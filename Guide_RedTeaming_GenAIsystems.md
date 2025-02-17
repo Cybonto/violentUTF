@@ -1,7 +1,5 @@
 # Guideline on the Red Teaming of Generative AI Systems
 
-# Guideline on the Red Teaming of Generative AI Systems
-
 - [1. Target System Description](#1-target-system-description)
     - [1. System Architecture](#1-system-architecture)
         - [System Flows](#system-flows)
