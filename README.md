@@ -6,6 +6,7 @@ A red teaming tool for Generative AI.
 - A while ago: Please stand by for the initial nightly-build release (scheduled for early March). 
 
 ## Folder Structure
+```
 violentutf/
 ├── app/
 │   ├── __init__.py
@@ -64,3 +65,4 @@ violentutf/
 ├── README.md              # Project documentation
 ├── .gitignore             # Git ignore file
 └── (additional files)
+```
