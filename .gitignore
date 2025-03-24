@@ -2,3 +2,5 @@
 .vitutf
 __pycache__/
 .DS_Store
+*pem*
+*.env
