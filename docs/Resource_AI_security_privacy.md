@@ -82,28 +82,76 @@ Point-in-time assessment of an organization's system and suitability of control 
 #### SOC 2 Type 2
 Comprehensive assessment of control effectiveness over an extended period (typically 6-12 months), providing higher assurance levels than Type 1.
 - **SOC 2 Type 2 Report**
+  - A detailed audit report conducted by an independent third-party auditor that evaluates the effectiveness of an organization's controls over a 6-12 month period against the AICPA Trust Services Criteria. For AI systems, this report includes specific attestations about data processing integrity, model governance, and security controls protecting AI operations and data. The report contains control descriptions, test procedures, and results demonstrating sustained compliance.
 - **CSA STAR Report**
+  - A specialized attestation report that combines SOC 2 examination with the Cloud Security Alliance's Cloud Controls Matrix, providing additional cloud-specific security assurances relevant to AI deployments. This report addresses cloud security controls specifically relevant to AI systems, such as secure model storage, training environment security, and data protection in distributed computing environments. It offers enhanced transparency about cloud security practices supporting AI operations.
 - **Resources:**
   - [A Survey of Major Cybersecurity Compliance Frameworks](https://ieeexplore.ieee.org/abstract/document/10565236) (IEEE-BidDataSecurity-2024)
-  - 
+  - [STAR Program for AI](https://e.cloudsecurityalliance.org/STAR_AI) (CSA-APR2025)
+  - [Securing the Future of AI: A Deep Compliance Review of Anthropic, Google DeepMind, and OpenAI Under SOC 2, ISO 27001, and NIST](https://www.tdcommons.org/dpubs_series/7951/) (TDcommons-APR2025)
+  - tba
 #### ISO 27001:2022
 International standard for information security management systems (ISMS), with specific considerations for AI systems.
 - **Statement of Applicability**
+  - A formal document that identifies which controls from ISO 27001 Annex A are applicable to the organization's AI systems and explains the rationale for including or excluding specific controls. For AI systems, this typically includes specialized controls addressing model security, data protection during training and inference, and access controls for AI development environments. The document serves as the foundation for ISMS implementation and auditing.
 - **ISO 27001 Certificate**
+  - The official certification document issued by an accredited certification body confirming that the organization's information security management system has been audited and meets all ISO 27001:2022 requirements. The certificate includes the certification scope specifically detailing AI-related activities covered, validity period (typically three years), and the issuing certification body's accreditation information. This certificate provides formal validation of the organization's security practices for AI systems.
+- **Resources:**
+  - [Managing Security and AI: The Role of ISO 27001 & 42001](https://www.ccsrisk.com/iso27001-iso42001#:~:text=In%20summary%2C%20ISO%2027001:2022,associated%20risks%20and%20negative%20impacts.)
+  - [Impact of Artificial Intelligence on Enterprise Information Security Management in the Context of ISO 27001 and 27002: A Tertiary Systematic Review and Comparative Analysis](https://link.springer.com/chapter/10.1007/978-3-031-52272-7_1) (SpringerNatureLink-APR2024)
 #### ISO/IEC 42001:2023
 The recently established international standard specifically addressing AI management systems and governance frameworks.
+- **Resources:**
+  - [Comparison and Analysis of 3 Key AI Documents: EU’s Proposed AI Act, Assessment List for Trustworthy AI (ALTAI), and ISO/IEC 42001 AI Management System](https://link.springer.com/chapter/10.1007/978-3-031-26438-2_15) (AICS2022)
+  - [ISO/IEC quality standards for AI engineering](https://www.sciencedirect.com/science/article/abs/pii/S1574013724000650) (ComputerScienceReview-NOV2024)
 
 #### Domain-specific Compliance: Finance
+- **Financial AI Risk Assessment**
+  - Documentation evaluating AI systems against financial regulatory requirements including model risk management guidelines (SR 11-7), consumer protection regulations, and anti-discrimination laws. This assessment identifies risks specific to AI use in financial decision-making and describes implemented controls.
+- **Model Governance Documentation**
+  - Formal documentation detailing model development, validation, implementation, and ongoing monitoring procedures in accordance with financial regulatory expectations, particularly focused on model explainability and auditability.
+- **Resources:**
+  - [Federal Reserve Guidance on Model Risk Management](https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm)
+  - [Financial Stability Board's Artificial Intelligence and Machine Learning in Financial Services](https://www.fsb.org/work-of-the-fsb/financial-innovation-and-structural-change/artificial-intelligence-and-machine-learning-in-financial-services/)
+  - [FINRA AI Report: Considerations for Use of Artificial Intelligence in the Securities Industry](https://www.finra.org/rules-guidance/key-topics/artificial-intelligence)
 
 #### Domain-specific Compliance: Healthcare
 ##### HIPAA
 Requirements specific to healthcare AI applications, focusing on protecting personal health information (PHI) in accordance with Health Insurance Portability and Accountability Act standards.
 - **Annual HIPAA SCA Report**
+  - A formal security compliance assessment report that documents an organization's adherence to HIPAA Security, Privacy, and Breach Notification Rules in the context of AI systems handling PHI. The report evaluates controls protecting patient data throughout the AI lifecycle, including data collection, processing, model training, and inference. It contains detailed findings on administrative, physical, and technical safeguards implemented to protect the confidentiality, integrity, and availability of PHI processed by AI systems, along with any required remediation actions.
+- **Resources:**
+  - [AI in Healthcare: HIPAA Compliance Considerations](https://www.hhs.gov/hipaa/for-professionals/special-topics/health-information-technology/index.html)
+  - [OCR Guidance on AI and Machine Learning in Healthcare](https://www.healthit.gov/topic/scientific-initiatives/artificial-intelligence-healthcare)
+##### Other healthcare
+- **AI Medical Device Documentation**
+  - For AI systems classified as medical devices, documentation demonstrating compliance with FDA requirements including pre-market submissions (510(k), De Novo, or PMA), quality system regulations, and post-market surveillance commitments.
+- **Clinical Validation Reports**
+  - Documentation of clinical validation studies demonstrating the safety and efficacy of AI applications in healthcare contexts, including statistical analyses, performance metrics, and testing across diverse patient populations.
+- **Resources:**
+  - [FDA Artificial Intelligence/Machine Learning (AI/ML)-Based Software as a Medical Device (SaMD) Action Plan](https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-software-medical-device)
+  - [Good Machine Learning Practice for Medical Device Development](https://www.fda.gov/medical-devices/software-medical-device-samd/good-machine-learning-practice-medical-device-development-guiding-principles)
 
 #### Domain-specific Compliance: Critical Infrastructure
+- **Critical Infrastructure Protection Plan**
+  - Documentation detailing how AI systems in critical infrastructure comply with relevant frameworks such as NIST Cybersecurity Framework, IEC 62443, or sector-specific guidelines. This includes security controls, resilience measures, and contingency planning.
+- **Operational Technology Security Assessment**
+  - Formal assessment of security controls protecting AI systems integrated with operational technology environments, including segmentation strategies, monitoring capabilities, and incident response procedures specific to industrial control systems.
+- **Resources:**
+  - [NIST Cybersecurity Framework for Critical Infrastructure](https://www.nist.gov/cyberframework)
+  - [CISA Artificial Intelligence and Critical Infrastructure Security](https://www.cisa.gov/topics/artificial-intelligence-critical-infrastructure-security)
+  - [IEC 62443 - Industrial Automation and Control Systems Security](https://www.isa.org/standards-and-publications/isa-standards/isa-iec-62443-series-of-standards)
 
 #### Domain-specific Compliance: Defense
-
+- **Classification Compliance Documentation**
+  - Documentation demonstrating that AI systems processing classified information adhere to relevant security classification guidelines, including data handling procedures, access controls, and security clearance requirements.
+- **Defense Acquisition Compliance Report**
+  - For AI systems developed for defense applications, documentation showing compliance with relevant defense acquisition regulations such as DFARS, including cybersecurity requirements, supply chain risk management, and testing procedures.
+- **Resources:**
+  - [DoD Artificial Intelligence Strategy](https://www.defense.gov/Innovation/AI-Engineering/)
+  - [Defense Innovation Board AI Principles](https://innovation.defense.gov/ai/)
+  - [National Security Commission on Artificial Intelligence Final Report](https://www.nscai.gov/report)
+  - [NIST AI Risk Management Framework](https://www.nist.gov/itl/ai-risk-management-framework)
 
 ### S2\. Controls
 Technical and organizational controls that provide the foundation for securing AI systems throughout their lifecycle.
