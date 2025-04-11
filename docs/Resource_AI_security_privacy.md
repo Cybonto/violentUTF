@@ -14,28 +14,82 @@ This resource represents collaborative input from security professionals, AI exp
 This section outlines and provides resources related to the regulatory frameworks, certifications, and compliance requirements applicable to AI systems across various industries and jurisdictions.
 
 #### General Items
-- **Model Card**
-- **System Card**
-- **Addendum Process**
-- SIG Lite questionaires
-- CAIQ Lite questionaires
-- VSA Core questionaires
+##### Model Card
+- **Description:**
+- A Model Card is a standardized documentation that provides essential information about a specific machine learning model. It focuses on the model's technical properties, performance characteristics, intended use cases, and limitations.
+- **Key Components:**
+  - Model architecture and version
+  - Training data characteristics (without revealing sensitive details)
+  - Performance metrics across different demographics and conditions
+  - Model limitations and failure modes
+  - Intended use cases and restrictions
+  - Model sensitivity and robustness measures
+  - Ethical considerations specific to the model
+- **Resources:**
+  - [Systematic analysis of 32,111 AI model cards characterizes documentation practice in AI](https://www.nature.com/articles/s42256-024-00857-z) (Nature-JUN2024)
+  - [Automatic Generation of Model and Data Cards: A Step Towards Responsible AI](https://arxiv.org/abs/2405.06258) (Arxiv-MAY2024)
+  - [Sample: Amazon's Guide to Creating a Model Card](https://docs.aws.amazon.com/sagemaker/latest/dg/model-cards-create.html) (APR2025)
+  - tba
+ 
+##### System Card
+- **Description:**
+  - A System Card documents the entire AI system that may employ one or more models. It focuses on the broader deployment context, integration aspects, data flows, user interactions, and system-wide risks and mitigations.
+- **Key Components:**
+  - System architecture overview and components
+  - Data flows and storage practices
+  - Underlying infrastructure and dependencies
+  - Human oversight mechanisms
+  - Integration with other systems
+  - Risk assessment and mitigation strategies
+  - User interaction patterns
+  - Monitoring and maintenance procedures
+  - Compliance with regulations
+- **Resources:**
+  - [OpenAI o1 System Card](https://arxiv.org/abs/2412.16720) (Arxiv-DEC2024)
+  - [AI Risk Profiles: A Standards Proposal for Pre-deployment AI Risk Disclosures](https://ojs.aaai.org/index.php/AAAI/article/view/30348) (AAAI2024)
+  - [AI Cards: Towards an Applied Framework for Machine-Readable AI and Risk Documentation Inspired by the EU AI Act](https://link.springer.com/chapter/10.1007/978-3-031-68024-3_3) (SpringerNatureLink-AUG2024)
+  - [Use case cards: a use case reporting framework inspired by the European AI Act](https://link.springer.com/article/10.1007/s10676-024-09757-7) (SpringerNatureLink-MAR2024)
+  - tba
 
+##### Addendum Process
+- **Resources:**
+  - [Model Card Addendum: Claude 3.5 Haiku and Upgraded Claude 3.5 Sonnet](https://assets.anthropic.com/m/1cd9d098ac3e6467/original/Claude-3-Model-Card-October-Addendum.pdf) (OCT2024)
+  - [Addendum to GPT-4o System Card: Native image generation](https://cdn.openai.com/11998be9-5319-4302-bfbf-1167e093f1fb/Native_Image_Generation_System_Card.pdf) (MAR2025)
+
+##### Standard Information Gathering (SIG) Lite questionnaire
+A streamlined version of the Shared Assessments SIG questionnaire that collects essential information about an organization's security controls, risk management practices, and compliance posture. The SIG Lite focuses on critical security domains with fewer questions than the comprehensive SIG, making it more accessible for AI vendors while still providing meaningful security assurance. It covers areas such as information security policies, access controls, data protection, and incident management specific to AI systems.
+- **Resources**:
+  - [What is the SIG questionnaire?](https://www.vanta.com/collection/trust/sig-questionnaire) (Vanta-APR2025)
+  - tba
+
+##### Consensus Assessments Initiative Questionnaire (CAIQ) Lite questionnaire
+Developed by the Cloud Security Alliance (CSA), the CAIQ Lite is a condensed version of the full CAIQ designed to assess the security capabilities of cloud service providers and AI systems. This questionnaire maps to the CSA Cloud Controls Matrix (CCM) and focuses on key security principles relevant to AI deployments, including data security, application security, and compliance. CAIQ Lite enables AI vendors to demonstrate their security posture without the extensive overhead of the full CAIQ, making it suitable for rapid vendor risk assessments.
+- **Resources**:
+  - [What is the CAIQ (Consensus Assessment Initiative Questionnaire)?](https://www.vanta.com/collection/trust/caiq) (Vanta-APR2025)
+  - tba
+
+##### Vendor Security Alliance (VSA) Core questionnaire
+The VSA Core questionnaire is a standardized security assessment tool developed by the Vendor Security Alliance to evaluate third-party vendor security practices, with specific considerations for AI systems. This questionnaire focuses on fundamental security controls across domains including data protection, access management, vulnerability management, and incident response. The VSA Core is designed to provide objective security assessment metrics while minimizing the burden on AI vendors, facilitating more efficient security reviews and enabling better comparison between different AI solution providers.
+- **Resources**:
+  - [What is the VSAQ (Vendor Security Alliance Questionnaire)?](https://www.vanta.com/collection/trust/vendor-security-alliance-questionnaire) (Vanta-APR2025)
+  - tba
+    
 #### SOC 2 Type 1
 Point-in-time assessment of an organization's system and suitability of control design related to security, availability, processing integrity, confidentiality, and privacy.
-
+- **Resources:**
+  - [How to incorporate AI considerations into your SOC2 examination](https://www.schellman.com/blog/soc-examinations/how-to-incorporate-ai-into-your-soc-2-examination#:~:text=While%20the%20SOC%202%20trust,Availability;)
+  - [SOC 2 Type 1 vs Type 2](https://secureframe.com/hub/soc-2/type-1-vs-type-2)
 #### SOC 2 Type 2
 Comprehensive assessment of control effectiveness over an extended period (typically 6-12 months), providing higher assurance levels than Type 1.
 - **SOC 2 Type 2 Report**
-  - 
 - **CSA STAR Report**
+- **Resources:**
+  - [A Survey of Major Cybersecurity Compliance Frameworks](https://ieeexplore.ieee.org/abstract/document/10565236) (IEEE-BidDataSecurity-2024)
   - 
 #### ISO 27001:2022
 International standard for information security management systems (ISMS), with specific considerations for AI systems.
 - **Statement of Applicability**
-  - 
 - **ISO 27001 Certificate**
-  - 
 #### ISO/IEC 42001:2023
 The recently established international standard specifically addressing AI management systems and governance frameworks.
 
@@ -176,6 +230,8 @@ Controls specific to protecting the confidentiality and integrity of data used i
 #### S3\.a Threat Intelligence
 Frameworks and methodologies for identifying, analyzing, and responding to emerging threats specific to AI systems, including model poisoning, evasion attacks, and data extraction techniques.
 - tools for threat intel
+- **Resources:**
+  - [Coordinated Flaw Disclosure for AI: Beyond Security Vulnerabilities](https://dl.acm.org/doi/10.5555/3716662.3716686) (AAAI2024)
 
 #### S3\.b Threat Hunting
 Proactive approaches to identifying potential adversarial activities targeting AI systems before they manifest as security incidents.
@@ -187,7 +243,10 @@ Proactive approaches to identifying potential adversarial activities targeting A
 - Data poisoning
 - Model manipulation
 
+- **Resources:**
+  - [OpenAI's Approach to External Red Teaming for AI Models and Systems](https://arxiv.org/abs/2503.16431) (Arxiv-JAN2025)
 - Tools for threat hunting
+- 
 
 #### S3\.c Testing
 - AI security testing methodologies
