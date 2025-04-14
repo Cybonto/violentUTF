@@ -65,48 +65,92 @@ This section outlines and provides resources related to the regulatory framework
 
 #### General Items
 ##### Model Card
-- **Description:**
-- A Model Card is a standardized documentation that provides essential information about a specific machine learning model. It focuses on the model's technical properties, performance characteristics, intended use cases, and limitations.
-- **Key Components:**
-  - Model architecture and version
-  - Training data characteristics (without revealing sensitive details)
-  - Performance metrics across different demographics and conditions
-  - Model limitations and failure modes
-  - Intended use cases and restrictions
-  - Model sensitivity and robustness measures
-  - Ethical considerations specific to the model
+Here is the information about Model Cards, synthesized from the provided documents:
+
+### Model Card
+* **Description:**
+    * A Model Card is a standardized document providing essential, easy-to-understand information about a machine learning model[cite: 21].
+    * It acts as a communication bridge between developers and users, detailing a model's functionality, applications, potential biases, errors, and limitations[cite: 16, 17].
+    * Inspired by concepts like food nutrition labels and datasheets in electronics, Model Cards aim to increase transparency and trust[cite: 20, 18, 19].
+    * They are considered a preferred reference over academic papers or technical reports for practitioners due to their concise, relevant, accessible, and up-to-date nature[cite: 23, 24, 25].
+* **Key Components:**
+    * **Model architecture and version:** Basic details about the model, including architecture, parameters, and potentially the base model if it's fine-tuned[cite: 464, 763].
+    * **Training data characteristics:** Information on training data, including volume, characteristics, and preprocessing steps (like tokenization or lowercasing), without revealing sensitive details[cite: 123, 124, 763]. Datasheets or data statements can complement this by detailing dataset motivation, composition, collection, and recommended uses[cite: 339].
+    * **Performance metrics across different demographics and conditions:** Evaluation results, ideally disaggregated across relevant factors (like domain, context, population subgroups) to reveal performance disparities[cite: 115, 117, 763]. Common metrics include F1 scores, BLEU scores, precision, recall, and accuracy[cite: 115, 424].
+    * **Model limitations and failure modes:** Known or foreseeable issues, including technical constraints (e.g., maximum input length), societal biases (potentially inherited from training data or backbone models), and potential harms or misunderstandings[cite: 93, 101, 102, 103, 464]. Disclaimers about intended use (e.g., "not for production" or "not a diagnostic tool") are also common[cite: 94, 95].
+    * **Intended use cases and restrictions:** Clear description of the model's designated tasks (e.g., object detection, tweet generation) and how it can be used directly or downstream (fine-tuned, part of a larger system)[cite: 105, 106, 464, 763]. It also addresses out-of-scope uses and potential misapplications, advising what users should avoid[cite: 109, 110, 763].
+    * **Model sensitivity and robustness measures:** While not explicitly detailed as "sensitivity and robustness" in the text, the evaluation section covers performance metrics, and the limitations section addresses potential failure points under certain conditions or with specific data types[cite: 113, 98, 100].
+    * **Ethical considerations specific to the model:** This is primarily covered under "Bias, Risks, and Limitations," discussing potential biases, societal impacts, and recommendations for mitigating risks[cite: 17, 103, 464, 763].
+* **Advances in Model Card:**
+    * Model cards have become a standard documentation approach in the AI community[cite: 20].
+    * Platforms like Hugging Face provide guidelines and tools to facilitate their creation, including graphical interfaces and methods to track environmental impact (like CO2 emissions)[cite: 40, 189, 190, 335].
+    * Automated generation of Model Cards using Large Language Models (LLMs) is being explored to enhance completeness, objectivity, and faithfulness compared to potentially incomplete human-written cards[cite: 407, 409, 433].
+    * Research is ongoing to improve documentation practices, potentially including system cards for complex AI systems [cite: 348] and value cards for educational purposes[cite: 347].
+* **Existing challenges and/or gaps with Model Card:**
+    * **Inconsistent Quality and Completeness:** Many model cards, even on platforms like Hugging Face, suffer from incompleteness and variability[cite: 3, 30, 31, 42, 427]. Developers might copy existing cards rather than using standardized templates[cite: 428].
+    * **Uneven Section Focus:** Some sections are frequently filled out (e.g., Training), while others crucial for responsible AI, like Environmental Impact, Limitations, and Evaluation, often have low completion rates and less detail[cite: 7, 43, 63, 157, 158].
+    * **Lack of Emphasis on Limitations:** There's a tendency to underreport limitations and potential negative outcomes, hindering informed decisions and trust[cite: 35, 159, 160]. Only a fraction of analyzed cards mentioned "weakness(es)", "limitation(s)", or "bias(es)"[cite: 604].
+    * **Superficial Evaluation Reporting:** Evaluations often present aggregate metrics, potentially hiding poor performance within specific subgroups[cite: 116, 117]. More granular, subgroup-based evaluation is needed[cite: 117].
+    * **Documentation Burden:** Creating comprehensive model cards can be time-consuming[cite: 133].
+    * **Potential for Bias in Automated Generation:** While aiming for improvement, LLM-generated cards might still inherit biases from source documents (e.g., papers overstating claims) or the LLMs themselves[cite: 597, 598, 603].
 - **Resources:**
   - [Systematic analysis of 32,111 AI model cards characterizes documentation practice in AI](https://www.nature.com/articles/s42256-024-00857-z) (Nature-JUN2024)
   - [Automatic Generation of Model and Data Cards: A Step Towards Responsible AI](https://arxiv.org/abs/2405.06258) (Arxiv-MAY2024)
   - [Sample: Amazon's Guide to Creating a Model Card](https://docs.aws.amazon.com/sagemaker/latest/dg/model-cards-create.html) (APR2025)
-  - [Model Cards for Model Reporting: State of the Art, Open Challenges, and Future Directions](https://dl.acm.org/doi/abs/10.1145/3593013.3593992) (FAccT-JUN2023)
-  - [Extending Model Cards with Model Contracts](https://dl.acm.org/doi/abs/10.1145/3583561.3583811) (CSE-SEIP-MAY2023)
-  - [Model reporting for intelligent systems: Towards a human-centred standard](https://www.sciencedirect.com/science/article/pii/S095070512200197X) (Knowledge-Based Systems-AUG2022)
-  - [Model Cards: A Practical Approach to Documenting AI/ML Models for Increased Transparency](https://ieeexplore.ieee.org/abstract/document/9871343/) (CogMI-DEC2021)
  
 ##### System Card
-- **Description:**
-  - A System Card documents the entire AI system that may employ one or more models. It focuses on the broader deployment context, integration aspects, data flows, user interactions, and system-wide risks and mitigations.
-- **Key Components:**
-  - System architecture overview and components
-  - Data flows and storage practices
-  - Underlying infrastructure and dependencies
-  - Human oversight mechanisms
-  - Integration with other systems
-  - Risk assessment and mitigation strategies
-  - User interaction patterns
-  - Monitoring and maintenance procedures
-  - Compliance with regulations
+* **Description:**
+    * While Model Cards focus on individual models and Data Cards/Datasheets focus on datasets, other documentation frameworks aim to capture broader system-level information, including context, risks, and compliance aspects[cite: 5, 47, 54, 353, 1210].
+    * System Cards or similar documentation (like AI Cards or AI Risk Profiles) document the entire AI system, which may involve multiple models and components, focusing on deployment context, data flows, interactions, and system-wide risks[cite: 5, 332, 1210].
+* **Key Components:**
+    * **System architecture overview and components:** Documentation should include the system's high-level architecture, detailing incorporating components like AI models, datasets, general-purpose AI systems, and other software elements[cite: 136, 140]. AI Cards, for example, list key components with links to their specific documentation (like Model Cards or Datasheets)[cite: 140, 141, 142].
+    * **Data flows and storage practices:** Understanding data lineage and processing is crucial[cite: 1131]. AI Cards include a section on data processing, specifying if personal, non-personal, anonymized, or licensed data is used and linking to relevant assessments like DPIAs[cite: 146, 147, 148].
+    * **Underlying infrastructure and dependencies:** While not a primary focus in the provided texts' examples (like AI Cards or Risk Profiles), information about hardware, software, cloud providers, and compute infrastructure is sometimes included in technical documentation templates[cite: 2487]. Risk profiles may implicitly cover infrastructure risks under categories like Security or Performance & Robustness[cite: 388, 391].
+    * **Human oversight mechanisms:** Documentation should specify the level of automation and the nature of human involvement, including whether end-users or affected subjects have control over outputs (e.g., opt-in/out, challenge, correct, reverse)[cite: 149, 157, 158, 159, 160, 161]. AI Cards explicitly include a section on human involvement[cite: 150].
+    * **Integration with other systems:** The context of use section in frameworks like AI Cards or Use Case Cards describes how the system operates within a specific setting, which can imply integration points[cite: 118, 1337]. Risk assessments should also consider interactions with other systems as potential failure points[cite: 399].
+    * **Risk assessment and mitigation strategies:** This is a central component. AI Risk Profiles propose a standard for pre-deployment risk disclosure based on a defined taxonomy (e.g., Abuse & Misuse, Compliance, Fairness & Bias, Security, Privacy, Performance & Robustness)[cite: 332, 333, 358, 368]. AI Cards include a "Risk Profile" section summarizing likelihood, severity, residual risk, impacts (on health, rights, society, environment), and mitigation measures (technical, monitoring, security, etc.)[cite: 162, 163]. Use Case Cards help assess risk levels based on the intended purpose and application area[cite: 1211, 1245]. Risk management system documentation is often part of broader technical documentation required by regulations like the EU AI Act[cite: 16, 19, 76].
+    * **User interaction patterns:** Use Case Cards specifically focus on modeling interactions between actors (users) and the system to achieve goals, using UML diagrams and descriptions[cite: 1211, 1238, 1317, 1344, 1348]. AI Cards also touch upon whether user involvement is intended, active, and informed[cite: 151, 154, 155].
+    * **Monitoring and maintenance procedures:** Post-market monitoring plans and system documentation are often required, especially for high-risk systems under regulations like the EU AI Act[cite: 79, 90]. Risk Profiles are envisioned as 'living documents' updated based on in-production monitoring and incident data[cite: 479, 481, 485]. AI Cards can include information on pre-determined changes affecting performance or risks[cite: 168].
+    * **Compliance with regulations:** Documentation is crucial for demonstrating compliance with regulations like the EU AI Act or GDPR[cite: 2, 18, 72, 144]. Frameworks like AI Cards and AI Risk Profiles are designed with regulatory requirements in mind, often including sections listing applicable regulations, standards, and certifications[cite: 5, 169, 332, 428, 465]. Use Case Cards help determine the risk level according to the AI Act, which dictates compliance obligations[cite: 1211, 1235, 1245].
+* **Advances in System Card:**
+    * Frameworks like AI Cards and AI Risk Profiles are being proposed to provide standardized, holistic views of AI systems and their associated risks, going beyond individual models or datasets[cite: 5, 332, 357].
+    * Use Case Cards adapt standard UML modeling to document AI system use cases specifically for risk assessment under regulations like the EU AI Act[cite: 1209, 1242].
+    * There's a move towards machine-readable documentation (e.g., using Semantic Web technologies, JSON) to improve interoperability, maintainability, automation (e.g., compliance checking, tool support), and information exchange across the AI value chain[cite: 6, 59, 120, 172, 176, 251, 252]. AI Cards explicitly include a machine-readable specification based on ontologies like AIRO[cite: 34, 180].
+    * AI systems (like Themisto) are being developed to assist in the creation of documentation itself, although currently focused more on code/notebook documentation[cite: 512, 544].
+* **Existing challenges and/or gaps with System Card:**
+    * Despite various proposals (Model Cards, Datasheets, Factsheets), there's still a lack of widely adopted, standardized methodologies focused specifically on documenting entire AI systems or use cases, especially in alignment with regulatory needs like the EU AI Act[cite: 3, 24, 55, 1208, 1309].
+    * Existing documentation often focuses heavily on technical aspects (models, data) rather than the broader system context, deployment environment, or system-level risks[cite: 54, 1233, 1303].
+    * Generating comprehensive system documentation can be challenging, requiring information exchange across complex value chains where details about third-party components might be needed but hard to obtain[cite: 84, 85, 86].
+    * Keeping documentation up-to-date with system changes (especially substantial modifications affecting compliance or purpose) is difficult[cite: 90, 91, 93].
+    * Assessing the real-world impact and risks, particularly concerning fundamental rights or societal effects, remains challenging, especially pre-deployment[cite: 88, 255, 338, 460]. Frameworks like Algorithmic Impact Assessments are suggested to help[cite: 471].
+    * Current AI evaluation benchmarks often fail to capture the full range of risks or downstream impacts[cite: 455, 457, 460].
+    * Defining and measuring the efficacy of risk mitigations is complex[cite: 423].
 - **Resources:**
   - [OpenAI o1 System Card](https://arxiv.org/abs/2412.16720) (Arxiv-DEC2024)
   - [AI Risk Profiles: A Standards Proposal for Pre-deployment AI Risk Disclosures](https://ojs.aaai.org/index.php/AAAI/article/view/30348) (AAAI2024)
   - [AI Cards: Towards an Applied Framework for Machine-Readable AI and Risk Documentation Inspired by the EU AI Act](https://link.springer.com/chapter/10.1007/978-3-031-68024-3_3) (SpringerNatureLink-AUG2024)
   - [Use case cards: a use case reporting framework inspired by the European AI Act](https://link.springer.com/article/10.1007/s10676-024-09757-7) (SpringerNatureLink-MAR2024)
-  * [AI FactSheets: Increasing trust in AI services through supplier's declarations of conformity](https://arxiv.org/abs/2010.12941) (IBM Journal of Research and Development-JUL2021)
-  * [A Survey on Explainability in Machine Learning: From Models to Systems](https://dl.acm.org/doi/abs/10.1145/3501870) (CSUR-MAY2022)
-  * [Documentation Matters: Human-Centered AI System to Support Data Science Project Documentation](https://dl.acm.org/doi/10.1145/3491102.3501878) (CHI-APR2022)
+  * [AI FactSheets: Increasing trust in AI services through supplier's declarations of conformity](https://ieeexplore.ieee.org/document/8843893/) (IBM Journal of Research and Development-JUL2021)
+  * [A Survey on Explainability in Machine Learning: From Models to Systems](https://dl.acm.org/doi/10.1613/jair.1.12228) (CSUR-MAY2022)
+  * [Documentation Matters: Human-Centered AI System to Support Data Science Project Documentation](https://dl.acm.org/doi/10.1145/3489465) (CHI-APR2022)
 
-##### Addendum Process
+##### The Addendum Process
+**Industry Best Practices:**
+
+* **Purposeful Updates:** Addenda are issued to document significant updates or additions to existing models or systems, such as new capabilities, performance improvements, or new models within a family[cite: 1, 2, 406, 412]. The addendum should clearly state its purpose and what new information it covers[cite: 1, 3, 412].
+* **Content of Addenda:** Updates typically include detailed discussions on performance changes (with updated benchmarks and human evaluations) and safety considerations specific to the new features or models[cite: 3, 4, 412, 433]. They may also detail new risks introduced by added capabilities (like native image generation) and the specific mitigations implemented to address them[cite: 411, 412, 419, 420, 424]. For new model versions, updated knowledge cutoffs are often specified[cite: 18, 19].
+* **Safety Focus:** Addenda often reiterate safety commitments, detail safety evaluations performed on the new components (including red-teaming results), discuss alignment with internal policies (like Responsible Scaling Policies) and external regulations, and outline any changes to the safety stack[cite: 12, 13, 35, 36, 37, 39, 137, 143, 144, 424, 433, 456]. Collaboration with external safety experts or institutes for testing may also be documented[cite: 14, 15, 145, 146].
+* **Iterative Deployment:** Addenda reflect an iterative approach to deployment, acknowledging that safety measures and policies will continue to be evaluated and adjusted based on real-world usage and learnings[cite: 422, 570].
+* **Holistic Approach:** Documentation practices are shifting towards more holistic views, encompassing the entire system and its operational context, which necessitates updates beyond just model-specific details[cite: 350, 351].
+
+**Issues/Challenges:**
+
+* **Keeping Pace:** AI development, especially for large models, is rapid, making it challenging for documentation, including addenda, to keep up[cite: 199].
+* **Manual Effort:** The majority of documentation practices rely heavily on manual effort (78% in one study), making the process of creating and updating cards or addenda time-consuming, tedious, and potentially inconsistent[cite: 202, 255, 256, 298, 304, 356].
+* **Automation Gaps:** While automation is seen as a way to improve efficiency and consistency, fully automated documentation generation is still uncommon (only 7% in one review)[cite: 301, 304, 357]. Semi-automated processes exist but still require significant human oversight[cite: 257, 299]. Automating documentation for complex, multimodal systems presents further challenges[cite: 315].
+* **Defining "Substantial Change":** Determining when an update or change to a model/system necessitates a formal addendum or update to the documentation lacks clear, standardized guidelines[cite: 672, 673].
+* **Information Gathering:** Compiling the necessary information for a comprehensive addendum, especially regarding third-party components or detailed risk assessments, can be a significant challenge[cite: 202].
+
 - **Resources:**
   - [Model Card Addendum: Claude 3.5 Haiku and Upgraded Claude 3.5 Sonnet](https://assets.anthropic.com/m/1cd9d098ac3e6467/original/Claude-3-Model-Card-October-Addendum.pdf) (OCT2024)
   - [Addendum to GPT-4o System Card: Native image generation](https://cdn.openai.com/11998be9-5319-4302-bfbf-1167e093f1fb/Native_Image_Generation_System_Card.pdf) (MAR2025)
@@ -116,26 +160,17 @@ This section outlines and provides resources related to the regulatory framework
 A streamlined version of the Shared Assessments SIG questionnaire that collects essential information about an organization's security controls, risk management practices, and compliance posture. The SIG Lite focuses on critical security domains with fewer questions than the comprehensive SIG, making it more accessible for AI vendors while still providing meaningful security assurance. It covers areas such as information security policies, access controls, data protection, and incident management specific to AI systems.
 - **Resources**:
   - [What is the SIG questionnaire?](https://www.vanta.com/collection/trust/sig-questionnaire) (Vanta-APR2025)
-  - [A Review of Cyber Security Risk Assessment Methods for Third-Party Vendors](https://ieeexplore.ieee.org/abstract/document/9620975/) (BDKCS-OCT2021)
-  - [Automating Vendor Risk Assessment: A Machine Learning Approach](https://dl.acm.org/doi/abs/10.1145/3488932.3497778) (ADM+ML-AUG2021)
-  - [Comparative Analysis of Third-Party Risk Management Frameworks in the Financial Sector](https://www.researchgate.net/publication/365123456_Comparative_Analysis_of_Third-Party_Risk_Management_Frameworks_in_the_Financial_Sector) (Journal of Risk and Financial Management-NOV2022)
+  - 
 
 ##### Consensus Assessments Initiative Questionnaire (CAIQ) Lite questionnaire
 Developed by the Cloud Security Alliance (CSA), the CAIQ Lite is a condensed version of the full CAIQ designed to assess the security capabilities of cloud service providers and AI systems. This questionnaire maps to the CSA Cloud Controls Matrix (CCM) and focuses on key security principles relevant to AI deployments, including data security, application security, and compliance. CAIQ Lite enables AI vendors to demonstrate their security posture without the extensive overhead of the full CAIQ, making it suitable for rapid vendor risk assessments.
 - **Resources**:
   - [What is the CAIQ (Consensus Assessment Initiative Questionnaire)?](https://www.vanta.com/collection/trust/caiq) (Vanta-APR2025)
-  - [Continuous Auditing and Certification of Cloud Services based on the CSA Cloud Controls Matrix (CCM)](https://ieeexplore.ieee.org/abstract/document/9660275/) (CLOUD-SEP2021)
-  - [Mapping CSA-CCM V4 Controls to ISO/IEC 27001:2022 for Enhanced Cloud Security Management](https://www.mdpi.com/2076-3417/13/13/7595) (Applied Sciences-JUN2023)
-  - [A Comprehensive Review of Cloud Security Assessment Methodologies](https://www.sciencedirect.com/science/article/pii/S187705092201131X) (ICCS-JUL2022)
-  - [Security Assurance in Cloud Computing: A Systematic Literature Review](https://ieeexplore.ieee.org/abstract/document/9477389/) (IEEE Access-JUN2021)
 
 ##### Vendor Security Alliance (VSA) Core questionnaire
 The VSA Core questionnaire is a standardized security assessment tool developed by the Vendor Security Alliance to evaluate third-party vendor security practices, with specific considerations for AI systems. This questionnaire focuses on fundamental security controls across domains including data protection, access management, vulnerability management, and incident response. The VSA Core is designed to provide objective security assessment metrics while minimizing the burden on AI vendors, facilitating more efficient security reviews and enabling better comparison between different AI solution providers.
 - **Resources**:
   - [What is the VSAQ (Vendor Security Alliance Questionnaire)?](https://www.vanta.com/collection/trust/vendor-security-alliance-questionnaire) (Vanta-APR2025)
-  - [A Framework for Evaluating Third-Party Vendor Security Posture Using Open-Source Intelligence](https://ieeexplore.ieee.org/abstract/document/10114363/) (ICC Workshops-MAY2023)
-  - [Standardizing Third-Party Security Assessments: Challenges and Opportunities](ttps://dl.acm.org/doi/abs/10.1145/3546069.3546087) (SCORED-NOV2022)
-  - [Comparative Analysis of Vendor Risk Management Questionnaires and Frameworks](https://papers.ssrn.com/sol3/papers.cfm%3Fabstract_id%3D4321098) (SSRN-JAN2023)
     
 #### SOC 2 Type 1
 Point-in-time assessment of an organization's system and suitability of control design related to security, availability, processing integrity, confidentiality, and privacy.
@@ -154,8 +189,6 @@ Comprehensive assessment of control effectiveness over an extended period (typic
   - [A Survey of Major Cybersecurity Compliance Frameworks](https://ieeexplore.ieee.org/abstract/document/10565236) (IEEE-BidDataSecurity-2024)
   - [STAR Program for AI](https://e.cloudsecurityalliance.org/STAR_AI) (CSA-APR2025)
   - [Securing the Future of AI: A Deep Compliance Review of Anthropic, Google DeepMind, and OpenAI Under SOC 2, ISO 27001, and NIST](https://www.tdcommons.org/dpubs_series/7951/) (TDcommons-APR2025)
-  - [Continuous Auditing and Certification of Cloud Services based on the CSA Cloud Controls Matrix (CCM)](https://ieeexplore.ieee.org/abstract/document/9660275/) (IEEE International Conference on Cloud Computing - CLOUD 2021-SEP2021)
-  - [Mapping CSA-CCM V4 Controls to ISO/IEC 27001:2022 for Enhanced Cloud Security Management](https://www.mdpi.com/2076-3417/13/13/7595) (Applied Sciences-JUN2023)
 #### ISO 27001:2022
 International standard for information security management systems (ISMS), with specific considerations for AI systems.
 - **Statement of Applicability**
@@ -188,10 +221,7 @@ The recently established international standard specifically addressing AI manag
   - [Mitigating Model Risk in AI: Advancing an MRM Framework for AI/ML Models at Financial Institutions](https://www.chartis-research.com/artificial-intelligence-ai/7947296/mitigating-model-risk-in-ai-advancing-an-mrm-framework-for-aiml-models-at-financial-institutions) (Chartis Research Report-JAN2025) - *Note: Industry research paper analyzing AI/ML model risk management (MRM) frameworks in finance, referencing SR 11-7.*
   - [The European Union's Approach to Artificial Intelligence and the Challenge of Financial Systemic Risk](https://www.researchgate.net/publication/376852879_The_European_Union's_Approach_to_Artificial_Intelligence_and_the_Challenge_of_Financial_Systemic_Risk) (European Business Organization Law Review-DEC2023 / via ResearchGate) - *Analyzes EU AI Act applicability to financial systemic risk from AI.*
   - [Digital Finance in the EU: Navigating new technological trends and the AI revolution](https://cadmus.eui.eu/handle/1814/77926) (European University Institute Report-NOV2024) - *Note: Report discussing AI trends, regulation, and risks in EU digital finance.*
-  - [Ethical AI frameworks for fraud prevention in financial systems](https://www.researchgate.net/publication/389401023_ETHICAL_AI_FRAMEWORKS_FOR_FRAUD_PREVENTION_IN_FINANCIAL_SYSTEMS) (ResearchGate-MAR2025) - *Discusses ethical frameworks and explainability (XAI) for AI in financial fraud prevention.*
-  - [Explainable AI in Finance: A Review of Machine Learning Interpretability Methods](https://www.mdpi.com/1911-8074/16/7/359) (Journal of Risk and Financial Management-JUL2023) - *Reviews methods crucial for model governance and regulatory compliance.*
   - [Model Risk Management of AI and Machine Learning Systems](https://www.pwc.co.uk/data-analytics/documents/model-risk-management-of-ai-machine-learning-systems.pdf) (PwC UK White Paper-JUN2020) - *Highly relevant white paper discussing MRM for AI, referencing SR 11-7.*
-  - [AI Governance in the Financial Services Industry: Regulatory Landscape and Industry Practices](https://dl.acm.org/doi/abs/10.1145/3653615.3653777) (ICAIF-NOV2023)
 #### Domain-specific Compliance: Healthcare
 ##### HIPAA
 Requirements specific to healthcare AI applications, focusing on protecting personal health information (PHI) in accordance with Health Insurance Portability and Accountability Act standards.
@@ -204,7 +234,6 @@ Requirements specific to healthcare AI applications, focusing on protecting pers
   - [AI Chatbots and Challenges of HIPAA Compliance for AI Developers and Vendors](https://www.researchgate.net/publication/378962258_AI_Chatbots_and_Challenges_of_HIPAA_Compliance_for_AI_Developers_and_Vendors) (Journal of Law, Medicine & Ethics-MAR2024) - *Analyzes specific HIPAA compliance challenges for AI chatbots.*
   - [Security and Privacy of Technologies in Health Information Systems: A Systematic Literature Review](https://www.mdpi.com/2073-431X/13/2/41) (Electronics-JAN2024) - *Reviews security/privacy technologies (IoT, blockchain, cloud) in HIS, discussing HIPAA context.*
   - [The Risk Assessment of the Security of Electronic Health Records Using Risk Matrix](https://www.mdpi.com/2076-3417/14/13/5785) (Applied Sciences-JUN2024) - *Focuses on EHR security risks within the HIPAA compliance landscape.*
-  - [Federated Learning for Healthcare AI: Privacy, Security, and Regulatory Considerations](https://www.google.com/search?q=https://ieeexplore.ieee.org/abstract/document/10116087/) (IEEE Journal of Biomedical and Health Informatics-JUL2023) - *Discusses privacy techniques like federated learning in the context of healthcare regulations like HIPAA.*
 ##### Other healthcare
 - **AI Medical Device Documentation**
   - For AI systems classified as medical devices, documentation demonstrating compliance with FDA requirements including pre-market submissions (510(k), De Novo, or PMA), quality system regulations, and post-market surveillance commitments.
