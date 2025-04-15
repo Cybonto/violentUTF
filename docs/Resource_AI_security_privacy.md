@@ -59,13 +59,10 @@ To provide a structured, research-based approach for organizations to assess, im
 ### Contributions
 This resource represents collaborative input from security professionals, AI experts, and privacy advocates to create a holistic framework addressing the unique challenges of securing AI systems and protecting data privacy.
 
-## Security
-### S1\. Compliance
+## S1\. Compliance
 This section outlines and provides resources related to the regulatory frameworks, certifications, and compliance requirements applicable to AI systems across various industries and jurisdictions.
 
-#### General Items
-
-##### MODEL CARD
+### General Items: Model Card
 * **Description:**
     * A Model Card is a standardized document providing essential, easy-to-understand information about a machine learning model.
     * It acts as a communication bridge between developers and users, detailing a model's functionality, applications, potential biases, errors, and limitations.
@@ -96,7 +93,7 @@ This section outlines and provides resources related to the regulatory framework
   - [Automatic Generation of Model and Data Cards: A Step Towards Responsible AI](https://arxiv.org/abs/2405.06258) (Arxiv-MAY2024)
   - [Sample: Amazon's Guide to Creating a Model Card](https://docs.aws.amazon.com/sagemaker/latest/dg/model-cards-create.html) (APR2025)
  
-##### SYSTEM CARD
+### General Items: SYSTEM CARD
 * **Description:**
     * While Model Cards focus on individual models and Data Cards/Datasheets focus on datasets, other documentation frameworks aim to capture broader system-level information, including context, risks, and compliance aspects.
     * System Cards or similar documentation (like AI Cards or AI Risk Profiles) document the entire AI system, which may involve multiple models and components, focusing on deployment context, data flows, interactions, and system-wide risks.
@@ -132,7 +129,7 @@ This section outlines and provides resources related to the regulatory framework
   * [A Survey on Explainability in Machine Learning: From Models to Systems](https://dl.acm.org/doi/10.1613/jair.1.12228) (CSUR-MAY2022)
   * [Documentation Matters: Human-Centered AI System to Support Data Science Project Documentation](https://dl.acm.org/doi/10.1145/3489465) (CHI-APR2022)
 
-##### The Addendum Process
+### General Items: The Addendum Process
 **Industry Best Practices:**
 
 * **Purposeful Updates:** Addenda are issued to document significant updates or additions to existing models or systems, such as new capabilities, performance improvements, or new models within a family. The addendum should clearly state its purpose and what new information it covers.
@@ -154,30 +151,30 @@ This section outlines and provides resources related to the regulatory framework
   - [Addendum to GPT-4o System Card: Native image generation](https://cdn.openai.com/11998be9-5319-4302-bfbf-1167e093f1fb/Native_Image_Generation_System_Card.pdf) (MAR2025)
   - [Documentation Practices of Artificial Intelligence](https://arxiv.org/abs/2406.18620) (arXiv-JUN2024)
 
-##### Standard Information Gathering (SIG) Lite questionnaire
+### General Items: Standard Information Gathering (SIG) Lite questionnaire
 A streamlined version of the Shared Assessments SIG questionnaire that collects essential information about an organization's security controls, risk management practices, and compliance posture. The SIG Lite focuses on critical security domains with fewer questions than the comprehensive SIG, making it more accessible for AI vendors while still providing meaningful security assurance. It covers areas such as information security policies, access controls, data protection, and incident management specific to AI systems.
 - **Resources**:
   - [What is the SIG questionnaire?](https://www.vanta.com/collection/trust/sig-questionnaire) (Vanta-APR2025)
   - 
 
-##### Consensus Assessments Initiative Questionnaire (CAIQ) Lite questionnaire
+### General Items: Consensus Assessments Initiative Questionnaire (CAIQ) Lite questionnaire
 Developed by the Cloud Security Alliance (CSA), the CAIQ Lite is a condensed version of the full CAIQ designed to assess the security capabilities of cloud service providers and AI systems. This questionnaire maps to the CSA Cloud Controls Matrix (CCM) and focuses on key security principles relevant to AI deployments, including data security, application security, and compliance. CAIQ Lite enables AI vendors to demonstrate their security posture without the extensive overhead of the full CAIQ, making it suitable for rapid vendor risk assessments.
 - **Resources**:
   - [What is the CAIQ (Consensus Assessment Initiative Questionnaire)?](https://www.vanta.com/collection/trust/caiq) (Vanta-APR2025)
 
-##### Vendor Security Alliance (VSA) Core questionnaire
+### General Items: Vendor Security Alliance (VSA) Core questionnaire
 The VSA Core questionnaire is a standardized security assessment tool developed by the Vendor Security Alliance to evaluate third-party vendor security practices, with specific considerations for AI systems. This questionnaire focuses on fundamental security controls across domains including data protection, access management, vulnerability management, and incident response. The VSA Core is designed to provide objective security assessment metrics while minimizing the burden on AI vendors, facilitating more efficient security reviews and enabling better comparison between different AI solution providers.
 - **Resources**:
   - [What is the VSAQ (Vendor Security Alliance Questionnaire)?](https://www.vanta.com/collection/trust/vendor-security-alliance-questionnaire) (Vanta-APR2025)
     
-#### SOC 2 Type 1
+### SOC 2 Type 1
 Point-in-time assessment of an organization's system and suitability of control design related to security, availability, processing integrity, confidentiality, and privacy.
 - **Resources:**
   - [How to incorporate AI considerations into your SOC2 examination](https://www.schellman.com/blog/soc-examinations/how-to-incorporate-ai-into-your-soc-2-examination#:~:text=While%20the%20SOC%202%20trust,Availability;)
   - [SOC 2 Type 1 vs Type 2](https://secureframe.com/hub/soc-2/type-1-vs-type-2)
   - [Audits as Instruments of Principled AI Governance](https://www.orfonline.org/research/audits-as-instruments-of-principled-ai-governance) (Observer Research Foundation Report-JAN2025)
   - [A Metric-Driven Security Analysis of Gaps in Current AI Standards](https://arxiv.org/abs/2502.08610) (arXiv-FEB2025)
-#### SOC 2 Type 2
+### SOC 2 Type 2
 Comprehensive assessment of control effectiveness over an extended period (typically 6-12 months), providing higher assurance levels than Type 1.
 - **SOC 2 Type 2 Report**
   - A detailed audit report conducted by an independent third-party auditor that evaluates the effectiveness of an organization's controls over a 6-12 month period against the AICPA Trust Services Criteria. For AI systems, this report includes specific attestations about data processing integrity, model governance, and security controls protecting AI operations and data. The report contains control descriptions, test procedures, and results demonstrating sustained compliance.
@@ -187,7 +184,7 @@ Comprehensive assessment of control effectiveness over an extended period (typic
   - [A Survey of Major Cybersecurity Compliance Frameworks](https://ieeexplore.ieee.org/abstract/document/10565236) (IEEE-BidDataSecurity-2024)
   - [STAR Program for AI](https://e.cloudsecurityalliance.org/STAR_AI) (CSA-APR2025)
   - [Securing the Future of AI: A Deep Compliance Review of Anthropic, Google DeepMind, and OpenAI Under SOC 2, ISO 27001, and NIST](https://www.tdcommons.org/dpubs_series/7951/) (TDcommons-APR2025)
-#### ISO 27001:2022
+### ISO 27001:2022
 International standard for information security management systems (ISMS), with specific considerations for AI systems.
 - **Statement of Applicability**
   - A formal document that identifies which controls from ISO 27001 Annex A are applicable to the organization's AI systems and explains the rationale for including or excluding specific controls. For AI systems, this typically includes specialized controls addressing model security, data protection during training and inference, and access controls for AI development environments. The document serves as the foundation for ISMS implementation and auditing.
@@ -199,7 +196,7 @@ International standard for information security management systems (ISMS), with 
   - [From COBIT to ISO 42001: Evaluating Cybersecurity Frameworks for Opportunities, Risks, and Regulatory Compliance in Commercializing Large Language Models](https://arxiv.org/abs/2402.15770) (arXiv preprint-FEB2024)
   - [Management of enterprise cyber security: A review of ISO/IEC 27001:2022](https://www.researchgate.net/publication/368911662_Management_of_enterprise_cyber_security_A_review_of_ISOIEC_270012022) (Journal of ICT Standardization-FEB2023)
   - [How emerging technologies are reshaping audit success factors](https://scholarsarchive.library.albany.edu/cgi/viewcontent.cgi?article=4431&context=legacy-etd) (PhD Dissertation, University at Albany, SUNY-APR2025)
-#### ISO/IEC 42001:2023
+### ISO/IEC 42001:2023
 The recently established international standard specifically addressing AI management systems and governance frameworks.
 - **Resources:**
   - [Comparison and Analysis of 3 Key AI Documents: EU’s Proposed AI Act, Assessment List for Trustworthy AI (ALTAI), and ISO/IEC 42001 AI Management System](https://link.springer.com/chapter/10.1007/978-3-031-26438-2_15) (AICS2022)
@@ -207,7 +204,7 @@ The recently established international standard specifically addressing AI manag
   - [From COBIT to ISO 42001: Evaluating Cybersecurity Frameworks for Opportunities, Risks, and Regulatory Compliance in Commercializing Large Language Models](https://arxiv.org/abs/2402.15770) (arXiv-FEB2024)
   - [AI Governance Frameworks: A Comparative Analysis for Responsible AI Development](https://ieeexplore.ieee.org/abstract/document/10317811/) (IEEE International Conference on Systems, Man, and Cybernetics - SMC 2023-OCT2023)
   - [Navigating geopolitics in AI governance](https://oxgs.org/2024/04/08/oxgs-report-navigating-geopolitics-in-ai-governance/) (Oxford Global Society Report-APR2024)
-#### Domain-specific Compliance: Finance
+### Domain-specific Compliance: Finance
 - **Financial AI Risk Assessment**
   - Documentation evaluating AI systems against financial regulatory requirements including model risk management guidelines (SR 11-7), consumer protection regulations, and anti-discrimination laws. This assessment identifies risks specific to AI use in financial decision-making and describes implemented controls.
 - **Model Governance Documentation**
@@ -220,8 +217,8 @@ The recently established international standard specifically addressing AI manag
   - [The European Union's Approach to Artificial Intelligence and the Challenge of Financial Systemic Risk](https://www.researchgate.net/publication/376852879_The_European_Union's_Approach_to_Artificial_Intelligence_and_the_Challenge_of_Financial_Systemic_Risk) (European Business Organization Law Review-DEC2023 / via ResearchGate) - *Analyzes EU AI Act applicability to financial systemic risk from AI.*
   - [Digital Finance in the EU: Navigating new technological trends and the AI revolution](https://cadmus.eui.eu/handle/1814/77926) (European University Institute Report-NOV2024) - *Note: Report discussing AI trends, regulation, and risks in EU digital finance.*
   - [Model Risk Management of AI and Machine Learning Systems](https://www.pwc.co.uk/data-analytics/documents/model-risk-management-of-ai-machine-learning-systems.pdf) (PwC UK White Paper-JUN2020) - *Highly relevant white paper discussing MRM for AI, referencing SR 11-7.*
-#### Domain-specific Compliance: Healthcare
-##### HIPAA
+### Domain-specific Compliance: Healthcare
+#### HIPAA
 Requirements specific to healthcare AI applications, focusing on protecting personal health information (PHI) in accordance with Health Insurance Portability and Accountability Act standards.
 - **Annual HIPAA SCA Report**
   - A formal security compliance assessment report that documents an organization's adherence to HIPAA Security, Privacy, and Breach Notification Rules in the context of AI systems handling PHI. The report evaluates controls protecting patient data throughout the AI lifecycle, including data collection, processing, model training, and inference. It contains detailed findings on administrative, physical, and technical safeguards implemented to protect the confidentiality, integrity, and availability of PHI processed by AI systems, along with any required remediation actions.
@@ -232,7 +229,7 @@ Requirements specific to healthcare AI applications, focusing on protecting pers
   - [AI Chatbots and Challenges of HIPAA Compliance for AI Developers and Vendors](https://www.researchgate.net/publication/378962258_AI_Chatbots_and_Challenges_of_HIPAA_Compliance_for_AI_Developers_and_Vendors) (Journal of Law, Medicine & Ethics-MAR2024) - *Analyzes specific HIPAA compliance challenges for AI chatbots.*
   - [Security and Privacy of Technologies in Health Information Systems: A Systematic Literature Review](https://www.mdpi.com/2073-431X/13/2/41) (Electronics-JAN2024) - *Reviews security/privacy technologies (IoT, blockchain, cloud) in HIS, discussing HIPAA context.*
   - [The Risk Assessment of the Security of Electronic Health Records Using Risk Matrix](https://www.mdpi.com/2076-3417/14/13/5785) (Applied Sciences-JUN2024) - *Focuses on EHR security risks within the HIPAA compliance landscape.*
-##### Other healthcare
+#### Other healthcare
 - **AI Medical Device Documentation**
   - For AI systems classified as medical devices, documentation demonstrating compliance with FDA requirements including pre-market submissions (510(k), De Novo, or PMA), quality system regulations, and post-market surveillance commitments.
 - **Clinical Validation Reports**
@@ -245,7 +242,7 @@ Requirements specific to healthcare AI applications, focusing on protecting pers
   - [Regulatory Frameworks for AI-Based Medical Devices: A Comparative Analysis](https://link.springer.com/article/10.1007/s10916-023-01958-y) (Journal of Medical Systems-MAY2023) - *Compares regulatory approaches (including FDA) for AI medical devices.*
   - [Validation of artificial intelligence in medical imaging: Radiology AITE checklist](https://pubs.rsna.org/doi/10.1148/ryai.230237) (Radiology: Artificial Intelligence-JAN2024)
 
-#### Domain-specific Compliance: Critical Infrastructure
+### Domain-specific Compliance: Critical Infrastructure
 - **Critical Infrastructure Protection Plan**
   - Documentation detailing how AI systems in critical infrastructure comply with relevant frameworks such as NIST Cybersecurity Framework, IEC 62443, or sector-specific guidelines. This includes security controls, resilience measures, and contingency planning.
 - **Operational Technology Security Assessment**
@@ -258,7 +255,7 @@ Requirements specific to healthcare AI applications, focusing on protecting pers
   - [AI-Driven Project Risk Management: Leveraging artificial intelligence to predict, mitigate, and manage project risks in critical infrastructure and national security projects](https://www.researchgate.net/publication/390521301_AI-Driven_Project_Risk_Management_Leveraging_artificial_intelligence_to_predict_mitigate_and_manage_project_risks_in_critical_infrastructure_and_national_security_projects) (Journal of Computer Science and Technology Studies-APR2025)
   - [Dynamic Cyber Resilience of Interdependent Critical Information Infrastructures](https://bspace.buid.ac.ae/handle/1234/1965) (PhD Thesis, British University in Dubai-FEB2022) - *Note: PhD Thesis focusing on resilience frameworks for critical infrastructure.*
 
-#### Domain-specific Compliance: Defense
+### Domain-specific Compliance: Defense
 - **Classification Compliance Documentation**
   - Documentation demonstrating that AI systems processing classified information adhere to relevant security classification guidelines, including data handling procedures, access controls, and security clearance requirements.
 - **Defense Acquisition Compliance Report**
@@ -272,10 +269,10 @@ Requirements specific to healthcare AI applications, focusing on protecting pers
   - [The Very Long Game: 25 Case Studies on the Global State of Defense AI](https://library.oapen.org/handle/20.500.12657/93630) (Springer-JUL2024)
   - [Ethical Considerations for AI in Defense: A Comparative Analysis of International Frameworks](https://ieeexplore.ieee.org/abstract/document/9762410/) (ISTAS-OCT2021)
 
-### S2\. Controls
+## S2\. Controls
 Technical and organizational controls that provide the foundation for securing AI systems throughout their lifecycle.
 
-#### S2\.a Infrastructure Diagrams
+### S2\.a Infrastructure Diagrams
 Visual representations of the AI system architecture, data flows, and security controls to support risk assessment and security planning.
 - **Resources:**
     - [Model-Based Systems Engineering for AI-Based Systems](https://arc.aiaa.org/doi/abs/10.2514/6.2023-2587) (AIAA2023)
@@ -285,7 +282,7 @@ Visual representations of the AI system architecture, data flows, and security c
     - [Model-driven architecture based security analysis](https://incose.onlinelibrary.wiley.com/doi/full/10.1002/sys.21581?casa_token=oeR-4hrafPAAAAAA%3AXxpL2K2XBVLKwk_D-lXRMhBT1Qu1zBNflZqwM-KK6D0Cn6zZC2XJoPcguPlbRYN7inCIrxnqHjGVweg) (Wiley-MAY2021)
     - [Integration of UML Diagrams from the Perspective of Enterprise Architecture](https://link.springer.com/chapter/10.1007/978-3-030-72651-5_44) (SpringerNatureLink-MAR2021)
 
-#### S2\.b Infrastructure Security
+### S2\.b Infrastructure Security
 Technical controls securing the underlying infrastructure supporting AI systems, including compute, storage, networking, and access management.
 - **Encryption**
   - The organization restricts privileged access to encryption keys to authorized users with a business need.
@@ -377,7 +374,7 @@ Technical controls securing the underlying infrastructure supporting AI systems,
     - [Security Hardening of Operating Systems: A Review of Techniques and Tools](https://www.sciencedirect.com/science/article/pii/S1877050922010868) (ICCS-JUL2022) - *Reviews general OS hardening techniques applicable to servers running AI workloads.*
     - [A Survey on DNS Encryption: Current Development, Malware Misuse, and Inference Techniques](https://dl.acm.org/doi/10.1145/3547331) (CSUR-DEC2022)
 
-#### S2\.c Organizational Security
+### S2\.c Organizational Security
 Administrative and procedural controls that establish security governance throughout the organization developing or operating AI systems.
 - **Asset disposal procedures**
   - The organization has electronic media containing confidential information purged or destroyed in accordance with best practices, and certificates of destruction are issued for each device destroyed.
@@ -447,7 +444,7 @@ Administrative and procedural controls that establish security governance throug
     - [Measuring the Impact of Security Awareness Training on Employee Behavior: A Longitudinal Study](https://dl.acm.org/doi/abs/10.1145/3485832.3485899) (ACM Conference on Computer and Communications Security- NOV2021) - *Presents a study measuring behavioral changes resulting from security training over time.*
     - [Human Factors in Cybersecurity: A Review of Current Trends and Future Directions](https://www.sciencedirect.com/science/article/pii/S2666389923000090) (Computers & Security-MAY2023) - *Reviews the role of human factors, including training and awareness, in overall cybersecurity posture.*
 
-#### S2\.d Product Security
+### S2\.d Product Security
 Security measures specifically integrated into AI products and services to protect against exploitation and unauthorized access.
 - **Data encryption**
   - The organization's datastores housing sensitive customer data are encrypted at rest.
@@ -475,7 +472,7 @@ Security measures specifically integrated into AI products and services to prote
     - [Adversarial Testing for Generative AI](https://developers.google.com/machine-learning/guides/adv-testing) (Google for Developers - DEC2024) - Describes a detailed workflow for adversarial testing, including identifying inputs, creating datasets, generating/annotating outputs, and reporting/mitigating findings.
     - [Toward a Comprehensive Framework for Ensuring Security and Privacy in Artificial Intelligence](https://www.mdpi.com/2079-9292/12/18/3786) (MDPI/Electronics - SEP2023) - Outlines key procedural elements within a security framework, including risk assessment steps, specific AI model security measures, monitoring and threat detection mechanisms (IDS, log analysis, real-time monitoring), and evaluation procedures like audits and penetration testing.
 
-#### S2\.e Internal Security Procedures
+### S2\.e Internal Security Procedures
 Operational security procedures for maintaining the security posture of AI systems throughout their lifecycle.
 - **Continuity and Disaster Recovery plans**
   - The organization has Business Continuity and Disaster Recovery Plans in place that outline communication plans in order to maintain information security continuity in the event of the unavailability of key personnel.
@@ -558,7 +555,7 @@ Operational security procedures for maintaining the security posture of AI syste
     - [Toward a Comprehensive Framework for Ensuring Security and Privacy in Artificial Intelligence](https://www.mdpi.com/2079-9292/12/18/3786) (MDPI/Electronics - SEP2023) - Proposes a framework encompassing key elements of a risk management program, including risk assessment (threat/vulnerability identification, impact assessment), defining security measures (mitigation), monitoring, and continuous evaluation.
     - [Risk Management Profile for Artificial Intelligence and Human Rights](https://2021-2025.state.gov/risk-management-profile-for-ai-and-human-rights/) (U.S. Department of State Guidance Document - JUL2024) - Provides guidance mapping human rights risks onto the NIST AI RMF (Govern, Map, Measure, Manage), offering a structured approach to identifying, assessing, and managing specific AI risks relevant to a documented program. *(Note: Government Guidance)*
     - [Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf) (NIST Technical Series Publication - JUL2024) - Official profile extending the NIST AI RMF, detailing unique risks of Generative AI and suggesting actions for risk management across the framework's functions (Govern, Map, Measure, Manage), serving as a basis for a documented program. *(Note: Government Framework Profile)*
-#### S2\.f Data and Privacy
+### S2\.f Data and Privacy
 Controls specific to protecting the confidentiality and integrity of data used in AI training and inference processes.
 - **Data retention procedures**
   - The organization has formal retention and disposal procedures in place to guide the secure retention and disposal of organization and customer data.
@@ -570,7 +567,7 @@ Controls specific to protecting the confidentiality and integrity of data used i
   - The organization has a data classification policy in place to help ensure that confidential data is properly secured and restricted to authorized personnel.
   - Resources: tba
 
-#### S2\.g Model Security
+### S2\.g Model Security
 - **Model poisoning protections**
   - Resources:
     - [Detecting and Preventing Data Poisoning Attacks on AI Models](https://arxiv.org/abs/2503.09302) (arXiv MAR2025)
@@ -602,8 +599,8 @@ Security controls, practices, and methodologies applied specifically to the MLOp
     - [Securing the AI supply chain: Mitigating vulnerabilities in AI model development and deployment](https://www.researchgate.net/publication/389890574_Securing_the_AI_supply_chain_Mitigating_vulnerabilities_in_AI_model_development_and_deployment) (ResearchGate Preprint - MAR2025) - Proposes a multi-layered security framework including elements like zero-trust architecture relevant for secure deployment pipelines, addressing supply chain risks impacting deployment. *(Note: Likely Peer-Reviewed)*
     - [Integrating Security into MLOps: A Framework for Risk Mitigation](https://iarjset.com/wp-content/uploads/2024/11/IARJSET.2024.111025.pdf) (IARJSET - NOV2024) - Addresses security challenges in model deployment, particularly API security (authentication, rate limiting, encryption) within the MLOps pipeline. *(Peer-Reviewed Journal Paper)*
     - [Secure the build and deployment pipeline](https://www.ncsc.gov.uk/collection/developers-collection/principles/secure-the-build-and-deployment-pipeline) (NCSC.GOV.UK - Undated, Recent) - Provides foundational secure deployment principles applicable to AI models, including trusting the pipeline infrastructure, controlling deployment triggers, automated testing, and managing secrets securely. *(Note: Government Guidance)*
-### S3\. Operations
-#### S3\.a Threat Intelligence
+## S3\. Operations
+### S3\.a Threat Intelligence
 Frameworks and methodologies for identifying, analyzing, and responding to emerging threats specific to AI systems, including model poisoning, evasion attacks, and data extraction techniques.
 - Resources:
   - [Coordinated Flaw Disclosure for AI: Beyond Security Vulnerabilities](https://dl.acm.org/doi/10.5555/3716662.3716686) (AAAI2024)
@@ -612,7 +609,7 @@ Frameworks and methodologies for identifying, analyzing, and responding to emerg
   - [Adversarial Threats to AI-Driven Systems: Exploring the Attack Surface of Machine Learning Models and Countermeasures](https://journaljerr.com/index.php/JERR/article/view/1413) (Olutimehin et al. - Journal of Engineering Research and Reports, Vol 27, Issue 3, FEB2025) - Analyzes the AI attack surface (data, model, deployment), quantifies attack success rates using frameworks like MITRE ATLAS, and evaluates countermeasures, contributing to threat analysis methodology. 
   - [Threat Intelligence in AI Platforms What You Need to Know](https://www.researchgate.net/publication/390040249_Threat_Intelligence_in_AI_Platforms_What_You_Need_to_Know) (ResearchGate Preprint- FEB2025) - Provides a guide to Threat Intelligence Platforms (TIPs), their features, types of intelligence, and example tools (including sharing platforms like MISP), offering context for tooling in AI threat intelligence. 
   - [Enhancing Proactive Cyber Defense: A Theoretical Framework for AI-Driven Predictive Cyber Threat Intelligence](https://www.rtic-journal.com/article/enhancing-proactive-cyber-defense-a-theoretical-framework-for-ai-driven-predictive-cyber-threat-16176) (Hasan et al. - Journal of Technologies Information and Communication, Vol 5, Issue 1, 2025) - Presents a framework using AI techniques for predictive threat intelligence, relevant for understanding advanced analysis methodologies.
-#### S3\.b Threat Hunting
+### S3\.b Threat Hunting
 Proactive approaches to identifying potential adversarial activities targeting AI systems before they manifest as security incidents.
 - Red teaming for AI systems
   - Resources:
@@ -677,7 +674,7 @@ Proactive approaches to identifying potential adversarial activities targeting A
     - [OpenAI's Approach to External Red Teaming for AI Models and Systems](https://arxiv.org/abs/2503.16431) (Arxiv-JAN2025)
     - [Defending against Data-Free Model Extraction by Distributionally Robust Defensive Training](https://openreview.net/forum?id=7DZAVpOoAK) (Golatkar et al. - OpenReview/NeurIPS 2023) - Proposes a defense (MeCo) against data-free model stealing attacks using robust training with input perturbations.
     - [Defense Against Model Stealing Based on Account-Aware Distribution Discrepancy](https://ojs.aaai.org/index.php/AAAI/article/view/32041) (Li et al. - AAAI 2025) - Introduces a non-parametric detector (ADD) to identify malicious queries indicative of model stealing attempts based on user account behavior.
-#### S3\.c Testing
+### S3\.c Testing
 - AI security testing methodologies
   - Resources:
     - ["AI Red Teaming: Applying Software TEVV for AI Evaluations"](https://www.cisa.gov/news-events/news/ai-red-teaming-applying-software-tevv-ai-evaluations) (Cybersecurity and Infrastructure Security Agency (CISA)-2025)
@@ -705,7 +702,7 @@ Proactive approaches to identifying potential adversarial activities targeting A
     - [AI Risk Management Framework (AI RMF 1.0)](https://www.nist.gov/itl/ai-risk-management-framework) (NIST - JAN2023 & ongoing updates) - A voluntary framework from the US National Institute of Standards and Technology providing principles and practices (Govern, Map, Measure, Manage) to guide the assessment and management of risks associated with AI systems. *(Note: Government Framework)*
     - [A Framework for Evaluating Emerging Cyberattack Capabilities of AI](https://arxiv.org/abs/2503.11917) (Brundage et al. - arXiv MAR2025) - Offers a framework specifically for evaluating the offensive potential of AI systems across cyberattack phases, contributing a risk assessment component to broader evaluation efforts.
 
-#### S3\.d Incident Response for AI Systems
+### S3\.d Incident Response for AI Systems
 AI-specific incident detection
   - Resources:
     - ["Anomaly Detection for Incident Response at Scale"](https://arxiv.org/abs/2403.00318) (arXiv-2024)
@@ -789,6 +786,7 @@ Security considerations for the AI development supply chain, including pre-train
   - ["Threat Modeling of Industrial Control Systems: A Systematic Literature Review"](https://www.sciencedirect.com/science/article/pii/S0167404823004534) (Computers & Security-2023)
   - ["Explainable AI for Cybersecurity Automation, Intelligence, and Threat Modeling"](https://www.sciencedirect.com/science/article/pii/S2405959524000572) (Journal of Information Security and Applications-2024)
   - ["Security and Privacy for Artificial Intelligence: Opportunities and Challenges"](https://arxiv.org/abs/2102.04661) (arXiv-2021)
+
 ## Privacy
 
 ### P1\. General Privacy
