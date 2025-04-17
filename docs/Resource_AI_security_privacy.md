@@ -151,41 +151,123 @@ This section outlines and provides resources related to the regulatory framework
   - [Addendum to GPT-4o System Card: Native image generation](https://cdn.openai.com/11998be9-5319-4302-bfbf-1167e093f1fb/Native_Image_Generation_System_Card.pdf) (MAR2025)
   - [Documentation Practices of Artificial Intelligence](https://arxiv.org/abs/2406.18620) (arXiv-JUN2024)
 
-### General Items: Standard Information Gathering (SIG) Lite questionnaire
+### General Items - The "Lite" Questionnaires
+#### Summary by Google Gemini Research
+Standardized questionnaires like SIG Lite, CAIQ Lite, and VSA Core offer efficiency and consistency for baseline evaluations but demonstrate varying degrees of applicability and notable limitations when confronted with the unique risk landscape of AI.
+
+SIG Lite, particularly with its 2024 update introducing an AI domain mapped to the NIST AI RMF and a dedicated SCRM domain, shows the most explicit adaptation towards addressing AI risks directly. However, its effectiveness is contingent on the specific subset of questions included from the comprehensive SIG Core. CAIQ Lite remains strongly focused on cloud security, providing essential assurance for AI systems deployed in the cloud but lacking inherent coverage of AI model-specific vulnerabilities. Its value lies in validating the security of the underlying platform. VSA Core offers a freely accessible option with a commendable focus on critical data privacy regulations (GDPR/CCPA), addressing a key AI risk area, but its coverage of technical AI security aspects appears limited in the Core version.
+
+A critical takeaway is that none of these 'Lite' or 'Core' questionnaires, in their current state, should be considered sufficient as standalone tools for comprehensively assessing vendors providing medium-to-high-risk AI systems. Their condensed nature, designed for speed and efficiency, inherently limits the depth required to probe complex technical vulnerabilities (like adversarial robustness or data poisoning resilience) and nuanced ethical considerations (like algorithmic bias and fairness) associated with AI. They serve best as an initial layer – establishing baseline security hygiene, checking cloud environment security, verifying privacy compliance, or initiating AI governance discussions – within a broader, more rigorous assessment strategy.
+
+Looking ahead, the evaluation of AI vendors will likely continue to evolve. We can anticipate further integration of AI-specific controls into standard questionnaires, potentially leading to more robust 'Lite' versions over time. The adoption and operationalization of frameworks like the NIST AI RMF will become increasingly central to demonstrating trustworthy AI practices. Furthermore, the limitations of static, point-in-time assessments will drive greater emphasis on evidence-based assurance, continuous monitoring, and potentially the use of AI itself to automate and enhance the TPRM process for AI vendors.
+
+Ultimately, building and maintaining trust in AI technologies necessitates rigorous security and ethical assessment throughout the entire supply chain. Organizations procuring AI solutions must proactively adapt their TPRM programs, moving beyond reliance on basic questionnaires. This requires embracing a hybrid approach that combines standardized baselines with tailored, in-depth, AI-specific inquiry, robust evidence validation, and ongoing monitoring to effectively manage the unique and evolving risks posed by third-party AI vendors.
+
+
+#### **Standard Information Gathering (SIG) Lite questionnaire**
 A streamlined version of the Shared Assessments SIG questionnaire that collects essential information about an organization's security controls, risk management practices, and compliance posture. The SIG Lite focuses on critical security domains with fewer questions than the comprehensive SIG, making it more accessible for AI vendors while still providing meaningful security assurance. It covers areas such as information security policies, access controls, data protection, and incident management specific to AI systems.
 - **Resources**:
-  - [What is the SIG questionnaire?](https://www.vanta.com/collection/trust/sig-questionnaire) (Vanta-APR2025)
-  - 
+  * [What is the SIG questionnaire?](https://www.vanta.com/collection/trust/sig-questionnaire) (Vanta-APR2025)
+  * [https://sharedassessments.org/about-sig/](https://sharedassessments.org/about-sig/)
+  * [https://www.prevalent.net/blog/sig-2024/](https://www.prevalent.net/blog/sig-2024/)
+  * [https://www.vanta.com/collection/trust/sig-questionnaire](https://www.vanta.com/collection/trust/sig-questionnaire)
+  * [https://www.upguard.com/blog/sig-questionnaire](https://www.upguard.com/blog/sig-questionnaire)
+  * [https://www.prevalent.net/blog/standard-information-gathering-sig-questionnaire-explained/](https://www.prevalent.net/blog/standard-information-gathering-sig-questionnaire-explained/)
+  * [https://www.centraleyes.com/sig-security-questionnaire/](https://www.centraleyes.com/sig-security-questionnaire/)
+  * [https://www.securitypalhq.com/blog/security-document-types](https://www.securitypalhq.com/blog/security-document-types)
+  * [https://www.venminder.com/press-releases/venminder-announces-integration-2024-sig-enhancing-third-party-risk-management-platform](https://www.venminder.com/press-releases/venminder-announces-integration-2024-sig-enhancing-third-party-risk-management-platform)
+  * [https://www.onetrust.com/blog/2022-sig-shared-assessments/](https://www.onetrust.com/blog/2022-sig-shared-assessments/)
+  * ([https://www.researchgate.net/publication/382858235\_Developing\_New\_Framework\_for\_Vendor\_Risk\_Assessment\_by\_Comparative\_Analysis](https://www.researchgate.net/publication/382858235_Developing_New_Framework_for_Vendor_Risk_Assessment_by_Comparative_Analysis))
 
-### General Items: Consensus Assessments Initiative Questionnaire (CAIQ) Lite questionnaire
+#### **General Items: Consensus Assessments Initiative Questionnaire (CAIQ) Lite questionnaire**
 Developed by the Cloud Security Alliance (CSA), the CAIQ Lite is a condensed version of the full CAIQ designed to assess the security capabilities of cloud service providers and AI systems. This questionnaire maps to the CSA Cloud Controls Matrix (CCM) and focuses on key security principles relevant to AI deployments, including data security, application security, and compliance. CAIQ Lite enables AI vendors to demonstrate their security posture without the extensive overhead of the full CAIQ, making it suitable for rapid vendor risk assessments.
 - **Resources**:
-  - [What is the CAIQ (Consensus Assessment Initiative Questionnaire)?](https://www.vanta.com/collection/trust/caiq) (Vanta-APR2025)
+  * [What is the CAIQ (Consensus Assessment Initiative Questionnaire)?](https://www.vanta.com/collection/trust/caiq) (Vanta-APR2025)
+  * [https://www.vanta.com/collection/trust/caiq](https://www.vanta.com/collection/trust/caiq)
+  * [https://cloudsecurityalliance.org/artifacts/consensus-assessments-initiative-questionnaire-v3-1](https://cloudsecurityalliance.org/artifacts/consensus-assessments-initiative-questionnaire-v3-1)
+  * [https://cloudsecurityalliance.org/blog/2019/03/01/introducing-caiq-lite](https://cloudsecurityalliance.org/blog/2019/03/01/introducing-caiq-lite)
+  * [https://www.servicenow.com/products/security-operations/what-is-caiq.html](https://www.servicenow.com/products/security-operations/what-is-caiq.html)
+  * [https://cloudsecurityalliance.org/artifacts/ccm-v4-0-implementation-guidelines](https://cloudsecurityalliance.org/artifacts/ccm-v4-0-implementation-guidelines)
 
-### General Items: Vendor Security Alliance (VSA) Core questionnaire
-The VSA Core questionnaire is a standardized security assessment tool developed by the Vendor Security Alliance to evaluate third-party vendor security practices, with specific considerations for AI systems. This questionnaire focuses on fundamental security controls across domains including data protection, access management, vulnerability management, and incident response. The VSA Core is designed to provide objective security assessment metrics while minimizing the burden on AI vendors, facilitating more efficient security reviews and enabling better comparison between different AI solution providers.
-- **Resources**:
-  - [What is the VSAQ (Vendor Security Alliance Questionnaire)?](https://www.vanta.com/collection/trust/vendor-security-alliance-questionnaire) (Vanta-APR2025)
     
-### SOC 2 Type 1
-Point-in-time assessment of an organization's system and suitability of control design related to security, availability, processing integrity, confidentiality, and privacy.
+### SOC 2
+#### Summary by Google Gemini Research
+The integration of Artificial Intelligence (AI) into critical business operations necessitates robust assurance regarding its security, reliability, and ethical governance. While these frameworks were not originally designed for AI's unique challenges, they offer a valuable foundation. SOC 2 Type 1 provides a baseline assessment of control design at a point in time, forcing initial documentation of security considerations for AI systems. However, its lack of operational testing limits its assurance value for dynamic AI environments. SOC 2 Type 2 significantly enhances assurance by evaluating the operating effectiveness of controls over an extended period, crucial for addressing ongoing AI operational requirements like model governance and continuous monitoring.
+
+For AI systems deployed in the cloud, the CSA STAR program, particularly when integrated with SOC 2 Type 2 (as STAR Attestation), adds essential cloud-specific security controls derived from the Cloud Controls Matrix (CCM). This combination addresses risks related to secure model storage, training environment security, and data protection in distributed cloud architectures.
+
+Despite their utility, SOC 2 and standard CSA STAR exhibit critical gaps concerning AI-specific risks such as algorithmic bias, model evasion, data poisoning, and explainability. Recognizing these limitations, the industry is moving towards specialized solutions. The SOC 2+ framework allows incorporating AI-specific criteria, such as controls from the ISO 42001 standard for AI Management Systems (AIMS), into a SOC 2 examination. Concurrently, the CSA is developing a dedicated STAR for AI program, featuring an AI Controls Matrix (AICM), to provide tailored assurance for AI services in the cloud.
+
+Ultimately, achieving comprehensive assurance for AI systems requires a multi-faceted strategy. Organizations should leverage SOC 2 Type 2 and CSA STAR as foundational elements for core security and cloud controls, supplement these with AI-specific risk assessments (e.g., using NIST AI RMF or ISO 42001 principles), and incorporate tailored AI controls through mechanisms like SOC 2+ or by adopting dedicated AI governance frameworks. Continuous vigilance and adaptation remain paramount in this rapidly evolving landscape.
+
+#### Type 1
+A SOC 2 Type 1 examination serves as an initial assessment within the SOC 2 framework, focusing on the controls at a service organization relevant to one or more of the Trust Services Criteria (TSC): Security (also known as the Common Criteria), Availability, Processing Integrity, Confidentiality, or Privacy. The primary objective of a Type 1 report is to evaluate the suitability of the design of these controls as of a specific point in time.
+
+An independent auditor assesses whether the controls, as designed and documented by the organization, are capable of meeting the applicable TSC if they were to operate effectively. Crucially, a Type 1 audit does not involve testing the operating effectiveness of these controls over a period. It provides a snapshot, confirming that the necessary policies, procedures, and control mechanisms have been conceptualized and put in place at that moment. Type 1 audits are generally less time-consuming and less expensive than Type 2 audits, often completed within weeks, making them a potential short-term solution for organizations needing to demonstrate initial compliance efforts quickly.
+
+While not created with AI in mind, the control design principles assessed in a SOC 2 Type 1 audit can be mapped to address the potential for certain AI-specific security risks, focusing purely on the design and implementation stage:
+- Data Poisoning: Controls relevant to mitigating data poisoning risks at the design stage can be assessed. This includes the design of data input validation mechanisms (Processing Integrity criteria 8), procedures for vetting the integrity and origin of training data sources (related to CC9.2 Vendor/Supply Chain Risk Management 8), and the design of logical access controls (CC6 series) to protect the confidentiality and integrity of training datasets.4 A Type 1 audit would verify if such controls are appropriately designed.
+- Model Evasion/Adversarial Attacks: The design of defenses against model evasion can be partially addressed. This involves assessing the design of input validation and sanitization routines intended to detect or block malicious inputs (Processing Integrity criteria 8), the design of system monitoring capabilities to detect anomalous behavior potentially indicative of an attack (related to CC4 Monitoring Activities 8), and the incorporation of security considerations within the AI model's software development lifecycle (SDLC) (CC8.1 Change Management 8). The Type 1 report attests to the suitability of these designs.
+- Privacy Risks (PII Handling): The design of controls to protect privacy when AI processes Personally Identifiable Information (PII) or other sensitive data falls squarely within the Confidentiality and Privacy TSCs.7 A Type 1 audit would assess the design of controls such as data minimization policies, de-identification techniques, encryption for data at rest and in transit, role-based access controls (CC6), and secure data retention and disposal procedures.7
+- Algorithmic Bias (Design Stage): SOC 2's applicability here is limited as it does not explicitly mandate bias detection or mitigation.2 However, certain design-stage controls could be tangentially relevant if included in the scope. For example, the design of processes within the SDLC (CC8.1) might include considerations for diverse data sourcing, specific data pre-processing steps aimed at fairness, or initial bias testing protocols before deployment. A Type 1 audit could verify the design of such documented processes if the organization defines them as controls against Processing Integrity or ethical objectives mapped to the TSCs.
+
 - **Resources:**
-  - [How to incorporate AI considerations into your SOC2 examination](https://www.schellman.com/blog/soc-examinations/how-to-incorporate-ai-into-your-soc-2-examination#:~:text=While%20the%20SOC%202%20trust,Availability;)
-  - [SOC 2 Type 1 vs Type 2](https://secureframe.com/hub/soc-2/type-1-vs-type-2)
-  - [Audits as Instruments of Principled AI Governance](https://www.orfonline.org/research/audits-as-instruments-of-principled-ai-governance) (Observer Research Foundation Report-JAN2025)
-  - [A Metric-Driven Security Analysis of Gaps in Current AI Standards](https://arxiv.org/abs/2502.08610) (arXiv-FEB2025)
-### SOC 2 Type 2
-Comprehensive assessment of control effectiveness over an extended period (typically 6-12 months), providing higher assurance levels than Type 1.
+  * [How to incorporate AI considerations into your SOC2 examination](https://www.schellman.com/blog/soc-examinations/how-to-incorporate-ai-into-your-soc-2-examination#:~:text=While%20the%20SOC%202%20trust,Availability;)
+  * [SOC 2 Type 1 vs Type 2](https://secureframe.com/hub/soc-2/type-1-vs-type-2)
+  * [Audits as Instruments of Principled AI Governance](https://www.orfonline.org/research/audits-as-instruments-of-principled-ai-governance) (Observer Research Foundation Report-JAN2025)
+  * [A Metric-Driven Security Analysis of Gaps in Current AI Standards](https://arxiv.org/abs/2502.08610) (arXiv-FEB2025)
+  * ([https://www.schellman.com/blog/soc-examinations/how-to-incorporate-ai-into-your-soc-2-examination](https://www.schellman.com/blog/soc-examinations/how-to-incorporate-ai-into-your-soc-2-examination)) [1]
+  * (https://secureframe.com/hub/soc-2/type-1-vs-type-2) [2]
+  * [Audits as Instruments of Principled AI Governance](https://www.orfonline.org/research/audits-as-instruments-of-principled-ai-governance) [3]
+  * ([https://scytale.ai/resources/the-essence-of-a-soc-2-compliance-gap-analysis/](https://scytale.ai/resources/the-essence-of-a-soc-2-compliance-gap-analysis/)) [4]
+  * ([https://scytale.ai/center/soc-2/soc-2-type-1-guide/](https://www.google.com/search?q=https://scytale.ai/center/soc-2/soc-2-type-1-guide/)) [5, 6]
+  * ([https://www.aicpa-cima.com/topic/audit-assurance/audit-and-assurance-greater-than-soc-2](https://www.aicpa-cima.com/topic/audit-assurance/audit-and-assurance-greater-than-soc-2)) [7, 8]
+  * ([https://www.prevalent.net/blog/aicpa-soc-2-third-party-risk-management/](https://www.prevalent.net/blog/aicpa-soc-2-third-party-risk-management/)) [9]
+  * ([https://workos.com/guide/the-developers-guide-to-soc-2-compliance](https://workos.com/guide/the-developers-guide-to-soc-2-compliance)) [10]
+  * ([https://linfordco.com/blog/soc-2-controls/](https://linfordco.com/blog/soc-2-controls/)) [11]
+  * ([https://www.auditfirm-example.com/whitepapers/soc2-ai-mapping](https://www.google.com/search?q=https://www.auditfirm-example.com/whitepapers/soc2-ai-mapping)) [11, 6, 12]
+#### Type 2
+Comprehensive assessment of control effectiveness over an extended period (typically 6-12 months), providing higher assurance levels than Type 1. The practical application of SOC 2 Type 1 to AI involves mapping the general requirements of the SOC 2 framework, particularly the Common Criteria (CC series) and any other selected TSCs, to the specific components and processes of the AI system during its design phase. This requires careful definition of the audit scope to include the relevant AI systems, data flows, and supporting infrastructure.4
+Based on guidance and common practice 8, examples of mapping include:
+- CC6 Series (Logical and Physical Access Controls): Designing controls to restrict access to AI models, training data, configuration parameters, and development/deployment environments based on the principle of least privilege.
+- CC4 Series (Monitoring Activities) & Processing Integrity (PI): Designing monitoring mechanisms to detect anomalies in AI inputs, outputs, or behavior (e.g., potential hallucinations, significant performance degradation) and designing input/output validation rules.
+- CC8.1 (Change Management / SDLC): Designing secure software development lifecycle practices specifically for AI models, including secure coding standards, vulnerability scanning of AI libraries, testing procedures (including security testing), and controlled deployment processes.
+- CC9.2 (Vendor Risk Management): Designing processes to assess and manage risks associated with third-party AI components, pre-trained models, or external data sources used by the AI system.
+Availability (A): Designing for redundancy, backups, and disaster recovery specifically for critical AI systems and their data.15
+Confidentiality (C) / Privacy (P): Designing data handling policies, encryption methods, and access controls for sensitive data processed or generated by the AI.7
+
+SOC 2 does not prescribe a specific list of controls; this flexibility allows organizations to tailor controls to their specific AI environment but also necessitates careful consideration to ensure the designed controls are truly adequate for the risks involved.16
+
 - **SOC 2 Type 2 Report**
   - A detailed audit report conducted by an independent third-party auditor that evaluates the effectiveness of an organization's controls over a 6-12 month period against the AICPA Trust Services Criteria. For AI systems, this report includes specific attestations about data processing integrity, model governance, and security controls protecting AI operations and data. The report contains control descriptions, test procedures, and results demonstrating sustained compliance.
 - **CSA STAR Report**
   - A specialized attestation report that combines SOC 2 examination with the Cloud Security Alliance's Cloud Controls Matrix, providing additional cloud-specific security assurances relevant to AI deployments. This report addresses cloud security controls specifically relevant to AI systems, such as secure model storage, training environment security, and data protection in distributed computing environments. It offers enhanced transparency about cloud security practices supporting AI operations.
 - **Resources:**
-  - [A Survey of Major Cybersecurity Compliance Frameworks](https://ieeexplore.ieee.org/abstract/document/10565236) (IEEE-BidDataSecurity-2024)
-  - [STAR Program for AI](https://e.cloudsecurityalliance.org/STAR_AI) (CSA-APR2025)
-  - [Securing the Future of AI: A Deep Compliance Review of Anthropic, Google DeepMind, and OpenAI Under SOC 2, ISO 27001, and NIST](https://www.tdcommons.org/dpubs_series/7951/) (TDcommons-APR2025)
+  * [A Survey of Major Cybersecurity Compliance Frameworks](https://ieeexplore.ieee.org/abstract/document/10565236) (IEEE-BidDataSecurity-2024)
+  * [STAR Program for AI](https://e.cloudsecurityalliance.org/STAR_AI) (CSA-APR2025)
+  * [Securing the Future of AI: A Deep Compliance Review of Anthropic, Google DeepMind, and OpenAI Under SOC 2, ISO 27001, and NIST](https://www.tdcommons.org/dpubs_series/7951/) (TDcommons-APR2025)
+  * (https://e.cloudsecurityalliance.org/STAR\_AI) [13]
+  * [AI Controls Matrix (AICM)](https://cloudsecurityalliance.org/artifacts/ai-controls-matrix) [14]
+  * ([https://secureframe.com/hub/soc-2/type-1-vs-type-2](https://secureframe.com/hub/soc-2/type-1-vs-type-2)) [2]
+  * ([https://cloudsecurityalliance.org/blog/2023/09/18/soc-2-and-iso-certifications-vs-csa-star](https://cloudsecurityalliance.org/blog/2023/09/18/soc-2-and-iso-certifications-vs-csa-star)) [15]
+  * ([https://accedere.io/soc\_csa](https://accedere.io/soc_csa)) [16]
+  * ([https://hyperproof.io/resource/csa-star-cloud-compliance/](https://hyperproof.io/resource/csa-star-cloud-compliance/)) [17]
+  * ([https://www.auditpeak.com/soc-2-compliance-in-ai-driven-businesses/](https://www.auditpeak.com/soc-2-compliance-in-ai-driven-businesses/)) [18]
+  * ([https://www.credo.ai/soc-2-type-ii](https://www.credo.ai/soc-2-type-ii)) [19]
+  * ([https://duplocloud.com/white-papers/soc-2-compliance-with-duplocloud/](https://duplocloud.com/white-papers/soc-2-compliance-with-duplocloud/)) [20]
+  * ([https://www.tdcommons.org/dpubs\_series/7951/](https://www.tdcommons.org/dpubs_series/7951/)) [21]
 ### ISO 27001:2022
 International standard for information security management systems (ISMS), with specific considerations for AI systems.
+
+Annex A of ISO 27001:2022 serves as a reference catalogue of 93 information security controls, providing potential treatments for risks identified through the ISMS risk assessment process.27 These controls are organized under four themes: Organizational (37 controls), People (8 controls), Physical (14 controls), and Technological (34 controls).16 Organizations select controls from Annex A based on their specific risk assessment and treatment decisions, documenting their choices in the Statement of Applicability.27 Several Annex A controls are particularly relevant for addressing AI-specific security risks:
+- Data Security Controls: Controls such as A.5.12 (Information classification), A.5.14 (Information transfer), A.8.10 (Information deletion), A.8.11 (Data masking), and A.8.12 (Data leakage prevention) are vital for protecting the confidentiality and integrity of sensitive data used for training AI models and during inference. These help mitigate risks like privacy breaches, unauthorized data disclosure, and ensure compliance with data protection regulations.6 Specifically, A.8.11 (Data masking) can be applied to protect Personally Identifiable Information (PII) when used in AI contexts.23
+- System & Software Security Controls: Controls like A.8.9 (Configuration management), A.8.23 (Web filtering), A.8.25 (Secure development life cycle), A.8.28 (Secure coding), and A.8.32 (Change management) are crucial for securing AI development environments, preventing vulnerabilities in AI platforms and models, managing secure deployment, and ensuring updates don't introduce new risks.7 A.8.25 and A.8.28, focusing on secure development practices, directly address risks introduced during the creation and coding of AI models and applications.7
+Threat & Vulnerability Management Controls: A.5.7 (Threat intelligence) enables organizations to collect and analyze information about threats targeting AI systems, including new attack vectors or vulnerabilities in specific AI frameworks.7 A.8.16 (Monitoring activities) supports the detection of anomalous behavior that might indicate attacks like model evasion or data poisoning attempts.7 Understanding the specific threat landscape for AI, as facilitated by A.5.7, is essential for effective defense.38
+- Access Control Controls: A.5.15 (Access control), A.5.18 (Access rights), and related identity management controls are fundamental for restricting access to sensitive AI models, training datasets, and development platforms to authorized personnel only. This mitigates risks of unauthorized model manipulation, data theft, or sabotage.7 Regular review of access rights, as specified in A.5.18, is critical, especially for privileged access.40
+- Cloud & Supplier Security Controls: With many AI services hosted in the cloud or involving third-party components, A.5.23 (Information security for use of cloud services) and A.5.19 (Information security in supplier relationships) are essential for managing the associated risks.7 This includes defining security responsibilities between the organization and cloud service providers or AI vendors.
+- Resilience Controls: A.5.30 (ICT readiness for business continuity) helps ensure that business processes reliant on AI systems can withstand and recover from disruptions.16
+- Personnel Security Controls: A.6.3 (Information security awareness, education and training) plays a role in ensuring staff understand AI-related security risks, their responsibilities, and safe operating procedures.26
+
 - **Statement of Applicability**
   - A formal document that identifies which controls from ISO 27001 Annex A are applicable to the organization's AI systems and explains the rationale for including or excluding specific controls. For AI systems, this typically includes specialized controls addressing model security, data protection during training and inference, and access controls for AI development environments. The document serves as the foundation for ISMS implementation and auditing.
 - **ISO 27001 Certificate**
@@ -196,14 +278,34 @@ International standard for information security management systems (ISMS), with 
   - [From COBIT to ISO 42001: Evaluating Cybersecurity Frameworks for Opportunities, Risks, and Regulatory Compliance in Commercializing Large Language Models](https://arxiv.org/abs/2402.15770) (arXiv preprint-FEB2024)
   - [Management of enterprise cyber security: A review of ISO/IEC 27001:2022](https://www.researchgate.net/publication/368911662_Management_of_enterprise_cyber_security_A_review_of_ISOIEC_270012022) (Journal of ICT Standardization-FEB2023)
   - [How emerging technologies are reshaping audit success factors](https://scholarsarchive.library.albany.edu/cgi/viewcontent.cgi?article=4431&context=legacy-etd) (PhD Dissertation, University at Albany, SUNY-APR2025)
+  - [https://advisera.com/articles/how-to-handle-artificial-intelligence-threats-using-iso-27001/](https://advisera.com/articles/how-to-handle-artificial-intelligence-threats-using-iso-27001/) [1]
+  - [https://www.isaca.org/resources/news-and-trends/newsletters/atisaca/2025/volume-1/securing-artificial-intelligence-opportunities-and-challenges](https://www.isaca.org/resources/news-and-trends/newsletters/atisaca/2025/volume-1/securing-artificial-intelligence-opportunities-and-challenges) [2]
+  - [https://www.osano.com/articles/ai-risk-management](https://www.osano.com/articles/ai-risk-management) [3, 4]
+  - [https://www.invicti.com/white-papers/application-security-according-to-iso-27001-invicti-ebook/](https://www.invicti.com/white-papers/application-security-according-to-iso-27001-invicti-ebook/) [5]
+  - [https://www.isms.online/iso-27001/annex-a/5-7-threat-intelligence-2022/](https://www.isms.online/iso-27001/annex-a/5-7-threat-intelligence-2022/) [6]
+  - [https://www.isms.online/iso-27001/annex-a/5-34-privacy-and-protection-of-pii-2022/](https://www.isms.online/iso-27001/annex-a/5-34-privacy-and-protection-of-pii-2022/) [7]
+  - [https://www.protiviti.com/us-en/whitepaper/iso-27001-2022-key-changes-and-approaches-transition](https://www.protiviti.com/us-en/whitepaper/iso-27001-2022-key-changes-and-approaches-transition) [8]
+  - [https://www.sgs.com/en/whitepapers/comparing-iso-iec-27001-2022-to-iso-iec-27001-2013-what-are-the-changes-form](https://www.sgs.com/en/whitepapers/comparing-iso-iec-27001-2022-to-iso-iec-27001-2013-what-are-the-changes-form) [9]
+  - [https://cetas.turing.ac.uk/publications/towards-secure-ai](https://cetas.turing.ac.uk/publications/towards-secure-ai) [10]
 ### ISO/IEC 42001:2023
-The recently established international standard specifically addressing AI management systems and governance frameworks.
+Published in December 2023, ISO/IEC 42001:2023 represents the first international management system standard specifically for Artificial Intelligence.1 Its primary purpose is to provide organizations with requirements and guidance for establishing, implementing, maintaining, and continually improving an AI Management System (AIMS).1 The standard aims to ensure the responsible development, deployment, and use of AI systems by addressing the unique challenges posed by this technology.18 This includes a strong focus on ethical considerations, transparency, accountability, managing bias, ensuring safety, data quality, security, and facilitating continuous learning and adaptation within AI systems.17 Key principles underpinning the standard include fairness, transparency, accountability, and security.5
+ISO 42001 marks a notable evolution from traditional IT management standards by embedding ethical considerations and the assessment of societal impacts directly into the core requirements of the management system.2 While standards like ISO 27001 primarily focus on protecting the organization's information assets based on the CIA triad 5, AI systems can introduce significant ethical challenges (like algorithmic bias and fairness issues) and have broader societal consequences (such as impacts on employment or the environment) that extend beyond the organization's immediate operational or security concerns.2 ISO 42001 explicitly incorporates requirements related to ethical principles, fairness, transparency, accountability, and the assessment of impacts on individuals and society through its main clauses (e.g., Clause 5 on Leadership, Clause 8 on Operation including impact assessments) and its Annex A controls.9 This integration mandates a proactive approach to responsible AI, making ethical governance an intrinsic and auditable component of the management system itself, rather than an optional overlay.
 - **Resources:**
   - [Comparison and Analysis of 3 Key AI Documents: EU’s Proposed AI Act, Assessment List for Trustworthy AI (ALTAI), and ISO/IEC 42001 AI Management System](https://link.springer.com/chapter/10.1007/978-3-031-26438-2_15) (AICS2022)
   - [ISO/IEC quality standards for AI engineering](https://www.sciencedirect.com/science/article/abs/pii/S1574013724000650) (ComputerScienceReview-NOV2024)
   - [From COBIT to ISO 42001: Evaluating Cybersecurity Frameworks for Opportunities, Risks, and Regulatory Compliance in Commercializing Large Language Models](https://arxiv.org/abs/2402.15770) (arXiv-FEB2024)
   - [AI Governance Frameworks: A Comparative Analysis for Responsible AI Development](https://ieeexplore.ieee.org/abstract/document/10317811/) (IEEE International Conference on Systems, Man, and Cybernetics - SMC 2023-OCT2023)
   - [Navigating geopolitics in AI governance](https://oxgs.org/2024/04/08/oxgs-report-navigating-geopolitics-in-ai-governance/) (Oxford Global Society Report-APR2024)
+  - [https://kpmg.com/ch/en/insights/artificial-intelligence/iso-iec-42001.html](https://kpmg.com/ch/en/insights/artificial-intelligence/iso-iec-42001.html) [11]
+  - [https://www.ey.com/en\_us/insights/ai/iso-42001-paving-the-way-for-ethical-ai](https://www.ey.com/en_us/insights/ai/iso-42001-paving-the-way-for-ethical-ai) [12]
+  - [https://www.schellman.com/blog/iso-certifications/how-to-assess-and-treat-ai-risks-and-impacts-with-iso42001](https://www.schellman.com/blog/iso-certifications/how-to-assess-and-treat-ai-risks-and-impacts-with-iso42001) [13]
+  - [https://www.standards.org.au/documents/understanding-42001-ai-management-system-standard-whitepaper](https://www.standards.org.au/documents/understanding-42001-ai-management-system-standard-whitepaper) [14]
+  - [https://pages.bsigroup.com/42001:2023](https://pages.bsigroup.com/42001:2023) [15]
+  - [https://pecb.com/article/navigating-iso-standards-and-ai-governance-for-a-secure-future](https://pecb.com/article/navigating-iso-standards-and-ai-governance-for-a-secure-future) [16]
+  - [https://www.isms.online/iso-42001/annex-a-controls/](https://www.isms.online/iso-42001/annex-a-controls/) [17]
+  - [https://www.sgs.com/-/media/sgscorp/documents/corporate/brochures/sgs-ba-ai-whitepaper-en.cdn.en.pdf](https://www.google.com/search?q=https://www.sgs.com/-/media/sgscorp/documents/corporate/brochures/sgs-ba-ai-whitepaper-en.cdn.en.pdf) [18]
+  - [https://elevateconsult.com/insights/how-iso-42001-overlaps-with-iso-27001-and-iso-9001/](https://elevateconsult.com/insights/how-iso-42001-overlaps-with-iso-27001-and-iso-9001/) [19]
+  - [https://cloudsecurityalliance.org/blog/2025/01/29/how-can-iso-iec-42001-nist-ai-rmf-help-comply-with-the-eu-ai-act](https://cloudsecurityalliance.org/blog/2025/01/29/how-can-iso-iec-42001-nist-ai-rmf-help-comply-with-the-eu-ai-act) [20]
 ### Domain-specific Compliance: Finance
 - **Financial AI Risk Assessment**
   - Documentation evaluating AI systems against financial regulatory requirements including model risk management guidelines (SR 11-7), consumer protection regulations, and anti-discrimination laws. This assessment identifies risks specific to AI use in financial decision-making and describes implemented controls.
