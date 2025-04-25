@@ -2,6 +2,7 @@
 A red teaming tool for Generative AI.
 
 ## Announcement
+- 24APR: ViolentUTF now moves on to the final round of the [CyberWarrior 2025 - Applied LLM Challenge](https://www.svcsi.org/events-1/cyberwarrior-2025-applied-llm-challenge) so the codes will stay under embargo until the winners are announced in June 2025. The first release will immediately dropped immediately after the competition is over.
 - 06MAR: I'm enrolling violentUTF to [CyberWarrior 2025 - Applied LLM Challenge](https://www.svcsi.org/events-1/cyberwarrior-2025-applied-llm-challenge) so the inition code push will not happen at least until the Demo Paper submission deadline is passed (27APR).
 - A while ago: Please stand by for the initial nightly-build release (scheduled for early March). 
 
