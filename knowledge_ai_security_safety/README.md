@@ -3,7 +3,7 @@
 ## Forewords
 This folder serves as a resource guide for addressing security, privacy, and other concerns in artificial intelligence systems. It outlines frameworks, controls, and attack/defense practices to help organizations implement robust AI security measures and privacy protections.
 
-This folder is a living folder with more sub-folders and knowledge items (the json files) to be added overtime. The grounding and tool for preparing the knowledge items can be found in the `specification_for_knowledge_extraction/SKEO`.
+This folder is a living folder with more sub-folders and knowledge items (the json files) to be added overtime. The grounding and tool for preparing the knowledge items can be found in the [SKEO-Structured Knowledge Extractor Ontology](https://github.com/Cybonto/SKEO) repository.
 
 ## Table of Contents
 
