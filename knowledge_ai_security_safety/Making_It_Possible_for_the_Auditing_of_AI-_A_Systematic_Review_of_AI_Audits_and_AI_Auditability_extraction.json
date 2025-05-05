@@ -1,0 +1,382 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "764af02c7b7a480788de87100f9cd634",
+      "title": "Making it possible for the auditing of ai: A systematic review of ai audits and ai auditability",
+      "authors": [
+        {
+          "name": "Y Li"
+        },
+        {
+          "name": "S Goel"
+        }
+      ],
+      "abstract": "Artificial intelligence (AI) technologies have become the key driver of innovation in society. However, numerous vulnerabilities of AI systems can lead to negative consequences for society, such as biases encoded in the training data and algorithms and lack of transparency. This calls for AI systems to be audited to ensure that the impact on society is understood and mitigated. To enable AI audits, auditability measures need to be implemented. This study provides a systematic review of academic work and regulatory work on AI audits and AI auditability. Results reveal the current understanding of the AI audit scope, audit challenges, and auditability measures. We identify and categorize AI auditability measures for each audit area and specific process to be audited and the party responsible for each process to be audited. Our findings will guide existing efforts to make AI systems auditable across the lifecycle of AI systems.\n\nKeywords Artificial intelligence (AI) · AI audits · Auditability · Accountability · Transparency · Explainability",
+      "doi": "10.1007/s10796-024-10508-8",
+      "publicationDate": "2024",
+      "journal": "Information Systems Frontiers, 2024",
+      "volume": "1",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "Artificial intelligence (AI)",
+        "AI audits",
+        "Auditability",
+        "Accountability",
+        "Transparency",
+        "Explainability"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/Making It Possible for the Auditing of AI- A Systematic Review of AI Audits and AI Auditability.pdf",
+      "fileUrl": "https://link.springer.com/article/10.1007/s10796-024-10508-8",
+      "extractionDate": "2025-04-28T22:43:08.681581",
+      "extractionConfidenceScore": 0.8519
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "8c3f0a7de322482b9187173e386f4b55",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence, AI Audits, AI Auditability",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [
+        {
+          "name": "Management and Business Department, Skidmore College",
+          "location": "815 North Broadway, Saratoga Springs, NY 12866, USA"
+        },
+        {
+          "name": "Department of Information Security and Digital Forensics, School of Business, University at Albany, State University of New York",
+          "location": "1400 Washington Ave, Albany, NY 12222, USA"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "efc16b39566b4377b422054ad41b10b5",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "764af02c7b7a480788de87100f9cd634"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "ffff7d867da54f57935eaf263fb5c485",
+      "problemStatement": "The core research problem addressed is the lack of effective and efficient auditing mechanisms for AI systems to ensure their lawfulness, ethics, and technical robustness, which is greatly understudied. This includes the need for implementing auditability measures to enable AI audits across the lifecycle of AI systems.",
+      "problemScope": "The scope includes academic and regulatory work on AI audits and AI auditability, categorizing AI auditability measures, identifying responsible parties for each audit process, and providing a roadmap for future studies.",
+      "problemType": "DesignProblem",
+      "problemImportance": "The problem is significant because vulnerabilities in AI systems can lead to negative societal consequences, such as biases, lack of transparency, and human rights violations. Ensuring AI systems are auditable is crucial for mitigating these risks.",
+      "businessRelevance": "Auditable AI systems are essential for organizations to ensure compliance with regulations, maintain public trust, and prevent reputational damage. The economic impact includes potential cost savings from early detection of issues and avoidance of penalties for non-compliance.",
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "c13e0275b9804449b24146f0143e5c6d",
+      "gapDescription": "Lack of universally accepted and formal standard that defines the audit scope and audit procedures for AI audits",
+      "relatedDomain": "AI Auditing Standards",
+      "gapSignificance": "To ensure effective and efficient audits of AI systems for lawfulness, ethics, and technical robustness",
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "24cfc2a71dde4aa78aa0d9caa899b965",
+      "gapDescription": "Insufficient operationalization of AI governance processes",
+      "relatedDomain": "AI Governance",
+      "gapSignificance": "To address immature AI governance implementation and questionable effectiveness of ethical standards and regulations",
+      "extractionConfidence": 0.8,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "c58c769375fe4302bc27e603e1b16d3b",
+      "gapDescription": "Lack of specific details guiding AI developers and operators to implement auditability across the lifecycle of an AI system",
+      "relatedDomain": "AI System Development and Operation",
+      "gapSignificance": "To translate the principle of AI auditability into actionable measures and enhance the potential for audits",
+      "extractionConfidence": 0.85,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "5a42839c4d1c43b380520d0dc838bdfc",
+      "gapDescription": "Need for a comprehensive review of existing literature on AI governance and AI auditing, alongside detailed guidance on implementing AI principles in practice",
+      "relatedDomain": "AI Governance and Auditing Literature",
+      "gapSignificance": "To unify the understanding and practices of AI governance and auditing",
+      "extractionConfidence": 0.8,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "bf0b5836ebe24239816dfa2ee7d902c0",
+      "gapDescription": "Lack of established procedures or certificates to qualify auditors for executing audit work in the algorithmic context",
+      "relatedDomain": "AI Auditor Qualification",
+      "gapSignificance": "To ensure that AI auditors are properly qualified and capable of conducting thorough and effective audits",
+      "extractionConfidence": 0.85,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "3fa5f995fcf84d75b2790f5eb2f3ed29",
+      "gapDescription": "Absence of proactive and holistic auditing tools appropriate for external audits",
+      "relatedDomain": "AI Auditing Tools",
+      "gapSignificance": "To enable external auditors to perform comprehensive audits without full access to the AI system's internal processes",
+      "extractionConfidence": 0.8,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "090175bf52564153905336417d934664",
+      "gapDescription": "Lack of research investment in both auditability standards and auditor competency",
+      "relatedDomain": "AI Auditability and Auditor Competency Research",
+      "gapSignificance": "To develop standards and training that ensure future AI systems are auditable and that auditors are competent",
+      "extractionConfidence": 0.8,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "94c7d5b6e0984d35993a0fb7e989b644",
+      "questionText": "What is the current state of the literature on AI audits?",
+      "questionType": "Descriptive",
+      "relatedVariables": [],
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485",
+      "addressesGap": "c13e0275b9804449b24146f0143e5c6d"
+    },
+    {
+      "internal_id": "e903376592f54391b9f9a43c7c8d5278",
+      "questionText": "What are the challenges of AI audits?",
+      "questionType": "Exploratory",
+      "relatedVariables": [],
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485",
+      "addressesGap": "c13e0275b9804449b24146f0143e5c6d"
+    },
+    {
+      "internal_id": "45612855c5de45dc89192070a8c7b031",
+      "questionText": "What major studies address auditability measures for AI systems?",
+      "questionType": "Descriptive",
+      "relatedVariables": [],
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485",
+      "addressesGap": "c13e0275b9804449b24146f0143e5c6d"
+    },
+    {
+      "internal_id": "2a432aa9270840e08ea0c154de958c14",
+      "questionText": "What auditability measures are implemented at different phases of AI systems?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Auditability measures",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Phases of AI systems",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485",
+      "addressesGap": "c13e0275b9804449b24146f0143e5c6d"
+    },
+    {
+      "internal_id": "0d5c7a567da943d5bff7212d1c85ca76",
+      "questionText": "Who are the responsible parties for each phase of the AI system audit?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Responsible parties",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Phase of AI system audit",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485",
+      "addressesGap": "c13e0275b9804449b24146f0143e5c6d"
+    },
+    {
+      "internal_id": "73bc04d0d36b4333a4043033f3238eb6",
+      "questionText": "What roadmap can be provided for future AI audit and AI auditability studies?",
+      "questionType": "Exploratory",
+      "relatedVariables": [],
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485",
+      "addressesGap": "c13e0275b9804449b24146f0143e5c6d"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "d1cfbca3e18343309547a91e482b9ef9",
+      "directionDescription": "Invest in relevant research on both auditability standards and auditor competency.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "addressesGap": "c13e0275b9804449b24146f0143e5c6d"
+    },
+    {
+      "internal_id": "7075974d98834037995d184709991144",
+      "directionDescription": "Design and implement proper training for current and future AI developers on developing auditable AI systems.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "addressesGap": "c13e0275b9804449b24146f0143e5c6d"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "20fab013f13d429bb80db1154ceba646",
+      "challengeDescription": "Complexity of AI systems making the audit more difficult due to large amounts of data privileging quantity over quality, with little attention to social context.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "27f26044ade1472e841df0e495831a7d",
+      "challengeDescription": "Lack of explainability in AI systems contributes to the difficulty in tracing model output back to requirements and identifying responsible actors.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.85,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "526ad20842474fa8aeded941cd6aa731",
+      "challengeDescription": "Insufficient documentation and traceable logs of governance processes and policies complicating the audit process.",
+      "challengeType": "TheoryGap",
+      "severity": "Moderate",
+      "extractionConfidence": 0.8,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "a24e6db4ea724ec2b7d4becf32039d73",
+      "challengeDescription": "Underdeveloped regulations and guidance worldwide, leading to inconsistency in AI audit scope, methodology, and evaluation metrics.",
+      "challengeType": "TheoryGap",
+      "severity": "Fundamental",
+      "extractionConfidence": 0.9,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "8c8783711be04ce58a5344352da0a4ac",
+      "challengeDescription": "Lack of proactive and holistic auditing tools as well as appropriate and competent auditors for AI audits.",
+      "challengeType": "Other",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    },
+    {
+      "internal_id": "c9810e7573094875a2e9eedd19cfb365",
+      "challengeDescription": "Ambiguity in regulatory frameworks allowing non-compliant developers to claim fairness in their algorithms.",
+      "challengeType": "TheoryGap",
+      "severity": "Moderate",
+      "extractionConfidence": 0.75,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "relatedProblem": "ffff7d867da54f57935eaf263fb5c485"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "ce19e82b7a3645cdb78c53cb9b4528fc",
+      "name": "Systematic Review of AI Audits and AI Auditability",
+      "description": "The study employs a systematic literature review (SLR) methodology to analyze academic and regulatory work on AI audits and AI auditability. The review aims to synthesize the current understanding of AI audit scope, challenges, and auditability measures, categorize AI auditability measures for each audit area, and identify responsible parties for each process to be audited.",
+      "studyDesign": {
+        "designType": "SystematicReview",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The systematic review was conducted by scanning bibliographies of key papers, performing a comprehensive bibliographic search, and screening based on inclusion criteria. The review included academic publications and policy/technical documents."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Literature Selection",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Scanning the bibliographies of seven well-cited papers addressing AI auditability.",
+              "inputs": "Bibliographies of key papers",
+              "outputs": "31 articles identified",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Performing a comprehensive bibliographic search in the ACM Digital Library and Google Scholar using specific search terms.",
+              "inputs": "Search terms",
+              "outputs": "30,641 search results",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Screening based on inclusion criteria by reading abstracts and full texts.",
+              "inputs": "Abstracts and full texts of articles",
+              "outputs": "140 studies included in final set",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure for selecting literature involved scanning bibliographies of key papers, searching academic databases, and screening for relevance based on inclusion criteria."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "QualitativeContentAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The analysis involved categorizing the literature based on bibliographic source and methodology, and providing a chronological overview of AI auditing research. The review also identified types of AI audits, challenges, and the roles of internal and external audits."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TextualDescription",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The study presents a systematic review of the literature on AI audits and auditability, categorizing the findings and providing a roadmap for future research. The results are represented in tabular and textual formats, including a chronological overview and categorization of studies."
+      },
+      "extractionConfidence": 0.95,
+      "paper": "764af02c7b7a480788de87100f9cd634",
+      "researchProblem": "ffff7d867da54f57935eaf263fb5c485"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "415f442e316b4e2c828fc010b4ddc55d",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "ce19e82b7a3645cdb78c53cb9b4528fc"
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@ A red teaming tool for Generative AI.
 
 ## Folder Structure
 ```
-violentutf/
+/
 ├── README.md
 ├── env.sample 
 ├── Guide_RedTeaming_GenAIsystems.md
@@ -22,17 +22,20 @@ violentutf/
 ├── config.py          # Configuration settings
 ├── requirements.txt   # Requirement file
 ├── api/               # API package
-│   ├── api.py     # Include all routers
-│   └── endpoints/ # Individual endpoints
+│   ├── __init__.py
+│   └── v1
 │       ├── __init__.py
-│       ├── hello.py                 # Hello World endpoint
-│       ├── memory.py                # Memory configuration endpoints
-│       ├── targets.py               # Target configuration endpoints
-│       ├── datasets.py              # Dataset configuration endpoints
-│       ├── converters.py            # Converter configuration endpoints
-│       ├── scorers.py               # Scorer configuration endpoints
-│       ├── orchestrators.py         # Orchestrator configuration endpoints
-│       └── reports.py               # Report generation endpoints
+│       ├── api.py     # Include all routers
+│       └── endpoints/ # Individual endpoints
+│           ├── __init__.py
+│           ├── hello.py                 # Hello World endpoint
+│           ├── memory.py                # Memory configuration endpoints
+│           ├── targets.py               # Target configuration endpoints
+│           ├── datasets.py              # Dataset configuration endpoints
+│           ├── converters.py            # Converter configuration endpoints
+│           ├── scorers.py               # Scorer configuration endpoints
+│           ├── orchestrators.py         # Orchestrator configuration endpoints
+│           └── reports.py               # Report generation endpoints
 ├── app_data
 |   ├── .gitignore
 |   ├── simplechat     # A simple chat application's data

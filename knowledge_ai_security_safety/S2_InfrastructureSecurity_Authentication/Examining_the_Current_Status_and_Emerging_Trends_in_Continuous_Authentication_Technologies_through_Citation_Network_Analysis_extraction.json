@@ -1,0 +1,469 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "b1a88bf3d4fa4775853a8210db72bcba",
+      "title": "Examining the current status and emerging trends in continuous authentication technologies through citation network analysis",
+      "authors": [
+        {
+          "name": "JJ Jeong"
+        },
+        {
+          "name": "Y Zolotavkin"
+        },
+        {
+          "name": "R Doss"
+        }
+      ],
+      "abstract": "Continuous Authentication (CA) technologies enable users to be authenticated beyond just the point of entry. In this article, we conduct a comprehensive review of over 2,300 articles to (a) identify the main components of CA research to date, and (b) explore the current gaps and future research directions. Through a Citation Network Analysis (CNA), we identified that there are currently three primary focus research areas on CA Keystroke Dynamics; Mouse Movements; and Mobile Device Touch, as well as identify an emerging trend in more recent studies on multi-modal CA authentication which utilises the numerous sensors that are embedded in modern mobile devices. This study also highlights the current gaps in the literature such as the need for a consensus over how to evaluate the application and utility of CA, and the need to examine the feasibility of CA technologies that currently exist based on more use case studies.",
+      "doi": "10.1145/3533705",
+      "publicationDate": "2022",
+      "journal": "ACM Computing Surveys, 2022",
+      "volume": "2",
+      "issue": "",
+      "pages": "300",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_InfrastructureSecurity_Authentication/Examining the Current Status and Emerging Trends in Continuous Authentication Technologies through Citation Network Analysis.pdf",
+      "fileUrl": "https://dl.acm.org/doi/abs/10.1145/3533705",
+      "extractionDate": "2025-04-29T07:21:01.432942",
+      "extractionConfidenceScore": 0.7778
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "3106fed4d31b4725908405d609c22d23",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cyber Security, Continuous Authentication Technologies",
+      "associatedProject": "Cooperative Research Centres Program",
+      "fundingSources": [
+        {
+          "funderName": "Cyber Security Research Centre Limited",
+          "grantNumber": null
+        },
+        {
+          "funderName": "Australian Government",
+          "grantNumber": null
+        }
+      ],
+      "institutions": [
+        {
+          "name": "Cyber Security Cooperative Research Centre",
+          "location": null
+        },
+        {
+          "name": "Deakin University-Centre for Cyber Security Research and Innovation (CSRI)",
+          "location": "Geelong, Victoria"
+        }
+      ],
+      "extractionConfidence": 0.95,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "7cbd0c37796c483b9692ab30be5fe135",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.4,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "91a8764bdbf14bb69b0b51eccaca1b64",
+      "problemStatement": "The research problem is the fragmented and silo-ed nature of Continuous Authentication (CA) research, which has resulted in a lack of consensus on evaluation methods, and the need to examine the feasibility of CA technologies based on use case studies. The study aims to identify the main components of CA research to date, explore current gaps, and future research directions.",
+      "problemScope": "The scope includes a comprehensive review of over 2,300 articles to understand the current status and emerging trends in CA technologies, focusing on Keystroke Dynamics, Mouse Movements, Mobile Device Touch, and multi-modal CA authentication.",
+      "problemType": "KnowledgeProblem",
+      "problemImportance": "Understanding and addressing the core issues in CA research is critical for improving the security of digital authentication systems, which is a growing concern for many institutions in the digital age.",
+      "businessRelevance": "The problem is relevant to businesses and industries that rely on digital authentication systems to secure user access and data. Solving the problem could lead to more robust and reliable authentication methods, enhancing security and user trust in digital services.",
+      "extractionConfidence": 0.9,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "79197ab6ab6341509773d3c4ddddda52",
+      "gapDescription": "Need for a consensus over how to evaluate the application and utility of Continuous Authentication (CA), including acceptable benchmarking for evaluation metrics such as Equal Error Rates (EER).",
+      "relatedDomain": "Continuous Authentication Technologies",
+      "gapSignificance": "Establishing a consensus is crucial for comparing different device and technique combinations for CA and for determining the efficacy of CA systems.",
+      "extractionConfidence": 0.9,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "1232b44993ed4fe0be0ab865ef8c96ca",
+      "gapDescription": "Lack of examination of the feasibility of CA technologies based on real use case studies.",
+      "relatedDomain": "Continuous Authentication Technologies",
+      "gapSignificance": "Real use case studies are essential to understand the practical applications and limitations of CA technologies in different settings.",
+      "extractionConfidence": 0.9,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "0fb4ccdba21b4ec58c9d36bcd3b6f736",
+      "gapDescription": "Insufficient research on the security and privacy concerns associated with CA technologies, including protection of templates and signals collected during CA sessions.",
+      "relatedDomain": "Continuous Authentication Technologies",
+      "gapSignificance": "Addressing security and privacy concerns is vital for user acceptance and for protecting users against potential adversarial attacks.",
+      "extractionConfidence": 0.85,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "7a70ec69cbf24efa9b2a22df3df2498c",
+      "gapDescription": "Lack of systematic frameworks and methodologies for cross-comparative studies to determine the efficacy of CA systems.",
+      "relatedDomain": "Continuous Authentication Technologies",
+      "gapSignificance": "Systematic frameworks and methodologies are needed to structure future studies for effective comparison and evaluation of CA systems.",
+      "extractionConfidence": 0.85,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "51c3adbe39274a87b2af6eb45ef1e0f5",
+      "gapDescription": "Absence of studies examining the feasibility of device and technique combinations for CA purposes based on different settings, such as remote or on-premises CA processes.",
+      "relatedDomain": "Continuous Authentication Technologies",
+      "gapSignificance": "Understanding the feasibility of CA in various settings is important for designing CA systems that are adaptable to different environments and user needs.",
+      "extractionConfidence": 0.85,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "4656c577509d44d095a0d73f1a6676cc",
+      "questionText": "What are the currently established research agendas on CA?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Continuous Authentication (CA) research agendas",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64",
+      "addressesGap": "79197ab6ab6341509773d3c4ddddda52"
+    },
+    {
+      "internal_id": "3ced76a5806c4057a04014b498657897",
+      "questionText": "What are the emerging research trends and current knowledge gaps pertaining to CA?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Emerging research trends in Continuous Authentication (CA)",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Knowledge gaps in Continuous Authentication (CA)",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64",
+      "addressesGap": "79197ab6ab6341509773d3c4ddddda52"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "b5cc32e30da84cada650fb1064db15eb",
+      "challengeDescription": "Need for a consensus over how to evaluate the application and utility of CA, and the need to examine the feasibility of CA technologies based on more use case studies.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "a021a645c0664651b59a851aec301c06",
+      "challengeDescription": "Current gaps in the literature such as the need for a consensus over how to evaluate the application and utility of CA, and the need to examine the feasibility of CA technologies that currently exist based on more use case studies.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "ecbd1065f0f04c54af86f59320096f72",
+      "challengeDescription": "Challenges surrounding privacy, security, and usability concerns in real-life applications of CA technology.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "6ae2cb9758b14104bf640abd1f1ae5b5",
+      "challengeDescription": "CA techniques that depend on specialised hardware and/or require users to carry additional devices raise concerns about its perceived intrusive nature.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "d2fbf650674344d68f35160048a7de3f",
+      "challengeDescription": "The scope and breadth of the body of knowledge on CA transpire across multiple disciplinary areas, making it difficult to grasp the full picture.",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "e8959ad57cfa437692318a6c0ef29623",
+      "challengeDescription": "The efficacy of multi-modal methods of biometric authentication technologies is yet to be fully tested due to discrepancies in benchmarking success and failure rates.",
+      "challengeType": "TheoryGap",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "7bcc31f8ee614380909115ecdf337edd",
+      "challengeDescription": "Lack of consensus over the combination of biometric features that need to be collected to ensure the highest level of security and accuracy.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "e7d987704bbd47a290f287f09de09312",
+      "challengeDescription": "No consensus on standards and protocols to sufficiently benchmark, test and evaluate mobile devices and the various CA methods that can be applied.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "42ae769707f8476a8508f87593f2d171",
+      "challengeDescription": "Lack of understanding of the optimal balance between usability and privacy when it comes to CA through mobile devices.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "5bd69efe8dd54f518c7574599c901ba1",
+      "challengeDescription": "Physiological biometric methods may only be feasible in certain circumstances and/or environments due to changes in physical traits over time and the need for user cooperation.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "3a9d4ef13a644c858217f2054091f42e",
+      "challengeDescription": "The need for low power sensors to ensure that energy consumption is optimised for physiological biometric traits in CA.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "7060a74e8a9b4a39bc04a22326ee88d9",
+      "challengeDescription": "The pervasive use of biomedical traits for CA should not lead to privacy and security threats.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    },
+    {
+      "internal_id": "73e18b74e27d4c309a9cdb1b93fc4b23",
+      "challengeDescription": "Blockchain technologies for CA create a continuous power drain on IoT devices due to the need for signals and data to be continuously sent and received.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "relatedProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "e94910c4a06d49f899fa02a19acf5186",
+      "challengeDescription": "Determining the optimal EER rate vs. data collection timeframe considering that studies imply that it takes months of data for EER rates to reach optimal rates.",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Evaluation metric consensus and dynamic nature of EER rates",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "encounteredInFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    },
+    {
+      "internal_id": "05f7b98cf3bf428e8ab1417c66a97c9a",
+      "challengeDescription": "Ensuring that templates and signals collected during CA sessions are protected from adversaries, addressing potential replay attacks, and considering the use of TPMs and/or TEEs.",
+      "resourceConstraint": "Security",
+      "technicalHurdle": "Data protection and privacy concerns",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "encounteredInFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    },
+    {
+      "internal_id": "1ee5aa8b31cb4f988d0701640e2f8133",
+      "challengeDescription": "Balancing the accuracy rates of CA technologies with ensuring that the practicality of MDTI is not compromised.",
+      "resourceConstraint": "Multiple",
+      "technicalHurdle": "Accuracy vs. practicality trade-off",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "encounteredInFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    },
+    {
+      "internal_id": "7f5a43f45dfc40699c80d84fecda638a",
+      "challengeDescription": "Lack of a systematic framework and methodology for cross-comparative studies to determine the efficacy of CA systems.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Absence of standard frameworks and methodologies",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "encounteredInFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    },
+    {
+      "internal_id": "3896923ff1fd4ea3aeae4e5a41701303",
+      "challengeDescription": "Addressing the feasibility of device/technique combinations for CA purposes based on different settings, such as remote or on-premises CA, supervised or unsupervised processes, and cost of the system.",
+      "resourceConstraint": "Multiple",
+      "technicalHurdle": "Feasibility studies and use-case differentiation",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "encounteredInFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    },
+    {
+      "internal_id": "78053d080bf84549b52c6a5ce8b17bce",
+      "challengeDescription": "Developing innovative hardware device solutions and non-biometric techniques for CA, rather than depending heavily on pre-existing software solutions utilizing biometric techniques.",
+      "resourceConstraint": "Innovation",
+      "technicalHurdle": "Hardware development and non-biometric technique exploration",
+      "extractionConfidence": 0.7,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "encounteredInFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    }
+  ],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "3794e7ae4c774450bf7a74c5e05e4e8b",
+      "limitationDescription": "Significant variations in the evaluation scores for EER rates, which may be due to the variation in the number of study participants; the combination of device and technique used; and the details of the experiment itself (e.g., text length).",
+      "limitationType": "MeasurementError",
+      "impactOnFindings": "This variation affects the comparability of the results and the ability to establish a benchmark for acceptable EER rates.",
+      "businessConstraints": "Organizations may find it challenging to determine the most appropriate device and technique combination for CA based on the expected accuracy rates and training time necessary.",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "limitedFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    },
+    {
+      "internal_id": "ce860fd27d5c40349f6ef160fd62150c",
+      "limitationDescription": "The lack of a systematic framework and methodology for cross-comparative studies to determine the efficacy of CA systems.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "Without a systematic framework, it is difficult to compare different CA systems and to determine which features, techniques, and algorithms are most suitable.",
+      "businessConstraints": "Decision-makers lack a structured reference point for comparing different CA systems, which may affect the adoption and implementation of CA technologies.",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "limitedFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    },
+    {
+      "internal_id": "4d50b268945a4339830f159d274da6d8",
+      "limitationDescription": "The study does not address how CA technologies would influence privacy and security matters, except for one study from the core group examined.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The implications of CA technologies on user privacy and security are not thoroughly understood, which may affect user acceptance and trust.",
+      "businessConstraints": "There may be regulatory and ethical considerations that are not accounted for, potentially hindering the deployment of CA technologies in sensitive environments.",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "limitedFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    },
+    {
+      "internal_id": "26f0db3cdce5490f859f01b063948434",
+      "limitationDescription": "The study relies heavily on software solutions utilizing biometric techniques, with little focus on innovative hardware device solutions and non-biometric techniques.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The potential benefits of hardware solutions and non-biometric techniques for CA are not explored, which may limit the understanding of the full range of CA capabilities.",
+      "businessConstraints": "Organizations may overlook potentially more suitable hardware solutions for CA that could offer better energy efficiency, usability, and cost-effectiveness.",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "limitedFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    },
+    {
+      "internal_id": "36857e0e7db94a21b37bbeb2664cdf42",
+      "limitationDescription": "Real use-cases are non-existent as there is no study which has examined the feasibility of device/technique combination for CA purposes based on different settings.",
+      "limitationType": "GeneralizabilityIssue",
+      "impactOnFindings": "The lack of real-world application studies limits the understanding of how CA technologies perform in practical scenarios and affects the generalizability of the research.",
+      "businessConstraints": "Businesses may find it difficult to predict the real-world performance and integration challenges of CA technologies without use-case studies.",
+      "extractionConfidence": 0.8,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "limitedFramework": "a422957374d94d14b7d1b71c3873a7b3"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "a422957374d94d14b7d1b71c3873a7b3",
+      "name": "Citation Network Analysis of Continuous Authentication Technologies",
+      "description": "The study employs a Citation Network Analysis (CNA) to review and synthesize a large body of literature on Continuous Authentication (CA) technologies. The approach involves a meta-analysis of prior survey articles, development of a Citation Network Graph (CNG) from referenced articles, and subsequent analysis to identify current research focuses and emerging trends in CA.",
+      "studyDesign": {
+        "designType": "MetaAnalysis",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is designed to systematically review and analyze the existing literature on CA technologies using citation network analysis. The design allows for the identification of main research components, gaps, and future directions in the field."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Citation Network Analysis",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Conduct a meta-analysis of 24 prior survey articles to establish a foundational understanding of CA concepts, models, and theoretical frameworks.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Develop a Citation Network Graph based on the articles referenced in the survey articles to visualize the citation relationships and identify core research areas.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Analyze the Citation Network Graph to address the research questions, identify current research focuses, emerging trends, and future challenges in CA.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "A systematic approach to analyze the citation network of over 2,300 articles on Continuous Authentication technologies. The process involves creating a Citation Network Graph and analyzing it to identify key research areas and trends."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "NetworkAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involved examining the Citation Network Graph to identify central research areas and synthesize key details from each node, including weighted-in-degree, device type, technique, accuracy, and summary. The analysis also included extracting Equal Error Rate (EER), False Accept Rate (FAR), and False Reject Rate (FRR) rates from the core nodes to compare the performance of various CA systems."
+      },
+      "extractionConfidence": 0.9,
+      "paper": "b1a88bf3d4fa4775853a8210db72bcba",
+      "researchProblem": "91a8764bdbf14bb69b0b51eccaca1b64"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "78fba4818d3a4c7ea115cf8e000eb9ba",
+      "itemName": "MaterialTool",
+      "itemType": null,
+      "identifier": null,
+      "specifications": null,
+      "roleInProcedure": null,
+      "extractionConfidence": 0.7,
+      "usedInFrameworks": [
+        "a422957374d94d14b7d1b71c3873a7b3"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,420 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "title": "Building A Secure Agentic AI Application Leveraging A2A Protocol",
+      "authors": [
+        {
+          "name": "I Habler"
+        },
+        {
+          "name": "K Huang"
+        },
+        {
+          "name": "VS Narajala"
+        },
+        {
+          "name": "P Kulkarni"
+        }
+      ],
+      "abstract": "As Agentic AI systems evolve from basic workflows to complex multi-agent collaboration, robust protocols such as Google's Agent2Agent (A2A) become essential enablers. To foster secure adoption and ensure the reliability of these complex interactions, understanding the secure implementation of A2A is essential. This paper addresses this goal by providing a comprehensive security analysis centered on the A2A protocol. We examine its fundamental elements and operational dynamics, situating it within the framework of agent communication development. Utilizing the MAESTRO framework, specifically designed for AI risks, we apply proactive threat modeling to assess potential security issues in A2A deployments, focusing on aspects such as Agent Card management, task execution integrity, and authentication methodologies.",
+      "doi": "",
+      "publicationDate": "2025",
+      "journal": "arXiv preprint arXiv …, 2025",
+      "volume": "1",
+      "issue": "",
+      "pages": "2",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_MCP/Building A Secure Agentic AI Application Leveraging A2A Protocol.pdf",
+      "fileUrl": "https://arxiv.org/abs/2504.16902",
+      "extractionDate": "2025-04-30T22:00:03.100206",
+      "extractionConfidenceScore": 0.7923
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "ffdde632d27c4792989caa31a01633c0",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.9,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "f25b9c40676242bfb6cb0e7f71c98af4",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": "MAESTRO framework for AI risks",
+      "guidingModels": [
+        {
+          "modelName": "Agent2Agent (A2A) protocol",
+          "relevance": "A foundational role in enabling secure, composable, and scalable multi-agent systems"
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "5738191267d94de28a0b38b3ab7ddc10",
+      "problemStatement": "The need for secure, interoperable communication in the evolving landscape of Agentic AI systems, particularly focusing on the secure implementation of Google's Agent2Agent (A2A) protocol in complex multi-agent collaborations.",
+      "problemScope": "The scope includes the security analysis of the A2A protocol, its fundamental elements, operational dynamics, and the application of proactive threat modeling to assess security issues in A2A deployments.",
+      "problemType": "DesignProblem",
+      "problemImportance": "Ensuring the reliability and security of complex interactions in multi-agent systems is critical for the adoption and proper functioning of Agentic AI.",
+      "businessRelevance": "Secure Agentic AI applications are vital for businesses to enable autonomous collaboration and federated analytics, impacting efficiency and innovation across various industries.",
+      "extractionConfidence": 0.85,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "e00e4e1191184361bcc592e04f61f9d3",
+      "gapDescription": "Understanding the secure implementation of A2A protocol in complex multi-agent systems",
+      "relatedDomain": "Artificial Intelligence, Cybersecurity",
+      "gapSignificance": "To ensure the reliability and secure adoption of multi-agent collaborations in Agentic AI systems",
+      "extractionConfidence": 0.8,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    },
+    {
+      "internal_id": "17e706a9565543c09506fbfa3b86d9f1",
+      "gapDescription": "Assessment of potential security issues in A2A deployments, focusing on Agent Card management, task execution integrity, and authentication methodologies",
+      "relatedDomain": "Artificial Intelligence, Cybersecurity",
+      "gapSignificance": "To proactively address security threats in the deployment of A2A protocol and enhance the trust and integrity of agent interactions",
+      "extractionConfidence": 0.8,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    },
+    {
+      "internal_id": "8d7388ef13c84cb385e50fe8d1ca6369",
+      "gapDescription": "Development of context-aware threat modeling to address novel risks such as prompt injection into AgentCards and cross-agent escalation",
+      "relatedDomain": "Artificial Intelligence, Cybersecurity",
+      "gapSignificance": "To create resilient multi-agent systems capable of handling emerging and sophisticated security threats",
+      "extractionConfidence": 0.75,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    },
+    {
+      "internal_id": "ecfdc6237e714b93abc4b99c98f57efb",
+      "gapDescription": "Integration of robust security controls into both protocol design and server implementation for A2A-based systems",
+      "relatedDomain": "Artificial Intelligence, Cybersecurity",
+      "gapSignificance": "To build foundational security measures that are essential for the protection of complex multi-agent ecosystems",
+      "extractionConfidence": 0.8,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    },
+    {
+      "internal_id": "0d8666b02af14e57a26cdd48bd3ad8d1",
+      "gapDescription": "Future enhancements to A2A should emphasize adaptive trust, continuous policy enforcement, and secure-by-default configurations",
+      "relatedDomain": "Artificial Intelligence, Cybersecurity",
+      "gapSignificance": "To ensure that A2A-based systems remain secure and trustworthy as they grow in complexity and are exposed to evolving threats",
+      "extractionConfidence": 0.75,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "1fb71d17f2d644f89fb3cd40ef5128d0",
+      "questionText": "How can the A2A protocol be securely implemented to ensure the reliability of complex multi-agent interactions?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "A2A protocol implementation",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Reliability of multi-agent interactions",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10",
+      "addressesGap": "e00e4e1191184361bcc592e04f61f9d3"
+    },
+    {
+      "internal_id": "60e40c91946f4513a14ba70681d6e05a",
+      "questionText": "What are the potential security issues in A2A deployments, focusing on aspects such as Agent Card management, task execution integrity, and authentication methodologies?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Agent Card management",
+          "variableRole": null
+        },
+        {
+          "variableName": "Task execution integrity",
+          "variableRole": null
+        },
+        {
+          "variableName": "Authentication methodologies",
+          "variableRole": null
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10",
+      "addressesGap": "e00e4e1191184361bcc592e04f61f9d3"
+    },
+    {
+      "internal_id": "4d54cab6729146d394b4f47595036cd8",
+      "questionText": "How does the MAESTRO framework's proactive threat modeling assess potential security issues in A2A deployments?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "MAESTRO framework",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Security issues in A2A deployments",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10",
+      "addressesGap": "e00e4e1191184361bcc592e04f61f9d3"
+    },
+    {
+      "internal_id": "8cdb4394571d4beeb2e6f74e4e400be9",
+      "questionText": "What security controls are essential for deeply integrating security into both protocol design and server implementation for A2A-based systems?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Security controls",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Protocol design and server implementation",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10",
+      "addressesGap": "e00e4e1191184361bcc592e04f61f9d3"
+    },
+    {
+      "internal_id": "ed89d0bba8754bf5b2f0c1959ecc3531",
+      "questionText": "What enhancements to A2A should be considered to support adaptive trust, continuous policy enforcement, and secure-by-default configurations in the context of growing multi-agent ecosystem complexity?",
+      "questionType": "Predictive",
+      "relatedVariables": [
+        {
+          "variableName": "Adaptive trust",
+          "variableRole": null
+        },
+        {
+          "variableName": "Continuous policy enforcement",
+          "variableRole": null
+        },
+        {
+          "variableName": "Secure-by-default configurations",
+          "variableRole": null
+        },
+        {
+          "variableName": "Multi-agent ecosystem complexity",
+          "variableRole": null
+        }
+      ],
+      "extractionConfidence": 0.75,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10",
+      "addressesGap": "e00e4e1191184361bcc592e04f61f9d3"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "961ac4493a3b4f0baa3a8150f3e97927",
+      "directionDescription": "Future enhancements to A2A should emphasize adaptive trust, continuous policy enforcement, and secure-by-default configurations.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "addressesGap": "e00e4e1191184361bcc592e04f61f9d3",
+      "extendsPotentialApplication": "70764f0054664686b58ff20b4a889a5d"
+    },
+    {
+      "internal_id": "647c6d4e6a124c868604d6f543dedb27",
+      "directionDescription": "Proactively address today's threats and anticipate tomorrow's to ensure A2A serves as a resilient backbone for intelligent, secure, and trustworthy agentic AI applications.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "addressesGap": "e00e4e1191184361bcc592e04f61f9d3",
+      "extendsPotentialApplication": "70764f0054664686b58ff20b4a889a5d"
+    },
+    {
+      "internal_id": "d26919f779b0403d870605c499ff0deb",
+      "directionDescription": "Integrate security deeply into both protocol design and server implementation, including strong cryptographic controls and zero-trust agent authentication.",
+      "timeframe": "Short-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "addressesGap": "e00e4e1191184361bcc592e04f61f9d3",
+      "extendsPotentialApplication": "70764f0054664686b58ff20b4a889a5d"
+    },
+    {
+      "internal_id": "2226684262e84c7798a5f392e88a38e0",
+      "directionDescription": "Implement robust security controls such as schema validation, logging integrity, and resilient streaming protocols.",
+      "timeframe": "Short-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "addressesGap": "e00e4e1191184361bcc592e04f61f9d3",
+      "extendsPotentialApplication": "70764f0054664686b58ff20b4a889a5d"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "70764f0054664686b58ff20b4a889a5d",
+      "applicationDescription": "Enabling secure, composable, and scalable multi-agent systems for autonomous collaboration in tasks such as document co-authoring and federated analytics across distributed datasets.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "buildOnMethodologicalFrameworks": [
+        "5a008ad1d94d409a95839c0d5b3fe765"
+      ]
+    },
+    {
+      "internal_id": "10f94f26b27b4d24a46a17f25e7dd18b",
+      "applicationDescription": "Building trust-aware, modular workflows that reflect real-world boundaries and roles, potentially applicable in various sectors where multi-agent systems can be deployed.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.7,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "buildOnMethodologicalFrameworks": [
+        "5a008ad1d94d409a95839c0d5b3fe765"
+      ]
+    },
+    {
+      "internal_id": "08a2efbf3cbf4f45acc8b2466ac0c4b4",
+      "applicationDescription": "Developing robust security controls for multi-agent systems, including cryptographic controls, zero-trust agent authentication, schema validation, logging integrity, and resilient streaming protocols.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.75,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "buildOnMethodologicalFrameworks": [
+        "5a008ad1d94d409a95839c0d5b3fe765"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "d522693172864f599c5d9754cbe776a4",
+      "challengeDescription": "The distributed and dynamic nature of multi-agent systems introduces threats.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    },
+    {
+      "internal_id": "293d881b05ee43bca09d364dbe424bdf",
+      "challengeDescription": "Novel risks such as prompt injection into AgentCards and cross-agent escalation highlight the need for context-aware threat modeling.",
+      "challengeType": "EmergentBehavior",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    },
+    {
+      "internal_id": "24b79eb1f4d44a13a05ac6e9573c5e85",
+      "challengeDescription": "Security must be deeply integrated into both protocol design and server implementation, requiring strong cryptographic controls and zero-trust agent authentication.",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.7,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    },
+    {
+      "internal_id": "fd2ad8d39c5a4e109c255e0cb0b90f59",
+      "challengeDescription": "As multi-agent ecosystems grow in complexity, future enhancements to A2A should emphasize adaptive trust, continuous policy enforcement, and secure-by-default configurations.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "relatedProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "5a008ad1d94d409a95839c0d5b3fe765",
+      "name": "Security Analysis of A2A Protocol",
+      "description": "The paper presents a security analysis of the Agent2Agent (A2A) protocol using the MAESTRO framework. The analysis includes examining the fundamental elements and operational dynamics of A2A, situating it within the framework of agent communication development, and applying proactive threat modeling to assess potential security issues in A2A deployments.",
+      "studyDesign": {
+        "designType": "CaseStudy",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is designed as a case study focusing on the A2A protocol, with no control group or randomization involved. It is cross-sectional as it assesses the protocol at a specific point in time without longitudinal tracking."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Security Analysis using MAESTRO",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Examine the fundamental elements and operational dynamics of the A2A protocol.",
+              "inputs": "A2A protocol specifications",
+              "outputs": "Detailed understanding of A2A elements and dynamics",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Situate the A2A protocol within the framework of agent communication development.",
+              "inputs": "Historical and current agent communication protocols",
+              "outputs": "Contextual analysis of A2A within the evolution of agent communication",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Apply proactive threat modeling using the MAESTRO framework to assess potential security issues.",
+              "inputs": "A2A deployment scenarios",
+              "outputs": "Identification of potential security threats and issues",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "A comprehensive security analysis of the A2A protocol using the MAESTRO framework, which is specifically designed for AI risks. The procedure involves proactive threat modeling to identify and assess potential security issues."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "QualitativeContentAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves applying the MAESTRO framework to the A2A protocol to identify and evaluate potential security threats. The analysis is qualitative, focusing on the integrity of agent card management, task execution, and authentication methodologies."
+      },
+      "extractionConfidence": 0.7,
+      "paper": "a4b2101a3b3b4a93b2149d74d4338a16",
+      "researchProblem": "5738191267d94de28a0b38b3ab7ddc10"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "fdfe388aedb84cd29a9f33cdad079b81",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "5a008ad1d94d409a95839c0d5b3fe765"
+      ]
+    }
+  ]
+}

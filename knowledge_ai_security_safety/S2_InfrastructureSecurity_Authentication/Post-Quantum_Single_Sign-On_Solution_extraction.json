@@ -1,0 +1,432 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "title": "Post-Quantum Single Sign-On Solution",
+      "authors": [
+        {
+          "name": "M Hassan"
+        },
+        {
+          "name": "R Nimsara…"
+        }
+      ],
+      "abstract": "Quantum computers pose a significant threat to widely used public-key cryptosystems, endangering current authentication and authorization systems. This paper presents a post-quantum Single Sign-On (SSO) solution that integrates Post-Quantum Cryptography (PQC) algorithms, specifically MLDSA and ML-KEM, for authentication and authorization. The proposed system demonstrates a 90% improvement in token generation speed post-migration from traditional cryptosystems and a 331% increase in key-storage speed when storing PQC keys using a novel vector database mechanism. Additionally, an enhanced risk-based authentication model is developed, achieving a 98% accuracy in detecting risky logins, surpassing existing models. These contributions offer a comprehensive, efficient, and secure SSO system resistant to quantum attacks, addressing the limitations of current systems that do not fully integrate PQC algorithms or optimized key storage solutions.",
+      "doi": "",
+      "publicationDate": "2024",
+      "journal": "… on Computer and …, 2024",
+      "volume": "90",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_InfrastructureSecurity_Authentication/Post-Quantum_Single_Sign-On_Solution.pdf",
+      "fileUrl": "https://ieeexplore.ieee.org/abstract/document/10927943/",
+      "extractionDate": "2025-04-29T07:25:16.822633",
+      "extractionConfidenceScore": 0.8625
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "41182f9a2e504de6aa07df8f2e831410",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cryptography/Information Security",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "f93098caf62e4d6e953b2c08cd6281a5",
+      "underlyingTheories": [
+        {
+          "theoryName": "Computational Complexity Theory",
+          "relevance": "Informs the research by providing a framework for understanding the computational difficulty of factoring large integers and the impact of quantum algorithms on this difficulty."
+        },
+        {
+          "theoryName": "Quantum Computing",
+          "relevance": "Underpins the need for post-quantum cryptography by demonstrating the potential of quantum computers to break current public-key cryptosystems."
+        }
+      ],
+      "conceptualFrameworkReference": "The paper references the conceptual framework of Post-Quantum Cryptography (PQC) as a response to the threat posed by quantum computing to current cryptographic systems.",
+      "guidingModels": [
+        {
+          "modelName": "MLDSA",
+          "relevance": "A PQC algorithm used for authentication in the proposed SSO solution."
+        },
+        {
+          "modelName": "ML-KEM",
+          "relevance": "A PQC algorithm used for authorization in the proposed SSO solution."
+        }
+      ],
+      "philosophicalParadigm": "Not Specified",
+      "schoolOfThought": "Cryptography",
+      "extractionConfidence": 0.85,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "c121b33cb9514b4285290d88901131bb",
+      "problemStatement": "Quantum computers threaten the security of current public-key cryptosystems, which are fundamental to authentication and authorization in Single Sign-On (SSO) systems.",
+      "problemScope": "The scope includes the development of a quantum-resistant SSO solution that integrates Post-Quantum Cryptography (PQC) algorithms for authentication and authorization, and addresses the limitations of current systems that do not fully integrate PQC algorithms or optimized key storage solutions.",
+      "problemType": "DesignProblem",
+      "problemImportance": "The importance lies in the need to protect authentication and authorization systems against the emerging threat of quantum computing, which can compromise widely used cryptographic methods like RSA.",
+      "businessRelevance": "The research is relevant to businesses that rely on secure authentication systems, as it addresses market gaps in quantum-resistant security solutions and has the potential to significantly impact the economic landscape by safeguarding against quantum attacks.",
+      "extractionConfidence": 0.9,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "4984efaca49f4035b5f74e8deb25e25b",
+      "gapDescription": "Current authentication and authorization systems are vulnerable to quantum attacks due to reliance on public-key cryptosystems that can be compromised by quantum algorithms.",
+      "relatedDomain": "Cryptography",
+      "gapSignificance": "Ensuring the security and integrity of authentication systems in the face of advancing quantum computing capabilities is critical for protecting sensitive information and maintaining trust in digital systems.",
+      "extractionConfidence": 0.9,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb"
+    },
+    {
+      "internal_id": "254192a31ba048469bb6f8ba399faa58",
+      "gapDescription": "Lack of fully integrated Post-Quantum Cryptography (PQC) algorithms in Single Sign-On (SSO) solutions.",
+      "relatedDomain": "Cryptography",
+      "gapSignificance": "Integrating PQC algorithms into SSO solutions is essential to develop systems that are resistant to quantum attacks, thereby future-proofing authentication mechanisms.",
+      "extractionConfidence": 0.8,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb"
+    },
+    {
+      "internal_id": "dc7c18c828454c3aa4f4515f16cb6b7a",
+      "gapDescription": "Insufficiently optimized key storage solutions for handling Post-Quantum Cryptography (PQC) keys.",
+      "relatedDomain": "Data Storage",
+      "gapSignificance": "Optimizing key storage is necessary to improve the performance and scalability of systems using PQC, which is crucial for their practical deployment and widespread adoption.",
+      "extractionConfidence": 0.85,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb"
+    },
+    {
+      "internal_id": "6a39cc89787744eebe0042bf366e8f86",
+      "gapDescription": "Existing risk-based authentication models do not achieve high accuracy in detecting risky logins.",
+      "relatedDomain": "Cybersecurity",
+      "gapSignificance": "Improving the accuracy of risk-based authentication models is important for preventing unauthorized access and enhancing the overall security of SSO systems.",
+      "extractionConfidence": 0.8,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "ccaa224175a34070b722cebf2ac850a0",
+      "questionText": "How can a post-quantum Single Sign-On (SSO) solution integrate Post-Quantum Cryptography (PQC) algorithms for authentication and authorization?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "Post-Quantum Cryptography (PQC) algorithms",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Authentication and authorization in SSO solution",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb",
+      "addressesGap": "4984efaca49f4035b5f74e8deb25e25b"
+    },
+    {
+      "internal_id": "b5fc0a853c7f4c65a004cc6d8bfa3cc4",
+      "questionText": "What is the performance improvement in token generation speed when migrating from traditional cryptosystems to PQC algorithms?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Token generation speed",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Traditional cryptosystems",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "PQC algorithms",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb",
+      "addressesGap": "4984efaca49f4035b5f74e8deb25e25b"
+    },
+    {
+      "internal_id": "a6dd82fe74014766bb499dceaf0c80e9",
+      "questionText": "How does the use of a novel vector database mechanism affect key-storage speed for PQC keys?",
+      "questionType": "Causal",
+      "relatedVariables": [
+        {
+          "variableName": "Key-storage speed",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Vector database mechanism",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb",
+      "addressesGap": "4984efaca49f4035b5f74e8deb25e25b"
+    },
+    {
+      "internal_id": "959d33f9c6d7482daeda372697236d36",
+      "questionText": "Can an enhanced risk-based authentication model achieve higher accuracy in detecting risky logins compared to existing models?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Accuracy of risky login detection",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Risk-based authentication model",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb",
+      "addressesGap": "4984efaca49f4035b5f74e8deb25e25b"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "2a06cfb08fa844df9269887c5419095e",
+      "applicationDescription": "Enhancing the security and efficiency of Single Sign-On (SSO) systems with a post-quantum solution that is resistant to quantum attacks.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.9,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "buildOnMethodologicalFrameworks": [
+        "75ef6885e91547eaa60c6a7db93c556a"
+      ]
+    },
+    {
+      "internal_id": "1c6cddea064c47a3b06ae84ce08d73c1",
+      "applicationDescription": "Improving key-storage performance for Post-Quantum Cryptography (PQC) keys using vector databases, applicable to any system requiring secure key management.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "buildOnMethodologicalFrameworks": [
+        "75ef6885e91547eaa60c6a7db93c556a"
+      ]
+    },
+    {
+      "internal_id": "ec7c9378af43484ea44c6af276f5e6cd",
+      "applicationDescription": "Implementing a faster mutual challenge-response authentication mechanism to reduce communication overhead in secure systems.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "buildOnMethodologicalFrameworks": [
+        "75ef6885e91547eaa60c6a7db93c556a"
+      ]
+    },
+    {
+      "internal_id": "47246ba9743a41d3a725c51c9e4b0394",
+      "applicationDescription": "Developing an improved risk-based authentication model with higher accuracy in detecting risky logins, which can be integrated into various authentication frameworks.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.85,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "buildOnMethodologicalFrameworks": [
+        "75ef6885e91547eaa60c6a7db93c556a"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "0dfee86674794aadb169692d323a8ae1",
+      "challengeDescription": "Quantum computers pose a significant threat to widely used public-key cryptosystems, endangering current authentication and authorization systems.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb"
+    },
+    {
+      "internal_id": "e1709a81720043198797a8a8028ebe7f",
+      "challengeDescription": "Classical public-key cryptosystems derive their security from the computational difficulty of factoring large integers, a task that quantum algorithms can solve in polynomial time, effectively compromising encryption methods like RSA.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb"
+    },
+    {
+      "internal_id": "68a07c7032b445de8b8f17c977e61943",
+      "challengeDescription": "The need for developing cryptographic algorithms that are resistant to quantum attacks to ensure the security of authentication and authorization systems in the post-quantum era.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "relatedProblem": "c121b33cb9514b4285290d88901131bb"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "75ef6885e91547eaa60c6a7db93c556a",
+      "name": "Post-Quantum Single Sign-On Solution",
+      "description": "The study presents a methodological framework for developing a quantum-resistant Single Sign-On (SSO) solution that integrates Post-Quantum Cryptography (PQC) algorithms. The framework includes the implementation of PQC key storage using vector databases, mutual challenge-response authentication, fast quantum-resistant JWT token generation using MLDSA, and an enhanced risk-based authentication model. The study conducts benchmarking to compare the performance of the proposed solutions with traditional cryptosystems and existing models.",
+      "studyDesign": {
+        "designType": "Experimental",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study involves the development and benchmarking of a new SSO solution against existing systems. It does not involve a control group or randomization, as it is focused on the implementation and performance evaluation of cryptographic and database technologies."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "PQC Key Storage on Vector Databases",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Simulate 100,000 key upserting operations on Qdrant.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Simulate 100,000 key insert operations on MySQL.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Compare the average key upsert/insert time between Qdrant and MySQL.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves simulating key upserting operations on a vector database system (Qdrant) and comparing it with key insert operations on a tabular database system (MySQL). The hypothesis is that vector databases will be faster for storing and retrieving PQC keys."
+        },
+        {
+          "procedureName": "Mutual Challenge-Response Authentication",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "User generates a random string and encrypts it with the server's public key to create a challenge.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Server retrieves user data, generates an access token, decrypts the challenge, and sends an encrypted token back to the user.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "User decrypts the encrypted token using the random string to retrieve the token and verify the server's authenticity.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "This procedure introduces an efficient mutual authentication mechanism that authenticates both the user and the server and establishes encrypted communication in just two exchanges."
+        },
+        {
+          "procedureName": "Fast Quantum-Resistant JWT Tokens",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Conduct 1,000 iterations of token generation and verification using ML-DSA, RSA, and ED25519.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Measure average CPU time and RAM usage for each algorithm.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves developing a new JWT signature scheme using MLDSA, a PQC signature algorithm, and benchmarking its performance against RSA and ED25519 algorithms."
+        },
+        {
+          "procedureName": "Risk-Based Authentication",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Preprocess the dataset by removing non-contributory features and adding a 'Login Hour' feature.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Train models using Logistic Regression, Random Forest, SVMs, and Decision Trees.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Select the SVM model as it achieved the highest accuracy with an AUC score of 0.9879.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves preprocessing a dataset of authentication attempts, training several models, and selecting the one with the highest accuracy for detecting risky logins."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "StatisticalAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": "Logistic Regression, Random Forest, Support Vector Machines (SVMs), Decision Trees",
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": "Dataset preprocessing included removing non-contributory features and adding a 'Login Hour' feature.",
+        "summary": "The data analysis involved benchmarking the performance of the proposed PQC key storage, mutual authentication, JWT token generation, and risk-based authentication model. The analysis compared these aspects with traditional cryptosystems and existing models, measuring read/write speeds, RAM and CPU performance, token generation and verification times, and memory usage. Additionally, the accuracy of the risk-based authentication model was evaluated using AUC scores."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TabularData",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The results showed a 331% improvement in key-storage speeds using a vector database compared to a SQL database. The mutual challenge-response authentication completed in 140 ± 20 microseconds, which is faster than RSA. The ML-DSA-based JWT tokens demonstrated a 90% improvement in token generation speed over RSA and a 60% faster token verification speed than ED25519. The risk-based authentication model achieved a 98% accuracy in detecting risky logins."
+      },
+      "extractionConfidence": 0.9,
+      "paper": "a2f6afc8749d40b1bc82cd0a409f4900",
+      "researchProblem": "c121b33cb9514b4285290d88901131bb"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "55d216ce7a0a4ef19518281eae0e6a77",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "75ef6885e91547eaa60c6a7db93c556a"
+      ]
+    }
+  ]
+}

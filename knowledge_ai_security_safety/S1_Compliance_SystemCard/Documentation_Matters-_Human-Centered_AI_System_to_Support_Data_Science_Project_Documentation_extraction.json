@@ -1,0 +1,626 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "title": "Documentation matters: Human-centered ai system to assist data science code documentation in computational notebooks",
+      "authors": [
+        {
+          "name": "AY Wang"
+        },
+        {
+          "name": "D Wang"
+        },
+        {
+          "name": "J Drozdal"
+        },
+        {
+          "name": "M Muller"
+        },
+        {
+          "name": "S Park…"
+        }
+      ],
+      "abstract": "",
+      "doi": "10.1145/3489465",
+      "publicationDate": "2022",
+      "journal": "ACM Transactions on …, 2022",
+      "volume": "80",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S1_Compliance_SystemCard/Documentation Matters- Human-Centered AI System to Support Data Science Project Documentation.pdf",
+      "fileUrl": "https://dl.acm.org/doi/abs/10.1145/3489465",
+      "extractionDate": "2025-04-24T07:51:41.484588",
+      "extractionConfidenceScore": 0.8041
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "7b91f7f123954cb294b5640d5570bcee",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Human-Computer Interaction",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "86f5a6b28f3e41a88fdb8948fc2189b3",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "3cc9ebb8a5bd416081df2e88c2fa300f",
+      "problemStatement": "The difficulty in manually documenting and refactoring messy and drafty analysis code in computational notebooks into a readable computational narrative, which is often neglected by data scientists.",
+      "problemScope": "The scope includes the process of documentation in computational notebooks used by data scientists, particularly focusing on the transition from raw, exploratory code to well-documented, shareable computational narratives.",
+      "problemType": "DesignProblem",
+      "problemImportance": "Effective documentation is critical for collaboration among data scientists and for their future reference, impacting the quality and reproducibility of data science work.",
+      "businessRelevance": "Improving documentation practices in data science can enhance collaboration, increase efficiency, and potentially lead to better-informed business decisions based on well-documented data analyses.",
+      "extractionConfidence": 0.9,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "d4ad800eef164e6083eeea0ab4e3ec96",
+      "gapDescription": "The practice of documentation in data science has both overlaps and strong contrasts in relation to the ones in software engineering, and many interventions and lessons learned about documentation in software engineering may not apply in the data science context.",
+      "relatedDomain": "Data Science Documentation",
+      "gapSignificance": "Understanding the unique documentation needs in data science is crucial for developing effective tools and practices that cater to the specific challenges and workflows of data scientists.",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f"
+    },
+    {
+      "internal_id": "afe62fbd1c1e4788beddf6c0a19b27e5",
+      "gapDescription": "There is a lack of understanding on how to evaluate the quality of documentation in data science notebooks, as traditional software documentation rubrics do not reflect users' satisfaction with the final notebooks.",
+      "relatedDomain": "Data Science Documentation Quality Assessment",
+      "gapSignificance": "Developing appropriate metrics for evaluating the quality of data science documentation is important for improving the effectiveness of documentation practices and tools.",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f"
+    },
+    {
+      "internal_id": "59b7e0bfd2c042f0b86ede3134e18186",
+      "gapDescription": "The current research does not focus on the explainability or trust aspect of the designed AI system in the data science context, which is a critical research topic.",
+      "relatedDomain": "Explainability and Trust in AI-assisted Data Science",
+      "gapSignificance": "Ensuring that AI systems are explainable and trustworthy is essential for their acceptance and effective collaboration with human data scientists.",
+      "extractionConfidence": 0.75,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f"
+    },
+    {
+      "internal_id": "6e015727329c48baa91576147c683a41",
+      "gapDescription": "There is a need to explore the generalizability of Themisto through a long-term deployment study to understand its usefulness in realistic notebooks that may be longer and more complicated than the notebooks used in controlled experiments.",
+      "relatedDomain": "Long-term Deployment and Usability of AI Tools in Data Science",
+      "gapSignificance": "Long-term studies can provide insights into the actual benefits and tradeoffs of AI-assisted tools in real-world data science workflows.",
+      "extractionConfidence": 0.7,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f"
+    },
+    {
+      "internal_id": "3a54fade68ec4ed99649f9af3b64278e",
+      "gapDescription": "The research lacks an in-depth analysis of how human data scientists perceive the fine-grained collaboration and interaction with the AI partner at the level of individual cells in notebooks.",
+      "relatedDomain": "Human-AI Collaboration in Data Science",
+      "gapSignificance": "A detailed understanding of human-AI interaction at a granular level is necessary to design better collaborative tools and improve the data science workflow.",
+      "extractionConfidence": 0.7,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "ed7188e4a932459f90b6e2aa8e148880",
+      "questionText": "What makes a well-documented notebook?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Documentation quality",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Notebook characteristics",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96"
+    },
+    {
+      "internal_id": "3eb2e3ff5a844d299913e2ff21bd7830",
+      "questionText": "Can Artificial Intelligence (AI) automation serve as a potential solution to support the human process of crafting documentation?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "AI automation effectiveness",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Human documentation process",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96"
+    },
+    {
+      "internal_id": "8b3a6d6838394045993da70baff91401",
+      "questionText": "Does Themisto reduce the time for data scientists to create documentation and improve their satisfaction with their computational notebooks?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Time to create documentation",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Satisfaction with computational notebooks",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Themisto usage",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96"
+    },
+    {
+      "internal_id": "fc4d9051ffbc4a5d88613750e0c4d4cb",
+      "questionText": "What is the quality of the documentation produced with Themisto compared to what data scientists produced on their own?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Documentation quality",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Documentation method",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96"
+    },
+    {
+      "internal_id": "153cfab94c4d4e7dab22b3341f0634d2",
+      "questionText": "How do data scientists perceive the usefulness of the tool in realistic notebooks?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Perceived usefulness",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Realistic notebook complexity",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96"
+    },
+    {
+      "internal_id": "e20a92a52f74486d92bd40a615a0bea3",
+      "questionText": "How do human data scientists behave and perceive the fine-grained collaboration and interaction with the AI partner?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Human-AI collaboration perception",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "AI partner interaction",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "32ae018d457d4282a44385a449309d12",
+      "directionDescription": "Future work should recognize the difference between data science and software engineering, and tailor the documentation experience for data scientists.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96",
+      "extendsPotentialApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "20a7d68a1d0d409995b24338ee5a62c6",
+      "directionDescription": "Investigate a hybrid and adapted approach for code summarization that includes adaptive interactive prompting based on the contents of the code cell or the user's history of writing markdown cells.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96",
+      "extendsPotentialApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "30ae3a04cc7f4d948b091f98fb4e99e4",
+      "directionDescription": "Explore the generalizability of Themisto through a long-term deployment study.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96",
+      "extendsPotentialApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "8a592383fbfe4c5baf310fd10a1fdc07",
+      "directionDescription": "Conduct an in-depth analysis to break down the level of individual cells, and further analyze the difference between automatically-generated, co-edited, or manually-produced cells.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96",
+      "extendsPotentialApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "83e36cac85c4426caa88bb664e4f65b5",
+      "directionDescription": "Design future human-centered AI systems to support users in various data science tasks beyond notebook documentation.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.85,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96",
+      "extendsPotentialApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "95b6d7ac5b9f464eb42dafbad99cfa60",
+      "directionDescription": "Evaluate whether the benefits and tradeoffs of human-AI collaboration in code documentation persist after a long period of adoption by users.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96",
+      "extendsPotentialApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "f0a114bb80e14c6aaa3faf0bcc0fd23d",
+      "directionDescription": "Investigate whether a system could generate code from descriptive text, particularly in a stylized form that might be translatable into code.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.7,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "addressesGap": "d4ad800eef164e6083eeea0ab4e3ec96",
+      "extendsPotentialApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "5c0df3c6ad514bf785b3d13241c0c663",
+      "applicationDescription": "Themisto can assist data scientists in generating documentation for computational notebooks, significantly reducing time spent on documentation tasks and improving satisfaction with the final notebook.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.9,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "buildOnMethodologicalFrameworks": [
+        "18293ae401114cf2b78d514afa4d8a6e"
+      ]
+    },
+    {
+      "internal_id": "f5d7886ea52f4c9eac704dc664d2485b",
+      "applicationDescription": "Themisto could be used to support the creation of educational materials by providing descriptive information suitable for teaching purposes.",
+      "targetSector": "Education",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "buildOnMethodologicalFrameworks": [
+        "18293ae401114cf2b78d514afa4d8a6e"
+      ]
+    },
+    {
+      "internal_id": "05927ed38133409c81f976a2c466ab3a",
+      "applicationDescription": "Themisto may be employed to improve collaborative data science projects by documenting version changes and editing histories, aiding in the explanation of notebooks.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "buildOnMethodologicalFrameworks": [
+        "18293ae401114cf2b78d514afa4d8a6e"
+      ]
+    },
+    {
+      "internal_id": "fffa3b90533a4b518755b9cc3b8e441d",
+      "applicationDescription": "Themisto could be adapted to generate automatic code from documentation, potentially benefiting those who write documentation before coding.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.7,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "buildOnMethodologicalFrameworks": [
+        "18293ae401114cf2b78d514afa4d8a6e"
+      ]
+    },
+    {
+      "internal_id": "809f31b2783a414fb06d769a1755ae00",
+      "applicationDescription": "Themisto might be used to help data scientists document the rationale behind selecting specific algorithms or handling execution errors.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "buildOnMethodologicalFrameworks": [
+        "18293ae401114cf2b78d514afa4d8a6e"
+      ]
+    },
+    {
+      "internal_id": "55d2c70e0d0b400a9fc8295f637402a8",
+      "applicationDescription": "Themisto could be utilized to tailor documentation to different audiences, such as non-technical domain experts, by using less technical terminology and focusing on topics of interest to the audience.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "buildOnMethodologicalFrameworks": [
+        "18293ae401114cf2b78d514afa4d8a6e"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "3452108610ca42b1a454bbe814aaead1",
+      "challengeDescription": "Data scientists often write messy and drafty analysis code in computational notebooks, which makes it tedious to manually document and refactor the raw notebook into a more readable computational narrative.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f"
+    },
+    {
+      "internal_id": "78b615f61f054c2ea5fb669edfa46cd1",
+      "challengeDescription": "Existing efforts focus on cleaning and organizing of existing notebook content, instead of creating new content, which does not fully address the need for comprehensive documentation.",
+      "challengeType": "TheoryGap",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f"
+    },
+    {
+      "internal_id": "bc54899a6f0148758bd3f21090de2703",
+      "challengeDescription": "The fragmented and colloquial nature of chat messages used for documentation in computational notebooks makes them unsuitable for formal documentation purposes.",
+      "challengeType": "Other",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "relatedProblem": "3cc9ebb8a5bd416081df2e88c2fa300f"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "d4e5184b180045e0b5374b0556dff2d9",
+      "challengeDescription": "Creating and maintaining a clean computational narrative is often an expensive and tedious process, leading to many computational notebooks being poorly documented.",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Difficulty in tracking the history of experimentation and documenting alternatives during rapid exploration by data scientists.",
+      "extractionConfidence": 0.9,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "encounteredInFramework": "18293ae401114cf2b78d514afa4d8a6e",
+      "relatedApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "950f4a2a6aa64158a048d75b5e05cff9",
+      "challengeDescription": "Despite the availability of various tools to help manage 'messy' computational notebooks, none directly aids data scientists in creating new, rich, descriptive content to document their computational notebooks.",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Lack of tools that support the creation of rich, descriptive documentation content within computational notebooks.",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "encounteredInFramework": "18293ae401114cf2b78d514afa4d8a6e",
+      "relatedApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "0699769f5b5b4bf1a506f35a04c22f79",
+      "challengeDescription": "Template-based approaches for documentation in software engineering may not work well in the rapid, experimental nature of data science work, as they cannot capture other aspects of documentation important in data science.",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Inapplicability of template-based documentation approaches to the dynamic and exploratory nature of data science.",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "encounteredInFramework": "18293ae401114cf2b78d514afa4d8a6e",
+      "relatedApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "72d1a637353641e6b413a71aed58d704",
+      "challengeDescription": "The sequence-to-sequence approach in neural machine translation models does not work well for code summarization because it loses semantic information when processing source code as a stream of tokens.",
+      "resourceConstraint": "None",
+      "technicalHurdle": "Inadequacy of sequence-to-sequence models for capturing the semantic information in source code for code summarization.",
+      "extractionConfidence": 0.85,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "encounteredInFramework": "18293ae401114cf2b78d514afa4d8a6e",
+      "relatedApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    },
+    {
+      "internal_id": "3869d359c60645baab83e726d5e977c3",
+      "challengeDescription": "The AI system's automation approach alone may not work well in the documentation creation task, as data science is a highly interdisciplinary field that requires various human expertises to explain and interpret.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Need for human expertise in explaining and interpreting interdisciplinary aspects of data science that AI alone cannot handle.",
+      "extractionConfidence": 0.8,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "encounteredInFramework": "18293ae401114cf2b78d514afa4d8a6e",
+      "relatedApplication": "5c0df3c6ad514bf785b3d13241c0c663"
+    }
+  ],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "18293ae401114cf2b78d514afa4d8a6e",
+      "name": "Human-centered AI system for data science code documentation",
+      "description": "The study aimed to develop and evaluate an AI system named Themisto to assist in the documentation of data science code within computational notebooks. The methodological framework involved a formative study to understand best practices in documentation, the design and implementation of the Themisto system, and a within-subjects experiment to evaluate the system's effectiveness.",
+      "studyDesign": {
+        "designType": "Experimental",
+        "controlGroup": true,
+        "randomization": false,
+        "blinding": "None",
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study used a within-subjects design where participants performed documentation tasks with and without the Themisto system. The design allowed for direct comparison of performance and satisfaction between conditions."
+      },
+      "populationAndSampling": {
+        "targetPopulation": "Data science practitioners",
+        "sampleSize": 24,
+        "samplingMethod": "Convenience",
+        "inclusionCriteria": "Participants were required to have experience in data science and familiarity with computational notebooks.",
+        "exclusionCriteria": null
+      },
+      "variables": [
+        {
+          "variableName": "Task completion time",
+          "variableRole": "Dependent",
+          "conceptualDefinition": "The amount of time participants spent completing the documentation task.",
+          "operationalization": "Measured using the time elapsed from the start to the completion of the task.",
+          "measurementScale": "Interval",
+          "units": "Seconds"
+        },
+        {
+          "variableName": "Participant satisfaction",
+          "variableRole": "Dependent",
+          "conceptualDefinition": "The level of satisfaction participants reported with their final notebooks.",
+          "operationalization": "Measured using a post-task questionnaire on a Likert scale.",
+          "measurementScale": "Ordinal",
+          "units": "Likert scale rating"
+        }
+      ],
+      "procedures": [
+        {
+          "procedureName": "Formative Study",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Collection of top 1% voted notebooks from Kaggle competitions for House Price Prediction and Titanic Survival Prediction.",
+              "inputs": null,
+              "outputs": "Dataset of 80 valid notebooks for analysis",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Iterative open coding process by research team members to analyze notebooks at the cell level.",
+              "inputs": "Dataset of 80 valid notebooks",
+              "outputs": "Taxonomy of nine categories for documentation content",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "An in-depth analysis of highly-voted Kaggle notebooks to understand the characteristics of well-documented computational narratives."
+        },
+        {
+          "procedureName": "Themisto System Development",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Development of a deep-learning-based approach for automatic documentation generation.",
+              "inputs": null,
+              "outputs": "Themisto system with deep-learning capability",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Integration of a query-based approach to retrieve existing documentation from online API websites.",
+              "inputs": null,
+              "outputs": "Themisto system with query-based documentation retrieval",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Incorporation of a prompt-based approach to assist users in completing documentation sentences.",
+              "inputs": null,
+              "outputs": "Themisto system with prompt-based assistance",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "Design and implementation of the Themisto system, integrating three distinct approaches for automated code documentation generation."
+        },
+        {
+          "procedureName": "Within-Subjects Experiment",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Participants performed documentation tasks on computational notebooks with and without Themisto.",
+              "inputs": "Computational notebooks",
+              "outputs": "Documented notebooks",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Measurement of task completion time and participant satisfaction.",
+              "inputs": "Documented notebooks",
+              "outputs": "Quantitative data on performance and satisfaction",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Analysis of qualitative data from post-task interviews.",
+              "inputs": "Participant feedback",
+              "outputs": "Qualitative insights into Themisto's usability and applicability",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "Evaluation of Themisto's effectiveness in assisting with documentation tasks compared to a control condition without Themisto."
+        }
+      ],
+      "dataCollection": {
+        "collectionMethod": "ExperimentManipulation",
+        "instrumentDescription": "Themisto system integrated into Jupyter Notebook environment, post-task questionnaire, and interview guide for qualitative feedback.",
+        "collectionSetting": "Controlled environment where participants interacted with computational notebooks.",
+        "collectionTimeframe": "During the within-subjects experiment sessions",
+        "dataRecordingFormat": "Digital recordings of task sessions, questionnaire responses, and interview transcripts"
+      },
+      "dataAnalysis": {
+        "analysisApproach": "MixedMethodsAnalysis",
+        "statisticalTests": "Two-way repeated measures ANOVA",
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "Quantitative data were analyzed using a two-way repeated measures ANOVA to examine the effect of Themisto on task completion time. Qualitative data from interviews were analyzed to gain insights into participant perceptions and experiences."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TabularData",
+        "visualizationType": "Graph",
+        "reportingStandard": null,
+        "summary": "Themisto reduced task completion time, reminded participants to document code, and improved satisfaction with computational notebooks. The quality of documentation with Themisto was comparable to manual documentation."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "Not specified",
+        "dataRepository": null,
+        "codeAvailabilityStatement": "Not specified",
+        "codeRepository": null,
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "eb8aaf39549d4a04ae7f574501f3a23b",
+      "researchProblem": "3cc9ebb8a5bd416081df2e88c2fa300f"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "56e14f9c11a34cef9fd8a6cdc171e125",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "18293ae401114cf2b78d514afa4d8a6e"
+      ]
+    }
+  ]
+}

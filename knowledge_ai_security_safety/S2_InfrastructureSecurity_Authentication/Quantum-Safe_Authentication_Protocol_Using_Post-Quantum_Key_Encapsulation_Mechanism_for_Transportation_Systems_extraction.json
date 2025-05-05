@@ -1,0 +1,274 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "776ffa10142a46a092c992ca92619828",
+      "title": "Quantum-Safe Authentication Protocol Using Post-Quantum Key Encapsulation Mechanism for Transportation Systems",
+      "authors": [
+        {
+          "name": "RP Parameswarath"
+        },
+        {
+          "name": "B Sikdar"
+        }
+      ],
+      "abstract": "The integration of Internet of Things (IoT) technology into transportation systems holds immense potential to transform the way we move people and goods, offering benefits such as increased efficiency, reduced emissions, improved safety, and enhanced user experience. With the ubiquitous and high-speed connectivity, sixth-generation (6G) technology is envisaged to make unprecedented revolutions in several fields and applications including IoT applications and transportation systems. The convergence of 6G networks with these applications will provide seamless connectivity and help to integrate functionalities such as sensing, communication, and computing, resulting in superior service quality. However, the IoT network is highly vulnerable to cyber-attacks. With the recent developments in quantum computers and quantum algorithms, it is important to make them secure from quantum attacks as well. In this paper, we propose a quantum-safe authentication protocol using a Post-Quantum Key Encapsulation Mechanism (PQKEM) for IoT applications in transportation systems. The protocol is built using CRYSTALS-Kyber, a lattice-based PQKEM, selected by the National Institute of Standards and Technology (NIST) in round 3 of the postquantum standardization process. We provide a formal security proof of the proposed authentication protocol using the RealOr-Random (RoR) model. We also present a performance analysis of the proposed authentication protocol.",
+      "doi": "",
+      "publicationDate": "2024",
+      "journal": "2024 IEEE 4th International …, 2024",
+      "volume": "6",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_InfrastructureSecurity_Authentication/Quantum-Safe_Authentication_Protocol_Using_Post-Quantum_Key_Encapsulation_Mechanism_for_Transportation_Systems.pdf",
+      "fileUrl": "https://ieeexplore.ieee.org/abstract/document/10717975/",
+      "extractionDate": "2025-04-29T07:17:20.805462",
+      "extractionConfidenceScore": 0.8458
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "12752c4d54e1488788d5deace709ddf0",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cryptography/Network Security",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "776ffa10142a46a092c992ca92619828"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "62a594fdf7004812aa3e65571bdb148d",
+      "underlyingTheories": [
+        {
+          "theoryName": "Public-Key Cryptography",
+          "relevance": "The research assumes the difficulty of solving hard mathematical problems such as the discrete logarithm problem and the integer factorization problem, which are foundational to public-key cryptography."
+        },
+        {
+          "theoryName": "Quantum Computing",
+          "relevance": "The research addresses the challenge posed by quantum computers to traditional cryptographic protocols, necessitating the development of quantum-safe solutions."
+        },
+        {
+          "theoryName": "Post-Quantum Cryptography",
+          "relevance": "The research is informed by the need for cryptographic protocols that remain secure in the era of quantum computing, leading to the adoption of post-quantum cryptographic mechanisms."
+        }
+      ],
+      "conceptualFrameworkReference": "The RealOr-Random (RoR) model is used as a conceptual framework for providing a formal security proof of the proposed authentication protocol.",
+      "guidingModels": [
+        {
+          "modelName": "CRYSTALS-Kyber",
+          "relevance": "CRYSTALS-Kyber, a lattice-based post-quantum key encapsulation mechanism, is the guiding model being tested and applied in the research for ensuring quantum-safe authentication."
+        }
+      ],
+      "philosophicalParadigm": "Positivism",
+      "schoolOfThought": "Cryptography",
+      "extractionConfidence": 0.85,
+      "paper": "776ffa10142a46a092c992ca92619828"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "17c9126fd3fb4dda8ea67cf7dd0992a6",
+      "problemStatement": "The need to develop a quantum-safe authentication protocol for IoT applications in transportation systems that is secure against both classical and quantum computer attacks.",
+      "problemScope": "The scope includes IoT applications in transportation systems, with a focus on ensuring security in the context of emerging quantum computing capabilities.",
+      "problemType": "DesignProblem",
+      "problemImportance": "The problem is critical because the security of IoT networks in transportation systems is vulnerable to cyber-attacks, and the advent of quantum computing poses new threats that can undermine existing cryptographic protocols.",
+      "businessRelevance": "Solving this problem is relevant to businesses that rely on secure IoT applications in transportation systems, as it can prevent potential losses due to cyber-attacks and ensure the reliability and trustworthiness of these systems in a future with quantum computers.",
+      "extractionConfidence": 0.9,
+      "paper": "776ffa10142a46a092c992ca92619828"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "a62a891600bf4c1b89774afd3f9b4eee",
+      "questionText": "Can a quantum-safe authentication protocol using a Post-Quantum Key Encapsulation Mechanism (PQKEM) be developed for IoT applications in transportation systems to secure them against both classical and quantum computer attacks?",
+      "questionType": "Applied",
+      "relatedVariables": [
+        {
+          "variableName": "Quantum-safe authentication protocol",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Post-Quantum Key Encapsulation Mechanism (PQKEM)",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Security against classical and quantum computer attacks",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "776ffa10142a46a092c992ca92619828",
+      "relatedProblem": "17c9126fd3fb4dda8ea67cf7dd0992a6"
+    },
+    {
+      "internal_id": "116cb344fc3a435b88897f2dd7e4c788",
+      "questionText": "Does the proposed authentication protocol using CRYSTALS-Kyber ensure quantum security and protection against various cyber-attacks in IoT-enabled transportation systems?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Authentication protocol security",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "CRYSTALS-Kyber",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Quantum security",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Protection against cyber-attacks",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "776ffa10142a46a092c992ca92619828",
+      "relatedProblem": "17c9126fd3fb4dda8ea67cf7dd0992a6"
+    },
+    {
+      "internal_id": "90fa555d295e48a89857a3be65f1f485",
+      "questionText": "What is the performance of the proposed quantum-safe authentication protocol compared to other existing protocols?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Performance of quantum-safe authentication protocol",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Existing authentication protocols",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "776ffa10142a46a092c992ca92619828",
+      "relatedProblem": "17c9126fd3fb4dda8ea67cf7dd0992a6"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "d58d35e3da2543f1925f5349c6da9b00",
+      "applicationDescription": "Quantum-safe authentication protocol for securing IoT applications in 6G-enabled transportation systems against various cyber-attacks including quantum attacks.",
+      "targetSector": "Transportation",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.9,
+      "paper": "776ffa10142a46a092c992ca92619828",
+      "buildOnMethodologicalFrameworks": [
+        "857d7b7781c44659ab48782dfb8e76e6"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "e9ce9a21a87043bdad6a2ce948daa801",
+      "challengeDescription": "The IoT network is highly vulnerable to cyber-attacks, including those from quantum computers, which can efficiently solve problems that current public-key cryptography relies on for security.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "776ffa10142a46a092c992ca92619828",
+      "relatedProblem": "17c9126fd3fb4dda8ea67cf7dd0992a6"
+    },
+    {
+      "internal_id": "bfe81cf0a97245c787e0336480d5d05c",
+      "challengeDescription": "The need to develop a quantum-safe authentication protocol that is secure against both classical and quantum computers due to the advent of quantum algorithms like Shor's algorithm.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "776ffa10142a46a092c992ca92619828",
+      "relatedProblem": "17c9126fd3fb4dda8ea67cf7dd0992a6"
+    },
+    {
+      "internal_id": "c3d1af8f26a44bc59e6d9418d12b82cf",
+      "challengeDescription": "Ensuring the security of the proposed authentication protocol in the context of the integration of IoT with 6G networks, which involves complex convergence of space, air, ground, and underwater networks.",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.8,
+      "paper": "776ffa10142a46a092c992ca92619828",
+      "relatedProblem": "17c9126fd3fb4dda8ea67cf7dd0992a6"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "857d7b7781c44659ab48782dfb8e76e6",
+      "name": "Quantum-Safe Authentication Protocol Using Post-Quantum Key Encapsulation Mechanism",
+      "description": "The study presents a quantum-safe authentication protocol for IoT applications in transportation systems using CRYSTALS-Kyber, a lattice-based post-quantum key encapsulation mechanism. The protocol is designed to be secure against both classical and quantum computer attacks and consists of three phases: setup, registration, and authentication. The authors provide a formal security proof using the RealOr-Random model and conduct a performance analysis of the protocol.",
+      "studyDesign": {
+        "designType": "Simulation",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study uses a simulation-based approach to design and evaluate a quantum-safe authentication protocol. The protocol is tested for security and performance without the use of control groups or randomization, as the focus is on cryptographic robustness rather than comparative analysis."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Quantum-Safe Authentication Protocol Procedure",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Cloud server generates private and public keys using the KeyGen function.",
+              "inputs": null,
+              "outputs": "Private key (pr CS), Public key (pu CS)",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "IoT devices and cloud server register with the trusted authority.",
+              "inputs": null,
+              "outputs": "Registration messages (R1, R2, R3, R4)",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Authentication phase where IoT devices and cloud server authenticate each other and establish a session key.",
+              "inputs": null,
+              "outputs": "Session key (SK)",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure outlines the steps taken to implement and evaluate the quantum-safe authentication protocol using CRYSTALS-Kyber. It includes the setup phase for key generation, the registration phase for device and server registration, and the authentication phase for mutual authentication and session key establishment."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "SimulationAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": "CRYSTALS-Kyber Key Encapsulation, AES encryption, RealOr-Random security model",
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves a formal security proof of the proposed authentication protocol using the RealOr-Random model. Additionally, a performance analysis is conducted to evaluate the efficiency of the protocol in terms of computational and communication overhead."
+      },
+      "resultsRepresentation": {
+        "representationFormat": null,
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The results of the study demonstrate the security of the proposed authentication protocol against quantum attacks, as proven by the RealOr-Random model. The performance analysis shows that the protocol is efficient in terms of computational and communication overhead, making it suitable for IoT applications in transportation systems."
+      },
+      "extractionConfidence": 0.85,
+      "paper": "776ffa10142a46a092c992ca92619828",
+      "researchProblem": "17c9126fd3fb4dda8ea67cf7dd0992a6"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "5f374ae73f164f4ca7742e40279d79f8",
+      "itemName": "MaterialTool",
+      "itemType": null,
+      "identifier": null,
+      "specifications": null,
+      "roleInProcedure": null,
+      "extractionConfidence": 0.7,
+      "usedInFrameworks": [
+        "857d7b7781c44659ab48782dfb8e76e6"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "08144d0fdcd4497299ef371d9e9d6048",
+      "title": "Two Factor Authentication using secure algorithm for Cloud Container",
+      "authors": [
+        {
+          "name": "VM Onmalwar"
+        },
+        {
+          "name": "CNSV Kumar"
+        }
+      ],
+      "abstract": "",
+      "doi": "",
+      "publicationDate": "2024",
+      "journal": "2024 3rd International …, 2024",
+      "volume": "1",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_InfrastructureSecurity_Authentication/Two_Factor_Authentication_using_secure_algorithm_for_Cloud_Container.pdf",
+      "fileUrl": "https://ieeexplore.ieee.org/abstract/document/10511507/",
+      "extractionDate": "2025-04-29T03:20:40.898297",
+      "extractionConfidenceScore": 0.38
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "410d980d49aa4308829555ce4edff4b3",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cloud Security",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.5,
+      "paper": "08144d0fdcd4497299ef371d9e9d6048"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "6de6bbb659b5405c869b441b892b8833",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.0,
+      "paper": "08144d0fdcd4497299ef371d9e9d6048"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "630ead1c140a42898b1ea5863580734c",
+      "problemStatement": "The core problem the research addresses is not explicitly stated in the provided text.",
+      "problemScope": null,
+      "problemType": null,
+      "problemImportance": null,
+      "businessRelevance": null,
+      "extractionConfidence": 0.0,
+      "paper": "08144d0fdcd4497299ef371d9e9d6048"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "7231435310e74994bb5ddb0aa45232ad",
+      "name": "Secure Two Factor Authentication for Cloud Containers",
+      "description": null,
+      "studyDesign": {
+        "designType": "Simulation",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": null
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Development of Secure Algorithm",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Identification of security requirements for two-factor authentication in cloud containers.",
+              "inputs": null,
+              "outputs": "List of security requirements",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Designing the algorithm to meet the identified security requirements.",
+              "inputs": "List of security requirements",
+              "outputs": "Algorithm design",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Implementation of the algorithm in a simulated cloud container environment.",
+              "inputs": "Algorithm design",
+              "outputs": "Implemented algorithm",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 4,
+              "description": "Testing the algorithm for effectiveness and security.",
+              "inputs": "Implemented algorithm",
+              "outputs": "Test results",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involved the development of a secure algorithm tailored for two-factor authentication in cloud container environments. The algorithm was designed to enhance security by requiring two distinct forms of user identification before granting access."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": null,
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": null
+      },
+      "validationAndVerification": {
+        "validationTypes": [
+          "Algorithm Effectiveness",
+          "Security Robustness"
+        ],
+        "validationProcedure": "The validation procedure involved a series of tests to evaluate the effectiveness of the two-factor authentication algorithm and its robustness against security threats. This included penetration testing and simulation of authentication scenarios to ensure the algorithm performed as expected.",
+        "validationMetrics": "Success rate of authentication, number of security breaches prevented, time taken for authentication",
+        "validationResults": null,
+        "industryStandards": null
+      },
+      "extractionConfidence": 0.5,
+      "paper": "08144d0fdcd4497299ef371d9e9d6048",
+      "researchProblem": "630ead1c140a42898b1ea5863580734c"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "800896005ebe48f5a01ef2d9044e3cb7",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "7231435310e74994bb5ddb0aa45232ad"
+      ]
+    }
+  ]
+}

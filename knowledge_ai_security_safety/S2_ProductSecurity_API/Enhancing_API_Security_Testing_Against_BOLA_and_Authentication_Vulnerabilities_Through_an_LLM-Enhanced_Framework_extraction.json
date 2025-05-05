@@ -1,0 +1,564 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "title": "Enhancing API Security Testing Against BOLA and Authentication Vulnerabilities Through an LLM-Enhanced Framework",
+      "authors": [
+        {
+          "name": "EM Pasca"
+        },
+        {
+          "name": "R Erdei"
+        },
+        {
+          "name": "D Delinschi"
+        },
+        {
+          "name": "O Matei"
+        }
+      ],
+      "abstract": "This study explores the enhancement of API security testing against Broken Object Level Authorization (BOLA) and Authentication vulnerabilities through the integration of an LLM (Large Language Model)-enhanced framework. By incorporating the OpenHermes 2.5 Mistral 7B model, fine-tuned for domain-specific vulnerabilities, into the Karate testing framework, we demonstrate a novel approach to generating comprehensive and accurate test scenarios. Our methodology emphasizes prompt refinement, dynamic data handling, and endpoint context recognition to address the complexities of API security testing. A case study utilizing the VAmPI API Specification reveals significant improvements in test case generation and complexity, highlighting the potential of fine-tuned LLMs in identifying and mitigating API vulnerabilities. While promising, our exploration uncovers challenges in dataset development, token allocation, and mock data reliance, suggesting areas for future research, including the adoption of Retrieval Augmented Generation (RAG) and Retrieval Aware Fine-Tuning (RAFT) methods. Our findings underscore the transformative impact of LLMs on API security testing, paving the way for more robust and efficient testing frameworks.",
+      "doi": "10.1007/978-3-031-75010-6_23",
+      "publicationDate": "2024",
+      "journal": "International Conference on …, 2024",
+      "volume": "2",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "API Security",
+        "Web Application Testing",
+        "Testing Microservices",
+        "Large Language Models (LLMs)",
+        "Cybersecurity"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_API/Enhancing API Security Testing Against BOLA and Authentication Vulnerabilities Through an LLM-Enhanced Framework.pdf",
+      "fileUrl": "https://link.springer.com/chapter/10.1007/978-3-031-75010-6_23",
+      "extractionDate": "2025-04-30T22:21:19.628205",
+      "extractionConfidenceScore": 0.8081
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "d161df6fd0684a0dbfd382472269838c",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "API Security Testing",
+      "associatedProject": "Collaborative Framework for Smart Agriculture - COSA",
+      "fundingSources": [
+        {
+          "funderName": "Romanian National Authority for Scientific Research and Innovation, CCCDI - UEFISCDI",
+          "grantNumber": "ERANET-CHISTERA-IV-TROCI 4/2024"
+        },
+        {
+          "funderName": "Romania's National Recovery and Resilience Plan PNRR-III-C9-2022-I8",
+          "grantNumber": "760070"
+        }
+      ],
+      "institutions": [],
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "f19f3c79ce6d43c4824bab700948a0e4",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "OpenHermes 2.5 Mistral 7B",
+          "relevance": "Used for fine-tuning to detect and mitigate API security vulnerabilities, specifically BOLA and Authentication flaws."
+        }
+      ],
+      "philosophicalParadigm": "Not Specified",
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "0235795a817845e5b60feff1e8506e32",
+      "problemStatement": "The research addresses the challenge of enhancing API security testing against Broken Object Level Authorization (BOLA) and Authentication vulnerabilities through the integration of a Large Language Model (LLM)-enhanced framework.",
+      "problemScope": "The scope includes the generation of comprehensive and accurate test scenarios for APIs, specifically targeting BOLA and Authentication vulnerabilities.",
+      "problemType": "DesignProblem",
+      "problemImportance": "These vulnerabilities pose significant risks to data integrity and user privacy, necessitating effective security testing frameworks.",
+      "businessRelevance": "Improving API security testing is crucial for protecting digital assets in software interconnectivity, which has direct implications for business operations and the safeguarding of sensitive data.",
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "81dad2a3f3964991b8da63360ca8f242",
+      "gapDescription": "Challenges in dataset development for fine-tuning LLMs to address API security vulnerabilities, including the time-consuming process of crafting API specifications and test scenarios.",
+      "relatedDomain": "API Security Testing",
+      "gapSignificance": "A comprehensive dataset is critical for simulating real-world scenarios and effectively addressing BOLA vulnerabilities.",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "relatedProblem": "0235795a817845e5b60feff1e8506e32"
+    },
+    {
+      "internal_id": "edeac04206a64833b013d5246d63856a",
+      "gapDescription": "Difficulties in managing the LLM's tendency to produce excessive verbatim text during fine-tuning, requiring iterative refinement and prompt engineering.",
+      "relatedDomain": "LLM Fine-Tuning for Security Testing",
+      "gapSignificance": "Minimizing verbatim text generation is essential for improving the predictive accuracy and relevance of test scenarios generated by LLMs.",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "relatedProblem": "0235795a817845e5b60feff1e8506e32"
+    },
+    {
+      "internal_id": "0884ff10be54456783ab9669045daeca",
+      "gapDescription": "Need for advanced methodologies like Retrieval Augmented Generation (RAG) and Retrieval Aware Fine-Tuning (RAFT) to navigate and address the intricacies of API security testing more effectively.",
+      "relatedDomain": "API Security Testing",
+      "gapSignificance": "Adopting RAG and RAFT methods could refine the mechanism for handling complex data relationships and improve the overall efficacy of API security testing frameworks.",
+      "extractionConfidence": 0.75,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "relatedProblem": "0235795a817845e5b60feff1e8506e32"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "f6dd6332767d4ae4b6f8337e6cccf4bf",
+      "questionText": "What is the effectiveness of security fine-tuned LLMs in generating comprehensive test scenarios for BOLA and similar domain-specific vulnerabilities?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Effectiveness of security fine-tuned LLMs",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Comprehensive test scenarios generation",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "BOLA and domain-specific vulnerabilities",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "relatedProblem": "0235795a817845e5b60feff1e8506e32",
+      "addressesGap": "81dad2a3f3964991b8da63360ca8f242"
+    },
+    {
+      "internal_id": "0022b4369178416baf8a834dacb77630",
+      "questionText": "What challenges and implications arise from fine-tuning an LLM for domain-specific security vulnerabilities, such as BOLA and Authentication flaws?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Challenges and implications of fine-tuning LLM",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Domain-specific security vulnerabilities",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "BOLA and Authentication flaws",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "relatedProblem": "0235795a817845e5b60feff1e8506e32",
+      "addressesGap": "81dad2a3f3964991b8da63360ca8f242"
+    },
+    {
+      "internal_id": "4c00dfc43a054b49924af0480b79d1bd",
+      "questionText": "Within the framework's architecture, how pivotal is the role of finetuning compared to other components like Karate DSL integration, in producing accurate and effective test scenarios?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Role of finetuning",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Karate DSL integration",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Accuracy of test scenarios",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Effectiveness of test scenarios",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "relatedProblem": "0235795a817845e5b60feff1e8506e32",
+      "addressesGap": "81dad2a3f3964991b8da63360ca8f242"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "d6bdda60f4134b05b1242091ab6d858c",
+      "directionDescription": "Developing methodologies for enhanced data relationships, ensuring test scenarios accurately reflect complex, real-world data interdependencies.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "addressesGap": "81dad2a3f3964991b8da63360ca8f242",
+      "arisesFromLimitation": "fc6ccf81c0c3409689df377aa2030de6"
+    },
+    {
+      "internal_id": "5663288e225145e5aa2a7914142dae65",
+      "directionDescription": "Advancing state management strategies to maintain test integrity, particularly for sequential dependencies within test suites.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "addressesGap": "81dad2a3f3964991b8da63360ca8f242",
+      "arisesFromLimitation": "fc6ccf81c0c3409689df377aa2030de6"
+    },
+    {
+      "internal_id": "9616407a7c2e44da9a078b72878c4237",
+      "directionDescription": "Embracing data variation and edge cases to challenge systems with unconventional datasets, thereby uncovering potential vulnerabilities.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "addressesGap": "81dad2a3f3964991b8da63360ca8f242",
+      "arisesFromLimitation": "fc6ccf81c0c3409689df377aa2030de6"
+    },
+    {
+      "internal_id": "e6246aedd60e425aafae6a58bf14b0c7",
+      "directionDescription": "Exploiting parameterized testing for efficiency, enabling exhaustive scenario exploration through variable-driven test executions.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "addressesGap": "81dad2a3f3964991b8da63360ca8f242",
+      "arisesFromLimitation": "fc6ccf81c0c3409689df377aa2030de6"
+    },
+    {
+      "internal_id": "23abd7f43eee4343acb379bb0254db8a",
+      "directionDescription": "Integrating with external data sources to enrich test datasets, capturing the multifaceted nature of API interactions.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "addressesGap": "81dad2a3f3964991b8da63360ca8f242",
+      "arisesFromLimitation": "fc6ccf81c0c3409689df377aa2030de6"
+    },
+    {
+      "internal_id": "60b788ce0b944b37b7d2e3c7c4fbce21",
+      "directionDescription": "Implementing feedback loops for continuous refinement of testing strategies, informed by ongoing analysis of test outcomes.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "addressesGap": "81dad2a3f3964991b8da63360ca8f242",
+      "arisesFromLimitation": "fc6ccf81c0c3409689df377aa2030de6"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "a7b2cfccdce548c59a13e29f9bb8073c",
+      "challengeDescription": "The development of a domain-specific dataset for fine-tuning LLMs is time-consuming and requires meticulous crafting of API specifications and test scenarios.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "relatedProblem": "0235795a817845e5b60feff1e8506e32"
+    },
+    {
+      "internal_id": "66c08e7aa0a840a785bf9887dbefea57",
+      "challengeDescription": "Managing the model's tendency to produce excessive verbatim text necessitates iterative refinement and prompt engineering, indicating a need for a nuanced approach to fine-tuning practices.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.75,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "relatedProblem": "0235795a817845e5b60feff1e8506e32"
+    },
+    {
+      "internal_id": "a86114912a954cd18419a7e01faaac00",
+      "challengeDescription": "Fine-tuning operates within a broader ecosystem of improvements, suggesting that addressing API security vulnerabilities requires a comprehensive enhancement strategy beyond just fine-tuning.",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "relatedProblem": "0235795a817845e5b60feff1e8506e32"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [
+    {
+      "internal_id": "6402c3f498a6475da10295c5bbcaade9",
+      "challengeDescription": "Dataset development for BOLA specifications was challenging due to the lack of comprehensive datasets, requiring the curation of a custom dataset with approximately 103 examples.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Curating a custom dataset from diverse sources structured around '[question]'/'[response]' pairs with a focus on authentication/authorization challenges.",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986",
+      "resultsInLimitation": "fc6ccf81c0c3409689df377aa2030de6",
+      "relatedScientificChallenge": "a7b2cfccdce548c59a13e29f9bb8073c"
+    },
+    {
+      "internal_id": "3e66be7924d0452596ebfcbb778e5c25",
+      "challengeDescription": "Token allocation limitations and the emergence of verbose text within test scenarios indicated the need for dataset optimization and enhanced LLM interaction strategies.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Refinement of scenario generation prompts and potential future adoption of Retrieval Augmented Generation (RAG) and Retrieval Aware Fine-Tuning (RAFT) methods.",
+      "extractionConfidence": 0.7,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986",
+      "resultsInLimitation": "fc6ccf81c0c3409689df377aa2030de6",
+      "relatedScientificChallenge": "a7b2cfccdce548c59a13e29f9bb8073c"
+    },
+    {
+      "internal_id": "17bfac4fd65f4c7ea9e9dc8318e752c8",
+      "challengeDescription": "Reliance on mock examples instead of genuine API endpoints suggested the framework's conceptual stage, necessitating advancements towards operational readiness.",
+      "researchPhase": "Validation",
+      "mitigationStrategy": "Adjustments to the prompts to include domain-specific endpoint paths and in-depth scenario validation.",
+      "extractionConfidence": 0.7,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986",
+      "resultsInLimitation": "fc6ccf81c0c3409689df377aa2030de6",
+      "relatedScientificChallenge": "a7b2cfccdce548c59a13e29f9bb8073c"
+    },
+    {
+      "internal_id": "0c4771b315c94b548777ade0f5a6a47b",
+      "challengeDescription": "The framework's handling of authentication scenarios, specifically the assumption of 'Bearer <token>' values, highlighted areas for improvement in generating and validating authentication tokens.",
+      "researchPhase": "Validation",
+      "mitigationStrategy": "Refining the scenario generation prompts to improve test scenario accuracy and relevance.",
+      "extractionConfidence": 0.7,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986",
+      "resultsInLimitation": "fc6ccf81c0c3409689df377aa2030de6",
+      "relatedScientificChallenge": "a7b2cfccdce548c59a13e29f9bb8073c"
+    },
+    {
+      "internal_id": "a440ed27cd344e5d9f9d6e1c75646773",
+      "challengeDescription": "Complexities associated with mock data and inter-dependent parameters critical for simulating real-world scenarios.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Developing methodologies for enhanced data relationships to ensure test scenarios accurately reflect complex, real-world data interdependencies.",
+      "extractionConfidence": 0.7,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986",
+      "resultsInLimitation": "fc6ccf81c0c3409689df377aa2030de6",
+      "relatedScientificChallenge": "a7b2cfccdce548c59a13e29f9bb8073c"
+    },
+    {
+      "internal_id": "32124c2e0916437095fa7d5c821e2b97",
+      "challengeDescription": "Addressing the BOLA vulnerability proved time-intensive, underscoring the need for a comprehensive dataset that encapsulates varied API specifications and corresponding attack vectors.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Potential integration of diverse datasets using LLMs and possibly employing RAFT or RAG strategies.",
+      "extractionConfidence": 0.7,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986",
+      "resultsInLimitation": "fc6ccf81c0c3409689df377aa2030de6",
+      "relatedScientificChallenge": "a7b2cfccdce548c59a13e29f9bb8073c"
+    }
+  ],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "5f748cc3a7ee40378bcfe241db597466",
+      "challengeDescription": "Dataset development for BOLA specifications is challenging due to the need for a comprehensive set that encapsulates varied API specifications and corresponding attack vectors.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Curating a custom dataset with sufficient examples and diversity",
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986"
+    },
+    {
+      "internal_id": "9996c83d49dd45b8b42f235f25974b98",
+      "challengeDescription": "Token allocation limitations and verbose text within test scenarios indicate a need for dataset optimization and enhanced LLM interaction strategies.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Managing token allocation and refining verbose text output",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986"
+    },
+    {
+      "internal_id": "890c4a40c0d6455e97147bcc0a7dc4bb",
+      "challengeDescription": "Reliance on mock examples instead of genuine API endpoints suggests the framework's conceptual stage, necessitating advancements towards operational readiness.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Transitioning from mock data to real-world API endpoint data",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986"
+    },
+    {
+      "internal_id": "e980f05127154936b4f15a1572b19926",
+      "challengeDescription": "The framework's handling of authentication scenarios, specifically the assumption of 'Bearer <token>' values, highlights areas for improvement in generating and validating authentication tokens.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Improving the generation and validation of authentication tokens",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986"
+    },
+    {
+      "internal_id": "7e2c22d6207a4027ae0a07e928ff4145",
+      "challengeDescription": "The need for component refinement to ensure domain-specific scenario generation due to limitations in endpoint context recognition.",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Refining components for accurate domain-specific scenario generation",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "encounteredInFramework": "6e102dba3dea4ee081f7d3530f937986"
+    }
+  ],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "fc6ccf81c0c3409689df377aa2030de6",
+      "limitationDescription": "Challenges in dataset development, token allocation, and reliance on mock data",
+      "limitationType": "ResourceConstraint",
+      "impactOnFindings": "May affect the model's ability to generate accurate and relevant test scenarios for real-world applications",
+      "businessConstraints": "Could limit the framework's practical deployment due to the need for dataset optimization and more sophisticated interaction strategies",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "limitedFramework": "6e102dba3dea4ee081f7d3530f937986"
+    },
+    {
+      "internal_id": "0748e496be874450aaaf29a1dc55e832",
+      "limitationDescription": "Use of mock 'http://api.example.com' paths due to the OAS Decomposer's domain handling",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "Limits the context recognition and domain-specific scenario generation, affecting the generalizability of the test cases",
+      "businessConstraints": "May hinder the framework's ability to be directly applied to real-world APIs without additional refinement",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "limitedFramework": "6e102dba3dea4ee081f7d3530f937986"
+    },
+    {
+      "internal_id": "ac3a8ac43f1e4e8c95ddb91d3f18ebd5",
+      "limitationDescription": "Reliance on mock examples instead of genuine API endpoints suggests the framework's conceptual stage",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "Impacts the operational readiness and authenticity of the generated test cases",
+      "businessConstraints": "Necessitates further development for the framework to be applicable in real operational environments",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "limitedFramework": "6e102dba3dea4ee081f7d3530f937986"
+    },
+    {
+      "internal_id": "097019ffef9e4726a8032468a741b3e9",
+      "limitationDescription": "Assumption of 'Bearer <token>' values in authentication scenarios indicates a need for improvement in token generation and validation",
+      "limitationType": "ValidityThreat",
+      "impactOnFindings": "May compromise the accuracy of authentication scenario testing and the identification of related vulnerabilities",
+      "businessConstraints": "Could affect the reliability of the framework in testing authentication mechanisms in a business setting",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "limitedFramework": "6e102dba3dea4ee081f7d3530f937986"
+    },
+    {
+      "internal_id": "4f7752c29f18477085a7a508bd8645df",
+      "limitationDescription": "Complexities associated with mock data and inter-dependent parameters critical for simulating real-world scenarios",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "Affects the ability to simulate complex, real-world data interdependencies, potentially limiting the effectiveness of test scenarios",
+      "businessConstraints": "May require more sophisticated data generation strategies for practical implementation",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "limitedFramework": "6e102dba3dea4ee081f7d3530f937986"
+    },
+    {
+      "internal_id": "4d3ebf12d75b43aeb94164f427a18bef",
+      "limitationDescription": "Time-intensive process of addressing the BOLA vulnerability due to the need for a comprehensive dataset",
+      "limitationType": "TemporalLimitation",
+      "impactOnFindings": "Delays in dataset development could slow down the process of identifying and mitigating BOLA vulnerabilities",
+      "businessConstraints": "Could extend the timeframe for deploying the framework in a business context, affecting project timelines and resource allocation",
+      "extractionConfidence": 0.8,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "limitedFramework": "6e102dba3dea4ee081f7d3530f937986"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "6e102dba3dea4ee081f7d3530f937986",
+      "name": "LLM-Enhanced Framework for API Security Testing",
+      "description": "The study presents a methodological framework that integrates a fine-tuned Large Language Model (LLM), specifically the OpenHermes 2.5 Mistral 7B model, into the Karate testing framework to enhance API security testing against Broken Object Level Authorization (BOLA) and Authentication vulnerabilities. The methodology emphasizes prompt refinement, dynamic data handling, and endpoint context recognition to generate comprehensive and accurate test scenarios. The framework is evaluated through a case study using the VAmPI API Specification, demonstrating improvements in test case generation and complexity.",
+      "studyDesign": {
+        "designType": "CaseStudy",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study employs a case study design to evaluate the effectiveness of the LLM-enhanced framework in generating test scenarios for API security vulnerabilities. The design does not include a control group or randomization, as it focuses on the application of the framework to a specific API specification and the subsequent analysis of the generated test cases."
+      },
+      "procedures": [
+        {
+          "procedureName": "Integration and Fine-Tuning of the OpenHermes 2.5 Mistral 7B Model",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Selection of the Mistral 7B model based on its efficiency, versatility, and innovative features suitable for the framework's requirements.",
+              "inputs": "Model selection criteria",
+              "outputs": "Selected Mistral 7B model",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Curating a custom dataset featuring examples to fine-tune the model for BOLA specifications.",
+              "inputs": "Approximately 103 examples",
+              "outputs": "Custom dataset for fine-tuning",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Using Togheter.ai for fine-tuning the model, with customization of hyperparameters and integration with Weights & Biases for training result monitoring.",
+              "inputs": "Custom dataset, Togheter.ai tool",
+              "outputs": "Fine-tuned OpenHermes 2.5 Mistral 7B model",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 4,
+              "description": "Compiling a dataset from diverse sources structured around 'question/response' pairs for testing BOLA vulnerabilities.",
+              "inputs": "Sources of BOLA vulnerability data",
+              "outputs": "Compiled BOLA dataset for Karate testing",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 5,
+              "description": "Training the model and optimizing it based on the reduction in loss and improved predictive accuracy.",
+              "inputs": "Fine-tuned model, training data",
+              "outputs": "Optimized model with training results",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 6,
+              "description": "Automating the test generation process using the KRTLLM framework, which includes components for data preparation, feature file generation, API framework building, and test running.",
+              "inputs": "Optimized model, API specification",
+              "outputs": "Generated test cases",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves integrating the OpenHermes 2.5 Mistral 7B model into the KRTLLM framework and fine-tuning it with a custom dataset to target API security vulnerabilities more effectively."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": null,
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves evaluating the effectiveness of the fine-tuned LLM within the Karate DSL-based testing framework by analyzing the generated test cases for their accuracy, complexity, and relevance in targeting BOLA and Authentication vulnerabilities."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TabularData",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The results indicate that the LLM-enhanced framework can generate a significant number of test cases with improved complexity and structure. The framework's ability to recognize endpoint context and handle authentication scenarios was also evaluated, revealing areas for further refinement."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "The training results are publicly available for review, and the fine-tuned model is publicly available on HuggingFace.",
+        "dataRepository": "https://api.wandb.ai/links/emil-pasca/bxdjrmfy",
+        "codeAvailabilityStatement": "The KRTLLM framework is an open-source project.",
+        "codeRepository": "https://huggingface.co/EmilMarian/OpenHermes-2.5-Mistral-7B-BOLA-KarateFine-Tuned/tree/main",
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "6e1b1bcbe73e4e4d90b72c4b9d372c72",
+      "researchProblem": "0235795a817845e5b60feff1e8506e32"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "916dfcb9d7044f7b94e5aa4dbd8b1ca8",
+      "itemName": "No relevant information provided",
+      "extractionConfidence": 0.7,
+      "usedInFrameworks": [
+        "6e102dba3dea4ee081f7d3530f937986"
+      ]
+    }
+  ]
+}

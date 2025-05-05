@@ -1,0 +1,568 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "741ec957cd9e4e9bac097a19f24210d9",
+      "title": "Access Control Analysis in Heterogeneous Big Data Management Systems",
+      "authors": [
+        {
+          "name": "Input2"
+        }
+      ],
+      "abstract": "Big data management systems are in demand today in almost all industries, being also a foundation for artificial intelligence training. The use of heterogeneous polystores in big data systems has led to the fact that tools within the same system have different data granularity and access control models. The harmonization of these components by the security administrator and the implementation of a common access policy are now carried out by hand. This leads to an increasing number of vulnerabilities, which in turn become frequent causes of data leaks. The current situation in the field of automation and analysis of access control in big data systems reveals the lack of automation solutions for polystore-based systems. This paper addresses the problem of automated access control analysis in big data management systems. We formulate and discuss the main contradiction between the requirement of scalability and flexibility of access control and the increased workload on the security administrator, aggravated by the use of different data and access control models in system components. To solve this problem, we propose a new automated method for analyzing security policies based on a graph model, which reduces the number of potential vulnerabilities caused by incorrect management of big data systems. The proposed method uses the data lifecycle model of the system, its current settings, and the required security policy. The use of two-pass analysis (from data sources to data receivers and back) allows us to solve two problems: the analysis of the access control system for potential vulnerabilities and the check for business logic vulnerabilities. As an example, we consider the use of a developed prototype tool for security policy analysis in a big data management system.",
+      "doi": "10.1134/S0361768824700269",
+      "publicationDate": "2024",
+      "journal": "Politekhnicheskaya",
+      "volume": "29",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S2_InfrastructureSecurity_Databases/Access Control Analysis in Heterogeneous Big Data Management Systems.pdf",
+      "fileUrl": "",
+      "extractionDate": "2025-04-24T08:42:41.645445",
+      "extractionConfidenceScore": 0.8345
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "6ff378ab43a74e3a950eb6041e1af33a",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Big Data Management Systems, Access Control, Security Policy Analysis",
+      "associatedProject": null,
+      "fundingSources": [
+        {
+          "funderName": "Russian Science Foundation",
+          "grantNumber": "23-11-20003"
+        },
+        {
+          "funderName": "St.Petersburg Science Foundation",
+          "grantNumber": null
+        }
+      ],
+      "institutions": [],
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "cc2084c8d97e48c1aec41cb26e2d6c43",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "Attribute-Based Access Control (ABAC)",
+          "relevance": "Used as a basic access control mechanism due to its granularity and accuracy; other policies can be described in ABAC terms and rules."
+        },
+        {
+          "modelName": "Data Lifecycle Model",
+          "relevance": "Used to describe the process of obtaining an output data fragment from an input one, taking into account the access rights of each processed fragment."
+        },
+        {
+          "modelName": "Graph Model of Data Lifecycle",
+          "relevance": "Describes big data processing in a polystore and can be constructed automatically, which is a significant advantage for the proposed method."
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "2c0f80920086442783c95847ccfbb0cc",
+      "problemStatement": "The problem of automated access control analysis in big data management systems, particularly in the context of heterogeneous polystores where tools within the same system have different data granularity and access control models, leading to vulnerabilities and data leaks due to manual harmonization and implementation of common access policies.",
+      "problemScope": "The scope includes big data management systems that utilize heterogeneous polystores, requiring scalable and flexible access control that is currently managed manually, leading to increased workload on security administrators and potential security risks.",
+      "problemType": "DesignProblem",
+      "problemImportance": "This problem is critical as it leads to an increasing number of vulnerabilities and frequent causes of data leaks, which are significant issues in the field of big data security.",
+      "businessRelevance": "Solving this problem is relevant to businesses as it pertains to the security and integrity of big data systems, which are foundational for industries and artificial intelligence training, and directly impacts the prevention of data leaks and the protection of sensitive information.",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "7929eb7f16e241a988fd653676f9deff",
+      "gapDescription": "Lack of automation solutions for polystore-based systems in the field of automation and analysis of access control in big data systems.",
+      "relatedDomain": "Big Data Management Systems",
+      "gapSignificance": "The harmonization of access control settings among heterogeneous components is carried out by hand, leading to high time costs, high requirements for the qualification of the security analyst, and a significant number of errors.",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "ba8a95e8c5d74d2b93b460aad00f7a85",
+      "gapDescription": "Existing solutions in the field of automation and analysis of access control in big data systems provide acceptable information security only for homogeneous systems.",
+      "relatedDomain": "Big Data Management Systems",
+      "gapSignificance": "In polystores, the harmonization of access control settings among heterogeneous components is not automated, which leads to vulnerabilities and data leaks.",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "88027f611da048b2a167b77a864212b4",
+      "gapDescription": "The problem of different data granulation in polystores has not been resolved, and the problem of granular access control in this subclass of solutions remains open.",
+      "relatedDomain": "Big Data Management Systems",
+      "gapSignificance": "Tools within the same system have different data granularity and access control models, which complicates the implementation of a common access policy and increases the risk of vulnerabilities.",
+      "extractionConfidence": 0.85,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "6cb04c9d505f406890cf7d74eb5677ff",
+      "gapDescription": "Lack of an analytical mechanism to detect vulnerabilities in access control implementations when using universal access control automation tools based on blockchain technology.",
+      "relatedDomain": "Big Data Management Systems",
+      "gapSignificance": "Without an analytical mechanism, there is still a need to transfer to internal access control systems in structured storages, which does not fully protect against data leaks.",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "e973e58ea0e74cc2989d75cebe0366c7",
+      "gapDescription": "Difficulty in implementing comprehensive, consistent access control at the system level due to the large number of users with different levels of access, complexity and nonlinearity of the lifecycle of data fragments, and different structuring of data during processing.",
+      "relatedDomain": "Big Data Management Systems",
+      "gapSignificance": "These problems lead to a main contradiction of access control in big data systems, where flexibility and scalability of access control are needed but increase the complexity of configuration and risk of data leaks.",
+      "extractionConfidence": 0.85,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "3771f04cbec946fa8cec452dbd534958",
+      "gapDescription": "The problem of constructing a highly detailed data processing graph for arbitrary data storages still poses a challenge.",
+      "relatedDomain": "Big Data Management Systems",
+      "gapSignificance": "A detailed data processing graph is essential for integrating auditing components with internal data conversions in DBMS, which is crucial for automated access control analysis.",
+      "extractionConfidence": 0.75,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "5c93c68c9db642d5ac0f93c26afbf527",
+      "questionText": "How can the problem of automated access control analysis in big data management systems be addressed?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "Automated access control analysis",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Big data management systems",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc",
+      "addressesGap": "7929eb7f16e241a988fd653676f9deff"
+    },
+    {
+      "internal_id": "c31e3ef2e7e94da2ac2158f1dde16e5f",
+      "questionText": "What is the main contradiction between the requirement of scalability and flexibility of access control and the increased workload on the security administrator in big data systems?",
+      "questionType": "Explanatory",
+      "relatedVariables": [
+        {
+          "variableName": "Scalability and flexibility of access control",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Workload on the security administrator",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc",
+      "addressesGap": "7929eb7f16e241a988fd653676f9deff"
+    },
+    {
+      "internal_id": "0b3ed90624dc4811a8124d41f32f6f0b",
+      "questionText": "Can a new automated method for analyzing security policies based on a graph model reduce the number of potential vulnerabilities caused by incorrect management of big data systems?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Automated method for analyzing security policies",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Number of potential vulnerabilities",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc",
+      "addressesGap": "7929eb7f16e241a988fd653676f9deff"
+    },
+    {
+      "internal_id": "93db34ee76584fa1bcaff9470e558392",
+      "questionText": "How does the use of two-pass analysis (from data sources to data receivers and back) solve the problems of analyzing the access control system for potential vulnerabilities and checking for business logic vulnerabilities?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "Two-pass analysis",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Potential vulnerabilities analysis",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Business logic vulnerabilities check",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc",
+      "addressesGap": "7929eb7f16e241a988fd653676f9deff"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "a55e8119f7854a448ac32fce164d8c1d",
+      "directionDescription": "Increasing the degree of automation by integration with data storages of various types, as well as improving algorithms and methods for data collection and analysis.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "addressesGap": "7929eb7f16e241a988fd653676f9deff",
+      "arisesFromLimitation": "f8a31933be1946f3a8a675ca35c9b28b",
+      "extendsPotentialApplication": "3118fd768ada45488f36c72b36dca13b"
+    },
+    {
+      "internal_id": "23078674b037461f955fb5a520ae6a75",
+      "directionDescription": "Developing methods for decision making support in the analysis of security policies and automating the process of finding rational decisions based on methods of multi-criteria discrete optimization and logic algebra.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "addressesGap": "7929eb7f16e241a988fd653676f9deff",
+      "arisesFromLimitation": "f8a31933be1946f3a8a675ca35c9b28b",
+      "extendsPotentialApplication": "3118fd768ada45488f36c72b36dca13b"
+    },
+    {
+      "internal_id": "e3b78948ba8e42a2be1ca89a13c9843a",
+      "directionDescription": "Constructing a highly detailed data processing graph for arbitrary data storages, integrating auditing components of data processing nodes with internal data conversions in DBMS when executing queries.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.85,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "addressesGap": "7929eb7f16e241a988fd653676f9deff",
+      "arisesFromLimitation": "f8a31933be1946f3a8a675ca35c9b28b",
+      "extendsPotentialApplication": "3118fd768ada45488f36c72b36dca13b"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "3118fd768ada45488f36c72b36dca13b",
+      "applicationDescription": "The proposed method and framework for automated access control analysis in big data systems can reduce the cost for collecting access control information and facilitate the manual analysis of access right transfer among data processing tools.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "buildOnMethodologicalFrameworks": [
+        "efc4f2070aea48feb21059b7650f6e6b"
+      ]
+    },
+    {
+      "internal_id": "c4d4c3b6dcff472faf92b5ce280b7c05",
+      "applicationDescription": "The method includes a two-pass analysis of access rules which can be used to check the system with the desired security policy for business logic vulnerabilities and to assess the possibility of data leaks, thus enhancing system security.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "buildOnMethodologicalFrameworks": [
+        "efc4f2070aea48feb21059b7650f6e6b"
+      ]
+    },
+    {
+      "internal_id": "d3853b479f1c4ea4810ea683e58761c8",
+      "applicationDescription": "The proposed method and prototype tool can be used as a basis for constructing various scientific and technical solutions, including auditing tools, tools for security assessment, and intrusion detection tools for big data management systems.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "buildOnMethodologicalFrameworks": [
+        "efc4f2070aea48feb21059b7650f6e6b"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "9dacb76d84fe45f68ba31e25fce0f1f8",
+      "challengeDescription": "Harmonization of access control settings among heterogeneous polystore components without efficient automation, leading to high time costs, high requirements for the qualification of the security analyst, and a significant number of errors.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "7b6a2d4a4f1f4721ab655d1d6f555694",
+      "challengeDescription": "Lack of automation solutions for polystore-based systems, which leads to an increasing number of vulnerabilities and frequent causes of data leaks.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "a326f76b990f493f99d598826b1b6ee6",
+      "challengeDescription": "The complexity and nonlinearity of the lifecycle of data fragments in big data systems, which makes it difficult to track these fragments and implement consistent access control.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "4904d1c705ed4ec99e34edf7fcbc76f9",
+      "challengeDescription": "Different structuring of data during their processing in the system due to the use of different processing tools and multiple operations for extracting parts of data and combining them into new sets.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "5103aa3914f64648823ff913443905f4",
+      "challengeDescription": "The main contradiction between the requirement of scalability and flexibility of access control and the increased workload on the security administrator, aggravated by the use of different data and access control models in system components.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Fundamental",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "166108c78dc44782b4e3ecd35ba365bb",
+      "challengeDescription": "The need for an analytical component that enables automated search for rational access parameters in a particular system, taking into account its components, operating principles, and business logic.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    },
+    {
+      "internal_id": "89636bb110be412bb2f144c6ac7ddefe",
+      "challengeDescription": "Integration of auditing components of data processing nodes with internal data conversions in DBMS when executing queries to construct a highly detailed data processing graph for arbitrary data storages.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "relatedProblem": "2c0f80920086442783c95847ccfbb0cc"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [
+    {
+      "internal_id": "55cee8726b764aa8bb371569dc5e55f7",
+      "challengeDescription": "The main contradiction between the flexibility of access control settings in big data systems and the increased workload on the security administrator, which is caused by the presence of heterogeneous polystore components in the data processing subsystem that do not allow for efficient automation of access control analysis.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Proposing a new method for automated access control analysis based on the initial and desired security policies and the data processing graph, including a two-pass analysis of access rules in the forward and backward directions over the data processing graph.",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "resultsInLimitation": "f8a31933be1946f3a8a675ca35c9b28b",
+      "relatedScientificChallenge": "9dacb76d84fe45f68ba31e25fce0f1f8"
+    },
+    {
+      "internal_id": "c9908143bdce469fae796d5263522ae7",
+      "challengeDescription": "The need to construct a data processing graph based on the migration of data fragments, which increases the workload for data collection in an operating big data system.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Automating the construction of the data processing graph where possible, and integrating auditing components of data processing nodes with internal data conversions in DBMS.",
+      "extractionConfidence": 0.75,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "resultsInLimitation": "f8a31933be1946f3a8a675ca35c9b28b",
+      "relatedScientificChallenge": "9dacb76d84fe45f68ba31e25fce0f1f8"
+    },
+    {
+      "internal_id": "ed19bc9934934576b8796dfcad122e61",
+      "challengeDescription": "The difficulty of constructing a highly detailed data processing graph for arbitrary data storages, which requires integrating auditing components with internal data conversions in DBMS.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Further research to integrate auditing components of data processing nodes with internal data conversions in DBMS and automate the collection of these data.",
+      "extractionConfidence": 0.7,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "resultsInLimitation": "f8a31933be1946f3a8a675ca35c9b28b",
+      "relatedScientificChallenge": "9dacb76d84fe45f68ba31e25fce0f1f8"
+    },
+    {
+      "internal_id": "8e8d1695651841e4a6460feb8f771e8e",
+      "challengeDescription": "The need to develop an automated data collection module for each data processing tool used in the system, which requires relatively high-level skills of the security administrator and high resource requirements for collecting information.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Increasing the degree of automation by integration with data storages of various types, as well as improving algorithms and methods for data collection and analysis.",
+      "extractionConfidence": 0.7,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "resultsInLimitation": "f8a31933be1946f3a8a675ca35c9b28b",
+      "relatedScientificChallenge": "9dacb76d84fe45f68ba31e25fce0f1f8"
+    }
+  ],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "8df965cff7b2459e93442426b3bc0610",
+      "challengeDescription": "Harmonization of components with different data granularity and access control models by the security administrator is currently manual, leading to vulnerabilities and data leaks.",
+      "resourceConstraint": "Personnel",
+      "technicalHurdle": "Lack of automation solutions for polystore-based systems",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "relatedApplication": "3118fd768ada45488f36c72b36dca13b"
+    },
+    {
+      "internal_id": "002677cba5414a688abeaca3f42dcf10",
+      "challengeDescription": "Increased workload on the security administrator due to the use of different data and access control models in system components.",
+      "resourceConstraint": "Personnel",
+      "technicalHurdle": "Integration of heterogeneous polystore components",
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "relatedApplication": "3118fd768ada45488f36c72b36dca13b"
+    },
+    {
+      "internal_id": "0aab40d8f9b84749be2fd5e7b0abd998",
+      "challengeDescription": "The need to construct a data processing graph based on the migration of data fragments increases the workload for analyzing an operating big data system.",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Construction of a data processing graph for data migration analysis",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "relatedApplication": "3118fd768ada45488f36c72b36dca13b"
+    },
+    {
+      "internal_id": "507d1df9fcff4c7aa73d114340d6d469",
+      "challengeDescription": "The need to develop an automated data collection module for each data processing tool used in the system.",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Development of automated data collection modules for diverse tools",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "relatedApplication": "3118fd768ada45488f36c72b36dca13b"
+    },
+    {
+      "internal_id": "3c8e41d2dc934ed9bf2035112d2a96ac",
+      "challengeDescription": "Relatively high resource requirements for collecting information from an operating big data processing system.",
+      "resourceConstraint": "Hardware",
+      "technicalHurdle": "Efficient data collection from active systems",
+      "extractionConfidence": 0.7,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "relatedApplication": "3118fd768ada45488f36c72b36dca13b"
+    },
+    {
+      "internal_id": "c0b87c988785401faceabbafa26935a2",
+      "challengeDescription": "Relatively high-level skills required of the security administrator to implement the proposed solution.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Need for advanced expertise in security administration",
+      "extractionConfidence": 0.7,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "encounteredInFramework": "efc4f2070aea48feb21059b7650f6e6b",
+      "relatedApplication": "3118fd768ada45488f36c72b36dca13b"
+    }
+  ],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "f8a31933be1946f3a8a675ca35c9b28b",
+      "limitationDescription": "The exact amount of time saved by the automation cannot be estimated, because it depends significantly on the complexity of a particular big data system and its data lifecycle, the number of types of system users, and the number of types of heterogeneous data fragments.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The results may not provide a clear indication of the time efficiency benefits across different systems.",
+      "businessConstraints": "Businesses may not be able to predict the return on investment for implementing the proposed method due to variability in time savings.",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "limitedFramework": "efc4f2070aea48feb21059b7650f6e6b"
+    },
+    {
+      "internal_id": "949e73e25ba8443aa436a1aadf2dfd1f",
+      "limitationDescription": "The proposed method and framework can be integrated into a big data system together with other solutions that provide access control for homogeneous components and information processing subsystems, but the possibility of implementing the proposed method in heterogeneous polystores, which use their own access control systems, is its key difference and advantage.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The study's findings may be limited to systems that can integrate the proposed method with existing access control solutions.",
+      "businessConstraints": "There may be challenges in applying the method to systems with highly heterogeneous access control mechanisms that are not easily integrated.",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "limitedFramework": "efc4f2070aea48feb21059b7650f6e6b"
+    },
+    {
+      "internal_id": "791c7ea16d544df3b2156206ef1235fb",
+      "limitationDescription": "Certain disadvantages of the proposed solution are currently the need to develop an automated data collection module for each data processing tool used in the system, relatively high-level skills of the security administrator, and, in part, relatively high resource requirements for collecting information from an operating big data processing system.",
+      "limitationType": "ResourceConstraint",
+      "impactOnFindings": "The applicability of the proposed solution may be limited by the resources available for developing data collection modules and the skill level of the security administrator.",
+      "businessConstraints": "Businesses may face increased costs and resource allocation challenges when developing custom modules and hiring or training skilled security administrators.",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "limitedFramework": "efc4f2070aea48feb21059b7650f6e6b"
+    },
+    {
+      "internal_id": "d6d290454dd2412c9ff04bb4631d4385",
+      "limitationDescription": "The problem of constructing a highly detailed data processing graph for arbitrary data storages still poses a challenge.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The effectiveness of the proposed method may be constrained by the current challenges in constructing detailed data processing graphs.",
+      "businessConstraints": "Businesses may encounter difficulties in implementing the proposed method due to the complexity of constructing detailed data processing graphs for their specific data storages.",
+      "extractionConfidence": 0.8,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "limitedFramework": "efc4f2070aea48feb21059b7650f6e6b"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "efc4f2070aea48feb21059b7650f6e6b",
+      "name": "Automated Access Control Analysis in Heterogeneous Big Data Systems",
+      "description": "The study proposes a methodological framework for automated access control analysis in big data management systems, particularly focusing on heterogeneous polystores. The framework is designed to address the contradiction between the need for scalable and flexible access control and the increased workload on security administrators due to different data and access control models in system components. The method involves a two-pass analysis (forward and reverse) over a graph model of the data lifecycle, which is constructed automatically and represents the structured data fragments and operations on them. The analysis is based on the attribute-based security model (ABAC) and aims to identify potential vulnerabilities and business logic issues by generating access matrices for input and output data fragments.",
+      "procedures": [
+        {
+          "procedureName": "Automated Access Control Analysis",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Construct a graph model of the data lifecycle, with vertices representing structured data fragments and edges representing operations on them.",
+              "inputs": "Data fragments and operations from the big data management system",
+              "outputs": "Graph model of the data lifecycle",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Perform a two-pass analysis (forward and reverse) over the graph model using the attribute-based security model (ABAC).",
+              "inputs": "Graph model of the data lifecycle",
+              "outputs": "Access matrices for input and output data fragments",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Identify potential vulnerabilities and business logic issues based on the generated access matrices.",
+              "inputs": "Access matrices for input and output data fragments",
+              "outputs": "Identification of potential vulnerabilities and business logic issues",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves constructing a graph model of the data lifecycle, representing the structured data fragments and operations on them. The analysis uses the attribute-based security model (ABAC) to generate access matrices for input and output data fragments, which are then used to identify potential vulnerabilities and business logic issues."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "Graph-Based Analysis",
+        "statisticalTests": null,
+        "algorithmsUsed": "Two-Pass Analysis (Forward and Reverse)",
+        "softwareDetails": "Custom Python Module, Apache Spark, MongoDB, PostgreSQL",
+        "parameterSettings": "ABAC rules and policies, data lifecycle graph construction parameters",
+        "dataPreprocessingSteps": "Extraction of access settings from data processing tools, formalization of access right transfer in a heterogeneous polystore",
+        "summary": "The data analysis involves the use of an attribute-based security model (ABAC) to analyze the access control system in a big data management system. The analysis is conducted in two directions: forward, from input to output data to check for business logic vulnerabilities, and reverse, from output to input data to assess the possibility of data leaks. The analysis generates access matrices that reflect the access rights of system users to different data fragments, which are then compared with the security policy to detect discrepancies and potential data leaks."
+      },
+      "extractionConfidence": 0.9,
+      "paper": "741ec957cd9e4e9bac097a19f24210d9",
+      "researchProblem": "2c0f80920086442783c95847ccfbb0cc"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "6e67e3417d5440e1a84f70f8b0d99978",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "efc4f2070aea48feb21059b7650f6e6b"
+      ]
+    }
+  ]
+}

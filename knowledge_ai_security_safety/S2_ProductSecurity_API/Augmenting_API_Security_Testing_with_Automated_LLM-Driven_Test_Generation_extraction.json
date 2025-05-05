@@ -1,0 +1,561 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "3eef385858934664b05fec736d08d897",
+      "title": "Augmenting API Security Testing with Automated LLM-Driven Test Generation",
+      "authors": [
+        {
+          "name": "EM Pasca"
+        },
+        {
+          "name": "R Erdei"
+        },
+        {
+          "name": "D Delinschi"
+        },
+        {
+          "name": "O Matei"
+        }
+      ],
+      "abstract": "In this paper, we propose a novel approach that leverages Large Language Models (LLMs) to automatically generate Karate DSL test cases from OpenAPI Specification documents. Our approach aims to exploit the natural language understanding and generation capabilities of LLMs to produce high-quality and comprehensive test cases that cover various security aspects. We present a proof-of-concept framework that integrates LLMs with Karate and demonstrates its feasibility and effectiveness on a sample API. We also discuss the limitations and future directions of our approach, which opens up new possibilities for applying LLMs to API security testing and other complex domains.",
+      "doi": "10.1007/978-3-031-75016-8_11",
+      "publicationDate": "2024",
+      "journal": "International Conference on …, 2024",
+      "volume": "1",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "Machine Learning in Software Testing",
+        "Large Language Models (LLMs)",
+        "Cybersecurity",
+        "Natural Language Understanding and Generation"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_API/Augmenting API Security Testing with Automated LLM-Driven Test Generation.pdf",
+      "fileUrl": "https://link.springer.com/chapter/10.1007/978-3-031-75016-8_11",
+      "extractionDate": "2025-04-30T22:28:41.598175",
+      "extractionConfidenceScore": 0.8303
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "43be1735ded84ef89290ff678bfca383",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cybersecurity, Software Testing",
+      "associatedProject": "Collaborative Framework for Smart Agriculture - COSA",
+      "fundingSources": [
+        {
+          "funderName": "Romanian National Authority for Scientific Research and Innovation, CCCDI - UEFISCDI",
+          "grantNumber": "EUROSTARS-4-E!4691-GenDeg 1/2024"
+        },
+        {
+          "funderName": "Romania's National Recovery and Resilience Plan PNRR-III-C9-2022-I8",
+          "grantNumber": "760070"
+        }
+      ],
+      "institutions": [],
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "c17abeba92f94022902a23641e526a1c",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "3eef385858934664b05fec736d08d897"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "0885521aa1e54575b2cdbd40f3b08db5",
+      "problemStatement": "The core research problem is the difficulty in keeping pace with the rapid evolution of APIs and the increasing sophistication of cyber threats in API security testing, particularly the time-consuming nature of manual test case creation, the complexity of covering a wide range of potential security vulnerabilities, and the need for continual updates to test suites as APIs evolve.",
+      "problemScope": "The problem scope includes the generation of test cases for API security testing, addressing the efficiency and comprehensiveness of test coverage, and the adaptability of test suites to evolving APIs.",
+      "problemType": "ApplicationProblem",
+      "problemImportance": "API security testing is critical in modern software development due to the ubiquity of APIs and the significant security risks they introduce. Improving the efficiency and effectiveness of API security testing is vital for maintaining software security.",
+      "businessRelevance": "Solving this problem has direct implications for businesses that rely on secure APIs for their operations, potentially reducing the time and resources required for security testing and mitigating the risk of security breaches.",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "9ba4c254745f46ba80f8174f1f7eabff",
+      "gapDescription": "The time-consuming nature of manual test case creation for API security vulnerabilities",
+      "relatedDomain": "API Security Testing",
+      "gapSignificance": "To improve the efficiency and coverage of security testing in rapidly evolving API landscapes",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    },
+    {
+      "internal_id": "8dd23bd044bf4cf8857be81054ad6820",
+      "gapDescription": "The complexity of covering a wide range of potential security vulnerabilities in API testing",
+      "relatedDomain": "API Security Testing",
+      "gapSignificance": "To ensure comprehensive security assessments that address the increasing sophistication of cyber threats",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    },
+    {
+      "internal_id": "3ba2b45fcc1343e0ad9079741ca0740d",
+      "gapDescription": "The need for continual updates to test suites as APIs evolve",
+      "relatedDomain": "API Security Testing",
+      "gapSignificance": "To maintain the relevance and effectiveness of security testing over time",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    },
+    {
+      "internal_id": "8a891796e21e494393799f8a95d8d6c8",
+      "gapDescription": "Interoperability issues and the need for manual adjustments in automated test generation",
+      "relatedDomain": "Automated Test Generation",
+      "gapSignificance": "To achieve higher autonomy and reduce the manual effort required in maintaining test suites",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    },
+    {
+      "internal_id": "c52d26e0184648f095f3e763dcb18f1e",
+      "gapDescription": "Accuracy limitations and varying complexity of generated tests by LLMs",
+      "relatedDomain": "Automated Test Generation",
+      "gapSignificance": "To enhance the precision and manage the complexity of tests generated by LLMs for better security testing outcomes",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    },
+    {
+      "internal_id": "c1e6cc1e74e247f599d06cc136a2cb36",
+      "gapDescription": "Challenges in interoperability and security testing depth",
+      "relatedDomain": "API Security Testing",
+      "gapSignificance": "To deepen the security analysis capabilities and improve integration with existing systems",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "75ae2a1198d0487588a634b119ba8cb4",
+      "questionText": "What is the effectiveness of LLMs in generating Karate DSL test scenarios for API security vulnerabilities?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Effectiveness of LLMs",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Karate DSL test scenarios",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "API security vulnerabilities",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5",
+      "addressesGap": "9ba4c254745f46ba80f8174f1f7eabff"
+    },
+    {
+      "internal_id": "b9950fbe4904448c9cfb42d9ccb0ddcd",
+      "questionText": "What are the main limitations of using LLMs for automated test generation, and how can they be addressed?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Limitations of LLMs",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Automated test generation",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5",
+      "addressesGap": "9ba4c254745f46ba80f8174f1f7eabff"
+    },
+    {
+      "internal_id": "8d8d154dcb164ff19434ff3032cc2381",
+      "questionText": "How can LLM integration in API security testing be extended to broader cybersecurity domains?",
+      "questionType": "Theoretical",
+      "relatedVariables": [
+        {
+          "variableName": "LLM integration in API security testing",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Broader cybersecurity domains",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5",
+      "addressesGap": "9ba4c254745f46ba80f8174f1f7eabff"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "87e61e2a56ca428a8f41a17c96c25eaa",
+      "directionDescription": "Refine the framework for higher autonomy and specialized focus on critical API vulnerabilities, such as Broken Object-level Authorization (BOLA).",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "addressesGap": "9ba4c254745f46ba80f8174f1f7eabff",
+      "arisesFromLimitation": "f4eed13ba0ae47248b25ae507a825855",
+      "extendsPotentialApplication": "c81ded4e64c544078041785181da0f68"
+    },
+    {
+      "internal_id": "49dfae10072c4884b7f1083487a23cb6",
+      "directionDescription": "Explore the use of communicative AI agents for automating security testing further.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "addressesGap": "9ba4c254745f46ba80f8174f1f7eabff",
+      "arisesFromLimitation": "f4eed13ba0ae47248b25ae507a825855",
+      "extendsPotentialApplication": "c81ded4e64c544078041785181da0f68"
+    },
+    {
+      "internal_id": "009694b981ce4ad19e98cb7d755edbd1",
+      "directionDescription": "Enhance the LLM training dataset with a broader array of API descriptions and vulnerabilities.",
+      "timeframe": "Short-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "addressesGap": "9ba4c254745f46ba80f8174f1f7eabff",
+      "arisesFromLimitation": "f4eed13ba0ae47248b25ae507a825855",
+      "extendsPotentialApplication": "c81ded4e64c544078041785181da0f68"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "c81ded4e64c544078041785181da0f68",
+      "applicationDescription": "Enhancing traditional software testing metrics by providing comprehensive path coverage and efficiently generating diverse test cases for API security.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "buildOnMethodologicalFrameworks": [
+        "5d39becbb22e42baba94bfeb81820e2a"
+      ]
+    },
+    {
+      "internal_id": "3bc8c56923bd4d4da2d4734b4edde887",
+      "applicationDescription": "Offering a more holistic assessment of API security by incorporating non-functional testing aspects, particularly security evaluations.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "buildOnMethodologicalFrameworks": [
+        "5d39becbb22e42baba94bfeb81820e2a"
+      ]
+    },
+    {
+      "internal_id": "94c10742cba147068cf31a4aca9d0e44",
+      "applicationDescription": "Refining the framework for higher autonomy and specialized focus on critical API vulnerabilities, such as Broken Object-level Authorization (BOLA).",
+      "targetSector": "Technology",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "buildOnMethodologicalFrameworks": [
+        "5d39becbb22e42baba94bfeb81820e2a"
+      ]
+    },
+    {
+      "internal_id": "11789df12c28431492f85adc87278a64",
+      "applicationDescription": "Exploring the use of communicative AI agents to automate security testing further, creating a more efficient, effective, and adaptive API security testing landscape.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "buildOnMethodologicalFrameworks": [
+        "5d39becbb22e42baba94bfeb81820e2a"
+      ]
+    },
+    {
+      "internal_id": "9f5ac7943dda4c868579375cbe67fbcb",
+      "applicationDescription": "Expanding the application of LLMs to broader cybersecurity areas, potentially transforming cybersecurity practices.",
+      "targetSector": "Defense",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.85,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "buildOnMethodologicalFrameworks": [
+        "5d39becbb22e42baba94bfeb81820e2a"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "7c056cb8b849436b8aa752534cdce7ea",
+      "challengeDescription": "The time-consuming nature of manual test case creation",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    },
+    {
+      "internal_id": "e70668d6dc774692a11f9bb6ed1afaa2",
+      "challengeDescription": "The complexity of covering a wide range of potential security vulnerabilities",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    },
+    {
+      "internal_id": "20acfd751e6b4372aea4b56ba8e4fe85",
+      "challengeDescription": "The need for continual updates to test suites as APIs evolve",
+      "challengeType": "ScaleChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    },
+    {
+      "internal_id": "5bcdb27f7abf4f3ca5a121e64ed96ba5",
+      "challengeDescription": "Interoperability and security testing depth as primary limitations",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "relatedProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [
+    {
+      "internal_id": "139e2e0d8a604af3824f82ce8600a200",
+      "challengeDescription": "The framework does not yet generate feature files and scenarios ready for execution without manual intervention, leading to various compilation issues, including incorrect syntax usage and inaccurate JSON payload structures.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Rectifying issues and enhancing readability, followed by re-execution of tests.",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "encounteredInFramework": "5d39becbb22e42baba94bfeb81820e2a",
+      "resultsInLimitation": "f4eed13ba0ae47248b25ae507a825855",
+      "relatedScientificChallenge": "7c056cb8b849436b8aa752534cdce7ea"
+    },
+    {
+      "internal_id": "a0fd0e48c42b43e8a3b9c740a2aa4f31",
+      "challengeDescription": "Manual adjustments varied across APIs, reflected in interoperability scores ranging from average to below average.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Future enhancements include refining prompts for the LLM service and implementing additional post-processing steps to improve test case quality and usability.",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "encounteredInFramework": "5d39becbb22e42baba94bfeb81820e2a",
+      "resultsInLimitation": "f4eed13ba0ae47248b25ae507a825855",
+      "relatedScientificChallenge": "7c056cb8b849436b8aa752534cdce7ea"
+    },
+    {
+      "internal_id": "0ab22e754be94539a5d45d667552cdf9",
+      "challengeDescription": "Accuracy limitations where the framework often fell short in capturing all nuances of complex API specifications.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Future work to explore various LLM architectures and training datasets to improve test case quality and effectiveness.",
+      "extractionConfidence": 0.7,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "encounteredInFramework": "5d39becbb22e42baba94bfeb81820e2a",
+      "resultsInLimitation": "f4eed13ba0ae47248b25ae507a825855",
+      "relatedScientificChallenge": "7c056cb8b849436b8aa752534cdce7ea"
+    },
+    {
+      "internal_id": "79009166229e4977b6448ab444033d18",
+      "challengeDescription": "Varying complexity of generated tests, with simpler APIs often resulting in more basic, boilerplate-like scenarios.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Optimizing test case generation time through more powerful computational resources or specialized LLMs.",
+      "extractionConfidence": 0.7,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "encounteredInFramework": "5d39becbb22e42baba94bfeb81820e2a",
+      "resultsInLimitation": "f4eed13ba0ae47248b25ae507a825855",
+      "relatedScientificChallenge": "7c056cb8b849436b8aa752534cdce7ea"
+    }
+  ],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "f90d2db162d14bf8884abf17f08e4247",
+      "challengeDescription": "Interoperability issues requiring manual intervention, ranging from syntax errors to inaccurate JSON payload structures",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Syntax errors and inaccurate JSON payload structures",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "encounteredInFramework": "5d39becbb22e42baba94bfeb81820e2a",
+      "relatedApplication": "c81ded4e64c544078041785181da0f68"
+    },
+    {
+      "internal_id": "204adba10e5e486a9e66e063ebcc8c96",
+      "challengeDescription": "Need for manual adjustments varied across APIs, reflected in interoperability scores ranging from average to below average",
+      "resourceConstraint": "Personnel",
+      "technicalHurdle": "Requirement for manual adjustments in test cases",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "encounteredInFramework": "5d39becbb22e42baba94bfeb81820e2a",
+      "relatedApplication": "c81ded4e64c544078041785181da0f68"
+    },
+    {
+      "internal_id": "f0d5744faa4b4706a2388f8a72d81a92",
+      "challengeDescription": "Accuracy limitations in capturing all nuances of complex API specifications",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Inability to fully capture complex API specifications",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "encounteredInFramework": "5d39becbb22e42baba94bfeb81820e2a",
+      "relatedApplication": "c81ded4e64c544078041785181da0f68"
+    },
+    {
+      "internal_id": "1e407fff167c429eb4842117f6cde3a0",
+      "challengeDescription": "Varying complexity of generated tests, with simpler APIs often resulting in more basic, boilerplate-like scenarios",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Generation of overly simplistic test cases for simple APIs",
+      "extractionConfidence": 0.7,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "encounteredInFramework": "5d39becbb22e42baba94bfeb81820e2a",
+      "relatedApplication": "c81ded4e64c544078041785181da0f68"
+    }
+  ],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "f4eed13ba0ae47248b25ae507a825855",
+      "limitationDescription": "The tool does not yet generate feature files and scenarios ready for execution without manual intervention, leading to various compilation issues such as incorrect syntax usage and inaccurate JSON payload structures.",
+      "limitationType": "ValidityThreat",
+      "impactOnFindings": "This limitation affects the reliability of the generated test cases and their immediate usability, potentially reducing the framework's effectiveness.",
+      "businessConstraints": "The need for manual intervention could increase the time and cost of implementing the framework in a business setting, as well as limit its scalability.",
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "limitedFramework": "5d39becbb22e42baba94bfeb81820e2a"
+    },
+    {
+      "internal_id": "cbd3a39582c84102b907096f4a2e859f",
+      "limitationDescription": "The framework often fell short in capturing all nuances of complex API specifications, reflecting accuracy limitations.",
+      "limitationType": "MeasurementError",
+      "impactOnFindings": "The inability to fully capture complex API specifications may lead to incomplete or incorrect test cases, affecting the quality of security testing.",
+      "businessConstraints": "Inaccurate test cases may lead to undetected security vulnerabilities, posing a risk to businesses that rely on the framework for API security testing.",
+      "extractionConfidence": 0.85,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "limitedFramework": "5d39becbb22e42baba94bfeb81820e2a"
+    },
+    {
+      "internal_id": "46ed5997672e4c73b4e8fad7eb1c5642",
+      "limitationDescription": "The complexity of generated tests varied, with simpler APIs often resulting in more basic, boilerplate-like scenarios.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The generation of basic test cases for simpler APIs may not provide a comprehensive evaluation of the API's security, limiting the framework's effectiveness.",
+      "businessConstraints": "Businesses may find the framework less useful for simpler APIs, which could affect the decision to adopt the tool for their API security testing needs.",
+      "extractionConfidence": 0.8,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "limitedFramework": "5d39becbb22e42baba94bfeb81820e2a"
+    },
+    {
+      "internal_id": "671a78d4d770487f96415eea65775dcb",
+      "limitationDescription": "Interoperability issues were encountered, requiring manual intervention for syntax errors and inaccurate JSON payload structures.",
+      "limitationType": "ReliabilityIssue",
+      "impactOnFindings": "Interoperability issues can lead to additional manual work to correct errors, which may affect the efficiency and reliability of the test generation process.",
+      "businessConstraints": "The requirement for manual corrections can increase the operational costs and reduce the attractiveness of the framework for businesses looking for automated solutions.",
+      "extractionConfidence": 0.85,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "limitedFramework": "5d39becbb22e42baba94bfeb81820e2a"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "5d39becbb22e42baba94bfeb81820e2a",
+      "name": "KRTLLM Framework",
+      "description": "The KRTLLM framework is a novel approach that integrates Large Language Models (LLMs) with the Karate DSL for automated generation of API security test cases. It is designed to address the challenges of manual test case creation, covering a wide range of potential security vulnerabilities, and updating test suites as APIs evolve. The framework consists of a structured pipeline with four main components: Test Data Preparation, Feature File Generator, Karate API Framework Builder, and Karate API Test Runner. The methodology includes the use of predefined instruction prompts, processing API segments, and generating Karate DSL feature files for execution.",
+      "studyDesign": {
+        "designType": "Experimental",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study employs an experimental design where the proposed framework is tested across various APIs to evaluate its effectiveness, limitations, and potential for broader application in cybersecurity domains."
+      },
+      "procedures": [
+        {
+          "procedureName": "KRTLLM Framework Procedure",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "API specifications are parsed into segments to accommodate LLM payload limitations.",
+              "inputs": "API's JSON/YAML file",
+              "outputs": "API segments",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Segments are processed with predefined instruction prompts to generate test scenarios.",
+              "inputs": "API segments",
+              "outputs": "LLM service responses",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Responses are formatted into Karate DSL feature files for testing.",
+              "inputs": "LLM service responses",
+              "outputs": "Karate DSL feature files",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 4,
+              "description": "The Karate API framework is built with necessary files for test execution.",
+              "inputs": "Karate DSL feature files",
+              "outputs": "Executable test framework",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 5,
+              "description": "Tests are executed using the 'mvn test' command to generate reports.",
+              "inputs": "Executable test framework",
+              "outputs": "Test reports",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves parsing API specifications, generating test cases using LLMs, building the Karate API framework, and running the tests to produce reports. The process is iterative and involves refining the LLM prompts and post-processing steps to improve test case quality."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "Comparative Analysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves evaluating the generated test cases using three metrics: Accuracy, Interoperability, and Complexity. These metrics assess the structural and semantic alignment of the test cases with the API specifications, the degree of manual intervention required, and the intricacy of the test cases, respectively."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TabularData",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The results are represented in a tabular format, showcasing the number of test cases generated, along with their Accuracy, Interoperability, and Complexity scores for each API. An overall 'Total score' is also presented for each API."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": null,
+        "dataRepository": null,
+        "codeAvailabilityStatement": "The paper does not explicitly state the availability of the code, but it is implied that the framework and its components are a proof-of-concept, suggesting that the code may be available upon request or in future work.",
+        "codeRepository": null,
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "3eef385858934664b05fec736d08d897",
+      "researchProblem": "0885521aa1e54575b2cdbd40f3b08db5"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "5b0fd3f0717241f0a785b8a59ac222c8",
+      "itemName": "MaterialTool",
+      "itemType": null,
+      "identifier": null,
+      "specifications": null,
+      "roleInProcedure": null,
+      "extractionConfidence": 0.7,
+      "usedInFrameworks": [
+        "5d39becbb22e42baba94bfeb81820e2a"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,365 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "title": "FuzzTheREST: An Intelligent Automated Black-box RESTful API Fuzzer",
+      "authors": [
+        {
+          "name": "T Dias"
+        },
+        {
+          "name": "E Maia"
+        },
+        {
+          "name": "I Praça"
+        }
+      ],
+      "abstract": "Software's pervasive impact and increasing reliance in the era of digital transformation raise concerns about vulnerabilities, emphasizing the need for software security. Fuzzy testing is a dynamic analysis software testing technique that consists of feeding faulty input data to a System Under Test (SUT) and observing its behavior. Specifically regarding black-box RESTful API testing, recent literature has attempted to automate this technique using heuristics to perform the input search and using the HTTP response status codes for classification. However, most approaches do not keep track of code coverage, which is important to validate the solution. This work introduces a black-box RESTful API fuzzy testing tool that employs Reinforcement Learning (RL) for vulnerability detection. The fuzzer operates via the OpenAPI Specification (OAS) file and a scenarios file, which includes information to communicate with the SUT and the sequences of functionalities to test, respectively. To evaluate its effectiveness, the tool was tested on the Petstore API. The tool found a total of six unique vulnerabilities and achieved 55% code coverage.",
+      "doi": "10.1007/978-3-031-82073-1_16",
+      "publicationDate": "2024",
+      "journal": "International Symposium on Distributed …, 2024",
+      "volume": "55",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "Fuzzy Testing",
+        "RESTful APIs",
+        "Vulnerability Detection",
+        "Code Security",
+        "Artificial Intelligence"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_API/FuzzTheREST- An Intelligent Automated Black-Box RESTful API Fuzzer.pdf",
+      "fileUrl": "https://link.springer.com/chapter/10.1007/978-3-031-82073-1_16",
+      "extractionDate": "2025-04-30T22:34:59.903178",
+      "extractionConfidenceScore": 0.8158
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "35a8c60ff0e9430eab516e218ee19de8",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Software Security, Automated Testing, Fuzzy Testing, RESTful API Testing, Reinforcement Learning",
+      "associatedProject": "TestLab",
+      "fundingSources": [
+        {
+          "funderName": "UIDP/00760/2020",
+          "grantNumber": null
+        },
+        {
+          "funderName": "UIDB/00760/2020",
+          "grantNumber": null
+        }
+      ],
+      "institutions": [],
+      "extractionConfidence": 0.9,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "055cc3c9886a47148403f0c8d08dd299",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "Reinforcement Learning",
+          "relevance": "Used to guide the input generation for black-box RESTful API fuzzy testing by learning the context of the System Under Test (SUT) based on its HTTP responses."
+        }
+      ],
+      "philosophicalParadigm": "Not Specified",
+      "schoolOfThought": "Software testing and security",
+      "extractionConfidence": 0.6,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "6704d30939e14aa2b1565554512ce509",
+      "problemStatement": "Existing approaches to black-box RESTful API testing with fuzzy testing techniques do not adequately track code coverage, which is crucial for validating the effectiveness of the testing process.",
+      "problemScope": "The scope is limited to black-box RESTful API testing using fuzzy testing techniques.",
+      "problemType": "MethodologicalProblem",
+      "problemImportance": "Ensuring software reliability and security is crucial due to the pervasive impact of software and increasing reliance on it in the digital era.",
+      "businessRelevance": "Improving the effectiveness of RESTful API testing tools can lead to the detection of vulnerabilities, thereby enhancing software security and reliability, which is vital for business operations and services that depend on technology.",
+      "extractionConfidence": 0.9,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "12d286227c3a494cb0edea5870f01428",
+      "gapDescription": "Most approaches to black-box RESTful API testing do not keep track of code coverage, which is important to validate the solution.",
+      "relatedDomain": "Software Testing",
+      "gapSignificance": "Code coverage is crucial for ensuring that the testing process is thorough and that the software is reliable and secure.",
+      "extractionConfidence": 0.9,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509"
+    },
+    {
+      "internal_id": "07cacc3eca284de6b4b3a3614848800b",
+      "gapDescription": "Existing approaches to RESTful API testing do not provide code coverage metrics to validate the solutions and only describe the errors or vulnerabilities found in numbers, without explaining them.",
+      "relatedDomain": "Software Testing",
+      "gapSignificance": "Providing detailed explanations of vulnerabilities and code coverage metrics can improve the understanding of testing outcomes and the reliability of software.",
+      "extractionConfidence": 0.8,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509"
+    },
+    {
+      "internal_id": "497434fc064d4797bdf39d2d73c508ab",
+      "gapDescription": "Current automated RESTful API testing tools do not adequately address the problem of generating valid inputs for parameterized test drivers like web APIs.",
+      "relatedDomain": "Software Testing",
+      "gapSignificance": "Improving the generation of valid inputs can lead to more effective testing and the discovery of more subtle and complex vulnerabilities.",
+      "extractionConfidence": 0.7,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509"
+    },
+    {
+      "internal_id": "ff814d29bae146bf858b6797fd0b810e",
+      "gapDescription": "There is a lack of integration of coverage as a decision metric during testing to balance exploration and exploitation.",
+      "relatedDomain": "Software Testing",
+      "gapSignificance": "Incorporating coverage as a decision metric could provide valuable guidance for the testing process and improve the efficiency of vulnerability detection.",
+      "extractionConfidence": 0.7,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "b3b384096ef14351ae776d8bd208084e",
+      "questionText": "How can reinforcement learning be utilized to improve the efficiency of black-box RESTful API fuzzy testing?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Reinforcement learning",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Efficiency of black-box RESTful API fuzzy testing",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509",
+      "addressesGap": "12d286227c3a494cb0edea5870f01428"
+    },
+    {
+      "internal_id": "e45418d7dfa04959a03671e6c0252c1f",
+      "questionText": "What is the effectiveness of the proposed black-box RESTful API fuzzer in detecting vulnerabilities?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Effectiveness of the fuzzer",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Vulnerability detection",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509",
+      "addressesGap": "12d286227c3a494cb0edea5870f01428"
+    },
+    {
+      "internal_id": "6f8304a4ec594321991613c72fe120f4",
+      "questionText": "Can the proposed fuzzer achieve considerable code coverage during testing?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Code coverage",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509",
+      "addressesGap": "12d286227c3a494cb0edea5870f01428"
+    },
+    {
+      "internal_id": "cbc3def1a52a48c58630d4f7db5355d3",
+      "questionText": "Does the fuzzer's usage impose significant time constraints on the testing process?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Time constraints of the fuzzer's usage",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509",
+      "addressesGap": "12d286227c3a494cb0edea5870f01428"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "0bb92021b70a4a4fa1c4732077abcee3",
+      "directionDescription": "Further improvements include increasing data types, mutators, and algorithms.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "addressesGap": "12d286227c3a494cb0edea5870f01428"
+    },
+    {
+      "internal_id": "9737b4844b134e09860434685a32f986",
+      "directionDescription": "Improvements to the unique identifier storing method to make it suitable for all APIs.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "addressesGap": "12d286227c3a494cb0edea5870f01428"
+    },
+    {
+      "internal_id": "a134f3509f04486b8136e3e97457e856",
+      "directionDescription": "Incorporating coverage as a decision metric during testing to provide valuable guidance for balancing exploration and exploitation.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "addressesGap": "12d286227c3a494cb0edea5870f01428"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "6211309966814d2d8941679e99d39410",
+      "challengeDescription": "Low code coverage due to randomness and inefficient execution due to redundant tests in fuzzy testing, leading to a higher rate of missed vulnerabilities.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509"
+    },
+    {
+      "internal_id": "beddf03a9bc349edaee06c8aaff3a718",
+      "challengeDescription": "Scalability issues due to the complexity of the Monte Carlo Control (MCC) algorithm in reinforcement learning-based test input generation.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509"
+    },
+    {
+      "internal_id": "902fd929836c4526bfb6180f25c74430",
+      "challengeDescription": "Lack of code coverage metrics to validate the solutions in automated testing approaches, leading to incomplete assessment of the testing tools' effectiveness.",
+      "challengeType": "TheoryGap",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509"
+    },
+    {
+      "internal_id": "a821166a89344d5c969fa73de1a2b2cb",
+      "challengeDescription": "Difficulty in balancing exploration and exploitation in reinforcement learning to effectively guide input generation for testing.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "relatedProblem": "6704d30939e14aa2b1565554512ce509"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "f3b2d57de62c40aaa1a1a2f68c4824ad",
+      "name": "FuzzTheREST Methodological Framework",
+      "description": "The study presents FuzzTheREST, an automated black-box RESTful API fuzzer that employs Reinforcement Learning (RL) to enhance the process of vulnerability detection in software. The fuzzer operates by utilizing the OpenAPI Specification (OAS) file and scenarios file to interact with the System Under Test (SUT) and generate faulty inputs. The RL algorithm learns from the SUT's HTTP responses to improve input generation. The tool's effectiveness was evaluated through a case study on the Petstore API, where it identified unique vulnerabilities and achieved significant code coverage.",
+      "studyDesign": {
+        "designType": "Experimental",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The research employs an experimental design where the FuzzTheREST tool is applied to the Petstore API to identify vulnerabilities and measure code coverage without the use of a control group or randomization. The study is cross-sectional as it evaluates the tool's effectiveness at a single point in time."
+      },
+      "procedures": [
+        {
+          "procedureName": "FuzzTheREST Testing Procedure",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Deploy the Petstore API in a Docker container to create a simulated production environment.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Set up a JaCoCo agent to measure real-time code coverage of the Petstore API.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Configure and run the FuzzTheREST tool to test the API, utilizing the OAS and scenarios files.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {
+                "Number of max. steps": "5 or 10",
+                "Number of episodes": "50 or 100 or 200 or 500",
+                "Exploration rate": "1 or 0.8",
+                "Exploration decay rate": "0.01"
+              }
+            },
+            {
+              "stepNumber": 4,
+              "description": "Analyze the HTTP responses from the API to identify vulnerabilities and measure the learning process of the RL algorithm.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 5,
+              "description": "Generate a vulnerability report and a code coverage report to evaluate the effectiveness of the fuzzer.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves deploying the Petstore API in a Docker container to simulate a production environment, setting up a JaCoCo agent for real-time code coverage, and then testing the API using the FuzzTheREST tool with various configurations. The tool's RL algorithm interacts with the API, generating and sending faulty inputs, and learning from the HTTP responses to improve future inputs."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "StatisticalAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": "Multi-table Q-Learning algorithm with an epsilon-greedy policy for exploration decay.",
+        "softwareDetails": null,
+        "parameterSettings": "Parameters for the RL algorithm included the number of maximum steps, number of episodes, exploration rate, and exploration decay rate.",
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involved evaluating the performance of the RL algorithm within the FuzzTheREST tool by monitoring the convergence of Q-Values and the distribution of received HTTP status codes. The analysis also included examining the vulnerability reports to identify unique vulnerabilities and using the JaCoCo coverage report to measure code coverage."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TabularData",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The study's findings include the identification of six unique vulnerabilities within the Petstore API and the achievement of 55% code coverage. The results demonstrate the RL algorithm's ability to learn and improve input generation over time, leading to successful interactions with the SUT."
+      },
+      "validationAndVerification": {
+        "validationTypes": [
+          "Code Coverage Analysis"
+        ],
+        "validationProcedure": "The validation involved analyzing the code coverage report generated by JaCoCo to assess the extent of code traversed by the fuzzer during testing.",
+        "validationMetrics": "Percentage of code coverage",
+        "validationResults": "55% code coverage was achieved, indicating that the fuzzer was able to traverse more than half of the code in the Petstore API.",
+        "industryStandards": null
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": null,
+        "dataRepository": null,
+        "codeAvailabilityStatement": "The paper does not provide a specific statement about code availability.",
+        "codeRepository": null,
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "dc3a3eacafe94b478b4d89d4bae9e8b5",
+      "researchProblem": "6704d30939e14aa2b1565554512ce509"
+    }
+  ],
+  "sciknow-25x1-material-tools": []
+}

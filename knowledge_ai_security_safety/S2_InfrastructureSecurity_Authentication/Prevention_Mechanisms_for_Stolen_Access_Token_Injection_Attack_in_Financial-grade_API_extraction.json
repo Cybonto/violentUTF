@@ -1,0 +1,301 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "9d9cd66f231741fa8622f201f969bda0",
+      "title": "Prevention Mechanisms for Stolen Access Token Injection Attack in Financial-grade API",
+      "authors": [
+        {
+          "name": "D Li"
+        },
+        {
+          "name": "CH Lin"
+        }
+      ],
+      "abstract": "In this paper, we will discuss the challenges of Financial-grade API, focusing on prevention mechanisms for 'Cuckoo's Token Attack' and delve into the current security authentication mechanisms of OAuth 2.0, Financial-grade API 2.0 and OpenID Connect. Finally, we found that the OpenID Connect method can mitigate the attack by using a one-time token and issuer identifier, but a one-time authentication method without the OpenID Connect requirement is also needed.",
+      "doi": "",
+      "publicationDate": "2023",
+      "journal": "… on Consumer Electronics-Taiwan (ICCE-Taiwan), 2023",
+      "volume": "111",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_InfrastructureSecurity_Authentication/Prevention_Mechanisms_for_Stolen_Access_Token_Injection_Attack_in_Financial-grade_API.pdf",
+      "fileUrl": "https://ieeexplore.ieee.org/abstract/document/10226912/",
+      "extractionDate": "2025-04-29T00:26:48.860680",
+      "extractionConfidenceScore": 0.7775
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "41030b3e48914f50bae0954442a6497e",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Information Security",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.6,
+      "paper": "9d9cd66f231741fa8622f201f969bda0"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "bb5b4f7617a84db599d390e5b6af9806",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "OAuth 2.0",
+          "relevance": "The research investigates the current security mechanisms of OAuth 2.0 in the context of Financial-grade API."
+        },
+        {
+          "modelName": "Financial-grade API 2.0",
+          "relevance": "The paper focuses on the security profiles of Financial-grade API 2.0 to address the challenges in the financial industry."
+        },
+        {
+          "modelName": "OpenID Connect",
+          "relevance": "The paper found that OpenID Connect can mitigate the Cuckoo's Token Attack, suggesting its method should be incorporated into FAPI standards."
+        }
+      ],
+      "philosophicalParadigm": "Not Specified",
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "9d9cd66f231741fa8622f201f969bda0"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "a7fd2c2c66b84efdb879743e939d6154",
+      "problemStatement": "Despite following all the security profiles suggested by Financial-grade API (FAPI), some attack scenarios, specifically the 'Cuckoo's Token Attack', which combines replay of access tokens and injection attack, are still possible and can compromise the security of financial APIs.",
+      "problemScope": "The scope includes the security mechanisms of OAuth 2.0 and FAPI 2.0, particularly in the context of preventing the 'Cuckoo's Token Attack' in financial APIs.",
+      "problemType": "DesignProblem",
+      "problemImportance": "Ensuring the security of financial APIs is critical due to the sensitive nature of financial data and the high risk associated with its potential compromise.",
+      "businessRelevance": "The security of financial APIs is crucial for the trust and reliability of open banking and Open API services, which are significant due to industry demand and regulatory requirements.",
+      "extractionConfidence": 0.9,
+      "paper": "9d9cd66f231741fa8622f201f969bda0"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "9de6df24d288412f94adb609413dc075",
+      "gapDescription": "Despite following all the security profiles suggested by FAPI, some attack scenarios they claimed to be safe would still have the possibility of being compromised.",
+      "relatedDomain": "Financial-grade API security",
+      "gapSignificance": "To ensure the robustness of FAPI against all potential attack scenarios, including those previously assumed to be safe.",
+      "extractionConfidence": 0.8,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "relatedProblem": "a7fd2c2c66b84efdb879743e939d6154"
+    },
+    {
+      "internal_id": "5b20eebe94094a9bb72af97f9321b74c",
+      "gapDescription": "FAPI only provides conceptual mitigation suggestions instead of a specification requirement for Cuckoo's Token Attack, allowing for flexibility in implementation but potentially leaving gaps in security.",
+      "relatedDomain": "Financial-grade API security",
+      "gapSignificance": "To develop specific, standardized requirements for mitigating Cuckoo's Token Attacks to enhance security across implementations.",
+      "extractionConfidence": 0.8,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "relatedProblem": "a7fd2c2c66b84efdb879743e939d6154"
+    },
+    {
+      "internal_id": "559c685c70c549b5adc4f98f7ef6fd10",
+      "gapDescription": "A one-time authentication method without the OpenID Connect requirement is needed to mitigate Cuckoo's Token Attack.",
+      "relatedDomain": "Authentication mechanisms in financial APIs",
+      "gapSignificance": "To provide an alternative solution for systems that do not use OpenID Connect, ensuring broader protection against the attack.",
+      "extractionConfidence": 0.7,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "relatedProblem": "a7fd2c2c66b84efdb879743e939d6154"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "d79d65ec34604301a6f59428d1fb6e6b",
+      "questionText": "What are the current security mechanisms of OAuth 2.0 and FAPI 2.0?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "OAuth 2.0 security mechanisms",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "FAPI 2.0 security mechanisms",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "relatedProblem": "a7fd2c2c66b84efdb879743e939d6154",
+      "addressesGap": "9de6df24d288412f94adb609413dc075"
+    },
+    {
+      "internal_id": "265ab9677a684fa8afa6cbe1c25d90c0",
+      "questionText": "Are there any relevant mitigation methods for the 'Cuckoo's Token Attack'?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Mitigation methods for Cuckoo's Token Attack",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "relatedProblem": "a7fd2c2c66b84efdb879743e939d6154",
+      "addressesGap": "9de6df24d288412f94adb609413dc075"
+    },
+    {
+      "internal_id": "e207e42216e04e3cacd0639abfdd4dc4",
+      "questionText": "Can the OpenID Connect method mitigate the 'Cuckoo's Token Attack' effectively?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "OpenID Connect method effectiveness",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Cuckoo's Token Attack",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "relatedProblem": "a7fd2c2c66b84efdb879743e939d6154",
+      "addressesGap": "9de6df24d288412f94adb609413dc075"
+    },
+    {
+      "internal_id": "67fdca5cef9f4d7e93f4f638b4257eb5",
+      "questionText": "Is a one-time authentication method without the OpenID Connect requirement necessary?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "One-time authentication method necessity",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "relatedProblem": "a7fd2c2c66b84efdb879743e939d6154",
+      "addressesGap": "9de6df24d288412f94adb609413dc075"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "a7ff24c6616c485ea030bea03746e1ea",
+      "directionDescription": "Develop and incorporate a mechanism similar to OIDC's nonce into FAPI standards to protect against Cuckoo's Token Attack.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "addressesGap": "9de6df24d288412f94adb609413dc075",
+      "arisesFromLimitation": "28d5fdc62f4f4c75982c20a59373c3a4",
+      "extendsPotentialApplication": "ee8631caabeb4c83a350fc4d69921507"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "ee8631caabeb4c83a350fc4d69921507",
+      "applicationDescription": "Incorporate a mechanism similar to OIDC's nonce into FAPI standards to protect against Cuckoo's Token Attack.",
+      "targetSector": "Finance",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "buildOnMethodologicalFrameworks": [
+        "86c1026517284073a848c5fd9c540fc4"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "5a03f57712034938a838e5191f30c331",
+      "challengeDescription": "Despite following all the security profiles suggested by FAPI, some attack scenarios they claimed to be safe would still have the possibility of being compromised.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "relatedProblem": "a7fd2c2c66b84efdb879743e939d6154"
+    },
+    {
+      "internal_id": "764e3652f0534d0f999650a82bc2462d",
+      "challengeDescription": "The 'Cuckoo's Token Attack' is a combination of the replay of access tokens and the injection attack, which poses a challenge to current security mechanisms.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "relatedProblem": "a7fd2c2c66b84efdb879743e939d6154"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "3cd9f0e86223444cb97e2b3d4f155790",
+      "challengeDescription": "Integration of a large number of third-party providers into the network system may increase the overall risk of the network and API system.",
+      "resourceConstraint": "Scale",
+      "technicalHurdle": "System integration",
+      "extractionConfidence": 0.8,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "encounteredInFramework": "86c1026517284073a848c5fd9c540fc4",
+      "relatedApplication": "ee8631caabeb4c83a350fc4d69921507"
+    },
+    {
+      "internal_id": "fed7839999c54e2fbf640ad999ced67f",
+      "challengeDescription": "FAPI only provides conceptual mitigation suggestions instead of a specification requirement, which allows for flexibility in implementation but may lead to inconsistent security measures.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Lack of standardized security requirements",
+      "extractionConfidence": 0.7,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "encounteredInFramework": "86c1026517284073a848c5fd9c540fc4",
+      "relatedApplication": "ee8631caabeb4c83a350fc4d69921507"
+    }
+  ],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "28d5fdc62f4f4c75982c20a59373c3a4",
+      "limitationDescription": "The pre-conditions for a Cuckoo's Token Attack do not apply to many ecosystems and require a powerful attacker, which may not represent common threat scenarios.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The study's findings may not be applicable to all financial ecosystems or to attackers with limited capabilities.",
+      "businessConstraints": "The proposed prevention mechanisms might be over-engineered for systems where the pre-conditions for the attack are not present, potentially leading to unnecessary complexity and cost.",
+      "extractionConfidence": 0.8,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "limitedFramework": "86c1026517284073a848c5fd9c540fc4"
+    },
+    {
+      "internal_id": "6fc3e76fe35f4b52a1b092beab0ff41f",
+      "limitationDescription": "FAPI only provides conceptual mitigation suggestions instead of a specification requirement, which may result in varied implementations and effectiveness.",
+      "limitationType": "ValidityThreat",
+      "impactOnFindings": "The lack of standardized requirements could affect the validity of the study's conclusions regarding the effectiveness of prevention mechanisms.",
+      "businessConstraints": "The absence of a clear specification requirement could lead to inconsistent adoption and effectiveness of prevention mechanisms across different businesses.",
+      "extractionConfidence": 0.75,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "limitedFramework": "86c1026517284073a848c5fd9c540fc4"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "86c1026517284073a848c5fd9c540fc4",
+      "name": "Prevention Mechanisms for Stolen Access Token Injection Attack in Financial-grade API",
+      "description": null,
+      "studyDesign": {
+        "designType": "Other",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": null,
+        "designDetails": null
+      },
+      "variables": [],
+      "procedures": [],
+      "extractionConfidence": 0.4,
+      "paper": "9d9cd66f231741fa8622f201f969bda0",
+      "researchProblem": "a7fd2c2c66b84efdb879743e939d6154"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "aee571b3d6e74bdbbd6ca205ad58d7eb",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "86c1026517284073a848c5fd9c540fc4"
+      ]
+    }
+  ]
+}

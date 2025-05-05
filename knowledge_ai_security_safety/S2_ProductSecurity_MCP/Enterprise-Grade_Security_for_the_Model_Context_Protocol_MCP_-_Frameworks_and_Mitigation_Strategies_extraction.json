@@ -1,0 +1,229 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "e01aaa848c5345c89735a1dc3e6737e4",
+      "title": "Enterprise-Grade Security for the Model Context Protocol (MCP): Frameworks and Mitigation Strategies",
+      "authors": [
+        {
+          "name": "VS Narajala"
+        },
+        {
+          "name": "I Habler"
+        }
+      ],
+      "abstract": "The Model Context Protocol (MCP), introduced by Anthropic, provides a standardized framework for artificial intelligence (AI) systems to interact with external data sources and tools in real-time. While MCP offers significant advantages for AI integration and capability extension, it introduces novel security challenges that demand rigorous analysis and mitigation. This paper builds upon foundational research into MCP architecture and preliminary security assessments to deliver enterprise-grade mitigation frameworks and detailed technical implementation strategies. Through systematic threat modeling and analysis of MCP implementations and analysis of potential attack vectors, including sophisticated threats like tool poisoning, we present actionable security patterns tailored for MCP implementers and adopters. The primary contribution of this research lies in translating theoretical security concerns into a practical, implementable framework with actionable controls, thereby providing essential guidance for the secure enterprise adoption and governance of integrated AI systems.",
+      "doi": "",
+      "publicationDate": "2025",
+      "journal": "arXiv preprint arXiv:2504.08623, 2025",
+      "volume": "",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_MCP/Enterprise-Grade Security for the Model Context Protocol (MCP)- Frameworks and Mitigation Strategies.pdf",
+      "fileUrl": "https://arxiv.org/abs/2504.08623",
+      "extractionDate": "2025-04-30T22:07:17.731846",
+      "extractionConfidenceScore": 0.8364
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "a0fced5dbfdc4dc3ae442631a9e85702",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence Security",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "85bb726af2f144fc9c75516562c869a9",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "d50adefb817b4da69ae1990b1161662a",
+      "problemStatement": "The core research problem is the introduction of novel security challenges by the Model Context Protocol (MCP) as it moves from theory into production, particularly in enterprise-grade environments.",
+      "problemScope": "The scope includes the systematic threat modeling and analysis of MCP implementations, potential attack vectors, and the development of mitigation frameworks and strategies for enterprise-level deployments.",
+      "problemType": "DesignProblem",
+      "problemImportance": "Addressing the security challenges of MCP is crucial for the safe and reliable integration of AI systems with external data sources and tools in real-time.",
+      "businessRelevance": "Ensuring the security of MCP systems is vital for businesses to confidently adopt and leverage AI capabilities, which has significant implications for operational efficiency, innovation, and competitive advantage.",
+      "extractionConfidence": 0.85,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "427f3035d8694a4793e91c9fb2fd95c9",
+      "questionText": "What does it take to secure MCP in real-world, enterprise-level deployments?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "MCP security",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Enterprise-level deployments",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4",
+      "relatedProblem": "d50adefb817b4da69ae1990b1161662a"
+    },
+    {
+      "internal_id": "0e0e144e2fa64df594645c848576072e",
+      "questionText": "How can enterprises implement actionable security strategies to safeguard their MCP systems?",
+      "questionType": "Applied",
+      "relatedVariables": [
+        {
+          "variableName": "Actionable security strategies",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "MCP systems",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4",
+      "relatedProblem": "d50adefb817b4da69ae1990b1161662a"
+    },
+    {
+      "internal_id": "60556bc977e64b49b458a5983d151569",
+      "questionText": "How can the proposed multi-layered security framework specifically tailored for MCP improve the security of AI systems?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Multi-layered security framework",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Security of AI systems",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4",
+      "relatedProblem": "d50adefb817b4da69ae1990b1161662a"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "4c315fd178f647d98127a584776d2337",
+      "applicationDescription": "Secure enterprise adoption and governance of integrated AI systems using the Model Context Protocol.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.9,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4",
+      "buildOnMethodologicalFrameworks": [
+        "57d94d4d5dd24cc8b723d99b5ac93470"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "898238a0a81a4d8c903b2d2cf1abc5dc",
+      "challengeDescription": "Securing MCP in real-world, enterprise-level deployments introduces novel security challenges due to its dynamic, tool-based model.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4",
+      "relatedProblem": "d50adefb817b4da69ae1990b1161662a"
+    },
+    {
+      "internal_id": "66a6787b1e3140fabd8f1421b50d7205",
+      "challengeDescription": "Tool poisoning is a sophisticated threat where maliciously crafted tool descriptions trick AI models, representing a unique risk associated with MCP's dynamic nature.",
+      "challengeType": "EmergentBehavior",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4",
+      "relatedProblem": "d50adefb817b4da69ae1990b1161662a"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "57d94d4d5dd24cc8b723d99b5ac93470",
+      "name": "Enterprise-Grade Security for the Model Context Protocol (MCP)",
+      "description": "The methodological framework of this study involves a systematic threat modeling and analysis of the Model Context Protocol (MCP) implementations to identify potential attack vectors, including sophisticated threats like tool poisoning. The study employs the MAESTRO framework for comprehensive threat modeling across seven specific layers of an AI system's architecture. This structured analysis allows for the categorization of threats and informs the development of a comprehensive security framework and mitigation strategies for enterprise-grade MCP implementations.",
+      "studyDesign": {
+        "designType": "CaseStudy",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is designed as a case study focusing on the security aspects of the Model Context Protocol (MCP) in enterprise environments. It uses the MAESTRO framework to systematically identify and categorize threats across the entire protocol stack, from underlying models to deployment infrastructure and ecosystem interactions."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Threat Modeling and Analysis",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Examine AI system vulnerabilities across seven distinct layers relevant to different aspects of MCP security using the MAESTRO framework.",
+              "inputs": null,
+              "outputs": "Comprehensive threat categories",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Identify key threats organized by MCP component using the MAESTRO framework.",
+              "inputs": null,
+              "outputs": "Categorized threats by MCP component",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Develop a comprehensive security framework and mitigation strategies based on the identified threats.",
+              "inputs": null,
+              "outputs": "Security framework and mitigation strategies",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves applying the MAESTRO framework to perform a structured analysis of the MCP security landscape across seven distinct layers of an AI system's architecture. This includes identifying key threats by MCP component, categorizing them, and informing the development of a comprehensive security framework and mitigation strategies."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": null,
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis in this study is primarily qualitative, focusing on the systematic categorization of threats to the MCP and the development of mitigation strategies. The analysis is informed by the MAESTRO framework's structured approach to threat modeling across different layers of AI system architecture."
+      },
+      "extractionConfidence": 0.9,
+      "paper": "e01aaa848c5345c89735a1dc3e6737e4",
+      "researchProblem": "d50adefb817b4da69ae1990b1161662a"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "f02bf269588645f79df6eba65c68d9b5",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "57d94d4d5dd24cc8b723d99b5ac93470"
+      ]
+    }
+  ]
+}

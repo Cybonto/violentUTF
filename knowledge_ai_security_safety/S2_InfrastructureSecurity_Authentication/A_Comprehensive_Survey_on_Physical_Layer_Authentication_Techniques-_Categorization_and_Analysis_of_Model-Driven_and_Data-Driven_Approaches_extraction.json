@@ -1,0 +1,325 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "title": "A Comprehensive Survey on Physical Layer Authentication Techniques: Categorization and Analysis of Model-Driven and Data-Driven Approaches",
+      "authors": [
+        {
+          "name": "Z Lai"
+        },
+        {
+          "name": "Z Chang"
+        },
+        {
+          "name": "M Sha"
+        },
+        {
+          "name": "Q Zhang"
+        },
+        {
+          "name": "N Xie"
+        },
+        {
+          "name": "C Chen…"
+        }
+      ],
+      "abstract": "The open and broadcast nature of wireless mediums introduces significant security vulnerabilities, making authentication a critical concern in wireless networks. In recent years, Physical-Layer Authentication (PLA) techniques have garnered considerable research interest due to their advantages over Upper-Layer Authentication (ULA) methods, such as lower complexity, enhanced security, and greater compatibility. The application of signal processing techniques in PLA serves as a crucial link between the extraction of Physical-Layer Features (PLFs) and the authentication of received signals. Different signal processing approaches, even with the same PLF, can result in varying authentication performances and computational demands. Despite this, there remains a shortage of comprehensive overviews on state-of-the-art PLA schemes with a focus on signal processing approaches. This article presents the first thorough survey of signal processing in various PLA schemes, categorizing existing approaches into model-based and Machine Learning (ML)-based schemes. We discuss motivation and address key issues in signal processing for PLA schemes. The applications, challenges, and future research directions of PLA are discussed in Part 3 of the Appendix, which can be found in supplementary materials online.",
+      "doi": "10.1145/3708496",
+      "publicationDate": "2025",
+      "journal": "ACM Computing …, 2025",
+      "volume": "1",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_InfrastructureSecurity_Authentication/A Comprehensive Survey on Physical Layer Authentication Techniques- Categorization and Analysis of Model-Driven and Data-Driven Approaches.pdf",
+      "fileUrl": "https://dl.acm.org/doi/abs/10.1145/3708496",
+      "extractionDate": "2025-04-29T07:23:09.096598",
+      "extractionConfidenceScore": 0.85
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "08ef7b0b11e340ea9aac5e14f33baafd",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Wireless Network Security",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "f5ee7d4178444ecba83296a26b6a99d3",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "Model-based PLA schemes",
+          "relevance": "Model-based schemes utilize a statistical process to describe the behavior of PLFs, making them ideal for simpler communication scenarios."
+        },
+        {
+          "modelName": "ML-based PLA schemes",
+          "relevance": "ML-based schemes employ data-driven approaches to train the descriptions of PLFs, suited for more complex communication contexts."
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": "Signal processing in wireless network security",
+      "extractionConfidence": 0.8,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "e3e0de69ae7a40c79e6a171c989c0f34",
+      "problemStatement": "The research addresses the critical concern of authentication in wireless networks, focusing on the vulnerabilities introduced by the open and broadcast nature of wireless mediums. It aims to understand, explain, and solve the limitations of Upper-Layer Authentication (ULA) techniques by exploring Physical-Layer Authentication (PLA) techniques, particularly the application of signal processing in PLA.",
+      "problemScope": "The scope includes the categorization and analysis of various PLA schemes, specifically model-driven and data-driven approaches, and their signal processing techniques in wireless networks.",
+      "problemType": "MethodologicalProblem",
+      "problemImportance": "The problem is significant because wireless networks are increasingly susceptible to security threats due to their open nature, and existing ULA techniques are becoming less effective with the evolution of computational power and cryptanalysis techniques.",
+      "businessRelevance": "Solving this problem has direct implications for the security of wireless communication services, which is crucial for the growth of mobile devices and IoT. Enhancing PLA techniques can lead to more secure networks, which is vital for businesses that rely on wireless communication.",
+      "extractionConfidence": 0.9,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "8a532d6762d24a3398ecfb7c65cd8ad7",
+      "gapDescription": "Despite existing surveys on PLA, the essential role of signal processing in effective authentication is not widely explored.",
+      "relatedDomain": "Physical-Layer Authentication (PLA)",
+      "gapSignificance": "Understanding signal processing's impact on PLA is crucial for enhancing authentication performance and computational efficiency.",
+      "extractionConfidence": 0.9,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    },
+    {
+      "internal_id": "d3e386017b3c435394a07b0dc04a5325",
+      "gapDescription": "Previous surveys have contributed to understanding PLA schemes but have not provided a holistic view that encompasses both model-based and ML-based schemes.",
+      "relatedDomain": "Physical-Layer Authentication (PLA)",
+      "gapSignificance": "A comprehensive overview that includes both model-based and ML-based schemes is necessary for a complete understanding of the PLA landscape.",
+      "extractionConfidence": 0.8,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    },
+    {
+      "internal_id": "6aa1a25d26c744ec9d76072a27ab9340",
+      "gapDescription": "Existing surveys often overlook the categorization of PLA schemes based on signal processing approaches into model-based and ML-based schemes.",
+      "relatedDomain": "Physical-Layer Authentication (PLA)",
+      "gapSignificance": "Categorizing PLA schemes based on signal processing approaches is important for structured research and development in secure communications.",
+      "extractionConfidence": 0.85,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    },
+    {
+      "internal_id": "246ae491017b486e806029447ffe561b",
+      "gapDescription": "There is a lack of exploration of PLA schemes for Cross-Technology Communication (CTC) environments, which introduces additional challenges for PLA schemes.",
+      "relatedDomain": "Physical-Layer Authentication (PLA) in Cross-Technology Communication (CTC)",
+      "gapSignificance": "Addressing the challenges of PLA in CTC environments is critical for authentication across different communication technologies and ensuring security in heterogeneous networks.",
+      "extractionConfidence": 0.75,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "fda93e90866748628a8b7b14c2815667",
+      "questionText": "How do different signal processing approaches impact the authentication performance and computational demands when using the same Physical-Layer Features (PLFs) in Physical-Layer Authentication (PLA) techniques?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Signal processing approaches",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Authentication performance",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Computational demands",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Physical-Layer Features (PLFs)",
+          "variableRole": "Moderator"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34",
+      "addressesGap": "8a532d6762d24a3398ecfb7c65cd8ad7"
+    },
+    {
+      "internal_id": "4fffc5cc1cd24e6e95b94c170de19691",
+      "questionText": "What are the practical applications, emerging challenges, and prospective research directions in Physical-Layer Authentication (PLA)?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Physical-Layer Authentication (PLA)",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Practical applications",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Emerging challenges",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Prospective research directions",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34",
+      "addressesGap": "8a532d6762d24a3398ecfb7c65cd8ad7"
+    },
+    {
+      "internal_id": "d014a7eafd314e10a4876d2842d63a5f",
+      "questionText": "What are the advantages and limitations of model-based and Machine Learning (ML)-based Physical-Layer Authentication (PLA) schemes?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Model-based PLA schemes",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "ML-based PLA schemes",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Advantages",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Limitations",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34",
+      "addressesGap": "8a532d6762d24a3398ecfb7c65cd8ad7"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "6c60cf5620634147bd54c79f025daff5",
+      "challengeDescription": "The effectiveness of Upper-Layer Authentication (ULA) schemes increasingly diminishes as computational power and cryptanalysis techniques evolve, leading to a need for more robust authentication methods like Physical-Layer Authentication (PLA).",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    },
+    {
+      "internal_id": "d8c05a1de11b4206ada39c03b8d8c113",
+      "challengeDescription": "Model-based PLA schemes often face limitations in more dynamic and complex scenarios due to their rigidity in adapting to the nonlinearity and variability of modern wireless networks.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    },
+    {
+      "internal_id": "43e2ec4bde074419bf833115ea477d43",
+      "challengeDescription": "The continuous learning capability of ML models enhances security by effectively detecting and responding to emerging threats, but this requires handling the dynamic nature of wireless channels and improving real-time performance with lower latency.",
+      "challengeType": "EmergentBehavior",
+      "severity": "Major",
+      "extractionConfidence": 0.85,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    },
+    {
+      "internal_id": "e6f4c423c10e4d0a8546105cc19aafec",
+      "challengeDescription": "Cross-Technology Communication (CTC) introduces additional challenges for PLA schemes, as different technologies employ varied modulation schemes, frequency bands, and communication protocols, resulting in diverse Physical-Layer Features (PLFs).",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    },
+    {
+      "internal_id": "2a6b17b6b6b44512b6c7925606f791bd",
+      "challengeDescription": "Defending against replay attacks poses greater challenges than impersonation attacks, because the replayed signal retains original private information.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.85,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "relatedProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "ebe2b240348840de8d23e155bce2c8ec",
+      "name": "A Comprehensive Survey on Physical Layer Authentication Techniques",
+      "description": "This study presents a comprehensive survey of signal processing approaches in various Physical-Layer Authentication (PLA) schemes, categorizing existing approaches into model-based and Machine Learning (ML)-based schemes. It discusses the motivation, key issues in signal processing for PLA schemes, applications, challenges, and future research directions. The survey introduces a unique taxonomy framework that encompasses a broader spectrum of PLA technologies.",
+      "studyDesign": {
+        "designType": "Survey",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is designed as a comprehensive survey and analysis of existing literature on PLA schemes, focusing on signal processing techniques. It categorizes the PLA schemes into model-based and ML-based approaches and further subdivides them based on complexity and the type of ML algorithms used."
+      },
+      "variables": [
+        {
+          "variableName": "Physical-Layer Authentication (PLA) techniques",
+          "variableRole": "Dependent",
+          "conceptualDefinition": "PLA techniques are authentication methods that leverage Physical-Layer Features (PLFs) such as Channel Impulse Response (CIR), Channel Frequency Response (CFR), Phase Noise (PN), and various tagging techniques for securing wireless networks.",
+          "operationalization": "The study examines the application of signal processing techniques in PLA, assessing their impact on authentication performance and computational demands.",
+          "measurementScale": "Categorical",
+          "units": null
+        }
+      ],
+      "procedures": [
+        {
+          "procedureName": "Taxonomy Framework Development",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Review and categorization of existing PLA schemes based on signal processing techniques.",
+              "inputs": "Existing literature on PLA schemes",
+              "outputs": "Taxonomy framework",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "Development of a taxonomy framework to categorize and analyze PLA schemes based on their signal processing approaches into model-based and ML-based schemes."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "QualitativeContentAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The study involves a qualitative analysis of existing literature on PLA schemes. It categorizes the schemes based on signal processing techniques and discusses their applications, challenges, and future directions. The analysis is based on the review of existing surveys, research papers, and technical reports."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TextualDescription",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The study presents a novel taxonomy framework categorizing PLA schemes into model-based and ML-based approaches. It provides a critical analysis of the advantages and limitations of these schemes and discusses practical applications, emerging challenges, and prospective research directions in PLA."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "Not applicable as this is a survey study synthesizing existing literature.",
+        "dataRepository": null,
+        "codeAvailabilityStatement": "Not applicable as this is a survey study synthesizing existing literature.",
+        "codeRepository": null,
+        "protocolAvailability": "The methodology is detailed within the published survey paper.",
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.85,
+      "paper": "0182c4ca442e4bfdb8d6fcc6960ad27d",
+      "researchProblem": "e3e0de69ae7a40c79e6a171c989c0f34"
+    }
+  ],
+  "sciknow-25x1-material-tools": []
+}

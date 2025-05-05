@@ -1,0 +1,317 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "5033b00359e94784ad7506a35df01a24",
+      "title": "A clustering algorithm combining fuzzy C-means and artificial bee colony algorithm",
+      "authors": [
+        {
+          "name": "Kan Ni"
+        }
+      ],
+      "abstract": "Serverless computing is one of the recent compelling paradigms in cloud computing. Serverless computing can quickly run user applications and services regardless of the underlying server architecture. Despite the availability of several commercial and open-source serverless platforms, there are still some open issues and challenges to address. One of the key concerns in serverless computing platforms is security. Therefore, in this paper, we present a multi-layer abstract model of serverless computing for an security investigation. We conduct a quantitative analysis of security risks for each layer. We observe that the Attack Tree and Attack-Defense Tree methodologies are viable approaches in this regard. Consequently, we make use of the Attack Tree and the Attack-Defense Tree to quantify the security risks and countermeasures of serverless computing. We also propose a novel measure called the Relative Risk Matrix (RRM) to quantify the probability of attack success. Stakeholders including application developers, researchers, and cloud providers can potentially apply these findings and implications to better understand and further enhance the security of serverless computing.\n\nKeywords Serverless computing, FaaS, Security, Quantification, Attack Tree, Attack-Defense Tree, Risk matrix",
+      "doi": "",
+      "publicationDate": "2024",
+      "journal": "Int. J. Innov. Comput. Inf. Control, 2024",
+      "volume": "1",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "Serverless computing",
+        "FaaS",
+        "Security",
+        "Quantification",
+        "Attack Tree",
+        "Attack-Defense Tree",
+        "Risk matrix"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_API/Toward security quantification of serverless computing.pdf",
+      "fileUrl": "http://www.ijicic.org/ijicic-200119.pdf",
+      "extractionDate": "2025-04-30T22:31:18.476805",
+      "extractionConfidenceScore": 0.8423
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "50ffe0216b364c7ebc80debb0a16de18",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cloud Computing Security",
+      "associatedProject": null,
+      "fundingSources": [
+        {
+          "funderName": "The Science and Technology Development Fund of Macao, Macao SAR, China",
+          "grantNumber": "0033/2022/ITP"
+        },
+        {
+          "funderName": "The Faculty Research Grant Projects of Macau University of Science and Technology, Macao SAR, China",
+          "grantNumber": "FRG-22-020-FI"
+        }
+      ],
+      "institutions": [
+        {
+          "name": "School of Computer Science and Engineering, Macau University of Science and Technology",
+          "location": "Taipa, Macao 999078, China"
+        },
+        {
+          "name": "AI and Cyber Futures Institute, Charles Sturt University",
+          "location": "Orange NSW 2800, Australia"
+        },
+        {
+          "name": "Rural Health Research Institute, Charles Sturt University",
+          "location": "Orange NSW 2800, Australia"
+        },
+        {
+          "name": "Department of Computer Science, Hong Kong Baptist University",
+          "location": "Hong Kong, China"
+        }
+      ],
+      "extractionConfidence": 0.95,
+      "paper": "5033b00359e94784ad7506a35df01a24"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "9d4ef88054a148b0a3e4d4ea260dc5d7",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "Attack Tree",
+          "relevance": "Used to quantify the security risks in serverless computing"
+        },
+        {
+          "modelName": "Attack-Defense Tree",
+          "relevance": "Used to quantify the security risks and countermeasures in serverless computing"
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "5033b00359e94784ad7506a35df01a24"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "4cfb342cfcf144d3a81f87a82625dd1f",
+      "problemStatement": "The core research problem is the security quantification in serverless computing platforms, specifically addressing the challenge of quantifying security risks and countermeasures for serverless computing architectures.",
+      "problemScope": "The scope includes understanding and analyzing the underlying architecture and principles of serverless computing, studying the security quantification mechanisms, and proposing a novel quantitative measure to compute the probability of risk or countermeasure.",
+      "problemType": "DesignProblem",
+      "problemImportance": "Security is a major concern preventing the widespread adoption of serverless computing, and quantifying security risks is crucial for enhancing trust and reliability in these platforms.",
+      "businessRelevance": "Improving security quantification in serverless computing is relevant to businesses as it can lead to increased adoption of serverless platforms, reduce risks associated with cloud services, and potentially lower operational costs due to pay-as-you-go models.",
+      "extractionConfidence": 0.9,
+      "paper": "5033b00359e94784ad7506a35df01a24"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "3286a4d80dcb4e71840be210a984a9fb",
+      "questionText": "How can the underlying architecture, principles, and applications of container technologies such as Docker and Kubernetes be understood and analyzed towards the development and deployment of serverless computing?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Underlying architecture, principles, and applications of container technologies",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Development and deployment of serverless computing",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "5033b00359e94784ad7506a35df01a24",
+      "relatedProblem": "4cfb342cfcf144d3a81f87a82625dd1f"
+    },
+    {
+      "internal_id": "34a8a71d02a1495b8dd877dee4ab934b",
+      "questionText": "What are the architecture, principles, effectiveness, and workflow of serverless computing, and what challenges and related issues exist towards the security enhancement?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Architecture, principles, effectiveness, and workflow of serverless computing",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Challenges and related issues towards security enhancement",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "5033b00359e94784ad7506a35df01a24",
+      "relatedProblem": "4cfb342cfcf144d3a81f87a82625dd1f"
+    },
+    {
+      "internal_id": "c096342c7f1b41619f1625b4a2f68d00",
+      "questionText": "What are the prominent and standard security quantification mechanisms, such as Attack Tree and Attack Defense Tree, and how can they be surveyed and analyzed?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Security quantification mechanisms",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Attack Tree and Attack Defense Tree methodologies",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "5033b00359e94784ad7506a35df01a24",
+      "relatedProblem": "4cfb342cfcf144d3a81f87a82625dd1f"
+    },
+    {
+      "internal_id": "c51d29db78ef4667a19db0b4e903dc24",
+      "questionText": "How can a novel quantitative measure be proposed to logically compute the probability of risk (an attack) or countermeasure?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "Novel quantitative measure",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Probability of risk or countermeasure",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "5033b00359e94784ad7506a35df01a24",
+      "relatedProblem": "4cfb342cfcf144d3a81f87a82625dd1f"
+    },
+    {
+      "internal_id": "dc9be2858abf46b58139dec39c2ebbd4",
+      "questionText": "How can the risk analysis of serverless computing be carried out while dividing it into its constituent layers, and how can the quantification help direct the end-to-end security enhancement of serverless computing?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Risk analysis of serverless computing",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "End-to-end security enhancement of serverless computing",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "5033b00359e94784ad7506a35df01a24",
+      "relatedProblem": "4cfb342cfcf144d3a81f87a82625dd1f"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "0b3e3184f0374fbe8480f30e8b22590e",
+      "challengeDescription": "Security is perhaps the greatest deterrent that prevents serverless computing from being widely adopted. Many business organizations and research institutes are quite vigilant in migrating their information assets to third-party service providers.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "5033b00359e94784ad7506a35df01a24",
+      "relatedProblem": "4cfb342cfcf144d3a81f87a82625dd1f"
+    },
+    {
+      "internal_id": "91ea9aed1c8140e1a4779a901c6c9b80",
+      "challengeDescription": "The presence of a large number of individual users has prompted transparency in security measures. Users may be trusted by cloud service providers, but distrust exists between different users.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "5033b00359e94784ad7506a35df01a24",
+      "relatedProblem": "4cfb342cfcf144d3a81f87a82625dd1f"
+    },
+    {
+      "internal_id": "97b8fa7c966a41ec8d7cebc230f6f872",
+      "challengeDescription": "Serverless computing platforms are still in their juvenile stage and there are some challenges that have not been well studied.",
+      "challengeType": "Other",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "5033b00359e94784ad7506a35df01a24",
+      "relatedProblem": "4cfb342cfcf144d3a81f87a82625dd1f"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "0fb7ea3e62dc472aabca4b5aa8d5347d",
+      "name": "Security Quantification in Serverless Computing",
+      "description": "The paper presents a methodological framework for quantifying security risks in serverless computing platforms. It utilizes a multi-layer abstract model to conduct a quantitative analysis of security risks at each layer of serverless computing. The methodology incorporates the use of Attack Trees and Attack-Defense Trees to model potential attack scenarios and defenses. Additionally, a novel measure called the Relative Risk Matrix (RRM) is proposed to quantify the probability of attack success. The framework aims to provide stakeholders with a better understanding of security risks and countermeasures in serverless computing.",
+      "studyDesign": {
+        "designType": "Observational",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study observes and analyzes the security aspects of serverless computing without manipulating variables or employing a control group. It is cross-sectional as it assesses the security risks at a single point in time."
+      },
+      "variables": [
+        {
+          "variableName": "Security Risk",
+          "variableRole": "Dependent",
+          "conceptualDefinition": "The potential for exploitation of vulnerabilities within the serverless computing environment, leading to unauthorized access, data breaches, or other forms of security incidents.",
+          "operationalization": "Quantified using Attack Trees, Attack-Defense Trees, and the Relative Risk Matrix to model and measure the likelihood and impact of potential attacks.",
+          "measurementScale": "Ratio",
+          "units": "Probability"
+        }
+      ],
+      "procedures": [
+        {
+          "procedureName": "Security Quantification Procedure",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Model the serverless computing system architecture into four distinct layers.",
+              "inputs": "Serverless computing system architecture",
+              "outputs": "Abstract model of serverless computing with identified layers",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Analyze security risks for each layer using Attack Trees and Attack-Defense Trees.",
+              "inputs": "Abstract model with identified layers",
+              "outputs": "Attack scenarios and defense mechanisms for each layer",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Develop and apply the Relative Risk Matrix to quantify the probability of attack success.",
+              "inputs": "Attack scenarios and defense mechanisms",
+              "outputs": "Quantified risk probabilities for each layer",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves modeling the serverless computing architecture into multiple layers and analyzing the security risks for each layer using Attack Trees and Attack-Defense Trees. The procedure also includes the development of the Relative Risk Matrix to quantify the probability of attack success and the effectiveness of defensive countermeasures."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "QuantitativeAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves the application of the proposed security quantification framework to the abstract model of serverless computing. The analysis includes the calculation of risk probabilities using the Relative Risk Matrix and the comparison of risk probabilities with and without defensive countermeasures. The effectiveness of the quantification method is evaluated by observing the reduction in risk probability across different layers of the serverless computing architecture."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TabularData",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The results of the security quantification are represented in tabular form, showing the calculated risk probabilities for each layer of the serverless computing architecture. The tables compare the probabilities of successful attacks before and after the application of defensive countermeasures. The overall risk probability of serverless computing is also presented, along with recommendations for improving security based on the quantification analysis."
+      },
+      "extractionConfidence": 0.9,
+      "paper": "5033b00359e94784ad7506a35df01a24",
+      "researchProblem": "4cfb342cfcf144d3a81f87a82625dd1f"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "c55f4fa663fb42a4a48f60d745870f3f",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "0fb7ea3e62dc472aabca4b5aa8d5347d"
+      ]
+    }
+  ]
+}

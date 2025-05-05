@@ -1,0 +1,585 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "title": "Opportunities and Challenges of Artificial Intelligence Applied to Identity and Access Management in Industrial Environments",
+      "authors": [
+        {
+          "name": "Jesús Vegas and César Llamas"
+        }
+      ],
+      "abstract": "The integration of artificial intelligence(AI) technologies into identity and access management (IAM) systems has greatly improved access control and management, offering more robust, adaptive, and intelligent solutions than traditional methods. AI-driven IAM systems enhance security, operational efficiency, and introduce new capabilities in industrial environments. In this narrative review, we present the state-of-the-art AI technologies in industrial IAM, focusing on methods such as biometric, comprising facial and voice recognition, and multifactor authentication for robust security. It addresses the challenges and solutions in implementing AI-based IAM systems in industrial settings, including security, privacy, evaluation, and continuous improvement. We present also the emerging trends and future directions, highlighting AI's potential to transform industrial security measures. This review aims to guide researchers and practitioners in developing and implementing next-generation access control systems, proposing future research directions to address challenges and optimize AI applications in this domain.",
+      "doi": "10.3390/fi16120469",
+      "publicationDate": "2024",
+      "journal": "Industry",
+      "volume": "4",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "identity and access management",
+        "artificial intelligence",
+        "industrial environments"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_InfrastructureSecurity_Application/Opportunities and Challenges of Artificial Intelligence Applied to Identity and Access Management in Industrial Environments .pdf",
+      "fileUrl": "",
+      "extractionDate": "2025-04-29T07:38:06.136587",
+      "extractionConfidenceScore": 0.8581
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "faa5c7bb89a3421097f17ecbd6a819f4",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence, Identity and Access Management, Cybersecurity",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 1.0,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "f7e4f04d857343cb85f3e5c56b19b5ed",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.4,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "19f88f4febe84b368cab0c40620bbc96",
+      "problemStatement": "The core research problem addressed is the integration of artificial intelligence (AI) technologies into identity and access management (IAM) systems in industrial environments, focusing on enhancing security, operational efficiency, and introducing new capabilities such as biometric recognition and multifactor authentication. The study aims to address the challenges and optimize the application of AI in IAM systems to improve access control and management.",
+      "problemScope": "The scope includes AI-driven IAM systems in industrial settings, with a focus on methods such as biometric recognition and multifactor authentication, and the challenges of implementing these systems including security, privacy, evaluation, and continuous improvement.",
+      "problemType": "ApplicationProblem",
+      "problemImportance": "This problem is significant as it represents the primary challenge in developing next-generation access control systems that are robust, adaptive, and intelligent, which is crucial for maintaining security in industrial environments.",
+      "businessRelevance": "Solving this problem has direct implications for businesses in terms of enhancing security measures, ensuring regulatory compliance, reducing operational costs, and improving scalability and performance of IAM systems in industrial operations.",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "d066728977b64574bc214ff80053fad7",
+      "questionText": "What are the main contributions of AI in identification and authentication with application in industrial IAM systems?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "AI contributions",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Identification and authentication",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Industrial IAM systems",
+          "variableRole": "Context"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    },
+    {
+      "internal_id": "21e684a53b68477290c924fe2d31891d",
+      "questionText": "What are the advanced capabilities that AI can bring to IAM systems?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Advanced capabilities",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "AI integration",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "IAM systems",
+          "variableRole": "Context"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    },
+    {
+      "internal_id": "5d889be24fdb4d82a45bfcb0fcf712d0",
+      "questionText": "What are the main challenges and future lines of research?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Challenges",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Future research",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "AI applications in IAM",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "b6e0e00b8df14ca1a753ab9c0e514c6a",
+      "directionDescription": "Development of harmonized standards and APIs to address interoperability and standardized protocols across industries for smoother communication and compatibility between systems.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "arisesFromLimitation": "65f03b4f8e3b40e38100da2e8f3b7eb5",
+      "extendsPotentialApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "6c078b26d5514dbcb9a227dadb5cad68",
+      "directionDescription": "Exploration of lightweight and adaptive AI models optimized for edge devices to enable deployment of high-performing IAM systems without overburdening existing infrastructures.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "arisesFromLimitation": "65f03b4f8e3b40e38100da2e8f3b7eb5",
+      "extendsPotentialApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "4bc47fef456e465384af02f1e64d5bce",
+      "directionDescription": "Incorporation of fairness-aware machine learning techniques and regular audits of system decisions to mitigate risks of algorithmic biases and ensure ethical decision-making in IAM.",
+      "timeframe": "Short-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "arisesFromLimitation": "65f03b4f8e3b40e38100da2e8f3b7eb5",
+      "extendsPotentialApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "db2d8f5e2cf84b26a5e33261fa9c0856",
+      "directionDescription": "Establishment of open-source benchmarking datasets and evaluation frameworks tailored to industrial IAM applications to encourage consistent and replicable research efforts.",
+      "timeframe": "Short-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "arisesFromLimitation": "65f03b4f8e3b40e38100da2e8f3b7eb5",
+      "extendsPotentialApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "d0c9a62c130e49a5bc01cb2028655600",
+      "directionDescription": "Research focused on dynamic policy adjustment mechanisms that leverage real-time user behavior analytics to fine-tune access control measures.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "arisesFromLimitation": "65f03b4f8e3b40e38100da2e8f3b7eb5",
+      "extendsPotentialApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "84e9222effbc4ed8aa4f11c9ee12abc5",
+      "directionDescription": "Creation of open-access datasets and privacy-preserving frameworks to support the adoption and refinement of AI-based IAM systems.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "arisesFromLimitation": "65f03b4f8e3b40e38100da2e8f3b7eb5",
+      "extendsPotentialApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "f4d291e2dd7e4b73b92850fac34ff860",
+      "applicationDescription": "AI-driven IAM solutions help manage access control, ensure compliance with privacy regulations, and mitigate the risk of unauthorized access to medical records in healthcare organizations.",
+      "targetSector": "Healthcare",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "buildOnMethodologicalFrameworks": [
+        "72d1adb778804c6fba88045534c3dfea"
+      ]
+    },
+    {
+      "internal_id": "868b8725444b4f6099f579351443a605",
+      "applicationDescription": "AI technologies such as biometric recognition and multifactor authentication enhance security and efficiency in industrial environments, maintaining security in unpredictable and harsh conditions.",
+      "targetSector": "Industry",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "buildOnMethodologicalFrameworks": [
+        "72d1adb778804c6fba88045534c3dfea"
+      ]
+    },
+    {
+      "internal_id": "a15fc3e0c860492293a3b4078dd68749",
+      "applicationDescription": "Integration of explainable AI, federated learning, edge computing, and blockchain technology in IAM systems to ensure robust security measures and reliable access control mechanisms.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "buildOnMethodologicalFrameworks": [
+        "72d1adb778804c6fba88045534c3dfea"
+      ]
+    },
+    {
+      "internal_id": "cd03ee07ac33490981228651b00a5338",
+      "applicationDescription": "AI-driven IAM systems can scale to accommodate the growing number of devices and users, especially with the proliferation of IoT devices, ensuring robust security without compromising efficiency.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "buildOnMethodologicalFrameworks": [
+        "72d1adb778804c6fba88045534c3dfea"
+      ]
+    },
+    {
+      "internal_id": "b72ddf0f132c4aaaae0cc6fadd493d8d",
+      "applicationDescription": "Federated learning techniques in AI-driven IAM systems enable collaborative model training without compromising sensitive data, enhancing security and privacy in industrial environments.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.8,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "buildOnMethodologicalFrameworks": [
+        "72d1adb778804c6fba88045534c3dfea"
+      ]
+    },
+    {
+      "internal_id": "240f126114d24278879df5e860dc1128",
+      "applicationDescription": "AI-based IAM systems use real-time monitoring and anomaly detection, predictive analytics, adaptive authentication mechanisms, and user behavior analysis to improve security and operational efficiency.",
+      "targetSector": "Industry",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "buildOnMethodologicalFrameworks": [
+        "72d1adb778804c6fba88045534c3dfea"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "0d616870b09e4f7382207af1e0c31184",
+      "challengeDescription": "Managing access to a wide range of resources, including physical assets, digital systems, and data, in industrial environments with complexity and scale while ensuring security and regulatory compliance.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    },
+    {
+      "internal_id": "2d39c6627c7c4dd0b641d6290a1c955f",
+      "challengeDescription": "Real-time access control and anomaly detection in industrial IAM systems due to the potential impact on production and safety, which differs from general IAM systems typically focused on standard IT environments.",
+      "challengeType": "EmergentBehavior",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    },
+    {
+      "internal_id": "8829194c2f3b46b5aaed51cec9ed058c",
+      "challengeDescription": "Integration of IT and OT (operational technology) in IAM systems, requiring management across traditional IT infrastructure and specialized OT systems, which necessitates scalable and flexible solutions for device-level interoperability.",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.85,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    },
+    {
+      "internal_id": "b5e0fb021a224a7aa4deffd85db5a207",
+      "challengeDescription": "Biometric systems in industrial environments must contend with various challenges such as dust, noise, vibrations, and extreme temperatures, affecting the reliability and robustness of biometric technologies.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    },
+    {
+      "internal_id": "b863e0e085664796b90c172bc7e5ac4b",
+      "challengeDescription": "Ensuring the explainability of AI-driven IAM systems to provide clear, understandable justifications for their actions, enhancing trust and accountability in sensitive and high-stakes environments.",
+      "challengeType": "TheoryGap",
+      "severity": "Moderate",
+      "extractionConfidence": 0.8,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    },
+    {
+      "internal_id": "1a753f77bfa3461eb98c5abf38d956b2",
+      "challengeDescription": "Implementing federated learning approaches in decentralized industrial environments to enhance AI capabilities without compromising data privacy.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.75,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    },
+    {
+      "internal_id": "35c3748fd3c4420badc942a38088416b",
+      "challengeDescription": "Leveraging edge computing in IAM systems to process access control data locally, essential for reducing latency and enhancing the responsiveness in real-time.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.75,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    },
+    {
+      "internal_id": "35ae5461c26b4fbbad9c0d2e5a1dbdc1",
+      "challengeDescription": "Integrating AI-based IAM systems with innovative technologies like blockchain for achieving decentralized and secure access management.",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.8,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "relatedProblem": "19f88f4febe84b368cab0c40620bbc96"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "21dc8b70117046029e7967d77c18146a",
+      "challengeDescription": "Ensuring robust data protection measures and compliance with privacy regulations to address concerns regarding privacy and data protection.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Data privacy and protection",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "encounteredInFramework": "72d1adb778804c6fba88045534c3dfea",
+      "relatedApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "6f5693920eaf436bb9b2230825107853",
+      "challengeDescription": "Addressing errors such as false positives and false negatives to improve accuracy and reliability in identity verification and access control.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Algorithmic accuracy and reliability",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "encounteredInFramework": "72d1adb778804c6fba88045534c3dfea",
+      "relatedApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "7c6788f258ca4a51adbedc2eacb6a58d",
+      "challengeDescription": "Integrating AI into existing IAM systems, which involves upgrading infrastructure, implementing advanced algorithms, and ensuring compatibility with current systems.",
+      "resourceConstraint": "Multiple",
+      "technicalHurdle": "System integration and compatibility",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "encounteredInFramework": "72d1adb778804c6fba88045534c3dfea",
+      "relatedApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "2d14e308ff2d4240b4efc3731481dbbe",
+      "challengeDescription": "Developing harmonized standards and APIs to address the lack of interoperability and standardized protocols across industries.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Interoperability and standardization",
+      "extractionConfidence": 0.8,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "encounteredInFramework": "72d1adb778804c6fba88045534c3dfea",
+      "relatedApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "672268bb8176458fa7a1bfa7ef2a145d",
+      "challengeDescription": "Exploring lightweight and adaptive AI models optimized for edge devices to enable deployment of high-performing IAM systems without overburdening existing infrastructures.",
+      "resourceConstraint": "Hardware",
+      "technicalHurdle": "Optimization for resource-constrained environments",
+      "extractionConfidence": 0.8,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "encounteredInFramework": "72d1adb778804c6fba88045534c3dfea",
+      "relatedApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "73f559d8c3d040978ccc3f8031ad4e6d",
+      "challengeDescription": "Incorporating fairness-aware machine learning techniques and regular audits to mitigate risks of algorithmic biases and discriminatory practices.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Algorithmic fairness and bias mitigation",
+      "extractionConfidence": 0.85,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "encounteredInFramework": "72d1adb778804c6fba88045534c3dfea",
+      "relatedApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "05a56584f56f4e8086399228816d68d8",
+      "challengeDescription": "Establishing open-source resources for benchmarking datasets and evaluation frameworks tailored to industrial IAM applications.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Lack of benchmarking datasets and evaluation frameworks",
+      "extractionConfidence": 0.85,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "encounteredInFramework": "72d1adb778804c6fba88045534c3dfea",
+      "relatedApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    },
+    {
+      "internal_id": "72c828cd4e6c45aaa97e5f069cb4bb66",
+      "challengeDescription": "Enabling organizations to collaboratively train models without compromising sensitive data using federated learning.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Privacy-preserving collaborative model training",
+      "extractionConfidence": 0.85,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "encounteredInFramework": "72d1adb778804c6fba88045534c3dfea",
+      "relatedApplication": "f4d291e2dd7e4b73b92850fac34ff860"
+    }
+  ],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "65f03b4f8e3b40e38100da2e8f3b7eb5",
+      "limitationDescription": "The extensive use of biometric data and user behavior analytics in AI-driven IAM systems raises substantial concerns regarding privacy and data protection.",
+      "limitationType": "ValidityThreat",
+      "impactOnFindings": "Potential risks if the data are mishandled or breached, affecting the trust and adoption of AI-driven IAM solutions.",
+      "businessConstraints": "Need for robust data protection measures and compliance with privacy regulations to maintain user trust.",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "limitedFramework": "72d1adb778804c6fba88045534c3dfea"
+    },
+    {
+      "internal_id": "a5431fde84104073872748515119f6d5",
+      "limitationDescription": "AI-driven IAM systems are not immune to errors such as false positives and false negatives.",
+      "limitationType": "ReliabilityIssue",
+      "impactOnFindings": "These errors can lead to reduced operational efficiency, compromised security, and decreased user trust.",
+      "businessConstraints": "Continuous system training and algorithm refinement are required to improve accuracy, which may increase operational costs and complexity.",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "limitedFramework": "72d1adb778804c6fba88045534c3dfea"
+    },
+    {
+      "internal_id": "154dab67a2fb45998d397bcad98c8fbe",
+      "limitationDescription": "Integrating AI into existing IAM systems is a complex endeavor that demands significant investment in technology and expertise.",
+      "limitationType": "ResourceConstraint",
+      "impactOnFindings": "The complexity of integration may slow down the adoption of AI-driven IAM systems and limit the scalability of the solutions.",
+      "businessConstraints": "Substantial financial outlays and skilled personnel are needed, which may be a barrier for some organizations.",
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "limitedFramework": "72d1adb778804c6fba88045534c3dfea"
+    },
+    {
+      "internal_id": "e0f08d97c5214b5db3aaa5cd8c9a8f02",
+      "limitationDescription": "Lack of interoperability and standardized protocols across industries complicates the integration of diverse legacy systems with modern AI-driven frameworks.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "This gap may hinder the seamless integration and communication between systems, affecting the overall effectiveness of AI-driven IAM systems.",
+      "businessConstraints": "Development of harmonized standards and APIs is required, which may involve regulatory hurdles and additional costs.",
+      "extractionConfidence": 0.85,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "limitedFramework": "72d1adb778804c6fba88045534c3dfea"
+    },
+    {
+      "internal_id": "6ed759ace08a498c97ebae38e6311dc6",
+      "limitationDescription": "Legacy systems often lack the computational capacity to support sophisticated AI algorithms, posing barriers to widespread adoption of AI solutions.",
+      "limitationType": "ResourceConstraint",
+      "impactOnFindings": "This limitation can prevent the full realization of AI's potential in IAM systems within resource-constrained industrial settings.",
+      "businessConstraints": "Upgrading infrastructure to support AI may not be feasible for all organizations, limiting the scalability and adoption of AI-driven IAM systems.",
+      "extractionConfidence": 0.85,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "limitedFramework": "72d1adb778804c6fba88045534c3dfea"
+    },
+    {
+      "internal_id": "3e8ccc2df3ff484181eb2d717298d34f",
+      "limitationDescription": "Reliance on AI for decision-making in IAM introduces ethical concerns, particularly around algorithmic biases.",
+      "limitationType": "ValidityThreat",
+      "impactOnFindings": "Biased datasets could lead to discriminatory practices, undermining trust in AI-driven IAM systems.",
+      "businessConstraints": "Incorporating fairness-aware machine learning techniques and regular audits are necessary, which may increase the complexity and cost of implementation.",
+      "extractionConfidence": 0.85,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "limitedFramework": "72d1adb778804c6fba88045534c3dfea"
+    },
+    {
+      "internal_id": "ca6ae6bec9f94966a82feee65edd0105",
+      "limitationDescription": "The absence of benchmarking datasets and evaluation frameworks tailored to industrial IAM applications is a significant limitation in the field.",
+      "limitationType": "GeneralizabilityIssue",
+      "impactOnFindings": "Lack of standardized evaluation may affect the replicability and robustness of research efforts in AI-driven IAM systems.",
+      "businessConstraints": "Establishing open-source resources for benchmarking is needed, which may require collaborative efforts and time to develop.",
+      "extractionConfidence": 0.85,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "limitedFramework": "72d1adb778804c6fba88045534c3dfea"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "72d1adb778804c6fba88045534c3dfea",
+      "name": "Narrative Review of AI in Industrial IAM",
+      "description": "This study employs a narrative review methodology to explore the integration of artificial intelligence (AI) technologies into identity and access management (IAM) systems in industrial environments. The review synthesizes existing literature on the state-of-the-art AI technologies in industrial IAM, focusing on biometric recognition methods, multifactor authentication, and the challenges and solutions in implementing AI-based IAM systems. It also presents emerging trends and future research directions in the domain.",
+      "studyDesign": {
+        "designType": "NarrativeReview",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is a narrative review, which is a qualitative research method used to synthesize findings from multiple studies on a particular topic. It does not involve primary data collection or experimental manipulation but rather an analysis of existing literature."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Literature Search and Review",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Conduct a literature search on academic databases using keywords such as 'artificial intelligence in industrial identity management' and 'authentication in industrial settings'.",
+              "inputs": "Keywords and search queries",
+              "outputs": "Identified peer-reviewed articles, conference papers, and credible sources",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Apply inclusion and exclusion criteria to filter the literature, focusing on studies that address the application of AI techniques in IAM.",
+              "inputs": "Identified literature",
+              "outputs": "Filtered set of relevant studies",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Evaluate the selected studies for relevance, methodology, and scientific contribution, focusing on practical solutions for authentication and identity management in industry.",
+              "inputs": "Filtered set of relevant studies",
+              "outputs": "Evaluated and selected studies for review",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 4,
+              "description": "Synthesize and analyze the findings from the selected studies, comparing and contrasting trends, gaps, and areas of consensus or disagreement.",
+              "inputs": "Evaluated and selected studies",
+              "outputs": "Synthesized findings and analysis",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves conducting a literature search using academic databases with selected keywords relevant to AI in industrial IAM, applying inclusion and exclusion criteria to ensure relevance and quality, and synthesizing the findings to present the state-of-the-art, challenges, and future directions."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "QualitativeContentAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis in this narrative review involves qualitative synthesis of the selected literature. The analysis focuses on identifying and summarizing the main contributions, challenges, and advanced capabilities of AI in industrial IAM systems. It also includes the extraction of trends and future research directions from the literature."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TextualDescription",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The results of the narrative review are presented in a structured format, highlighting the key findings related to AI technologies in industrial IAM, such as biometric recognition, multifactor authentication, anomaly detection, and predictive analytics. The review also discusses the challenges in implementing these technologies and proposes future research directions."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "Not applicable as this is a narrative review based on previously published literature.",
+        "dataRepository": null,
+        "codeAvailabilityStatement": "Not applicable as this is a narrative review without computational code.",
+        "codeRepository": null,
+        "protocolAvailability": "Not applicable as this is a narrative review without experimental protocols.",
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "cbb3d9a6a9bf45a8a9327793f6986568",
+      "researchProblem": "19f88f4febe84b368cab0c40620bbc96"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "9d2d26055147443ea58b9d1d42d86404",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "72d1adb778804c6fba88045534c3dfea"
+      ]
+    }
+  ]
+}

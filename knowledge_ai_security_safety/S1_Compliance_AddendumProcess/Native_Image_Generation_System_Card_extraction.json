@@ -1,0 +1,403 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "fa350525014a4f9ca30c96405b16df11",
+      "title": "Addendum to GPT-4o System Card: Native image generation",
+      "authors": [],
+      "abstract": "",
+      "doi": "",
+      "publicationDate": "2025",
+      "journal": "OpenAI\n\nMarch",
+      "volume": "25",
+      "issue": "",
+      "pages": "2025",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S1_Compliance_AddendumProcess/Native_Image_Generation_System_Card.pdf",
+      "fileUrl": "",
+      "extractionDate": "2025-04-24T08:03:08.704859",
+      "extractionConfidenceScore": 0.8146
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "2b47f3b38e554dfc841923a0c045f03d",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence, specifically in the area of image generation and multimodal AI models",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [
+        {
+          "name": "OpenAI",
+          "location": null
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "fa350525014a4f9ca30c96405b16df11"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "7eebd0fa2c4a4a0f870466426b262d35",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "4o image generation",
+          "relevance": "A new approach to image generation embedded within ChatGPT, capable of creating photorealistic outputs and transforming images based on detailed instructions."
+        },
+        {
+          "modelName": "DALL·E",
+          "relevance": "Previous generative model by OpenAI used as a reference point for the development of 4o image generation."
+        },
+        {
+          "modelName": "Sora",
+          "relevance": "Previous tool by OpenAI referenced for lessons learned and applied to the safety infrastructure of 4o image generation."
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "fa350525014a4f9ca30c96405b16df11"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "a08256ca5b2d4faa8de4369e46f9a10a",
+      "problemStatement": "The core research problem is the introduction of new risks associated with the capabilities of the 4o image generation model, which is more advanced than previous models like DALL·E. These risks include the potential for creating or altering photographs in detrimental ways, generating schematics and instructions for making weapons, and other safety challenges that arise from its photorealism, image-to-image transformation, and instruction-following capabilities.",
+      "problemScope": "The scope includes the safety challenges and risks specific to the 4o image generation model, which is embedded within the ChatGPT architecture and offers new capabilities over previous models.",
+      "problemType": "DesignProblem",
+      "problemImportance": "Addressing these risks is crucial for ensuring the responsible deployment and use of advanced AI image generation models, preventing misuse, and maintaining user trust.",
+      "businessRelevance": "Solving these problems is relevant to businesses that rely on AI image generation for various applications, ensuring that the technology is safe and adheres to ethical standards, which is essential for market acceptance and regulatory compliance.",
+      "extractionConfidence": 0.9,
+      "paper": "fa350525014a4f9ca30c96405b16df11"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "d3cb31d0bfd048348c0df6cc662db77f",
+      "questionText": "What are the new risks introduced by the native image generation capabilities of the 4o image generation model?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "4o image generation capabilities",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "New risks",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "relatedProblem": "a08256ca5b2d4faa8de4369e46f9a10a"
+    },
+    {
+      "internal_id": "28f6a279ea4243d69de3f6a0eb8af3bc",
+      "questionText": "How effective are the mitigation strategies in addressing the unique safety challenges posed by 4o image generation?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Mitigation strategies",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Safety challenges",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "relatedProblem": "a08256ca5b2d4faa8de4369e46f9a10a"
+    },
+    {
+      "internal_id": "0345b699b12c413aba45dd0daa007899",
+      "questionText": "How does the 4o image generation model perform in terms of safety and effectiveness when evaluated against prompts from external manual red teaming, automated red teaming, and offline testing using real-world scenarios?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "4o image generation model performance",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Safety and effectiveness evaluations",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "External manual red teaming",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Automated red teaming",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Offline testing using real-world scenarios",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "relatedProblem": "a08256ca5b2d4faa8de4369e46f9a10a"
+    },
+    {
+      "internal_id": "aa55df48c6ab47f596517a2623d2b34e",
+      "questionText": "What are the specific model policies for child safety in 4o image generation, and how effective are the detection mechanisms?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Child safety model policies",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Detection mechanisms effectiveness",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "relatedProblem": "a08256ca5b2d4faa8de4369e46f9a10a"
+    },
+    {
+      "internal_id": "a4287907839a4e21a844425e35645ad8",
+      "questionText": "How does the 4o image generation model address the generation of images that resemble the aesthetics of some artists' work?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Artist style image generation",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "relatedProblem": "a08256ca5b2d4faa8de4369e46f9a10a"
+    },
+    {
+      "internal_id": "c1a1f94592094d2988419cbbc67cb888",
+      "questionText": "How does the 4o image generation model handle the generation of depictions of public figures?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Public figure image generation",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "relatedProblem": "a08256ca5b2d4faa8de4369e46f9a10a"
+    },
+    {
+      "internal_id": "d6175e9f35094ceca0c9489e18901518",
+      "questionText": "What are the representational biases present in the 4o image generation model, and how do they compare to earlier models?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Representational biases",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "4o image generation model",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Earlier models",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "relatedProblem": "a08256ca5b2d4faa8de4369e46f9a10a"
+    },
+    {
+      "internal_id": "96202bc500534c0f8ae223c2f50fbe14",
+      "questionText": "What are the approaches and effectiveness of the provenance tools used for 4o image generation?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Provenance tools",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Effectiveness of provenance tools",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "relatedProblem": "a08256ca5b2d4faa8de4369e46f9a10a"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [],
+  "sciknow-25x1-methodological-challenges": [
+    {
+      "internal_id": "abfc166488bc4da48e623fff8a9a6299",
+      "challengeDescription": "Ensuring balanced demographic representation in image generation outputs",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Refining approach and investing in developing more effective post-training mitigations",
+      "extractionConfidence": 0.8,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "encounteredInFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263",
+      "resultsInLimitation": "50a0caa4a2b647b5be145b8d89b42aa6"
+    },
+    {
+      "internal_id": "0276a255b84142d58011742e9be3463c",
+      "challengeDescription": "Preventing, detecting, and reporting Child Sexual Abuse Material (CSAM) content",
+      "researchPhase": "Validation",
+      "mitigationStrategy": "Prioritizing prevention, detection, and reporting across all products",
+      "extractionConfidence": 0.9,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "encounteredInFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263",
+      "resultsInLimitation": "50a0caa4a2b647b5be145b8d89b42aa6"
+    },
+    {
+      "internal_id": "7d3da56447d54d76a050cec65404bf7b",
+      "challengeDescription": "Addressing the risk of generating images that resemble the aesthetics of specific artists' work",
+      "researchPhase": "Validation",
+      "mitigationStrategy": "Taking a conservative approach with the version of 4o image generation",
+      "extractionConfidence": 0.85,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "encounteredInFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263",
+      "resultsInLimitation": "50a0caa4a2b647b5be145b8d89b42aa6"
+    },
+    {
+      "internal_id": "ea3a8de3ce02493093374adef4586d0e",
+      "challengeDescription": "Evaluating the safety and effectiveness of 4o image generation's safety stack",
+      "researchPhase": "Validation",
+      "mitigationStrategy": "Using a combination of external, manual red teaming; automated red teaming; and offline testing using real-world scenarios",
+      "extractionConfidence": 0.75,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "encounteredInFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263",
+      "resultsInLimitation": "50a0caa4a2b647b5be145b8d89b42aa6"
+    }
+  ],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "0189f438baa74f8ba4a6b8d4fd42de4a",
+      "challengeDescription": "Ensuring balanced demographic representation in image generation outputs",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Developing more effective post-training mitigations for representational biases",
+      "extractionConfidence": 0.8,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "encounteredInFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263"
+    },
+    {
+      "internal_id": "4906df7b97304ee7a14001f5d291c9f2",
+      "challengeDescription": "Preventing, detecting, and reporting Child Sexual Abuse Material (CSAM) content",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Creating robust safety measures for child protection",
+      "extractionConfidence": 0.9,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "encounteredInFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263"
+    },
+    {
+      "internal_id": "dea2981a0b6d4e6c9db064e9dec8cf5c",
+      "challengeDescription": "Maximizing helpfulness and creative freedom while minimizing harm",
+      "resourceConstraint": "Multiple",
+      "technicalHurdle": "Balancing safety and freedom in content generation",
+      "extractionConfidence": 0.7,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "encounteredInFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263"
+    },
+    {
+      "internal_id": "9199b722e6f94d39a1f332d9e4c7a0f4",
+      "challengeDescription": "Addressing the risks of generating images that resemble the aesthetics of artists' work",
+      "resourceConstraint": "None",
+      "technicalHurdle": "Implementing conservative approaches to respect creative property",
+      "extractionConfidence": 0.7,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "encounteredInFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263"
+    }
+  ],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "50a0caa4a2b647b5be145b8d89b42aa6",
+      "limitationDescription": "Challenges remain-particularly around demographic representation-and additional work is needed to ensure balanced outputs.",
+      "limitationType": "GeneralizabilityIssue",
+      "impactOnFindings": "The study's findings may not be fully representative of all demographics, which could affect the generalizability and applicability of the results.",
+      "businessConstraints": "There may be challenges in ensuring that the image generation tool is equally effective and unbiased across different demographic groups, which could affect market acceptance and regulatory compliance.",
+      "extractionConfidence": 0.8,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "limitedFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263"
+    },
+    {
+      "internal_id": "1e53053abb254913b1584b846f33f6be",
+      "limitationDescription": "The conservative approach taken with this version of 4o image generation as the team learns more about its use by the creative community.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The findings may not fully capture the potential of 4o image generation due to the conservative scope of the current deployment.",
+      "businessConstraints": "The conservative approach may limit the tool's functionality and appeal to the creative community, potentially affecting adoption and user satisfaction.",
+      "extractionConfidence": 0.7,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "limitedFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263"
+    },
+    {
+      "internal_id": "6a4f9eddbbdc40e3964e5002a395de2f",
+      "limitationDescription": "The model can generate images that resemble the aesthetics of some artists' work when their name is used in the prompt.",
+      "limitationType": "ValidityThreat",
+      "impactOnFindings": "The ability to inadvertently replicate artists' styles may raise questions about the originality and ethical use of the generated images, affecting the validity of the tool's creative output.",
+      "businessConstraints": "This limitation could lead to legal and ethical challenges, impacting the tool's marketability and necessitating additional safeguards or usage guidelines.",
+      "extractionConfidence": 0.75,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "limitedFramework": "cb0f8f4aacbb407fb7e4f4dfc40be263"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "cb0f8f4aacbb407fb7e4f4dfc40be263",
+      "name": "Methodological Framework for Evaluating GPT-4o Image Generation Safety",
+      "description": "The methodological framework for evaluating the GPT-4o image generation model's safety involves a structured approach that includes a combination of manual and automated red teaming, as well as offline testing using real-world scenarios. The framework is designed to identify and mitigate potential safety risks associated with the model's capabilities, such as image-to-image transformation, photorealism, and instruction following. The evaluation process assesses the model's adherence to safety policies and its ability to prevent the generation of unsafe content while maintaining creative freedom for users.",
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Safety Challenges and Mitigations",
+          "steps": [],
+          "procedureDescription": "The procedure involves identifying new risks associated with native image generation capabilities and implementing mitigation strategies such as chat model refusals, prompt blocking, and output blocking."
+        },
+        {
+          "procedureName": "Safety Evaluations",
+          "steps": [],
+          "procedureDescription": "The procedure includes evaluating the safety stack's performance using data from external manual red teaming, automated red teaming, and offline testing with real-world scenarios."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": null,
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves calculating metrics such as 'not_unsafe' and 'not_overrefuse' to assess the model's performance in generating safe content and avoiding over-refusal of user prompts. The analysis includes performance metrics from different testing methods and the use of classifiers for detecting specific content such as CSAM."
+      },
+      "ethicalConsiderations": {
+        "ethicsApprovalBody": null,
+        "approvalIdentifier": null,
+        "informedConsentProcedure": null,
+        "animalWelfareCompliance": null,
+        "dataAnonymization": false,
+        "privacyMeasures": "The framework includes measures to protect the privacy of individuals and prevent the generation of harmful content. It uses classifiers to detect and block content that violates privacy and safety policies."
+      },
+      "extractionConfidence": 0.85,
+      "paper": "fa350525014a4f9ca30c96405b16df11",
+      "materialsAndTools": [
+        "Safety-focused reasoning monitor",
+        "Photorealistic-person classifier"
+      ],
+      "researchProblem": "a08256ca5b2d4faa8de4369e46f9a10a"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "42220c32a49f4d6a9590dc0ff14cf43c",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "cb0f8f4aacbb407fb7e4f4dfc40be263"
+      ]
+    }
+  ]
+}

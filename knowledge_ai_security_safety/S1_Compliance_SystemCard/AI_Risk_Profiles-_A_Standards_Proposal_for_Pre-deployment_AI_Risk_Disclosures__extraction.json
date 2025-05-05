@@ -1,0 +1,489 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "9a9170fe3a0049f3ae214df081ad381a",
+      "title": "AI risk profiles: A standards proposal for pre-deployment AI risk disclosures",
+      "authors": [
+        {
+          "name": "E Sherman"
+        },
+        {
+          "name": "I Eisenberg"
+        }
+      ],
+      "abstract": "As AI systems' sophistication and proliferation have increased, awareness of the risks has grown proportionally. The AI industry is increasingly emphasizing the need for transparency, with proposals ranging from standardizing use of technical disclosures, like model cards, to regulatory licensing regimes. Since the AI value chain is complicated, with actors bringing varied expertise, perspectives, and values, it is crucial that consumers of transparency disclosures be able to understand the risks of the AI system in question. In this paper, we propose a risk profiling standard which can guide downstream decision-making, including triaging further risk assessment, informing procurement and deployment, and directing regulatory frameworks. The standard is built on our proposed taxonomy of AI risks, which distills the wide variety of risks proposed in the literature into a high-level categorization. We outline the myriad data sources needed to construct informative Risk Profiles and propose a template and methodology for collating risk information into a standard, yet flexible, structure. We apply this methodology to a number of prominent AI systems using publicly available information. To conclude, we discuss design decisions for the profiles and future work.",
+      "doi": "",
+      "publicationDate": "2024",
+      "journal": "Proceedings of the AAAI Conference on …, 2024",
+      "volume": "2023",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "IAAI2024: Assurance",
+        "IAAI2024: Generative AI",
+        "IAAI2024: Track: AI Incidents and Best Practices (paper)",
+        "IAAI2024: Education and Training"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S1_Compliance_SystemCard/AI Risk Profiles- A Standards Proposal for Pre-deployment AI Risk Disclosures .pdf",
+      "fileUrl": "https://ojs.aaai.org/index.php/AAAI/article/view/30348",
+      "extractionDate": "2025-04-24T07:53:38.744587",
+      "extractionConfidenceScore": 0.8226
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "07da48af05c943d59e8cc1a98bb410cc",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence, AI Risk Assessment",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [
+        {
+          "name": "Association for the Advancement of Artificial Intelligence",
+          "location": null
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "ca968a21587f4791a494ffc00d0fd4b8",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "NIST AI Risk Management Framework",
+          "relevance": "Directs AI developers or deployers to identify potential negative impacts, offering a process for risk management."
+        },
+        {
+          "modelName": "Trustworthy Characteristics",
+          "relevance": "Used in conjunction with the risk taxonomy to enable comprehensive risk/benefit analysis of AI systems."
+        },
+        {
+          "modelName": "ATT&CK Framework",
+          "relevance": "Provides frameworks for articulating potential vulnerabilities in AI systems."
+        }
+      ],
+      "philosophicalParadigm": "Not Specified",
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "b89b7839efe8493b85b1881b087b5ac1",
+      "problemStatement": "The lack of a standardized framework for pre-deployment evaluation of AI systems that clearly outlines risks in a unified taxonomy and is flexible enough to enable information distillation at several levels of technical depth.",
+      "problemScope": "The scope includes the development of a risk-centric approach for assessing AI systems and a standardized reporting paradigm for pre-deployment AI risk disclosures.",
+      "problemType": "DesignProblem",
+      "problemImportance": "This problem is critical as it addresses the need for transparency and informed decision-making in the deployment of AI systems, which can have significant societal and economic impacts.",
+      "businessRelevance": "The research problem is highly relevant to businesses as it aims to provide a standardized method for assessing and communicating AI risks, which is essential for responsible procurement, deployment, and regulatory compliance.",
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "0bba89daba894126bdde57cdc18dbd5d",
+      "gapDescription": "Current conventions for AI risk disclosure do not satisfy the diverse needs of stakeholders, lacking a standard risk taxonomy and failing to emphasize risk in characterizing AI systems.",
+      "relatedDomain": "AI Risk Disclosure",
+      "gapSignificance": "A standardized framework for AI risk disclosure is necessary to guide downstream decision-making, inform procurement and deployment, and direct regulatory frameworks.",
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1"
+    },
+    {
+      "internal_id": "e7e5608a7c9048a3b65579b360b6423e",
+      "gapDescription": "Risk scenario discovery relies on subject-matter expertise with respect to AI's potential harms, with significant latitude for subjectivity, indicating a lack of standardized tools and conventions for risk-scenario discovery.",
+      "relatedDomain": "AI Risk Management",
+      "gapSignificance": "Standardized tools and conventions for risk-scenario discovery are needed to reduce subjectivity and improve the reliability of AI risk assessments.",
+      "extractionConfidence": 0.8,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1"
+    },
+    {
+      "internal_id": "4573ce8384de4473a4ef73ef1fd17f2c",
+      "gapDescription": "The nascent state of AI evaluations, particularly for generative AI systems, makes profiling challenging due to the lack of comprehensive benchmarks and the difficulty in creating them.",
+      "relatedDomain": "AI System Evaluation",
+      "gapSignificance": "Developing more challenging and comprehensive benchmarks is necessary to accurately evaluate AI systems and anticipate their downstream impacts on stakeholders and society.",
+      "extractionConfidence": 0.85,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1"
+    },
+    {
+      "internal_id": "0295abdea9564c1898bf8492aa75c186",
+      "gapDescription": "Existing evaluation approaches poorly anticipate downstream impacts on stakeholders and society at large, highlighting a need for improved impact-forecasting methodologies.",
+      "relatedDomain": "AI Impact Forecasting",
+      "gapSignificance": "Improved methodologies for forecasting the societal impact of AI systems are crucial for responsible deployment and governance of AI technologies.",
+      "extractionConfidence": 0.8,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1"
+    },
+    {
+      "internal_id": "99f3731bf7f24747bde65d3f69bd2dea",
+      "gapDescription": "There is a lack of a principled approach to identifying similar systems to the one being evaluated at pre-deployment time, which could inform risk profiles and post-deployment monitoring.",
+      "relatedDomain": "AI System Comparison",
+      "gapSignificance": "A principled approach to identifying similar AI systems is important for comprehensive risk profiling and effective monitoring of AI systems post-deployment.",
+      "extractionConfidence": 0.75,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "467086c964c14e389815925ef2d98ae1",
+      "questionText": "How can a risk profiling standard guide downstream decision-making in AI system deployment?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Risk profiling standard",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Downstream decision-making",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d"
+    },
+    {
+      "internal_id": "bca6e6707232443bbf188c47e85fb731",
+      "questionText": "What taxonomy of AI risks can effectively distill the wide variety of risks proposed in the literature into a high-level categorization?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Taxonomy of AI risks",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d"
+    },
+    {
+      "internal_id": "cd675fb045334954a20063d70b650541",
+      "questionText": "What methodology can be used for collecting and distilling system information to generate informative AI Risk Profiles?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "Methodology for AI Risk Profiles",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d"
+    },
+    {
+      "internal_id": "db826b0fa214471d97ee4706eddfda0e",
+      "questionText": "How can Risk Profiles be applied to prominent AI systems using publicly available information?",
+      "questionType": "Applied",
+      "relatedVariables": [
+        {
+          "variableName": "Application of Risk Profiles",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Publicly available information",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d"
+    },
+    {
+      "internal_id": "684a3baf989e40a4a82f6eff4777528b",
+      "questionText": "What are the design decisions and implications for Risk Profiles in establishing regulatory and industry standards for AI risk disclosure?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Design decisions for Risk Profiles",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Regulatory and industry standards",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d"
+    },
+    {
+      "internal_id": "dfef703a2c2a4a18b53ffe2e54ea497b",
+      "questionText": "How can Risk Profiles inform ongoing decision-making and governance after AI system deployment?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Risk Profiles",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Ongoing decision-making and governance",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "relatedProblem": "b89b7839efe8493b85b1881b087b5ac1",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "4de14706fca54a498b1f69d536482009",
+      "directionDescription": "Develop a scoring method which serves as a middle-ground by enabling transparent application of subjective weightings for risk summarization.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d",
+      "extendsPotentialApplication": "adfe950620884ce897a51590d0d73cfd"
+    },
+    {
+      "internal_id": "4dd5f791d6b048dda0a0922012ba783b",
+      "directionDescription": "Incorporate the process of algorithmic impact assessments to harden the evaluations section and fill gaps left by the present inadequacy of technical evaluations.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d",
+      "extendsPotentialApplication": "adfe950620884ce897a51590d0d73cfd"
+    },
+    {
+      "internal_id": "d111fcf590604b9a8a093b57577dd9c8",
+      "directionDescription": "Develop a principled approach to identifying similar systems to the one being evaluated at pre-deployment time, which can indicate a need for alternative mitigation approaches.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d",
+      "extendsPotentialApplication": "adfe950620884ce897a51590d0d73cfd"
+    },
+    {
+      "internal_id": "4d36a981a3a34fe9bf2a65537380c61f",
+      "directionDescription": "Improve the Risk Profile methodology to strengthen proposals in service of a convention for regulation-mandated risk reporting.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d",
+      "extendsPotentialApplication": "adfe950620884ce897a51590d0d73cfd"
+    },
+    {
+      "internal_id": "d1116c9acc984ccea77377dd9b686285",
+      "directionDescription": "Expand the evaluations section to include more challenging and comprehensive benchmarks, bespoke and qualitative evaluations, and explicit measures of societal impact.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "addressesGap": "0bba89daba894126bdde57cdc18dbd5d",
+      "extendsPotentialApplication": "adfe950620884ce897a51590d0d73cfd"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "adfe950620884ce897a51590d0d73cfd",
+      "applicationDescription": "Guiding downstream decision-making for corporate procurement decision-makers and AI-informed regulatory bodies by triaging further risk assessment, informing procurement and deployment, and directing regulatory frameworks.",
+      "targetSector": "Government",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "buildOnMethodologicalFrameworks": [
+        "2dcfb5ed8e8541d382a01ef232d700ea"
+      ]
+    },
+    {
+      "internal_id": "cfa76764a1f649c4b57c15cc6fb443f6",
+      "applicationDescription": "Informing the creation of regulatory frameworks and compliance with standards such as the EU's General Data Privacy Regulation, California's Consumer Privacy Act, and SOC II.",
+      "targetSector": "Government",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "buildOnMethodologicalFrameworks": [
+        "2dcfb5ed8e8541d382a01ef232d700ea"
+      ]
+    },
+    {
+      "internal_id": "07908223d5464df69d01cad27cf00899",
+      "applicationDescription": "Supporting ongoing decision-making and governance of AI systems post-deployment, including the need for additional evaluations, further mitigation measures, or system changes like model re-training.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "buildOnMethodologicalFrameworks": [
+        "2dcfb5ed8e8541d382a01ef232d700ea"
+      ]
+    },
+    {
+      "internal_id": "7a77aca8249f4de2ae5646678e7afb26",
+      "applicationDescription": "Enhancing monitoring strategies for AI systems by using AI incident databases to update risk assessments and management practices.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "buildOnMethodologicalFrameworks": [
+        "2dcfb5ed8e8541d382a01ef232d700ea"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [],
+  "sciknow-25x1-methodological-challenges": [
+    {
+      "internal_id": "c26098ed443a4e4bb21ed263a0dfc999",
+      "challengeDescription": "Risk scenario discovery relies on subject-matter expertise with respect to AI's potential harms, with significant latitude for subjectivity.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Development of common risk scenarios, tools to support risk-scenario discovery, and conventions for determining thresholds of relevance for each scenario.",
+      "extractionConfidence": 0.8,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "encounteredInFramework": "2dcfb5ed8e8541d382a01ef232d700ea"
+    },
+    {
+      "internal_id": "4de25d49def84def8688008afb1e0691",
+      "challengeDescription": "Comprehensive profiling requires incorporating all of the expertise and information that exists for the system, which may not be available due to developers' reluctance to disclose information.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Proposing a disclosure paradigm that brings clarity to the risk evaluation process by highlighting where risk information comes from and the causes of information gaps.",
+      "extractionConfidence": 0.75,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "encounteredInFramework": "2dcfb5ed8e8541d382a01ef232d700ea"
+    },
+    {
+      "internal_id": "729cef592b1c49a0814af82a4e59e6b6",
+      "challengeDescription": "Difficulty in evaluating the efficacy of most mitigations, which stresses that risk reduction is not synonymous with elimination.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Emphasizing plausible and relevant risk scenarios and discussing all developer-provided mitigations cautiously.",
+      "extractionConfidence": 0.7,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "encounteredInFramework": "2dcfb5ed8e8541d382a01ef232d700ea"
+    },
+    {
+      "internal_id": "d5bee2e6ce464d70b72610bebaeeff61",
+      "challengeDescription": "Risk summarization over-indexes to the risk profiler's biases due to subjective weighting of competing risks.",
+      "researchPhase": "Interpretation",
+      "mitigationStrategy": "Adopting a conservative approach in risk summarization and envisioning a future scoring method which enables transparent application of subjective weightings.",
+      "extractionConfidence": 0.7,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "encounteredInFramework": "2dcfb5ed8e8541d382a01ef232d700ea"
+    },
+    {
+      "internal_id": "ce172da25ea14bacb401f153c5de0f1c",
+      "challengeDescription": "The nascent state of AI evaluations, particularly for generative AI systems, makes profiling challenging due to the saturation of performance on traditional benchmarks and the difficulty in creating comprehensive benchmarks.",
+      "researchPhase": "Validation",
+      "mitigationStrategy": "Supplementing benchmarks with bespoke and qualitative evaluations and incorporating recent proposals for 'soft' deployments and explicit measures of societal impact.",
+      "extractionConfidence": 0.7,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "encounteredInFramework": "2dcfb5ed8e8541d382a01ef232d700ea"
+    },
+    {
+      "internal_id": "2c5257bb8ba84d3bba269e14b85f74dc",
+      "challengeDescription": "Establishing a reference point for understanding the degree of mitigation is necessary when summarizing risks.",
+      "researchPhase": "Interpretation",
+      "mitigationStrategy": "Defining mitigation relative to a model trained with performance as the sole objective and to an infrastructure with high risk tolerance.",
+      "extractionConfidence": 0.7,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "encounteredInFramework": "2dcfb5ed8e8541d382a01ef232d700ea"
+    }
+  ],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "2dcfb5ed8e8541d382a01ef232d700ea",
+      "name": "AI Risk Profiles Methodology",
+      "description": "The paper proposes a methodological framework for creating AI Risk Profiles, which are standardized reports that assess the risks associated with AI systems before deployment. The framework is designed to guide decision-making for various stakeholders, including procurement and regulatory bodies, by providing a clear taxonomy of AI risks and a structured approach to risk assessment and disclosure.",
+      "procedures": [
+        {
+          "procedureName": "Risk Scenario Identification",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Assess the AI system against a set of possible risk scenarios.",
+              "inputs": "AI system documentation, academic articles, marketing materials, independent evaluations",
+              "outputs": "List of applicable risk scenarios",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "Identify applicable risk scenarios for a particular AI use case, assessing the AI system against a set of possible scenarios based on their implicit probability and magnitude of impact. This process relies on subject-matter expertise and is expected to evolve as the field matures."
+        },
+        {
+          "procedureName": "Risk-Relevant Information Surfacing",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Infer risk scenarios from various sources of AI system documentation.",
+              "inputs": "AI system documentation",
+              "outputs": "Inferred risk scenarios",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "Infer risk scenarios from existing AI system documentation, which can include academic articles, marketing materials, independent evaluations, and evaluations of analogous systems."
+        },
+        {
+          "procedureName": "Risk Profile Report Creation",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Analyze risks and mitigations and compile them into a summary table.",
+              "inputs": "Identified risk scenarios, mitigation measures",
+              "outputs": "Risk and mitigation summary table",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Discuss formal evaluations of the AI system, focusing on quantitative benchmarks and third-party qualitative metrics.",
+              "inputs": "Developers' published evaluations, academic benchmarks, third-party qualitative metrics",
+              "outputs": "Evaluations section of the Risk Profile",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Check system compliance with relevant standards and regulations.",
+              "inputs": "Compliance requirements",
+              "outputs": "Compliance section of the Risk Profile",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "Compile the AI Risk Profile using a template that includes analysis of risks and mitigations, formal evaluations of the system, and compliance with regulations and standards."
+        }
+      ],
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "The Risk Profiles are compiled using publicly available information.",
+        "dataRepository": "https://credo.ai/ai-vendor-directory",
+        "codeAvailabilityStatement": null,
+        "codeRepository": null,
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "9a9170fe3a0049f3ae214df081ad381a",
+      "materialsAndTools": [
+        "Evaluations of analogous systems"
+      ],
+      "researchProblem": "b89b7839efe8493b85b1881b087b5ac1"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "7d1eed83e70648448abba853437b2fc2",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "2dcfb5ed8e8541d382a01ef232d700ea"
+      ]
+    }
+  ]
+}

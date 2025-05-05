@@ -1,0 +1,486 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "7bb11090a9c34e0185113798e7d5a274",
+      "title": "A Survey on Model Context Protocol: Architecture, State-of-the-art, Challenges and Future Directions",
+      "authors": [],
+      "abstract": "The rapid proliferation of large-language-model (LLM) services is constrained by three long-standing barriers: stateless integration interfaces, ad-hoc security controls, and the absence of a unified mechanism for injecting rich, multi-turn context. The Model Context Protocol (MCP) has been proposed to overcome these limitations through a session-oriented, JSON-RPC framework that allows LLMs to negotiate capabilities, invoke external tools, and retrieve contextual resources under fine-grained, OAuth 2.1-compliant access control. This article provides the first comprehensive treatment of MCP from a communications-systems perspective. We (i) dissect its layered host-client-server architecture, (ii) formalize its lifecycle and transport semantics, and (iii) benchmark official and community implementations spanning software-development, cloud-automation, healthcare, and cybersecurity domains. Open challenges-including transport-layer latency,token-lifecycle overhead, cross-server privilege escalation, and persistent-context tampering-are analysed in depth, and mitigation strategies rooted in cryptographic hardening, edge caching, and capability-graph isolation are articulated. Finally, we outline a future research agenda that extends MCP toward multimodal payloads, Quick UDP Internet Connection (QUIC)-enabled streaming, and post-quantum credential exchange. By synthesizing protocol design with deployment evidence, the article positions MCP as a pivotal enabler of secure, adaptive, and scalable agentic workflows-marking a decisive forward step in the maturation of real-world LLM applications.",
+      "doi": "10.36227/techrxiv.174495492.22752319",
+      "publicationDate": "2025",
+      "journal": "Authorea Preprints, 2025",
+      "volume": "1",
+      "issue": "",
+      "pages": "1",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_MCP/A Survey on Model Context Protocol- Architecture, State-of-the-art, Challenges and Future Directions.pdf",
+      "fileUrl": "https://www.techrxiv.org/doi/full/10.36227/techrxiv.174495492.22752319",
+      "extractionDate": "2025-04-30T22:10:15.727959",
+      "extractionConfidenceScore": 0.8143
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "27746f67e2274a088eca5dc050295631",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence, specifically Large Language Models (LLMs) and Communication Protocols",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.7,
+      "paper": "7bb11090a9c34e0185113798e7d5a274"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "eae1e13ea2824af888e955643c358249",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "7bb11090a9c34e0185113798e7d5a274"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "4c93b7877cd741879ce2b0e3c6e52280",
+      "problemStatement": "The inability of conventional communication protocols to handle nuanced, context-rich, and stateful interactions required by modern large-language-model (LLM) applications.",
+      "problemScope": "The evolution of infrastructure supporting the deployment of LLMs across high-stakes domains and the need for a protocol that can maintain conversational context, coordinate asynchronous operations, and dynamically negotiate capabilities.",
+      "problemType": "DesignProblem",
+      "problemImportance": "The importance lies in enabling secure, adaptive, and scalable agentic workflows for LLM-centered systems, which is crucial for their maturation and effective application in real-world scenarios.",
+      "businessRelevance": "Addressing this problem is relevant to businesses that rely on LLM services for tasks in healthcare, finance, legal analysis, and real-time decision-making, as it can lead to improved efficiency, security, and functionality of AI-driven operations.",
+      "extractionConfidence": 0.85,
+      "paper": "7bb11090a9c34e0185113798e7d5a274"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "ba545c339ff04addb4571000816c79e0",
+      "gapDescription": "Inability of conventional communication protocols to handle nuanced, context-rich, and stateful interactions required by modern LLM applications",
+      "relatedDomain": "Communication Protocols for LLMs",
+      "gapSignificance": "Essential for the evolution of infrastructure supporting the deployment of LLMs in high-stakes domains",
+      "extractionConfidence": 0.9,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    },
+    {
+      "internal_id": "4fb2aafd2d774322ad2a9a20d47109e5",
+      "gapDescription": "Lack of a unified mechanism for injecting rich, multi-turn context in LLM services",
+      "relatedDomain": "LLM Context Management",
+      "gapSignificance": "Critical for enabling LLMs to maintain conversational context and adapt to user intent in real-world applications",
+      "extractionConfidence": 0.9,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    },
+    {
+      "internal_id": "0db7af607bde45ee88091f314c85f264",
+      "gapDescription": "Challenges in transport-layer latency, token-lifecycle overhead, cross-server privilege escalation, and persistent-context tampering within MCP",
+      "relatedDomain": "MCP Implementation and Security",
+      "gapSignificance": "Addressing these challenges is key to ensuring secure, adaptive, and scalable agentic workflows for LLM applications",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    },
+    {
+      "internal_id": "c5d15046a07f43df82a86aa2c87fb92e",
+      "gapDescription": "Need for research on extending MCP toward multimodal payloads, QUIC-enabled streaming, and post-quantum credential exchange",
+      "relatedDomain": "MCP Protocol Enhancement",
+      "gapSignificance": "Important for the future development of MCP to support advanced features and security in LLM applications",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "f0c78f1461234fde8711eaa062524e66",
+      "questionText": "What are the architectural components and lifecycle of the Model Context Protocol (MCP) in the context of large-language-model (LLM) services?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Model Context Protocol (MCP)",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Large-language-model (LLM) services",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280",
+      "addressesGap": "ba545c339ff04addb4571000816c79e0"
+    },
+    {
+      "internal_id": "4b806ac38f8d43a0948b3bbc5feedc88",
+      "questionText": "How do official and community implementations of MCP perform across different domains such as software-development, cloud-automation, healthcare, and cybersecurity?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "MCP implementations",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Performance across domains",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280",
+      "addressesGap": "ba545c339ff04addb4571000816c79e0"
+    },
+    {
+      "internal_id": "808c11a78b9f4c26b78eff7059f73c8b",
+      "questionText": "What are the open challenges associated with MCP, including issues like transport-layer latency and token-lifecycle overhead?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Transport-layer latency",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Token-lifecycle overhead",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280",
+      "addressesGap": "ba545c339ff04addb4571000816c79e0"
+    },
+    {
+      "internal_id": "76bdc49b940c4bf6be69b883e44cd39c",
+      "questionText": "What mitigation strategies can be applied to address the challenges faced by MCP, such as cryptographic hardening, edge caching, and capability-graph isolation?",
+      "questionType": "Explanatory",
+      "relatedVariables": [
+        {
+          "variableName": "Challenges faced by MCP",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Mitigation strategies",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280",
+      "addressesGap": "ba545c339ff04addb4571000816c79e0"
+    },
+    {
+      "internal_id": "41450abf9fc5455d8fc0a2b555c437cb",
+      "questionText": "How can the Model Context Protocol be extended to support multimodal payloads, QUIC-enabled streaming, and post-quantum credential exchange?",
+      "questionType": "Predictive",
+      "relatedVariables": [
+        {
+          "variableName": "Model Context Protocol extensions",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Multimodal payloads",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "QUIC-enabled streaming",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Post-quantum credential exchange",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280",
+      "addressesGap": "ba545c339ff04addb4571000816c79e0"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "a3c2db0274e8449d9be26494bd65047d",
+      "directionDescription": "Extending MCP toward multimodal payloads to enhance its capabilities.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "addressesGap": "ba545c339ff04addb4571000816c79e0",
+      "extendsPotentialApplication": "eb8733a69c79447d9730b1dbe29ab41e"
+    },
+    {
+      "internal_id": "bb1404d87c944cf7a62ae119b2068ff6",
+      "directionDescription": "Incorporating Quick UDP Internet Connection (QUIC)-enabled streaming into MCP for improved performance.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "addressesGap": "ba545c339ff04addb4571000816c79e0",
+      "extendsPotentialApplication": "eb8733a69c79447d9730b1dbe29ab41e"
+    },
+    {
+      "internal_id": "c4bf1ae7aca945e6896940e46f056b12",
+      "directionDescription": "Developing post-quantum credential exchange mechanisms to future-proof MCP against advances in quantum computing.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.7,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "addressesGap": "ba545c339ff04addb4571000816c79e0",
+      "extendsPotentialApplication": "eb8733a69c79447d9730b1dbe29ab41e"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "eb8733a69c79447d9730b1dbe29ab41e",
+      "applicationDescription": "Secure, adaptive, and scalable agentic workflows for LLM services",
+      "targetSector": "Technology",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "buildOnMethodologicalFrameworks": [
+        "ba904f21b7914cc9b492ed40fcb22800"
+      ]
+    },
+    {
+      "internal_id": "e12cb65ed62c450095b22c2abe2d1f26",
+      "applicationDescription": "Software development integration with LLMs using MCP for enhanced capabilities",
+      "targetSector": "Technology",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "buildOnMethodologicalFrameworks": [
+        "ba904f21b7914cc9b492ed40fcb22800"
+      ]
+    },
+    {
+      "internal_id": "d711e12da7cf4e36b00e5ff7a99f54c7",
+      "applicationDescription": "Cloud automation services leveraging MCP for improved LLM interactions",
+      "targetSector": "Technology",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "buildOnMethodologicalFrameworks": [
+        "ba904f21b7914cc9b492ed40fcb22800"
+      ]
+    },
+    {
+      "internal_id": "2f349916461742599e9390ba030887e8",
+      "applicationDescription": "Healthcare applications utilizing MCP for context-rich LLM engagements",
+      "targetSector": "Healthcare",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "buildOnMethodologicalFrameworks": [
+        "ba904f21b7914cc9b492ed40fcb22800"
+      ]
+    },
+    {
+      "internal_id": "74f0c8f41aef493a80e3c1445a24eb31",
+      "applicationDescription": "Cybersecurity solutions incorporating MCP to enhance LLM capabilities",
+      "targetSector": "Defense",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "buildOnMethodologicalFrameworks": [
+        "ba904f21b7914cc9b492ed40fcb22800"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "4df9c531eef24a51b973a408a82a826f",
+      "challengeDescription": "The inability of conventional communication protocols to handle nuanced, context-rich, and stateful interactions required by modern LLM applications.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    },
+    {
+      "internal_id": "3b499ccf217748f7a1badfe4a60b871c",
+      "challengeDescription": "Transport-layer latency in the Model Context Protocol which affects the performance of LLM services.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    },
+    {
+      "internal_id": "717868b2538f4c099286e5f01158c0dd",
+      "challengeDescription": "Token-lifecycle overhead in the Model Context Protocol, which can impact efficiency and scalability.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    },
+    {
+      "internal_id": "4f694ef748e94e63937f787411fba0f2",
+      "challengeDescription": "Cross-server privilege escalation, which poses a security risk in the Model Context Protocol.",
+      "challengeType": "Other",
+      "severity": "Major",
+      "extractionConfidence": 0.85,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    },
+    {
+      "internal_id": "78795667633b465c9ff3f3936fb45394",
+      "challengeDescription": "Persistent-context tampering, which threatens the integrity and reliability of LLM services using the Model Context Protocol.",
+      "challengeType": "Other",
+      "severity": "Major",
+      "extractionConfidence": 0.85,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "relatedProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [
+    {
+      "internal_id": "572b180311474fc6b1be990c54bd4682",
+      "challengeDescription": "Transport-layer latency in the communication of the Model Context Protocol (MCP)",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Cryptographic hardening, edge caching",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "encounteredInFramework": "ba904f21b7914cc9b492ed40fcb22800",
+      "relatedScientificChallenge": "4df9c531eef24a51b973a408a82a826f"
+    },
+    {
+      "internal_id": "4ca7bffea7334667aefc4aac098871bf",
+      "challengeDescription": "Token-lifecycle overhead in MCP's session-oriented framework",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Cryptographic hardening, edge caching",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "encounteredInFramework": "ba904f21b7914cc9b492ed40fcb22800",
+      "relatedScientificChallenge": "4df9c531eef24a51b973a408a82a826f"
+    },
+    {
+      "internal_id": "eb773f3b6d494d1a928ef5d0a7b81d63",
+      "challengeDescription": "Cross-server privilege escalation risk in MCP's layered host-client-server architecture",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Capability-graph isolation",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "encounteredInFramework": "ba904f21b7914cc9b492ed40fcb22800",
+      "relatedScientificChallenge": "4df9c531eef24a51b973a408a82a826f"
+    },
+    {
+      "internal_id": "f299bc72851b4b00ae11fa3a6fd68f53",
+      "challengeDescription": "Persistent-context tampering in the MCP framework",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Cryptographic hardening, capability-graph isolation",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "encounteredInFramework": "ba904f21b7914cc9b492ed40fcb22800",
+      "relatedScientificChallenge": "4df9c531eef24a51b973a408a82a826f"
+    }
+  ],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "c09b9f1f613841f29a44fe552281307f",
+      "challengeDescription": "Transport-layer latency issues in communication",
+      "resourceConstraint": "Infrastructure",
+      "technicalHurdle": "Latency in the transport layer of the communication protocol",
+      "extractionConfidence": 0.9,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "encounteredInFramework": "ba904f21b7914cc9b492ed40fcb22800",
+      "relatedApplication": "eb8733a69c79447d9730b1dbe29ab41e"
+    },
+    {
+      "internal_id": "c5b43a4ae46342fd973621568b89c4d5",
+      "challengeDescription": "Token-lifecycle overhead leading to inefficiencies",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Management of token lifecycles",
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "encounteredInFramework": "ba904f21b7914cc9b492ed40fcb22800",
+      "relatedApplication": "eb8733a69c79447d9730b1dbe29ab41e"
+    },
+    {
+      "internal_id": "80173fc3b36a4d37bd86f8255c0c4456",
+      "challengeDescription": "Cross-server privilege escalation posing security risks",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Preventing unauthorized access across servers",
+      "extractionConfidence": 0.85,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "encounteredInFramework": "ba904f21b7914cc9b492ed40fcb22800",
+      "relatedApplication": "eb8733a69c79447d9730b1dbe29ab41e"
+    },
+    {
+      "internal_id": "8cf0cf69d4354e73847138b32b7b14b0",
+      "challengeDescription": "Persistent-context tampering threatening data integrity",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Ensuring the integrity of persistent context data",
+      "extractionConfidence": 0.85,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "encounteredInFramework": "ba904f21b7914cc9b492ed40fcb22800",
+      "relatedApplication": "eb8733a69c79447d9730b1dbe29ab41e"
+    }
+  ],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "ba904f21b7914cc9b492ed40fcb22800",
+      "name": "Survey on Model Context Protocol",
+      "description": "The paper conducts a comprehensive survey of the Model Context Protocol (MCP) from a communications-systems perspective. It involves dissecting the MCP's architecture, formalizing its lifecycle and transport semantics, and benchmarking its implementations across various domains. The study also analyzes open challenges and proposes mitigation strategies, setting a future research agenda for MCP.",
+      "studyDesign": {
+        "designType": "Survey",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is designed as a survey to evaluate the MCP's architecture, lifecycle, and transport semantics. It includes a cross-sectional analysis of existing implementations and challenges, without the use of control groups or randomization."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Architecture Dissection",
+          "steps": [],
+          "procedureDescription": "The procedure involves a detailed analysis of the MCP's layered host-client-server architecture, identifying its components and their interactions."
+        },
+        {
+          "procedureName": "Lifecycle and Transport Semantics Formalization",
+          "steps": [],
+          "procedureDescription": "This procedure formalizes the lifecycle of MCP and its transport semantics, providing a structured understanding of the protocol's operation."
+        },
+        {
+          "procedureName": "Benchmarking",
+          "steps": [],
+          "procedureDescription": "Benchmarking official and community implementations of MCP across different domains to evaluate performance and identify best practices."
+        },
+        {
+          "procedureName": "Challenge Analysis",
+          "steps": [],
+          "procedureDescription": "In-depth analysis of the open challenges faced by MCP, such as transport-layer latency and token-lifecycle overhead."
+        },
+        {
+          "procedureName": "Mitigation Strategy Development",
+          "steps": [],
+          "procedureDescription": "Articulation of strategies to mitigate identified challenges, including cryptographic hardening and edge caching."
+        },
+        {
+          "procedureName": "Future Research Agenda Setting",
+          "steps": [],
+          "procedureDescription": "Outlining a research agenda for extending MCP capabilities, including multimodal payloads and post-quantum credential exchange."
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "7bb11090a9c34e0185113798e7d5a274",
+      "researchProblem": "4c93b7877cd741879ce2b0e3c6e52280"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "8b9528dca19542dd9429cf93d5fa9964",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "ba904f21b7914cc9b492ed40fcb22800"
+      ]
+    }
+  ]
+}

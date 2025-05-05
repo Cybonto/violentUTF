@@ -59,8 +59,8 @@ Before integrating with ViolentUTF API, make sure you have a running Keycloak in
   ```bash
   pip install -r requirements.txt
   ```
-- **Check Authentication Utilities** - `core/security.py`, `core/config.py`, and `core/auth.py` must exist
-- **Make sure** to rename `env.sample` to `.env` file with your proper Keycloak settings.
+- **Check Authentication Utilities** - `core/security.py` and `core/config.py` must exist
+- **Make sure** to rename `env.sample` to `.env` file and replace the holder values with your proper Keycloak values.
 - **Generate a Self-Signed Certificate**:
   ```bash
   openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -80,11 +80,11 @@ Before integrating with ViolentUTF API, make sure you have a running Keycloak in
   - In production you hould obtain a Trusted Certificate. Use certificates from a trusted Certificate Authority (CA), such as Let's Encrypt.
 
 
-### 3. Implement an Authenticated Endpoint
+### 3. Test an Authenticated Endpoint
 - The `violentutf/api/v1/endpoints/hello.py` must exist
 - Attempt to access the endpoint without a token:
   ```bash
-  curl http://localhost:8000/api/v1/hello
+  curl -k https://localhost:8000/api/v1/hello
   ```
 - You should receive a `401 Unauthorized` error.
 - Obtain an access token from Keycloak (using appropriate OAuth2 flow)
@@ -93,7 +93,7 @@ Before integrating with ViolentUTF API, make sure you have a running Keycloak in
   ```
 - Copy the `access_token` and include it in the below request:
   ```bash
-  curl -H "Authorization: Bearer <access token without quotes here>" http://localhost:8000/api/v1/hello
+  curl -k -H "Authorization: Bearer <access token without quotes here>" https://localhost:8000/api/v1/hello
   ```
 - If you correctly configured KeyCloak, the token is valid and the user should be authenticated. You should receive:
   ```json

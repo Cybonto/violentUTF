@@ -1,0 +1,462 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "7f15917b44234a5c9679cfa551249c1a",
+      "title": "SoK: Access Control Policy Generation from High-level Natural Language Requirements",
+      "authors": [],
+      "abstract": "",
+      "doi": "10.1145/3706057",
+      "publicationDate": "2024",
+      "journal": "ACM Computing …, 2024",
+      "volume": "49",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_InfrastructureSecurity_Application/SoK- Access Control Policy Generation from High-level Natural Language Requirements.pdf",
+      "fileUrl": "https://dl.acm.org/doi/abs/10.1145/3706057",
+      "extractionDate": "2025-04-29T07:42:20.797036",
+      "extractionConfidenceScore": 0.8318
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "3c0624bd739a4c4eb5f2d0a6b3995b5e",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Natural Language Processing, Machine Learning, Cybersecurity",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "bda29b7f42214d88aab5a7aa20c2cfe4",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "7f15917b44234a5c9679cfa551249c1a"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "8886342f1986445f84a6c946c52c85bb",
+      "problemStatement": "The research addresses the challenge of generating and configuring access control policies from high-level natural language requirements, focusing on improving the usability and reliability of tools and frameworks to avoid access control failures.",
+      "problemScope": "The scope includes the analysis of existing tools and frameworks for policy configuration and generation, their limitations, and the usability-security trade-off in access control policy generation.",
+      "problemType": "DesignProblem",
+      "problemImportance": "The problem is significant as it relates to the security and integrity of information systems, preventing data leaks and unauthorized access due to human errors in policy configuration.",
+      "businessRelevance": "Solving this problem has direct implications for organizational security, reducing the risk of data breaches and ensuring compliance with data protection regulations, which is critical for maintaining trust and avoiding financial losses.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "2088c91dfe4b46d98c493f1cb57c539d",
+      "gapDescription": "Existing automated policy generation frameworks are unreliable in generating accurate access control policies without human supervision due to limitations of the NLP techniques utilized and lack of domain adaptation.",
+      "relatedDomain": "Access Control Policy Generation",
+      "gapSignificance": "Improving the reliability of automated policy generation frameworks is crucial to prevent access control failures and potential data breaches.",
+      "extractionConfidence": 0.9,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb"
+    },
+    {
+      "internal_id": "8c4d4e015eed41f49fccfae790a349e1",
+      "gapDescription": "The scarcity of domain-related datasets for access control policy generation limits the ability to train and adapt NLP models to this domain, affecting the accuracy and reliability of automated policy generation.",
+      "relatedDomain": "Natural Language Processing for Access Control",
+      "gapSignificance": "Developing a rich, domain-specific dataset is essential for training NLP models that can accurately generate access control policies and reduce the risk of security incidents.",
+      "extractionConfidence": 0.85,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb"
+    },
+    {
+      "internal_id": "3d38e35235bc4f0fa89fc7f64e623489",
+      "gapDescription": "There is a need for standard usability evaluation instruments specifically designed to assess access control policy authoring and visualization tools, as existing general usability instruments may not adequately capture all relevant factors.",
+      "relatedDomain": "Usability Evaluation of Security Tools",
+      "gapSignificance": "Creating tailored usability evaluation instruments for security tools can lead to the development of more effective and user-friendly policy authoring interfaces, reducing human errors and security risks.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb"
+    },
+    {
+      "internal_id": "ad3200bbf55b4f67a1df1cea05f0ee42",
+      "gapDescription": "Feedback mechanisms for policy authoring tools are not sufficiently developed to provide precise, concise, and understandable feedback, which is necessary to prevent policy configuration errors.",
+      "relatedDomain": "User Interface Design for Security Tools",
+      "gapSignificance": "Enhancing feedback mechanisms in policy authoring tools can improve the policy configuration process, leading to fewer access control failures and enhanced data security.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb"
+    },
+    {
+      "internal_id": "af51d237222141b8b16cebd85dce0cc7",
+      "gapDescription": "There is a lack of research on optimizing automated policy generation frameworks using advanced NLP techniques combined with human feedback to improve reliability and reduce errors.",
+      "relatedDomain": "Machine Learning and Human-Computer Interaction in Security",
+      "gapSignificance": "Optimizing automated policy generation with advanced NLP and human feedback can significantly reduce access control failures and enhance overall system security.",
+      "extractionConfidence": 0.85,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "9745814ad8da420a9cf7613d9d77634e",
+      "questionText": "What are the tools and frameworks proposed to generate and configure access control policies?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "tools and frameworks",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 1.0,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb",
+      "addressesGap": "2088c91dfe4b46d98c493f1cb57c539d"
+    },
+    {
+      "internal_id": "bf2ffe296ce54e82ba5a40ecec9fa05e",
+      "questionText": "What are the limitations of the existing tools and framework developed to generate and configure access control policies?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "limitations",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 1.0,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb",
+      "addressesGap": "2088c91dfe4b46d98c493f1cb57c539d"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "c29289cce4924897b479d4d1226355f8",
+      "challengeDescription": "Manual policy authoring is repetitive, laborious, and error-prone, leading to access control failures.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb"
+    },
+    {
+      "internal_id": "e5cc2f37318a40538a454abe52a5673c",
+      "challengeDescription": "Existing automated solutions for policy generation are not reliable enough and require human verification due to inaccuracies in ML/NLP techniques.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb"
+    },
+    {
+      "internal_id": "48fa3352f7f24013b43604810dabf1bc",
+      "challengeDescription": "Graphical policy authoring tools induce human errors due to usability issues, making them unsuitable for accurate policy authoring and visualization.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.85,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "relatedProblem": "8886342f1986445f84a6c946c52c85bb"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [
+    {
+      "internal_id": "8096d3f8610e4f5da02e5d6b0e57ef5c",
+      "challengeDescription": "Graphical policy authoring tools do not support policies containing multiple rules with different access decisions, leading to potential mistakes in policy rules and access control failures.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Development of template-based policy authoring tools to improve flexibility and enforce consistent terminology.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b",
+      "resultsInLimitation": "91c74ee7ced746dc93882cda1f6b4204",
+      "relatedScientificChallenge": "c29289cce4924897b479d4d1226355f8"
+    },
+    {
+      "internal_id": "fc26a7a9970448f5b3a3a3ac7307fb68",
+      "challengeDescription": "Graphical policy authoring and visualization tools lack the ability to provide adequate feedback in case of configuration mistakes, increasing the likelihood of misconfigurations and access control failures.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Improvement of usability by following Nielsen's usability guidelines to enhance learnability, memorability, and user satisfaction.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b",
+      "resultsInLimitation": "91c74ee7ced746dc93882cda1f6b4204",
+      "relatedScientificChallenge": "c29289cce4924897b479d4d1226355f8"
+    },
+    {
+      "internal_id": "76963de48d644345877b7a44b0272f56",
+      "challengeDescription": "NLP-based automated policy generation frameworks suffer from the lack of domain-related datasets, affecting the reliability of machine learning and deep learning models used in text classification.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Creation of high-quality, annotated data for NLACP, access type, or attribute classification to properly train ML/DL models.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b",
+      "resultsInLimitation": "91c74ee7ced746dc93882cda1f6b4204",
+      "relatedScientificChallenge": "c29289cce4924897b479d4d1226355f8"
+    },
+    {
+      "internal_id": "3a75ccb907b84c85b2fb9461c02daf64",
+      "challengeDescription": "Rule-based text classification techniques are limited by the number of pre-defined hardcoded patterns, potentially neglecting actual NLACPs that do not match the patterns.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Use of machine learning and deep learning-based algorithms that learn common patterns in NLACP and non-NLACP sentences from a given training set.",
+      "extractionConfidence": 0.75,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b",
+      "resultsInLimitation": "91c74ee7ced746dc93882cda1f6b4204",
+      "relatedScientificChallenge": "c29289cce4924897b479d4d1226355f8"
+    },
+    {
+      "internal_id": "442256d58c8243cc8b579c8da0c8e4d0",
+      "challengeDescription": "Shallow parsing for information extraction requires NLACPs to be written according to specific templates, limiting the extraction of policy components if the NLACP is structured differently.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Use of dependency parsing that identifies relationships between words in a sentence to generate a directed graph, allowing for more flexible extraction of policy components.",
+      "extractionConfidence": 0.75,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b",
+      "resultsInLimitation": "91c74ee7ced746dc93882cda1f6b4204",
+      "relatedScientificChallenge": "c29289cce4924897b479d4d1226355f8"
+    }
+  ],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "eab0d70931334132b0415ff1179b4a85",
+      "challengeDescription": "Usability issues of existing tools make policy authoring and visualization difficult for administrators, leading to incorrect or incomplete access control policies.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Lack of intuitive interfaces and support for complex policy conditions in GUIs",
+      "extractionConfidence": 0.9,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "47aa66cdb5ba4bb68b82947c11295da2",
+      "challengeDescription": "Manual and repetitive nature of policy configuration using graphical tools is prone to human errors, causing access control failures.",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Error-prone manual policy configuration process",
+      "extractionConfidence": 0.9,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "8ca59d9cd4c3488bbf0cae2da48f1e18",
+      "challengeDescription": "Automated policy generation frameworks based on ML/NLP techniques are not reliable enough to operate without human supervision due to false positives and negatives.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Insufficient reliability of ML/NLP models for policy generation",
+      "extractionConfidence": 0.85,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "154029bdcae342fc99fdb8ff94157897",
+      "challengeDescription": "Lack of domain-related datasets for training ML/DL models in automated policy generation frameworks, affecting the reliability of text classification.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Insufficient domain-specific training data for ML/DL models",
+      "extractionConfidence": 0.85,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "b139df8336be457285e2c4cba0533b09",
+      "challengeDescription": "Graphical policy authoring and visualization tools do not provide adequate feedback in case of configuration mistakes, leading to further misconfigurations.",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Lack of feedback mechanisms in policy authoring and visualization tools",
+      "extractionConfidence": 0.9,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "a061dde3274f44b8868ce53a379a13fe",
+      "challengeDescription": "Graph-based policy visualization tools can be difficult to interpret correctly, leading to misconfigurations due to misinterpretation of visualization features.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Complexity of graph-based policy visualization interpretation",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "76743cc4e44d477f91e9e1baf48e78e6",
+      "challengeDescription": "Rule-based text classification techniques for policy generation are limited by the number of pre-defined hardcoded patterns, potentially neglecting legitimate NLACPs.",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Limitations of rule-based text classification in handling diverse sentence structures",
+      "extractionConfidence": 0.85,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "84df42750dcf49ac9aa27380905b2812",
+      "challengeDescription": "Shallow parsing for information extraction in policy generation is constrained by the requirement for NLACPs to be written according to specific templates.",
+      "resourceConstraint": "Data",
+      "technicalHurdle": "Dependency on specific templates for shallow parsing in information extraction",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "encounteredInFramework": "034172fecc504c8aa61d9609e6107a4b"
+    }
+  ],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "91c74ee7ced746dc93882cda1f6b4204",
+      "limitationDescription": "Graphical policy authoring tools do not often support policies containing multiple rules with different access decisions, leading to potential mistakes in policy rules.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "May result in incorrect access control policies, creating security holes in the authorization system.",
+      "businessConstraints": "Could lead to data breaches if incorrect policies are applied due to the tool's limitations in handling complex policy requirements.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "limitedFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "a11e666f555245bdb188c642b60d5f82",
+      "limitationDescription": "Graphical policy authoring and visualization tools do not provide adequate feedback in case of configuration mistakes, affecting the administrator's ability to correct errors.",
+      "limitationType": "UsabilityIssue",
+      "impactOnFindings": "Increases the likelihood of misconfigurations in the authorization system, causing access control failures.",
+      "businessConstraints": "Administrators might attempt trial and error to resolve mistakes, leading to more misconfigurations and potential data breaches.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "limitedFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "71e66a184d3d4a039dc296618f7139e4",
+      "limitationDescription": "Existing NLP-based automated policy generation frameworks lack domain-related datasets, which affects the training and adaptation of ML/DL models to the access control domain.",
+      "limitationType": "ResourceConstraint",
+      "impactOnFindings": "May result in the failure to identify necessary NLACPs, leading to missing access control policies and security holes in the authorization system.",
+      "businessConstraints": "The lack of high-quality, annotated data for NLACP classification could hinder the reliability of automated policy generation in practical settings.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "limitedFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "a41e4815e8194da8bfbbe01bc6981e2a",
+      "limitationDescription": "Rule-based text classification techniques used in policy generation frameworks are limited by the number of pre-defined hardcoded patterns, potentially missing actual NLACPs.",
+      "limitationType": "ValidityThreat",
+      "impactOnFindings": "Could result in overlooking legitimate NLACPs, leading to incomplete policy generation and potential security vulnerabilities.",
+      "businessConstraints": "May not be suitable for organizations with diverse and complex policy structures that do not conform to predefined patterns.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "limitedFramework": "034172fecc504c8aa61d9609e6107a4b"
+    },
+    {
+      "internal_id": "c12ac37064ae43f3b199547d06f573d8",
+      "limitationDescription": "Shallow parsing techniques for information extraction in policy generation are limited to specific templates, potentially failing to extract components from NLACPs with different structures.",
+      "limitationType": "MethodologyLimitation",
+      "impactOnFindings": "Could lead to incorrect access control policies if NLACPs are not written according to the specific template used for defining grammar rules.",
+      "businessConstraints": "May not be adaptable to organizations with varying policy writing styles, leading to implementation challenges.",
+      "extractionConfidence": 0.8,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "limitedFramework": "034172fecc504c8aa61d9609e6107a4b"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "034172fecc504c8aa61d9609e6107a4b",
+      "name": "Systematic Literature Review (SLR) on Access Control Policy Generation",
+      "description": "The study employs a Systematic Literature Review (SLR) methodology to investigate existing tools and frameworks for generating and configuring access control policies, as well as their limitations. The SLR follows a scientific and reproducible approach, structured into two main stages: planning the review and conducting the review. The planning stage involves defining the research scope, formulating research questions, developing search strings, selecting data sources, and defining study selection criteria. The conducting stage includes research identification and study selection, data extraction, and data analysis.",
+      "studyDesign": {
+        "designType": "Systematic Literature Review",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The SLR is designed to systematically identify and analyze literature on access control policy generation tools and frameworks. It includes a comprehensive search strategy, study selection criteria, and thematic analysis for data synthesis."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Planning the SLR",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Defining the research scope using the PICOC framework.",
+              "inputs": null,
+              "outputs": "A defined scope for the SLR.",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Formulating research questions to guide the literature review process.",
+              "inputs": null,
+              "outputs": "Research questions that the SLR aims to answer.",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Developing search strings to extract relevant literature.",
+              "inputs": null,
+              "outputs": "Search strings tailored to different databases and search engines.",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 4,
+              "description": "Selecting data sources including scientific digital libraries and top-tier selected conferences.",
+              "inputs": null,
+              "outputs": "A list of data sources from which literature will be extracted.",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 5,
+              "description": "Defining study selection criteria to ensure relevant and high-quality studies are included.",
+              "inputs": null,
+              "outputs": "Inclusion and exclusion criteria for the SLR.",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "This procedure involves the initial steps taken to set up the systematic literature review, including defining the scope, formulating research questions, developing search strings, selecting data sources, and defining inclusion and exclusion criteria for study selection."
+        },
+        {
+          "procedureName": "Conducting the SLR",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Performing research identification and study selection using the PRISMA framework.",
+              "inputs": "Search strings, data sources",
+              "outputs": "Selected studies for inclusion in the SLR.",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Extracting data from the included publications and organizing the information.",
+              "inputs": "Selected studies",
+              "outputs": "Extracted qualitative and quantitative data from studies.",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Analyzing the data using thematic analysis to identify recurring patterns and concepts.",
+              "inputs": "Extracted data",
+              "outputs": "Identified themes and categories relevant to access control policy generation.",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "This procedure involves the execution of the systematic literature review, including research identification and study selection, data extraction, and data analysis."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "Thematic Analysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "Thematic analysis was conducted to qualitatively answer the research questions by identifying recurring patterns of meaning and concepts within the extracted data. The process involved familiarization with the data, coding, generating initial themes, reviewing themes, and defining and naming higher order themes. The co-authors validated the process by reviewing the consistency of codes and themes against the associated data."
+      },
+      "extractionConfidence": 0.95,
+      "paper": "7f15917b44234a5c9679cfa551249c1a",
+      "researchProblem": "8886342f1986445f84a6c946c52c85bb"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "28e8d6ab5bf2429390ceefb55dc1c192",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "034172fecc504c8aa61d9609e6107a4b"
+      ]
+    }
+  ]
+}

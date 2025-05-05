@@ -1,0 +1,374 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "438f347a68404414975991c7d6f3d669",
+      "title": "Monitoring Software Tool to Prevent Data Leaks in a RESTful API",
+      "authors": [
+        {
+          "name": "REC Valencia"
+        },
+        {
+          "name": "AC Villegas"
+        },
+        {
+          "name": "AF Morales…"
+        }
+      ],
+      "abstract": "This research work proposes a monitoring tool to detect data leaks in a RESTful API. Data leaks present an increasing risk to organizations, compromising confidential and sensitive information. Various entities define data leaks as events that compromise the confidentiality, availability or integrity of information. The European Commission and the Agencia Espaæola de Protección de Datos emphasize the protection of personal data in this context. The proposed monitoring software tool relies on a 'data-driven' approach to analyze API traffic and detect anomalies that could indicate data leaks. The software tool proposed for monitoring was developed with the prototype model, which is characterized by the construction of incremental prototypes with minimal functionalities, which are evaluated and modified based on user comments. This iterative process is repeated until a final prototype is obtained that serves as the basis for the final product. The proposed monitoring tool provides API administrators with a configurable solution to prevent data leaks in RESTful API. Its detailed logging, risk detection, flexible configuration options, and design make it a valuable tool for improving API security. Finally, in this work, it is proposed that the monitoring software tool be part of the official repository of Composer as a process that collaborates with the development of software under the standards and good practices of API programming.",
+      "doi": "10.1007/978-3-031-75702-0_14",
+      "publicationDate": "2024",
+      "journal": "… on Technologies and …, 2024",
+      "volume": "39000",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "Data leaks",
+        "Data-Driven",
+        "API monitoring",
+        "RESTful API"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_API/Monitoring Software Tool to Prevent Data Leaks in a RESTful API.pdf",
+      "fileUrl": "https://link.springer.com/chapter/10.1007/978-3-031-75702-0_14",
+      "extractionDate": "2025-04-30T22:13:35.963290",
+      "extractionConfidenceScore": 0.8278
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "92db47508ecf45a6913c2ece05016f7b",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cybersecurity",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "438f347a68404414975991c7d6f3d669"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "12210ce62daa4dadafdefc00430514b9",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "Prototype Model",
+          "relevance": "The prototype model is characterized by the construction of incremental prototypes with minimal functionalities, which are evaluated and modified based on user comments. This iterative process is repeated until a final prototype is obtained that serves as the basis for the final product."
+        }
+      ],
+      "philosophicalParadigm": "Not Specified",
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "438f347a68404414975991c7d6f3d669"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "3dafebcbc0364d369951fc0f8eb38f3e",
+      "problemStatement": "The unauthorized access, disclosure, or loss of confidential or sensitive information in RESTful APIs, known as data leaks, which pose a significant risk to organizations.",
+      "problemScope": "The scope includes the detection and prevention of data leaks in RESTful APIs, focusing on the confidentiality, availability, and integrity of information.",
+      "problemType": "ApplicationProblem",
+      "problemImportance": "Data leaks compromise the security of information, which is critical for maintaining privacy and trust in digital environments.",
+      "businessRelevance": "Preventing data leaks is crucial for businesses to protect their confidential information and maintain their reputation, potentially avoiding financial losses and legal consequences.",
+      "extractionConfidence": 0.9,
+      "paper": "438f347a68404414975991c7d6f3d669"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "0eb68fe49eca425f8d56a74e9a7a386a",
+      "gapDescription": "The current monitoring tools do not include mechanisms to detect some risks related to the APIs that could lead to data leaks.",
+      "relatedDomain": "Cybersecurity and API Management",
+      "gapSignificance": "Improving the detection of risks related to APIs is crucial for preventing data leaks and ensuring the security of sensitive information.",
+      "extractionConfidence": 0.8,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "relatedProblem": "3dafebcbc0364d369951fc0f8eb38f3e"
+    },
+    {
+      "internal_id": "ac0318f86b38471da2e26b268a18c986",
+      "gapDescription": "There is a lack of integration of advice and defense mechanisms developed by cybersecurity companies into monitoring tools to enhance their effectiveness in preventing data leaks.",
+      "relatedDomain": "Cybersecurity and Software Development",
+      "gapSignificance": "Incorporating expert cybersecurity advice and defense mechanisms can provide API administrators with more comprehensive tools to counteract risks and prevent data leaks.",
+      "extractionConfidence": 0.8,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "relatedProblem": "3dafebcbc0364d369951fc0f8eb38f3e"
+    },
+    {
+      "internal_id": "23c20b44218d480bb23f15fff024dee4",
+      "gapDescription": "Automated tests to evaluate the functionality and behavior of the monitoring software tool have not yet been carried out.",
+      "relatedDomain": "Software Testing and Quality Assurance",
+      "gapSignificance": "Conducting automated tests is essential to ensure the reliability and effectiveness of the monitoring tool before it can be widely adopted and included in development processes.",
+      "extractionConfidence": 0.85,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "relatedProblem": "3dafebcbc0364d369951fc0f8eb38f3e"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "cffe5768b9954646be872ef74fbd1e5e",
+      "questionText": "How can a monitoring software tool be developed to prevent data leaks in RESTful APIs?",
+      "questionType": "Applied",
+      "relatedVariables": [
+        {
+          "variableName": "Data leaks",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Monitoring software tool",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "relatedProblem": "3dafebcbc0364d369951fc0f8eb38f3e",
+      "addressesGap": "0eb68fe49eca425f8d56a74e9a7a386a"
+    },
+    {
+      "internal_id": "8ff601aeede04c718b01eed4927f7c88",
+      "questionText": "What data-driven approaches can be implemented in a monitoring tool to detect anomalies indicating data leaks in RESTful API traffic?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "Anomalies in API traffic",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Data-driven approaches",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "relatedProblem": "3dafebcbc0364d369951fc0f8eb38f3e",
+      "addressesGap": "0eb68fe49eca425f8d56a74e9a7a386a"
+    },
+    {
+      "internal_id": "c8183ace453a4661ad81762e06b651e2",
+      "questionText": "How effective is the proposed monitoring tool in detecting risks and alerting administrators of potential data leaks in RESTful APIs?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Effectiveness of the monitoring tool",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Detection of risks and alerting",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "relatedProblem": "3dafebcbc0364d369951fc0f8eb38f3e",
+      "addressesGap": "0eb68fe49eca425f8d56a74e9a7a386a"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "c9a8b061237e4677880e66ae22c7afe2",
+      "directionDescription": "Include mechanisms to detect additional risks related to APIs to enhance the robustness and effectiveness of the monitoring software tool.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "addressesGap": "0eb68fe49eca425f8d56a74e9a7a386a",
+      "extendsPotentialApplication": "b6258bb590694427ba0a1fccb1b8a037"
+    },
+    {
+      "internal_id": "2234d81fdf024f6b8d5bcc67adbea137",
+      "directionDescription": "Incorporate advice and defense mechanisms developed by cybersecurity companies into the alert template to inform the API administrator of various ways to counteract risks.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "addressesGap": "0eb68fe49eca425f8d56a74e9a7a386a",
+      "extendsPotentialApplication": "b6258bb590694427ba0a1fccb1b8a037"
+    },
+    {
+      "internal_id": "fd40f4d18009425a8d1c2c945bb9fa86",
+      "directionDescription": "Carry out automated tests to evaluate the functionality and behavior of the monitoring software tool.",
+      "timeframe": "Short-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "addressesGap": "0eb68fe49eca425f8d56a74e9a7a386a",
+      "extendsPotentialApplication": "b6258bb590694427ba0a1fccb1b8a037"
+    },
+    {
+      "internal_id": "d87f16fe7d8249c9a46bae09e53b4662",
+      "directionDescription": "Publish the monitoring software tool on Packagist for adoption in the developer community to promote good practices in API development.",
+      "timeframe": "Short-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "addressesGap": "0eb68fe49eca425f8d56a74e9a7a386a",
+      "extendsPotentialApplication": "b6258bb590694427ba0a1fccb1b8a037"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "b6258bb590694427ba0a1fccb1b8a037",
+      "applicationDescription": "The monitoring software tool is designed to detect data leaks in RESTful APIs, providing API administrators with a configurable solution to prevent the compromise of confidential and sensitive information.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.9,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "buildOnMethodologicalFrameworks": [
+        "584a0d00641d425eab8df24b842930f3"
+      ]
+    },
+    {
+      "internal_id": "1a1d6419457f4be08352e9089d6548db",
+      "applicationDescription": "The tool records a history of requests and errors, enabling real-time analysis of the API status, which can be used to improve API security and performance monitoring.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "buildOnMethodologicalFrameworks": [
+        "584a0d00641d425eab8df24b842930f3"
+      ]
+    },
+    {
+      "internal_id": "3fd53d6e5efb45688db8b564139229f2",
+      "applicationDescription": "The software tool can be integrated into the official repository of Composer, promoting good practices in API development and potentially influencing software development standards.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.7,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "buildOnMethodologicalFrameworks": [
+        "584a0d00641d425eab8df24b842930f3"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "584a0d00641d425eab8df24b842930f3",
+      "name": "Prototype Model for Monitoring Software Tool Development",
+      "description": "The study employs the prototype model, a software development lifecycle model, to create a monitoring tool for detecting data leaks in RESTful APIs. This iterative approach involves constructing incremental prototypes with minimal functionalities, which are then evaluated and modified based on user feedback. The process is repeated until a final prototype is obtained, serving as the basis for the final product. The methodology encompasses analysis of RESTful API elements, development and implementation of the API and monitoring tool, functionality tests, and validation through a case study.",
+      "studyDesign": {
+        "designType": "CaseStudy",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study follows a structured software development process using the prototype model, which is characterized by iterative development and user feedback integration. The design is focused on creating a configurable and detailed monitoring tool for RESTful API security."
+      },
+      "procedures": [
+        {
+          "procedureName": "Prototype Development",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Stakeholders discuss product needs and requirements.",
+              "inputs": null,
+              "outputs": "Initial prototype plan",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Design and development of the initial prototype.",
+              "inputs": "Prototype plan",
+              "outputs": "Developed initial prototype",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Prototype is evaluated by users and feedback is collected.",
+              "inputs": "Initial prototype",
+              "outputs": "User feedback",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 4,
+              "description": "Modifications are made to the prototype based on feedback.",
+              "inputs": "User feedback",
+              "outputs": "Revised prototype",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 5,
+              "description": "Final prototype is developed and serves as the basis for the final product.",
+              "inputs": "Revised prototype",
+              "outputs": "Final prototype",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The prototype development procedure involves initial communication with stakeholders, quick planning, rapid design modeling, prototype development, and iterative feedback and modifications until the final prototype is ready."
+        },
+        {
+          "procedureName": "API Development and Monitor Implementation",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Identify standards and specifications for API development.",
+              "inputs": null,
+              "outputs": "Selected standards and specifications",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Design the API according to the selected standards and specifications.",
+              "inputs": "Standards and specifications",
+              "outputs": "API design",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Implement the monitoring tool in the developed API.",
+              "inputs": "API design",
+              "outputs": "API with integrated monitoring tool",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "This procedure involves the identification of relevant standards and specifications for API development, followed by the design and implementation of the API and the monitoring tool using the Laravel framework."
+        },
+        {
+          "procedureName": "Functionality Tests",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Run the API using Postman.",
+              "inputs": "Developed API",
+              "outputs": "API responses",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Analyze the results of the tests for subsequent improvement.",
+              "inputs": "API responses",
+              "outputs": "Analysis of test results",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "Functionality tests are conducted using Postman to evaluate the effectiveness of the monitoring tool by running the API and reviewing the responses."
+        }
+      ],
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "The software tool developed for monitoring is intended to be published on Packagist for adoption in the developer community.",
+        "dataRepository": "Packagist",
+        "codeAvailabilityStatement": "The code for the monitoring tool will be made available in the official repository of Composer.",
+        "codeRepository": "Composer"
+      },
+      "extractionConfidence": 0.9,
+      "paper": "438f347a68404414975991c7d6f3d669",
+      "researchProblem": "3dafebcbc0364d369951fc0f8eb38f3e"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "024c27be576743d6813da1e94cf594e7",
+      "itemName": "MaterialTool",
+      "itemType": null,
+      "identifier": null,
+      "specifications": null,
+      "roleInProcedure": null,
+      "extractionConfidence": 0.7,
+      "usedInFrameworks": [
+        "584a0d00641d425eab8df24b842930f3"
+      ]
+    }
+  ]
+}

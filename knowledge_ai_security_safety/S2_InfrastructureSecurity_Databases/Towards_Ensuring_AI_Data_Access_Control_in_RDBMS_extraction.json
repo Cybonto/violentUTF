@@ -1,0 +1,617 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "7555885bff814151b5fffbb4c0e0c19d",
+      "title": "Towards Ensuring AI Data Access Control in RDBMS",
+      "authors": [
+        {
+          "name": "William Kandolo"
+        }
+      ],
+      "abstract": "Relational  Database  Management  Systems  (RDBMS)  are  foundational for structured  data management  across  various  domains,  making  their  security paramount,  especially  in  the  era  of  Artificial  Intelligence  (AI).  This  paper  proposes an  AI-Driven  Access  Control  (AI-DAC)  framework  that  integrates  machine  learning  (ML),  reinforcement  learning  (RL),  and  metaheuristic  algorithms  to  enhance data  access  control  in  RDBMS.  The  framework  is  designed  to  dynamically  adapt  to evolving  security  threats,  providing  a  robust,  multi-layered  approach  that  includes diagnostic,  corrective,  and  generative  loops.  The  AI-DAC  framework's  effectiveness  is  validated  through  comprehensive  experimental  studies  and  real-world  case analyses,  demonstrating  its  capability  to  optimize  access  control  policies,  reduce unauthorized  access,  and  ensure  high  security  in  RDBMS  environments.",
+      "doi": "10.1007/978-3-031-83432-5_19",
+      "publicationDate": "2024",
+      "journal": "International Conference on Advanced Research in …, 2024",
+      "volume": "",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "AI-Driven Access Control",
+        "RDBMS Security",
+        "Machine Learning",
+        "Reinforcement Learning",
+        "Metaheuristic Algorithms"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S2_InfrastructureSecurity_Databases/Towards Ensuring AI Data Access Control in RDBMS.pdf",
+      "fileUrl": "https://link.springer.com/chapter/10.1007/978-3-031-83432-5_19",
+      "extractionDate": "2025-04-24T08:44:32.286195",
+      "extractionConfidenceScore": 0.857
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "d2e51f83fd78447a96a06ff003eddc8e",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence, Security, Database Management Systems",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "776f3800234e480595feba1441c165f0",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "AI-Driven Access Control (AI-DAC) Framework",
+          "relevance": "A framework that integrates machine learning, reinforcement learning, and metaheuristic algorithms to enhance data access control in RDBMS."
+        },
+        {
+          "modelName": "Triple-Loop Learning (TLL)",
+          "relevance": "A mechanism for continuous improvement and strategic evolution of security policies within the AI-DAC framework."
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "a3e878a061854103850b551c150eed89",
+      "problemStatement": "Current RDBMS security models are not fully equipped to handle the dynamic access patterns and rapidly evolving security threats posed by AI-driven systems.",
+      "problemScope": null,
+      "problemType": "DesignProblem",
+      "problemImportance": "As AI systems evolve, so too do the threats they face, necessitating more adaptive and resilient security frameworks.",
+      "businessRelevance": "The security of RDBMS is crucial for industries like finance, healthcare, and government, where structured data management is essential.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "7972bf8df9874e258c49e0ba9630cf6b",
+      "gapDescription": "Empirical validation of the AI-DAC framework in diverse environments, including different industry sectors and varying scales of operation.",
+      "relatedDomain": "RDBMS Security",
+      "gapSignificance": "To refine the framework and ensure its robustness and scalability in different contexts.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "d4e6b4c8a1bd4319acb53086eee2d900",
+      "gapDescription": "Integration of the AI-DAC framework with existing cybersecurity infrastructures to enhance overall security resilience.",
+      "relatedDomain": "Cybersecurity",
+      "gapSignificance": "To facilitate the sharing of security intelligence across different systems and improve the framework's ability to anticipate and respond to threats.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "c499d2350a7a42e6abca72e3be15d8d5",
+      "gapDescription": "Enhancement of reinforcement learning models within the AI-DAC framework to handle more complex decision-making scenarios.",
+      "relatedDomain": "Machine Learning",
+      "gapSignificance": "To improve the framework's ability to optimize policies more effectively in real-time.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "88cb2ef86a824636b73def1a1a7424fd",
+      "gapDescription": "Exploration of metaheuristic algorithm variants and hybrid approaches to enhance the efficiency and effectiveness of the AI-DAC framework.",
+      "relatedDomain": "Computational Optimization",
+      "gapSignificance": "To potentially offer different advantages in optimizing security policies.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "57f99790fe854ab993b51f562c954320",
+      "gapDescription": "Development of context-aware security mechanisms that are capable of making decisions based on a deep understanding of the operating environment.",
+      "relatedDomain": "AI-Driven Security Systems",
+      "gapSignificance": "To enable the framework to make more informed decisions by considering a broader range of factors.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "133e01476fee42fc9fe6412ed3842e23",
+      "gapDescription": "Addressing ethical and legal considerations related to the use of AI in security contexts, particularly concerning privacy, fairness, and accountability.",
+      "relatedDomain": "AI Ethics and Law",
+      "gapSignificance": "To ensure that the framework's decision-making processes are transparent and adhere to legal and ethical standards.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "0cfe5e51836c4ca99d4f1bbf1b5967fb",
+      "gapDescription": "Longitudinal studies on the adaptation of the AI-DAC framework to understand its long-term effectiveness and evolution in response to continuous threats.",
+      "relatedDomain": "Security Systems Analysis",
+      "gapSignificance": "To assess the long-term robustness of the framework's adaptive capabilities.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "5ef11250df4d42ce829f53736060f699",
+      "gapDescription": "Application of the AI-DAC framework in emerging technologies such as blockchain, IoT, and quantum computing.",
+      "relatedDomain": "Emerging Technologies",
+      "gapSignificance": "To adapt the framework to secure technologies with unique security challenges and requirements.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "c2d9f40361e444b79186984a8c34c774",
+      "gapDescription": "Development of advanced real-time response and mitigation strategies within the AI-DAC framework.",
+      "relatedDomain": "Incident Response",
+      "gapSignificance": "To improve the accuracy of threat detection and mitigation and reduce response times.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "1846422935134e2baafdf55efae9f89a",
+      "gapDescription": "Exploration of user-centric security approaches within the AI-DAC framework to develop more personalized security strategies.",
+      "relatedDomain": "User-Centric Security",
+      "gapSignificance": "To enhance user trust and compliance with security protocols by incorporating user feedback and behavior analytics.",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "b529a854f72b438da9fd298b383db6f0",
+      "questionText": "How can an AI-Driven Access Control (AI-DAC) framework integrate machine learning, reinforcement learning, and metaheuristic algorithms to enhance data access control in RDBMS?",
+      "questionType": "Applied",
+      "relatedVariables": [
+        {
+          "variableName": "AI-Driven Access Control (AI-DAC) framework",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Data access control in RDBMS",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b"
+    },
+    {
+      "internal_id": "d4d8dd886f414377b50c23dda3ec0326",
+      "questionText": "Can the AI-DAC framework dynamically adapt to evolving security threats in RDBMS environments?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "AI-DAC framework adaptability",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Evolving security threats",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b"
+    },
+    {
+      "internal_id": "3f6b3de9236d42b3b7b12f539a455629",
+      "questionText": "Does the application of Triple-Loop Learning (TLL) in RDBMS security provide a mechanism for continuous improvement and strategic evolution of security policies?",
+      "questionType": "Explanatory",
+      "relatedVariables": [
+        {
+          "variableName": "Triple-Loop Learning (TLL)",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Continuous improvement of security policies",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b"
+    },
+    {
+      "internal_id": "d3a8370867004db094aab967567b1c63",
+      "questionText": "How effective are adaptive metaheuristic algorithms for optimizing security policies in real-time to ensure a balance between security and system performance?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Adaptive metaheuristic algorithms",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Optimization of security policies",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b"
+    },
+    {
+      "internal_id": "471c885469484d02bc8bdec7fc99f746",
+      "questionText": "Can reinforcement learning be used within the AI-DAC framework to develop context-aware security policies that adapt dynamically to a wide range of scenarios?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Reinforcement learning",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Context-aware security policies",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b"
+    },
+    {
+      "internal_id": "d2aebdf9861a4e6c9a1234e1c54fea74",
+      "questionText": "What is the practical applicability and effectiveness of the AI-DAC framework in diverse RDBMS environments?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "AI-DAC framework",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Effectiveness in diverse RDBMS environments",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b"
+    },
+    {
+      "internal_id": "c6eeb8be38a44ae983ec7a5c5e16c81a",
+      "questionText": "How can the security policy optimization problem be formulated as a multi-objective task integrating advanced mathematical models with adaptive algorithms to enhance the efficiency and robustness of security policies?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "Security policy optimization",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Multi-objective task",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Advanced mathematical models",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Adaptive algorithms",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "e6ec6c0877b14dd0a45b4a2ddb6bde67",
+      "directionDescription": "Empirical validation of the AI-DAC framework across diverse environments, such as cloud-based databases, distributed systems, and large-scale enterprise databases.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    },
+    {
+      "internal_id": "3ada90c2170e46b7871d718f77b96a39",
+      "directionDescription": "Integration of the AI-DAC framework with existing cybersecurity infrastructures to enhance overall security resilience and facilitate the sharing of security intelligence.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    },
+    {
+      "internal_id": "79d9946566df455b83cab9ae48c31cb4",
+      "directionDescription": "Enhancement of the reinforcement learning models within the AI-DAC framework using more sophisticated algorithms like deep reinforcement learning or multi-agent reinforcement learning.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    },
+    {
+      "internal_id": "05c88cd5a4eb4f6da7893241e7074894",
+      "directionDescription": "Exploration of different metaheuristic algorithms, such as Particle Swarm Optimization and Ant Colony Optimization, and research into hybrid metaheuristic approaches.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    },
+    {
+      "internal_id": "c8d7b578f5f24e818c0d18a59d82be01",
+      "directionDescription": "Development of context-aware security mechanisms within the AI-DAC framework, leveraging techniques like contextual bandits and transfer learning.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    },
+    {
+      "internal_id": "65760b6d39254058b0daea2637ac3ea5",
+      "directionDescription": "Addressing ethical and legal considerations related to AI in security, focusing on transparency, adherence to standards, and user privacy.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    },
+    {
+      "internal_id": "fae104a46b604b06bc3a030b2b73ffb6",
+      "directionDescription": "Conducting longitudinal studies on the AI-DAC framework to assess its long-term effectiveness and adaptability to continuous threats.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    },
+    {
+      "internal_id": "fed3088c3b774fb38cc9e8c8c8492ae4",
+      "directionDescription": "Application of the AI-DAC framework in emerging technologies like blockchain, IoT, and quantum computing to manage their unique security challenges.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    },
+    {
+      "internal_id": "13becff49a3f4da1ae8b8ff22404ed77",
+      "directionDescription": "Development of advanced real-time response and mitigation strategies within the AI-DAC framework, integrating predictive analytics and automated incident response mechanisms.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    },
+    {
+      "internal_id": "7d598c6d6ae84fbf89b8911d8c3db366",
+      "directionDescription": "Exploration of user-centric security approaches within the AI-DAC framework, incorporating user feedback and behavior analytics for personalized security strategies.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "addressesGap": "7972bf8df9874e258c49e0ba9630cf6b",
+      "extendsPotentialApplication": "7d580f940d504c9d9c82bb7604caa992"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "7d580f940d504c9d9c82bb7604caa992",
+      "applicationDescription": "The AI-DAC framework offers a dynamic and adaptive solution to enhance data access control in RDBMS environments, representing a significant advancement over traditional access control mechanisms.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "buildOnMethodologicalFrameworks": [
+        "62787a2105ec4f64930b54a0672c3f79"
+      ]
+    },
+    {
+      "internal_id": "6a8edd850ea342a78676216c494c23ee",
+      "applicationDescription": "The AI-DAC framework can be integrated with existing cybersecurity infrastructures to enhance overall security resilience and facilitate the sharing of security intelligence across different systems.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "buildOnMethodologicalFrameworks": [
+        "62787a2105ec4f64930b54a0672c3f79"
+      ]
+    },
+    {
+      "internal_id": "433c73dc89b34712ad192b9f96da8d2e",
+      "applicationDescription": "The AI-DAC framework can be adapted to secure emerging technologies such as blockchain, Internet of Things (IoT), and quantum computing, which have unique security challenges and requirements.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "buildOnMethodologicalFrameworks": [
+        "62787a2105ec4f64930b54a0672c3f79"
+      ]
+    },
+    {
+      "internal_id": "7221afacd2db415c8c7f11367887b894",
+      "applicationDescription": "The AI-DAC framework could be used to manage and secure the vast amounts of data generated by connected devices in the context of IoT.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "buildOnMethodologicalFrameworks": [
+        "62787a2105ec4f64930b54a0672c3f79"
+      ]
+    },
+    {
+      "internal_id": "52759cd674ba4cc097984b4264e91b22",
+      "applicationDescription": "The AI-DAC framework could be enhanced with context-aware security policies, leveraging techniques such as contextual bandits and transfer learning, to make more informed decisions by considering a broader range of factors.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "buildOnMethodologicalFrameworks": [
+        "62787a2105ec4f64930b54a0672c3f79"
+      ]
+    },
+    {
+      "internal_id": "c63318966b294faca298c37d2e410b1d",
+      "applicationDescription": "The AI-DAC framework could be developed to respect user privacy while still providing robust security, addressing important ethical and legal considerations.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.7,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "buildOnMethodologicalFrameworks": [
+        "62787a2105ec4f64930b54a0672c3f79"
+      ]
+    },
+    {
+      "internal_id": "c3478155d291431eaa4e77b9474d15db",
+      "applicationDescription": "The AI-DAC framework could incorporate user feedback and behavior analytics to develop more personalized security strategies that are both effective and user-friendly.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "buildOnMethodologicalFrameworks": [
+        "62787a2105ec4f64930b54a0672c3f79"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "fe46f0162c514c97b910f95977f8caa6",
+      "challengeDescription": "Current RDBMS security models are not fully equipped to handle the dynamic access patterns and rapidly evolving security threats posed by AI-driven systems.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "dbbafc9c411a4b4c9eb4a99f3d53ddad",
+      "challengeDescription": "Traditional access control models lack the flexibility and adaptive capabilities required to secure modern RDBMS in dynamic, AI-driven environments.",
+      "challengeType": "EmergentBehavior",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "2d8b1793a61a4bec902df1ea9dfa6c80",
+      "challengeDescription": "The need for security mechanisms that are context-aware and capable of making decisions based on a deep understanding of the operating environment.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.8,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    },
+    {
+      "internal_id": "5986c135d6154a18bed800df4adabfa0",
+      "challengeDescription": "The use of AI in security contexts raises important ethical and legal considerations, particularly concerning privacy, fairness, and accountability.",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.85,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "relatedProblem": "a3e878a061854103850b551c150eed89"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "62787a2105ec4f64930b54a0672c3f79",
+      "name": "AI-Driven Access Control (AI-DAC) Framework",
+      "description": "The AI-DAC framework is a novel methodological approach designed to enhance data access control in Relational Database Management Systems (RDBMS) by integrating machine learning (ML), reinforcement learning (RL), and metaheuristic algorithms into a unified architecture. This multi-layered framework incorporates diagnostic, corrective, and generative loops to dynamically adapt to evolving security threats, optimize access control policies, reduce unauthorized access, and ensure high security in RDBMS environments.",
+      "studyDesign": {
+        "designType": "Simulation",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study employs a simulated RDBMS environment to evaluate the AI-DAC framework's performance against traditional access control mechanisms. The simulation includes various access patterns to assess the framework's adaptability to changing conditions."
+      },
+      "procedures": [
+        {
+          "procedureName": "AI-DAC Framework Implementation",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Data Collection Module collects and preprocesses data from the RDBMS environment to detect anomalies and potential security threats.",
+              "inputs": "User access records, system logs, network traffic",
+              "outputs": "Analyzed data for threat detection",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Decision-Making Module uses reinforcement learning agents to determine actions for mitigating detected threats and dynamically applies security policies based on real-time feedback.",
+              "inputs": "Analyzed data from Diagnostic Loop",
+              "outputs": "Security policy decisions",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Policy Optimization Module employs metaheuristic algorithms to explore and optimize security policy configurations for continuous improvement.",
+              "inputs": "Current security policies",
+              "outputs": "Optimized security policies",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The AI-DAC framework is implemented using a modular architecture comprising three primary modules: Data Collection Module (Diagnostic Loop), Decision-Making Module (Corrective Loop), and Policy Optimization Module (Generative Loop). Each module plays a specific role in the overall framework, working together to enhance RDBMS security."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "SimulationAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": "Machine learning models (e.g., decision trees, support vector machines, deep learning networks), reinforcement learning techniques (e.g., Q-learning), metaheuristic algorithms (e.g., Genetic Algorithms, Simulated Annealing)",
+        "softwareDetails": "Python, TensorFlow, PyTorch",
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The AI-DAC framework's effectiveness is validated through comprehensive experimental studies and real-world case analyses. The performance is evaluated based on detection accuracy, false positive rates, response times, and system overhead. Machine learning models, reinforcement learning, and metaheuristic algorithms are used to analyze the data and optimize the security policies."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "Multiple",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The AI-DAC framework demonstrated high accuracy in detecting security threats, a low false positive rate, rapid response times to detected threats, and minimal impact on system performance. Case studies in financial services, university network security, and healthcare data encryption showcased the framework's practical applicability and effectiveness in diverse RDBMS environments."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": null,
+        "dataRepository": null,
+        "codeAvailabilityStatement": "The prototype of the AI-DAC framework was developed using Python, with TensorFlow and PyTorch employed for machine learning and reinforcement learning tasks, respectively. Metaheuristic algorithms were implemented using custom Python scripts.",
+        "codeRepository": null,
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "7555885bff814151b5fffbb4c0e0c19d",
+      "researchProblem": "a3e878a061854103850b551c150eed89"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "2052fe59952d42ddb9de6d5998d1b898",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "62787a2105ec4f64930b54a0672c3f79"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,299 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "title": "Attribute-based encryption for cloud computing access control: A survey",
+      "authors": [
+        {
+          "name": "Y Zhang"
+        },
+        {
+          "name": "RH Deng"
+        },
+        {
+          "name": "S Xu"
+        },
+        {
+          "name": "J Sun"
+        },
+        {
+          "name": "Q Li…"
+        }
+      ],
+      "abstract": "Attribute-based encryption (ABE) for cloud computing access control is reviewed in this article. A taxonomy and comprehensive assessment criteria of ABE are first proposed. In the taxonomy, ABE schemes are assorted into key-policy ABE (KP-ABE) schemes, ciphertext-policy ABE (CP-ABE) schemes, anti-quantum ABE schemes, and generic constructions. In accordance with cryptographically functional features, CP-ABE is further divided into nine subcategories with regard to basic functionality, revocation, accountability, policy hiding, policy updating, multi-authority, hierarchy, offline computation, and outsourced computation. In addition, a systematical methodology for discussing and comparing existing ABE schemes is proposed. For KP-ABE and each type of CP-ABE, the corresponding access control scenario is presented and explained by concrete examples. Specifically, the syntax of ABE is given followed by the adversarial model and security goals. ABE schemes are discussed according to the design strategies and special features and are compared in the light of the proposed assessment criteria with respect to security and performance. Compared to related state-of-the-art survey papers, this article not only provides a broader 12 categories of ABE schemes, but also makes a more comprehensive and holistic comparison. Finally, a number of open research challenges in ABE are pointed out.",
+      "doi": "10.1145/3398036",
+      "publicationDate": "2020",
+      "journal": "ACM Computing Surveys …, 2020",
+      "volume": "12",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S2_InfrastructureSecurity_Encryption/Attribute-based Encryption for Cloud Computing Access Control- A Survey.pdf",
+      "fileUrl": "https://dl.acm.org/doi/abs/10.1145/3398036",
+      "extractionDate": "2025-04-24T08:15:39.314581",
+      "extractionConfidenceScore": 0.8406
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "ce577ef708aa4bfd819002f7ccef162e",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cloud Computing Access Control",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "9a4e500e4ac84ff1b02ddc964a9e6efd",
+      "underlyingTheories": [
+        {
+          "theoryName": "Cryptography",
+          "relevance": "The research is informed by cryptographic principles, specifically focusing on attribute-based encryption (ABE) as a cryptographic primitive for access control in cloud computing."
+        }
+      ],
+      "conceptualFrameworkReference": "The paper presents a taxonomy and comprehensive assessment criteria for ABE schemes, which serves as the conceptual framework for the survey.",
+      "guidingModels": [
+        {
+          "modelName": "Taxonomy of ABE",
+          "relevance": "The taxonomy categorizes ABE schemes into key-policy ABE (KP-ABE), ciphertext-policy ABE (CP-ABE), anti-quantum ABE schemes, and generic constructions, guiding the structure of the research."
+        },
+        {
+          "modelName": "Assessment Criteria of ABE",
+          "relevance": "The assessment criteria provide a systematic methodology for discussing and comparing existing ABE schemes in terms of security and performance."
+        }
+      ],
+      "philosophicalParadigm": "Positivism",
+      "schoolOfThought": "The research is influenced by the school of thought that emphasizes empirical evidence and logical analysis in the field of computer security and cryptography.",
+      "extractionConfidence": 0.85,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "f8ca6bdd79184467a4d2a4104e4dc118",
+      "problemStatement": "The core research problem addressed in the paper is the lack of clear and comprehensive assessment criteria for evaluating and comparing existing Attribute-Based Encryption (ABE) schemes in terms of security and performance, particularly in the context of cloud computing access control.",
+      "problemScope": "The scope of the problem includes the evaluation and comparison of various ABE schemes, including key-policy ABE (KP-ABE), ciphertext-policy ABE (CP-ABE), anti-quantum ABE schemes, and generic constructions, with a focus on their application in cloud computing access control.",
+      "problemType": "MethodologicalProblem",
+      "problemImportance": "This problem is significant because security concerns and privacy issues are major hindrances to the wider adoption of cloud computing. ABE technology plays a key role in realizing access control systems with fine granularity and scalability, and a clear understanding of its assessment criteria is crucial for its application and further development.",
+      "businessRelevance": "Solving this problem has direct implications for businesses and organizations that rely on cloud computing services. It can lead to more secure and efficient access control mechanisms, which are essential for protecting sensitive data in the cloud. This, in turn, can enhance trust in cloud services and potentially lead to increased adoption and economic growth in the cloud computing market.",
+      "extractionConfidence": 0.9,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "c29c82be57a947afa6bb078805d96c48",
+      "questionText": "How can a systematic methodology be proposed for discussing and comparing existing ABE schemes?",
+      "questionType": "Methodological",
+      "relatedVariables": [],
+      "extractionConfidence": 0.9,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    },
+    {
+      "internal_id": "921c3766e39a4ebfb534ddf9a8c15dba",
+      "questionText": "What are the open research challenges in ABE for cloud computing access control?",
+      "questionType": "Exploratory",
+      "relatedVariables": [],
+      "extractionConfidence": 0.9,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    },
+    {
+      "internal_id": "1991ce5e762646e7ae2ca73892f092b1",
+      "questionText": "How can ABE schemes be categorized and assessed comprehensively in terms of security and performance?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Security",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Performance",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "ABE schemes",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    },
+    {
+      "internal_id": "2a842c11d4994eb8a670f75fc633f555",
+      "questionText": "What are the design strategies and special features of state-of-the-art ABE schemes?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Design strategies",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Special features",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    },
+    {
+      "internal_id": "e2d1e78d21f44592a76bbbdb73f63ff7",
+      "questionText": "How do different types of CP-ABE solutions compare in terms of their application scenarios and cryptographic functional features?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Application scenarios",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Cryptographic functional features",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "CP-ABE solutions",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "c9480b6ba17543fb8ceb0b941b632869",
+      "challengeDescription": "Designing ABE schemes that are secure against adaptive adversaries, which do not need to specify their target access policy or attribute list in advance, is technically more challenging than designing schemes secure against selective adversaries.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    },
+    {
+      "internal_id": "1c883da83de341ecbb88f961a79db723",
+      "challengeDescription": "Proving the security of ABE schemes in non-generic groups and standard models is technically more challenging, because the challengers have limited ability in the process of simulation compared with the case of generic groups and random oracle models.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    },
+    {
+      "internal_id": "18ec1146adca4a81a1f3bfbf2d725fe3",
+      "challengeDescription": "Achieving full security under recognized complexity assumptions with concise forms is challenging, as fewer parameters are provided by the assumption instance for the challengers to use in the simulation.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    },
+    {
+      "internal_id": "cea1f601836343cdb9c0b3adae814211",
+      "challengeDescription": "Designing prime-order ABE constructions that achieve full security is more challenging than composite-order constructions because the methodology for full security proofs usually relies on composite-order groups.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    },
+    {
+      "internal_id": "8dae07f9f98c4674be5223a8d5d55f58",
+      "challengeDescription": "Improving the expressiveness of ABE schemes while maintaining or enhancing security and efficiency is a fundamental challenge, as increased expressiveness often comes with increased complexity and potential security vulnerabilities.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    },
+    {
+      "internal_id": "05e0529d808848c6a08aaf6ed5197d91",
+      "challengeDescription": "Developing ABE schemes with constant-size ciphertexts and attribute secret keys to reduce communication and storage costs in cloud computing environments is a significant challenge due to the intrinsic complexity of ABE.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.8,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "relatedProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "0c39b92d47014e5ba2d07248da19d83a",
+      "name": "Methodological Framework for Surveying ABE Schemes in Cloud Computing Access Control",
+      "description": "The methodological framework of this survey paper involves a structured approach to categorize, assess, and compare various Attribute-Based Encryption (ABE) schemes as they apply to cloud computing access control. The framework includes the development of a taxonomy for ABE schemes, comprehensive assessment criteria, and a systematic methodology for discussing and comparing the schemes. The taxonomy categorizes ABE into key-policy ABE (KP-ABE), ciphertext-policy ABE (CP-ABE), anti-quantum ABE, and generic constructions. CP-ABE is further divided into subcategories based on cryptographically functional features. The assessment criteria are designed to evaluate the security and performance of ABE schemes fairly. The methodology includes presenting application scenarios, defining syntax, adversarial models, security goals, and analyzing design strategies and special features of ABE schemes. The paper also identifies open research challenges in the field of ABE.",
+      "studyDesign": {
+        "designType": "Survey",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is designed as a comprehensive survey of existing literature on ABE schemes, with a focus on their application in cloud computing access control. It involves a systematic review and comparison of the schemes based on a proposed taxonomy and assessment criteria. The study does not involve experimental data collection or analysis but rather synthesizes and evaluates existing research findings."
+      },
+      "procedures": [
+        {
+          "procedureName": "Taxonomy Development",
+          "steps": [],
+          "procedureDescription": "Development of a clear taxonomy for ABE schemes, categorizing them into KP-ABE, CP-ABE, anti-quantum ABE, and generic constructions, with further subdivisions for CP-ABE based on functional features."
+        },
+        {
+          "procedureName": "Assessment Criteria Formulation",
+          "steps": [],
+          "procedureDescription": "Formulation of comprehensive assessment criteria for ABE schemes, focusing on security and performance aspects to enable fair evaluation."
+        },
+        {
+          "procedureName": "Systematic Methodology for Discussion and Comparison",
+          "steps": [],
+          "procedureDescription": "Proposal of a systematic methodology to discuss and compare ABE schemes, including presenting application scenarios, defining syntax, adversarial models, security goals, and analyzing design strategies and special features."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "QualitativeContentAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The analysis in the paper is qualitative and comparative in nature. It involves reviewing the literature on ABE schemes, categorizing them based on the proposed taxonomy, and evaluating them against the assessment criteria. The analysis includes a discussion of the syntax, adversarial models, security goals, design strategies, and special features of the ABE schemes. The paper also compares the schemes in terms of security and performance based on the assessment criteria."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TabularData",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The paper presents a comprehensive comparison of ABE schemes, highlighting their security and performance characteristics. It provides a taxonomy of ABE schemes, discusses the application scenarios, and evaluates the schemes based on the proposed assessment criteria. The results include detailed tables and figures that compare the ABE schemes across various dimensions, such as system public key size, ciphertext size, attribute secret key size, computation cost, expressiveness, group type, attribute universe, security model, and underlying complexity assumption."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "Not applicable as this is a survey paper and does not involve the generation of new empirical data.",
+        "dataRepository": null,
+        "codeAvailabilityStatement": "Not applicable as this is a survey paper and does not involve the development or use of computational code.",
+        "codeRepository": null,
+        "protocolAvailability": "The methodology and criteria for the survey are detailed within the paper, allowing for reproducibility of the survey approach.",
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "e6aa1cb0816e4471b498e3b62a16bbf3",
+      "researchProblem": "f8ca6bdd79184467a4d2a4104e4dc118"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "a55f33d0dbcc45ceaf0d6311e87c3a58",
+      "itemName": "No relevant information provided",
+      "extractionConfidence": 0.7,
+      "usedInFrameworks": [
+        "0c39b92d47014e5ba2d07248da19d83a"
+      ]
+    }
+  ]
+}

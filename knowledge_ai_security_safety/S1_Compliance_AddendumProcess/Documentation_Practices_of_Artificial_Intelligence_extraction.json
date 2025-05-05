@@ -1,0 +1,358 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "7a8de9beac7440d7ab66850cf944770b",
+      "title": "Documentation Practices of Artificial Intelligence",
+      "authors": [
+        {
+          "name": "S Arnold"
+        },
+        {
+          "name": "D Yesilbas"
+        },
+        {
+          "name": "R Gröbner…"
+        }
+      ],
+      "abstract": "",
+      "doi": "",
+      "publicationDate": "2024",
+      "journal": "arXiv preprint arXiv …, 2024",
+      "volume": "1",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S1_Compliance_AddendumProcess/Documentation Practices of Artificial Intelligence.pdf",
+      "fileUrl": "https://arxiv.org/abs/2406.18620",
+      "extractionDate": "2025-04-24T08:00:42.628461",
+      "extractionConfidenceScore": 0.7781
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "d404fb42429f449e9649403c22f57ca5",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.9,
+      "paper": "7a8de9beac7440d7ab66850cf944770b"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "e56bb7df77b34434be64e884aef444e4",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "AI documentation checklists",
+          "relevance": "Categorizes information at the levels of data, models, and systems to enhance transparency, accountability, and ethical practices in AI."
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "7a8de9beac7440d7ab66850cf944770b"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "148aabacb06b4ddab645c6c547a47159",
+      "problemStatement": "The current three-part typology of AI documentation checklists may not sufficiently address the intricate complexities and diverse stakeholder needs in the AI ecosystem.",
+      "problemScope": "The scope includes the examination of AI documentation practices across data, models, and systems, and their adequacy in meeting the needs of various stakeholders within the AI ecosystem.",
+      "problemType": "DesignProblem",
+      "problemImportance": "Addressing this problem is crucial for enhancing transparency, accountability, and ethical practices in AI, which are fundamental for responsible AI development and deployment.",
+      "businessRelevance": "Improving AI documentation practices can help decision makers, developers, compliance officers, and end users better understand and manage AI systems, aligning with operational needs, strategic goals, and regulatory standards.",
+      "extractionConfidence": 0.8,
+      "paper": "7a8de9beac7440d7ab66850cf944770b"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "a4c727bd41104a6ca0b519af633e3944",
+      "gapDescription": "The current typology of AI documentation checklists may not sufficiently address the intricate complexities and diverse stakeholder needs in the AI ecosystem.",
+      "relatedDomain": "AI Documentation Practices",
+      "gapSignificance": "Understanding and addressing the complexities and stakeholder needs is crucial for enhancing transparency, accountability, and ethical practices in AI.",
+      "extractionConfidence": 0.8,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159"
+    },
+    {
+      "internal_id": "741ef351431742438c24c2733de3dae3",
+      "gapDescription": "There is a lack of automated tools for producing AI documentation, which leads to a reliance on manual effort.",
+      "relatedDomain": "AI Documentation Automation",
+      "gapSignificance": "Automating the documentation process can improve efficiency, consistency, and reduce reluctance in documentation practices.",
+      "extractionConfidence": 0.85,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159"
+    },
+    {
+      "internal_id": "e30c5260805f4d08bedeee0bd7261f3c",
+      "gapDescription": "There is a need for more holistic documentation approaches that encompass operational context and system interdependencies.",
+      "relatedDomain": "Holistic AI Documentation",
+      "gapSignificance": "As AI systems become more complex and integrated, comprehensive documentation is necessary to understand and manage these systems effectively.",
+      "extractionConfidence": 0.75,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159"
+    },
+    {
+      "internal_id": "8d0b297a8e224eaa9c353bdce285c3f4",
+      "gapDescription": "Current documentation practices may not be sufficiently engaging or accessible for stakeholders, hindering effective navigation, querying, and understanding of AI systems.",
+      "relatedDomain": "Engaging and Accessible AI Documentation",
+      "gapSignificance": "Improving the interactivity and accessibility of documentation is essential for fostering a culture of informed and responsible AI use.",
+      "extractionConfidence": 0.7,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "89d59e9de4204b01b3e233a13df073c6",
+      "questionText": "Does the current three-part typology of AI documentation sufficiently address the intricate complexities and diverse stakeholder needs in the AI ecosystem?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "AI documentation typology",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Complexities and stakeholder needs",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159",
+      "addressesGap": "a4c727bd41104a6ca0b519af633e3944"
+    },
+    {
+      "internal_id": "69bb5d29de2e475ba5222ab62442526d",
+      "questionText": "What are the implications of extending beyond the conventional typology of AI documentation for understanding documentation practices for a diverse range of stakeholders?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "AI documentation practices",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Stakeholder diversity",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.7,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159",
+      "addressesGap": "a4c727bd41104a6ca0b519af633e3944"
+    },
+    {
+      "internal_id": "743f909fab854d01aff41610fe80153b",
+      "questionText": "How is the nature of AI documentation evolving to match the increasing complexity and integration of AI systems?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "AI documentation evolution",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "AI system complexity and integration",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159",
+      "addressesGap": "a4c727bd41104a6ca0b519af633e3944"
+    },
+    {
+      "internal_id": "90339cebd21c49728b6a781b8ce70b26",
+      "questionText": "In what ways can making AI documentation more accessible and engaging empower stakeholders to foster a culture of informed and responsible AI use?",
+      "questionType": "Theoretical",
+      "relatedVariables": [
+        {
+          "variableName": "AI documentation accessibility",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Stakeholder empowerment",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.7,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159",
+      "addressesGap": "a4c727bd41104a6ca0b519af633e3944"
+    },
+    {
+      "internal_id": "ffc3764cb6e248b0ae9140c1c2ca5ad0",
+      "questionText": "What opportunities exist for improving AI documentation processes through automation?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "AI documentation automation",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Documentation process improvement",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159",
+      "addressesGap": "a4c727bd41104a6ca0b519af633e3944"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "9e6828978c2147eabf1999074daa5662",
+      "challengeDescription": "The three-part typology of AI documentation may not sufficiently address the intricate complexities and diverse stakeholder needs in the AI ecosystem.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159"
+    },
+    {
+      "internal_id": "e18951bd1ffe470ba590293700595280",
+      "challengeDescription": "Critical considerations such as usage implications, support for multimodality, and audience-specific documentation requirements call for a granulated review of AI documentation.",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "relatedProblem": "148aabacb06b4ddab645c6c547a47159"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "43ec2faeb0f34668aa8133247670acca",
+      "name": "Exploration of AI Documentation Practices",
+      "description": "The study aims to explore the landscape and trends within the field of AI documentation by conducting a systematic literature review. The methodological approach includes a structured search and screening process, eligibility assessment, feature extraction, and analysis of the collected data. The study design is observational and exploratory, focusing on the categorization and synthesis of AI documentation practices as reported in the literature.",
+      "studyDesign": {
+        "designType": "Observational",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is designed as a systematic literature review, which involves searching, screening, and analyzing relevant literature to map the current state of AI documentation practices. The design does not involve experimental manipulation, control groups, or randomization, as it is based on the analysis of existing literature."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Literature Search and Screening",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Search the Scopus database using keywords 'AI documentation', 'data cards', 'model cards', and 'system cards'.",
+              "inputs": "Search terms",
+              "outputs": "Initial set of studies",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Screen the retrieved studies for duplicates and relevance to AI documentation practices.",
+              "inputs": "Initial set of studies",
+              "outputs": "Screened set of studies",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Assess the eligibility of the screened studies using inclusion and exclusion criteria.",
+              "inputs": "Screened set of studies",
+              "outputs": "Eligible studies",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves a systematic search of the Scopus database using specific keywords related to AI documentation. The search is limited to titles, abstracts, and keywords of publications from 2018 onwards. The screening process includes checking for duplicates, relevance, and detail level, followed by an eligibility assessment based on predefined inclusion and exclusion criteria."
+        },
+        {
+          "procedureName": "Feature Extraction",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Extract the scope of AI documentation from each study.",
+              "inputs": "Eligible studies",
+              "outputs": "Scope categorization",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Quantify the dimensions discussed in each AI documentation checklist.",
+              "inputs": "Eligible studies",
+              "outputs": "Dimensions quantification",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Identify the intended audience for each AI documentation checklist.",
+              "inputs": "Eligible studies",
+              "outputs": "Audience identification",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 4,
+              "description": "Determine the multimodality support in the AI documentation.",
+              "inputs": "Eligible studies",
+              "outputs": "Multimodality support assessment",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 5,
+              "description": "Categorize the level of automation in the AI documentation process.",
+              "inputs": "Eligible studies",
+              "outputs": "Automation level categorization",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "This procedure involves extracting key characteristics from the eligible studies to understand the depth and breadth of AI documentation practices. The characteristics include scope, dimensions, audience, multimodality, and level of automation."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "StatisticalAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves descriptive statistics and correlational analysis of the extracted features from the eligible studies. The study uses histograms to present temporal distribution and scope of AI documentation, and it quantifies the dimensions and audience distribution. Correlational analysis is performed to understand the relationships between documentation checklists and their characteristics."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "Graph",
+        "visualizationType": "Histogram, CorrelationalMatrix",
+        "reportingStandard": null,
+        "summary": "The results are represented through descriptive statistics, histograms, and correlational matrices. The study presents the temporal dynamics of AI documentation, the distribution of documentation scope, dimensions, audience, multimodality, and automation levels. It also discusses the correlations between documentation characteristics and their implications."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": null,
+        "dataRepository": null,
+        "codeAvailabilityStatement": null,
+        "codeRepository": null,
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.95,
+      "paper": "7a8de9beac7440d7ab66850cf944770b",
+      "researchProblem": "148aabacb06b4ddab645c6c547a47159"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "ccdce57c452841758af9bc5d4608faad",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "43ec2faeb0f34668aa8133247670acca"
+      ]
+    }
+  ]
+}

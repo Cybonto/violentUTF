@@ -1,5 +1,10 @@
 # Resource for AI Security and Privacy
 
+## Forewords
+This folder serves as a resource guide for addressing security, privacy, and other concerns in artificial intelligence systems. It outlines frameworks, controls, and attack/defense practices to help organizations implement robust AI security measures and privacy protections.
+
+This folder is a living folder with more sub-folders and knowledge items (the json files) to be added overtime. The grounding and tool for preparing the knowledge items can be found in the `specification_for_knowledge_extraction/SKEO`.
+
 ## Table of Contents
 
 1.  [Forewords](#forewords)
@@ -133,8 +138,6 @@
         * [International privacy regulations affecting AI](#international-privacy-regulations-affecting-ai)
         * [Emerging AI-specific privacy legislation](#emerging-ai-specific-privacy-legislation)
       
-## Forewords
-This document serves as a resource guide for addressing security and privacy concerns in artificial intelligence systems. It outlines frameworks, controls, and best practices to help organizations implement robust AI security measures and privacy protections.
 
 ### Goals
 To provide a structured, research-based approach for organizations to assess, implement, and maintain security and privacy safeguards specific to AI systems, ensuring compliance with regulatory requirements while protecting sensitive data and models.
@@ -426,6 +429,7 @@ Requirements specific to healthcare AI applications, focusing on protecting pers
   - [Clinical Validation of Digital Healthcare Solutions: State of the Art, Challenges and Opportunities](https://www.researchgate.net/publication/380812278_Clinical_Validation_of_Digital_Healthcare_Solutions_State_of_the_Art_Challenges_and_Opportunities) (Journal of Personalized Medicine-MAY2024) - *Reviews challenges and opportunities in clinically validating digital health tech, including AI.*
   - [Regulatory Frameworks for AI-Based Medical Devices: A Comparative Analysis](https://link.springer.com/article/10.1007/s10916-023-01958-y) (Journal of Medical Systems-MAY2023) - *Compares regulatory approaches (including FDA) for AI medical devices.*
   - [Validation of artificial intelligence in medical imaging: Radiology AITE checklist](https://pubs.rsna.org/doi/10.1148/ryai.230237) (Radiology: Artificial Intelligence-JAN2024)
+
 ### Domain-specific Compliance: Critical Infrastructure
 - **Critical Infrastructure Protection Plan**
   - Documentation detailing how AI systems in critical infrastructure comply with relevant frameworks such as NIST Cybersecurity Framework, IEC 62443, or sector-specific guidelines. This includes security controls, resilience measures, and contingency planning.
@@ -438,6 +442,7 @@ Requirements specific to healthcare AI applications, focusing on protecting pers
   - [Generative AI and LLMs for Critical Infrastructure Protection: Evaluation Benchmarks, Agentic AI, Challenges, and Opportunities](https://www.mdpi.com/1424-8220/25/6/1666) (Sensors - MDPI Journal-MAR2025)
   - [AI-Driven Project Risk Management: Leveraging artificial intelligence to predict, mitigate, and manage project risks in critical infrastructure and national security projects](https://www.researchgate.net/publication/390521301_AI-Driven_Project_Risk_Management_Leveraging_artificial_intelligence_to_predict_mitigate_and_manage_project_risks_in_critical_infrastructure_and_national_security_projects) (Journal of Computer Science and Technology Studies-APR2025)
   - [Dynamic Cyber Resilience of Interdependent Critical Information Infrastructures](https://bspace.buid.ac.ae/handle/1234/1965) (PhD Thesis, British University in Dubai-FEB2022) - *Note: PhD Thesis focusing on resilience frameworks for critical infrastructure.*
+
 ### Domain-specific Compliance: Defense
 - **Classification Compliance Documentation**
   - Documentation demonstrating that AI systems processing classified information adhere to relevant security classification guidelines, including data handling procedures, access controls, and security clearance requirements.
@@ -456,45 +461,7 @@ Requirements specific to healthcare AI applications, focusing on protecting pers
 Technical and organizational controls that provide the foundation for securing AI systems throughout their lifecycle.
 
 ### S2\.a Infrastructure Diagrams
-System modeling, particularly Model-Based Systems Engineering (MBSE), and visualization techniques, such as architecture diagrams and Data Flow Diagrams (DFDs), offer powerful methodologies to address the security challenges inherent in complex AI systems.3 These approaches shift the focus from disparate documents to integrated, often visual, models that serve as a central repository of system knowledge.15 By creating structured representations of the AI system's architecture, data flows, component interactions, and security controls, these techniques facilitate a deeper understanding and more rigorous analysis.
-
-MBSE provides a formalized framework for applying modeling throughout the system lifecycle, supporting requirements definition, design, analysis, verification, and validation.16 Infrastructure diagrams offer high-level views of components and their connections, while DFDs trace the critical paths of data through the system [User Query].23
-
-Architecture diagrams, whether high-level infrastructure views or detailed UML/SysML component diagrams, are instrumental in identifying the system's attack surface.15 They clearly delineate system boundaries, interfaces with external entities, network exposure points, and internal component interactions where an attacker might attempt to gain entry or influence system behavior.  
-DFDs are particularly powerful for uncovering risks associated with data handling throughout the AI lifecycle.23 By tracing data paths, analysts can pinpoint:
-
-* Where sensitive data (e.g., training data containing PII, confidential model parameters, sensitive user inputs or outputs) is exposed, either in transit or at rest.  
-* Ingestion points for untrusted data (e.g., user-provided content, third-party data feeds) that could be vectors for data poisoning or prompt injection attacks.  
-* Processing stages where data integrity could be compromised (e.g., lack of validation before model training or inference).  
-* Potential data leakage pathways where inference results or intermediate data might be improperly disclosed.
-
-MBSE provides formal mechanisms for capturing and managing security requirements within the system model.15 These requirements can range from traditional security objectives like confidentiality, integrity, and availability to AI-specific needs such as robustness against adversarial inputs, fairness, privacy preservation during training, or resistance to model extraction attacks. These requirements are not just listed but are explicitly linked to other elements within the model.  
-
-The concept of traceability is a cornerstone benefit of MBSE.15 It establishes explicit, navigable links between different model elements. This allows security requirements to be traced downwards to the specific architectural components, design decisions, or functions responsible for implementing them. Traceability also extends upwards, linking requirements to their originating sources (e.g., policies, standards, stakeholder needs), and forwards to verification and validation activities (e.g., test cases, analysis results) that demonstrate compliance.15 This bidirectional traceability ensures that all security requirements are addressed in the design and implementation, provides clear justification for design choices, and generates objective evidence crucial for compliance audits and regulatory submissions (e.g., satisfying Risk Management Framework (RMF) requirements).15  
-
-Furthermore, MBSE models help manage the inherent trade-offs and potential conflicts that often arise between security requirements and other system goals, such as performance, usability, or cost.15 By representing these different aspects within a unified model, engineers can perform trade studies and make informed decisions, explicitly documenting the rationale for balancing competing objectives.
-
-**Table S2a_1: MBSE Techniques & Benefits for AI Security**
-
-| MBSE Technique/Capability | Description | Application in AI Security | Key Benefit |
-| :---- | :---- | :---- | :---- |
-| **Requirements Modeling** | Formal capture and management of system requirements using diagrams (e.g., SysML Requirement diagrams). | Define specific security requirements (confidentiality, integrity, robustness, fairness, privacy) and link them to AI system functions/components. | Clarity, Completeness, Foundation for Traceability |
-| **Structural Modeling** | Defining system architecture, components, interfaces, and relationships (e.g., Block Definition Diagrams). | Model secure AI architecture, identify trust boundaries, map components (data stores, models, APIs), visualize deployment topology. | Architectural Understanding, Attack Surface Identification, Design Clarity |
-| **Behavioral Modeling** | Describing system dynamics, interactions, and state changes (e.g., Sequence, State Machine diagrams). | Model secure data flows, analyze authentication protocols, simulate system response to security events (e.g., detected intrusion), model secure states. | Dynamic Analysis, Interaction Validation, Vulnerability Identification |
-| **Parametric Modeling** | Defining constraints and performance parameters for analysis (e.g., Parametric diagrams). | Analyze security/performance trade-offs, model resource constraints for security functions, evaluate effectiveness of controls based on parameters. | Quantitative Analysis, Trade-off Studies, Optimization |
-| **Automated V\&V (via Models)** | Using the model to automatically check consistency, simulate behavior, or generate test cases. | Simulate attack scenarios against the model, verify security control logic, check for requirement violations, ensure consistency of security views. | Early Detection of Flaws, Automation, Reduced Testing Effort, Consistency |
-| **Traceability Links** | Explicitly connecting related model elements (requirements, components, tests, risks, controls). | Link security requirements to design elements & tests; link threats/risks to controls; track implementation status of security features. | Compliance Evidence, Impact Analysis, Requirements Coverage, Auditability |
-
-**Table S2a_2: Mapping AI Threats to Modeling Artifacts and Mitigation Approaches**
-
-| AI-Specific Threat | Description | Relevant Modeling Artifact(s) | How Modeling Aids Identification | Example Mitigation Strategy |
-| :---- | :---- | :---- | :---- | :---- |
-| **Data Poisoning** 4 | Maliciously corrupting training data to manipulate model behavior or introduce backdoors. | DFD showing data sources, preprocessing pipelines; Architecture diagram showing data ingestion points. | Visualizes pathways for untrusted data, highlights preprocessing steps where validation should occur, identifies trust boundaries for data sources. | Input validation/sanitization on training data, anomaly detection in data sources, differential privacy during training, secure data provenance tracking. |
-| **Model Evasion (Adversarial Examples)** 4 | Crafting slightly modified inputs during inference to cause misclassification or incorrect output. | DFD showing inference input path; Architecture diagram showing input validation/processing components; Behavioral model (e.g., sequence diagram) of inference. | Highlights input processing points, shows where input validation/filtering should occur, clarifies the flow from input reception to model query. | Adversarial training, input filtering/quantization, gradient masking (limited effectiveness), defensive distillation, robust optimization techniques. |
-| **Model Inference/ Inversion** 3 | Extracting sensitive information about the training data or model parameters via queries to the deployed model. | DFD showing model outputs and API interactions; Architecture diagram defining API endpoints and output formats. | Shows data leakage channels via model outputs, clarifies what information is exposed through APIs, helps analyze query patterns. | Output filtering/perturbation, differential privacy, limiting query granularity or frequency, confidence score thresholding, secure multi-party computation for model training/inference. |
-| **Model Extraction/ Theft** 3 | Reconstructing or stealing a functionally equivalent copy of the proprietary model. | Architecture diagram showing model storage, deployment environment, access controls; DFD showing model loading/access paths. | Identifies where the model asset resides, highlights access control points, clarifies pathways for accessing model files or parameters. | Strong access controls on model repositories and deployment infrastructure, model watermarking, API rate limiting, obfuscation techniques (limited effectiveness). |
-| **Prompt Injection** 8 | Manipulating Large Language Model (LLM) inputs (prompts) to bypass safety guardrails or trigger unintended actions. | DFD showing prompt construction and processing flow; Architecture diagram detailing interaction between LLM, user interface, and backend systems/APIs. | Maps the flow of user input into the final prompt, visualizes how prompts interact with backend functions or external tools, identifies sanitization points. | Input validation and sanitization of prompts, output encoding before display/use, context-aware filtering, least privilege for LLM-accessed tools/APIs, Azure AI Content Safety.30 |
-
+Visual representations of the AI system architecture, data flows, and security controls to support risk assessment and security planning.
 - **Resources:**
     - [Model-Based Systems Engineering for AI-Based Systems](https://arc.aiaa.org/doi/abs/10.2514/6.2023-2587) (AIAA2023)
     - [System Architects Are not Alone Anymore: Automatic System Modeling with AI](https://telecom-paris.hal.science/hal-04483279/) (HAL-FEB2024)
@@ -502,16 +469,6 @@ Furthermore, MBSE models help manage the inherent trade-offs and potential confl
     - [A Taxonomy of MBSE Approaches by Languages, Tools and Methods](https://ieeexplore.ieee.org/abstract/document/9950507) (IEEEaccess-NOV2022)
     - [Model-driven architecture based security analysis](https://incose.onlinelibrary.wiley.com/doi/full/10.1002/sys.21581?casa_token=oeR-4hrafPAAAAAA%3AXxpL2K2XBVLKwk_D-lXRMhBT1Qu1zBNflZqwM-KK6D0Cn6zZC2XJoPcguPlbRYN7inCIrxnqHjGVweg) (Wiley-MAY2021)
     - [Integration of UML Diagrams from the Perspective of Enterprise Architecture](https://link.springer.com/chapter/10.1007/978-3-030-72651-5_44) (SpringerNatureLink-MAR2021)
-    * ([https://owasp.org/www-project-ai-security-and-privacy-guide/ai-threat-modeling-project/ai-ml-threat-modeling](https://owasp.org/www-project-ai-security-and-privacy-guide/ai-threat-modeling-project/ai-ml-threat-modeling)) (OWASP AI Exchange) \- Discusses adapting threat modeling for AI/ML, aligning with OWASP's focus on application security.  
-    * ([https://www.cisa.gov/resources-tools/resources/guidelines-secure-ai-system-development](https://www.cisa.gov/resources-tools/resources/guidelines-secure-ai-system-development)) (CISA, NCSC, and partners) \- Provides comprehensive guidelines covering the AI lifecycle, including secure design principles and threat modeling.9  
-    * ([https://www.enisa.europa.eu/publications/enisa-threat-landscape-for-artificial-intelligence](https://www.enisa.europa.eu/publications/enisa-threat-landscape-for-artificial-intelligence)) (ENISA) \- Identifies AI assets and maps threats across the AI lifecycle, providing a foundation for asset-centric threat modeling.7  
-    * ([https://insights.sei.cmu.edu/blog/an-introduction-to-model-based-systems-engineering-mbse/](https://insights.sei.cmu.edu/blog/an-introduction-to-model-based-systems-engineering-mbse/)) (SEI CMU Blog) \- Introduces MBSE concepts and mentions its application for mitigating security risks early in development.16  
-    * ([https://www.wiley.com/en-us/Threat+Modeling%3A+Designing+for+Security-p-9781118809990](https://www.wiley.com/en-us/Threat+Modeling%3A+Designing+for+Security-p-9781118809990)) (Book Chapter Excerpt/Summary, Adam Shostack) \- While a book, excerpts and summaries often discuss the foundational role of DFDs in threat modeling, relevant for visualizing AI data flows.28  
-    * ([https://arxiv.org/abs/2403.06512](https://arxiv.org/abs/2403.06512)) (arXiv) \- Technical paper presenting an asset-driven threat modeling approach using knowledge graphs and custom diagram stencils for AI systems.3  
-    * ([https://www.mdpi.com/2226-4310/10/2/116](https://www.mdpi.com/2226-4310/10/2/116)) (MDPI Aerospace) \- Academic paper demonstrating MBSE (using SysML) for cybersecurity, including requirements traceability, applicable to complex AI systems.22  
-    * ([https://resources.sei.cmu.edu/library/asset-view/933017/](https://resources.sei.cmu.edu/library/asset-view/933017/)) (SEI CMU Presentation) \- Presentation outlining an approach to extend standard architecture frameworks (UAF) for threat modeling using MBSE.17  
-    * ([https://aws.amazon.com/blogs/security/threat-modeling-your-generative-ai-workload-to-evaluate-security-risk/](https://aws.amazon.com/blogs/security/threat-modeling-your-generative-ai-workload-to-evaluate-security-risk/)) (AWS Security Blog) \- Practical guidance on applying the four-stage threat modeling process to generative AI, emphasizing DFDs and identifying AI-specific threats.25  
-    * ([https://mbse-capella.org/resources/pdf/Towards-a-model-based-approach-to-Systems-and-Cybersecurity-co-engineering\_v2.pdf](https://mbse-capella.org/resources/pdf/Towards-a-model-based-approach-to-Systems-and-Cybersecurity-co-engineering_v2.pdf)) (Capella MBSE Tool Ecosystem) \- Paper discussing leveraging MBSE (specifically with the Arcadia method/Capella tool) for integrating cybersecurity concerns into systems engineering activities.20
 
 ### S2\.b Infrastructure Security
 Technical controls securing the underlying infrastructure supporting AI systems, including compute, storage, networking, and access management.
@@ -525,6 +482,12 @@ Technical controls securing the underlying infrastructure supporting AI systems,
     - [algoTRIC: Symmetric and asymmetric encryption algorithms for Cryptography -- A comparative analysis in AI era](https://arxiv.org/abs/2412.15237) (Arxiv-DEC2024)
     - [A Hybrid Cryptographic Mechanism for Secure Data Transmission in Edge AI Networks](https://link.springer.com/article/10.1007/s44196-024-00417-8) (SpringerNatureLink-FEB2024)
     - [A Framework for Cryptographic Verifiability of End-to-End AI Pipelines](https://arxiv.org/abs/2503.22573) (Arxiv-MAR2025)
+    * [ESPQ: Quantum-Safe Encapsulation Security Payload](https://ieeexplore.ieee.org/document/10646304)
+    * [Securing Cloud AI Workloads: Protecting Generative AI Models from Adversarial Attacks](https://ieeexplore.ieee.org/document/10848877)
+    * [Encrypted Data Caching and Learning Framework for Robust Federated Learning-Based Mobile Edge Computing](https://ieeexplore.ieee.org/document/10438353)
+    * [Enhancing Database Encryption: Adaptive Measures for Digital Assets Against LLMs-Based Reverse Engineering](https://ieeexplore.ieee.org/document/10917597)
+    * [First Demonstration of Unclonable Double Encryption 28nm RRAM-Based Compute-in-Memory Macro for Confidential AI](https://ieeexplore.ieee.org/document/10873366)
+    - **More on `Encrypted AI` will be added here**
 - **Authentication**
   - The organization requires authentication to systems and applications to use unique username and password or authorized Secure Socket Shell (SSH) keys.
   - Resources:
@@ -533,61 +496,69 @@ Technical controls securing the underlying infrastructure supporting AI systems,
     - [A Comprehensive Survey on Physical Layer Authentication Techniques: Categorization and Analysis of Model-Driven and Data-Driven Approaches](https://dl.acm.org/doi/10.1145/3708496) (CSUR-JAN2025)
     - [Authenticated Delegation and Authorized AI Agents](https://arxiv.org/abs/2501.09674) (Arxiv-JAN2025)
     - [Examining the Current Status and Emerging Trends in Continuous Authentication Technologies through Citation Network Analysis](https://dl.acm.org/doi/10.1145/3533705) (CSUR-DEC2022)
+    - [Secure and efficient authenticated group key agreement protocol for AI-based automation systems](https://www.sciencedirect.com/science/article/abs/pii/S0019057823001805)
+    - [API Security for White Hat Hackers: Uncover offensive defense strategies and get up to speed with secure API implementation](https://ieeexplore.ieee.org/document/10769217)
+    * [AI-Enabled Multi-Factor Authentication (MFA) Systems for Private and Public Cloud Security](https://ieeexplore.ieee.org/document/10941462)
+    * [Securing Cloud AI Workloads: Protecting Generative AI Models from Adversarial Attacks](https://ieeexplore.ieee.org/document/10848877)
+    * [Secure Authentication and Trust Management Scheme for Edge AI-Enabled Cyber-Physical Systems](https://ieeexplore.ieee.org/document/10855321)
+    * [Two Factor Authentication using secure algorithm for Cloud Container](https://ieeexplore.ieee.org/document/10511507)
+    * [Prevention Mechanisms for Stolen Access Token Injection Attack in Financial-grade API](https://ieeexplore.ieee.org/document/10226912)
+    * [Performance and Security Comparison of Json Web Tokens (JWT) and Platform Agnostic Security Tokens (PASETO) on RESTful APIs](https://ieeexplore.ieee.org/document/10277377)
+    * [Development of Big Data System with API Authentication for Industrial Boilers](https://ieeexplore.ieee.org/document/10827348)
+    * [An Overview Analysis of Authentication Mechanism in Microservices-Based Software Architecture: A Discussion Paper](https://ieeexplore.ieee.org/document/10256409)
+    * [FPRESSO: Fast and Privacy-Preserving SSO Authentication With Dynamic Load Balancing for Multi-Cloud-Based Web Applications](https://ieeexplore.ieee.org/document/10734102)
+    * [Quantum-Safe Authentication Protocol Using Post-Quantum Key Encapsulation Mechanism for Transportation Systems](https://ieeexplore.ieee.org/document/10717975)
+    * [Quantum Safe Multi-Factor User Authentication Protocol for Cloud-Assisted Medical IoT](https://ieeexplore.ieee.org/document/10817601)
+    * [Post-Quantum Single Sign-On Solution](https://ieeexplore.ieee.org/document/10927943)
 - **Application access control**
   - System access restricted to authorized access only
   - Resources:
-    - [Leveraging AI for enhanced identity and access management in cloud-based systems to advance user authentication and access control](https://wjarr.com/sites/default/files/WJARR-2024-3501.pdf) (World Journal of Advanced Research and Reviews-DEC2024)
-    - [Opportunities and Challenges of Artificial Intelligence Applied to Identity and Access Management in Industrial Environments](https://www.mdpi.com/1999-5903/16/12/469) (Applied Sciences-DEC2024) - *Reviews AI applications in IAM specifically for industrial settings, relevant to securing AI applications in OT/ICS.*
-    - [Zero Trust Architecture for Artificial Intelligence Systems: A Survey]
+    * [Leveraging AI for enhanced identity and access management in cloud-based systems to advance user authentication and access control](https://wjarr.com/sites/default/files/WJARR-2024-3501.pdf) (World Journal of Advanced Research and Reviews-DEC2024)
+    * [Opportunities and Challenges of Artificial Intelligence Applied to Identity and Access Management in Industrial Environments](https://www.mdpi.com/1999-5903/16/12/469) (Applied Sciences-DEC2024) - *Reviews AI applications in IAM specifically for industrial settings, relevant to securing AI applications in OT/ICS.*
+    * [SoK: Access Control Policy Generation from High-level Natural Language Requirements](https://dl.acm.org/doi/10.1145/3706057)
+    * [AI-HybridChain: Picturized authentication and DRL based access control method with secure two fold revocation for ensuring cloud computing security](https://www.sciencedirect.com/science/article/pii/S0167739X24001912)
+
 - **Production DB access control**
   - The organization restricts privileged access to databases to authorized users with a business need.
   - Resources:
-    - [Ensuring AI Data Access Control in RDBMS: A Comprehensive Review](https://openaccess.thecvf.com/content/CVPR2024W/WRD24/html/Kandolo_Ensuring_AI_Data_Access_Control_in_RDBMS_A_Comprehensive_Review_CVPRW_2024_paper.html) (CVPR-2024)
-    - [Privacy-Preserving Data Publishing for Machine Learning: A Survey](https://www.google.com/search?q=https://ieeexplore.ieee.org/abstract/document/9795419/) (IEEE Transactions on Knowledge and Data Engineering-SEP2022) - *Surveys techniques to protect data privacy when data is used for ML, relevant to controlling access and exposure of sensitive DB data.*
-    - [Federated Database Systems Security: A Survey](https://www.mdpi.com/2076-3417/13/1/439) (Applied Sciences-DEC2022) - *Reviews security challenges, including access control, in federated database systems which might host AI training/operational data.*
-    - [A Survey on Security and Privacy Issues of Federated Learning](https://www.google.com/search?q=https://www.sciencedirect.com/science/article/pii/S2666389922000025) (Telematics and Informatics Reports-JUN2022) - *Discusses security/privacy in federated learning, which involves controlled access to distributed data sources.*
+    * [Ensuring AI Data Access Control in RDBMS: A Comprehensive Review](https://openaccess.thecvf.com/content/CVPR2024W/WRD24/html/Kandolo_Ensuring_AI_Data_Access_Control_in_RDBMS_A_Comprehensive_Review_CVPRW_2024_paper.html) (CVPR-2024)
+    * [Towards Ensuring AI Data Access Control in RDBMS](https://link.springer.com/chapter/10.1007/978-3-031-83432-5_19)
+    * [Access Control Analysis in Heterogeneous Big Data Management Systems](https://link.springer.com/article/10.1134/S0361768824700269)
+    * [Comparative Analysis of Ontology Based Data Access Control and Security Enhancement in Healthcare Application](https://link.springer.com/article/10.3103/S8756699024700353)
+    * [An access and inference control model for time series databases](https://www.sciencedirect.com/science/article/pii/S0167739X18306757)
 - **Firewall access control**
   - The organization restricts privileged access to the firewall to authorized users with a business need.
   - Resources:
-    - [A Survey on Network Security Policy Verification and Synthesis](https://www.google.com/search?q=https://ieeexplore.ieee.org/abstract/document/10289020/) (IEEE Access-OCT2023) - *Surveys methods for verifying network security policies, including firewall rules, crucial for managing access.*
-    - [Automated Firewall Policy Analysis and Optimization: A Survey](https://www.sciencedirect.com/science/article/pii/S157401372200127X) (Journal of Network and Computer Applications-OCT2022)
-    - [Leveraging Machine Learning for Intelligent Firewall Rule Management](https://ieeexplore.ieee.org/abstract/document/9797189/) (ICC-MAY2022)
-    - [Zero Trust Network Access (ZTNA): Concepts, Architectures, and Challenges](https://www.google.com/search?q=https://ieeexplore.ieee.org/abstract/document/9679566/) (IEEE Access-JAN2022) - *Explores ZTNA concepts, a modern approach to network access control applicable to managing firewall policies and infrastructure access.*
-    - [A Framework for Secure Configuration Management of Network Devices](https://www.mdpi.com/2076-3417/12/19/9807) (Applied Sciences-SEP2022) - *Proposes a framework for secure configuration management applicable to firewalls.*
+    * [Oblivious and distributed firewall policies for securing firewalls from malicious attacks](https://www.sciencedirect.com/science/article/pii/S0167404824005066)
 - **Production OS access control**
   - The organization restricts privileged access to the operating system to authorized users with a business need.
   - Resources:
-    - [Introduction to Privileged Access Management](https://www.researchgate.net/publication/378990267_Introduction_to_Privileged_Access_Management) (ISSA Journal-FEB2024)
-    - [Security Hardening of Operating Systems: A Review of Techniques and Tools](https://www.sciencedirect.com/science/article/pii/S1877050922010868) (ICCS-JUL2022)
-    - [Identity and Access Management in Cloud Environments: Challenges and Solutions](https://ieeexplore.ieee.org/abstract/document/9611972/) (CloudCom-DEC2021)
-    - [Secure Configuration of Compute Instances for Machine Learning Workloads](https://dl.acm.org/doi/abs/10.1145/3488932.3497777) (ADM+ML-AUG2021)
+    * [Advancements in Operating System Design for Cloud Computing Environments](https://ieeexplore.ieee.org/abstract/document/10840767)
+    - [Integrating Artificial Intelligence into Operating Systems: A Comprehensive Survey on Techniques, Applications, and Future Directions](https://arxiv.org/pdf/2407.14567)
+
 - **Production network access control**
   - The organization restricts privileged access to the production network to authorized users with a business need.
   - The organization requires authentication to the "production network" to use unique usernames and passwords or authorized Secure Socket Shell (SSH) keys.
   - Resources:
-    - [Identity and Access Management in Cloud Environments: Challenges and Solutions](https://ieeexplore.ieee.org/abstract/document/9611972/) (IEEE International Conference on Cloud Computing Technology and Science - CloudCom 2021-DEC2021) - *Covers IAM challenges relevant to securing production networks hosted in the cloud.*
-    - [Considerations regarding Sovereign AI and National AI Policy](https://sovereign-ai.org/media/papers/Considerations_regarding_Sovereign_AI_C_Sovereign_AI__Imperial_College.pdf) (Imperial College London White Paper-APR2024) - *Note: Policy paper discussing strategic autonomy and control over critical AI infrastructure, relating to network access control.*
-    - [A Survey on Network Security Policy Verification and Synthesis](https://ieeexplore.ieee.org/abstract/document/10289020/) (IEEE Access-OCT2023) - *Surveys methods for verifying network security policies, essential for ensuring correct network access.*
+    - [Research on Network Security Access Control Based on Improved Algorithm](https://dl.acm.org/doi/pdf/10.1145/3689236.3691492)
+    - [A Hybrid Cryptographic Mechanism for Secure Data Transmission in Edge AI Networks](https://link.springer.com/article/10.1007/s44196-024-00417-8)
 - **Remote access control**
   - The organization's production systems can only be remotely accessed by authorized employees via an approved encrypted connection.
   - Resources:
-    - [Zero Trust Network Access (ZTNA): Concepts, Architectures, and Challenges](https://ieeexplore.ieee.org/abstract/document/9679566/) (IEEE Access-JAN2022) - *Explores ZTNA concepts, a primary modern approach for securing remote access based on identity and context rather than network perimeter.*
-    - [A Survey on Zero Trust Architecture: Principles, Models, and Challenges](https://ieeexplore.ieee.org/abstract/document/10142490/) (IEEE Access-JUN2023) - *Surveys Zero Trust principles applicable to securing remote connections.*
-    - [Security and Privacy of Technologies in Health Information Systems: A Systematic Literature Review](https://www.mdpi.com/2073-431X/13/2/41) (Electronics-JAN2024) - *Discusses security aspects like secure access control and data sharing in healthcare systems, relevant to remote access needs.*
-    - [A Secure Remote Access Framework for Industrial Control Systems Using Software-Defined Networking](https://www.google.com/search?q=https://ieeexplore.ieee.org/abstract/document/9498958/) (IEEE Transactions on Industrial Informatics-AUG2021)
+    - tba
 - **Infrastructure performance monitoring**
   - An infrastructure monitoring tool is utilized to monitor systems, infrastructure, and performance and generates alerts when specific predefined thresholds are met.
   - Resources:
-    - [Artificial Intelligence for Real-Time Cloud Monitoring and Troubleshooting](https://www.researchgate.net/publication/387140941_Artificial_Intelligence_for_Real-Time_Cloud_Monitoring_and_Troubleshooting) (International Journal of Progressive Research in Engineering Management and Science-DEC2024)
     - [AIOps Architecture in Data Center Site Infrastructure Monitoring](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9328990/) (Computational Intelligence and Neuroscience-JUL2022)
     - [AIOps in Cloud-native DevOps: IT Operations Management with Artificial Intelligence](https://www.researchgate.net/publication/377614566_AIOps_in_Cloud-native_DevOps_IT_Operations_Management_with_Artificial_Intelligence) (Journal of Artificial Intelligence & Cloud Computing-JAN2023)
-    - [Advancing AI-Enabled Techniques in Energy System Modeling: A Review of Data-Driven, Mechanism-Driven, and Hybrid Modeling Approaches](https://www.mdpi.com/1996-1073/18/4/845) (MDPI-FEB2025)
     - [Performance Measurement System and Quality Management in Data-Driven Industry 4.0: A Review](https://www.mdpi.com/1424-8220/22/1/224) (MDPI-DEC2021)
-    - [Observability for Microservices-Based Systems: A Systematic Literature Review](https://ieeexplore.ieee.org/abstract/document/9783198/) (IEEE Access-MAY2022)
+    - [A survey on observability of distributed edge & container-based microservices](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9837035)
+
 
 - **Network Firewall**
   - The organization uses firewalls and configures them to prevent unauthorized access.
   - Resources:
+    * [TokenGuard: A novel framework for robust access management in SDN controllers](https://www.sciencedirect.com/science/article/pii/S0140366425001264)
     - [Next Generation AI-Based Firewalls: A Comparative Study](https://www.researchgate.net/publication/377060591_Next_Generation_AI-Based_Firewalls_A_Comparative_Study) (IJC-DEC2023) - *Compares different approaches for integrating AI into next-generation firewalls.*
     - [Next-Gen Firewalls: Enhancing Cloud Security with Generative AI](https://onlinescientificresearch.com/articles/nextgen-firewalls-enhancing-cloud-security-with-generative-ai.pdf) (Journal of Artificial Intelligence & Cloud Computing-AUG2024) - *Discusses using Generative AI and ML to improve NGFW capabilities for cloud environments.*
     - [Building smarter firewalls: Using AI to strengthen network security protocols](https://www.researchgate.net/publication/390137426_Building_smarter_firewalls_Using_AI_to_strengthen_network_security_protocols) (International Journal of Computing and Artificial Intelligence-AUG2022) - *Analyzes how AI enhances modern intrusion detection and adaptive security policies in firewalls.*
@@ -687,6 +658,33 @@ Security measures specifically integrated into AI products and services to prote
     - ["AI-Powered Encryption: Revolutionizing Cybersecurity with Adaptive Cryptography"](https://turcomat.org/index.php/turkbilmat/article/view/14976) (Turkish Journal of Computer and Mathematics Education-2025)
     - ["algoTRIC: Symmetric and Asymmetric Encryption Algorithms for Cryptography—A Comparative Analysis in AI Era"](https://arxiv.org/abs/2412.15237) (arXiv-2024)
     - ["Privacy-Preserving Machine Learning with Fully Homomorphic Encryption for Deep Neural Network"](https://arxiv.org/abs/2106.07229) (arXiv-2021)
+- **API Security**
+    - [Research Towards Key Issues of API Security](https://link.springer.com/chapter/10.1007/978-981-16-9229-1_11)
+    - [Testing RESTful APIs: A Survey](https://dl.acm.org/doi/full/10.1145/3617175)
+    - [API Governance at Scale](https://dl.acm.org/doi/pdf/10.1145/3639477.3639713)
+    - [A framework for checking and mitigating the security vulnerabilities of cloud service RESTful APIs](https://link.springer.com/article/10.1007/s11761-024-00404-z)
+    - [Performance and Availability Analysis of API Design Techniques for API Gateways](https://link.springer.com/article/10.1007/s13369-024-09474-9)
+    - [Monitoring Software Tool to Prevent Data Leaks in a RESTful API](https://link.springer.com/chapter/10.1007/978-3-031-75702-0_14)
+    - [An empirical study of API Management and ISO/IEC SQuaRE: a practitioners’ perspective](https://sedici.unlp.edu.ar/bitstream/handle/10915/164926/Documento_completo.pdf?sequence=1)
+    - [Augmenting API Security Testing with Automated LLM-Driven Test Generation](https://link.springer.com/chapter/10.1007/978-3-031-75016-8_11)
+    - [Enhancing API Security Testing Against BOLA and Authentication Vulnerabilities Through an LLM-Enhanced Framework](https://link.springer.com/chapter/10.1007/978-3-031-75010-6_23)
+    - [Machine Learning-Based Detection of API Security Attacks](https://link.springer.com/chapter/10.1007/978-981-99-7814-4_23)
+    - [FuzzTheREST: An Intelligent Automated Black-Box RESTful API Fuzzer](https://link.springer.com/chapter/10.1007/978-3-031-82073-1_16)
+    - [Evading Userland API Hooking, Again: Novel Attacks and a Principled Defense Method](https://link.springer.com/chapter/10.1007/978-3-031-64171-8_8)
+    - [Toward security quantification of serverless computing](https://link.springer.com/article/10.1186/s13677-024-00703-y)
+    - [Understanding security tactics in microservice APIs using annotated software architecture decomposition models – a controlled experiment](https://link.springer.com/article/10.1007/s10664-024-10601-1)
+    - 
+- **MCP Security**
+  - [A Survey on Model Context Protocol: Architecture, State-of-the-art, Challenges and Future Directions](https://www.techrxiv.org/doi/full/10.36227/techrxiv.174495492.22752319)
+  - [Model Context Protocol (MCP): Landscape, Security Threats, and Future Research Directions](https://arxiv.org/pdf/2503.23278)
+  - [MCP Safety Audit: LLMs with the Model Context Protocol Allow Major Security Exploits](https://arxiv.org/abs/2504.03767)
+  - [Enterprise-Grade Security for the Model Context Protocol (MCP): Frameworks and Mitigation Strategies](https://arxiv.org/pdf/2504.08623)
+  - [A Survey of AI Agent Protocols](https://arxiv.org/pdf/2504.16736)
+  - [Building A Secure Agentic AI Application Leveraging A2A Protocol](https://arxiv.org/pdf/2504.16902)
+  - [AI Agents Under Threat: A Survey of Key Security Challenges and Future Pathways](https://dl.acm.org/doi/10.1145/3716628)
+  - [Security and Privacy Challenges of Large Language Models: A Survey](https://dl.acm.org/doi/10.1145/3712001)
+  - [Emerging Practices in Frontier AI Safety Frameworks](https://arxiv.org/pdf/2503.04746)
+  - Pending more papers on AI Function Calling
 - **Control self-assessments**
   - The organization performs control self-assessments at least annually to gain assurance that controls are in place and operating effectively. Corrective actions are taken based on relevant findings. If the organization has committed to an SLA for a finding, the corrective action is completed within that SLA.
   - Resources:

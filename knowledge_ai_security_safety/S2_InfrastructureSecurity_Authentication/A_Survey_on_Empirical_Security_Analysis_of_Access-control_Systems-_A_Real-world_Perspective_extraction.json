@@ -1,0 +1,293 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "8737ab344c824f83852907b45e5fb06d",
+      "title": "A survey on empirical security analysis of access-control systems: a real-world perspective",
+      "authors": [
+        {
+          "name": "S Parkinson"
+        },
+        {
+          "name": "S Khan"
+        }
+      ],
+      "abstract": "There any many different access-control systems, yet a commonality is that they provide flexible mechanisms to enforce different access levels. Their importance in organisations to adequately restrict resources, coupled with their use in a dynamic environment, mandates the need to routinely perform policy analysis. The aim of performing analysis is often to identify potential problematic permissions, which have the potential to be exploited and could result in data theft and unintended modification. There is a vast body of published literature on analysing access-control systems, yet as performing analysis has a strong end-user motivation and is grounded in security challenges faced in real-world systems, it is important to understand how research is developing, what are the common themes of interest, and to identify key challenges that should be addressed in future work. To the best of the authors' knowledge, no survey has been performed to gain an understanding of empirical access-control analysis, focussing on how techniques are evaluated and how they align to the needs of real-world analysis tasks. This article provides a systematic literature review, identifying and summarising key works. Key findings are identified and discussed as areas of future work.",
+      "doi": "10.1145/3533703",
+      "publicationDate": "2022",
+      "journal": "ACM Computing Surveys, 2022",
+      "volume": "2022",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_InfrastructureSecurity_Authentication/A Survey on Empirical Security Analysis of Access-control Systems- A Real-world Perspective.pdf",
+      "fileUrl": "https://dl.acm.org/doi/abs/10.1145/3533703",
+      "extractionDate": "2025-04-28T23:10:00.002452",
+      "extractionConfidenceScore": 0.8156
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "3eb4606e42bb491e861552ec85e6f2ea",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Information Security",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [
+        {
+          "name": "University of Huddersfield",
+          "location": "Queensgate, Huddersfield, West Yorkshire, HD1 3DH, UK"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "8737ab344c824f83852907b45e5fb06d"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "682582d0e05e4edbaf5a9f49664cc817",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "8737ab344c824f83852907b45e5fb06d"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "f9745c9e2ad444b5aa21f5bf35428a42",
+      "problemStatement": "The core research problem is the lack of empirical security analysis of access-control systems from a real-world perspective, which includes understanding how research is developing, identifying common themes of interest, and pinpointing key challenges that should be addressed in future work.",
+      "problemScope": "The scope includes the analysis of access-control policies, identification of problematic permissions, and the evaluation of techniques against real-world or synthetic datasets.",
+      "problemType": "EmpiricalProblem",
+      "problemImportance": "Understanding and improving the empirical analysis of access-control systems is crucial for enhancing security measures in organizations and preventing data theft and unintended modification.",
+      "businessRelevance": "The research problem is highly relevant to businesses as it addresses the need for secure, reliable, and efficient access-control systems that are essential for protecting sensitive resources and ensuring compliance with legal frameworks like GDPR.",
+      "extractionConfidence": 0.9,
+      "paper": "8737ab344c824f83852907b45e5fb06d"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "c780588dfd64462a935f3340da8f37f3",
+      "gapDescription": "No survey has been performed to gain an understanding of empirical access-control analysis, focusing on how techniques are evaluated and how they align to the needs of real-world analysis tasks.",
+      "relatedDomain": "Access-Control Systems Security Analysis",
+      "gapSignificance": "Understanding empirical analysis is crucial for developing methods that are effective in real-world scenarios and for addressing security challenges faced by organizations.",
+      "extractionConfidence": 0.9,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42"
+    },
+    {
+      "internal_id": "31486a288cd142478d4e736eeb6aa9a3",
+      "gapDescription": "There is a lack of understanding of what empirical results and observations have been made about each approach to access-control policy analysis.",
+      "relatedDomain": "Access-Control Policy Analysis",
+      "gapSignificance": "Empirical results are necessary to validate the effectiveness of access-control analysis approaches and to guide future research.",
+      "extractionConfidence": 0.85,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42"
+    },
+    {
+      "internal_id": "200740515e4644459e3f9aa6268e37dd",
+      "gapDescription": "There is a need for a systematic survey of analyzing access-control policies that investigates the aspects of policy size and processing time to determine suitability for real-world policies.",
+      "relatedDomain": "Access-Control Policy Analysis",
+      "gapSignificance": "A systematic survey can help identify techniques that are scalable and efficient for use in real-world environments, which is critical for maintaining security in large and complex systems.",
+      "extractionConfidence": 0.8,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42"
+    },
+    {
+      "internal_id": "a9a473059b9f4cada4d89acb690ad2b6",
+      "gapDescription": "There is a challenge in adequately testing developed techniques for access-control analysis due to the difficulty of representing diverse implementations and gaining access to live, industrial systems.",
+      "relatedDomain": "Access-Control Analysis Techniques Testing",
+      "gapSignificance": "Proper testing is essential to ensure that access-control analysis techniques are reliable and applicable to a variety of real-world systems.",
+      "extractionConfidence": 0.75,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "37967e453ce149f6ba0fa6250f186385",
+      "questionText": "How are empirical access-control analysis techniques evaluated and how do they align to the needs of real-world analysis tasks?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Evaluation techniques",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Alignment to real-world tasks",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42",
+      "addressesGap": "c780588dfd64462a935f3340da8f37f3"
+    },
+    {
+      "internal_id": "8b290ba1b7d4422cb9c33b93c3ff59eb",
+      "questionText": "What are the common themes of interest in the empirical security analysis of access-control systems?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Themes of interest",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42",
+      "addressesGap": "c780588dfd64462a935f3340da8f37f3"
+    },
+    {
+      "internal_id": "df5d4797e81445e6890be5a7d0484406",
+      "questionText": "What key challenges should be addressed in future work on access-control systems analysis?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Key challenges",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42",
+      "addressesGap": "c780588dfd64462a935f3340da8f37f3"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "2e1a0eed7fcf4032bca064cc180dd322",
+      "challengeDescription": "Access control implementations in large multi-user and multi-device systems can result in large, unwieldy policies that are resource-intensive to manually review.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42"
+    },
+    {
+      "internal_id": "37d54356ff0d4350943e6c920dcaf69c",
+      "challengeDescription": "Both supervised and unsupervised approaches to analysing access-control policies are problematic, requiring either pre-established knowledge or a reliable unsupervised algorithm capable of adequately discovering problematic permissions.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42"
+    },
+    {
+      "internal_id": "cfdb41da811f4ea2833f98209a4fa8c3",
+      "challengeDescription": "The need for minimal impact on live systems during analysis and the necessity for quick extraction and rectification of problems in access-control policies.",
+      "challengeType": "EmergentBehavior",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42"
+    },
+    {
+      "internal_id": "f25b277fdfb341778285cfc1f8a9eae5",
+      "challengeDescription": "Adequately testing any developed technique for access-control analysis is challenging due to the time-consuming nature of developing and configuring simulations to represent diverse implementations and the difficulty of gaining access to live, industrial systems.",
+      "challengeType": "TheoryGap",
+      "severity": "Moderate",
+      "extractionConfidence": 0.7,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "relatedProblem": "f9745c9e2ad444b5aa21f5bf35428a42"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "a5f65416dca34f94b9cf121a9d5a628d",
+      "name": "Systematic Literature Review on Empirical Security Analysis of Access-Control Systems",
+      "description": "The paper presents a systematic literature review focused on empirical security analysis of access-control systems from a real-world perspective. It aims to understand how research in this area is developing, identify common themes of interest, and pinpoint key challenges for future work. The review categorizes and evaluates techniques based on their alignment with real-world analysis tasks, using criteria such as policy size, processing time, and the use of real-world or synthetic datasets for validation.",
+      "studyDesign": {
+        "designType": "Systematic Review",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study design involves a systematic review of literature to categorize and evaluate existing research on access-control systems, focusing on empirical analysis and real-world applicability."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Literature Review",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Identification of relevant literature on access-control systems and their empirical security analysis.",
+              "inputs": null,
+              "outputs": "A collection of academic papers and articles relevant to the topic.",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Categorization of the literature based on access-control system types and analysis techniques.",
+              "inputs": null,
+              "outputs": "Categorized groups of literature for detailed review.",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Evaluation of the techniques based on criteria such as policy size, processing time, and validation methods.",
+              "inputs": null,
+              "outputs": "Assessment of the techniques' applicability to real-world scenarios.",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 4,
+              "description": "Identification of key findings, common challenges, and knowledge gaps for future research.",
+              "inputs": null,
+              "outputs": "A synthesized understanding of the current state of research and future directions.",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves a systematic search and review of existing literature on the empirical security analysis of access-control systems. The review categorizes the literature based on the type of access-control system (e.g., Role-based, Discretionary, Attribute-based) and evaluates the techniques based on their empirical validation and relevance to real-world scenarios."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "Qualitative Content Analysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves a qualitative synthesis of findings from the reviewed literature. The analysis focuses on categorizing the research based on the type of access-control system, identifying common themes and challenges, and evaluating the empirical validation of the techniques. The review assesses the suitability of the techniques for real-world policy analysis tasks."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TextualDescription",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The results of the systematic literature review are presented in a structured format, summarizing key works in the field of access-control systems. The findings highlight the empirical validation of techniques, common themes, challenges, and potential areas for future research. The review provides a basis for understanding the development of research in this area and its alignment with real-world analysis tasks."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "Not applicable as this is a literature review and does not involve the generation of new empirical data.",
+        "dataRepository": null,
+        "codeAvailabilityStatement": "Not applicable as this is a literature review and does not involve the development of new software or algorithms.",
+        "codeRepository": null,
+        "protocolAvailability": "The methodology for the systematic literature review is detailed within the paper itself.",
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "8737ab344c824f83852907b45e5fb06d",
+      "researchProblem": "f9745c9e2ad444b5aa21f5bf35428a42"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "e564a62ad53b4be09791a17ce1ddfd06",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "a5f65416dca34f94b9cf121a9d5a628d"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,487 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "title": "A hybrid cryptographic mechanism for secure data transmission in edge AI networks",
+      "authors": [
+        {
+          "name": "A Almalawi"
+        },
+        {
+          "name": "S Hassan"
+        },
+        {
+          "name": "A Fahad"
+        },
+        {
+          "name": "AI Khan"
+        }
+      ],
+      "abstract": "As Edge AI systems become more prevalent, ensuring data privacy and security in these decentralized networks is essential. In this work, a novel hybrid cryptographic mechanism was presented by combining Ant Lion Optimization (ALO) and Diffie-Hellman-based Twofish cryptography (DHT) for secure data transmission. The developed work collects the data from the created edge AI system and processes it using the Autoencoder. The Autoencoder learns the data patterns and identifies the malicious data entry. The Diffie-Hellman (DH) key exchange generates a shared secret key for encryption, while the ALO optimizes the key exchange and improves security performance. Further, the Twofish algorithm performs the data encryption using a generated secret key, preventing security threats during transmission. The implementation results of the study show that it achieved a higher accuracy of 99.45%, lower time consumption of 2 s, minimum delay of 0.8 s, and reduced energy consumption of 3.2 mJ.\n\nKeywords Ant Lion optimization · Edge artificial intelligence · Soft computing · Data transmission · Diffie-Hellman key exchange · Twofish algorithm",
+      "doi": "10.1007/s44196-024-00417-8",
+      "publicationDate": "2024",
+      "journal": "International Journal of …, 2024",
+      "volume": "1",
+      "issue": "",
+      "pages": "",
+      "keywords": [
+        "Ant Lion optimization",
+        "Edge artificial intelligence",
+        "Soft computing",
+        "Data transmission",
+        "Diffie–Hellman key exchange",
+        "Twofish algorithm"
+      ],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S2_InfrastructureSecurity_Encryption/A Hybrid Cryptographic Mechanism for Secure Data Transmission in Edge AI Networks.pdf",
+      "fileUrl": "https://link.springer.com/article/10.1007/s44196-024-00417-8",
+      "extractionDate": "2025-04-24T08:24:27.248051",
+      "extractionConfidenceScore": 0.834
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "06ac509707184b1e8d10deb37c49f032",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Edge artificial intelligence · Soft computing · Data transmission · Cryptography",
+      "associatedProject": null,
+      "fundingSources": [
+        {
+          "funderName": "Deanship of Scientific Research (DSR) at King Abdulaziz University (KAU)",
+          "grantNumber": "KEP-MSc: 78-611-1443"
+        }
+      ],
+      "institutions": [
+        {
+          "name": "King Abdulaziz University",
+          "location": "Jeddah, Saudi Arabia"
+        },
+        {
+          "name": "Aligarh Muslim University",
+          "location": "Aligarh, Uttar Pradesh, India"
+        },
+        {
+          "name": "College of Computer Science and Information Technology, Al Baha University",
+          "location": "Al Baha, Saudi Arabia"
+        }
+      ],
+      "extractionConfidence": 0.95,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "9e3d1f11a9d54b689599a6e4e77f6bea",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "Ant Lion Optimization (ALO)",
+          "relevance": "ALO is used to optimize the key exchange process in the hybrid cryptographic mechanism, improving security performance."
+        },
+        {
+          "modelName": "Diffie-Hellman-based Twofish cryptography (DHT)",
+          "relevance": "DHT is used for secure data transmission by generating a shared secret key for encryption and using the Twofish algorithm to perform the data encryption."
+        },
+        {
+          "modelName": "Autoencoder Neural Network",
+          "relevance": "The Autoencoder is used to learn data patterns and identify malicious data entry within the edge AI network."
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "c7911836f1a54ab7b543524e9f162815",
+      "problemStatement": "Ensuring data privacy and security in decentralized Edge AI networks during data transmission.",
+      "problemScope": "The problem is scoped to Edge AI networks which are decentralized and require secure data transmission mechanisms.",
+      "problemType": "DesignProblem",
+      "problemImportance": "The problem is critical as Edge AI systems become more prevalent, and the security of data in these systems is essential for maintaining privacy and preventing breaches.",
+      "businessRelevance": "Solving this problem has significant implications for businesses that rely on Edge AI systems for operations, as it can prevent data breaches and ensure the integrity of data-driven decisions.",
+      "extractionConfidence": 0.8,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "17359c62362b4b94ba0c758362f8f3c4",
+      "questionText": "How can a hybrid cryptographic mechanism enhance security and privacy during data transmission in edge AI networks?",
+      "questionType": "Applied",
+      "relatedVariables": [
+        {
+          "variableName": "hybrid cryptographic mechanism",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "security and privacy",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "data transmission",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "edge AI networks",
+          "variableRole": "Context"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "relatedProblem": "c7911836f1a54ab7b543524e9f162815"
+    },
+    {
+      "internal_id": "8e4beed7dc564990b6e73bf3c8ade4d6",
+      "questionText": "What is the performance of the proposed ALO-DHT model in terms of accuracy, recall, time, delay, precision, and energy consumption compared to existing techniques?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "ALO-DHT model performance",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "accuracy",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "recall",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "time consumption",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "delay",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "precision",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "energy consumption",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "existing techniques",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "relatedProblem": "c7911836f1a54ab7b543524e9f162815"
+    },
+    {
+      "internal_id": "83ba5de1ff5f4e3ead45a471af218f35",
+      "questionText": "Can the proposed ALO-DHT model effectively reduce the computational complexity and latency while providing better security in edge AI systems?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "ALO-DHT model",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "computational complexity",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "latency",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "security",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "edge AI systems",
+          "variableRole": "Context"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "relatedProblem": "c7911836f1a54ab7b543524e9f162815"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "c2cb449b2c2e42d396914d1552c553a8",
+      "directionDescription": "Developing an intelligent security framework to work optimally under resource-constrained and dynamic network conditions.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "arisesFromLimitation": "51967072d5444f9eb31066a269f61eea"
+    },
+    {
+      "internal_id": "be671c0da4194020ab8c2c873bff6701",
+      "directionDescription": "Reducing the computational complexity using some compression mechanisms, which makes them more effective and reliable in real-time edge AI applications.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "arisesFromLimitation": "51967072d5444f9eb31066a269f61eea"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [],
+  "sciknow-25x1-methodological-challenges": [
+    {
+      "internal_id": "a7d50e4d7f10497c98801faa4b828395",
+      "challengeDescription": "The iterative refinement of DH parameters potentially increases the key generation time, inducing latency in real-time network.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": null,
+      "extractionConfidence": 0.8,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a",
+      "resultsInLimitation": "51967072d5444f9eb31066a269f61eea"
+    },
+    {
+      "internal_id": "1cceba2a6d8a41f0babebe42c5e3894a",
+      "challengeDescription": "Combining different algorithms into a single framework introduces computational complexity.",
+      "researchPhase": "MultiplePhases",
+      "mitigationStrategy": null,
+      "extractionConfidence": 0.8,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a",
+      "resultsInLimitation": "51967072d5444f9eb31066a269f61eea"
+    },
+    {
+      "internal_id": "3f986812acfb409da1b17ec5afda7034",
+      "challengeDescription": "The DH parameter optimization through ALO demands significant amount of computational resources, making the system ineffective in resource-constrained edge AI network.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": null,
+      "extractionConfidence": 0.8,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a",
+      "resultsInLimitation": "51967072d5444f9eb31066a269f61eea"
+    },
+    {
+      "internal_id": "0489ff8c1b0842629f90364e408004c0",
+      "challengeDescription": "The system faces difficulty in adapting to rapidly changing network conditions due to the iterative nature of the ALO approach.",
+      "researchPhase": "Validation",
+      "mitigationStrategy": null,
+      "extractionConfidence": 0.7,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a",
+      "resultsInLimitation": "51967072d5444f9eb31066a269f61eea"
+    },
+    {
+      "internal_id": "de8dacca22fd4438b10010026d024fe6",
+      "challengeDescription": "The Twofish algorithm limits the system's interpretability and demands knowledge expertise for precise implementation in real-world applications.",
+      "researchPhase": "Implementation",
+      "mitigationStrategy": null,
+      "extractionConfidence": 0.7,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a",
+      "resultsInLimitation": "51967072d5444f9eb31066a269f61eea"
+    }
+  ],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "59aa1156722342f499c0bda60997350e",
+      "challengeDescription": "The iterative refinement of DH parameters potentially increases the key generation time, inducing latency in real-time network.",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Latency due to optimization process",
+      "extractionConfidence": 0.9,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    },
+    {
+      "internal_id": "e5409d25379d46bc830e7b3bcfe707c2",
+      "challengeDescription": "Combining different algorithms into a single framework introduces computational complexity.",
+      "resourceConstraint": "Hardware",
+      "technicalHurdle": "High computational demand",
+      "extractionConfidence": 0.8,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    },
+    {
+      "internal_id": "e15ff18254c04283a188d619a8e7ac91",
+      "challengeDescription": "The DH parameter optimization through ALO demands significant amount of computational resources, making the system ineffective in resource-constrained edge AI network.",
+      "resourceConstraint": "Hardware",
+      "technicalHurdle": "Resource-intensive optimization",
+      "extractionConfidence": 0.9,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    },
+    {
+      "internal_id": "85574a52c4894299a646133fb2561a7f",
+      "challengeDescription": "Difficulty in adapting the rapidly changing network conditions due to the iterative nature of ALO approach.",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Poor adaptability to network changes",
+      "extractionConfidence": 0.7,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    },
+    {
+      "internal_id": "44f7913e04d34c18bbfc868629f4601d",
+      "challengeDescription": "The Twofish algorithm limits the system's interpretability and demands knowledge expertise for precise implementation in real-world applications.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Complex implementation requiring specialized knowledge",
+      "extractionConfidence": 0.8,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "encounteredInFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    }
+  ],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "51967072d5444f9eb31066a269f61eea",
+      "limitationDescription": "Since the key generation process is optimized by ALO mechanism, it indirectly increases the latency. The iterative refinement of DH parameters potentially increases the key generation time, inducing latency in real-time network.",
+      "limitationType": "TemporalLimitation",
+      "impactOnFindings": "This limitation may affect the real-time performance of the system due to increased latency during the key generation process.",
+      "businessConstraints": "In business settings, increased latency can impact the responsiveness of applications, potentially affecting user experience and real-time data processing requirements.",
+      "extractionConfidence": 0.9,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "limitedFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    },
+    {
+      "internal_id": "fdbf51f193224954bcf3f40290e7be44",
+      "limitationDescription": "Combining different algorithms, like Autoencoder neural network, Ant Lion Optimization, Diffie-Hellman, and Twofish algorithm into a single framework introduces computational complexity.",
+      "limitationType": "ResourceConstraint",
+      "impactOnFindings": "The computational complexity may limit the efficiency of the system and affect its performance in processing data.",
+      "businessConstraints": "High computational complexity can lead to increased costs for deployment and operation, making it less feasible for businesses with limited computational resources.",
+      "extractionConfidence": 0.9,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "limitedFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    },
+    {
+      "internal_id": "c38ec09e6658471d8b2ab4810b10f758",
+      "limitationDescription": "The DH parameter optimization through ALO demands significant amount of computational resources. This makes the system ineffective in resource-constrained edge AI network.",
+      "limitationType": "ResourceConstraint",
+      "impactOnFindings": "The demand for significant computational resources may not be met by all edge AI networks, especially those with limited resources, affecting the generalizability of the system.",
+      "businessConstraints": "Resource constraints can hinder the deployment of the system in environments with limited computational capacity, affecting scalability and increasing operational costs.",
+      "extractionConfidence": 0.9,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "limitedFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    },
+    {
+      "internal_id": "95b10e784d5448ecbb880043b46ee44e",
+      "limitationDescription": "Since the system adaptability relies on the iterative nature of ALO approach, it faces difficulty in adapting the rapidly changing network conditions.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The system's difficulty in adapting to rapidly changing network conditions may limit its effectiveness in dynamic environments.",
+      "businessConstraints": "Businesses operating in fast-changing network environments may find the system less suitable, potentially requiring additional solutions to cope with network variability.",
+      "extractionConfidence": 0.85,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "limitedFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    },
+    {
+      "internal_id": "c8cd223d31f54b6e8e611ac1d572a0c7",
+      "limitationDescription": "Although the Twofish algorithm is robust and offers security, it limits the system's interpretability, and demands a knowledge expertise for precise implementation of this approach in real-world applications.",
+      "limitationType": "Other",
+      "impactOnFindings": "The complexity of the Twofish algorithm may affect the ease of understanding and interpreting the system's security mechanisms.",
+      "businessConstraints": "The need for specialized knowledge to implement the Twofish algorithm may pose a barrier to adoption, requiring businesses to invest in expert personnel or training.",
+      "extractionConfidence": 0.85,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "limitedFramework": "af4b5889f93e4c8baf9183e4f537908a"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "af4b5889f93e4c8baf9183e4f537908a",
+      "name": "Hybrid Cryptographic Mechanism for Secure Data Transmission in Edge AI Networks",
+      "description": "The study presents a novel hybrid cryptographic mechanism combining Ant Lion Optimization (ALO) and Diffie-Hellman-based Twofish cryptography (DHT) to secure data transmission in Edge AI networks. The methodology involves creating an edge AI environment, employing an autoencoder neural network for attack prediction, and using the proposed ALO-DHT cryptographic algorithm for data encryption.",
+      "studyDesign": {
+        "designType": "Simulation",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": null,
+        "designDetails": "The study uses a simulation-based approach to design and test the cryptographic mechanism. It does not involve a control group, randomization, or blinding as it is focused on the development and performance evaluation of an algorithm."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Data Collection and Processing",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Collect data from the medical edge AI network, including electronic health records (EHRs) and real-time patient monitoring data.",
+              "inputs": null,
+              "outputs": "Dataset for analysis",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Use an autoencoder neural network to identify and eliminate malicious data entries by comparing new data with learned patterns.",
+              "inputs": "Collected dataset",
+              "outputs": "Processed and cleaned dataset",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "Data is collected from an edge AI network comprising sensors and edge-computing devices. An autoencoder neural network is used to identify and eliminate malicious data entries."
+        },
+        {
+          "procedureName": "Cryptography",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Optimize the initial parameters of Diffie-Hellman key exchange using Ant Lion Optimization.",
+              "inputs": "Processed dataset",
+              "outputs": "Optimized parameters for key exchange",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Generate a shared secret key using the Diffie-Hellman approach with optimized parameters.",
+              "inputs": "Optimized parameters",
+              "outputs": "Shared secret key",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Encrypt the data using the Twofish algorithm with the shared secret key.",
+              "inputs": "Shared secret key and processed dataset",
+              "outputs": "Encrypted data",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The processed data is encrypted using the proposed ALO-DHT cryptographic algorithm to ensure privacy and security during transmission."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "StatisticalAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": "Ant Lion Optimization, Diffie-Hellman key exchange, Twofish algorithm",
+        "softwareDetails": "Matlab",
+        "parameterSettings": null,
+        "dataPreprocessingSteps": "Use of autoencoder neural network for identifying and eliminating malicious data entries.",
+        "summary": "The study's data analysis involves comparing the performance of the proposed ALO-DHT model with conventional models in terms of accuracy, precision, recall, F1 score, time consumption, delay, and energy consumption."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "Graph",
+        "visualizationType": "Line charts and bar graphs",
+        "reportingStandard": null,
+        "summary": "The proposed ALO-DHT model demonstrated high accuracy, precision, recall, and F1 score, along with lower time consumption, delay, and energy consumption compared to conventional models."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "Not specified",
+        "dataRepository": null,
+        "codeAvailabilityStatement": "Not specified",
+        "codeRepository": null,
+        "protocolAvailability": "Not specified",
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.85,
+      "paper": "e49fe22e607e44deae95cd4dfdc36ed5",
+      "researchProblem": "c7911836f1a54ab7b543524e9f162815"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "0bf4e879c2564a71806f26af19f2f435",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "af4b5889f93e4c8baf9183e4f537908a"
+      ]
+    }
+  ]
+}

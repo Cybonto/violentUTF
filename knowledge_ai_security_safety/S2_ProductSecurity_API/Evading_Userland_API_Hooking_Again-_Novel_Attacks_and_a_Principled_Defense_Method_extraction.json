@@ -1,0 +1,367 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "d926face5cb24f0da26ff004f6ef7a8f",
+      "title": "Evading Userland API Hooking, Again: Novel Attacks and a Principled Defense Method",
+      "authors": [
+        {
+          "name": "C Assaiante"
+        },
+        {
+          "name": "S Nicchi"
+        },
+        {
+          "name": "DC D'Elia…"
+        }
+      ],
+      "abstract": "Monitoring how a program utilizes userland APIs is behind much dependability and security research. To intercept and study their invocations, the established practice targets the prologue of API implementations for inserting hooks. This paper questions the validity of this design for security uses by examining completeness and correctness attacks to it. We first show how evasions that jump across the hook instrumentation are practical and can reach places much deeper than those we currently find in executables in the wild. Next, we propose and demonstrate TOCTTOU attacks that lead monitoring systems to observe false indicators for the argument values that a program uses for API calls. To mitigate both threats, we design a static analysis to identify vantage points for effective hook placement in API code, supporting both reliable call recording and accurate argument extraction. We use this analysis to implement an open-source prototype API monitor, Toxotidae, that we evaluate against adversarial and benign executables for Windows.",
+      "doi": "10.1007/978-3-031-64171-8_8",
+      "publicationDate": "2024",
+      "journal": "… Conference on Detection …, 2024",
+      "volume": "1",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_API/Evading Userland API Hooking, Again- Novel Attacks and a Principled Defense Method.pdf",
+      "fileUrl": "https://link.springer.com/chapter/10.1007/978-3-031-64171-8_8",
+      "extractionDate": "2025-04-30T22:24:16.296131",
+      "extractionConfidenceScore": 0.8326
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "4d36ae14352b4da59779c5b61fe1874e",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Security Research; API Monitoring; Userland API Hooking",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "55f887d68b5e4e48b0c506921aed5fa2",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "8ced762ca5c84fc3b714ddbc3c6f48f1",
+      "problemStatement": "The research addresses the problem of evading userland API hooking by examining the completeness and correctness attacks on current API monitoring systems, and proposing a principled defense method to mitigate these threats.",
+      "problemScope": "The scope includes the analysis of API call obfuscation techniques, the feasibility of TOCTTOU attacks within userland, and the development of a static analysis method for effective hook placement in API code to ensure reliable call recording and accurate argument extraction.",
+      "problemType": "DesignProblem",
+      "problemImportance": "This problem is critical for the dependability and security of systems that monitor API usage, as current practices are vulnerable to evasion techniques that can compromise the completeness and correctness of API call tracing.",
+      "businessRelevance": "Solving this problem has significant implications for cybersecurity and anti-malware industries, as it enhances the ability to detect and prevent malicious activities by ensuring more robust monitoring of API calls.",
+      "extractionConfidence": 0.9,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "b8fd1eeadc504f6b870d08ec209bb991",
+      "gapDescription": "Current API monitoring systems assume API calls to follow the calling convention of the target platform, which affects the completeness and correctness of the tracing if adversarial code invokes APIs in unexpected ways.",
+      "relatedDomain": "API monitoring and security",
+      "gapSignificance": "Understanding and mitigating adversarial techniques that exploit the assumptions of API call conventions is crucial for improving the reliability and security of API monitoring systems.",
+      "extractionConfidence": 0.9,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    },
+    {
+      "internal_id": "9cba73f5bdfb4aeb90f11dd1b5b4bbfb",
+      "gapDescription": "Prior research on stolen code attacks is limited to a few instructions, and the potential extent of such attacks is not well understood.",
+      "relatedDomain": "Malware analysis and API security",
+      "gapSignificance": "A deeper understanding of stolen code attacks is necessary to design more robust defenses against malware that employs such techniques.",
+      "extractionConfidence": 0.8,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    },
+    {
+      "internal_id": "03f018be239f485797075b7324cd7176",
+      "gapDescription": "The feasibility of TOCTTOU attacks on userland Windows APIs is unexplored, particularly in providing fake indicators to monitoring systems.",
+      "relatedDomain": "API security and correctness monitoring",
+      "gapSignificance": "Investigating TOCTTOU attacks within userland is essential to develop monitoring systems that can accurately log API calls and their arguments, even in the presence of such attacks.",
+      "extractionConfidence": 0.85,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    },
+    {
+      "internal_id": "55f8c6c9b24040e78496cbc758ea6e09",
+      "gapDescription": "There is a lack of program analysis techniques that can track the propagation and life span of parameter values throughout the locations in use to a function.",
+      "relatedDomain": "Program analysis and software security",
+      "gapSignificance": "Developing such techniques would enable more accurate and reliable API monitoring, which is critical for security applications.",
+      "extractionConfidence": 0.75,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "e0c692e52e8746d28db74646e7f7329d",
+      "questionText": "How can evasions that jump across the hook instrumentation be practical and reach places much deeper than those currently found in executables in the wild?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Evasion techniques",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Depth of reachable places",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1",
+      "addressesGap": "b8fd1eeadc504f6b870d08ec209bb991"
+    },
+    {
+      "internal_id": "0c533c47e0234896ae5a667526423684",
+      "questionText": "Are current API monitoring systems vulnerable to TOCTTOU attacks that lead monitoring systems to observe false indicators for the argument values that a program uses for API calls?",
+      "questionType": "Confirmatory",
+      "relatedVariables": [
+        {
+          "variableName": "Vulnerability of API monitoring systems",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "TOCTTOU attacks",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1",
+      "addressesGap": "b8fd1eeadc504f6b870d08ec209bb991"
+    },
+    {
+      "internal_id": "638349bbbc23431fa9ca06b3e6e4be7e",
+      "questionText": "Can a static analysis identify vantage points for effective hook placement in API code to support both reliable call recording and accurate argument extraction?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "Static analysis",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Effective hook placement",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1",
+      "addressesGap": "b8fd1eeadc504f6b870d08ec209bb991"
+    },
+    {
+      "internal_id": "7519bf0c87d7491d89bcce7c91bcfe5d",
+      "questionText": "How effective is the proposed static analysis in identifying vantage points for hook placement against adversarial and benign executables for Windows?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Effectiveness of static analysis",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Adversarial and benign executables",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1",
+      "addressesGap": "b8fd1eeadc504f6b870d08ec209bb991"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "8b9e44d396094d22bc559c5f4a17d96f",
+      "challengeDescription": "Determining the deepest point(s) in the control-flow graph of the API where one can place hooks and still be able to determine not only that an API call took place, but also which were the parameters supplied for it.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    },
+    {
+      "internal_id": "4cdc7e17e2e84c9e80fd58d20de80e99",
+      "challengeDescription": "Devising a data-flow analysis that can trace parameter value propagation from the entry point of the API, considering how the values they contain flow through API code and where they end up stored.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    },
+    {
+      "internal_id": "c43e9a53b3204977a79a0c36df4b9e1a",
+      "challengeDescription": "Countering completeness and correctness attacks such as stolen code and TOCTTOU attacks, which exploit the weaknesses of current API monitoring systems.",
+      "challengeType": "SecurityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    },
+    {
+      "internal_id": "d454c7d27e8a4a08b0301c127abe140f",
+      "challengeDescription": "Implementing a reliable API hooking system that can effectively trace API call parameter values while overcoming the limitations of current on-entry hooking designs.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    },
+    {
+      "internal_id": "8e3878871d59490bbace9647fcf84464",
+      "challengeDescription": "Identifying live copies of argument values at each instruction in API code to provide sufficient information for an API monitoring implementation to reliably trace API call parameter values.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "relatedProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "c2629e43bad044d28677f169bdc3aa0b",
+      "limitationDescription": "Imperfections in CFG reconstruction, modeling of instruction effects, or incomplete PDB files may lead to missed or incorrectly modeled locations.",
+      "limitationType": "ValidityThreat",
+      "impactOnFindings": "May affect the accuracy of static analysis and the identification of vulnerable locations for TOCTTOU attacks.",
+      "businessConstraints": "Could impact the reliability of the defense method in practical security applications, potentially requiring additional resources for validation and testing.",
+      "extractionConfidence": 0.9,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "limitedFramework": "f29cc2b3df684064b3de8c2a29564ebd"
+    },
+    {
+      "internal_id": "8bdbec4f315d478489bca239e78b6003",
+      "limitationDescription": "Exclusion of complete code copies from stolen code attacks, considered inconvenient for an attacker, may not account for all possible attack scenarios.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "May underestimate the potential of stolen code attacks and the effectiveness of the proposed defense.",
+      "businessConstraints": "Could lead to overestimating the security provided by the defense method in real-world applications.",
+      "extractionConfidence": 0.85,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "limitedFramework": "f29cc2b3df684064b3de8c2a29564ebd"
+    },
+    {
+      "internal_id": "3c02247d50a64958a8b8bbffbc8d6b4f",
+      "limitationDescription": "The TOCTTOU attack's feasibility and scalability may require more evaluation and calibration for practical deployment by threat actors.",
+      "limitationType": "GeneralizabilityIssue",
+      "impactOnFindings": "The generalizability of the TOCTTOU attack findings may be limited, affecting the perceived threat level.",
+      "businessConstraints": "May influence the prioritization of defense mechanisms against TOCTTOU attacks in business settings.",
+      "extractionConfidence": 0.8,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "limitedFramework": "f29cc2b3df684064b3de8c2a29564ebd"
+    },
+    {
+      "internal_id": "f1d57f2c96324b739f4c1ab69b20adc1",
+      "limitationDescription": "The static analysis may not model partial uses of argument locations correctly, leading to inconsistencies in hook retrieval of correct values.",
+      "limitationType": "MeasurementError",
+      "impactOnFindings": "Could affect the reported accuracy of the Toxotidae system in retrieving argument values.",
+      "businessConstraints": "Might necessitate additional measures or tools to ensure accurate argument value retrieval in practice.",
+      "extractionConfidence": 0.9,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "limitedFramework": "f29cc2b3df684064b3de8c2a29564ebd"
+    },
+    {
+      "internal_id": "e825cbdbda0745ab9da8326e84793df6",
+      "limitationDescription": "The research does not cover the scenario where an API monitoring solution may re-inspect the initial storage of parameters upon API return, potentially exposing attacks.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "May not fully account for all possible defensive measures against TOCTTOU attacks.",
+      "businessConstraints": "Could lead to a false sense of security if monitoring solutions in use re-inspect parameters upon API return.",
+      "extractionConfidence": 0.85,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "limitedFramework": "f29cc2b3df684064b3de8c2a29564ebd"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "f29cc2b3df684064b3de8c2a29564ebd",
+      "name": "Static Analysis for Effective Hook Placement in API Code",
+      "description": "The study presents a methodological framework for identifying vantage points for effective hook placement in API code to counteract completeness and correctness attacks on userland API hooking. The framework involves a static program analysis technique that tracks how argument values flow through the storage locations in use to API code, with the goal of intercepting call arguments right before API code uses them. This information guides the insertion of deep hooks in a principled way that effectively counters both types of attacks. The framework also includes the development of an open-source prototype API monitor, Toxotidae, which is evaluated against adversarial and benign executables for Windows.",
+      "studyDesign": {
+        "designType": "Observational",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study uses an observational design to examine the behavior of programs utilizing userland APIs and to propose a static analysis technique for effective hook placement. The design is cross-sectional as it analyzes the current state of API hooking vulnerabilities and defenses."
+      },
+      "procedures": [
+        {
+          "procedureName": "Static Program Analysis",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Construct the control-flow graph (CFG) of the API using disassembly tools.",
+              "inputs": "API binary code",
+              "outputs": "Control-flow graph (CFG)"
+            },
+            {
+              "stepNumber": 2,
+              "description": "Perform data-flow analysis to trace parameter value propagation from the entry point of the API.",
+              "inputs": "CFG",
+              "outputs": "Data-flow analysis results"
+            },
+            {
+              "stepNumber": 3,
+              "description": "Identify live copies of argument values at each instruction in API code.",
+              "inputs": "Data-flow analysis results",
+              "outputs": "Locations of live argument value copies"
+            },
+            {
+              "stepNumber": 4,
+              "description": "Determine the most convenient places for hook insertion using dominator information on the CFG.",
+              "inputs": "Locations of live argument value copies",
+              "outputs": "Program points for hook insertion"
+            }
+          ],
+          "procedureDescription": "A binary-level static analysis to track the propagation of API call argument values through the control-flow graph (CFG) of the API, identifying the deepest points in the CFG where hooks can be placed to reliably trace API call parameter values."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "StatisticalAnalysis",
+        "statisticalTests": "Geometric mean, standard deviation, and success rate calculations were used to analyze the effectiveness and performance of the proposed defense.",
+        "algorithmsUsed": "Static program analysis algorithms for tracking argument value propagation and identifying live copies.",
+        "softwareDetails": "IDA Pro, Capstone framework, Pin tool",
+        "parameterSettings": "Specific parameters for the static analysis and dynamic binary instrumentation were set based on the requirements of the study.",
+        "dataPreprocessingSteps": "Preparation of adversarial and benign executables, and setup of the test environment for evaluation.",
+        "summary": "The data analysis involves evaluating the effectiveness of the proposed static analysis technique and the Toxotidae system against known attacks and benign executables. The analysis includes measuring the depth of hook placement, the number of hooks needed, the accuracy of argument value retrieval, and the performance overhead."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "The artifacts, including the Toxotidae prototype, are available on GitHub.",
+        "dataRepository": "https://github.com/cristianassaiante/toxotidae",
+        "codeAvailabilityStatement": "The source code for the Toxotidae prototype is openly available.",
+        "codeRepository": "https://github.com/cristianassaiante/toxotidae",
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "d926face5cb24f0da26ff004f6ef7a8f",
+      "researchProblem": "8ced762ca5c84fc3b714ddbc3c6f48f1"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "60c15e4907c54fde9a4a3ef03436b11f",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "f29cc2b3df684064b3de8c2a29564ebd"
+      ]
+    }
+  ]
+}

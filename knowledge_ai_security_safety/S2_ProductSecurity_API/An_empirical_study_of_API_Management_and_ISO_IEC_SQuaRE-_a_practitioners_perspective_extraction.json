@@ -1,0 +1,487 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "c357c37d3f814aa3b42e909902f4a61c",
+      "title": "An empirical study of API Management and ISO/IEC SQuaRE: a practitioners' perspective",
+      "authors": [
+        {
+          "name": "UNLu"
+        }
+      ],
+      "abstract": "",
+      "doi": "",
+      "publicationDate": null,
+      "journal": "perspective\n\nEder dos Santos",
+      "volume": "1",
+      "issue": "",
+      "pages": "2",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_API/An empirical study of API Management and ISO_IEC SQuaRE- a practitioners’ perspective.pdf",
+      "fileUrl": "",
+      "extractionDate": "2025-04-30T22:22:45.664982",
+      "extractionConfidenceScore": 0.8276
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "5f26c1e4807a43b1a61aa7c7e95dec77",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Software Engineering",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [
+        {
+          "name": "Santa Cruz province, Argentina",
+          "location": null
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "a0030e3312c94b29bf75bc488ca8621e",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "ISO/IEC 25010",
+          "relevance": "Used to identify the relationship between the quality characteristics established in the quality model and the API management main functions/capabilities."
+        }
+      ],
+      "philosophicalParadigm": "Not Specified",
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "e6ee21009f6a40f983d6689b962ca26d",
+      "problemStatement": "The research addresses the challenges in API management activities and the perception of software quality characteristics related to API management platforms by practitioners in the software industry.",
+      "problemScope": "The scope includes the relationship between quality characteristics established in the ISO/IEC 25010 standard and the main functions/capabilities of API management platforms.",
+      "problemType": "EmpiricalProblem",
+      "problemImportance": "Understanding practitioners' perceptions of quality characteristics is crucial for defining benchmarks and providing insights into emerging trends in software product lifecycle management.",
+      "businessRelevance": "The study relates to the API Economy and the need for organizations to effectively manage their APIs to deliver value and expand their business models.",
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "e11ff5db41d04d4fbb5a49caa511ac11",
+      "gapDescription": "Lack of evidence pertaining to investigations specifically targeting the perceived quality of stakeholders in the API industry.",
+      "relatedDomain": "API Management and Software Quality Assessment",
+      "gapSignificance": "Understanding stakeholders' perceptions of quality is crucial for improving API management platforms and aligning them with industry standards.",
+      "extractionConfidence": 0.9,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "relatedProblem": "e6ee21009f6a40f983d6689b962ca26d"
+    },
+    {
+      "internal_id": "c56f016f5f1b4a7eae29f159061024bd",
+      "gapDescription": "Insufficient research on the relationship between the quality characteristics established in the ISO/IEC 25010 standard and the main functions/capabilities of API management.",
+      "relatedDomain": "Software Engineering and API Management",
+      "gapSignificance": "Identifying this relationship is important for defining benchmarks and providing insights into emerging trends in software quality.",
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "relatedProblem": "e6ee21009f6a40f983d6689b962ca26d"
+    },
+    {
+      "internal_id": "6bf8667a8ecd4888a2c39c555bc95e86",
+      "gapDescription": "Limited generalizability of the study findings due to the small sample size and exploratory nature of the pilot experiment.",
+      "relatedDomain": "Empirical Software Engineering Research",
+      "gapSignificance": "Expanding the sample size and diversity is necessary to enhance the validity and applicability of the research outcomes.",
+      "extractionConfidence": 0.7,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "relatedProblem": "e6ee21009f6a40f983d6689b962ca26d"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "b0b969ff42004273b9f56de58c835b42",
+      "questionText": "How do practitioners in the software industry perceive quality characteristics related to common functions and capabilities of API management platforms?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Perception of quality characteristics",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "API management platform functions and capabilities",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "relatedProblem": "e6ee21009f6a40f983d6689b962ca26d",
+      "addressesGap": "e11ff5db41d04d4fbb5a49caa511ac11"
+    },
+    {
+      "internal_id": "9a0d0de4ca1f47b887898ad03e3754fd",
+      "questionText": "What is the relationship between the quality characteristics established in the ISO/IEC 25010 standard and the API management main functions/capabilities?",
+      "questionType": "Correlational",
+      "relatedVariables": [
+        {
+          "variableName": "ISO/IEC 25010 quality characteristics",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "API management main functions/capabilities",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "relatedProblem": "e6ee21009f6a40f983d6689b962ca26d",
+      "addressesGap": "e11ff5db41d04d4fbb5a49caa511ac11"
+    },
+    {
+      "internal_id": "5d8e007042fe4dde814540d18325c68f",
+      "questionText": "Which quality characteristics are perceived as related to API Management capabilities according to the opinions of the participants?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Perceived relatedness of quality characteristics",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "API Management capabilities",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "relatedProblem": "e6ee21009f6a40f983d6689b962ca26d",
+      "addressesGap": "e11ff5db41d04d4fbb5a49caa511ac11"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "c0bd85a0f64f4e2da7594baf1cdd59dd",
+      "directionDescription": "Increase sample size to enhance the generalizability of the results and improve the representativeness of the sample.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "addressesGap": "e11ff5db41d04d4fbb5a49caa511ac11",
+      "arisesFromLimitation": "9063a25d9fa5448988e25a9207439e9f",
+      "extendsPotentialApplication": "cdbbb52964854189b96d89ee8e680f46"
+    },
+    {
+      "internal_id": "548ae4e6a5254dfe81c6eefc77063786",
+      "directionDescription": "Explore additional variables that may influence the observed patterns to gain a more comprehensive understanding.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "addressesGap": "e11ff5db41d04d4fbb5a49caa511ac11",
+      "arisesFromLimitation": "9063a25d9fa5448988e25a9207439e9f",
+      "extendsPotentialApplication": "cdbbb52964854189b96d89ee8e680f46"
+    },
+    {
+      "internal_id": "05f8dd54a85e417484b5b856480dde89",
+      "directionDescription": "Conduct additional statistical analysis through multivariate analysis and other techniques.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "addressesGap": "e11ff5db41d04d4fbb5a49caa511ac11",
+      "arisesFromLimitation": "9063a25d9fa5448988e25a9207439e9f",
+      "extendsPotentialApplication": "cdbbb52964854189b96d89ee8e680f46"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "cdbbb52964854189b96d89ee8e680f46",
+      "applicationDescription": "Understanding the relationships between API Management capabilities and ISO 25010 quality characteristics provides valuable insights into the design, development, and enhancement of API management platforms as software products.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "buildOnMethodologicalFrameworks": [
+        "522806584a5646b594e63885de58480f"
+      ]
+    },
+    {
+      "internal_id": "b4cc8a9fc7434d3c906132e366af9154",
+      "applicationDescription": "The study's insights on the associations between capabilities and ISO 25010's quality characteristics can guide platform providers in making informed decisions to improve specific aspects of their API management offerings.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "buildOnMethodologicalFrameworks": [
+        "522806584a5646b594e63885de58480f"
+      ]
+    },
+    {
+      "internal_id": "56d689db3adb44e1857643f322179a9d",
+      "applicationDescription": "The study's results can help API management platform users, developers, and decision-makers make informed choices when selecting or customizing platforms to align with their specific needs and quality requirements.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "buildOnMethodologicalFrameworks": [
+        "522806584a5646b594e63885de58480f"
+      ]
+    },
+    {
+      "internal_id": "a64b0bb922e941778f29993566c5fb2e",
+      "applicationDescription": "By addressing the identified gaps and weaknesses, developers can work towards creating more robust, efficient, and user-friendly API management platforms that meet users' expectations and industry standards.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "buildOnMethodologicalFrameworks": [
+        "522806584a5646b594e63885de58480f"
+      ]
+    },
+    {
+      "internal_id": "cc4ab578f79044febcae0fd37d07437c",
+      "applicationDescription": "The insights gained from this study offer valuable guidance to API management platform providers, developers, and users, promoting the continuous improvement and adoption of high-quality API management software products that meet the evolving needs of the software industry.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Ready for Deployment",
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "buildOnMethodologicalFrameworks": [
+        "522806584a5646b594e63885de58480f"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [],
+  "sciknow-25x1-methodological-challenges": [
+    {
+      "internal_id": "fac9fb300469483c859a5a245f05f4ad",
+      "challengeDescription": "The survey utilized a non-probabilistic sampling scheme, specifically convenience sampling, which can limit the generalizability of the findings and lead to inaccurate conclusions about the broader population.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": "Utilizing personal networks, constructing a sample based on convenience, authority, and credibility.",
+      "extractionConfidence": 0.9,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "encounteredInFramework": "522806584a5646b594e63885de58480f",
+      "resultsInLimitation": "9063a25d9fa5448988e25a9207439e9f"
+    },
+    {
+      "internal_id": "737a854318b84128be69d66fa8bc61a3",
+      "challengeDescription": "The study may lack sufficient statistical power to detect meaningful relationships or differences, which can increase the likelihood of Type II errors (false negatives) and limit the ability to draw accurate conclusions from the data.",
+      "researchPhase": "Analysis",
+      "mitigationStrategy": "Designing a brief and concise survey, carefully considering the type and number of instructions provided.",
+      "extractionConfidence": 0.8,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "encounteredInFramework": "522806584a5646b594e63885de58480f",
+      "resultsInLimitation": "9063a25d9fa5448988e25a9207439e9f"
+    },
+    {
+      "internal_id": "31663d51da174ff3b4d9ecb52a098ed9",
+      "challengeDescription": "The small sample size of only six participants may limit the generalizability of the findings.",
+      "researchPhase": "Validation",
+      "mitigationStrategy": "The study's design includes mandatory radio button selections to reduce potential misinterpretation or inaccurate responses.",
+      "extractionConfidence": 0.95,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "encounteredInFramework": "522806584a5646b594e63885de58480f",
+      "resultsInLimitation": "9063a25d9fa5448988e25a9207439e9f"
+    },
+    {
+      "internal_id": "2312c446fa9f492d8f192afe46d3109d",
+      "challengeDescription": "The sample consisted of a reduced group of participants, which may not be representative of the broader population of professionals in the IT-related industry.",
+      "researchPhase": "DataCollection",
+      "mitigationStrategy": null,
+      "extractionConfidence": 0.85,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "encounteredInFramework": "522806584a5646b594e63885de58480f",
+      "resultsInLimitation": "9063a25d9fa5448988e25a9207439e9f"
+    },
+    {
+      "internal_id": "2207343797234be58d858a4386c04f52",
+      "challengeDescription": "The pilot nature of the experiment may not provide definitive conclusions.",
+      "researchPhase": "Interpretation",
+      "mitigationStrategy": null,
+      "extractionConfidence": 0.7,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "encounteredInFramework": "522806584a5646b594e63885de58480f",
+      "resultsInLimitation": "9063a25d9fa5448988e25a9207439e9f"
+    }
+  ],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [
+    {
+      "internal_id": "9063a25d9fa5448988e25a9207439e9f",
+      "limitationDescription": "The study involved only six participants, which may limit the generalizability of the findings.",
+      "limitationType": "SampleSizeLimitation",
+      "impactOnFindings": "May limit the generalizability of the findings and lead to inaccurate conclusions about the broader population.",
+      "businessConstraints": "The findings may not be applicable to a broader range of professional settings or may not reflect the diversity of the IT industry.",
+      "extractionConfidence": 0.9,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "limitedFramework": "522806584a5646b594e63885de58480f"
+    },
+    {
+      "internal_id": "a3f534f26ae2495a8ef3bf511979d43b",
+      "limitationDescription": "The sample consisted of a reduced group of participants, which may not be representative of the broader population of professionals in the IT-related industry.",
+      "limitationType": "GeneralizabilityIssue",
+      "impactOnFindings": "May affect the representativeness of the sample and the applicability of the results to a wider audience.",
+      "businessConstraints": "Could lead to the development of API management platforms that do not cater to the needs of a diverse user base.",
+      "extractionConfidence": 0.9,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "limitedFramework": "522806584a5646b594e63885de58480f"
+    },
+    {
+      "internal_id": "301a9c74fc034e678b163ae7183403a3",
+      "limitationDescription": "The study aimed to gather preliminary insights and may not provide definitive conclusions.",
+      "limitationType": "ScopeLimitation",
+      "impactOnFindings": "The findings are preliminary and may not provide a comprehensive understanding of the subject matter.",
+      "businessConstraints": "May result in a lack of actionable data for businesses looking to make informed decisions based on the study.",
+      "extractionConfidence": 0.85,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "limitedFramework": "522806584a5646b594e63885de58480f"
+    },
+    {
+      "internal_id": "60f0cfc7c2fb4bd09f8c3ae138e90c21",
+      "limitationDescription": "Sampling Bias can limit the generalizability of the findings and lead to inaccurate conclusions about the broader population.",
+      "limitationType": "SelectionBias",
+      "impactOnFindings": "Could lead to biased results that do not accurately reflect the views of the target population.",
+      "businessConstraints": "May cause businesses to make decisions based on skewed data, potentially leading to ineffective strategies.",
+      "extractionConfidence": 0.85,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "limitedFramework": "522806584a5646b594e63885de58480f"
+    },
+    {
+      "internal_id": "6be17688fdab436ba1428317b160b4c3",
+      "limitationDescription": "Limited Statistical Power: the study may lack sufficient statistical power to detect meaningful relationships or differences, which can increase the likelihood of Type II errors (false negatives) and limit the ability to draw accurate conclusions from the data.",
+      "limitationType": "ValidityThreat",
+      "impactOnFindings": "Increases the risk of not detecting significant effects or differences that are actually present, affecting the validity of the study's conclusions.",
+      "businessConstraints": "Could result in overlooking important factors that are critical for the success of API management platforms in business environments.",
+      "extractionConfidence": 0.85,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "limitedFramework": "522806584a5646b594e63885de58480f"
+    }
+  ],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "522806584a5646b594e63885de58480f",
+      "name": "Survey-based Exploratory Study on API Management and ISO/IEC SQuaRE",
+      "description": "The study employs an exploratory survey design to gather insights into API management practices and assess the quality characteristics of API management platforms from the perspective of software industry practitioners. The survey incorporates the ISO/IEC 25010 standard's quality characteristics and a set of API management capabilities identified in the literature. The methodology includes non-probabilistic convenience sampling, online data collection, and a structured questionnaire with both open-ended and closed-ended questions.",
+      "studyDesign": {
+        "designType": "Survey",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is designed as an exploratory survey without a control group or randomization. It is cross-sectional as it captures data at a single point in time. The survey aims to establish a preliminary understanding of the subject matter, which will inform future, more specific research."
+      },
+      "populationAndSampling": {
+        "targetPopulation": "Professionals based in the province of Santa Cruz, Argentina, with an academic background in computer science and currently working in the area, both in the public and private spheres.",
+        "sampleSize": 6,
+        "samplingMethod": "Convenience",
+        "inclusionCriteria": "Participants are selected based on their accessibility, expertise, and relevance to the study's focus on API management.",
+        "exclusionCriteria": null
+      },
+      "variables": [
+        {
+          "variableName": "Quality Characteristics",
+          "variableRole": "Independent",
+          "conceptualDefinition": "Characteristics defined by the ISO/IEC 25010 standard, which include Functional Suitability, Performance Efficiency, Compatibility, Usability, Reliability, Security, Maintainability, and Portability.",
+          "operationalization": "Assessment of the extent to which each API management function aligns with each quality characteristic through survey responses.",
+          "measurementScale": "Nominal",
+          "units": "Yes/No (Related/Not related) options"
+        },
+        {
+          "variableName": "API Management Capabilities",
+          "variableRole": "Dependent",
+          "conceptualDefinition": "The set of 15 capabilities supported by API management platforms as identified in the literature.",
+          "operationalization": "Survey questions corresponding to each of the main API management capabilities, such as Authentication, Authorization, Identity mediation, etc.",
+          "measurementScale": "Nominal",
+          "units": "Multiple-choice options"
+        }
+      ],
+      "procedures": [
+        {
+          "procedureName": "Survey Administration",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Designing the survey questionnaire incorporating ISO/IEC 25010 quality characteristics and API management capabilities.",
+              "inputs": "ISO/IEC 25010 standard, literature on API management capabilities",
+              "outputs": "Survey questionnaire",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Distributing the online survey to the selected sample of professionals.",
+              "inputs": "Survey questionnaire",
+              "outputs": "Responses from participants",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Collecting and analyzing the survey responses to assess the alignment between API management functions and quality characteristics.",
+              "inputs": "Responses from participants",
+              "outputs": "Data for analysis",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves the design and distribution of an online survey to a convenience sample of professionals, followed by the collection and analysis of their responses."
+        }
+      ],
+      "dataCollection": {
+        "collectionMethod": "SurveyAdministration",
+        "instrumentDescription": "An online survey consisting of two main groups of prompts: open-ended questions for demographic data and closed-ended multiple-choice grid questions for assessing API management capabilities against ISO/IEC 25010 quality characteristics.",
+        "collectionSetting": "Online environment accessible to professionals in the province of Santa Cruz, Argentina.",
+        "collectionTimeframe": "Two weeks",
+        "dataRecordingFormat": "Digital responses collected via the online survey platform"
+      },
+      "dataAnalysis": {
+        "analysisApproach": null,
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The analysis involves summarizing the survey responses, particularly the alignment between API management capabilities and quality characteristics. Descriptive statistics and visualization techniques, such as 3D bar graphs with error bars and color scales, are used to present the findings."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "Graph",
+        "visualizationType": "3D bar graph",
+        "reportingStandard": null,
+        "summary": "The results are represented through descriptive statistics and visualizations, including 3D bar graphs and color scales. The findings provide preliminary insights into the perceived alignment of API management capabilities with quality characteristics."
+      },
+      "validationAndVerification": {
+        "validationTypes": [],
+        "validationProcedure": null,
+        "validationMetrics": null,
+        "validationResults": null,
+        "industryStandards": null
+      },
+      "ethicalConsiderations": {
+        "ethicsApprovalBody": null,
+        "approvalIdentifier": null,
+        "informedConsentProcedure": null,
+        "dataAnonymization": false,
+        "privacyMeasures": null
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": null,
+        "dataRepository": null,
+        "codeAvailabilityStatement": null,
+        "codeRepository": null,
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.85,
+      "paper": "c357c37d3f814aa3b42e909902f4a61c",
+      "researchProblem": "e6ee21009f6a40f983d6689b962ca26d"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "c156b8a169ff4afea727982339f0cfa1",
+      "itemName": "MaterialTool",
+      "itemType": null,
+      "identifier": null,
+      "specifications": null,
+      "roleInProcedure": null,
+      "extractionConfidence": 0.7,
+      "usedInFrameworks": [
+        "522806584a5646b594e63885de58480f"
+      ]
+    }
+  ]
+}

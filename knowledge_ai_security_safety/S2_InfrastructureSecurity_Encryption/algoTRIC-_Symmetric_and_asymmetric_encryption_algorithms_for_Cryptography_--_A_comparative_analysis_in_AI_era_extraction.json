@@ -1,0 +1,505 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "abb8af268db6484ca41007e6817646b9",
+      "title": "algoTRIC: Symmetric and asymmetric encryption algorithms for Cryptography--A comparative analysis in AI era",
+      "authors": [
+        {
+          "name": "N Kshetri"
+        },
+        {
+          "name": "MM Rahman"
+        },
+        {
+          "name": "MM Rana"
+        },
+        {
+          "name": "OF Osama…"
+        }
+      ],
+      "abstract": "The  increasing integration of artificial intelligence (AI) within cybersecurity has necessitated stronger encryption  methods  to  ensure  data  security.  This  paper  presents  a  comparative  analysis  of  symmetric  (SE)  and asymmetric  encryption  (AE)  algorithms,  focusing  on  their  role  in  securing  sensitive  information  in  AI-driven environments.  Through  an  in-depth  study  of  various  encryption  algorithms  such  as  AES,  RSA,  and  others,  this research  evaluates  the  efficiency,  complexity,  and  security  of  these  algorithms  within  modern  cybersecurity frameworks. Utilizing both qualitative and quantitative analysis, this research explores the historical evolution of encryption algorithms and their growing relevance in AI applications. The comparison of SE and AE algorithms focuses on key factors such as processing speed, scalability, and security resilience in the face of evolving threats. Special attention is given to how these algorithms are integrated into AI systems and how they manage the challenges posed by large-scale data processing in multi-agent environments. Our results highlight that while SE algorithms demonstrate high-speed performance and lower computational demands, AE algorithms provide superior security, particularly in scenarios requiring enhanced encryption for AI-based networks. The paper concludes by addressing the security concerns that encryption algorithms must tackle in the age of AI and outlines future research directions aimed at enhancing encryption techniques for cybersecurity.",
+      "doi": "",
+      "publicationDate": "2024",
+      "journal": "arXiv preprint arXiv …, 2024",
+      "volume": "2024",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S2_InfrastructureSecurity_Encryption/algoTRIC- Symmetric and asymmetric encryption algorithms for Cryptography -- A comparative analysis in AI era.pdf",
+      "fileUrl": "https://arxiv.org/abs/2412.15237",
+      "extractionDate": "2025-04-24T08:10:17.465981",
+      "extractionConfidenceScore": 0.7662
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "35a0025b9de24f4c9d4324b3491f918a",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cryptography, Artificial Intelligence",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "36cda922cdfa413e9837ff2050af2ead",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "abb8af268db6484ca41007e6817646b9"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "59953e5303cd490196db91ca51431ee9",
+      "problemStatement": "The research addresses the challenge of ensuring data security in AI-driven environments by evaluating and comparing the efficiency, complexity, and security resilience of symmetric and asymmetric encryption algorithms within modern cybersecurity frameworks.",
+      "problemScope": "The scope includes the analysis of various encryption algorithms, their integration into AI systems, and their performance in securing sensitive information against evolving cyber threats.",
+      "problemType": "ApplicationProblem",
+      "problemImportance": "The problem is significant due to the increasing integration of AI in cybersecurity, the growing number of data breaches, and the need for encryption methods that can withstand sophisticated cyberattacks and secure AI-based networks.",
+      "businessRelevance": "The research is relevant to businesses that rely on data security and encryption to protect sensitive information in the context of AI and cybersecurity, addressing market needs for robust encryption techniques.",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "03090a119fbc4f96a53fa829f3f1336a",
+      "gapDescription": "Vulnerabilities in AI models to adversarial attacks, which compromise the precision and resilience of systems intended to identify and counter cyber threats.",
+      "relatedDomain": "Cybersecurity and AI-driven encryption",
+      "gapSignificance": "Ensuring the resilience of AI-driven encryption systems against sophisticated cyberattacks is crucial for protecting sensitive information.",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    },
+    {
+      "internal_id": "838723c997d64cb495a63c247e2fed6f",
+      "gapDescription": "The need for ethical and legal frameworks to address privacy, transparency, and equality in the use of AI-driven encryption technologies.",
+      "relatedDomain": "Ethics and legality in AI-driven cybersecurity",
+      "gapSignificance": "To prevent AI-encrypted systems from compromising the security and confidentiality they are designed to protect, and to ensure fair distribution and use of these technologies.",
+      "extractionConfidence": 0.75,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    },
+    {
+      "internal_id": "7ff9638a483f45d391c0051ffe331354",
+      "gapDescription": "The challenge of integrating human intelligence with AI for decision-making in encryption and cybersecurity.",
+      "relatedDomain": "Human-AI interaction in cybersecurity",
+      "gapSignificance": "Human oversight may be necessary to guide AI algorithms and ensure the reliability and ethical use of AI in cybersecurity.",
+      "extractionConfidence": 0.7,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    },
+    {
+      "internal_id": "cc1e25eae95c4b4c8402619304a92166",
+      "gapDescription": "Research in adversarial resilience, quantum-resistant encryption, and ethical AI to establish a secure and flexible cybersecurity framework.",
+      "relatedDomain": "Advanced cybersecurity research",
+      "gapSignificance": "To mitigate new threats and protect sensitive data across various industries, it is essential to advance research in these areas.",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "37a7eab26f5f4827b15cb0ccc9815fe0",
+      "questionText": "How do symmetric and asymmetric encryption algorithms compare in terms of efficiency, complexity, and security within modern cybersecurity frameworks?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Symmetric encryption algorithms",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Asymmetric encryption algorithms",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Efficiency",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Complexity",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Security",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9",
+      "addressesGap": "03090a119fbc4f96a53fa829f3f1336a"
+    },
+    {
+      "internal_id": "63ccdf0bd5364210b96c253441548aba",
+      "questionText": "What are the key factors that influence the performance of encryption algorithms in AI-driven environments?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Processing speed",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Scalability",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Security resilience",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Encryption algorithms",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "AI-driven environments",
+          "variableRole": "Moderator"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9",
+      "addressesGap": "03090a119fbc4f96a53fa829f3f1336a"
+    },
+    {
+      "internal_id": "f8c24b47c7ab4e0d8c793dbbdcafcf4f",
+      "questionText": "How do encryption algorithms manage the challenges posed by large-scale data processing in multi-agent environments?",
+      "questionType": "Explanatory",
+      "relatedVariables": [
+        {
+          "variableName": "Encryption algorithms",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Large-scale data processing",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Multi-agent environments",
+          "variableRole": "Moderator"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9",
+      "addressesGap": "03090a119fbc4f96a53fa829f3f1336a"
+    },
+    {
+      "internal_id": "b78d267db531409d88a030af1cce1676",
+      "questionText": "What are the future research directions aimed at enhancing encryption techniques for cybersecurity in the age of AI?",
+      "questionType": "Theoretical",
+      "relatedVariables": [
+        {
+          "variableName": "Encryption techniques",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Cybersecurity",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "AI era",
+          "variableRole": "Moderator"
+        }
+      ],
+      "extractionConfidence": 0.75,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9",
+      "addressesGap": "03090a119fbc4f96a53fa829f3f1336a"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "89ee8b19c8b94a63b0b98758359925c6",
+      "directionDescription": "Further research in fields like adversarial resilience, quantum-resistant encryption, and ethical AI.",
+      "timeframe": "Long-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "addressesGap": "03090a119fbc4f96a53fa829f3f1336a",
+      "extendsPotentialApplication": "47a09982e9c24c5babeaa39e8c4d5c9f"
+    },
+    {
+      "internal_id": "c4d88d76831c47f1bef0edb53cc5f19d",
+      "directionDescription": "Development of strict governance structures and ethical standards for AI-encrypted systems.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "addressesGap": "03090a119fbc4f96a53fa829f3f1336a",
+      "extendsPotentialApplication": "47a09982e9c24c5babeaa39e8c4d5c9f"
+    },
+    {
+      "internal_id": "ca1371f5745a4a049e850e2dd620970f",
+      "directionDescription": "Interdisciplinary response to influence the future of cybersecurity responsibly.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "addressesGap": "03090a119fbc4f96a53fa829f3f1336a",
+      "extendsPotentialApplication": "47a09982e9c24c5babeaa39e8c4d5c9f"
+    },
+    {
+      "internal_id": "781327b6a3504092b4e902fa24090de2",
+      "directionDescription": "Cooperation between government, business, and academia to create ethical guidelines and legal frameworks for AI-enhanced encryption.",
+      "timeframe": "Medium-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.85,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "addressesGap": "03090a119fbc4f96a53fa829f3f1336a",
+      "extendsPotentialApplication": "47a09982e9c24c5babeaa39e8c4d5c9f"
+    },
+    {
+      "internal_id": "c1299818f9b540ac90d33bf7d638bd0a",
+      "directionDescription": "Proactive approach to the creation and management of AI-driven encryption systems.",
+      "timeframe": "Short-term",
+      "requiredResources": null,
+      "extractionConfidence": 0.85,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "addressesGap": "03090a119fbc4f96a53fa829f3f1336a",
+      "extendsPotentialApplication": "47a09982e9c24c5babeaa39e8c4d5c9f"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "47a09982e9c24c5babeaa39e8c4d5c9f",
+      "applicationDescription": "Real-time threat detection and flexible security mechanisms in digital environments using AI-driven encryption.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "buildOnMethodologicalFrameworks": [
+        "b1ebd473e47544e286e61cc7d9251290"
+      ]
+    },
+    {
+      "internal_id": "7129407fe2f44b36889c3d78bae02198",
+      "applicationDescription": "Safeguarding extremely sensitive information in vital sectors such as healthcare, banking, and national security with AI-driven encryption.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "buildOnMethodologicalFrameworks": [
+        "b1ebd473e47544e286e61cc7d9251290"
+      ]
+    },
+    {
+      "internal_id": "79fbccc51f8a472aa1d239033068926e",
+      "applicationDescription": "Homomorphic encryption and AI-enhanced algorithms for strengthening data security and enabling sophisticated calculations on encrypted data.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Proof of Concept",
+      "extractionConfidence": 0.7,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "buildOnMethodologicalFrameworks": [
+        "b1ebd473e47544e286e61cc7d9251290"
+      ]
+    },
+    {
+      "internal_id": "050d60405e18451792a3528422cb91cb",
+      "applicationDescription": "Adaptive encryption key management to provide a strong defense against complex cyberattacks.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Prototype",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "buildOnMethodologicalFrameworks": [
+        "b1ebd473e47544e286e61cc7d9251290"
+      ]
+    },
+    {
+      "internal_id": "6c150eac1fce406d97d833918d95e2df",
+      "applicationDescription": "Development of quantum-resistant encryption to reduce new dangers and protect sensitive data across various industries.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.6,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "buildOnMethodologicalFrameworks": [
+        "b1ebd473e47544e286e61cc7d9251290"
+      ]
+    },
+    {
+      "internal_id": "6b039c4dbec84735994a3b8548358d97",
+      "applicationDescription": "Establishing strict governance structures and ethical standards to prevent AI-encrypted systems from jeopardizing security and confidentiality.",
+      "targetSector": "Government",
+      "implementationReadiness": "Not specified",
+      "extractionConfidence": 0.7,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "buildOnMethodologicalFrameworks": [
+        "b1ebd473e47544e286e61cc7d9251290"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "d1990fd9364f42b19cc19466fa460930",
+      "challengeDescription": "The increasing complexity and volume of contemporary data environments pose a challenge for conventional encryption methods to identify anomalies and threats effectively.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    },
+    {
+      "internal_id": "53f5499630e54b8595513f5d25bce7bd",
+      "challengeDescription": "The need for encryption algorithms to evolve and adapt in real-time to swiftly changing cyber threats in AI-driven environments.",
+      "challengeType": "EmergentBehavior",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    },
+    {
+      "internal_id": "bf1c9561595242acb5a106bc2e452234",
+      "challengeDescription": "Ensuring the security resilience of encryption algorithms in the face of evolving cyber threats, particularly in AI and Large Language Models (LLMs) age.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    },
+    {
+      "internal_id": "eec1147abb754565bddf78a8c3c17523",
+      "challengeDescription": "The integration of AI into cybersecurity and encryption requires the development of new frameworks and tools to protect against complex cyberattacks.",
+      "challengeType": "MultidisciplinaryChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.7,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    },
+    {
+      "internal_id": "604e0a706aee4e1aae0cdb3dacffa950",
+      "challengeDescription": "The necessity for encryption techniques to be scalable and manage large-scale data processing in multi-agent environments.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    },
+    {
+      "internal_id": "5e1433d497fc4ad0a8c1f65044ef234d",
+      "challengeDescription": "The lack of foundational theories or models that can fully explain or predict the behavior of encryption algorithms in the context of AI and cybersecurity.",
+      "challengeType": "TheoryGap",
+      "severity": "Fundamental",
+      "extractionConfidence": 0.7,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "relatedProblem": "59953e5303cd490196db91ca51431ee9"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "f5d6dba32549452abb7976abc4152c4e",
+      "challengeDescription": "Adversarial attacks targeting vulnerabilities in AI models using misleading inputs, compromising the precision and resilience of systems intended to identify and counter cyber threats.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Adversarial resilience of AI models",
+      "extractionConfidence": 0.8,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "encounteredInFramework": "b1ebd473e47544e286e61cc7d9251290",
+      "relatedApplication": "47a09982e9c24c5babeaa39e8c4d5c9f"
+    },
+    {
+      "internal_id": "3fc8db2257814935a552ce3b7c8072a4",
+      "challengeDescription": "Ensuring the fair distribution of AI-driven encryption technologies across various international businesses with varying levels of technological resources and regulatory compliance skills.",
+      "resourceConstraint": "Multiple",
+      "technicalHurdle": "Scalability and accessibility of AI-driven encryption technologies",
+      "extractionConfidence": 0.7,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "encounteredInFramework": "b1ebd473e47544e286e61cc7d9251290",
+      "relatedApplication": "47a09982e9c24c5babeaa39e8c4d5c9f"
+    },
+    {
+      "internal_id": "d03c9793ef904e7ba402d0585a6e52c9",
+      "challengeDescription": "Establishing strict governance structures and ethical standards to prevent AI-encrypted systems from unintentionally jeopardizing security and confidentiality.",
+      "resourceConstraint": "Personnel",
+      "technicalHurdle": "Development of governance frameworks and ethical standards",
+      "extractionConfidence": 0.7,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "encounteredInFramework": "b1ebd473e47544e286e61cc7d9251290",
+      "relatedApplication": "47a09982e9c24c5babeaa39e8c4d5c9f"
+    },
+    {
+      "internal_id": "d69c41e1afb94a629126bb6e59e3c17e",
+      "challengeDescription": "Addressing ethical and legal issues such as surveillance, data privacy, and the potential misuse of AI-enhanced encryption for illegal data access.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Ethical and legal considerations in AI-enhanced encryption",
+      "extractionConfidence": 0.7,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "encounteredInFramework": "b1ebd473e47544e286e61cc7d9251290",
+      "relatedApplication": "47a09982e9c24c5babeaa39e8c4d5c9f"
+    }
+  ],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "b1ebd473e47544e286e61cc7d9251290",
+      "name": "Comparative Analysis of Encryption Algorithms in AI",
+      "description": "This study conducts a comparative analysis of symmetric and asymmetric encryption algorithms, assessing their efficiency, complexity, and security within AI-driven cybersecurity frameworks. It involves qualitative and quantitative analysis to explore the historical evolution of encryption algorithms and their application in AI. The study compares key factors such as processing speed, scalability, and security resilience against evolving threats, with a focus on integration into AI systems and large-scale data processing challenges.",
+      "studyDesign": {
+        "designType": "ComparativeStudy",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is designed to compare different encryption algorithms without the use of control groups or randomization. It is cross-sectional as it analyzes existing algorithms at a single point in time."
+      },
+      "variables": [
+        {
+          "variableName": "Encryption Algorithm Efficiency",
+          "variableRole": "Dependent",
+          "conceptualDefinition": "The performance of encryption algorithms in terms of speed and computational resources required.",
+          "operationalization": "Measured by benchmarking the algorithms using standardized datasets and computational tasks.",
+          "measurementScale": "Continuous",
+          "units": "Time (seconds), Computational Resources (CPU cycles)"
+        },
+        {
+          "variableName": "Encryption Algorithm Complexity",
+          "variableRole": "Dependent",
+          "conceptualDefinition": "The structural intricacy of encryption algorithms, which affects their implementation and potential vulnerabilities.",
+          "operationalization": "Assessed through expert analysis of the algorithm's design and its resistance to various attack vectors.",
+          "measurementScale": "Ordinal",
+          "units": "Complexity Level (Low, Medium, High)"
+        },
+        {
+          "variableName": "Encryption Algorithm Security",
+          "variableRole": "Dependent",
+          "conceptualDefinition": "The ability of encryption algorithms to withstand cyber threats and protect sensitive data.",
+          "operationalization": "Evaluated based on the algorithm's known vulnerabilities, historical breach data, and theoretical security assessments.",
+          "measurementScale": "Ordinal",
+          "units": "Security Rating (Insecure, Secure, Highly Secure)"
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "MixedMethodsAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves both qualitative and quantitative methods. Qualitative analysis includes a historical review of encryption algorithms and their evolution. Quantitative analysis involves benchmarking algorithms for efficiency and complexity, and evaluating security based on known vulnerabilities and theoretical assessments."
+      },
+      "extractionConfidence": 0.6,
+      "paper": "abb8af268db6484ca41007e6817646b9",
+      "researchProblem": "59953e5303cd490196db91ca51431ee9"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "61785074b902424198a9116f2b7b130c",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "b1ebd473e47544e286e61cc7d9251290"
+      ]
+    }
+  ]
+}

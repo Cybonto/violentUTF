@@ -1,0 +1,330 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "106219caabb142db80c603b4d78ec089",
+      "title": "A survey on searchable symmetric encryption",
+      "authors": [
+        {
+          "name": "F Li"
+        },
+        {
+          "name": "J Ma"
+        },
+        {
+          "name": "Y Miao"
+        },
+        {
+          "name": "X Liu"
+        },
+        {
+          "name": "J Ning"
+        },
+        {
+          "name": "RH Deng"
+        }
+      ],
+      "abstract": "Outsourcing data to the cloud has become prevalent, so Searchable Symmetric Encryption (SSE), one of the methods for protecting outsourced data, has arisen widespread interest. Moreover, many novel technologies and theories have emerged, especially for the attacks on SSE and privacy-preserving. But most surveys related to SSE concentrate on one aspect (e.g., single keyword search, fuzzy keyword search) or lack in-depth analysis. Therefore, we revisit the existing work and conduct a comprehensive analysis and summary. We provide an overview of state-of-the-art in SSE and focus on the privacy it can protect. Generally, (1) we study the work of the past few decades and classify SSE based on query expressiveness. Meanwhile, we summarize the existing schemes and analyze their performance on efficiency, storage space, index structures, and so on.; (2) we complement the gap in the privacy of SSE and introduce in detail the attacks and the related defenses; (3) we discuss the open issues and challenges in existing schemes and future research directions. We desire that our work will help novices to grasp and understand SSE comprehensively. We expect it can inspire the SSE community to discover more crucial leakages and design more efficient and secure constructions.",
+      "doi": "10.1145/3617991",
+      "publicationDate": "2023",
+      "journal": "ACM Computing Surveys, 2023",
+      "volume": "2023",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S2_InfrastructureSecurity_Encryption/A Survey on Searchable Symmetric Encryption.pdf",
+      "fileUrl": "https://dl.acm.org/doi/abs/10.1145/3617991",
+      "extractionDate": "2025-04-24T08:39:37.737630",
+      "extractionConfidenceScore": 0.8192
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "7d258a4309d2492493d26f81fe58e785",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cryptography, Information Security",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.8,
+      "paper": "106219caabb142db80c603b4d78ec089"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "10d0b6e0026b4d43898ae97780bb74e4",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "Searchable Symmetric Encryption (SSE)",
+          "relevance": "The research focuses on SSE, providing a comprehensive analysis of its privacy protection capabilities, classifying SSE based on query expressiveness, and summarizing existing schemes."
+        },
+        {
+          "modelName": "Security Definition for SSE",
+          "relevance": "The research uses formal security definitions for SSE to evaluate the security of different SSE schemes, including adaptive and non-adaptive adversary models."
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.5,
+      "paper": "106219caabb142db80c603b4d78ec089"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "f209f467a2ee4ec481ae3b7f2fc7e18c",
+      "problemStatement": "The research addresses the problem of insufficient and outdated surveys on Searchable Symmetric Encryption (SSE), particularly the lack of comprehensive analysis on SSE's privacy-preserving aspects, attacks, and related defenses.",
+      "problemScope": "The scope includes the study of past work on SSE, classification based on query expressiveness, and a detailed analysis of privacy concerns, attacks, and defenses related to SSE.",
+      "problemType": "KnowledgeProblem",
+      "problemImportance": "Understanding and addressing the privacy and security aspects of SSE is crucial due to the widespread outsourcing of data to the cloud and the need for privacy-preserving search capabilities on encrypted data.",
+      "businessRelevance": "Solving the problem has significant implications for businesses that rely on cloud services for data storage, as it can enhance the security and privacy of their data while maintaining searchability, thus addressing market needs for secure cloud computing solutions.",
+      "extractionConfidence": 0.9,
+      "paper": "106219caabb142db80c603b4d78ec089"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [
+    {
+      "internal_id": "34c0784f241c41f880b2d4def046ab80",
+      "gapDescription": "Most surveys related to SSE concentrate on one aspect (e.g., single keyword search, fuzzy keyword search) or lack in-depth analysis.",
+      "relatedDomain": "Searchable Symmetric Encryption (SSE)",
+      "gapSignificance": "A comprehensive analysis of SSE is needed to understand the full scope of the technology and its privacy implications.",
+      "extractionConfidence": 0.8,
+      "paper": "106219caabb142db80c603b4d78ec089",
+      "relatedProblem": "f209f467a2ee4ec481ae3b7f2fc7e18c"
+    },
+    {
+      "internal_id": "f90e31348e6d4135a6c0ba1b75b9b7fa",
+      "gapDescription": "Existing surveys fail to cover the progress SSE has made in recent years, especially regarding privacy-preserving and leakage-abuse attacks.",
+      "relatedDomain": "Searchable Symmetric Encryption (SSE)",
+      "gapSignificance": "Understanding recent advancements and challenges in SSE is crucial for developing more secure and efficient systems.",
+      "extractionConfidence": 0.8,
+      "paper": "106219caabb142db80c603b4d78ec089",
+      "relatedProblem": "f209f467a2ee4ec481ae3b7f2fc7e18c"
+    },
+    {
+      "internal_id": "0b936d9ad8db43999343d6ef12ba30b1",
+      "gapDescription": "There is a lack of detailed analysis of the attacks on SSE and the related defenses.",
+      "relatedDomain": "Searchable Symmetric Encryption (SSE)",
+      "gapSignificance": "In-depth knowledge of potential attacks and defenses is necessary to enhance the security of SSE systems.",
+      "extractionConfidence": 0.8,
+      "paper": "106219caabb142db80c603b4d78ec089",
+      "relatedProblem": "f209f467a2ee4ec481ae3b7f2fc7e18c"
+    },
+    {
+      "internal_id": "493b674336f44b56b9d8a95ed06c060a",
+      "gapDescription": "Some important search functionalities such as substring search, semantic search, etc., are left out in existing surveys.",
+      "relatedDomain": "Searchable Symmetric Encryption (SSE)",
+      "gapSignificance": "Including all search functionalities is important for a complete understanding of SSE capabilities and limitations.",
+      "extractionConfidence": 0.8,
+      "paper": "106219caabb142db80c603b4d78ec089",
+      "relatedProblem": "f209f467a2ee4ec481ae3b7f2fc7e18c"
+    },
+    {
+      "internal_id": "10d52fa2ac03402d9e6224d3f8049708",
+      "gapDescription": "Current threats SSE faces and corresponding defenses are rarely analyzed in existing surveys.",
+      "relatedDomain": "Searchable Symmetric Encryption (SSE)",
+      "gapSignificance": "A thorough analysis of threats and defenses is essential for the ongoing development and application of SSE.",
+      "extractionConfidence": 0.8,
+      "paper": "106219caabb142db80c603b4d78ec089",
+      "relatedProblem": "f209f467a2ee4ec481ae3b7f2fc7e18c"
+    }
+  ],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "70d2afb7b1174011aa223a3c3a8791b6",
+      "questionText": "How can SSE be classified based on query expressiveness, and what are the performance implications in terms of efficiency, storage space, and index structures?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Query expressiveness",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Efficiency",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Storage space",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Index structures",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "106219caabb142db80c603b4d78ec089",
+      "relatedProblem": "f209f467a2ee4ec481ae3b7f2fc7e18c",
+      "addressesGap": "34c0784f241c41f880b2d4def046ab80"
+    },
+    {
+      "internal_id": "90dd719790834770a304edfb70f220ba",
+      "questionText": "What are the current gaps in the privacy of SSE, and what detailed attacks and related defenses have emerged in recent years?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Privacy of SSE",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Attacks on SSE",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Defenses against attacks",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "106219caabb142db80c603b4d78ec089",
+      "relatedProblem": "f209f467a2ee4ec481ae3b7f2fc7e18c",
+      "addressesGap": "34c0784f241c41f880b2d4def046ab80"
+    },
+    {
+      "internal_id": "ac191a9efc754c3d99c4304dab0a0795",
+      "questionText": "What are the open issues and challenges in existing SSE schemes, and what are the potential future research directions?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Open issues in SSE",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Challenges in SSE",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Future research directions",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "106219caabb142db80c603b4d78ec089",
+      "relatedProblem": "f209f467a2ee4ec481ae3b7f2fc7e18c",
+      "addressesGap": "34c0784f241c41f880b2d4def046ab80"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "d3c844b6d7c4433fa778e0e640c8e212",
+      "name": "Methodological Framework for a Survey on Searchable Symmetric Encryption",
+      "description": "The paper presents a comprehensive survey methodology focused on Searchable Symmetric Encryption (SSE). The authors systematically review and classify existing SSE schemes based on query expressiveness, analyze their performance in terms of efficiency, storage space, and index structures, and detail the privacy concerns, attacks, and defenses related to SSE. The survey includes a taxonomy of SSE functionalities, a formal security definition, and a discussion of open issues and future research directions.",
+      "studyDesign": {
+        "designType": "Survey",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study design involves a literature review and classification of existing SSE schemes, an analysis of their performance and security, and a discussion of open issues and future research directions."
+      },
+      "procedures": [
+        {
+          "procedureName": "Literature Review and Classification",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Review existing SSE work from the past few decades.",
+              "inputs": "Scientific articles and publications on SSE",
+              "outputs": "A classified summary of SSE schemes",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Classify SSE schemes based on query expressiveness.",
+              "inputs": "SSE schemes identified in the literature review",
+              "outputs": "Taxonomy of SSE functionalities",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The authors conduct a literature review of SSE schemes from the past few decades, classify them based on query expressiveness, and summarize the methods used in the literature."
+        },
+        {
+          "procedureName": "Performance and Security Analysis",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Analyze the performance of SSE schemes on efficiency, storage space, and index structures.",
+              "inputs": "Classified SSE schemes",
+              "outputs": "Performance analysis results",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Detail the privacy concerns, attacks, and defenses related to SSE.",
+              "inputs": "Identified privacy concerns and attacks on SSE",
+              "outputs": "Summary of attacks and defenses",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The authors analyze the performance of SSE schemes in terms of efficiency, storage space, and index structures, and detail the privacy concerns, attacks, and defenses."
+        },
+        {
+          "procedureName": "Discussion of Open Issues and Future Research Directions",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Identify and discuss open issues in existing SSE schemes.",
+              "inputs": "Findings from the literature review and analysis",
+              "outputs": "List of open issues in SSE",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Propose future research directions for SSE.",
+              "inputs": "List of open issues and current state of SSE",
+              "outputs": "Proposed future research directions",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The authors discuss the open issues and challenges in existing SSE schemes and propose future research directions."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "QualitativeContentAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis in this survey paper involves qualitative synthesis of information from existing literature on SSE. The authors do not perform quantitative data analysis but rather focus on classifying, summarizing, and synthesizing information from various sources to provide an in-depth understanding of SSE."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TextualDescription",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The results of the survey are represented through a taxonomy of SSE functionalities, detailed discussions of performance and security aspects, and a comprehensive list of open issues and future research directions. The findings are presented in narrative form, supported by tables summarizing the performance and complexity of partial SSE schemes."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "Not applicable as this is a survey paper synthesizing existing literature.",
+        "dataRepository": null,
+        "codeAvailabilityStatement": "Not applicable as this is a survey paper without computational experiments.",
+        "codeRepository": null,
+        "protocolAvailability": "The methodology is detailed within the paper itself.",
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.9,
+      "paper": "106219caabb142db80c603b4d78ec089",
+      "researchProblem": "f209f467a2ee4ec481ae3b7f2fc7e18c"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "9839c1f42d6247099a93c413325a5892",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "d3c844b6d7c4433fa778e0e640c8e212"
+      ]
+    }
+  ]
+}

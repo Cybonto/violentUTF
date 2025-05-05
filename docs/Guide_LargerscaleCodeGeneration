@@ -1,0 +1,261 @@
+
+## Guiding Principles (for the proposed methodology)
+1. Design First
+  - Mature the system design to the best capability before coding
+  - If code generation runs into deadends, revise the system design
+2. Model-based System Engineering principles:
+  - System design/model is the single source of truth through the entire life cycle
+  - Always maintain accurate and consistent traceability
+  - Always break down systems into manageable parts (components, modules, classes, etc.)
+  - Communication language must be standardized, concise, and consistent through the entire life cycle.
+3. Maximum context
+  - Always err on providing more information than needed
+  - Always provide the lastest and most accurate information (watch out for chat history)
+4. Maximum documentation 
+5. Always use the best LLM for the tasks (not necessarily the most expensive one, different tasks require different LLMs)
+
+## Methodology & Examples
+
+### 1. The System Design Document
+The system design document describes the system to be produced. This is the ground truth for the entire project and will be used for both code and documentation generations. Therefore, attentive care is a must. I recommend the following sections:
+
+- **Section A: Vision Statement**:
+  - The background/context involving the project.
+  - The problems and the need for solutions.
+  - Other details such as gaps, competitions, etc.
+- **Section B: Main Requirements**: This section outlines the overarching requirements that all downstream activities must align to. Below is a sample list of categories for main requirements.
+  - System Architecture and Design
+  - Accessibility and Interfaces
+  - User Interaction and Experience
+  - Logging, Monitoring, and Alerting
+  - Development and Deployment Practices
+  - Maintainability and Support
+  - Data Quality and Validation
+  - Security Considerations
+- **Section C: Use Cases**: This section helps with informally documenting the complex requirements and dependencies that are not yet formalized. Stakeholders may feel the need to iteratively add more use cases. It is best if stakeholders can contribute use cases as fast and as comprehensive as possible. This section is optional as the additional requirements and dependencies will be specified in the "Program Steps" sections. Include this section especially when your code generation phase has started and use cases keep coming in. 
+- **Section D: Key Definitions**: This section unifies and/or clarifies key definitions to be used throughout the project. "Definitions" can be anything from a technical terms, an API function, to a particular product. This is essential in cases where there are:
+  - Conflicting or different versions of a definition
+  - Different leveraged products/packages/APIs that have confusing overlaps
+  - New knowledge that the LLMs are not aware of
+  - Obsolete knowledge that must be explicitly black-listed
+- **Section E: Main Structure**: 
+  - Outline of the project layers with brief descriptions and key features
+    - Administrative layers (i.e. authentication and authorization, logging, dashboarding)
+    - Application layers (i.e. front-end, back-end, api)
+    - Infrastructure layers (i.e. folder/file structure)
+  - How each layer will be integrated with other layers, for example:
+    - Dependencies
+    - Deployment option(s)
+    - Inputs from upstream layers, outputs to downstream layers, data models and formats
+- **Section F: Program Steps**: This section describes the steps of the workflows that the program supports. I prefer explicit steps chained in a fashion as linear as possible, although, it might not always be the case. However, breaking down the program to "steps" - aka divide and conquer - is a critical strategy for improving the performance of code generation. Each step should have the following sub-sections:
+  - Interface: describes what the interface(s) should be. The interface can be GUI, CLI, API or all of the above.
+  - Action: describes all the possible actions being supported by the interface(s).
+  - Backend: describes the logics needed to implement the action(s) including dependencies, constraints, etc.
+  - Algorithm: describes the algorithms used by certain functions in the backend, especially useful when the functions are designed to take care of complex tasks.
+  - Example:
+  ```text
+    #### 3a. Manage Existing Generators
+    - **Display:**
+      - A list of existing Generators (if any):
+        - Each item is a check box, showing the Generator name.
+        - A dialog box (st.dialog) will appear showing the Generator's brief details when the user clicks on the Generator name.
+      - If there is no Generator, display a proper message.
+      - Buttons to **Add** new Generator or **Delete** an existing Generator. User must check at least one existing Generator for the "Delete" button to work.
+    - **Action:**
+      - User can add (configure/set up) a new Generator
+      - User can delete an existing Generator.
+    - **Backend:**
+      - Retrieve and display the list of saved Generators from PyRIT's memory.
+      - Implement add and delete functionalities. The add functionality will be further described in the following sub-sections.
+      - Update `st.session_state`, other data store (if any), and the parameter file when changes are made.
+    - The below steps (3b to 3f) are displayed when user choose to Add or Edit 
+  ```
+
+### 2. The Development Plan
+The development plan aims to build a robust, scalable, and secure system based on a provided System Design document. The plan is structured in iterative phases, each building upon the previous one, ensuring that dependencies among requirements, functions, files, and modules are appropriately managed. Each iteration includes clear goals, inputs, outputs, methodologies, and deliverables, with an emphasis on testing, documentation, and adherence to best practices.
+- **Sample Prompt**:
+  ```
+  I have the following blueprint.md of the ViolentUTF program:
+  {{blueprint}}
+  {{coreapi}}
+
+  I have the following sample development plan for an API:
+  {{sample_api_devplan}}
+
+  Based on the blueprint, dependencies among proposed requirements, functions, files, modules, please give me a robust development plan for ViolentUTF API. The plan must be structured in iterative phases, each building upon the previous one, ensuring that dependencies among requirements, functions, files, and modules are appropriately managed. Each iteration includes clear goals, inputs, outputs, methodologies, and deliverables, with an emphasis on testing, documentation, and adherence to best practices.
+  ```
+- **Sample Result**:
+  ```
+    ### **Iteration 0: Setup and Foundation (1 Week)**
+    **Goal:**
+    - Establish the basic project structure, development environment, and core tools.
+    - Implement authentication and authorization with Keycloak.
+    - Create a simple authenticated API endpoint to verify the setup.
+
+    **Inputs:**
+    - Blueprint and architectural design documents.
+    - Access to development environments (local machines, cloud instances).
+    - Access to Keycloak instance (or plan for local Keycloak setup).
+    - Decision on technology stack (e.g., Python 3.10+, FastAPI, PostgreSQL/AzureSQL).
+
+    **Outputs:**
+    - Project repository initialized with Git.
+    - Basic folder structure adhering to Python project best practices.
+    - FastAPI application skeleton.
+    - Basic Pydantic models for core data entities (e.g., `UserIdentity`, `ErrorResponse`).
+    - Working Keycloak integration with FastAPI for authentication and authorization.
+    - A single authenticated "Hello World" API endpoint (`/api/v1/hello`).
+    - Basic CI/CD pipeline setup (e.g., GitHub Actions).
+    - Documentation (README) detailing project setup, structure, and initial API usage.
+
+    **Methodologies:**
+    - **Project Setup:**
+      - Use `poetry` or `pipenv` for dependency management.
+      - Create a `.env` file for environment variables (ensure it's excluded from version control).
+      - Establish a consistent code style (e.g., using `black`, `flake8`).
+    - **FastAPI Application Skeleton:**
+      - Create a main application file (`main.py`) with FastAPI instance.
+      - Set up routers and include versioning (`/api/v1`).
+    - **Authentication with Keycloak:**
+      - Configure a Keycloak realm and client for the API.
+      - Implement OAuth 2.0 authentication flow using Keycloak.
+      - Use FastAPI dependencies to extract and validate JWT tokens.
+      - Write the `get_current_user` dependency and `has_permission` decorator as per the blueprint.
+    - **First API Endpoint:**
+      - Implement a simple "Hello World" endpoint that requires authentication.
+      - Test the endpoint using an HTTP client (e.g., `curl`, `Postman`) with a valid access token.
+    - **Testing:**
+      - Set up `pytest` for testing.
+      - Write a test for the "Hello World" endpoint, including authentication.
+    - **Documentation:**
+      - Write a `README.md` with instructions on setting up and running the application.
+      - Include basic API documentation, explaining how to authenticate and call the endpoint.
+    **Deliverables:**
+      - Git repository with the initial codebase and folder structure.
+      - Functional FastAPI application with Keycloak authentication integrated.
+      - Basic Pydantic models (`UserIdentity`, `ErrorResponse`).
+      - "Hello World" endpoint secured with authentication.
+      - CI/CD pipeline running tests and linting on commits.
+      - Documentation covering setup, authentication, and initial API usage.
+  ```
+
+### 3. The Code Generation
+- This section is applied to each iteration of the plan.
+- **Step 1: Generate folder structure and files***
+  - Sample prompt:
+    ```
+    I have the following program description of the FedRAMP OllaLab - AnyDoc to JSON :
+    {{description of the program section you're trying to develop in a particular interation}}
+
+    Please do the following:
+    - Design all the functions needed to implement the above program description to its fullest.
+    - Prepare detailed doc-string for the function/method/class. Doc-string must have the following items:
+      - Parameters:
+        - Describe each parameter:
+            - Name
+            - Type (if applicable)
+            - Default value (if applicable)
+            - Description of its purpose
+      - Returns: Describe the return value:
+            - Type (if applicable)
+            - Description of what is returned
+      - Raises: List any exceptions that the function/class/method might raise:
+        - Exception type
+        - Conditions under which the exception is raised
+      - Upstream functions: a list of functions that call this function.
+      - Downstream functions: a list of functions that this function calls.
+      - Dependencies: other dependencies, requirements that must be achieved for this function to execute successfully.
+    - Propose folder structure and files with brief descriptions per folder or file.
+    - Propose the content of each file without specific function/method implementation detail.
+    ```
+- **Step 2: Code Generation**
+  - Sample prompt:
+    ```
+    I have the following program description of the FedRAMP OllaLab - AnyDoc to JSON :
+    {{progdesc}}
+
+    I have the following proposed structure:
+    {{progstruct}}
+
+    My current logger_manager.py is:
+    {{logger_manager_v1}}
+
+    My current param_manager.py is:
+    {{param_manager_v1}}
+
+    My current doc_preprocessor.py is:
+    {{doc_preprocessor_v1}}
+
+    My current doc_converter.py is:
+    {{doc_converter_v1}}
+
+    My current md_parser.py is:
+    {{md_parser_v2}}
+
+    My current table_processor.py is:
+    {{table_processor_v1}}
+
+    My current data_enricher.py is:
+    {{data_enricher_v1}}
+
+    Please do the following in this particular order:
+    1. Design all the functions needed to implement Anydoc_2_Json.py to its fullest.
+    2. Prepare detailed doc-string for the function/method/class. Doc-string must have the following items:
+      - Parameters:
+        - Describe each parameter:
+            - Name
+            - Type (if applicable)
+            - Default value (if applicable)
+            - Description of its purpose
+      - Returns: Describe the return value:
+            - Type (if applicable)
+            - Description of what is returned
+      - Raises: List any exceptions that the function/class/method might raise:
+        - Exception type
+        - Conditions under which the exception is raised
+      - Upstream functions: a list of functions that call this function.
+      - Downstream functions: a list of functions that this function calls.
+      - Dependencies: other dependencies, requirements that must be achieved for this function to execute successfully.
+    3. Give me only the full implementation of the file. Try to avoid "placeholder implementation". If you have to put a place holder, briefly explain why you cann't provide the implementation.
+    4. If you need to modify any existing file(s), please show the modification(s) with brief explanation
+  ```
+
+### 4. The Test Generation
+- This section is applied to each iteration of the plan.
+- Tests should be done after the main code generation phase is completed because codes can change significantly during the code generation phase.
+- Test-driven development can be applied at this stage. A pair can be any combination of human and AI.
+- Sample prompt:
+  ```
+  # My current /core/config.py is:
+  {{core_config_py}}
+
+  # My current /core/security.py is:
+  {{core_security_py}}
+
+  # The current Pyrit instructions for Target is:
+  {{pyrit_common}}
+  {{pyrit_prompttarget}}
+
+  # The current Garak documentation is:
+  {{garak}}
+
+  # My current /api/v1/endpoints/targets.py is:
+  {{api_v1_targets}}
+
+  # My current test_targets.py is:
+  {{test_targets}}
+
+  # Please do the following:
+  - Change the scope of fixtures from module to function to ensure each test has its own fresh setup and teardown, preventing tests from interfering with each other.
+  - Ensure that each test creates its own resources and cleans them up afterward. This will make the tests independent and reliable, regardless of the execution order.
+  - Include tests for other providers. Ensure that all required parameters are supplied, and handle sensitive data securely using environment variables.
+  - Double check test_targets.py for any mistakes or potential improvements.
+
+  # Note that:
+  - I use self-signed certificates for dev.
+  - Ensure consistent formatting and adherence to PEP 8 style guidelines for better readability.
+  ```
+
+### 5. The Documentation Generation
+- This section is applied to each iteration of the plan.
+- Once this section is completed, you start a new iteration.

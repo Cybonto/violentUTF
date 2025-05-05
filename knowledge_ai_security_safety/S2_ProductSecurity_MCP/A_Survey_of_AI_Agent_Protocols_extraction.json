@@ -1,0 +1,452 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "title": "MESSAGES SENT VERSUS MESSAGES RECEIVED",
+      "authors": [
+        {
+          "name": "RA Cossa"
+        },
+        {
+          "name": "B Glosserman"
+        }
+      ],
+      "abstract": "The rapid development of large language models (LLMs) has led to the widespread deployment of LLM agents across diverse industries, including customer service, content generation, data analysis, and even healthcare. However, as more LLM agents are deployed, a major issue has emerged: there is no standard way for these agents to communicate with external tools or data sources. This lack of standardized protocols makes it difficult for agents to work together or scale effectively, and it limits their ability to tackle complex, real-world tasks. A unified communication protocol for LLM agents could change this. It would allow agents and tools to interact more smoothly, encourage collaboration, and triggering the formation of collective intelligence. In this paper, we provide the first comprehensive analysis of existing agent protocols, proposing a systematic two-dimensional classification that differentiates context-oriented versus inter-agent protocols and general-purpose versus domain-specific protocols. Additionally, we conduct a comparative performance analysis of these protocols across key dimensions such as security, scalability, and latency. Finally, we explore the future landscape of agent protocols by identifying critical research directions and characteristics necessary for next-generation protocols. These characteristics include adaptability, privacy preservation, and group-based interaction, as well as trends toward layered architectures and collective intelligence infrastructures. We expect this work to serve as a practical reference for both researchers and engineers seeking to design, evaluate, or integrate robust communication infrastructures for intelligent agents.\n\nKey Words: AI Agent Protocol, AI Agent, Agent Protocol Evaluation, LLMs\n\n∗ Corresponding author.\n\n## Contents\n\n| 1   | Introduction                                                 | Introduction                                                              | 3     |\n|-----|--------------------------------------------------------------|---------------------------------------------------------------------------|-------|\n| 2   | Preliminaries                                                | Preliminaries                                                             | 4     |\n|     | 2.1                                                          | Definition and Characteristics of LLM agents . . . . . . . . . . .        | 4     |\n|     | 2.2                                                          | Definition and Developments of Agent Protocols . . . . . . . . .          | 6     |\n| 3   | Protocol Taxonomy                                            | Protocol Taxonomy                                                         | 7     |\n|     | 3.1                                                          | Context-Oriented Protocols . . . . . . . . . . . . . . . . . . . . .      | 8     |\n|     |                                                              | 3.1.1 General-Purpose Protocols . . . . . . . . . . . . . . . . .         | 9     |\n|     |                                                              | 3.1.2 Domain-Specific Protocols . . . . . . . . . . . . . . . . . .       | 10    |\n|     | 3.2                                                          | Inter-Agent Protocols . . . . . . . . . . . . . . . . . . . . . . . .     | 11    |\n|     |                                                              | 3.2.1 General-Purpose Protocols . . . . . . . . . . . . . . . . .         | 11    |\n|     |                                                              | 3.2.2 Domain-Specific Protocols . . . . . . . . . . . . . . . . . .       | 15    |\n|     | Comparison                                                   | Comparison                                                                |       |\n| 4   | Protocol Evaluation and                                      | Protocol Evaluation and                                                   | 18    |\n|     | 4.1                                                          | Efficiency . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  | 18    |\n|     | 4.2                                                          | Scalability . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . | 19    |\n|     | 4.3                                                          | Security . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  | 20    |\n|     | 4.4                                                          | Reliability . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . | 20    |\n|     | 4.5                                                          | Extensibility . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   | 21    |\n|     | 4.6                                                          | Operability . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   | 22    |\n|     | 4.7                                                          | Interoperability . . . . . . . . . . . . . . . . . . . . . . . . . . . .  | 23    |\n|     | 4.8                                                          | Evaluation over Protocol Evolution: Case Studies . . . . . . . . .        | 23    |\n| 5   |                                                              |                                                                           |       |\n|     | 5.1                                                          | MCP: Single Agent Invokes All Tools . . . . . . . . . . . . . . . .       | 25    |\n|     | 5.2                                                          | A2A: Complex Collaboration Inter-agents Within an Enterprise .            | 26    |\n|     | 5.3                                                          | ANP: Cross-Domain Agent Protocol . . . . . . . . . . . . . . . .          | 26 26 |\n|     | 5.4                                                          | Agora: Natural Language to Protocol Generation . . . . . . . . .          |       |\n| 6   | Academic Outlook                                             | Academic Outlook                                                          | 27    |\n|     | Short-Term Outlook: From Static to Evolvable . . . . . . . . | . .                                                                       | 27    |\n|     | 6.1 6.2                                                      | Mid-Term Outlook: From Rules to Ecosystems . . . . . . . . . .            | 28    |\n|     | 6.3                                                          | Long-Term Outlook: From Protocols to Intelligence Infrastructure          | 28    |\n\n7\n\nConclusion",
+      "doi": "",
+      "publicationDate": "2019",
+      "journal": "… Connections: A Triannual E-Journal on …, 2019",
+      "volume": "",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/AI-Safety_Privacy/S2_ProductSecurity_MCP/A Survey of AI Agent Protocols.pdf",
+      "fileUrl": "http://cc.pacforum.org/wp-content/uploads/2019/01/1803_RegionalOverview.pdf",
+      "extractionDate": "2025-04-30T22:04:34.432448",
+      "extractionConfidenceScore": 0.85
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "8ab2322759704f159fdb3cc83be7f47b",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Artificial Intelligence, specifically Large Language Models (LLMs) and Agent Protocols",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [],
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "b2b295c4a18941e3965e9f48f56e4fbe",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "Model Context Protocol (MCP)",
+          "relevance": "MCP is used as a foundational framework for building robust and secure LLM agent systems, providing a unified protocol for context acquisition and tool invocation."
+        },
+        {
+          "modelName": "Agent Network Protocol (ANP)",
+          "relevance": "ANP is used to enable interoperability among various agents across heterogeneous domains, aiming to build an open, secure, and efficient collaborative network for agents."
+        },
+        {
+          "modelName": "Agent2Agent Protocol (A2A)",
+          "relevance": "A2A Protocol is designed to enable seamless agent collaboration regardless of underlying frameworks and vendor implementations, supporting complex inter-agent collaboration."
+        }
+      ],
+      "philosophicalParadigm": null,
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "c279d287718b483b9666f1696a3ee26e",
+      "problemStatement": "The lack of standardized communication protocols for large language model (LLM) agents, which hinders their ability to work together, scale effectively, and tackle complex, real-world tasks.",
+      "problemScope": "The problem spans across various industries where LLM agents are deployed, such as customer service, content generation, data analysis, and healthcare, and affects the interoperability and scalability of agent networks.",
+      "problemType": "DesignProblem",
+      "problemImportance": "Standardized communication protocols are crucial for enabling seamless interaction between agents and tools, encouraging collaboration, and forming collective intelligence, which can transform industries by solving more complex problems.",
+      "businessRelevance": "Solving this problem has significant implications for businesses that rely on LLM agents for automation and efficiency, as it can lead to improved interoperability, reduced development costs, and the creation of new cognitive architectures for distributed intelligence.",
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "bc101599aa704210af55eb300f4700f1",
+      "questionText": "How can a unified communication protocol for LLM agents change the current landscape and enable agents and tools to interact more smoothly?",
+      "questionType": "Exploratory",
+      "relatedVariables": [
+        {
+          "variableName": "Unified communication protocol",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Agent and tool interaction",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "relatedProblem": "c279d287718b483b9666f1696a3ee26e"
+    },
+    {
+      "internal_id": "1268cb9a1142451fbb785e586236c979",
+      "questionText": "What are the similarities and differences between existing agent protocols, and how do they compare across various performance characteristics such as security, scalability, and latency?",
+      "questionType": "Comparative",
+      "relatedVariables": [
+        {
+          "variableName": "Agent protocols",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Performance characteristics",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.95,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "relatedProblem": "c279d287718b483b9666f1696a3ee26e"
+    },
+    {
+      "internal_id": "e15ba4276f2140bbacb287586557b556",
+      "questionText": "What are the critical research directions and characteristics necessary for next-generation agent protocols to support evolving agent ecosystems?",
+      "questionType": "Theoretical",
+      "relatedVariables": [
+        {
+          "variableName": "Next-generation agent protocols",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Evolving agent ecosystems",
+          "variableRole": "Dependent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "relatedProblem": "c279d287718b483b9666f1696a3ee26e"
+    }
+  ],
+  "sciknow-25x1-future-directions": [
+    {
+      "internal_id": "0019449b1ff84ca8b9411c69d63e7d14",
+      "directionDescription": "Development of next-generation protocols that are evolvable, privacy-aware, and group-coordinated.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "extendsPotentialApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    },
+    {
+      "internal_id": "13dbfecad8d64429ad656fd4cb4001ba",
+      "directionDescription": "Creation of layered architectures and collective intelligence infrastructures.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "extendsPotentialApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    },
+    {
+      "internal_id": "ee9dd185e5ef404089df722725cabbe7",
+      "directionDescription": "Building a more connected and collaborative agent ecosystem where agents and tools can dynamically form coalitions, exchange knowledge, and co-evolve.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "extendsPotentialApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    },
+    {
+      "internal_id": "6be0cc1f9e464d8cb11006c50f615431",
+      "directionDescription": "Establishing future agent communication standards to enable a new era of distributed, collective intelligence.",
+      "timeframe": "Not specified",
+      "requiredResources": null,
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "extendsPotentialApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    }
+  ],
+  "sciknow-25x1-potential-applications": [
+    {
+      "internal_id": "a6fc04a9f2d94abe99d39199a03074e3",
+      "applicationDescription": "Unified communication protocols for LLM agents will allow agents and tools to interact more smoothly, encourage collaboration, and trigger the formation of collective intelligence.",
+      "targetSector": "Technology",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "buildOnMethodologicalFrameworks": [
+        "b45ad053daa94ac29c2da1c7f9e86240"
+      ]
+    },
+    {
+      "internal_id": "580d7b3bbba24c77b6f361a228a6a167",
+      "applicationDescription": "Next-generation protocols will enable agents and tools to dynamically form coalitions, exchange knowledge, and co-evolve to solve increasingly complex real-world problems.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.8,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "buildOnMethodologicalFrameworks": [
+        "b45ad053daa94ac29c2da1c7f9e86240"
+      ]
+    },
+    {
+      "internal_id": "22f009ca55a0458fa968bb0a6eb9caf7",
+      "applicationDescription": "The development of agent protocols will pave the way toward a more connected and collaborative agent ecosystem, reshaping how intelligence is shared, coordinated, and amplified across systems.",
+      "targetSector": "Multiple",
+      "implementationReadiness": "Conceptual",
+      "extractionConfidence": 0.85,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "buildOnMethodologicalFrameworks": [
+        "b45ad053daa94ac29c2da1c7f9e86240"
+      ]
+    }
+  ],
+  "sciknow-25x1-scientific-challenges": [
+    {
+      "internal_id": "dda12d07a26548d5993f05d22d81a513",
+      "challengeDescription": "The lack of standardized protocols for LLM agents to communicate with external tools or data sources, which limits their ability to work together, scale effectively, and tackle complex real-world tasks.",
+      "challengeType": "ScaleChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "relatedProblem": "c279d287718b483b9666f1696a3ee26e"
+    },
+    {
+      "internal_id": "83f81f363b69409e80d206c6d8378dd9",
+      "challengeDescription": "Fragmentation in the LLM ecosystem due to varying prompt formats across base models and different invocation interfaces implemented by data, tool, and service providers.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.85,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "relatedProblem": "c279d287718b483b9666f1696a3ee26e"
+    },
+    {
+      "internal_id": "d17ad0bb6c694f0ca02f8b54ecf46521",
+      "challengeDescription": "The absence of standardized context-oriented protocols leading to significant fragmentation in context exchange between agents and context providers.",
+      "challengeType": "ComplexityChallenge",
+      "severity": "Major",
+      "extractionConfidence": 0.85,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "relatedProblem": "c279d287718b483b9666f1696a3ee26e"
+    },
+    {
+      "internal_id": "3c6d19e001844d38b222cc9f03b8a274",
+      "challengeDescription": "The need for a unified protocol for agent systems to enable different forms of intelligence to flow between systems, allowing for the emergence of collective intelligence.",
+      "challengeType": "EmergentBehavior",
+      "severity": "Fundamental",
+      "extractionConfidence": 0.8,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "relatedProblem": "c279d287718b483b9666f1696a3ee26e"
+    },
+    {
+      "internal_id": "2be85271427b480584aae8fc832d6c5e",
+      "challengeDescription": "The decoupling of tool invocations from LLM responses to mitigate security concerns and privacy issues in context acquisition.",
+      "challengeType": "Other",
+      "severity": "Moderate",
+      "extractionConfidence": 0.75,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "relatedProblem": "c279d287718b483b9666f1696a3ee26e"
+    },
+    {
+      "internal_id": "c81afdcace4e42cf8c10d98462dc3bbf",
+      "challengeDescription": "The need for next-generation protocols to support evolving agent ecosystems, which should embody characteristics such as adaptability, privacy preservation, and group-based interaction.",
+      "challengeType": "TheoryGap",
+      "severity": "Major",
+      "extractionConfidence": 0.8,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "relatedProblem": "c279d287718b483b9666f1696a3ee26e"
+    }
+  ],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "04331268d95540889a3b0727622efde7",
+      "challengeDescription": "Lack of standardized protocols for LLM agents to communicate with external tools or data sources.",
+      "resourceConstraint": "Infrastructure",
+      "technicalHurdle": "Standardization of communication protocols",
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "encounteredInFramework": "b45ad053daa94ac29c2da1c7f9e86240",
+      "relatedApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    },
+    {
+      "internal_id": "3805bf345b714addbdde38d224393b6b",
+      "challengeDescription": "Difficulty for LLM agents to work together or scale effectively due to non-standardized communication.",
+      "resourceConstraint": "Scale",
+      "technicalHurdle": "Integration and scalability of LLM agents",
+      "extractionConfidence": 0.9,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "encounteredInFramework": "b45ad053daa94ac29c2da1c7f9e86240",
+      "relatedApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    },
+    {
+      "internal_id": "9a9d89188096423d829eb3858df0a425",
+      "challengeDescription": "Limited ability of LLM agents to tackle complex, real-world tasks without a unified communication protocol.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Development of a unified communication protocol",
+      "extractionConfidence": 0.8,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "encounteredInFramework": "b45ad053daa94ac29c2da1c7f9e86240",
+      "relatedApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    },
+    {
+      "internal_id": "cfe86ecb49ff4c03ad9442241eea00ad",
+      "challengeDescription": "Ensuring security, scalability, and latency in the performance of agent protocols.",
+      "resourceConstraint": "Multiple",
+      "technicalHurdle": "Optimization of protocol performance across multiple dimensions",
+      "extractionConfidence": 0.85,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "encounteredInFramework": "b45ad053daa94ac29c2da1c7f9e86240",
+      "relatedApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    },
+    {
+      "internal_id": "aa50ae92bdc147aaaee8945f20085340",
+      "challengeDescription": "Development of next-generation protocols that include adaptability, privacy preservation, and group-based interaction.",
+      "resourceConstraint": "Expertise",
+      "technicalHurdle": "Incorporating advanced features into new protocols",
+      "extractionConfidence": 0.8,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "encounteredInFramework": "b45ad053daa94ac29c2da1c7f9e86240",
+      "relatedApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    },
+    {
+      "internal_id": "7332150ee4ae4f32937262330e17c272",
+      "challengeDescription": "Transitioning towards layered architectures and collective intelligence infrastructures.",
+      "resourceConstraint": "Infrastructure",
+      "technicalHurdle": "Design and implementation of complex system architectures",
+      "extractionConfidence": 0.75,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "encounteredInFramework": "b45ad053daa94ac29c2da1c7f9e86240",
+      "relatedApplication": "a6fc04a9f2d94abe99d39199a03074e3"
+    }
+  ],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "b45ad053daa94ac29c2da1c7f9e86240",
+      "name": "Analysis of Communication Protocols for Large Language Model (LLM) Agents",
+      "description": "The paper presents a comprehensive analysis of existing communication protocols for LLM agents, proposing a systematic classification and conducting a comparative performance analysis across key dimensions such as security, scalability, and latency. It also explores future directions for agent protocols, identifying characteristics necessary for next-generation protocols.",
+      "studyDesign": {
+        "designType": "Observational",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is observational and cross-sectional, focusing on the analysis and classification of existing agent protocols without experimental manipulation or control groups."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Classification of Agent Protocols",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Define and describe the characteristics of LLM agents and the necessity for standardized communication protocols.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Propose a two-dimensional classification framework for agent protocols based on object orientation and application scenario.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Analyze and categorize existing protocols into the proposed classification framework.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The study introduces a systematic classification of agent protocols, distinguishing context-oriented vs. inter-agent protocols and general-purpose vs. domain-specific protocols."
+        },
+        {
+          "procedureName": "Comparative Performance Analysis",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Identify key performance dimensions such as efficiency, scalability, security, and reliability.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Evaluate the performance of different protocols based on the identified dimensions.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The study conducts a comparative analysis of the performance of various protocols across multiple key dimensions."
+        },
+        {
+          "procedureName": "Future Landscape Exploration",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Identify critical research directions for the evolution of agent protocols.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Determine necessary characteristics for future protocols such as adaptability, privacy preservation, and group-based interaction.",
+              "inputs": null,
+              "outputs": null,
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The study explores the future landscape of LLM agent protocols, outlining major research directions and identifying characteristics for next-generation protocols."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "QualitativeContentAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": null,
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves qualitative assessment of existing agent protocols, categorizing them based on the proposed classification framework, and systematically evaluating their performance across various dimensions. The analysis includes a review of literature and existing protocol specifications to assess their relative strengths and limitations."
+      },
+      "resultsRepresentation": {
+        "representationFormat": "TextualDescription",
+        "visualizationType": null,
+        "reportingStandard": null,
+        "summary": "The study presents a structured taxonomy of agent protocols, a comparative analysis of their performance, and a forward-looking perspective on the evolution of agent protocols. The results are represented through descriptive text, tables, and conceptual diagrams."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": null,
+        "dataRepository": null,
+        "codeAvailabilityStatement": null,
+        "codeRepository": null,
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.85,
+      "paper": "6b8d1f8c04394ca2a68b23ed17c3b7d9",
+      "researchProblem": "c279d287718b483b9666f1696a3ee26e"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "a428ac869a79443f9ec8f9356a8af14b",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel head, wooden handle, 16oz",
+      "roleInProcedure": "Used for driving nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "b45ad053daa94ac29c2da1c7f9e86240"
+      ]
+    }
+  ]
+}

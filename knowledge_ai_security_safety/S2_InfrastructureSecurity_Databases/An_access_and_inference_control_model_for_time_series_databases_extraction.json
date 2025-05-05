@@ -1,0 +1,310 @@
+{
+  "sciknow-25x1-scientific-papers": [
+    {
+      "internal_id": "f1b9d8df444a476985db30d32c0a6369",
+      "title": "Next generation cloud computing: New trends and research directions",
+      "authors": [
+        {
+          "name": "B Varghese"
+        },
+        {
+          "name": "R Buyya"
+        }
+      ],
+      "abstract": "",
+      "doi": "",
+      "publicationDate": "2018",
+      "journal": "Future Generation Computer Systems, 2018",
+      "volume": "26",
+      "issue": "",
+      "pages": "",
+      "keywords": [],
+      "pdfPath": "/Users/tamnguyen/Documents/GitHub/SKEO/SKEO_extractor/AI-Safety_Privacy/S2_InfrastructureSecurity_Databases/An access and inference control model for time series databases.pdf",
+      "fileUrl": "https://www.sciencedirect.com/science/article/pii/S0167739X17302224",
+      "extractionDate": "2025-04-24T08:48:18.776005",
+      "extractionConfidenceScore": 0.7857
+    }
+  ],
+  "sciknow-25x1-research-contexts": [
+    {
+      "internal_id": "581bc47a31e34f3ba55be5674d9ec052",
+      "discipline": "Computer Science",
+      "fieldOfStudy": "Cloud Computing Security",
+      "associatedProject": null,
+      "fundingSources": [],
+      "institutions": [
+        {
+          "name": "Sharif University of Technology",
+          "location": "Tehran, Iran"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "f1b9d8df444a476985db30d32c0a6369"
+    }
+  ],
+  "sciknow-25x1-theoretical-bases": [
+    {
+      "internal_id": "c104aab6d810472da5b5e83b6cf2bed1",
+      "underlyingTheories": [],
+      "conceptualFrameworkReference": null,
+      "guidingModels": [
+        {
+          "modelName": "Discretionary Access Control Model",
+          "relevance": "Used to define and express authorization rules for preventing information inference in time series databases"
+        }
+      ],
+      "philosophicalParadigm": "Not Specified",
+      "schoolOfThought": null,
+      "extractionConfidence": 0.6,
+      "paper": "f1b9d8df444a476985db30d32c0a6369"
+    }
+  ],
+  "sciknow-25x1-research-problems": [
+    {
+      "internal_id": "0cd8de21e7bb4cabaa22f46eca6b7674",
+      "problemStatement": "The core research problem is the lack of a complete and specific solution to satisfy the security requirements of time-series data in cloud computing, particularly addressing the need for access and inference control models that can handle time-based granularities, value-based constraints, and time-series composition without leading to information leakage or inference.",
+      "problemScope": "The problem scope includes security requirements for time-series data applications, particularly in cloud computing environments where data are created and evolved over time, and where sensitive information must be protected against unauthorized access.",
+      "problemType": "DesignProblem",
+      "problemImportance": "This problem is critical because time-series data are prevalent in many real-life applications such as business, health, and meteorology, where the temporal features of data are crucial. Ensuring the security of such data is essential to prevent information leakage that could impact strategic decisions and operations.",
+      "businessRelevance": "The research problem is highly relevant to businesses that rely on time-series data for making strategic decisions. Protecting this data from unauthorized access is vital to maintaining competitive advantage and preventing economic losses due to information leakage.",
+      "extractionConfidence": 0.9,
+      "paper": "f1b9d8df444a476985db30d32c0a6369"
+    }
+  ],
+  "sciknow-25x1-knowledge-gaps": [],
+  "sciknow-25x1-research-questions": [
+    {
+      "internal_id": "c2448c2e45714b7ba0280bc64d2b5ca3",
+      "questionText": "What are the security requirements of time series data applications and how can an access and inference control model satisfy them?",
+      "questionType": "Descriptive",
+      "relatedVariables": [
+        {
+          "variableName": "Security requirements of time series data",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Access and inference control model",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.9,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "relatedProblem": "0cd8de21e7bb4cabaa22f46eca6b7674"
+    },
+    {
+      "internal_id": "5043884fcebc460d879b24a022c134b9",
+      "questionText": "How can different types of conflicts in authorization rules be identified and what approaches can be proposed for conflict resolution?",
+      "questionType": "Methodological",
+      "relatedVariables": [
+        {
+          "variableName": "Types of conflicts in authorization rules",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Conflict resolution approaches",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.85,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "relatedProblem": "0cd8de21e7bb4cabaa22f46eca6b7674"
+    },
+    {
+      "internal_id": "12d8810aba6946a19b078e32ac223001",
+      "questionText": "What is the overhead of the proposed access control enforcement procedure and how is it affected by various parameters such as the number of authorization rules, complexity of value constraints, dataset size, and complexity of temporal constraints?",
+      "questionType": "Evaluative",
+      "relatedVariables": [
+        {
+          "variableName": "Overhead of access control enforcement procedure",
+          "variableRole": "Dependent"
+        },
+        {
+          "variableName": "Number of authorization rules",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Complexity of value constraints",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Dataset size",
+          "variableRole": "Independent"
+        },
+        {
+          "variableName": "Complexity of temporal constraints",
+          "variableRole": "Independent"
+        }
+      ],
+      "extractionConfidence": 0.8,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "relatedProblem": "0cd8de21e7bb4cabaa22f46eca6b7674"
+    }
+  ],
+  "sciknow-25x1-future-directions": [],
+  "sciknow-25x1-potential-applications": [],
+  "sciknow-25x1-scientific-challenges": [],
+  "sciknow-25x1-methodological-challenges": [],
+  "sciknow-25x1-implementation-challenges": [
+    {
+      "internal_id": "58ab9bb31e944692a832101558832f7b",
+      "challengeDescription": "Secure access layer impacts total response time, increasing the amount of time between sending a request and receiving the first response.",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Processing overhead due to secure access layer tasks such as searching authorization rule base, rewriting queries, sanitizing responses, and applying value constraints.",
+      "extractionConfidence": 0.8,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "encounteredInFramework": "9717645d7e5741dabc1ba3e475fdc654"
+    },
+    {
+      "internal_id": "99059f35c799436e9320ee75a72b29c0",
+      "challengeDescription": "The overhead of secure access layer for write queries includes searching the authorization rule base to check if the subject is authorized, which can be time-consuming.",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Efficiency of searching through a potentially large number of authorization rules.",
+      "extractionConfidence": 0.7,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "encounteredInFramework": "9717645d7e5741dabc1ba3e475fdc654"
+    },
+    {
+      "internal_id": "3209a204c068465eb2ca4dd86de4837f",
+      "challengeDescription": "The processing time of the access control system is influenced by multiple factors such as the total number of authorization rules, the complexity of value constraints, and the number of data points being accessed.",
+      "resourceConstraint": "Multiple",
+      "technicalHurdle": "Scalability issues related to the number of authorization rules and the complexity of processing large volumes of data points.",
+      "extractionConfidence": 0.7,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "encounteredInFramework": "9717645d7e5741dabc1ba3e475fdc654"
+    },
+    {
+      "internal_id": "b632b7ea507140ae93371eb9229a21f7",
+      "challengeDescription": "The overhead of the access control system decreases as the number of data being accessed increases, which may affect the system's performance with smaller datasets.",
+      "resourceConstraint": "Scale",
+      "technicalHurdle": "Disproportionate overhead for smaller data access operations compared to larger ones.",
+      "extractionConfidence": 0.7,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "encounteredInFramework": "9717645d7e5741dabc1ba3e475fdc654"
+    },
+    {
+      "internal_id": "6c0c9a34f85041db9628130badc64a0a",
+      "challengeDescription": "The average processing time for all query types increases linearly with more data points being accessed or with more complex value constraints of authorization rules.",
+      "resourceConstraint": "Time",
+      "technicalHurdle": "Linear increase in processing time with data volume and complexity, potentially affecting performance.",
+      "extractionConfidence": 0.7,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "encounteredInFramework": "9717645d7e5741dabc1ba3e475fdc654"
+    },
+    {
+      "internal_id": "41ec72ba506e46e79a79b6f37a296c7c",
+      "challengeDescription": "Indexing authorization rules could reduce the time to find related rules efficiently, implying a need for optimization.",
+      "resourceConstraint": "Software",
+      "technicalHurdle": "Optimization of the rule base search algorithm to improve performance.",
+      "extractionConfidence": 0.7,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "encounteredInFramework": "9717645d7e5741dabc1ba3e475fdc654"
+    }
+  ],
+  "sciknow-25x1-limitations": [],
+  "sciknow-25x1-methodological-frameworks": [
+    {
+      "internal_id": "9717645d7e5741dabc1ba3e475fdc654",
+      "name": "Access and Inference Control Model for Time Series Data",
+      "description": "The paper presents a methodological framework for addressing security requirements of time series data applications. The framework includes a discretionary access control model with the capability of preventing information inference in time series data. It is composed of five primitive components: Subjects, Objects, Access Modes, Value Constraints, and Temporal Constraints. These components are used to define and express authorization rules. The model also investigates different types of conflicts between authorization rules and proposes different approaches for conflict resolution. The paper includes a detailed analysis of security issues in time series data, a formal definition of time series data, and a motivating example to elaborate on the security requirements. The proposed model is evaluated through implementation as a secure access layer over a time series database, and the overhead of the access control procedure on the performance of the database is measured.",
+      "studyDesign": {
+        "designType": "Observational",
+        "controlGroup": false,
+        "randomization": false,
+        "blinding": null,
+        "timeDimension": "CrossSectional",
+        "designDetails": "The study is observational and cross-sectional, focusing on the development and evaluation of an access control model for time series data. It does not involve a control group, randomization, or blinding as it is not an experimental study but rather a design and implementation of a security framework."
+      },
+      "variables": [],
+      "procedures": [
+        {
+          "procedureName": "Development of Access and Inference Control Model",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Identify security requirements for time series data applications.",
+              "inputs": null,
+              "outputs": "List of security requirements",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Define primitive components of the access control model.",
+              "inputs": null,
+              "outputs": "Formal definitions of Subjects, Objects, Access Modes, Value Constraints, and Temporal Constraints",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 3,
+              "description": "Formulate authorization rules based on the primitive components.",
+              "inputs": null,
+              "outputs": "Set of authorization rules",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 4,
+              "description": "Analyze potential conflicts between authorization rules and propose resolution strategies.",
+              "inputs": null,
+              "outputs": "Conflict resolution approaches",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves the conceptualization and formalization of an access control model for time series data. It includes the definition of primitive components, authorization rules, and conflict resolution strategies."
+        },
+        {
+          "procedureName": "Implementation and Evaluation",
+          "steps": [
+            {
+              "stepNumber": 1,
+              "description": "Implement the access control model as a secure access layer over OpenTSDB.",
+              "inputs": null,
+              "outputs": "Secure access layer",
+              "parameters": {}
+            },
+            {
+              "stepNumber": 2,
+              "description": "Measure the overhead of the access control procedure on the performance of the time series database.",
+              "inputs": "Queries to the time series database",
+              "outputs": "Performance metrics",
+              "parameters": {}
+            }
+          ],
+          "procedureDescription": "The procedure involves the implementation of the proposed model as a secure access layer over a time series database and the evaluation of its performance overhead."
+        }
+      ],
+      "dataAnalysis": {
+        "analysisApproach": "StatisticalAnalysis",
+        "statisticalTests": null,
+        "algorithmsUsed": null,
+        "softwareDetails": "OpenTSDB 2.2 with HBase 0.98 as the storage engine, SQL Server database for storing authorization rules, EntityFramework for database connection, C# language for implementing the secure access layer",
+        "parameterSettings": null,
+        "dataPreprocessingSteps": null,
+        "summary": "The data analysis involves measuring the overhead of the access control procedure on the performance of the time series database. The analysis includes executing read, aggregation, and composition queries over the database with and without the secure access layer, and comparing the average response times to calculate the overhead percentage."
+      },
+      "reproducibilityAndSharing": {
+        "dataAvailabilityStatement": "The paper does not provide a specific statement about data availability.",
+        "dataRepository": null,
+        "codeAvailabilityStatement": "The paper does not provide a specific statement about code availability.",
+        "codeRepository": null,
+        "protocolAvailability": null,
+        "commercializationPartners": null
+      },
+      "extractionConfidence": 0.85,
+      "paper": "f1b9d8df444a476985db30d32c0a6369",
+      "researchProblem": "0cd8de21e7bb4cabaa22f46eca6b7674"
+    }
+  ],
+  "sciknow-25x1-material-tools": [
+    {
+      "internal_id": "f89cdbceb59a491abf57e497154277dc",
+      "itemName": "Hammer",
+      "itemType": "Tool",
+      "identifier": "HMR-001",
+      "specifications": "Steel, 16oz",
+      "roleInProcedure": "Used to drive nails into wood",
+      "extractionConfidence": 0.9,
+      "usedInFrameworks": [
+        "9717645d7e5741dabc1ba3e475fdc654"
+      ]
+    }
+  ]
+}
