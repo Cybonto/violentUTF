@@ -1,35 +1,35 @@
 # kong/config/kong.yaml
+_format_version: "3.0"
 _transform: true
 
-# Service pointing to the Kong Admin API itself
 services:
   - name: kong-admin-api-service
-    # Use localhost because KONG_ADMIN_LISTEN is now 127.0.0.1:8001
-    url: http://0.0.0.0:8001
+    url: http://kong:8001
     plugins:
-      # Apply basic auth plugin to this service
       - name: basic-auth
         config:
           hide_credentials: true
-    # Route to access the Admin API service via the main proxy (e.g., http://<kong_host>:8000/admin-api)
     routes:
       - name: kong-admin-api-route
         paths:
-          - /admin-api # Or any path you prefer
+          - /admin-api
+        strip_path: true
 
-# Optional: Create a consumer and credentials for basic auth
+  - name: kong-admin-gui-service
+    url: http://kong:8002
+    routes:
+      - name: kong-admin-gui-route
+        paths:
+          - /admin-gui
+        strip_path: true
+
 consumers:
-  - username: admin-user # Choose your admin username
-    # Create basic auth credentials for this consumer
+  - username: kong_manager_admin
     basicauth_credentials:
-      - username: admin-user # Must match consumer username
-        password: YourSecurePassword # CHANGE THIS PASSWORD!
+      - username: kong_manager_admin
+        password: YourSecurePasswordForKongManager!
 
-# You might need to add the GUI service as well if KONG_ADMIN_GUI_LISTEN is 127.0.0.1
-# and you want to access it via the main proxy.
- - name: kong-admin-gui-service
-   url: http://0.0.0.0:8002
-   routes:
-     - name: kong-admin-gui-route
-       paths:
-         - /admin-gui # Or any path you prefer
+  - username: admin-proxy-user
+    basicauth_credentials:
+      - username: admin-proxy-user
+        password: AnotherSecurePassword
