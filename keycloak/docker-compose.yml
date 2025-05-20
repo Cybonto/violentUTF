@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.4
+    command: start
+    networks:
+      - postgres-network
+      - vutf-network    # Add this line
+    environment:
+      # --- Admin Credentials ---
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+
+      # --- Database Configuration ---
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_PORT: 5432
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      # Use the variable from the .env file
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # --- Network Configuration ---
+      KC_HOSTNAME: localhost
+      KC_HTTP_ENABLED: true
+      KC_HTTP_PORT: 8080
+
+      # --- Optional: Health and Metrics ---
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:15
+    networks:
+      - postgres-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      # Use the variable from the .env file
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  postgres-network:
+    driver: bridge
+  vutf-network:
+    external: true
+
+volumes:
+  postgres_data:
+    driver: local

@@ -1,0 +1,43 @@
+# Git files
+.git/
+.gitignore
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+pip-selfcheck.json
+target/ # For Rust, if it were part of the build process
+
+# IDE and editor specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test related files (if not needed in production image)
+.pytest_cache/
+.hypothesis/
+# tests/ # Uncomment if you want to exclude tests from the image
+
+# Log files and temporary data from host (logs inside container go to /app/app_logs, managed by volume)
+# app_logs/* # Content of app_logs will be handled by a volume
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Archives and packages
+*.tar.gz
+*.zip
+*.egg-info/
+dist/
+build/
+
+# User-specific files or large data not for the image
+# sample_run/ # If sample_run contains large files not needed at runtime
+# *.ipynb # Jupyter notebooks, if any, are usually for development

@@ -1,0 +1,24 @@
+# This is the configuration file for APISIX Dashboard
+
+conf:
+  listen:
+    host: 0.0.0.0
+    port: 9000
+  etcd:
+    endpoints:           # Changed from 'host' to 'endpoints'
+      - "http://etcd:2379"
+    prefix: "/apisix"     # Add this to explicitly set the prefix
+    timeout: 30           # Add explicit timeout
+  log:
+    error_log:
+      level: warn
+      file_path: "logs/error.log"
+    access_log:
+      file_path: "logs/access.log"
+      
+authentication:
+  secret: APISIX_DASHBOARD_SECRET_PLACEHOLDER
+  expire_time: 3600
+  users:
+    - username: admin
+      password: APISIX_DASHBOARD_PASSWORD_PLACEHOLDER

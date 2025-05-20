@@ -1,0 +1,52 @@
+# Authentication
+Authlib>=1.3.2
+
+# Web UI and utility packages
+streamlit>=1.10.0
+PyYAML>=6.0
+Jinja2>=3.0.0
+requests>=2.26.0        # Consolidated duplicate “requests” entry
+peft>=0.1.0
+python-dateutil>=2.8.0
+pytest
+
+# Data and plotting
+pandas>=1.3.0
+plotly>=5.0.0
+semopy>=2.1.0           # (Adjust as needed based on semopy’s release history)
+scipy>=1.7.0
+matplotlib>=3.5.0
+lxml>=4.6.0
+pydantic
+pydantic-settings
+
+# Database and ORM support
+SQLAlchemy>=1.4.0
+duckdb>=0.7.0           # (Use the version range suitable for your project)
+neo4j>=5.0.0
+
+# HTTP requests and asynchronous operations
+aiohttp>=3.8.0
+
+# Doc processing
+weasyprint>=53.0
+docling
+
+# LLMs
+nltk>=3.7
+sentence-transformers>=2.2.0
+transformers>=4.25.0
+ollama>=0.1.0
+openai>=0.27.0
+anthropic>=0.3.0
+google-cloud-aiplatform>=1.12.0
+boto3>=1.20.0
+
+# Red Teaming tools
+pyrit                             # Must use Python 3.9 or 3.11 or 3.12
+garak
+
+# Other requirements for ViolentUTF
+python-jose[cryptography]
+cryptography
+python-multipart

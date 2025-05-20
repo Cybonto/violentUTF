@@ -4,3 +4,10 @@ __pycache__/
 .DS_Store
 *pem*
 *.env
+secrets.toml
+*.log
+*temp*
+CA.crt
+!zscaler.pem
+*bak*
+*old*
