@@ -47,8 +47,8 @@ ViolentUTF is a comprehensive AI security testing platform that combines industr
 #### macOS
 ```bash
 # Clone repository
-git clone https://github.com/cybonto/ViolentUTF_nightly.git
-cd ViolentUTF_nightly
+git clone https://github.com/cybonto/ViolentUTF.git
+cd ViolentUTF
 
 # Configure AI provider keys
 cp ai-tokens.env.sample ai-tokens.env
@@ -61,8 +61,8 @@ cp ai-tokens.env.sample ai-tokens.env
 #### Linux
 ```bash
 # Clone and setup
-git clone https://github.com/cybonto/ViolentUTF_nightly.git
-cd ViolentUTF_nightly
+git clone https://github.com/cybonto/ViolentUTF.git
+cd ViolentUTF
 cp ai-tokens.env.sample ai-tokens.env
 # Edit ai-tokens.env with your API keys
 ./setup_linux.sh
@@ -71,8 +71,8 @@ cp ai-tokens.env.sample ai-tokens.env
 #### Windows
 ```bash
 # Clone and setup
-git clone https://github.com/cybonto/ViolentUTF_nightly.git
-cd ViolentUTF_nightly
+git clone https://github.com/cybonto/ViolentUTF.git
+cd ViolentUTF
 copy ai-tokens.env.sample ai-tokens.env
 # Edit ai-tokens.env with your API keys
 setup_windows.bat
@@ -319,7 +319,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 ### **Development Setup**
 ```bash
 # Clone repository
-git clone https://github.com/cybonto/ViolentUTF_nightly.git
+git clone https://github.com/cybonto/ViolentUTF.git
 
 # Setup development environment
 ./setup_macos.sh  # or setup_linux.sh/setup_windows.bat
@@ -354,8 +354,8 @@ ViolentUTF builds upon excellent open-source projects:
 ## 💬 Support
 
 - **Documentation**: [docs/](docs/) directory
-- **Issues**: [GitHub Issues](https://github.com/cybonto/ViolentUTF_nightly/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/cybonto/ViolentUTF_nightly/discussions)
+- **Issues**: [GitHub Issues](https://github.com/cybonto/ViolentUTF/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/cybonto/ViolentUTF/discussions)
 
 ---
 
