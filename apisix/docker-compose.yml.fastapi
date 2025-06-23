@@ -1,0 +1,32 @@
+# FastAPI service configuration to be added to APISIX docker-compose.yml
+  
+  # ViolentUTF API Service
+  fastapi:
+    container_name: violentutf_api
+    build:
+      context: ../violentutf_api/fastapi_app
+      dockerfile: Dockerfile
+    env_file:
+      - ../violentutf_api/fastapi_app/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Override to use internal network names
+      - KEYCLOAK_URL=http://keycloak:8080
+      - APISIX_BASE_URL=http://apisix:9080
+      - APISIX_ADMIN_URL=http://apisix:9180
+    volumes:
+      - ../violentutf_api/fastapi_app:/app
+      - fastapi_data:/app/app_data
+      - fastapi_config:/app/config
+    networks:
+      - apisix_network
+      - vutf-network
+    depends_on:
+      - apisix
+      - etcd
+    restart: unless-stopped
+    # No ports exposed - only accessible through APISIX
+
+# Add to volumes section:
+  fastapi_data:
+  fastapi_config:

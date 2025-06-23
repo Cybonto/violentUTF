@@ -1,0 +1,757 @@
+Directory structure:
+└── examples/
+    ├── README.md
+    ├── 01_basic_usage_example.py
+    ├── 02_full_schema_description_example.py
+    ├── 03_custom_exposed_endpoints_example.py
+    ├── 04_separate_server_example.py
+    ├── 05_reregister_tools_example.py
+    ├── 06_custom_mcp_router_example.py
+    ├── 07_configure_http_timeout_example.py
+    ├── 08_auth_example_token_passthrough.py
+    ├── 09_auth_example_auth0.py
+    ├── __init__.py
+    └── shared/
+        ├── __init__.py
+        ├── auth.py
+        ├── setup.py
+        └── apps/
+            ├── __init__.py
+            └── items.py
+
+================================================
+FILE: examples/README.md
+================================================
+# FastAPI-MCP Examples
+
+The following examples demonstrate various features and usage patterns of FastAPI-MCP:
+
+1. [Basic Usage Example](01_basic_usage_example.py) - Basic FastAPI-MCP integration
+2. [Full Schema Description](02_full_schema_description_example.py) - Customizing schema descriptions
+3. [Custom Exposed Endpoints](03_custom_exposed_endpoints_example.py) - Controlling which endpoints are exposed
+4. [Separate Server](04_separate_server_example.py) - Deploying MCP server separately
+5. [Reregister Tools](05_reregister_tools_example.py) - Adding endpoints after MCP server creation
+6. [Custom MCP Router](06_custom_mcp_router_example.py) - Advanced routing configuration
+7. [Configure HTTP Timeout](07_configure_http_timeout_example.py) - Customizing timeout settings
+
+
+
+================================================
+FILE: examples/01_basic_usage_example.py
+================================================
+from examples.shared.apps.items import app # The FastAPI app
+from examples.shared.setup import setup_logging
+
+from fastapi_mcp import FastApiMCP
+
+setup_logging()
+
+# Add MCP server to the FastAPI app
+mcp = FastApiMCP(app)
+
+# Mount the MCP server to the FastAPI app
+mcp.mount()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+================================================
+FILE: examples/02_full_schema_description_example.py
+================================================
+
+"""
+This example shows how to describe the full response schema instead of just a response example.
+"""
+from examples.shared.apps.items import app # The FastAPI app
+from examples.shared.setup import setup_logging
+
+from fastapi_mcp import FastApiMCP
+
+setup_logging()
+
+# Add MCP server to the FastAPI app
+mcp = FastApiMCP(
+    app,
+    name="Item API MCP",
+    description="MCP server for the Item API",
+    describe_full_response_schema=True,  # Describe the full response JSON-schema instead of just a response example
+    describe_all_responses=True,  # Describe all the possible responses instead of just the success (2XX) response
+)
+
+mcp.mount()
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+================================================
+FILE: examples/03_custom_exposed_endpoints_example.py
+================================================
+"""
+This example shows how to customize exposing endpoints by filtering operation IDs and tags.
+Notes on filtering:
+- You cannot use both `include_operations` and `exclude_operations` at the same time
+- You cannot use both `include_tags` and `exclude_tags` at the same time
+- You can combine operation filtering with tag filtering (e.g., use `include_operations` with `include_tags`)
+- When combining filters, a greedy approach will be taken. Endpoints matching either criteria will be included
+"""
+from examples.shared.apps.items import app # The FastAPI app
+from examples.shared.setup import setup_logging
+
+from fastapi_mcp import FastApiMCP
+
+setup_logging()
+
+# Examples demonstrating how to filter MCP tools by operation IDs and tags
+
+# Filter by including specific operation IDs
+include_operations_mcp = FastApiMCP(
+    app,
+    name="Item API MCP - Included Operations",
+    include_operations=["get_item", "list_items"],
+)
+
+# Filter by excluding specific operation IDs
+exclude_operations_mcp = FastApiMCP(
+    app,    
+    name="Item API MCP - Excluded Operations",
+    exclude_operations=["create_item", "update_item", "delete_item"],
+)
+
+# Filter by including specific tags
+include_tags_mcp = FastApiMCP(
+    app,
+    name="Item API MCP - Included Tags",
+    include_tags=["items"],
+)
+
+# Filter by excluding specific tags
+exclude_tags_mcp = FastApiMCP(
+    app,
+    name="Item API MCP - Excluded Tags",
+    exclude_tags=["search"],
+)
+
+# Combine operation IDs and tags (include mode)
+combined_include_mcp = FastApiMCP(
+    app,
+    name="Item API MCP - Combined Include",
+    include_operations=["delete_item"],
+    include_tags=["search"],
+)
+
+# Mount all MCP servers with different paths
+include_operations_mcp.mount(mount_path="/include-operations-mcp")
+exclude_operations_mcp.mount(mount_path="/exclude-operations-mcp")
+include_tags_mcp.mount(mount_path="/include-tags-mcp")
+exclude_tags_mcp.mount(mount_path="/exclude-tags-mcp")
+combined_include_mcp.mount(mount_path="/combined-include-mcp")
+
+if __name__ == "__main__":
+    import uvicorn
+
+    print("Server is running with multiple MCP endpoints:")
+    print(" - /include-operations-mcp: Only get_item and list_items operations")
+    print(" - /exclude-operations-mcp: All operations except create_item, update_item, and delete_item")
+    print(" - /include-tags-mcp: Only operations with the 'items' tag")
+    print(" - /exclude-tags-mcp: All operations except those with the 'search' tag")
+    print(" - /combined-include-mcp: Operations with 'search' tag or delete_item operation")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+================================================
+FILE: examples/04_separate_server_example.py
+================================================
+"""
+This example shows how to run the MCP server and the FastAPI app separately.
+You can create an MCP server from one FastAPI app, and mount it to a different app.
+"""
+from fastapi import FastAPI
+
+from examples.shared.apps.items import app
+from examples.shared.setup import setup_logging
+
+from fastapi_mcp import FastApiMCP
+
+setup_logging()
+
+MCP_SERVER_HOST = "localhost"
+MCP_SERVER_PORT = 8000
+ITEMS_API_HOST = "localhost"
+ITEMS_API_PORT = 8001
+
+
+# Take the FastAPI app only as a source for MCP server generation
+mcp = FastApiMCP(app)
+
+# Mount the MCP server to a separate FastAPI app
+mcp_app = FastAPI()
+mcp.mount(mcp_app)
+
+# Run the MCP server separately from the original FastAPI app.
+# It still works 🚀
+# Your original API is **not exposed**, only via the MCP server.
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(mcp_app, host="0.0.0.0", port=8000)
+
+
+================================================
+FILE: examples/05_reregister_tools_example.py
+================================================
+"""
+This example shows how to re-register tools if you add endpoints after the MCP server was created.
+"""
+from examples.shared.apps.items import app # The FastAPI app
+from examples.shared.setup import setup_logging
+
+from fastapi_mcp import FastApiMCP
+
+setup_logging()
+
+mcp = FastApiMCP(app) # Add MCP server to the FastAPI app
+mcp.mount() # MCP server
+
+
+# This endpoint will not be registered as a tool, since it was added after the MCP instance was created
+@app.get("/new/endpoint/", operation_id="new_endpoint", response_model=dict[str, str])
+async def new_endpoint():
+    return {"message": "Hello, world!"}
+
+
+# But if you re-run the setup, the new endpoints will now be exposed.
+mcp.setup_server()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+================================================
+FILE: examples/06_custom_mcp_router_example.py
+================================================
+"""
+This example shows how to mount the MCP server to a specific APIRouter, giving a custom mount path.
+"""
+from examples.shared.apps.items import app # The FastAPI app
+from examples.shared.setup import setup_logging
+
+from fastapi import APIRouter
+from fastapi_mcp import FastApiMCP
+
+setup_logging()
+
+other_router = APIRouter(prefix="/other/route")    
+app.include_router(other_router)
+
+mcp = FastApiMCP(app)
+
+# Mount the MCP server to a specific router.
+# It will now only be available at `/other/route/mcp`
+mcp.mount(other_router)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+================================================
+FILE: examples/07_configure_http_timeout_example.py
+================================================
+"""
+This example shows how to configure the HTTP client timeout for the MCP server.
+In case you have API endpoints that take longer than 5 seconds to respond, you can increase the timeout.
+"""
+from examples.shared.apps.items import app # The FastAPI app
+from examples.shared.setup import setup_logging
+
+import httpx
+
+from fastapi_mcp import FastApiMCP
+
+setup_logging()
+
+
+mcp = FastApiMCP(
+    app,
+    http_client=httpx.AsyncClient(timeout=20)
+)
+mcp.mount()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+================================================
+FILE: examples/08_auth_example_token_passthrough.py
+================================================
+"""
+This example shows how to reject any request without a valid token passed in the Authorization header.
+
+In order to configure the auth header, the config file for the MCP server should looks like this:
+```json
+{
+  "mcpServers": {
+    "remote-example": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:8000/mcp",
+        "--header",
+        "Authorization:${AUTH_HEADER}"
+      ]
+    },
+    "env": {
+      "AUTH_HEADER": "Bearer <your-token>"
+    }
+  }
+}
+```
+"""
+from examples.shared.apps.items import app # The FastAPI app
+from examples.shared.setup import setup_logging
+
+from fastapi import Depends
+from fastapi.security import HTTPBearer
+
+from fastapi_mcp import FastApiMCP, AuthConfig
+
+setup_logging()
+
+# Scheme for the Authorization header
+token_auth_scheme = HTTPBearer()
+
+# Create a private endpoint
+@app.get("/private")
+async def private(token = Depends(token_auth_scheme)):
+    return token.credentials
+
+# Create the MCP server with the token auth scheme
+mcp = FastApiMCP(
+    app,
+    name="Protected MCP",
+    auth_config=AuthConfig(
+        dependencies=[Depends(token_auth_scheme)],
+    ),
+)
+
+# Mount the MCP server
+mcp.mount()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+================================================
+FILE: examples/09_auth_example_auth0.py
+================================================
+from fastapi import FastAPI, Depends, HTTPException, Request, status
+from pydantic_settings import BaseSettings
+from typing import Any
+import logging
+
+from fastapi_mcp import FastApiMCP, AuthConfig
+
+from examples.shared.auth import fetch_jwks_public_key
+from examples.shared.setup import setup_logging
+
+
+setup_logging()
+logger = logging.getLogger(__name__)
+
+
+class Settings(BaseSettings):
+    """
+    For this to work, you need an .env file in the root of the project with the following variables:
+    AUTH0_DOMAIN=your-tenant.auth0.com
+    AUTH0_AUDIENCE=https://your-tenant.auth0.com/api/v2/
+    AUTH0_CLIENT_ID=your-client-id
+    AUTH0_CLIENT_SECRET=your-client-secret
+    """
+
+    auth0_domain: str  # Auth0 domain, e.g. "your-tenant.auth0.com"
+    auth0_audience: str  # Audience, e.g. "https://your-tenant.auth0.com/api/v2/"
+    auth0_client_id: str
+    auth0_client_secret: str
+
+    @property
+    def auth0_jwks_url(self):
+        return f"https://{self.auth0_domain}/.well-known/jwks.json"
+
+    @property
+    def auth0_oauth_metadata_url(self):
+        return f"https://{self.auth0_domain}/.well-known/openid-configuration"
+
+    class Config:
+        env_file = ".env"
+
+
+settings = Settings()  # type: ignore
+
+
+async def lifespan(app: FastAPI):
+    app.state.jwks_public_key = await fetch_jwks_public_key(settings.auth0_jwks_url)
+    logger.info(f"Auth0 client ID in settings: {settings.auth0_client_id}")
+    logger.info(f"Auth0 domain in settings: {settings.auth0_domain}")
+    logger.info(f"Auth0 audience in settings: {settings.auth0_audience}")
+    yield
+
+
+async def verify_auth(request: Request) -> dict[str, Any]:
+    try:
+        import jwt
+
+        auth_header = request.headers.get("authorization", "")
+        if not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization header")
+
+        token = auth_header.split(" ")[1]
+
+        header = jwt.get_unverified_header(token)
+
+        # Check if this is a JWE token (encrypted token)
+        if header.get("alg") == "dir" and header.get("enc") == "A256GCM":
+            raise ValueError(
+                "Token is encrypted, offline validation not possible. "
+                "This is usually due to not specifying the audience when requesting the token."
+            )
+
+        # Otherwise, it's a JWT, we can validate it offline
+        if header.get("alg") in ["RS256", "HS256"]:
+            claims = jwt.decode(
+                token,
+                app.state.jwks_public_key,
+                algorithms=["RS256", "HS256"],
+                audience=settings.auth0_audience,
+                issuer=f"https://{settings.auth0_domain}/",
+                options={"verify_signature": True},
+            )
+            return claims
+
+    except Exception as e:
+        logger.error(f"Auth error: {str(e)}")
+
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+
+async def get_current_user_id(claims: dict = Depends(verify_auth)) -> str:
+    user_id = claims.get("sub")
+
+    if not user_id:
+        logger.error("No user ID found in token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    return user_id
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/api/public", operation_id="public")
+async def public():
+    return {"message": "This is a public route"}
+
+
+@app.get("/api/protected", operation_id="protected")
+async def protected(user_id: str = Depends(get_current_user_id)):
+    return {"message": f"Hello, {user_id}!", "user_id": user_id}
+
+
+# Set up FastAPI-MCP with Auth0 auth
+mcp = FastApiMCP(
+    app,
+    name="MCP With Auth0",
+    description="Example of FastAPI-MCP with Auth0 authentication",
+    auth_config=AuthConfig(
+        issuer=f"https://{settings.auth0_domain}/",
+        authorize_url=f"https://{settings.auth0_domain}/authorize",
+        oauth_metadata_url=settings.auth0_oauth_metadata_url,
+        audience=settings.auth0_audience,
+        client_id=settings.auth0_client_id,
+        client_secret=settings.auth0_client_secret,
+        dependencies=[Depends(verify_auth)],
+        setup_proxies=True,
+    ),
+)
+
+# Mount the MCP server
+mcp.mount()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+================================================
+FILE: examples/__init__.py
+================================================
+
+
+
+================================================
+FILE: examples/shared/__init__.py
+================================================
+
+
+
+================================================
+FILE: examples/shared/auth.py
+================================================
+from jwt.algorithms import RSAAlgorithm
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+
+import logging
+import httpx
+
+from examples.shared.setup import setup_logging
+
+setup_logging()
+
+logger = logging.getLogger(__name__)
+
+
+async def fetch_jwks_public_key(url: str) -> str:
+    """
+    Fetch JWKS from a given URL and extract the primary public key in PEM format.
+
+    Args:
+        url: The JWKS URL to fetch from
+
+    Returns:
+        PEM-formatted public key as a string
+    """
+    logger.info(f"Fetching JWKS from: {url}")
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        response.raise_for_status()
+        jwks_data = response.json()
+
+        if not jwks_data or "keys" not in jwks_data or not jwks_data["keys"]:
+            logger.error("Invalid JWKS data format: missing or empty 'keys' array")
+            raise ValueError("Invalid JWKS data format: missing or empty 'keys' array")
+
+        # Just use the first key in the set
+        jwk = jwks_data["keys"][0]
+
+        # Convert JWK to PEM format
+        public_key = RSAAlgorithm.from_jwk(jwk)
+        if isinstance(public_key, RSAPublicKey):
+            pem = public_key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+            pem_str = pem.decode("utf-8")
+            logger.info("Successfully extracted public key from JWKS")
+            return pem_str
+        else:
+            logger.error("Invalid JWKS data format: expected RSA public key")
+            raise ValueError("Invalid JWKS data format: expected RSA public key")
+
+
+
+================================================
+FILE: examples/shared/setup.py
+================================================
+import logging
+
+from pydantic import BaseModel
+
+
+class LoggingConfig(BaseModel):
+    LOGGER_NAME: str = "fastapi_mcp"
+    LOG_FORMAT: str = "%(levelprefix)s %(asctime)s\t[%(name)s] %(message)s"
+    LOG_LEVEL: str = logging.getLevelName(logging.DEBUG)
+
+    version: int = 1
+    disable_existing_loggers: bool = False
+    formatters: dict = {
+        "default": {
+            "()": "uvicorn.logging.DefaultFormatter",
+            "fmt": LOG_FORMAT,
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    }
+    handlers: dict = {
+        "default": {
+            "formatter": "default",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+        },
+    }
+    loggers: dict = {
+        "": {"handlers": ["default"], "level": LOG_LEVEL},  # Root logger
+        "uvicorn": {"handlers": ["default"], "level": LOG_LEVEL},
+        LOGGER_NAME: {"handlers": ["default"], "level": LOG_LEVEL},
+    }
+
+
+def setup_logging():
+    from logging.config import dictConfig
+
+    logging_config = LoggingConfig()
+    dictConfig(logging_config.model_dump())
+
+
+
+================================================
+FILE: examples/shared/apps/__init__.py
+================================================
+
+
+
+================================================
+FILE: examples/shared/apps/items.py
+================================================
+"""
+Simple example of using FastAPI-MCP to add an MCP server to a FastAPI app.
+"""
+
+from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel
+from typing import List, Optional
+
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    price: float
+    tags: List[str] = []
+
+
+items_db: dict[int, Item] = {}
+
+
+@app.get("/items/", response_model=List[Item], tags=["items"], operation_id="list_items")
+async def list_items(skip: int = 0, limit: int = 10):
+    """
+    List all items in the database.
+
+    Returns a list of items, with pagination support.
+    """
+    return list(items_db.values())[skip : skip + limit]
+
+
+@app.get("/items/{item_id}", response_model=Item, tags=["items"], operation_id="get_item")
+async def read_item(item_id: int):
+    """
+    Get a specific item by its ID.
+
+    Raises a 404 error if the item does not exist.
+    """
+    if item_id not in items_db:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return items_db[item_id]
+
+
+@app.post("/items/", response_model=Item, tags=["items"], operation_id="create_item")
+async def create_item(item: Item):
+    """
+    Create a new item in the database.
+
+    Returns the created item with its assigned ID.
+    """
+    items_db[item.id] = item
+    return item
+
+
+@app.put("/items/{item_id}", response_model=Item, tags=["items"], operation_id="update_item")
+async def update_item(item_id: int, item: Item):
+    """
+    Update an existing item.
+
+    Raises a 404 error if the item does not exist.
+    """
+    if item_id not in items_db:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    item.id = item_id
+    items_db[item_id] = item
+    return item
+
+
+@app.delete("/items/{item_id}", tags=["items"], operation_id="delete_item")
+async def delete_item(item_id: int):
+    """
+    Delete an item from the database.
+
+    Raises a 404 error if the item does not exist.
+    """
+    if item_id not in items_db:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    del items_db[item_id]
+    return {"message": "Item deleted successfully"}
+
+
+@app.get("/items/search/", response_model=List[Item], tags=["search"], operation_id="search_items")
+async def search_items(
+    q: Optional[str] = Query(None, description="Search query string"),
+    min_price: Optional[float] = Query(None, description="Minimum price"),
+    max_price: Optional[float] = Query(None, description="Maximum price"),
+    tags: List[str] = Query([], description="Filter by tags"),
+):
+    """
+    Search for items with various filters.
+
+    Returns a list of items that match the search criteria.
+    """
+    results = list(items_db.values())
+
+    if q:
+        q = q.lower()
+        results = [
+            item for item in results if q in item.name.lower() or (item.description and q in item.description.lower())
+        ]
+
+    if min_price is not None:
+        results = [item for item in results if item.price >= min_price]
+    if max_price is not None:
+        results = [item for item in results if item.price <= max_price]
+
+    if tags:
+        results = [item for item in results if all(tag in item.tags for tag in tags)]
+
+    return results
+
+
+sample_items = [
+    Item(id=1, name="Hammer", description="A tool for hammering nails", price=9.99, tags=["tool", "hardware"]),
+    Item(id=2, name="Screwdriver", description="A tool for driving screws", price=7.99, tags=["tool", "hardware"]),
+    Item(id=3, name="Wrench", description="A tool for tightening bolts", price=12.99, tags=["tool", "hardware"]),
+    Item(id=4, name="Saw", description="A tool for cutting wood", price=19.99, tags=["tool", "hardware", "cutting"]),
+    Item(id=5, name="Drill", description="A tool for drilling holes", price=49.99, tags=["tool", "hardware", "power"]),
+]
+for item in sample_items:
+    items_db[item.id] = item
+
+

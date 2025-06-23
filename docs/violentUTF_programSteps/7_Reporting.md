@@ -1,0 +1,564 @@
+### 7. Reporting
+
+The reporting component is an essential part of the Violent UTF system, providing detailed and professional reports based on the results of red teaming activities. It integrates seamlessly with other components, particularly the Memory and Orchestrator modules, to extract data, analyze results, and generate comprehensive reports. The reporting functionality can be configured through the parameter file or the GUI, ensuring that user preferences are saved and consistently applied.
+
+#### 7a. Configure Reporting Parameters
+
+- **Display in GUI:**
+
+  - **Heading:** "Configure Reporting"
+  - **Explanation:** Describe the purpose of the reporting configuration and how it impacts the final output.
+  - **Input Fields:**
+
+    - **Generate Report** (checkbox, default: enabled): Option to generate a report after the analysis.
+
+    - **Report Format** (dropdown): Options include "HTML", "PDF", "Markdown".
+
+    - **Report Template** (file uploader or selectbox): Allow users to select from existing templates or upload a custom template.
+
+    - **Output Directory** (text input): Specify where the report files will be saved.
+
+    - **Include Sections** (multiselect):
+
+      - **Executive Summary** (default: enabled)
+      - **Methodology** (default: enabled)
+      - **Detailed Results** (default: enabled)
+      - **Analysis and Discussion** (default: enabled)
+      - **Recommendations** (default: enabled)
+      - **Appendix** (default: optional)
+
+    - **Include Company Branding** (checkbox, default: optional): Option to include company logos or branding in the report.
+
+    - **Anonymize Sensitive Information** (checkbox, default: optional): Remove or obfuscate any sensitive information from the report.
+
+    - **Additional Options** (expandable section): Advanced settings such as:
+
+      - **Customize Color Theme**
+      - **Include Raw Data Exports**
+      - **Compliance with Accessibility Guidelines**
+
+    - **Pipeline-Specific Options:**
+
+      - **If the pipeline is PyRIT-based:**
+
+        - **Include Interactive Visualizations** (checkbox, default: enabled): Enable interactive charts using Plotly (applicable for HTML reports).
+
+        - **Include Conversation Analytics** (checkbox, default: enabled): Include advanced conversation analytics such as repeated content or embeddings-based similarity.
+
+      - **If the pipeline is Garak-based:**
+
+        - **Include AVID Output** (checkbox, default: enabled): Include an AI Vulnerability Database (AVID)-formatted JSON output for sharing and integration.
+
+        - **Include Failure Rate Statistics** (checkbox, default: enabled): Include statistics on the failure rates discovered by Garak.
+
+        - **Include Detailed Attempt Logs** (checkbox, default: optional): Include detailed logs of each attempt made by the probes.
+
+    - **Action:** User configures reporting preferences and clicks **"Save"**.
+
+- **In CLI:**
+
+  - Users can set reporting parameters via command-line arguments or by specifying them in the parameter file using the `--report` flag followed by the path to the parameter file section for reporting configurations.
+
+- **Backend:**
+
+  - Store the user-selected reporting configurations in `st.session_state["reporting_parameters"]`.
+
+  - Update the YAML parameter file under a dedicated `reporting` section with the user's selections.
+
+  - **Example parameter file entry:**
+
+    ```yaml
+    reporting:
+      generate_report: true
+      report_format: "HTML"
+      include_sections:
+        - executive_summary
+        - methodology
+        - detailed_results
+        - analysis_and_discussion
+        - recommendations
+      include_company_branding: true
+      anonymize_sensitive_information: false
+      include_interactive_visualizations: true      # For PyRIT
+      include_conversation_analytics: true          # For PyRIT
+      include_avid_output: true                     # For Garak
+      include_failure_rate_statistics: true         # For Garak
+      include_detailed_attempt_logs: false          # For Garak
+      report_template: "templates/default_report_template.html"
+      output_directory: "reports/"
+    ```
+
+- **Error Handling & Tests:**
+
+  - Validate the user inputs for correctness (e.g., valid output directory path, template file exists).
+
+  - Provide meaningful error messages for invalid configurations.
+
+  - Include tests to ensure configurations are correctly saved and loaded.
+
+#### 7b. Incorporating Garak Reports
+
+Garak produces detailed reports in JSON Lines (`.jsonl`) format, which can be further processed into other formats such as AVID (AI Vulnerability Database). The reports contain rich information about each attempt, including prompts, responses, and detector evaluations.
+
+- **Processing Garak Reports:**
+
+  - **Retrieve and Load Garak Report Data:**
+
+    Use the `garak.report.Report` class to load the report generated by Garak.
+
+    ```python
+    import garak.report
+
+    report_path = st.session_state.get("garak_report_path", "path/to/garak.report.jsonl")
+    garak_report = garak.report.Report(report_location=report_path)
+    garak_report.load()
+    ```
+
+  - **Extract Evaluations and Scores:**
+
+    ```python
+    garak_report.get_evaluations()
+    evaluations_df = garak_report.evaluations
+    scores_df = garak_report.scores
+    ```
+
+  - **Include AVID Outputs:**
+
+    Garak can convert reports into the AVID format for integration with the AI Vulnerability Database.
+
+    - **Optionally generate AVID JSONL:**
+
+      If the user selects "Include AVID Output", the application can run:
+
+      ```python
+      garak_report.export()
+      # This will generate an AVID-compatible JSONL file, typically named garak.<uuid>.avid.jsonl
+      ```
+
+    - **In GUI:**
+
+      Provide an option to download the AVID-formatted report or include it in the final report package.
+
+- **Include in Report:**
+
+  - **Failure Rate Statistics:**
+
+    - Compute and display overall failure rates, broken down by probe, detector, or failure type.
+
+    - **Example Code:**
+
+      ```python
+      # Total attempts
+      total_attempts = len(garak_report.records)
+
+      # Calculate the number of failures
+      total_failures = evaluations_df[evaluations_df['result'] == 'fail'].shape[0]
+
+      # Calculate failure rate
+      failure_rate = (total_failures / total_attempts) * 100
+
+      st.write(f"Total Attempts: {total_attempts}")
+      st.write(f"Total Failures: {total_failures}")
+      st.write(f"Failure Rate: {failure_rate:.2f}%")
+      ```
+
+  - **Detailed Attempt Logs:**
+
+    - If the user opts to include detailed attempt logs, present them in tables with options for pagination and filtering.
+
+    - Include information such as:
+
+      - **Probe Name**
+      - **Prompt**
+      - **Response**
+      - **Detectors Applied**
+      - **Detection Results**
+
+    - **In GUI:**
+
+      ```python
+      st.dataframe(evaluations_df)
+      ```
+
+  - **Visualizations:**
+
+    - Create charts to illustrate failure rates, such as bar charts showing failures per probe or detector.
+
+    - **Example Code:**
+
+      ```python
+      import plotly.express as px
+
+      # Failure rates per probe
+      probe_failure_rates = evaluations_df[evaluations_df['result'] == 'fail'].groupby('probe').size().reset_index(name='failures')
+      probe_failure_rates['failure_rate'] = (probe_failure_rates['failures'] / total_attempts) * 100
+
+      fig = px.bar(probe_failure_rates, x='probe', y='failure_rate', title='Failure Rate per Probe')
+      st.plotly_chart(fig)
+      ```
+
+#### 7c. Design Questions for User Input
+
+To generate a comprehensive and insightful report, it's important to gather additional context and insights from the user. These inputs can greatly enhance the quality of the report.
+
+- **Executive Summary Inputs:**
+
+  - **Question:** "Please provide a brief description of the Generator system being tested (e.g., model name, version, usage context)."
+
+    - **Input Field:** `st.text_area("Generator System Description")`
+
+  - **Question:** "What are the primary objectives of this red teaming exercise?"
+
+    - **Input Field:** `st.text_area("Red Teaming Objectives")`
+
+- **Methodology Inputs:**
+
+  - **Question:** "Are there any specific configurations or parameters that should be highlighted in the methodology?"
+
+    - **Input Field:** `st.text_area("Methodology Notes")`
+
+- **Analysis and Discussion Inputs:**
+
+  - **Question:** "Are there any specific areas of concern or vulnerabilities you would like to highlight?"
+
+    - **Input Field:** `st.text_area("Areas of Concern")`
+
+  - **Question:** "Can you provide any hypotheses or explanations for the observed vulnerabilities?"
+
+    - **Input Field:** `st.text_area("Hypotheses and Explanations")`
+
+- **Recommendations Inputs:**
+
+  - **Question:** "Based on the findings, what are your recommendations for mitigating the identified vulnerabilities?"
+
+    - **Input Field:** `st.text_area("Recommendations")`
+
+  - **Question:** "Do you have any strategic goals or constraints that should be considered in the recommendations?"
+
+    - **Input Field:** `st.text_area("Strategic Goals or Constraints")`
+
+- **Additional Information:**
+
+  - **Question:** "Is there any additional context or information that should be included in the report?"
+
+    - **Input Field:** `st.text_area("Additional Information")`
+
+  - **Question:** "Would you like to anonymize any sensitive information in the report?"
+
+    - **Input Field:** `st.checkbox("Anonymize Sensitive Information")`
+
+- **Integration in GUI:**
+
+  - Present these questions as part of the reporting configuration, under a section titled **"Additional Report Content"**.
+
+  - Store user inputs in `st.session_state["report_inputs"]` for use in report generation.
+
+#### 7d. Detailed Tools and Process for Reporting
+
+##### 7d.1 Data Extraction
+
+- **For PyRIT-based Reports:**
+
+  - **Retrieve Data from Memory:**
+
+    ```python
+    from pyrit.memory import CentralMemory
+
+    memory_interface = CentralMemory.get_memory_instance()
+    prompt_pieces = memory_interface.get_prompt_request_pieces()
+    response_pieces = memory_interface.get_prompt_response_pieces()
+    ```
+
+  - **Initialize Conversation Analytics:**
+
+    ```python
+    from pyrit.analytics import ConversationAnalytics
+
+    conversation_analytics = ConversationAnalytics(memory_interface=memory_interface)
+    ```
+
+    - **Repeated Content Detection:**
+
+      ```python
+      repeated_entries = conversation_analytics.get_prompt_entries_with_same_converted_content()
+      ```
+
+    - **Embeddings-based Similarity:**
+
+      ```python
+      similar_messages = conversation_analytics.get_similar_chat_messages_by_embedding()
+      ```
+
+- **For Garak-based Reports:**
+
+  - **Load Garak Report Data:**
+
+    (As shown earlier in **7b**.)
+
+##### 7d.2 Data Transformation
+
+- **Convert Raw Data into DataFrames:**
+
+  ```python
+  import pandas as pd
+
+  # For PyRIT prompt request pieces
+  prompts_df = pd.DataFrame([piece.to_dict() for piece in prompt_pieces])
+
+  # For Garak evaluations
+  evaluations_df = garak_report.evaluations
+  ```
+
+- **Filter or Group Data:**
+
+  - **Example for PyRIT:**
+
+    ```python
+    # Group by orchestrator
+    grouped_prompts = prompts_df.groupby('orchestrator_identifier').size().reset_index(name='prompt_count')
+    ```
+
+  - **Example for Garak:**
+
+    ```python
+    # Group failures by probe
+    failure_counts = evaluations_df[evaluations_df['result'] == 'fail'].groupby('probe').size().reset_index(name='failures')
+    ```
+
+##### 7d.3 Visualization
+
+- **Create Charts and Graphs:**
+
+  - **For PyRIT:**
+
+    ```python
+    fig = px.bar(grouped_prompts, x='orchestrator_identifier', y='prompt_count', title='Prompts per Orchestrator')
+    st.plotly_chart(fig)
+    ```
+
+  - **For Garak:**
+
+    (As shown earlier in **7b**.)
+
+- **Include Visualizations in Report:**
+
+  - Save figures to files or include them directly in the report using placeholders in the template.
+
+##### 7d.4 Report Generation
+
+- **Using Jinja2 Templates:**
+
+  - **Prepare Template and Data:**
+
+    - Load the selected template.
+
+      ```python
+      from jinja2 import Environment, FileSystemLoader
+
+      env = Environment(loader=FileSystemLoader('templates/'))
+      template = env.get_template('default_report_template.html')
+      ```
+
+    - **Data for the Template:**
+
+      Prepare a context dictionary containing all the data to be included in the report.
+
+      ```python
+      context = {
+          'executive_summary': st.session_state["report_inputs"].get("Executive Summary"),
+          'methodology': st.session_state["report_inputs"].get("Methodology"),
+          'detailed_results': ...,  # DataFrames or processed data
+          'analysis': st.session_state["report_inputs"].get("Analysis"),
+          'recommendations': st.session_state["report_inputs"].get("Recommendations"),
+          'figures': ...,  # Paths or base64-encoded images
+          # Additional data as needed
+      }
+      ```
+
+  - **Render and Save Report:**
+
+    - Render the report.
+
+      ```python
+      report_content = template.render(context)
+      ```
+
+    - Save the report to the specified output directory.
+
+      ```python
+      output_path = os.path.join(st.session_state["reporting_parameters"]["output_directory"], "final_report.html")
+      with open(output_path, 'w', encoding='utf-8') as f:
+          f.write(report_content)
+      ```
+
+- **Converting HTML to PDF (Optional):**
+
+  - If the user selects PDF format, convert the HTML report to PDF.
+
+    ```python
+    from weasyprint import HTML
+
+    HTML(string=report_content).write_pdf("final_report.pdf")
+    ```
+
+##### 7d.5 Integrate User Inputs
+
+- **Incorporate Responses into the Report:**
+
+  - Include user-provided content in the appropriate sections of the report.
+
+  - Ensure sensitive information is anonymized if the user selected that option.
+
+- **Example in Template:**
+
+  ```html
+  <!-- Executive Summary -->
+  <h2>Executive Summary</h2>
+  <p>{{ executive_summary }}</p>
+
+  <!-- Methodology -->
+  <h2>Methodology</h2>
+  <p>{{ methodology }}</p>
+
+  <!-- Detailed Results -->
+  <h2>Detailed Results</h2>
+  <!-- Include tables and figures -->
+
+  <!-- Analysis and Discussion -->
+  <h2>Analysis and Discussion</h2>
+  <p>{{ analysis }}</p>
+
+  <!-- Recommendations -->
+  <h2>Recommendations</h2>
+  <p>{{ recommendations }}</p>
+  ```
+
+#### 7e. Implementing Additional Improvements
+
+##### 7e.1 User Customization
+
+- **Report Sections:**
+
+  - Allow users to select which sections to include in the report.
+
+  - In the GUI, provide checkboxes or toggles for each section.
+
+- **Branding and Themes:**
+
+  - Enable users to upload a company logo.
+
+  - Allow selection of color themes or styles.
+
+  - Adjust the report template to accommodate branding elements.
+
+##### 7e.2 Error Handling
+
+- **Robust Exceptions:**
+
+  - Wrap report generation code in `try...except` blocks.
+
+  - Provide detailed error messages and guidance.
+
+- **Data Validation:**
+
+  - Ensure that all required data is available before generating the report.
+
+  - Prompt the user if any critical data is missing.
+
+##### 7e.3 Automated Summaries
+
+- **Using LLMs for Summarization:**
+
+  - Optionally, use a configured LLM target to generate summaries.
+
+  - **Example:**
+
+    ```python
+    if st.session_state["use_llm_for_summaries"]:
+        llm_target = st.session_state["llm_target"]
+        # Generate executive summary
+        prompt = f"Please generate an executive summary based on the following data:\n{summary_data}"
+        executive_summary = asyncio.run(llm_target.send_prompt_async(prompt))
+        st.session_state["report_inputs"]["Executive Summary"] = executive_summary
+    ```
+
+- **Ensure Compliance:**
+
+  - If using LLMs, ensure that privacy and security considerations are addressed.
+
+##### 7e.4 Compliance with Standards
+
+- **Accessibility:**
+
+  - Ensure that HTML reports follow accessibility guidelines (e.g., proper use of headings, alt text for images).
+
+- **Citation and Attribution:**
+
+  - Include citations where appropriate.
+
+- **Privacy Considerations:**
+
+  - Remove or obfuscate sensitive data if "Anonymize Sensitive Information" is selected.
+
+##### 7e.5 Export Options
+
+- **Multiple Formats:**
+
+  - Provide options to download reports in different formats (HTML, PDF, Markdown).
+
+- **Upload to AVID:**
+
+  - If appropriate and authorized, provide functionality to directly upload AVID-formatted reports to the AI Vulnerability Database.
+
+- **Provide Raw Data Exports:**
+
+  - Allow users to download raw data files (e.g., CSV or JSON).
+
+#### 7f. Running and Generating the Final Report
+
+- **Display in GUI:**
+
+  - **"Generate Report"** button to start the report generation process.
+
+  - **Progress Indicator:** Show progress and status messages.
+
+- **Action:**
+
+  - User clicks **"Generate Report"**.
+
+- **Backend:**
+
+  - Validate all configurations and inputs.
+
+  - Execute the data extraction, transformation, visualization, and report generation steps.
+
+  - Handle exceptions and provide feedback.
+
+- **Upon Completion:**
+
+  - Display a success message and provide download links for the report.
+
+  - Optionally, display a summary of what was included in the report.
+
+#### 7g. Error Handling and Testing
+
+- **Implement Robust Error Handling:**
+  - Use `try...except` blocks around critical operations.
+  - Log exceptions and display user-friendly messages.
+
+- **Testing:**
+  - Include unit tests for data processing functions.
+  - Test report generation with various configurations and data sets.
+  - Ensure that user inputs are correctly incorporated.
+
+#### 7h. User Experience Considerations
+- **Intuitive Interface:**
+  - Organize the reporting configuration into logical sections.
+  - Use clear labels, placeholders, and tooltips.
+
+- **Feedback and Progress Indicators:**
+  - Provide visual indicators during long-running operations.
+
+- **Documentation and Help:**
+  - Include inline guidance and links to documentation.
+  - Provide examples or sample reports.

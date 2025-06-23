@@ -1,0 +1,7 @@
+# Protect route configuration script from automatic modifications
+configure_routes.sh -diff linguist-generated=false
+configure_routes_template.sh -diff linguist-generated=false
+
+# Mark as vendored to prevent automated tools from modifying
+configure_routes.sh linguist-vendored=false
+configure_routes_template.sh linguist-vendored=false

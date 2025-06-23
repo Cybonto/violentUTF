@@ -1,86 +1,10 @@
-services:
-  # Strapi Service (moved from the root docker-compose.yml)
-  strapi:
-    container_name: strapi_cms_api
-    build:
-      context: ./strapi
-      dockerfile: Dockerfile
-    environment:
-      DATABASE_CLIENT: postgres
-      DATABASE_HOST: postgres_strapi_api
-      DATABASE_PORT: 5432
-      DATABASE_NAME: ${STRAPI_DB_NAME:-strapi}
-      DATABASE_USERNAME: ${STRAPI_DB_USER:-strapi}
-      DATABASE_PASSWORD: ${STRAPI_DB_PASSWORD:-strapipassword}
-      DATABASE_SSL: "false"
-      HOST: 0.0.0.0
-      PORT: 1337
-      API_TOKEN_SALT: ${STRAPI_API_TOKEN_SALT}
-      ADMIN_JWT_SECRET: ${STRAPI_ADMIN_JWT_SECRET}
-      JWT_SECRET: ${STRAPI_JWT_SECRET}
-      KEYCLOAK_SERVER_URL: ${KEYCLOAK_EXTERNAL_URL} # Ensure this is reachable
-      KEYCLOAK_REALM_NAME: ${KEYCLOAK_EXTERNAL_REALM_NAME:-ViolentUTF}
-      NODE_ENV: ${NODE_ENV:-development}
-      SHARP_IGNORE_GLOBAL_LIBVIPS: 'true'
-      APP_KEYS: "yourRandomKeyA,yourOtherRandomKeyB" # Replace with your actual keys
-    volumes:
-      - ./strapi/config:/opt/app/config
-      - ./strapi/src:/opt/app/src
-      - ./strapi/package.json:/opt/app/package.json
-      - ./strapi/package-lock.json:/opt/app/package-lock.json
-      - ./strapi/.env:/opt/app/.env # Ensure this .env is suitable or create a new one
-      - ./strapi/public/uploads:/opt/app/public/uploads
-    ports:
-      - "1337:1337"
-    networks:
-      - violentutf_api_network
-    depends_on:
-      postgres_strapi_api:
-        condition: service_healthy
-    restart: unless-stopped
+# This docker-compose.yml is deprecated
+# The FastAPI service has been moved to the APISIX stack
+# See ../apisix/docker-compose.yml for the integrated configuration
 
-  # Strapi Database (moved from the root docker-compose.yml)
-  postgres_strapi_api:
-    image: postgres:15
-    container_name: strapi_api_db
-    volumes:
-      - strapi_api_pg_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${STRAPI_DB_NAME:-strapi}
-      POSTGRES_USER: ${STRAPI_DB_USER:-strapi}
-      POSTGRES_PASSWORD: ${STRAPI_DB_PASSWORD:-strapipassword}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - violentutf_api_network
-    restart: unless-stopped
+# To start the API:
+# cd ../apisix
+# docker compose up -d
 
-  fastapi:
-    container_name: fastapi_service
-    build:
-      context: ./fastapi_app
-      dockerfile: Dockerfile  # IMPORTANT: You'll need to create this Dockerfile
-    # Example environment variables (adjust as needed)
-    # environment:
-    #   API_KEY: ${FASTAPI_API_KEY}
-    #   DATABASE_URL: "your_fastapi_db_connection_string"
-    ports:
-      - "8000:8000" # Assuming FastAPI runs on port 8000 internally
-    volumes:
-      - ../fastapi_app:/app # Mount your app code
-    networks:
-      - violentutf_api_network
-    # depends_on:
-    #   - some_other_service_if_needed # e.g., a database for FastAPI
-    restart: unless-stopped
-
-volumes:
-  strapi_api_pg_data: # Renamed to avoid conflict with old volume if any
-
-networks:
-  violentutf_api_network:
-    driver: bridge
-    name: violentutf_api_net
+# The API is accessible through APISIX at:
+# http://localhost:9080/api/

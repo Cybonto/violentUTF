@@ -59,6 +59,15 @@
         "attributes": {}
       },
       {
+        "id": "ai-api-access-role-id",
+        "name": "ai-api-access",
+        "description": "Access to AI API endpoints via APISIX",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "d24956b4-89da-4586-ad5a-f1e3a95a8201",
+        "attributes": {}
+      },
+      {
         "id": "8dec6615-c444-4fbf-9b8e-cbe189bac33c",
         "name": "uma_authorization",
         "description": "${role_uma_authorization}",

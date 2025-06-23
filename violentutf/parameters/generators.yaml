@@ -1,0 +1,14 @@
+Test_gpt3.5_turbo:
+  generator_type: AI Gateway
+  parameters:
+    provider: openai
+    model: gpt-3.5-turbo
+    max_requests_per_minute: 0
+    seed: 0
+Test_haiku_20240307:
+  generator_type: AI Gateway
+  parameters:
+    provider: anthropic
+    model: claude-3-5-haiku-20241022
+    max_requests_per_minute: 0
+    seed: 0

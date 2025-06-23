@@ -1,0 +1,5 @@
+test:
+  type: SubStringScorer
+  params:
+    substring: test
+    category: test

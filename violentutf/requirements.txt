@@ -27,6 +27,11 @@ neo4j>=5.0.0
 
 # HTTP requests and asynchronous operations
 aiohttp>=3.8.0
+httpx>=0.24.0
+httpx-sse>=0.3.0
+
+# Environment variable management
+python-dotenv>=1.0.0
 
 # Doc processing
 weasyprint>=53.0
@@ -42,9 +47,9 @@ anthropic>=0.3.0
 google-cloud-aiplatform>=1.12.0
 boto3>=1.20.0
 
-# Red Teaming tools
-pyrit                             # Must use Python 3.9 or 3.11 or 3.12
-garak
+# Red Teaming tools - Requires Python 3.10-3.12
+pyrit>=0.4.0                      # Microsoft PyRIT framework
+garak>=0.9.0                      # NVIDIA Garak LLM vulnerability scanner
 
 # Other requirements for ViolentUTF
 python-jose[cryptography]

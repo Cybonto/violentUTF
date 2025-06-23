@@ -1,0 +1,9 @@
+{
+    "test": {
+        "class": "ScoringOrchestrator",
+        "parameters": {
+            "batch_size": "10",
+            "verbose": ""
+        }
+    }
+}

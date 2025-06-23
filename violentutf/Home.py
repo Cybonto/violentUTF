@@ -10,6 +10,10 @@ import streamlit as st
 from utils.logging import setup_logging, get_logger
 import logging # Import base logging for potential direct use if needed
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 # Get a logger for this specific file (Home.py)
 logger = get_logger(__name__)
 
