@@ -155,17 +155,6 @@ def display_sidebar(page_name: str = None):
                     st.code('curl -H "Authorization: Bearer <token>" ...', language="bash")
             else:
                 st.warning("No JWT token available. Please ensure you're logged in.")
-        
-        # Navigation links
-        st.markdown("---")
-        st.markdown("### Navigation")
-        st.page_link("Home.py", label="🏠 Home")
-        st.page_link("pages/0_Welcome.py", label="👋 Welcome")
-        st.page_link("pages/2_ConfigureGenerators.py", label="⚙️ Generators")
-        st.page_link("pages/3_ConfigureDatasets.py", label="📊 Datasets")
-        st.page_link("pages/4_ConfigureConverters.py", label="🔄 Converters")
-        st.page_link("pages/5_ConfigureScorers.py", label="📈 Scorers")
-        st.page_link("pages/Simple_Chat.py", label="💬 Simple Chat")
 
 def clear_user_session():
     """Clear all user-related session state"""
