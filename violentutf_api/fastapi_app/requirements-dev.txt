@@ -1,0 +1,45 @@
+# API Development Dependencies
+# This file contains dependencies for API development (not testing)
+
+# Code formatting and linting
+black>=23.0.0
+isort>=5.12.0
+flake8>=6.0.0
+pylint>=2.17.0
+
+# Type checking
+mypy>=1.5.0
+types-PyYAML
+types-requests
+types-python-jose
+types-passlib
+
+# Pre-commit hooks
+pre-commit>=3.3.0
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.1.0
+mkdocstrings[python]>=0.22.0
+
+# Development utilities
+ipython>=8.14.0
+rich>=13.5.0  # Better terminal output
+python-dotenv>=1.0.0  # Environment variable management
+
+# API development tools
+uvicorn[standard]>=0.23.0  # ASGI server with reload
+watchdog>=3.0.0  # File watching for auto-reload
+
+# Database development
+alembic>=1.11.0  # Database migrations
+sqlalchemy-utils>=0.41.0  # Additional SQLAlchemy utilities
+
+# Debugging and profiling
+debugpy>=1.6.0  # Python debugger
+pyinstrument>=4.5.0  # Performance profiler
+py-spy>=0.3.14  # Sampling profiler
+
+# API documentation
+fastapi-code-generator>=0.4.0  # Generate code from OpenAPI
+datamodel-code-generator>=0.21.0  # Generate pydantic models

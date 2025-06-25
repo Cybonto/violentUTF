@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Dict, Optional
 from tests.utils.keycloak_auth import keycloak_auth
 
+# Configure pytest-asyncio at the top level
+pytest_plugins = ('pytest_asyncio',)
+
 # Load environment variables from project root
 def load_environment():
     """Load environment variables from .env files"""
@@ -198,6 +201,12 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "integration: mark test as integration test"
     )
+    config.addinivalue_line(
+        "markers", "allows_mock_auth: mark test as allowing mock authentication"
+    )
+    
+    # Configure asyncio for pytest
+    config.option.asyncio_default_fixture_loop_scope = "function"
 
 def pytest_collection_modifyitems(config, items):
     """Modify test collection to handle service requirements"""

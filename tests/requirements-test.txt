@@ -1,0 +1,60 @@
+# ViolentUTF Test Dependencies
+# This file contains all dependencies needed for running tests
+
+# Testing framework
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
+pytest-env
+pytest-xdist  # Parallel test execution
+pytest-timeout  # Prevent hanging tests
+pytest-httpx  # HTTPX mocking
+
+# Test data and mocking
+factory-boy  # Test data factories
+faker  # Fake data generation
+responses  # Mock HTTP responses
+freezegun  # Mock datetime
+aioresponses  # Mock async HTTP requests
+
+# Code quality (optional - install separately if needed)
+# pytest-black
+# pytest-isort
+# pytest-flake8
+
+# Additional testing utilities (optional)
+# pytest-clarity  # Better assertion messages
+# pytest-sugar  # Better test output formatting
+# pytest-benchmark  # Performance testing
+
+# Type checking
+mypy
+types-PyYAML
+types-requests
+types-python-jose
+types-passlib
+
+# Integration test specific dependencies (optional)
+# docker  # For container management in integration tests
+# testcontainers  # Test containers for integration tests
+
+# Security testing (optional)
+# bandit  # Security linter
+# safety  # Dependency vulnerability scanner
+
+# Load testing (optional - for performance tests)
+# locust  # Load testing framework
+
+# API testing
+httpx  # Modern HTTP client for API tests
+pydantic  # For response validation
+
+# Additional dependencies needed by the app
+passlib  # Password hashing
+bcrypt  # Password hashing backend for passlib
+python-jose[cryptography]  # JWT handling
+python-multipart  # Form data support
+aiosqlite  # Async SQLite for testing
+sqlalchemy  # Database ORM
+httpcore  # Required by httpx

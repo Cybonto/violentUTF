@@ -1,0 +1,123 @@
+[run]
+# Specify the source directories
+source = .
+# Use parallel processing
+parallel = True
+# Track which tests cover which lines
+branch = True
+
+# Omit files from coverage
+omit = 
+    # Test files
+    */tests/*
+    */test_*.py
+    *_test.py
+    
+    # Virtual environments
+    */venv/*
+    */venv_api/*
+    */venv_streamlit/*
+    */.venv/*
+    
+    # Python cache
+    */__pycache__/*
+    
+    # Migrations
+    */migrations/*
+    */alembic/*
+    
+    # Setup files
+    setup.py
+    */setup.py
+    
+    # Configuration files
+    */conf.py
+    */config.py
+    
+    # Third-party packages
+    */site-packages/*
+    
+    # Temporary files
+    */tmp/*
+    */temp/*
+    
+    # Documentation
+    */docs/*
+    
+    # Scripts
+    */scripts/*
+    setup_*.sh
+    *.bat
+
+[report]
+# Precision for coverage percentages
+precision = 2
+
+# Show lines that weren't covered
+show_missing = True
+
+# Skip files with 100% coverage in the report
+skip_covered = False
+
+# Skip empty files
+skip_empty = True
+
+# Exclude lines from coverage
+exclude_lines =
+    # Standard pragma
+    pragma: no cover
+    
+    # Don't complain about debug code
+    def __repr__
+    def __str__
+    
+    # Don't complain if tests don't hit defensive assertion code
+    raise AssertionError
+    raise NotImplementedError
+    
+    # Don't complain if non-runnable code isn't run
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    
+    # Don't complain about abstract methods
+    @(abc\.)?abstractmethod
+    
+    # Defensive programming
+    except ImportError
+    except ModuleNotFoundError
+    
+    # Platform-specific code
+    if sys.platform
+    if os.name
+
+# Sort the report by coverage percentage
+sort = Cover
+
+[html]
+# Directory for HTML coverage report
+directory = htmlcov
+title = ViolentUTF Coverage Report
+
+# Include branch coverage in HTML report
+show_contexts = True
+
+[xml]
+# Output file for XML coverage report
+output = coverage.xml
+
+[json]
+# Output file for JSON coverage report
+output = coverage.json
+# Pretty print JSON
+pretty_print = True
+
+[paths]
+# Map paths from different environments
+source =
+    violentutf/
+    violentutf_api/
+    tests/
+
+[tool:coverage]
+# Additional coverage configuration for different tools
+# This section can be used by tools that don't use .coveragerc directly

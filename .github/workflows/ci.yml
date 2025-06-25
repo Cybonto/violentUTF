@@ -1,0 +1,298 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, dev_tests ]
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "18"
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-lint-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-lint-
+          ${{ runner.os }}-pip-
+    
+    - name: Install linting dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r violentutf_api/fastapi_app/requirements-dev.txt
+    
+    - name: Run flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Check code formatting with black
+      run: |
+        black --check --diff violentutf/ violentutf_api/ tests/
+    
+    - name: Check import sorting with isort
+      run: |
+        isort --check-only --diff violentutf/ violentutf_api/ tests/
+
+  test:
+    name: Run Tests - Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: keycloak
+          POSTGRES_PASSWORD: keycloak
+          POSTGRES_DB: keycloak
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-test-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-test-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-test-
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r violentutf/requirements.txt
+        pip install -r violentutf_api/fastapi_app/requirements.txt
+        pip install -r tests/requirements-test.txt
+    
+    - name: Set up test environment
+      run: |
+        # Create necessary directories
+        mkdir -p app_data/violentutf/datasets
+        mkdir -p app_data/violentutf/parameters
+        mkdir -p app_data/violentutf/api_memory
+        mkdir -p logs
+        
+        # Set environment variables
+        echo "JWT_SECRET_KEY=test-secret-key-for-ci" >> $GITHUB_ENV
+        echo "KEYCLOAK_URL=http://localhost:8080" >> $GITHUB_ENV
+        echo "KEYCLOAK_REALM=violentutf" >> $GITHUB_ENV
+        echo "KEYCLOAK_CLIENT_ID=violentutf-client" >> $GITHUB_ENV
+        echo "API_BASE_URL=http://localhost:9080" >> $GITHUB_ENV
+    
+    - name: Run unit tests with coverage
+      run: |
+        cd tests
+        python -m pytest unit/ -v --cov=../violentutf --cov=../violentutf_api/fastapi_app/app --cov-report=xml --cov-report=html --cov-report=term
+    
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./tests/coverage.xml
+        flags: unittests
+        name: codecov-py${{ matrix.python-version }}
+        fail_ci_if_error: false
+    
+    - name: Upload coverage HTML report
+      uses: actions/upload-artifact@v3
+      if: matrix.python-version == '3.11'
+      with:
+        name: coverage-report
+        path: tests/htmlcov/
+    
+    - name: Check coverage threshold
+      run: |
+        # Extract coverage percentage
+        coverage_percent=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('tests/coverage.xml'); root = tree.getroot(); print(float(root.attrib['line-rate']) * 100)")
+        echo "Coverage: ${coverage_percent}%"
+        
+        # Fail if coverage is below threshold
+        python -c "import sys; sys.exit(0 if ${coverage_percent} >= 80 else 1)"
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+    
+    - name: Start services
+      run: |
+        # Start Keycloak
+        cd keycloak
+        docker-compose up -d
+        cd ..
+        
+        # Start APISIX
+        cd apisix
+        docker-compose up -d
+        cd ..
+        
+        # Wait for services to be ready
+        sleep 30
+    
+    - name: Run integration tests
+      run: |
+        cd tests
+        python -m pytest integration/ -v --tb=short
+    
+    - name: Stop services
+      if: always()
+      run: |
+        cd keycloak && docker-compose down
+        cd ../apisix && docker-compose down
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+    
+    - name: Run Bandit security scan
+      run: |
+        bandit -r violentutf/ violentutf_api/ -f json -o bandit-report.json
+    
+    - name: Upload Bandit report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: bandit-report
+        path: bandit-report.json
+    
+    - name: Check dependencies for vulnerabilities
+      run: |
+        safety check -r violentutf/requirements.txt -r violentutf_api/fastapi_app/requirements.txt
+
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build ViolentUTF Streamlit image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./violentutf
+        push: false
+        tags: violentutf/streamlit:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build ViolentUTF API image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./violentutf_api/fastapi_app
+        push: false
+        tags: violentutf/api:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [lint, test, integration-test, security-scan]
+    if: always()
+    
+    steps:
+    - name: Check job statuses
+      run: |
+        echo "Lint: ${{ needs.lint.result }}"
+        echo "Test: ${{ needs.test.result }}"
+        echo "Integration Test: ${{ needs.integration-test.result }}"
+        echo "Security Scan: ${{ needs.security-scan.result }}"
+        
+        # Set overall status
+        if [[ "${{ needs.lint.result }}" == "failure" ]] || \
+           [[ "${{ needs.test.result }}" == "failure" ]] || \
+           [[ "${{ needs.integration-test.result }}" == "failure" ]] || \
+           [[ "${{ needs.security-scan.result }}" == "failure" ]]; then
+          echo "CI_STATUS=failure" >> $GITHUB_ENV
+        else
+          echo "CI_STATUS=success" >> $GITHUB_ENV
+        fi
+    
+    - name: Create status comment
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const status = process.env.CI_STATUS;
+          const emoji = status === 'success' ? '✅' : '❌';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## CI Status: ${emoji} ${status}\n\n` +
+                  `- Lint: ${{ needs.lint.result }}\n` +
+                  `- Tests: ${{ needs.test.result }}\n` +
+                  `- Integration: ${{ needs.integration-test.result }}\n` +
+                  `- Security: ${{ needs.security-scan.result }}`
+          })
