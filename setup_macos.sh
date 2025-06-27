@@ -1308,14 +1308,17 @@ fetch_openapi_spec() {
     
     # Add custom headers if provided
     if [ -n "$custom_headers" ]; then
-        IFS=',' read -ra HEADERS <<< "$custom_headers"
-        for header in "${HEADERS[@]}"; do
+        # Save IFS and restore it after
+        local OLD_IFS="$IFS"
+        IFS=','
+        for header in $custom_headers; do
             # Trim whitespace
             header=$(echo "$header" | xargs)
             if [ -n "$header" ]; then
                 curl_args+=(-H "$header")
             fi
         done
+        IFS="$OLD_IFS"
     fi
     
     # Normalize URL to prevent double slashes
@@ -1522,7 +1525,9 @@ create_openapi_route() {
             ;;
         "api_key")
             # auth_config format: "header:value"
-            IFS=':' read -r header value <<< "$auth_config"
+            # Use echo and pipe for compatibility
+            header=$(echo "$auth_config" | cut -d: -f1)
+            value=$(echo "$auth_config" | cut -d: -f2-)
             auth_section='"auth": {
                 "header": {
                     "'"$header"'": "'"$value"'"
@@ -1673,7 +1678,17 @@ setup_openapi_routes() {
                     local endpoints_file="$cache_dir/${provider_id}_endpoints.json"
                     if parse_openapi_endpoints "$spec_file" "$provider_id" "$endpoints_file"; then
                         
-                        # Process endpoints using process substitution to avoid subshell
+                        # Process endpoints - save to temp file to avoid subshell issues
+                        local temp_endpoints="$cache_dir/${provider_id}_temp_endpoints.txt"
+                        python3 -c "
+import json
+with open('$endpoints_file', 'r') as f:
+    data = json.load(f)
+    # Sort to process AI endpoints first
+    endpoints = sorted(data['endpoints'], key=lambda x: not x.get('is_ai_endpoint', False))
+    for ep in endpoints:
+        print(f\"{ep['path']}|{ep['method']}|{ep['operationId']}|{ep.get('is_ai_endpoint', False)}\")" > "$temp_endpoints"
+                        
                         while IFS='|' read -r path method op_id is_ai; do
                             local auth_config_value="$auth_value"
                             if [ "$auth_type" = "api_key" ]; then
@@ -1682,18 +1697,11 @@ setup_openapi_routes() {
                             
                             if create_openapi_route "$provider_id" "$provider_name" "$base_url" \
                                 "$path" "$method" "$op_id" "$auth_type" "$auth_config_value"; then
-                                ((total_success++))
+                                total_success=$((total_success + 1))
                             else
-                                ((total_failed++))
+                                total_failed=$((total_failed + 1))
                             fi
-                        done < <(python3 -c "
-import json
-with open('$endpoints_file', 'r') as f:
-    data = json.load(f)
-    # Sort to process AI endpoints first
-    endpoints = sorted(data['endpoints'], key=lambda x: not x.get('is_ai_endpoint', False))
-    for ep in endpoints:
-        print(f\"{ep['path']}|{ep['method']}|{ep['operationId']}|{ep.get('is_ai_endpoint', False)}\")")
+                        done < "$temp_endpoints"
                     fi
                 fi
             fi
