@@ -2650,6 +2650,13 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
     ORIGINAL_DIR=$(pwd)
     cd "$KEYCLOAK_ENV_DIR" || { echo "Failed to cd into $KEYCLOAK_ENV_DIR"; exit 1; }
     
+    # Check if .env file exists - it might have been removed or this is a fresh setup
+    if [ ! -f ".env" ]; then
+        echo "⚠️  Keycloak .env file missing. Creating it with PostgreSQL password..."
+        echo "POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD" > .env
+        echo "✅ Created keycloak/.env"
+    fi
+    
     # Ensure docker-compose.yml has network configuration
     echo "Ensuring Keycloak docker-compose.yml has proper network configuration..."
     ensure_network_in_compose "docker-compose.yml" "keycloak"
