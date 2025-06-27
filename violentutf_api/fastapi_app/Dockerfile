@@ -1,4 +1,4 @@
-# Multi-stage build for production with SSL bypass for corporate environments
+# Multi-stage build for production with Zscaler certificate support
 FROM python:3.11-slim as builder
 
 WORKDIR /build
@@ -8,18 +8,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ git build-essential pkg-config curl libssl-dev ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Rust with SSL verification disabled (for Zscaler/corporate proxy environments)
+# Copy and install Zscaler certificates if they exist
+# Using a more Docker-friendly approach
+COPY zscaler.cr[t] CA.cr[t] /usr/local/share/ca-certificates/
+RUN update-ca-certificates || true
+
+# Set environment to use system certificates
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+# Install Rust with proper certificate handling
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
-RUN curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
     chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
 # Verify Rust installation
 RUN rustc --version && cargo --version
 
-# Copy and install requirements with trusted hosts
+# Copy and install requirements
 COPY requirements.txt requirements-minimal.txt ./
-RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt && \
+RUN pip install --no-cache-dir -r requirements.txt && \
     pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
 
 # Final stage
@@ -32,9 +42,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl git gcc g++ build-essential ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Rust for runtime with SSL bypass
+# Copy certificates from builder stage
+COPY --from=builder /usr/local/share/ca-certificates/ /usr/local/share/ca-certificates/
+RUN update-ca-certificates || true
+
+# Set environment to use system certificates
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+# Install Rust for runtime
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
-RUN curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
     chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 

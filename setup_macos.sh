@@ -2283,89 +2283,54 @@ handle_ssl_certificate_issues() {
     # Test if we can reach common SSL sites
     if ! curl -s --connect-timeout 5 https://sh.rustup.rs > /dev/null 2>&1; then
         echo "⚠️  Detected SSL certificate verification issues (likely Zscaler or corporate proxy)"
-        echo "Applying automatic SSL workaround for Docker builds..."
         
-        # Backup original Dockerfile if it exists and we haven't backed it up already
-        if [ -f "violentutf_api/fastapi_app/Dockerfile" ] && [ ! -f "violentutf_api/fastapi_app/Dockerfile.original" ]; then
-            cp violentutf_api/fastapi_app/Dockerfile violentutf_api/fastapi_app/Dockerfile.original
-            echo "   Backed up original Dockerfile to Dockerfile.original"
-        else
-            echo "   Using previously created SSL workaround Dockerfile"
+        # Check if certificates already exist
+        if [ -f "violentutf_api/fastapi_app/zscaler.crt" ] || [ -f "violentutf_api/fastapi_app/CA.crt" ]; then
+            echo "✅ Found Zscaler/CA certificates in FastAPI directory"
+            echo "   The Dockerfile will use these certificates for SSL verification"
+            export SSL_WORKAROUND_APPLIED=true
+            return 0
         fi
         
-        # Create a Dockerfile that bypasses SSL verification
-        cat > violentutf_api/fastapi_app/Dockerfile << 'EOF'
-# Multi-stage build for production with SSL bypass for corporate environments
-FROM python:3.11-slim as builder
-
-WORKDIR /build
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc g++ git build-essential pkg-config curl libssl-dev ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Rust with SSL verification disabled (for Zscaler/corporate proxy environments)
-ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
-RUN curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
-
-# Verify Rust installation
-RUN rustc --version && cargo --version
-
-# Copy and install requirements with trusted hosts
-COPY requirements.txt requirements-minimal.txt ./
-RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt && \
-    pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
-
-# Final stage
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl git gcc g++ build-essential ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Rust for runtime with SSL bypass
-ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
-RUN curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
-
-# Copy wheels and install
-COPY --from=builder /build/wheels /wheels
-COPY requirements.txt ./
-RUN pip install --no-cache /wheels/*
-
-# Verify PyRIT and Garak installation
-COPY verify_redteam_install.py .
-RUN python verify_redteam_install.py && \
-    echo "✅ PyRIT and Garak verification completed successfully"
-
-# Copy application
-COPY . .
-
-# Create directories and user
-RUN mkdir -p app_data config logs && chmod 755 app_data config logs
-RUN useradd -m -u 1000 fastapi && chown -R fastapi:fastapi /app
-USER fastapi
-
-ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
-EOF
+        echo ""
+        echo "📌 You need to add your Zscaler/CA certificates for the build to work."
+        echo ""
+        echo "Option 1 (Automatic - macOS only):"
+        echo "   ./get-zscaler-certs.sh"
+        echo ""
+        echo "Option 2 (Manual):"
+        echo "   1. Export your Zscaler certificate (usually from Keychain or Certificate Manager)"
+        echo "   2. Copy the certificates to the FastAPI directory:"
+        echo "      cp zscaler.crt violentutf_api/fastapi_app/"
+        echo "      cp CA.crt violentutf_api/fastapi_app/"
+        echo ""
+        echo "After adding certificates, run this setup script again."
+        echo ""
         
-        echo "✅ Applied SSL certificate workaround for Docker builds"
-        echo "   Note: This bypasses SSL verification for Rust installation only"
-        
-        # Set flag to indicate SSL workaround was applied
-        export SSL_WORKAROUND_APPLIED=true
+        # Ask user if they want to try automatic export
+        if [ -f "./get-zscaler-certs.sh" ]; then
+            read -p "Would you like to try automatic certificate export? (y/n): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                ./get-zscaler-certs.sh
+                
+                # Check if certificates were exported successfully
+                if [ -f "violentutf_api/fastapi_app/zscaler.crt" ] || [ -f "violentutf_api/fastapi_app/CA.crt" ]; then
+                    echo "✅ Certificates exported successfully. Continuing setup..."
+                    export SSL_WORKAROUND_APPLIED=true
+                    return 0
+                else
+                    echo "❌ Certificate export failed. Please add certificates manually and run setup again."
+                    exit 1
+                fi
+            else
+                echo "Please add certificates manually and run setup again."
+                exit 1
+            fi
+        else
+            echo "Please add certificates manually and run setup again."
+            exit 1
+        fi
     else
         echo "✅ No SSL certificate issues detected"
         export SSL_WORKAROUND_APPLIED=false
