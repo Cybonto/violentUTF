@@ -1,4 +1,4 @@
-# Multi-stage build for production
+# Multi-stage build for production with Zscaler support
 # Updated to Python 3.11 for PyRIT and Garak compatibility
 FROM python:3.11-slim as builder
 
@@ -16,29 +16,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Handle Zscaler certificates - create directory first
-RUN mkdir -p /usr/local/share/ca-certificates
+# Copy and install Zscaler certificates
+COPY zscaler.crt /usr/local/share/ca-certificates/
+COPY zscaler.pem /usr/local/share/ca-certificates/
+COPY CA.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
 
-# Copy certificates if they exist, otherwise create empty files to avoid build failure
-COPY zscaler.crt* CA.crt* /tmp/certs/ 2>/dev/null || :
-RUN if ls /tmp/certs/*.crt 2>/dev/null; then \
-        cp /tmp/certs/*.crt /usr/local/share/ca-certificates/ && \
-        update-ca-certificates; \
-    fi
+# Set environment to use system certificates
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 # Install Rust toolchain for base2048 dependency
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH
 
-# Try to install Rust, with fallback to insecure mode if SSL fails (for Zscaler environments)
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME || \
-    (echo "Retrying Rust installation with SSL verification disabled (Zscaler workaround)..." && \
-     curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-     chmod -R a+w $RUSTUP_HOME $CARGO_HOME)
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
 # Verify Rust installation
 RUN rustc --version && cargo --version
@@ -65,28 +60,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Zscaler certificates if they exist (for corporate environments)
-COPY --from=builder /usr/local/share/ca-certificates/*.crt /usr/local/share/ca-certificates/ 2>/dev/null || true
-COPY --from=builder /usr/local/share/ca-certificates/*.pem /usr/local/share/ca-certificates/ 2>/dev/null || true
+# Copy certificates from builder
+COPY --from=builder /usr/local/share/ca-certificates/ /usr/local/share/ca-certificates/
+RUN update-ca-certificates
 
-# Update CA certificates if any were added
-RUN if ls /usr/local/share/ca-certificates/*.crt 1> /dev/null 2>&1; then \
-        update-ca-certificates; \
-    fi
+# Set environment to use system certificates
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 # Install Rust for runtime compilation if needed
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH
 
-# Try to install Rust, with fallback to insecure mode if SSL fails (for Zscaler environments)
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME || \
-    (echo "Retrying Rust installation with SSL verification disabled (Zscaler workaround)..." && \
-     curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-     chmod -R a+w $RUSTUP_HOME $CARGO_HOME)
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
 # Copy wheels from builder and install
 COPY --from=builder /build/wheels /wheels
