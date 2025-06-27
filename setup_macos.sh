@@ -2289,6 +2289,8 @@ handle_ssl_certificate_issues() {
         if [ -f "violentutf_api/fastapi_app/Dockerfile" ] && [ ! -f "violentutf_api/fastapi_app/Dockerfile.original" ]; then
             cp violentutf_api/fastapi_app/Dockerfile violentutf_api/fastapi_app/Dockerfile.original
             echo "   Backed up original Dockerfile to Dockerfile.original"
+        else
+            echo "   Using previously created SSL workaround Dockerfile"
         fi
         
         # Create a Dockerfile that bypasses SSL verification

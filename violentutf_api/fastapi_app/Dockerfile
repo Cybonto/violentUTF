@@ -1,53 +1,25 @@
-# Multi-stage build for production
-# Updated to Python 3.11 for PyRIT and Garak compatibility
+# Multi-stage build for production with SSL bypass for corporate environments
 FROM python:3.11-slim as builder
 
 WORKDIR /build
 
-# Install build dependencies for PyRIT and Garak (including Rust for base2048)
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    git \
-    build-essential \
-    pkg-config \
-    curl \
-    libssl-dev \
-    ca-certificates \
+    gcc g++ git build-essential pkg-config curl libssl-dev ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Handle Zscaler certificates - create directory first
-RUN mkdir -p /usr/local/share/ca-certificates
-
-# Copy certificates if they exist, otherwise create empty files to avoid build failure
-COPY zscaler.crt* CA.crt* /tmp/certs/ 2>/dev/null || :
-RUN if ls /tmp/certs/*.crt 2>/dev/null; then \
-        cp /tmp/certs/*.crt /usr/local/share/ca-certificates/ && \
-        update-ca-certificates; \
-    fi
-
-# Install Rust toolchain for base2048 dependency
-ENV RUSTUP_HOME=/usr/local/rustup \
-    CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:$PATH
-
-# Try to install Rust, with fallback to insecure mode if SSL fails (for Zscaler environments)
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+# Install Rust with SSL verification disabled (for Zscaler/corporate proxy environments)
+ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
+RUN curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME || \
-    (echo "Retrying Rust installation with SSL verification disabled (Zscaler workaround)..." && \
-     curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-     chmod -R a+w $RUSTUP_HOME $CARGO_HOME)
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
 # Verify Rust installation
 RUN rustc --version && cargo --version
 
-# Copy requirements and install dependencies
+# Copy and install requirements with trusted hosts
 COPY requirements.txt requirements-minimal.txt ./
-
-# Install dependencies directly in builder stage to ensure they compile
-RUN pip install --no-cache-dir -r requirements.txt && \
+RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt && \
     pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
 
 # Final stage
@@ -55,40 +27,18 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install runtime dependencies for PyRIT and Garak
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    git \
-    gcc \
-    g++ \
-    build-essential \
-    ca-certificates \
+    curl git gcc g++ build-essential ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Zscaler certificates if they exist (for corporate environments)
-COPY --from=builder /usr/local/share/ca-certificates/*.crt /usr/local/share/ca-certificates/ 2>/dev/null || true
-COPY --from=builder /usr/local/share/ca-certificates/*.pem /usr/local/share/ca-certificates/ 2>/dev/null || true
-
-# Update CA certificates if any were added
-RUN if ls /usr/local/share/ca-certificates/*.crt 1> /dev/null 2>&1; then \
-        update-ca-certificates; \
-    fi
-
-# Install Rust for runtime compilation if needed
-ENV RUSTUP_HOME=/usr/local/rustup \
-    CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:$PATH
-
-# Try to install Rust, with fallback to insecure mode if SSL fails (for Zscaler environments)
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+# Install Rust for runtime with SSL bypass
+ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
+RUN curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME || \
-    (echo "Retrying Rust installation with SSL verification disabled (Zscaler workaround)..." && \
-     curl -k --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-     sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-     chmod -R a+w $RUSTUP_HOME $CARGO_HOME)
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-# Copy wheels from builder and install
+# Copy wheels and install
 COPY --from=builder /build/wheels /wheels
 COPY requirements.txt ./
 RUN pip install --no-cache /wheels/*
@@ -101,24 +51,14 @@ RUN python verify_redteam_install.py && \
 # Copy application
 COPY . .
 
-# Create necessary directories with proper permissions
-RUN mkdir -p app_data config logs && \
-    chmod 755 app_data config logs
-
-# Create non-root user
-RUN useradd -m -u 1000 fastapi && \
-    chown -R fastapi:fastapi /app
-
-# Switch to non-root user
+# Create directories and user
+RUN mkdir -p app_data config logs && chmod 755 app_data config logs
+RUN useradd -m -u 1000 fastapi && chown -R fastapi:fastapi /app
 USER fastapi
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
