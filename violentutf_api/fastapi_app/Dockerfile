@@ -12,11 +12,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     pkg-config \
     curl \
+    libssl-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Rust toolchain for base2048 dependency
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+
+# Verify Rust installation
+RUN rustc --version && cargo --version
 
 # Copy requirements and install dependencies
 COPY requirements.txt requirements-minimal.txt ./
@@ -40,8 +50,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Rust for runtime compilation if needed
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
 # Copy wheels from builder and install
 COPY --from=builder /build/wheels /wheels
