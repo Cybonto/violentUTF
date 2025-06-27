@@ -1555,7 +1555,7 @@ create_openapi_route() {
                     "model": "'"$operation_id"'"
                 },
                 "override": {
-                    "endpoint": "'"${base_url}${endpoint_path}"'"
+                    "endpoint": "'"${base_url}/${endpoint_path}"'"
                 }
             }
         }
