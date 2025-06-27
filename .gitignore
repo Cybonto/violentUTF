@@ -13,3 +13,4 @@ CA.crt
 *old*
 docs/.DS_Store
 *.db
+*CLAUDE*.*

@@ -103,6 +103,42 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
         }
         return bedrock_mappings.get(model)
     
+    # OpenAPI provider mappings
+    elif provider.startswith("openapi-"):
+        # For OpenAPI providers, the model is the operation ID
+        # Format: /ai/openapi/{provider-id}/{path}
+        provider_id = provider.replace("openapi-", "")
+        
+        # Need to find the actual path for this operation
+        # Query APISIX to find the route
+        try:
+            apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
+            apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
+            
+            response = requests.get(
+                f"{apisix_admin_url}/apisix/admin/routes",
+                headers={"X-API-KEY": apisix_admin_key},
+                timeout=5
+            )
+            
+            if response.status_code == 200:
+                routes_data = response.json()
+                if "list" in routes_data:
+                    for route_item in routes_data["list"]:
+                        route = route_item.get("value", {})
+                        route_id = route.get("id", "")
+                        
+                        # Match route ID pattern
+                        safe_operation_id = model.replace("_", "-").lower()
+                        expected_route_id = f"openapi-{provider_id}-{safe_operation_id}"
+                        
+                        if route_id == expected_route_id:
+                            return route.get("uri", "")
+        except Exception as e:
+            logger.error(f"Error finding OpenAPI endpoint for {provider}/{model}: {e}")
+        
+        return None
+    
     return None
 
 # DuckDB storage replaces in-memory storage
@@ -272,6 +308,35 @@ def discover_apisix_models(provider: str) -> List[str]:
                     # Extract model from URI like /ai/webui/llama2 -> llama2
                     model_key = uri.replace("/ai/webui/", "")
                     models.append(model_key)
+                    
+                elif provider.startswith("openapi-") and uri.startswith("/ai/openapi/"):
+                    # Extract OpenAPI provider routes
+                    # URI format: /ai/openapi/{provider-id}/{path}
+                    parts = uri.split("/")
+                    if len(parts) >= 4:
+                        provider_id = parts[3]
+                        if provider == f"openapi-{provider_id}":
+                            # Get operation ID from route description or ID
+                            route_id = route.get("id", "")
+                            desc = route.get("desc", "")
+                            
+                            # Extract operation ID from route ID
+                            # New format: openapi-{provider-id}-{operation-id}-{hash}
+                            if route_id.startswith(f"openapi-{provider_id}-"):
+                                # Remove prefix
+                                temp = route_id.replace(f"openapi-{provider_id}-", "")
+                                # Remove the last -xxxxxxxx (8 char hash)
+                                if len(temp) > 9 and temp[-9] == '-':
+                                    operation_id = temp[:-9]
+                                else:
+                                    operation_id = temp
+                                # Convert back from safe format
+                                operation_id = operation_id.replace("-", "_")
+                                models.append(operation_id)
+                            elif desc and ":" in desc:
+                                # Fallback: extract from description
+                                operation_id = desc.split(":")[-1].strip()
+                                models.append(operation_id)
         
         # Remove duplicates and sort
         models = list(set(models))
@@ -324,6 +389,12 @@ def map_uri_to_model(provider: str, uri_key: str) -> str:
         }
         return uri_to_model.get(uri_key)
     
+    # OpenAPI URI mappings
+    elif provider.startswith("openapi-"):
+        # For OpenAPI, the URI key is the operation ID
+        # Just return it as-is
+        return uri_key
+    
     return uri_key
 
 def get_fallback_models(provider: str) -> List[str]:
@@ -336,6 +407,11 @@ def get_fallback_models(provider: str) -> List[str]:
         "ollama": ["llama2", "codellama", "mistral", "llama3"],
         "webui": ["llama2", "codellama"]
     }
+    
+    # For OpenAPI providers, return empty list as models are discovered dynamically
+    if provider.startswith("openapi-"):
+        return []
+        
     return fallback_mappings.get(provider, [])
 
 
@@ -370,6 +446,29 @@ async def get_generator_type_params(
             raise safe_error_response("Generator type not found", status_code=404)
         
         type_def = GENERATOR_TYPE_DEFINITIONS[generator_type]
+        
+        # For AI Gateway, dynamically add OpenAPI providers to options
+        if generator_type == "AI Gateway":
+            # Make a copy to avoid modifying the original
+            type_def = type_def.copy()
+            type_def["parameters"] = [param.copy() for param in type_def["parameters"]]
+            
+            # Find the provider parameter and add OpenAPI providers
+            for param in type_def["parameters"]:
+                if param["name"] == "provider":
+                    # Get base providers
+                    base_providers = ["openai", "anthropic", "ollama", "webui"]
+                    
+                    # Discover OpenAPI providers
+                    openapi_providers = get_openapi_providers()
+                    
+                    # Combine all providers
+                    all_providers = base_providers + openapi_providers
+                    param["options"] = all_providers
+                    
+                    logger.info(f"Available providers: {all_providers}")
+                    break
+        
         parameters = [GeneratorParameter(**param) for param in type_def["parameters"]]
         
         return GeneratorParametersResponse(
@@ -601,6 +700,62 @@ async def update_generator(
     except Exception as e:
         logger.error(f"Error updating generator {generator_id}: {e}")
         raise safe_error_response("Failed to update generator", status_code=500)
+
+
+def get_openapi_providers() -> List[str]:
+    """
+    Discover available OpenAPI providers from APISIX routes
+    """
+    try:
+        apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
+        apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
+        
+        response = requests.get(
+            f"{apisix_admin_url}/apisix/admin/routes",
+            headers={"X-API-KEY": apisix_admin_key},
+            timeout=10
+        )
+        
+        if response.status_code != 200:
+            return []
+        
+        routes_data = response.json()
+        providers = set()
+        
+        if "list" in routes_data:
+            for route_item in routes_data["list"]:
+                route = route_item.get("value", {})
+                uri = route.get("uri", "")
+                
+                # Match OpenAPI URI pattern: /ai/openapi/{provider-id}/...
+                if uri.startswith("/ai/openapi/"):
+                    parts = uri.split("/")
+                    if len(parts) >= 4:
+                        provider_id = parts[3]
+                        providers.add(f"openapi-{provider_id}")
+        
+        return sorted(list(providers))
+        
+    except Exception as e:
+        logger.error(f"Error discovering OpenAPI providers: {e}")
+        return []
+
+
+@router.get("/apisix/openapi-providers", response_model=List[str],
+           summary="Get list of available OpenAPI providers")
+async def get_openapi_providers_endpoint(
+    current_user=Depends(get_current_user)
+) -> List[str]:
+    """Get list of available OpenAPI providers"""
+    try:
+        providers = get_openapi_providers()
+        return providers
+    except Exception as e:
+        logger.error(f"Error getting OpenAPI providers: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=safe_error_response("Failed to get OpenAPI providers")
+        )
 
 
 

@@ -673,6 +673,46 @@ BEDROCK_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your_aws_access_key_id_here
 AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key_here
 AWS_SESSION_TOKEN=your_aws_session_token_here_if_using_temp_credentials
+
+# OpenAPI Provider Configuration
+# Support for generic OpenAPI-compliant endpoints
+OPENAPI_ENABLED=false
+
+# OpenAPI Provider 1
+OPENAPI_1_ENABLED=false
+OPENAPI_1_ID=custom-api-1
+OPENAPI_1_NAME="Custom API Provider 1"
+OPENAPI_1_BASE_URL=https://api.example.com
+OPENAPI_1_SPEC_PATH=/openapi.json
+OPENAPI_1_AUTH_TYPE=bearer
+OPENAPI_1_AUTH_TOKEN=your_bearer_token_here
+# Optional: Custom headers (comma-separated key:value pairs)
+OPENAPI_1_CUSTOM_HEADERS=""
+
+# OpenAPI Provider 2 (API Key example)
+OPENAPI_2_ENABLED=false
+OPENAPI_2_ID=internal-api
+OPENAPI_2_NAME="Internal AI Service"
+OPENAPI_2_BASE_URL=https://internal.company.com/ai/v1
+OPENAPI_2_SPEC_PATH=/swagger.json
+OPENAPI_2_AUTH_TYPE=api_key
+OPENAPI_2_API_KEY=your_api_key_here
+OPENAPI_2_API_KEY_HEADER=X-API-Key
+OPENAPI_2_CUSTOM_HEADERS=""
+
+# OpenAPI Provider 3 (Basic Auth example)
+OPENAPI_3_ENABLED=false
+OPENAPI_3_ID=legacy-api
+OPENAPI_3_NAME="Legacy API System"
+OPENAPI_3_BASE_URL=https://legacy.system.com
+OPENAPI_3_SPEC_PATH=/api-docs/openapi.yaml
+OPENAPI_3_AUTH_TYPE=basic
+OPENAPI_3_BASIC_USERNAME=username
+OPENAPI_3_BASIC_PASSWORD=password
+OPENAPI_3_CUSTOM_HEADERS=""
+
+# Add more providers as needed following the same pattern
+# Maximum supported: 10 providers (OPENAPI_1 through OPENAPI_10)
 EOF
         echo "✅ Created $AI_TOKENS_FILE"
         echo "📝 Please edit this file and add your API keys, then re-run the script"
@@ -1238,6 +1278,442 @@ setup_bedrock_routes() {
     fi
 }
 
+# Function to fetch OpenAPI specification
+fetch_openapi_spec() {
+    local base_url="$1"
+    local spec_path="$2"
+    local auth_type="$3"
+    local auth_value="$4"
+    local auth_header="$5"
+    local custom_headers="$6"
+    local output_file="$7"
+    
+    echo "Fetching OpenAPI spec from ${base_url}${spec_path}..."
+    
+    # Use array for curl command to avoid eval
+    local curl_args=(-s -f)
+    
+    # Add authentication
+    case "$auth_type" in
+        "bearer")
+            curl_args+=(-H "Authorization: Bearer $auth_value")
+            ;;
+        "api_key")
+            curl_args+=(-H "$auth_header: $auth_value")
+            ;;
+        "basic")
+            curl_args+=(-u "$auth_value")
+            ;;
+    esac
+    
+    # Add custom headers if provided
+    if [ -n "$custom_headers" ]; then
+        IFS=',' read -ra HEADERS <<< "$custom_headers"
+        for header in "${HEADERS[@]}"; do
+            # Trim whitespace
+            header=$(echo "$header" | xargs)
+            if [ -n "$header" ]; then
+                curl_args+=(-H "$header")
+            fi
+        done
+    fi
+    
+    # Normalize URL to prevent double slashes
+    local full_url="${base_url%/}/${spec_path#/}"
+    
+    # Execute curl with array expansion
+    if curl "${curl_args[@]}" "$full_url" -o "$output_file"; then
+        echo "✅ Successfully fetched OpenAPI spec"
+        return 0
+    else
+        echo "❌ Failed to fetch OpenAPI spec from $full_url"
+        return 1
+    fi
+}
+
+# Function to validate OpenAPI specification
+validate_openapi_spec() {
+    local spec_file="$1"
+    
+    echo "Validating OpenAPI specification..."
+    
+    # Check if file exists
+    if [ ! -f "$spec_file" ]; then
+        echo "❌ Spec file not found: $spec_file"
+        return 1
+    fi
+    
+    # Check if it's valid JSON
+    if python3 -c "import json; json.load(open('$spec_file'))" 2>/dev/null; then
+        echo "✅ Valid JSON format"
+        spec_format="json"
+    else
+        # Check for YAML support
+        if ! python3 -c "import yaml" 2>/dev/null; then
+            echo "⚠️  PyYAML not installed, trying JSON only"
+            echo "❌ Invalid JSON format and YAML support not available"
+            return 1
+        fi
+        
+        # Try YAML
+        if python3 -c "import yaml; yaml.safe_load(open('$spec_file'))" 2>/dev/null; then
+            echo "✅ Valid YAML format"
+            spec_format="yaml"
+        else
+            echo "❌ Invalid specification format (not valid JSON or YAML)"
+            return 1
+        fi
+    fi
+    
+    # Check for OpenAPI version (3.0+) with proper variable passing
+    local openapi_version=$(python3 - "$spec_file" "$spec_format" << 'EOF' 2>/dev/null
+import sys
+import json
+import yaml
+
+spec_file = sys.argv[1]
+spec_format = sys.argv[2]
+
+with open(spec_file, 'r') as f:
+    if spec_format == 'json':
+        spec = json.load(f)
+    else:
+        spec = yaml.safe_load(f)
+    print(spec.get('openapi', ''))
+EOF
+)
+    
+    if [[ "$openapi_version" =~ ^3\. ]]; then
+        echo "✅ OpenAPI version: $openapi_version"
+        return 0
+    else
+        echo "❌ Unsupported OpenAPI version: $openapi_version (requires 3.0+)"
+        return 1
+    fi
+}
+
+# Function to parse OpenAPI spec and extract endpoints
+parse_openapi_endpoints() {
+    local spec_file="$1"
+    local provider_id="$2"
+    local endpoints_file="$3"
+    
+    echo "Parsing OpenAPI endpoints..."
+    
+    # Create Python script with proper parameter passing
+    if ! python3 - "$spec_file" "$provider_id" > "$endpoints_file" << 'EOF'
+import json
+import yaml
+import sys
+
+try:
+    spec_file = sys.argv[1]
+    provider_id = sys.argv[2]
+    
+    # Load the spec
+    with open(spec_file, 'r') as f:
+        content = f.read()
+        try:
+            spec = json.loads(content)
+        except:
+            spec = yaml.safe_load(content)
+    
+    # Extract base information
+    servers = spec.get('servers', [])
+    base_path = servers[0].get('url', '') if servers else ''
+    
+    # Extract paths and operations
+    paths = spec.get('paths', {})
+    endpoints = []
+    
+    for path, path_item in paths.items():
+        # Skip if path item is a reference
+        if isinstance(path_item, dict) and '$ref' not in path_item:
+            for method in ['get', 'post', 'put', 'delete', 'patch', 'head', 'options']:
+                if method in path_item:
+                    operation = path_item[method]
+                    
+                    # Generate unique operation ID if not provided
+                    op_id = operation.get('operationId', f"{method}_{path.replace('/', '_').replace('{', '').replace('}', '')}")
+                    
+                    # Extract operation details
+                    endpoint = {
+                        'path': path,
+                        'method': method.upper(),
+                        'operationId': op_id,
+                        'summary': operation.get('summary', ''),
+                        'description': operation.get('description', ''),
+                        'tags': operation.get('tags', []),
+                        'security': operation.get('security', spec.get('security', [])),
+                        'parameters': operation.get('parameters', []),
+                        'requestBody': operation.get('requestBody', {}),
+                        'responses': operation.get('responses', {})
+                    }
+                    
+                    # Check if this looks like an AI/chat endpoint
+                    is_ai_endpoint = any(keyword in path.lower() or keyword in endpoint['summary'].lower() 
+                                       for keyword in ['chat', 'completion', 'generate', 'predict', 'inference', 'embedding'])
+                    endpoint['is_ai_endpoint'] = is_ai_endpoint
+                    
+                    endpoints.append(endpoint)
+    
+    # Output as JSON
+    result = {
+        'provider_id': provider_id,
+        'base_path': base_path,
+        'endpoints': endpoints,
+        'security_schemes': spec.get('components', {}).get('securitySchemes', {})
+    }
+    
+    print(json.dumps(result, indent=2))
+    
+except Exception as e:
+    import traceback
+    sys.stderr.write(f"Error parsing OpenAPI spec: {str(e)}\n")
+    sys.stderr.write(traceback.format_exc())
+    sys.exit(1)
+EOF
+    then
+        local endpoint_count=$(python3 -c "import json; print(len(json.load(open('$endpoints_file'))['endpoints']))")
+        echo "✅ Found $endpoint_count endpoints"
+        return 0
+    else
+        echo "❌ Failed to parse endpoints"
+        return 1
+    fi
+}
+
+# Function to create APISIX route for OpenAPI endpoint
+create_openapi_route() {
+    local provider_id="$1"
+    local provider_name="$2"
+    local base_url="$3"
+    local endpoint_path="$4"
+    local method="$5"
+    local operation_id="$6"
+    local auth_type="$7"
+    local auth_config="$8"
+    
+    # Generate route ID with path hash for uniqueness
+    local path_hash=$(echo -n "${method}:${endpoint_path}" | md5sum | cut -c1-8)
+    local safe_operation_id=$(echo "$operation_id" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+    local route_id="openapi-${provider_id}-${safe_operation_id}-${path_hash}"
+    
+    # Convert OpenAPI path parameters to APISIX wildcards
+    # {id} -> *, {userId} -> *, etc.
+    local apisix_path=$(echo "$endpoint_path" | sed 's/{[^}]*}/*/g')
+    local uri="/ai/openapi/${provider_id}${apisix_path}"
+    
+    # Normalize base URL and endpoint path to prevent double slashes
+    base_url="${base_url%/}"
+    endpoint_path="${endpoint_path#/}"
+    
+    echo "Creating route: $uri -> ${base_url}/${endpoint_path}"
+    
+    # Build auth configuration for ai-proxy
+    local auth_section=""
+    case "$auth_type" in
+        "bearer")
+            auth_section='"auth": {
+                "header": {
+                    "Authorization": "Bearer '"$auth_config"'"
+                }
+            },'
+            ;;
+        "api_key")
+            # auth_config format: "header:value"
+            IFS=':' read -r header value <<< "$auth_config"
+            auth_section='"auth": {
+                "header": {
+                    "'"$header"'": "'"$value"'"
+                }
+            },'
+            ;;
+        "basic")
+            # auth_config format: "username:password"
+            local basic_auth=$(echo -n "$auth_config" | base64)
+            auth_section='"auth": {
+                "header": {
+                    "Authorization": "Basic '"$basic_auth"'"
+                }
+            },'
+            ;;
+    esac
+    
+    # Create route configuration
+    local route_config='{
+        "id": "'"$route_id"'",
+        "uri": "'"$uri"'",
+        "methods": ["'"$method"'"],
+        "desc": "'"$provider_name: $operation_id"'",
+        "plugins": {
+            "key-auth": {},
+            "ai-proxy": {
+                "provider": "openai-compatible",
+                '"$auth_section"'
+                "options": {
+                    "model": "'"$operation_id"'"
+                },
+                "override": {
+                    "endpoint": "'"${base_url}${endpoint_path}"'"
+                }
+            }
+        }
+    }'
+    
+    # Check if route already exists
+    local existing_route=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
+        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+    
+    if echo "$existing_route" | grep -q '"id"'; then
+        echo "⚠️  Route already exists for $operation_id, skipping"
+        return 0
+    fi
+    
+    # Create the route in APISIX
+    local response
+    local http_code
+    
+    response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
+      -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
+      -H "Content-Type: application/json" \
+      -d "${route_config}" 2>&1)
+    
+    http_code="${response: -3}"
+    local response_body="${response:0:-3}"
+    
+    if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+        echo "✅ Successfully created route for $operation_id"
+        return 0
+    else
+        echo "❌ Failed to create route for $operation_id"
+        echo "   HTTP Code: $http_code"
+        echo "   Route ID: $route_id"
+        return 1
+    fi
+}
+
+# Main function to setup OpenAPI routes
+setup_openapi_routes() {
+    if [ "$OPENAPI_ENABLED" != "true" ]; then
+        echo "OpenAPI providers disabled. Skipping setup."
+        return 0
+    fi
+    
+    echo "Setting up OpenAPI provider routes..."
+    
+    local cache_dir="/tmp/violentutf_openapi_cache"
+    mkdir -p "$cache_dir"
+    
+    local total_success=0
+    local total_failed=0
+    
+    # Process up to 10 OpenAPI providers
+    for i in {1..10}; do
+        local enabled_var="OPENAPI_${i}_ENABLED"
+        local enabled="${!enabled_var}"
+        
+        if [ "$enabled" = "true" ]; then
+            # Load provider configuration
+            local id_var="OPENAPI_${i}_ID"
+            local name_var="OPENAPI_${i}_NAME"
+            local base_url_var="OPENAPI_${i}_BASE_URL"
+            local spec_path_var="OPENAPI_${i}_SPEC_PATH"
+            local auth_type_var="OPENAPI_${i}_AUTH_TYPE"
+            
+            local provider_id="${!id_var}"
+            local provider_name="${!name_var}"
+            local base_url="${!base_url_var}"
+            local spec_path="${!spec_path_var}"
+            local auth_type="${!auth_type_var}"
+            
+            # Validate required fields
+            if [ -z "$provider_id" ] || [ -z "$base_url" ] || [ -z "$spec_path" ]; then
+                echo "⚠️  Skipping OpenAPI provider $i: missing required configuration"
+                continue
+            fi
+            
+            echo ""
+            echo "Processing OpenAPI provider: $provider_name ($provider_id)"
+            echo "----------------------------------------"
+            
+            # Prepare auth configuration based on type
+            local auth_value=""
+            local auth_header=""
+            case "$auth_type" in
+                "bearer")
+                    local token_var="OPENAPI_${i}_AUTH_TOKEN"
+                    auth_value="${!token_var}"
+                    ;;
+                "api_key")
+                    local key_var="OPENAPI_${i}_API_KEY"
+                    local header_var="OPENAPI_${i}_API_KEY_HEADER"
+                    auth_value="${!key_var}"
+                    auth_header="${!header_var:-X-API-Key}"  # Default to X-API-Key if not specified
+                    ;;
+                "basic")
+                    local username_var="OPENAPI_${i}_BASIC_USERNAME"
+                    local password_var="OPENAPI_${i}_BASIC_PASSWORD"
+                    auth_value="${!username_var}:${!password_var}"
+                    ;;
+            esac
+            
+            # Get custom headers if any
+            local headers_var="OPENAPI_${i}_CUSTOM_HEADERS"
+            local custom_headers="${!headers_var}"
+            
+            # Fetch OpenAPI spec
+            local spec_file="$cache_dir/${provider_id}_spec.json"
+            if fetch_openapi_spec "$base_url" "$spec_path" "$auth_type" "$auth_value" "$auth_header" "$custom_headers" "$spec_file"; then
+                
+                # Validate spec
+                if validate_openapi_spec "$spec_file"; then
+                    
+                    # Parse endpoints
+                    local endpoints_file="$cache_dir/${provider_id}_endpoints.json"
+                    if parse_openapi_endpoints "$spec_file" "$provider_id" "$endpoints_file"; then
+                        
+                        # Process endpoints using process substitution to avoid subshell
+                        while IFS='|' read -r path method op_id is_ai; do
+                            local auth_config_value="$auth_value"
+                            if [ "$auth_type" = "api_key" ]; then
+                                auth_config_value="${auth_header}:${auth_value}"
+                            fi
+                            
+                            if create_openapi_route "$provider_id" "$provider_name" "$base_url" \
+                                "$path" "$method" "$op_id" "$auth_type" "$auth_config_value"; then
+                                ((total_success++))
+                            else
+                                ((total_failed++))
+                            fi
+                        done < <(python3 -c "
+import json
+with open('$endpoints_file', 'r') as f:
+    data = json.load(f)
+    # Sort to process AI endpoints first
+    endpoints = sorted(data['endpoints'], key=lambda x: not x.get('is_ai_endpoint', False))
+    for ep in endpoints:
+        print(f\"{ep['path']}|{ep['method']}|{ep['operationId']}|{ep.get('is_ai_endpoint', False)}\")")
+                    fi
+                fi
+            fi
+        fi
+    done
+    
+    # Cleanup cache
+    rm -rf "$cache_dir"
+    
+    echo ""
+    echo "OpenAPI route setup summary:"
+    echo "✅ Successfully created: $total_success routes"
+    if [ $total_failed -gt 0 ]; then
+        echo "❌ Failed to create: $total_failed routes"
+        return 1
+    fi
+    
+    return 0
+}
+
 # Enhanced debugging function for AI proxy setup
 debug_ai_proxy_setup() {
     echo "🔍 Debugging AI Proxy Setup..."
@@ -1329,6 +1805,11 @@ setup_ai_providers_enhanced() {
     
     echo "Setting up AWS Bedrock routes..."
     if ! setup_bedrock_routes; then
+        setup_errors=$((setup_errors + 1))
+    fi
+    
+    echo "Setting up OpenAPI routes..."
+    if ! setup_openapi_routes; then
         setup_errors=$((setup_errors + 1))
     fi
     
