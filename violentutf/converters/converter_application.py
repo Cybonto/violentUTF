@@ -75,7 +75,7 @@ async def apply_converter_to_prompt(converter: PromptConverter, prompt: SeedProm
             parameters=prompt.parameters,
             prompt_group_id=prompt.prompt_group_id,
             prompt_group_alias=prompt.prompt_group_alias,
-            sequence=prompt.sequence
+            sequence=prompt.sequence,
         )
 
         logger.debug(f"Applied converter to prompt ID {prompt.id}")
@@ -121,7 +121,7 @@ async def apply_converter_to_dataset(converter: PromptConverter, dataset: SeedPr
             groups=dataset.groups,
             source=dataset.source,
             date_added=dataset.date_added,
-            added_by=dataset.added_by
+            added_by=dataset.added_by,
         )
         logger.info(f"Applied converter to dataset with {len(dataset.prompts)} prompts.")
         return transformed_dataset

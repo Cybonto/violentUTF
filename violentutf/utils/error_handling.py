@@ -31,6 +31,7 @@ Dependencies:
 
 import logging
 
+
 class DatasetLoadingError(Exception):
     """
     Exception raised when a dataset fails to load.
@@ -38,8 +39,10 @@ class DatasetLoadingError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class DatasetParsingError(Exception):
     """
@@ -48,8 +51,10 @@ class DatasetParsingError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class TemplateError(Exception):
     """
@@ -58,8 +63,10 @@ class TemplateError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class ConverterLoadingError(Exception):
     """
@@ -68,8 +75,10 @@ class ConverterLoadingError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class ConverterApplicationError(Exception):
     """
@@ -78,8 +87,10 @@ class ConverterApplicationError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class ScorerLoadingError(Exception):
     """
@@ -88,8 +99,10 @@ class ScorerLoadingError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class ScorerInstantiationError(Exception):
     """
@@ -98,8 +111,10 @@ class ScorerInstantiationError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class ScorerConfigurationError(Exception):
     """
@@ -108,8 +123,10 @@ class ScorerConfigurationError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class ScorerDeletionError(Exception):
     """
@@ -118,8 +135,10 @@ class ScorerDeletionError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class ScorerTestingError(Exception):
     """
@@ -128,8 +147,10 @@ class ScorerTestingError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
+
 
 class ScorerApplicationError(Exception):
     """
@@ -138,29 +159,42 @@ class ScorerApplicationError(Exception):
     Parameters:
         message (str): Description of the error.
     """
+
     def __init__(self, message: str):
         super().__init__(message)
 
+
 class OrchestratorLoadingError(Exception):
     """Exception raised when an Orchestrator fails to load."""
+
     pass
+
 
 class OrchestratorInstantiationError(Exception):
     """Exception raised when an Orchestrator cannot be instantiated."""
+
     pass
+
 
 class OrchestratorConfigurationError(Exception):
     """Exception raised when there is a configuration error with an Orchestrator."""
+
     pass
+
 
 class OrchestratorDeletionError(Exception):
     """Exception raised when deleting an Orchestrator fails."""
+
     pass
+
 
 class OrchestratorTestingError(Exception):
     """Exception raised when testing an Orchestrator fails."""
+
     pass
+
 
 class OrchestratorExecutionError(Exception):
     """Exception raised when executing an Orchestrator fails."""
+
     pass
