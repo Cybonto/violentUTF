@@ -249,7 +249,7 @@ def fetch_online_dataset(url: str) -> pd.DataFrame:
     """
     try:
         logger.info(f"Fetching dataset from URL: {url}")
-        response = requests.get(url)
+        response = requests.get(url, timeout=30)
         response.raise_for_status()
         # Determine the file extension based on the URL
         parsed_url = requests.utils.urlparse(url)

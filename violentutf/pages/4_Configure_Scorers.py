@@ -472,7 +472,7 @@ def _test_scorer_orchestrator_mode(
                 logger.error(f"  Payload: {execution_payload}")
 
                 # Get detailed response
-                debug_response = requests.post(execution_url, json=execution_payload, headers=headers)
+                debug_response = requests.post(execution_url, json=execution_payload, headers=headers, timeout=30)
                 logger.error(f"  Response status: {debug_response.status_code}")
                 logger.error(f"  Response headers: {dict(debug_response.headers)}")
                 logger.error(f"  Response text: {debug_response.text}")

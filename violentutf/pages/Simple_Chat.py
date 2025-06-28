@@ -348,7 +348,7 @@ with st.sidebar:
 
             # Fetch available models
             try:
-                models_response = requests.get(f"{selected_endpoint}/v1/models")
+                models_response = requests.get(f"{selected_endpoint}/v1/models", timeout=30)
                 if models_response.status_code == 200:
                     available_models_data = models_response.json()
                     # assume the response contains a list of models under 'data' key

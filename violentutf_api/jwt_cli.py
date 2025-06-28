@@ -65,6 +65,7 @@ def login(username: str, password: str):
         response = requests.post(
             f"{API_BASE_URL}/api/v1/auth/token",
             data={"username": username, "password": password, "grant_type": "password"},
+            timeout=30
         )
 
         if response.status_code == 200:
@@ -100,7 +101,7 @@ def logout():
 def whoami():
     """Show current user information"""
     try:
-        response = requests.get(f"{API_BASE_URL}/api/v1/auth/me", headers=get_auth_header())
+        response = requests.get(f"{API_BASE_URL}/api/v1/auth/me", headers=get_auth_header(), timeout=30)
 
         if response.status_code == 200:
             user_info = response.json()

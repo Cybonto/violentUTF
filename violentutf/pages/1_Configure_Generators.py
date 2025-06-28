@@ -315,7 +315,7 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
 
                 headers = get_auth_headers()
                 debug_response = requests.post(
-                    API_ENDPOINTS["orchestrator_create"], json=orchestrator_payload, headers=headers
+                    API_ENDPOINTS["orchestrator_create"], json=orchestrator_payload, headers=headers, timeout=30
                 )
                 logger.error(f"Debug response status: {debug_response.status_code}")
                 logger.error(f"Debug response text: {debug_response.text}")
@@ -367,7 +367,7 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
                 import requests
 
                 headers = get_auth_headers()
-                debug_response = requests.post(execution_url, json=execution_payload, headers=headers)
+                debug_response = requests.post(execution_url, json=execution_payload, headers=headers, timeout=30)
                 logger.error(f"Debug execution response status: {debug_response.status_code}")
                 logger.error(f"Debug execution response text: {debug_response.text}")
                 return {

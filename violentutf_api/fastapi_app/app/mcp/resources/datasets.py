@@ -62,7 +62,7 @@ class DatasetResourceProvider(BaseResourceProvider):
 
                 # Calculate content metadata
                 content_size = len(str(content_data).encode("utf-8"))
-                content_hash = hashlib.md5(str(content_data).encode("utf-8")).hexdigest()
+                content_hash = hashlib.md5(str(content_data).encode("utf-8"), usedforsecurity=False).hexdigest()
 
                 # Create comprehensive resource
                 resource_content = {
