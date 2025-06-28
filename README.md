@@ -312,6 +312,39 @@ cd tests/mcp_tests && python -m pytest
 cd apisix && ./verify_routes.sh
 ```
 
+## 🔧 Troubleshooting
+
+### Corporate Proxy / Zscaler SSL Issues
+
+The setup script automatically detects and handles SSL certificate issues. If you encounter SSL errors during setup, you have two options:
+
+#### Automatic Fix (Default)
+The setup script will automatically detect SSL issues and apply a workaround. No action needed.
+
+#### Option 1: Add Zscaler Certificates
+
+If you have your Zscaler certificates:
+
+1. Export certificates from your system (see `/docs/guides/zscaler-setup.md`)
+2. Copy them to the FastAPI directory:
+   ```bash
+   cp zscaler.crt violentutf_api/fastapi_app/
+   cp CA.crt violentutf_api/fastapi_app/
+   ```
+3. Use the Zscaler-aware Dockerfile:
+   ```bash
+   cp violentutf_api/fastapi_app/Dockerfile.zscaler violentutf_api/fastapi_app/Dockerfile
+   ./setup_macos.sh
+   ```
+
+### Other Common Issues
+
+- **Keycloak Authentication Errors**: See `/docs/troubleshooting/keycloak-password-fix.md`
+- **Docker Build Failures**: Ensure Docker Desktop has sufficient resources (8GB RAM minimum)
+- **Service Connection Issues**: Run `./check_services.sh` to verify all services are running
+
+For more detailed troubleshooting, see the [Troubleshooting Guide](docs/troubleshooting/).
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.

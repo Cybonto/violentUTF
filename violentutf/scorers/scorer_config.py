@@ -40,8 +40,17 @@ import os
 import asyncio
 from pathlib import Path
 from typing import (
-    List, Dict, Any, Type, Optional, Union, Literal,
-    get_type_hints, get_origin, get_args, Tuple  # Added Tuple here
+    List,
+    Dict,
+    Any,
+    Type,
+    Optional,
+    Union,
+    Literal,
+    get_type_hints,
+    get_origin,
+    get_args,
+    Tuple,  # Added Tuple here
 )
 import collections.abc  # To check for Callable if needed
 
@@ -67,7 +76,7 @@ import collections.abc  # To check for Callable if needed, though not typical fo
 logger = get_logger(__name__)
 
 # Define the parameter file path
-PARAMETER_FILE = Path('parameters/scorers.yaml')
+PARAMETER_FILE = Path("parameters/scorers.yaml")
 
 
 def list_scorer_types() -> List[str]:
@@ -80,18 +89,23 @@ def list_scorer_types() -> List[str]:
     available_scorers = []
     try:
         # Use pyrit.score.__all__ if available and maintained, otherwise inspect members
-        if hasattr(score, '__all__'):
+        if hasattr(score, "__all__"):
             all_names = score.__all__
             for name in all_names:
                 obj = getattr(score, name)
-                if inspect.isclass(obj) and issubclass(obj, Scorer) and obj is not Scorer and not inspect.isabstract(obj):
+                if (
+                    inspect.isclass(obj)
+                    and issubclass(obj, Scorer)
+                    and obj is not Scorer
+                    and not inspect.isabstract(obj)
+                ):
                     available_scorers.append(name)
         else:
             # Fallback to inspecting all members
             for name, obj in inspect.getmembers(score):
                 if inspect.isclass(obj) and issubclass(obj, Scorer) and obj is not Scorer:
                     # Double check it's defined in pyrit.score, not just imported there
-                    if hasattr(obj, '__module__') and obj.__module__.startswith('pyrit.score'):
+                    if hasattr(obj, "__module__") and obj.__module__.startswith("pyrit.score"):
                         if not inspect.isabstract(obj):
                             available_scorers.append(name)
 
@@ -101,6 +115,7 @@ def list_scorer_types() -> List[str]:
     except Exception as e:
         logger.error(f"Error listing scorer types: {e}", exc_info=True)
         return []
+
 
 def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
     """
@@ -144,7 +159,7 @@ def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
 
     param_definitions = []
     for param_name, param in init_signature.parameters.items():
-        if param.name == 'self' or param.kind in [param.VAR_POSITIONAL, param.VAR_KEYWORD]:
+        if param.name == "self" or param.kind in [param.VAR_POSITIONAL, param.VAR_KEYWORD]:
             continue
 
         raw_annotation = type_hints.get(param_name, Any)
@@ -153,7 +168,13 @@ def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
 
         primary_type = raw_annotation
         literal_choices = None
-        type_str = str(raw_annotation).replace('typing.', '').replace('pyrit.score.', '').replace('pyrit.prompt_target.', '').replace('pathlib.', '')
+        type_str = (
+            str(raw_annotation)
+            .replace("typing.", "")
+            .replace("pyrit.score.", "")
+            .replace("pyrit.prompt_target.", "")
+            .replace("pathlib.", "")
+        )
 
         # --- Determine Primary Type, Literal Choices, and String Representation ---
         if origin_type is Literal:
@@ -179,11 +200,13 @@ def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
                         type_str = "Optional[Literal[]]"
                         primary_type = Any
                 else:
-                    inner_type_str = str(primary_type).replace('typing.', '').replace('pyrit.', '').replace('pathlib.', '')
+                    inner_type_str = (
+                        str(primary_type).replace("typing.", "").replace("pyrit.", "").replace("pathlib.", "")
+                    )
                     type_str = f"Optional[{inner_type_str}]"
             else:
                 primary_type = Union
-                type_str = str(raw_annotation).replace('typing.', '').replace('pyrit.', '')
+                type_str = str(raw_annotation).replace("typing.", "").replace("pyrit.", "")
         elif origin_type is list or origin_type is List:
             primary_type = list
             type_str = f"List[{str(type_args[0]).replace('typing.', '') if type_args else 'Any'}]"
@@ -195,15 +218,24 @@ def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
                 primary_type = raw_annotation
             else:
                 primary_type = Any
-                type_str = str(raw_annotation).replace('typing.', '').replace('pyrit.', '').replace('pathlib.', '')
+                type_str = str(raw_annotation).replace("typing.", "").replace("pyrit.", "").replace("pathlib.", "")
 
         # --- Identify Complex Types to Skip in Generic UI ---
         complex_types_to_skip = (
-            PromptChatTarget, PromptShieldTarget, Scorer, Path, TrueFalseQuestion,
-            collections.abc.Callable
+            PromptChatTarget,
+            PromptShieldTarget,
+            Scorer,
+            Path,
+            TrueFalseQuestion,
+            collections.abc.Callable,
         )
         skip_in_ui = isinstance(primary_type, type) and issubclass(primary_type, complex_types_to_skip)
-        if primary_type is list and type_args and isinstance(type_args[0], type) and issubclass(type_args[0], complex_types_to_skip):
+        if (
+            primary_type is list
+            and type_args
+            and isinstance(type_args[0], type)
+            and issubclass(type_args[0], complex_types_to_skip)
+        ):
             skip_in_ui = True
         if isinstance(raw_annotation, type) and issubclass(raw_annotation, complex_types_to_skip):
             skip_in_ui = True
@@ -212,20 +244,21 @@ def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
         default_value = None if param.default == param.empty else param.default
 
         param_info = {
-            'name': param_name,
-            'type_str': type_str,
-            'raw_type': raw_annotation,
-            'primary_type': primary_type,
-            'literal_choices': literal_choices,
-            'required': param.default == param.empty,
-            'default': default_value,
-            'skip_in_ui': skip_in_ui,
-            'description': param_name.replace('_', ' ').capitalize(),
+            "name": param_name,
+            "type_str": type_str,
+            "raw_type": raw_annotation,
+            "primary_type": primary_type,
+            "literal_choices": literal_choices,
+            "required": param.default == param.empty,
+            "default": default_value,
+            "skip_in_ui": skip_in_ui,
+            "description": param_name.replace("_", " ").capitalize(),
         }
         param_definitions.append(param_info)
 
     logger.debug(f"Parameters for scorer '{scorer_type}': {param_definitions}")
     return param_definitions
+
 
 def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
     """
@@ -261,14 +294,17 @@ def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
 
     # Determine the names of parameters, excluding self, *args, **kwargs
     init_param_names = [
-        pname for pname, p in scorer_init_params.items()
-        if pname != 'self' and p.kind in [inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY]
+        pname
+        for pname, p in scorer_init_params.items()
+        if pname != "self" and p.kind in [inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY]
     ]
     logger.debug(f"Found __init__ param names for {scorer_type}: {init_param_names}")
 
     if not init_param_names:
         if params:
-            logger.warning(f"Scorer '{scorer_type}' takes no parameters, but received: {list(params.keys())}. Ignoring them.")
+            logger.warning(
+                f"Scorer '{scorer_type}' takes no parameters, but received: {list(params.keys())}. Ignoring them."
+            )
         try:
             scorer_instance = scorer_class()
             logger.info(f"Scorer '{scorer_type}' instantiated without parameters.")
@@ -281,28 +317,37 @@ def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
         logger.debug(f"Filtered params for {scorer_type}: {filtered_params}")
 
         required_param_names = {
-            p.name for p in scorer_init_params.values()
+            p.name
+            for p in scorer_init_params.values()
             if p.name in init_param_names and p.default == inspect.Parameter.empty
         }
         missing_required = required_param_names - set(filtered_params.keys())
 
         if missing_required:
-            params_safe_log = {k: ('***' if 'key' in k.lower() else v) for k, v in filtered_params.items()}
-            logger.error(f"Missing required parameters for {scorer_type}: {missing_required}. Provided: {params_safe_log}")
+            params_safe_log = {k: ("***" if "key" in k.lower() else v) for k, v in filtered_params.items()}
+            logger.error(
+                f"Missing required parameters for {scorer_type}: {missing_required}. Provided: {params_safe_log}"
+            )
             raise ScorerInstantiationError(f"Missing required parameters for {scorer_type}: {missing_required}")
 
         try:
             scorer_instance = scorer_class(**filtered_params)
-            params_safe_log = {k: ('***' if 'key' in k.lower() else v) for k, v in filtered_params.items()}
+            params_safe_log = {k: ("***" if "key" in k.lower() else v) for k, v in filtered_params.items()}
             logger.info(f"Scorer '{scorer_type}' instantiated with parameters: {params_safe_log}")
         except TypeError as te:
-            params_safe_log = {k: ('***' if 'key' in k.lower() else v) for k, v in filtered_params.items()}
-            logger.error(f"TypeError during instantiation of '{scorer_type}' with params {params_safe_log}: {te}", exc_info=True)
-            raise ScorerInstantiationError(f"TypeError instantiating {scorer_type}: {te}. Check parameter types/counts.") from te
+            params_safe_log = {k: ("***" if "key" in k.lower() else v) for k, v in filtered_params.items()}
+            logger.error(
+                f"TypeError during instantiation of '{scorer_type}' with params {params_safe_log}: {te}", exc_info=True
+            )
+            raise ScorerInstantiationError(
+                f"TypeError instantiating {scorer_type}: {te}. Check parameter types/counts."
+            ) from te
 
     return scorer_instance
 
+
 # --- Configuration Management Functions ---
+
 
 def add_scorer(scorer_name: str, scorer_type: str, params: Dict[str, Any]) -> Scorer:
     """
@@ -327,35 +372,34 @@ def add_scorer(scorer_name: str, scorer_type: str, params: Dict[str, Any]) -> Sc
 
     # Try instantiating first to validate type and params before saving
     try:
-         # Note: For scorers needing Path objects, ensure params contains Path instances
-         # or add conversion logic here/in instantiate_scorer if needed.
-         # Example: Convert string paths to Path objects if required by __init__
-         params_processed = params.copy()
-         # Potential Path conversion (if UI provides strings but Scorer needs Path):
-         # scorer_class_ref = getattr(score, scorer_type, None)
-         # if scorer_class_ref:
-         #    sig = inspect.signature(scorer_class_ref.__init__)
-         #    hints = get_type_hints(scorer_class_ref.__init__)
-         #    for name, value in params_processed.items():
-         #        if name in sig.parameters and hints.get(name) is Path and isinstance(value, str):
-         #             params_processed[name] = Path(value)
+        # Note: For scorers needing Path objects, ensure params contains Path instances
+        # or add conversion logic here/in instantiate_scorer if needed.
+        # Example: Convert string paths to Path objects if required by __init__
+        params_processed = params.copy()
+        # Potential Path conversion (if UI provides strings but Scorer needs Path):
+        # scorer_class_ref = getattr(score, scorer_type, None)
+        # if scorer_class_ref:
+        #    sig = inspect.signature(scorer_class_ref.__init__)
+        #    hints = get_type_hints(scorer_class_ref.__init__)
+        #    for name, value in params_processed.items():
+        #        if name in sig.parameters and hints.get(name) is Path and isinstance(value, str):
+        #             params_processed[name] = Path(value)
 
-         scorer_instance = instantiate_scorer(scorer_type, params_processed)
+        scorer_instance = instantiate_scorer(scorer_type, params_processed)
     except (ScorerLoadingError, ScorerInstantiationError) as e:
-         # Re-raise errors related to loading/instantiation
-         raise e
+        # Re-raise errors related to loading/instantiation
+        raise e
     except Exception as e:
-         # Catch other potential errors during pre-processing or instantiation
-         logger.exception(f"Unexpected error during pre-save instantiation check for {scorer_type}: {e}")
-         raise ScorerInstantiationError(f"Validation failed for {scorer_type}: {e}") from e
-
+        # Catch other potential errors during pre-processing or instantiation
+        logger.exception(f"Unexpected error during pre-save instantiation check for {scorer_type}: {e}")
+        raise ScorerInstantiationError(f"Validation failed for {scorer_type}: {e}") from e
 
     # Save configuration if instantiation was successful
     configured_scorers[scorer_name] = {
-        'type': scorer_type,
+        "type": scorer_type,
         # Store the original params provided, assuming UI handles types correctly
         # If Path conversion happened, decide whether to store string or Path object in YAML
-        'params': params
+        "params": params,
     }
     update_parameter_file(configured_scorers)
     logger.info(f"Scorer '{scorer_name}' of type '{scorer_type}' added.")
@@ -374,11 +418,12 @@ def load_scorers() -> Dict[str, Dict[str, Any]]:
         logger.debug(f"Parameter file '{PARAMETER_FILE}' not found. Returning empty configuration.")
         return {}
     try:
-        with open(PARAMETER_FILE, 'r') as f:
+        with open(PARAMETER_FILE, "r") as f:
             # Use yaml.FullLoader or yaml.Loader if needing to load custom Python objects (like Path)
             # For simple types, safe_load is best. If storing Path objects, need custom handling or use Loader.
             data = yaml.safe_load(f)
-            if data is None: data = {}
+            if data is None:
+                data = {}
             logger.debug(f"Loaded scorer configurations ({len(data)} items).")
             return data
     except yaml.YAMLError as ye:
@@ -409,12 +454,12 @@ def get_scorer(scorer_name: str) -> Scorer:
         raise ScorerConfigurationError(f"Scorer configuration '{scorer_name}' not found.")
 
     scorer_config = configured_scorers[scorer_name]
-    scorer_type = scorer_config.get('type')
-    params = scorer_config.get('params', {}) # Default to empty dict if params missing
+    scorer_type = scorer_config.get("type")
+    params = scorer_config.get("params", {})  # Default to empty dict if params missing
 
     if not scorer_type:
-         logger.error(f"Scorer configuration '{scorer_name}' is missing the 'type' field.")
-         raise ScorerConfigurationError(f"Scorer configuration '{scorer_name}' is invalid (missing type).")
+        logger.error(f"Scorer configuration '{scorer_name}' is missing the 'type' field.")
+        raise ScorerConfigurationError(f"Scorer configuration '{scorer_name}' is invalid (missing type).")
 
     # Handle potential Path object conversion if stored as string in YAML
     # (Requires knowing which parameters expect Path)
@@ -423,16 +468,26 @@ def get_scorer(scorer_name: str) -> Scorer:
         # This ideally uses info from get_scorer_params but that adds complexity here.
         # Manual conversion based on known scorer types:
         params_processed = params.copy()
-        if scorer_type == "SelfAskLikertScorer" and 'likert_scale_path' in params_processed and isinstance(params_processed['likert_scale_path'], str):
-             params_processed['likert_scale_path'] = Path(params_processed['likert_scale_path'])
+        if (
+            scorer_type == "SelfAskLikertScorer"
+            and "likert_scale_path" in params_processed
+            and isinstance(params_processed["likert_scale_path"], str)
+        ):
+            params_processed["likert_scale_path"] = Path(params_processed["likert_scale_path"])
         # Add similar conversions for SelfAskCategoryScorer, SelfAskScaleScorer, SelfAskTrueFalseScorer if needed
-        elif scorer_type == "SelfAskCategoryScorer" and 'content_classifier' in params_processed and isinstance(params_processed['content_classifier'], str):
-             params_processed['content_classifier'] = Path(params_processed['content_classifier'])
+        elif (
+            scorer_type == "SelfAskCategoryScorer"
+            and "content_classifier" in params_processed
+            and isinstance(params_processed["content_classifier"], str)
+        ):
+            params_processed["content_classifier"] = Path(params_processed["content_classifier"])
         elif scorer_type == "SelfAskScaleScorer":
-             if 'scale_arguments_path' in params_processed and isinstance(params_processed.get('scale_arguments_path'), str):
-                 params_processed['scale_arguments_path'] = Path(params_processed['scale_arguments_path'])
-             if 'system_prompt_path' in params_processed and isinstance(params_processed.get('system_prompt_path'), str):
-                 params_processed['system_prompt_path'] = Path(params_processed['system_prompt_path'])
+            if "scale_arguments_path" in params_processed and isinstance(
+                params_processed.get("scale_arguments_path"), str
+            ):
+                params_processed["scale_arguments_path"] = Path(params_processed["scale_arguments_path"])
+            if "system_prompt_path" in params_processed and isinstance(params_processed.get("system_prompt_path"), str):
+                params_processed["system_prompt_path"] = Path(params_processed["system_prompt_path"])
         # Add more conversions as necessary based on scorer __init__ signatures requiring Path
 
         scorer_instance = instantiate_scorer(scorer_type, params_processed)
@@ -440,10 +495,11 @@ def get_scorer(scorer_name: str) -> Scorer:
         return scorer_instance
     except (ScorerLoadingError, ScorerInstantiationError) as e:
         logger.error(f"Failed to instantiate scorer '{scorer_name}' from config: {e}")
-        raise e # Re-raise specific errors
+        raise e  # Re-raise specific errors
     except Exception as e:
         logger.exception(f"Unexpected error getting scorer '{scorer_name}': {e}")
         raise ScorerInstantiationError(f"Unexpected error getting scorer '{scorer_name}': {e}") from e
+
 
 def delete_scorer(scorer_name: str) -> bool:
     """
@@ -467,9 +523,9 @@ def delete_scorer(scorer_name: str) -> bool:
         update_parameter_file(configured_scorers)
         logger.info(f"Scorer configuration '{scorer_name}' deleted.")
         return True
-    except ScorerConfigurationError as e: # Catch specific error from update_parameter_file
-         logger.error(f"Failed to save configuration after deleting scorer '{scorer_name}': {e}")
-         raise ScorerDeletionError(f"Failed to save configuration after deleting scorer '{scorer_name}': {e}") from e
+    except ScorerConfigurationError as e:  # Catch specific error from update_parameter_file
+        logger.error(f"Failed to save configuration after deleting scorer '{scorer_name}': {e}")
+        raise ScorerDeletionError(f"Failed to save configuration after deleting scorer '{scorer_name}': {e}") from e
     except Exception as e:
         logger.error(f"Error deleting scorer configuration '{scorer_name}': {e}", exc_info=True)
         raise ScorerDeletionError(f"Error deleting scorer configuration '{scorer_name}': {e}") from e
@@ -503,6 +559,7 @@ async def test_scorer_async(scorer_name: str, sample_input: PromptRequestPiece) 
         logger.error(f"Error testing scorer '{scorer_name}': {e}", exc_info=True)
         raise ScorerTestingError(f"Error testing scorer '{scorer_name}': {e}") from e
 
+
 # Keep sync wrapper if needed by parts of the app that aren't async
 def test_scorer(scorer_name: str, sample_input: PromptRequestPiece) -> List[Score]:
     """
@@ -526,19 +583,23 @@ def test_scorer(scorer_name: str, sample_input: PromptRequestPiece) -> List[Scor
         if loop.is_running():
             # If loop is already running (e.g., in Jupyter), create a task
             # This might require await if called from an async context
-             logger.warning("Running test_scorer within an existing event loop. Consider calling test_scorer_async directly.")
-             task = loop.create_task(test_scorer_async(scorer_name, sample_input))
-             # Note: This sync wrapper cannot easily return the result here if loop is running.
-             # It might be better to enforce using test_scorer_async in async contexts.
-             # Returning None or raising an error might be clearer.
-             raise ScorerTestingError("Cannot run sync test_scorer reliably within an already running event loop. Use test_scorer_async.")
+            logger.warning(
+                "Running test_scorer within an existing event loop. Consider calling test_scorer_async directly."
+            )
+            task = loop.create_task(test_scorer_async(scorer_name, sample_input))
+            # Note: This sync wrapper cannot easily return the result here if loop is running.
+            # It might be better to enforce using test_scorer_async in async contexts.
+            # Returning None or raising an error might be clearer.
+            raise ScorerTestingError(
+                "Cannot run sync test_scorer reliably within an already running event loop. Use test_scorer_async."
+            )
         else:
             result = loop.run_until_complete(test_scorer_async(scorer_name, sample_input))
             return result
     except Exception as e:
-         logger.error(f"Error in sync wrapper test_scorer for '{scorer_name}': {e}", exc_info=True)
-         # Re-raise or handle as appropriate
-         raise e
+        logger.error(f"Error in sync wrapper test_scorer for '{scorer_name}': {e}", exc_info=True)
+        # Re-raise or handle as appropriate
+        raise e
 
 
 def update_parameter_file(configured_scorers: Dict[str, Any]) -> None:
@@ -552,8 +613,8 @@ def update_parameter_file(configured_scorers: Dict[str, Any]) -> None:
         ScorerConfigurationError: If updating the parameter file fails.
     """
     try:
-        PARAMETER_FILE.parent.mkdir(parents=True, exist_ok=True) # Use pathlib's mkdir
-        with open(PARAMETER_FILE, 'w') as f:
+        PARAMETER_FILE.parent.mkdir(parents=True, exist_ok=True)  # Use pathlib's mkdir
+        with open(PARAMETER_FILE, "w") as f:
             # Use default_flow_style=False for better readability
             yaml.safe_dump(configured_scorers, f, default_flow_style=False, sort_keys=False)
         logger.info(f"Scorer configurations updated in '{PARAMETER_FILE}'.")

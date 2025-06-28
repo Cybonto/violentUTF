@@ -106,9 +106,7 @@ async def apply_scorer_to_dataset(scorer_instance: Scorer, dataset: SeedPromptDa
         for seed_prompt in dataset.prompts:
             # Create a PromptRequestPiece for each seed_prompt
             prp = PromptRequestPiece(
-                role='user',
-                original_value=seed_prompt.value,
-                original_value_data_type=seed_prompt.data_type
+                role="user", original_value=seed_prompt.value, original_value_data_type=seed_prompt.data_type
             )
             request_pieces.append(prp)
 
@@ -122,12 +120,14 @@ async def apply_scorer_to_dataset(scorer_instance: Scorer, dataset: SeedPromptDa
         for i, scores in enumerate(scored_results):
             if isinstance(scores, Exception):
                 logger.error(f"Error scoring request_piece '{request_pieces[i].id}': {scores}")
-                raise ScorerApplicationError(f"Error scoring request_piece '{request_pieces[i].id}': {scores}") from scores
+                raise ScorerApplicationError(
+                    f"Error scoring request_piece '{request_pieces[i].id}': {scores}"
+                ) from scores
             else:
                 all_scores.extend(scores)
                 logger.debug(f"Scored request_piece '{request_pieces[i].id}': {scores}")
 
-        dataset_name = dataset.name if hasattr(dataset, 'name') else 'Unnamed Dataset'
+        dataset_name = dataset.name if hasattr(dataset, "name") else "Unnamed Dataset"
         logger.info(f"Applied scorer to dataset '{dataset_name}'. Total scores: {len(all_scores)}")
         return all_scores
     except Exception as e:

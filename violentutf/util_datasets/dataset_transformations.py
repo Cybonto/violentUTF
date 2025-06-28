@@ -26,6 +26,7 @@ from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 def combine_datasets(datasets_list: List[SeedPromptDataset]) -> SeedPromptDataset:
     """
     Combines multiple SeedPromptDatasets into one dataset.
@@ -61,6 +62,7 @@ def combine_datasets(datasets_list: List[SeedPromptDataset]) -> SeedPromptDatase
     except Exception as e:
         logger.exception(f"Error combining datasets: {e}")
         raise ValueError(f"Error combining datasets: {e}") from e
+
 
 def transform_dataset_with_template(dataset: SeedPromptDataset, template_content: str) -> SeedPromptDataset:
     """
@@ -103,6 +105,7 @@ def transform_dataset_with_template(dataset: SeedPromptDataset, template_content
         logger.exception(f"Error transforming dataset with template: {e}")
         raise TemplateError(f"Error transforming dataset with template: {e}") from e
 
+
 def apply_template_to_prompt(prompt: SeedPrompt, template) -> SeedPrompt:
     """
     Applies the prompt template to a single SeedPrompt.
@@ -130,7 +133,7 @@ def apply_template_to_prompt(prompt: SeedPrompt, template) -> SeedPrompt:
     try:
         # Prepare context for the template rendering
         context = prompt.__dict__
-        context = {k: v for k, v in context.items() if not k.startswith('_')}
+        context = {k: v for k, v in context.items() if not k.startswith("_")}
         # Render the template
         rendered_value = template.render(**context)
         # Create a new SeedPrompt with the transformed value
@@ -152,7 +155,7 @@ def apply_template_to_prompt(prompt: SeedPrompt, template) -> SeedPrompt:
             parameters=prompt.parameters,
             prompt_group_id=prompt.prompt_group_id,
             prompt_group_alias=prompt.prompt_group_alias,
-            sequence=prompt.sequence
+            sequence=prompt.sequence,
         )
         logger.debug(f"Applied template to prompt ID {prompt.id}")
         return transformed_prompt

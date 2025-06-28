@@ -1,0 +1,58 @@
+[flake8]
+# Configuration for flake8 linting
+max-line-length = 120
+max-complexity = 15
+exclude = 
+    .git,
+    __pycache__,
+    build,
+    dist,
+    .eggs,
+    *.egg-info,
+    .tox,
+    .venv,
+    venv,
+    .pytest_cache,
+    migrations,
+    app_data,
+    violentutf_logs,
+    tests/fixtures
+ignore = 
+    # E203: whitespace before ':' (conflicts with Black)
+    E203,
+    # W503: line break before binary operator (conflicts with Black)
+    W503,
+    # E501: line too long (handled by max-line-length)
+    E501,
+    # F401: imported but unused (handled separately)
+    F401
+per-file-ignores =
+    # Allow unused imports in __init__.py files
+    __init__.py:F401
+    # Allow complex functions in test files
+    test_*.py:C901
+    # Allow long lines in configuration files
+    */config.py:E501
+    */settings.py:E501
+
+# Additional flake8 plugins configuration
+extend-ignore = 
+    # D100: Missing docstring in public module
+    D100,
+    # D104: Missing docstring in public package
+    D104
+
+# McCabe complexity checker
+max-complexity = 15
+
+# Format for error output
+format = %(path)s:%(row)d:%(col)d: %(code)s %(text)s
+
+# Show source code for errors
+show-source = True
+
+# Count errors
+count = True
+
+# Statistics
+statistics = True

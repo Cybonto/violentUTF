@@ -1,0 +1,111 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "02:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Cybonto/violentutf-maintainers"
+    assignees:
+      - "Cybonto"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    groups:
+      development:
+        patterns:
+          - "pytest*"
+          - "black"
+          - "isort"
+          - "flake8*"
+          - "mypy*"
+          - "bandit*"
+      security:
+        patterns:
+          - "safety"
+          - "pip-audit"
+      ai-frameworks:
+        patterns:
+          - "pyrit*"
+          - "garak*"
+    ignore:
+      # Don't update major versions automatically
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Python dependencies in violentutf
+  - package-ecosystem: "pip"
+    directory: "/violentutf"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "02:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Cybonto/violentutf-maintainers"
+    labels:
+      - "dependencies"
+      - "python"
+      - "violentutf"
+    commit-message:
+      prefix: "chore(violentutf)"
+
+  # Python dependencies in violentutf_api
+  - package-ecosystem: "pip"
+    directory: "/violentutf_api/fastapi_app"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "02:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Cybonto/violentutf-maintainers"
+    labels:
+      - "dependencies"
+      - "python"
+      - "api"
+    commit-message:
+      prefix: "chore(api)"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "02:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Cybonto/violentutf-maintainers"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(docker)"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "02:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Cybonto/violentutf-maintainers"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci)"
+    # Security updates for GitHub Actions should be prioritized
+    allow:
+      - dependency-type: "all"

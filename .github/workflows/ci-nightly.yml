@@ -1,0 +1,235 @@
+name: Nightly CI
+
+on:
+  schedule:
+    # Run at 2 AM UTC every day
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      comprehensive:
+        description: 'Run comprehensive tests'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+  security-events: write
+
+jobs:
+  # Extended multi-platform matrix testing
+  extended-test-matrix:
+    name: Extended Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04, macos-13, macos-12, windows-2022, windows-2019]
+        python-version: ["3.10", "3.11", "3.12", "3.13-dev"]
+        exclude:
+          # Exclude older OS with newer Python
+          - os: ubuntu-20.04
+            python-version: "3.13-dev"
+          - os: macos-12
+            python-version: "3.13-dev"
+          - os: windows-2019
+            python-version: "3.13-dev"
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install all dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install -r violentutf/requirements.txt
+          pip install -r violentutf_api/fastapi_app/requirements.txt
+          pip install pytest pytest-cov pytest-xdist pytest-timeout pytest-benchmark
+
+      - name: Run comprehensive test suite
+        run: |
+          # Only run unit tests for now
+          if [ -d "tests/unit" ] && [ "$(find tests/unit -name 'test_*.py' -type f | wc -l)" -gt 0 ]; then
+            pytest tests/unit -v --tb=short \
+              --cov=violentutf --cov=violentutf_api \
+              --cov-report=xml:coverage-${{ matrix.os }}-${{ matrix.python-version }}.xml \
+              --cov-report=html:htmlcov-${{ matrix.os }}-${{ matrix.python-version }} \
+              --junit-xml=junit-${{ matrix.os }}-${{ matrix.python-version }}.xml \
+              -n auto \
+              --timeout=600
+          else
+            echo "No unit tests found, creating empty results"
+            mkdir -p htmlcov-${{ matrix.os }}-${{ matrix.python-version }}
+            echo '<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="empty" tests="0"></testsuite></testsuites>' > junit-${{ matrix.os }}-${{ matrix.python-version }}.xml
+            echo '<?xml version="1.0" encoding="utf-8"?><coverage></coverage>' > coverage-${{ matrix.os }}-${{ matrix.python-version }}.xml
+          fi
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
+          path: |
+            coverage-*.xml
+            htmlcov-*/
+          retention-days: 30
+
+  # Comprehensive security analysis
+  comprehensive-security:
+    name: Comprehensive Security Analysis
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Run Semgrep analysis
+        uses: returntocorp/semgrep-action@c36e05e6e0e5fa3025f59a018e74c94ab72b999e # v1
+        with:
+          config: >-
+            p/python
+            p/security-audit
+            p/owasp-top-ten
+            p/r2c-security-audit
+          generateSarif: true
+
+      - name: Upload Semgrep results
+        uses: github/codeql-action/upload-sarif@407ffafae6a767df3e0230c3df91b6443ae8df75 # v2.22.8
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: Run GitLeaks secret scanning
+        uses: zricethezav/gitleaks-action@7737b2acafdb2eab1ec5ec6d296e07dd3a4d7b2b # v2.3.2
+        with:
+          config-path: .gitleaks.toml
+          report-format: sarif
+
+      - name: Detect secrets with detect-secrets
+        run: |
+          pip install detect-secrets
+          detect-secrets scan --all-files --force-use-all-plugins > secrets-baseline.json || true
+          detect-secrets audit secrets-baseline.json --report --json > secrets-report.json || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: security-analysis-reports
+          path: |
+            semgrep.sarif
+            secrets-*.json
+          retention-days: 90
+
+  # Dependency update check
+  dependency-updates:
+    name: Check Dependency Updates
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Check for outdated dependencies
+        run: |
+          pip install pip-tools safety
+          
+          # Check each requirements file
+          for req_file in $(find . -name "requirements*.txt"); do
+            echo "Checking $req_file..."
+            pip list --outdated --format=json > outdated_$(basename $req_file).json
+          done
+          
+          # Security check on dependencies
+          safety check --json --output safety-nightly.json || true
+
+      - name: Generate dependency report
+        run: |
+          python scripts/generate_dependency_report.py \
+            --outdated-files "outdated_*.json" \
+            --safety-file safety-nightly.json \
+            --output dependency-report.md || echo "No report generator found"
+
+      - name: Upload dependency reports
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: dependency-reports
+          path: |
+            outdated_*.json
+            safety-nightly.json
+            dependency-report.md
+          retention-days: 30
+
+  # Create summary issue if failures
+  nightly-summary:
+    name: Nightly CI Summary
+    runs-on: ubuntu-22.04
+    needs: [
+      extended-test-matrix,
+      comprehensive-security,
+      dependency-updates
+    ]
+    if: failure()
+    
+    steps:
+      - name: Create failure issue
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const date = new Date().toISOString().split('T')[0];
+            const title = `Nightly CI Failure - ${date}`;
+            
+            let body = `## Nightly CI Run Failed\n\n`;
+            body += `**Date**: ${date}\n`;
+            body += `**Run**: ${context.runId}\n\n`;
+            body += `### Failed Jobs\n\n`;
+            
+            const jobs = [
+              { name: 'Extended Tests', status: '${{ needs.extended-test-matrix.result }}' },
+              { name: 'Security', status: '${{ needs.comprehensive-security.result }}' },
+              { name: 'Dependencies', status: '${{ needs.dependency-updates.result }}' }
+            ];
+            
+            for (const job of jobs) {
+              if (job.status === 'failure') {
+                body += `- ❌ ${job.name}\n`;
+              }
+            }
+            
+            body += `\n[View Run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+            
+            // Check if issue already exists for today
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'nightly-ci',
+              state: 'open'
+            });
+            
+            const existingIssue = issues.find(issue => issue.title === title);
+            
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['nightly-ci', 'automated']
+              });
+            }

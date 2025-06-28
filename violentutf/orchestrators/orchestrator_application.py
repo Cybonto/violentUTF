@@ -23,6 +23,7 @@ import asyncio
 
 logger = get_logger(__name__)
 
+
 async def test_orchestrator(orchestrator: Orchestrator) -> bool:
     """
     Tests the configured Orchestrator.
@@ -40,7 +41,7 @@ async def test_orchestrator(orchestrator: Orchestrator) -> bool:
         - Orchestrator's own test methods or a simple operation
     """
     try:
-        orchestrator_name = orchestrator.get_identifier().get('name', 'unknown')
+        orchestrator_name = orchestrator.get_identifier().get("name", "unknown")
         logger.info(f"Testing Orchestrator '{orchestrator_name}'")
         # For testing purposes, we will just validate that the orchestrator can be instantiated
 
@@ -51,6 +52,7 @@ async def test_orchestrator(orchestrator: Orchestrator) -> bool:
     except Exception as e:
         logger.error(f"Error testing Orchestrator '{orchestrator_name}': {e}")
         raise OrchestratorTestingError(f"Error testing Orchestrator '{orchestrator_name}': {e}")
+
 
 async def run_orchestrator(orchestrator: Orchestrator):
     """
@@ -66,21 +68,21 @@ async def run_orchestrator(orchestrator: Orchestrator):
         - Orchestrator's run or execute methods
     """
     try:
-        orchestrator_name = orchestrator.get_identifier().get('name', 'unknown')
+        orchestrator_name = orchestrator.get_identifier().get("name", "unknown")
         logger.info(f"Running Orchestrator '{orchestrator_name}'")
         # Depending on the Orchestrator type, we may need to call different methods
 
         # For orchestrators with 'run_attack_async' method
-        if hasattr(orchestrator, 'run_attack_async'):
+        if hasattr(orchestrator, "run_attack_async"):
             # Depending on the method signature, we may need to pass required parameters
-            method = getattr(orchestrator, 'run_attack_async')
+            method = getattr(orchestrator, "run_attack_async")
             sig = inspect.signature(method)
             params = sig.parameters
 
             # Prepare dummy or default parameters
             kwargs = {}
-            if 'objective' in params:
-                kwargs['objective'] = "This is a sample objective."
+            if "objective" in params:
+                kwargs["objective"] = "This is a sample objective."
 
             logger.debug(f"Calling 'run_attack_async' with parameters: {kwargs}")
             if asyncio.iscoroutinefunction(method):

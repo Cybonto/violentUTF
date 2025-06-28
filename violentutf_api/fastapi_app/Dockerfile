@@ -1,27 +1,34 @@
-# Multi-stage build for production
-# Updated to Python 3.11 for PyRIT and Garak compatibility
+# Multi-stage build for production with Zscaler certificate support
 FROM python:3.11-slim as builder
 
 WORKDIR /build
 
-# Install build dependencies for PyRIT and Garak (including Rust for base2048)
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    git \
-    build-essential \
-    pkg-config \
-    curl \
+    gcc g++ git build-essential pkg-config curl libssl-dev ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Rust toolchain for base2048 dependency
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
+# Copy and install Zscaler certificates if they exist
+# Using a more Docker-friendly approach
+COPY zscaler.cr[t] CA.cr[t] /usr/local/share/ca-certificates/
+RUN update-ca-certificates || true
 
-# Copy requirements and install dependencies
+# Set environment to use system certificates
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+# Install Rust with proper certificate handling
+ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+
+# Verify Rust installation
+RUN rustc --version && cargo --version
+
+# Copy and install requirements
 COPY requirements.txt requirements-minimal.txt ./
-
-# Install dependencies directly in builder stage to ensure they compile
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
 
@@ -30,20 +37,27 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install runtime dependencies for PyRIT and Garak
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    git \
-    gcc \
-    g++ \
-    build-essential \
+    curl git gcc g++ build-essential ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Rust for runtime compilation if needed
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
+# Copy certificates from builder stage
+COPY --from=builder /usr/local/share/ca-certificates/ /usr/local/share/ca-certificates/
+RUN update-ca-certificates || true
 
-# Copy wheels from builder and install
+# Set environment to use system certificates
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+# Install Rust for runtime
+ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+
+# Copy wheels and install
 COPY --from=builder /build/wheels /wheels
 COPY requirements.txt ./
 RUN pip install --no-cache /wheels/*
@@ -56,24 +70,14 @@ RUN python verify_redteam_install.py && \
 # Copy application
 COPY . .
 
-# Create necessary directories with proper permissions
-RUN mkdir -p app_data config logs && \
-    chmod 755 app_data config logs
-
-# Create non-root user
-RUN useradd -m -u 1000 fastapi && \
-    chown -R fastapi:fastapi /app
-
-# Switch to non-root user
+# Create directories and user
+RUN mkdir -p app_data config logs && chmod 755 app_data config logs
+RUN useradd -m -u 1000 fastapi && chown -R fastapi:fastapi /app
 USER fastapi
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
