@@ -121,6 +121,7 @@ jobs:
     - name: Run unit tests with coverage
       run: |
         cd tests
+        export PYTHONPATH="${PYTHONPATH}:../violentutf_api/fastapi_app:../violentutf"
         python -m pytest unit/ -v --cov=../violentutf --cov=../violentutf_api/fastapi_app/app --cov-report=xml --cov-report=html --cov-report=term
     
     - name: Upload coverage reports to Codecov

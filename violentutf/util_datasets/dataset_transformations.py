@@ -98,7 +98,7 @@ def transform_dataset_with_template(
         - utils.error_handling
     """
     try:
-        env = Environment()
+        env = Environment(autoescape=True)
         template = env.from_string(template_content)
         transformed_prompts = []
         for prompt in dataset.prompts:
