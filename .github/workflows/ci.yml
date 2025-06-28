@@ -111,29 +111,31 @@ jobs:
         run: |
           ${{ env.VENV_ACTIVATE }}
           # Only verify if packages are installed
-          python -c "
-import sys
-try:
-    import pyrit
-    print(f'PyRIT version: {pyrit.__version__}')
-except ImportError:
-    print('PyRIT not installed (expected if requirements not found)')
-try:
-    import garak
-    print('Garak imported successfully')
-except ImportError:
-    print('Garak not installed (expected if requirements not found)')
-try:
-    import fastapi
-    print(f'FastAPI version: {fastapi.__version__}')
-except ImportError:
-    print('FastAPI not installed')
-try:
-    import streamlit
-    print(f'Streamlit version: {streamlit.__version__}')
-except ImportError:
-    print('Streamlit not installed')
-"
+          cat > check_deps.py << 'EOF'
+          import sys
+          try:
+              import pyrit
+              print(f'PyRIT version: {pyrit.__version__}')
+          except ImportError:
+              print('PyRIT not installed (expected if requirements not found)')
+          try:
+              import garak
+              print('Garak imported successfully')
+          except ImportError:
+              print('Garak not installed (expected if requirements not found)')
+          try:
+              import fastapi
+              print(f'FastAPI version: {fastapi.__version__}')
+          except ImportError:
+              print('FastAPI not installed')
+          try:
+              import streamlit
+              print(f'Streamlit version: {streamlit.__version__}')
+          except ImportError:
+              print('Streamlit not installed')
+          EOF
+          python check_deps.py
+          rm -f check_deps.py
 
       - name: Run unit tests
         shell: bash
