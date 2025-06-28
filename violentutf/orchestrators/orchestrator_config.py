@@ -30,10 +30,12 @@ from typing import Any, Dict, List, Tuple, Union
 # Import PyRIT Orchestrator classes
 import pyrit.orchestrator as pyrit_orchestrator
 from pyrit.orchestrator import Orchestrator
-from utils.error_handling import (OrchestratorConfigurationError,
-                                  OrchestratorDeletionError,
-                                  OrchestratorInstantiationError,
-                                  OrchestratorLoadingError)
+from utils.error_handling import (
+    OrchestratorConfigurationError,
+    OrchestratorDeletionError,
+    OrchestratorInstantiationError,
+    OrchestratorLoadingError,
+)
 from utils.logging import get_logger
 
 logger = get_logger(__name__)

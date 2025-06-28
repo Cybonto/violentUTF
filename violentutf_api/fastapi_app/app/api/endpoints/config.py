@@ -11,13 +11,17 @@ from typing import Any, Dict, List, Optional
 import yaml
 from app.core.auth import get_current_user
 from app.models.auth import User
-from app.schemas.config import (ConfigLoadResponse, ConfigParametersResponse,
-                                EnvironmentConfigResponse,
-                                EnvironmentSchemaResponse,
-                                EnvironmentValidationResponse,
-                                ParameterFilesListResponse,
-                                SaltGenerationResponse, UpdateConfigRequest,
-                                UpdateEnvironmentConfigRequest)
+from app.schemas.config import (
+    ConfigLoadResponse,
+    ConfigParametersResponse,
+    EnvironmentConfigResponse,
+    EnvironmentSchemaResponse,
+    EnvironmentValidationResponse,
+    ParameterFilesListResponse,
+    SaltGenerationResponse,
+    UpdateConfigRequest,
+    UpdateEnvironmentConfigRequest,
+)
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 router = APIRouter()

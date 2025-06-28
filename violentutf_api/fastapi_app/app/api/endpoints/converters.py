@@ -13,19 +13,24 @@ from typing import Any, Dict, List, Optional
 
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
-from app.schemas.converters import (ApplicationMode, ConvertedPrompt,
-                                    ConverterApplyRequest,
-                                    ConverterApplyResponse,
-                                    ConverterCreateRequest,
-                                    ConverterCreateResponse,
-                                    ConverterDeleteResponse, ConverterError,
-                                    ConverterParameter,
-                                    ConverterParametersResponse,
-                                    ConverterPreviewRequest,
-                                    ConverterPreviewResponse,
-                                    ConvertersListResponse,
-                                    ConverterTypesResponse,
-                                    ConverterUpdateRequest, ParameterType)
+from app.schemas.converters import (
+    ApplicationMode,
+    ConvertedPrompt,
+    ConverterApplyRequest,
+    ConverterApplyResponse,
+    ConverterCreateRequest,
+    ConverterCreateResponse,
+    ConverterDeleteResponse,
+    ConverterError,
+    ConverterParameter,
+    ConverterParametersResponse,
+    ConverterPreviewRequest,
+    ConverterPreviewResponse,
+    ConvertersListResponse,
+    ConverterTypesResponse,
+    ConverterUpdateRequest,
+    ParameterType,
+)
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 
@@ -441,8 +446,7 @@ async def preview_converter(
         elif request.dataset_id:
             # Load real prompts from dataset for converter preview
             try:
-                from app.services.dataset_integration_service import \
-                    get_dataset_prompts
+                from app.services.dataset_integration_service import get_dataset_prompts
 
                 real_prompts = await get_dataset_prompts(
                     dataset_id=request.dataset_id,

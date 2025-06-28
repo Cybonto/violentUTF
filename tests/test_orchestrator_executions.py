@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 
 import requests
+
 # Load environment variables
 from dotenv import load_dotenv
 

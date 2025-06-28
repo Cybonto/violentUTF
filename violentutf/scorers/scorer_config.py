@@ -40,8 +40,18 @@ import logging
 import os
 from pathlib import Path
 from typing import Tuple  # Added Tuple here
-from typing import (Any, Dict, List, Literal, Optional, Type, Union, get_args,
-                    get_origin, get_type_hints)
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Type,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 # PyRIT imports
 import pyrit.score as score  # Import the pyrit.score module as score
@@ -50,10 +60,14 @@ from pyrit.models import Score  # Import Score class from pyrit.models
 from pyrit.models import PromptRequestPiece
 from pyrit.prompt_target import PromptChatTarget, PromptShieldTarget
 from pyrit.score import Scorer, TrueFalseQuestion  # Import Scorer class
-from utils.error_handling import (ScorerConfigurationError,
-                                  ScorerDeletionError,
-                                  ScorerInstantiationError, ScorerLoadingError,
-                                  ScorerTestingError)
+from utils.error_handling import (
+    ScorerConfigurationError,
+    ScorerDeletionError,
+    ScorerInstantiationError,
+    ScorerLoadingError,
+    ScorerTestingError,
+)
+
 # Project-specific imports
 from utils.logging import get_logger
 

@@ -125,8 +125,9 @@ def handle_authentication_and_sidebar(page_name: str = ""):
     except AttributeError:
         # st.user not available - use Keycloak authentication
         logger.info("st.user not available, using Keycloak authentication")
-        from .auth_utils_keycloak import \
-            handle_authentication_and_sidebar as keycloak_auth
+        from .auth_utils_keycloak import (
+            handle_authentication_and_sidebar as keycloak_auth,
+        )
 
         return keycloak_auth(page_name)
 

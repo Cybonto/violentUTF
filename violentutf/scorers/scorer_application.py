@@ -19,8 +19,7 @@ import asyncio
 import logging
 from typing import List
 
-from pyrit.models import (PromptRequestPiece, Score, SeedPrompt,
-                          SeedPromptDataset)
+from pyrit.models import PromptRequestPiece, Score, SeedPrompt, SeedPromptDataset
 from pyrit.score import Scorer
 from utils.error_handling import ScorerApplicationError
 from utils.logging import get_logger

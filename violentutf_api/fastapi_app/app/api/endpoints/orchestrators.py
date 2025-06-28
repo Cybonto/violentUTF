@@ -5,14 +5,19 @@ from uuid import UUID
 
 from app.core.auth import get_current_user
 from app.db.database import get_session
-from app.models.orchestrator import (OrchestratorConfiguration,
-                                     OrchestratorExecution)
+from app.models.orchestrator import OrchestratorConfiguration, OrchestratorExecution
 from app.schemas.orchestrator import ExecutionCreate  # RESTful schemas
 from app.schemas.orchestrator import (  # Keep for backward compatibility in RESTful endpoint
-    ExecutionListResponse, ExecutionResponse, OrchestratorConfigCreate,
-    OrchestratorConfigResponse, OrchestratorExecuteResponse,
-    OrchestratorMemoryResponse, OrchestratorResultsResponse,
-    OrchestratorScoresResponse, OrchestratorTypeInfo)
+    ExecutionListResponse,
+    ExecutionResponse,
+    OrchestratorConfigCreate,
+    OrchestratorConfigResponse,
+    OrchestratorExecuteResponse,
+    OrchestratorMemoryResponse,
+    OrchestratorResultsResponse,
+    OrchestratorScoresResponse,
+    OrchestratorTypeInfo,
+)
 from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select

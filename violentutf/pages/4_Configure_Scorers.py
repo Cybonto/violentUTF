@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 import requests
 import streamlit as st
+
 # Load environment variables from .env file
 from dotenv import load_dotenv
 

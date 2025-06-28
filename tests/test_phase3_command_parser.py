@@ -10,9 +10,12 @@ import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from violentutf.utils.mcp_integration import (ConfigurationIntentDetector,
-                                              MCPCommand, MCPCommandType,
-                                              NaturalLanguageParser)
+from violentutf.utils.mcp_integration import (
+    ConfigurationIntentDetector,
+    MCPCommand,
+    MCPCommandType,
+    NaturalLanguageParser,
+)
 
 
 class TestNaturalLanguageParser(unittest.TestCase):

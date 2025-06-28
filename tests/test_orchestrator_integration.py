@@ -3,12 +3,15 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from violentutf_api.fastapi_app.app.services.dataset_integration_service import \
-    get_dataset_prompts
-from violentutf_api.fastapi_app.app.services.generator_integration_service import \
-    execute_generator_prompt
-from violentutf_api.fastapi_app.app.services.scorer_integration_service import \
-    execute_scorer
+from violentutf_api.fastapi_app.app.services.dataset_integration_service import (
+    get_dataset_prompts,
+)
+from violentutf_api.fastapi_app.app.services.generator_integration_service import (
+    execute_generator_prompt,
+)
+from violentutf_api.fastapi_app.app.services.scorer_integration_service import (
+    execute_scorer,
+)
 
 
 @pytest.mark.asyncio
@@ -225,8 +228,9 @@ async def test_scorer_integration_error():
 @pytest.mark.asyncio
 async def test_end_to_end_orchestrator_workflow():
     """Test complete orchestrator workflow from creation to execution"""
-    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import \
-        PyRITOrchestratorService
+    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import (
+        PyRITOrchestratorService,
+    )
 
     orchestrator_service = PyRITOrchestratorService()
 
@@ -299,8 +303,9 @@ async def test_end_to_end_orchestrator_workflow():
 @pytest.mark.asyncio
 async def test_orchestrator_with_dataset_execution():
     """Test orchestrator execution with dataset input"""
-    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import \
-        PyRITOrchestratorService
+    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import (
+        PyRITOrchestratorService,
+    )
 
     orchestrator_service = PyRITOrchestratorService()
 

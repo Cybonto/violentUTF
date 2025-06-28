@@ -14,9 +14,12 @@ from typing import Any, Dict, List, Optional
 import httpx
 from app.core.config import settings
 from app.mcp.auth import MCPAuthHandler
-from app.mcp.resources.base import (AdvancedResource, BaseResourceProvider,
-                                    ResourceMetadata,
-                                    advanced_resource_registry)
+from app.mcp.resources.base import (
+    AdvancedResource,
+    BaseResourceProvider,
+    ResourceMetadata,
+    advanced_resource_registry,
+)
 
 logger = logging.getLogger(__name__)
 

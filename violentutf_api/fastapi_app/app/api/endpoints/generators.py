@@ -17,13 +17,18 @@ import requests
 from app.core.auth import get_current_user
 from app.core.error_handling import safe_error_response, validation_error
 from app.db.duckdb_manager import get_duckdb_manager
-from app.schemas.generators import (APIXModelsResponse, GeneratorCreateRequest,
-                                    GeneratorDeleteResponse, GeneratorError,
-                                    GeneratorInfo, GeneratorParameter,
-                                    GeneratorParametersResponse,
-                                    GeneratorsListResponse,
-                                    GeneratorTypesResponse,
-                                    GeneratorUpdateRequest)
+from app.schemas.generators import (
+    APIXModelsResponse,
+    GeneratorCreateRequest,
+    GeneratorDeleteResponse,
+    GeneratorError,
+    GeneratorInfo,
+    GeneratorParameter,
+    GeneratorParametersResponse,
+    GeneratorsListResponse,
+    GeneratorTypesResponse,
+    GeneratorUpdateRequest,
+)
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 

@@ -6,8 +6,7 @@ from typing import Any, Dict, List, Optional
 from app.mcp.tools.executor import tool_executor
 from app.mcp.tools.generator import tool_generator
 from app.mcp.tools.generators import generator_tools
-from app.mcp.tools.introspection import (get_introspector,
-                                         initialize_introspector)
+from app.mcp.tools.introspection import get_introspector, initialize_introspector
 from app.mcp.tools.orchestrators import orchestrator_tools
 from mcp.types import Tool
 

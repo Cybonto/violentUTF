@@ -449,8 +449,7 @@ class PyRITOrchestratorService:
     ) -> PromptTarget:
         """Create PromptTarget from configured generator"""
         # Import generator service functions directly
-        from app.services.generator_integration_service import \
-            get_generator_by_name
+        from app.services.generator_integration_service import get_generator_by_name
 
         # Use the provided user context to access the user's generators
         logger.info(
@@ -740,8 +739,7 @@ class PyRITOrchestratorService:
                 return await self._load_memory_dataset_prompts(dataset_id, sample_size)
             else:
                 # Import dataset service functions for non-memory datasets
-                from app.services.dataset_integration_service import \
-                    get_dataset_prompts
+                from app.services.dataset_integration_service import get_dataset_prompts
 
                 dataset_prompts = await get_dataset_prompts(
                     dataset_id, sample_size, user_context
@@ -750,8 +748,7 @@ class PyRITOrchestratorService:
         except Exception as e:
             logger.error(f"Failed to load dataset prompts for {dataset_id}: {e}")
             # Fallback to service method
-            from app.services.dataset_integration_service import \
-                get_dataset_prompts
+            from app.services.dataset_integration_service import get_dataset_prompts
 
             return await get_dataset_prompts(dataset_id, sample_size, user_context)
 
@@ -763,8 +760,9 @@ class PyRITOrchestratorService:
             logger.info(f"Loading real memory dataset prompts for {dataset_id}")
 
             # Use the shared memory dataset loading function from dataset integration service
-            from app.services.dataset_integration_service import \
-                _load_real_memory_dataset_prompts
+            from app.services.dataset_integration_service import (
+                _load_real_memory_dataset_prompts,
+            )
 
             prompts = await _load_real_memory_dataset_prompts(dataset_id)
 
@@ -1244,7 +1242,9 @@ class ConfiguredGeneratorTarget(PromptTarget):
         """Send prompt through configured generator and return PyRIT response"""
         # Import generator execution functions directly
         from app.services.generator_integration_service import (
-            _execute_apisix_generator, _execute_generic_generator)
+            _execute_apisix_generator,
+            _execute_generic_generator,
+        )
 
         # Extract the user prompt from the request pieces
         user_piece = None
@@ -1419,64 +1419,63 @@ class ConfiguredScorerWrapper(Scorer):
 
         # Map scorer types from UI to proper PyRIT types
         if scorer_type == "SelfAskTrueFalseScorer":
-            from app.services.scorer_integration_service import \
-                _execute_true_false_scorer
+            from app.services.scorer_integration_service import (
+                _execute_true_false_scorer,
+            )
 
             score_result = await _execute_true_false_scorer(
                 self.scorer_config, text_to_score
             )
         elif scorer_type == "SelfAskLikertScorer":
-            from app.services.scorer_integration_service import \
-                _execute_likert_scorer
+            from app.services.scorer_integration_service import _execute_likert_scorer
 
             score_result = await _execute_likert_scorer(
                 self.scorer_config, text_to_score
             )
         elif scorer_type in ["true_false_scorer", "SelfAskRefusalScorer"]:
-            from app.services.scorer_integration_service import \
-                _execute_true_false_scorer
+            from app.services.scorer_integration_service import (
+                _execute_true_false_scorer,
+            )
 
             score_result = await _execute_true_false_scorer(
                 self.scorer_config, text_to_score
             )
         elif scorer_type in ["likert_scorer", "SelfAskScaleScorer"]:
-            from app.services.scorer_integration_service import \
-                _execute_likert_scorer
+            from app.services.scorer_integration_service import _execute_likert_scorer
 
             score_result = await _execute_likert_scorer(
                 self.scorer_config, text_to_score
             )
         elif scorer_type == "SubStringScorer":
-            from app.services.scorer_integration_service import \
-                _execute_substring_scorer
+            from app.services.scorer_integration_service import (
+                _execute_substring_scorer,
+            )
 
             score_result = await _execute_substring_scorer(
                 self.scorer_config, text_to_score
             )
         elif scorer_type == "SelfAskCategoryScorer":
-            from app.services.scorer_integration_service import \
-                _execute_category_scorer
+            from app.services.scorer_integration_service import _execute_category_scorer
 
             score_result = await _execute_category_scorer(
                 self.scorer_config, text_to_score
             )
         elif scorer_type == "FloatScaleThresholdScorer":
-            from app.services.scorer_integration_service import \
-                _execute_threshold_scorer
+            from app.services.scorer_integration_service import (
+                _execute_threshold_scorer,
+            )
 
             score_result = await _execute_threshold_scorer(
                 self.scorer_config, text_to_score
             )
         elif scorer_type == "TrueFalseInverterScorer":
-            from app.services.scorer_integration_service import \
-                _execute_inverter_scorer
+            from app.services.scorer_integration_service import _execute_inverter_scorer
 
             score_result = await _execute_inverter_scorer(
                 self.scorer_config, text_to_score
             )
         else:
-            from app.services.scorer_integration_service import \
-                _execute_generic_scorer
+            from app.services.scorer_integration_service import _execute_generic_scorer
 
             score_result = await _execute_generic_scorer(
                 self.scorer_config, text_to_score

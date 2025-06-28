@@ -2,10 +2,23 @@
 Main API router that includes all sub-routers
 """
 
-from app.api.endpoints import (apisix_admin, auth, config, converters,
-                               database, datasets, echo, files, generators,
-                               health, jwt_keys, orchestrators, redteam,
-                               scorers, sessions)
+from app.api.endpoints import (
+    apisix_admin,
+    auth,
+    config,
+    converters,
+    database,
+    datasets,
+    echo,
+    files,
+    generators,
+    health,
+    jwt_keys,
+    orchestrators,
+    redteam,
+    scorers,
+    sessions,
+)
 from fastapi import APIRouter
 
 api_router = APIRouter()

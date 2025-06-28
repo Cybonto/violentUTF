@@ -9,8 +9,11 @@ This module tests password strength validation including:
 """
 
 import pytest
-from app.core.password_policy import (PasswordStrength, PasswordValidator,
-                                      validate_password_strength)
+from app.core.password_policy import (
+    PasswordStrength,
+    PasswordValidator,
+    validate_password_strength,
+)
 
 
 # Mock functions that don't exist in the actual module
