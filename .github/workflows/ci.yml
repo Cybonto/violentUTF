@@ -97,8 +97,13 @@ jobs:
           ${{ env.VENV_ACTIVATE }}
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
-          pip install -r violentutf/requirements.txt
-          pip install -r violentutf_api/fastapi_app/requirements.txt
+          # Install project requirements if they exist
+          if [ -f violentutf/requirements.txt ]; then
+            pip install -r violentutf/requirements.txt
+          fi
+          if [ -f violentutf_api/fastapi_app/requirements.txt ]; then
+            pip install -r violentutf_api/fastapi_app/requirements.txt
+          fi
           pip install pytest pytest-cov pytest-xdist pytest-timeout pytest-mock
 
       - name: Verify dependency installation
@@ -339,9 +344,11 @@ jobs:
           # Create Python environment for integration tests
           python -m venv venv
           source venv/bin/activate
+          pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -r violentutf/requirements.txt
-          pip install -r violentutf_api/fastapi_app/requirements.txt
+          # Install project requirements if they exist
+          [ -f violentutf/requirements.txt ] && pip install -r violentutf/requirements.txt || true
+          [ -f violentutf_api/fastapi_app/requirements.txt ] && pip install -r violentutf_api/fastapi_app/requirements.txt || true
           pip install pytest pytest-timeout requests
           
           # Run integration tests

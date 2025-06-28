@@ -105,7 +105,8 @@ markers = [
     "unit: marks tests as unit tests",
     "e2e: marks tests as end-to-end tests",
     "docker: marks tests that require Docker",
-    "security: marks security-related tests"
+    "security: marks security-related tests",
+    "benchmark: marks performance benchmark tests"
 ]
 filterwarnings = [
     "error",

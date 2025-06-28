@@ -2,7 +2,7 @@ name: Update Badges
 
 on:
   workflow_run:
-    workflows: ["ViolentUTF CI Pipeline", "Nightly Comprehensive CI"]
+    workflows: ["CI Pipeline", "Nightly CI"]
     types:
       - completed
   workflow_dispatch:

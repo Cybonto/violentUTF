@@ -1,0 +1,58 @@
+title = "ViolentUTF gitleaks configuration"
+# Gitleaks configuration for detecting secrets in the codebase
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "ViolentUTF specific allowlists"
+paths = [
+    # Ignore test files
+    '''tests/.*''',
+    '''.*_test\.py$''',
+    '''test_.*\.py$''',
+    # Ignore documentation
+    '''.*\.md$''',
+    '''docs/.*''',
+    # Ignore CI/CD files (they reference but don't contain secrets)
+    '''\.github/workflows/.*''',
+    # Ignore sample files
+    '''.*\.sample$''',
+    '''.*\.example$'''
+]
+
+# Custom rules for AI-related secrets
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{48}'''
+tags = ["key", "openai"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''sk-ant-[a-zA-Z0-9]{90,}'''
+tags = ["key", "anthropic"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_\s-]?key|apikey)\s*[:=]\s*['\"]([a-zA-Z0-9_\-]{20,})['\"]'''
+tags = ["key", "api"]
+
+[[rules.allowlist]]
+regexes = [
+    '''api[_\s-]?key\s*[:=]\s*['\"]?\s*(os\.getenv|environ|{{|<[^>]+>|\$\{?[A-Z_]+\}?)'''
+]
+
+[[rules]]
+id = "jwt-token"
+description = "JWT Token"
+regex = '''eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*'''
+tags = ["jwt", "token"]
+
+# Allow JWT tokens in test files
+[[rules.allowlist]]
+paths = [
+    '''tests/.*'''
+]
