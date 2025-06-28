@@ -68,9 +68,7 @@ def test_keycloak_verification_implementation():
         print(
             f'   ✅ Signature verification enabled: {"verify_signature": True in content}'
         )
-        print(
-            f'   ✅ Expiration verification enabled: {"verify_exp": True in content}'
-        )
+        print(f'   ✅ Expiration verification enabled: {"verify_exp": True in content}')
         print(f'   ✅ Audience verification enabled: {"verify_aud": True in content}')
         print(f'   ✅ Issuer verification enabled: {"verify_iss": True in content}')
         print(f'   ✅ JWKS client implemented: {"PyJWKClient" in content}')

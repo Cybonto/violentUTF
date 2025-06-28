@@ -4,6 +4,7 @@ Comprehensive tests for 0_Welcome.py backend API endpoints
 
 import json
 import os
+
 # Import the FastAPI app
 import sys
 import tempfile

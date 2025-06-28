@@ -31,6 +31,7 @@ env_path = pathlib.Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 import anthropic
+
 # Import OpenAI and Anthropic libraries
 import openai
 from openai import OpenAI
@@ -307,8 +308,11 @@ with st.sidebar:
     selected_provider = st.selectbox("Select Provider", options=providers)
 
     if selected_provider == "AI Gateway":
-        from utils.auth_utils import (check_ai_access, ensure_ai_access,
-                                      get_current_token)
+        from utils.auth_utils import (
+            check_ai_access,
+            ensure_ai_access,
+            get_current_token,
+        )
         from utils.token_manager import token_manager
 
         # Check AI access with current token (refresh if needed)
@@ -757,9 +761,12 @@ with st.sidebar:
 
 # Import MCP client for enhancement features
 from utils.mcp_client import MCPClientSync
-from utils.mcp_integration import (ConfigurationIntentDetector,
-                                   ContextAnalyzer, MCPCommandType,
-                                   NaturalLanguageParser)
+from utils.mcp_integration import (
+    ConfigurationIntentDetector,
+    ContextAnalyzer,
+    MCPCommandType,
+    NaturalLanguageParser,
+)
 
 # Initialize MCP client
 if "mcp_client" not in st.session_state:

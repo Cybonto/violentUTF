@@ -8,9 +8,14 @@ from datetime import datetime
 from typing import List, Optional
 
 from app.core.password_policy import validate_password_strength
-from app.core.validation import (SecurityLimits, ValidationPatterns,
-                                 create_validation_error, sanitize_string,
-                                 validate_role_list, validate_username)
+from app.core.validation import (
+    SecurityLimits,
+    ValidationPatterns,
+    create_validation_error,
+    sanitize_string,
+    validate_role_list,
+    validate_username,
+)
 from pydantic import BaseModel, EmailStr, Field, validator
 
 

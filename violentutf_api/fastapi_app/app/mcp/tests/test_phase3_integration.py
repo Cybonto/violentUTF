@@ -19,13 +19,18 @@ from app.mcp.prompts import prompts_manager
 from app.mcp.prompts.base import PromptArgument, prompt_registry
 from app.mcp.prompts.security import BiasDetectionPrompt, JailbreakPrompt
 from app.mcp.prompts.testing import CapabilityTestPrompt, ReasoningTestPrompt
+
 # Test the actual implemented components
-from app.mcp.resources.base import (AdvancedResource, ResourceMetadata,
-                                    advanced_resource_registry)
-from app.mcp.resources.configuration import (ConfigurationResourceProvider,
-                                             StatusResourceProvider)
-from app.mcp.resources.datasets import (DatasetResourceProvider,
-                                        ResultsResourceProvider)
+from app.mcp.resources.base import (
+    AdvancedResource,
+    ResourceMetadata,
+    advanced_resource_registry,
+)
+from app.mcp.resources.configuration import (
+    ConfigurationResourceProvider,
+    StatusResourceProvider,
+)
+from app.mcp.resources.datasets import DatasetResourceProvider, ResultsResourceProvider
 from app.mcp.resources.manager import resource_manager
 from app.mcp.server.base import ViolentUTFMCPServer
 from mcp.types import Prompt, Resource

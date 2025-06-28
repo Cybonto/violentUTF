@@ -10,8 +10,7 @@ from app.mcp.resources import resource_registry
 from app.mcp.server.base import ViolentUTFMCPServer
 from app.mcp.tools import tool_registry
 from app.mcp.tools.generators import generator_tools
-from app.mcp.tools.introspection import (EndpointIntrospector,
-                                         initialize_introspector)
+from app.mcp.tools.introspection import EndpointIntrospector, initialize_introspector
 from app.mcp.tools.orchestrators import orchestrator_tools
 from mcp.types import Resource, Tool
 

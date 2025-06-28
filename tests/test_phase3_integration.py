@@ -17,9 +17,11 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from violentutf.utils.mcp_client import MCPClientSync
-from violentutf.utils.mcp_integration import (ConfigurationIntentDetector,
-                                              ConversationContextAnalyzer,
-                                              NaturalLanguageParser)
+from violentutf.utils.mcp_integration import (
+    ConfigurationIntentDetector,
+    ConversationContextAnalyzer,
+    NaturalLanguageParser,
+)
 
 
 class TestCommandProcessingIntegration:

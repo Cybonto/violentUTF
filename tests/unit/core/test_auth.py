@@ -17,6 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import httpx
 import pytest
+
 # Import the module to test
 from app.core.auth import AuthMiddleware, api_key_header, bearer_scheme
 from app.models.api_key import APIKey

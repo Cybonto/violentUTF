@@ -12,8 +12,7 @@ from app.db.database import get_db_session
 from app.models.api_key import APIKey
 from app.models.auth import User
 from fastapi import HTTPException, Request, Security, status
-from fastapi.security import (APIKeyHeader, HTTPAuthorizationCredentials,
-                              HTTPBearer)
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 
 logger = logging.getLogger(__name__)

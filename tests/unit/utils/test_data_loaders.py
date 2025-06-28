@@ -11,6 +11,7 @@ This module tests various dataset loading utilities including:
 import json
 import logging
 import os
+
 # Mock the error handling module before importing data_loaders
 import sys
 import tempfile
@@ -42,11 +43,15 @@ mock_logging_module = MagicMock()
 mock_logging_module.get_logger = MagicMock(return_value=logging.getLogger("test"))
 sys.modules["utils.logging"] = mock_logging_module
 
-from util_datasets.data_loaders import (create_seed_prompt_dataset,
-                                        fetch_online_dataset, get_garak_probes,
-                                        get_pyrit_datasets, load_dataset,
-                                        map_dataset_fields,
-                                        parse_local_dataset_file)
+from util_datasets.data_loaders import (
+    create_seed_prompt_dataset,
+    fetch_online_dataset,
+    get_garak_probes,
+    get_pyrit_datasets,
+    load_dataset,
+    map_dataset_fields,
+    parse_local_dataset_file,
+)
 
 
 class TestDataLoaders:

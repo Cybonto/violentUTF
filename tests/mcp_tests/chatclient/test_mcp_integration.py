@@ -10,11 +10,17 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from utils.mcp_client import MCPClientSync
+
 # Import from utils - conftest.py handles path setup
-from utils.mcp_integration import (ContextAnalyzer, DatasetIntegration,
-                                   MCPCommand, MCPCommandType,
-                                   NaturalLanguageParser, ResourceSearcher,
-                                   TestScenarioInterpreter)
+from utils.mcp_integration import (
+    ContextAnalyzer,
+    DatasetIntegration,
+    MCPCommand,
+    MCPCommandType,
+    NaturalLanguageParser,
+    ResourceSearcher,
+    TestScenarioInterpreter,
+)
 
 
 class TestNaturalLanguageParser:

@@ -12,8 +12,13 @@ from typing import Any, Dict, List
 
 import httpx
 from app.core.config import settings
-from app.mcp.prompts.base import (BasePrompt, DynamicPrompt, PromptArgument,
-                                  StaticPrompt, prompt_registry)
+from app.mcp.prompts.base import (
+    BasePrompt,
+    DynamicPrompt,
+    PromptArgument,
+    StaticPrompt,
+    prompt_registry,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -3,8 +3,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import \
-    PyRITOrchestratorService
+from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import (
+    PyRITOrchestratorService,
+)
 
 
 @pytest.fixture
@@ -126,8 +127,9 @@ async def test_generator_target_bridge():
     """Test ConfiguredGeneratorTarget bridge functionality"""
     from pyrit.models import PromptRequestPiece
 
-    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import \
-        ConfiguredGeneratorTarget
+    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import (
+        ConfiguredGeneratorTarget,
+    )
 
     generator_config = {"name": "test_generator", "type": "test_type"}
 

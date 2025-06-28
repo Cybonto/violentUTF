@@ -11,6 +11,7 @@ import pandas as pd
 import requests
 import streamlit as st
 import yaml
+
 # Load environment variables from .env file
 from dotenv import load_dotenv
 
