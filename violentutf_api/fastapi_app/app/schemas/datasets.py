@@ -7,15 +7,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from app.core.validation import (
-    SecurityLimits,
-    ValidationPatterns,
-    create_validation_error,
-    sanitize_string,
-    validate_file_upload,
-    validate_json_data,
-    validate_url,
-)
+from app.core.validation import (SecurityLimits, ValidationPatterns,
+                                 create_validation_error, sanitize_string,
+                                 validate_file_upload, validate_json_data,
+                                 validate_url)
 from pydantic import BaseModel, Field, validator
 
 

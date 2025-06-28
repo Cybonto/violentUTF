@@ -14,7 +14,8 @@ from app.core.security import create_api_key_token
 from app.db.database import get_session
 from app.models.api_key import APIKey as APIKeyModel
 from app.models.auth import User
-from app.schemas.auth import APIKey, APIKeyCreate, APIKeyList, APIKeyResponse, UserInfo
+from app.schemas.auth import (APIKey, APIKeyCreate, APIKeyList, APIKeyResponse,
+                              UserInfo)
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

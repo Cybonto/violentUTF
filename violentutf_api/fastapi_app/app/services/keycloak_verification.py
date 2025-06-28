@@ -12,7 +12,8 @@ from urllib.parse import urljoin
 import httpx
 import jwt
 from app.core.config import settings
-from app.core.security_logging import log_authentication_failure, log_security_error
+from app.core.security_logging import (log_authentication_failure,
+                                       log_security_error)
 from cryptography.hazmat.primitives import serialization
 from fastapi import HTTPException, status
 from jwt import PyJWKClient

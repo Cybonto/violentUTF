@@ -6,9 +6,9 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from pyrit.models import PromptRequestPiece, PromptRequestResponse
-from pyrit.models.prompt_request_response import construct_response_from_request
+from pyrit.models.prompt_request_response import \
+    construct_response_from_request
 from pyrit.prompt_target import PromptChatTarget
-
 # Import the TokenManager for APISIX integration
 from utils.token_manager import TokenManager
 

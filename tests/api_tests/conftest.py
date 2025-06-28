@@ -13,10 +13,8 @@ sys.path.insert(0, str(parent_dir))
 
 import pytest
 import requests
-
 # Import all fixtures from the main conftest
 from conftest import *
-
 # Import the keycloak_auth utility
 from utils.keycloak_auth import keycloak_auth
 

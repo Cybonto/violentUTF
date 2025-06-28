@@ -24,10 +24,8 @@ with patch.dict(
     try:
         from app.mcp.config import mcp_settings
         from app.mcp.tools.generators import GeneratorConfigurationTools
-        from app.mcp.tools.introspection import (
-            EndpointIntrospector,
-            ViolentUTFToolFilter,
-        )
+        from app.mcp.tools.introspection import (EndpointIntrospector,
+                                                 ViolentUTFToolFilter)
         from app.mcp.tools.orchestrators import OrchestratorManagementTools
         from mcp.types import Resource, Tool
     except ImportError as e:

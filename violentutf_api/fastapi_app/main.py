@@ -10,7 +10,8 @@ from app.core.config import settings
 from app.core.error_handling import setup_error_handlers
 from app.core.logging import setup_logging
 from app.core.rate_limiting import custom_rate_limit_handler, limiter
-from app.core.security_headers import configure_cors_settings, setup_security_headers
+from app.core.security_headers import (configure_cors_settings,
+                                       setup_security_headers)
 from app.db.database import init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,7 +38,8 @@ async def lifespan(app: FastAPI):
     # Initialize PyRIT orchestrator service
     logger.info("Initializing PyRIT orchestrator service...")
     try:
-        from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
+        from app.services.pyrit_orchestrator_service import \
+            pyrit_orchestrator_service
 
         logger.info("PyRIT orchestrator service initialized successfully")
     except Exception as e:

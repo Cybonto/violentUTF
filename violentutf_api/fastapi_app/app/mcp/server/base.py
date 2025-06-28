@@ -10,7 +10,8 @@ from app.mcp.config import mcp_settings
 from fastapi import FastAPI, HTTPException
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
-from mcp.types import CreateMessageRequest, Prompt, Resource, ServerCapabilities, Tool
+from mcp.types import (CreateMessageRequest, Prompt, Resource,
+                       ServerCapabilities, Tool)
 
 logger = logging.getLogger(__name__)
 

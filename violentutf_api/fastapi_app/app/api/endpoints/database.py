@@ -12,14 +12,10 @@ from typing import List, Optional
 import duckdb
 from app.core.auth import get_current_user
 from app.models.auth import User
-from app.schemas.database import (
-    DatabaseInitResponse,
-    DatabaseStatsResponse,
-    DatabaseStatusResponse,
-    InitializeDatabaseRequest,
-    ResetDatabaseRequest,
-    TableStats,
-)
+from app.schemas.database import (DatabaseInitResponse, DatabaseStatsResponse,
+                                  DatabaseStatusResponse,
+                                  InitializeDatabaseRequest,
+                                  ResetDatabaseRequest, TableStats)
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 router = APIRouter()

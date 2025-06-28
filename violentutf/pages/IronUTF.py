@@ -11,7 +11,6 @@ from typing import Any, Dict, List, Optional
 
 import requests
 import streamlit as st
-
 # Load environment variables from .env file
 from dotenv import load_dotenv
 from utils.auth_utils import handle_authentication_and_sidebar

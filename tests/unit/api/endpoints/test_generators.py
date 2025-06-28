@@ -15,20 +15,15 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import httpx
 import pytest
-from app.api.endpoints.generators import (
-    create_generator,
-    delete_generator,
-    discover_apisix_models,
-    get_apisix_endpoint_for_model,
-    get_apisix_models,
-    get_fallback_models,
-    get_generator_type_params,
-    get_generator_types,
-    get_generators,
-    map_uri_to_model,
-    router,
-    update_generator,
-)
+from app.api.endpoints.generators import (create_generator, delete_generator,
+                                          discover_apisix_models,
+                                          get_apisix_endpoint_for_model,
+                                          get_apisix_models,
+                                          get_fallback_models,
+                                          get_generator_type_params,
+                                          get_generator_types, get_generators,
+                                          map_uri_to_model, router,
+                                          update_generator)
 from fastapi import HTTPException
 
 
@@ -48,11 +43,8 @@ def test_generator(*args, **kwargs):
     pass
 
 
-from app.schemas.generators import (
-    GeneratorCreateRequest,
-    GeneratorParameter,
-    GeneratorUpdateRequest,
-)
+from app.schemas.generators import (GeneratorCreateRequest, GeneratorParameter,
+                                    GeneratorUpdateRequest)
 
 
 class TestAPISIXModelMapping:

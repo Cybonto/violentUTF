@@ -13,28 +13,17 @@ from typing import Any, Dict, List, Optional
 
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
-from app.schemas.scorers import (
-    ParameterType,
-    ScorerAnalyticsResponse,
-    ScorerCategoryType,
-    ScorerCloneRequest,
-    ScorerConfigExport,
-    ScorerConfigImport,
-    ScorerCreateRequest,
-    ScorerCreateResponse,
-    ScorerDeleteResponse,
-    ScorerError,
-    ScorerHealthResponse,
-    ScorerImportResponse,
-    ScorerInfo,
-    ScorerParameter,
-    ScorerParametersResponse,
-    ScorersListResponse,
-    ScorerTypesResponse,
-    ScorerUpdateRequest,
-    ScorerValidationRequest,
-    ScorerValidationResponse,
-)
+from app.schemas.scorers import (ParameterType, ScorerAnalyticsResponse,
+                                 ScorerCategoryType, ScorerCloneRequest,
+                                 ScorerConfigExport, ScorerConfigImport,
+                                 ScorerCreateRequest, ScorerCreateResponse,
+                                 ScorerDeleteResponse, ScorerError,
+                                 ScorerHealthResponse, ScorerImportResponse,
+                                 ScorerInfo, ScorerParameter,
+                                 ScorerParametersResponse, ScorersListResponse,
+                                 ScorerTypesResponse, ScorerUpdateRequest,
+                                 ScorerValidationRequest,
+                                 ScorerValidationResponse)
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 

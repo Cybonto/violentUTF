@@ -13,18 +13,10 @@ from unittest.mock import Mock, patch
 
 import jwt
 import pytest
-from app.core.security import (
-    ALGORITHM,
-    SECRET_KEY,
-    create_access_token,
-    decode_token,
-    get_password_hash,
-    pwd_context,
-    timing_safe_compare,
-    validate_secret_key,
-    validate_token_length,
-    verify_password,
-)
+from app.core.security import (ALGORITHM, SECRET_KEY, create_access_token,
+                               decode_token, get_password_hash, pwd_context,
+                               timing_safe_compare, validate_secret_key,
+                               validate_token_length, verify_password)
 from app.core.validation import SecurityLimits
 from freezegun import freeze_time
 from passlib.context import CryptContext

@@ -230,7 +230,8 @@ class GarakService:
                 generator_class = garak._plugins.load_plugin("generators.rest")
 
                 # Get APISIX endpoint
-                from app.api.endpoints.generators import get_apisix_endpoint_for_model
+                from app.api.endpoints.generators import \
+                    get_apisix_endpoint_for_model
 
                 provider = target_config.get("provider", "openai")
                 model = target_config.get("model", "gpt-3.5-turbo")

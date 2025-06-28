@@ -11,21 +11,10 @@ from typing import List, Optional
 
 from app.core.auth import get_current_user
 from app.models.auth import User
-from app.schemas.files import (
-    FileInfo,
-    FileListResponse,
-    FileMetadataResponse,
-    FileUploadResponse,
-)
-from fastapi import (
-    APIRouter,
-    Depends,
-    File,
-    HTTPException,
-    Response,
-    UploadFile,
-    status,
-)
+from app.schemas.files import (FileInfo, FileListResponse,
+                               FileMetadataResponse, FileUploadResponse)
+from fastapi import (APIRouter, Depends, File, HTTPException, Response,
+                     UploadFile, status)
 from fastapi.responses import FileResponse
 
 router = APIRouter()

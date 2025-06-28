@@ -14,14 +14,9 @@ from typing import Any, Dict, List, Optional, Tuple
 import streamlit as st
 
 from .mcp_client import MCPClientSync
-from .mcp_integration import (
-    DatasetIntegration,
-    MCPCommand,
-    MCPCommandType,
-    NaturalLanguageParser,
-    ResourceSearcher,
-    TestScenarioInterpreter,
-)
+from .mcp_integration import (DatasetIntegration, MCPCommand, MCPCommandType,
+                              NaturalLanguageParser, ResourceSearcher,
+                              TestScenarioInterpreter)
 
 logger = logging.getLogger(__name__)
 

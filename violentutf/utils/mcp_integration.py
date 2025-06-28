@@ -18,10 +18,8 @@ from .mcp_client import MCPClient, MCPClientSync
 # Import existing dataset utilities
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
-    from util_datasets.dataset_transformations import (
-        JinjaTransformer,
-        TransformationConfig,
-    )
+    from util_datasets.dataset_transformations import (JinjaTransformer,
+                                                       TransformationConfig)
 except ImportError:
     # Fallback if dataset_transformations is not available
     JinjaTransformer = None

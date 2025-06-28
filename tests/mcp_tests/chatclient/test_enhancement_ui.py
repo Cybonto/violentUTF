@@ -9,10 +9,10 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import streamlit as st
-
 # Import utilities
 from utils.mcp_client import MCPClientSync
-from utils.mcp_integration import ContextAnalyzer, MCPCommandType, NaturalLanguageParser
+from utils.mcp_integration import (ContextAnalyzer, MCPCommandType,
+                                   NaturalLanguageParser)
 
 
 class TestEnhancementStripUI:

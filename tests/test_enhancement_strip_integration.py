@@ -18,11 +18,9 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from violentutf.utils.mcp_client import MCPClientSync
-from violentutf.utils.mcp_integration import (
-    ContextAnalyzer,
-    NaturalLanguageParser,
-    TestScenarioInterpreter,
-)
+from violentutf.utils.mcp_integration import (ContextAnalyzer,
+                                              NaturalLanguageParser,
+                                              TestScenarioInterpreter)
 
 
 def create_test_jwt_token() -> str:

@@ -88,7 +88,8 @@ class PyRITService:
             def _get_endpoint_url(self, provider: str, model: str) -> str:
                 """Map provider/model to APISIX endpoint"""
                 # Import the mapping function from generators.py
-                from app.api.endpoints.generators import get_apisix_endpoint_for_model
+                from app.api.endpoints.generators import \
+                    get_apisix_endpoint_for_model
 
                 endpoint = get_apisix_endpoint_for_model(provider, model)
                 if endpoint:

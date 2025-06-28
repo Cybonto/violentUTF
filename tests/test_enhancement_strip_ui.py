@@ -113,10 +113,8 @@ class TestEnhancementStripUI:
         try:
             # These functions should be defined in Simple_Chat.py
             from violentutf.pages.Simple_Chat import (
-                analyze_prompt_with_mcp,
-                enhance_prompt_with_mcp,
-                generate_test_variations_with_mcp,
-            )
+                analyze_prompt_with_mcp, enhance_prompt_with_mcp,
+                generate_test_variations_with_mcp)
 
             # Functions should be callable
             assert callable(enhance_prompt_with_mcp)

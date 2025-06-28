@@ -12,7 +12,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import requests
 import streamlit as st
-
 # Load environment variables from .env file
 from dotenv import load_dotenv
 from plotly.subplots import make_subplots
@@ -21,7 +20,6 @@ load_dotenv()
 
 from utils.auth_utils import handle_authentication_and_sidebar
 from utils.jwt_manager import jwt_manager
-
 # Use the centralized logging setup
 from utils.logging import get_logger
 

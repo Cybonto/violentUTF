@@ -12,7 +12,6 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import httpx
 import pytest
 from httpx import Response
-
 # Import from utils - conftest.py handles path setup
 from utils.mcp_client import MCPClient, MCPClientSync, MCPMethod, MCPResponse
 

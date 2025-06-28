@@ -8,7 +8,6 @@ import uuid  # Ensure uuid is imported
 from typing import Any, Dict, List, Optional
 
 import yaml
-
 # Use the centralized logging setup
 from utils.logging import get_logger
 
@@ -18,28 +17,18 @@ logger = get_logger(__name__)
 # Import CentralMemory ONLY IF NEEDED elsewhere in this module (currently not needed)
 # from pyrit.memory import CentralMemory
 import httpx  # Needed for test_generator_async exception handling
-
 # PyRIT imports
-from pyrit.models import (
-    PromptRequestPiece,
-    PromptRequestResponse,
-    construct_response_from_request,
-)
-
+from pyrit.models import (PromptRequestPiece, PromptRequestResponse,
+                          construct_response_from_request)
 # Note: PromptResponseError is not explicitly needed here as errors are strings
 from pyrit.prompt_target import HTTPTarget  # Keep original import name
 from pyrit.prompt_target import PromptChatTarget  # Base class for chat targets
 from pyrit.prompt_target import PromptTarget  # Base class for all targets
-from pyrit.prompt_target import (
-    AzureBlobStorageTarget,
-    AzureMLChatTarget,
-    CrucibleTarget,
-    GandalfTarget,
-    HuggingFaceChatTarget,
-    HuggingFaceEndpointTarget,
-    OpenAIDALLETarget,
-    OpenAITTSTarget,
-)
+from pyrit.prompt_target import (AzureBlobStorageTarget, AzureMLChatTarget,
+                                 CrucibleTarget, GandalfTarget,
+                                 HuggingFaceChatTarget,
+                                 HuggingFaceEndpointTarget, OpenAIDALLETarget,
+                                 OpenAITTSTarget)
 
 # --- Import Custom Targets ---
 # OpenAI_Completion removed - use AI Gateway instead

@@ -11,27 +11,18 @@ import httpx
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.error_handling import authentication_error, safe_error_response
-from app.core.password_policy import (
-    default_password_validator,
-    validate_password_strength,
-)
+from app.core.password_policy import (default_password_validator,
+                                      validate_password_strength)
 from app.core.rate_limiting import auth_rate_limit
 from app.core.security import create_access_token
-from app.core.security_logging import (
-    log_authentication_failure,
-    log_authentication_success,
-    log_suspicious_activity,
-    log_token_event,
-    log_weak_password_attempt,
-)
+from app.core.security_logging import (log_authentication_failure,
+                                       log_authentication_success,
+                                       log_suspicious_activity,
+                                       log_token_event,
+                                       log_weak_password_attempt)
 from app.models.auth import User
-from app.schemas.auth import (
-    Token,
-    TokenInfoResponse,
-    TokenValidationRequest,
-    TokenValidationResponse,
-    UserInfo,
-)
+from app.schemas.auth import (Token, TokenInfoResponse, TokenValidationRequest,
+                              TokenValidationResponse, UserInfo)
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -67,7 +58,8 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
                 keycloak_token = response.json()
 
                 # SECURITY FIX: Implement proper Keycloak JWT signature verification
-                from app.services.keycloak_verification import keycloak_verifier
+                from app.services.keycloak_verification import \
+                    keycloak_verifier
 
                 try:
                     # Verify Keycloak token signature and extract user info

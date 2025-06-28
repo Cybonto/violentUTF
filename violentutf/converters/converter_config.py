@@ -22,65 +22,27 @@ Dependencies:
 import collections.abc  # To check for Callab
 import inspect
 import logging
-from typing import (
-    Any,
-    Callable,
-    Dict,  # Added Callable for type hints below
-    List,
-    Literal,
-    Type,
-    Union,
-    _LiteralGenericAlias,
-    _UnionGenericAlias,
-    get_args,
-    get_origin,
-    get_type_hints,
-)
+from typing import Dict  # Added Callable for type hints below
+from typing import (Any, Callable, List, Literal, Type, Union,
+                    _LiteralGenericAlias, _UnionGenericAlias, get_args,
+                    get_origin, get_type_hints)
 
 from pyrit.models import SeedPrompt  # If needed
 from pyrit.prompt_converter import (  # List all converters explicitly to ensure they're available; Add other converters as needed
-    AddImageTextConverter,
-    AddTextImageConverter,
-    AsciiArtConverter,
-    AtbashConverter,
-    AudioFrequencyConverter,
-    AzureSpeechAudioToTextConverter,
-    AzureSpeechTextToAudioConverter,
-    Base64Converter,
-    CaesarConverter,
-    CharacterSpaceConverter,
-    CodeChameleonConverter,
-    EmojiConverter,
-    FlipConverter,
-    FuzzerCrossOverConverter,
-    FuzzerExpandConverter,
-    FuzzerRephraseConverter,
-    FuzzerShortenConverter,
-    FuzzerSimilarConverter,
-    HumanInTheLoopConverter,
-    LeetspeakConverter,
-    LLMGenericTextConverter,
-    MaliciousQuestionGeneratorConverter,
-    MathPromptConverter,
-    MorseConverter,
-    NoiseConverter,
-    PersuasionConverter,
-    PromptConverter,
-    QRCodeConverter,
-    RandomCapitalLettersConverter,
-    RepeatTokenConverter,
-    ROT13Converter,
-    SearchReplaceConverter,
-    StringJoinConverter,
-    SuffixAppendConverter,
-    TenseConverter,
-    ToneConverter,
-    TranslationConverter,
-    UnicodeConfusableConverter,
-    UnicodeSubstitutionConverter,
-    UrlConverter,
-    VariationConverter,
-)
+    AddImageTextConverter, AddTextImageConverter, AsciiArtConverter,
+    AtbashConverter, AudioFrequencyConverter, AzureSpeechAudioToTextConverter,
+    AzureSpeechTextToAudioConverter, Base64Converter, CaesarConverter,
+    CharacterSpaceConverter, CodeChameleonConverter, EmojiConverter,
+    FlipConverter, FuzzerCrossOverConverter, FuzzerExpandConverter,
+    FuzzerRephraseConverter, FuzzerShortenConverter, FuzzerSimilarConverter,
+    HumanInTheLoopConverter, LeetspeakConverter, LLMGenericTextConverter,
+    MaliciousQuestionGeneratorConverter, MathPromptConverter, MorseConverter,
+    NoiseConverter, PersuasionConverter, PromptConverter, QRCodeConverter,
+    RandomCapitalLettersConverter, RepeatTokenConverter, ROT13Converter,
+    SearchReplaceConverter, StringJoinConverter, SuffixAppendConverter,
+    TenseConverter, ToneConverter, TranslationConverter,
+    UnicodeConfusableConverter, UnicodeSubstitutionConverter, UrlConverter,
+    VariationConverter)
 from pyrit.prompt_target import PromptChatTarget  # Needed for some converters
 from utils.error_handling import ConverterLoadingError
 from utils.logging import get_logger

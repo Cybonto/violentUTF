@@ -16,16 +16,10 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from violentutf.utils.mcp_client import (
-    MCPAuthenticationError,
-    MCPClient,
-    MCPClientError,
-    MCPClientSync,
-    MCPConnectionError,
-    MCPMethod,
-    MCPResponse,
-    MCPTimeoutError,
-)
+from violentutf.utils.mcp_client import (MCPAuthenticationError, MCPClient,
+                                         MCPClientError, MCPClientSync,
+                                         MCPConnectionError, MCPMethod,
+                                         MCPResponse, MCPTimeoutError)
 
 
 class TestMCPResponse:

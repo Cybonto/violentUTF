@@ -26,7 +26,6 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
-
 # Now we can import the service
 from app.services.garak_integration import GarakService
 

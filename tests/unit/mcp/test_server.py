@@ -16,16 +16,9 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from mcp.types import (
-    CallToolRequest,
-    CreateMessageRequest,
-    GetPromptRequest,
-    Prompt,
-    ReadResourceRequest,
-    Resource,
-    ServerCapabilities,
-    Tool,
-)
+from mcp.types import (CallToolRequest, CreateMessageRequest, GetPromptRequest,
+                       Prompt, ReadResourceRequest, Resource,
+                       ServerCapabilities, Tool)
 
 # Mock the MCP server module
 with patch("mcp.server.Server"):

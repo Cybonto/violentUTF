@@ -12,30 +12,18 @@ from datetime import datetime
 from io import StringIO
 from typing import Any, Dict, List, Optional
 
-from app.schemas.datasets import (
-    DatasetCreateRequest,
-    DatasetCreateResponse,
-    DatasetDeleteResponse,
-    DatasetError,
-    DatasetFieldMappingRequest,
-    DatasetFieldMappingResponse,
-    DatasetInfo,
-    DatasetPreviewRequest,
-    DatasetPreviewResponse,
-    DatasetSaveRequest,
-    DatasetSaveResponse,
-    DatasetsListResponse,
-    DatasetSourceType,
-    DatasetTransformRequest,
-    DatasetTransformResponse,
-    DatasetType,
-    DatasetTypesResponse,
-    DatasetUpdateRequest,
-    DatasetUpdateResponse,
-    MemoryDatasetInfo,
-    MemoryDatasetsResponse,
-    SeedPromptInfo,
-)
+from app.schemas.datasets import (DatasetCreateRequest, DatasetCreateResponse,
+                                  DatasetDeleteResponse, DatasetError,
+                                  DatasetFieldMappingRequest,
+                                  DatasetFieldMappingResponse, DatasetInfo,
+                                  DatasetPreviewRequest,
+                                  DatasetPreviewResponse, DatasetSaveRequest,
+                                  DatasetSaveResponse, DatasetsListResponse,
+                                  DatasetSourceType, DatasetTransformRequest,
+                                  DatasetTransformResponse, DatasetType,
+                                  DatasetTypesResponse, DatasetUpdateRequest,
+                                  DatasetUpdateResponse, MemoryDatasetInfo,
+                                  MemoryDatasetsResponse, SeedPromptInfo)
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 
@@ -772,18 +760,15 @@ async def _load_real_pyrit_dataset(
         logger.info(f"Loading real PyRIT dataset: {dataset_type} with config: {config}")
 
         # Import PyRIT dataset functions
-        from pyrit.datasets import (
-            fetch_adv_bench_dataset,
-            fetch_aya_redteaming_dataset,
-            fetch_decoding_trust_stereotypes_dataset,
-            fetch_forbidden_questions_dataset,
-            fetch_harmbench_dataset,
-            fetch_many_shot_jailbreaking_dataset,
-            fetch_pku_safe_rlhf_dataset,
-            fetch_seclists_bias_testing_dataset,
-            fetch_wmdp_dataset,
-            fetch_xstest_dataset,
-        )
+        from pyrit.datasets import (fetch_adv_bench_dataset,
+                                    fetch_aya_redteaming_dataset,
+                                    fetch_decoding_trust_stereotypes_dataset,
+                                    fetch_forbidden_questions_dataset,
+                                    fetch_harmbench_dataset,
+                                    fetch_many_shot_jailbreaking_dataset,
+                                    fetch_pku_safe_rlhf_dataset,
+                                    fetch_seclists_bias_testing_dataset,
+                                    fetch_wmdp_dataset, fetch_xstest_dataset)
 
         # Map dataset types to their fetch functions
         dataset_fetchers = {

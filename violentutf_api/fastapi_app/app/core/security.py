@@ -9,8 +9,10 @@ from typing import Any, Dict, Optional
 
 import jwt
 from app.core.config import settings
-from app.core.password_policy import PasswordStrength, validate_password_strength
-from app.core.validation import SecurityLimits, sanitize_string, validate_jwt_token
+from app.core.password_policy import (PasswordStrength,
+                                      validate_password_strength)
+from app.core.validation import (SecurityLimits, sanitize_string,
+                                 validate_jwt_token)
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
