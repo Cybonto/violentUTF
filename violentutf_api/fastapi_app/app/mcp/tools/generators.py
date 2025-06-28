@@ -430,7 +430,7 @@ class GeneratorConfigurationTools:
                     try:
                         error_data = response.json()
                         error_detail = error_data.get("detail", str(error_data))
-                    except:
+                    except Exception:
                         error_detail = response.text
 
                     return {

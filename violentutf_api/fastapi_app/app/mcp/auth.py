@@ -51,7 +51,7 @@ class MCPAuthHandler:
                     "email": user_info["email"],
                     "keycloak_verified": True,
                 }
-            except:
+            except Exception:
                 # Fall back to local JWT verification
                 payload = decode_token(token)
                 if payload:

@@ -150,7 +150,7 @@ class MCPToolExecutor:
                     try:
                         error_data = response.json()
                         error_detail = error_data.get("detail", str(error_data))
-                    except:
+                    except Exception:
                         error_detail = response.text
 
                     return {
@@ -162,7 +162,7 @@ class MCPToolExecutor:
                 # Return successful response
                 try:
                     return response.json()
-                except:
+                except Exception:
                     return {"message": "Success", "raw_response": response.text}
 
             except httpx.TimeoutException:

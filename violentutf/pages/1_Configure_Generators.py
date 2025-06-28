@@ -121,7 +121,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
             try:
                 error_detail = response.json().get("detail", response.text)
                 st.error(f"❌ Request validation failed: {error_detail}")
-            except:
+            except Exception:
                 st.error(f"❌ Bad request: {response.text}")
             return None
         elif response.status_code == 401:
@@ -141,7 +141,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
             try:
                 error_detail = response.json().get("detail", response.text)
                 st.error(f"❌ Validation error: {error_detail}")
-            except:
+            except Exception:
                 st.error(f"❌ Validation failed: {response.text}")
             return None
         elif response.status_code == 500:
@@ -329,7 +329,7 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
                         "success": False,
                         "error": f"Orchestrator creation failed (ID: {error_id}): {error_msg}. This suggests an issue with the orchestrator service or generator lookup.",
                     }
-                except:
+                except Exception:
                     return {
                         "success": False,
                         "error": f"Failed to create test orchestrator - API returned {debug_response.status_code}: {debug_response.text}",

@@ -211,7 +211,8 @@ async def get_database_stats(current_user: User = Depends(get_current_user)):
 
             for table_name in table_names:
                 try:
-                    result = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()
+                    # Use identifier quoting for table names to prevent SQL injection
+                    result = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()
                     count = result[0] if result else 0
                     total_records += count
 

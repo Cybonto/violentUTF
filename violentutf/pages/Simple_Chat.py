@@ -989,7 +989,7 @@ def generate_test_variations_with_mcp(prompt_text, test_type="general"):
                     variation = mcp_client.execute_tool(f"generate_{test}_test", {"prompt": prompt_text})
                     if variation:
                         variations.append({"type": test, "content": variation})
-                except:
+                except Exception:
                     continue
 
         if not variations:

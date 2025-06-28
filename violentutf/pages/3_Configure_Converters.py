@@ -136,7 +136,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
                 logger.error(f"Validation error details: {error_detail}")
                 # Store error details for display
                 st.session_state["last_api_error"] = error_detail
-            except:
+            except Exception:
                 st.session_state["last_api_error"] = response.text
             return None
         elif response.status_code == 502:

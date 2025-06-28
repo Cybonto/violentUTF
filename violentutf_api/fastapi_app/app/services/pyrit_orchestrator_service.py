@@ -1172,7 +1172,7 @@ class ConfiguredScorerWrapper(Scorer):
         if score_result.get("score_metadata"):
             try:
                 metadata_dict = json.loads(score_result.get("score_metadata", "{}"))
-            except:
+            except Exception:
                 metadata_dict = {}
 
         # Add execution metadata if available

@@ -405,7 +405,7 @@ def run_orchestrator_dataset_test(
                     error_details = debug_response.json()
                     error_msg = error_details.get("detail", debug_response.text)
                     st.error(f"❌ Orchestrator creation failed: {error_msg}")
-                except:
+                except Exception:
                     st.error(
                         f"❌ Failed to create orchestrator - API returned {debug_response.status_code}: {debug_response.text}"
                     )

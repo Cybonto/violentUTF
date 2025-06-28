@@ -493,7 +493,7 @@ def _test_scorer_orchestrator_mode(
                     error_msg = error_details.get("detail", debug_response.text)
                     logger.error(f"  Parsed error: {error_msg}")
                     return False, {"error": f"Orchestrator execution failed: {error_msg}"}
-                except:
+                except Exception:
                     return False, {
                         "error": f"Failed to execute orchestrator - API returned {debug_response.status_code}: {debug_response.text}"
                     }

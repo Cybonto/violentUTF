@@ -240,7 +240,7 @@ def prepare_feature_matrix(results: List[Dict[str, Any]]) -> Tuple[pd.DataFrame,
                     if numbers:
                         return float(numbers[0])
                     return 0.0
-                except:
+                except Exception:
                     return 0.0
             return 0.0
 
@@ -379,7 +379,7 @@ def analyze_patterns_and_trends(results: List[Dict[str, Any]], df_features: pd.D
                 if numbers:
                     return float(numbers[0])
                 return 0.0
-            except:
+            except Exception:
                 return 0.0
         return 0.0
 

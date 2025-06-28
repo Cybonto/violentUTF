@@ -208,7 +208,7 @@ class MCPClient:
                     return MCPResponse(
                         id=data.get("id", request_id), result=data.get("result"), error=data.get("error")
                     )
-                except:
+                except Exception:
                     return MCPResponse(
                         id=request_id,
                         error={"code": -32700, "message": f"Invalid response format: {response.text[:200]}"},

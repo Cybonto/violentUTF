@@ -248,7 +248,7 @@ class ResourcePreview:
         try:
             json_content = json.loads(content)
             st.json(json_content)
-        except:
+        except Exception:
             # Display as text
             st.text_area("Content", value=content, height=300)
 

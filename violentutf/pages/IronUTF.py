@@ -155,7 +155,7 @@ class APISIXAdmin:
                 try:
                     error_detail = response.json().get("detail", response.text)
                     error_msg += f" - {error_detail}"
-                except:
+                except Exception:
                     error_msg += f" - {response.text}"
                 logger.error(error_msg)
                 return False, error_msg

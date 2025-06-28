@@ -410,7 +410,7 @@ class StatusResourceProvider(BaseResourceProvider):
                         "status": "healthy" if api_response.status_code == 200 else "unhealthy",
                         "status_code": api_response.status_code,
                     }
-                except:
+                except Exception:
                     status["components"]["api"] = {"status": "unhealthy", "error": "Connection failed"}
 
                 # Check database
@@ -420,7 +420,7 @@ class StatusResourceProvider(BaseResourceProvider):
                         "status": "healthy" if db_response.status_code == 200 else "unhealthy",
                         "status_code": db_response.status_code,
                     }
-                except:
+                except Exception:
                     status["components"]["database"] = {"status": "unhealthy", "error": "Connection failed"}
 
             # MCP status

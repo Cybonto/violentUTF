@@ -646,9 +646,10 @@ class DuckDBManager:
             # Count records in each table
             for table in ["generators", "datasets", "dataset_prompts", "converters", "scorers", "user_sessions"]:
                 try:
-                    count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                    # Use identifier quoting for table names to prevent SQL injection
+                    count = conn.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
                     stats[table] = count
-                except:
+                except Exception:
                     stats[table] = 0
 
             # Database file size
