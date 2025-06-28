@@ -13,36 +13,38 @@ from typing import List, Dict, Tuple
 APISIX_BASE_URL = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
 START_PAGE_PATH = "../violentutf/pages/0_Start.py"
 
+
 def extract_endpoints_from_start_page() -> List[str]:
     """Extract all API endpoints from the Start and Configure Generators pages"""
     endpoints = []
-    
+
     # Check Start page, Configure Generators page, and Configure Datasets page
     page_files = [
         "../violentutf/pages/0_Start.py",
         "../violentutf/pages/1_Configure_Generators.py",
         "../violentutf/pages/2_Configure_Datasets.py",
         "../violentutf/pages/3_Configure_Converters.py",
-        "../violentutf/pages/4_Configure_Scorers.py"
+        "../violentutf/pages/4_Configure_Scorers.py",
     ]
-    
+
     for page_file in page_files:
         try:
-            with open(page_file, 'r') as f:
+            with open(page_file, "r") as f:
                 content = f.read()
-                
+
             # Extract from API_ENDPOINTS dictionary
             endpoint_pattern = r'"([^"]+)": f"\{API_BASE_URL\}([^"]+)"'
             matches = re.findall(endpoint_pattern, content)
-            
+
             for endpoint_name, endpoint_path in matches:
                 endpoints.append(endpoint_path)
-                
+
         except FileNotFoundError:
             print(f"⚠️  Could not find {page_file}")
             continue
-    
+
     return sorted(list(set(endpoints)))
+
 
 def test_apisix_connectivity() -> bool:
     """Test basic APISIX connectivity"""
@@ -52,6 +54,7 @@ def test_apisix_connectivity() -> bool:
     except requests.ConnectionError:
         return False
 
+
 def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
     """Test if an endpoint is routed through APISIX"""
     headers = {
@@ -59,12 +62,12 @@ def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
         "X-Real-IP": "127.0.0.1",
         "X-Forwarded-For": "127.0.0.1",
         "X-Forwarded-Host": "localhost:9080",
-        "X-API-Gateway": "APISIX"
+        "X-API-Gateway": "APISIX",
     }
-    
+
     try:
         response = requests.get(f"{APISIX_BASE_URL}{endpoint}", headers=headers, timeout=10)
-        
+
         if response.status_code == 404:
             return "❌ NOT ROUTED", response.status_code, "Route not configured in APISIX"
         elif response.status_code in [401, 403]:
@@ -73,18 +76,19 @@ def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
             return "✅ ROUTED", response.status_code, "Accessible"
         else:
             return "⚠️  ROUTED", response.status_code, f"Unexpected status"
-            
+
     except requests.ConnectionError:
         return "❌ CONNECTION", 0, "Cannot connect to APISIX"
     except Exception as e:
         return "❌ ERROR", 0, str(e)
+
 
 def main():
     """Main test function"""
     print("🚀 Testing 0_Start.py API Endpoints Through APISIX")
     print("=" * 60)
     print()
-    
+
     # Test APISIX connectivity
     print("🔌 Testing APISIX Gateway connectivity...")
     if test_apisix_connectivity():
@@ -93,9 +97,9 @@ def main():
         print(f"❌ APISIX Gateway is NOT running at {APISIX_BASE_URL}")
         print("   💡 Start APISIX: cd apisix && docker compose up -d")
         return False
-    
+
     print()
-    
+
     # Extract endpoints from Start page
     print("📋 Extracting endpoints from 0_Start.py...")
     try:
@@ -104,29 +108,29 @@ def main():
     except Exception as e:
         print(f"❌ Error reading Start page: {e}")
         return False
-    
+
     print()
-    
+
     # Test each endpoint
     print("🔍 Testing endpoint routing through APISIX...")
     print("-" * 80)
     print(f"{'Endpoint':<40} {'Status':<15} {'Code':<8} {'Description'}")
     print("-" * 80)
-    
+
     all_routed = True
     not_routed = []
-    
+
     for endpoint in endpoints:
         status, code, description = test_endpoint_routing(endpoint)
         print(f"{endpoint:<40} {status:<15} {code:<8} {description}")
-        
+
         if "NOT ROUTED" in status:
             all_routed = False
             not_routed.append(endpoint)
-    
+
     print("-" * 80)
     print()
-    
+
     # Summary
     if all_routed:
         print("✅ ALL ENDPOINTS ARE PROPERLY ROUTED!")
@@ -138,9 +142,9 @@ def main():
             print(f"   - {endpoint}")
         print()
         print("💡 Fix by running: cd apisix && ./configure_routes.sh")
-    
+
     print()
-    
+
     # Additional information
     print("📖 Additional Information:")
     print(f"   - APISIX Gateway: {APISIX_BASE_URL}")
@@ -158,8 +162,9 @@ def main():
         print("   1. Start FastAPI service: cd violentutf_api && docker compose up -d")
         print("   2. Test Start page in Streamlit app")
         print("   3. Check authentication with valid JWT tokens")
-    
+
     return all_routed
+
 
 if __name__ == "__main__":
     success = main()
