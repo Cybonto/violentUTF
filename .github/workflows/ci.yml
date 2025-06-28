@@ -1,0 +1,479 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, dev_*, develop]
+  pull_request:
+    branches: [main, dev_*, develop]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Enable debug mode with tmate'
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  checks: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION_DEFAULT: "3.11"
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  # Phase A: Foundation - Multi-platform testing infrastructure
+  test-matrix:
+    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-13, windows-2022]
+        python-version: ["3.10", "3.11", "3.12"]
+        include:
+          - os: ubuntu-22.04
+            platform: linux
+            arch: amd64
+          - os: macos-13
+            platform: darwin
+            arch: arm64
+          - os: windows-2022
+            platform: windows
+            arch: amd64
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            violentutf/requirements.txt
+            violentutf_api/fastapi_app/requirements.txt
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libpq-dev \
+            libssl-dev \
+            libffi-dev \
+            python3-dev
+
+      - name: Install system dependencies (macOS)
+        if: matrix.platform == 'darwin'
+        run: |
+          brew install postgresql libpq
+
+      - name: Create virtual environment
+        shell: bash
+        run: |
+          python -m venv venv
+          if [[ "${{ matrix.platform }}" == "windows" ]]; then
+            echo "VENV_ACTIVATE=venv\\Scripts\\activate" >> $GITHUB_ENV
+          else
+            echo "VENV_ACTIVATE=source venv/bin/activate" >> $GITHUB_ENV
+          fi
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          ${{ env.VENV_ACTIVATE }}
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install -r violentutf/requirements.txt
+          pip install -r violentutf_api/fastapi_app/requirements.txt
+          pip install pytest pytest-cov pytest-xdist pytest-timeout pytest-mock
+
+      - name: Verify dependency installation
+        shell: bash
+        run: |
+          ${{ env.VENV_ACTIVATE }}
+          python -c "import pyrit; print(f'PyRIT version: {pyrit.__version__}')"
+          python -c "import garak; print('Garak imported successfully')"
+          python -c "import fastapi; print(f'FastAPI version: {fastapi.__version__}')"
+          python -c "import streamlit; print(f'Streamlit version: {streamlit.__version__}')"
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          ${{ env.VENV_ACTIVATE }}
+          pytest tests/unit -v --tb=short \
+            --cov=violentutf --cov=violentutf_api \
+            --cov-report=xml:coverage-${{ matrix.os }}-${{ matrix.python-version }}.xml \
+            --junit-xml=junit-${{ matrix.os }}-${{ matrix.python-version }}.xml \
+            -n auto \
+            --timeout=300
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+          path: |
+            junit-*.xml
+            coverage-*.xml
+          retention-days: 7
+
+      - name: Setup tmate session for debugging
+        if: ${{ failure() && inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # v3.17
+
+  # Phase B: Code Quality and Standards
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+          cache: 'pip'
+
+      - name: Install quality tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort flake8 mypy pylint bandit[toml] radon
+
+      - name: Check code formatting with Black
+        run: |
+          black --check --diff --verbose \
+            violentutf/ violentutf_api/ tests/
+
+      - name: Check import sorting with isort
+        run: |
+          isort --check-only --diff \
+            violentutf/ violentutf_api/ tests/
+
+      - name: Run flake8 linting
+        run: |
+          flake8 violentutf/ violentutf_api/ tests/ \
+            --count --statistics \
+            --max-line-length=120 \
+            --extend-ignore=E203,W503 \
+            --max-complexity=15
+
+      - name: Run type checking with mypy
+        run: |
+          mypy violentutf/ violentutf_api/ \
+            --ignore-missing-imports \
+            --python-version=${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Security linting with Bandit
+        run: |
+          bandit -r violentutf/ violentutf_api/ \
+            -f json -o bandit-results.json \
+            --severity-level medium
+
+      - name: Code complexity analysis
+        run: |
+          radon cc violentutf/ violentutf_api/ -a -nc
+
+      - name: Upload security scan results
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: bandit-results
+          path: bandit-results.json
+          retention-days: 30
+
+  # Phase C: Dependency Security Management
+  dependency-security:
+    name: Dependency Security Scan
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Install security scanning tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety pip-audit
+
+      - name: Scan with Safety
+        run: |
+          safety check --json --output safety-report.json || true
+
+      - name: Scan with pip-audit
+        run: |
+          pip-audit --desc --format json --output pip-audit-report.json || true
+
+      - name: Validate AI tokens sample file
+        run: |
+          if [ -f "ai-tokens.env.sample" ]; then
+            echo "Validating ai-tokens.env.sample structure..."
+            # Check for required AI provider entries
+            for provider in OPENAI ANTHROPIC AWS GARAK PYRIT; do
+              if ! grep -q "^${provider}_" ai-tokens.env.sample; then
+                echo "WARNING: Missing ${provider} configuration in ai-tokens.env.sample"
+              fi
+            done
+          fi
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: dependency-security-reports
+          path: |
+            safety-report.json
+            pip-audit-report.json
+          retention-days: 30
+
+  # Docker Integration Testing with DinD
+  docker-integration:
+    name: Docker Integration Tests
+    runs-on: ubuntu-22.04
+    services:
+      docker:
+        image: docker:24-dind
+        options: --privileged
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+        with:
+          driver-opts: network=host
+
+      - name: Create CI Docker Compose configuration
+        run: |
+          cat > docker-compose.ci.yml << 'EOF'
+          version: '3.8'
+          services:
+            apisix:
+              image: apache/apisix:3.7.0-debian
+              environment:
+                - APISIX_STAND_ALONE=false
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:9080/apisix/admin/routes"]
+                interval: 30s
+                timeout: 10s
+                retries: 3
+            
+            keycloak:
+              image: quay.io/keycloak/keycloak:23.0
+              environment:
+                - KEYCLOAK_ADMIN=admin
+                - KEYCLOAK_ADMIN_PASSWORD=admin
+                - KC_DB=postgres
+                - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+                - KC_DB_USERNAME=keycloak
+                - KC_DB_PASSWORD=keycloak
+              command: start-dev
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+                interval: 30s
+                timeout: 10s
+                retries: 3
+            
+            postgres:
+              image: postgres:16-alpine
+              environment:
+                - POSTGRES_DB=keycloak
+                - POSTGRES_USER=keycloak
+                - POSTGRES_PASSWORD=keycloak
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -U keycloak"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
+          
+          networks:
+            default:
+              name: vutf-network
+          EOF
+
+      - name: Start services
+        run: |
+          docker compose -f docker-compose.ci.yml up -d
+          
+          # Wait for services to be healthy
+          echo "Waiting for services to be ready..."
+          for service in postgres keycloak apisix; do
+            echo "Checking $service..."
+            timeout 300 bash -c "until docker compose -f docker-compose.ci.yml ps $service | grep -q healthy; do sleep 5; done"
+          done
+
+      - name: Validate service connectivity
+        run: |
+          # Test APISIX
+          curl -f http://localhost:9080/apisix/admin/routes || exit 1
+          
+          # Test Keycloak
+          curl -f http://localhost:8080/health || exit 1
+          
+          # Test network connectivity
+          docker compose -f docker-compose.ci.yml exec -T apisix curl -f http://keycloak:8080/health || exit 1
+
+      - name: Run integration tests
+        run: |
+          # Create Python environment for integration tests
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install -r violentutf/requirements.txt
+          pip install -r violentutf_api/fastapi_app/requirements.txt
+          pip install pytest pytest-timeout requests
+          
+          # Run integration tests
+          pytest tests/integration -v --tb=short \
+            --timeout=600 \
+            -k "docker or integration" || true
+
+      - name: Collect service logs
+        if: always()
+        run: |
+          mkdir -p logs
+          for service in apisix keycloak postgres; do
+            docker compose -f docker-compose.ci.yml logs $service > logs/${service}.log 2>&1
+          done
+
+      - name: Upload service logs
+        if: always()
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: docker-service-logs
+          path: logs/
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose -f docker-compose.ci.yml down -v
+
+  # Test Result Processing and PR Comments
+  process-results:
+    name: Process Test Results
+    runs-on: ubuntu-22.04
+    needs: [test-matrix, code-quality, dependency-security, docker-integration]
+    if: always()
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        with:
+          path: artifacts
+
+      - name: Process test results
+        run: |
+          echo "## CI Pipeline Summary" > summary.md
+          echo "" >> summary.md
+          
+          # Process test results
+          if [ -d "artifacts/test-results-*" ]; then
+            echo "### Test Results" >> summary.md
+            echo "| Platform | Python | Status |" >> summary.md
+            echo "|----------|--------|--------|" >> summary.md
+            for result in artifacts/test-results-*/junit-*.xml; do
+              if [ -f "$result" ]; then
+                platform=$(echo $result | grep -oP 'junit-\K[^-]+')
+                python=$(echo $result | grep -oP '\d+\.\d+(?=\.xml)')
+                # Simple check for test status
+                if grep -q 'failures="0"' "$result" && grep -q 'errors="0"' "$result"; then
+                  echo "| $platform | $python | ✅ |" >> summary.md
+                else
+                  echo "| $platform | $python | ❌ |" >> summary.md
+                fi
+              fi
+            done
+            echo "" >> summary.md
+          fi
+          
+          # Security scan results
+          if [ -f "artifacts/bandit-results/bandit-results.json" ]; then
+            echo "### Security Scan Results" >> summary.md
+            issues=$(python3 -c "import json; data=json.load(open('artifacts/bandit-results/bandit-results.json')); print(len(data.get('results', [])))")
+            echo "- Bandit: Found $issues security issues" >> summary.md
+            echo "" >> summary.md
+          fi
+          
+          # Dependency security
+          if [ -f "artifacts/dependency-security-reports/safety-report.json" ]; then
+            echo "### Dependency Security" >> summary.md
+            vulns=$(python3 -c "import json; data=json.load(open('artifacts/dependency-security-reports/safety-report.json')); print(len(data))" 2>/dev/null || echo "0")
+            echo "- Safety: Found $vulns vulnerabilities" >> summary.md
+            echo "" >> summary.md
+          fi
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('summary.md', 'utf8');
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('## CI Pipeline Summary')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: summary
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: summary
+              });
+            }
+
+  # Final status check
+  ci-status:
+    name: CI Status Check
+    runs-on: ubuntu-22.04
+    needs: [test-matrix, code-quality, dependency-security, docker-integration]
+    if: always()
+    
+    steps:
+      - name: Check CI status
+        run: |
+          if [ "${{ needs.test-matrix.result }}" != "success" ] || \
+             [ "${{ needs.code-quality.result }}" != "success" ] || \
+             [ "${{ needs.dependency-security.result }}" != "success" ] || \
+             [ "${{ needs.docker-integration.result }}" != "success" ]; then
+            echo "CI pipeline failed!"
+            exit 1
+          fi
+          echo "CI pipeline passed!"

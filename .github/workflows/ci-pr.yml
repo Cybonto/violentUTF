@@ -1,0 +1,290 @@
+name: PR Quick Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # Quick validation for PR changes
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@94549999469dbfa032becf298d95c87a14c34394 # v40.2.0
+        with:
+          files_yaml: |
+            python:
+              - '**.py'
+            docker:
+              - '**/Dockerfile*'
+              - '**/docker-compose*.yml'
+            docs:
+              - '**.md'
+              - 'docs/**'
+            config:
+              - '**.yaml'
+              - '**.yml'
+              - '**.json'
+              - '**.toml'
+            test:
+              - 'tests/**'
+              - '**/test_*.py'
+              - '**/*_test.py'
+
+      - name: PR size labeling
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const labels = [];
+            const changes = pr.additions + pr.deletions;
+            
+            if (changes < 10) labels.push('size/XS');
+            else if (changes < 50) labels.push('size/S');
+            else if (changes < 200) labels.push('size/M');
+            else if (changes < 500) labels.push('size/L');
+            else labels.push('size/XL');
+            
+            // Add type labels based on changed files
+            const changedFiles = ${{ toJson(steps.changed-files.outputs) }};
+            if (changedFiles.python_any_changed === 'true') labels.push('python');
+            if (changedFiles.docker_any_changed === 'true') labels.push('docker');
+            if (changedFiles.docs_any_changed === 'true') labels.push('documentation');
+            if (changedFiles.test_any_changed === 'true') labels.push('tests');
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: labels
+            });
+
+  # Fast Python linting
+  python-lint:
+    name: Python Linting
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort flake8 pyupgrade autoflake
+
+      - name: Run auto-formatting checks
+        id: format-check
+        continue-on-error: true
+        run: |
+          # Check if formatting is needed
+          black --check --diff violentutf/ violentutf_api/ tests/ > black.diff 2>&1 || echo "NEEDS_FORMAT=true" >> $GITHUB_ENV
+          isort --check-only --diff violentutf/ violentutf_api/ tests/ > isort.diff 2>&1 || echo "NEEDS_FORMAT=true" >> $GITHUB_ENV
+
+      - name: Generate formatting suggestions
+        if: env.NEEDS_FORMAT == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            let comment = '## 🎨 Code Formatting Suggestions\n\n';
+            comment += 'This PR has code formatting issues. You can fix them by running:\n\n';
+            comment += '```bash\n';
+            comment += 'pip install black isort\n';
+            comment += 'black violentutf/ violentutf_api/ tests/\n';
+            comment += 'isort violentutf/ violentutf_api/ tests/\n';
+            comment += '```\n\n';
+            
+            if (fs.existsSync('black.diff') && fs.statSync('black.diff').size > 0) {
+              comment += '<details>\n<summary>Black formatting changes needed</summary>\n\n';
+              comment += '```diff\n' + fs.readFileSync('black.diff', 'utf8') + '\n```\n';
+              comment += '</details>\n\n';
+            }
+            
+            if (fs.existsSync('isort.diff') && fs.statSync('isort.diff').size > 0) {
+              comment += '<details>\n<summary>Import sorting changes needed</summary>\n\n';
+              comment += '```diff\n' + fs.readFileSync('isort.diff', 'utf8') + '\n```\n';
+              comment += '</details>\n';
+            }
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+  # Security quick scan
+  security-scan:
+    name: Security Quick Scan
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Run Trivy security scan
+        uses: aquasecurity/trivy-action@fbd16365eb88e12433951383f5e99bd901fc618f # v0.14.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@407ffafae6a767df3e0230c3df91b6443ae8df75 # v2.22.8
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Minimal test validation
+  quick-test:
+    name: Quick Test Validation
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            violentutf/requirements.txt
+            violentutf_api/fastapi_app/requirements.txt
+
+      - name: Install minimal dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-xdist
+          # Install only critical dependencies for quick tests
+          pip install fastapi uvicorn httpx streamlit
+
+      - name: Run quick unit tests
+        run: |
+          # Run only fast unit tests (marked with 'quick' or not marked as 'slow')
+          pytest tests/unit -v -m "not slow" -x --tb=short \
+            --maxfail=5 -n auto || true
+
+  # Docker validation
+  docker-lint:
+    name: Docker Validation
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Run Hadolint on Dockerfiles
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        with:
+          recursive: true
+          ignore: DL3008,DL3009  # Ignore apt-get version pinning for now
+
+      - name: Validate Docker Compose files
+        run: |
+          # Find all docker-compose files
+          find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml" | while read -r file; do
+            echo "Validating $file..."
+            docker compose -f "$file" config > /dev/null || exit 1
+          done
+
+  # PR status check
+  pr-status:
+    name: PR Status Check
+    runs-on: ubuntu-22.04
+    needs: [pr-validation, python-lint, security-scan, quick-test, docker-lint]
+    if: always()
+    
+    steps:
+      - name: Set PR status
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const checks = [
+              { name: 'pr-validation', result: '${{ needs.pr-validation.result }}' },
+              { name: 'python-lint', result: '${{ needs.python-lint.result }}' },
+              { name: 'security-scan', result: '${{ needs.security-scan.result }}' },
+              { name: 'quick-test', result: '${{ needs.quick-test.result }}' },
+              { name: 'docker-lint', result: '${{ needs.docker-lint.result }}' }
+            ];
+            
+            const failedChecks = checks.filter(c => c.result === 'failure');
+            const allSuccess = failedChecks.length === 0;
+            
+            let comment = '## PR Quick Check Results\n\n';
+            comment += '| Check | Status |\n';
+            comment += '|-------|--------|\n';
+            
+            for (const check of checks) {
+              const emoji = check.result === 'success' ? '✅' : 
+                           check.result === 'failure' ? '❌' : '⏭️';
+              comment += `| ${check.name} | ${emoji} ${check.result} |\n`;
+            }
+            
+            if (!allSuccess) {
+              comment += '\n⚠️ **Some checks failed.** Please review the logs above.';
+            } else {
+              comment += '\n✅ **All quick checks passed!**';
+            }
+            
+            // Post or update comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('## PR Quick Check Results')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }

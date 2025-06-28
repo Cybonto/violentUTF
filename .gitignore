@@ -14,3 +14,43 @@ CA.crt
 docs/.DS_Store
 *.db
 *CLAUDE*.*
+
+# CI/CD artifacts
+coverage.xml
+coverage-*.xml
+htmlcov/
+htmlcov-*/
+.coverage
+.coverage.*
+junit-*.xml
+test-results.xml
+*.sarif
+bandit-results.json
+safety-report.json
+pip-audit-report.json
+benchmark_results.json
+benchmark_hist/
+memory_profile.txt
+performance_report.md
+secrets-baseline.json
+secrets-report.json
+dependency-check-report.*
+semgrep.sarif
+trivy-results.sarif
+
+# Python artifacts
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE artifacts
+.idea/
+.vscode/
+*.swp
+*.swo
