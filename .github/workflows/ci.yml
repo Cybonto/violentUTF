@@ -219,10 +219,10 @@ jobs:
     
     - name: Run Bandit security scan
       run: |
-        # Run bandit but only fail on HIGH severity issues
-        bandit -r violentutf/ violentutf_api/ -f json -o bandit-report.json -lll || true
-        # Check if there are any HIGH severity issues and fail if found
-        python -c "import json; data = json.load(open('bandit-report.json')); high_issues = [r for r in data['results'] if r['issue_severity'] == 'HIGH']; exit(1 if high_issues else 0)"
+        # Run bandit for MEDIUM and HIGH severity issues
+        bandit -r violentutf/ violentutf_api/ -f json -o bandit-report.json -ll || true
+        # Check if there are any HIGH or MEDIUM severity issues and fail if found
+        python -c "import json; data = json.load(open('bandit-report.json')); high_issues = [r for r in data['results'] if r['issue_severity'] == 'HIGH']; medium_issues = [r for r in data['results'] if r['issue_severity'] == 'MEDIUM']; print(f'Found {len(high_issues)} HIGH and {len(medium_issues)} MEDIUM severity issues'); exit(1 if high_issues or medium_issues else 0)"
     
     - name: Upload Bandit report
       uses: actions/upload-artifact@v4

@@ -10,6 +10,7 @@ actual implementation without external dependencies.
 import asyncio
 import os
 import sys
+import tempfile
 from typing import Any, Dict, Generator
 from unittest.mock import Mock, patch
 
@@ -56,8 +57,9 @@ def mock_environment():
         "KEYCLOAK_CLIENT_ID": "violentutf-fastapi",
         "KEYCLOAK_CLIENT_SECRET": "test_client_secret",
         # Override data directories to prevent file system issues
-        "APP_DATA_DIR": "/tmp/test_app_data",
-        "CONFIG_DIR": "/tmp/test_config",
+        # Use tempfile for secure temporary directories
+        "APP_DATA_DIR": tempfile.mkdtemp(prefix="test_app_data_"),
+        "CONFIG_DIR": tempfile.mkdtemp(prefix="test_config_"),
         # Database (use in-memory for tests)
         "DATABASE_URL": "sqlite:///:memory:",
         # Performance settings for tests

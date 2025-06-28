@@ -419,6 +419,7 @@ def run_orchestrator_dataset_test(
                     API_ENDPOINTS["orchestrator_create"],
                     json=orchestrator_payload,
                     headers=headers,
+                    timeout=30,
                 )
                 logger.error(f"Debug response status: {debug_response.status_code}")
                 logger.error(f"Debug response text: {debug_response.text}")

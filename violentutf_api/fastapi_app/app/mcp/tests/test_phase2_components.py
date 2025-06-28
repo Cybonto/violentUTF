@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 import sys
+import tempfile
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -16,8 +17,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 with patch.dict(
     os.environ,
     {
-        "APP_DATA_DIR": "/tmp/test_app_data",
-        "CONFIG_DIR": "/tmp/test_config",
+        "APP_DATA_DIR": tempfile.mkdtemp(prefix="test_app_data_"),
+        "CONFIG_DIR": tempfile.mkdtemp(prefix="test_config_"),
         "JWT_SECRET_KEY": "test_secret_key",
     },
 ):

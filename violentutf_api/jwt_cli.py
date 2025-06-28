@@ -66,6 +66,7 @@ def login(username: str, password: str):
         response = requests.post(
             f"{API_BASE_URL}/api/v1/auth/token",
             data={"username": username, "password": password, "grant_type": "password"},
+            timeout=30,
         )
 
         if response.status_code == 200:
@@ -105,7 +106,7 @@ def whoami():
     """Show current user information"""
     try:
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/auth/me", headers=get_auth_header()
+            f"{API_BASE_URL}/api/v1/auth/me", headers=get_auth_header(), timeout=30
         )
 
         if response.status_code == 200:
@@ -155,7 +156,7 @@ def refresh():
     """Refresh the current token"""
     try:
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/auth/refresh", headers=get_auth_header()
+            f"{API_BASE_URL}/api/v1/auth/refresh", headers=get_auth_header(), timeout=30
         )
 
         if response.status_code == 200:
@@ -198,6 +199,7 @@ def create_key(name: str, permissions: tuple):
             f"{API_BASE_URL}/api/v1/keys/create",
             headers=get_auth_header(),
             json={"name": name, "permissions": list(permissions)},
+            timeout=30,
         )
 
         if response.status_code == 200:
@@ -225,7 +227,7 @@ def list_keys():
     """List all API keys"""
     try:
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/keys/list", headers=get_auth_header()
+            f"{API_BASE_URL}/api/v1/keys/list", headers=get_auth_header(), timeout=30
         )
 
         if response.status_code == 200:
@@ -261,7 +263,7 @@ def revoke_key(key_id: str):
     """Revoke an API key"""
     try:
         response = requests.delete(
-            f"{API_BASE_URL}/api/v1/keys/{key_id}", headers=get_auth_header()
+            f"{API_BASE_URL}/api/v1/keys/{key_id}", headers=get_auth_header(), timeout=30
         )
 
         if response.status_code == 200:
@@ -281,7 +283,7 @@ def get_current_key():
     """Get current session as API key format"""
     try:
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/keys/current", headers=get_auth_header()
+            f"{API_BASE_URL}/api/v1/keys/current", headers=get_auth_header(), timeout=30
         )
 
         if response.status_code == 200:

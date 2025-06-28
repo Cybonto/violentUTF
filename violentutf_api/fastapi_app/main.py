@@ -122,6 +122,11 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
 
+    # Allow configuring host via environment variable for security
+    import os
+    host = os.getenv("VIOLENTUTF_HOST", "0.0.0.0")  # Default for Docker compatibility
+    port = int(os.getenv("VIOLENTUTF_PORT", "8000"))
+    
     uvicorn.run(
-        "main:app", host="0.0.0.0", port=8000, reload=settings.DEBUG, log_level="info"
+        "main:app", host=host, port=port, reload=settings.DEBUG, log_level="info"
     )
