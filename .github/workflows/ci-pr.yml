@@ -195,9 +195,13 @@ jobs:
 
       - name: Run quick unit tests
         run: |
-          # Run only fast unit tests (marked with 'quick' or not marked as 'slow')
-          pytest tests/unit -v -m "not slow" -x --tb=short \
-            --maxfail=5 -n auto || true
+          # Run only unit tests if they exist
+          if [ -d "tests/unit" ] && [ "$(find tests/unit -name 'test_*.py' -type f)" ]; then
+            pytest tests/unit -v -m "not slow" -x --tb=short \
+              --maxfail=5 -n auto || true
+          else
+            echo "No unit tests found, skipping test execution"
+          fi
 
   # Docker validation
   docker-lint:
