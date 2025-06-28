@@ -24,30 +24,24 @@ Dependencies:
 - utils.logging
 """
 
-import os
-import json
 import asyncio
+import json
 import logging
-from typing import List, Dict, Any, Optional, Union, Tuple
-import pandas as pd
-import yaml
-import requests
+import os
 from io import StringIO
 from pathlib import Path
-from pyrit.datasets import (
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import pandas as pd
+import requests
+import yaml
+from pyrit.datasets import (  # Add other datasets as needed
+    fetch_adv_bench_dataset, fetch_aya_redteaming_dataset,
     fetch_decoding_trust_stereotypes_dataset,
-    fetch_harmbench_dataset,
-    fetch_many_shot_jailbreaking_dataset,
-    fetch_adv_bench_dataset,
-    fetch_aya_redteaming_dataset,
-    fetch_seclists_bias_testing_dataset,
-    fetch_xstest_dataset,
-    fetch_pku_safe_rlhf_dataset,
-    fetch_wmdp_dataset,
-    fetch_forbidden_questions_dataset,
-    fetch_adv_bench_dataset,
-    # Add other datasets as needed
-)
+    fetch_forbidden_questions_dataset, fetch_harmbench_dataset,
+    fetch_many_shot_jailbreaking_dataset, fetch_pku_safe_rlhf_dataset,
+    fetch_seclists_bias_testing_dataset, fetch_wmdp_dataset,
+    fetch_xstest_dataset)
 from pyrit.models import SeedPrompt, SeedPromptDataset
 from utils.error_handling import DatasetLoadingError, DatasetParsingError
 from utils.logging import get_logger
@@ -56,18 +50,19 @@ logger = get_logger(__name__)
 
 # Mapping of dataset names to their corresponding fetch functions
 PYRIT_DATASETS = {
-    'decoding_trust_stereotypes': fetch_decoding_trust_stereotypes_dataset,
-    'harmbench': fetch_harmbench_dataset,
+    "decoding_trust_stereotypes": fetch_decoding_trust_stereotypes_dataset,
+    "harmbench": fetch_harmbench_dataset,
     #'many_shot_jailbreaking': fetch_many_shot_jailbreaking_dataset,
-    'adv_bench': fetch_adv_bench_dataset,
-    'aya_redteaming': fetch_aya_redteaming_dataset,
-    'seclists_bias_testing': fetch_seclists_bias_testing_dataset,
-    'xstest': fetch_xstest_dataset,
+    "adv_bench": fetch_adv_bench_dataset,
+    "aya_redteaming": fetch_aya_redteaming_dataset,
+    "seclists_bias_testing": fetch_seclists_bias_testing_dataset,
+    "xstest": fetch_xstest_dataset,
     #'pku_safe_rlhf': fetch_pku_safe_rlhf_dataset,
     #'wmdp': fetch_wmdp_dataset,
-    'forbidden_questions': fetch_forbidden_questions_dataset,
+    "forbidden_questions": fetch_forbidden_questions_dataset,
     # Add other datasets as needed
 }
+
 
 def get_pyrit_datasets() -> List[str]:
     """
@@ -95,6 +90,7 @@ def get_pyrit_datasets() -> List[str]:
     logger.debug(f"Retrieved PyRIT datasets: {datasets_list}")
     return datasets_list
 
+
 def get_garak_probes() -> List[str]:
     """
     Retrieves a list of natively supported probes for Garak.
@@ -120,7 +116,10 @@ def get_garak_probes() -> List[str]:
     logger.warning("get_garak_probes() is not yet implemented.")
     raise NotImplementedError("get_garak_probes() is not implemented yet.")
 
-def load_dataset(dataset_name: str, config: Dict[str, Any]) -> Optional[SeedPromptDataset]:
+
+def load_dataset(
+    dataset_name: str, config: Dict[str, Any]
+) -> Optional[SeedPromptDataset]:
     """
     Loads a dataset by name and returns a SeedPromptDataset object.
 
@@ -164,6 +163,7 @@ def load_dataset(dataset_name: str, config: Dict[str, Any]) -> Optional[SeedProm
         logger.exception(f"Error loading dataset '{dataset_name}': {e}")
         raise DatasetLoadingError(f"Error loading dataset '{dataset_name}': {e}") from e
 
+
 def parse_local_dataset_file(uploaded_file) -> pd.DataFrame:
     """
     Parses an uploaded local dataset file in various formats.
@@ -190,24 +190,28 @@ def parse_local_dataset_file(uploaded_file) -> pd.DataFrame:
     try:
         file_extension = Path(uploaded_file.name).suffix.lower()
         content = uploaded_file.read()
-        logger.info(f"Parsing uploaded file '{uploaded_file.name}' with extension '{file_extension}'")
-        if file_extension in ['.csv', '.tsv']:
-            delimiter = ',' if file_extension == '.csv' else '\t'
-            dataframe = pd.read_csv(StringIO(content.decode('utf-8')), delimiter=delimiter)
-        elif file_extension in ['.json', '.jsonl']:
-            lines = content.decode('utf-8').splitlines()
+        logger.info(
+            f"Parsing uploaded file '{uploaded_file.name}' with extension '{file_extension}'"
+        )
+        if file_extension in [".csv", ".tsv"]:
+            delimiter = "," if file_extension == ".csv" else "\t"
+            dataframe = pd.read_csv(
+                StringIO(content.decode("utf-8")), delimiter=delimiter
+            )
+        elif file_extension in [".json", ".jsonl"]:
+            lines = content.decode("utf-8").splitlines()
             if len(lines) == 1:
                 json_data = json.loads(lines[0])
             else:
                 json_data = [json.loads(line) for line in lines]
             dataframe = pd.json_normalize(json_data)
-        elif file_extension in ['.yaml', '.yml']:
-            yaml_data = yaml.safe_load(content.decode('utf-8'))
+        elif file_extension in [".yaml", ".yml"]:
+            yaml_data = yaml.safe_load(content.decode("utf-8"))
             dataframe = pd.json_normalize(yaml_data)
-        elif file_extension in ['.txt']:
-            text = content.decode('utf-8')
-            lines = text.strip().split('\n')
-            dataframe = pd.DataFrame(lines, columns=['text'])
+        elif file_extension in [".txt"]:
+            text = content.decode("utf-8")
+            lines = text.strip().split("\n")
+            dataframe = pd.DataFrame(lines, columns=["text"])
         else:
             logger.error(f"Unsupported file type: '{file_extension}'")
             raise DatasetParsingError(f"Unsupported file type: '{file_extension}'")
@@ -215,7 +219,10 @@ def parse_local_dataset_file(uploaded_file) -> pd.DataFrame:
         return dataframe
     except Exception as e:
         logger.exception(f"Error parsing uploaded file '{uploaded_file.name}': {e}")
-        raise DatasetParsingError(f"Error parsing uploaded file '{uploaded_file.name}': {e}") from e
+        raise DatasetParsingError(
+            f"Error parsing uploaded file '{uploaded_file.name}': {e}"
+        ) from e
+
 
 def fetch_online_dataset(url: str) -> pd.DataFrame:
     """
@@ -250,21 +257,42 @@ def fetch_online_dataset(url: str) -> pd.DataFrame:
         parsed_url = requests.utils.urlparse(url)
         file_extension = Path(parsed_url.path).suffix.lower()
         content = response.content
-        if file_extension not in ['.csv', '.tsv', '.json', '.jsonl', '.yaml', '.yml', '.txt']:
-            logger.warning(f"Could not determine file type from URL. Assuming CSV format.")
-            file_extension = '.csv'  # Default to CSV
-        uploaded_file = type('UploadedFile', (object,), {'name': f'downloaded{file_extension}', 'read': lambda: content})
+        if file_extension not in [
+            ".csv",
+            ".tsv",
+            ".json",
+            ".jsonl",
+            ".yaml",
+            ".yml",
+            ".txt",
+        ]:
+            logger.warning(
+                f"Could not determine file type from URL. Assuming CSV format."
+            )
+            file_extension = ".csv"  # Default to CSV
+        uploaded_file = type(
+            "UploadedFile",
+            (object,),
+            {"name": f"downloaded{file_extension}", "read": lambda: content},
+        )
         dataframe = parse_local_dataset_file(uploaded_file)
         logger.info(f"Dataset fetched and parsed successfully from URL: {url}")
         return dataframe
     except requests.HTTPError as e:
         logger.exception(f"HTTP error fetching dataset from URL '{url}': {e}")
-        raise DatasetParsingError(f"HTTP error fetching dataset from URL '{url}': {e}") from e
+        raise DatasetParsingError(
+            f"HTTP error fetching dataset from URL '{url}': {e}"
+        ) from e
     except Exception as e:
         logger.exception(f"Error fetching dataset from URL '{url}': {e}")
-        raise DatasetParsingError(f"Error fetching dataset from URL '{url}': {e}") from e
+        raise DatasetParsingError(
+            f"Error fetching dataset from URL '{url}': {e}"
+        ) from e
 
-def map_dataset_fields(dataframe: pd.DataFrame, mappings: Dict[str, str]) -> List[SeedPrompt]:
+
+def map_dataset_fields(
+    dataframe: pd.DataFrame, mappings: Dict[str, str]
+) -> List[SeedPrompt]:
     """
     Maps fields from the dataframe to the required SeedPrompt attributes.
 
@@ -290,28 +318,39 @@ def map_dataset_fields(dataframe: pd.DataFrame, mappings: Dict[str, str]) -> Lis
         - utils.error_handling
     """
     try:
-        required_attributes = ['value']
+        required_attributes = ["value"]
         seed_prompts = []
         for index, row in dataframe.iterrows():
             seed_prompt_data = {}
             for dataframe_column, prompt_attr in mappings.items():
                 if dataframe_column not in dataframe.columns:
                     logger.error(f"Column '{dataframe_column}' not found in DataFrame")
-                    raise DatasetParsingError(f"Column '{dataframe_column}' not found in dataset.")
+                    raise DatasetParsingError(
+                        f"Column '{dataframe_column}' not found in dataset."
+                    )
                 seed_prompt_data[prompt_attr] = row[dataframe_column]
             # Ensure required attributes are present
             if not all(attr in seed_prompt_data for attr in required_attributes):
-                missing_attrs = [attr for attr in required_attributes if attr not in seed_prompt_data]
-                logger.error(f"Missing required attributes: {missing_attrs} in row {index}")
-                raise DatasetParsingError(f"Missing required attributes: {missing_attrs}")
+                missing_attrs = [
+                    attr for attr in required_attributes if attr not in seed_prompt_data
+                ]
+                logger.error(
+                    f"Missing required attributes: {missing_attrs} in row {index}"
+                )
+                raise DatasetParsingError(
+                    f"Missing required attributes: {missing_attrs}"
+                )
             # Create SeedPrompt object
             seed_prompt = SeedPrompt(**seed_prompt_data)
             seed_prompts.append(seed_prompt)
-        logger.info(f"Mapped dataset fields successfully. Total prompts: {len(seed_prompts)}")
+        logger.info(
+            f"Mapped dataset fields successfully. Total prompts: {len(seed_prompts)}"
+        )
         return seed_prompts
     except Exception as e:
         logger.exception(f"Error mapping dataset fields: {e}")
         raise DatasetParsingError(f"Error mapping dataset fields: {e}") from e
+
 
 def create_seed_prompt_dataset(seed_prompts: List[SeedPrompt]) -> SeedPromptDataset:
     """
@@ -337,7 +376,9 @@ def create_seed_prompt_dataset(seed_prompts: List[SeedPrompt]) -> SeedPromptData
     """
     if not seed_prompts:
         logger.error("Seed prompts list is empty. Cannot create dataset.")
-        raise ValueError("Cannot create SeedPromptDataset with an empty seed prompts list.")
+        raise ValueError(
+            "Cannot create SeedPromptDataset with an empty seed prompts list."
+        )
     dataset = SeedPromptDataset(prompts=seed_prompts)
     logger.info(f"Created SeedPromptDataset with {len(seed_prompts)} prompts.")
     return dataset

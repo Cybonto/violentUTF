@@ -16,7 +16,7 @@ test_metadata = {
     "scorer_name": "TestScorer",
     "scorer_type": "SubStringScorer",
     "test_mode": "full_execution",
-    "execution_timestamp": datetime.now().isoformat()
+    "execution_timestamp": datetime.now().isoformat(),
 }
 
 print("🧪 Testing Scorer Metadata Structure")
@@ -43,9 +43,12 @@ sample_score = {
     "score_category": "violation_detected",
     "score_rationale": "Found prohibited substring",
     "score_metadata": json.dumps(test_metadata),
-    "scorer_class_identifier": {"__type__": "ConfiguredScorerWrapper", "scorer_name": "TestScorer"},
+    "scorer_class_identifier": {
+        "__type__": "ConfiguredScorerWrapper",
+        "scorer_name": "TestScorer",
+    },
     "prompt_request_response_id": "conv-123",
-    "timestamp": datetime.now().isoformat()
+    "timestamp": datetime.now().isoformat(),
 }
 
 print(json.dumps(sample_score, indent=2))

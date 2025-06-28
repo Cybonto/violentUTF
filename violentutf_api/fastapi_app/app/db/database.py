@@ -1,31 +1,28 @@
 """
 Database configuration and session management
 """
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import declarative_base
-from contextlib import asynccontextmanager
+
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import AsyncGenerator
 
 from app.core.config import settings
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
+from sqlalchemy.orm import declarative_base
 
 # Use SQLite for simplicity (can be changed to PostgreSQL later)
-DATABASE_URL = settings.DATABASE_URL or f"sqlite+aiosqlite:///{settings.APP_DATA_DIR}/violentutf_api.db"
+DATABASE_URL = (
+    settings.DATABASE_URL
+    or f"sqlite+aiosqlite:///{settings.APP_DATA_DIR}/violentutf_api.db"
+)
 
 # Create async engine
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True
-)
+engine = create_async_engine(DATABASE_URL, echo=settings.DEBUG, future=True)
 
 # Create async session factory
-async_session = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False
-)
+async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 # Base class for models
 Base = declarative_base()
@@ -40,7 +37,7 @@ async def init_db():
         db_path = DATABASE_URL.split("///")[1]
         db_dir = os.path.dirname(db_path)
         Path(db_dir).mkdir(parents=True, exist_ok=True)
-    
+
     async with engine.begin() as conn:
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)

@@ -1,13 +1,16 @@
 """
 Session management schemas
 """
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+
 from datetime import datetime
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field
 
 
 class UpdateSessionRequest(BaseModel):
     """Request to update session state"""
+
     ui_preferences: Optional[Dict[str, Any]] = None
     workflow_state: Optional[Dict[str, Any]] = None
     temporary_data: Optional[Dict[str, Any]] = None
@@ -16,6 +19,7 @@ class UpdateSessionRequest(BaseModel):
 
 class SessionStateResponse(BaseModel):
     """Session state response"""
+
     session_id: str
     user_id: str
     ui_preferences: Dict[str, Any]
@@ -27,6 +31,7 @@ class SessionStateResponse(BaseModel):
 
 class SessionSchemaResponse(BaseModel):
     """Session state schema definition"""
+
     schema: Dict[str, Any]
     version: str
     last_updated: datetime

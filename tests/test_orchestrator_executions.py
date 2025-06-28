@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """Test script to verify orchestrator executions endpoint"""
 
-import requests
 import json
 import os
 from datetime import datetime
 
+import requests
 # Load environment variables
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Configuration
-API_BASE_URL = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080").rstrip('/api').rstrip('/')
+API_BASE_URL = (
+    os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080").rstrip("/api").rstrip("/")
+)
 if not API_BASE_URL:
     API_BASE_URL = "http://localhost:9080"
 
@@ -22,12 +25,13 @@ if not jwt_token:
     # Try to create a token using the JWT manager approach
     try:
         from violentutf.utils.jwt_manager import jwt_manager
+
         test_user_data = {
             "preferred_username": "test_user",
             "email": "test@example.com",
             "name": "Test User",
             "sub": "test-user-id",
-            "roles": ["ai-api-access"]
+            "roles": ["ai-api-access"],
         }
         jwt_token = jwt_manager.create_token(test_user_data)
     except Exception as e:
@@ -39,7 +43,7 @@ if not jwt_token:
 headers = {
     "Authorization": f"Bearer {jwt_token}",
     "Content-Type": "application/json",
-    "X-API-Gateway": "APISIX"
+    "X-API-Gateway": "APISIX",
 }
 
 print(f"Testing orchestrator executions endpoint...")
@@ -56,18 +60,22 @@ try:
     response = requests.get(url, headers=headers)
     print(f"Status Code: {response.status_code}")
     print(f"Response Headers: {dict(response.headers)}")
-    
+
     if response.status_code == 200:
         data = response.json()
         print(f"Success! Response: {json.dumps(data, indent=2)}")
     else:
         print(f"Error Response: {response.text}")
-        
+
         # If we get a 422 error, it might be treating 'executions' as a UUID
         if response.status_code == 422:
-            print("\n⚠️  Getting 422 error - 'executions' is being treated as a UUID parameter")
-            print("This suggests the wildcard route is catching the request before the specific route")
-            
+            print(
+                "\n⚠️  Getting 422 error - 'executions' is being treated as a UUID parameter"
+            )
+            print(
+                "This suggests the wildcard route is catching the request before the specific route"
+            )
+
 except Exception as e:
     print(f"Request failed: {e}")
 
@@ -81,10 +89,10 @@ try:
     # Remove APISIX-specific header for direct test
     direct_headers = headers.copy()
     direct_headers.pop("X-API-Gateway", None)
-    
+
     response = requests.get(direct_url, headers=direct_headers)
     print(f"Status Code: {response.status_code}")
-    
+
     if response.status_code == 200:
         print("✓ Endpoint exists in FastAPI")
     elif response.status_code == 401:
@@ -93,7 +101,7 @@ try:
         print("⚠️  Endpoint blocked - likely requires APISIX gateway header")
     else:
         print(f"Response: {response.text}")
-        
+
 except Exception as e:
     print(f"Request failed: {e}")
 
@@ -104,7 +112,7 @@ admin_key = os.getenv("APISIX_ADMIN_KEY")
 if admin_key:
     admin_url = "http://localhost:9180/apisix/admin/routes"
     admin_headers = {"X-API-KEY": admin_key}
-    
+
     try:
         response = requests.get(admin_url, headers=admin_headers)
         if response.status_code == 200:
@@ -124,7 +132,8 @@ print("\n" + "=" * 50)
 print("DIAGNOSIS:")
 print("-" * 50)
 
-print("""
+print(
+    """
 The issue is that the APISIX route pattern '/api/v1/orchestrators*' is matching
 '/api/v1/orchestrators/executions' and treating 'executions' as a UUID parameter.
 
@@ -137,4 +146,5 @@ takes precedence over the wildcard route. This can be done by:
 
 The endpoint URL in the dashboard files is correct and doesn't need to be changed.
 The issue is with the APISIX routing configuration.
-""")
+"""
+)

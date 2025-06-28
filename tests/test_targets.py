@@ -6,22 +6,30 @@ import sys
 # Add project root to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 # Add violentutf_api/fastapi_app to path for imports
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'violentutf_api', 'fastapi_app'))
+sys.path.append(
+    os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "violentutf_api", "fastapi_app"
+    )
+)
 
-from dotenv import load_dotenv
+import json
+
 import pytest
-from fastapi.testclient import TestClient
 from api.v1.endpoints.targets import router as targets_router
 from core.security import get_current_user
-from fastapi import FastAPI, Depends
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI
+from fastapi.testclient import TestClient
+
 from keycloak import KeycloakOpenID
-import json
 
 # Create a new FastAPI app for testing
 app = FastAPI()
 
 # Include the targets router
-app.include_router(targets_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(
+    targets_router, prefix="/api/v1", dependencies=[Depends(get_current_user)]
+)
 
 client = TestClient(app)
 
@@ -32,7 +40,9 @@ load_dotenv()
 KEYCLOAK_URL = os.environ.get("KEYCLOAK_URL")
 KEYCLOAK_REALM = os.environ.get("KEYCLOAK_REALM")
 CLIENT_ID = os.environ.get("KEYCLOAK_CLIENT_ID")
-CLIENT_SECRET = os.environ.get("KEYCLOAK_CLIENT_SECRET")  # For confidential clients ONLY
+CLIENT_SECRET = os.environ.get(
+    "KEYCLOAK_CLIENT_SECRET"
+)  # For confidential clients ONLY
 USERNAME = os.environ.get("KEYCLOAK_USERNAME")
 PASSWORD = os.environ.get("KEYCLOAK_PASSWORD")
 
@@ -59,6 +69,7 @@ headers = {
     "Content-Type": "application/json",
 }
 
+
 @pytest.fixture(scope="function")
 def test_client():
     """
@@ -67,6 +78,7 @@ def test_client():
     with TestClient(app) as c:
         c.headers.update(headers)
         yield c
+
 
 def test_get_targets(test_client):
     """
@@ -86,9 +98,9 @@ def test_get_targets(test_client):
         },
     }
     response = test_client.post(url, json=target_payload)
-    assert response.status_code == 201, (
-        f"Expected status code 201, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 201
+    ), f"Expected status code 201, got {response.status_code}"
     json_data = response.json()
     target_id = json_data["id"]
     print("Created target:", json.dumps(json_data, indent=2))
@@ -96,9 +108,9 @@ def test_get_targets(test_client):
     try:
         # Retrieve all targets
         response = test_client.get(url)
-        assert response.status_code == 200, (
-            f"Expected status code 200, got {response.status_code}"
-        )
+        assert (
+            response.status_code == 200
+        ), f"Expected status code 200, got {response.status_code}"
         json_data = response.json()
         assert "targets" in json_data, "Response JSON should contain 'targets' key"
         print("GET /api/v1/targets response:", json.dumps(json_data, indent=2))
@@ -107,10 +119,11 @@ def test_get_targets(test_client):
         # Delete the target
         url = f"/api/v1/targets/{target_id}"
         response = test_client.delete(url)
-        assert response.status_code == 204, (
-            f"Expected status code 204, got {response.status_code}"
-        )
+        assert (
+            response.status_code == 204
+        ), f"Expected status code 204, got {response.status_code}"
         print(f"Deleted target {target_id}")
+
 
 def test_get_target_by_id(test_client):
     """
@@ -130,9 +143,9 @@ def test_get_target_by_id(test_client):
         },
     }
     response = test_client.post(url, json=target_payload)
-    assert response.status_code == 201, (
-        f"Expected status code 201, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 201
+    ), f"Expected status code 201, got {response.status_code}"
     json_data = response.json()
     target_id = json_data["id"]
     print("Created target:", json.dumps(json_data, indent=2))
@@ -141,13 +154,13 @@ def test_get_target_by_id(test_client):
         # Retrieve the target by ID
         url = f"/api/v1/targets/{target_id}"
         response = test_client.get(url)
-        assert response.status_code == 200, (
-            f"Expected status code 200, got {response.status_code}"
-        )
+        assert (
+            response.status_code == 200
+        ), f"Expected status code 200, got {response.status_code}"
         json_data = response.json()
-        assert json_data["id"] == target_id, (
-            f"Expected target ID {target_id}, got {json_data['id']}"
-        )
+        assert (
+            json_data["id"] == target_id
+        ), f"Expected target ID {target_id}, got {json_data['id']}"
         print(
             f"GET /api/v1/targets/{target_id} response:",
             json.dumps(json_data, indent=2),
@@ -156,10 +169,11 @@ def test_get_target_by_id(test_client):
         # Delete the target
         url = f"/api/v1/targets/{target_id}"
         response = test_client.delete(url)
-        assert response.status_code == 204, (
-            f"Expected status code 204, got {response.status_code}"
-        )
+        assert (
+            response.status_code == 204
+        ), f"Expected status code 204, got {response.status_code}"
         print(f"Deleted target {target_id}")
+
 
 def create_openai_target(test_client):
     """
@@ -178,12 +192,13 @@ def create_openai_target(test_client):
         },
     }
     response = test_client.post(url, json=target_payload)
-    assert response.status_code == 201, (
-        f"Expected status code 201, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 201
+    ), f"Expected status code 201, got {response.status_code}"
     json_data = response.json()
     target_id = json_data["id"]
     return target_id
+
 
 def test_update_target(test_client):
     """
@@ -202,19 +217,24 @@ def test_update_target(test_client):
         response = test_client.put(f"/api/v1/targets/{target_id}", json=update_data)
         if response.status_code != 200:
             print("Error details:", response.json())
-        assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+        assert (
+            response.status_code == 200
+        ), f"Expected status code 200, got {response.status_code}"
         target = response.json()
         assert target["name"] == update_data["name"], "Updated target name mismatch"
-        assert target["description"] == update_data["description"], "Updated target description mismatch"
+        assert (
+            target["description"] == update_data["description"]
+        ), "Updated target description mismatch"
 
     finally:
         # Delete the target
         url = f"/api/v1/targets/{target_id}"
         response = test_client.delete(url)
-        assert response.status_code == 204, (
-            f"Expected status code 204, got {response.status_code}"
-        )
+        assert (
+            response.status_code == 204
+        ), f"Expected status code 204, got {response.status_code}"
         print(f"Deleted target {target_id}")
+
 
 def test_test_target(test_client):
     """
@@ -225,13 +245,15 @@ def test_test_target(test_client):
 
     # Prepare the test prompt
     test_prompt = "Hello, how are you?"
-    test_request = {
-        "test_prompt": test_prompt
-    }
+    test_request = {"test_prompt": test_prompt}
 
     try:
-        response = test_client.post(f"/api/v1/targets/{target_id}/test", json=test_request)
-        assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+        response = test_client.post(
+            f"/api/v1/targets/{target_id}/test", json=test_request
+        )
+        assert (
+            response.status_code == 200
+        ), f"Expected status code 200, got {response.status_code}"
         test_response = response.json()
         assert test_response["success"], "The test should be successful"
         assert "response" in test_response, "Response should contain 'response' field"
@@ -241,10 +263,11 @@ def test_test_target(test_client):
         # Delete the target
         url = f"/api/v1/targets/{target_id}"
         response = test_client.delete(url)
-        assert response.status_code == 204, (
-            f"Expected status code 204, got {response.status_code}"
-        )
+        assert (
+            response.status_code == 204
+        ), f"Expected status code 204, got {response.status_code}"
         print(f"Deleted target {target_id}")
+
 
 def test_delete_target(test_client):
     """
@@ -257,9 +280,9 @@ def test_delete_target(test_client):
     # Delete the target
     url = f"/api/v1/targets/{target_id}"
     response = test_client.delete(url)
-    assert response.status_code == 204, (
-        f"Expected status code 204, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 204
+    ), f"Expected status code 204, got {response.status_code}"
     print(f"Deleted target {target_id}")
 
     # Verify deletion
@@ -269,6 +292,7 @@ def test_delete_target(test_client):
         f"GET /api/v1/targets/{target_id} after deletion response:",
         response.status_code,
     )
+
 
 def test_test_target_invalid_api_key(test_client):
     """
@@ -284,36 +308,43 @@ def test_test_target_invalid_api_key(test_client):
             "api_key": "invalid_api_key",  # Invalid API key
             "model": "gpt-3.5-turbo",
             "endpoint": "https://api.openai.com/v1",
-        }
+        },
     }
 
     # Create the target
     url = "/api/v1/targets"
     response = test_client.post(url, json=target_payload)
-    assert response.status_code == 201, f"Expected status code 201, got {response.status_code}"
+    assert (
+        response.status_code == 201
+    ), f"Expected status code 201, got {response.status_code}"
     target = response.json()
     target_id = target["id"]
 
     # Prepare the test prompt
-    test_request = {
-        "test_prompt": "Hello, how are you?"
-    }
+    test_request = {"test_prompt": "Hello, how are you?"}
 
     try:
-        response = test_client.post(f"/api/v1/targets/{target_id}/test", json=test_request)
-        assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+        response = test_client.post(
+            f"/api/v1/targets/{target_id}/test", json=test_request
+        )
+        assert (
+            response.status_code == 200
+        ), f"Expected status code 200, got {response.status_code}"
         test_response = response.json()
-        assert not test_response["success"], "The test should fail due to invalid API key"
+        assert not test_response[
+            "success"
+        ], "The test should fail due to invalid API key"
         assert "error" in test_response, "Response should contain 'error' field"
         print(f"Test error: {test_response['error']}")
     finally:
         # Delete the target
         url = f"/api/v1/targets/{target_id}"
         response = test_client.delete(url)
-        assert response.status_code == 204, (
-            f"Expected status code 204, got {response.status_code}"
-        )
+        assert (
+            response.status_code == 204
+        ), f"Expected status code 204, got {response.status_code}"
         print(f"Deleted target {target_id}")
+
 
 def test_test_target_special_characters(test_client):
     """
@@ -325,15 +356,19 @@ def test_test_target_special_characters(test_client):
     # Prepare a prompt with special characters
     test_prompt = "𝒯𝑒𝓈𝓉𝒾𝓃𝑔 special characters! ©®👍🏽🚀✨"
 
-    test_request = {
-        "test_prompt": test_prompt
-    }
+    test_request = {"test_prompt": test_prompt}
 
     try:
-        response = test_client.post(f"/api/v1/targets/{target_id}/test", json=test_request)
-        assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+        response = test_client.post(
+            f"/api/v1/targets/{target_id}/test", json=test_request
+        )
+        assert (
+            response.status_code == 200
+        ), f"Expected status code 200, got {response.status_code}"
         test_response = response.json()
-        assert test_response["success"], "The test should be successful with special characters"
+        assert test_response[
+            "success"
+        ], "The test should be successful with special characters"
         assert "response" in test_response, "Response should contain 'response' field"
 
         print(f"Test response: {test_response['response']}")
@@ -341,7 +376,7 @@ def test_test_target_special_characters(test_client):
         # Delete the target
         url = f"/api/v1/targets/{target_id}"
         response = test_client.delete(url)
-        assert response.status_code == 204, (
-            f"Expected status code 204, got {response.status_code}"
-        )
+        assert (
+            response.status_code == 204
+        ), f"Expected status code 204, got {response.status_code}"
         print(f"Deleted target {target_id}")

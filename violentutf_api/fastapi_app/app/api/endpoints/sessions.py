@@ -1,20 +1,19 @@
 """
 Session management endpoints for user state persistence
 """
-from fastapi import APIRouter, HTTPException, Depends, status
-from typing import Optional, Dict, Any
+
 import json
 import os
 import uuid
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
 from app.models.auth import User
-from app.schemas.sessions import (
-    SessionStateResponse, UpdateSessionRequest,
-    SessionSchemaResponse
-)
+from app.schemas.sessions import (SessionSchemaResponse, SessionStateResponse,
+                                  UpdateSessionRequest)
+from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
 
@@ -32,14 +31,14 @@ def get_session_file_path(username: str) -> str:
 def load_session_data(username: str) -> Dict[str, Any]:
     """Load session data from file"""
     session_file = get_session_file_path(username)
-    
+
     if os.path.exists(session_file):
         try:
-            with open(session_file, 'r') as f:
+            with open(session_file, "r") as f:
                 return json.load(f)
         except Exception:
             pass
-    
+
     # Return default session data
     return {
         "session_id": f"session_{username}_{datetime.now().isoformat()}",
@@ -48,7 +47,7 @@ def load_session_data(username: str) -> Dict[str, Any]:
         "workflow_state": {},
         "temporary_data": {},
         "cache_data": {},
-        "last_updated": datetime.now().isoformat()
+        "last_updated": datetime.now().isoformat(),
     }
 
 
@@ -56,9 +55,9 @@ def save_session_data(username: str, session_data: Dict[str, Any]) -> None:
     """Save session data to file"""
     session_file = get_session_file_path(username)
     session_data["last_updated"] = datetime.now().isoformat()
-    
+
     try:
-        with open(session_file, 'w') as f:
+        with open(session_file, "w") as f:
             json.dump(session_data, f, indent=2, default=str)
     except Exception as e:
         print(f"Error saving session data: {e}")
@@ -73,9 +72,9 @@ async def get_session_state(current_user: User = Depends(get_current_user)):
         # Get session data from DuckDB
         db_manager = get_duckdb_manager(current_user.username)
         session_result = db_manager.get_session("main_session")
-        
+
         if session_result:
-            session_data = session_result['data']
+            session_data = session_result["data"]
             return SessionStateResponse(
                 session_id=session_data.get("session_id", str(uuid.uuid4())),
                 user_id=current_user.username,
@@ -83,7 +82,7 @@ async def get_session_state(current_user: User = Depends(get_current_user)):
                 workflow_state=session_data.get("workflow_state", {}),
                 temporary_data=session_data.get("temporary_data", {}),
                 cache_data=session_data.get("cache_data", {}),
-                last_updated=datetime.fromisoformat(session_result['updated_at'])
+                last_updated=datetime.fromisoformat(session_result["updated_at"]),
             )
         else:
             # Return default session state
@@ -94,20 +93,19 @@ async def get_session_state(current_user: User = Depends(get_current_user)):
                 workflow_state={},
                 temporary_data={},
                 cache_data={},
-                last_updated=datetime.utcnow()
+                last_updated=datetime.utcnow(),
             )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error loading session state: {str(e)}"
+            detail=f"Error loading session state: {str(e)}",
         )
 
 
 @router.put("", response_model=SessionStateResponse)
 async def update_session_state(
-    request: UpdateSessionRequest,
-    current_user: User = Depends(get_current_user)
+    request: UpdateSessionRequest, current_user: User = Depends(get_current_user)
 ):
     """
     Update session state (UI preferences, workflow state, temporary data)
@@ -116,9 +114,9 @@ async def update_session_state(
         # Get DuckDB manager and load existing session data
         db_manager = get_duckdb_manager(current_user.username)
         session_result = db_manager.get_session("main_session")
-        
+
         if session_result:
-            session_data = session_result['data']
+            session_data = session_result["data"]
         else:
             # Create new session data
             session_data = {
@@ -126,25 +124,25 @@ async def update_session_state(
                 "ui_preferences": {},
                 "workflow_state": {},
                 "temporary_data": {},
-                "cache_data": {}
+                "cache_data": {},
             }
-        
+
         # Update provided fields
         if request.ui_preferences is not None:
             session_data["ui_preferences"].update(request.ui_preferences)
-        
+
         if request.workflow_state is not None:
             session_data["workflow_state"].update(request.workflow_state)
-        
+
         if request.temporary_data is not None:
             session_data["temporary_data"].update(request.temporary_data)
-        
+
         if request.cache_data is not None:
             session_data["cache_data"].update(request.cache_data)
-        
+
         # Save updated session data to DuckDB
         db_manager.save_session("main_session", session_data)
-        
+
         return SessionStateResponse(
             session_id=session_data["session_id"],
             user_id=current_user.username,
@@ -152,13 +150,13 @@ async def update_session_state(
             workflow_state=session_data["workflow_state"],
             temporary_data=session_data["temporary_data"],
             cache_data=session_data["cache_data"],
-            last_updated=datetime.fromisoformat(session_data["last_updated"])
+            last_updated=datetime.fromisoformat(session_data["last_updated"]),
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating session state: {str(e)}"
+            detail=f"Error updating session state: {str(e)}",
         )
 
 
@@ -175,13 +173,13 @@ async def reset_session_state(current_user: User = Depends(get_current_user)):
             "ui_preferences": {},
             "workflow_state": {},
             "temporary_data": {},
-            "cache_data": {}
+            "cache_data": {},
         }
-        
+
         # Save reset session data to DuckDB
         db_manager = get_duckdb_manager(current_user.username)
         db_manager.save_session("main_session", session_data)
-        
+
         return SessionStateResponse(
             session_id=session_data["session_id"],
             user_id=current_user.username,
@@ -189,13 +187,13 @@ async def reset_session_state(current_user: User = Depends(get_current_user)):
             workflow_state=session_data["workflow_state"],
             temporary_data=session_data["temporary_data"],
             cache_data=session_data["cache_data"],
-            last_updated=datetime.fromisoformat(session_data["last_updated"])
+            last_updated=datetime.fromisoformat(session_data["last_updated"]),
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error resetting session state: {str(e)}"
+            detail=f"Error resetting session state: {str(e)}",
         )
 
 
@@ -208,12 +206,12 @@ async def get_session_schema():
         "session_id": {
             "type": "string",
             "description": "Unique session identifier",
-            "required": True
+            "required": True,
         },
         "user_id": {
-            "type": "string", 
+            "type": "string",
             "description": "User identifier",
-            "required": True
+            "required": True,
         },
         "ui_preferences": {
             "type": "object",
@@ -222,8 +220,8 @@ async def get_session_schema():
                 "theme": {"type": "string", "enum": ["light", "dark", "auto"]},
                 "sidebar_collapsed": {"type": "boolean"},
                 "default_page": {"type": "string"},
-                "table_page_size": {"type": "integer", "minimum": 10, "maximum": 100}
-            }
+                "table_page_size": {"type": "integer", "minimum": 10, "maximum": 100},
+            },
         },
         "workflow_state": {
             "type": "object",
@@ -232,8 +230,8 @@ async def get_session_schema():
                 "current_step": {"type": "string"},
                 "completed_steps": {"type": "array", "items": {"type": "string"}},
                 "form_data": {"type": "object"},
-                "selected_configs": {"type": "object"}
-            }
+                "selected_configs": {"type": "object"},
+            },
         },
         "temporary_data": {
             "type": "object",
@@ -241,8 +239,8 @@ async def get_session_schema():
             "properties": {
                 "uploaded_files": {"type": "array"},
                 "form_cache": {"type": "object"},
-                "alerts": {"type": "array"}
-            }
+                "alerts": {"type": "array"},
+            },
         },
         "cache_data": {
             "type": "object",
@@ -250,13 +248,11 @@ async def get_session_schema():
             "properties": {
                 "generator_configs": {"type": "object"},
                 "dataset_summaries": {"type": "object"},
-                "recent_runs": {"type": "array"}
-            }
-        }
+                "recent_runs": {"type": "array"},
+            },
+        },
     }
-    
+
     return SessionSchemaResponse(
-        schema=schema,
-        version="1.0",
-        last_updated=datetime.now()
+        schema=schema, version="1.0", last_updated=datetime.now()
     )

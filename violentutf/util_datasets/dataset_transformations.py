@@ -18,13 +18,15 @@ Dependencies:
 """
 
 import logging
-from typing import List, Dict, Any
-from pyrit.models import SeedPrompt, SeedPromptDataset
+from typing import Any, Dict, List
+
 from jinja2 import Environment, exceptions
+from pyrit.models import SeedPrompt, SeedPromptDataset
 from utils.error_handling import TemplateError
 from utils.logging import get_logger
 
 logger = get_logger(__name__)
+
 
 def combine_datasets(datasets_list: List[SeedPromptDataset]) -> SeedPromptDataset:
     """
@@ -52,17 +54,26 @@ def combine_datasets(datasets_list: List[SeedPromptDataset]) -> SeedPromptDatase
         combined_prompts = []
         for dataset in datasets_list:
             if not isinstance(dataset, SeedPromptDataset):
-                logger.error("All items in datasets_list must be SeedPromptDataset instances.")
-                raise ValueError("All items in datasets_list must be SeedPromptDataset instances.")
+                logger.error(
+                    "All items in datasets_list must be SeedPromptDataset instances."
+                )
+                raise ValueError(
+                    "All items in datasets_list must be SeedPromptDataset instances."
+                )
             combined_prompts.extend(dataset.prompts)
         combined_dataset = SeedPromptDataset(prompts=combined_prompts)
-        logger.info(f"Combined {len(datasets_list)} datasets into one with {len(combined_prompts)} prompts.")
+        logger.info(
+            f"Combined {len(datasets_list)} datasets into one with {len(combined_prompts)} prompts."
+        )
         return combined_dataset
     except Exception as e:
         logger.exception(f"Error combining datasets: {e}")
         raise ValueError(f"Error combining datasets: {e}") from e
 
-def transform_dataset_with_template(dataset: SeedPromptDataset, template_content: str) -> SeedPromptDataset:
+
+def transform_dataset_with_template(
+    dataset: SeedPromptDataset, template_content: str
+) -> SeedPromptDataset:
     """
     Applies a prompt template to the given dataset.
 
@@ -94,7 +105,9 @@ def transform_dataset_with_template(dataset: SeedPromptDataset, template_content
             transformed_prompt = apply_template_to_prompt(prompt, template)
             transformed_prompts.append(transformed_prompt)
         transformed_dataset = SeedPromptDataset(prompts=transformed_prompts)
-        logger.info(f"Transformed dataset with template. Total transformed prompts: {len(transformed_prompts)}")
+        logger.info(
+            f"Transformed dataset with template. Total transformed prompts: {len(transformed_prompts)}"
+        )
         return transformed_dataset
     except exceptions.TemplateError as e:
         logger.exception(f"Error in template: {e}")
@@ -102,6 +115,7 @@ def transform_dataset_with_template(dataset: SeedPromptDataset, template_content
     except Exception as e:
         logger.exception(f"Error transforming dataset with template: {e}")
         raise TemplateError(f"Error transforming dataset with template: {e}") from e
+
 
 def apply_template_to_prompt(prompt: SeedPrompt, template) -> SeedPrompt:
     """
@@ -130,7 +144,7 @@ def apply_template_to_prompt(prompt: SeedPrompt, template) -> SeedPrompt:
     try:
         # Prepare context for the template rendering
         context = prompt.__dict__
-        context = {k: v for k, v in context.items() if not k.startswith('_')}
+        context = {k: v for k, v in context.items() if not k.startswith("_")}
         # Render the template
         rendered_value = template.render(**context)
         # Create a new SeedPrompt with the transformed value
@@ -152,13 +166,17 @@ def apply_template_to_prompt(prompt: SeedPrompt, template) -> SeedPrompt:
             parameters=prompt.parameters,
             prompt_group_id=prompt.prompt_group_id,
             prompt_group_alias=prompt.prompt_group_alias,
-            sequence=prompt.sequence
+            sequence=prompt.sequence,
         )
         logger.debug(f"Applied template to prompt ID {prompt.id}")
         return transformed_prompt
     except exceptions.TemplateError as e:
         logger.exception(f"Error rendering template for prompt ID {prompt.id}: {e}")
-        raise TemplateError(f"Error rendering template for prompt ID {prompt.id}: {e}") from e
+        raise TemplateError(
+            f"Error rendering template for prompt ID {prompt.id}: {e}"
+        ) from e
     except Exception as e:
         logger.exception(f"Error applying template to prompt ID {prompt.id}: {e}")
-        raise TemplateError(f"Error applying template to prompt ID {prompt.id}: {e}") from e
+        raise TemplateError(
+            f"Error applying template to prompt ID {prompt.id}: {e}"
+        ) from e

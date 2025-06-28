@@ -1,8 +1,12 @@
 """
 Main API router that includes all sub-routers
 """
+
+from app.api.endpoints import (apisix_admin, auth, config, converters,
+                               database, datasets, echo, files, generators,
+                               health, jwt_keys, orchestrators, redteam,
+                               scorers, sessions)
 from fastapi import APIRouter
-from app.api.endpoints import auth, health, jwt_keys, echo, database, sessions, config, files, generators, datasets, converters, scorers, redteam, orchestrators, apisix_admin
 
 api_router = APIRouter()
 
@@ -34,7 +38,9 @@ api_router.include_router(scorers.router, prefix="/scorers", tags=["scorers"])
 api_router.include_router(redteam.router, prefix="/redteam", tags=["red-teaming"])
 
 # Orchestrator management endpoints for PyRIT orchestrator API
-api_router.include_router(orchestrators.router, prefix="/orchestrators", tags=["orchestrators"])
+api_router.include_router(
+    orchestrators.router, prefix="/orchestrators", tags=["orchestrators"]
+)
 
 # APISIX admin endpoints for IronUTF plugin management
 api_router.include_router(apisix_admin.router)

@@ -1,11 +1,13 @@
 """
 Health check endpoints
 """
-from fastapi import APIRouter, Request, Response
+
 from datetime import datetime
+
 from app.core.config import settings
 from app.core.security_headers import validate_security_headers
 from app.core.security_logging import security_metrics
+from fastapi import APIRouter, Request, Response
 
 router = APIRouter()
 
@@ -17,7 +19,7 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT
+        "environment": settings.ENVIRONMENT,
     }
 
 
@@ -29,15 +31,15 @@ async def readiness_check():
     checks = {
         "api": True,
         "config": bool(settings.SECRET_KEY),
-        "keycloak_configured": bool(settings.KEYCLOAK_CLIENT_SECRET)
+        "keycloak_configured": bool(settings.KEYCLOAK_CLIENT_SECRET),
     }
-    
+
     all_ready = all(checks.values())
-    
+
     return {
         "ready": all_ready,
         "checks": checks,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
 
@@ -48,13 +50,13 @@ async def security_headers_check(request: Request, response: Response):
     """
     # This endpoint will automatically get security headers applied by middleware
     # We can validate them here for testing purposes
-    
+
     return {
         "status": "security headers applied",
         "environment": settings.ENVIRONMENT,
         "endpoint": "/api/v1/health/security-headers",
         "timestamp": datetime.utcnow().isoformat(),
-        "note": "Check response headers to verify security headers are present"
+        "note": "Check response headers to verify security headers are present",
     }
 
 
@@ -68,5 +70,5 @@ async def security_metrics_check():
         "metrics": security_metrics.get_metrics(),
         "last_reset": security_metrics.last_reset,
         "environment": settings.ENVIRONMENT,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }

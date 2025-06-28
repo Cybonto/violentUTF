@@ -1,13 +1,16 @@
 """
 File management schemas
 """
-from pydantic import BaseModel, Field
-from typing import Optional, List
+
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class FileInfo(BaseModel):
     """File information"""
+
     file_id: str
     filename: str
     original_filename: str
@@ -20,6 +23,7 @@ class FileInfo(BaseModel):
 
 class FileUploadResponse(BaseModel):
     """Response from file upload"""
+
     file_id: str
     filename: str
     size_bytes: int
@@ -31,6 +35,7 @@ class FileUploadResponse(BaseModel):
 
 class FileMetadataResponse(BaseModel):
     """File metadata response"""
+
     file_info: FileInfo
     download_url: str
     available: bool
@@ -38,6 +43,7 @@ class FileMetadataResponse(BaseModel):
 
 class FileListResponse(BaseModel):
     """List of files response"""
+
     files: List[FileInfo]
     total_count: int
     limit: int

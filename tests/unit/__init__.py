@@ -2,9 +2,10 @@
 Unit test package initialization.
 This file is loaded before any unit tests to set up the test environment.
 """
+
 import os
 import sys
-from unittest.mock import Mock, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 # Set test environment variables before importing any app modules
 os.environ["APP_DATA_DIR"] = "./tests/test_data"
@@ -22,5 +23,5 @@ mock_db_module.AsyncSession = MagicMock()
 mock_db_module.engine = MagicMock()
 
 # Pre-insert the mock into sys.modules
-sys.modules['app.db.database'] = mock_db_module
-sys.modules['app.db'] = MagicMock(database=mock_db_module)
+sys.modules["app.db.database"] = mock_db_module
+sys.modules["app.db"] = MagicMock(database=mock_db_module)

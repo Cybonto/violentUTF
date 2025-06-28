@@ -22,8 +22,9 @@ import sys
 _setup_done = False
 
 # Define handler names for uniqueness checks
-_FILE_HANDLER_NAME = 'app_file_handler'
-_CONSOLE_HANDLER_NAME = 'app_console_handler'
+_FILE_HANDLER_NAME = "app_file_handler"
+_CONSOLE_HANDLER_NAME = "app_console_handler"
+
 
 def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
     """
@@ -47,7 +48,7 @@ def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
         # Prevent re-running setup in the same process
         return
 
-    log_dir = 'app_logs'
+    log_dir = "app_logs"
     try:
         os.makedirs(log_dir, exist_ok=True)
     except OSError as e:
@@ -57,36 +58,42 @@ def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
         # For now, we'll proceed but file logging might fail
         pass
 
-    log_file = os.path.join(log_dir, 'app.log')
+    log_file = os.path.join(log_dir, "app.log")
 
     # Define a consistent, detailed format
-    log_format = '%(asctime)s [%(levelname)-8s] [%(name)s:%(funcName)s:%(lineno)d] - %(message)s'
+    log_format = (
+        "%(asctime)s [%(levelname)-8s] [%(name)s:%(funcName)s:%(lineno)d] - %(message)s"
+    )
     formatter = logging.Formatter(log_format)
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(log_level) # Set root logger level to the lowest level needed by any handler
+    root_logger.setLevel(
+        log_level
+    )  # Set root logger level to the lowest level needed by any handler
 
     # --- File Handler ---
     # Check if our specific file handler already exists
     if not any(h.name == _FILE_HANDLER_NAME for h in root_logger.handlers):
         try:
-            file_handler = logging.FileHandler(log_file, encoding='utf-8')
+            file_handler = logging.FileHandler(log_file, encoding="utf-8")
             file_handler.setLevel(log_level)
             file_handler.setFormatter(formatter)
-            file_handler.name = _FILE_HANDLER_NAME # Name the handler
+            file_handler.name = _FILE_HANDLER_NAME  # Name the handler
             root_logger.addHandler(file_handler)
         except (OSError, IOError) as e:
             # Handle potential file opening errors
-            print(f"Error setting up file log handler for '{log_file}': {e}", file=sys.stderr)
-
+            print(
+                f"Error setting up file log handler for '{log_file}': {e}",
+                file=sys.stderr,
+            )
 
     # --- Console Handler ---
     # Check if our specific console handler already exists
     if not any(h.name == _CONSOLE_HANDLER_NAME for h in root_logger.handlers):
-        console_handler = logging.StreamHandler(sys.stdout) # Log to stdout
+        console_handler = logging.StreamHandler(sys.stdout)  # Log to stdout
         console_handler.setLevel(console_level)
         console_handler.setFormatter(formatter)
-        console_handler.name = _CONSOLE_HANDLER_NAME # Name the handler
+        console_handler.name = _CONSOLE_HANDLER_NAME  # Name the handler
         root_logger.addHandler(console_handler)
 
     # --- Reduce Verbosity of Third-Party Libraries ---
@@ -96,7 +103,10 @@ def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
 
     # --- Mark setup as done ---
     _setup_done = True
-    logging.getLogger(__name__).info("Logging setup completed.") # Log completion using the new setup
+    logging.getLogger(__name__).info(
+        "Logging setup completed."
+    )  # Log completion using the new setup
+
 
 def get_logger(name: str) -> logging.Logger:
     """

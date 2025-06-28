@@ -2,6 +2,7 @@
 Base configuration and fixtures for unit tests.
 This file provides shared fixtures and configuration for all unit tests.
 """
+
 import os
 import sys
 from pathlib import Path
@@ -12,21 +13,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # Comment out deleted imports - tests will use mock modules defined below
 # The tests now have properly fixed expectations
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
-from datetime import datetime, timedelta
-from freezegun import freeze_time
-import tempfile
-from contextlib import contextmanager
-from typing import Dict, Any, Optional
 import json
+import tempfile
 import uuid
+from contextlib import contextmanager
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
+from freezegun import freeze_time
 
 # Load test environment variables BEFORE importing any app modules
 test_env_file = Path(__file__).parent.parent / ".env.test"
 if test_env_file.exists():
     from dotenv import load_dotenv
+
     load_dotenv(test_env_file, override=True)
 
 # Create test directories
@@ -40,8 +43,10 @@ for test_dir in test_dirs:
     test_dir.mkdir(parents=True, exist_ok=True)
 
 # Add the FastAPI app directory to Python path
-fastapi_app_path = os.path.join(os.path.dirname(__file__), '../../violentutf_api/fastapi_app')
-violentutf_path = os.path.join(os.path.dirname(__file__), '../../violentutf')
+fastapi_app_path = os.path.join(
+    os.path.dirname(__file__), "../../violentutf_api/fastapi_app"
+)
+violentutf_path = os.path.join(os.path.dirname(__file__), "../../violentutf")
 
 # Ensure paths exist and add them
 if os.path.exists(fastapi_app_path):
@@ -54,6 +59,7 @@ if os.path.exists(violentutf_path):
 # Event Loop Configuration
 # ====================
 
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create event loop for async tests."""
@@ -65,6 +71,7 @@ def event_loop():
 # ====================
 # Environment and Configuration
 # ====================
+
 
 @pytest.fixture
 def mock_env_vars():
@@ -83,9 +90,9 @@ def mock_env_vars():
         "DATABASE_URL": "duckdb:///:memory:",
         "REDIS_URL": "redis://localhost:6379/0",
         "LOG_LEVEL": "DEBUG",
-        "ENVIRONMENT": "test"
+        "ENVIRONMENT": "test",
     }
-    
+
     with patch.dict(os.environ, env_vars):
         yield env_vars
 
@@ -98,14 +105,11 @@ def test_config():
         "version": "1.0.0-test",
         "debug": True,
         "testing": True,
-        "rate_limit": {
-            "enabled": False,
-            "requests_per_minute": 60
-        },
+        "rate_limit": {"enabled": False, "requests_per_minute": 60},
         "security": {
             "cors_origins": ["http://localhost:3000"],
-            "allowed_hosts": ["localhost", "127.0.0.1"]
-        }
+            "allowed_hosts": ["localhost", "127.0.0.1"],
+        },
     }
 
 
@@ -113,19 +117,20 @@ def test_config():
 # File System and I/O
 # ====================
 
+
 @pytest.fixture
 def isolated_filesystem():
     """Provide isolated filesystem for tests."""
     with tempfile.TemporaryDirectory() as tmpdir:
         old_cwd = os.getcwd()
         os.chdir(tmpdir)
-        
+
         # Create common directories
         os.makedirs("app_data/violentutf/datasets", exist_ok=True)
         os.makedirs("app_data/violentutf/parameters", exist_ok=True)
         os.makedirs("app_data/violentutf/api_memory", exist_ok=True)
         os.makedirs("logs", exist_ok=True)
-        
+
         yield tmpdir
         os.chdir(old_cwd)
 
@@ -133,6 +138,7 @@ def isolated_filesystem():
 # ====================
 # Database Fixtures
 # ====================
+
 
 @pytest.fixture
 def mock_db_session():
@@ -145,7 +151,7 @@ def mock_db_session():
     session.flush = Mock()
     session.close = Mock()
     session.execute = Mock()
-    
+
     # Make query chainable
     query_mock = Mock()
     query_mock.filter = Mock(return_value=query_mock)
@@ -155,9 +161,9 @@ def mock_db_session():
     query_mock.count = Mock(return_value=0)
     query_mock.limit = Mock(return_value=query_mock)
     query_mock.offset = Mock(return_value=query_mock)
-    
+
     session.query.return_value = query_mock
-    
+
     return session
 
 
@@ -170,14 +176,14 @@ def mock_duckdb_manager():
     manager.fetch_all = AsyncMock(return_value=[])
     manager.create_table = AsyncMock()
     manager.close = AsyncMock()
-    
+
     # Add connection context manager
     async def async_context():
         yield manager
-    
+
     manager.__aenter__ = AsyncMock(return_value=manager)
     manager.__aexit__ = AsyncMock(return_value=None)
-    
+
     return manager
 
 
@@ -185,11 +191,12 @@ def mock_duckdb_manager():
 # HTTP and Network
 # ====================
 
+
 @pytest.fixture
 def mock_httpx_client():
     """Mock httpx client for external API calls."""
     client = AsyncMock()
-    
+
     # Default response
     response = Mock()
     response.status_code = 200
@@ -197,13 +204,13 @@ def mock_httpx_client():
     response.text = "OK"
     response.headers = {}
     response.raise_for_status = Mock()
-    
+
     client.get = AsyncMock(return_value=response)
     client.post = AsyncMock(return_value=response)
     client.put = AsyncMock(return_value=response)
     client.delete = AsyncMock(return_value=response)
     client.patch = AsyncMock(return_value=response)
-    
+
     return client
 
 
@@ -215,13 +222,14 @@ def security_headers():
         "X-Forwarded-For": "127.0.0.1",
         "X-Real-IP": "127.0.0.1",
         "User-Agent": "pytest/test-agent",
-        "Authorization": "Bearer test-token"
+        "Authorization": "Bearer test-token",
     }
 
 
 # ====================
 # Authentication and JWT
 # ====================
+
 
 @pytest.fixture
 def fixed_datetime():
@@ -242,7 +250,7 @@ def mock_jwt_payload(fixed_datetime):
         "exp": int((fixed_datetime + timedelta(hours=1)).timestamp()),
         "iat": int(fixed_datetime.timestamp()),
         "iss": "http://localhost:8080/auth/realms/violentutf",
-        "aud": "violentutf-client"
+        "aud": "violentutf-client",
     }
 
 
@@ -250,13 +258,15 @@ def mock_jwt_payload(fixed_datetime):
 def mock_admin_jwt_payload(mock_jwt_payload):
     """Admin JWT payload for testing."""
     admin_payload = mock_jwt_payload.copy()
-    admin_payload.update({
-        "sub": "admin-user-456",
-        "email": "admin@example.com",
-        "name": "Admin User",
-        "preferred_username": "admin",
-        "roles": ["user", "admin"]
-    })
+    admin_payload.update(
+        {
+            "sub": "admin-user-456",
+            "email": "admin@example.com",
+            "name": "Admin User",
+            "preferred_username": "admin",
+            "roles": ["user", "admin"],
+        }
+    )
     return admin_payload
 
 
@@ -278,7 +288,7 @@ def mock_keycloak_response():
         "id_token": "mock-id-token",
         "not_before_policy": 0,
         "session_state": "mock-session-state",
-        "scope": "openid email profile"
+        "scope": "openid email profile",
     }
 
 
@@ -286,34 +296,36 @@ def mock_keycloak_response():
 # API Response Fixtures
 # ====================
 
+
 @pytest.fixture
 def success_response():
     """Standard success API response."""
+
     def _response(data: Any = None, message: str = "Success"):
-        return {
-            "status": "success",
-            "message": message,
-            "data": data
-        }
+        return {"status": "success", "message": message, "data": data}
+
     return _response
 
 
 @pytest.fixture
 def error_response():
     """Standard error API response."""
+
     def _response(message: str = "Error", code: str = "ERROR", status_code: int = 400):
         return {
             "status": "error",
             "message": message,
             "code": code,
-            "status_code": status_code
+            "status_code": status_code,
         }
+
     return _response
 
 
 # ====================
 # Model and Data Fixtures
 # ====================
+
 
 @pytest.fixture
 def sample_generator():
@@ -323,14 +335,10 @@ def sample_generator():
         "name": "test-generator",
         "model": "gpt-4",
         "provider": "openai",
-        "parameters": {
-            "temperature": 0.7,
-            "max_tokens": 1000,
-            "top_p": 0.9
-        },
+        "parameters": {"temperature": 0.7, "max_tokens": 1000, "top_p": 0.9},
         "created_at": datetime.utcnow().isoformat(),
         "updated_at": datetime.utcnow().isoformat(),
-        "is_active": True
+        "is_active": True,
     }
 
 
@@ -344,10 +352,10 @@ def sample_dataset():
         "type": "jailbreak",
         "prompts": [
             {"id": 1, "prompt": "Test prompt 1", "category": "test"},
-            {"id": 2, "prompt": "Test prompt 2", "category": "test"}
+            {"id": 2, "prompt": "Test prompt 2", "category": "test"},
         ],
         "created_at": datetime.utcnow().isoformat(),
-        "size": 2
+        "size": 2,
     }
 
 
@@ -358,15 +366,12 @@ def sample_orchestrator_config():
         "id": "orch-" + str(uuid.uuid4()),
         "name": "test-orchestrator",
         "type": "red_teaming",
-        "target": {
-            "type": "http_target",
-            "url": "http://test-target/api/chat"
-        },
+        "target": {"type": "http_target", "url": "http://test-target/api/chat"},
         "generators": ["gen-123"],
         "converters": ["ascii_art", "base64"],
         "scorers": ["self_ask", "substring"],
         "max_iterations": 5,
-        "batch_size": 10
+        "batch_size": 10,
     }
 
 
@@ -377,11 +382,8 @@ def sample_scorer_config():
         "id": "scorer-" + str(uuid.uuid4()),
         "name": "test-scorer",
         "type": "substring",
-        "parameters": {
-            "substring": "test",
-            "case_sensitive": False
-        },
-        "threshold": 0.8
+        "parameters": {"substring": "test", "case_sensitive": False},
+        "threshold": 0.8,
     }
 
 
@@ -389,20 +391,21 @@ def sample_scorer_config():
 # Mock Services
 # ====================
 
+
 @pytest.fixture
 def mock_pyrit_orchestrator():
     """Mock PyRIT orchestrator."""
     orchestrator = Mock()
     orchestrator.id = "orch-123"
-    orchestrator.run_async = AsyncMock(return_value={
-        "results": [
-            {"prompt": "test", "response": "response", "score": 0.9}
-        ],
-        "status": "completed"
-    })
+    orchestrator.run_async = AsyncMock(
+        return_value={
+            "results": [{"prompt": "test", "response": "response", "score": 0.9}],
+            "status": "completed",
+        }
+    )
     orchestrator.get_memory = Mock(return_value=[])
     orchestrator.dispose_db_engine = Mock()
-    
+
     return orchestrator
 
 
@@ -410,11 +413,9 @@ def mock_pyrit_orchestrator():
 def mock_garak_scanner():
     """Mock Garak scanner."""
     scanner = Mock()
-    scanner.scan = AsyncMock(return_value={
-        "vulnerabilities": [],
-        "score": 1.0,
-        "status": "safe"
-    })
+    scanner.scan = AsyncMock(
+        return_value={"vulnerabilities": [], "score": 1.0, "status": "safe"}
+    )
     return scanner
 
 
@@ -428,13 +429,14 @@ def mock_mcp_server():
     server.register_tool = Mock()
     server.register_resource = Mock()
     server.handle_request = AsyncMock(return_value={"result": "success"})
-    
+
     return server
 
 
 # ====================
 # FastAPI Test Client
 # ====================
+
 
 @pytest.fixture
 def mock_request():
@@ -450,7 +452,7 @@ def mock_request():
     request.client = Mock()
     request.client.host = "127.0.0.1"
     request.state = Mock()
-    
+
     return request
 
 
@@ -458,23 +460,28 @@ def mock_request():
 # Utility Functions
 # ====================
 
+
 @pytest.fixture
 def create_temp_file():
     """Create temporary file for testing."""
+
     def _create(content: str = "", suffix: str = ".txt") -> str:
-        with tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False) as f:
             f.write(content)
             return f.name
+
     return _create
 
 
 @pytest.fixture
 def async_return():
     """Helper to create async return values."""
+
     def _return(value):
         future = asyncio.Future()
         future.set_result(value)
         return future
+
     return _return
 
 
@@ -482,10 +489,12 @@ def async_return():
 # Cleanup
 # ====================
 
+
 @pytest.fixture(autouse=True)
 def cleanup():
     """Automatic cleanup after each test."""
     yield
     # Clean up any temporary files or resources
     import gc
+
     gc.collect()
