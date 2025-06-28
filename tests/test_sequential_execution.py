@@ -9,32 +9,33 @@ to avoid the 504 Gateway Timeout issue.
 import asyncio
 import time
 
+
 def sequential_execution_flow():
     """
     Proposed flow for Full Execution with progress tracking:
-    
+
     1. Create orchestrator (quick)
     2. Start execution (returns execution_id immediately)
     3. Poll execution status endpoint every 2-5 seconds
     4. Update progress bar based on status
     5. When complete, fetch full results
     """
-    
+
     print("Sequential Execution Flow:")
     print("=" * 60)
-    
+
     # Step 1: Create orchestrator
     print("\n1. CREATE ORCHESTRATOR")
     print("   POST /api/v1/orchestrators")
     print("   Returns: orchestrator_id (immediate)")
-    
+
     # Step 2: Start execution
     print("\n2. START EXECUTION")
     print("   POST /api/v1/orchestrators/{orchestrator_id}/executions")
     print("   Payload: {execution_type: 'dataset', input_data: {...}}")
     print("   Returns: execution_id (immediate)")
     print("   Status: 'pending' or 'running'")
-    
+
     # Step 3: Poll for status
     print("\n3. POLL EXECUTION STATUS")
     print("   GET /api/v1/orchestrators/{orchestrator_id}/executions/{execution_id}")
@@ -46,12 +47,12 @@ def sequential_execution_flow():
     print("         message: 'Processing prompt 5 of 20...'")
     print("      }")
     print("   }")
-    
+
     # Step 4: Get results when complete
     print("\n4. GET FINAL RESULTS")
     print("   GET /api/v1/orchestrators/{orchestrator_id}/executions/{execution_id}/results")
     print("   Returns: Full results with scores and metadata")
-    
+
     print("\n" + "=" * 60)
     print("BENEFITS:")
     print("- No timeout issues (each request is quick)")
@@ -60,13 +61,14 @@ def sequential_execution_flow():
     print("- Robust error handling")
     print("- Works with any dataset size")
 
+
 def proposed_ui_changes():
     """
     UI changes needed in 4_Configure_Scorers.py
     """
     print("\n\nProposed UI Changes:")
     print("=" * 60)
-    
+
     print("\n1. Replace blocking spinner with progress bar:")
     print("   progress_bar = st.progress(0)")
     print("   status_text = st.empty()")
@@ -83,13 +85,14 @@ def proposed_ui_changes():
     print("   results = get_execution_results(orchestrator_id, execution_id)")
     print("   display_results(results)")
 
+
 def api_endpoints_needed():
     """
     API endpoints that need to be added/modified
     """
     print("\n\nAPI Endpoints Needed:")
     print("=" * 60)
-    
+
     print("\n1. Modify orchestrator execution to be async:")
     print("   - Return execution_id immediately")
     print("   - Run execution in background task")
@@ -116,11 +119,12 @@ def api_endpoints_needed():
     print("      estimated_completion: '2025-06-11T21:05:00Z'")
     print("   }")
 
+
 if __name__ == "__main__":
     sequential_execution_flow()
     proposed_ui_changes()
     api_endpoints_needed()
-    
+
     print("\n\nIMPLEMENTATION PRIORITY:")
     print("1. First, check if execution endpoint already returns execution_id")
     print("2. If yes, implement polling in UI")

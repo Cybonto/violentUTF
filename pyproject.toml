@@ -1,0 +1,243 @@
+[tool.black]
+# Black code formatter configuration
+line-length = 120
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # Directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | app_data
+  | violentutf_logs
+  | migrations
+)/
+'''
+
+[tool.isort]
+# isort import sorter configuration
+profile = "black"
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip = [
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".tox",
+    ".venv",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "app_data",
+    "violentutf_logs",
+    "migrations"
+]
+known_first_party = ["violentutf", "violentutf_api"]
+known_third_party = ["pyrit", "garak", "fastapi", "streamlit"]
+
+[tool.mypy]
+# MyPy type checker configuration
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_optional = true
+ignore_missing_imports = true
+pretty = true
+show_error_context = true
+show_error_codes = true
+show_column_numbers = true
+show_traceback = true
+
+# Per-module options
+[[tool.mypy.overrides]]
+module = [
+    "pyrit.*",
+    "garak.*",
+    "streamlit.*",
+    "pandas.*",
+    "numpy.*"
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+# Pytest configuration
+minversion = "6.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--tb=short"
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "e2e: marks tests as end-to-end tests",
+    "docker: marks tests that require Docker",
+    "security: marks security-related tests",
+    "benchmark: marks performance benchmark tests"
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning"
+]
+
+[tool.coverage.run]
+# Coverage.py configuration
+branch = true
+source = ["violentutf", "violentutf_api"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/app_data/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/setup.py",
+    "*/config.py",
+    "*/conftest.py"
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = true
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod"
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.bandit]
+# Bandit security linter configuration
+exclude_dirs = [
+    "tests",
+    "test",
+    ".git",
+    ".tox",
+    "dist",
+    "doc",
+    "build",
+    "venv",
+    ".venv",
+    "app_data",
+    "violentutf_logs"
+]
+skips = [
+    "B101",  # assert_used - we use assert in tests
+    "B601",  # paramiko_calls - false positives
+]
+tests = [
+    "B201",  # flask_debug_true
+    "B301",  # pickle
+    "B302",  # marshal
+    "B303",  # md5
+    "B304",  # des
+    "B305",  # cipher
+    "B306",  # mktemp_q
+    "B307",  # eval
+    "B308",  # mark_safe
+    "B309",  # httpsconnection
+    "B310",  # urllib_urlopen
+    "B311",  # random
+    "B312",  # telnetlib
+    "B313",  # xml_bad_cElementTree
+    "B314",  # xml_bad_ElementTree
+    "B315",  # xml_bad_expatreader
+    "B316",  # xml_bad_expatbuilder
+    "B317",  # xml_bad_sax
+    "B318",  # xml_bad_minidom
+    "B319",  # xml_bad_pulldom
+    "B320",  # xml_bad_etree
+    "B321",  # ftplib
+    "B322",  # input
+    "B323",  # unverified_context
+    "B324",  # hashlib_new_insecure_functions
+    "B325",  # tempnam
+    "B401",  # import_telnetlib
+    "B402",  # import_ftplib
+    "B403",  # import_pickle
+    "B404",  # import_subprocess
+    "B405",  # import_xml_etree
+    "B406",  # import_xml_sax
+    "B407",  # import_xml_expat
+    "B408",  # import_xml_minidom
+    "B409",  # import_xml_pulldom
+    "B410",  # import_lxml
+    "B411",  # import_xmlrpclib
+    "B412",  # import_httpoxy
+    "B413",  # import_pycrypto
+    "B501",  # request_with_no_cert_validation
+    "B502",  # ssl_with_bad_version
+    "B503",  # ssl_with_bad_defaults
+    "B504",  # ssl_with_no_version
+    "B505",  # weak_cryptographic_key
+    "B506",  # yaml_load
+    "B507",  # ssh_no_host_key_verification
+    "B601",  # paramiko_calls
+    "B602",  # subprocess_popen_with_shell_equals_true
+    "B603",  # subprocess_without_shell_equals_true
+    "B604",  # any_other_function_with_shell_equals_true
+    "B605",  # start_process_with_a_shell
+    "B606",  # start_process_with_no_shell
+    "B607",  # start_process_with_partial_path
+    "B608",  # hardcoded_sql_expressions
+    "B609",  # linux_commands_wildcard_injection
+    "B610",  # django_extra_used
+    "B611",  # django_rawsql_used
+    "B701",  # jinja2_autoescape_false
+    "B702",  # use_of_mako_templates
+    "B703"   # django_mark_safe
+]
+
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"

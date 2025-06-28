@@ -1,6 +1,7 @@
 """
 ViolentUTF API - FastAPI application for programmatic access to LLM red-teaming tools
 """
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -27,33 +28,35 @@ async def lifespan(app: FastAPI):
     logger.info(f"API Title: {settings.PROJECT_NAME}")
     logger.info(f"API Version: {settings.VERSION}")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
-    
+
     # Initialize database
     logger.info("Initializing database...")
     await init_db()
     logger.info("Database initialized")
-    
+
     # Initialize PyRIT orchestrator service
     logger.info("Initializing PyRIT orchestrator service...")
     try:
         from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
+
         logger.info("PyRIT orchestrator service initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize PyRIT orchestrator service: {e}")
         # Don't fail the startup, just log the error
-    
+
     # Initialize MCP server
     logger.info("Initializing MCP server...")
     try:
         from app.mcp import mcp_server
+
         await mcp_server.initialize()
         logger.info("MCP server initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize MCP server: {e}")
         # Don't fail the startup, just log the error
-    
+
     yield
-    
+
     # Shutdown tasks can be added here
     logger.info("Shutting down ViolentUTF API...")
 
@@ -66,7 +69,7 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Configure secure CORS settings
@@ -89,10 +92,12 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 # Mount MCP server
 try:
     from app.mcp import mcp_server
+
     mcp_server.mount_to_app(app)
     logger.info("MCP server mounted successfully")
 except Exception as e:
     logger.error(f"Failed to mount MCP server: {e}")
+
 
 # Root endpoint
 @app.get("/")
@@ -102,8 +107,9 @@ async def root():
         "version": settings.VERSION,
         "docs": "/docs",
         "health": "/api/v1/health",
-        "mcp": "/mcp/sse"
+        "mcp": "/mcp/sse",
     }
+
 
 # Health check endpoint
 @app.get("/health")
@@ -113,10 +119,5 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=settings.DEBUG,
-        log_level="info"
-    )
+
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=settings.DEBUG, log_level="info")

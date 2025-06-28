@@ -1,0 +1,203 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Is this a pre-release?'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  # Validate version and run tests
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_notes: ${{ steps.notes.outputs.release_notes }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+          
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+          
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "Error: Invalid version format. Expected: X.Y.Z or X.Y.Z-suffix"
+            exit 1
+          fi
+          
+      - name: Generate release notes
+        id: notes
+        run: |
+          # Generate release notes from commits
+          cat > release_notes.md << 'EOF'
+          # Release ${{ steps.version.outputs.version }}
+          
+          ## What's Changed
+          
+          EOF
+          
+          # Add commit history
+          git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"- %s (%h)" >> release_notes.md || \
+          git log --pretty=format:"- %s (%h)" -n 20 >> release_notes.md
+          
+          # Add standard sections
+          cat >> release_notes.md << 'EOF'
+          
+          ## Docker Images
+          
+          This release includes Docker images for both AMD64 and ARM64 architectures:
+          - `violentutf/violentutf:${{ steps.version.outputs.version }}`
+          - `violentutf/violentutf_api:${{ steps.version.outputs.version }}`
+          
+          ## Installation
+          
+          See the [installation guide](docs/guides/Guide_Installation.md) for detailed instructions.
+          
+          ## Full Changelog
+          
+          https://github.com/${{ github.repository }}/compare/...v${{ steps.version.outputs.version }}
+          EOF
+          
+          # Save release notes
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  # Run comprehensive tests
+  test-release:
+    name: Test Release
+    needs: validate
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  # Build and push Docker images
+  build-docker:
+    name: Build Docker Images
+    needs: [validate, test-release]
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        service: [violentutf, violentutf_api]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+        
+      - name: Log in to Docker Hub
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build and push Docker images
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
+        with:
+          context: ./${{ matrix.service }}
+          file: ./${{ matrix.service }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            violentutf/${{ matrix.service }}:${{ needs.validate.outputs.version }}
+            violentutf/${{ matrix.service }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ needs.validate.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ needs.validate.outputs.version }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            VCS_REF=${{ github.sha }}
+
+  # Create GitHub release
+  create-release:
+    name: Create Release
+    needs: [validate, test-release, build-docker]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        
+      - name: Create release artifacts
+        run: |
+          # Create release directory
+          mkdir -p release
+          
+          # Package source code
+          git archive --format=tar.gz --prefix=violentutf-${{ needs.validate.outputs.version }}/ \
+            -o release/violentutf-${{ needs.validate.outputs.version }}-source.tar.gz HEAD
+            
+          # Create checksums
+          cd release
+          sha256sum * > SHA256SUMS
+          cd ..
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: ViolentUTF v${{ needs.validate.outputs.version }}
+          body: ${{ needs.validate.outputs.release_notes }}
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+          files: |
+            release/*
+            
+      - name: Update latest tag
+        if: github.event.inputs.prerelease != 'true'
+        run: |
+          git tag -f latest
+          git push origin latest --force
+
+  # Post-release notifications
+  notify-release:
+    name: Release Notifications
+    needs: [validate, create-release]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Send release notification
+        run: |
+          echo "Release v${{ needs.validate.outputs.version }} has been published!"
+          echo "Docker images are available at:"
+          echo "  - violentutf/violentutf:${{ needs.validate.outputs.version }}"
+          echo "  - violentutf/violentutf_api:${{ needs.validate.outputs.version }}"
