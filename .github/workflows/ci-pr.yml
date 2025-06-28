@@ -196,7 +196,7 @@ jobs:
       - name: Run quick unit tests
         run: |
           # Run only unit tests if they exist
-          if [ -d "tests/unit" ] && [ "$(find tests/unit -name 'test_*.py' -type f)" ]; then
+          if [ -d "tests/unit" ] && [ "$(find tests/unit -name 'test_*.py' -type f | wc -l)" -gt 0 ]; then
             pytest tests/unit -v -m "not slow" -x --tb=short \
               --maxfail=5 -n auto || true
           else
@@ -223,7 +223,7 @@ jobs:
           # Find all docker-compose files
           find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml" | while read -r file; do
             echo "Validating $file..."
-            docker compose -f "$file" config > /dev/null || exit 1
+            docker-compose -f "$file" config > /dev/null || exit 1
           done
 
   # PR status check

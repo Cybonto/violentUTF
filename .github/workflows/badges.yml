@@ -65,6 +65,7 @@ jobs:
           fi
           
       - name: Commit badge updates
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -72,5 +73,5 @@ jobs:
           if [[ -n $(git status -s) ]]; then
             git add .github/badges/ README.md || true
             git commit -m "chore: update status badges [skip ci]" || true
-            git push || true
+            git push || echo "Push failed - may be on protected branch"
           fi

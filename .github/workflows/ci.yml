@@ -85,16 +85,15 @@ jobs:
         shell: bash
         run: |
           python -m venv venv
-          if [[ "${{ matrix.platform }}" == "windows" ]]; then
-            echo "VENV_ACTIVATE=venv\\Scripts\\activate" >> $GITHUB_ENV
-          else
-            echo "VENV_ACTIVATE=source venv/bin/activate" >> $GITHUB_ENV
-          fi
 
       - name: Install Python dependencies
         shell: bash
         run: |
-          ${{ env.VENV_ACTIVATE }}
+          if [[ "${{ matrix.platform }}" == "windows" ]]; then
+            . venv/Scripts/activate
+          else
+            . venv/bin/activate
+          fi
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
           # Install project requirements if they exist
@@ -109,7 +108,11 @@ jobs:
       - name: Verify dependency installation
         shell: bash
         run: |
-          ${{ env.VENV_ACTIVATE }}
+          if [[ "${{ matrix.platform }}" == "windows" ]]; then
+            . venv/Scripts/activate
+          else
+            . venv/bin/activate
+          fi
           # Only verify if packages are installed
           cat > check_deps.py << 'EOF'
           import sys
@@ -140,7 +143,11 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: |
-          ${{ env.VENV_ACTIVATE }}
+          if [[ "${{ matrix.platform }}" == "windows" ]]; then
+            . venv/Scripts/activate
+          else
+            . venv/bin/activate
+          fi
           # Only run unit tests for now
           if [ -d "tests/unit" ] && [ "$(find tests/unit -name 'test_*.py' -type f | wc -l)" -gt 0 ]; then
             pytest tests/unit -v --tb=short \
