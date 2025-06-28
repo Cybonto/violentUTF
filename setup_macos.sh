@@ -730,12 +730,44 @@ load_ai_tokens() {
     
     echo "Loading AI configuration from $AI_TOKENS_FILE..."
     
+    # Clear any previously loaded OpenAPI variables to ensure fresh load
+    for i in {1..10}; do
+        unset OPENAPI_${i}_ENABLED
+        unset OPENAPI_${i}_ID
+        unset OPENAPI_${i}_NAME
+        unset OPENAPI_${i}_BASE_URL
+        unset OPENAPI_${i}_SPEC_PATH
+        unset OPENAPI_${i}_AUTH_TYPE
+        unset OPENAPI_${i}_AUTH_TOKEN
+        unset OPENAPI_${i}_API_KEY
+        unset OPENAPI_${i}_API_KEY_HEADER
+        unset OPENAPI_${i}_BASIC_USERNAME
+        unset OPENAPI_${i}_BASIC_PASSWORD
+        unset OPENAPI_${i}_CUSTOM_HEADERS
+    done
+    
     # Load the .env file
     set -a  # automatically export all variables
     source "$AI_TOKENS_FILE"
     set +a  # stop automatically exporting
     
-    echo "✅ AI configuration loaded"
+    # Show loaded OpenAPI providers
+    local openapi_count=0
+    for i in {1..10}; do
+        local enabled_var="OPENAPI_${i}_ENABLED"
+        if [ "${!enabled_var}" = "true" ]; then
+            local id_var="OPENAPI_${i}_ID"
+            local name_var="OPENAPI_${i}_NAME"
+            echo "  - Found OpenAPI provider: ${!name_var} (${!id_var})"
+            openapi_count=$((openapi_count + 1))
+        fi
+    done
+    
+    if [ $openapi_count -gt 0 ]; then
+        echo "✅ AI configuration loaded with $openapi_count OpenAPI provider(s)"
+    else
+        echo "✅ AI configuration loaded (no OpenAPI providers configured)"
+    fi
     return 0
 }
 
@@ -1566,14 +1598,7 @@ create_openapi_route() {
         }
     }'
     
-    # Check if route already exists
-    local existing_route=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
-        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
-    
-    if echo "$existing_route" | grep -q '"id"'; then
-        echo "⚠️  Route already exists for $operation_id, skipping"
-        return 0
-    fi
+    # No need to check if route exists since we clear them first
     
     # Create the route in APISIX
     local response
@@ -1598,6 +1623,40 @@ create_openapi_route() {
     fi
 }
 
+# Function to clear existing OpenAPI routes
+clear_openapi_routes() {
+    echo "Clearing existing OpenAPI routes..."
+    
+    # Get all routes from APISIX
+    local routes_response=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
+        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+    
+    # Parse route IDs that start with "openapi-"
+    local route_ids=$(echo "$routes_response" | grep -o '"id":"openapi-[^"]*"' | cut -d'"' -f4)
+    
+    if [ -z "$route_ids" ]; then
+        echo "No existing OpenAPI routes found"
+        return 0
+    fi
+    
+    local deleted_count=0
+    for route_id in $route_ids; do
+        echo "Deleting route: $route_id"
+        local delete_response=$(curl -s -w "%{http_code}" -X DELETE "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
+            -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
+        local http_code="${delete_response: -3}"
+        
+        if [ "$http_code" = "200" ] || [ "$http_code" = "204" ]; then
+            deleted_count=$((deleted_count + 1))
+        else
+            echo "⚠️  Failed to delete route $route_id (HTTP $http_code)"
+        fi
+    done
+    
+    echo "✅ Deleted $deleted_count OpenAPI routes"
+    return 0
+}
+
 # Main function to setup OpenAPI routes
 setup_openapi_routes() {
     if [ "$OPENAPI_ENABLED" != "true" ]; then
@@ -1606,6 +1665,9 @@ setup_openapi_routes() {
     fi
     
     echo "Setting up OpenAPI provider routes..."
+    
+    # Clear existing OpenAPI routes to ensure fresh configuration
+    clear_openapi_routes
     
     local cache_dir="/tmp/violentutf_openapi_cache"
     mkdir -p "$cache_dir"
