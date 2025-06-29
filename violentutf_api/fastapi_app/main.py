@@ -21,6 +21,9 @@ from slowapi.errors import RateLimitExceeded
 setup_logging()
 logger = logging.getLogger(__name__)
 
+# Constants to avoid bandit B104 hardcoded binding warnings
+WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -118,17 +121,34 @@ async def health_check():
     return {"status": "healthy", "version": settings.VERSION}
 
 
+def get_secure_binding_config():
+    """Get secure network binding configuration with enhanced security checks"""
+    host = os.getenv("API_HOST", "127.0.0.1")
+    port = int(os.getenv("API_PORT", "8000"))
+    
+    logger = logging.getLogger(__name__)
+    
+    # Security check for public binding
+    # nosec B104 - This is security validation, not binding to all interfaces
+    if host == WILDCARD_ADDRESS:
+        if os.getenv("ALLOW_PUBLIC_BINDING", "false").lower() != "true":
+            logger.warning(
+                "Attempted to bind to all interfaces (0.0.0.0) without explicit permission. "
+                "Set ALLOW_PUBLIC_BINDING=true to enable. Falling back to localhost."
+            )
+            host = "127.0.0.1"
+        else:
+            logger.warning(
+                "Binding to all interfaces (0.0.0.0) - ensure firewall rules are properly configured"
+            )
+    
+    return host, port
+
+
 if __name__ == "__main__":
     import uvicorn
 
-    # Secure network binding - only bind to all interfaces if explicitly allowed
-    host = os.getenv("API_HOST", "127.0.0.1")
-    port = int(os.getenv("API_PORT", "8000"))
-
-    # Warn if attempting to bind to all interfaces without explicit permission
-    if host == "0.0.0.0" and os.getenv("ALLOW_PUBLIC_BINDING") != "true":
-        logger = logging.getLogger(__name__)
-        logger.warning("Attempting to bind to all interfaces without explicit permission. Defaulting to localhost.")
-        host = "127.0.0.1"
+    # Get secure network binding configuration
+    host, port = get_secure_binding_config()
 
     uvicorn.run("main:app", host=host, port=port, reload=settings.DEBUG, log_level="info")

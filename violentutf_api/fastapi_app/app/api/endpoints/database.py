@@ -3,6 +3,7 @@ Database management endpoints for PyRIT Memory (DuckDB) operations
 """
 
 import hashlib
+import logging
 import os
 import tempfile
 from datetime import datetime
@@ -22,6 +23,7 @@ from app.schemas.database import (
 )
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -42,6 +44,24 @@ def get_db_path(username: str, salt: str, app_data_dir: str) -> str:
     if not filename:
         return ""
     return os.path.join(app_data_dir, filename)
+
+
+# Security: Allowed table names for counting operations to prevent SQL injection
+ALLOWED_PYRIT_TABLES = {
+    'prompt_pieces', 'conversations', 'scores', 'datasets', 'generators',
+    'scorers', 'orchestrator_executions', 'orchestrator_results'
+}
+
+
+def get_secure_table_count(conn, table_name: str) -> int:
+    """Get row count for table with name validation to prevent SQL injection"""
+    if table_name not in ALLOWED_PYRIT_TABLES:
+        raise ValueError(f"Invalid table name: {table_name}")
+    
+    # Use string formatting with pre-validated table name (table_name is whitelisted above)
+    query = 'SELECT COUNT(*) FROM "{}"'.format(table_name)  # nosec B608
+    result = conn.execute(query).fetchone()
+    return result[0] if result else 0
 
 
 @router.post("/initialize", response_model=DatabaseInitResponse)
@@ -211,12 +231,15 @@ async def get_database_stats(current_user: User = Depends(get_current_user)):
 
             for table_name in table_names:
                 try:
-                    # Use identifier quoting for table names to prevent SQL injection
-                    result = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()
-                    count = result[0] if result else 0
+                    # Use secure helper method to prevent SQL injection
+                    count = get_secure_table_count(conn, table_name)
                     total_records += count
 
                     tables.append(TableStats(table_name=table_name, row_count=count))
+                except ValueError as e:
+                    # Invalid table name
+                    logger.warning(f"Invalid table name in database stats: {e}")
+                    tables.append(TableStats(table_name=table_name, row_count=0))
                 except Exception:
                     # Table might not exist
                     tables.append(TableStats(table_name=table_name, row_count=0))

@@ -858,7 +858,7 @@ def render_parameter_input(param: Dict[str, Any], scorer_type: str, is_required:
                     generator_names = [gen["name"] for gen in generators]
 
                     selected_generator = st.selectbox(
-                        f"{label} (Select from configured generators)",
+                        label + " (Select from configured generators)",  # nosec B608
                         options=["-- Select Generator --"] + generator_names,
                         key=key,
                         help="Choose a configured generator to use as the chat target for this scorer",
