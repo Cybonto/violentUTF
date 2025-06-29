@@ -155,7 +155,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
                 call_params["max_tokens"] = self.max_tokens
             elif self.provider == "anthropic":
                 call_params["max_tokens"] = 1000  # Default for Anthropic
-                logger.debug(f"Using default max_tokens=1000 for Anthropic provider")
+                logger.debug("Using default max_tokens=1000 for Anthropic provider")
 
             if self.top_p is not None:
                 call_params["top_p"] = self.top_p
@@ -264,7 +264,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
                 error="none",
             )
 
-            logger.debug(f"Successfully created response using construct_response_from_request")
+            logger.debug("Successfully created response using construct_response_from_request")
             return response
 
         except Exception as e:

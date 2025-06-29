@@ -605,7 +605,7 @@ async def update_scorer(scorer_id: str, request: ScorerUpdateRequest, current_us
             logger.info(f"Scorer name update requested: {request.name} (update functionality needs implementation)")
 
         if request.parameters is not None:
-            logger.info(f"Scorer parameters update requested (update functionality needs implementation)")
+            logger.info("Scorer parameters update requested (update functionality needs implementation)")
 
         response = ScorerCreateResponse(
             success=True,
@@ -650,7 +650,7 @@ async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)):
             raise HTTPException(status_code=500, detail=f"Failed to delete scorer with ID '{scorer_id}'")
 
         response = ScorerDeleteResponse(
-            success=True, message=f"Scorer deleted successfully", deleted_scorer=scorer_name
+            success=True, message="Scorer deleted successfully", deleted_scorer=scorer_name
         )
 
         logger.info(f"Successfully deleted scorer {scorer_id}")
@@ -800,7 +800,7 @@ async def validate_scorer_config(request: ScorerValidationRequest, current_user=
             if param_name == "chat_target":
                 # Special handling for chat_target
                 if not request.generator_id and param_name not in request.parameters:
-                    errors.append(f"Chat target is required but no generator_id provided")
+                    errors.append("Chat target is required but no generator_id provided")
                     suggested_fixes.append("Select a generator to use as chat target")
             elif param_name not in request.parameters:
                 errors.append(f"Required parameter '{param_name}' is missing")

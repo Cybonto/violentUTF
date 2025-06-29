@@ -53,7 +53,7 @@ class PyRITOrchestratorService:
             if memory is not None:
                 # Debug: log memory object details
                 logger.info(f"Memory object type: {type(memory)}")
-                logger.info(f"Memory available: Global PyRIT memory instance exists")
+                logger.info("Memory available: Global PyRIT memory instance exists")
                 return True
             else:
                 # No global memory - this is fine, orchestrators can use their own memory

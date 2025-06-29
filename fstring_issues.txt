@@ -1,0 +1,182 @@
+violentutf/custom_targets/apisix_ai_gateway.py:158:30
+                logger.debug(f"Using default max_tokens=1000 for Anthropic provider")
+                             ^
+violentutf/custom_targets/apisix_ai_gateway.py:267:26
+            logger.debug(f"Successfully created response using construct_response_from_request")
+                         ^
+violentutf/generators/generator_config.py:1041:46
+                            raise ValueError(f"Invalid JSON object provided for 'headers'.")
+                                             ^
+violentutf/pages/0_Start.py:165:22
+            st.error(f"Endpoint not found. Check APISIX routing configuration.")
+                     ^
+violentutf/pages/0_Start.py:236:18
+        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+                 ^
+violentutf/pages/0_Start.py:467:21
+        logger.info(f"User clicked 'Start'. Navigating to Configure Generators.")
+                    ^
+violentutf/pages/1_Configure_Generators.py:203:18
+        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+                 ^
+violentutf/pages/1_Configure_Generators.py:869:29
+                model_key = f"AI Gateway_model"
+                            ^
+violentutf/pages/1_Configure_Generators.py:885:34
+                st.session_state[f"AI Gateway_model"] = None
+                                 ^
+violentutf/pages/2_Configure_Datasets.py:190:18
+        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+                 ^
+violentutf/pages/2_Configure_Datasets.py:261:29
+                logger.info(f"Auto-loaded datasets for display")
+                            ^
+violentutf/pages/2_Configure_Datasets.py:921:33
+                with st.spinner(f"Processing uploaded file..."):
+                                ^
+violentutf/pages/2_Configure_Datasets.py:1060:32
+                    st.success(f"✅ Transformed dataset created!")
+                               ^
+violentutf/pages/3_Configure_Converters.py:188:18
+        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+                 ^
+violentutf/pages/3_Configure_Converters.py:289:22
+        logger.error(f"Failed to apply converter - no data returned from API")
+                     ^
+violentutf/pages/3_Configure_Converters.py:343:29
+                logger.info(f"Auto-loaded datasets for display")
+                            ^
+violentutf/pages/3_Configure_Converters.py:1016:28
+                st.success(f"✅ Converter applied successfully!")
+                           ^
+violentutf/pages/3_Configure_Converters.py:1030:33
+                        st.info(f"**New Dataset Details from API:**")
+                                ^
+violentutf/pages/4_Configure_Scorers.py:185:18
+        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+                 ^
+violentutf/pages/4_Configure_Scorers.py:429:21
+        logger.info(f"📊 SCORER TEST DEBUG - Execution Details:")
+                    ^
+violentutf/pages/4_Configure_Scorers.py:471:30
+                logger.error(f"🔍 Debugging orchestrator execution failure:")
+                             ^
+violentutf/pages/4_Configure_Scorers.py:483:30
+                logger.error(f"💡 COMPARISON TO WORKING DATASET TEST:")
+                             ^
+violentutf/pages/4_Configure_Scorers.py:490:30
+                logger.error(f"  Check if these same dataset+generator work in Configure Datasets page")
+                             ^
+violentutf/pages/4_Configure_Scorers.py:1108:21
+        st.markdown(f"### 🚀 Full Execution Progress")
+                    ^
+violentutf/pages/4_Configure_Scorers.py:1476:34
+                        st.write(f"• Execution Summary: ✅ Present")
+                                 ^
+violentutf/pages/5_Dashboard.py:167:18
+        st.error(f"❌ Failed to generate API token.")
+                 ^
+violentutf/pages/6_Advanced_Dashboard.py:127:18
+        st.error(f"❌ Failed to generate API token.")
+                 ^
+violentutf/pages/6_Advanced_Dashboard.py:856:32
+                    "Details": f"Increased violations during specific hours",
+                               ^
+violentutf/pages/IronUTF.py:109:18
+        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+                 ^
+violentutf/pages/Simple_Chat.py:875:42
+                            if st.button(f"Use", key=f"use_var_{i}", use_container_width=True):
+                                         ^
+violentutf/pages/Simple_Chat.py:1359:38
+                            st.write(f"**Size:** Unknown")
+                                     ^
+violentutf/pages/Simple_Chat.py:1938:24
+            st.success(f"✅ Orchestrator execution started!")
+                       ^
+violentutf/util_datasets/data_loaders.py:258:28
+            logger.warning(f"Could not determine file type from URL. Assuming CSV format.")
+                           ^
+violentutf_api/fastapi_app/app/api/endpoints/converters.py:731:39
+                return prompt[::-1] + f"\n\n[This message has been reversed. Please decode and respond.]"
+                                      ^
+violentutf_api/fastapi_app/app/api/endpoints/orchestrators.py:229:57
+            raise HTTPException(status_code=404, detail=f"Orchestrator configuration not found")
+                                                        ^
+violentutf_api/fastapi_app/app/api/endpoints/orchestrators.py:639:57
+            raise HTTPException(status_code=404, detail=f"Orchestrator configuration not found")
+                                                        ^
+violentutf_api/fastapi_app/app/api/endpoints/scorers.py:608:25
+            logger.info(f"Scorer parameters update requested (update functionality needs implementation)")
+                        ^
+violentutf_api/fastapi_app/app/api/endpoints/scorers.py:653:35
+            success=True, message=f"Scorer deleted successfully", deleted_scorer=scorer_name
+                                  ^
+violentutf_api/fastapi_app/app/api/endpoints/scorers.py:803:35
+                    errors.append(f"Chat target is required but no generator_id provided")
+                                  ^
+violentutf_api/fastapi_app/app/mcp/apisix_routes.py:27:26
+            upstream_url=f"http://violentutf-api:8000",
+                         ^
+violentutf_api/fastapi_app/app/mcp/apisix_routes.py:45:26
+            upstream_url=f"http://violentutf-api:8000",
+                         ^
+violentutf_api/fastapi_app/app/services/pyrit_orchestrator_service.py:56:29
+                logger.info(f"Memory available: Global PyRIT memory instance exists")
+                            ^
+violentutf_api/fastapi_app/app/services/scorer_integration_service.py:130:40
+            "score_value_description": f"Error occurred during scoring",
+                                       ^
+violentutf_api/fastapi_app/app/services/scorer_integration_service.py:256:44
+                "score_value_description": f"Likert scale score (0-1) based on response length",
+                                           ^
+violentutf_api/fastapi_app/app/services/scorer_integration_service.py:267:40
+            "score_value_description": f"Error occurred during scoring",
+                                       ^
+violentutf_api/fastapi_app/app/services/scorer_integration_service.py:285:28
+            logger.warning(f"SubStringScorer missing required parameter 'substring'")
+                           ^
+violentutf_api/fastapi_app/app/services/scorer_integration_service.py:331:28
+            logger.warning(f"SelfAskCategoryScorer missing required parameter 'categories'")
+                           ^
+violentutf_api/fastapi_app/app/services/scorer_integration_service.py:419:28
+            logger.warning(f"FloatScaleThresholdScorer missing required parameter 'scorer'")
+                           ^
+violentutf_api/fastapi_app/app/services/scorer_integration_service.py:470:28
+            logger.warning(f"TrueFalseInverterScorer missing required parameter 'scorer'")
+                           ^
+violentutf_api/fastapi_app/app/services/scorer_integration_service.py:497:40
+            "score_value_description": f"Inverted boolean evaluation",
+                                       ^
+violentutf_api/fastapi_app/diagnose_user_context.py:64:11
+    print(f"\n📈 Summary:")
+          ^
+violentutf_api/fastapi_app/diagnose_user_context.py:69:15
+        print(f"\n⚠️  ISSUE FOUND: No generators configured in any user context")
+              ^
+violentutf_api/fastapi_app/diagnose_user_context.py:70:15
+        print(f"   SOLUTION: Go to 'Configure Generators' page and create a generator")
+              ^
+violentutf_api/fastapi_app/diagnose_user_context.py:71:15
+        print(f"   Example: Create an 'AI Gateway' generator with provider and model")
+              ^
+violentutf_api/fastapi_app/diagnose_user_context.py:74:15
+        print(f"\n💡 If scorer testing fails despite having generators:")
+              ^
+violentutf_api/fastapi_app/diagnose_user_context.py:75:15
+        print(f"   1. Note which user context has generators above")
+              ^
+violentutf_api/fastapi_app/diagnose_user_context.py:76:15
+        print(f"   2. Run migration script to move data to 'violentutf.web':")
+              ^
+violentutf_api/fastapi_app/diagnose_user_context.py:77:15
+        print(f'      python3 migrate_user_context.py --from "SOURCE_USER" --to "violentutf.web"')
+              ^
+violentutf_api/jwt_cli.py:188:24
+            click.echo(f"API Key created successfully!")
+                       ^
+violentutf_api/jwt_cli.py:258:24
+            click.echo(f"Session API Key:")
+                       ^
+60    F541 f-string is missing placeholders
+60

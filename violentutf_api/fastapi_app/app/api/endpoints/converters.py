@@ -728,7 +728,7 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
         elif converter_type == "CodeChameleonConverter":
             encrypt_type = parameters.get("encrypt_type", "custom")
             if encrypt_type == "reverse":
-                return prompt[::-1] + f"\n\n[This message has been reversed. Please decode and respond.]"
+                return prompt[::-1] + "\n\n[This message has been reversed. Please decode and respond.]"
             elif encrypt_type == "odd_even":
                 odd = prompt[1::2]
                 even = prompt[::2]

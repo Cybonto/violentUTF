@@ -1038,7 +1038,7 @@ class Generator:
                     try:
                         parsed_val = json.loads(current_value) if current_value.strip() else None
                         if parsed_val is not None and not isinstance(parsed_val, dict):
-                            raise ValueError(f"Invalid JSON object provided for 'headers'.")
+                            raise ValueError("Invalid JSON object provided for 'headers'.")
                         self.parameters[p_name] = parsed_val
                         current_value = self.parameters[p_name]
                         if current_value is None:

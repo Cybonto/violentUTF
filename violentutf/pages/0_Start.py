@@ -162,7 +162,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
             logger.error(f"403 Forbidden: {response.text}")
             return None
         elif response.status_code == 404:
-            st.error(f"Endpoint not found. Check APISIX routing configuration.")
+            st.error("Endpoint not found. Check APISIX routing configuration.")
             logger.error(f"404 Not Found: {url} - {response.text}")
             return None
         elif response.status_code == 502:
@@ -233,7 +233,7 @@ def create_compatible_api_token():
             return None
 
     except Exception as e:
-        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+        st.error("❌ Failed to generate API token. Please try refreshing the page.")
         logger.error(f"Token creation failed: {e}")
         return None
 
@@ -464,7 +464,7 @@ def main():
         help="Begin the AI red-teaming workflow by configuring generators, datasets, converters, and scoring engines",
     ):
         st.session_state["started"] = True
-        logger.info(f"User clicked 'Start'. Navigating to Configure Generators.")
+        logger.info("User clicked 'Start'. Navigating to Configure Generators.")
         st.switch_page("pages/1_Configure_Generators.py")
 
 

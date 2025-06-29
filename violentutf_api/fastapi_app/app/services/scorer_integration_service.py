@@ -282,7 +282,7 @@ async def _execute_substring_scorer(scorer_config: Dict, text: str) -> Dict[str,
         category = parameters.get("category", "match")
 
         if not substring:
-            logger.warning(f"SubStringScorer missing required parameter 'substring'")
+            logger.warning("SubStringScorer missing required parameter 'substring'")
             return {
                 "score_value": False,
                 "score_value_description": "SubString match failed - no substring specified",
@@ -328,7 +328,7 @@ async def _execute_category_scorer(scorer_config: Dict, text: str) -> Dict[str, 
         categories = parameters.get("categories", ["positive", "negative", "neutral"])
 
         if not categories:
-            logger.warning(f"SelfAskCategoryScorer missing required parameter 'categories'")
+            logger.warning("SelfAskCategoryScorer missing required parameter 'categories'")
             return {
                 "score_value": 0.0,  # Return numeric value for error case
                 "score_value_description": "Category classification failed - no categories specified",
@@ -416,7 +416,7 @@ async def _execute_threshold_scorer(scorer_config: Dict, text: str) -> Dict[str,
         base_scorer_config = parameters.get("scorer", {})
 
         if not base_scorer_config:
-            logger.warning(f"FloatScaleThresholdScorer missing required parameter 'scorer'")
+            logger.warning("FloatScaleThresholdScorer missing required parameter 'scorer'")
             return {
                 "score_value": False,
                 "score_value_description": "Threshold scorer failed - no base scorer specified",
@@ -467,7 +467,7 @@ async def _execute_inverter_scorer(scorer_config: Dict, text: str) -> Dict[str, 
         base_scorer_config = parameters.get("scorer", {})
 
         if not base_scorer_config:
-            logger.warning(f"TrueFalseInverterScorer missing required parameter 'scorer'")
+            logger.warning("TrueFalseInverterScorer missing required parameter 'scorer'")
             return {
                 "score_value": False,
                 "score_value_description": "Inverter scorer failed - no base scorer specified",

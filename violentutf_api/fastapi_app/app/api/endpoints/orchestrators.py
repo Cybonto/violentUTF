@@ -226,7 +226,7 @@ async def get_execution_results(
         config = result.scalar_one_or_none()
 
         if not config:
-            raise HTTPException(status_code=404, detail=f"Orchestrator configuration not found")
+            raise HTTPException(status_code=404, detail="Orchestrator configuration not found")
 
         if execution.status != "completed":
             raise HTTPException(status_code=400, detail=f"Execution not completed. Status: {execution.status}")
@@ -636,7 +636,7 @@ async def get_execution_results_restful(
         config = result.scalar_one_or_none()
 
         if not config:
-            raise HTTPException(status_code=404, detail=f"Orchestrator configuration not found")
+            raise HTTPException(status_code=404, detail="Orchestrator configuration not found")
 
         # Same status check as original (400 not 409)
         if execution.status != "completed":

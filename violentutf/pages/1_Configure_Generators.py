@@ -200,7 +200,7 @@ def create_compatible_api_token():
             return None
 
     except Exception as e:
-        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+        st.error("❌ Failed to generate API token. Please try refreshing the page.")
         logger.error(f"Token creation failed: {e}")
         return None
 
@@ -866,7 +866,7 @@ def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
 
             if available_models:
                 # Create model selectbox with available models
-                model_key = f"AI Gateway_model"
+                model_key = "AI Gateway_model"
 
                 default_index = 0
                 current_model = st.session_state.get(model_key)
