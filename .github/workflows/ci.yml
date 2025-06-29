@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI Dispatcher
 
 on:
   push:
@@ -7,388 +7,204 @@ on:
     branches: [main, dev_*, develop]
   workflow_dispatch:
     inputs:
-      debug_enabled:
-        type: boolean
-        description: 'Enable debug mode with tmate'
+      workflow_type:
+        description: 'Workflow type to run'
         required: false
-        default: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - quick
+          - pr-validation
+          - full
+          - nightly
 
 permissions:
   contents: read
+  actions: write
   pull-requests: write
-  issues: write
   checks: write
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
-env:
-  PYTHON_VERSION_DEFAULT: "3.11"
-  DOCKER_BUILDKIT: 1
-  COMPOSE_DOCKER_CLI_BUILD: 1
-
 jobs:
-  # Phase A: Foundation - Multi-platform testing infrastructure
-  test-matrix:
-    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-22.04, macos-13, windows-2022]
-        python-version: ["3.10", "3.11", "3.12"]
-        include:
-          - os: ubuntu-22.04
-            platform: linux
-            arch: amd64
-          - os: macos-13
-            platform: darwin
-            arch: arm64
-          - os: windows-2022
-            platform: windows
-            arch: amd64
-    
+  # Determine which workflow to trigger based on context
+  dispatch-decision:
+    name: Determine Workflow
+    runs-on: ubuntu-latest
+    outputs:
+      workflow: ${{ steps.decide.outputs.workflow }}
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements.txt
-            violentutf/requirements.txt
-            violentutf_api/fastapi_app/requirements.txt
-
-      - name: Install system dependencies (Ubuntu)
-        if: matrix.platform == 'linux'
+      - name: Analyze context and decide workflow
+        id: decide
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            libpq-dev \
-            libssl-dev \
-            libffi-dev \
-            python3-dev
+          # Check if manual dispatch with specific workflow
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ "${{ inputs.workflow_type }}" != "auto" ]]; then
+            echo "workflow=${{ inputs.workflow_type }}" >> $GITHUB_OUTPUT
+            echo "Manual dispatch: ${{ inputs.workflow_type }}"
+            exit 0
+          fi
 
-      - name: Install system dependencies (macOS)
-        if: matrix.platform == 'darwin'
-        run: |
-          brew install postgresql libpq
+          # Check if commit message contains special flags
+          if [[ "${{ github.event.head_commit.message }}" == *"[full-ci]"* ]]; then
+            echo "workflow=full" >> $GITHUB_OUTPUT
+            echo "Full CI requested via commit message"
+            exit 0
+          fi
 
-      - name: Create virtual environment
-        shell: bash
-        run: |
-          python -m venv venv
+          if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]] || \
+             [[ "${{ github.event.head_commit.message }}" == *"[ci skip]"* ]]; then
+            echo "workflow=skip" >> $GITHUB_OUTPUT
+            echo "CI skipped via commit message"
+            exit 0
+          fi
 
-      - name: Install Python dependencies
-        shell: bash
-        run: |
-          if [[ "${{ matrix.platform }}" == "windows" ]]; then
-            . venv/Scripts/activate
+          # Pull request logic
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "workflow=pr-validation" >> $GITHUB_OUTPUT
+            echo "Pull request validation workflow"
+            exit 0
+          fi
+
+          # Branch-based logic
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "workflow=full" >> $GITHUB_OUTPUT
+            echo "Main branch: full CI"
+          elif [[ "${{ github.ref }}" =~ ^refs/heads/dev_ ]]; then
+            echo "workflow=quick" >> $GITHUB_OUTPUT
+            echo "Dev branch: quick checks"
           else
-            . venv/bin/activate
-          fi
-          python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
-          # Install project requirements if they exist
-          if [ -f violentutf/requirements.txt ]; then
-            pip install -r violentutf/requirements.txt
-          fi
-          if [ -f violentutf_api/fastapi_app/requirements.txt ]; then
-            pip install -r violentutf_api/fastapi_app/requirements.txt
-          fi
-          pip install pytest pytest-cov pytest-xdist pytest-timeout pytest-mock
-
-      - name: Verify dependency installation
-        shell: bash
-        run: |
-          if [[ "${{ matrix.platform }}" == "windows" ]]; then
-            . venv/Scripts/activate
-          else
-            . venv/bin/activate
-          fi
-          # Only verify if packages are installed
-          cat > check_deps.py << 'EOF'
-          import sys
-          try:
-              import pyrit
-              print(f'PyRIT version: {pyrit.__version__}')
-          except ImportError:
-              print('PyRIT not installed (expected if requirements not found)')
-          try:
-              import garak
-              print('Garak imported successfully')
-          except ImportError:
-              print('Garak not installed (expected if requirements not found)')
-          try:
-              import fastapi
-              print(f'FastAPI version: {fastapi.__version__}')
-          except ImportError:
-              print('FastAPI not installed')
-          try:
-              import streamlit
-              print(f'Streamlit version: {streamlit.__version__}')
-          except ImportError:
-              print('Streamlit not installed')
-          EOF
-          python check_deps.py
-          rm -f check_deps.py
-
-      - name: Run unit tests
-        shell: bash
-        run: |
-          if [[ "${{ matrix.platform }}" == "windows" ]]; then
-            . venv/Scripts/activate
-          else
-            . venv/bin/activate
-          fi
-          # Only run unit tests for now
-          if [ -d "tests/unit" ] && [ "$(find tests/unit -name 'test_*.py' -type f | wc -l)" -gt 0 ]; then
-            pytest tests/unit -v --tb=short \
-              --cov=violentutf --cov=violentutf_api \
-              --cov-report=xml:coverage-${{ matrix.os }}-${{ matrix.python-version }}.xml \
-              --junit-xml=junit-${{ matrix.os }}-${{ matrix.python-version }}.xml \
-              -n auto \
-              --timeout=300
-          else
-            echo "No unit tests found, skipping test execution"
-            # Create empty test results to prevent artifact upload failures
-            echo '<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="empty" tests="0" errors="0" failures="0" skipped="0" time="0.0"></testsuite></testsuites>' > junit-${{ matrix.os }}-${{ matrix.python-version }}.xml
-            echo '<?xml version="1.0" encoding="utf-8"?><coverage version="1.0"><packages></packages></coverage>' > coverage-${{ matrix.os }}-${{ matrix.python-version }}.xml
+            echo "workflow=pr-validation" >> $GITHUB_OUTPUT
+            echo "Other branch: PR validation level"
           fi
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
-          path: |
-            junit-*.xml
-            coverage-*.xml
-          retention-days: 7
+  # Quick checks for development branches
+  trigger-quick-checks:
+    name: Trigger Quick Checks
+    needs: dispatch-decision
+    if: needs.dispatch-decision.outputs.workflow == 'quick'
+    runs-on: ubuntu-latest
 
-      - name: Setup tmate session for debugging
-        if: ${{ failure() && inputs.debug_enabled }}
-        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # v3.17
-
-  # Phase B: Code Quality and Standards
-  code-quality:
-    name: Code Quality Checks
-    runs-on: ubuntu-22.04
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Set up Python
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
-          cache: 'pip'
-
-      - name: Install quality tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install black isort flake8 mypy pylint bandit[toml] radon
-
-      - name: Check code formatting with Black
-        run: |
-          black --check --diff --verbose \
-            violentutf/ violentutf_api/ tests/
-
-      - name: Check import sorting with isort
-        run: |
-          isort --check-only --diff \
-            violentutf/ violentutf_api/ tests/
-
-      - name: Run flake8 linting
-        run: |
-          flake8 violentutf/ violentutf_api/ tests/ \
-            --count --statistics \
-            --max-line-length=120 \
-            --extend-ignore=E203,W503 \
-            --max-complexity=15
-
-      - name: Run type checking with mypy
-        run: |
-          mypy violentutf/ violentutf_api/ \
-            --ignore-missing-imports \
-            --python-version=${{ env.PYTHON_VERSION_DEFAULT }}
-
-      - name: Security linting with Bandit
-        run: |
-          bandit -r violentutf/ violentutf_api/ \
-            -f json -o bandit-results.json \
-            --severity-level medium
-
-      - name: Code complexity analysis
-        run: |
-          radon cc violentutf/ violentutf_api/ -a -nc
-
-      - name: Upload security scan results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: bandit-results
-          path: bandit-results.json
-          retention-days: 30
-
-  # Phase C: Dependency Security Management
-  dependency-security:
-    name: Dependency Security Scan
-    runs-on: ubuntu-22.04
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Set up Python
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
-        with:
-          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
-
-      - name: Install security scanning tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install safety pip-audit
-
-      - name: Scan with Safety
-        run: |
-          safety check --json --output safety-report.json || true
-
-      - name: Scan with pip-audit
-        run: |
-          pip-audit --desc --format json --output pip-audit-report.json || true
-
-      - name: Validate AI tokens sample file
-        run: |
-          if [ -f "ai-tokens.env.sample" ]; then
-            echo "Validating ai-tokens.env.sample structure..."
-            # Check for required AI provider entries
-            for provider in OPENAI ANTHROPIC AWS GARAK PYRIT; do
-              if ! grep -q "^${provider}_" ai-tokens.env.sample; then
-                echo "WARNING: Missing ${provider} configuration in ai-tokens.env.sample"
-              fi
-            done
-          fi
-
-      - name: Upload security reports
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: dependency-security-reports
-          path: |
-            safety-report.json
-            pip-audit-report.json
-          retention-days: 30
-
-  # Test Result Processing and PR Comments
-  process-results:
-    name: Process Test Results
-    runs-on: ubuntu-22.04
-    needs: [test-matrix, code-quality, dependency-security]
-    if: always()
-    
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          path: artifacts
-
-      - name: Process test results
-        run: |
-          echo "## CI Pipeline Summary" > summary.md
-          echo "" >> summary.md
-          
-          # Process test results
-          if [ -d "artifacts/test-results-*" ]; then
-            echo "### Test Results" >> summary.md
-            echo "| Platform | Python | Status |" >> summary.md
-            echo "|----------|--------|--------|" >> summary.md
-            for result in artifacts/test-results-*/junit-*.xml; do
-              if [ -f "$result" ]; then
-                platform=$(echo $result | grep -oP 'junit-\K[^-]+')
-                python=$(echo $result | grep -oP '\d+\.\d+(?=\.xml)')
-                # Simple check for test status
-                if grep -q 'failures="0"' "$result" && grep -q 'errors="0"' "$result"; then
-                  echo "| $platform | $python | ✅ |" >> summary.md
-                else
-                  echo "| $platform | $python | ❌ |" >> summary.md
-                fi
-              fi
-            done
-            echo "" >> summary.md
-          fi
-          
-          # Security scan results
-          if [ -f "artifacts/bandit-results/bandit-results.json" ]; then
-            echo "### Security Scan Results" >> summary.md
-            issues=$(python3 -c "import json; data=json.load(open('artifacts/bandit-results/bandit-results.json')); print(len(data.get('results', [])))")
-            echo "- Bandit: Found $issues security issues" >> summary.md
-            echo "" >> summary.md
-          fi
-          
-          # Dependency security
-          if [ -f "artifacts/dependency-security-reports/safety-report.json" ]; then
-            echo "### Dependency Security" >> summary.md
-            vulns=$(python3 -c "import json; data=json.load(open('artifacts/dependency-security-reports/safety-report.json')); print(len(data))" 2>/dev/null || echo "0")
-            echo "- Safety: Found $vulns vulnerabilities" >> summary.md
-            echo "" >> summary.md
-          fi
-
-      - name: Comment on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      - name: Trigger quick checks workflow
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
         with:
           script: |
-            const fs = require('fs');
-            const summary = fs.readFileSync('summary.md', 'utf8');
-            
-            const { data: comments } = await github.rest.issues.listComments({
+            await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              workflow_id: 'quick-checks.yml',
+              ref: context.ref
             });
-            
-            const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
-              comment.body.includes('## CI Pipeline Summary')
-            );
-            
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: summary
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: summary
-              });
-            }
+            console.log('Triggered quick-checks workflow');
 
-  # Final status check
-  ci-status:
-    name: CI Status Check
-    runs-on: ubuntu-22.04
-    needs: [test-matrix, code-quality, dependency-security]
-    if: always()
-    
+  # PR validation for pull requests
+  trigger-pr-validation:
+    name: Trigger PR Validation
+    needs: dispatch-decision
+    if: needs.dispatch-decision.outputs.workflow == 'pr-validation'
+    runs-on: ubuntu-latest
     steps:
-      - name: Check CI status
+      - name: Trigger PR validation workflow
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'pr-validation.yml',
+              ref: context.ref
+            });
+            console.log('Triggered pr-validation workflow');
+  # Full CI for main branch and releases
+  trigger-full-ci:
+    name: Trigger Full CI
+    needs: dispatch-decision
+    if: needs.dispatch-decision.outputs.workflow == 'full'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger full CI workflow
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'full-ci.yml',
+              ref: context.ref
+            });
+            console.log('Triggered full-ci workflow');
+
+  # Nightly testing
+  trigger-nightly:
+    name: Trigger Nightly Tests
+    needs: dispatch-decision
+    if: needs.dispatch-decision.outputs.workflow == 'nightly'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger nightly workflow
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'nightly.yml',
+              ref: context.ref
+            });
+            console.log('Triggered nightly workflow');
+
+  # Skip notification
+  skip-notification:
+    name: CI Skipped
+    needs: dispatch-decision
+    if: needs.dispatch-decision.outputs.workflow == 'skip'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log skip
         run: |
-          if [ "${{ needs.test-matrix.result }}" != "success" ] || \
-             [ "${{ needs.code-quality.result }}" != "success" ] || \
-             [ "${{ needs.dependency-security.result }}" != "success" ]; then
-            echo "CI pipeline failed!"
-            exit 1
-          fi
-          echo "CI pipeline passed!"
+          echo "CI skipped as requested via commit message"
+          echo "## CI Skipped" >> $GITHUB_STEP_SUMMARY
+          echo "CI was skipped via [skip ci] flag in commit message" >> $GITHUB_STEP_SUMMARY
+
+  # Summary status
+  dispatcher-status:
+    name: Dispatcher Status
+    needs: [dispatch-decision, trigger-quick-checks, trigger-pr-validation, trigger-full-ci, trigger-nightly, skip-notification]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Summary
+        run: |
+          echo "## CI Dispatcher Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Selected**: ${{ needs.dispatch-decision.outputs.workflow }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Show which workflow was triggered
+          case "${{ needs.dispatch-decision.outputs.workflow }}" in
+            "quick")
+              echo "✅ Triggered quick development checks (5-10 minutes)" >> $GITHUB_STEP_SUMMARY
+              ;;
+            "pr-validation")
+              echo "✅ Triggered PR validation suite (15-20 minutes)" >> $GITHUB_STEP_SUMMARY
+              ;;
+            "full")
+              echo "✅ Triggered full CI matrix (20-30 minutes)" >> $GITHUB_STEP_SUMMARY
+              ;;
+            "nightly")
+              echo "✅ Triggered nightly deep testing (60-90 minutes)" >> $GITHUB_STEP_SUMMARY
+              ;;
+            "skip")
+              echo "⏭️ CI skipped as requested" >> $GITHUB_STEP_SUMMARY
+              ;;
+            *)
+              echo "❓ Unknown workflow: ${{ needs.dispatch-decision.outputs.workflow }}" >> $GITHUB_STEP_SUMMARY
+              ;;
+          esac

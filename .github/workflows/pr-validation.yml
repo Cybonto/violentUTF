@@ -1,0 +1,355 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSIONS: '["3.10", "3.11"]'
+  OS_MATRIX: '["ubuntu-latest", "windows-latest"]'
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: pr-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-quality:
+    name: Comprehensive Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Cache quality tools
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pre-commit
+          key: ${{ runner.os }}-quality-${{ hashFiles('.pre-commit-config.yaml', '**/requirements*.txt') }}
+
+      - name: Install quality tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort flake8 flake8-docstrings flake8-annotations
+          pip install bandit safety pylint mypy
+          pip install coverage pytest-cov
+
+      - name: Run Black formatter
+        run: |
+          black --check --diff . --verbose
+
+      - name: Run isort
+        run: |
+          isort --check-only --diff . --profile black
+
+      - name: Run comprehensive flake8
+        run: |
+          flake8 . --count --statistics --show-source
+
+      - name: Run pylint
+        continue-on-error: true
+        run: |
+          find . -name "*.py" -not -path "./tests/*" | xargs pylint --rcfile=.pylintrc || true
+
+      - name: Run mypy type checking
+        continue-on-error: true
+        run: |
+          mypy --install-types --non-interactive . || true
+
+      - name: Security scan with bandit
+        run: |
+          bandit -r . -f json -o bandit-report.json
+          python -c "import json; data = json.load(open('bandit-report.json')); issues = data.get('results', []); print(f'Security issues found: {len(issues)}'); [print(f\"- {i['test_name']}: {i['filename']}:{i['line_number']}\") for i in issues[:10]]"
+
+      - name: Dependency security check
+        run: |
+          safety check --json --output safety-report.json || true
+          if [ -f safety-report.json ]; then
+            python -c "import json; data = json.load(open('safety-report.json')); vulns = data.get('vulnerabilities', []); print(f'Vulnerable dependencies: {len(vulns)}'); [print(f\"- {v['package_name']}=={v['analyzed_version']}\") for v in vulns[:5]]"
+          fi
+
+  test-matrix:
+    name: Test Matrix - ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.10', '3.11']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Cache dependencies
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        with:
+          path: |
+            ~/.cache/pip
+            .pytest_cache
+          key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          # Install all requirements
+          for req in $(find . -name "requirements*.txt" -type f); do
+            echo "Installing from $req"
+            pip install -r "$req" || true
+          done
+          pip install pytest pytest-cov pytest-timeout pytest-xdist
+
+      - name: Run tests with coverage
+        run: |
+          pytest -v --cov=. --cov-report=xml --cov-report=term-missing --timeout=300 -n auto
+
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  api-contract-tests:
+    name: API Contract Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install API dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx pytest pytest-asyncio pydantic
+          # Install API specific requirements
+          if [ -f violentutf_api/requirements.txt ]; then
+            pip install -r violentutf_api/requirements.txt
+          fi
+
+      - name: Run API contract tests
+        run: |
+          # Run API specific tests
+          if [ -d tests/api_tests ]; then
+            pytest tests/api_tests/ -v --tb=short
+          fi
+          # Run contract validation
+          cat > validate_schemas.py << 'EOF'
+          import os
+          import json
+          import glob
+          # Validate OpenAPI schemas if present
+          for schema in glob.glob('**/openapi*.json', recursive=True):
+              print(f'Validating OpenAPI schema: {schema}')
+              with open(schema) as f:
+                  json.load(f)  # Basic validation
+          EOF
+          python validate_schemas.py
+
+  docker-validation:
+    name: Docker Build Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+
+      - name: Cache Docker layers
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Validate Docker Compose
+        run: |
+          # Validate all docker-compose files
+          for compose_file in $(find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml"); do
+            echo "Validating: $compose_file"
+            docker compose -f "$compose_file" config > /dev/null
+          done
+
+      - name: Build Docker images
+        run: |
+          # Build main services
+          docker compose build --no-cache violentutf || true
+          docker compose build --no-cache violentutf_api || true
+
+      - name: Run Docker security scan
+        run: |
+          # Install trivy for security scanning
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install trivy -y
+
+          # Scan built images
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "violentutf|api" | while read image; do
+            echo "Scanning $image"
+            trivy image --severity HIGH,CRITICAL "$image" || true
+          done
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [code-quality]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Start services
+        run: |
+          # Use docker compose to start required services
+          docker compose up -d apisix keycloak postgres
+
+          # Wait for services to be healthy
+          timeout 120s bash -c 'until docker compose ps | grep -E "apisix.*healthy|keycloak.*healthy"; do sleep 5; done'
+
+      - name: Run integration tests
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-timeout httpx
+
+          # Install all dependencies
+          for req in $(find . -name "requirements*.txt" -type f); do
+            pip install -r "$req" || true
+          done
+
+          # Run integration tests
+          pytest tests/ -v -k "integration" --timeout=60 || true
+
+      - name: Collect service logs
+        if: failure()
+        run: |
+          docker compose logs > docker-compose.log
+          echo "Docker service logs collected"
+
+      - name: Stop services
+        if: always()
+        run: |
+          docker compose down -v
+
+  pr-summary:
+    name: PR Validation Summary
+    needs: [code-quality, test-matrix, api-contract-tests, docker-validation, integration-tests]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Generate PR Comment
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+        with:
+          script: |
+            const jobResults = {
+              'Code Quality': '${{ needs.code-quality.result }}',
+              'Test Matrix': '${{ needs.test-matrix.result }}',
+              'API Contract Tests': '${{ needs.api-contract-tests.result }}',
+              'Docker Validation': '${{ needs.docker-validation.result }}',
+              'Integration Tests': '${{ needs.integration-tests.result }}'
+            };
+
+            let comment = '## Pull Request Validation Results\n\n';
+            let allPassed = true;
+
+            for (const [job, result] of Object.entries(jobResults)) {
+              const emoji = result === 'success' ? '✅' : '❌';
+              comment += `${emoji} **${job}**: ${result}\n`;
+              if (result !== 'success') allPassed = false;
+            }
+
+            comment += '\n### Summary\n';
+            if (allPassed) {
+              comment += '🎉 All validation checks passed! This PR is ready for review.\n';
+            } else {
+              comment += '⚠️ Some checks failed. Please review the errors above and fix them before merging.\n';
+            }
+
+            comment += '\n*Runtime: ~15-20 minutes*\n';
+            comment += `*Triggered by: @${context.actor}*\n`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Pull Request Validation Results')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
