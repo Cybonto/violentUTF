@@ -1,0 +1,185 @@
+# Pre-commit hooks for ViolentUTF
+# Run manually: pre-commit run --all-files
+# Install: pre-commit install
+
+default_language_version:
+  python: python3.11
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=5000']
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-xml
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+      - id: debug-statements
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+      - id: name-tests-test
+        args: ['--pytest-test-first']
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+
+  # Python code formatting
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3.11
+        args: ['--line-length=120']
+
+  # Import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile', 'black', '--line-length', '120']
+
+  # Linting
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [
+          '--max-line-length=120',
+          '--extend-ignore=E203,W503,E501',
+          '--max-complexity=15',
+          '--exclude=.git,__pycache__,build,dist,venv,env,.venv,.env'
+        ]
+        additional_dependencies: [
+          'flake8-docstrings',
+          'flake8-annotations',
+          'flake8-bugbear',
+          'flake8-comprehensions',
+          'flake8-simplify'
+        ]
+
+  # Security checks
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        args: ['-ll', '--skip=B101,B601,B602,B607']
+        exclude: 'tests/'
+
+  # Type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        args: [
+          '--ignore-missing-imports',
+          '--no-strict-optional',
+          '--warn-redundant-casts',
+          '--warn-unused-ignores'
+        ]
+        additional_dependencies: [
+          'types-requests',
+          'types-pyyaml',
+          'types-python-dateutil'
+        ]
+        exclude: 'tests/'
+
+  # Markdown
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix', '--disable', 'MD013', 'MD033']
+
+  # YAML formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [yaml]
+        exclude: '.github/workflows/'
+
+  # Shell script checks
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        args: ['--severity=warning']
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: ['--ignore', 'DL3008', '--ignore', 'DL3009']
+
+  # Secret detection
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: 'ai-tokens.env.sample|keycloak/realm-export.json'
+
+  # License headers
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.4
+    hooks:
+      - id: insert-license
+        name: Add license header (Python)
+        files: \.py$
+        exclude: '__pycache__|migrations|build|dist|venv'
+        args:
+          - --license-filepath
+          - .license-header.txt
+          - --comment-style
+          - '#'
+          - --skip-license-insertion-comment
+          - '# Copyright (c) Microsoft Corporation.'
+
+# Custom local hooks
+  - repo: local
+    hooks:
+      - id: no-print-statements
+        name: Check for print statements
+        entry: '(?<!def )print\('
+        language: pygrep
+        types: [python]
+        exclude: 'tests/|setup.py|scripts/'
+        
+      - id: no-hardcoded-secrets
+        name: Check for hardcoded secrets
+        entry: '(api_key|apikey|password|secret|token|private_key)\s*=\s*["\'][^"\']+["\']'
+        language: pygrep
+        types: [python]
+        exclude: 'tests/|ai-tokens.env.sample'
+        
+      - id: validate-requirements
+        name: Validate requirements files
+        entry: bash -c 'for f in $(find . -name "requirements*.txt" -type f); do grep -E "^[^#]" "$f" | grep -qE "^[a-zA-Z0-9]" || echo "Empty or invalid requirements file: $f"; done'
+        language: system
+        pass_filenames: false
+        
+      - id: check-github-actions
+        name: Validate GitHub Actions workflows  
+        entry: yamllint -d relaxed
+        language: system
+        files: '^\.github/workflows/.*\.(yml|yaml)$'
+        
+      - id: check-docker-compose
+        name: Validate docker-compose files
+        entry: docker compose config --quiet
+        language: system
+        files: 'docker-compose.*\.ya?ml$'
+        pass_filenames: true
