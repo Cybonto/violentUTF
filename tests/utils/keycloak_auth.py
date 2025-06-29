@@ -4,12 +4,13 @@ Handles OAuth2 authentication with Keycloak to obtain JWT tokens for testing
 """
 
 import os
-import requests
-import jwt
 import time
 from datetime import datetime, timezone
 from typing import Dict, Optional, Tuple
 from urllib.parse import urljoin
+
+import jwt
+import requests
 
 
 class KeycloakAuthenticator:

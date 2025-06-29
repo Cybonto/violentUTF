@@ -3,23 +3,24 @@ Test suite for MCP Integration Utilities
 Tests natural language parsing, context analysis, and integration features
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 import json
-import sys
 import os
+import sys
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+from utils.mcp_client import MCPClientSync
 
 # Import from utils - conftest.py handles path setup
 from utils.mcp_integration import (
-    NaturalLanguageParser,
+    ContextAnalyzer,
+    DatasetIntegration,
     MCPCommand,
     MCPCommandType,
-    ContextAnalyzer,
+    NaturalLanguageParser,
     ResourceSearcher,
     TestScenarioInterpreter,
-    DatasetIntegration,
 )
-from utils.mcp_client import MCPClientSync
 
 
 class TestNaturalLanguageParser:

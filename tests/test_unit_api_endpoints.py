@@ -2,24 +2,24 @@
 Comprehensive tests for 0_Welcome.py backend API endpoints
 """
 
-import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import patch, mock_open, MagicMock
-import os
-import tempfile
 import json
-import yaml
-from datetime import datetime
+import os
 
 # Import the FastAPI app
 import sys
-import os
+import tempfile
+from datetime import datetime
+from unittest.mock import MagicMock, mock_open, patch
+
+import pytest
+import yaml
+from fastapi.testclient import TestClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../violentutf_api/fastapi_app"))
 
-from main import app
-from app.models.auth import User
 from app.core.auth import get_current_user
+from app.models.auth import User
+from main import app
 
 client = TestClient(app)
 

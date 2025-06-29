@@ -66,7 +66,7 @@ def login(username: str, password: str):
         response = requests.post(
             f"{API_BASE_URL}/api/v1/auth/token",
             data={"username": username, "password": password, "grant_type": "password"},
-            timeout=30
+            timeout=30,
         )
 
         if response.status_code == 200:

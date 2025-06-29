@@ -2,8 +2,8 @@
 """
 Test the complete authentication flow to verify the fix
 """
-import sys
 import os
+import sys
 
 sys.path.append("violentutf")
 

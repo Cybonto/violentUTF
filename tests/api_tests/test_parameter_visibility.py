@@ -3,8 +3,9 @@ Test cases for parameter visibility logic in AI Gateway configuration
 Tests that API Key and Custom Endpoint are hidden/shown appropriately based on provider selection
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 
 def should_show_parameter(param_name: str, provider: str) -> bool:

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Test script to verify scorer orchestrator creation fix"""
 
-import requests
 import json
 from datetime import datetime
+
+import requests
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"  # APISIX Gateway

@@ -3,12 +3,13 @@
 Test script to verify the Keycloak JWT signature verification fix
 """
 
-import jwt
 import json
 import time
+from typing import Any, Dict
+
+import jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from typing import Dict, Any
 
 
 def generate_test_rsa_keys():

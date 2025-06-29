@@ -6,18 +6,19 @@ Tests MCP client with actual ViolentUTF API endpoints.
 MUST use real MCP server, no mocks or simulated data.
 """
 
-import pytest
+import asyncio
 import os
 import sys
 import time
-import asyncio
+from typing import Any, Dict, List
+
 import jwt
-from typing import Dict, Any, List
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from violentutf.utils.mcp_client import MCPClient, MCPClientSync
 from violentutf.utils.jwt_manager import jwt_manager
+from violentutf.utils.mcp_client import MCPClient, MCPClientSync
 
 
 def create_test_jwt_token() -> str:

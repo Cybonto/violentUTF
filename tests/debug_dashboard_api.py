@@ -4,11 +4,12 @@ Debug script to trace exactly what the dashboard API calls are doing
 and why they can't find scorer execution results.
 """
 
+import json
 import os
 import sys
-import json
-import requests
 from datetime import datetime, timedelta
+
+import requests
 from dotenv import load_dotenv
 
 # Add the violentutf directory to Python path
@@ -18,8 +19,8 @@ sys.path.append("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf
 load_dotenv("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf/.env")
 
 from utils.jwt_manager import jwt_manager
-from utils.user_context import get_user_context_for_token
 from utils.logging import get_logger
+from utils.user_context import get_user_context_for_token
 
 logger = get_logger(__name__)
 

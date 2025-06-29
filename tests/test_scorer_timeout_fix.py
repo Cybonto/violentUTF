@@ -3,14 +3,15 @@
 Test script to verify scorer timeout fixes
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import requests
 import time
 from datetime import datetime
+
+import requests
 
 
 def test_batch_execution_performance():

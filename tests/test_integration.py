@@ -2,9 +2,10 @@
 """
 Test script to verify ViolentUTF API integration
 """
-import requests
-import sys
 import json
+import sys
+
+import requests
 
 
 def test_api_health():

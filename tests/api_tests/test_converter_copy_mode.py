@@ -6,11 +6,12 @@ This is a simplified test focused on verifying the fix for the issue
 where converters in COPY mode didn't actually create new datasets.
 """
 
+import json
 import os
 import sys
-import json
 import time
 import uuid
+
 import requests
 
 # Add parent directory to path for imports

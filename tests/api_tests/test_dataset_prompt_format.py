@@ -9,14 +9,15 @@ This test verifies that the prompt field naming is consistent across:
 4. Converter application (expects 'text' in prompts)
 """
 
+import json
 import os
 import sys
-import json
 import time
 import uuid
+from datetime import datetime
+
 import pytest
 import requests
-from datetime import datetime
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

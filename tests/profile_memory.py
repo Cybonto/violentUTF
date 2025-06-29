@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Memory profiling script for ViolentUTF components."""
-import tracemalloc
 import time
+import tracemalloc
 
 
 def profile_sample_operation():

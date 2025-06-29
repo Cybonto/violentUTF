@@ -3,16 +3,17 @@ Enhanced test cases for Save and Test Generator functionality
 Tests the complete flow with live Keycloak authentication and real API endpoints
 """
 
-import pytest
-import requests
 import json
-import time
-import jwt
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, Optional
 import os
 import sys
+import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any, Dict, Optional
+
+import jwt
+import pytest
+import requests
 
 # Add tests directory to path for imports
 tests_dir = Path(__file__).parent.parent

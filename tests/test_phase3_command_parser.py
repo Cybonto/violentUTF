@@ -4,17 +4,17 @@ Phase 3: Command Parser Tests
 Tests for natural language command parsing and MCP command recognition
 """
 
-import unittest
-import sys
 import os
+import sys
+import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from violentutf.utils.mcp_integration import (
-    NaturalLanguageParser,
     ConfigurationIntentDetector,
-    MCPCommandType,
     MCPCommand,
+    MCPCommandType,
+    NaturalLanguageParser,
 )
 
 

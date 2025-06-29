@@ -3,15 +3,16 @@
 Summary script to check scorer executions in the database
 """
 
+import json
 import os
 import sys
-import json
-import jwt
-import requests
+from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
+
+import jwt
+import requests
 from dotenv import load_dotenv
-from collections import defaultdict
 
 # Load environment variables
 env_path = Path(__file__).parent / "violentutf" / ".env"

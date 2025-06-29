@@ -2,6 +2,6 @@
 Test utilities for ViolentUTF testing
 """
 
-from .keycloak_auth import keycloak_auth, KeycloakAuthenticator
+from .keycloak_auth import KeycloakAuthenticator, keycloak_auth
 
 __all__ = ["keycloak_auth", "KeycloakAuthenticator"]

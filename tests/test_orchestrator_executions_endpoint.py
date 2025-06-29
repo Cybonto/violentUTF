@@ -2,11 +2,13 @@
 Test the new /orchestrators/executions endpoint for Dashboard_2 support
 """
 
+from datetime import datetime
+from unittest.mock import Mock, patch
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch
-from datetime import datetime
-from uuid import uuid4
+
 from violentutf_api.fastapi_app.main import app
 
 client = TestClient(app)

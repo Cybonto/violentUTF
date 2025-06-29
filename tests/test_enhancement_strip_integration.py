@@ -6,18 +6,19 @@ Tests enhancement strip functionality with actual MCP server responses.
 MUST use real MCP server, no mocks or simulated data.
 """
 
-import pytest
 import os
 import sys
 import time
-import jwt
-from typing import Dict, Any
+from typing import Any, Dict
 from unittest.mock import Mock, patch
+
+import jwt
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from violentutf.utils.mcp_client import MCPClientSync
-from violentutf.utils.mcp_integration import NaturalLanguageParser, ContextAnalyzer, TestScenarioInterpreter
+from violentutf.utils.mcp_integration import ContextAnalyzer, NaturalLanguageParser, TestScenarioInterpreter
 
 
 def create_test_jwt_token() -> str:

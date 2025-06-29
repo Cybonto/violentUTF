@@ -92,9 +92,7 @@ def transform_dataset_with_template(dataset: SeedPromptDataset, template_content
     try:
         env = Environment(
             autoescape=select_autoescape(
-                enabled_extensions=['html', 'xml', 'j2', 'jinja', 'jinja2'],
-                default_for_string=True,
-                default=True
+                enabled_extensions=["html", "xml", "j2", "jinja", "jinja2"], default_for_string=True, default=True
             )
         )
         template = env.from_string(template_content)

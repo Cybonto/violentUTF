@@ -4,10 +4,11 @@ Test script for converter preview endpoint
 This script tests the converter preview functionality to identify the issue
 """
 
-import requests
 import json
-import sys
 import os
+import sys
+
+import requests
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"

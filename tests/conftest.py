@@ -3,11 +3,13 @@ Pytest configuration and fixtures for ViolentUTF tests
 Provides authentication, environment setup, and common test utilities
 """
 
-import pytest
 import os
-import requests
 from pathlib import Path
 from typing import Dict, Optional
+
+import pytest
+import requests
+
 from tests.utils.keycloak_auth import keycloak_auth
 
 
@@ -69,8 +71,9 @@ def mock_headers():
     jwt_secret = os.getenv("JWT_SECRET_KEY", "test_secret")
 
     # Create a simple mock JWT for testing
-    import jwt
     from datetime import datetime, timedelta, timezone
+
+    import jwt
 
     payload = {
         "sub": "test_user",

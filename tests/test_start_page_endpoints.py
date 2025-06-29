@@ -4,10 +4,11 @@ Test script to verify that all endpoints used in 0_Start.py are properly routed 
 Run this script to ensure the Start page will work correctly with the API
 """
 
-import requests
 import os
 import re
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
+
+import requests
 
 # Configuration
 APISIX_BASE_URL = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")

@@ -5,25 +5,25 @@ Unit Tests for MCP Client
 Tests for MCP client SSE connection, JSON-RPC handling, and authentication.
 """
 
-import pytest
 import asyncio
 import json
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from typing import Dict, Any
-
-import sys
 import os
+import sys
+from typing import Any, Dict
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from violentutf.utils.mcp_client import (
-    MCPClient,
-    MCPClientSync,
-    MCPResponse,
-    MCPMethod,
-    MCPClientError,
-    MCPConnectionError,
     MCPAuthenticationError,
+    MCPClient,
+    MCPClientError,
+    MCPClientSync,
+    MCPConnectionError,
+    MCPMethod,
+    MCPResponse,
     MCPTimeoutError,
 )
 

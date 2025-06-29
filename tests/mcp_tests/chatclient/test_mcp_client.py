@@ -3,14 +3,15 @@ Test suite for MCP Client implementation
 Tests SSE connection, JSON-RPC handling, and all MCP operations
 """
 
-import pytest
 import asyncio
 import json
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-import httpx
-from httpx import Response
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import httpx
+import pytest
+from httpx import Response
 
 # Import from utils - conftest.py handles path setup
 from utils.mcp_client import MCPClient, MCPClientSync, MCPMethod, MCPResponse

@@ -5,12 +5,13 @@ UI Tests for MCP Enhancement Strip in Simple Chat
 Tests the enhancement strip UI components and interactions.
 """
 
+import os
+import sys
+from datetime import datetime
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 import streamlit as st
-from unittest.mock import Mock, patch, MagicMock
-import sys
-import os
-from datetime import datetime
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -97,8 +98,8 @@ class TestEnhancementStripUI:
         try:
             # These functions should be defined in Simple_Chat.py
             from violentutf.pages.Simple_Chat import (
-                enhance_prompt_with_mcp,
                 analyze_prompt_with_mcp,
+                enhance_prompt_with_mcp,
                 generate_test_variations_with_mcp,
             )
 

@@ -4,10 +4,11 @@ Test script to verify rate limiting is working correctly
 SECURITY: Tests that authentication endpoints properly enforce rate limits
 """
 import asyncio
-import aiohttp
 import json
 import time
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
+import aiohttp
 
 # Test configuration
 API_BASE_URL = "http://localhost:8000/api/v1"

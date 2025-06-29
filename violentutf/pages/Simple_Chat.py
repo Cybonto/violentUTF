@@ -9,31 +9,30 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import ollama
-import requests
-import streamlit as st
-from dotenv import load_dotenv
-from ollama import Client
-
 import anthropic
 
 # Import boto3 for Amazon Bedrock
 import boto3
+import ollama
 
 # Import OpenAI and Anthropic libraries
 import openai
+import requests
+import streamlit as st
+from dotenv import load_dotenv
 
 # Import Google Vertex AI libraries
 from google.cloud import aiplatform
 from google.oauth2 import service_account
+from ollama import Client
 from openai import OpenAI
-from vertexai.preview.language_models import ChatModel
 
 # Import utilities
 from utils.auth_utils import handle_authentication_and_sidebar
 from utils.jwt_manager import jwt_manager
 from utils.mcp_client import MCPClientSync
 from utils.mcp_integration import ConfigurationIntentDetector, ContextAnalyzer, MCPCommandType, NaturalLanguageParser
+from vertexai.preview.language_models import ChatModel
 
 # Get the path to the .env file relative to this script (pages directory -> parent directory)
 env_path = pathlib.Path(__file__).parent.parent / ".env"

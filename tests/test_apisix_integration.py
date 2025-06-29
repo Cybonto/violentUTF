@@ -3,11 +3,12 @@ Integration tests for ViolentUTF API through APISIX Gateway
 Tests the actual APISIX routing to ensure endpoints work as expected
 """
 
+import json
+import os
+from typing import Any, Dict, Optional
+
 import pytest
 import requests
-import os
-import json
-from typing import Dict, Any, Optional
 
 # APISIX Gateway Configuration
 APISIX_BASE_URL = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
@@ -478,7 +479,6 @@ class TestAuthenticationErrorHandling:
 
 # Import patch for environment variable testing
 from unittest.mock import patch
-
 
 if __name__ == "__main__":
     # Run with: python -m pytest test_apisix_integration.py -v -s

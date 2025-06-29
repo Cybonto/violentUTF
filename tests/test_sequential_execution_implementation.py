@@ -5,10 +5,11 @@ Test script to verify the sequential execution implementation for avoiding 504 G
 This script demonstrates the batch processing approach implemented in 4_Configure_Scorers.py
 """
 
-import requests
-import time
 import json
+import time
 from datetime import datetime
+
+import requests
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"  # APISIX Gateway

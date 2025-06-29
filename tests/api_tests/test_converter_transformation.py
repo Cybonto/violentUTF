@@ -6,13 +6,14 @@ This test verifies that converters not only create new datasets but
 also properly transform the prompts according to the converter type.
 """
 
+import base64
+import json
 import os
 import sys
-import json
 import time
 import uuid
+
 import requests
-import base64
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

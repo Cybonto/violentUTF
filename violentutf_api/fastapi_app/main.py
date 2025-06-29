@@ -124,11 +124,11 @@ if __name__ == "__main__":
     # Secure network binding - only bind to all interfaces if explicitly allowed
     host = os.getenv("API_HOST", "127.0.0.1")
     port = int(os.getenv("API_PORT", "8000"))
-    
+
     # Warn if attempting to bind to all interfaces without explicit permission
     if host == "0.0.0.0" and os.getenv("ALLOW_PUBLIC_BINDING") != "true":
         logger = logging.getLogger(__name__)
         logger.warning("Attempting to bind to all interfaces without explicit permission. Defaulting to localhost.")
         host = "127.0.0.1"
-    
+
     uvicorn.run("main:app", host=host, port=port, reload=settings.DEBUG, log_level="info")

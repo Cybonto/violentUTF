@@ -3,15 +3,16 @@ Test cases for JWT authentication system and API key management
 Tests the recent changes in JWT token handling, refresh mechanisms, and APISIX integration
 """
 
+import json
+import os
+import time
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
+from unittest.mock import MagicMock, patch
+
+import jwt
 import pytest
 import requests
-import json
-import time
-import jwt
-import os
-from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, MagicMock
-from typing import Dict, Any, Optional
 
 # API Configuration
 API_BASE_URL = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")

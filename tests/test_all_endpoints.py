@@ -4,12 +4,13 @@ Comprehensive ViolentUTF API Endpoint Testing Script
 Tests all 69 API endpoints systematically to ensure they work properly
 """
 
-import requests
 import json
-import time
-from typing import Dict, Any, Optional, Tuple
-import sys
 import os
+import sys
+import time
+from typing import Any, Dict, Optional, Tuple
+
+import requests
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"

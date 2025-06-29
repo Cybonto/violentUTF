@@ -8,14 +8,16 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 # Add violentutf_api/fastapi_app to path for imports
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "violentutf_api", "fastapi_app"))
 
-from dotenv import load_dotenv
+import json
+
 import pytest
-from fastapi.testclient import TestClient
 from api.v1.endpoints.targets import router as targets_router
 from core.security import get_current_user
-from fastapi import FastAPI, Depends
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI
+from fastapi.testclient import TestClient
+
 from keycloak import KeycloakOpenID
-import json
 
 # Create a new FastAPI app for testing
 app = FastAPI()

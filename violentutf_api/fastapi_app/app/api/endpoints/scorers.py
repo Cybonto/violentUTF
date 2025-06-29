@@ -649,9 +649,7 @@ async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)):
         if not deleted:
             raise HTTPException(status_code=500, detail=f"Failed to delete scorer with ID '{scorer_id}'")
 
-        response = ScorerDeleteResponse(
-            success=True, message="Scorer deleted successfully", deleted_scorer=scorer_name
-        )
+        response = ScorerDeleteResponse(success=True, message="Scorer deleted successfully", deleted_scorer=scorer_name)
 
         logger.info(f"Successfully deleted scorer {scorer_id}")
         return response

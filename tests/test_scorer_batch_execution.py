@@ -3,14 +3,14 @@
 Test script to verify scorer batch execution improvements
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import unittest
-from unittest.mock import patch, MagicMock
 import time
+import unittest
+from unittest.mock import MagicMock, patch
 
 
 class TestScorerBatchExecution(unittest.TestCase):
@@ -47,8 +47,9 @@ class TestScorerBatchExecution(unittest.TestCase):
     def test_batch_size_reduction(self):
         """Test that batch size is reduced from 10 to 5"""
         # Check the code contains the reduced batch size
-        import violentutf.pages.Configure_Scorers as scorer_page
         import inspect
+
+        import violentutf.pages.Configure_Scorers as scorer_page
 
         # Get the source code of _execute_full_dataset_with_progress
         source = inspect.getsource(scorer_page._execute_full_dataset_with_progress)
@@ -61,8 +62,9 @@ class TestScorerBatchExecution(unittest.TestCase):
         """Test that execution stops after consecutive failures"""
         # This would require more complex mocking of the execution flow
         # For now, verify the code includes consecutive failure handling
-        import violentutf.pages.Configure_Scorers as scorer_page
         import inspect
+
+        import violentutf.pages.Configure_Scorers as scorer_page
 
         source = inspect.getsource(scorer_page._execute_full_dataset_with_progress)
 
@@ -73,8 +75,9 @@ class TestScorerBatchExecution(unittest.TestCase):
 
     def test_timeout_values(self):
         """Test that appropriate timeout values are set"""
-        import violentutf.pages.Configure_Scorers as scorer_page
         import inspect
+
+        import violentutf.pages.Configure_Scorers as scorer_page
 
         # Check batch execution timeout
         source = inspect.getsource(scorer_page._execute_full_dataset_with_progress)

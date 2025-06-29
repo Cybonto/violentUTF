@@ -2,13 +2,14 @@
 Real integration test for Simple Chat with MCP features
 """
 
-import pytest
-import requests
-import time
-import subprocess
 import os
 import signal
+import subprocess
 import sys
+import time
+
+import pytest
+import requests
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
