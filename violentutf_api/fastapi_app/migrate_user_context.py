@@ -18,7 +18,7 @@ from pathlib import Path
 # Add app directory to path
 sys.path.append(str(Path(__file__).parent / "app"))
 
-from app.db.duckdb_manager import DuckDBManager
+from app.db.duckdb_manager import DuckDBManager  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
