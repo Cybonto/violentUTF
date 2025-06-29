@@ -4,11 +4,11 @@ Provides NVIDIA Garak LLM vulnerability scanning functionality for ViolentUTF pl
 """
 
 import asyncio
-import logging
 import json
+import logging
 import uuid
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,8 @@ class GarakService:
         try:
             import garak
             from garak import _plugins
-            from garak.generators import Generator
             from garak.evaluators import Evaluator
+            from garak.generators import Generator
 
             self.available = True
             logger.info("✅ Garak initialized successfully")
@@ -137,8 +137,8 @@ class GarakService:
 
         try:
             import garak.cli
-            from garak.generators import Generator
             from garak._plugins import load_plugin
+            from garak.generators import Generator
 
             # Create generator based on target configuration
             generator = await self._create_garak_generator(target_config)

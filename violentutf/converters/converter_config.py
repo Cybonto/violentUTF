@@ -19,25 +19,26 @@ Dependencies:
 - utils.logging
 """
 
-import logging
+import collections.abc  # To check for Callab
 import inspect
-from typing import (
-    List,
-    Dict,
+import logging
+from typing import (  # Added Callable for type hints below
     Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
     Type,
-    get_type_hints,
     Union,
+    _LiteralGenericAlias,
     _UnionGenericAlias,
     get_args,
     get_origin,
-    Literal,
-    _LiteralGenericAlias,
-    Callable,
-)  # Added Callable for type hints below
-from pyrit.prompt_converter import (
-    PromptConverter,
-    # List all converters explicitly to ensure they're available
+    get_type_hints,
+)
+
+from pyrit.models import SeedPrompt  # If needed
+from pyrit.prompt_converter import (  # List all converters explicitly to ensure they're available; Add other converters as needed
     AddImageTextConverter,
     AddTextImageConverter,
     AsciiArtConverter,
@@ -64,6 +65,7 @@ from pyrit.prompt_converter import (
     MorseConverter,
     NoiseConverter,
     PersuasionConverter,
+    PromptConverter,
     QRCodeConverter,
     RandomCapitalLettersConverter,
     RepeatTokenConverter,
@@ -78,18 +80,10 @@ from pyrit.prompt_converter import (
     UnicodeSubstitutionConverter,
     UrlConverter,
     VariationConverter,
-    # Add other converters as needed
 )
-
-from typing import get_type_hints
-
 from pyrit.prompt_target import PromptChatTarget  # Needed for some converters
-from pyrit.models import SeedPrompt  # If needed
-
 from utils.error_handling import ConverterLoadingError
 from utils.logging import get_logger
-
-import collections.abc  # To check for Callab
 
 logger = get_logger(__name__)
 

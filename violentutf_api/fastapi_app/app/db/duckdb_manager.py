@@ -3,15 +3,16 @@ DuckDB Manager for ViolentUTF Configuration Storage
 Extends existing PyRIT database functionality to support configuration persistence
 """
 
-import os
 import hashlib
-import duckdb
 import json
+import logging
+import os
 import uuid
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
-import logging
+from typing import Any, Dict, List, Optional, Tuple
+
+import duckdb
 
 logger = logging.getLogger(__name__)
 

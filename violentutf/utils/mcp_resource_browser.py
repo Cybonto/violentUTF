@@ -6,11 +6,12 @@ This module provides a sidebar resource browser for MCP resources
 with search, filtering, and preview capabilities.
 """
 
-import streamlit as st
-from typing import Dict, Any, List, Optional, Tuple
+import json
 import logging
 from datetime import datetime
-import json
+from typing import Any, Dict, List, Optional, Tuple
+
+import streamlit as st
 
 from .mcp_client import MCPClientSync
 

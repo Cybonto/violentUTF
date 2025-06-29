@@ -2,9 +2,10 @@
 Echo endpoint for testing API connectivity
 """
 
+from typing import Any, Dict, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
 
 router = APIRouter()
 

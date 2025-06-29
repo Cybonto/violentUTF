@@ -1,12 +1,12 @@
 """MCP Tool Executor - Executes MCP tools by calling FastAPI endpoints"""
 
 import asyncio
-import logging
 import json
-from typing import Dict, Any, Optional, List
-import httpx
+import logging
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
+import httpx
 from app.core.config import settings
 from app.mcp.tools.introspection import get_introspector
 

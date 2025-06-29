@@ -3,15 +3,16 @@ Comprehensive security logging and monitoring
 SECURITY: Implements detailed security event logging for audit, compliance, and threat detection
 """
 
-import logging
 import json
+import logging
 import time
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List
-from enum import Enum
-from dataclasses import dataclass, asdict
-from fastapi import Request
 import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from fastapi import Request
 
 
 # Security event types

@@ -5,16 +5,17 @@ This module handles JWT token creation, validation, and refresh logic
 between Streamlit frontend and FastAPI backend.
 """
 
+import asyncio
+import logging
 import os
+import threading
 import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+
 import jwt
 import requests
 import streamlit as st
-from typing import Optional, Dict, Any
-import logging
-from datetime import datetime, timedelta
-import threading
-import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +45,10 @@ class JWTManager:
     def _load_environment(self):
         """Load environment variables from .env file if available"""
         try:
-            from dotenv import load_dotenv
             import os
             from pathlib import Path
+
+            from dotenv import load_dotenv
 
             # Look for .env file in multiple locations
             env_locations = [

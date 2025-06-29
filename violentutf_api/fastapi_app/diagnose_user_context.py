@@ -6,8 +6,8 @@ This script helps diagnose user context mismatches that prevent
 scorer testing from working properly.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add app directory to path

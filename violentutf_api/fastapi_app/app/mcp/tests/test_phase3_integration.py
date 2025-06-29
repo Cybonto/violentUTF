@@ -8,24 +8,25 @@ These tests validate the advanced features implemented in Phase 3:
 - End-to-end integration of all components
 """
 
-import pytest
 import asyncio
 import logging
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+from app.mcp.prompts import prompts_manager
+from app.mcp.prompts.base import PromptArgument, prompt_registry
+from app.mcp.prompts.security import BiasDetectionPrompt, JailbreakPrompt
+from app.mcp.prompts.testing import CapabilityTestPrompt, ReasoningTestPrompt
 
 # Test the actual implemented components
-from app.mcp.resources.base import advanced_resource_registry, AdvancedResource, ResourceMetadata
-from app.mcp.resources.datasets import DatasetResourceProvider, ResultsResourceProvider
+from app.mcp.resources.base import AdvancedResource, ResourceMetadata, advanced_resource_registry
 from app.mcp.resources.configuration import ConfigurationResourceProvider, StatusResourceProvider
+from app.mcp.resources.datasets import DatasetResourceProvider, ResultsResourceProvider
 from app.mcp.resources.manager import resource_manager
-from app.mcp.prompts.base import prompt_registry, PromptArgument
-from app.mcp.prompts.security import JailbreakPrompt, BiasDetectionPrompt
-from app.mcp.prompts.testing import CapabilityTestPrompt, ReasoningTestPrompt
-from app.mcp.prompts import prompts_manager
 from app.mcp.server.base import ViolentUTFMCPServer
-from mcp.types import Resource, Prompt
+from mcp.types import Prompt, Resource
 
 logger = logging.getLogger(__name__)
 
@@ -575,7 +576,7 @@ class TestPhase3Documentation:
     def test_phase3_implementation_complete(self):
         """Verify all Phase 3 components are implemented"""
         # Check resource providers exist
-        from app.mcp.resources import datasets, configuration
+        from app.mcp.resources import configuration, datasets
 
         assert hasattr(datasets, "DatasetResourceProvider")
         assert hasattr(datasets, "ResultsResourceProvider")

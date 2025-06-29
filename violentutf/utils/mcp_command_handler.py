@@ -6,20 +6,21 @@ This module provides command execution and management for the
 Smart Commands & Natural Language Interface in Simple Chat.
 """
 
-import streamlit as st
-from typing import Dict, Any, List, Optional, Tuple
+import json
 import logging
 from datetime import datetime
-import json
+from typing import Any, Dict, List, Optional, Tuple
+
+import streamlit as st
 
 from .mcp_client import MCPClientSync
 from .mcp_integration import (
-    NaturalLanguageParser,
-    MCPCommandType,
+    DatasetIntegration,
     MCPCommand,
+    MCPCommandType,
+    NaturalLanguageParser,
     ResourceSearcher,
     TestScenarioInterpreter,
-    DatasetIntegration,
 )
 
 logger = logging.getLogger(__name__)

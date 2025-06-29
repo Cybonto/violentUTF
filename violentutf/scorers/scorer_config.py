@@ -33,44 +33,43 @@ Dependencies:
 - utils.error_handling
 """
 
-import logging
-import inspect
-import yaml
-import os
 import asyncio
+import collections.abc  # To check for Callable if needed, though not typical for scorers
+import inspect
+import logging
+import os
 from pathlib import Path
+from typing import Tuple  # Added Tuple here
 from typing import (
-    List,
-    Dict,
     Any,
-    Type,
-    Optional,
-    Union,
+    Dict,
+    List,
     Literal,
-    get_type_hints,
-    get_origin,
+    Optional,
+    Type,
+    Union,
     get_args,
-    Tuple,  # Added Tuple here
+    get_origin,
+    get_type_hints,
 )
-import collections.abc  # To check for Callable if needed
 
 # PyRIT imports
 import pyrit.score as score  # Import the pyrit.score module as score
-from pyrit.score import Scorer, TrueFalseQuestion  # Import Scorer class
+import yaml
 from pyrit.models import Score  # Import Score class from pyrit.models
-from pyrit.prompt_target import PromptChatTarget, PromptShieldTarget
 from pyrit.models import PromptRequestPiece
+from pyrit.prompt_target import PromptChatTarget, PromptShieldTarget
+from pyrit.score import Scorer, TrueFalseQuestion  # Import Scorer class
+from utils.error_handling import (
+    ScorerConfigurationError,
+    ScorerDeletionError,
+    ScorerInstantiationError,
+    ScorerLoadingError,
+    ScorerTestingError,
+)
 
 # Project-specific imports
 from utils.logging import get_logger
-from utils.error_handling import (
-    ScorerLoadingError,
-    ScorerInstantiationError,
-    ScorerConfigurationError,
-    ScorerDeletionError,
-    ScorerTestingError,
-)
-import collections.abc  # To check for Callable if needed, though not typical for scorers
 
 # Configure logger
 logger = get_logger(__name__)

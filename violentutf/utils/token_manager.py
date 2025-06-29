@@ -4,13 +4,14 @@ Token management utilities for ViolentUTF Keycloak integration.
 Handles JWT token extraction, validation, and APISIX endpoint access.
 """
 
-import os
-import streamlit as st
-import requests
-import jwt
-import time
-from typing import Optional, Dict, Any
 import logging
+import os
+import time
+from typing import Any, Dict, Optional
+
+import jwt
+import requests
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
@@ -218,8 +219,9 @@ class TokenManager:
         Since the user is already authenticated via Streamlit OAuth, we'll use
         the password grant with the configured user credentials.
         """
-        import requests
         import os
+
+        import requests
 
         try:
             token_url = self.keycloak_config.get(

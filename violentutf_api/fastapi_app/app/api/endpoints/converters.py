@@ -4,36 +4,35 @@ Implements API backend for 3_Configure_Converters.py page
 """
 
 import asyncio
+import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Dict, List, Any, Optional
 from io import StringIO
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from fastapi.responses import JSONResponse
-
-from app.schemas.converters import (
-    ConverterTypesResponse,
-    ConverterParametersResponse,
-    ConverterParameter,
-    ConvertersListResponse,
-    ConverterCreateRequest,
-    ConverterCreateResponse,
-    ConverterPreviewRequest,
-    ConverterPreviewResponse,
-    ConverterApplyRequest,
-    ConverterApplyResponse,
-    ConverterDeleteResponse,
-    ConverterUpdateRequest,
-    ConvertedPrompt,
-    ConverterError,
-    ApplicationMode,
-    ParameterType,
-)
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
-import logging
+from app.schemas.converters import (
+    ApplicationMode,
+    ConvertedPrompt,
+    ConverterApplyRequest,
+    ConverterApplyResponse,
+    ConverterCreateRequest,
+    ConverterCreateResponse,
+    ConverterDeleteResponse,
+    ConverterError,
+    ConverterParameter,
+    ConverterParametersResponse,
+    ConverterPreviewRequest,
+    ConverterPreviewResponse,
+    ConvertersListResponse,
+    ConverterTypesResponse,
+    ConverterUpdateRequest,
+    ParameterType,
+)
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 

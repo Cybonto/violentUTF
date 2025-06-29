@@ -2,18 +2,18 @@
 Authentication and authorization middleware
 """
 
-from typing import Optional, Tuple
-from fastapi import HTTPException, Security, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
-from jose import JWTError
-import httpx
 import logging
+from typing import Optional, Tuple
 
+import httpx
 from app.core.config import settings
 from app.core.security import decode_token
-from app.models.auth import User
 from app.db.database import get_db_session
 from app.models.api_key import APIKey
+from app.models.auth import User
+from fastapi import HTTPException, Request, Security, status
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError
 
 logger = logging.getLogger(__name__)
 
@@ -127,9 +127,10 @@ class AuthMiddleware:
             True if signature is valid, False otherwise
         """
         try:
-            import hmac
-            import hashlib
             import base64
+            import hashlib
+            import hmac
+
             from app.core.config import settings
 
             # Get the shared secret

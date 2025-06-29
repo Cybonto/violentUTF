@@ -1,12 +1,13 @@
 """Phase 2 Component Tests for ViolentUTF MCP Server"""
 
-import pytest
 import asyncio
 import logging
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, AsyncMock
-import sys
 import os
+import sys
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 # Add the app directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
@@ -17,11 +18,11 @@ with patch.dict(
     {"APP_DATA_DIR": "/tmp/test_app_data", "CONFIG_DIR": "/tmp/test_config", "JWT_SECRET_KEY": "test_secret_key"},
 ):
     try:
-        from mcp.types import Tool, Resource
-        from app.mcp.tools.generators import GeneratorConfigurationTools
-        from app.mcp.tools.orchestrators import OrchestratorManagementTools
-        from app.mcp.tools.introspection import ViolentUTFToolFilter, EndpointIntrospector
         from app.mcp.config import mcp_settings
+        from app.mcp.tools.generators import GeneratorConfigurationTools
+        from app.mcp.tools.introspection import EndpointIntrospector, ViolentUTFToolFilter
+        from app.mcp.tools.orchestrators import OrchestratorManagementTools
+        from mcp.types import Resource, Tool
     except ImportError as e:
         # If imports fail, we'll skip the tests
         pytest.skip(f"Required modules not available: {e}")

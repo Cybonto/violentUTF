@@ -1,7 +1,7 @@
 """ViolentUTF Model Context Protocol (MCP) Module"""
 
-from app.mcp.server import mcp_server
 from app.mcp.config import mcp_settings
+from app.mcp.server import mcp_server
 
 __all__ = ["mcp_server", "mcp_settings"]
 

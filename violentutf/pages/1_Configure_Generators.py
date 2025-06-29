@@ -1,25 +1,27 @@
-import streamlit as st
-import os
-import sys
-import yaml
-import pandas as pd
-import json
 import asyncio
+import json
 import math
-from typing import Optional, List, Dict, Any
+import os
+import pathlib
+import sys
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
 import requests
+import streamlit as st
+import yaml
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
-import pathlib
+
+# Import utilities
+from utils.logging import get_logger
+from utils.auth_utils import handle_authentication_and_sidebar
 
 # Get the path to the .env file relative to this script
 env_path = pathlib.Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
-
-# Use the centralized logging setup
-from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -1474,9 +1476,6 @@ def proceed_to_next_step():
 
 
 # --- Helper Functions ---
-
-# Import centralized auth utility
-from utils.auth_utils import handle_authentication_and_sidebar
 
 # --- Run Main Function ---
 if __name__ == "__main__":

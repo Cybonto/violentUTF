@@ -5,15 +5,15 @@ import asyncio
 import inspect
 import logging
 import uuid
-from typing import Dict, List, Any, Optional, Type, Union
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Type, Union
 
-from pyrit.orchestrator import Orchestrator, PromptSendingOrchestrator
-from pyrit.models import PromptRequestPiece, PromptRequestResponse, SeedPrompt
 from pyrit.memory import CentralMemory, MemoryInterface
-from pyrit.prompt_target import PromptTarget, PromptChatTarget
-from pyrit.score.scorer import Scorer
+from pyrit.models import PromptRequestPiece, PromptRequestResponse, SeedPrompt
+from pyrit.orchestrator import Orchestrator, PromptSendingOrchestrator
 from pyrit.prompt_converter import PromptConverter
+from pyrit.prompt_target import PromptChatTarget, PromptTarget
+from pyrit.score.scorer import Scorer
 
 logger = logging.getLogger(__name__)
 
@@ -146,8 +146,9 @@ class PyRITOrchestratorService:
         memory = self._get_memory()
         if memory is None:
             # Create a separate memory instance for the API service to avoid database conflicts
-            from pyrit.memory import DuckDBMemory, CentralMemory
             import os
+
+            from pyrit.memory import CentralMemory, DuckDBMemory
 
             # Use API-specific database path to avoid conflicts with Streamlit
             # Check if running in Docker or local environment
@@ -240,10 +241,11 @@ class PyRITOrchestratorService:
     async def _reload_orchestrator_from_db(self, orchestrator_id: str, user_context: str = None) -> bool:
         """Reload orchestrator instance from database configuration"""
         try:
-            from app.models.orchestrator import OrchestratorConfiguration
-            from app.db.database import get_session
-            from sqlalchemy import select
             from uuid import UUID
+
+            from app.db.database import get_session
+            from app.models.orchestrator import OrchestratorConfiguration
+            from sqlalchemy import select
 
             # Get database session
             async for db in get_session():
@@ -263,8 +265,9 @@ class PyRITOrchestratorService:
                 memory = self._get_memory()
                 if memory is None:
                     # Create API-specific memory if needed
-                    from pyrit.memory import DuckDBMemory, CentralMemory
                     import os
+
+                    from pyrit.memory import CentralMemory, DuckDBMemory
 
                     api_memory_dir = os.path.join("/app/app_data/violentutf", "api_memory")
                     os.makedirs(api_memory_dir, exist_ok=True)
@@ -1163,8 +1166,9 @@ class ConfiguredScorerWrapper(Scorer):
             score_result = await _execute_generic_scorer(self.scorer_config, text_to_score)
 
         # Create PyRIT Score object
-        from pyrit.models import Score
         import json
+
+        from pyrit.models import Score
 
         # Prepare metadata with execution context
         metadata_dict = {}

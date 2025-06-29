@@ -6,15 +6,15 @@ This module provides access to ViolentUTF system configuration and status
 information through the MCP protocol.
 """
 
-import httpx
-from typing import Dict, Any, Optional, List
-from datetime import datetime
-import os
 import logging
+import os
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from app.mcp.resources.base import BaseResourceProvider, AdvancedResource, ResourceMetadata, advanced_resource_registry
+import httpx
 from app.core.config import settings
 from app.mcp.auth import MCPAuthHandler
+from app.mcp.resources.base import AdvancedResource, BaseResourceProvider, ResourceMetadata, advanced_resource_registry
 
 logger = logging.getLogger(__name__)
 
@@ -482,8 +482,8 @@ class StatusResourceProvider(BaseResourceProvider):
     async def _get_mcp_status(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
         """Get MCP server status"""
         try:
-            from app.mcp.tools import tool_registry
             from app.mcp.resources import resource_registry
+            from app.mcp.tools import tool_registry
 
             # Get tool and resource counts
             tools = await tool_registry.list_tools()

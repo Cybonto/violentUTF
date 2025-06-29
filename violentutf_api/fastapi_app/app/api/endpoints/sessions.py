@@ -2,17 +2,17 @@
 Session management endpoints for user state persistence
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
-from typing import Optional, Dict, Any
 import json
 import os
 import uuid
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
 from app.models.auth import User
-from app.schemas.sessions import SessionStateResponse, UpdateSessionRequest, SessionSchemaResponse
+from app.schemas.sessions import SessionSchemaResponse, SessionStateResponse, UpdateSessionRequest
+from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
 

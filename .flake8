@@ -43,7 +43,7 @@ extend-ignore =
     D104
 
 # McCabe complexity checker
-max-complexity = 15
+# (max-complexity already set above)
 
 # Format for error output
 format = %(path)s:%(row)d:%(col)d: %(code)s %(text)s

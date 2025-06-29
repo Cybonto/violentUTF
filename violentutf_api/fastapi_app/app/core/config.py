@@ -2,11 +2,12 @@
 Application configuration using Pydantic Settings
 """
 
-from typing import List, Optional, Union
-from pydantic import AnyHttpUrl, Field, validator
-from pydantic_settings import BaseSettings
 import os
 from pathlib import Path
+from typing import List, Optional, Union
+
+from pydantic import AnyHttpUrl, Field, validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):

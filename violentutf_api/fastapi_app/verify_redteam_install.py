@@ -4,8 +4,8 @@ Verify PyRIT and Garak installation
 This script checks that the AI red-teaming frameworks are properly installed
 """
 
-import sys
 import importlib
+import sys
 
 
 def verify_package(package_name, import_name=None):

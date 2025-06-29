@@ -4,10 +4,11 @@ Common authentication utilities for ViolentUTF pages.
 Provides consistent token management and authentication handling.
 """
 
-import streamlit as st
 import logging
-import requests
 import os
+
+import requests
+import streamlit as st
 from utils.token_manager import token_manager
 
 logger = logging.getLogger(__name__)

@@ -9,36 +9,35 @@ import json
 import time
 import uuid
 from datetime import datetime
-from typing import Dict, List, Any, Optional
 from io import StringIO
-
-from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
-from fastapi.responses import JSONResponse
+from typing import Any, Dict, List, Optional
 
 from app.schemas.datasets import (
-    DatasetTypesResponse,
-    DatasetType,
-    DatasetsListResponse,
-    DatasetInfo,
     DatasetCreateRequest,
     DatasetCreateResponse,
-    DatasetUpdateRequest,
-    DatasetUpdateResponse,
-    DatasetSaveRequest,
-    DatasetSaveResponse,
-    DatasetTransformRequest,
-    DatasetTransformResponse,
-    MemoryDatasetsResponse,
-    MemoryDatasetInfo,
+    DatasetDeleteResponse,
+    DatasetError,
     DatasetFieldMappingRequest,
     DatasetFieldMappingResponse,
-    DatasetDeleteResponse,
+    DatasetInfo,
     DatasetPreviewRequest,
     DatasetPreviewResponse,
-    SeedPromptInfo,
+    DatasetSaveRequest,
+    DatasetSaveResponse,
+    DatasetsListResponse,
     DatasetSourceType,
-    DatasetError,
+    DatasetTransformRequest,
+    DatasetTransformResponse,
+    DatasetType,
+    DatasetTypesResponse,
+    DatasetUpdateRequest,
+    DatasetUpdateResponse,
+    MemoryDatasetInfo,
+    MemoryDatasetsResponse,
+    SeedPromptInfo,
 )
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi.responses import JSONResponse
 
 # PyRIT imports for memory access
 try:
@@ -46,9 +45,10 @@ try:
 except ImportError:
     # Fallback if import structure is different
     PromptRequestPiece = None
+import logging
+
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -615,16 +615,16 @@ async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any]) ->
 
         # Import PyRIT dataset functions
         from pyrit.datasets import (
-            fetch_aya_redteaming_dataset,
-            fetch_harmbench_dataset,
             fetch_adv_bench_dataset,
-            fetch_xstest_dataset,
-            fetch_pku_safe_rlhf_dataset,
+            fetch_aya_redteaming_dataset,
             fetch_decoding_trust_stereotypes_dataset,
-            fetch_many_shot_jailbreaking_dataset,
             fetch_forbidden_questions_dataset,
+            fetch_harmbench_dataset,
+            fetch_many_shot_jailbreaking_dataset,
+            fetch_pku_safe_rlhf_dataset,
             fetch_seclists_bias_testing_dataset,
             fetch_wmdp_dataset,
+            fetch_xstest_dataset,
         )
 
         # Map dataset types to their fetch functions
@@ -713,6 +713,7 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
     try:
         import os
         import sqlite3
+
         from pyrit.memory import CentralMemory
 
         memory_datasets = []

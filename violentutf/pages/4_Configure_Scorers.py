@@ -1,20 +1,22 @@
-import streamlit as st
+import asyncio
+import json
 import os
 import sys
-import json
-import asyncio
 import time
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import requests
+import streamlit as st
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
 
-load_dotenv()
-
-# Use the centralized logging setup
+# Import utilities
 from utils.logging import get_logger
+from utils.auth_utils import handle_authentication_and_sidebar
+
+load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -1598,9 +1600,6 @@ def save_and_test_scorer(
 
 
 # --- Helper Functions ---
-
-# Import centralized auth utility
-from utils.auth_utils import handle_authentication_and_sidebar
 
 # --- Run Main Function ---
 if __name__ == "__main__":

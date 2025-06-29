@@ -3,16 +3,16 @@ APISIX Admin API proxy endpoints with proper authentication and authorization.
 This module provides secure access to APISIX admin functions for authorized users.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Dict, List, Optional, Any
-import httpx
-import os
 import logging
-from pydantic import BaseModel, Field
+import os
+from typing import Any, Dict, List, Optional
 
+import httpx
 from app.core.auth import get_current_user
-from app.models.auth import User
 from app.core.config import settings
+from app.models.auth import User
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 

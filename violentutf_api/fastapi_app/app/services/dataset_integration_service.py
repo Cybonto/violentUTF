@@ -1,7 +1,8 @@
 import logging
-from typing import List, Optional, Dict, Any
-import requests
 import os
+from typing import Any, Dict, List, Optional
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -200,6 +201,7 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
     try:
         import os
         import sqlite3
+
         from pyrit.memory import CentralMemory
 
         prompts = []

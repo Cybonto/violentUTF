@@ -7,11 +7,11 @@ security testing templates and dynamic prompt generation.
 """
 
 import logging
-from typing import List, Dict, Any
-from app.mcp.prompts.base import prompt_registry
+from typing import Any, Dict, List
 
 # Import prompt providers to auto-register them
 from app.mcp.prompts import security, testing
+from app.mcp.prompts.base import prompt_registry
 
 logger = logging.getLogger(__name__)
 

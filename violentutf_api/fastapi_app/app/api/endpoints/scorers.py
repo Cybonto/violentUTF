@@ -4,40 +4,39 @@ Implements API backend for 4_Configure_Scorers.py page
 """
 
 import asyncio
+import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Dict, List, Any, Optional
 from io import StringIO
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from fastapi.responses import JSONResponse
-
-from app.schemas.scorers import (
-    ScorerTypesResponse,
-    ScorerParametersResponse,
-    ScorerParameter,
-    ScorersListResponse,
-    ScorerInfo,
-    ScorerCreateRequest,
-    ScorerCreateResponse,
-    ScorerCloneRequest,
-    ScorerUpdateRequest,
-    ScorerDeleteResponse,
-    ScorerValidationRequest,
-    ScorerValidationResponse,
-    ScorerAnalyticsResponse,
-    ScorerConfigExport,
-    ScorerConfigImport,
-    ScorerImportResponse,
-    ScorerHealthResponse,
-    ScorerError,
-    ScorerCategoryType,
-    ParameterType,
-)
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
-import logging
+from app.schemas.scorers import (
+    ParameterType,
+    ScorerAnalyticsResponse,
+    ScorerCategoryType,
+    ScorerCloneRequest,
+    ScorerConfigExport,
+    ScorerConfigImport,
+    ScorerCreateRequest,
+    ScorerCreateResponse,
+    ScorerDeleteResponse,
+    ScorerError,
+    ScorerHealthResponse,
+    ScorerImportResponse,
+    ScorerInfo,
+    ScorerParameter,
+    ScorerParametersResponse,
+    ScorersListResponse,
+    ScorerTypesResponse,
+    ScorerUpdateRequest,
+    ScorerValidationRequest,
+    ScorerValidationResponse,
+)
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -669,9 +668,10 @@ async def _execute_real_pyrit_scorer(
 ) -> List[Dict[str, Any]]:
     """Execute real PyRIT scorer and return results"""
     try:
-        from pyrit.models import PromptRequestPiece, PromptRequestResponse
-        from datetime import datetime
         import uuid
+        from datetime import datetime
+
+        from pyrit.models import PromptRequestPiece, PromptRequestResponse
 
         logger.info(f"Executing real PyRIT scorer: {scorer_type} with parameters: {parameters}")
 

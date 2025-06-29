@@ -3,16 +3,16 @@ Security utilities for JWT token generation and validation
 SECURITY: Enhanced with comprehensive validation to prevent token injection attacks
 """
 
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
-import jwt
 import logging
-from passlib.context import CryptContext
-from fastapi import HTTPException, status
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 
+import jwt
 from app.core.config import settings
-from app.core.validation import validate_jwt_token, SecurityLimits, sanitize_string
-from app.core.password_policy import validate_password_strength, PasswordStrength
+from app.core.password_policy import PasswordStrength, validate_password_strength
+from app.core.validation import SecurityLimits, sanitize_string, validate_jwt_token
+from fastapi import HTTPException, status
+from passlib.context import CryptContext
 
 logger = logging.getLogger(__name__)
 

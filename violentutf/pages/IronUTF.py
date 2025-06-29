@@ -1,20 +1,16 @@
-app_version = "0.1"
-app_title = "IronUTF"
-app_description = "Defense Module"
-app_icon = "🛡️"
-
-import streamlit as st
-import requests
 import json
-import os
-from typing import Dict, List, Optional, Any
 import logging
-from utils.jwt_manager import jwt_manager
-from utils.auth_utils import handle_authentication_and_sidebar
+import os
+import pathlib
+from typing import Any, Dict, List, Optional
+
+import requests
+import streamlit as st
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
-import pathlib
+from utils.auth_utils import handle_authentication_and_sidebar
+from utils.jwt_manager import jwt_manager
 
 # Get the path to the .env file relative to this script
 env_path = pathlib.Path(__file__).parent.parent / ".env"
@@ -22,6 +18,12 @@ load_dotenv(dotenv_path=env_path)
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+# App configuration
+app_version = "0.1"
+app_title = "IronUTF"
+app_description = "Defense Module"
+app_icon = "🛡️"
 
 # Page configuration
 st.set_page_config(page_title="IronUTF - Defense Module", page_icon="🛡️", layout="wide")

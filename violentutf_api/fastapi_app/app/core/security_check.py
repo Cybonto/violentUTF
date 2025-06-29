@@ -4,7 +4,8 @@ SECURITY: Validates that security measures are properly configured
 """
 
 import logging
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
 
     try:
         # Check if limiter is properly configured
-        from app.core.rate_limiting import limiter, RATE_LIMITS
+        from app.core.rate_limiting import RATE_LIMITS, limiter
 
         validation_results["limiter_configured"] = True
         validation_results["rate_limiting_enabled"] = True

@@ -2,11 +2,11 @@
 Logging configuration for ViolentUTF API
 """
 
+import json
 import logging
 import sys
-from pathlib import Path
-import json
 from datetime import datetime
+from pathlib import Path
 
 
 class JSONFormatter(logging.Formatter):

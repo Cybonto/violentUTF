@@ -3,15 +3,16 @@ Comprehensive input validation module
 SECURITY: Validates and sanitizes all user inputs to prevent injection attacks and data corruption
 """
 
-import re
 import json
 import logging
-from typing import Any, Dict, List, Optional, Union
+import re
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Field, validator, EmailStr
-from fastapi import HTTPException, status
-import jwt
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse
+
+import jwt
+from fastapi import HTTPException, status
+from pydantic import BaseModel, EmailStr, Field, validator
 
 logger = logging.getLogger(__name__)
 

@@ -1,12 +1,32 @@
 # generators/generator_config.py
 
-import os
-import yaml
 import asyncio
-import uuid  # Ensure uuid is imported
 import json  # Ensure json is imported
 import math  # Ensure math is imported
-from typing import Dict, List, Any, Optional
+import os
+import uuid  # Ensure uuid is imported
+from typing import Any, Dict, List, Optional
+
+import httpx  # Needed for test_generator_async exception handling
+import yaml
+
+# PyRIT imports
+from pyrit.models import PromptRequestPiece, PromptRequestResponse, construct_response_from_request
+
+# Note: PromptResponseError is not explicitly needed here as errors are strings
+from pyrit.prompt_target import HTTPTarget  # Keep original import name
+from pyrit.prompt_target import PromptChatTarget  # Base class for chat targets
+from pyrit.prompt_target import PromptTarget  # Base class for all targets
+from pyrit.prompt_target import (
+    AzureBlobStorageTarget,
+    AzureMLChatTarget,
+    CrucibleTarget,
+    GandalfTarget,
+    HuggingFaceChatTarget,
+    HuggingFaceEndpointTarget,
+    OpenAIDALLETarget,
+    OpenAITTSTarget,
+)
 
 # Use the centralized logging setup
 from utils.logging import get_logger
@@ -14,27 +34,8 @@ from utils.logging import get_logger
 # Configure logger for this module FIRST
 logger = get_logger(__name__)
 
-# PyRIT imports
-from pyrit.models import PromptRequestResponse, PromptRequestPiece, construct_response_from_request
-
-# Note: PromptResponseError is not explicitly needed here as errors are strings
-from pyrit.prompt_target import (
-    AzureBlobStorageTarget,
-    AzureMLChatTarget,
-    CrucibleTarget,
-    GandalfTarget,
-    HTTPTarget,  # Keep original import name
-    HuggingFaceChatTarget,
-    HuggingFaceEndpointTarget,
-    OpenAIDALLETarget,
-    OpenAITTSTarget,
-    PromptChatTarget,  # Base class for chat targets
-    PromptTarget,  # Base class for all targets
-)
-
 # Import CentralMemory ONLY IF NEEDED elsewhere in this module (currently not needed)
 # from pyrit.memory import CentralMemory
-import httpx  # Needed for test_generator_async exception handling
 
 # --- Import Custom Targets ---
 # OpenAI_Completion removed - use AI Gateway instead

@@ -3,11 +3,11 @@ Password strength validation and policy enforcement
 SECURITY: Implements comprehensive password security requirements to prevent weak passwords
 """
 
-import re
 import logging
-from typing import Dict, List, Optional, Tuple
+import re
 from dataclasses import dataclass
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

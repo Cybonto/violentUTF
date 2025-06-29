@@ -1,32 +1,33 @@
-import streamlit as st
+import asyncio
+import json
 import os
 import sys
-import json
-import asyncio
-from typing import Optional, List, Dict, Any, Tuple, Union
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-import pandas as pd
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import requests
-from collections import Counter, defaultdict
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans, DBSCAN
-from sklearn.ensemble import IsolationForest
-from scipy import stats
+import streamlit as st
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
+from plotly.subplots import make_subplots
+from scipy import stats
+from sklearn.cluster import DBSCAN, KMeans
+from sklearn.decomposition import PCA
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
 
-load_dotenv()
-
-# Use the centralized logging setup
-from utils.logging import get_logger
+# Import utilities
 from utils.auth_utils import handle_authentication_and_sidebar
 from utils.jwt_manager import jwt_manager
+from utils.logging import get_logger
+
+load_dotenv()
 
 logger = get_logger(__name__)
 

@@ -5,14 +5,15 @@ ViolentUTF JWT CLI Tool - Command line interface for JWT key management
 Requirements:
     pip install click requests
 """
-import click
-import requests
 import json
 import os
-from pathlib import Path
-from datetime import datetime
-from typing import Optional
 import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+import click
+import requests
 
 # Configuration
 API_BASE_URL = os.getenv("VIOLENTUTF_API_URL", "http://localhost:8000")

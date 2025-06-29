@@ -5,32 +5,32 @@ SECURITY: Enhanced with secure error handling to prevent information disclosure
 """
 
 import asyncio
+import json
+import logging
+import os
 import time
 import uuid
-import os
-import requests
-import json
 from datetime import datetime
-from typing import Dict, List, Any, Optional
-from fastapi import APIRouter, HTTPException, Depends, Query
-from fastapi.responses import JSONResponse
+from typing import Any, Dict, List, Optional
 
-from app.schemas.generators import (
-    GeneratorTypesResponse,
-    GeneratorParametersResponse,
-    GeneratorsListResponse,
-    GeneratorCreateRequest,
-    GeneratorUpdateRequest,
-    GeneratorInfo,
-    APIXModelsResponse,
-    GeneratorDeleteResponse,
-    GeneratorError,
-    GeneratorParameter,
-)
+import requests
 from app.core.auth import get_current_user
 from app.core.error_handling import safe_error_response, validation_error
 from app.db.duckdb_manager import get_duckdb_manager
-import logging
+from app.schemas.generators import (
+    APIXModelsResponse,
+    GeneratorCreateRequest,
+    GeneratorDeleteResponse,
+    GeneratorError,
+    GeneratorInfo,
+    GeneratorParameter,
+    GeneratorParametersResponse,
+    GeneratorsListResponse,
+    GeneratorTypesResponse,
+    GeneratorUpdateRequest,
+)
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 

@@ -1,45 +1,52 @@
-app_version = "0.6"
-app_title = "Simple Chat"
-app_description = "A simple chat application with your selected LLM."
-app_icon = ":robot_face:"
-
-import os
-import streamlit as st
-import requests
-import ollama
-from ollama import Client
 import glob
 import json
-from datetime import datetime
-import time
+import logging
+import os
+import pathlib
 import re
 import shutil
-import logging
-from typing import Dict, Any, Optional, List
+import time
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-# Configure logging
-logger = logging.getLogger(__name__)
-
-# Load environment variables from .env file
+import ollama
+import requests
+import streamlit as st
 from dotenv import load_dotenv
-import pathlib
+from ollama import Client
+
+import anthropic
+
+# Import boto3 for Amazon Bedrock
+import boto3
+
+# Import OpenAI and Anthropic libraries
+import openai
+
+# Import Google Vertex AI libraries
+from google.cloud import aiplatform
+from google.oauth2 import service_account
+from openai import OpenAI
+from vertexai.preview.language_models import ChatModel
+
+# Import utilities
+from utils.auth_utils import handle_authentication_and_sidebar
+from utils.jwt_manager import jwt_manager
+from utils.mcp_client import MCPClientSync
+from utils.mcp_integration import ConfigurationIntentDetector, ContextAnalyzer, MCPCommandType, NaturalLanguageParser
 
 # Get the path to the .env file relative to this script (pages directory -> parent directory)
 env_path = pathlib.Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# Import OpenAI and Anthropic libraries
-import openai
-from openai import OpenAI
-import anthropic
+# App configuration
+app_version = "0.6"
+app_title = "Simple Chat"
+app_description = "A simple chat application with your selected LLM."
+app_icon = ":robot_face:"
 
-# Import Google Vertex AI libraries
-from google.cloud import aiplatform
-from google.oauth2 import service_account
-from vertexai.preview.language_models import ChatModel
-
-# Import boto3 for Amazon Bedrock
-import boto3
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Define the data directory
 DATA_DIR = "app_data/simplechat"
@@ -85,8 +92,6 @@ API_ENDPOINTS = {
 st.set_page_config(page_title=app_title, page_icon=app_icon, layout="wide", initial_sidebar_state="collapsed")
 
 # Handle authentication - must be done before any other content
-from utils.auth_utils import handle_authentication_and_sidebar
-
 user_name = handle_authentication_and_sidebar("Simple Chat")
 
 # Application Header
@@ -268,7 +273,7 @@ with st.sidebar:
     selected_provider = st.selectbox("Select Provider", options=providers)
 
     if selected_provider == "AI Gateway":
-        from utils.auth_utils import check_ai_access, get_current_token, ensure_ai_access
+        from utils.auth_utils import check_ai_access, ensure_ai_access, get_current_token
         from utils.token_manager import token_manager
 
         # Check AI access with current token (refresh if needed)
@@ -653,10 +658,6 @@ with st.sidebar:
         prompt_variables = load_prompt_variables(st.session_state["prompt_variable_file"])
     else:
         prompt_variables = {}
-
-# Import MCP client for enhancement features
-from utils.mcp_client import MCPClientSync
-from utils.mcp_integration import NaturalLanguageParser, ContextAnalyzer, ConfigurationIntentDetector, MCPCommandType
 
 # Initialize MCP client
 if "mcp_client" not in st.session_state:

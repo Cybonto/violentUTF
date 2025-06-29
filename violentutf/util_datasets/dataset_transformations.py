@@ -18,9 +18,10 @@ Dependencies:
 """
 
 import logging
-from typing import List, Dict, Any
-from pyrit.models import SeedPrompt, SeedPromptDataset
+from typing import Any, Dict, List
+
 from jinja2 import Environment, exceptions, select_autoescape
+from pyrit.models import SeedPrompt, SeedPromptDataset
 from utils.error_handling import TemplateError
 from utils.logging import get_logger
 

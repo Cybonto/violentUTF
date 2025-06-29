@@ -1,10 +1,11 @@
 # custom_targets/apisix_ai_gateway.py
 
+import logging
 import os
 import uuid
-import logging
-from typing import Optional, Dict, Any, List
-from pyrit.models import PromptRequestResponse, PromptRequestPiece
+from typing import Any, Dict, List, Optional
+
+from pyrit.models import PromptRequestPiece, PromptRequestResponse
 from pyrit.models.prompt_request_response import construct_response_from_request
 from pyrit.prompt_target import PromptChatTarget
 
