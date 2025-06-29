@@ -165,7 +165,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
           path: |
@@ -232,7 +232,7 @@ jobs:
           radon cc violentutf/ violentutf_api/ -a -nc
 
       - name: Upload security scan results
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: bandit-results
           path: bandit-results.json
@@ -278,7 +278,7 @@ jobs:
           fi
 
       - name: Upload security reports
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: dependency-security-reports
           path: |
