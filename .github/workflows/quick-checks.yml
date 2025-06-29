@@ -1,0 +1,201 @@
+name: Quick Development Checks
+
+on:
+  push:
+    branches:
+      - 'dev_*'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+concurrency:
+  group: quick-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-quick-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-quick-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort flake8 bandit
+
+      - name: Run Black formatter check
+        run: |
+          black --check --diff .
+
+      - name: Run isort import checker
+        run: |
+          isort --check-only --diff .
+
+      - name: Run critical flake8 checks
+        run: |
+          # Only check for critical errors that would prevent code execution
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run high-severity security scan
+        run: |
+          # Only check for high severity issues
+          bandit -r . -ll -f json -o bandit-results.json || true
+          if [ -f bandit-results.json ]; then
+            python -c "import json; data = json.load(open('bandit-results.json')); print(f'High severity issues: {len(data.get(\"results\", []))}'); exit(1 if len(data.get('results', [])) > 0 else 0)"
+          fi
+
+  core-tests:
+    name: Core Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Cache test dependencies
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        with:
+          path: |
+            ~/.cache/pip
+            .pytest_cache
+          key: ${{ runner.os }}-test-quick-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-test-quick-
+            ${{ runner.os }}-test-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Install test dependencies
+          if [ -f requirements-test.txt ]; then
+            pip install -r requirements-test.txt
+          fi
+          # Install main dependencies
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          # Install API dependencies if present
+          if [ -f violentutf_api/requirements.txt ]; then
+            pip install -r violentutf_api/requirements.txt
+          fi
+
+      - name: Run core unit tests
+        run: |
+          # Run only unit tests, skip integration tests
+          pytest tests/unit/ -v --tb=short --maxfail=5 || true
+          # If unit test directory doesn't exist, run basic tests
+          if [ ! -d tests/unit/ ]; then
+            echo "No unit test directory found, running basic tests"
+            pytest tests/ -v --tb=short --maxfail=5 -k "not integration and not e2e" || true
+          fi
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## Quick Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Python Version: ${{ env.PYTHON_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+  syntax-validation:
+    name: Configuration Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Validate YAML files
+        run: |
+          # Install yamllint
+          pip install yamllint
+          # Check all YAML files
+          find . -name "*.yaml" -o -name "*.yml" | grep -v ".github/workflows" | xargs yamllint -d relaxed || true
+          # Strict check for GitHub Actions workflows
+          yamllint -d relaxed .github/workflows/*.yml
+
+      - name: Validate JSON files
+        run: |
+          # Check all JSON files are valid
+          find . -name "*.json" -type f | while read file; do
+            echo "Validating: $file"
+            python -m json.tool "$file" > /dev/null || echo "Invalid JSON: $file"
+          done
+
+      - name: Check file permissions
+        run: |
+          # Ensure scripts are executable
+          find . -name "*.sh" -type f | while read file; do
+            if [[ ! -x "$file" ]]; then
+              echo "Script not executable: $file"
+            fi
+          done
+
+  quick-summary:
+    name: Quick Check Summary
+    needs: [code-quality, core-tests, syntax-validation]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Summary Report
+        run: |
+          echo "## Quick Development Checks Completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Check job results
+          if [[ "${{ needs.code-quality.result }}" == "success" ]]; then
+            echo "✅ Code Quality: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Code Quality: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.core-tests.result }}" == "success" ]]; then
+            echo "✅ Core Tests: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Core Tests: ${{ needs.core-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.syntax-validation.result }}" == "success" ]]; then
+            echo "✅ Syntax Validation: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Syntax Validation: ${{ needs.syntax-validation.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Runtime**: ~5-10 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY

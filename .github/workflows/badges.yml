@@ -17,10 +17,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-        
+
       - name: Create badges directory
         run: mkdir -p .github/badges
-        
+
       - name: Generate CI status badge
         run: |
           # CI Pipeline status
@@ -32,16 +32,16 @@ jobs:
               *) echo "gray";;
             esac
           )'"}' > .github/badges/ci-status.json
-          
+
       - name: Generate test coverage badge
         run: |
           # This would normally parse actual coverage data
           echo '{"schemaVersion":1,"label":"coverage","message":"80%","color":"green"}' > .github/badges/coverage.json
-          
+
       - name: Generate security badge
         run: |
           echo '{"schemaVersion":1,"label":"security","message":"passing","color":"green"}' > .github/badges/security.json
-          
+
       - name: Update README badges
         run: |
           # Create or update badges section in README
@@ -51,25 +51,25 @@ jobs:
               # Add badges section at the beginning of README
               cat > README_new.md << 'EOF'
           ## Status
-          
+
           ![CI Status](https://img.shields.io/github/actions/workflow/status/ViolentUTF/ViolentUTF/ci.yml?branch=main&label=CI)
           ![Coverage](https://img.shields.io/codecov/c/github/ViolentUTF/ViolentUTF?label=coverage)
           ![Security](https://img.shields.io/github/actions/workflow/status/ViolentUTF/ViolentUTF/ci.yml?branch=main&label=security)
           ![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
           ![License](https://img.shields.io/github/license/ViolentUTF/ViolentUTF)
-          
+
           EOF
               cat README.md >> README_new.md
               mv README_new.md README.md
             fi
           fi
-          
+
       - name: Commit badge updates
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          
+
           if [[ -n $(git status -s) ]]; then
             git add .github/badges/ README.md || true
             git commit -m "chore: update status badges [skip ci]" || true

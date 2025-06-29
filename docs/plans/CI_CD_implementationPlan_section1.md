@@ -3,11 +3,12 @@
 **Parent Plan**: CI_CD_planning.md  
 **Section**: 1. Initialize Continuous Integration Workflow  
 **Created**: December 28, 2024  
+**Updated**: December 29, 2024 - Added three-tier optimization strategy
 **Status**: Implementation Ready  
 
 ## Overview
 
-This document provides a detailed implementation plan for establishing the continuous integration workflow for ViolentUTF. The implementation will create a comprehensive, secure, and efficient CI pipeline that validates code quality, security, and functionality for every code change.
+This document provides a detailed implementation plan for establishing an optimized continuous integration workflow for ViolentUTF. The implementation uses a three-tier testing strategy to provide fast feedback for developers while maintaining comprehensive quality assurance for production code.
 
 ## Prerequisites
 
@@ -23,24 +24,62 @@ This document provides a detailed implementation plan for establishing the conti
 - Document current test execution patterns and requirements
 - Map existing Docker service dependencies and startup sequences
 
+## Three-Tier Optimization Strategy
+
+### Current Issues
+1. **Resource Intensive**: 12 parallel jobs (3 OS × 4 Python versions) on every push
+2. **Slow Feedback**: Developers wait 20-30 minutes for results  
+3. **Frequent Failures**: Cache service 503 errors, transient test failures
+4. **Blocking Issues**: Code quality failures prevent all other tests from providing value
+
+### Proposed Architecture
+
+#### Tier 1: Quick Development Checks (dev_* branches)
+**Runtime**: 5-10 minutes  
+**Triggers**: Push to dev_* branches
+- Code formatting (black, isort)
+- Critical linting (flake8 - E9, F63, F7, F82 errors only)
+- High-severity security scan (bandit -ll)
+- Core unit tests (pytest tests/unit/)
+- Single environment (Ubuntu + Python 3.11)
+
+#### Tier 2: Pull Request Validation  
+**Runtime**: 15-20 minutes  
+**Triggers**: Pull requests to main/develop
+- Comprehensive code quality checks
+- Full security scans (all severity levels)
+- Reduced test matrix (Ubuntu/Windows × Python 3.10/3.11)
+- API contract tests
+- Integration tests with Docker services
+
+#### Tier 3: Full Matrix Testing
+**Runtime**: 20-30 minutes  
+**Triggers**: Push to main, release tags, nightly schedule, [full-ci] flag
+- Complete test matrix (3 OS × 4 Python versions)
+- Comprehensive security scanning (Semgrep, pip-audit)
+- Full integration testing
+- Performance benchmarks
+- Docker image builds
+
 ## Implementation Tasks
 
-### Task 1: Core Workflow Infrastructure
+### Task 1: Optimized Workflow Infrastructure
 
-#### 1.1 GitHub Actions Workflow Structure
-**Deliverable**: Create foundational workflow file structure
-- Create `.github/workflows/ci.yml` as main CI workflow
-- Create `.github/workflows/ci-pr.yml` for pull request specific checks
-- Create `.github/workflows/ci-nightly.yml` for comprehensive nightly builds
-- Establish workflow naming conventions and file organization
+#### 1.1 Split Workflow Architecture
+**Deliverable**: Create tiered workflow file structure
+- Create `.github/workflows/quick-checks.yml` for rapid dev feedback
+- Create `.github/workflows/pr-validation.yml` for PR quality gates
+- Create `.github/workflows/full-ci.yml` for comprehensive validation
+- Create `.github/workflows/nightly.yml` for scheduled deep testing
+- Create `.github/workflows/ci-dispatcher.yml` for workflow routing logic
 
-#### 1.2 Workflow Triggers and Conditions
-**Deliverable**: Define when and how workflows execute
-- Configure push triggers for main and development branches
-- Set up pull request triggers with appropriate path filters
-- Implement manual workflow dispatch for debugging and testing
-- Define workflow concurrency groups to prevent duplicate runs
-- Set up conditional execution based on file changes
+#### 1.2 Smart Workflow Triggers
+**Deliverable**: Intelligent workflow execution
+- Configure branch-specific triggers (dev_* → quick-checks)
+- Set up PR-specific validation triggers
+- Implement commit message flags ([skip ci], [full-ci])
+- Define concurrency groups with appropriate cancellation
+- Add conditional execution based on changed files
 
 #### 1.3 Security Configuration Foundation
 **Deliverable**: Establish secure workflow execution environment

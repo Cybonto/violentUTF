@@ -18,7 +18,7 @@ jobs:
   pr-validation:
     name: PR Validation
     runs-on: ubuntu-22.04
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -57,23 +57,23 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.issue.number
             });
-            
+
             const labels = [];
             const changes = pr.additions + pr.deletions;
-            
+
             if (changes < 10) labels.push('size/XS');
             else if (changes < 50) labels.push('size/S');
             else if (changes < 200) labels.push('size/M');
             else if (changes < 500) labels.push('size/L');
             else labels.push('size/XL');
-            
+
             // Add type labels based on changed files
             const changedFiles = ${{ toJson(steps.changed-files.outputs) }};
             if (changedFiles.python_any_changed === 'true') labels.push('python');
             if (changedFiles.docker_any_changed === 'true') labels.push('docker');
             if (changedFiles.docs_any_changed === 'true') labels.push('documentation');
             if (changedFiles.test_any_changed === 'true') labels.push('tests');
-            
+
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -86,7 +86,7 @@ jobs:
     name: Python Linting
     runs-on: ubuntu-22.04
     if: github.event.pull_request.head.repo.full_name == github.repository
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -123,19 +123,19 @@ jobs:
             comment += 'black violentutf/ violentutf_api/ tests/\n';
             comment += 'isort violentutf/ violentutf_api/ tests/\n';
             comment += '```\n\n';
-            
+
             if (fs.existsSync('black.diff') && fs.statSync('black.diff').size > 0) {
               comment += '<details>\n<summary>Black formatting changes needed</summary>\n\n';
               comment += '```diff\n' + fs.readFileSync('black.diff', 'utf8') + '\n```\n';
               comment += '</details>\n\n';
             }
-            
+
             if (fs.existsSync('isort.diff') && fs.statSync('isort.diff').size > 0) {
               comment += '<details>\n<summary>Import sorting changes needed</summary>\n\n';
               comment += '```diff\n' + fs.readFileSync('isort.diff', 'utf8') + '\n```\n';
               comment += '</details>\n';
             }
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -147,7 +147,7 @@ jobs:
   security-scan:
     name: Security Quick Scan
     runs-on: ubuntu-22.04
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -171,7 +171,7 @@ jobs:
   quick-test:
     name: Quick Test Validation
     runs-on: ubuntu-22.04
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -207,7 +207,7 @@ jobs:
   docker-lint:
     name: Docker Validation
     runs-on: ubuntu-22.04
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -232,7 +232,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [pr-validation, python-lint, security-scan, quick-test, docker-lint]
     if: always()
-    
+
     steps:
       - name: Set PR status
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -245,38 +245,38 @@ jobs:
               { name: 'quick-test', result: '${{ needs.quick-test.result }}' },
               { name: 'docker-lint', result: '${{ needs.docker-lint.result }}' }
             ];
-            
+
             const failedChecks = checks.filter(c => c.result === 'failure');
             const allSuccess = failedChecks.length === 0;
-            
+
             let comment = '## PR Quick Check Results\n\n';
             comment += '| Check | Status |\n';
             comment += '|-------|--------|\n';
-            
+
             for (const check of checks) {
-              const emoji = check.result === 'success' ? '✅' : 
+              const emoji = check.result === 'success' ? '✅' :
                            check.result === 'failure' ? '❌' : '⏭️';
               comment += `| ${check.name} | ${emoji} ${check.result} |\n`;
             }
-            
+
             if (!allSuccess) {
               comment += '\n⚠️ **Some checks failed.** Please review the logs above.';
             } else {
               comment += '\n✅ **All quick checks passed!**';
             }
-            
+
             // Post or update comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
-            const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
               comment.body.includes('## PR Quick Check Results')
             );
-            
+
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,

@@ -34,7 +34,7 @@ jobs:
             python-version: "3.13-dev"
           - os: windows-2019
             python-version: "3.13-dev"
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -86,7 +86,7 @@ jobs:
   comprehensive-security:
     name: Comprehensive Security Analysis
     runs-on: ubuntu-22.04
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -136,7 +136,7 @@ jobs:
   dependency-updates:
     name: Check Dependency Updates
     runs-on: ubuntu-22.04
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -149,13 +149,13 @@ jobs:
       - name: Check for outdated dependencies
         run: |
           pip install pip-tools safety
-          
+
           # Check each requirements file
           for req_file in $(find . -name "requirements*.txt"); do
             echo "Checking $req_file..."
             pip list --outdated --format=json > outdated_$(basename $req_file).json
           done
-          
+
           # Security check on dependencies
           safety check --json --output safety-nightly.json || true
 
@@ -186,7 +186,7 @@ jobs:
       dependency-updates
     ]
     if: failure()
-    
+
     steps:
       - name: Create failure issue
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -194,26 +194,26 @@ jobs:
           script: |
             const date = new Date().toISOString().split('T')[0];
             const title = `Nightly CI Failure - ${date}`;
-            
+
             let body = `## Nightly CI Run Failed\n\n`;
             body += `**Date**: ${date}\n`;
             body += `**Run**: ${context.runId}\n\n`;
             body += `### Failed Jobs\n\n`;
-            
+
             const jobs = [
               { name: 'Extended Tests', status: '${{ needs.extended-test-matrix.result }}' },
               { name: 'Security', status: '${{ needs.comprehensive-security.result }}' },
               { name: 'Dependencies', status: '${{ needs.dependency-updates.result }}' }
             ];
-            
+
             for (const job of jobs) {
               if (job.status === 'failure') {
                 body += `- ❌ ${job.name}\n`;
               }
             }
-            
+
             body += `\n[View Run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
-            
+
             // Check if issue already exists for today
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -221,9 +221,9 @@ jobs:
               labels: 'nightly-ci',
               state: 'open'
             });
-            
+
             const existingIssue = issues.find(issue => issue.title === title);
-            
+
             if (!existingIssue) {
               await github.rest.issues.create({
                 owner: context.repo.owner,
