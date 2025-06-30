@@ -1774,7 +1774,7 @@ create_openapi_route() {
       -d "${route_config}" 2>&1)
     
     http_code="${response: -3}"
-    local response_body="${response:0:-3}"
+    response_body="${response%???}"
     
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created route for $operation_id"
