@@ -1366,15 +1366,11 @@ fetch_openapi_spec() {
     # Use array for curl command to avoid eval
     local curl_args=(-s -f)
     
-    # Check for SSL certificate issues (Zscaler/corporate proxy)
-    # Test connectivity first
-    if ! curl -s --connect-timeout 5 --max-time 10 "${base_url%/}${spec_path}" > /dev/null 2>&1; then
-        echo "⚠️  SSL connectivity issue detected, testing with insecure connection..."
-        # Add insecure flag for corporate proxy/Zscaler environments
-        curl_args+=(-k)
-        echo "   Using --insecure flag to bypass SSL verification"
-        echo "   💡 Consider running ./get-zscaler-certs.sh for proper certificate handling"
-    fi
+    # Always use -k flag for SSL bypass in corporate proxy environments
+    # This ensures compatibility with Zscaler and other corporate proxies
+    curl_args+=(-k)
+    echo "   Using --insecure flag to bypass SSL verification for corporate proxy compatibility"
+    echo "   💡 Consider running ./get-zscaler-certs.sh for proper certificate handling"
     
     # Add authentication
     case "$auth_type" in
@@ -1596,55 +1592,38 @@ create_openapi_route() {
     
     echo "Creating route: $uri -> ${base_url}/${endpoint_path}"
     
-    # Build auth configuration for ai-proxy
-    local auth_section=""
-    case "$auth_type" in
-        "bearer")
-            auth_section='"auth": {
-                "header": {
-                    "Authorization": "Bearer '"$auth_config"'"
-                }
-            },'
-            ;;
-        "api_key")
-            # auth_config format: "header:value"
-            # Use echo and pipe for compatibility
-            header=$(echo "$auth_config" | cut -d: -f1)
-            value=$(echo "$auth_config" | cut -d: -f2-)
-            auth_section='"auth": {
-                "header": {
-                    "'"$header"'": "'"$value"'"
-                }
-            },'
-            ;;
-        "basic")
-            # auth_config format: "username:password"
-            local basic_auth=$(echo -n "$auth_config" | base64)
-            auth_section='"auth": {
-                "header": {
-                    "Authorization": "Basic '"$basic_auth"'"
-                }
-            },'
-            ;;
-    esac
+    # Extract hostname and port from base_url for upstream configuration
+    local hostname=$(echo "$base_url" | sed -E 's|https?://([^/]+).*|\1|')
+    local scheme="https"
+    local port=443
+    if [[ "$base_url" == http://* ]]; then
+        scheme="http"
+        port=80
+    fi
     
-    # Create route configuration
+    # Handle explicit port in hostname
+    if [[ "$hostname" == *:* ]]; then
+        port=$(echo "$hostname" | cut -d: -f2)
+        hostname=$(echo "$hostname" | cut -d: -f1)
+    fi
+    
+    # Create simplified route configuration using proxy-rewrite
     local route_config='{
         "id": "'"$route_id"'",
         "uri": "'"$uri"'",
         "methods": ["'"$method"'"],
         "desc": "'"$provider_name: $operation_id"'",
+        "upstream": {
+            "type": "roundrobin",
+            "nodes": {
+                "'"$hostname:$port"'": 1
+            },
+            "scheme": "'"$scheme"'"
+        },
         "plugins": {
             "key-auth": {},
-            "ai-proxy": {
-                "provider": "openai-compatible",
-                '"$auth_section"'
-                "options": {
-                    "model": "'"$operation_id"'"
-                },
-                "override": {
-                    "endpoint": "'"${base_url}/${endpoint_path}"'"
-                }
+            "proxy-rewrite": {
+                "regex_uri": ["^/ai/openapi/'"$provider_id"'(.*)", "$1"]
             }
         }
     }'
@@ -1670,6 +1649,8 @@ create_openapi_route() {
         echo "❌ Failed to create route for $operation_id"
         echo "   HTTP Code: $http_code"
         echo "   Route ID: $route_id"
+        echo "   URI: $uri"
+        echo "   Response: $response_body"
         return 1
     fi
 }
@@ -1795,14 +1776,26 @@ setup_openapi_routes() {
                         local temp_endpoints="$cache_dir/${provider_id}_temp_endpoints.txt"
                         python3 -c "
 import json
-with open('$endpoints_file', 'r') as f:
-    data = json.load(f)
+import sys
+
+try:
+    with open('$endpoints_file', 'r') as f:
+        data = json.load(f)
     # Sort to process AI endpoints first
     endpoints = sorted(data['endpoints'], key=lambda x: not x.get('is_ai_endpoint', False))
     for ep in endpoints:
-        print(f\"{ep['path']}|{ep['method']}|{ep['operationId']}|{ep.get('is_ai_endpoint', False)}\")" > "$temp_endpoints"
+        print(f\"{ep['path']}|{ep['method']}|{ep['operationId']}|{ep.get('is_ai_endpoint', False)}\")
+except Exception as e:
+    print(f\"Error processing endpoints: {e}\", file=sys.stderr)
+    sys.exit(1)
+" > "$temp_endpoints"
                         
+                        echo "Processing individual endpoints..."
+                        local processed_count=0
                         while IFS='|' read -r path method op_id is_ai; do
+                            processed_count=$((processed_count + 1))
+                            echo "  [$processed_count] Processing: $method $path ($op_id)"
+                            
                             local auth_config_value="$auth_value"
                             if [ "$auth_type" = "api_key" ]; then
                                 auth_config_value="${auth_header}:${auth_value}"

@@ -211,6 +211,7 @@ except Exception as e:
                 created_routes=$(python3 -c "
 import json
 import requests
+import sys
 
 try:
     # Load the spec
