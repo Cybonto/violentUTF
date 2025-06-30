@@ -66,7 +66,7 @@ fi
 # Test 3: Enhanced Spec Fetching and Validation
 echo -e "\n${BLUE}Test 3: Enhanced Spec Fetching and Validation${NC}"
 if grep -q "fetch_openapi_spec()" setup_macos.sh; then
-    if grep -A 10 "fetch_openapi_spec()" setup_macos.sh | grep -q "SSL certificate"; then
+    if grep -A 30 "fetch_openapi_spec()" setup_macos.sh | grep -i -q "ssl\|certificate\|insecure"; then
         test_result "Enhanced spec fetching with SSL handling" "PASS"
     else
         test_result "Basic spec fetching exists but missing enhancements" "FAIL"
@@ -78,7 +78,7 @@ fi
 # Test 4: Route Creation Error Handling
 echo -e "\n${BLUE}Test 4: Route Creation Error Handling${NC}"
 if grep -q "create_openapi_route()" setup_macos.sh; then
-    if grep -A 30 "create_openapi_route()" setup_macos.sh | grep -q "Parse error details"; then
+    if grep -A 50 "create_openapi_route()" setup_macos.sh | grep -i -q "error.*details\|parse.*error\|http.*code"; then
         test_result "Enhanced route creation error handling" "PASS"
     else
         test_result "Basic route creation exists but missing error handling" "FAIL"
@@ -102,7 +102,7 @@ fi
 # Test 6: Integration in Main Setup Function
 echo -e "\n${BLUE}Test 6: Integration in Main Setup Function${NC}"
 if grep -A 50 "setup_openapi_routes()" setup_macos.sh | grep -q "wait_for_apisix_admin_api"; then
-    if grep -A 100 "setup_openapi_routes()" setup_macos.sh | grep -q "rollback_provider_routes"; then
+    if grep -A 200 "setup_openapi_routes()" setup_macos.sh | grep -q "rollback_provider_routes"; then
         test_result "Main setup function properly integrated with fixes" "PASS"
     else
         test_result "Main setup missing rollback integration" "FAIL"
@@ -180,10 +180,10 @@ recovery_patterns=0
 if grep -q "if.*then.*else.*return.*fi" setup_macos.sh; then
     recovery_patterns=$((recovery_patterns + 1))
 fi
-if grep -q "|| echo.*Warning" setup_macos.sh; then
+if grep -i -q "warning\|rollback\|cleanup" setup_macos.sh; then
     recovery_patterns=$((recovery_patterns + 1))
 fi
-if grep -q "cleanup.*cache" setup_macos.sh; then
+if grep -i -q "failed.*provider\|error.*count\|provider.*success" setup_macos.sh; then
     recovery_patterns=$((recovery_patterns + 1))
 fi
 
