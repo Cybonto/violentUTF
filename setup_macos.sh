@@ -1483,10 +1483,16 @@ parse_openapi_endpoints() {
     echo "Parsing OpenAPI endpoints..."
     
     # Create Python script with proper parameter passing
-    if ! python3 - "$spec_file" "$provider_id" > "$endpoints_file" << 'EOF'
+    if python3 - "$spec_file" "$provider_id" > "$endpoints_file" 2>/tmp/parse_error.log << 'EOF'
 import json
-import yaml
 import sys
+
+# Try to import yaml, but continue without it if not available
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    YAML_AVAILABLE = False
 
 try:
     spec_file = sys.argv[1]
@@ -1498,7 +1504,10 @@ try:
         try:
             spec = json.loads(content)
         except:
-            spec = yaml.safe_load(content)
+            if YAML_AVAILABLE:
+                spec = yaml.safe_load(content)
+            else:
+                raise Exception("File is not valid JSON and PyYAML is not available for YAML parsing")
     
     # Extract base information
     servers = spec.get('servers', [])
@@ -1556,11 +1565,27 @@ except Exception as e:
     sys.exit(1)
 EOF
     then
-        local endpoint_count=$(python3 -c "import json; print(len(json.load(open('$endpoints_file'))['endpoints']))")
-        echo "✅ Found $endpoint_count endpoints"
-        return 0
+        if [ -f "$endpoints_file" ] && [ -s "$endpoints_file" ]; then
+            local endpoint_count=$(python3 -c "import json; print(len(json.load(open('$endpoints_file'))['endpoints']))" 2>/dev/null)
+            if [ -n "$endpoint_count" ] && [ "$endpoint_count" -gt 0 ]; then
+                echo "✅ Found $endpoint_count endpoints"
+                return 0
+            else
+                echo "❌ Endpoints file created but contains no valid endpoints"
+                echo "   File: $endpoints_file"
+                [ -f "$endpoints_file" ] && echo "   Size: $(wc -c < "$endpoints_file") bytes"
+                return 1
+            fi
+        else
+            echo "❌ No endpoints file created"
+            return 1
+        fi
     else
         echo "❌ Failed to parse endpoints"
+        if [ -f "/tmp/parse_error.log" ]; then
+            echo "   Python error details:"
+            cat /tmp/parse_error.log | head -10
+        fi
         return 1
     fi
 }
@@ -1705,6 +1730,12 @@ setup_openapi_routes() {
     fi
     
     echo "Setting up OpenAPI provider routes..."
+    
+    # Ensure APISIX admin URL is set
+    if [ -z "$APISIX_ADMIN_URL" ]; then
+        APISIX_ADMIN_URL="http://localhost:9180"
+        echo "⚠️  APISIX_ADMIN_URL not set, using default: $APISIX_ADMIN_URL"
+    fi
     
     # Clear existing OpenAPI routes to ensure fresh configuration
     clear_openapi_routes
