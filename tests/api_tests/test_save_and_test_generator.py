@@ -387,7 +387,7 @@ class TestSaveAndTestGenerator:
                     # This could be the original authentication bug if it's not AI provider related
                     pytest.fail(f"APISIX API key issue still present: {error_data}")
 
-            except Exception as parse_error:
+            except Exception:
                 # If we can't parse the response, check the raw text for AI provider indicators
                 if any(pattern in response_text for pattern in ["/ai/", "gateway", "apisix"]):
                     pytest.skip("Cannot parse error response but appears to be AI provider configuration issue")
@@ -450,8 +450,8 @@ class TestGeneratorParameterLogic:
         for model in standard_openai_models:
             # This test documents the expected behavior
             # In the UI, when provider=openai and model in standard_openai_models:
-            expected_hidden_params = ["api_key", "endpoint"]
-            expected_visible_params = ["provider", "model", "temperature", "max_tokens", "top_p"]
+            # Expected hidden params: ["api_key", "endpoint"]
+            # Expected visible params: ["provider", "model", "temperature", "max_tokens", "top_p"]
 
             # This would be tested against the actual UI logic
             assert True  # Placeholder - actual implementation would test UI state
@@ -464,8 +464,8 @@ class TestGeneratorParameterLogic:
         anthropic_models = ["claude-3-sonnet-20240229", "claude-3-5-sonnet-20241022"]
 
         for model in anthropic_models:
-            expected_hidden_params = ["api_key", "endpoint"]
-            expected_visible_params = ["provider", "model", "temperature", "max_tokens", "top_p"]
+            # Expected hidden params: ["api_key", "endpoint"]
+            # Expected visible params: ["provider", "model", "temperature", "max_tokens", "top_p"]
 
             assert True  # Placeholder for actual UI logic test
 
@@ -479,7 +479,7 @@ class TestGeneratorParameterLogic:
 
         for provider in local_providers:
             # For local providers, endpoint might be configurable
-            expected_visible_params = ["provider", "model", "endpoint", "temperature", "max_tokens", "top_p"]
+            # Expected visible params: ["provider", "model", "endpoint", "temperature", "max_tokens", "top_p"]
             # api_key might still be hidden for local providers
 
             assert True  # Placeholder for actual UI logic test

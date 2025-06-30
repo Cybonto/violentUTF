@@ -665,7 +665,7 @@ def configure_converter_parameters():
                                 final_value = [line.strip() for line in raw_value.strip().split("\n") if line.strip()]
                             else:
                                 final_value = str(raw_value)
-                        except ValueError as ve:
+                        except ValueError:
                             st.error(f"Invalid value for '{param_name}': {raw_value}")
                             form_valid = False
                             continue

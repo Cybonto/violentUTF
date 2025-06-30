@@ -569,7 +569,6 @@ async def delete_dataset(
 
         # Delete from session
         if delete_from_session:
-            user_session_key = f"session_{user_id}"
             # Legacy session storage removed
             # if user_session_key in _session_datasets and dataset_id in _session_datasets[user_session_key]:
             #     del _session_datasets[user_session_key][dataset_id]

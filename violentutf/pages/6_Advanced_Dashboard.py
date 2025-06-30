@@ -136,10 +136,6 @@ def create_compatible_api_token():
 def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
     """Load comprehensive execution data for analysis"""
     try:
-        # Calculate time range
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days_back)
-
         # First get all orchestrators (same approach as Dashboard_2)
         orchestrators_response = api_request("GET", API_ENDPOINTS["orchestrators"])
         if not orchestrators_response:

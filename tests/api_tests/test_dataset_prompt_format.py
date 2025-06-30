@@ -91,13 +91,7 @@ class TestDatasetPromptFormat:
 
     def test_dataset_creation_and_retrieval(self):
         """Test that dataset prompts are properly stored and retrieved"""
-        # Create a dataset with specific prompts
-        test_prompts = [
-            "Test prompt 1",
-            "Test prompt 2 with special chars: @#$%",
-            "Test prompt 3 with unicode: 你好世界",
-        ]
-
+        # Create a dataset for testing
         dataset_name = f"test_dataset_{uuid.uuid4().hex[:8]}"
 
         # Create dataset via API

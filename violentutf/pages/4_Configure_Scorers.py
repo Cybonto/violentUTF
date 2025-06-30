@@ -674,10 +674,9 @@ def display_header():
 def render_main_content():
     """Render the main content area with scorer management."""
 
-    # Load scorer types and existing scorers
+    # Load scorer types
     with st.spinner("Loading scorer information..."):
         scorer_types_data = load_scorer_types_from_api()
-        scorers_data = load_scorers_from_api()
 
     if not scorer_types_data:
         st.error("❌ Failed to load scorer types")

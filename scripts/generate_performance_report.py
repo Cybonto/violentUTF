@@ -25,7 +25,7 @@ def main():
                 benchmark_data = json.load(f)
             report_content.append("## Benchmark Results")
             report_content.append("")
-            report_content.append("Benchmark data loaded successfully.")
+            report_content.append(f"Benchmark data loaded: {len(benchmark_data)} entries")
             report_content.append("")
         except Exception as e:
             report_content.append(f"Error loading benchmark data: {e}")
@@ -38,7 +38,7 @@ def main():
         try:
             with open(args.memory_file, "r") as f:
                 memory_data = f.read()
-            report_content.append("Memory profiling data loaded successfully.")
+            report_content.append(f"Memory profiling data loaded: {len(memory_data)} bytes")
             report_content.append("")
         except Exception as e:
             report_content.append(f"Error loading memory data: {e}")

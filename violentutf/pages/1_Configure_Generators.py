@@ -873,7 +873,7 @@ def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
                 if current_model and current_model in available_models:
                     default_index = available_models.index(current_model)
 
-                selected_model = st.selectbox(
+                st.selectbox(
                     f"{model_param['description']}*",
                     options=available_models,
                     index=default_index,
@@ -1247,9 +1247,6 @@ def display_generator_test_chat(generator_name: str = None):
     if not generator:
         st.error(f"Generator '{generator_name}' not found")
         return
-
-    generator_type = generator.get("type", "Unknown")
-    parameters = generator.get("parameters", {})
 
     chat_history = st.session_state[chat_key]
 

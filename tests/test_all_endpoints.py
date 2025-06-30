@@ -349,7 +349,7 @@ def test_dataset_endpoints():
         "config": {"dataset_type": "harmful_prompts"},
     }
 
-    dataset_created = test_endpoint("POST", "/api/v1/datasets", "Create dataset", dataset_payload)
+    test_endpoint("POST", "/api/v1/datasets", "Create dataset", dataset_payload)
 
     # Test field mapping
     test_endpoint(
@@ -386,7 +386,7 @@ def test_converter_endpoints():
     # Test converter creation
     converter_payload = {"name": "test_converter", "converter_type": "ROT13Converter", "parameters": {}}
 
-    converter_created = test_endpoint("POST", "/api/v1/converters", "Create converter", converter_payload)
+    test_endpoint("POST", "/api/v1/converters", "Create converter", converter_payload)
 
     # Skip operations requiring actual converter IDs
     test_endpoint(
@@ -436,7 +436,7 @@ def test_scorer_endpoints():
         "parameters": {"substring": "test", "category": "match"},
     }
 
-    scorer_created = test_endpoint("POST", "/api/v1/scorers", "Create scorer", scorer_payload)
+    test_endpoint("POST", "/api/v1/scorers", "Create scorer", scorer_payload)
 
     # Skip operations requiring actual scorer IDs
     test_endpoint("POST", "/api/v1/scorers/test_id/test", "Test scorer", skip_reason="Requires actual scorer ID")

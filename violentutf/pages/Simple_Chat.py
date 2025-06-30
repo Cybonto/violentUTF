@@ -2120,8 +2120,6 @@ def get_active_plugins(provider: str, model: str) -> Dict[str, Any]:
         if not api_key:
             return {}
 
-        headers = {"apikey": api_key, "Content-Type": "application/json"}
-
         # Query APISIX admin API through ViolentUTF API
         violentutf_api_url = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
         if violentutf_api_url.endswith("/api"):

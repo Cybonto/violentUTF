@@ -346,7 +346,7 @@ test_param: test_value
 
         files = {"file": ("test_config.yaml", yaml_content, "application/x-yaml")}
 
-        with patch("builtins.open", mock_open()) as mock_file:
+        with patch("builtins.open", mock_open()):
             response = client.post("/api/v1/config/parameters/load", headers=auth_headers, files=files)
             assert response.status_code == 200
 

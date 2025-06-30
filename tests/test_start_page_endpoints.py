@@ -51,7 +51,7 @@ def test_apisix_connectivity() -> bool:
     """Test basic APISIX connectivity"""
     try:
         response = requests.get(f"{APISIX_BASE_URL}/health", timeout=10)
-        return True
+        return response.status_code == 200
     except requests.ConnectionError:
         return False
 

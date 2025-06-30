@@ -37,7 +37,6 @@ def test_batch_execution_performance():
 
     for test_case in test_cases:
         print(f"\nTesting: {test_case['name']}")
-        start_time = time.time()
 
         # Simulate batch processing
         try:
