@@ -258,9 +258,7 @@ try:
                     
                     if response.status_code in [200, 201]:
                         routes_created += 1
-                        print(f'Created route: {route_id}', file=sys.stderr)
-                    else:
-                        print(f'Failed to create route {route_id}: {response.status_code}', file=sys.stderr)
+                    # Don't print to stderr to avoid bash parsing issues
     
     print(routes_created)
 except Exception as e:
