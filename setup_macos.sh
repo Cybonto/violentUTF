@@ -781,8 +781,9 @@ update_fastapi_ai_providers() {
         return 1
     fi
     
-    # Remove existing AI provider flags if they exist
-    sed -i '' '/^# AI Provider Configuration/,/^$/d' violentutf_api/fastapi_app/.env
+    # Remove existing AI provider configuration section if it exists
+    # This removes everything from "# AI Provider Configuration" to the end of file
+    sed -i '' '/^# AI Provider Configuration/,$d' violentutf_api/fastapi_app/.env
     
     # Append updated AI provider configuration
     cat >> violentutf_api/fastapi_app/.env <<EOF
@@ -794,7 +795,42 @@ ANTHROPIC_ENABLED=${ANTHROPIC_ENABLED:-false}
 OLLAMA_ENABLED=${OLLAMA_ENABLED:-false}
 OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}
 OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
+
+# OpenAPI Provider Configurations (for dynamic model discovery)
 EOF
+
+    # Add OpenAPI provider configurations if they exist
+    if [ "$OPENAPI_ENABLED" = "true" ]; then
+        echo "Adding OpenAPI provider configurations to FastAPI .env..."
+        
+        # Add up to 10 OpenAPI providers
+        for i in {1..10}; do
+            local enabled_var="OPENAPI_${i}_ENABLED"
+            local id_var="OPENAPI_${i}_ID"
+            local name_var="OPENAPI_${i}_NAME"
+            local base_url_var="OPENAPI_${i}_BASE_URL"
+            local auth_token_var="OPENAPI_${i}_AUTH_TOKEN"
+            local auth_type_var="OPENAPI_${i}_AUTH_TYPE"
+            local spec_path_var="OPENAPI_${i}_SPEC_PATH"
+            
+            # Check if this provider is enabled and configured
+            if [ "${!enabled_var}" = "true" ] && [ -n "${!id_var}" ]; then
+                echo "  Adding OpenAPI provider $i: ${!id_var}"
+                
+                cat >> violentutf_api/fastapi_app/.env <<EOF
+# OpenAPI Provider $i Configuration
+${enabled_var}=${!enabled_var}
+${id_var}=${!id_var}
+${name_var}=${!name_var}
+${base_url_var}=${!base_url_var}
+${auth_token_var}=${!auth_token_var}
+${auth_type_var}=${!auth_type_var:-bearer}
+${spec_path_var}=${!spec_path_var}
+
+EOF
+            fi
+        done
+    fi
     
     echo "✅ Updated FastAPI .env with AI provider flags"
     echo "   OPENAI_ENABLED=${OPENAI_ENABLED:-false}"
@@ -3362,7 +3398,42 @@ ANTHROPIC_ENABLED=${ANTHROPIC_ENABLED:-false}
 OLLAMA_ENABLED=${OLLAMA_ENABLED:-false}
 OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}
 OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
+
+# OpenAPI Provider Configurations (for dynamic model discovery)
 EOF
+
+# Add OpenAPI provider configurations if they exist
+if [ "$OPENAPI_ENABLED" = "true" ]; then
+    echo "Adding OpenAPI provider configurations to initial FastAPI .env..."
+    
+    # Add up to 10 OpenAPI providers
+    for i in {1..10}; do
+        local enabled_var="OPENAPI_${i}_ENABLED"
+        local id_var="OPENAPI_${i}_ID"
+        local name_var="OPENAPI_${i}_NAME"
+        local base_url_var="OPENAPI_${i}_BASE_URL"
+        local auth_token_var="OPENAPI_${i}_AUTH_TOKEN"
+        local auth_type_var="OPENAPI_${i}_AUTH_TYPE"
+        local spec_path_var="OPENAPI_${i}_SPEC_PATH"
+        
+        # Check if this provider is enabled and configured
+        if [ "${!enabled_var}" = "true" ] && [ -n "${!id_var}" ]; then
+            echo "  Adding OpenAPI provider $i: ${!id_var}"
+            
+            cat >> violentutf_api/fastapi_app/.env <<EOF
+# OpenAPI Provider $i Configuration
+${enabled_var}=${!enabled_var}
+${id_var}=${!id_var}
+${name_var}=${!name_var}
+${base_url_var}=${!base_url_var}
+${auth_token_var}=${!auth_token_var}
+${auth_type_var}=${!auth_type_var:-bearer}
+${spec_path_var}=${!spec_path_var}
+
+EOF
+        fi
+    done
+fi
 echo "✅ Created violentutf_api/fastapi_app/.env"
 
 # Verify OPENAPI_ENABLED was correctly written to FastAPI .env file
