@@ -1447,8 +1447,8 @@ validate_openapi_spec() {
         fi
     fi
     
-    # Check for OpenAPI version (3.0+) with proper variable passing
-    local openapi_version=$(python3 - "$spec_file" "$spec_format" << 'EOF' 2>/dev/null
+    # Enhanced validation with detailed structure checking
+    local validation_result=$(python3 - "$spec_file" "$spec_format" << 'EOF' 2>/dev/null
 import sys
 import json
 import yaml
@@ -1456,22 +1456,103 @@ import yaml
 spec_file = sys.argv[1]
 spec_format = sys.argv[2]
 
-with open(spec_file, 'r') as f:
-    if spec_format == 'json':
-        spec = json.load(f)
-    else:
-        spec = yaml.safe_load(f)
-    print(spec.get('openapi', ''))
+try:
+    with open(spec_file, 'r') as f:
+        if spec_format == 'json':
+            spec = json.load(f)
+        else:
+            spec = yaml.safe_load(f)
+    
+    # Check OpenAPI version
+    openapi_version = spec.get('openapi', '')
+    if not openapi_version.startswith('3.'):
+        print(f"INVALID_VERSION:{openapi_version}")
+        sys.exit(1)
+    
+    # Check for required sections
+    required_sections = ['info', 'paths']
+    missing_sections = []
+    for section in required_sections:
+        if section not in spec:
+            missing_sections.append(section)
+    
+    if missing_sections:
+        print(f"MISSING_SECTIONS:{','.join(missing_sections)}")
+        sys.exit(1)
+    
+    # Check paths section content
+    paths = spec.get('paths', {})
+    if not paths:
+        print("EMPTY_PATHS")
+        sys.exit(1)
+    
+    # Count total operations
+    operation_count = 0
+    path_count = len(paths)
+    
+    for path, path_item in paths.items():
+        if isinstance(path_item, dict) and '$ref' not in path_item:
+            for method in ['get', 'post', 'put', 'delete', 'patch', 'head', 'options']:
+                if method in path_item:
+                    operation_count += 1
+    
+    if operation_count == 0:
+        print("NO_OPERATIONS")
+        sys.exit(1)
+    
+    # Success - return validation summary
+    print(f"VALID:{openapi_version}:{path_count}:{operation_count}")
+    
+except Exception as e:
+    print(f"ERROR:{str(e)}")
+    sys.exit(1)
 EOF
 )
     
-    if [[ "$openapi_version" =~ ^3\. ]]; then
-        echo "✅ OpenAPI version: $openapi_version"
-        return 0
-    else
-        echo "❌ Unsupported OpenAPI version: $openapi_version (requires 3.0+)"
-        return 1
-    fi
+    # Parse validation result
+    local result_type=$(echo "$validation_result" | cut -d: -f1)
+    
+    case "$result_type" in
+        "VALID")
+            local version=$(echo "$validation_result" | cut -d: -f2)
+            local path_count=$(echo "$validation_result" | cut -d: -f3)
+            local operation_count=$(echo "$validation_result" | cut -d: -f4)
+            echo "✅ OpenAPI validation passed"
+            echo "   Version: $version"
+            echo "   Paths: $path_count"
+            echo "   Operations: $operation_count"
+            return 0
+            ;;
+        "INVALID_VERSION")
+            local version=$(echo "$validation_result" | cut -d: -f2)
+            echo "❌ Unsupported OpenAPI version: $version (requires 3.0+)"
+            return 1
+            ;;
+        "MISSING_SECTIONS")
+            local sections=$(echo "$validation_result" | cut -d: -f2)
+            echo "❌ Missing required sections: $sections"
+            return 1
+            ;;
+        "EMPTY_PATHS")
+            echo "❌ OpenAPI spec has empty paths section"
+            echo "   Cannot create routes without endpoint definitions"
+            return 1
+            ;;
+        "NO_OPERATIONS")
+            echo "❌ OpenAPI spec contains no valid operations"
+            echo "   All paths may contain only $ref or have no HTTP methods"
+            return 1
+            ;;
+        "ERROR")
+            local error=$(echo "$validation_result" | cut -d: -f2-)
+            echo "❌ Validation error: $error"
+            return 1
+            ;;
+        *)
+            echo "❌ Unknown validation result: $validation_result"
+            return 1
+            ;;
+    esac
 }
 
 # Function to parse OpenAPI spec and extract endpoints
@@ -1625,6 +1706,20 @@ create_openapi_route() {
     
     echo "Creating route: $uri -> ${base_url}/${endpoint_path}"
     
+    # Validate inputs
+    if [ -z "$provider_id" ] || [ -z "$operation_id" ] || [ -z "$base_url" ]; then
+        echo "❌ Missing required parameters for route creation"
+        return 1
+    fi
+    
+    # Check for route ID conflicts
+    local existing_route_check=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
+        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+    if echo "$existing_route_check" | grep -q '"id":"'"$route_id"'"'; then
+        echo "⚠️  Route ID collision detected: $route_id"
+        echo "   This may indicate duplicate operations in the OpenAPI spec"
+    fi
+    
     # Extract hostname and port from base_url for upstream configuration
     local hostname=$(echo "$base_url" | sed -E 's|https?://([^/]+).*|\1|')
     local scheme="https"
@@ -1638,6 +1733,12 @@ create_openapi_route() {
     if [[ "$hostname" == *:* ]]; then
         port=$(echo "$hostname" | cut -d: -f2)
         hostname=$(echo "$hostname" | cut -d: -f1)
+    fi
+    
+    # Validate extracted hostname
+    if [ -z "$hostname" ]; then
+        echo "❌ Could not extract hostname from base URL: $base_url"
+        return 1
     fi
     
     # Create simplified route configuration using proxy-rewrite
@@ -1677,13 +1778,32 @@ create_openapi_route() {
     
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created route for $operation_id"
+        
+        # Verify route was actually created by checking it exists
+        local verify_response=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
+            -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+        if echo "$verify_response" | grep -q '"id":"'"$route_id"'"'; then
+            echo "   Route verification: ✅ Route is active"
+        else
+            echo "   Route verification: ⚠️  Route may not be active"
+        fi
+        
         return 0
     else
         echo "❌ Failed to create route for $operation_id"
         echo "   HTTP Code: $http_code"
         echo "   Route ID: $route_id"
         echo "   URI: $uri"
-        echo "   Response: $response_body"
+        echo "   Target: ${base_url}/${endpoint_path}"
+        echo "   Method: $method"
+        
+        # Parse error details from response if available
+        if echo "$response_body" | grep -q "error"; then
+            local error_msg=$(echo "$response_body" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('message', data.get('error', 'Unknown error')))" 2>/dev/null || echo "Could not parse error")
+            echo "   Error details: $error_msg"
+        fi
+        
+        echo "   Full response: $response_body"
         return 1
     fi
 }
@@ -1722,6 +1842,243 @@ clear_openapi_routes() {
     return 0
 }
 
+# Function to rollback OpenAPI routes for a specific provider
+rollback_provider_routes() {
+    local provider_id="$1"
+    local reason="$2"
+    
+    echo "🔄 Rolling back routes for provider: $provider_id"
+    echo "   Reason: $reason"
+    
+    # Get all routes from APISIX
+    local routes_response=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
+        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+    
+    # Parse route IDs that start with "openapi-{provider_id}-"
+    local route_ids=$(echo "$routes_response" | grep -o '"id":"openapi-'"$provider_id"'-[^"]*"' | cut -d'"' -f4)
+    
+    if [ -z "$route_ids" ]; then
+        echo "   No routes found for provider $provider_id to rollback"
+        return 0
+    fi
+    
+    local deleted_count=0
+    local failed_count=0
+    
+    for route_id in $route_ids; do
+        echo "   Removing route: $route_id"
+        local delete_response=$(curl -s -w "%{http_code}" -X DELETE "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
+            -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
+        local http_code="${delete_response: -3}"
+        
+        if [ "$http_code" = "200" ] || [ "$http_code" = "204" ]; then
+            deleted_count=$((deleted_count + 1))
+        else
+            echo "   ⚠️  Failed to delete route $route_id (HTTP $http_code)"
+            failed_count=$((failed_count + 1))
+        fi
+    done
+    
+    if [ $deleted_count -gt 0 ]; then
+        echo "   ✅ Rolled back $deleted_count routes for provider $provider_id"
+    fi
+    if [ $failed_count -gt 0 ]; then
+        echo "   ⚠️  Failed to rollback $failed_count routes for provider $provider_id"
+    fi
+    
+    return 0
+}
+
+# Function to save provider state for potential rollback
+save_provider_state() {
+    local provider_id="$1"
+    local state_file="$2"
+    
+    # Save current routes for this provider to a state file
+    local routes_response=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
+        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+    
+    # Extract routes for this provider
+    echo "$routes_response" | python3 -c "
+import sys
+import json
+
+try:
+    data = json.load(sys.stdin)
+    provider_routes = []
+    
+    if 'list' in data:
+        for route_item in data['list']:
+            route = route_item.get('value', {})
+            route_id = route.get('id', '')
+            if route_id.startswith('openapi-$provider_id-'):
+                provider_routes.append(route)
+    
+    # Save to state file
+    with open('$state_file', 'w') as f:
+        json.dump({
+            'provider_id': '$provider_id',
+            'timestamp': '$(date -u +"%Y-%m-%dT%H:%M:%SZ")',
+            'routes': provider_routes
+        }, f, indent=2)
+    
+    print(f'Saved {len(provider_routes)} routes for provider $provider_id')
+except Exception as e:
+    print(f'Error saving provider state: {e}', file=sys.stderr)
+    sys.exit(1)
+" 2>/dev/null || echo "Warning: Could not save provider state for $provider_id"
+}
+
+# Function to validate OpenAPI provider configuration
+validate_openapi_provider() {
+    local provider_index="$1"
+    local provider_id="$2"
+    local provider_name="$3"
+    local base_url="$4"
+    local spec_path="$5"
+    local auth_type="$6"
+    
+    echo "Validating OpenAPI provider $provider_index: $provider_name"
+    
+    # Check required fields
+    if [ -z "$provider_id" ]; then
+        echo "❌ Provider ID is empty"
+        return 1
+    fi
+    
+    if [ -z "$base_url" ]; then
+        echo "❌ Base URL is empty"
+        return 1
+    fi
+    
+    if [ -z "$spec_path" ]; then
+        echo "❌ Spec path is empty"
+        return 1
+    fi
+    
+    # Validate provider ID format (only alphanumeric and hyphens)
+    if ! echo "$provider_id" | grep -q '^[a-zA-Z0-9-]*$'; then
+        echo "❌ Provider ID contains invalid characters (only alphanumeric and hyphens allowed): $provider_id"
+        return 1
+    fi
+    
+    # Validate base URL format
+    if ! echo "$base_url" | grep -qE '^https?://[^/]+'; then
+        echo "❌ Invalid base URL format: $base_url"
+        return 1
+    fi
+    
+    # Validate spec path starts with /
+    if [[ "$spec_path" != /* ]]; then
+        echo "❌ Spec path must start with '/': $spec_path"
+        return 1
+    fi
+    
+    # Validate auth type
+    case "$auth_type" in
+        "bearer"|"api_key"|"basic"|"none"|"")
+            # Valid auth types
+            ;;
+        *)
+            echo "❌ Invalid auth type '$auth_type'. Must be: bearer, api_key, basic, or none"
+            return 1
+            ;;
+    esac
+    
+    # Validate auth-specific configurations
+    case "$auth_type" in
+        "bearer")
+            local token_var="OPENAPI_${provider_index}_AUTH_TOKEN"
+            local token="${!token_var}"
+            if [ -z "$token" ]; then
+                echo "❌ Bearer auth type requires AUTH_TOKEN to be set"
+                return 1
+            fi
+            ;;
+        "api_key")
+            local key_var="OPENAPI_${provider_index}_API_KEY"
+            local key="${!key_var}"
+            if [ -z "$key" ]; then
+                echo "❌ API key auth type requires API_KEY to be set"
+                return 1
+            fi
+            ;;
+        "basic")
+            local username_var="OPENAPI_${provider_index}_BASIC_USERNAME"
+            local password_var="OPENAPI_${provider_index}_BASIC_PASSWORD"
+            local username="${!username_var}"
+            local password="${!password_var}"
+            if [ -z "$username" ] || [ -z "$password" ]; then
+                echo "❌ Basic auth type requires both BASIC_USERNAME and BASIC_PASSWORD to be set"
+                return 1
+            fi
+            ;;
+    esac
+    
+    # Test URL reachability (basic connectivity test)
+    echo "  Testing connectivity to $base_url..."
+    local test_url="${base_url%/}${spec_path}"
+    local connectivity_response=$(curl -s -I -m 10 -k "$test_url" 2>/dev/null | head -n 1)
+    if [ -z "$connectivity_response" ]; then
+        echo "⚠️  Warning: Cannot reach $test_url (network connectivity issue)"
+        echo "   Setup will continue but spec fetching may fail"
+    else
+        echo "  ✅ Basic connectivity to $base_url confirmed"
+    fi
+    
+    echo "✅ Provider $provider_index validation passed"
+    return 0
+}
+
+# Function to validate all OpenAPI providers before setup
+validate_all_openapi_providers() {
+    echo "Validating OpenAPI provider configurations..."
+    
+    local validation_errors=0
+    local enabled_count=0
+    
+    for i in {1..10}; do
+        local enabled_var="OPENAPI_${i}_ENABLED"
+        local enabled="${!enabled_var}"
+        
+        if [ "$enabled" = "true" ]; then
+            enabled_count=$((enabled_count + 1))
+            
+            # Load provider configuration
+            local id_var="OPENAPI_${i}_ID"
+            local name_var="OPENAPI_${i}_NAME"
+            local base_url_var="OPENAPI_${i}_BASE_URL"
+            local spec_path_var="OPENAPI_${i}_SPEC_PATH"
+            local auth_type_var="OPENAPI_${i}_AUTH_TYPE"
+            
+            local provider_id="${!id_var}"
+            local provider_name="${!name_var}"
+            local base_url="${!base_url_var}"
+            local spec_path="${!spec_path_var}"
+            local auth_type="${!auth_type_var}"
+            
+            if ! validate_openapi_provider "$i" "$provider_id" "$provider_name" "$base_url" "$spec_path" "$auth_type"; then
+                validation_errors=$((validation_errors + 1))
+                echo "❌ Provider $i validation failed"
+            fi
+        fi
+    done
+    
+    if [ $enabled_count -eq 0 ]; then
+        echo "ℹ️  No OpenAPI providers enabled"
+        return 0
+    fi
+    
+    if [ $validation_errors -gt 0 ]; then
+        echo "❌ $validation_errors OpenAPI provider(s) failed validation"
+        echo "   Fix configuration errors before proceeding"
+        return 1
+    else
+        echo "✅ All $enabled_count OpenAPI provider(s) passed validation"
+        return 0
+    fi
+}
+
 # Main function to setup OpenAPI routes
 setup_openapi_routes() {
     if [ "$OPENAPI_ENABLED" != "true" ]; then
@@ -1737,14 +2094,29 @@ setup_openapi_routes() {
         echo "⚠️  APISIX_ADMIN_URL not set, using default: $APISIX_ADMIN_URL"
     fi
     
+    # Wait for APISIX to be ready before proceeding
+    if ! wait_for_apisix_admin_api; then
+        echo "❌ APISIX admin API is not ready - cannot setup OpenAPI routes"
+        return 1
+    fi
+    
+    # Validate all OpenAPI provider configurations first
+    if ! validate_all_openapi_providers; then
+        echo "❌ OpenAPI provider validation failed"
+        return 1
+    fi
+    
     # Clear existing OpenAPI routes to ensure fresh configuration
     clear_openapi_routes
     
     local cache_dir="/tmp/violentutf_openapi_cache"
-    mkdir -p "$cache_dir"
+    local state_dir="/tmp/violentutf_openapi_state"
+    mkdir -p "$cache_dir" "$state_dir"
     
     local total_success=0
     local total_failed=0
+    local failed_providers=()
+    local successful_providers=()
     
     # Process up to 10 OpenAPI providers
     for i in {1..10}; do
@@ -1800,8 +2172,16 @@ setup_openapi_routes() {
             local headers_var="OPENAPI_${i}_CUSTOM_HEADERS"
             local custom_headers="${!headers_var}"
             
+            # Save provider state before attempting setup
+            local state_file="$state_dir/${provider_id}_state.json"
+            save_provider_state "$provider_id" "$state_file"
+            
             # Fetch OpenAPI spec
             local spec_file="$cache_dir/${provider_id}_spec.json"
+            local provider_success=true
+            local provider_route_count=0
+            local provider_failed_count=0
+            
             if fetch_openapi_spec "$base_url" "$spec_path" "$auth_type" "$auth_value" "$auth_header" "$custom_headers" "$spec_file"; then
                 
                 # Validate spec
@@ -1843,28 +2223,118 @@ except Exception as e:
                             if create_openapi_route "$provider_id" "$provider_name" "$base_url" \
                                 "$path" "$method" "$op_id" "$auth_type" "$auth_config_value"; then
                                 total_success=$((total_success + 1))
+                                provider_route_count=$((provider_route_count + 1))
                             else
                                 total_failed=$((total_failed + 1))
+                                provider_failed_count=$((provider_failed_count + 1))
                             fi
                         done < "$temp_endpoints"
+                        
+                        # Check if provider had too many failures
+                        if [ $provider_failed_count -gt 0 ] && [ $provider_route_count -eq 0 ]; then
+                            provider_success=false
+                        elif [ $provider_failed_count -gt $((provider_route_count / 2)) ]; then
+                            echo "⚠️  Provider $provider_id had high failure rate ($provider_failed_count failures vs $provider_route_count successes)"
+                            provider_success=false
+                        fi
+                    else
+                        echo "❌ Failed to parse endpoints for provider $provider_id"
+                        provider_success=false
                     fi
+                else
+                    echo "❌ OpenAPI spec validation failed for provider $provider_id"
+                    provider_success=false
                 fi
+            else
+                echo "❌ Failed to fetch OpenAPI spec for provider $provider_id"
+                provider_success=false
+            fi
+            
+            # Handle provider result
+            if [ "$provider_success" = "true" ] && [ $provider_route_count -gt 0 ]; then
+                successful_providers+=("$provider_id")
+                echo "✅ Provider $provider_id setup completed: $provider_route_count routes created"
+            else
+                failed_providers+=("$provider_id")
+                echo "❌ Provider $provider_id setup failed"
+                
+                # Rollback routes for this provider
+                rollback_provider_routes "$provider_id" "Setup failed or no routes created"
             fi
         fi
     done
     
-    # Cleanup cache
-    rm -rf "$cache_dir"
+    # Cleanup cache and state directories
+    rm -rf "$cache_dir" "$state_dir"
     
     echo ""
     echo "OpenAPI route setup summary:"
     echo "✅ Successfully created: $total_success routes"
-    if [ $total_failed -gt 0 ]; then
-        echo "❌ Failed to create: $total_failed routes"
-        return 1
+    if [ ${#successful_providers[@]} -gt 0 ]; then
+        echo "✅ Successful providers: ${successful_providers[*]}"
     fi
     
-    return 0
+    if [ $total_failed -gt 0 ]; then
+        echo "❌ Failed to create: $total_failed routes"
+    fi
+    if [ ${#failed_providers[@]} -gt 0 ]; then
+        echo "❌ Failed providers (rolled back): ${failed_providers[*]}"
+    fi
+    
+    # Return success if at least one provider succeeded
+    if [ ${#successful_providers[@]} -gt 0 ]; then
+        echo "✅ OpenAPI setup completed with at least one successful provider"
+        return 0
+    elif [ ${#failed_providers[@]} -gt 0 ]; then
+        echo "❌ All OpenAPI providers failed - no routes created"
+        return 1
+    else
+        echo "ℹ️  No OpenAPI providers were configured for setup"
+        return 0
+    fi
+}
+
+# Function to wait for APISIX admin API to be ready
+wait_for_apisix_admin_api() {
+    local max_attempts=30
+    local attempt=1
+    local wait_seconds=2
+    
+    echo "Waiting for APISIX admin API to be ready..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        echo "  Attempt $attempt/$max_attempts: Checking APISIX admin API..."
+        
+        # Test admin API accessibility
+        local response=$(curl -s -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
+            -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+        local http_code="${response: -3}"
+        
+        if [ "$http_code" = "200" ]; then
+            echo "✅ APISIX admin API is ready"
+            
+            # Also verify we can access plugins endpoint
+            local plugins_response=$(curl -s -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/plugins/list" \
+                -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+            local plugins_http_code="${plugins_response: -3}"
+            
+            if [ "$plugins_http_code" = "200" ]; then
+                echo "✅ APISIX plugins API is ready"
+                return 0
+            else
+                echo "  Plugins API not ready yet (HTTP $plugins_http_code)"
+            fi
+        else
+            echo "  Admin API not ready yet (HTTP $http_code)"
+        fi
+        
+        sleep $wait_seconds
+        attempt=$((attempt + 1))
+    done
+    
+    echo "❌ APISIX admin API failed to become ready after $((max_attempts * wait_seconds)) seconds"
+    echo "   This will cause OpenAPI route setup to fail"
+    return 1
 }
 
 # Enhanced debugging function for AI proxy setup
@@ -1915,16 +2385,19 @@ setup_ai_providers_enhanced() {
     
     echo "Setting up AI providers with enhanced error handling..."
     
-    # Debug APISIX setup first
+    # Wait for APISIX admin API to be ready first
+    if ! wait_for_apisix_admin_api; then
+        echo "❌ APISIX admin API not ready - cannot proceed with AI provider setup"
+        SKIP_AI_SETUP=true
+        return 1
+    fi
+    
+    # Debug APISIX setup to verify prerequisites
     if ! debug_ai_proxy_setup; then
         echo "❌ AI Proxy setup prerequisites not met"
         SKIP_AI_SETUP=true
         return 1
     fi
-    
-    # Wait for APISIX to be fully ready
-    echo "Waiting for APISIX to be fully ready..."
-    sleep 10
     
     local setup_errors=0
     
