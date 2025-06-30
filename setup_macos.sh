@@ -2081,12 +2081,19 @@ validate_all_openapi_providers() {
 
 # Main function to setup OpenAPI routes
 setup_openapi_routes() {
-    if [ "$OPENAPI_ENABLED" != "true" ]; then
-        echo "OpenAPI providers disabled. Skipping setup."
-        return 0
-    fi
+    local log_file="/tmp/violentutf_openapi_setup.log"
+    echo "$(date): Starting OpenAPI setup" > "$log_file"
     
     echo "Setting up OpenAPI provider routes..."
+    echo "$(date): OPENAPI_ENABLED = '${OPENAPI_ENABLED:-<not set>}'" >> "$log_file"
+    echo "$(date): OPENAPI_1_ENABLED = '${OPENAPI_1_ENABLED:-<not set>}'" >> "$log_file"
+    echo "$(date): OPENAPI_1_ID = '${OPENAPI_1_ID:-<not set>}'" >> "$log_file"
+    
+    if [ "$OPENAPI_ENABLED" != "true" ]; then
+        echo "OpenAPI providers disabled. Skipping setup."
+        echo "$(date): Skipping - OPENAPI_ENABLED != 'true'" >> "$log_file"
+        return 0
+    fi
     
     # Ensure APISIX admin URL is set
     if [ -z "$APISIX_ADMIN_URL" ]; then
@@ -2095,16 +2102,22 @@ setup_openapi_routes() {
     fi
     
     # Wait for APISIX to be ready before proceeding
+    echo "$(date): Checking APISIX readiness..." >> "$log_file"
     if ! wait_for_apisix_admin_api; then
         echo "❌ APISIX admin API is not ready - cannot setup OpenAPI routes"
+        echo "$(date): APISIX readiness check failed" >> "$log_file"
         return 1
     fi
+    echo "$(date): APISIX is ready" >> "$log_file"
     
     # Validate all OpenAPI provider configurations first
+    echo "$(date): Validating OpenAPI providers..." >> "$log_file"
     if ! validate_all_openapi_providers; then
         echo "❌ OpenAPI provider validation failed"
+        echo "$(date): Provider validation failed" >> "$log_file"
         return 1
     fi
+    echo "$(date): Provider validation passed" >> "$log_file"
     
     # Clear existing OpenAPI routes to ensure fresh configuration
     clear_openapi_routes
@@ -2119,11 +2132,14 @@ setup_openapi_routes() {
     local successful_providers=()
     
     # Process up to 10 OpenAPI providers
+    echo "$(date): Starting provider processing loop..." >> "$log_file"
     for i in {1..10}; do
         local enabled_var="OPENAPI_${i}_ENABLED"
         local enabled="${!enabled_var}"
+        echo "$(date): Checking provider $i: $enabled_var = '${enabled:-<not set>}'" >> "$log_file"
         
         if [ "$enabled" = "true" ]; then
+            echo "$(date): Processing enabled provider $i" >> "$log_file"
             # Load provider configuration
             local id_var="OPENAPI_${i}_ID"
             local name_var="OPENAPI_${i}_NAME"
@@ -2138,14 +2154,17 @@ setup_openapi_routes() {
             local auth_type="${!auth_type_var}"
             
             # Validate required fields
+            echo "$(date): Provider $i config - ID: '$provider_id', URL: '$base_url', Path: '$spec_path'" >> "$log_file"
             if [ -z "$provider_id" ] || [ -z "$base_url" ] || [ -z "$spec_path" ]; then
                 echo "⚠️  Skipping OpenAPI provider $i: missing required configuration"
+                echo "$(date): Skipping provider $i - missing config" >> "$log_file"
                 continue
             fi
             
             echo ""
             echo "Processing OpenAPI provider: $provider_name ($provider_id)"
             echo "----------------------------------------"
+            echo "$(date): Processing provider: $provider_name ($provider_id)" >> "$log_file"
             
             # Prepare auth configuration based on type
             local auth_value=""
@@ -2182,14 +2201,20 @@ setup_openapi_routes() {
             local provider_route_count=0
             local provider_failed_count=0
             
+            echo "$(date): Fetching spec from: ${base_url}${spec_path}" >> "$log_file"
             if fetch_openapi_spec "$base_url" "$spec_path" "$auth_type" "$auth_value" "$auth_header" "$custom_headers" "$spec_file"; then
+                echo "$(date): Spec fetch successful" >> "$log_file"
                 
                 # Validate spec
+                echo "$(date): Validating spec..." >> "$log_file"
                 if validate_openapi_spec "$spec_file"; then
+                    echo "$(date): Spec validation passed" >> "$log_file"
                     
                     # Parse endpoints
                     local endpoints_file="$cache_dir/${provider_id}_endpoints.json"
+                    echo "$(date): Parsing endpoints..." >> "$log_file"
                     if parse_openapi_endpoints "$spec_file" "$provider_id" "$endpoints_file"; then
+                        echo "$(date): Endpoint parsing successful" >> "$log_file"
                         
                         # Process endpoints - save to temp file to avoid subshell issues
                         local temp_endpoints="$cache_dir/${provider_id}_temp_endpoints.txt"
@@ -2211,9 +2236,13 @@ except Exception as e:
                         
                         echo "Processing individual endpoints..."
                         local processed_count=0
+                        local total_endpoints=$(wc -l < "$temp_endpoints")
+                        echo "$(date): Found $total_endpoints endpoints to process" >> "$log_file"
+                        
                         while IFS='|' read -r path method op_id is_ai; do
                             processed_count=$((processed_count + 1))
                             echo "  [$processed_count] Processing: $method $path ($op_id)"
+                            echo "$(date): Processing endpoint $processed_count: $method $path ($op_id)" >> "$log_file"
                             
                             local auth_config_value="$auth_value"
                             if [ "$auth_type" = "api_key" ]; then
@@ -2254,13 +2283,17 @@ except Exception as e:
             if [ "$provider_success" = "true" ] && [ $provider_route_count -gt 0 ]; then
                 successful_providers+=("$provider_id")
                 echo "✅ Provider $provider_id setup completed: $provider_route_count routes created"
+                echo "$(date): Provider $provider_id SUCCESS - $provider_route_count routes created" >> "$log_file"
             else
                 failed_providers+=("$provider_id")
                 echo "❌ Provider $provider_id setup failed"
+                echo "$(date): Provider $provider_id FAILED" >> "$log_file"
                 
                 # Rollback routes for this provider
                 rollback_provider_routes "$provider_id" "Setup failed or no routes created"
             fi
+        else
+            echo "$(date): Spec fetch failed for provider $i" >> "$log_file"
         fi
     done
     
@@ -2270,6 +2303,10 @@ except Exception as e:
     echo ""
     echo "OpenAPI route setup summary:"
     echo "✅ Successfully created: $total_success routes"
+    echo "$(date): FINAL RESULTS - Success: $total_success, Failed: $total_failed" >> "$log_file"
+    echo "$(date): Successful providers: ${successful_providers[*]:-none}" >> "$log_file"
+    echo "$(date): Failed providers: ${failed_providers[*]:-none}" >> "$log_file"
+    
     if [ ${#successful_providers[@]} -gt 0 ]; then
         echo "✅ Successful providers: ${successful_providers[*]}"
     fi
@@ -2281,15 +2318,21 @@ except Exception as e:
         echo "❌ Failed providers (rolled back): ${failed_providers[*]}"
     fi
     
+    # Show log file location for debugging
+    echo "📝 OpenAPI setup log saved to: $log_file"
+    
     # Return success if at least one provider succeeded
     if [ ${#successful_providers[@]} -gt 0 ]; then
         echo "✅ OpenAPI setup completed with at least one successful provider"
+        echo "$(date): RETURNING SUCCESS" >> "$log_file"
         return 0
     elif [ ${#failed_providers[@]} -gt 0 ]; then
         echo "❌ All OpenAPI providers failed - no routes created"
+        echo "$(date): RETURNING FAILURE - all providers failed" >> "$log_file"
         return 1
     else
         echo "ℹ️  No OpenAPI providers were configured for setup"
+        echo "$(date): RETURNING SUCCESS - no providers configured" >> "$log_file"
         return 0
     fi
 }
@@ -2435,8 +2478,12 @@ setup_ai_providers_enhanced() {
     fi
     
     echo "Setting up OpenAPI routes..."
+    echo "🔧 Calling setup_openapi_routes function..."
     if ! setup_openapi_routes; then
+        echo "❌ setup_openapi_routes returned failure"
         setup_errors=$((setup_errors + 1))
+    else
+        echo "✅ setup_openapi_routes completed successfully"
     fi
     
     if [ $setup_errors -gt 0 ]; then
