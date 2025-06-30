@@ -2421,12 +2421,15 @@ debug_ai_proxy_setup() {
 
 # Enhanced AI setup with better error handling
 setup_ai_providers_enhanced() {
+    echo "🔍 DEBUG: Entered setup_ai_providers_enhanced function" | tee -a /tmp/violentutf_ai_setup_debug.log
     if [ "$SKIP_AI_SETUP" = true ]; then
         echo "Skipping AI provider setup due to configuration issues."
+        echo "$(date): Exiting setup_ai_providers_enhanced - SKIP_AI_SETUP=true" >> /tmp/violentutf_ai_setup_debug.log
         return 0
     fi
     
     echo "Setting up AI providers with enhanced error handling..."
+    echo "$(date): Continuing with AI provider setup" >> /tmp/violentutf_ai_setup_debug.log
     
     # Wait for APISIX admin API to be ready first
     if ! wait_for_apisix_admin_api; then
@@ -4058,14 +4061,19 @@ echo "SECTION C: SETTING UP AI PROXY"
 # ---------------------------------------------------------------
 echo "Step C1: Preparing AI configuration..."
 
+echo "🔍 DEBUG: Checking AI tokens template..." | tee -a /tmp/violentutf_ai_setup_debug.log
 if ! create_ai_tokens_template; then
     echo "❌ Please configure $AI_TOKENS_FILE and re-run the script"
+    echo "$(date): AI tokens template creation failed" >> /tmp/violentutf_ai_setup_debug.log
     SKIP_AI_SETUP=true
 else
+    echo "🔍 DEBUG: AI tokens template OK, loading tokens..." | tee -a /tmp/violentutf_ai_setup_debug.log
     if ! load_ai_tokens; then
         echo "❌ Failed to load AI configuration"
+        echo "$(date): load_ai_tokens failed" >> /tmp/violentutf_ai_setup_debug.log
         SKIP_AI_SETUP=true
     else
+        echo "🔍 DEBUG: AI tokens loaded successfully" | tee -a /tmp/violentutf_ai_setup_debug.log
         SKIP_AI_SETUP=false
         
         # Update FastAPI .env with AI provider flags now that ai-tokens are loaded
@@ -4077,18 +4085,24 @@ fi
 # C2. Setup AI Provider Routes
 # ---------------------------------------------------------------
 # Replace this section in the main script:
+echo "🔍 DEBUG: SKIP_AI_SETUP = '${SKIP_AI_SETUP:-<not set>}'" | tee -a /tmp/violentutf_ai_setup_debug.log
 if [ "$SKIP_AI_SETUP" != true ]; then
     echo "Step C2: Setting up AI provider routes in APISIX..."
+    echo "$(date): Starting AI provider setup" >> /tmp/violentutf_ai_setup_debug.log
     
     # Check if ai-proxy plugin is available
+    echo "🔍 DEBUG: Checking ai-proxy plugin availability..." | tee -a /tmp/violentutf_ai_setup_debug.log
     if ! check_ai_proxy_plugin; then
         echo "Cannot proceed with AI proxy setup - plugin not available"
+        echo "$(date): ai-proxy plugin check failed" >> /tmp/violentutf_ai_setup_debug.log
         SKIP_AI_SETUP=true
     else
+        echo "🔍 DEBUG: ai-proxy plugin available, calling setup_ai_providers_enhanced" | tee -a /tmp/violentutf_ai_setup_debug.log
         setup_ai_providers_enhanced
     fi
 else
     echo "Skipping AI provider routes setup due to configuration issues."
+    echo "$(date): Skipping AI setup - SKIP_AI_SETUP=$SKIP_AI_SETUP" >> /tmp/violentutf_ai_setup_debug.log
 fi
 
 # ---------------------------------------------------------------
