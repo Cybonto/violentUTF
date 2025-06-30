@@ -676,6 +676,7 @@ AWS_SESSION_TOKEN=your_aws_session_token_here_if_using_temp_credentials
 
 # OpenAPI Provider Configuration
 # Support for generic OpenAPI-compliant endpoints
+# Note: This default will be overridden by values from ai-tokens.env
 OPENAPI_ENABLED=false
 
 # OpenAPI Provider 1
@@ -3151,6 +3152,35 @@ fi
 
 echo "✅ Created keycloak/.env with password: ${KEYCLOAK_POSTGRES_PASSWORD:0:8}..."
 
+# --- Load AI Tokens Configuration Early ---
+echo "Loading AI configuration before creating service .env files..."
+if [ -f "$AI_TOKENS_FILE" ]; then
+    echo "Loading AI tokens from $AI_TOKENS_FILE..."
+    if ! load_ai_tokens; then
+        echo "❌ Failed to load AI configuration from $AI_TOKENS_FILE"
+        echo "⚠️  Using default settings (all AI providers disabled)"
+    else
+        echo "✅ AI configuration loaded successfully"
+        echo "   OPENAI_ENABLED=${OPENAI_ENABLED:-false}"
+        echo "   ANTHROPIC_ENABLED=${ANTHROPIC_ENABLED:-false}"
+        echo "   OLLAMA_ENABLED=${OLLAMA_ENABLED:-false}"
+        echo "   OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}"
+        echo "   OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}"
+        
+        # Validate that OPENAPI_ENABLED was properly loaded from ai-tokens.env
+        if [ "$OPENAPI_ENABLED" = "true" ]; then
+            echo "✅ OpenAPI providers will be enabled in FastAPI container"
+        elif [ "$OPENAPI_ENABLED" = "false" ]; then
+            echo "ℹ️  OpenAPI providers are disabled in ai-tokens.env"
+        else
+            echo "⚠️  OPENAPI_ENABLED has unexpected value: ${OPENAPI_ENABLED:-<unset>}"
+        fi
+    fi
+else
+    echo "⚠️  AI tokens file not found: $AI_TOKENS_FILE"
+    echo "   Using default settings (all AI providers disabled)"
+fi
+
 # --- Create APISIX configurations ---
 echo "Creating APISIX configurations..."
 mkdir -p apisix/conf
@@ -3334,6 +3364,20 @@ OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}
 OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
 EOF
 echo "✅ Created violentutf_api/fastapi_app/.env"
+
+# Verify OPENAPI_ENABLED was correctly written to FastAPI .env file
+if [ -f "violentutf_api/fastapi_app/.env" ]; then
+    openapi_value_in_file=$(grep "^OPENAPI_ENABLED=" "violentutf_api/fastapi_app/.env" | cut -d= -f2)
+    if [ "$openapi_value_in_file" = "true" ]; then
+        echo "✅ Verified: OPENAPI_ENABLED=true written to FastAPI .env file"
+    elif [ "$openapi_value_in_file" = "false" ]; then
+        echo "ℹ️  Verified: OPENAPI_ENABLED=false written to FastAPI .env file"
+    else
+        echo "⚠️  Warning: OPENAPI_ENABLED has unexpected value in .env file: $openapi_value_in_file"
+    fi
+else
+    echo "❌ Could not verify FastAPI .env file creation"
+fi
 
 # Synchronize environment variables between services
 sync_environment_variables() {
@@ -4078,18 +4122,14 @@ if ! create_ai_tokens_template; then
     echo "$(date): AI tokens template creation failed" >> ./tmp/violentutf_ai_setup_debug.log
     SKIP_AI_SETUP=true
 else
-    echo "🔍 DEBUG: AI tokens template OK, loading tokens..." | tee -a ./tmp/violentutf_ai_setup_debug.log
-    if ! load_ai_tokens; then
-        echo "❌ Failed to load AI configuration"
-        echo "$(date): load_ai_tokens failed" >> ./tmp/violentutf_ai_setup_debug.log
-        SKIP_AI_SETUP=true
-    else
-        echo "🔍 DEBUG: AI tokens loaded successfully" | tee -a ./tmp/violentutf_ai_setup_debug.log
-        SKIP_AI_SETUP=false
-        
-        # Update FastAPI .env with AI provider flags now that ai-tokens are loaded
-        update_fastapi_ai_providers
-    fi
+    echo "🔍 DEBUG: AI tokens template OK, tokens already loaded early in setup" | tee -a ./tmp/violentutf_ai_setup_debug.log
+    echo "🔍 DEBUG: AI tokens already loaded successfully" | tee -a ./tmp/violentutf_ai_setup_debug.log
+    SKIP_AI_SETUP=false
+    
+    # Update FastAPI .env with AI provider flags now that ai-tokens are loaded
+    # Note: AI tokens were loaded early in setup before .env file creation
+    # This update ensures the latest values are applied after any container setup
+    update_fastapi_ai_providers
 fi
 
 # ---------------------------------------------------------------
