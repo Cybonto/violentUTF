@@ -177,12 +177,104 @@ for i in {1..10}; do
         if curl -s -f -k "$spec_url" -H "Authorization: Bearer $auth_token_val" -o "$temp_spec"; then
             echo "✅ Successfully fetched OpenAPI spec"
             
-            # Try to parse with our Python diagnostic
-            if python3 /Users/tamnguyen/Documents/GitHub/ViolentUTF/test-openapi-parsing.py "$spec_url" "$id_val"; then
-                echo "✅ Spec parsing test passed"
-                routes_created=$((routes_created + 1))
+            # Parse the OpenAPI spec inline
+            echo "🔧 Parsing OpenAPI spec..."
+            endpoints_count=$(python3 -c "
+import json
+import sys
+
+try:
+    with open('$temp_spec', 'r') as f:
+        spec = json.load(f)
+    
+    paths = spec.get('paths', {})
+    endpoint_count = 0
+    
+    for path, path_item in paths.items():
+        if isinstance(path_item, dict) and '\$ref' not in path_item:
+            for method in ['get', 'post', 'put', 'delete', 'patch', 'head', 'options']:
+                if method in path_item:
+                    endpoint_count += 1
+    
+    print(endpoint_count)
+except Exception as e:
+    print(0)
+" 2>/dev/null)
+            
+            if [ "$endpoints_count" -gt 0 ]; then
+                echo "✅ Found $endpoints_count endpoints in spec"
+                
+                # Now try to create actual APISIX routes
+                echo "🔧 Creating APISIX routes..."
+                
+                # Create routes using the actual setup script logic
+                created_routes=$(python3 -c "
+import json
+import requests
+
+try:
+    # Load the spec
+    with open('$temp_spec', 'r') as f:
+        spec = json.load(f)
+    
+    paths = spec.get('paths', {})
+    routes_created = 0
+    
+    for path, path_item in paths.items():
+        if isinstance(path_item, dict) and '\$ref' not in path_item:
+            for method in ['get', 'post', 'put', 'delete', 'patch', 'head', 'options']:
+                if method in path_item:
+                    operation = path_item[method]
+                    op_id = operation.get('operationId', f'{method}_{path.replace(\"/\", \"_\").replace(\"{\", \"\").replace(\"}\", \"\")}')
+                    
+                    # Create APISIX route
+                    route_id = f'openapi-$id_val-{op_id.replace(\"_\", \"-\").lower()}'
+                    
+                    route_config = {
+                        'uri': f'/ai/openapi/$id_val{path}',
+                        'methods': [method.upper()],
+                        'upstream': {
+                            'type': 'roundrobin',
+                            'nodes': {
+                                '$base_url_val'.replace('https://', '').replace('http://', '') + ':443': 1
+                            },
+                            'scheme': 'https'
+                        },
+                        'plugins': {
+                            'proxy-rewrite': {
+                                'regex_uri': [f'^/ai/openapi/$id_val(.*)', '\$1']
+                            }
+                        }
+                    }
+                    
+                    # Create the route
+                    response = requests.put(
+                        f'$APISIX_ADMIN_URL/apisix/admin/routes/{route_id}',
+                        headers={'X-API-KEY': '$APISIX_ADMIN_KEY', 'Content-Type': 'application/json'},
+                        json=route_config,
+                        timeout=10
+                    )
+                    
+                    if response.status_code in [200, 201]:
+                        routes_created += 1
+                        print(f'Created route: {route_id}', file=sys.stderr)
+                    else:
+                        print(f'Failed to create route {route_id}: {response.status_code}', file=sys.stderr)
+    
+    print(routes_created)
+except Exception as e:
+    print(f'Error: {e}', file=sys.stderr)
+    print(0)
+" 2>&1)
+                
+                if [ "$created_routes" -gt 0 ]; then
+                    echo "✅ Successfully created $created_routes APISIX routes"
+                    routes_created=$((routes_created + created_routes))
+                else
+                    echo "❌ Failed to create APISIX routes"
+                fi
             else
-                echo "❌ Spec parsing test failed"
+                echo "❌ No endpoints found in spec"
             fi
         else
             echo "❌ Failed to fetch OpenAPI spec from $spec_url"
