@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import requests
 from app.core.auth import get_current_user
+from app.core.config import settings
 from app.core.error_handling import safe_error_response, validation_error
 from app.db.duckdb_manager import get_duckdb_manager
 from app.schemas.generators import (
@@ -452,22 +453,22 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
             # Find the provider parameter and add enabled providers
             for param in type_def["parameters"]:
                 if param["name"] == "provider":
-                    # Get enabled base providers by checking environment flags
+                    # Get enabled base providers by checking settings flags
                     base_providers = []
 
-                    # Check each provider's ENABLED flag
-                    if os.getenv("OPENAI_ENABLED", "false").lower() == "true":
+                    # Check each provider's ENABLED flag from settings
+                    if settings.OPENAI_ENABLED:
                         base_providers.append("openai")
-                    if os.getenv("ANTHROPIC_ENABLED", "false").lower() == "true":
+                    if settings.ANTHROPIC_ENABLED:
                         base_providers.append("anthropic")
-                    if os.getenv("OLLAMA_ENABLED", "false").lower() == "true":
+                    if settings.OLLAMA_ENABLED:
                         base_providers.append("ollama")
-                    if os.getenv("OPEN_WEBUI_ENABLED", "false").lower() == "true":
+                    if settings.OPEN_WEBUI_ENABLED:
                         base_providers.append("webui")
 
                     # Discover OpenAPI providers (only if OPENAPI_ENABLED=true)
                     openapi_providers = []
-                    if os.getenv("OPENAPI_ENABLED", "false").lower() == "true":
+                    if settings.OPENAPI_ENABLED:
                         openapi_providers = get_openapi_providers()
 
                     # Combine all enabled providers
@@ -476,6 +477,7 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
 
                     logger.info(f"Enabled providers: {all_providers}")
                     logger.debug(f"Base providers: {base_providers}, OpenAPI providers: {openapi_providers}")
+                    logger.debug(f"Settings - OPENAI: {settings.OPENAI_ENABLED}, ANTHROPIC: {settings.ANTHROPIC_ENABLED}, OLLAMA: {settings.OLLAMA_ENABLED}, OPEN_WEBUI: {settings.OPEN_WEBUI_ENABLED}, OPENAPI: {settings.OPENAPI_ENABLED}")
                     break
 
         parameters = [GeneratorParameter(**param) for param in type_def["parameters"]]

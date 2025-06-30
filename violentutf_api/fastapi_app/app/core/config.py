@@ -79,6 +79,14 @@ class Settings(BaseSettings):
     PYRIT_MEMORY_DB_PATH: str = Field(default="/app/app_data/violentutf", env="PYRIT_MEMORY_DB_PATH")
     PYRIT_DB_SALT: str = Field(default="", env="PYRIT_DB_SALT")
 
+    # AI Provider Configuration (from ai-tokens.env)
+    # These enable/disable providers in the UI
+    OPENAI_ENABLED: bool = Field(default=False, env="OPENAI_ENABLED")
+    ANTHROPIC_ENABLED: bool = Field(default=False, env="ANTHROPIC_ENABLED")
+    OLLAMA_ENABLED: bool = Field(default=False, env="OLLAMA_ENABLED")
+    OPEN_WEBUI_ENABLED: bool = Field(default=False, env="OPEN_WEBUI_ENABLED")
+    OPENAPI_ENABLED: bool = Field(default=False, env="OPENAPI_ENABLED")
+
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
