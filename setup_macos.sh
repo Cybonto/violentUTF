@@ -2506,10 +2506,33 @@ echo "=========================================="
 # --- Create Keycloak .env ---
 echo "Creating Keycloak configuration..."
 mkdir -p keycloak
+
+# Validate that password is set
+if [ -z "$KEYCLOAK_POSTGRES_PASSWORD" ]; then
+    echo "❌ Error: KEYCLOAK_POSTGRES_PASSWORD is not set!"
+    exit 1
+fi
+
+# Create .env file with validation
 cat > keycloak/.env <<EOF
 POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD
 EOF
-echo "✅ Created keycloak/.env"
+
+# Verify .env file was created and contains the password
+if [ ! -f "keycloak/.env" ]; then
+    echo "❌ Error: Failed to create keycloak/.env file!"
+    exit 1
+fi
+
+# Verify the password is in the file
+if ! grep -q "POSTGRES_PASSWORD=" keycloak/.env; then
+    echo "❌ Error: Password not properly written to keycloak/.env!"
+    echo "File contents:"
+    cat keycloak/.env
+    exit 1
+fi
+
+echo "✅ Created keycloak/.env with password: ${KEYCLOAK_POSTGRES_PASSWORD:0:8}..."
 
 # --- Create APISIX configurations ---
 echo "Creating APISIX configurations..."
@@ -2776,6 +2799,36 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
     ORIGINAL_DIR=$(pwd)
     cd "$KEYCLOAK_ENV_DIR" || { echo "Failed to cd into $KEYCLOAK_ENV_DIR"; exit 1; }
     
+    # Verify .env file exists before starting containers
+    if [ ! -f ".env" ]; then
+        echo "❌ Error: .env file missing in keycloak directory!"
+        echo "Expected location: $(pwd)/.env"
+        echo "Returning to parent directory to check..."
+        cd "$ORIGINAL_DIR"
+        if [ -f "keycloak/.env" ]; then
+            echo "Found .env in keycloak/.env, copying to keycloak directory..."
+            cp "keycloak/.env" "keycloak/.env"
+            cd "$KEYCLOAK_ENV_DIR"
+        else
+            echo "❌ Critical Error: No .env file found anywhere!"
+            exit 1
+        fi
+    fi
+    
+    # Verify .env file has the password
+    if ! grep -q "POSTGRES_PASSWORD=" .env; then
+        echo "❌ Error: .env file exists but missing POSTGRES_PASSWORD!"
+        echo "File contents:"
+        cat .env
+        exit 1
+    fi
+    
+    echo "✅ Verified .env file exists with password before starting containers"
+    
+    # Clean up any existing containers and volumes to prevent password mismatch
+    echo "Cleaning up existing Keycloak containers and volumes to prevent password conflicts..."
+    ${DOCKER_COMPOSE_CMD} down -v 2>/dev/null || true
+    echo "✅ Cleaned up existing containers and volumes"
     
     # Ensure docker-compose.yml has network configuration
     echo "Ensuring Keycloak docker-compose.yml has proper network configuration..."
