@@ -585,10 +585,8 @@ def test_scorer(scorer_name: str, sample_input: PromptRequestPiece) -> List[Scor
             logger.warning(
                 "Running test_scorer within an existing event loop. Consider calling test_scorer_async directly."
             )
-            task = loop.create_task(test_scorer_async(scorer_name, sample_input))
-            # Note: This sync wrapper cannot easily return the result here if loop is running.
+            # Note: Cannot run sync test_scorer reliably within an already running event loop.
             # It might be better to enforce using test_scorer_async in async contexts.
-            # Returning None or raising an error might be clearer.
             raise ScorerTestingError(
                 "Cannot run sync test_scorer reliably within an already running event loop. Use test_scorer_async."
             )

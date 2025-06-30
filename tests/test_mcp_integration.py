@@ -323,6 +323,7 @@ class TestMCPIntegration:
 
         response_time = end_time - start_time
         assert response_time < 5.0, f"List tools took too long: {response_time}s"
+        assert tools is not None, "Tools list should not be None"
         print(f"List tools response time: {response_time:.2f}s")
 
         # Measure health check performance

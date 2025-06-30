@@ -252,8 +252,6 @@ class TestMCPClientSync:
 
     def test_sync_initialization(self, client):
         """Test synchronous initialization"""
-        mock_response = {"jsonrpc": "2.0", "id": 1, "result": {"name": "ViolentUTF MCP Server", "version": "1.0.0"}}
-
         with patch.object(client.client, "initialize", new_callable=AsyncMock, return_value=True):
             result = client.initialize()
             assert result is True

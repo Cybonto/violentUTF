@@ -55,32 +55,34 @@ def test_batch_processing():
         print(f"Processing prompts {batch_start + 1}-{batch_end}")
 
         # Step 1: Create orchestrator for this batch
-        orchestrator_payload = {
-            "name": f"test_batch_{batch_idx}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            "orchestrator_type": "PromptSendingOrchestrator",
-            "description": f"Test batch {batch_idx + 1}",
-            "parameters": {
-                "objective_target": {"type": "configured_generator", "generator_name": "test_generator"},
-                "scorers": [{"type": "configured_scorer", "scorer_id": "test_scorer_id", "scorer_name": "test_scorer"}],
-            },
-        }
+        # Expected payload structure:
+        # {
+        #     "name": f"test_batch_{batch_idx}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        #     "orchestrator_type": "PromptSendingOrchestrator",
+        #     "description": f"Test batch {batch_idx + 1}",
+        #     "parameters": {
+        #         "objective_target": {"type": "configured_generator", "generator_name": "test_generator"},
+        #         "scorers": [{"type": "configured_scorer", "scorer_id": "test_scorer_id", "scorer_name": "test_scorer"}],
+        #     },
+        # }
 
         print(f"Creating orchestrator for batch {batch_idx + 1}...")
         # Simulate orchestrator creation
         orchestrator_id = f"orch_{batch_idx}_{datetime.now().strftime('%H%M%S')}"
 
         # Step 2: Execute batch
-        execution_payload = {
-            "execution_name": f"batch_{batch_idx}_execution",
-            "execution_type": "dataset",
-            "input_data": {
-                "dataset_id": "test_dataset",
-                "sample_size": batch_prompts,
-                "randomize": False,
-                "offset": batch_start,
-                "metadata": {"batch_index": batch_idx, "total_batches": num_batches, "test_mode": "batch_processing"},
-            },
-        }
+        # Expected payload structure:
+        # {
+        #     "execution_name": f"batch_{batch_idx}_execution",
+        #     "execution_type": "dataset",
+        #     "input_data": {
+        #         "dataset_id": "test_dataset",
+        #         "sample_size": batch_prompts,
+        #         "randomize": False,
+        #         "offset": batch_start,
+        #         "metadata": {"batch_index": batch_idx, "total_batches": num_batches, "test_mode": "batch_processing"},
+        #     },
+        # }
 
         print(f"Executing batch {batch_idx + 1} with {batch_prompts} prompts...")
         start_time = time.time()

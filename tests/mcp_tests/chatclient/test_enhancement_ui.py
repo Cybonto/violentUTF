@@ -225,7 +225,7 @@ class TestEnhancementStripUI:
 
         # Attempt enhancement
         try:
-            result = mock_session_state["mcp_client"].get_prompt("prompt_enhancement", {"original_prompt": "test"})
+            mock_session_state["mcp_client"].get_prompt("prompt_enhancement", {"original_prompt": "test"})
         except Exception as e:
             error_msg = str(e)
             assert error_msg == "Test error"

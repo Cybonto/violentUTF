@@ -293,7 +293,6 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
 
         # Generate converter ID
         converter_id = str(uuid.uuid4())
-        now = datetime.utcnow()
 
         # Validate converter type
         all_converter_types = []
@@ -311,24 +310,6 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
             for required_param in required_params:
                 if required_param not in request.parameters:
                     raise HTTPException(status_code=400, detail=f"Required parameter '{required_param}' missing")
-
-        # Create converter configuration
-        converter_data = {
-            "id": converter_id,
-            "name": request.name,
-            "converter_type": request.converter_type,
-            "parameters": request.parameters,
-            "generator_id": request.generator_id,
-            "created_at": now,
-            "updated_at": now,
-            "created_by": user_id,
-            "status": "ready",
-            "metadata": {
-                "requires_target": any(
-                    p.get("skip_in_ui", False) for p in CONVERTER_PARAMETERS.get(request.converter_type, [])
-                )
-            },
-        }
 
         # Store converter in DuckDB
         db_manager = get_duckdb_manager(user_id)
