@@ -433,7 +433,13 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
         
         logger.info(f"Discovering models from {provider_id} at {models_url}")
         
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        # Configure SSL verification - disable for corporate environments with proxy/self-signed certs
+        # TODO: Make this configurable via environment variable for security
+        ssl_verify = False  # Disabled for corporate proxy compatibility
+        if not ssl_verify:
+            logger.warning(f"SSL verification disabled for {provider_id} - ensure network security")
+        
+        async with httpx.AsyncClient(timeout=10.0, verify=ssl_verify) as client:
             response = await client.get(models_url, headers=headers)
             
         if response.status_code == 200:
