@@ -12,6 +12,7 @@ extend-exclude = '''
   | \.mypy_cache
   | \.tox
   | \.venv
+  | \.vitutf
   | _build
   | buck-out
   | build
@@ -38,6 +39,7 @@ skip = [
     ".mypy_cache",
     ".tox",
     ".venv",
+    ".vitutf",
     "_build",
     "buck-out",
     "build",

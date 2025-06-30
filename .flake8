@@ -12,6 +12,7 @@ exclude =
     .tox,
     .venv,
     venv,
+    .vitutf,
     .pytest_cache,
     migrations,
     app_data,
