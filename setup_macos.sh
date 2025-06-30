@@ -1366,6 +1366,16 @@ fetch_openapi_spec() {
     # Use array for curl command to avoid eval
     local curl_args=(-s -f)
     
+    # Check for SSL certificate issues (Zscaler/corporate proxy)
+    # Test connectivity first
+    if ! curl -s --connect-timeout 5 --max-time 10 "${base_url%/}${spec_path}" > /dev/null 2>&1; then
+        echo "⚠️  SSL connectivity issue detected, testing with insecure connection..."
+        # Add insecure flag for corporate proxy/Zscaler environments
+        curl_args+=(-k)
+        echo "   Using --insecure flag to bypass SSL verification"
+        echo "   💡 Consider running ./get-zscaler-certs.sh for proper certificate handling"
+    fi
+    
     # Add authentication
     case "$auth_type" in
         "bearer")

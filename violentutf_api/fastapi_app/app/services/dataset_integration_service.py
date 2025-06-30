@@ -125,6 +125,7 @@ async def _get_native_dataset_prompts(dataset_config: Dict) -> List[str]:
     """Get prompts from native dataset"""
     # Extract prompts from native dataset
     dataset_type = dataset_config.get("dataset_type")
+    logger.debug(f"Processing native dataset of type: {dataset_type}")
 
     # Get prompts from the dataset configuration
     prompts = dataset_config.get("prompts", [])

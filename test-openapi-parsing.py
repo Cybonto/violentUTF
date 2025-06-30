@@ -8,6 +8,8 @@ import json
 import sys
 import urllib.request
 import urllib.error
+import ssl
+import os
 
 def test_openapi_parsing(spec_url, provider_id="test"):
     """Test OpenAPI spec parsing with detailed error reporting"""
@@ -20,9 +22,30 @@ def test_openapi_parsing(spec_url, provider_id="test"):
     try:
         # Step 1: Fetch the spec
         print("📥 Fetching OpenAPI spec...")
-        with urllib.request.urlopen(spec_url, timeout=30) as response:
-            spec_content = response.read().decode('utf-8')
-        print(f"✅ Successfully fetched spec ({len(spec_content)} bytes)")
+        
+        # Handle SSL certificate issues (Zscaler/corporate proxy)
+        ssl_context = None
+        try:
+            # Try with default SSL context first
+            with urllib.request.urlopen(spec_url, timeout=30) as response:
+                spec_content = response.read().decode('utf-8')
+            print(f"✅ Successfully fetched spec ({len(spec_content)} bytes)")
+        except urllib.error.URLError as e:
+            if "CERTIFICATE_VERIFY_FAILED" in str(e):
+                print("⚠️  SSL certificate verification failed - trying with unverified SSL context")
+                print("   This is common with Zscaler or corporate proxy environments")
+                
+                # Create unverified SSL context as fallback
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+                
+                with urllib.request.urlopen(spec_url, timeout=30, context=ssl_context) as response:
+                    spec_content = response.read().decode('utf-8')
+                print(f"✅ Successfully fetched spec with unverified SSL ({len(spec_content)} bytes)")
+                print("💡 Consider running ./get-zscaler-certs.sh to properly handle SSL certificates")
+            else:
+                raise
         
         # Step 2: Parse JSON
         print("📝 Parsing JSON...")
