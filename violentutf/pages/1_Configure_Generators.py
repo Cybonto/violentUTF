@@ -42,6 +42,7 @@ API_ENDPOINTS = {
     "generator_types": f"{API_BASE_URL}/api/v1/generators/types",
     "generator_params": f"{API_BASE_URL}/api/v1/generators/types/{{generator_type}}/params",
     "apisix_models": f"{API_BASE_URL}/api/v1/generators/apisix/models",
+    "openapi_providers": f"{API_BASE_URL}/api/v1/generators/apisix/openapi-providers",
     # Orchestrator endpoints for generator testing
     "orchestrators": f"{API_BASE_URL}/api/v1/orchestrators",
     "orchestrator_create": f"{API_BASE_URL}/api/v1/orchestrators",
@@ -762,8 +763,46 @@ def add_new_generator_form():
 def handle_ai_gateway_provider_selection():
     """Handle AI Gateway provider selection outside the form to enable dynamic model loading"""
     try:
+        # Add refresh button for debugging
+        col_refresh, col_debug = st.columns([3, 1])
+        with col_debug:
+            if st.button("🔄 Refresh Providers", help="Refresh provider list from API"):
+                st.session_state.pop("ai_gateway_param_cache", None)
+                st.rerun()
+        
         param_defs = get_generator_params_from_api("AI Gateway")
         provider_param = next((p for p in param_defs if p["name"] == "provider"), None)
+        
+        # Debug information
+        with st.expander("🔍 Debug Info", expanded=False):
+            st.write("**API Response Debug:**")
+            st.write(f"Total parameters found: {len(param_defs)}")
+            if provider_param:
+                st.write(f"Provider options: {provider_param['options']}")
+                st.write(f"Total providers: {len(provider_param['options'])}")
+                # Highlight OpenAPI providers
+                openapi_providers = [p for p in provider_param['options'] if p.startswith('openapi-')]
+                if openapi_providers:
+                    st.success(f"✅ OpenAPI providers found: {openapi_providers}")
+                else:
+                    st.warning("⚠️ No OpenAPI providers found in options")
+            else:
+                st.error("❌ No provider parameter found")
+            
+            # Direct API test for OpenAPI providers
+            st.write("**Direct OpenAPI Providers Test:**")
+            try:
+                openapi_data = api_request("GET", API_ENDPOINTS["openapi_providers"])
+                if openapi_data:
+                    st.write(f"Direct API call result: {openapi_data}")
+                    if isinstance(openapi_data, list) and len(openapi_data) > 0:
+                        st.success(f"✅ Direct API call found {len(openapi_data)} OpenAPI providers")
+                    else:
+                        st.warning("⚠️ Direct API call returned empty list")
+                else:
+                    st.error("❌ Direct API call failed")
+            except Exception as e:
+                st.error(f"❌ Direct API call error: {e}")
 
         if provider_param:
             st.markdown("**🔧 AI Gateway Configuration**")
