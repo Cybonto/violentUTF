@@ -196,7 +196,12 @@ if [ -f "$temp_endpoints" ] && [ -s "$temp_endpoints" ]; then
         processed_count=$((processed_count + 1))
         
         # Generate route ID (from create_openapi_route function)
-        path_hash=$(echo -n "${method}:${path}" | md5sum | cut -c1-8)
+        # Use md5 on macOS, md5sum on Linux
+        if command -v md5 > /dev/null 2>&1; then
+            path_hash=$(echo -n "${method}:${path}" | md5 | cut -c1-8)
+        else
+            path_hash=$(echo -n "${method}:${path}" | md5sum | cut -c1-8)
+        fi
         safe_operation_id=$(echo "$op_id" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
         route_id="openapi-${provider_id}-${safe_operation_id}-${path_hash}"
         

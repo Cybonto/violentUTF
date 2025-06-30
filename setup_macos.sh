@@ -1577,7 +1577,12 @@ create_openapi_route() {
     local auth_config="$8"
     
     # Generate route ID with path hash for uniqueness
-    local path_hash=$(echo -n "${method}:${endpoint_path}" | md5sum | cut -c1-8)
+    # Use md5 on macOS, md5sum on Linux
+    if command -v md5 > /dev/null 2>&1; then
+        local path_hash=$(echo -n "${method}:${endpoint_path}" | md5 | cut -c1-8)
+    else
+        local path_hash=$(echo -n "${method}:${endpoint_path}" | md5sum | cut -c1-8)
+    fi
     local safe_operation_id=$(echo "$operation_id" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
     local route_id="openapi-${provider_id}-${safe_operation_id}-${path_hash}"
     
