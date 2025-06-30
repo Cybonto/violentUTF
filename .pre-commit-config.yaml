@@ -161,7 +161,7 @@ repos:
 
       - id: no-hardcoded-secrets
         name: Check for hardcoded secrets
-        entry: '(api_key|apikey|password|secret|token|private_key)=.*["'\''].*["'\'']'
+        entry: '(api_key|apikey|password|secret|token|private_key)=.*["\x27].*["\x27]'
         language: pygrep
         types: [python]
         exclude: 'tests/|ai-tokens.env.sample'
