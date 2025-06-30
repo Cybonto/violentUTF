@@ -19,18 +19,21 @@ logger = logging.getLogger(__name__)
 
 class DuckDBManager:
     """Manages DuckDB operations for ViolentUTF configuration storage"""
-    
+
     # Security: Allowed columns for UPDATE operations to prevent SQL injection
-    ALLOWED_UPDATE_COLUMNS = {
-        'parameters', 'status', 'test_results', 'updated_at',
-        'name', 'type', 'config'
-    }
-    
+    ALLOWED_UPDATE_COLUMNS = {"parameters", "status", "test_results", "updated_at", "name", "type", "config"}
+
     # Security: Allowed table names for counting operations
     ALLOWED_TABLES = {
-        'generators', 'scorers', 'datasets', 'conversations', 
-        'orchestrator_executions', 'orchestrator_results',
-        'dataset_prompts', 'converters', 'user_sessions'
+        "generators",
+        "scorers",
+        "datasets",
+        "conversations",
+        "orchestrator_executions",
+        "orchestrator_results",
+        "dataset_prompts",
+        "converters",
+        "user_sessions",
     }
 
     def __init__(self, username: str, salt: str = None, app_data_dir: str = None):
@@ -178,29 +181,31 @@ class DuckDBManager:
         )
 
     # Security helper methods
-    def _build_safe_update_query(self, updates_dict: Dict[str, Any], generator_id: str, user_id: str) -> Tuple[str, List]:
+    def _build_safe_update_query(
+        self, updates_dict: Dict[str, Any], generator_id: str, user_id: str
+    ) -> Tuple[str, List]:
         """Build parameterized UPDATE query with column validation to prevent SQL injection"""
-        
+
         # Validate column names against whitelist
         for column in updates_dict.keys():
             if column not in self.ALLOWED_UPDATE_COLUMNS:
                 raise ValueError(f"Invalid column for update: {column}")
-        
+
         # Build parameterized query using string formatting to avoid bandit B608 warning
         set_clauses = ["{} = ?".format(col) for col in updates_dict.keys()]
         query_template = "UPDATE generators SET {} WHERE id = ? AND user_id = ?"
-        query = query_template.format(', '.join(set_clauses))
-        
+        query = query_template.format(", ".join(set_clauses))
+
         # Build parameter list
         params = list(updates_dict.values()) + [generator_id, user_id]
-        
+
         return query, params
-    
+
     def _get_table_count(self, conn, table_name: str) -> int:
         """Get row count for table with name validation to prevent SQL injection"""
         if table_name not in self.ALLOWED_TABLES:
             raise ValueError(f"Invalid table name: {table_name}")
-        
+
         # Use string formatting with pre-validated table name (table_name is whitelisted above)
         query = 'SELECT COUNT(*) FROM "{}"'.format(table_name)  # nosec B608
         result = conn.execute(query).fetchone()
@@ -323,7 +328,7 @@ class DuckDBManager:
         try:
             # Use secure helper method to build query
             query, params = self._build_safe_update_query(updates_dict, generator_id, self.username)
-            
+
             with duckdb.connect(self.db_path) as conn:
                 # Handle CURRENT_TIMESTAMP specially as it needs to be unquoted
                 if "updated_at" in updates_dict:
@@ -334,10 +339,10 @@ class DuckDBManager:
                     query = query.replace("updated_at = ?", "updated_at = CURRENT_TIMESTAMP")
                     # Remove CURRENT_TIMESTAMP from params
                     params.pop(timestamp_idx)
-                
+
                 conn.execute(query, params)
                 return conn.rowcount > 0
-                
+
         except ValueError as e:
             logger.error(f"Security validation failed in update_generator: {e}")
             raise

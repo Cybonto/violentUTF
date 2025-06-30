@@ -48,8 +48,14 @@ def get_db_path(username: str, salt: str, app_data_dir: str) -> str:
 
 # Security: Allowed table names for counting operations to prevent SQL injection
 ALLOWED_PYRIT_TABLES = {
-    'prompt_pieces', 'conversations', 'scores', 'datasets', 'generators',
-    'scorers', 'orchestrator_executions', 'orchestrator_results'
+    "prompt_pieces",
+    "conversations",
+    "scores",
+    "datasets",
+    "generators",
+    "scorers",
+    "orchestrator_executions",
+    "orchestrator_results",
 }
 
 
@@ -57,7 +63,7 @@ def get_secure_table_count(conn, table_name: str) -> int:
     """Get row count for table with name validation to prevent SQL injection"""
     if table_name not in ALLOWED_PYRIT_TABLES:
         raise ValueError(f"Invalid table name: {table_name}")
-    
+
     # Use string formatting with pre-validated table name (table_name is whitelisted above)
     query = 'SELECT COUNT(*) FROM "{}"'.format(table_name)  # nosec B608
     result = conn.execute(query).fetchone()

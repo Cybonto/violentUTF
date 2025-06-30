@@ -125,9 +125,9 @@ def get_secure_binding_config():
     """Get secure network binding configuration with enhanced security checks"""
     host = os.getenv("API_HOST", "127.0.0.1")
     port = int(os.getenv("API_PORT", "8000"))
-    
+
     logger = logging.getLogger(__name__)
-    
+
     # Security check for public binding
     # nosec B104 - This is security validation, not binding to all interfaces
     if host == WILDCARD_ADDRESS:
@@ -138,10 +138,8 @@ def get_secure_binding_config():
             )
             host = "127.0.0.1"
         else:
-            logger.warning(
-                "Binding to all interfaces (0.0.0.0) - ensure firewall rules are properly configured"
-            )
-    
+            logger.warning("Binding to all interfaces (0.0.0.0) - ensure firewall rules are properly configured")
+
     return host, port
 
 

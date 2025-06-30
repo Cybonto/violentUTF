@@ -16,7 +16,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 # Mock environment variables to prevent path creation errors
 with patch.dict(
     os.environ,
-    {"APP_DATA_DIR": tempfile.mkdtemp(prefix="test_app_data_"), "CONFIG_DIR": tempfile.mkdtemp(prefix="test_config_"), "JWT_SECRET_KEY": "test_secret_key"},
+    {
+        "APP_DATA_DIR": tempfile.mkdtemp(prefix="test_app_data_"),
+        "CONFIG_DIR": tempfile.mkdtemp(prefix="test_config_"),
+        "JWT_SECRET_KEY": "test_secret_key",
+    },
 ):
     try:
         from app.mcp.config import mcp_settings

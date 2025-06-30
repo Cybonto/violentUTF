@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # Constants to avoid bandit B104 hardcoded binding warnings
 WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
 
+
 # Security constants for validation
 class SecurityLimits:
     """Security limits for input validation"""
@@ -294,33 +295,34 @@ def validate_url(url: str) -> str:
     host = parsed.hostname
     if not host:
         raise ValueError("Invalid URL: no hostname")
-    
+
     # Enhanced dangerous hosts list
     dangerous_hosts = [
         "localhost",
         "127.",
         "::1",
-        "10.",           # Private network
-        "192.168.",      # Private network  
-        "172.",          # Private network (172.16-31.x.x)
-        "169.254.",      # Link-local
+        "10.",  # Private network
+        "192.168.",  # Private network
+        "172.",  # Private network (172.16-31.x.x)
+        "169.254.",  # Link-local
         "metadata.google.internal",
         "metadata",
         "metadata.aws",
         "metadata.azure.com",
     ]
-    
+
     # Special handling for wildcard address - always block
     # nosec B104 - This is security validation, not binding to all interfaces
     if host == WILDCARD_ADDRESS:
         raise ValueError("Access to 0.0.0.0 is not allowed")
-    
+
     for dangerous in dangerous_hosts:
         if host.startswith(dangerous):
             raise ValueError(f"Access to internal/localhost URLs not allowed: {host}")
-    
+
     # Additional check for private IP ranges
     import ipaddress
+
     try:
         ip = ipaddress.ip_address(host)
         if ip.is_private or ip.is_loopback or ip.is_link_local:
