@@ -27,7 +27,7 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@94549999469dbfa032becf298d95c87a14c34394 # v40.2.0
+        uses: tj-actions/changed-files@94549999469dbfa032becf298d95c87a14c34394  # v40.2.0
         with:
           files_yaml: |
             python:
@@ -49,7 +49,7 @@ jobs:
               - '**/*_test.py'
 
       - name: PR size labeling
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea  # v7.0.1
         with:
           script: |
             const { data: pr } = await github.rest.pulls.get({
@@ -68,11 +68,16 @@ jobs:
             else labels.push('size/XL');
 
             // Add type labels based on changed files
-            const changedFiles = ${{ toJson(steps.changed-files.outputs) }};
-            if (changedFiles.python_any_changed === 'true') labels.push('python');
-            if (changedFiles.docker_any_changed === 'true') labels.push('docker');
-            if (changedFiles.docs_any_changed === 'true') labels.push('documentation');
-            if (changedFiles.test_any_changed === 'true') labels.push('tests');
+            const changedFiles = ${{
+            toJson(steps.changed-files.outputs) }};
+            if (changedFiles.python_any_changed === 'true')
+            labels.push('python');
+            if (changedFiles.docker_any_changed === 'true')
+            labels.push('docker');
+            if (changedFiles.docs_any_changed === 'true')
+            labels.push('documentation');
+            if (changedFiles.test_any_changed === 'true')
+            labels.push('tests');
 
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
@@ -107,32 +112,41 @@ jobs:
         continue-on-error: true
         run: |
           # Check if formatting is needed
-          black --check --diff violentutf/ violentutf_api/ tests/ > black.diff 2>&1 || echo "NEEDS_FORMAT=true" >> $GITHUB_ENV
-          isort --check-only --diff violentutf/ violentutf_api/ tests/ > isort.diff 2>&1 || echo "NEEDS_FORMAT=true" >> $GITHUB_ENV
+          black --check --diff violentutf/ violentutf_api/ tests/ \
+            > black.diff 2>&1 || echo "NEEDS_FORMAT=true" >> $GITHUB_ENV
+          isort --check-only --diff violentutf/ violentutf_api/ tests/ \
+            > isort.diff 2>&1 || echo "NEEDS_FORMAT=true" >> $GITHUB_ENV
 
       - name: Generate formatting suggestions
         if: env.NEEDS_FORMAT == 'true'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea  # v7.0.1
         with:
           script: |
             const fs = require('fs');
             let comment = '## 🎨 Code Formatting Suggestions\n\n';
-            comment += 'This PR has code formatting issues. You can fix them by running:\n\n';
+            comment += 'This PR has code formatting issues. You can fix them by
+            running:\n\n';
             comment += '```bash\n';
             comment += 'pip install black isort\n';
             comment += 'black violentutf/ violentutf_api/ tests/\n';
             comment += 'isort violentutf/ violentutf_api/ tests/\n';
             comment += '```\n\n';
 
-            if (fs.existsSync('black.diff') && fs.statSync('black.diff').size > 0) {
-              comment += '<details>\n<summary>Black formatting changes needed</summary>\n\n';
-              comment += '```diff\n' + fs.readFileSync('black.diff', 'utf8') + '\n```\n';
+            if (fs.existsSync('black.diff') &&
+            fs.statSync('black.diff').size > 0) {
+              comment += '<details>\n<summary>Black formatting changes
+              needed</summary>\n\n';
+              comment += '```diff\n' + fs.readFileSync('black.diff', 'utf8') +
+              '\n```\n';
               comment += '</details>\n\n';
             }
 
-            if (fs.existsSync('isort.diff') && fs.statSync('isort.diff').size > 0) {
-              comment += '<details>\n<summary>Import sorting changes needed</summary>\n\n';
-              comment += '```diff\n' + fs.readFileSync('isort.diff', 'utf8') + '\n```\n';
+            if (fs.existsSync('isort.diff') &&
+            fs.statSync('isort.diff').size > 0) {
+              comment += '<details>\n<summary>Import sorting changes
+              needed</summary>\n\n';
+              comment += '```diff\n' + fs.readFileSync('isort.diff', 'utf8') +
+              '\n```\n';
               comment += '</details>\n';
             }
 
@@ -153,7 +167,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@fbd16365eb88e12433951383f5e99bd901fc618f # v0.14.0
+        uses: aquasecurity/trivy-action@fbd16365eb88e12433951383f5e99bd901fc618f  # v0.14.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -162,7 +176,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
+        uses: github/codeql-action/upload-sarif@39edc492dbe16b1465b0cafca41432d857bdb31a  # v3.29.1
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -196,7 +210,8 @@ jobs:
       - name: Run quick unit tests
         run: |
           # Run only unit tests if they exist
-          if [ -d "tests/unit" ] && [ "$(find tests/unit -name 'test_*.py' -type f | wc -l)" -gt 0 ]; then
+          if [ -d "tests/unit" ] && [ "$(find tests/unit -name 'test_*.py' -type f
+          | wc -l)" -gt 0 ]; then
             pytest tests/unit -v -m "not slow" -x --tb=short \
               --maxfail=5 -n auto || true
           else
@@ -213,7 +228,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Hadolint on Dockerfiles
-        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf  # v3.1.0
         with:
           recursive: true
           ignore: DL3008,DL3009  # Ignore apt-get version pinning for now
@@ -221,7 +236,8 @@ jobs:
       - name: Validate Docker Compose files
         run: |
           # Find all docker-compose files
-          find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml" | while read -r file; do
+          find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml" |
+          while read -r file; do
             echo "Validating $file..."
             docker-compose -f "$file" config > /dev/null || exit 1
           done
@@ -230,20 +246,26 @@ jobs:
   pr-status:
     name: PR Status Check
     runs-on: ubuntu-22.04
-    needs: [pr-validation, python-lint, security-scan, quick-test, docker-lint]
+    needs: [pr-validation, python-lint, security-scan, quick-test,
+    docker-lint]
     if: always()
 
     steps:
       - name: Set PR status
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea  # v7.0.1
         with:
           script: |
             const checks = [
-              { name: 'pr-validation', result: '${{ needs.pr-validation.result }}' },
-              { name: 'python-lint', result: '${{ needs.python-lint.result }}' },
-              { name: 'security-scan', result: '${{ needs.security-scan.result }}' },
-              { name: 'quick-test', result: '${{ needs.quick-test.result }}' },
-              { name: 'docker-lint', result: '${{ needs.docker-lint.result }}' }
+              { name: 'pr-validation', result: '${{
+              needs.pr-validation.result }}' },
+              { name: 'python-lint', result: '${{
+              needs.python-lint.result }}' },
+              { name: 'security-scan', result: '${{
+              needs.security-scan.result }}' },
+              { name: 'quick-test', result: '${{
+              needs.quick-test.result }}' },
+              { name: 'docker-lint', result: '${{
+              needs.docker-lint.result }}' }
             ];
 
             const failedChecks = checks.filter(c => c.result === 'failure');
@@ -260,7 +282,8 @@ jobs:
             }
 
             if (!allSuccess) {
-              comment += '\n⚠️ **Some checks failed.** Please review the logs above.';
+              comment += '\n⚠️ **Some checks failed.** Please review the logs
+              above.';
             } else {
               comment += '\n✅ **All quick checks passed!**';
             }
