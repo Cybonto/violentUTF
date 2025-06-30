@@ -2451,16 +2451,8 @@ echo "Generating secure secrets for all services..."
 SENSITIVE_VALUES+=("Keycloak Admin Username: admin")
 SENSITIVE_VALUES+=("Keycloak Admin Password: admin")
 
-# Keycloak PostgreSQL password (reuse existing or generate new for fresh setups)
-if [ -f "keycloak/.env" ]; then
-    # Reuse existing password to avoid authentication issues with persistent volumes
-    KEYCLOAK_POSTGRES_PASSWORD=$(grep "^POSTGRES_PASSWORD=" keycloak/.env | cut -d'=' -f2)
-    echo "🔄 Reusing existing Keycloak PostgreSQL password from keycloak/.env"
-else
-    # Generate new password for fresh setup
-    KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
-    echo "🆕 Generated new Keycloak PostgreSQL password for fresh setup"
-fi
+# Keycloak PostgreSQL password (for new setups)
+KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
 SENSITIVE_VALUES+=("Keycloak PostgreSQL Password: $KEYCLOAK_POSTGRES_PASSWORD")
 
 # ViolentUTF application secrets
@@ -2784,12 +2776,6 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
     ORIGINAL_DIR=$(pwd)
     cd "$KEYCLOAK_ENV_DIR" || { echo "Failed to cd into $KEYCLOAK_ENV_DIR"; exit 1; }
     
-    # Check if .env file exists - it might have been removed or this is a fresh setup
-    if [ ! -f ".env" ]; then
-        echo "⚠️  Keycloak .env file missing. Creating it with PostgreSQL password..."
-        echo "POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD" > .env
-        echo "✅ Created keycloak/.env"
-    fi
     
     # Ensure docker-compose.yml has network configuration
     echo "Ensuring Keycloak docker-compose.yml has proper network configuration..."
