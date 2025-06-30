@@ -474,33 +474,34 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
 
 def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
     """
-    Get configuration for an OpenAPI provider from environment variables
+    Get configuration for an OpenAPI provider from settings
     Phase 1 Enhancement: Centralized provider configuration mapping
     """
     # Try numbered format first (OPENAPI_1_*, OPENAPI_2_*, etc.)
     for i in range(1, 11):  # Support up to 10 providers
-        id_var = f"OPENAPI_{i}_ID"
-        if os.getenv(id_var) == provider_id:
+        # Use getattr to access settings dynamically
+        id_value = getattr(settings, f"OPENAPI_{i}_ID", None)
+        if id_value == provider_id:
             return {
                 "id": provider_id,
-                "name": os.getenv(f"OPENAPI_{i}_NAME"),
-                "base_url": os.getenv(f"OPENAPI_{i}_BASE_URL"),
-                "auth_token": os.getenv(f"OPENAPI_{i}_AUTH_TOKEN"),
-                "auth_type": os.getenv(f"OPENAPI_{i}_AUTH_TYPE", "bearer"),
+                "name": getattr(settings, f"OPENAPI_{i}_NAME", None),
+                "base_url": getattr(settings, f"OPENAPI_{i}_BASE_URL", None),
+                "auth_token": getattr(settings, f"OPENAPI_{i}_AUTH_TOKEN", None),
+                "auth_type": getattr(settings, f"OPENAPI_{i}_AUTH_TYPE", "bearer"),
             }
     
     # Try direct format (OPENAPI_{PROVIDER_ID}_*, e.g., OPENAPI_GSAI_API_1_*)
     provider_key = provider_id.upper().replace("-", "_")
-    base_url = os.getenv(f"OPENAPI_{provider_key}_BASE_URL")
-    auth_token = os.getenv(f"OPENAPI_{provider_key}_AUTH_TOKEN")
+    base_url = getattr(settings, f"OPENAPI_{provider_key}_BASE_URL", None)
+    auth_token = getattr(settings, f"OPENAPI_{provider_key}_AUTH_TOKEN", None)
     
     if base_url and auth_token:
         return {
             "id": provider_id,
-            "name": os.getenv(f"OPENAPI_{provider_key}_NAME", f"OpenAPI {provider_id}"),
+            "name": getattr(settings, f"OPENAPI_{provider_key}_NAME", f"OpenAPI {provider_id}"),
             "base_url": base_url,
             "auth_token": auth_token,
-            "auth_type": os.getenv(f"OPENAPI_{provider_key}_AUTH_TYPE", "bearer"),
+            "auth_type": getattr(settings, f"OPENAPI_{provider_key}_AUTH_TYPE", "bearer"),
         }
     
     return {"id": provider_id, "name": None, "base_url": None, "auth_token": None, "auth_type": None}
@@ -517,8 +518,10 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
         # Get provider configuration
         config = get_openapi_provider_config(provider_id)
         
+        logger.info(f"Configuration for {provider_id}: base_url={'***' if config['base_url'] else None}, auth_token={'***' if config['auth_token'] else None}")
+        
         if config["base_url"] and config["auth_token"]:
-            logger.info(f"Attempting dynamic model discovery for {provider_id}")
+            logger.info(f"Attempting dynamic model discovery for {provider_id} at {config['base_url']}")
             
             # Try to discover models from actual provider API
             models = await discover_openapi_models_from_provider(
@@ -526,12 +529,13 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
             )
             
             if models:
-                logger.info(f"Dynamic discovery successful for {provider_id}: found {len(models)} models")
+                logger.info(f"✅ Dynamic discovery successful for {provider_id}: found {len(models)} models: {models}")
                 return models
             else:
-                logger.info(f"Dynamic discovery failed for {provider_id}, falling back to route parsing")
+                logger.warning(f"❌ Dynamic discovery failed for {provider_id}, falling back to route parsing")
         else:
-            logger.warning(f"Missing configuration for {provider_id}: base_url={bool(config['base_url'])}, auth_token={bool(config['auth_token'])}")
+            logger.warning(f"❌ Missing configuration for {provider_id}: base_url={bool(config['base_url'])}, auth_token={bool(config['auth_token'])}")
+            logger.info(f"Config details: {config}")
     
     # Fallback to existing route-based discovery
     return discover_apisix_models(provider)
@@ -947,6 +951,20 @@ async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dic
                 safe_config["auth_token"] = f"***{safe_config['auth_token'][-4:]}"
             
             debug_info["provider_configs"][provider] = safe_config
+        
+        # Also check settings directly for debugging
+        debug_info["settings_check"] = {}
+        for i in range(1, 11):
+            enabled = getattr(settings, f"OPENAPI_{i}_ENABLED", None)
+            if enabled:
+                debug_info["settings_check"][f"provider_{i}"] = {
+                    "enabled": enabled,
+                    "id": getattr(settings, f"OPENAPI_{i}_ID", None),
+                    "name": getattr(settings, f"OPENAPI_{i}_NAME", None),
+                    "base_url": getattr(settings, f"OPENAPI_{i}_BASE_URL", None),
+                    "auth_token": "***" if getattr(settings, f"OPENAPI_{i}_AUTH_TOKEN", None) else None,
+                    "auth_type": getattr(settings, f"OPENAPI_{i}_AUTH_TYPE", None),
+                }
         
         # Check environment variables
         env_vars = [
