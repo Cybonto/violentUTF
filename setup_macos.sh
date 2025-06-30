@@ -2451,8 +2451,16 @@ echo "Generating secure secrets for all services..."
 SENSITIVE_VALUES+=("Keycloak Admin Username: admin")
 SENSITIVE_VALUES+=("Keycloak Admin Password: admin")
 
-# Keycloak PostgreSQL password (for new setups)
-KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
+# Keycloak PostgreSQL password (reuse existing or generate new for fresh setups)
+if [ -f "keycloak/.env" ]; then
+    # Reuse existing password to avoid authentication issues with persistent volumes
+    KEYCLOAK_POSTGRES_PASSWORD=$(grep "^POSTGRES_PASSWORD=" keycloak/.env | cut -d'=' -f2)
+    echo "🔄 Reusing existing Keycloak PostgreSQL password from keycloak/.env"
+else
+    # Generate new password for fresh setup
+    KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
+    echo "🆕 Generated new Keycloak PostgreSQL password for fresh setup"
+fi
 SENSITIVE_VALUES+=("Keycloak PostgreSQL Password: $KEYCLOAK_POSTGRES_PASSWORD")
 
 # ViolentUTF application secrets
