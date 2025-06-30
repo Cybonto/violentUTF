@@ -468,16 +468,24 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
 
                     # Discover OpenAPI providers (only if OPENAPI_ENABLED=true)
                     openapi_providers = []
+                    logger.info(f"OPENAPI_ENABLED setting: {settings.OPENAPI_ENABLED}")
                     if settings.OPENAPI_ENABLED:
-                        openapi_providers = get_openapi_providers()
+                        try:
+                            openapi_providers = get_openapi_providers()
+                            logger.info(f"Successfully discovered OpenAPI providers: {openapi_providers}")
+                        except Exception as e:
+                            logger.error(f"Error discovering OpenAPI providers: {e}")
+                            openapi_providers = []
+                    else:
+                        logger.warning("OpenAPI providers disabled by OPENAPI_ENABLED setting")
 
                     # Combine all enabled providers
                     all_providers = base_providers + openapi_providers
                     param["options"] = all_providers
 
-                    logger.info(f"Enabled providers: {all_providers}")
-                    logger.debug(f"Base providers: {base_providers}, OpenAPI providers: {openapi_providers}")
-                    logger.debug(
+                    logger.info(f"Final enabled providers list: {all_providers}")
+                    logger.info(f"Base providers: {base_providers}, OpenAPI providers: {openapi_providers}")
+                    logger.info(
                         f"Settings - OPENAI: {settings.OPENAI_ENABLED}, ANTHROPIC: {settings.ANTHROPIC_ENABLED}, OLLAMA: {settings.OLLAMA_ENABLED}, OPEN_WEBUI: {settings.OPEN_WEBUI_ENABLED}, OPENAPI: {settings.OPENAPI_ENABLED}"
                     )
                     break
