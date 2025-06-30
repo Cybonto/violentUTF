@@ -449,20 +449,33 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
             type_def = type_def.copy()
             type_def["parameters"] = [param.copy() for param in type_def["parameters"]]
 
-            # Find the provider parameter and add OpenAPI providers
+            # Find the provider parameter and add enabled providers
             for param in type_def["parameters"]:
                 if param["name"] == "provider":
-                    # Get base providers
-                    base_providers = ["openai", "anthropic", "ollama", "webui"]
+                    # Get enabled base providers by checking environment flags
+                    base_providers = []
 
-                    # Discover OpenAPI providers
-                    openapi_providers = get_openapi_providers()
+                    # Check each provider's ENABLED flag
+                    if os.getenv("OPENAI_ENABLED", "false").lower() == "true":
+                        base_providers.append("openai")
+                    if os.getenv("ANTHROPIC_ENABLED", "false").lower() == "true":
+                        base_providers.append("anthropic")
+                    if os.getenv("OLLAMA_ENABLED", "false").lower() == "true":
+                        base_providers.append("ollama")
+                    if os.getenv("OPEN_WEBUI_ENABLED", "false").lower() == "true":
+                        base_providers.append("webui")
 
-                    # Combine all providers
+                    # Discover OpenAPI providers (only if OPENAPI_ENABLED=true)
+                    openapi_providers = []
+                    if os.getenv("OPENAPI_ENABLED", "false").lower() == "true":
+                        openapi_providers = get_openapi_providers()
+
+                    # Combine all enabled providers
                     all_providers = base_providers + openapi_providers
                     param["options"] = all_providers
 
-                    logger.info(f"Available providers: {all_providers}")
+                    logger.info(f"Enabled providers: {all_providers}")
+                    logger.debug(f"Base providers: {base_providers}, OpenAPI providers: {openapi_providers}")
                     break
 
         parameters = [GeneratorParameter(**param) for param in type_def["parameters"]]

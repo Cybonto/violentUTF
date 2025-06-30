@@ -771,6 +771,47 @@ load_ai_tokens() {
     return 0
 }
 
+# Function to update FastAPI .env with AI provider flags
+update_fastapi_ai_providers() {
+    echo "Updating FastAPI .env with AI provider configuration..."
+    
+    if [ ! -f "violentutf_api/fastapi_app/.env" ]; then
+        echo "❌ FastAPI .env file not found, cannot update AI provider flags"
+        return 1
+    fi
+    
+    # Remove existing AI provider flags if they exist
+    sed -i '' '/^# AI Provider Configuration/,/^$/d' violentutf_api/fastapi_app/.env
+    
+    # Append updated AI provider configuration
+    cat >> violentutf_api/fastapi_app/.env <<EOF
+
+# AI Provider Configuration (from ai-tokens.env)
+# These enable/disable providers in the UI
+OPENAI_ENABLED=${OPENAI_ENABLED:-false}
+ANTHROPIC_ENABLED=${ANTHROPIC_ENABLED:-false}
+OLLAMA_ENABLED=${OLLAMA_ENABLED:-false}
+OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}
+OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
+EOF
+    
+    echo "✅ Updated FastAPI .env with AI provider flags"
+    echo "   OPENAI_ENABLED=${OPENAI_ENABLED:-false}"
+    echo "   ANTHROPIC_ENABLED=${ANTHROPIC_ENABLED:-false}"
+    echo "   OLLAMA_ENABLED=${OLLAMA_ENABLED:-false}"
+    echo "   OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}"
+    echo "   OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}"
+    
+    # Restart FastAPI container to apply new environment variables
+    echo "Restarting FastAPI container to apply provider configuration..."
+    if docker ps --filter "name=violentutf_api" --format "{{.Names}}" | grep -q violentutf_api; then
+        docker restart violentutf_api > /dev/null 2>&1
+        echo "✅ FastAPI container restarted"
+    else
+        echo "ℹ️  FastAPI container not running yet, will use new config when started"
+    fi
+}
+
 # Function to check if ai-proxy plugin is available
 check_ai_proxy_plugin() {
     echo "Checking if ai-proxy plugin is available in APISIX..."
@@ -2707,6 +2748,14 @@ GENERATOR_TYPE_MAPPING=AI Gateway:apisix_ai_gateway
 SERVICE_NAME=ViolentUTF API
 SERVICE_VERSION=1.0.0
 DEBUG=false
+
+# AI Provider Configuration (from ai-tokens.env)
+# These enable/disable providers in the UI
+OPENAI_ENABLED=${OPENAI_ENABLED:-false}
+ANTHROPIC_ENABLED=${ANTHROPIC_ENABLED:-false}
+OLLAMA_ENABLED=${OLLAMA_ENABLED:-false}
+OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}
+OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
 EOF
 echo "✅ Created violentutf_api/fastapi_app/.env"
 
@@ -3456,6 +3505,9 @@ else
         SKIP_AI_SETUP=true
     else
         SKIP_AI_SETUP=false
+        
+        # Update FastAPI .env with AI provider flags now that ai-tokens are loaded
+        update_fastapi_ai_providers
     fi
 fi
 
