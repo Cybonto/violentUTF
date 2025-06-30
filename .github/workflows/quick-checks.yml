@@ -51,16 +51,16 @@ jobs:
 
       - name: Run Black formatter check
         run: |
-          black --check --diff .
+          black --check --diff . --exclude="\.vitutf"
 
       - name: Run isort import checker
         run: |
-          isort --check-only --diff .
+          isort --check-only --diff . --skip .vitutf
 
       - name: Run critical flake8 checks
         run: |
           # Only check for critical errors that would prevent code execution
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.vitutf,__pycache__,.git
 
       - name: Run high-severity security scan
         run: |
