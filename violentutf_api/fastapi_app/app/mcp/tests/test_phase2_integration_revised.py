@@ -785,7 +785,7 @@ class TestPhase2AuthenticationIntegration(TestPhase2Architecture):
 
                 # Test tool execution with auth context
                 result = await generator_tools.execute_tool("list_generators", {}, {"token": "test_token"})
-                
+
                 # Verify tool execution returned a result
                 assert result is not None, "Tool execution should return a result"
 

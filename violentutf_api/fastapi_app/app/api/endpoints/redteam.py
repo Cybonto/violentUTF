@@ -100,7 +100,7 @@ async def create_pyrit_target(request: PyRITTargetRequest, current_user=Depends(
 
         # Create PyRIT target
         target = await pyrit_service.create_prompt_target(target_config)
-        
+
         # Validate target was created successfully
         if not target:
             raise HTTPException(status_code=500, detail="Failed to create PyRIT target")

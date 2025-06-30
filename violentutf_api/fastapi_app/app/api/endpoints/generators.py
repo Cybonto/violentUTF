@@ -477,7 +477,9 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
 
                     logger.info(f"Enabled providers: {all_providers}")
                     logger.debug(f"Base providers: {base_providers}, OpenAPI providers: {openapi_providers}")
-                    logger.debug(f"Settings - OPENAI: {settings.OPENAI_ENABLED}, ANTHROPIC: {settings.ANTHROPIC_ENABLED}, OLLAMA: {settings.OLLAMA_ENABLED}, OPEN_WEBUI: {settings.OPEN_WEBUI_ENABLED}, OPENAPI: {settings.OPENAPI_ENABLED}")
+                    logger.debug(
+                        f"Settings - OPENAI: {settings.OPENAI_ENABLED}, ANTHROPIC: {settings.ANTHROPIC_ENABLED}, OLLAMA: {settings.OLLAMA_ENABLED}, OPEN_WEBUI: {settings.OPEN_WEBUI_ENABLED}, OPENAPI: {settings.OPENAPI_ENABLED}"
+                    )
                     break
 
         parameters = [GeneratorParameter(**param) for param in type_def["parameters"]]

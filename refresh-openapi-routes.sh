@@ -102,15 +102,35 @@ echo ""
 echo "🚀 Triggering route reload from ai-tokens.env..."
 echo ""
 
-# Source the setup functions we need
-source <(grep -A 1000 "setup_openapi_routes()" setup_macos.sh | grep -B 1000 "^}")
-source <(grep -A 1000 "load_ai_tokens()" setup_macos.sh | grep -B 1000 "^}")
+# Extract and source the setup functions we need
+echo "📥 Extracting setup functions..."
+
+# Create temporary files for the functions
+temp_setup_functions="/tmp/setup_functions_$$.sh"
+temp_load_tokens="/tmp/load_tokens_$$.sh"
+
+# Extract setup_openapi_routes function
+echo "# Extracted setup_openapi_routes function" > "$temp_setup_functions"
+grep -A 1000 "setup_openapi_routes()" setup_macos.sh | grep -B 1000 "^}" >> "$temp_setup_functions"
+
+# Extract load_ai_tokens function  
+echo "# Extracted load_ai_tokens function" > "$temp_load_tokens"
+grep -A 1000 "load_ai_tokens()" setup_macos.sh | grep -B 1000 "^}" >> "$temp_load_tokens"
+
+# Source the functions
+source "$temp_load_tokens"
+source "$temp_setup_functions"
 
 # Load AI tokens
+echo "🔧 Loading AI tokens..."
 load_ai_tokens
 
 # Run OpenAPI setup
+echo "🔧 Running OpenAPI setup..."
 setup_openapi_routes
+
+# Cleanup temp files
+rm -f "$temp_setup_functions" "$temp_load_tokens"
 
 # Show final state
 echo ""
