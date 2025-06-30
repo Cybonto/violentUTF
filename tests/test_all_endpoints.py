@@ -78,7 +78,6 @@ def test_endpoint(
     skip_reason: Optional[str] = None,
 ) -> bool:
     """Test a single endpoint and record results"""
-    global test_results
     test_results["total"] += 1
 
     if skip_reason:

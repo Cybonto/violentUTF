@@ -2,7 +2,7 @@
 
 import inspect
 import logging
-from typing import Any, Dict, List, Optional, get_type_hints
+from typing import Any, Dict, List, Optional, Union, get_type_hints
 
 from app.core.config import settings
 from fastapi import FastAPI

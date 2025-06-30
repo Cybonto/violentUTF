@@ -596,7 +596,7 @@ GENERATOR_PARAMS = {
 
 def load_generators() -> Dict[str, "Generator"]:
     """Loads Generator configurations from the YAML file."""
-    global _generators_cache
+    global _generators_cache  # noqa: F824
     if not os.path.isfile(GENERATORS_CONFIG_FILE_PATH):
         logger.info(f"Generator config file not found at {GENERATORS_CONFIG_FILE_PATH}. Starting empty.")
         _generators_cache = {}
@@ -652,7 +652,6 @@ def load_generators() -> Dict[str, "Generator"]:
 
 def save_generators() -> bool:
     """Saves the current state of the generator cache to the YAML file."""
-    global _generators_cache
     data_to_save = {}
     for name, gen_instance in _generators_cache.items():
         if isinstance(gen_instance, Generator):
@@ -691,7 +690,6 @@ def save_generators() -> bool:
 
 def get_generators() -> Dict[str, "Generator"]:
     """Retrieves the current dictionary of loaded Generator instances."""
-    global _generators_cache
     if not _generators_cache:
         logger.debug("Generator cache empty, loading from file.")
         load_generators()
@@ -700,7 +698,7 @@ def get_generators() -> Dict[str, "Generator"]:
 
 def add_generator(generator_name: str, generator_type: str, parameters: Dict[str, Any]) -> "Generator":
     """Adds a new Generator configuration."""
-    global _generators_cache
+    global _generators_cache  # noqa: F824
     if generator_name in _generators_cache:
         raise ValueError(f"Generator name '{generator_name}' already exists.")
     if generator_type not in GENERATOR_TYPE_CLASSES or GENERATOR_TYPE_CLASSES[generator_type] is None:
@@ -726,7 +724,7 @@ def add_generator(generator_name: str, generator_type: str, parameters: Dict[str
 
 def delete_generator(generator_name: str) -> bool:
     """Deletes a Generator configuration."""
-    global _generators_cache
+    global _generators_cache  # noqa: F824
     if generator_name not in _generators_cache:
         raise KeyError(f"Cannot delete: Generator '{generator_name}' does not exist.")
     try:
@@ -744,7 +742,6 @@ def delete_generator(generator_name: str) -> bool:
 
 def configure_generator(generator_name: str, parameters: Dict[str, Any]) -> "Generator":
     """Updates the parameters of an existing Generator."""
-    global _generators_cache
     if generator_name not in _generators_cache:
         raise KeyError(f"Cannot configure: Generator '{generator_name}' does not exist.")
     try:
@@ -771,7 +768,6 @@ async def test_generator_async(generator_name: str) -> tuple[bool, str]:
     Handles PyRIT PromptTarget instances.
     Logs pass/fail status explicitly.
     """
-    global _generators_cache
     if generator_name not in _generators_cache:
         error_msg = f"Cannot test: Generator '{generator_name}' does not exist."
         logger.error(error_msg)
@@ -866,7 +862,6 @@ async def test_generator_async(generator_name: str) -> tuple[bool, str]:
 
 def get_generator_by_name(generator_name: str) -> Optional["Generator"]:
     """Retrieves a specific Generator instance by name."""
-    global _generators_cache
     gen = _generators_cache.get(generator_name)
     if not gen:
         logger.debug(f"Generator '{generator_name}' not in cache, attempting reload.")

@@ -468,7 +468,7 @@ async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, c
         }
 
         # Store transformed dataset
-        _session_datasets[user_session_key][transformed_id] = transformed_dataset_data
+        # _session_datasets[user_session_key][transformed_id] = transformed_dataset_data  # Legacy session storage removed
 
         transform_summary = (
             f"Applied template to {len(original_prompts)} prompts using {request.template_type} template"
@@ -570,10 +570,12 @@ async def delete_dataset(
         # Delete from session
         if delete_from_session:
             user_session_key = f"session_{user_id}"
-            if user_session_key in _session_datasets and dataset_id in _session_datasets[user_session_key]:
-                del _session_datasets[user_session_key][dataset_id]
-                deleted_from_session = True
-                logger.info(f"Dataset {dataset_id} deleted from session")
+            # Legacy session storage removed
+            # if user_session_key in _session_datasets and dataset_id in _session_datasets[user_session_key]:
+            #     del _session_datasets[user_session_key][dataset_id]
+            #     deleted_from_session = True
+            #     logger.info(f"Dataset {dataset_id} deleted from session")
+            deleted_from_session = False  # Session storage not available
 
         # Delete from memory (simulated)
         if delete_from_memory:

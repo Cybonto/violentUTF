@@ -19,6 +19,7 @@ import ollama
 import openai
 import requests
 import streamlit as st
+import vertexai
 from dotenv import load_dotenv
 
 # Import Google Vertex AI libraries
