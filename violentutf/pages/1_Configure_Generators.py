@@ -43,6 +43,7 @@ API_ENDPOINTS = {
     "generator_params": f"{API_BASE_URL}/api/v1/generators/types/{{generator_type}}/params",
     "apisix_models": f"{API_BASE_URL}/api/v1/generators/apisix/models",
     "openapi_providers": f"{API_BASE_URL}/api/v1/generators/apisix/openapi-providers",
+    "openapi_models": f"{API_BASE_URL}/api/v1/generators/apisix/openapi-models",
     # Orchestrator endpoints for generator testing
     "orchestrators": f"{API_BASE_URL}/api/v1/orchestrators",
     "orchestrator_create": f"{API_BASE_URL}/api/v1/orchestrators",
