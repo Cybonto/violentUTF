@@ -38,12 +38,23 @@ else
     echo -e "${YELLOW}Warning: ai-tokens.env not found${NC}"
 fi
 
-# Also check for .env files
+# Also check for .env files with VIOLENTUTF_API_KEY
 if [ -f "./.env" ]; then
     load_env_file "./.env"
 fi
 if [ -f "./violentutf/.env" ]; then
+    echo "Loading violentutf/.env"
     load_env_file "./violentutf/.env"
+elif [ -f "../violentutf/.env" ]; then
+    echo "Loading ../violentutf/.env"
+    load_env_file "../violentutf/.env"
+fi
+if [ -f "./violentutf_api/fastapi_app/.env" ]; then
+    echo "Loading violentutf_api/fastapi_app/.env"
+    load_env_file "./violentutf_api/fastapi_app/.env"
+elif [ -f "../violentutf_api/fastapi_app/.env" ]; then
+    echo "Loading ../violentutf_api/fastapi_app/.env"
+    load_env_file "../violentutf_api/fastapi_app/.env"
 fi
 
 echo -e "${BLUE}=== OpenAPI Endpoint Testing ===${NC}"
@@ -133,7 +144,13 @@ echo
 echo -e "${BLUE}Test 2: Through APISIX${NC}"
 
 if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
-    echo "Using APISIX API key: ${VIOLENTUTF_API_KEY:0:10}...${VIOLENTUTF_API_KEY: -10}"
+    key_length=${#VIOLENTUTF_API_KEY}
+    echo "Found APISIX API key (length: $key_length)"
+    if [ $key_length -gt 20 ]; then
+        echo "Using APISIX API key: ${VIOLENTUTF_API_KEY:0:10}...${VIOLENTUTF_API_KEY: -10}"
+    else
+        echo "Using APISIX API key: [SHORT KEY]"
+    fi
     echo
     
     echo "Testing through APISIX gateway:"
