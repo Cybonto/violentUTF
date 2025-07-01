@@ -1108,7 +1108,7 @@ create_open_webui_route() {
 # Function to create APISIX API key consumer
 create_apisix_consumer() {
     local consumer_config='{
-        "username": "violentutf_user",
+        "username": "violentutf",
         "plugins": {
             "key-auth": {
                 "key": "'$VIOLENTUTF_API_KEY'"
@@ -1120,7 +1120,15 @@ create_apisix_consumer() {
     local response
     local http_code
     
-    response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf_user" \
+    # First check if consumer already exists
+    existing_consumer=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf" \
+      -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+    
+    if echo "$existing_consumer" | grep -q '"username":"violentutf"'; then
+        echo "   Consumer 'violentutf' already exists, updating..."
+    fi
+    
+    response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${consumer_config}" 2>&1)
@@ -1129,7 +1137,7 @@ create_apisix_consumer() {
     response_body="${response%???}"
     
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
-        echo "✅ Successfully created API key consumer"
+        echo "✅ Successfully created/updated API key consumer 'violentutf'"
         echo "   API Key: $VIOLENTUTF_API_KEY"
         echo "   Use this key in the 'apikey' header for AI Gateway requests"
         return 0
