@@ -112,7 +112,7 @@ echo "$openapi_routes" | jq -c '.[]' | while IFS= read -r route; do
         auth_headers=$(echo "$proxy_rewrite" | jq -r '.headers.set // empty')
         if [ -n "$auth_headers" ]; then
             echo "  Authentication headers:"
-            echo "$auth_headers" | jq -r 'to_entries[] | "    - " + .key + ": " + (.value | if (. | type == "string" and length > 20) then (.[0:10] + "..." + .[-10:]) else . end)'
+            echo "$auth_headers" | jq -r 'to_entries[] | "    - " + .key + ": " + (.value | tostring | if length > 20 then .[0:10] + "..." + .[-10:] else . end)'
             
             # Check specific auth headers
             has_auth_header=$(echo "$auth_headers" | jq -r 'has("Authorization")')
