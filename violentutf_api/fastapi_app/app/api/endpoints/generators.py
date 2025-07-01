@@ -47,32 +47,32 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     # OpenAI model mappings
     if provider == "openai":
         openai_mappings = {
-            "gpt-4": "/ai/openai/gpt4",
-            "gpt-3.5-turbo": "/ai/openai/gpt35",
-            "gpt-4-turbo": "/ai/openai/gpt4-turbo",
-            "gpt-4o": "/ai/openai/gpt4o",
-            "gpt-4o-mini": "/ai/openai/gpt4o-mini",
-            "gpt-4.1": "/ai/openai/gpt41",
-            "gpt-4.1-mini": "/ai/openai/gpt41-mini",
-            "gpt-4.1-nano": "/ai/openai/gpt41-nano",
-            "o1-preview": "/ai/openai/o1-preview",
-            "o1-mini": "/ai/openai/o1-mini",
-            "o3-mini": "/ai/openai/o3-mini",
-            "o4-mini": "/ai/openai/o4-mini",
+            "gpt - 4": "/ai/openai/gpt4",
+            "gpt - 3.5 - turbo": "/ai/openai/gpt35",
+            "gpt - 4 - turbo": "/ai/openai/gpt4 - turbo",
+            "gpt - 4o": "/ai/openai/gpt4o",
+            "gpt - 4o-mini": "/ai/openai/gpt4o-mini",
+            "gpt - 4.1": "/ai/openai/gpt41",
+            "gpt - 4.1 - mini": "/ai/openai/gpt41 - mini",
+            "gpt - 4.1 - nano": "/ai/openai/gpt41 - nano",
+            "o1 - preview": "/ai/openai/o1 - preview",
+            "o1 - mini": "/ai/openai/o1 - mini",
+            "o3 - mini": "/ai/openai/o3 - mini",
+            "o4 - mini": "/ai/openai/o4 - mini",
         }
         return openai_mappings.get(model)
 
     # Anthropic model mappings
     elif provider == "anthropic":
         anthropic_mappings = {
-            "claude-3-opus-20240229": "/ai/anthropic/opus",
-            "claude-3-sonnet-20240229": "/ai/anthropic/sonnet",
-            "claude-3-haiku-20240307": "/ai/anthropic/haiku",
-            "claude-3-5-sonnet-20241022": "/ai/anthropic/sonnet35",
-            "claude-3-5-haiku-20241022": "/ai/anthropic/haiku35",
-            "claude-3-7-sonnet-latest": "/ai/anthropic/sonnet37",
-            "claude-sonnet-4-20250514": "/ai/anthropic/sonnet4",
-            "claude-opus-4-20250514": "/ai/anthropic/opus4",
+            "claude - 3 - opus - 20240229": "/ai/anthropic/opus",
+            "claude - 3 - sonnet - 20240229": "/ai/anthropic/sonnet",
+            "claude - 3 - haiku - 20240307": "/ai/anthropic/haiku",
+            "claude - 3 - 5-sonnet - 20241022": "/ai/anthropic/sonnet35",
+            "claude - 3 - 5-haiku - 20241022": "/ai/anthropic/haiku35",
+            "claude - 3 - 7-sonnet-latest": "/ai/anthropic/sonnet37",
+            "claude-sonnet - 4 - 20250514": "/ai/anthropic/sonnet4",
+            "claude-opus - 4 - 20250514": "/ai/anthropic/opus4",
         }
         return anthropic_mappings.get(model)
 
@@ -94,11 +94,11 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     # AWS Bedrock model mappings (when supported)
     elif provider == "bedrock":
         bedrock_mappings = {
-            "anthropic.claude-opus-4-20250514-v1:0": "/ai/bedrock/claude-opus-4",
-            "anthropic.claude-sonnet-4-20250514-v1:0": "/ai/bedrock/claude-sonnet-4",
-            "anthropic.claude-3-5-sonnet-20241022-v2:0": "/ai/bedrock/claude-35-sonnet",
-            "anthropic.claude-3-5-haiku-20241022-v1:0": "/ai/bedrock/claude-35-haiku",
-            "meta.llama3-3-70b-instruct-v1:0": "/ai/bedrock/llama3-3-70b",
+            "anthropic.claude-opus - 4 - 20250514 - v1:0": "/ai/bedrock/claude-opus - 4",
+            "anthropic.claude-sonnet - 4 - 20250514 - v1:0": "/ai/bedrock/claude-sonnet - 4",
+            "anthropic.claude - 3 - 5-sonnet - 20241022 - v2:0": "/ai/bedrock/claude - 35 - sonnet",
+            "anthropic.claude - 3 - 5-haiku - 20241022 - v1:0": "/ai/bedrock/claude - 35 - haiku",
+            "meta.llama3 - 3 - 70b-instruct-v1:0": "/ai/bedrock/llama3 - 3 - 70b",
             "amazon.nova-pro-v1:0": "/ai/bedrock/nova-pro",
             "amazon.nova-lite-v1:0": "/ai/bedrock/nova-lite",
         }
@@ -164,7 +164,7 @@ GENERATOR_TYPE_DEFINITIONS = {
                 "type": "selectbox",
                 "description": "AI Model",
                 "required": True,
-                "default": "gpt-3.5-turbo",
+                "default": "gpt - 3.5 - turbo",
                 "options": [],  # Dynamically loaded
                 "category": "configuration",
             },
@@ -285,14 +285,14 @@ def discover_apisix_models(provider: str) -> List[str]:
 
                 # Match provider-specific URI patterns
                 if provider == "openai" and uri.startswith("/ai/openai/"):
-                    # Extract model from URI like /ai/openai/gpt4 -> gpt-4
+                    # Extract model from URI like /ai/openai/gpt4 -> gpt - 4
                     model_key = uri.replace("/ai/openai/", "")
                     actual_model = map_uri_to_model("openai", model_key)
                     if actual_model:
                         models.append(actual_model)
 
                 elif provider == "anthropic" and uri.startswith("/ai/anthropic/"):
-                    # Extract model from URI like /ai/anthropic/opus -> claude-3-opus-20240229
+                    # Extract model from URI like /ai/anthropic/opus -> claude - 3 - opus - 20240229
                     model_key = uri.replace("/ai/anthropic/", "")
                     actual_model = map_uri_to_model("anthropic", model_key)
                     if actual_model:
@@ -360,32 +360,32 @@ def map_uri_to_model(provider: str, uri_key: str) -> str:
     # OpenAI URI mappings (reverse of setup_macos.sh)
     if provider == "openai":
         uri_to_model = {
-            "gpt4": "gpt-4",
-            "gpt35": "gpt-3.5-turbo",
-            "gpt4-turbo": "gpt-4-turbo",
-            "gpt4o": "gpt-4o",
-            "gpt4o-mini": "gpt-4o-mini",
-            "gpt41": "gpt-4.1",
-            "gpt41-mini": "gpt-4.1-mini",
-            "gpt41-nano": "gpt-4.1-nano",
-            "o1-preview": "o1-preview",
-            "o1-mini": "o1-mini",
-            "o3-mini": "o3-mini",
-            "o4-mini": "o4-mini",
+            "gpt4": "gpt - 4",
+            "gpt35": "gpt - 3.5 - turbo",
+            "gpt4 - turbo": "gpt - 4 - turbo",
+            "gpt4o": "gpt - 4o",
+            "gpt4o-mini": "gpt - 4o-mini",
+            "gpt41": "gpt - 4.1",
+            "gpt41 - mini": "gpt - 4.1 - mini",
+            "gpt41 - nano": "gpt - 4.1 - nano",
+            "o1 - preview": "o1 - preview",
+            "o1 - mini": "o1 - mini",
+            "o3 - mini": "o3 - mini",
+            "o4 - mini": "o4 - mini",
         }
         return uri_to_model.get(uri_key)
 
     # Anthropic URI mappings
     elif provider == "anthropic":
         uri_to_model = {
-            "opus": "claude-3-opus-20240229",
-            "sonnet": "claude-3-sonnet-20240229",
-            "haiku": "claude-3-haiku-20240307",
-            "sonnet35": "claude-3-5-sonnet-20241022",
-            "haiku35": "claude-3-5-haiku-20241022",
-            "sonnet37": "claude-3-7-sonnet-latest",
-            "sonnet4": "claude-sonnet-4-20250514",
-            "opus4": "claude-opus-4-20250514",
+            "opus": "claude - 3 - opus - 20240229",
+            "sonnet": "claude - 3 - sonnet - 20240229",
+            "haiku": "claude - 3 - haiku - 20240307",
+            "sonnet35": "claude - 3 - 5-sonnet - 20241022",
+            "haiku35": "claude - 3 - 5-haiku - 20241022",
+            "sonnet37": "claude - 3 - 7-sonnet-latest",
+            "sonnet4": "claude-sonnet - 4 - 20250514",
+            "opus4": "claude-opus - 4 - 20250514",
         }
         return uri_to_model.get(uri_key)
 
@@ -403,8 +403,8 @@ def get_fallback_models(provider: str) -> List[str]:
     Fallback model lists if APISIX discovery fails
     """
     fallback_mappings = {
-        "openai": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-4o", "gpt-4o-mini"],
-        "anthropic": ["claude-3-sonnet-20240229", "claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"],
+        "openai": ["gpt - 4", "gpt - 4 - turbo", "gpt - 3.5 - turbo", "gpt - 4o", "gpt - 4o-mini"],
+        "anthropic": ["claude - 3 - sonnet - 20240229", "claude - 3 - 5-sonnet - 20241022", "claude - 3 - haiku - 20240307"],
         "ollama": ["llama2", "codellama", "mistral", "llama3"],
         "webui": ["llama2", "codellama"],
     }

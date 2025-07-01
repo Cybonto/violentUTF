@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 """
 Comprehensive ViolentUTF API Endpoint Testing Script
 Tests all 69 API endpoints systematically to ensure they work properly
@@ -303,7 +303,7 @@ def test_generator_endpoints():
     generator_payload = {
         "name": f"test_generator_{int(time.time())}",  # Unique name
         "type": "AI Gateway",  # Use correct generator type
-        "parameters": {"provider": "openai", "model": "gpt-3.5-turbo", "temperature": 0.7},
+        "parameters": {"provider": "openai", "model": "gpt - 3.5 - turbo", "temperature": 0.7},
     }
 
     gen_created = test_endpoint("POST", "/api/v1/generators", "Create generator", generator_payload)

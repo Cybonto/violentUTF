@@ -528,11 +528,11 @@ with st.sidebar:
                 # Fetch available models (assuming API provides a way)
                 # For now, we'll hardcode some model names
                 model_names = [
-                    "claude - 3-5 - sonnet - latest",
-                    "claude - 3-5 - haiku - latest",
-                    "claude - 3-opus - latest",
-                    "claude - 3-sonnet - 20240229",
-                    "claude - 3-haiku - 20240307",
+                    "claude - 3 - 5 - sonnet - latest",
+                    "claude - 3 - 5 - haiku - latest",
+                    "claude - 3 - opus - latest",
+                    "claude - 3 - sonnet - 20240229",
+                    "claude - 3 - haiku - 20240307",
                 ]
             except Exception as e:
                 st.warning(f"Error initializing Anthropic client: {e}")
@@ -1983,9 +1983,9 @@ def extract_generator_params(text):
     elif "claude" in text.lower():
         params["provider"] = "anthropic"
         if "3.5" in text:
-            params["model"] = "claude - 3-5 - sonnet - 20241022"
+            params["model"] = "claude - 3 - 5 - sonnet - 20241022"
         else:
-            params["model"] = "claude - 3-opus - 20240229"
+            params["model"] = "claude - 3 - opus - 20240229"
     elif "llama" in text.lower():
         params["provider"] = "ollama"
         params["model"] = "llama3"
@@ -2052,7 +2052,7 @@ def extract_scorer_params(text):
     if "gpt - 4" in text.lower():
         params["model"] = "gpt - 4"
     elif "claude" in text.lower():
-        params["model"] = "claude - 3-5 - sonnet - 20241022"
+        params["model"] = "claude - 3 - 5 - sonnet - 20241022"
 
     # Extract threshold
     import re

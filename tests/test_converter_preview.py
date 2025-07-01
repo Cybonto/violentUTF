@@ -17,7 +17,11 @@ JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbW
 
 def get_auth_headers():
     """Get authentication headers for API requests"""
-    return {"Authorization": f"Bearer {JWT_TOKEN}", "Content - Type": "application / json", "X - API - Gateway": "APISIX"}
+    return {
+        "Authorization": f"Bearer {JWT_TOKEN}",
+        "Content - Type": "application / json",
+        "X - API - Gateway": "APISIX",
+    }
 
 
 def make_request(method, endpoint, **kwargs):

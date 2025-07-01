@@ -1072,7 +1072,10 @@ def _render_manual_testing(scorer_id: str, scorer_name: str, category: str, cate
         st.markdown("**Select a sample input relevant to this scorer category:**")
         sample_inputs = test_cases.get(category, ["Sample text for testing"])
         test_input = st.selectbox(
-            "Sample inputs:", sample_inputs, key=f"sample_input_{scorer_id}", help=f"Pre - made test cases for {category}"
+            "Sample inputs:",
+            sample_inputs,
+            key=f"sample_input_{scorer_id}",
+            help=f"Pre - made test cases for {category}",
         )
 
     with tab2:

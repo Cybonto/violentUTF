@@ -60,8 +60,8 @@ class TestAuthenticationEndpoints:
         assert data["username"] == "testuser"
         assert data["email"] == "test@example.com"
         assert "ai-api-access" in data["roles"]
-        assert data["has_ai_access"]  is True
-        assert data["token_valid"]  is True
+        assert data["has_ai_access"] is True
+        assert data["token_valid"] is True
 
     def test_validate_token(self, auth_headers):
         """Test POST /auth/token/validate endpoint"""
@@ -72,8 +72,8 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["valid"]  is True
-        assert data["has_ai_access"]  is True
+        assert data["valid"] is True
+        assert data["has_ai_access"] is True
         assert data["missing_roles"] == []
 
     def test_validate_token_missing_role(self, auth_headers):
@@ -84,7 +84,7 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["valid"]  is False
+        assert data["valid"] is False
         assert "admin" in data["missing_roles"]
 
     def test_logout(self, auth_headers):
@@ -138,8 +138,8 @@ class TestDatabaseEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["is_initialized"]  is True
-        assert data["connection_healthy"]  is True
+        assert data["is_initialized"] is True
+        assert data["connection_healthy"] is True
         assert data["file_size_mb"] == 1.0
 
     @patch("os.path.exists")
@@ -198,7 +198,7 @@ class TestSessionEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024-01-01T00:00:00"}',
+        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024 - 01 - 01T00:00:00"}',
     )
     @patch("os.path.exists")
     def test_get_session_state(self, mock_exists, mock_file, auth_headers):
@@ -229,7 +229,7 @@ class TestSessionEndpoints:
             "workflow_state": {},
             "temporary_data": {},
             "cache_data": {},
-            "last_updated": "2024-01-01T00:00:00",
+            "last_updated": "2024 - 01 - 01T00:00:00",
         }
         mock_file.return_value.read.return_value = json.dumps(existing_data)
 
@@ -243,7 +243,7 @@ class TestSessionEndpoints:
 
         data = response.json()
         assert data["ui_preferences"]["theme"] == "light"
-        assert data["ui_preferences"]["sidebar_collapsed"]  is True
+        assert data["ui_preferences"]["sidebar_collapsed"] is True
         assert data["workflow_state"]["current_step"] == "database_init"
 
     @patch("builtins.open", new_callable=mock_open)
@@ -337,7 +337,7 @@ class TestFileEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["success"]  is True
+        assert data["success"] is True
         assert data["filename"] == "test.txt"
         assert "file_id" in data
 

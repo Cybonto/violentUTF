@@ -149,7 +149,7 @@ class AuthMiddleware:
 
             # Calculate expected HMAC signature
             expected_signature = hmac.new(
-                gateway_secret.encode("utf-8"), signature_payload.encode("utf-8"), hashlib.sha256
+                gateway_secret.encode("utf - 8"), signature_payload.encode("utf - 8"), hashlib.sha256
             ).hexdigest()
 
             # Compare signatures using constant-time comparison

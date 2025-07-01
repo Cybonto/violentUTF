@@ -71,7 +71,11 @@ class APISIXGatewayAuth:
             signature, timestamp = self.generate_hmac_signature(gateway_secret, method, path)
 
             # Test headers
-            test_headers = {"X - API - Gateway": "APISIX", "X - APISIX - Signature": signature, "X - APISIX - Timestamp": timestamp}
+            test_headers = {
+                "X - API - Gateway": "APISIX",
+                "X - APISIX - Signature": signature,
+                "X - APISIX - Timestamp": timestamp,
+            }
 
             # Make test request
             response = requests.get(f"{fastapi_url}{path}", headers=test_headers, timeout=10)

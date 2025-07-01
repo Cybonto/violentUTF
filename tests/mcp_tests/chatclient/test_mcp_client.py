@@ -46,7 +46,11 @@ class TestMCPClient:
     @pytest.fixture
     def mock_auth_headers(self):
         """Mock authentication headers"""
-        return {"Authorization": "Bearer test_token", "Content - Type": "application / json", "X - API - Gateway": "APISIX"}
+        return {
+            "Authorization": "Bearer test_token",
+            "Content - Type": "application / json",
+            "X - API - Gateway": "APISIX",
+        }
 
     @pytest.mark.asyncio
     async def test_initialization(self, client, mock_auth_headers):

@@ -528,7 +528,9 @@ def configure_converter_parameters():
         "generated_converter_name" not in st.session_state
         or st.session_state.get("last_converter_class") != converter_class
     ):
-        st.session_state["generated_converter_name"] = f"{converter_class}_{datetime.now().strftime('%Y % m%d_ % H%M % S')}"
+        st.session_state["generated_converter_name"] = (
+            f"{converter_class}_{datetime.now().strftime('%Y % m%d_ % H%M % S')}"
+        )
         st.session_state["last_converter_class"] = converter_class
 
     default_name = st.session_state.get("custom_converter_name", st.session_state["generated_converter_name"])

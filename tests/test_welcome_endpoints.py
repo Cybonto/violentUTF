@@ -58,8 +58,8 @@ class TestAuthenticationEndpoints:
         assert data["username"] == "testuser"
         assert data["email"] == "test@example.com"
         assert "ai-api-access" in data["roles"]
-        assert data["has_ai_access"]  is True
-        assert data["token_valid"]  is True
+        assert data["has_ai_access"] is True
+        assert data["token_valid"] is True
 
         # Clean up
         app.dependency_overrides.clear()
@@ -76,8 +76,8 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["valid"]  is True
-        assert data["has_ai_access"]  is True
+        assert data["valid"] is True
+        assert data["has_ai_access"] is True
         assert data["missing_roles"] == []
 
     @patch("app.core.auth.get_current_user")
@@ -92,7 +92,7 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["valid"]  is False
+        assert data["valid"] is False
         assert "admin" in data["missing_roles"]
         assert "ai-api-access" in data["missing_roles"]
 
@@ -154,8 +154,8 @@ class TestDatabaseEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["is_initialized"]  is True
-        assert data["connection_healthy"]  is True
+        assert data["is_initialized"] is True
+        assert data["connection_healthy"] is True
         assert data["file_size_mb"] == 1.0
 
     @patch("app.core.auth.get_current_user")
@@ -213,7 +213,7 @@ class TestSessionEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024-01-01T00:00:00"}',
+        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024 - 01 - 01T00:00:00"}',
     )
     @patch("os.path.exists")
     def test_get_session_state(self, mock_exists, mock_file, mock_get_user, auth_headers, mock_user):
@@ -247,7 +247,7 @@ class TestSessionEndpoints:
             "workflow_state": {},
             "temporary_data": {},
             "cache_data": {},
-            "last_updated": "2024-01-01T00:00:00",
+            "last_updated": "2024 - 01 - 01T00:00:00",
         }
         mock_file.return_value.read.return_value = json.dumps(existing_data)
 
@@ -261,7 +261,7 @@ class TestSessionEndpoints:
 
         data = response.json()
         assert data["ui_preferences"]["theme"] == "light"
-        assert data["ui_preferences"]["sidebar_collapsed"]  is True
+        assert data["ui_preferences"]["sidebar_collapsed"] is True
         assert data["workflow_state"]["current_step"] == "database_init"
 
     @patch("app.core.auth.get_current_user")
@@ -351,7 +351,7 @@ test_param: test_value
             assert response.status_code == 200
 
             data = response.json()
-            assert data["success"]  is True
+            assert data["success"] is True
             assert "test_param" in data["parameters"]
 
     def test_load_invalid_yaml(self, auth_headers):
@@ -431,7 +431,7 @@ class TestEnvironmentConfigEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["configuration_complete"]  is True
+        assert data["configuration_complete"] is True
 
     @patch("app.core.auth.get_current_user")
     def test_validate_environment_config(self, mock_get_user, auth_headers, mock_user):
@@ -454,7 +454,7 @@ class TestEnvironmentConfigEndpoints:
         data = response.json()
         assert "schema" in data
         assert "PYRIT_DB_SALT" in data["schema"]
-        assert data["schema"]["PYRIT_DB_SALT"]["required"]  is True
+        assert data["schema"]["PYRIT_DB_SALT"]["required"] is True
 
     @patch("app.core.auth.get_current_user")
     def test_generate_salt(self, mock_get_user, auth_headers, mock_user):
@@ -487,7 +487,7 @@ class TestFileEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["success"]  is True
+        assert data["success"] is True
         assert data["filename"] == "test.txt"
         assert "file_id" in data
 
@@ -495,7 +495,7 @@ class TestFileEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
+        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024 - 01 - 01T00:00:00", "uploaded_by": "testuser"}',
     )
     @patch("os.path.exists")
     def test_get_file_metadata(self, mock_exists, mock_file, mock_get_user, auth_headers, mock_user):
@@ -509,7 +509,7 @@ class TestFileEndpoints:
         data = response.json()
         assert data["file_info"]["file_id"] == "test-id"
         assert data["file_info"]["filename"] == "test.txt"
-        assert data["available"]  is True
+        assert data["available"] is True
 
     def test_get_file_not_found(self, auth_headers):
         """Test GET /files/{file_id} with non-existent file"""
@@ -521,7 +521,7 @@ class TestFileEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
+        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024 - 01 - 01T00:00:00", "uploaded_by": "testuser"}',
     )
     @patch("os.makedirs")
     def test_list_files(self, mock_makedirs, mock_file, mock_glob, mock_get_user, auth_headers, mock_user):
@@ -542,7 +542,7 @@ class TestFileEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
+        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024 - 01 - 01T00:00:00", "uploaded_by": "testuser"}',
     )
     @patch("os.path.exists")
     @patch("os.remove")

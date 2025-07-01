@@ -14,8 +14,8 @@ sys.path.insert(0, str(parent_dir))
 import pytest
 import requests
 
-# Import all fixtures from the main conftest
-from conftest import *
+# Import specific fixtures from the main conftest
+from conftest import api_headers, auth_token, service_health_check, setup_database
 
 # Import the keycloak_auth utility
 from utils.keycloak_auth import keycloak_auth

@@ -120,7 +120,7 @@ def test_list_all_orchestrator_executions(mock_auth, mock_db):
     assert exec1["orchestrator_id"] == str(orchestrator1_id)
     assert exec1["name"] == "Security Test Orchestrator"
     assert exec1["orchestrator_type"] == "PromptSendingOrchestrator"
-    assert exec1["has_scorer_results"]  is True
+    assert exec1["has_scorer_results"] is True
     assert exec1["status"] == "completed"
 
     # Check second execution (no scorer results)
@@ -129,7 +129,7 @@ def test_list_all_orchestrator_executions(mock_auth, mock_db):
     assert exec2["orchestrator_id"] == str(orchestrator2_id)
     assert exec2["name"] == "Dataset Test Orchestrator"
     assert exec2["orchestrator_type"] == "RedTeamingOrchestrator"
-    assert exec2["has_scorer_results"]  is False
+    assert exec2["has_scorer_results"] is False
     assert exec2["status"] == "completed"
 
 
