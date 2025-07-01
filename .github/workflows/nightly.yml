@@ -238,13 +238,13 @@ jobs:
       - name: Memory profiling
         run: |
           # Profile memory usage
-          mprof run python -m pytest tests/ -k "not integration" || true
+          mprof run python -m pytest tests/unit/ || true
           mprof plot -o memory-usage.png || true
 
       - name: CPU profiling
         run: |
           # Profile CPU usage
-          py-spy record -d 30 -o cpu-profile.svg -- python -m pytest tests/ || true
+          py-spy record -d 30 -o cpu-profile.svg -- python -m pytest tests/unit/ || true
 
       - name: Stress test with edge cases
         run: |

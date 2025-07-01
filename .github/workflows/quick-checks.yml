@@ -120,7 +120,7 @@ jobs:
           # If unit test directory doesn't exist, run basic tests
           if [ ! -d tests/unit/ ]; then
             echo "No unit test directory found, running basic tests"
-            pytest tests/ -v --tb=short --maxfail=5 -k "not integration and not e2e" || true
+            pytest tests/unit/ -v --tb=short --maxfail=5 || true
           fi
 
       - name: Generate test summary

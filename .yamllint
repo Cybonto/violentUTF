@@ -1,0 +1,10 @@
+extends: relaxed
+
+rules:
+  line-length:
+    max: 150
+    level: warning
+  new-line-at-end-of-file:
+    level: error
+  trailing-spaces:
+    level: error
