@@ -112,11 +112,13 @@ echo "$openapi_routes" | jq -c '.[]' | while IFS= read -r route; do
         auth_headers=$(echo "$proxy_rewrite" | jq -r '.headers.set // empty')
         if [ -n "$auth_headers" ]; then
             echo "  Authentication headers:"
-            echo "$auth_headers" | jq -r 'to_entries[] | "    - \(.key): \(.value | if length > 20 then .[:10] + \"...\" + .[-10:] else . end)"'
+            echo "$auth_headers" | jq -r 'to_entries[] | "    - " + .key + ": " + (.value | if (. | type == "string" and length > 20) then (.[0:10] + "..." + .[-10:]) else . end)'
             
             # Check specific auth headers
-            has_auth=$(echo "$auth_headers" | jq -r 'has("Authorization") or has("X-API-Key") or has("x-api-key") or (to_entries[] | select(.key | contains("Key") or contains("key")) | .key)')
-            if [ -n "$has_auth" ]; then
+            has_auth_header=$(echo "$auth_headers" | jq -r 'has("Authorization")')
+            has_api_key=$(echo "$auth_headers" | jq -r 'to_entries[] | select(.key | test("[Kk]ey"; "i")) | .key' | head -1)
+            
+            if [ "$has_auth_header" = "true" ] || [ -n "$has_api_key" ]; then
                 echo -e "  ${GREEN}✓ Authentication configured${NC}"
             else
                 echo -e "  ${YELLOW}⚠ No authentication headers found${NC}"
