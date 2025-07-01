@@ -47,8 +47,8 @@ class DuckDBManager:
         """Generate database filename based on salted hash of username"""
         if not self.username or not self.salt:
             return ""
-        salt_bytes = self.salt.encode("utf - 8") if isinstance(self.salt, str) else self.salt
-        hashed_username = hashlib.sha256(salt_bytes + self.username.encode("utf - 8")).hexdigest()
+        salt_bytes = self.salt.encode("utf-8") if isinstance(self.salt, str) else self.salt
+        hashed_username = hashlib.sha256(salt_bytes + self.username.encode("utf-8")).hexdigest()
         return f"pyrit_memory_{hashed_username}.db"
 
     def _get_db_path(self) -> str:

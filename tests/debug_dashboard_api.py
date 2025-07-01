@@ -1,4 +1,4 @@
-#!/usr / bin / env python3
+#!/usr/bin/env python3
 """
 Debug script to trace exactly what the dashboard API calls are doing
 and why they can't find scorer execution results.
@@ -13,10 +13,10 @@ import requests
 from dotenv import load_dotenv
 
 # Add the violentutf directory to Python path
-sys.path.append("/Users / tamnguyen / Documents / GitHub / ViolentUTF_nightly / violentutf")
+sys.path.append("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf")
 
 # Load environment variables
-load_dotenv("/Users / tamnguyen / Documents / GitHub / ViolentUTF_nightly / violentutf/.env")
+load_dotenv("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf/.env")
 
 from utils.jwt_manager import jwt_manager
 from utils.logging import get_logger
@@ -44,8 +44,8 @@ def get_auth_headers():
 
         headers = {
             "Authorization": f"Bearer {api_token}",
-            "Content - Type": "application / json",
-            "X - API - Gateway": "APISIX",
+            "Content-Type": "application/json",
+            "X-API-Gateway": "APISIX",
         }
 
         # Add APISIX API key
@@ -95,7 +95,7 @@ def debug_orchestrator_flow():
 
     # Step 1: Get all orchestrators (like the fixed dashboards do)
     print("\n1️⃣ Getting all orchestrators...")
-    orchestrators_response = api_request("GET", f"{API_BASE_URL}/api / v1 / orchestrators")
+    orchestrators_response = api_request("GET", f"{API_BASE_URL}/api/v1/orchestrators")
 
     if not orchestrators_response:
         print("❌ Failed to get orchestrators")
@@ -134,7 +134,7 @@ def debug_orchestrator_flow():
         orch_name = orchestrator.get("name", "Unknown")
 
         print(f"\n🔍 Getting executions for: {orch_name}")
-        exec_url = f"{API_BASE_URL}/api / v1 / orchestrators/{orch_id}/executions"
+        exec_url = f"{API_BASE_URL}/api/v1/orchestrators/{orch_id}/executions"
         exec_response = api_request("GET", exec_url)
 
         if exec_response and "executions" in exec_response:

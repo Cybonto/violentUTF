@@ -53,8 +53,8 @@ def get_auth_headers() -> Dict[str, str]:
 
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content - Type": "application / json",
-            "X - API - Gateway": "APISIX",
+            "Content-Type": "application/json",
+            "X-API-Gateway": "APISIX",
         }
 
         # Add APISIX API key for AI model access
@@ -308,7 +308,7 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
         test_prompt = "Hello, please respond with 'Test successful' if you receive this message."
 
         # Prepare request
-        headers = {"apikey": api_key, "Content - Type": "application / json"}
+        headers = {"apikey": api_key, "Content-Type": "application/json"}
 
         payload = {"messages": [{"role": "user", "content": test_prompt}], "max_tokens": 50, "temperature": 0}
 

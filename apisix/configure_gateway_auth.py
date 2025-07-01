@@ -1,7 +1,7 @@
-#!/usr / bin / env python3
+#!/usr/bin/env python3
 """
 APISIX Gateway Authentication Configuration Script
-Configures HMAC - based authentication between APISIX and FastAPI
+Configures HMAC-based authentication between APISIX and FastAPI
 """
 
 import hashlib
@@ -21,7 +21,7 @@ class APISIXGatewayAuth:
     def __init__(self, admin_url: str = "http://localhost:9180", admin_key: str = ""):
         self.admin_url = admin_url.rstrip("/")
         self.admin_key = admin_key
-        self.headers = {"X - API - KEY": admin_key, "Content - Type": "application / json"}
+        self.headers = {"X-API-KEY": admin_key, "Content-Type": "application/json"}
 
     def generate_hmac_signature(
         self, gateway_secret: str, method: str, path: str, timestamp: Optional[str] = None
@@ -44,9 +44,9 @@ class APISIXGatewayAuth:
         # Create signature payload: METHOD:PATH:TIMESTAMP
         signature_payload = f"{method}:{path}:{timestamp}"
 
-        # Generate HMAC - SHA256 signature
+        # Generate HMAC-SHA256 signature
         signature = hmac.new(
-            gateway_secret.encode("utf - 8"), signature_payload.encode("utf - 8"), hashlib.sha256
+            gateway_secret.encode("utf-8"), signature_payload.encode("utf-8"), hashlib.sha256
         ).hexdigest()
 
         return signature, timestamp
@@ -72,9 +72,9 @@ class APISIXGatewayAuth:
 
             # Test headers
             test_headers = {
-                "X - API - Gateway": "APISIX",
-                "X - APISIX - Signature": signature,
-                "X - APISIX - Timestamp": timestamp,
+                "X-API-Gateway": "APISIX",
+                "X-APISIX-Signature": signature,
+                "X-APISIX-Timestamp": timestamp,
             }
 
             # Make test request
@@ -105,7 +105,7 @@ class APISIXGatewayAuth:
         try:
             # Plugin configuration for global use
             plugin_config = {
-                "id": "gateway - auth - global",
+                "id": "gateway-auth-global",
                 "plugins": {
                     "serverless - pre - function": {
                         "phase": "rewrite",
@@ -138,9 +138,9 @@ class APISIXGatewayAuth:
                                 end
 
                                 -- Add headers
-                                ngx.req.set_header("X - API - Gateway", "APISIX")
-                                ngx.req.set_header("X - APISIX - Signature", signature_hex)
-                                ngx.req.set_header("X - APISIX - Timestamp", timestamp)
+                                ngx.req.set_header("X-API-Gateway", "APISIX")
+                                ngx.req.set_header("X-APISIX-Signature", signature_hex)
+                                ngx.req.set_header("X-APISIX-Timestamp", timestamp)
                             end
                             """
                         ],
@@ -150,7 +150,7 @@ class APISIXGatewayAuth:
 
             # Apply to plugin configs
             response = requests.put(
-                f"{self.admin_url}/apisix / admin / plugin_configs / gateway - auth - global",
+                f"{self.admin_url}/apisix/admin/plugin_configs/gateway-auth-global",
                 headers=self.headers,
                 json=plugin_config,
                 timeout=10,

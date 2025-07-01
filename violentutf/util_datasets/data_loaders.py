@@ -196,19 +196,19 @@ def parse_local_dataset_file(uploaded_file) -> pd.DataFrame:
         logger.info(f"Parsing uploaded file '{uploaded_file.name}' with extension '{file_extension}'")
         if file_extension in [".csv", ".tsv"]:
             delimiter = "," if file_extension == ".csv" else "\t"
-            dataframe = pd.read_csv(StringIO(content.decode("utf - 8")), delimiter=delimiter)
+            dataframe = pd.read_csv(StringIO(content.decode("utf-8")), delimiter=delimiter)
         elif file_extension in [".json", ".jsonl"]:
-            lines = content.decode("utf - 8").splitlines()
+            lines = content.decode("utf-8").splitlines()
             if len(lines) == 1:
                 json_data = json.loads(lines[0])
             else:
                 json_data = [json.loads(line) for line in lines]
             dataframe = pd.json_normalize(json_data)
         elif file_extension in [".yaml", ".yml"]:
-            yaml_data = yaml.safe_load(content.decode("utf - 8"))
+            yaml_data = yaml.safe_load(content.decode("utf-8"))
             dataframe = pd.json_normalize(yaml_data)
         elif file_extension in [".txt"]:
-            text = content.decode("utf - 8")
+            text = content.decode("utf-8")
             lines = text.strip().split("\n")
             dataframe = pd.DataFrame(lines, columns=["text"])
         else:

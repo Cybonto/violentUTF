@@ -87,10 +87,10 @@ def get_auth_headers() -> Dict[str, str]:
 
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content - Type": "application / json",
+            "Content-Type": "application/json",
             # SECURITY FIX: Remove hardcoded IP headers that can be used for spoofing
             # Only include gateway identification header
-            "X - API - Gateway": "APISIX",
+            "X-API-Gateway": "APISIX",
         }
 
         # Add APISIX API key for AI model access

@@ -47,32 +47,32 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     # OpenAI model mappings
     if provider == "openai":
         openai_mappings = {
-            "gpt - 4": "/ai/openai/gpt4",
-            "gpt - 3.5 - turbo": "/ai/openai/gpt35",
-            "gpt - 4 - turbo": "/ai/openai/gpt4 - turbo",
-            "gpt - 4o": "/ai/openai/gpt4o",
-            "gpt - 4o-mini": "/ai/openai/gpt4o-mini",
-            "gpt - 4.1": "/ai/openai/gpt41",
-            "gpt - 4.1 - mini": "/ai/openai/gpt41 - mini",
-            "gpt - 4.1 - nano": "/ai/openai/gpt41 - nano",
-            "o1 - preview": "/ai/openai/o1 - preview",
-            "o1 - mini": "/ai/openai/o1 - mini",
-            "o3 - mini": "/ai/openai/o3 - mini",
-            "o4 - mini": "/ai/openai/o4 - mini",
+            "gpt-4": "/ai/openai/gpt4",
+            "gpt-3.5-turbo": "/ai/openai/gpt35",
+            "gpt-4-turbo": "/ai/openai/gpt4-turbo",
+            "gpt-4o": "/ai/openai/gpt4o",
+            "gpt-4o-mini": "/ai/openai/gpt4o-mini",
+            "gpt-4.1": "/ai/openai/gpt41",
+            "gpt-4.1-mini": "/ai/openai/gpt41-mini",
+            "gpt-4.1-nano": "/ai/openai/gpt41-nano",
+            "o1-preview": "/ai/openai/o1-preview",
+            "o1-mini": "/ai/openai/o1-mini",
+            "o3-mini": "/ai/openai/o3-mini",
+            "o4-mini": "/ai/openai/o4-mini",
         }
         return openai_mappings.get(model)
 
     # Anthropic model mappings
     elif provider == "anthropic":
         anthropic_mappings = {
-            "claude - 3 - opus - 20240229": "/ai/anthropic/opus",
-            "claude - 3 - sonnet - 20240229": "/ai/anthropic/sonnet",
-            "claude - 3 - haiku - 20240307": "/ai/anthropic/haiku",
-            "claude - 3 - 5-sonnet - 20241022": "/ai/anthropic/sonnet35",
-            "claude - 3 - 5-haiku - 20241022": "/ai/anthropic/haiku35",
-            "claude - 3 - 7-sonnet-latest": "/ai/anthropic/sonnet37",
-            "claude-sonnet - 4 - 20250514": "/ai/anthropic/sonnet4",
-            "claude-opus - 4 - 20250514": "/ai/anthropic/opus4",
+            "claude-3-opus-20240229": "/ai/anthropic/opus",
+            "claude-3-sonnet-20240229": "/ai/anthropic/sonnet",
+            "claude-3-haiku-20240307": "/ai/anthropic/haiku",
+            "claude-3-5-sonnet-20241022": "/ai/anthropic/sonnet35",
+            "claude-3-5-haiku-20241022": "/ai/anthropic/haiku35",
+            "claude-3-7-sonnet-latest": "/ai/anthropic/sonnet37",
+            "claude-sonnet-4-20250514": "/ai/anthropic/sonnet4",
+            "claude-opus-4-20250514": "/ai/anthropic/opus4",
         }
         return anthropic_mappings.get(model)
 
@@ -168,7 +168,7 @@ GENERATOR_TYPE_DEFINITIONS = {
                 "type": "selectbox",
                 "description": "AI Model",
                 "required": True,
-                "default": "gpt - 3.5 - turbo",
+                "default": "gpt-3.5-turbo",
                 "options": [],  # Dynamically loaded
                 "category": "configuration",
             },
@@ -289,14 +289,14 @@ def discover_apisix_models(provider: str) -> List[str]:
 
                 # Match provider-specific URI patterns
                 if provider == "openai" and uri.startswith("/ai/openai/"):
-                    # Extract model from URI like /ai/openai/gpt4 -> gpt - 4
+                    # Extract model from URI like /ai/openai/gpt4 -> gpt-4
                     model_key = uri.replace("/ai/openai/", "")
                     actual_model = map_uri_to_model("openai", model_key)
                     if actual_model:
                         models.append(actual_model)
 
                 elif provider == "anthropic" and uri.startswith("/ai/anthropic/"):
-                    # Extract model from URI like /ai/anthropic/opus -> claude - 3 - opus - 20240229
+                    # Extract model from URI like /ai/anthropic/opus -> claude-3-opus-20240229
                     model_key = uri.replace("/ai/anthropic/", "")
                     actual_model = map_uri_to_model("anthropic", model_key)
                     if actual_model:

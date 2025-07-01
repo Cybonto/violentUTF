@@ -114,8 +114,8 @@ def get_auth_headers() -> Dict[str, str]:
 
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content - Type": "application / json",
-            "X - API - Gateway": "APISIX",
+            "Content-Type": "application/json",
+            "X-API-Gateway": "APISIX",
         }
 
         # Add APISIX API key for AI model access
@@ -506,8 +506,8 @@ with st.sidebar:
                         test_body = json.dumps({"prompt": "Hello", "maxTokens": 5})
                         response = bedrock_client.invoke_model(
                             modelId=selected_model,
-                            accept="application / json",
-                            contentType="application / json",
+                            accept="application/json",
+                            contentType="application/json",
                             body=test_body,
                         )
                         st.success("Model is accessible and ready.")
@@ -532,11 +532,11 @@ with st.sidebar:
                 # Fetch available models (assuming API provides a way)
                 # For now, we'll hardcode some model names
                 model_names = [
-                    "claude - 3 - 5 - sonnet - latest",
-                    "claude - 3 - 5 - haiku - latest",
-                    "claude - 3 - opus - latest",
-                    "claude - 3 - sonnet - 20240229",
-                    "claude - 3 - haiku - 20240307",
+                    "claude-3-5-sonnet-latest",
+                    "claude-3-5-haiku-latest",
+                    "claude-3-opus-latest",
+                    "claude-3-sonnet-20240229",
+                    "claude-3-haiku-20240307",
                 ]
             except Exception as e:
                 st.warning(f"Error initializing Anthropic client: {e}")
@@ -1978,18 +1978,18 @@ def extract_generator_params(text):
     params = {}
 
     # Extract provider and model
-    if "gpt - 4" in text.lower() or "gpt4" in text.lower():
+    if "gpt-4" in text.lower() or "gpt4" in text.lower():
         params["provider"] = "openai"
-        params["model"] = "gpt - 4"
+        params["model"] = "gpt-4"
     elif "gpt - 3.5" in text.lower() or "gpt3.5" in text.lower():
         params["provider"] = "openai"
         params["model"] = "gpt - 3.5 - turbo"
     elif "claude" in text.lower():
         params["provider"] = "anthropic"
         if "3.5" in text:
-            params["model"] = "claude - 3 - 5 - sonnet - 20241022"
+            params["model"] = "claude-3-5-sonnet-20241022"
         else:
-            params["model"] = "claude - 3 - opus - 20240229"
+            params["model"] = "claude-3-opus-20240229"
     elif "llama" in text.lower():
         params["provider"] = "ollama"
         params["model"] = "llama3"
@@ -2053,8 +2053,8 @@ def extract_scorer_params(text):
         params["type"] = "hallucination"
 
     # Extract model if specified
-    if "gpt - 4" in text.lower():
-        params["model"] = "gpt - 4"
+    if "gpt-4" in text.lower():
+        params["model"] = "gpt-4"
     elif "claude" in text.lower():
         params["model"] = "claude - 3 - 5 - sonnet - 20241022"
 
@@ -2137,8 +2137,8 @@ def get_active_plugins(provider: str, model: str) -> Dict[str, Any]:
         if jwt_token:
             auth_headers = {
                 "Authorization": f"Bearer {jwt_token}",
-                "Content - Type": "application / json",
-                "X - API - Gateway": "APISIX",
+                "Content-Type": "application/json",
+                "X-API-Gateway": "APISIX",
             }
 
             # Get all routes
@@ -2405,11 +2405,11 @@ if generate_response:
                             st.stop()
                         response = bedrock_client.invoke_model(
                             modelId=selected_model,
-                            accept="application / json",
-                            contentType="application / json",
+                            accept="application/json",
+                            contentType="application/json",
                             body=body,
                         )
-                        response_body = response["body"].read().decode("utf - 8")
+                        response_body = response["body"].read().decode("utf-8")
                         response_json = json.loads(response_body)
                         if "result" in response_json:
                             st.session_state["full_response"] = response_json["result"]

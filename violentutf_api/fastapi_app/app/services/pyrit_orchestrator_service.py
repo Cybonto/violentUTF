@@ -152,8 +152,8 @@ class PyRITOrchestratorService:
 
             # Use API - specific database path to avoid conflicts with Streamlit
             # Check if running in Docker or local environment
-            if os.path.exists("/app / app_data / violentutf"):
-                api_memory_dir = os.path.join("/app / app_data / violentutf", "api_memory")
+            if os.path.exists("/app/app_data/violentutf"):
+                api_memory_dir = os.path.join("/app/app_data/violentutf", "api_memory")
             else:
                 # Local development - use temp directory
                 import tempfile
@@ -269,7 +269,7 @@ class PyRITOrchestratorService:
 
                     from pyrit.memory import CentralMemory, DuckDBMemory
 
-                    api_memory_dir = os.path.join("/app / app_data / violentutf", "api_memory")
+                    api_memory_dir = os.path.join("/app/app_data/violentutf", "api_memory")
                     os.makedirs(api_memory_dir, exist_ok=True)
 
                     api_memory_file = os.path.join(api_memory_dir, "orchestrator_memory.db")
