@@ -66,9 +66,9 @@ jobs:
       - name: Run high-severity security scan
         run: |
           # Only check for high severity issues
-          bandit -r . -ll -f json -o bandit-results.json --exclude ".vitutf,__pycache__,.git" || true
+          bandit -r . -ll -f json -o bandit-results.json --exclude ".vitutf,__pycache__,.git,venv,.venv,node_modules,htmlcov,.pytest_cache" || true
           if [ -f bandit-results.json ]; then
-            python -c "import json; data = json.load(open('bandit-results.json')); print(f'High severity issues: {len(data.get(\"results\", []))}'); exit(1 if len(data.get('results', [])) > 0 else 0)"
+            python -c "import json; data = json.load(open('bandit-results.json')); high_severity = [r for r in data.get('results', []) if r.get('issue_severity') == 'HIGH']; print(f'High severity issues: {len(high_severity)}'); exit(1 if len(high_severity) > 0 else 0)"
           fi
 
   core-tests:
