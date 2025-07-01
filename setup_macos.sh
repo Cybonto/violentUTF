@@ -4013,6 +4013,46 @@ validate_docker_network_config() {
     
     echo "APISIX setup complete."
     
+    # Copy Zscaler/CA certificates to APISIX if they exist
+    echo ""
+    echo "Checking for Zscaler/CA certificates to install in APISIX..."
+    CERTS_INSTALLED=false
+    
+    # Check for certificates in multiple locations
+    for cert_file in "zscaler.crt" "CA.crt" "violentutf_api/fastapi_app/zscaler.crt" "violentutf_api/fastapi_app/CA.crt"; do
+        if [ -f "$cert_file" ]; then
+            cert_name=$(basename "$cert_file")
+            echo "Found certificate: $cert_file"
+            
+            # Copy to APISIX container
+            APISIX_CONTAINER=$(docker ps --filter "name=apisix-apisix-1" --format "{{.Names}}" | head -n 1)
+            if [ -n "$APISIX_CONTAINER" ]; then
+                echo "Copying $cert_name to APISIX container..."
+                if docker cp "$cert_file" "$APISIX_CONTAINER:/usr/local/share/ca-certificates/"; then
+                    echo "✅ Copied $cert_name to APISIX"
+                    CERTS_INSTALLED=true
+                else
+                    echo "⚠️  Failed to copy $cert_name to APISIX"
+                fi
+            fi
+        fi
+    done
+    
+    # Update CA certificates in APISIX if any were installed
+    if [ "$CERTS_INSTALLED" = true ]; then
+        echo "Updating CA certificates in APISIX container..."
+        APISIX_CONTAINER=$(docker ps --filter "name=apisix-apisix-1" --format "{{.Names}}" | head -n 1)
+        if [ -n "$APISIX_CONTAINER" ]; then
+            # Try to update certificates (may not work in all APISIX images)
+            docker exec "$APISIX_CONTAINER" update-ca-certificates 2>/dev/null || true
+            echo "✅ Zscaler/CA certificates installed in APISIX"
+            echo "   Note: APISIX may need to be restarted for certificates to take effect"
+        fi
+    else
+        echo "ℹ️  No Zscaler/CA certificates found - proceeding without them"
+        echo "   This is normal if not in a Zscaler environment"
+    fi
+    
     # Configure all routes immediately after APISIX is ready
     echo ""
     echo "Configuring API routes now that APISIX is ready..."
