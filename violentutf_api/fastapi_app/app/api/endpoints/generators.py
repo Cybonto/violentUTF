@@ -349,32 +349,32 @@ def map_uri_to_model(provider: str, uri_key: str) -> str:
     # OpenAI URI mappings (reverse of setup_macos.sh)
     if provider == "openai":
         uri_to_model = {
-            "gpt4": "gpt - 4",
-            "gpt35": "gpt - 3.5 - turbo",
-            "gpt4 - turbo": "gpt - 4 - turbo",
-            "gpt4o": "gpt - 4o",
-            "gpt4o-mini": "gpt - 4o-mini",
-            "gpt41": "gpt - 4.1",
-            "gpt41 - mini": "gpt - 4.1 - mini",
-            "gpt41 - nano": "gpt - 4.1 - nano",
-            "o1 - preview": "o1 - preview",
-            "o1 - mini": "o1 - mini",
-            "o3 - mini": "o3 - mini",
-            "o4 - mini": "o4 - mini",
+            "gpt4": "gpt-4",
+            "gpt35": "gpt-3.5-turbo",
+            "gpt4-turbo": "gpt-4-turbo",
+            "gpt4o": "gpt-4o",
+            "gpt4o-mini": "gpt-4o-mini",
+            "gpt41": "gpt-4.1",
+            "gpt41-mini": "gpt-4.1-mini",
+            "gpt41-nano": "gpt-4.1-nano",
+            "o1-preview": "o1-preview",
+            "o1-mini": "o1-mini",
+            "o3-mini": "o3-mini",
+            "o4-mini": "o4-mini",
         }
         return uri_to_model.get(uri_key)
 
     # Anthropic URI mappings
     elif provider == "anthropic":
         uri_to_model = {
-            "opus": "claude - 3 - opus - 20240229",
-            "sonnet": "claude - 3 - sonnet - 20240229",
-            "haiku": "claude - 3 - haiku - 20240307",
-            "sonnet35": "claude - 3 - 5-sonnet - 20241022",
-            "haiku35": "claude - 3 - 5-haiku - 20241022",
-            "sonnet37": "claude - 3 - 7-sonnet-latest",
-            "sonnet4": "claude-sonnet - 4 - 20250514",
-            "opus4": "claude-opus - 4 - 20250514",
+            "opus": "claude-3-opus-20240229",
+            "sonnet": "claude-3-sonnet-20240229",
+            "haiku": "claude-3-haiku-20240307",
+            "sonnet35": "claude-3-5-sonnet-20241022",
+            "haiku35": "claude-3-5-haiku-20241022",
+            "sonnet37": "claude-3-7-sonnet-latest",
+            "sonnet4": "claude-sonnet-4-20250514",
+            "opus4": "claude-opus-4-20250514",
         }
         return uri_to_model.get(uri_key)
 
@@ -392,11 +392,11 @@ def get_fallback_models(provider: str) -> List[str]:
     Fallback model lists if APISIX discovery fails
     """
     fallback_mappings = {
-        "openai": ["gpt - 4", "gpt - 4 - turbo", "gpt - 3.5 - turbo", "gpt - 4o", "gpt - 4o-mini"],
+        "openai": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-4o", "gpt-4o-mini"],
         "anthropic": [
-            "claude - 3 - sonnet - 20240229",
-            "claude - 3 - 5-sonnet - 20241022",
-            "claude - 3 - haiku - 20240307",
+            "claude-3-sonnet-20240229",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-haiku-20240307",
         ],
         "ollama": ["llama2", "codellama", "mistral", "llama3"],
         "webui": ["llama2", "codellama"],
@@ -638,6 +638,17 @@ async def get_generators(current_user=Depends(get_current_user)):
 
         generators = []
         for gen_data in generators_data:
+            # Parse last_test_time safely
+            last_test_time = None
+            if gen_data.get("test_results") and gen_data.get("test_results", {}).get("last_time"):
+                try:
+                    last_time_str = gen_data.get("test_results", {}).get("last_time")
+                    if isinstance(last_time_str, str):
+                        last_test_time = datetime.fromisoformat(last_time_str)
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Failed to parse last_test_time for generator {gen_data['id']}: {e}")
+                    last_test_time = None
+            
             generators.append(
                 GeneratorInfo(
                     id=gen_data["id"],
@@ -650,11 +661,7 @@ async def get_generators(current_user=Depends(get_current_user)):
                     last_test_result=(
                         gen_data.get("test_results", {}).get("last_result") if gen_data.get("test_results") else None
                     ),
-                    last_test_time=(
-                        datetime.fromisoformat(gen_data.get("test_results", {}).get("last_time"))
-                        if gen_data.get("test_results") and gen_data.get("test_results", {}).get("last_time")
-                        else None
-                    ),
+                    last_test_time=last_test_time,
                 )
             )
 
