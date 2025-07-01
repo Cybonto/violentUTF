@@ -95,35 +95,19 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
 
         headers = {"Content-Type": "application/json", "X-API-Gateway": "APISIX"}
 
-        # Handle authentication based on provider type
-        if provider.startswith("openapi-"):
-            # OpenAPI providers need Bearer token from their configuration
-            # Get the provider configuration to find auth token
-            provider_id = provider.replace("openapi-", "")
-            logger.info(f"Looking up config for OpenAPI provider: {provider} -> {provider_id}")
-            from app.api.endpoints.generators import get_openapi_provider_config
-            provider_config = get_openapi_provider_config(provider_id)
-            logger.info(f"Provider config result: {bool(provider_config)}")
-            
-            if provider_config and provider_config.get("auth_token"):
-                headers["Authorization"] = f"Bearer {provider_config['auth_token']}"
-                # Log token info without exposing it
-                token = provider_config['auth_token']
-                masked = token[:4] + '...' + token[-4:] if len(token) > 8 else '***'
-                logger.info(f"Added Bearer token for OpenAPI provider {provider}: {masked}")
-            else:
-                logger.warning(f"No auth token found for OpenAPI provider {provider}")
-                if provider_config:
-                    logger.warning(f"Provider config keys: {list(provider_config.keys())}")
-                else:
-                    logger.warning(f"Provider config is None for {provider_id}")
+        # All requests go through APISIX, so we always need the APISIX API key
+        # APISIX will handle upstream authentication via proxy-rewrite plugin
+        api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY")
+        if api_key:
+            headers["apikey"] = api_key
+            logger.info(f"Using APISIX API key for authentication (provider: {provider})")
         else:
-            # Add API key for APISIX key-auth plugin (for built-in providers)
-            api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY")
-            if api_key:
-                headers["apikey"] = api_key
-            else:
-                logger.warning("No APISIX API key found in environment - requests may fail")
+            logger.warning("No APISIX API key found in environment - requests may fail")
+        
+        # For OpenAPI providers, APISIX proxy-rewrite plugin handles upstream auth
+        if provider.startswith("openapi-"):
+            provider_id = provider.replace("openapi-", "")
+            logger.info(f"OpenAPI provider {provider_id} - authentication will be handled by APISIX proxy-rewrite")
 
         # Log request details for debugging
         logger.info(f"Making request to: {url}")
