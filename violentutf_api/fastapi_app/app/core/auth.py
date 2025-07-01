@@ -131,8 +131,7 @@ class AuthMiddleware:
             import hashlib
             import hmac
 
-            from app.core.config import settings
-
+            #             from app.core.config import settings # F811: removed duplicate import
             # Get the shared secret
             gateway_secret = settings.APISIX_GATEWAY_SECRET
             if not gateway_secret:

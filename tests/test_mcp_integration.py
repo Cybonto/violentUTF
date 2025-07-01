@@ -7,6 +7,7 @@ MUST use real MCP server, no mocks or simulated data.
 """
 
 import asyncio
+import logging
 import os
 import sys
 import time
@@ -109,7 +110,6 @@ class TestMCPIntegration:
 
         # Skip assertion on tool count if JSON serialization issue
         if len(tools) == 0:
-            import logging
 
             logger = logging.getLogger(__name__)
             logger.warning("No tools returned - possible JSON serialization issue in MCP server")

@@ -241,12 +241,12 @@ def test_converter_transformations():
         for converter_id in resources_to_cleanup["converters"]:
             try:
                 requests.delete(f"{API_BASE_URL}/api/v1/converters/{converter_id}", headers=headers)
-            except:
+            except Exception:
                 pass
         for dataset_id in resources_to_cleanup["datasets"]:
             try:
                 requests.delete(f"{API_BASE_URL}/api/v1/datasets/{dataset_id}", headers=headers)
-            except:
+            except Exception:
                 pass
 
 

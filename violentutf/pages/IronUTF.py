@@ -39,7 +39,7 @@ if VIOLENTUTF_API_URL.endswith("/api"):
 def get_auth_headers() -> Dict[str, str]:
     """Get authentication headers for API requests through APISIX Gateway"""
     try:
-        from utils.jwt_manager import jwt_manager
+        #         from utils.jwt_manager import jwt_manager # F811: removed duplicate import
 
         # Use jwt_manager for automatic token refresh
         token = jwt_manager.get_valid_token()
@@ -51,7 +51,11 @@ def get_auth_headers() -> Dict[str, str]:
         if not token:
             return {}
 
-        headers = {"Authorization": f"Bearer {token}", "Content - Type": "application / json", "X - API - Gateway": "APISIX"}
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content - Type": "application / json",
+            "X - API - Gateway": "APISIX",
+        }
 
         # Add APISIX API key for AI model access
         apisix_api_key = (
@@ -69,7 +73,7 @@ def get_auth_headers() -> Dict[str, str]:
 def create_compatible_api_token():
     """Create a FastAPI - compatible token using JWT manager - NEVER implement manually"""
     try:
-        from utils.jwt_manager import jwt_manager
+        #         from utils.jwt_manager import jwt_manager # F811: removed duplicate import
 
         # Check for Keycloak token first
         keycloak_token = st.session_state.get("access_token")

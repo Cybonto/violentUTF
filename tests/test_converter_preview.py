@@ -39,7 +39,7 @@ def make_request(method, endpoint, **kwargs):
         try:
             response_data = response.json()
             print(f"Response data: {json.dumps(response_data, indent=2)}")
-        except:
+        except Exception:
             print(f"Response text: {response.text}")
             response_data = None
 

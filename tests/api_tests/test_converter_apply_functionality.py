@@ -77,14 +77,14 @@ class TestConverterApplyFunctionality:
         for dataset_id in self.created_resources["datasets"]:
             try:
                 requests.delete(f"{API_BASE}/datasets/{dataset_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
         # Delete converters
         for converter_id in self.created_resources["converters"]:
             try:
                 requests.delete(f"{API_BASE}/converters/{converter_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
     def test_converter_apply_copy_mode(self):

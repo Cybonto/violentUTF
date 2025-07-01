@@ -263,7 +263,7 @@ class TestTestScenarioInterpreter:
     @pytest.fixture
     def interpreter(self):
         """Create interpreter with mock MCP client"""
-        from utils.mcp_integration import TestScenarioInterpreter
+        #         from utils.mcp_integration import TestScenarioInterpreter # F811: removed duplicate import
 
         mock_client = Mock(spec=MCPClientSync)
         mock_client.get_prompt.return_value = "Rendered test prompt"
@@ -398,7 +398,7 @@ class TestIntegration:
     def test_full_command_flow(self):
         """Test complete flow from parsing to execution"""
         # Import the class correctly
-        from utils.mcp_integration import TestScenarioInterpreter
+        #         from utils.mcp_integration import TestScenarioInterpreter # F811: removed duplicate import
 
         # Create components
         parser = NaturalLanguageParser()

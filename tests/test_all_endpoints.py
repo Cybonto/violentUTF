@@ -45,7 +45,7 @@ def make_request(method: str, endpoint: str, **kwargs) -> Tuple[bool, int, str, 
         # Try to parse JSON response
         try:
             response_data = response.json()
-        except:
+        except Exception:
             response_data = None
 
         # Determine success based on status code
@@ -298,7 +298,7 @@ def test_generator_endpoints():
     )
 
     # Test generator creation with unique name to avoid conflicts
-    import time
+    #     import time # F811: removed duplicate import
 
     generator_payload = {
         "name": f"test_generator_{int(time.time())}",  # Unique name

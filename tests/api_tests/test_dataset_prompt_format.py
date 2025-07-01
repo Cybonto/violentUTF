@@ -79,14 +79,14 @@ class TestDatasetPromptFormat:
         for dataset_id in self.created_resources["datasets"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
         # Delete created converters
         for converter_id in self.created_resources["converters"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
     def test_dataset_creation_and_retrieval(self):

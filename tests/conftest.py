@@ -216,17 +216,17 @@ def pytest_collection_modifyitems(config, items):
 
     try:
         apisix_running = requests.get("http://localhost:9080/health", timeout=2).status_code in [200, 404]
-    except:
+    except Exception:
         apisix_running = False
 
     try:
         fastapi_running = requests.get("http://localhost:8000/health", timeout=2).status_code == 200
-    except:
+    except Exception:
         fastapi_running = False
 
     try:
         keycloak_available = keycloak_auth.is_keycloak_available()
-    except:
+    except Exception:
         keycloak_available = False
 
     for item in items:

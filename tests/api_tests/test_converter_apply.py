@@ -76,14 +76,14 @@ class TestConverterApply:
         for dataset_id in self.created_resources["datasets"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
         # Delete created converters
         for converter_id in self.created_resources["converters"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
     def create_test_dataset(self, name: str, prompts: list) -> str:

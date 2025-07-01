@@ -112,7 +112,11 @@ def get_auth_headers() -> Dict[str, str]:
         if not token:
             return {}
 
-        headers = {"Authorization": f"Bearer {token}", "Content - Type": "application / json", "X - API - Gateway": "APISIX"}
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content - Type": "application / json",
+            "X - API - Gateway": "APISIX",
+        }
 
         # Add APISIX API key for AI model access
         apisix_api_key = (
@@ -663,7 +667,7 @@ with st.sidebar:
 if "mcp_client" not in st.session_state:
     st.session_state["mcp_client"] = MCPClientSync()
     # Set JWT token for MCP client
-    from utils.jwt_manager import jwt_manager
+    #     from utils.jwt_manager import jwt_manager # F811: removed duplicate import
 
     token = jwt_manager.get_valid_token()
     if token:
@@ -1947,7 +1951,7 @@ def setup_orchestrator(params):
                     with col1:
                         st.metric("Total Prompts", summary.get("total_prompts", 0))
                     with col2:
-                        st.metric("Success Rate", f"{summary.get('success_rate', 0)*100:.1f}%")
+                        st.metric("Success Rate", f"{summary.get('success_rate', 0) * 100:.1f}%")
 
                 # Show sample results
                 if "prompt_request_responses" in exec_response:
@@ -2138,7 +2142,9 @@ def get_active_plugins(provider: str, model: str) -> Dict[str, Any]:
             }
 
             # Get all routes
-            response = requests.get(f"{violentutf_api_url}/api / v1 / apisix - admin / routes", headers=auth_headers, timeout=5)
+            response = requests.get(
+                f"{violentutf_api_url}/api / v1 / apisix - admin / routes", headers=auth_headers, timeout=5
+            )
 
             if response.status_code == 200:
                 routes = response.json().get("list", [])
@@ -2398,7 +2404,10 @@ if generate_response:
                             st.error("Selected model not supported.")
                             st.stop()
                         response = bedrock_client.invoke_model(
-                            modelId=selected_model, accept="application / json", contentType="application / json", body=body
+                            modelId=selected_model,
+                            accept="application / json",
+                            contentType="application / json",
+                            body=body,
                         )
                         response_body = response["body"].read().decode("utf - 8")
                         response_json = json.loads(response_body)

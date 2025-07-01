@@ -404,7 +404,11 @@ def get_fallback_models(provider: str) -> List[str]:
     """
     fallback_mappings = {
         "openai": ["gpt - 4", "gpt - 4 - turbo", "gpt - 3.5 - turbo", "gpt - 4o", "gpt - 4o-mini"],
-        "anthropic": ["claude - 3 - sonnet - 20240229", "claude - 3 - 5-sonnet - 20241022", "claude - 3 - haiku - 20240307"],
+        "anthropic": [
+            "claude - 3 - sonnet - 20240229",
+            "claude - 3 - 5-sonnet - 20241022",
+            "claude - 3 - haiku - 20240307",
+        ],
         "ollama": ["llama2", "codellama", "mistral", "llama3"],
         "webui": ["llama2", "codellama"],
     }
@@ -907,7 +911,7 @@ async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict
 
         # Discover models for each provider
         for provider in providers:
-            provider_id = provider.replace("openapi-", "")
+            # provider_id = provider.replace("openapi-", "")  # F841: unused variable
 
             try:
                 models = await discover_apisix_models_enhanced(provider)

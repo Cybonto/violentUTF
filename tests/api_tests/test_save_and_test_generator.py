@@ -5,11 +5,14 @@ Tests the complete flow from generator creation to testing via API with live aut
 
 import json
 import os
+
+# import os # F811: removed duplicate import
 import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
+from unittest.mock import patch
 
 import jwt
 import pytest
@@ -403,7 +406,7 @@ class TestSaveAndTestGenerator:
             try:
                 error_data = test_response.json() if test_response.text else {}
                 error_detail = error_data.get("detail", test_response.text)
-            except:
+            except Exception:
                 error_detail = test_response.text
 
             # These are acceptable failure reasons (actual AI provider issues)
@@ -487,9 +490,6 @@ class TestGeneratorParameterLogic:
     def test_apisix_api_key_environment_variables(self):
         """Test environment variable priority for APISIX API key authentication"""
         # This test verifies the environment variable setup for the "Missing API key in request" fix
-
-        import os
-        from unittest.mock import patch
 
         # Test the priority order used in generators.py
         test_vars = {

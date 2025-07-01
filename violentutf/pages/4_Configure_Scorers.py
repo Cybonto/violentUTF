@@ -1432,9 +1432,9 @@ def _display_test_results(
                 if execution_summary:
                     st.markdown("**📊 Execution Summary:**")
                     # Use a container with formatted text instead of columns to avoid nesting
-                    total_prompts = execution_summary.get("total_prompts", 0)
-                    successful_prompts = execution_summary.get("successful_prompts", 0)
-                    success_rate = execution_summary.get("success_rate", 0) * 100
+                    # total_prompts = execution_summary.get("total_prompts", 0)  # F841: unused variable
+                    # successful_prompts = execution_summary.get("successful_prompts", 0)  # F841: unused variable
+                    # success_rate = execution_summary.get("success_rate", 0) * 100  # F841: unused variable
 
                     st.markdown(
                         """

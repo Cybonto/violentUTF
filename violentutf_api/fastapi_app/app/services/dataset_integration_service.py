@@ -200,7 +200,7 @@ async def _get_memory_dataset_prompts(dataset_config: Dict) -> List[str]:
 async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
     """Load actual prompts from PyRIT memory database files"""
     try:
-        import os
+        #         import os # F811: removed duplicate import
         import sqlite3
 
         from pyrit.memory import CentralMemory

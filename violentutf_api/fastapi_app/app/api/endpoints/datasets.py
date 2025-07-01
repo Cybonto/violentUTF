@@ -509,7 +509,9 @@ async def get_memory_datasets(current_user=Depends(get_current_user)):
 
 
 @router.post(
-    "/field - mapping", response_model=DatasetFieldMappingResponse, summary="Get field mapping options for uploaded file"
+    "/field - mapping",
+    response_model=DatasetFieldMappingResponse,
+    summary="Get field mapping options for uploaded file",
 )
 async def get_field_mapping(request: DatasetFieldMappingRequest, current_user=Depends(get_current_user)):
     """Analyze an uploaded file and return field mapping options"""

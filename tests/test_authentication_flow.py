@@ -146,7 +146,7 @@ try:
         headers = {"Authorization": f'Bearer {st.session_state["api_token"]}', "X-API-Gateway": "APISIX"}
         response = requests.get("http://localhost:9080/api/v1/auth/token/info", headers=headers, timeout=5)
         api_accessible = response.status_code == 200
-except:
+except Exception:
     pass
 
 print("\nSUMMARY:")

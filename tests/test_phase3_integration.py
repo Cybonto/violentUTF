@@ -16,7 +16,7 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from violentutf.utils.mcp_client import MCPClientSync
+from violentutf.utils.mcp_client import MCPClient, MCPClientSync
 from violentutf.utils.mcp_integration import (
     ConfigurationIntentDetector,
     ConversationContextAnalyzer,
@@ -141,7 +141,6 @@ class TestCommandProcessingIntegration:
         mock_client.post.return_value.__aenter__.return_value = mock_response
 
         # Create client and test
-        from violentutf.utils.mcp_client import MCPClient
 
         client = MCPClient()
         client.set_test_token("test-token")
