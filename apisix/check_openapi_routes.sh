@@ -69,21 +69,22 @@ if ! echo "$routes_response" | jq -e '.list' > /dev/null 2>&1; then
     exit 1
 fi
 
-# Find OpenAPI routes
-openapi_routes=$(echo "$routes_response" | jq -r '.list[] | select(.value.uri | contains("/ai/openapi/"))')
+# Find OpenAPI routes and store as JSON array
+openapi_routes=$(echo "$routes_response" | jq -r '[.list[] | select(.value.uri | contains("/ai/openapi/"))]')
 
-if [ -z "$openapi_routes" ]; then
+# Check if any routes found
+route_count=$(echo "$openapi_routes" | jq 'length')
+
+if [ "$route_count" -eq 0 ]; then
     echo -e "${YELLOW}No OpenAPI routes found in APISIX${NC}"
     exit 0
 fi
 
-# Count routes
-route_count=$(echo "$openapi_routes" | jq -s 'length')
 echo -e "${BLUE}Found $route_count OpenAPI route(s)${NC}"
 echo
 
 # Process each OpenAPI route
-echo "$openapi_routes" | while IFS= read -r route; do
+echo "$openapi_routes" | jq -c '.[]' | while IFS= read -r route; do
     route_id=$(echo "$route" | jq -r '.key | split("/") | last')
     route_uri=$(echo "$route" | jq -r '.value.uri')
     
@@ -176,7 +177,7 @@ echo -e "${BLUE}=== Recommendations ===${NC}"
 echo
 
 # Check if any routes need updating
-needs_update=$(echo "$openapi_routes" | jq -s '[.[] | select(.value.plugins."proxy-rewrite".headers.set | not)] | length')
+needs_update=$(echo "$openapi_routes" | jq '[.[] | select(.value.plugins."proxy-rewrite".headers.set | not)] | length')
 
 if [ "$needs_update" -gt 0 ]; then
     echo -e "${YELLOW}Found $needs_update route(s) without authentication headers${NC}"
