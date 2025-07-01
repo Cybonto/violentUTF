@@ -24,9 +24,12 @@ services:
       KC_HTTP_ENABLED: true
       KC_HTTP_PORT: 8080
 
-      # --- Proxy Configuration (NEW) ---
+      # --- Proxy Configuration ---
       # This tells Keycloak to trust proxy headers
+      KC_PROXY: edge              # Trust edge proxy headers
       KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_STRICT: false   # Allow flexible hostname validation
+      KC_HOSTNAME_STRICT_HTTPS: false  # Allow HTTP when behind proxy
 
       # --- Optional: Health and Metrics ---
       KC_HEALTH_ENABLED: true

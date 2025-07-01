@@ -27,9 +27,20 @@ load_env_file() {
     fi
 }
 
-# Load configs
+# Load configs - try multiple locations
+if [ -f "../ai-tokens.env" ]; then
+    echo "Loading ../ai-tokens.env"
+    load_env_file "../ai-tokens.env"
+elif [ -f "../../ai-tokens.env" ]; then
+    echo "Loading ../../ai-tokens.env"
+    load_env_file "../../ai-tokens.env"
+elif [ -f "./ai-tokens.env" ]; then
+    echo "Loading ./ai-tokens.env"
+    load_env_file "./ai-tokens.env"
+fi
+
 [ -f "../violentutf/.env" ] && load_env_file "../violentutf/.env"
-[ -f "../ai-tokens.env" ] && load_env_file "../ai-tokens.env"
+[ -f "../../violentutf/.env" ] && load_env_file "../../violentutf/.env"
 
 echo -e "${BLUE}=== Testing Request Flow ===${NC}"
 echo
