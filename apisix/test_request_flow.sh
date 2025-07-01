@@ -74,9 +74,37 @@ echo
 echo -e "${BLUE}Step 2: Test APISIX connectivity${NC}"
 echo "Checking if APISIX can reach the upstream..."
 
-# This would need to be run from inside APISIX container
-echo "To test from APISIX container:"
-echo "docker exec apisix-apisix-1 curl -I https://api.dev.gsai.mcaas.fcs.gsa.gov"
+# Test from inside APISIX container
+echo "Testing from inside APISIX container..."
+
+# Check if certificates are installed
+cert_check=$(docker exec apisix-apisix-1 ls /usr/local/share/ca-certificates/ 2>&1 | grep -E "zscaler|CA.crt" || echo "No certificates found")
+if [ "$cert_check" != "No certificates found" ]; then
+    echo -e "${GREEN}✓ Certificates found in container: $cert_check${NC}"
+else
+    echo -e "${YELLOW}⚠️  No Zscaler certificates in container${NC}"
+fi
+
+# Test DNS
+dns_test=$(docker exec apisix-apisix-1 nslookup api.dev.gsai.mcaas.fcs.gsa.gov 2>&1 | grep -A1 "Name:" || echo "DNS failed")
+if [[ "$dns_test" == *"Name:"* ]]; then
+    echo -e "${GREEN}✓ DNS resolution works${NC}"
+else
+    echo -e "${RED}✗ DNS resolution failed${NC}"
+fi
+
+# Test with wget (APISIX doesn't have curl)
+echo "Testing HTTPS connectivity with wget..."
+wget_test=$(docker exec apisix-apisix-1 wget -q -O - --no-check-certificate \
+    --header="Authorization: Bearer ${OPENAPI_1_AUTH_TOKEN:-test}" \
+    https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models 2>&1 | head -20 || echo "FAILED")
+
+if [[ "$wget_test" == *"data"* ]]; then
+    echo -e "${GREEN}✓ Can reach upstream API directly${NC}"
+else
+    echo -e "${RED}✗ Cannot reach upstream API${NC}"
+    echo "Response: $wget_test"
+fi
 echo
 
 # Step 3: Test with different headers
@@ -111,6 +139,10 @@ echo
 echo -e "${BLUE}Step 4: Check APISIX error logs${NC}"
 echo "Recent errors (excluding reportServiceInstance):"
 docker logs apisix-apisix-1 2>&1 | grep -v "reportServiceInstance" | grep -i "error" | tail -5
+
+echo
+echo "SSL-related logs:"
+docker logs apisix-apisix-1 2>&1 | grep -E "(SSL|ssl|certificate|handshake|verify)" | tail -5 || echo "No SSL errors found"
 
 # Step 5: Test a simple APISIX route
 echo
