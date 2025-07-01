@@ -58,7 +58,7 @@ async def _get_dataset_by_id(dataset_id: str, user_context: Optional[str] = None
     """Get dataset configuration by ID from backend service"""
     try:
         # Get datasets directly from DuckDB without authentication context
-        # This is safe for internal service-to-service calls
+        # This is safe for internal service - to - service calls
         from app.db.duckdb_manager import get_duckdb_manager
 
         # Use the provided user context or fall back to web interface user
@@ -214,7 +214,7 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
                 logger.info(f"Found active PyRIT memory instance for dataset {dataset_id}")
 
                 # Get conversation pieces from memory that could be prompts
-                # Look for user-role pieces that contain the original prompts
+                # Look for user - role pieces that contain the original prompts
                 conversation_pieces = memory_instance.get_conversation()
 
                 for piece in conversation_pieces:
@@ -234,10 +234,10 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
 
         # Check common PyRIT memory database locations
         potential_paths = [
-            "/app/app_data/violentutf/api_memory",  # Docker API memory
-            "./violentutf/app_data/violentutf",  # Local Streamlit memory
+            "/app / app_data / violentutf / api_memory",  # Docker API memory
+            "./violentutf / app_data / violentutf",  # Local Streamlit memory
             os.path.expanduser("~/.pyrit"),  # User PyRIT directory
-            "./app_data/violentutf",  # Relative app data
+            "./app_data / violentutf",  # Relative app data
         ]
 
         for base_path in potential_paths:
@@ -259,8 +259,8 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
                     # Query for prompt request pieces with user role
                     cursor.execute(
                         """
-                        SELECT original_value FROM PromptRequestPieces 
-                        WHERE role = 'user' AND original_value IS NOT NULL 
+                        SELECT original_value FROM PromptRequestPieces
+                        WHERE role = 'user' AND original_value IS NOT NULL
                         AND LENGTH(original_value) > 0
                         AND original_value NOT LIKE '%Native harmbench prompt%'
                         AND original_value NOT LIKE '%Native % prompt %'
@@ -298,7 +298,7 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
 
 
 async def _get_converter_dataset_prompts(dataset_config: Dict) -> List[str]:
-    """Get prompts from converter-generated dataset"""
+    """Get prompts from converter - generated dataset"""
     try:
         logger.info(f"Loading converter dataset: {dataset_config.get('name')}")
 
@@ -337,7 +337,7 @@ async def _get_converter_dataset_prompts(dataset_config: Dict) -> List[str]:
 
 
 async def _get_transform_dataset_prompts(dataset_config: Dict) -> List[str]:
-    """Get prompts from transform-generated dataset"""
+    """Get prompts from transform - generated dataset"""
     try:
         logger.info(f"Loading transform dataset: {dataset_config.get('name')}")
 

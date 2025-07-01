@@ -255,7 +255,7 @@ def fetch_online_dataset(url: str) -> pd.DataFrame:
         file_extension = Path(parsed_url.path).suffix.lower()
         content = response.content
         if file_extension not in [".csv", ".tsv", ".json", ".jsonl", ".yaml", ".yml", ".txt"]:
-            logger.warning(f"Could not determine file type from URL. Assuming CSV format.")
+            logger.warning("Could not determine file type from URL. Assuming CSV format.")
             file_extension = ".csv"  # Default to CSV
         uploaded_file = type(
             "UploadedFile", (object,), {"name": f"downloaded{file_extension}", "read": lambda: content}

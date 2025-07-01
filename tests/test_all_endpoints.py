@@ -463,7 +463,7 @@ def print_summary():
     print(f"📈 Success Rate: {success_rate:.1f}%")
 
     if test_results["failed"] > 0:
-        print(f"\n❌ FAILED TESTS:")
+        print("\n❌ FAILED TESTS:")
         for detail in test_results["details"]:
             if detail["status"] == "FAIL":
                 print(f"   {detail['method']} {detail['endpoint']} - {detail['message']}")

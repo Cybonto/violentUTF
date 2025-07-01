@@ -30,28 +30,28 @@ if not API_BASE_URL:
 
 API_ENDPOINTS = {
     # Authentication endpoints
-    "auth_token_info": f"{API_BASE_URL}/api/v1/auth/token/info",
-    "auth_token_validate": f"{API_BASE_URL}/api/v1/auth/token/validate",
+    "auth_token_info": f"{API_BASE_URL}/api / v1 / auth / token / info",
+    "auth_token_validate": f"{API_BASE_URL}/api / v1 / auth / token / validate",
     # Database endpoints
-    "database_status": f"{API_BASE_URL}/api/v1/database/status",
-    "database_stats": f"{API_BASE_URL}/api/v1/database/stats",
+    "database_status": f"{API_BASE_URL}/api / v1 / database / status",
+    "database_stats": f"{API_BASE_URL}/api / v1 / database / stats",
     # Converter endpoints
-    "converters": f"{API_BASE_URL}/api/v1/converters",
-    "converter_types": f"{API_BASE_URL}/api/v1/converters/types",
-    "converter_params": f"{API_BASE_URL}/api/v1/converters/params/{{converter_type}}",
-    "converter_preview": f"{API_BASE_URL}/api/v1/converters/{{converter_id}}/preview",
-    "converter_apply": f"{API_BASE_URL}/api/v1/converters/{{converter_id}}/apply",
-    "converter_delete": f"{API_BASE_URL}/api/v1/converters/{{converter_id}}",
+    "converters": f"{API_BASE_URL}/api / v1 / converters",
+    "converter_types": f"{API_BASE_URL}/api / v1 / converters / types",
+    "converter_params": f"{API_BASE_URL}/api / v1 / converters / params/{{converter_type}}",
+    "converter_preview": f"{API_BASE_URL}/api / v1 / converters/{{converter_id}}/preview",
+    "converter_apply": f"{API_BASE_URL}/api / v1 / converters/{{converter_id}}/apply",
+    "converter_delete": f"{API_BASE_URL}/api / v1 / converters/{{converter_id}}",
     # Generator endpoints (for converter testing)
-    "generators": f"{API_BASE_URL}/api/v1/generators",
+    "generators": f"{API_BASE_URL}/api / v1 / generators",
     # Dataset endpoints (for converter application)
-    "datasets": f"{API_BASE_URL}/api/v1/datasets",
+    "datasets": f"{API_BASE_URL}/api / v1 / datasets",
     # Session endpoints
-    "sessions": f"{API_BASE_URL}/api/v1/sessions",
-    "sessions_update": f"{API_BASE_URL}/api/v1/sessions",
+    "sessions": f"{API_BASE_URL}/api / v1 / sessions",
+    "sessions_update": f"{API_BASE_URL}/api / v1 / sessions",
 }
 
-# Initialize session state for API-backed converters
+# Initialize session state for API - backed converters
 if "api_converters" not in st.session_state:
     st.session_state.api_converters = {}
 if "api_converter_types" not in st.session_state:
@@ -87,10 +87,10 @@ def get_auth_headers() -> Dict[str, str]:
 
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
+            "Content - Type": "application / json",
             # SECURITY FIX: Remove hardcoded IP headers that can be used for spoofing
             # Only include gateway identification header
-            "X-API-Gateway": "APISIX",
+            "X - API - Gateway": "APISIX",
         }
 
         # Add APISIX API key for AI model access
@@ -162,7 +162,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
 
 
 def create_compatible_api_token():
-    """Create a FastAPI-compatible token using JWT manager"""
+    """Create a FastAPI - compatible token using JWT manager"""
     try:
         from utils.jwt_manager import jwt_manager
         from utils.user_context import get_user_context_for_token
@@ -286,7 +286,7 @@ def apply_converter_via_api(converter_id: str, dataset_id: str, mode: str, new_d
     if data:
         return True, data
     else:
-        logger.error(f"Failed to apply converter - no data returned from API")
+        logger.error("Failed to apply converter - no data returned from API")
         return False, {"error": "No response from API"}
 
 
@@ -303,10 +303,10 @@ def auto_load_generators():
             generators = get_generators_from_api()
             if generators:
                 st.session_state.api_generators_cache = generators
-                logger.info(f"Auto-loaded {len(generators)} generators for converter testing")
+                logger.info(f"Auto - loaded {len(generators)} generators for converter testing")
             else:
                 st.session_state.api_generators_cache = []
-                logger.info("No generators found during auto-load for converter testing")
+                logger.info("No generators found during auto - load for converter testing")
 
         # Clear force reload flag
         if "force_reload_generators" in st.session_state:
@@ -340,9 +340,9 @@ def auto_load_datasets():
         with st.spinner("Loading existing datasets..."):
             datasets_data = load_datasets_from_api()
             if datasets_data:
-                logger.info(f"Auto-loaded datasets for display")
+                logger.info("Auto - loaded datasets for display")
             else:
-                logger.info("No existing datasets found during auto-load")
+                logger.info("No existing datasets found during auto - load")
 
         # Clear force reload flag
         if "force_reload_datasets" in st.session_state:
@@ -362,7 +362,7 @@ def load_datasets_from_api():
 # --- Main Page Function ---
 def main():
     """Renders the Configure Converters page content with API backend."""
-    logger.debug("Configure Converters page (API-backed) loading.")
+    logger.debug("Configure Converters page (API - backed) loading.")
     st.set_page_config(
         page_title="Configure Converters", page_icon="🔄", layout="wide", initial_sidebar_state="expanded"
     )
@@ -383,7 +383,7 @@ def main():
         if not api_token:
             return
 
-    # Auto-load generators and datasets for consistency
+    # Auto - load generators and datasets for consistency
     auto_load_generators()
     auto_load_datasets()
 
@@ -405,7 +405,7 @@ def main():
 def display_header():
     """Displays the main header for the page."""
     st.title("🔄 Configure Converters")
-    st.markdown("*Configure prompt converters to transform and enhance red-teaming inputs*")
+    st.markdown("*Configure prompt converters to transform and enhance red - teaming inputs*")
 
 
 def select_generator_and_dataset():
@@ -528,7 +528,7 @@ def configure_converter_parameters():
         "generated_converter_name" not in st.session_state
         or st.session_state.get("last_converter_class") != converter_class
     ):
-        st.session_state["generated_converter_name"] = f"{converter_class}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        st.session_state["generated_converter_name"] = f"{converter_class}_{datetime.now().strftime('%Y % m%d_ % H%M % S')}"
         st.session_state["last_converter_class"] = converter_class
 
     default_name = st.session_state.get("custom_converter_name", st.session_state["generated_converter_name"])
@@ -572,7 +572,7 @@ def configure_converter_parameters():
         form_valid = True
         temp_params = {}
 
-        # Filter out UI-skipped parameters
+        # Filter out UI - skipped parameters
         ui_params = [p for p in params_info if not p.get("skip_in_ui", False)]
 
         for param_info in ui_params:
@@ -644,7 +644,7 @@ def configure_converter_parameters():
                     param_type = param_info["primary_type"]
                     required = param_info["required"]
 
-                    # Handle empty/None values
+                    # Handle empty / None values
                     if raw_value is None or (isinstance(raw_value, str) and not raw_value.strip()):
                         if required:
                             st.error(f"Parameter '{param_name}' is required.")
@@ -778,7 +778,7 @@ def preview_and_apply_converter():
                     # Use custom name if available, otherwise generate default
                     custom_name = st.session_state.get("custom_converter_name")
                     if not custom_name:
-                        custom_name = f"{converter_class}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                        custom_name = f"{converter_class}_{datetime.now().strftime('%Y % m%d_ % H%M % S')}"
 
                     # Get generator ID if converter requires target
                     generator_id = None
@@ -829,7 +829,7 @@ def preview_and_apply_converter():
 
     converter_id = current_converter["id"]
 
-    # Two-column layout for preview and application
+    # Two - column layout for preview and application
     col1, col2 = st.columns([1, 1])
 
     with col1:
@@ -910,7 +910,7 @@ def preview_and_apply_converter():
                 st.success("✅ Preview generated successfully!")
 
                 for i, result in enumerate(preview_results):
-                    with st.expander(f"Sample {i+1}", expanded=True):
+                    with st.expander(f"Sample {i + 1}", expanded=True):
                         st.caption("Original:")
                         st.text(result["original_value"])
                         st.caption("Converted:")
@@ -939,7 +939,7 @@ def preview_and_apply_converter():
                 st.markdown("4. Return here to apply converters")
 
                 if st.button("📊 Go to Configure Datasets", key="go_to_datasets_no_real"):
-                    st.switch_page("pages/2_Configure_Datasets.py")
+                    st.switch_page("pages / 2_Configure_Datasets.py")
             with col2:
                 if st.button("🔄 Refresh", help="Refresh dataset list", key="refresh_datasets_apply"):
                     st.session_state["force_reload_datasets"] = True
@@ -998,7 +998,7 @@ def preview_and_apply_converter():
             if new_dataset_name:
                 import re
 
-                if not re.match(r"^[a-zA-Z0-9_-]+$", new_dataset_name):
+                if not re.match(r"^[a - zA - Z0 - 9_-]+$", new_dataset_name):
                     st.error(
                         "Dataset name can only contain alphanumeric characters, underscores, and hyphens (no spaces)."
                     )
@@ -1013,7 +1013,7 @@ def preview_and_apply_converter():
                 )
 
             if success:
-                st.success(f"✅ Converter applied successfully!")
+                st.success("✅ Converter applied successfully!")
                 st.info(f"**Result:** {result.get('message', 'Conversion completed')}")
 
                 # Debug: Show what the API returned
@@ -1027,7 +1027,7 @@ def preview_and_apply_converter():
                     # Check the API response for new dataset info
                     if "dataset_id" in result and "dataset_name" in result:
                         st.success(f"📊 Converter created new dataset: '{result['dataset_name']}'")
-                        st.info(f"**New Dataset Details from API:**")
+                        st.info("**New Dataset Details from API:**")
                         st.write(f"• Name: {result['dataset_name']}")
                         st.write(f"• ID: {result['dataset_id']}")
                         st.write(f"• Converted Prompts: {result.get('converted_count', 0)}")
@@ -1122,7 +1122,7 @@ def proceed_to_next_step():
         "Next: Configure Scorers",
         type="primary",
         use_container_width=True,
-        help="Proceed to configure scorers for AI red-teaming evaluation",
+        help="Proceed to configure scorers for AI red - teaming evaluation",
     ):
         logger.info("User proceeded to next step after configuring converters.")
 
@@ -1134,7 +1134,7 @@ def proceed_to_next_step():
         }
         api_request("PUT", API_ENDPOINTS["sessions_update"], json=session_update)
 
-        st.switch_page("pages/4_Configure_Scorers.py")
+        st.switch_page("pages / 4_Configure_Scorers.py")
 
 
 # --- Helper Functions ---

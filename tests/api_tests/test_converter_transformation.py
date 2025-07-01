@@ -144,10 +144,10 @@ def test_converter_transformations():
         # Verify at least some prompts were converted
         if converted_dataset.get("prompts") and len(converted_dataset["prompts"]) > 0:
             sample_prompt = converted_dataset["prompts"][0]["value"]
-            print(f"   ✅ ROT13 conversion created dataset with transformed prompts")
+            print("   ✅ ROT13 conversion created dataset with transformed prompts")
             print(f"   📝 Sample converted prompt: '{sample_prompt}'")
         else:
-            print(f"   ✅ ROT13 converter applied successfully")
+            print("   ✅ ROT13 converter applied successfully")
 
         # Test 2: Base64 Converter
         print("\n2️⃣ Testing Base64 Converter...")
@@ -182,7 +182,7 @@ def test_converter_transformations():
         b64_dataset_id = response.json()["dataset_id"]
         resources_to_cleanup["datasets"].append(b64_dataset_id)
 
-        print(f"   ✅ Base64 converter applied successfully")
+        print("   ✅ Base64 converter applied successfully")
 
         # Test 3: Caesar Cipher with custom offset
         print("\n3️⃣ Testing Caesar Cipher Converter with custom offset...")
@@ -216,7 +216,7 @@ def test_converter_transformations():
         caesar_dataset_id = response.json()["dataset_id"]
         resources_to_cleanup["datasets"].append(caesar_dataset_id)
 
-        print(f"   ✅ Caesar cipher converter (offset=7) applied successfully")
+        print("   ✅ Caesar cipher converter (offset=7) applied successfully")
 
         print("\n✅ All converter transformations tested successfully!")
         print("\n📊 Summary:")

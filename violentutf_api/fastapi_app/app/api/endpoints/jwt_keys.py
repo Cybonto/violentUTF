@@ -84,7 +84,7 @@ async def list_api_keys(
     """
     # Query database for user's API keys
     result = await db.execute(
-        select(APIKeyModel).where(APIKeyModel.user_id == current_user.username, APIKeyModel.is_active == True)
+        select(APIKeyModel).where(APIKeyModel.user_id == current_user.username, APIKeyModel.is_active  is True)
     )
     db_keys = result.scalars().all()
 

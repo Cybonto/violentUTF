@@ -11,7 +11,7 @@ from utils.logging import get_logger, setup_logging
 
 app_version = "0.1"
 app_title = "ViolentUTF - Home"
-app_description = "Welcome Red-teamers to Vi-Tuff! Please use the tools wisely."
+app_description = "Welcome Red - teamers to Vi - Tuff! Please use the tools wisely."
 app_icon = "	:house:"
 
 load_dotenv()
@@ -45,9 +45,9 @@ st.markdown(
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    [data-testid="collapsedControl"] {display: none;}
-    [data-testid="stSidebarNav"] {display: none;}
-    
+    [data - testid="collapsedControl"] {display: none;}
+    [data - testid="stSidebarNav"] {display: none;}
+
     </style>
     """,
     unsafe_allow_html=True,
@@ -57,12 +57,12 @@ st.markdown(
 st.markdown(
     """
     <style>
-    [data-testid="stSidebar"] > div:first-child {
+    [data - testid="stSidebar"] > div:first - child {
         display: flex;
-        flex-direction: column;
+        flex - direction: column;
     }
-    [data-testid="stSidebar"] button {
-        margin-top: auto;
+    [data - testid="stSidebar"] button {
+        margin - top: auto;
     }
     </style>
     """,
@@ -78,7 +78,7 @@ st.text("")
 # Function to extract variables from page files
 def extract_variables(file_path):
     variables = {}
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, "r", encoding="utf - 8") as f:
         for line in f:
             line = line.strip()
             if line.startswith("app_version"):

@@ -50,7 +50,7 @@ def test_orchestrator_creation():
         "save_results": False,
     }
 
-    print(f"\n📝 Orchestrator payload:")
+    print("\n📝 Orchestrator payload:")
     print(json.dumps(orchestrator_payload, indent=2))
 
     # Make request
@@ -64,7 +64,7 @@ def test_orchestrator_creation():
         print(f"   Orchestrator ID: {result.get('orchestrator_id')}")
         return True
     else:
-        print(f"❌ Failed to create orchestrator")
+        print("❌ Failed to create orchestrator")
         print(f"   Response: {response.text}")
         return False
 

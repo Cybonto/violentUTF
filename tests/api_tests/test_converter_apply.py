@@ -238,7 +238,7 @@ class TestConverterApply:
         # Track new dataset for cleanup
         self.created_resources["datasets"].append(result["dataset_id"])
 
-        print(f"✅ Converter with custom parameters successfully applied")
+        print("✅ Converter with custom parameters successfully applied")
 
     def test_converter_apply_missing_dataset(self):
         """Test error handling for non-existent dataset"""
@@ -260,7 +260,7 @@ class TestConverterApply:
         assert response.status_code == 404
         assert "not found" in response.text.lower()
 
-        print(f"✅ Properly handles non-existent dataset error")
+        print("✅ Properly handles non-existent dataset error")
 
     def test_converter_apply_missing_new_name(self):
         """Test validation for missing new dataset name in COPY mode"""
@@ -283,7 +283,7 @@ class TestConverterApply:
         assert response.status_code == 400
         assert "new_dataset_name is required" in response.text
 
-        print(f"✅ Properly validates required fields for COPY mode")
+        print("✅ Properly validates required fields for COPY mode")
 
 
 def main():

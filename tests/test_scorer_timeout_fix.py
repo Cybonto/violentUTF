@@ -49,9 +49,9 @@ def test_batch_execution_performance():
 
             # Check if it would timeout with 30-second limit
             if processing_time > 30:
-                print(f"  ⚠️  Would timeout with 30-second limit!")
+                print("  ⚠️  Would timeout with 30-second limit!")
             else:
-                print(f"  ✅ Would complete within 30-second limit")
+                print("  ✅ Would complete within 30-second limit")
 
             # Check if it would complete with new timeout
             if processing_time <= test_case["expected_time"]:

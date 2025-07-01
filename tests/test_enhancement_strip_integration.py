@@ -340,7 +340,7 @@ class TestEnhancementStripIntegration:
         for operation, duration, success in performance_results:
             assert duration < 5.0, f"{operation} took too long: {duration}s"
 
-        print(f"\nPerformance summary:")
+        print("\nPerformance summary:")
         for op, dur, success in performance_results:
             status = "✓" if success else "✗"
             print(f"{status} {op}: {dur:.2f}s")

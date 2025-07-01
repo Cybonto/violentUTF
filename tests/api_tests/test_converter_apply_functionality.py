@@ -260,7 +260,7 @@ class TestConverterApplyFunctionality:
 
         self.created_resources["datasets"].append(result["dataset_id"])
 
-        logger.info(f"Successfully applied_Caesar_cipher converter with offset 7")
+        logger.info("Successfully applied_Caesar_cipher converter with offset 7")
 
     def test_converter_apply_invalid_dataset(self):
         """Test applying converter to non-existent dataset"""

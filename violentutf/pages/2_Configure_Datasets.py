@@ -258,7 +258,7 @@ def auto_load_datasets():
         with st.spinner("Loading existing datasets..."):
             datasets_data = load_datasets_from_api()
             if datasets_data:
-                logger.info(f"Auto-loaded datasets for display")
+                logger.info("Auto-loaded datasets for display")
             else:
                 logger.info("No existing datasets found during auto-load")
 
@@ -918,7 +918,7 @@ def flow_upload_local_dataset():
                     "field_mappings": field_mappings,
                 }
 
-                with st.spinner(f"Processing uploaded file..."):
+                with st.spinner("Processing uploaded file..."):
                     success = create_dataset_via_api(dataset_name, "local", create_config)
 
                 if success:
@@ -1057,7 +1057,7 @@ def flow_transform_datasets():
                     data = api_request("POST", url, json=payload)
 
                 if data:
-                    st.success(f"✅ Transformed dataset created!")
+                    st.success("✅ Transformed dataset created!")
                     # Update local state with transformed dataset
                     transformed_dataset = data.get("transformed_dataset", {})
                     st.session_state.api_datasets[transformed_name] = transformed_dataset

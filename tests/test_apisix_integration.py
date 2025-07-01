@@ -328,7 +328,7 @@ class TestDebugHelpers:
 
     def test_print_apisix_status(self):
         """Print current APISIX status for debugging"""
-        print(f"\n🔍 APISIX Gateway Status:")
+        print("\n🔍 APISIX Gateway Status:")
         print(f"   Base URL: {APISIX_BASE_URL}")
 
         try:
@@ -340,7 +340,7 @@ class TestDebugHelpers:
         # Test a few key endpoints
         test_endpoints = ["/api/v1/auth/token/info", "/api/v1/database/status", "/api/v1/sessions", "/docs"]
 
-        print(f"\n📋 Route Status:")
+        print("\n📋 Route Status:")
         for endpoint in test_endpoints:
             try:
                 response = requests.get(f"{APISIX_BASE_URL}{endpoint}", headers=get_apisix_headers(), timeout=5)
@@ -349,7 +349,7 @@ class TestDebugHelpers:
             except Exception as e:
                 print(f"   {endpoint}: ❌ Error ({e})")
 
-        print(f"\n💡 If routes are missing, run: cd apisix && ./configure_routes.sh")
+        print("\n💡 If routes are missing, run: cd apisix && ./configure_routes.sh")
 
 
 class TestJWTAuthenticationIntegration:
@@ -381,7 +381,7 @@ class TestJWTAuthenticationIntegration:
             "/api/v1/generators/types",
         ]
 
-        print(f"\n🔧 Testing Generator Endpoints:")
+        print("\n🔧 Testing Generator Endpoints:")
         for endpoint in generator_endpoints:
             response = make_request("GET", f"{APISIX_BASE_URL}{endpoint}")
 

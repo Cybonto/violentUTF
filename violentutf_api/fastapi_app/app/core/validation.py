@@ -30,7 +30,7 @@ class SecurityLimits:
     MAX_NESTED_DEPTH = 5
     MAX_JSON_SIZE = 10000  # bytes
 
-    # Username/identifier limits
+    # Username / identifier limits
     MIN_USERNAME_LENGTH = 3
     MAX_USERNAME_LENGTH = 50
     MIN_NAME_LENGTH = 1
@@ -47,31 +47,31 @@ class ValidationPatterns:
     """Regex patterns for validation"""
 
     # Safe username pattern (alphanumeric, dash, underscore)
-    USERNAME = re.compile(r"^[a-zA-Z0-9_-]+$")
+    USERNAME = re.compile(r"^[a - zA - Z0 - 9_-]+$")
 
     # Safe name pattern (letters, spaces, basic punctuation)
-    SAFE_NAME = re.compile(r"^[a-zA-Z0-9\s\-_.()]+$")
+    SAFE_NAME = re.compile(r"^[a - zA - Z0 - 9\s\-_.()]+$")
 
     # Safe identifier for API keys, dataset names, etc.
-    SAFE_IDENTIFIER = re.compile(r"^[a-zA-Z0-9_-]+$")
+    SAFE_IDENTIFIER = re.compile(r"^[a - zA - Z0 - 9_-]+$")
 
     # Generator name pattern (allows dots for model names like gpt3.5)
-    GENERATOR_NAME = re.compile(r"^[a-zA-Z0-9._-]+$")
+    GENERATOR_NAME = re.compile(r"^[a - zA - Z0 - 9._-]+$")
 
     # Generator type pattern (allows spaces for types like "AI Gateway")
-    GENERATOR_TYPE = re.compile(r"^[a-zA-Z0-9\s_-]+$")
+    GENERATOR_TYPE = re.compile(r"^[a - zA - Z0 - 9\s_-]+$")
 
     # Safe file name pattern
-    SAFE_FILENAME = re.compile(r"^[a-zA-Z0-9_.-]+$")
+    SAFE_FILENAME = re.compile(r"^[a - zA - Z0 - 9_.-]+$")
 
     # Safe URL pattern (basic validation)
-    SAFE_URL = re.compile(r"^https?://[a-zA-Z0-9.-]+[a-zA-Z0-9/._-]*$")
+    SAFE_URL = re.compile(r"^https?://[a - zA - Z0 - 9.-]+[a - zA - Z0 - 9/._-]*$")
 
     # JWT token pattern
-    JWT_TOKEN = re.compile(r"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$")
+    JWT_TOKEN = re.compile(r"^[A - Za - z0 - 9_-]+\.[A - Za - z0 - 9_-]+\.[A - Za - z0 - 9_-]+$")
 
     # Role pattern (lowercase alphanumeric with dash)
-    ROLE_PATTERN = re.compile(r"^[a-z0-9-]+$")
+    ROLE_PATTERN = re.compile(r"^[a - z0 - 9-]+$")
 
 
 class SafeString(str):
@@ -150,7 +150,7 @@ def validate_email(email: str) -> str:
     email = email.strip().lower()
 
     # Basic format check
-    if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+    if not re.match(r"^[a - zA - Z0 - 9._%+-]+@[a - zA - Z0 - 9.-]+\.[a - zA - Z]{2,}$", email):
         raise ValueError("Invalid email format")
 
     if len(email) > 254:  # RFC 5321 limit
@@ -303,8 +303,8 @@ def validate_url(url: str) -> str:
         "::1",
         "10.",  # Private network
         "192.168.",  # Private network
-        "172.",  # Private network (172.16-31.x.x)
-        "169.254.",  # Link-local
+        "172.",  # Private network (172.16 - 31.x.x)
+        "169.254.",  # Link - local
         "metadata.google.internal",
         "metadata",
         "metadata.aws",
@@ -318,7 +318,7 @@ def validate_url(url: str) -> str:
 
     for dangerous in dangerous_hosts:
         if host.startswith(dangerous):
-            raise ValueError(f"Access to internal/localhost URLs not allowed: {host}")
+            raise ValueError(f"Access to internal / localhost URLs not allowed: {host}")
 
     # Additional check for private IP ranges
     import ipaddress
@@ -326,7 +326,7 @@ def validate_url(url: str) -> str:
     try:
         ip = ipaddress.ip_address(host)
         if ip.is_private or ip.is_loopback or ip.is_link_local:
-            raise ValueError(f"Access to private/internal IP addresses not allowed: {host}")
+            raise ValueError(f"Access to private / internal IP addresses not allowed: {host}")
     except ipaddress.AddressValueError:
         # Not an IP address, hostname validation above should catch issues
         pass
@@ -342,7 +342,7 @@ def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLi
     Validate JSON data structure and prevent deeply nested objects
     """
     if isinstance(data, str):
-        if len(data.encode("utf-8")) > SecurityLimits.MAX_JSON_SIZE:
+        if len(data.encode("utf - 8")) > SecurityLimits.MAX_JSON_SIZE:
             raise ValueError(f"JSON data too large (max {SecurityLimits.MAX_JSON_SIZE} bytes)")
 
         try:
@@ -405,12 +405,12 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
 
     # Validate content type
     allowed_content_types = [
-        "text/csv",
-        "text/plain",
-        "application/json",
-        "application/x-yaml",
-        "text/yaml",
-        "text/tab-separated-values",
+        "text / csv",
+        "text / plain",
+        "application / json",
+        "application / x - yaml",
+        "text / yaml",
+        "text / tab - separated - values",
     ]
 
     if content_type not in allowed_content_types:
@@ -419,7 +419,7 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
     # Check file size (10MB limit)
     max_size = 10 * 1024 * 1024  # 10MB
     if file_size > max_size:
-        raise ValueError(f"File too large (max {max_size // (1024*1024)}MB)")
+        raise ValueError(f"File too large (max {max_size // (1024 * 1024)}MB)")
 
     return filename
 
@@ -456,7 +456,7 @@ def validate_generator_parameters(parameters: Dict[str, Any]) -> Dict[str, Any]:
         if len(key) > 100:
             raise ValueError("Parameter key too long")
 
-        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", key):
+        if not re.match(r"^[a - zA - Z_][a - zA - Z0 - 9_]*$", key):
             raise ValueError(f"Invalid parameter key format: {key}")
 
         # Validate value based on type

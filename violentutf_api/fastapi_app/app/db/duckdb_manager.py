@@ -39,7 +39,7 @@ class DuckDBManager:
     def __init__(self, username: str, salt: str = None, app_data_dir: str = None):
         self.username = username
         self.salt = salt or os.getenv("PYRIT_DB_SALT", "default_salt_2025")
-        self.app_data_dir = app_data_dir or os.getenv("APP_DATA_DIR", "./app_data/violentutf")
+        self.app_data_dir = app_data_dir or os.getenv("APP_DATA_DIR", "./app_data / violentutf")
         self.db_path = self._get_db_path()
         self._ensure_tables()
 
@@ -47,8 +47,8 @@ class DuckDBManager:
         """Generate database filename based on salted hash of username"""
         if not self.username or not self.salt:
             return ""
-        salt_bytes = self.salt.encode("utf-8") if isinstance(self.salt, str) else self.salt
-        hashed_username = hashlib.sha256(salt_bytes + self.username.encode("utf-8")).hexdigest()
+        salt_bytes = self.salt.encode("utf - 8") if isinstance(self.salt, str) else self.salt
+        hashed_username = hashlib.sha256(salt_bytes + self.username.encode("utf - 8")).hexdigest()
         return f"pyrit_memory_{hashed_username}.db"
 
     def _get_db_path(self) -> str:
@@ -206,7 +206,7 @@ class DuckDBManager:
         if table_name not in self.ALLOWED_TABLES:
             raise ValueError(f"Invalid table name: {table_name}")
 
-        # Use string formatting with pre-validated table name (table_name is whitelisted above)
+        # Use string formatting with pre - validated table name (table_name is whitelisted above)
         query = 'SELECT COUNT(*) FROM "{}"'.format(table_name)  # nosec B608
         result = conn.execute(query).fetchone()
         return result[0] if result else 0
@@ -460,13 +460,13 @@ class DuckDBManager:
         with duckdb.connect(self.db_path) as conn:
             results = conn.execute(
                 """
-                SELECT d.id, d.name, d.source_type, d.configuration, d.status, 
+                SELECT d.id, d.name, d.source_type, d.configuration, d.status,
                        d.created_at, d.updated_at, d.metadata,
                        COUNT(dp.id) as prompt_count
                 FROM datasets d
                 LEFT JOIN dataset_prompts dp ON d.id = dp.dataset_id
                 WHERE d.user_id = ?
-                GROUP BY d.id, d.name, d.source_type, d.configuration, d.status, 
+                GROUP BY d.id, d.name, d.source_type, d.configuration, d.status,
                          d.created_at, d.updated_at, d.metadata
                 ORDER BY d.created_at DESC
             """,
@@ -515,7 +515,7 @@ class DuckDBManager:
                 # Update existing session
                 conn.execute(
                     """
-                    UPDATE user_sessions 
+                    UPDATE user_sessions
                     SET session_data = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE user_id = ? AND session_key = ?
                 """,

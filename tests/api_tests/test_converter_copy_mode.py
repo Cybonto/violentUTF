@@ -116,7 +116,7 @@ def test_converter_copy_mode():
         return False
 
     apply_result = response.json()
-    print(f"✅ Converter applied successfully:")
+    print("✅ Converter applied successfully:")
     print(f"   - Success: {apply_result['success']}")
     print(f"   - New dataset: '{apply_result['dataset_name']}'")
     print(f"   - New dataset ID: {apply_result['dataset_id']}")
@@ -133,7 +133,7 @@ def test_converter_copy_mode():
         return False
 
     new_dataset = response.json()
-    print(f"✅ New dataset verified:")
+    print("✅ New dataset verified:")
     print(f"   - Name: {new_dataset['name']}")
     print(f"   - Source type: {new_dataset['source_type']}")
     print(f"   - Prompt count: {new_dataset['prompt_count']}")

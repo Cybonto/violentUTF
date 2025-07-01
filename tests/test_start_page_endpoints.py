@@ -76,7 +76,7 @@ def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
         elif response.status_code == 200:
             return "✅ ROUTED", response.status_code, "Accessible"
         else:
-            return "⚠️  ROUTED", response.status_code, f"Unexpected status"
+            return "⚠️  ROUTED", response.status_code, "Unexpected status"
 
     except requests.ConnectionError:
         return "❌ CONNECTION", 0, "Cannot connect to APISIX"
@@ -149,8 +149,8 @@ def main():
     # Additional information
     print("📖 Additional Information:")
     print(f"   - APISIX Gateway: {APISIX_BASE_URL}")
-    print(f"   - APISIX Dashboard: http://localhost:9001")
-    print(f"   - APISIX Admin API: http://localhost:9180")
+    print("   - APISIX Dashboard: http://localhost:9001")
+    print("   - APISIX Admin API: http://localhost:9180")
     print(f"   - Start page path: {START_PAGE_PATH}")
     print()
     print("🛠️  Next Steps:")

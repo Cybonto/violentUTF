@@ -770,10 +770,10 @@ def handle_ai_gateway_provider_selection():
             if st.button("🔄 Refresh Providers", help="Refresh provider list from API"):
                 st.session_state.pop("ai_gateway_param_cache", None)
                 st.rerun()
-        
+
         param_defs = get_generator_params_from_api("AI Gateway")
         provider_param = next((p for p in param_defs if p["name"] == "provider"), None)
-        
+
         # Debug information
         with st.expander("🔍 Debug Info", expanded=False):
             st.write("**API Response Debug:**")
@@ -782,14 +782,14 @@ def handle_ai_gateway_provider_selection():
                 st.write(f"Provider options: {provider_param['options']}")
                 st.write(f"Total providers: {len(provider_param['options'])}")
                 # Highlight OpenAPI providers
-                openapi_providers = [p for p in provider_param['options'] if p.startswith('openapi-')]
+                openapi_providers = [p for p in provider_param["options"] if p.startswith("openapi-")]
                 if openapi_providers:
                     st.success(f"✅ OpenAPI providers found: {openapi_providers}")
                 else:
                     st.warning("⚠️ No OpenAPI providers found in options")
             else:
                 st.error("❌ No provider parameter found")
-            
+
             # Direct API test for OpenAPI providers
             st.write("**Direct OpenAPI Providers Test:**")
             try:
@@ -922,7 +922,7 @@ def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
                 )
             else:
                 st.warning(f"⚠️ No models available for {selected_provider} provider")
-                st.session_state[f"AI Gateway_model"] = None
+                st.session_state["AI Gateway_model"] = None
 
         # Render other configuration parameters based on provider selection
         selected_provider = st.session_state.get("AI Gateway_provider", "openai")

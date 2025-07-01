@@ -1,6 +1,6 @@
 """
 Test suite for MCP Client implementation
-Tests SSE connection, JSON-RPC handling, and all MCP operations
+Tests SSE connection, JSON - RPC handling, and all MCP operations
 """
 
 import asyncio
@@ -46,7 +46,7 @@ class TestMCPClient:
     @pytest.fixture
     def mock_auth_headers(self):
         """Mock authentication headers"""
-        return {"Authorization": "Bearer test_token", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+        return {"Authorization": "Bearer test_token", "Content - Type": "application / json", "X - API - Gateway": "APISIX"}
 
     @pytest.mark.asyncio
     async def test_initialization(self, client, mock_auth_headers):
@@ -54,7 +54,7 @@ class TestMCPClient:
         # Mock successful initialization response
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
-        mock_response.headers = {"content-type": "application/json"}
+        mock_response.headers = {"content - type": "application / json"}
         mock_response.json.return_value = {
             "jsonrpc": "2.0",
             "id": 1,
@@ -89,7 +89,7 @@ class TestMCPClient:
         # Mock response with prompts
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
-        mock_response.headers = {"content-type": "application/json"}
+        mock_response.headers = {"content - type": "application / json"}
         mock_response.json.return_value = {
             "jsonrpc": "2.0",
             "id": 2,
@@ -117,7 +117,7 @@ class TestMCPClient:
         """Test getting a specific prompt"""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
-        mock_response.headers = {"content-type": "application/json"}
+        mock_response.headers = {"content - type": "application / json"}
         mock_response.json.return_value = {
             "jsonrpc": "2.0",
             "id": 3,
@@ -137,16 +137,16 @@ class TestMCPClient:
         """Test listing resources"""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
-        mock_response.headers = {"content-type": "application/json"}
+        mock_response.headers = {"content - type": "application / json"}
         mock_response.json.return_value = {
             "jsonrpc": "2.0",
             "id": 4,
             "result": {
                 "resources": [
                     {
-                        "uri": "violentutf://datasets/harmbench",
+                        "uri": "violentutf://datasets / harmbench",
                         "name": "HarmBench Dataset",
-                        "mimeType": "application/json",
+                        "mimeType": "application / json",
                     }
                 ]
             },
@@ -159,18 +159,18 @@ class TestMCPClient:
                 resources = await client.list_resources()
 
                 assert len(resources) == 1
-                assert resources[0]["uri"] == "violentutf://datasets/harmbench"
+                assert resources[0]["uri"] == "violentutf://datasets / harmbench"
 
     @pytest.mark.asyncio
     async def test_read_resource(self, client, mock_auth_headers):
         """Test reading a resource"""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
-        mock_response.headers = {"content-type": "application/json"}
+        mock_response.headers = {"content - type": "application / json"}
         mock_response.json.return_value = {
             "jsonrpc": "2.0",
             "id": 5,
-            "result": {"contents": [{"mimeType": "text/plain", "text": "Resource content here"}]},
+            "result": {"contents": [{"mimeType": "text / plain", "text": "Resource content here"}]},
         }
 
         client._initialized = True
@@ -186,11 +186,11 @@ class TestMCPClient:
         """Test parsing SSE formatted response"""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
-        mock_response.headers = {"content-type": "text/event-stream"}
+        mock_response.headers = {"content - type": "text / event - stream"}
         mock_response.text = """data: {"jsonrpc": "2.0", "id": 6, "result": {"test": "sse_data"}}
 
 event: close
-data: 
+data:
 
 """
 
@@ -209,7 +209,7 @@ data:
                 headers = client._get_auth_headers()
 
                 assert headers["Authorization"] == "Bearer test_token"
-                assert headers["X-API-Gateway"] == "APISIX"
+                assert headers["X - API - Gateway"] == "APISIX"
                 assert headers["apikey"] == "test_api_key"
 
     @pytest.mark.asyncio
@@ -228,7 +228,7 @@ data:
         """Test health check functionality"""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
-        mock_response.headers = {"content-type": "application/json"}
+        mock_response.headers = {"content - type": "application / json"}
         mock_response.json.return_value = {
             "jsonrpc": "2.0",
             "id": 1,
@@ -321,7 +321,7 @@ class TestIntegration:
             resp_data = next(response_iter)
             mock_resp = Mock(spec=Response)
             mock_resp.status_code = 200
-            mock_resp.headers = {"content-type": "application/json"}
+            mock_resp.headers = {"content - type": "application / json"}
             mock_resp.json.return_value = resp_data
             return mock_resp
 

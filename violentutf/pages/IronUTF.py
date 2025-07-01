@@ -51,7 +51,7 @@ def get_auth_headers() -> Dict[str, str]:
         if not token:
             return {}
 
-        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+        headers = {"Authorization": f"Bearer {token}", "Content - Type": "application / json", "X - API - Gateway": "APISIX"}
 
         # Add APISIX API key for AI model access
         apisix_api_key = (
@@ -67,7 +67,7 @@ def get_auth_headers() -> Dict[str, str]:
 
 
 def create_compatible_api_token():
-    """Create a FastAPI-compatible token using JWT manager - NEVER implement manually"""
+    """Create a FastAPI - compatible token using JWT manager - NEVER implement manually"""
     try:
         from utils.jwt_manager import jwt_manager
 
@@ -80,7 +80,7 @@ def create_compatible_api_token():
             decoded = {
                 "preferred_username": "keycloak_user",
                 "email": "user@keycloak.local",
-                "roles": ["ai-api-access", "admin", "apisix-admin"],  # Include admin roles for IronUTF
+                "roles": ["ai - api - access", "admin", "apisix - admin"],  # Include admin roles for IronUTF
             }
             api_token = jwt_manager.create_token(decoded)
         else:
@@ -90,8 +90,8 @@ def create_compatible_api_token():
                 "preferred_username": os.getenv("KEYCLOAK_USERNAME", "violentutf.web"),
                 "email": "violentutf@example.com",
                 "name": "ViolentUTF Admin",
-                "sub": "violentutf-admin",
-                "roles": ["ai-api-access", "admin", "apisix-admin"],  # Admin roles for IronUTF
+                "sub": "violentutf - admin",
+                "roles": ["ai - api - access", "admin", "apisix - admin"],  # Admin roles for IronUTF
             }
             api_token = jwt_manager.create_token(mock_keycloak_data)
 
@@ -115,7 +115,7 @@ class APISIXAdmin:
     """Class to interact with APISIX Admin through ViolentUTF API"""
 
     def __init__(self):
-        self.api_url = f"{VIOLENTUTF_API_URL}/api/v1/apisix-admin"
+        self.api_url = f"{VIOLENTUTF_API_URL}/api / v1 / apisix - admin"
         self.headers = get_auth_headers()
 
     def get_all_routes(self) -> Optional[Dict]:
@@ -168,22 +168,22 @@ class APISIXAdmin:
 
 
 def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai-prompt-guard plugin configuration"""
+    """Render UI for ai - prompt - guard plugin configuration"""
     # st.subheader("🛡️ AI Prompt Guard Configuration")
 
     with st.expander("ℹ️ About AI Prompt Guard", expanded=False):
         st.markdown(
             """
-        The **ai-prompt-guard** plugin helps protect your AI models from harmful or inappropriate prompts by:
+        The **ai - prompt - guard** plugin helps protect your AI models from harmful or inappropriate prompts by:
         - Blocking prompts containing specific patterns or keywords
         - Allowing only prompts that match certain criteria
         - Customizing error messages for blocked requests
-        
-        [📚 Official Documentation](https://apisix.apache.org/docs/apisix/plugins/ai-prompt-guard/)
+
+        [📚 Official Documentation](https://apisix.apache.org / docs / apisix / plugins / ai - prompt - guard/)
         """
         )
 
-    config = current_config.get("ai-prompt-guard", {})
+    config = current_config.get("ai - prompt - guard", {})
 
     # Initialize session state only if not already initialized for this route
     deny_patterns_key = f"deny_patterns_{route_id}"
@@ -290,13 +290,13 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
 
         # Extract endpoint from route_id
         if "openai" in route_id:
-            endpoint = f"{base_url}/ai/openai/{model}"
+            endpoint = f"{base_url}/ai / openai/{model}"
         elif "anthropic" in route_id:
-            endpoint = f"{base_url}/ai/anthropic/{model}"
+            endpoint = f"{base_url}/ai / anthropic/{model}"
         elif "ollama" in route_id:
-            endpoint = f"{base_url}/ai/ollama/{model}"
+            endpoint = f"{base_url}/ai / ollama/{model}"
         elif "webui" in route_id:
-            endpoint = f"{base_url}/ai/webui/{model}"
+            endpoint = f"{base_url}/ai / webui/{model}"
         else:
             endpoint = f"{base_url}/ai/{provider}/{model}"
 
@@ -304,7 +304,7 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
         test_prompt = "Hello, please respond with 'Test successful' if you receive this message."
 
         # Prepare request
-        headers = {"apikey": api_key, "Content-Type": "application/json"}
+        headers = {"apikey": api_key, "Content - Type": "application / json"}
 
         payload = {"messages": [{"role": "user", "content": test_prompt}], "max_tokens": 50, "temperature": 0}
 
@@ -326,7 +326,7 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
 
             return {"success": True, "test_prompt": test_prompt, "response": response_text, "filtered": False}
         elif response.status_code == 400:
-            # Check if it's a plugin-related error
+            # Check if it's a plugin - related error
             error_text = response.text
             if "system" in error_text and "anthropic" in route_id.lower():
                 return {
@@ -354,7 +354,7 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
 def detect_provider_type(route_config: Dict) -> str:
     """Detect the AI provider type from route configuration."""
     plugins = route_config.get("plugins", {})
-    ai_proxy = plugins.get("ai-proxy", {})
+    ai_proxy = plugins.get("ai - proxy", {})
 
     provider = ai_proxy.get("provider", "")
     override = ai_proxy.get("override", {})
@@ -363,7 +363,7 @@ def detect_provider_type(route_config: Dict) -> str:
     # Direct provider detection
     if provider == "openai":
         return "openai"
-    elif provider == "openai-compatible":
+    elif provider == "openai - compatible":
         # Check endpoint to determine actual provider
         if "anthropic.com" in endpoint:
             return "anthropic"
@@ -435,33 +435,33 @@ def handle_append_role_change():
 
 
 def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai-prompt-decorator plugin configuration"""
+    """Render UI for ai - prompt - decorator plugin configuration"""
     # st.subheader("🎨 AI Prompt Decorator Configuration")
 
     # Detect provider type
     provider_type = detect_provider_type(route_config)
 
-    # Show provider-specific warnings
+    # Show provider - specific warnings
     if provider_type == "anthropic":
         st.warning(
             """
         ⚠️ **Anthropic API Limitation**: System messages cannot be added to the messages array.
-        Only 'user' and 'assistant' roles are supported for prepend/append operations.
-        To add system-like instructions, use the 'user' role with clear directives.
+        Only 'user' and 'assistant' roles are supported for prepend / append operations.
+        To add system - like instructions, use the 'user' role with clear directives.
         """
         )
 
     with st.expander("ℹ️ About AI Prompt Decorator", expanded=False):
         st.markdown(
             """
-        The **ai-prompt-decorator** plugin allows you to modify prompts before they reach the AI model by:
+        The **ai - prompt - decorator** plugin allows you to modify prompts before they reach the AI model by:
         - Adding messages before the user prompt (prepend)
         - Adding messages after the user prompt (append)
         - Injecting system prompts or context
-        
+
         Messages are added as chat conversation entries with specified roles (system, user, assistant).
-        
-        [📚 Official Documentation](https://apisix.apache.org/docs/apisix/plugins/ai-prompt-decorator/)
+
+        [📚 Official Documentation](https://apisix.apache.org / docs / apisix / plugins / ai - prompt - decorator/)
         """
         )
 
@@ -470,9 +470,9 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
     with col1:
         st.info(f"🤖 Detected Provider: **{provider_type.title()}**")
 
-    config = current_config.get("ai-prompt-decorator", {})
+    config = current_config.get("ai - prompt - decorator", {})
 
-    # Extract existing prepend/append messages
+    # Extract existing prepend / append messages
     prepend_messages = config.get("prepend", [])
     append_messages = config.get("append", [])
 
@@ -776,11 +776,11 @@ def main():
             # Update checkbox states based on current plugins
             guard_key = f"enable_guard_{route_id}"
             if guard_key not in st.session_state:
-                st.session_state[guard_key] = "ai-prompt-guard" in current_plugins
+                st.session_state[guard_key] = "ai - prompt - guard" in current_plugins
 
             decorator_key = f"enable_decorator_{route_id}"
             if decorator_key not in st.session_state:
-                st.session_state[decorator_key] = "ai-prompt-decorator" in current_plugins
+                st.session_state[decorator_key] = "ai - prompt - decorator" in current_plugins
 
             enable_guard = st.checkbox(
                 "Enable AI Prompt Guard", key=guard_key, help="Enable prompt filtering and blocking"
@@ -797,9 +797,9 @@ def main():
 
                 # Add the plugins as configured
                 if enable_guard:
-                    test_plugins["ai-prompt-guard"] = guard_config if guard_config else {}
+                    test_plugins["ai - prompt - guard"] = guard_config if guard_config else {}
                 if enable_decorator:
-                    test_plugins["ai-prompt-decorator"] = decorator_config if decorator_config else {}
+                    test_plugins["ai - prompt - decorator"] = decorator_config if decorator_config else {}
 
                 # Test with a simple prompt
                 with st.spinner("Testing configuration..."):
@@ -826,19 +826,19 @@ def main():
                 # Build new plugins configuration
                 new_plugins = current_plugins.copy()
 
-                # Handle ai-prompt-guard
+                # Handle ai - prompt - guard
                 if enable_guard:
                     # Always add the guard config when enabled (even if empty)
-                    new_plugins["ai-prompt-guard"] = guard_config if guard_config else {}
-                elif "ai-prompt-guard" in new_plugins:
-                    del new_plugins["ai-prompt-guard"]
+                    new_plugins["ai - prompt - guard"] = guard_config if guard_config else {}
+                elif "ai - prompt - guard" in new_plugins:
+                    del new_plugins["ai - prompt - guard"]
 
-                # Handle ai-prompt-decorator
+                # Handle ai - prompt - decorator
                 if enable_decorator:
                     # Always add the decorator config when enabled (even if empty)
-                    new_plugins["ai-prompt-decorator"] = decorator_config if decorator_config else {}
-                elif "ai-prompt-decorator" in new_plugins:
-                    del new_plugins["ai-prompt-decorator"]
+                    new_plugins["ai - prompt - decorator"] = decorator_config if decorator_config else {}
+                elif "ai - prompt - decorator" in new_plugins:
+                    del new_plugins["ai - prompt - decorator"]
 
                 # Debug: Show what we're sending
                 logger.info(f"Updating route {route_id} with plugins: {new_plugins}")
@@ -846,7 +846,7 @@ def main():
                 # Update route configuration
                 route_value["plugins"] = new_plugins
 
-                # Remove read-only fields that APISIX doesn't accept in updates
+                # Remove read - only fields that APISIX doesn't accept in updates
                 fields_to_remove = ["create_time", "update_time", "createdIndex", "modifiedIndex"]
                 for field in fields_to_remove:
                     route_value.pop(field, None)
@@ -879,7 +879,7 @@ def main():
         st.markdown("---")
         st.info(
             """
-        🔒 **Security Notice**: Changes to AI plugin configurations take effect immediately. 
+        🔒 **Security Notice**: Changes to AI plugin configurations take effect immediately.
         Please test your changes thoroughly to ensure they don't inadvertently block legitimate requests.
         """
         )

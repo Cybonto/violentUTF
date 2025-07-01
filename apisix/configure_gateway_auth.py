@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 APISIX Gateway Authentication Configuration Script
-Configures HMAC-based authentication between APISIX and FastAPI
+Configures HMAC - based authentication between APISIX and FastAPI
 """
 
 import hashlib
@@ -21,7 +21,7 @@ class APISIXGatewayAuth:
     def __init__(self, admin_url: str = "http://localhost:9180", admin_key: str = ""):
         self.admin_url = admin_url.rstrip("/")
         self.admin_key = admin_key
-        self.headers = {"X-API-KEY": admin_key, "Content-Type": "application/json"}
+        self.headers = {"X - API - KEY": admin_key, "Content - Type": "application / json"}
 
     def generate_hmac_signature(
         self, gateway_secret: str, method: str, path: str, timestamp: Optional[str] = None
@@ -44,9 +44,9 @@ class APISIXGatewayAuth:
         # Create signature payload: METHOD:PATH:TIMESTAMP
         signature_payload = f"{method}:{path}:{timestamp}"
 
-        # Generate HMAC-SHA256 signature
+        # Generate HMAC - SHA256 signature
         signature = hmac.new(
-            gateway_secret.encode("utf-8"), signature_payload.encode("utf-8"), hashlib.sha256
+            gateway_secret.encode("utf - 8"), signature_payload.encode("utf - 8"), hashlib.sha256
         ).hexdigest()
 
         return signature, timestamp
@@ -71,13 +71,13 @@ class APISIXGatewayAuth:
             signature, timestamp = self.generate_hmac_signature(gateway_secret, method, path)
 
             # Test headers
-            test_headers = {"X-API-Gateway": "APISIX", "X-APISIX-Signature": signature, "X-APISIX-Timestamp": timestamp}
+            test_headers = {"X - API - Gateway": "APISIX", "X - APISIX - Signature": signature, "X - APISIX - Timestamp": timestamp}
 
             # Make test request
             response = requests.get(f"{fastapi_url}{path}", headers=test_headers, timeout=10)
 
             if response.status_code == 200:
-                print(f"✅ Gateway authentication test successful")
+                print("✅ Gateway authentication test successful")
                 return True
             else:
                 print(f"❌ Gateway authentication test failed: {response.status_code}")
@@ -101,42 +101,42 @@ class APISIXGatewayAuth:
         try:
             # Plugin configuration for global use
             plugin_config = {
-                "id": "gateway-auth-global",
+                "id": "gateway - auth - global",
                 "plugins": {
-                    "serverless-pre-function": {
+                    "serverless - pre - function": {
                         "phase": "rewrite",
                         "functions": [
-                            f"""
+                            """
                             return function(conf, ctx)
                                 local ngx = ngx
                                 local ngx_time = ngx.time
                                 local resty_hmac = require("resty.hmac")
-                                
+
                                 -- Get current timestamp
                                 local timestamp = tostring(ngx_time())
-                                
+
                                 -- Get request details
                                 local method = ngx.var.request_method
                                 local path = ngx.var.uri
-                                
+
                                 -- Create signature payload
                                 local signature_payload = method .. ":" .. path .. ":" .. timestamp
-                                
+
                                 -- Generate HMAC signature
                                 local hmac_sha256 = resty_hmac:new("{gateway_secret}", resty_hmac.ALGOS.SHA256)
                                 hmac_sha256:update(signature_payload)
                                 local signature = hmac_sha256:final()
-                                
+
                                 -- Convert to hex
                                 local signature_hex = ""
                                 for i = 1, #signature do
                                     signature_hex = signature_hex .. string.format("%02x", signature:byte(i))
                                 end
-                                
+
                                 -- Add headers
-                                ngx.req.set_header("X-API-Gateway", "APISIX")
-                                ngx.req.set_header("X-APISIX-Signature", signature_hex)
-                                ngx.req.set_header("X-APISIX-Timestamp", timestamp)
+                                ngx.req.set_header("X - API - Gateway", "APISIX")
+                                ngx.req.set_header("X - APISIX - Signature", signature_hex)
+                                ngx.req.set_header("X - APISIX - Timestamp", timestamp)
                             end
                             """
                         ],
@@ -146,7 +146,7 @@ class APISIXGatewayAuth:
 
             # Apply to plugin configs
             response = requests.put(
-                f"{self.admin_url}/apisix/admin/plugin_configs/gateway-auth-global",
+                f"{self.admin_url}/apisix / admin / plugin_configs / gateway - auth - global",
                 headers=self.headers,
                 json=plugin_config,
                 timeout=10,

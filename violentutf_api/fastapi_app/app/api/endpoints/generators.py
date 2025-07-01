@@ -13,8 +13,8 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import requests
 import httpx
+import requests
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.error_handling import safe_error_response, validation_error
@@ -418,6 +418,7 @@ def get_fallback_models(provider: str) -> List[str]:
 
 # === Phase 1: Dynamic Model Discovery ===
 
+
 async def discover_openapi_models_from_provider(provider_id: str, base_url: str, auth_token: str) -> List[str]:
     """
     Discover available models directly from OpenAPI provider's /api/v1/models endpoint
@@ -426,25 +427,22 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
     try:
         # Construct models endpoint URL
         models_url = f"{base_url.rstrip('/')}/api/v1/models"
-        headers = {
-            "Authorization": f"Bearer {auth_token}",
-            "Accept": "application/json"
-        }
-        
+        headers = {"Authorization": f"Bearer {auth_token}", "Accept": "application/json"}
+
         logger.info(f"Discovering models from {provider_id} at {models_url}")
-        
+
         # Configure SSL verification - disable for corporate environments with proxy/self-signed certs
         # TODO: Make this configurable via environment variable for security
         ssl_verify = False  # Disabled for corporate proxy compatibility
         if not ssl_verify:
             logger.warning(f"SSL verification disabled for {provider_id} - ensure network security")
-        
+
         async with httpx.AsyncClient(timeout=10.0, verify=ssl_verify) as client:
             response = await client.get(models_url, headers=headers)
-            
+
         if response.status_code == 200:
             data = response.json()
-            
+
             # Parse OpenAI-compatible models response
             if "data" in data and isinstance(data["data"], list):
                 models = [model["id"] for model in data["data"] if "id" in model]
@@ -453,7 +451,7 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
             else:
                 logger.warning(f"Unexpected response format from {provider_id}: missing 'data' array")
                 return []
-        
+
         elif response.status_code == 403:
             logger.error(f"Authentication failed for {provider_id}: Invalid or expired token")
             return []
@@ -466,7 +464,7 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
         else:
             logger.warning(f"Failed to discover models from {provider_id}: HTTP {response.status_code}")
             return []
-        
+
     except httpx.TimeoutException:
         logger.warning(f"Timeout while discovering models from {provider_id}")
         return []
@@ -495,12 +493,12 @@ def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
                 "auth_token": getattr(settings, f"OPENAPI_{i}_AUTH_TOKEN", None),
                 "auth_type": getattr(settings, f"OPENAPI_{i}_AUTH_TYPE", "bearer"),
             }
-    
+
     # Try direct format (OPENAPI_{PROVIDER_ID}_*, e.g., OPENAPI_GSAI_API_1_*)
     provider_key = provider_id.upper().replace("-", "_")
     base_url = getattr(settings, f"OPENAPI_{provider_key}_BASE_URL", None)
     auth_token = getattr(settings, f"OPENAPI_{provider_key}_AUTH_TOKEN", None)
-    
+
     if base_url and auth_token:
         return {
             "id": provider_id,
@@ -509,7 +507,7 @@ def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
             "auth_token": auth_token,
             "auth_type": getattr(settings, f"OPENAPI_{provider_key}_AUTH_TYPE", "bearer"),
         }
-    
+
     return {"id": provider_id, "name": None, "base_url": None, "auth_token": None, "auth_type": None}
 
 
@@ -520,29 +518,31 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
     """
     if provider.startswith("openapi-"):
         provider_id = provider.replace("openapi-", "")
-        
+
         # Get provider configuration
         config = get_openapi_provider_config(provider_id)
-        
-        logger.info(f"Configuration for {provider_id}: base_url={'***' if config['base_url'] else None}, auth_token={'***' if config['auth_token'] else None}")
-        
+
+        logger.info(
+            f"Configuration for {provider_id}: base_url={'***' if config['base_url'] else None}, auth_token={'***' if config['auth_token'] else None}"
+        )
+
         if config["base_url"] and config["auth_token"]:
             logger.info(f"Attempting dynamic model discovery for {provider_id} at {config['base_url']}")
-            
+
             # Try to discover models from actual provider API
-            models = await discover_openapi_models_from_provider(
-                provider_id, config["base_url"], config["auth_token"]
-            )
-            
+            models = await discover_openapi_models_from_provider(provider_id, config["base_url"], config["auth_token"])
+
             if models:
                 logger.info(f"✅ Dynamic discovery successful for {provider_id}: found {len(models)} models: {models}")
                 return models
             else:
                 logger.warning(f"❌ Dynamic discovery failed for {provider_id}, falling back to route parsing")
         else:
-            logger.warning(f"❌ Missing configuration for {provider_id}: base_url={bool(config['base_url'])}, auth_token={bool(config['auth_token'])}")
+            logger.warning(
+                f"❌ Missing configuration for {provider_id}: base_url={bool(config['base_url'])}, auth_token={bool(config['auth_token'])}"
+            )
             logger.info(f"Config details: {config}")
-    
+
     # Fallback to existing route-based discovery
     return discover_apisix_models(provider)
 
@@ -887,7 +887,9 @@ async def get_openapi_providers_endpoint(current_user=Depends(get_current_user))
         raise HTTPException(status_code=500, detail=safe_error_response("Failed to get OpenAPI providers"))
 
 
-@router.get("/apisix/openapi-models", response_model=Dict[str, List[str]], summary="Get models for all OpenAPI providers")
+@router.get(
+    "/apisix/openapi-models", response_model=Dict[str, List[str]], summary="Get models for all OpenAPI providers"
+)
 async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict[str, List[str]]:
     """
     Get available models for all configured OpenAPI providers
@@ -895,18 +897,18 @@ async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict
     """
     try:
         logger.info(f"User {current_user.username} requested models for all OpenAPI providers")
-        
+
         providers = get_openapi_providers()
         all_models = {}
-        
+
         if not providers:
             logger.info("No OpenAPI providers found")
             return {}
-        
+
         # Discover models for each provider
         for provider in providers:
             provider_id = provider.replace("openapi-", "")
-            
+
             try:
                 models = await discover_apisix_models_enhanced(provider)
                 all_models[provider] = models
@@ -914,12 +916,12 @@ async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict
             except Exception as e:
                 logger.error(f"Error discovering models for {provider}: {e}")
                 all_models[provider] = []
-        
+
         total_models = sum(len(models) for models in all_models.values())
         logger.info(f"Total models discovered across {len(providers)} providers: {total_models}")
-        
+
         return all_models
-        
+
     except Exception as e:
         logger.error(f"Error getting OpenAPI models: {e}")
         raise HTTPException(status_code=500, detail=safe_error_response("Failed to get OpenAPI models"))
@@ -933,31 +935,31 @@ async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dic
     """
     try:
         logger.info(f"User {current_user.username} requested OpenAPI debug information")
-        
+
         debug_info = {
             "openapi_enabled": settings.OPENAPI_ENABLED,
             "discovered_providers": [],
             "provider_configs": {},
             "environment_check": {},
-            "routes_check": {}
+            "routes_check": {},
         }
-        
+
         # Get discovered providers
         providers = get_openapi_providers()
         debug_info["discovered_providers"] = providers
-        
+
         # Check configuration for each provider
         for provider in providers:
             provider_id = provider.replace("openapi-", "")
             config = get_openapi_provider_config(provider_id)
-            
+
             # Mask sensitive information
             safe_config = config.copy()
             if safe_config.get("auth_token"):
                 safe_config["auth_token"] = f"***{safe_config['auth_token'][-4:]}"
-            
+
             debug_info["provider_configs"][provider] = safe_config
-        
+
         # Also check settings directly for debugging
         debug_info["settings_check"] = {}
         for i in range(1, 11):
@@ -971,65 +973,58 @@ async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dic
                     "auth_token": "***" if getattr(settings, f"OPENAPI_{i}_AUTH_TOKEN", None) else None,
                     "auth_type": getattr(settings, f"OPENAPI_{i}_AUTH_TYPE", None),
                 }
-        
+
         # Check environment variables
         env_vars = [
             "OPENAPI_ENABLED",
-            "OPENAPI_1_ENABLED", "OPENAPI_1_ID", "OPENAPI_1_NAME", 
-            "OPENAPI_1_BASE_URL", "OPENAPI_1_AUTH_TYPE"
+            "OPENAPI_1_ENABLED",
+            "OPENAPI_1_ID",
+            "OPENAPI_1_NAME",
+            "OPENAPI_1_BASE_URL",
+            "OPENAPI_1_AUTH_TYPE",
         ]
-        
+
         for var in env_vars:
             value = os.getenv(var)
             if "TOKEN" in var and value:
                 debug_info["environment_check"][var] = f"***{value[-4:]}"
             else:
                 debug_info["environment_check"][var] = bool(value)
-        
+
         # Check APISIX routes
         try:
             apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
             apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
-            
+
             response = requests.get(
-                f"{apisix_admin_url}/apisix/admin/routes",
-                headers={"X-API-KEY": apisix_admin_key},
-                timeout=5
+                f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=5
             )
-            
+
             if response.status_code == 200:
                 routes_data = response.json()
                 openapi_routes = []
-                
+
                 if "list" in routes_data:
                     for route_item in routes_data["list"]:
                         route = route_item.get("value", {})
                         uri = route.get("uri", "")
                         if uri.startswith("/ai/openapi/"):
-                            openapi_routes.append({
-                                "id": route.get("id", ""),
-                                "uri": uri,
-                                "desc": route.get("desc", "")
-                            })
-                
+                            openapi_routes.append(
+                                {"id": route.get("id", ""), "uri": uri, "desc": route.get("desc", "")}
+                            )
+
                 debug_info["routes_check"] = {
                     "status": "success",
                     "total_openapi_routes": len(openapi_routes),
-                    "routes": openapi_routes[:10]  # Limit to first 10 for readability
+                    "routes": openapi_routes[:10],  # Limit to first 10 for readability
                 }
             else:
-                debug_info["routes_check"] = {
-                    "status": "error",
-                    "http_code": response.status_code
-                }
+                debug_info["routes_check"] = {"status": "error", "http_code": response.status_code}
         except Exception as e:
-            debug_info["routes_check"] = {
-                "status": "error",
-                "error": str(e)
-            }
-        
+            debug_info["routes_check"] = {"status": "error", "error": str(e)}
+
         return debug_info
-        
+
     except Exception as e:
         logger.error(f"Error in OpenAPI debug endpoint: {e}")
         raise HTTPException(status_code=500, detail=safe_error_response("Failed to get debug information"))

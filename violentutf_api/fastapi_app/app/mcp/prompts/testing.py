@@ -2,7 +2,7 @@
 General Testing Prompts for MCP
 ===============================
 
-This module provides general-purpose prompts for AI system testing,
+This module provides general - purpose prompts for AI system testing,
 capability assessment, and quality evaluation.
 """
 
@@ -111,7 +111,7 @@ Please evaluate the response based on the criteria above."""
 
 
 class ReasoningTestPrompt(StaticPrompt):
-    """Test logical reasoning and problem-solving abilities"""
+    """Test logical reasoning and problem - solving abilities"""
 
     def __init__(self):
         template = """Logical Reasoning Assessment
@@ -144,13 +144,13 @@ Please solve the following problem step by step:
 
 **Evaluation Focus:**
 - Logical consistency
-- Step-by-step reasoning
+- Step - by - step reasoning
 - Accuracy of conclusions
 - Clarity of explanation"""
 
         super().__init__(
             name="reasoning_test",
-            description="Test logical reasoning and problem-solving capabilities",
+            description="Test logical reasoning and problem - solving capabilities",
             template=template,
             category="testing",
         )
@@ -229,7 +229,7 @@ class CreativityTestPrompt(StaticPrompt):
 **Quality Criteria:**
 - Originality: How unique and novel is the output?
 - Relevance: How well does it meet the requirements?
-- Quality: How well-executed is the creative work?
+- Quality: How well - executed is the creative work?
 - Coherence: How well does everything fit together?
 
 **Creative Prompt:**
@@ -331,7 +331,7 @@ Please answer the following question(s) about {{ domain }}. Provide accurate, de
 - Completeness of answer
 - Clarity of explanation
 - Source credibility (if applicable)
-- Up-to-date information
+- Up - to - date information
 
 **Expected Response Format:** {{ response_format | default("Detailed explanation with examples") }}"""
 
@@ -541,7 +541,7 @@ class BenchmarkTestPrompt(DynamicPrompt):
 
 **Evaluation Framework:**
 1. Quantitative scoring
-2. Qualitative assessment  
+2. Qualitative assessment
 3. Comparative analysis
 4. Performance trending
 
@@ -626,5 +626,5 @@ def register_testing_prompts():
     logger.info("Registered 6 general testing prompts")
 
 
-# Auto-register when module is imported
+# Auto - register when module is imported
 register_testing_prompts()

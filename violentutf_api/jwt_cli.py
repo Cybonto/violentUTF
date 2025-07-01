@@ -190,7 +190,7 @@ def create_key(name: str, permissions: tuple):
 
         if response.status_code == 200:
             key_data = response.json()
-            click.echo(f"API Key created successfully!")
+            click.echo("API Key created successfully!")
             click.echo(f"Key ID: {key_data['key_id']}")
             click.echo(f"API Key: {key_data['api_key']}")
             click.echo(f"Name: {key_data['name']}")
@@ -264,7 +264,7 @@ def get_current_key():
 
         if response.status_code == 200:
             key_data = response.json()
-            click.echo(f"Session API Key:")
+            click.echo("Session API Key:")
             click.echo(f"API Key: {key_data['api_key']}")
             click.echo(f"Expires: {key_data['expires_at']}")
             click.echo(f"Permissions: {', '.join(key_data['permissions'])}")

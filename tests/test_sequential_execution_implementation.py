@@ -36,7 +36,7 @@ def test_batch_processing():
     batch_size = 10
     num_batches = (full_dataset_size + batch_size - 1) // batch_size
 
-    print(f"\nDataset Configuration:")
+    print("\nDataset Configuration:")
     print(f"  Total prompts: {full_dataset_size}")
     print(f"  Batch size: {batch_size}")
     print(f"  Number of batches: {num_batches}")
@@ -155,7 +155,7 @@ def test_api_timeout_handling():
             print(f"  ✓ Safe from timeout (under {timeout_threshold}s)")
         else:
             print(f"  ✗ Risk of timeout (over {timeout_threshold}s)")
-            print(f"  → Recommendation: Use smaller batch size")
+            print("  → Recommendation: Use smaller batch size")
 
     print("\nCONCLUSION:")
     print("The implementation uses batch_size=10 which keeps execution")

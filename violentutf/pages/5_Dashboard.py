@@ -164,7 +164,7 @@ def create_compatible_api_token():
             return None
 
     except Exception as e:
-        st.error(f"❌ Failed to generate API token.")
+        st.error("❌ Failed to generate API token.")
         logger.error(f"Token creation failed: {e}")
         return None
 

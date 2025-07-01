@@ -83,7 +83,7 @@ async def test_rate_limiting():
             successful = [r for r in responses if r["status"] in [200, 201, 401, 403]]
             errors = [r for r in responses if r["status"] not in [200, 201, 401, 403, 429]]
 
-            print(f"   Results:")
+            print("   Results:")
             print(f"   ✅ Successful requests: {len(successful)}")
             print(f"   🛑 Rate limited (429): {len(rate_limited)}")
             print(f"   ❌ Other errors: {len(errors)}")
@@ -94,7 +94,7 @@ async def test_rate_limiting():
                 first_rate_limit = min([r["request_num"] for r in rate_limited])
                 print(f"   📊 First rate limit hit at request #{first_rate_limit}")
             else:
-                print(f"   ❌ FAIL: Rate limiting not working - no 429 responses")
+                print("   ❌ FAIL: Rate limiting not working - no 429 responses")
 
             results[endpoint] = {
                 "total_requests": len(responses),

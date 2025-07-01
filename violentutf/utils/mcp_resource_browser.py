@@ -214,7 +214,7 @@ class ResourcePreview:
                     st.write(f"Items: {len(content['content'])}")
                     # Show first few items
                     for i, item in enumerate(content["content"][:3]):
-                        st.write(f"**Item {i+1}:**")
+                        st.write(f"**Item {i + 1}:**")
                         st.json(item)
                     if len(content["content"]) > 3:
                         st.caption(f"...and {len(content['content']) - 3} more items")
@@ -232,7 +232,7 @@ class ResourcePreview:
 
         # Display first few items
         for i, item in enumerate(content[:5]):
-            with st.expander(f"Item {i+1}", expanded=i == 0):
+            with st.expander(f"Item {i + 1}", expanded=i == 0):
                 if isinstance(item, dict):
                     st.json(item)
                 else:

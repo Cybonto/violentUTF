@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# DuckDB storage replaces in-memory storage
+# DuckDB storage replaces in - memory storage
 # _datasets_store: Dict[str, Dict[str, Any]] = {} - REMOVED
 # _session_datasets: Dict[str, Dict[str, Any]] = {} - REMOVED
 
@@ -62,7 +62,7 @@ router = APIRouter()
 NATIVE_DATASET_TYPES = {
     "aya_redteaming": {
         "name": "aya_redteaming",
-        "description": "Aya Red-teaming Dataset - Multilingual red-teaming prompts",
+        "description": "Aya Red - teaming Dataset - Multilingual red - teaming prompts",
         "category": "redteaming",
         "config_required": True,
         "available_configs": {
@@ -85,7 +85,7 @@ NATIVE_DATASET_TYPES = {
     },
     "many_shot_jailbreaking": {
         "name": "many_shot_jailbreaking",
-        "description": "Many-shot Jailbreaking Dataset - Context length exploitation prompts",
+        "description": "Many - shot Jailbreaking Dataset - Context length exploitation prompts",
         "category": "jailbreaking",
         "config_required": False,
         "available_configs": None,
@@ -99,14 +99,14 @@ NATIVE_DATASET_TYPES = {
     },
     "xstest": {
         "name": "xstest",
-        "description": "XSTest Dataset - Cross-domain safety testing",
+        "description": "XSTest Dataset - Cross - domain safety testing",
         "category": "safety",
         "config_required": False,
         "available_configs": None,
     },
     "pku_safe_rlhf": {
         "name": "pku_safe_rlhf",
-        "description": "PKU-SafeRLHF Dataset - Safe reinforcement learning from human feedback",
+        "description": "PKU - SafeRLHF Dataset - Safe reinforcement learning from human feedback",
         "category": "safety",
         "config_required": False,
         "available_configs": None,
@@ -127,7 +127,7 @@ NATIVE_DATASET_TYPES = {
     },
     "seclists_bias_testing": {
         "name": "seclists_bias_testing",
-        "description": "SecLists Bias Testing Dataset - Security-focused bias evaluation",
+        "description": "SecLists Bias Testing Dataset - Security - focused bias evaluation",
         "category": "bias",
         "config_required": False,
         "available_configs": None,
@@ -509,7 +509,7 @@ async def get_memory_datasets(current_user=Depends(get_current_user)):
 
 
 @router.post(
-    "/field-mapping", response_model=DatasetFieldMappingResponse, summary="Get field mapping options for uploaded file"
+    "/field - mapping", response_model=DatasetFieldMappingResponse, summary="Get field mapping options for uploaded file"
 )
 async def get_field_mapping(request: DatasetFieldMappingRequest, current_user=Depends(get_current_user)):
     """Analyze an uploaded file and return field mapping options"""
@@ -559,7 +559,7 @@ async def delete_dataset(
     delete_from_memory: bool = Query(default=False, description="Delete from PyRIT memory"),
     current_user=Depends(get_current_user),
 ):
-    """Delete a dataset from session and/or PyRIT memory"""
+    """Delete a dataset from session and / or PyRIT memory"""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} deleting dataset: {dataset_id}")
@@ -804,10 +804,10 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
 
         # Check common PyRIT memory database locations
         potential_paths = [
-            "/app/app_data/violentutf/api_memory",  # Docker API memory
-            "./violentutf/app_data/violentutf",  # Local Streamlit memory
+            "/app / app_data / violentutf / api_memory",  # Docker API memory
+            "./violentutf / app_data / violentutf",  # Local Streamlit memory
             os.path.expanduser("~/.pyrit"),  # User PyRIT directory
-            "./app_data/violentutf",  # Relative app data
+            "./app_data / violentutf",  # Relative app data
         ]
 
         for base_path in potential_paths:
@@ -825,13 +825,13 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                 with sqlite3.connect(db_path) as conn:
                     cursor = conn.cursor()
 
-                    # Query for conversation groups, filtering out test/mock data
+                    # Query for conversation groups, filtering out test / mock data
                     cursor.execute(
                         """
                         SELECT conversation_id, COUNT(*) as prompt_count,
                                MIN(original_value) as first_prompt
-                        FROM PromptRequestPieces 
-                        WHERE role = 'user' AND original_value IS NOT NULL 
+                        FROM PromptRequestPieces
+                        WHERE role = 'user' AND original_value IS NOT NULL
                         AND LENGTH(original_value) > 0
                         AND original_value NOT LIKE '%Native harmbench prompt%'
                         AND original_value NOT LIKE '%Native % prompt %'
