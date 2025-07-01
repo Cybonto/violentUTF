@@ -14,7 +14,20 @@ NC='\033[0m' # No Color
 load_env_file() {
     local env_file="$1"
     if [ -f "$env_file" ]; then
-        export $(grep -v '^#' "$env_file" | xargs)
+        # Read env file line by line, skip comments and empty lines
+        while IFS='=' read -r key value; do
+            # Skip comments and empty lines
+            if [[ -z "$key" || "$key" =~ ^[[:space:]]*# ]]; then
+                continue
+            fi
+            # Remove leading/trailing whitespace
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            # Export if valid
+            if [[ -n "$key" && "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+                export "$key=$value"
+            fi
+        done < "$env_file"
     fi
 }
 
