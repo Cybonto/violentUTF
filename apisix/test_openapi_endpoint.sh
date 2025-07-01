@@ -27,9 +27,24 @@ load_env_file() {
     fi
 }
 
-# Load configs
-[ -f "ai-tokens.env" ] && load_env_file "ai-tokens.env"
-[ -f "../ai-tokens.env" ] && load_env_file "../ai-tokens.env"
+# Load configs - check current directory first, then parent
+if [ -f "./ai-tokens.env" ]; then
+    echo "Loading ai-tokens.env from current directory"
+    load_env_file "./ai-tokens.env"
+elif [ -f "../ai-tokens.env" ]; then
+    echo "Loading ai-tokens.env from parent directory"
+    load_env_file "../ai-tokens.env"
+else
+    echo -e "${YELLOW}Warning: ai-tokens.env not found${NC}"
+fi
+
+# Also check for .env files
+if [ -f "./.env" ]; then
+    load_env_file "./.env"
+fi
+if [ -f "./violentutf/.env" ]; then
+    load_env_file "./violentutf/.env"
+fi
 
 echo -e "${BLUE}=== OpenAPI Endpoint Testing ===${NC}"
 echo
@@ -41,7 +56,14 @@ echo "URL: https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models"
 echo
 
 if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
-    echo "Using auth token: ${OPENAPI_1_AUTH_TOKEN:0:10}...${OPENAPI_1_AUTH_TOKEN: -10}"
+    # Debug: show token length and preview
+    token_length=${#OPENAPI_1_AUTH_TOKEN}
+    echo "Found auth token (length: $token_length)"
+    if [ $token_length -gt 20 ]; then
+        echo "Using auth token: ${OPENAPI_1_AUTH_TOKEN:0:10}...${OPENAPI_1_AUTH_TOKEN: -10}"
+    else
+        echo "Using auth token: [SHORT TOKEN: $OPENAPI_1_AUTH_TOKEN]"
+    fi
     echo
     
     # Test models endpoint
