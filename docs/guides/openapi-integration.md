@@ -110,8 +110,9 @@ The setup script will:
 1. **Fetch OpenAPI Specifications**: Download the OpenAPI spec from each configured provider
 2. **Validate Specifications**: Ensure specs are OpenAPI 3.0+ compliant
 3. **Parse Endpoints**: Extract all paths and operations
-4. **Create APISIX Routes**: Generate routes for each endpoint with proper authentication
-5. **Report Results**: Show summary of created routes
+4. **Create APISIX Routes**: Generate routes for each endpoint with proper authentication headers
+5. **Configure Authentication**: Automatically add Bearer tokens, API keys, or Basic auth headers
+6. **Report Results**: Show summary of created routes
 
 ### What Happens During Setup
 
@@ -122,11 +123,15 @@ For each OpenAPI provider, the system will:
 3. Extract all endpoints (paths + operations)
 4. Prioritize AI-related endpoints (containing keywords like "chat", "completion", "generate")
 5. Create APISIX routes with pattern: `/ai/openapi/{provider-id}/{original-path}`
-6. Configure authentication using the ai-proxy plugin
+6. Configure authentication headers in the proxy-rewrite plugin based on your auth type:
+   - **Bearer**: Adds `Authorization: Bearer <token>` header
+   - **API Key**: Adds custom header (e.g., `X-API-Key: <key>`)
+   - **Basic**: Adds `Authorization: Basic <base64>` header
 
 Example route mapping:
 - Original: `POST https://api.myservice.com/v1/chat/completions`
 - APISIX Route: `POST http://localhost:9080/ai/openapi/myapi/v1/chat/completions`
+- Authentication: Automatically forwarded to upstream provider
 
 ## Using OpenAPI Endpoints
 
@@ -157,10 +162,38 @@ If the setup script can't fetch your OpenAPI spec:
 
 ### Authentication Failures
 
-If routes are created but API calls fail:
-- Verify your authentication credentials are correct
-- Check if the API requires additional headers
-- Review APISIX logs: `docker logs violentutf-apisix-1`
+If routes are created but API calls fail with 401 Unauthorized:
+
+1. **Verify credentials are correct in ai-tokens.env**:
+   ```bash
+   grep "OPENAPI_.*_AUTH" ai-tokens.env
+   ```
+
+2. **Update existing routes with authentication** (if created before auth fix):
+   ```bash
+   cd apisix && ./update_openapi_auth.sh
+   ```
+
+3. **Check APISIX is forwarding headers**:
+   ```bash
+   # View route configuration
+   curl -H "X-API-KEY: $APISIX_ADMIN_KEY" \
+        http://localhost:9180/apisix/admin/routes | jq '.list[] | select(.value.uri | contains("/ai/openapi/"))'
+   
+   # Look for proxy-rewrite.headers.set.Authorization
+   ```
+
+4. **Review APISIX logs**:
+   ```bash
+   docker logs apisix-apisix-1 --tail 50 | grep -E "(401|auth|Auth)"
+   ```
+
+5. **Test authentication directly**:
+   ```bash
+   # Test your token works directly with the API
+   curl -H "Authorization: Bearer $YOUR_TOKEN" \
+        https://api.yourservice.com/v1/models
+   ```
 
 ### No Endpoints Discovered
 
@@ -175,6 +208,76 @@ If your OpenAPI provider doesn't appear in Streamlit:
 - Restart the FastAPI service: `docker restart violentutf_api`
 - Check FastAPI logs: `docker logs violentutf_api`
 - Verify routes were created: `curl -H "X-API-KEY: your-key" http://localhost:9180/apisix/admin/routes`
+
+## Authentication Details
+
+### How Authentication Headers Work
+
+When the setup script creates APISIX routes for your OpenAPI providers, it automatically configures the `proxy-rewrite` plugin to add authentication headers to all upstream requests:
+
+```json
+{
+  "plugins": {
+    "key-auth": {},
+    "proxy-rewrite": {
+      "regex_uri": ["^/ai/openapi/provider-id(.*)", "$1"],
+      "headers": {
+        "set": {
+          "Authorization": "Bearer your-token-here"
+        }
+      }
+    }
+  }
+}
+```
+
+This means:
+1. Client sends request to APISIX with `apikey` header for gateway authentication
+2. APISIX validates the gateway API key
+3. APISIX adds the provider's authentication header before forwarding to upstream
+4. Upstream API receives the request with proper authentication
+
+### Authentication Header Formats
+
+The setup script automatically formats headers based on your `AUTH_TYPE`:
+
+**Bearer Token**:
+```bash
+OPENAPI_1_AUTH_TYPE=bearer
+OPENAPI_1_AUTH_TOKEN=sk-1234567890
+# Results in: Authorization: Bearer sk-1234567890
+```
+
+**API Key with Custom Header**:
+```bash
+OPENAPI_1_AUTH_TYPE=api_key
+OPENAPI_1_API_KEY=abc123
+OPENAPI_1_API_KEY_HEADER=X-Custom-Key
+# Results in: X-Custom-Key: abc123
+```
+
+**Basic Authentication**:
+```bash
+OPENAPI_1_AUTH_TYPE=basic
+OPENAPI_1_BASIC_USERNAME=user
+OPENAPI_1_BASIC_PASSWORD=pass
+# Results in: Authorization: Basic dXNlcjpwYXNz
+```
+
+### Updating Existing Routes
+
+If you created OpenAPI routes before the authentication fix was implemented, use the update script:
+
+```bash
+cd apisix
+./update_openapi_auth.sh
+```
+
+This script will:
+- Find all OpenAPI routes in APISIX
+- Check if they have authentication headers configured
+- Add missing authentication headers based on your ai-tokens.env
+- Report which routes were updated
 
 ## Advanced Configuration
 

@@ -100,14 +100,23 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
             # OpenAPI providers need Bearer token from their configuration
             # Get the provider configuration to find auth token
             provider_id = provider.replace("openapi-", "")
+            logger.info(f"Looking up config for OpenAPI provider: {provider} -> {provider_id}")
             from app.api.endpoints.generators import get_openapi_provider_config
             provider_config = get_openapi_provider_config(provider_id)
+            logger.info(f"Provider config result: {bool(provider_config)}")
             
             if provider_config and provider_config.get("auth_token"):
                 headers["Authorization"] = f"Bearer {provider_config['auth_token']}"
-                logger.info(f"Added Bearer token for OpenAPI provider {provider}")
+                # Log token info without exposing it
+                token = provider_config['auth_token']
+                masked = token[:4] + '...' + token[-4:] if len(token) > 8 else '***'
+                logger.info(f"Added Bearer token for OpenAPI provider {provider}: {masked}")
             else:
                 logger.warning(f"No auth token found for OpenAPI provider {provider}")
+                if provider_config:
+                    logger.warning(f"Provider config keys: {list(provider_config.keys())}")
+                else:
+                    logger.warning(f"Provider config is None for {provider_id}")
         else:
             # Add API key for APISIX key-auth plugin (for built-in providers)
             api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY")
@@ -116,6 +125,16 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
             else:
                 logger.warning("No APISIX API key found in environment - requests may fail")
 
+        # Log request details for debugging
+        logger.info(f"Making request to: {url}")
+        logger.info(f"Request headers keys: {list(headers.keys())}")
+        if 'Authorization' in headers:
+            auth_header = headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header[7:]
+                masked = token[:4] + '...' + token[-4:] if len(token) > 8 else '***'
+                logger.info(f"Authorization header: Bearer {masked}")
+        
         response = requests.post(url, json=payload, headers=headers, timeout=30)
 
         logger.info(f"APISIX response status: {response.status_code}")

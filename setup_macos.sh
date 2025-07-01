@@ -1679,6 +1679,42 @@ create_openapi_route() {
     # Escape description to avoid JSON issues
     local safe_description=$(echo "${provider_name} ${operation_id}" | sed 's/[\"\\]/\\&/g')
     
+    # Build authentication headers based on auth_type
+    local auth_headers_json=""
+    case "$auth_type" in
+        "bearer")
+            if [ -n "$auth_config" ]; then
+                auth_headers_json='"headers": {"set": {"Authorization": "Bearer '"$auth_config"'"}}'
+            fi
+            ;;
+        "api_key")
+            if [ -n "$auth_config" ]; then
+                # Check if we have a custom header name in the format "header:key"
+                if [[ "$auth_config" == *":"* ]]; then
+                    local header_name=$(echo "$auth_config" | cut -d: -f1)
+                    local api_key=$(echo "$auth_config" | cut -d: -f2-)
+                    auth_headers_json='"headers": {"set": {"'"$header_name"'": "'"$api_key"'"}}'
+                else
+                    # Default to X-API-Key
+                    auth_headers_json='"headers": {"set": {"X-API-Key": "'"$auth_config"'"}}'
+                fi
+            fi
+            ;;
+        "basic")
+            if [ -n "$auth_config" ]; then
+                # auth_config should be in format "username:password"
+                local basic_auth=$(echo -n "$auth_config" | base64)
+                auth_headers_json='"headers": {"set": {"Authorization": "Basic '"$basic_auth"'"}}'
+            fi
+            ;;
+    esac
+    
+    # Build proxy-rewrite plugin config
+    local proxy_rewrite_config='"regex_uri": ["^/ai/openapi/'"$provider_id"'(.*)", "$1"]'
+    if [ -n "$auth_headers_json" ]; then
+        proxy_rewrite_config="${proxy_rewrite_config}, ${auth_headers_json}"
+    fi
+    
     local route_config='{
         "uri": "'"$uri"'",
         "methods": ["'"$method"'"],
@@ -1693,7 +1729,7 @@ create_openapi_route() {
         "plugins": {
             "key-auth": {},
             "proxy-rewrite": {
-                "regex_uri": ["^/ai/openapi/'"$provider_id"'(.*)", "$1"]
+                '"$proxy_rewrite_config"'
             }
         }
     }'
