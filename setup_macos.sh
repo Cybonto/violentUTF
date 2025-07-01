@@ -667,12 +667,7 @@ OPEN_WEBUI_ENABLED=false
 OPEN_WEBUI_ENDPOINT=http://localhost:3000/ollama/v1/chat/completions
 OPEN_WEBUI_API_KEY=your_open_webui_api_key_here
 
-# AWS Bedrock Configuration
-BEDROCK_ENABLED=false
-BEDROCK_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your_aws_access_key_id_here
-AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key_here
-AWS_SESSION_TOKEN=your_aws_session_token_here_if_using_temp_credentials
+# AWS Bedrock Configuration - REMOVED (not supported)
 
 # OpenAPI Provider Configuration
 # Support for generic OpenAPI-compliant endpoints
@@ -1108,65 +1103,7 @@ create_open_webui_route() {
     fi
 }
 
-# Function to create AWS Bedrock route
-create_bedrock_route() {
-    local model="$1"
-    local uri="$2"
-    local region="$3"
-    local access_key="$4"
-    local secret_key="$5"
-    local session_token="$6"
-    
-    local route_id="bedrock-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]' | sed 's/anthropic-//g' | sed 's/meta-//g' | sed 's/amazon-//g')"
-    
-    # Create route config with ai-proxy plugin for Bedrock (using openai-compatible + custom endpoint)
-    local route_config='{
-        "id": "'$route_id'",
-        "uri": "'$uri'",
-        "methods": ["POST", "GET"],
-        "plugins": {
-            "key-auth": {},
-            "ai-proxy": {
-                "provider": "openai-compatible",
-                "auth": {
-                    "header": {
-                        "Authorization": "AWS4-HMAC-SHA256 Credential='$access_key'/'$(date +%Y%m%d)'/'$region'/bedrock/aws4_request"
-                    }
-                },
-                "options": {
-                    "model": "'$model'",
-                    "max_tokens": 1000,
-                    "temperature": 0.7
-                },
-                "override": {
-                    "endpoint": "https://bedrock-runtime.'$region'.amazonaws.com/model/'$model'/invoke"
-                }
-            }
-        }
-    }'
-    
-    echo "Creating AWS Bedrock route for model $model at $uri..."
-    local response
-    local http_code
-    
-    response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes" \
-      -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
-      -H "Content-Type: application/json" \
-      -d "${route_config}" 2>&1)
-    
-    http_code="${response: -3}"
-    response_body="${response%???}"
-    
-    if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
-        echo "✅ Successfully created AWS Bedrock route: $uri -> $model"
-        CREATED_AI_ROUTES+=("AWS Bedrock: $uri -> $model")
-    else
-        echo "❌ Failed to create AWS Bedrock route for $model"
-        echo "   HTTP Code: $http_code"
-        echo "   Response: $response_body"
-        return 1
-    fi
-}
+# Function to create AWS Bedrock route - REMOVED (not supported)
 
 # Function to create APISIX API key consumer
 create_apisix_consumer() {
@@ -1339,54 +1276,7 @@ setup_open_webui_routes() {
     fi
 }
 
-# Function to setup AWS Bedrock routes
-setup_bedrock_routes() {
-    if [ "$BEDROCK_ENABLED" != "true" ]; then
-        echo "AWS Bedrock provider disabled. Skipping setup."
-        return 0
-    fi
-    
-    echo "⚠️  AWS Bedrock integration is currently not supported by APISIX ai-proxy plugin."
-    echo "   The ai-proxy plugin does not support native AWS SigV4 authentication required for Bedrock."
-    echo "   Bedrock endpoints are configured in TokenManager for future implementation."
-    echo "   Use the standalone Bedrock provider in Simple Chat for now."
-    return 0
-    
-    # Future implementation when AWS SigV4 support is added to APISIX
-    if [ -z "$AWS_ACCESS_KEY_ID" ] || [ "$AWS_ACCESS_KEY_ID" = "your_aws_access_key_id_here" ]; then
-        echo "⚠️  AWS Bedrock enabled but Access Key ID not configured. Skipping Bedrock setup."
-        return 0
-    fi
-    
-    if [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ "$AWS_SECRET_ACCESS_KEY" = "your_aws_secret_access_key_here" ]; then
-        echo "⚠️  AWS Bedrock enabled but Secret Access Key not configured. Skipping Bedrock setup."
-        return 0
-    fi
-    
-    echo "Setting up AWS Bedrock routes..."
-    
-    local region="${BEDROCK_REGION:-us-east-1}"
-    
-    # Priority Bedrock models for AI Gateway
-    local models=("anthropic.claude-opus-4-20250514-v1:0" "anthropic.claude-sonnet-4-20250514-v1:0" "anthropic.claude-3-5-sonnet-20241022-v2:0" "anthropic.claude-3-5-haiku-20241022-v1:0" "meta.llama3-3-70b-instruct-v1:0" "amazon.nova-pro-v1:0" "amazon.nova-lite-v1:0")
-    local uris=("/ai/bedrock/claude-opus-4" "/ai/bedrock/claude-sonnet-4" "/ai/bedrock/claude-35-sonnet" "/ai/bedrock/claude-35-haiku" "/ai/bedrock/llama3-3-70b" "/ai/bedrock/nova-pro" "/ai/bedrock/nova-lite")
-    
-    local setup_success=true
-    for i in "${!models[@]}"; do
-        local model="${models[$i]}"
-        local uri="${uris[$i]}"
-        echo "Processing model: $model -> $uri"
-        if ! create_bedrock_route "$model" "$uri" "$region" "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" "$AWS_SESSION_TOKEN"; then
-            setup_success=false
-        fi
-    done
-    
-    if [ "$setup_success" = true ]; then
-        return 0
-    else
-        return 1
-    fi
-}
+# Function to setup AWS Bedrock routes - REMOVED (not supported)
 
 # Function to fetch OpenAPI specification
 fetch_openapi_spec() {
@@ -2523,10 +2413,7 @@ setup_ai_providers_enhanced() {
         setup_errors=$((setup_errors + 1))
     fi
     
-    echo "Setting up AWS Bedrock routes..."
-    if ! setup_bedrock_routes; then
-        setup_errors=$((setup_errors + 1))
-    fi
+    # AWS Bedrock routes - REMOVED (not supported)
     
     echo "Setting up OpenAPI routes..."
     echo "🔧 Calling setup_openapi_routes function..."
@@ -2569,9 +2456,7 @@ test_ai_routes() {
         run_test "AI Anthropic route accessibility" "curl -s -o /dev/null -w '%{http_code}' ${APISIX_URL}/ai/anthropic/opus -X POST -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"test\"}]}' | grep -E '(200|401|422|400|404)'"
     fi
     
-    if [ "$BEDROCK_ENABLED" = "true" ]; then
-        run_test "AI Bedrock route accessibility" "curl -s -o /dev/null -w '%{http_code}' ${APISIX_URL}/ai/bedrock/claude-opus-4 -X POST -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"test\"}]}' | grep -E '(200|401|422|400|404)'"
-    fi
+    # AWS Bedrock test - REMOVED (not supported)
 }
 
 # Simplified AI configuration summary (no yq)
@@ -2631,16 +2516,7 @@ show_ai_summary() {
             echo "   - /ai/webui/codellama"
         fi
         
-        if [ "$BEDROCK_ENABLED" = "true" ]; then
-            echo "✅ AWS Bedrock"
-            echo "   - /ai/bedrock/claude-opus-4 (anthropic.claude-opus-4-20250514-v1:0)"
-            echo "   - /ai/bedrock/claude-sonnet-4 (anthropic.claude-sonnet-4-20250514-v1:0)"
-            echo "   - /ai/bedrock/claude-35-sonnet (anthropic.claude-3-5-sonnet-20241022-v2:0)"
-            echo "   - /ai/bedrock/claude-35-haiku (anthropic.claude-3-5-haiku-20241022-v1:0)"
-            echo "   - /ai/bedrock/llama3-3-70b (meta.llama3-3-70b-instruct-v1:0)"
-            echo "   - /ai/bedrock/nova-pro (amazon.nova-pro-v1:0)"
-            echo "   - /ai/bedrock/nova-lite (amazon.nova-lite-v1:0)"
-        fi
+        # AWS Bedrock endpoints - REMOVED (not supported)
         
         if [ ${#CREATED_AI_ROUTES[@]} -eq 0 ]; then
             echo "⚠️  No AI routes were created"

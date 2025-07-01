@@ -91,18 +91,7 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
         webui_mappings = {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"}
         return webui_mappings.get(model)
 
-    # AWS Bedrock model mappings (when supported)
-    elif provider == "bedrock":
-        bedrock_mappings = {
-            "anthropic.claude-opus - 4 - 20250514 - v1:0": "/ai/bedrock/claude-opus - 4",
-            "anthropic.claude-sonnet - 4 - 20250514 - v1:0": "/ai/bedrock/claude-sonnet - 4",
-            "anthropic.claude - 3 - 5-sonnet - 20241022 - v2:0": "/ai/bedrock/claude - 35 - sonnet",
-            "anthropic.claude - 3 - 5-haiku - 20241022 - v1:0": "/ai/bedrock/claude - 35 - haiku",
-            "meta.llama3 - 3 - 70b-instruct-v1:0": "/ai/bedrock/llama3 - 3 - 70b",
-            "amazon.nova-pro-v1:0": "/ai/bedrock/nova-pro",
-            "amazon.nova-lite-v1:0": "/ai/bedrock/nova-lite",
-        }
-        return bedrock_mappings.get(model)
+    # AWS Bedrock - REMOVED (not supported)
 
     # OpenAPI provider mappings
     elif provider.startswith("openapi-"):

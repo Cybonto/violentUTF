@@ -97,10 +97,12 @@ create_route() {
             },
             \"proxy-rewrite\": {
                 \"headers\": {
-                    \"X-Real-IP\": \"\$remote_addr\",
-                    \"X-Forwarded-For\": \"\$proxy_add_x_forwarded_for\",
-                    \"X-Forwarded-Host\": \"\$host\",
-                    \"X-API-Gateway\": \"APISIX\"
+                    \"set\": {
+                        \"X-Real-IP\": \"\$remote_addr\",
+                        \"X-Forwarded-For\": \"\$proxy_add_x_forwarded_for\",
+                        \"X-Forwarded-Host\": \"\$host\",
+                        \"X-API-Gateway\": \"APISIX\"
+                    }
                 }
             }
         },
@@ -146,6 +148,9 @@ create_route "2006" "/api/v1/keys/*" "[\"GET\", \"POST\", \"PUT\", \"DELETE\"]" 
 
 # Test endpoints
 create_route "2007" "/api/v1/test/*" "[\"GET\", \"POST\", \"PUT\", \"DELETE\"]" "Test endpoints"
+
+# Debug endpoints (for JWT troubleshooting)
+create_route "2015" "/api/v1/debug/*" "[\"GET\", \"POST\", \"PUT\", \"DELETE\"]" "Debug endpoints"
 
 # Generator management endpoints
 create_route "2008" "/api/v1/generators*" "[\"GET\", \"POST\", \"PUT\", \"DELETE\"]" "Generator management endpoints"

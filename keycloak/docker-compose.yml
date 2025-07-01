@@ -26,9 +26,7 @@ services:
 
       # --- Proxy Configuration (NEW) ---
       # This tells Keycloak to trust proxy headers
-      KC_PROXY: edge
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_PROXY_HEADERS: xforwarded
 
       # --- Optional: Health and Metrics ---
       KC_HEALTH_ENABLED: true
