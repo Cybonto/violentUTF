@@ -95,12 +95,11 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
 
     # OpenAPI provider mappings
     elif provider.startswith("openapi-"):
-        # For OpenAPI providers, the model is the operation ID
-        # Format: /ai/openapi/{provider-id}/{path}
+        # For OpenAPI providers, we need to find the chat completions endpoint
+        # The model is passed as a parameter, not part of the URL
         provider_id = provider.replace("openapi-", "")
-
-        # Need to find the actual path for this operation
-        # Query APISIX to find the route
+        
+        # Query APISIX to find the chat completions route
         try:
             apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
             apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
@@ -115,13 +114,29 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
                     for route_item in routes_data["list"]:
                         route = route_item.get("value", {})
                         route_id = route.get("id", "")
-
-                        # Match route ID pattern
-                        safe_operation_id = model.replace("_", "-").lower()
-                        expected_route_id = f"openapi-{provider_id}-{safe_operation_id}"
-
-                        if route_id == expected_route_id:
-                            return route.get("uri", "")
+                        uri = route.get("uri", "")
+                        
+                        # Look for the chat completions endpoint for this provider
+                        # Pattern: /ai/openapi/{provider-id}/api/v1/chat/completions
+                        if (route_id.startswith(f"openapi-{provider_id}-") and 
+                            uri.endswith("/chat/completions") and
+                            f"/openapi/{provider_id}/" in uri):
+                            logger.info(f"Found OpenAPI chat endpoint for {provider}: {uri}")
+                            return uri
+                            
+                    # If no chat/completions endpoint found, try looking for "converse" operation
+                    for route_item in routes_data["list"]:
+                        route = route_item.get("value", {})
+                        route_id = route.get("id", "")
+                        uri = route.get("uri", "")
+                        
+                        if (route_id.startswith(f"openapi-{provider_id}-") and 
+                            "converse" in route_id.lower() and
+                            f"/openapi/{provider_id}/" in uri):
+                            logger.info(f"Found OpenAPI converse endpoint for {provider}: {uri}")
+                            return uri
+                            
+            logger.warning(f"No chat completions endpoint found for OpenAPI provider {provider}")
         except Exception as e:
             logger.error(f"Error finding OpenAPI endpoint for {provider}/{model}: {e}")
 
