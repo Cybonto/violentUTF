@@ -153,6 +153,7 @@ install_streamlit_dependencies() {
         echo ""
         echo "📋 No requirements.txt found, installing common ViolentUTF dependencies..."
         echo "📦 Installing the following packages:"
+        echo "   • python-dotenv (for environment variables)"
         echo "   • streamlit-authenticator (for authentication)"
         echo "   • streamlit-option-menu (for UI components)"
         echo "   • pyrit (Microsoft's AI Red Team framework)"
@@ -167,6 +168,7 @@ install_streamlit_dependencies() {
         echo "⏳ This may take several minutes..."
         # Install common dependencies for ViolentUTF
         $pip_cmd install \
+            python-dotenv \
             streamlit-authenticator \
             streamlit-option-menu \
             pyrit \
@@ -182,6 +184,17 @@ install_streamlit_dependencies() {
     fi
     
     echo "✅ Dependencies installed successfully"
+    
+    # Quick check for python-dotenv since it's critical
+    echo ""
+    echo "🔍 Verifying critical dependencies..."
+    if ! $pip_cmd show python-dotenv &> /dev/null; then
+        echo "⚠️  python-dotenv not found, installing it now..."
+        $pip_cmd install python-dotenv
+    else
+        echo "✅ python-dotenv is installed"
+    fi
+    
     return 0
 }
 
@@ -259,6 +272,14 @@ check_and_setup_streamlit() {
     
     # Install Streamlit and dependencies
     local requirements_file="requirements.txt"
+    
+    # Check if requirements.txt exists in current directory
+    if [ -f "$requirements_file" ]; then
+        echo "📋 Found requirements.txt in $(pwd)"
+    else
+        echo "📋 No requirements.txt found in $(pwd), will install default dependencies"
+    fi
+    
     if ! install_streamlit_dependencies "$requirements_file"; then
         echo "❌ Failed to install Streamlit dependencies"
         cd .. || true
