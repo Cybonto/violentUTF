@@ -101,9 +101,11 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
         
         # Query APISIX to find the chat completions route
         try:
-            apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
+            # When running in Docker, use container name; when local, use localhost
+            apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://apisix-apisix-1:9180")
             apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
 
+            logger.info(f"Querying APISIX admin API at {apisix_admin_url} for OpenAPI routes")
             response = requests.get(
                 f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=5
             )
@@ -111,10 +113,19 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
             if response.status_code == 200:
                 routes_data = response.json()
                 if "list" in routes_data:
+                    # Log total routes found
+                    total_routes = len(routes_data["list"])
+                    openapi_routes = [r for r in routes_data["list"] if r.get("value", {}).get("id", "").startswith("openapi-")]
+                    logger.info(f"Found {total_routes} total routes, {len(openapi_routes)} OpenAPI routes")
+                    
                     for route_item in routes_data["list"]:
                         route = route_item.get("value", {})
                         route_id = route.get("id", "")
                         uri = route.get("uri", "")
+                        
+                        # Log routes that match the provider
+                        if route_id.startswith(f"openapi-{provider_id}-"):
+                            logger.debug(f"Checking route: id={route_id}, uri={uri}")
                         
                         # Look for the chat completions endpoint for this provider
                         # Pattern: /ai/openapi/{provider-id}/api/v1/chat/completions
@@ -136,9 +147,15 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
                             logger.info(f"Found OpenAPI converse endpoint for {provider}: {uri}")
                             return uri
                             
+            else:
+                logger.error(f"Failed to query APISIX admin API: HTTP {response.status_code}")
+                logger.error(f"Response: {response.text}")
+                
             logger.warning(f"No chat completions endpoint found for OpenAPI provider {provider}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error querying APISIX admin API: {e}")
         except Exception as e:
-            logger.error(f"Error finding OpenAPI endpoint for {provider}/{model}: {e}")
+            logger.error(f"Error finding OpenAPI endpoint for {provider}/{model}: {e}", exc_info=True)
 
         return None
 
