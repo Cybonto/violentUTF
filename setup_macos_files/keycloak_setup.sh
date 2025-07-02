@@ -1,161 +1,298 @@
 #!/usr/bin/env bash
-# keycloak_setup.sh - Complete Keycloak configuration and realm setup
+# keycloak_setup.sh - Keycloak setup and configuration functions
 
-# Function to setup Keycloak
+# Function to get Keycloak admin token
+get_keycloak_admin_token() {
+    echo "Obtaining Keycloak admin access token..."
+    
+    # Keycloak settings
+    local KEYCLOAK_SERVER_URL="http://localhost:8080"
+    local KEYCLOAK_ADMIN_USERNAME="admin"
+    local KEYCLOAK_ADMIN_PASSWORD="admin"
+    
+    # Get admin token
+    local TOKEN_RESPONSE=$(curl -s -k -X POST "$KEYCLOAK_SERVER_URL/realms/master/protocol/openid-connect/token" \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "username=$KEYCLOAK_ADMIN_USERNAME" \
+        -d "password=$KEYCLOAK_ADMIN_PASSWORD" \
+        -d "grant_type=password" \
+        -d "client_id=admin-cli")
+    
+    if [ $? -ne 0 ]; then
+        echo "Error: Could not connect to Keycloak server at $KEYCLOAK_SERVER_URL"
+        return 1
+    fi
+    
+    # Extract access token
+    KEYCLOAK_ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r .access_token)
+    
+    if [ -z "$KEYCLOAK_ACCESS_TOKEN" ] || [ "$KEYCLOAK_ACCESS_TOKEN" == "null" ]; then
+        echo "Error: Could not obtain Keycloak admin access token. Response: $TOKEN_RESPONSE"
+        return 1
+    fi
+    
+    echo "✅ Successfully obtained Keycloak admin access token"
+    export KEYCLOAK_ACCESS_TOKEN
+    return 0
+}
+
+# Function to make Keycloak API calls
+make_api_call() {
+    local METHOD="$1"
+    local ENDPOINT="$2"
+    local DATA_FILE="$3"
+    local KEYCLOAK_SERVER_URL="http://localhost:8080"
+    
+    if [ -z "$KEYCLOAK_ACCESS_TOKEN" ]; then
+        echo "Error: No Keycloak access token available"
+        return 1
+    fi
+    
+    local CURL_CMD="curl -s -k -X $METHOD"
+    CURL_CMD="$CURL_CMD -H \"Authorization: Bearer $KEYCLOAK_ACCESS_TOKEN\""
+    CURL_CMD="$CURL_CMD -H \"Content-Type: application/json\""
+    
+    if [ -n "$DATA_FILE" ] && [ -f "$DATA_FILE" ]; then
+        CURL_CMD="$CURL_CMD -d @$DATA_FILE"
+    fi
+    
+    CURL_CMD="$CURL_CMD -w \"\\n%{http_code}\""
+    CURL_CMD="$CURL_CMD \"${KEYCLOAK_SERVER_URL}/admin${ENDPOINT}\""
+    
+    # Execute the curl command
+    local RESPONSE=$(eval $CURL_CMD)
+    API_CALL_STATUS=$(echo "$RESPONSE" | tail -n 1)
+    API_CALL_RESPONSE=$(echo "$RESPONSE" | head -n -1)
+    
+    export API_CALL_STATUS
+    export API_CALL_RESPONSE
+}
+
+# Main Keycloak setup function
 setup_keycloak() {
-    echo "Setting up Keycloak service..."
+    echo ""
+    echo "==========================================="
+    echo "Setting up Keycloak"
+    echo "==========================================="
     
-    local original_dir=$(pwd)
+    local KEYCLOAK_DIR="keycloak"
+    local DOCKER_COMPOSE_CMD="docker compose"
     
-    if [ ! -d "keycloak" ]; then
-        echo "❌ Keycloak directory not found"
-        return 1
-    fi
-    
-    cd "keycloak" || { echo "Failed to cd into keycloak directory"; exit 1; }
-    
-    # Ensure .env file exists
-    if [ ! -f ".env" ]; then
-        echo "❌ Keycloak .env file missing!"
-        cd "$original_dir"
-        return 1
-    fi
-    
-    # Ensure network exists and is available
-    echo "Ensuring Docker network is available for Keycloak..."
-    if ! docker network inspect "$SHARED_NETWORK_NAME" >/dev/null 2>&1; then
-        echo "Creating shared network for Keycloak..."
-        docker network create "$SHARED_NETWORK_NAME"
-    fi
-    
-    # Start Keycloak containers
-    echo "Starting Keycloak containers..."
-    if ${DOCKER_COMPOSE_CMD:-docker-compose} up -d; then
-        echo "✅ Keycloak containers started"
-        
-        # Wait for Keycloak to be ready
-        echo "Waiting for Keycloak to be ready..."
-        local retry_count=0
-        local max_retries=30
-        
-        until [ $retry_count -ge $max_retries ]; do
-            if curl -s -k -o /dev/null -w "%{http_code}" "http://localhost:8080/realms/master" | grep -q "200"; then
-                echo "✅ Keycloak is ready"
-                break
-            fi
-            echo "Waiting for Keycloak... (attempt $((retry_count + 1))/$max_retries)"
-            sleep 10
-            retry_count=$((retry_count + 1))
-        done
-        
-        if [ $retry_count -ge $max_retries ]; then
-            echo "❌ Keycloak failed to become ready"
-            cd "$original_dir"
+    # Check if legacy docker-compose is being used
+    if ! command -v docker &> /dev/null || ! docker compose version &> /dev/null 2>&1; then
+        if command -v docker-compose &> /dev/null; then
+            DOCKER_COMPOSE_CMD="docker-compose"
+        else
+            echo "Error: Neither 'docker compose' nor 'docker-compose' is available"
             return 1
         fi
-        
-    else
-        echo "❌ Failed to start Keycloak containers"
-        cd "$original_dir"
-        return 1
     fi
     
-    cd "$original_dir"
+    cd "$KEYCLOAK_DIR" || return 1
     
-    # Disable SSL requirements for both realms
-    disable_ssl_requirements
+    # Start Keycloak if not already running
+    echo "Starting Keycloak services..."
+    $DOCKER_COMPOSE_CMD up -d
     
-    return 0
-}
-
-# Function to obtain Keycloak admin access token
-get_keycloak_admin_token() {
-    echo "Attempting to obtain Keycloak admin access token..."
-    local token_response
-    token_response=$(curl -s -k -X POST "http://localhost:8080/realms/master/protocol/openid-connect/token" \
-      -H "Content-Type: application/x-www-form-urlencoded" \
-      -d "username=admin" \
-      -d "password=admin" \
-      -d "grant_type=password" \
-      -d "client_id=admin-cli")
-
-    ACCESS_TOKEN=$(echo "${token_response}" | jq -r .access_token 2>/dev/null || echo "")
-
-    if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
-        echo "❌ Could not obtain Keycloak admin access token."
-        echo "Response: ${token_response}"
-        return 1
-    fi
-    echo "✅ Successfully obtained Keycloak admin access token."
-    return 0
-}
-
-# Function to make authenticated API call to Keycloak
-make_api_call() {
-    local method="$1"
-    local endpoint_path="$2"
-    local data_arg="$3"
-    local full_url="http://localhost:8080/admin${endpoint_path}"
+    # Wait for Keycloak to be ready
+    echo "Waiting for Keycloak to be ready..."
+    local RETRY_COUNT=0
+    local MAX_RETRIES=30
+    local SUCCESS=false
     
-    echo "Making API call: $method $endpoint_path"
-    
-    # This is a simplified version - full implementation would be much more complex
-    if [ -n "$data_arg" ]; then
-        curl -s -k -X "$method" "$full_url" \
-            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "$data_arg"
-    else
-        curl -s -k -X "$method" "$full_url" \
-            -H "Authorization: Bearer ${ACCESS_TOKEN}"
-    fi
-}
-
-# Function to import Keycloak realm
-import_keycloak_realm() {
-    echo "Importing Keycloak realm..."
-    
-    local realm_export_file="keycloak/realm-export.json"
-    
-    if [ ! -f "$realm_export_file" ]; then
-        echo "❌ Realm export file not found: $realm_export_file"
-        return 1
-    fi
-    
-    # Get admin token first
-    if ! get_keycloak_admin_token; then
-        return 1
-    fi
-    
-    # This is a simplified version - real implementation would handle existing realms, etc.
-    echo "📝 Note: Realm import is a complex operation that requires full implementation"
-    echo "✅ Keycloak realm import placeholder completed"
-    
-    return 0
-}
-
-# Function to disable SSL requirements
-disable_ssl_requirements() {
-    echo "Disabling SSL requirements for Keycloak realms..."
-    
-    # Find Keycloak container
-    local keycloak_container=$(docker ps --filter "name=keycloak" --format "{{.Names}}" | grep -E "keycloak-keycloak|keycloak_keycloak" | head -n 1)
-    
-    if [ -n "$keycloak_container" ]; then
-        echo "Configuring Keycloak admin CLI..."
-        docker exec "$keycloak_container" /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin
-        
-        echo "Disabling SSL requirement for master realm..."
-        docker exec "$keycloak_container" /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
-        
-        # Also disable for ViolentUTF realm if it exists
-        if docker exec "$keycloak_container" /opt/keycloak/bin/kcadm.sh get realms/ViolentUTF >/dev/null 2>&1; then
-            echo "Disabling SSL requirement for ViolentUTF realm..."
-            docker exec "$keycloak_container" /opt/keycloak/bin/kcadm.sh update realms/ViolentUTF -s sslRequired=NONE
+    until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
+        RETRY_COUNT=$((RETRY_COUNT+1))
+        # Check Keycloak health
+        local HTTP_STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" "http://localhost:8080/realms/master")
+        if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "✅ Keycloak is up and responding"
+            SUCCESS=true
+            break
         fi
-        
-        echo "✅ SSL requirements disabled for Keycloak realms"
-    else
-        echo "⚠️  Could not find Keycloak container to disable SSL requirements"
+        echo "Keycloak not ready yet (attempt $RETRY_COUNT/$MAX_RETRIES). Waiting 10 seconds..."
+        sleep 10
+    done
+    
+    if [ "$SUCCESS" = false ]; then
+        echo "❌ Keycloak did not become ready in time"
+        $DOCKER_COMPOSE_CMD logs keycloak
+        cd ..
+        return 1
     fi
+    
+    # Disable SSL requirement for master realm
+    echo "Disabling SSL requirement for master realm..."
+    local KEYCLOAK_CONTAINER=$(docker ps --filter "name=keycloak" --format "{{.Names}}" | grep -E "keycloak-keycloak|keycloak_keycloak" | head -n 1)
+    if [ -n "$KEYCLOAK_CONTAINER" ]; then
+        docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin
+        docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
+        echo "✅ SSL requirement disabled for master realm"
+    fi
+    
+    # Get admin token
+    if ! get_keycloak_admin_token; then
+        echo "❌ Failed to get Keycloak admin token"
+        cd ..
+        return 1
+    fi
+    
+    # Import ViolentUTF realm
+    echo "Importing ViolentUTF realm..."
+    local REALM_EXPORT_FILE="realm-export.json"
+    
+    if [ ! -f "$REALM_EXPORT_FILE" ]; then
+        echo "❌ Error: $REALM_EXPORT_FILE not found!"
+        cd ..
+        return 1
+    fi
+    
+    # Extract realm name
+    local TARGET_REALM_NAME=$(jq -r .realm "$REALM_EXPORT_FILE")
+    if [ -z "$TARGET_REALM_NAME" ] || [ "$TARGET_REALM_NAME" == "null" ]; then
+        echo "❌ Error: Could not extract realm name from $REALM_EXPORT_FILE"
+        cd ..
+        return 1
+    fi
+    echo "Target realm name: $TARGET_REALM_NAME"
+    
+    # Check if realm already exists
+    make_api_call "GET" "/realms/${TARGET_REALM_NAME}"
+    if [ "$API_CALL_STATUS" -eq 200 ]; then
+        echo "Realm '$TARGET_REALM_NAME' already exists. Deleting and re-importing..."
+        make_api_call "DELETE" "/realms/${TARGET_REALM_NAME}"
+        if [ "$API_CALL_STATUS" -ne 204 ]; then
+            echo "❌ Failed to delete existing realm"
+            cd ..
+            return 1
+        fi
+        echo "Existing realm deleted"
+    fi
+    
+    # Import the realm
+    echo "Importing realm from $REALM_EXPORT_FILE..."
+    make_api_call "POST" "/realms" "$REALM_EXPORT_FILE"
+    if [ "$API_CALL_STATUS" -eq 201 ]; then
+        echo "✅ Realm '$TARGET_REALM_NAME' imported successfully"
+        
+        # Disable SSL requirement for the imported realm
+        echo "Disabling SSL requirement for realm '$TARGET_REALM_NAME'..."
+        docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh update realms/${TARGET_REALM_NAME} -s sslRequired=NONE
+        echo "✅ SSL requirement disabled for realm '$TARGET_REALM_NAME'"
+    else
+        echo "❌ Failed to import realm. Status: $API_CALL_STATUS"
+        echo "Response: $API_CALL_RESPONSE"
+        cd ..
+        return 1
+    fi
+    
+    # Configure ViolentUTF client
+    echo "Configuring ViolentUTF client..."
+    local VUTF_CLIENT_ID="violentutf"
+    
+    # Get client UUID
+    make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients?clientId=${VUTF_CLIENT_ID}"
+    if [ "$API_CALL_STATUS" -ne 200 ]; then
+        echo "❌ Error: Could not get client info"
+        cd ..
+        return 1
+    fi
+    
+    local KC_CLIENT_UUID=$(echo "$API_CALL_RESPONSE" | jq -r '.[0].id')
+    if [ -z "$KC_CLIENT_UUID" ] || [ "$KC_CLIENT_UUID" == "null" ]; then
+        echo "❌ Error: Client '${VUTF_CLIENT_ID}' not found"
+        cd ..
+        return 1
+    fi
+    echo "Found client '${VUTF_CLIENT_ID}' with UUID '${KC_CLIENT_UUID}'"
+    
+    # Update client secret if needed
+    if [ -n "$VIOLENTUTF_CLIENT_SECRET" ]; then
+        echo "Updating client secret..."
+        local SECRET_UPDATE_JSON=$(printf '{"type":"secret","value":"%s"}' "$VIOLENTUTF_CLIENT_SECRET")
+        echo "$SECRET_UPDATE_JSON" > /tmp/client-secret.json
+        make_api_call "POST" "/realms/${TARGET_REALM_NAME}/clients/${KC_CLIENT_UUID}/client-secret" "/tmp/client-secret.json"
+        rm -f /tmp/client-secret.json
+        
+        if [ "$API_CALL_STATUS" -eq 200 ]; then
+            echo "✅ Client secret updated successfully"
+        else
+            echo "⚠️  Warning: Could not update client secret (may already be set)"
+        fi
+    fi
+    
+    # Create ViolentUTF users if needed
+    create_violentutf_users "$TARGET_REALM_NAME"
+    
+    cd ..
+    echo "✅ Keycloak setup completed"
+    return 0
+}
+
+# Function to create ViolentUTF users
+create_violentutf_users() {
+    local REALM_NAME="$1"
+    
+    echo "Creating ViolentUTF users..."
+    
+    # Create violentutf.web user
+    local USER_JSON=$(cat <<EOF
+{
+    "username": "violentutf.web",
+    "enabled": true,
+    "emailVerified": true,
+    "firstName": "ViolentUTF",
+    "lastName": "Web User",
+    "email": "violentutf.web@violentutf.local",
+    "credentials": [{
+        "type": "password",
+        "value": "${VIOLENTUTF_USER_PASSWORD:-password123}",
+        "temporary": false
+    }]
+}
+EOF
+)
+    
+    echo "$USER_JSON" > /tmp/user.json
+    make_api_call "POST" "/realms/${REALM_NAME}/users" "/tmp/user.json"
+    rm -f /tmp/user.json
+    
+    if [ "$API_CALL_STATUS" -eq 201 ]; then
+        echo "✅ ViolentUTF user created successfully"
+        echo "   Username: violentutf.web"
+        echo "   Password: ${VIOLENTUTF_USER_PASSWORD:-password123}"
+    elif [ "$API_CALL_STATUS" -eq 409 ]; then
+        echo "ℹ️  ViolentUTF user already exists"
+        echo "   Username: violentutf.web"
+        echo "   Password: ${VIOLENTUTF_USER_PASSWORD:-password123}"
+    else
+        echo "⚠️  Could not create ViolentUTF user. Status: $API_CALL_STATUS"
+    fi
+}
+
+# Function to verify Keycloak is properly configured
+verify_keycloak_setup() {
+    echo "Verifying Keycloak setup..."
+    
+    # Check if Keycloak is running
+    if ! docker ps | grep -q keycloak; then
+        echo "❌ Keycloak container is not running"
+        return 1
+    fi
+    
+    # Check master realm
+    local MASTER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/realms/master/.well-known/openid-configuration")
+    if [ "$MASTER_STATUS" -ne 200 ]; then
+        echo "❌ Keycloak master realm is not accessible"
+        return 1
+    fi
+    
+    # Check ViolentUTF realm
+    local VUTF_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/realms/ViolentUTF/.well-known/openid-configuration")
+    if [ "$VUTF_STATUS" -ne 200 ]; then
+        echo "❌ ViolentUTF realm is not accessible"
+        return 1
+    fi
+    
+    echo "✅ Keycloak is properly configured"
+    return 0
 }

@@ -327,7 +327,7 @@ display_generated_secrets() {
     echo ""
     
     echo "👤 User Account Credentials:"
-    echo "   ViolentUTF User Password: $VIOLENTUTF_USER_PASSWORD"
+    echo "   ViolentUTF User: violentutf.web / $VIOLENTUTF_USER_PASSWORD"
     echo "   ViolentUTF Cookie Secret: $VIOLENTUTF_COOKIE_SECRET"
     echo "   Keycloak Admin: admin / admin (default)"
     echo ""
@@ -356,6 +356,14 @@ display_generated_secrets() {
     echo "   • APISIX: apisix/.env, apisix/conf/config.yaml, apisix/conf/dashboard.yaml"
     echo "   • ViolentUTF: violentutf/.env, violentutf/.streamlit/secrets.toml"
     echo "   • FastAPI: violentutf_api/fastapi_app/.env"
+    echo "=================================================="
+    echo ""
+    echo "🚀 Access Points:"
+    echo "   • ViolentUTF App: http://localhost:8501"
+    echo "     Login: violentutf.web / $VIOLENTUTF_USER_PASSWORD"
+    echo "   • API Documentation: http://localhost:9080/api/docs"
+    echo "   • Keycloak Admin: http://localhost:8080"
+    echo "     Login: admin / admin"
     echo "=================================================="
     echo ""
 }

@@ -144,9 +144,13 @@ main_setup() {
     
     echo ""
     echo "🎉 Setup completed successfully!"
-    echo "📋 Access your ViolentUTF platform at: http://localhost:8501"
-    echo "📖 API Documentation: http://localhost:9080/api/docs"
-    echo "🔐 Keycloak Admin: http://localhost:9080/auth/admin"
+    echo ""
+    echo "📋 ViolentUTF Platform Access:"
+    echo "   • Application: http://localhost:8501"
+    echo "     Login with: violentutf.web / [see password below]"
+    echo "   • API Documentation: http://localhost:9080/api/docs"
+    echo "   • Keycloak Admin: http://localhost:8080/auth/admin"
+    echo "     Login with: admin / admin"
     
     # Display all generated secrets
     display_generated_secrets
