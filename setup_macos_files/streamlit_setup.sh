@@ -15,17 +15,19 @@ find_python() {
             # Ensure Python 3.8+ for Streamlit compatibility
             if [ "$major" -eq 3 ] && [ "$minor" -ge 8 ]; then
                 python_cmd=$cmd
-                echo "Found Python: $cmd (version $version)"
+                # Print info to stderr so it doesn't interfere with return value
+                echo "Found Python: $cmd (version $version)" >&2
                 break
             fi
         fi
     done
     
     if [ -z "$python_cmd" ]; then
-        echo "❌ No suitable Python found (requires Python 3.8+)"
+        echo "❌ No suitable Python found (requires Python 3.8+)" >&2
         return 1
     fi
     
+    # Only return the command itself
     echo "$python_cmd"
 }
 
