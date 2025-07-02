@@ -28,14 +28,14 @@ if [ -f "setup_macos_files/streamlit_setup.sh" ]; then
     fi
     
     # Re-activate venv after setup (in case it was created)
-    if [ -d "violentutf/.venv" ]; then
-        source violentutf/.venv/bin/activate
+    if [ -d "violentutf/.vitutf" ]; then
+        source violentutf/.vitutf/bin/activate
     fi
 else
     # Fallback to old method
-    if [ -d "violentutf/.venv" ]; then
+    if [ -d "violentutf/.vitutf" ]; then
         echo "🐍 Activating Python virtual environment..."
-        source violentutf/.venv/bin/activate
+        source violentutf/.vitutf/bin/activate
     elif [ -d ".vitutf" ]; then
         echo "🐍 Activating Python virtual environment..."
         source .vitutf/bin/activate
@@ -79,8 +79,8 @@ launch_new_terminal() {
     cat > /tmp/launch_violentutf_session.sh <<EOF
 #!/bin/bash
 cd "$SCRIPT_DIR"
-if [ -d "violentutf/.venv" ]; then
-    source violentutf/.venv/bin/activate
+if [ -d "violentutf/.vitutf" ]; then
+    source violentutf/.vitutf/bin/activate
 elif [ -d ".vitutf" ]; then
     source .vitutf/bin/activate
 fi

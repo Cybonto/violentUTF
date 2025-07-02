@@ -176,7 +176,7 @@ check_and_setup_streamlit() {
     cd "$violentutf_dir" || return 1
     
     # Check for virtual environment
-    local venv_dir=".venv"
+    local venv_dir=".vitutf"
     local using_venv=false
     
     if [ -d "$venv_dir" ]; then

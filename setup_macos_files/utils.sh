@@ -400,9 +400,9 @@ echo ""
 cd "$streamlit_dir" || exit 1
 
 # Activate virtual environment if it exists
-if [ -d ".venv" ]; then
+if [ -d ".vitutf" ]; then
     echo "🐍 Activating Python virtual environment..."
-    source .venv/bin/activate
+    source .vitutf/bin/activate
 fi
 
 # Launch Streamlit
