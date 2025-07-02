@@ -2656,7 +2656,7 @@ replace_in_file() {
 get_keycloak_admin_token() {
     echo "Attempting to obtain Keycloak admin access token..."
     local token_response
-    token_response=$(curl -s -X POST "${KEYCLOAK_SERVER_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" \
+    token_response=$(curl -s -k -X POST "${KEYCLOAK_SERVER_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" \
       -H "Content-Type: application/x-www-form-urlencoded" \
       -d "username=${ADMIN_USER}" \
       -d "password=${ADMIN_PASS}" \
@@ -2688,7 +2688,7 @@ make_api_call() {
 
     response_file=$(mktemp) # Create a temporary file to store the response body
 
-    local curl_opts=(-s -w "%{http_code}" -o "${response_file}" \
+    local curl_opts=(-s -k -w "%{http_code}" -o "${response_file}" \
         -H "Authorization: Bearer ${ACCESS_TOKEN}" \
         -X "${method}")
 
@@ -3504,7 +3504,7 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
         until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
             RETRY_COUNT=$((RETRY_COUNT+1))
             # Check Keycloak health/ready endpoint (not admin API, no token needed for this one)
-            HTTP_STATUS_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "${KEYCLOAK_SERVER_URL}/realms/master")
+            HTTP_STATUS_HEALTH=$(curl -s -k -o /dev/null -w "%{http_code}" "${KEYCLOAK_SERVER_URL}/realms/master")
             if [ "$HTTP_STATUS_HEALTH" -eq 200 ]; then
                 echo "Keycloak is up and responding on its main endpoint."
                 SUCCESS=true
@@ -3545,6 +3545,17 @@ fi
 
 
 if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
+    # First, disable SSL requirement for master realm to allow HTTP access
+    echo "Disabling SSL requirement for master realm..."
+    KEYCLOAK_CONTAINER=$(docker ps --filter "name=keycloak" --format "{{.Names}}" | grep -E "keycloak-keycloak|keycloak_keycloak" | head -n 1)
+    if [ -n "$KEYCLOAK_CONTAINER" ]; then
+        docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin
+        docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
+        echo "SSL requirement disabled for master realm"
+    else
+        echo "Warning: Could not find Keycloak container to disable SSL requirement"
+    fi
+    
     get_keycloak_admin_token # Obtain admin token for subsequent API calls
 
     # ---------------------------------------------------------------
@@ -3585,6 +3596,11 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
     make_api_call "POST" "/realms" "$REALM_EXPORT_FILE"
     if [ "$API_CALL_STATUS" -eq 201 ]; then # 201 Created is success for POST
         echo "Realm '$TARGET_REALM_NAME' imported successfully via API."
+        
+        # Disable SSL requirement for the imported realm
+        echo "Disabling SSL requirement for realm '$TARGET_REALM_NAME'..."
+        docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh update realms/${TARGET_REALM_NAME} -s sslRequired=NONE
+        echo "SSL requirement disabled for realm '$TARGET_REALM_NAME'"
     else
         echo "Failed to import realm '$TARGET_REALM_NAME' via API. Status: $API_CALL_STATUS, Response: $API_CALL_RESPONSE"
         exit 1
@@ -4919,7 +4935,7 @@ run_test() {
 }
 
 # 1. Test Keycloak master realm is accessible
-run_test "Keycloak master realm" "curl -s -o /dev/null -w '%{http_code}' ${KEYCLOAK_SERVER_URL}/realms/master | grep -q 200"
+run_test "Keycloak master realm" "curl -s -k -o /dev/null -w '%{http_code}' ${KEYCLOAK_SERVER_URL}/realms/master | grep -q 200"
 
 # 2. Test network connectivity between APISIX and Keycloak
 run_test "APISIX to Keycloak network connectivity" "test_network_connectivity apisix keycloak 8080"

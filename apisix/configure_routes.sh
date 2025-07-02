@@ -182,6 +182,73 @@ create_route "3001" "/mcp/*" "[\"GET\", \"POST\", \"OPTIONS\"]" "MCP Server-Sent
 # MCP OAuth endpoints
 create_route "3002" "/mcp/oauth/*" "[\"GET\", \"POST\"]" "MCP OAuth proxy endpoints"
 
+# Generic API catch-all route (lowest priority)
+echo
+echo "📡 Creating generic API catch-all route..."
+curl -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "{
+    \"id\": \"violentutf-api\",
+    \"uri\": \"/api/*\",
+    \"name\": \"violentutf-api\",
+    \"methods\": [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\", \"PATCH\"],
+    \"upstream\": {
+        \"type\": \"roundrobin\",
+        \"nodes\": {
+            \"violentutf_api:8000\": 1
+        },
+        \"timeout\": {
+            \"connect\": 60,
+            \"send\": 60,
+            \"read\": 60
+        },
+        \"scheme\": \"http\",
+        \"pass_host\": \"pass\",
+        \"hash_on\": \"vars\"
+    },
+    \"priority\": 1,
+    \"plugins\": {
+        \"cors\": {
+            \"allow_origins\": \"http://localhost:8501,http://localhost:3000\",
+            \"allow_methods\": \"GET,POST,PUT,DELETE,PATCH,OPTIONS\",
+            \"allow_headers\": \"Authorization,Content-Type,X-Requested-With\",
+            \"allow_credential\": true,
+            \"expose_headers\": \"X-Total-Count\",
+            \"max_age\": 3600
+        },
+        \"proxy-rewrite\": {
+            \"headers\": {
+                \"set\": {
+                    \"X-Real-IP\": \"\$remote_addr\",
+                    \"X-Forwarded-For\": \"\$proxy_add_x_forwarded_for\",
+                    \"X-Forwarded-Host\": \"\$host\",
+                    \"X-API-Gateway\": \"APISIX\"
+                }
+            }
+        },
+        \"limit-req\": {
+            \"rate\": 100,
+            \"burst\": 50,
+            \"key_type\": \"var\",
+            \"key\": \"remote_addr\",
+            \"rejected_code\": 429,
+            \"rejected_msg\": \"Too many requests\",
+            \"policy\": \"local\",
+            \"nodelay\": false,
+            \"allow_degradation\": false
+        },
+        \"limit-count\": {
+            \"count\": 1000,
+            \"time_window\": 3600,
+            \"key_type\": \"var\",
+            \"key\": \"remote_addr\",
+            \"rejected_code\": 429,
+            \"rejected_msg\": \"API rate limit exceeded\",
+            \"policy\": \"local\",
+            \"show_limit_quota_header\": true,
+            \"allow_degradation\": false
+        }
+    }
+}" $APISIX_ADMIN_URL/apisix/admin/routes/violentutf-api
+
 echo
 echo "✅ APISIX route configuration completed!"
 echo
