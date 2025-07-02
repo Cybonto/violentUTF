@@ -26,6 +26,7 @@ load_modules() {
         "ai_providers_setup.sh"
         "openapi_setup.sh"
         "violentutf_api_setup.sh"
+        "streamlit_setup.sh"
         "validation.sh"
         "cleanup.sh"
     )

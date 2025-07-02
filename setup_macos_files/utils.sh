@@ -375,6 +375,15 @@ launch_streamlit_in_new_terminal() {
         return 1
     fi
     
+    # Check and setup Streamlit if needed
+    if [ -f "$SETUP_MODULES_DIR/streamlit_setup.sh" ]; then
+        source "$SETUP_MODULES_DIR/streamlit_setup.sh"
+        if ! ensure_streamlit_ready "$streamlit_dir"; then
+            echo "❌ Failed to prepare Streamlit environment"
+            return 1
+        fi
+    fi
+    
     # Create a launch script that will be executed in the new terminal
     local launch_script="/tmp/launch_violentutf_streamlit.sh"
     cat > "$launch_script" <<EOF

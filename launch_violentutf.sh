@@ -17,15 +17,31 @@ echo "=========================================="
 echo "🚀 ViolentUTF Application Launcher"
 echo "=========================================="
 
-# Check if virtual environment exists
-if [ -d "violentutf/.venv" ]; then
-    echo "🐍 Activating Python virtual environment..."
-    source violentutf/.venv/bin/activate
-elif [ -d ".vitutf" ]; then
-    echo "🐍 Activating Python virtual environment..."
-    source .vitutf/bin/activate
+# Source the streamlit setup functions if available
+if [ -f "setup_macos_files/streamlit_setup.sh" ]; then
+    source setup_macos_files/streamlit_setup.sh
+    
+    # Check and setup Streamlit environment
+    if ! ensure_streamlit_ready "violentutf"; then
+        echo -e "${RED}Failed to setup Streamlit environment${NC}"
+        exit 1
+    fi
+    
+    # Re-activate venv after setup (in case it was created)
+    if [ -d "violentutf/.venv" ]; then
+        source violentutf/.venv/bin/activate
+    fi
 else
-    echo -e "${YELLOW}Warning: Virtual environment not found, using system Python${NC}"
+    # Fallback to old method
+    if [ -d "violentutf/.venv" ]; then
+        echo "🐍 Activating Python virtual environment..."
+        source violentutf/.venv/bin/activate
+    elif [ -d ".vitutf" ]; then
+        echo "🐍 Activating Python virtual environment..."
+        source .vitutf/bin/activate
+    else
+        echo -e "${YELLOW}Warning: Virtual environment not found, using system Python${NC}"
+    fi
 fi
 
 # Check if Home.py exists
