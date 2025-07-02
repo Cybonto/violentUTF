@@ -359,3 +359,65 @@ display_generated_secrets() {
     echo "=================================================="
     echo ""
 }
+
+# Function to launch Streamlit in a new terminal window
+launch_streamlit_in_new_terminal() {
+    echo ""
+    echo "🚀 Launching ViolentUTF Streamlit Web Interface..."
+    
+    # Get the current working directory
+    local current_dir=$(pwd)
+    local streamlit_dir="$current_dir/violentutf"
+    
+    # Check if violentutf directory exists
+    if [ ! -d "$streamlit_dir" ]; then
+        echo "❌ ViolentUTF directory not found at $streamlit_dir"
+        return 1
+    fi
+    
+    # Create a launch script that will be executed in the new terminal
+    local launch_script="/tmp/launch_violentutf_streamlit.sh"
+    cat > "$launch_script" <<EOF
+#!/bin/bash
+echo "🌟 Starting ViolentUTF Streamlit Application..."
+echo "📂 Working directory: $streamlit_dir"
+echo "🌐 Application will be available at: http://localhost:8501"
+echo ""
+echo "⚠️  Note: Keep this terminal window open to keep the application running"
+echo "   Press Ctrl+C to stop the application"
+echo ""
+
+# Change to the violentutf directory
+cd "$streamlit_dir" || exit 1
+
+# Activate virtual environment if it exists
+if [ -d ".venv" ]; then
+    echo "🐍 Activating Python virtual environment..."
+    source .venv/bin/activate
+fi
+
+# Launch Streamlit
+echo "🚀 Starting Streamlit server..."
+streamlit run Home.py --server.port=8501 --server.address=0.0.0.0 --browser.gatherUsageStats=false
+EOF
+    
+    # Make the script executable
+    chmod +x "$launch_script"
+    
+    # Launch new Terminal window on macOS
+    osascript <<EOF
+tell application "Terminal"
+    activate
+    set newTab to do script "bash '$launch_script'"
+    set custom title of newTab to "ViolentUTF Streamlit Server"
+end tell
+EOF
+    
+    # Clean up the temporary script after a short delay
+    sleep 2
+    rm -f "$launch_script"
+    
+    echo "✅ ViolentUTF Streamlit launched in new terminal window"
+    echo "🌐 Access the web interface at: http://localhost:8501"
+    echo ""
+}

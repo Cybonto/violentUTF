@@ -18,14 +18,15 @@ echo "🚀 ViolentUTF Application Launcher"
 echo "=========================================="
 
 # Check if virtual environment exists
-if [ ! -d ".vitutf" ]; then
-    echo -e "${RED}Error: Virtual environment not found!${NC}"
-    echo "Please run setup_macos.sh first."
-    exit 1
+if [ -d "violentutf/.venv" ]; then
+    echo "🐍 Activating Python virtual environment..."
+    source violentutf/.venv/bin/activate
+elif [ -d ".vitutf" ]; then
+    echo "🐍 Activating Python virtual environment..."
+    source .vitutf/bin/activate
+else
+    echo -e "${YELLOW}Warning: Virtual environment not found, using system Python${NC}"
 fi
-
-# Activate virtual environment
-source .vitutf/bin/activate
 
 # Check if Home.py exists
 if [ -f "violentutf/Home.py" ]; then
@@ -62,7 +63,11 @@ launch_new_terminal() {
     cat > /tmp/launch_violentutf_session.sh <<EOF
 #!/bin/bash
 cd "$SCRIPT_DIR"
-source .vitutf/bin/activate
+if [ -d "violentutf/.venv" ]; then
+    source violentutf/.venv/bin/activate
+elif [ -d ".vitutf" ]; then
+    source .vitutf/bin/activate
+fi
 echo "🚀 Starting ViolentUTF application..."
 echo "   Access the app at: http://localhost:8501"
 echo ""

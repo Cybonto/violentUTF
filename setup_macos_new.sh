@@ -149,6 +149,9 @@ main_setup() {
     
     # Display all generated secrets
     display_generated_secrets
+    
+    # Launch Streamlit in a new terminal window
+    launch_streamlit_in_new_terminal
 }
 
 # --- Cleanup orchestration ---
