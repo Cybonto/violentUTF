@@ -62,7 +62,8 @@ make_api_call() {
     # Execute the curl command
     local RESPONSE=$(eval $CURL_CMD)
     API_CALL_STATUS=$(echo "$RESPONSE" | tail -n 1)
-    API_CALL_RESPONSE=$(echo "$RESPONSE" | head -n -1)
+    # Fix for macOS head command - use sed instead
+    API_CALL_RESPONSE=$(echo "$RESPONSE" | sed '$d')
     
     export API_CALL_STATUS
     export API_CALL_RESPONSE
@@ -185,9 +186,9 @@ setup_keycloak() {
         return 1
     fi
     
-    # Configure ViolentUTF client
-    echo "Configuring ViolentUTF client..."
-    local VUTF_CLIENT_ID="violentutf"
+    # Configure APISIX client (used by ViolentUTF)
+    echo "Configuring APISIX client..."
+    local VUTF_CLIENT_ID="apisix"
     
     # Get client UUID
     make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients?clientId=${VUTF_CLIENT_ID}"
@@ -199,24 +200,24 @@ setup_keycloak() {
     
     local KC_CLIENT_UUID=$(echo "$API_CALL_RESPONSE" | jq -r '.[0].id')
     if [ -z "$KC_CLIENT_UUID" ] || [ "$KC_CLIENT_UUID" == "null" ]; then
-        echo "❌ Error: Client '${VUTF_CLIENT_ID}' not found"
+        echo "❌ Error: Client 'apisix' not found"
         cd ..
         return 1
     fi
     echo "Found client '${VUTF_CLIENT_ID}' with UUID '${KC_CLIENT_UUID}'"
     
-    # Update client secret if needed
-    if [ -n "$VIOLENTUTF_CLIENT_SECRET" ]; then
-        echo "Updating client secret..."
-        local SECRET_UPDATE_JSON=$(printf '{"type":"secret","value":"%s"}' "$VIOLENTUTF_CLIENT_SECRET")
+    # Update client secret if needed (use APISIX client secret)
+    if [ -n "$APISIX_CLIENT_SECRET" ]; then
+        echo "Updating APISIX client secret..."
+        local SECRET_UPDATE_JSON=$(printf '{"type":"secret","value":"%s"}' "$APISIX_CLIENT_SECRET")
         echo "$SECRET_UPDATE_JSON" > /tmp/client-secret.json
         make_api_call "POST" "/realms/${TARGET_REALM_NAME}/clients/${KC_CLIENT_UUID}/client-secret" "/tmp/client-secret.json"
         rm -f /tmp/client-secret.json
         
         if [ "$API_CALL_STATUS" -eq 200 ]; then
-            echo "✅ Client secret updated successfully"
+            echo "✅ APISIX client secret updated successfully"
         else
-            echo "⚠️  Warning: Could not update client secret (may already be set)"
+            echo "⚠️  Warning: Could not update APISIX client secret (may already be set)"
         fi
     fi
     

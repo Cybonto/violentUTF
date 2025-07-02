@@ -186,6 +186,8 @@ install_streamlit_dependencies() {
         echo "   • httpx, aiohttp (HTTP clients)"
         echo "   • python-jose (JWT handling)"
         echo "   • python-multipart (form data)"
+        echo "   • anthropic (Anthropic AI SDK)"
+        echo "   • openai (OpenAI SDK)"
         echo ""
         echo "⏳ This may take several minutes..."
         # Install common dependencies for ViolentUTF
@@ -202,7 +204,9 @@ install_streamlit_dependencies() {
             httpx \
             aiohttp \
             python-jose \
-            python-multipart
+            python-multipart \
+            anthropic \
+            openai
     fi
     
     echo "✅ Dependencies installed successfully"
@@ -330,6 +334,7 @@ check_and_setup_streamlit() {
     # Check if requirements.txt exists in current directory
     if [ -f "$requirements_file" ]; then
         echo "📋 Found requirements.txt in $(pwd)"
+        echo "   This includes all dependencies (anthropic, openai, etc.)"
     else
         echo "📋 No requirements.txt found in $(pwd), will install default dependencies"
     fi
