@@ -102,7 +102,7 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
         # Query APISIX to find the chat completions route
         try:
             # When running in Docker, use container name; when local, use localhost
-            apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://apisix-apisix-1:9180")
+            apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://apisix:9180")
             apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
 
             logger.info(f"Querying APISIX admin API at {apisix_admin_url} for OpenAPI routes")
