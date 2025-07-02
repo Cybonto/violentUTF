@@ -87,7 +87,17 @@ setup_python_venv() {
     # Activate virtual environment
     if [ -f "$venv_dir/bin/activate" ]; then
         source "$venv_dir/bin/activate"
-        echo "✅ Virtual environment activated"
+        
+        # Verify activation worked
+        if [ -z "$VIRTUAL_ENV" ]; then
+            echo "❌ Virtual environment activation failed (VIRTUAL_ENV not set)"
+            return 1
+        fi
+        
+        echo "✅ Virtual environment activated at: $VIRTUAL_ENV"
+        
+        # Force PATH update to ensure venv binaries are found first
+        export PATH="$VIRTUAL_ENV/bin:$PATH"
     else
         echo "❌ Failed to activate virtual environment"
         return 1
@@ -114,9 +124,24 @@ install_streamlit_dependencies() {
     echo "📦 Installing Streamlit and dependencies..."
     
     # Determine which python command to use
-    local pip_cmd="python -m pip"
-    if ! command -v python &> /dev/null; then
-        if command -v python3 &> /dev/null; then
+    local pip_cmd=""
+    
+    # If in virtual environment, use its Python
+    if [ -n "$VIRTUAL_ENV" ]; then
+        echo "📍 Using virtual environment at: $VIRTUAL_ENV"
+        # In venv, python should always exist
+        if [ -x "$VIRTUAL_ENV/bin/python" ]; then
+            pip_cmd="$VIRTUAL_ENV/bin/python -m pip"
+        else
+            echo "❌ Virtual environment Python not found!"
+            return 1
+        fi
+    else
+        echo "⚠️  Warning: Not in a virtual environment"
+        # Fall back to system Python
+        if command -v python &> /dev/null; then
+            pip_cmd="python -m pip"
+        elif command -v python3 &> /dev/null; then
             pip_cmd="python3 -m pip"
         else
             echo "❌ No Python command found in PATH"
@@ -124,10 +149,7 @@ install_streamlit_dependencies() {
         fi
     fi
     
-    # Check if we're in a virtual environment
-    if [ -z "$VIRTUAL_ENV" ]; then
-        echo "⚠️  Warning: Not in a virtual environment"
-    fi
+    echo "📦 Using pip command: $pip_cmd"
     
     # Install Streamlit
     echo "Installing Streamlit..."
@@ -220,34 +242,66 @@ check_and_setup_streamlit() {
     local using_venv=false
     
     if [ -d "$venv_dir" ]; then
-        echo "Found existing virtual environment"
-        source "$venv_dir/bin/activate"
-        using_venv=true
+        echo "Found existing virtual environment at $venv_dir"
+        if [ -f "$venv_dir/bin/activate" ]; then
+            source "$venv_dir/bin/activate"
+            
+            # Verify activation
+            if [ -n "$VIRTUAL_ENV" ]; then
+                using_venv=true
+                # Ensure venv binaries are first in PATH
+                export PATH="$VIRTUAL_ENV/bin:$PATH"
+                echo "✅ Activated virtual environment: $VIRTUAL_ENV"
+            else
+                echo "⚠️  Failed to activate existing virtual environment"
+                using_venv=false
+            fi
+        else
+            echo "⚠️  Virtual environment missing activate script"
+            using_venv=false
+        fi
     fi
     
     # Determine which python command to use for testing
-    local test_python_cmd="python"
-    if ! command -v python &> /dev/null; then
-        if command -v python3 &> /dev/null; then
+    local test_python_cmd=""
+    local test_streamlit_cmd=""
+    
+    # If in venv, use venv commands
+    if [ -n "$VIRTUAL_ENV" ]; then
+        test_python_cmd="$VIRTUAL_ENV/bin/python"
+        test_streamlit_cmd="$VIRTUAL_ENV/bin/streamlit"
+    else
+        # Use system commands
+        if command -v python &> /dev/null; then
+            test_python_cmd="python"
+        elif command -v python3 &> /dev/null; then
             test_python_cmd="python3"
         fi
+        test_streamlit_cmd="streamlit"
     fi
     
-    # Check if Streamlit is installed
-    if command -v streamlit &> /dev/null; then
-        local streamlit_version=$(streamlit --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    # Check if Streamlit is installed in the right place
+    if [ -n "$test_streamlit_cmd" ] && command -v "$test_streamlit_cmd" &> /dev/null; then
+        local streamlit_version=$($test_streamlit_cmd --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
         echo "✅ Streamlit is already installed (version $streamlit_version)"
+        echo "📍 Location: $(which $test_streamlit_cmd)"
         
-        # Verify it works
-        if $test_python_cmd -c "import streamlit" 2>/dev/null; then
+        # Verify it works with the same Python
+        if [ -n "$test_python_cmd" ] && $test_python_cmd -c "import streamlit" 2>/dev/null; then
             echo "✅ Streamlit import test passed"
-            cd .. || true
-            return 0
+            # Also verify python-dotenv while we're at it
+            if $test_python_cmd -c "import dotenv" 2>/dev/null; then
+                echo "✅ python-dotenv import test passed"
+                cd .. || true
+                return 0
+            else
+                echo "⚠️  python-dotenv import failed, will install dependencies"
+            fi
         else
-            echo "⚠️  Streamlit command found but import failed, reinstalling..."
+            echo "⚠️  Streamlit import failed, reinstalling..."
         fi
     else
-        echo "📋 Streamlit not found, will install it"
+        echo "📋 Streamlit not found in expected location, will install it"
     fi
     
     # If not using venv, create one
@@ -286,23 +340,37 @@ check_and_setup_streamlit() {
         return 1
     fi
     
-    # Final verification - determine which python to use
-    local verify_python_cmd="python"
-    if ! command -v python &> /dev/null; then
-        if command -v python3 &> /dev/null; then
-            verify_python_cmd="python3"
-        fi
+    # Final verification - use the same Python that installed packages
+    local verify_python_cmd=""
+    if [ -n "$VIRTUAL_ENV" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
+        verify_python_cmd="$VIRTUAL_ENV/bin/python"
+    elif command -v python &> /dev/null; then
+        verify_python_cmd="python"
+    elif command -v python3 &> /dev/null; then
+        verify_python_cmd="python3"
+    else
+        echo "❌ No Python found for verification"
+        cd .. || true
+        return 1
+    fi
+    
+    # Also ensure streamlit command is from venv if in venv
+    local streamlit_cmd="streamlit"
+    if [ -n "$VIRTUAL_ENV" ] && [ -x "$VIRTUAL_ENV/bin/streamlit" ]; then
+        streamlit_cmd="$VIRTUAL_ENV/bin/streamlit"
     fi
     
     # Final verification
-    if command -v streamlit &> /dev/null && $verify_python_cmd -c "import streamlit" 2>/dev/null; then
+    if command -v "$streamlit_cmd" &> /dev/null && $verify_python_cmd -c "import streamlit" 2>/dev/null; then
         echo ""
         echo "===================================="
         echo "✅ Streamlit setup completed successfully!"
         echo "===================================="
         echo "📍 Virtual environment: $(pwd)/$venv_dir"
         echo "🔧 Python version: $($verify_python_cmd --version 2>&1)"
-        echo "📦 Streamlit version: $(streamlit --version 2>&1)"
+        echo "📍 Python location: $verify_python_cmd"
+        echo "📦 Streamlit version: $($streamlit_cmd --version 2>&1)"
+        echo "📍 Streamlit location: $(which $streamlit_cmd)"
         echo "🌐 Ready to launch at: http://localhost:8501"
         echo "===================================="
         cd .. || true
