@@ -211,14 +211,27 @@ install_streamlit_dependencies() {
     
     echo "✅ Dependencies installed successfully"
     
-    # Quick check for python-dotenv since it's critical
+    # Verify critical dependencies
     echo ""
     echo "🔍 Verifying critical dependencies..."
-    if ! $pip_cmd show python-dotenv &> /dev/null; then
-        echo "⚠️  python-dotenv not found, installing it now..."
-        $pip_cmd install python-dotenv
-    else
-        echo "✅ python-dotenv is installed"
+    local critical_packages=("python-dotenv" "anthropic" "openai")
+    local missing_packages=()
+    
+    for package in "${critical_packages[@]}"; do
+        if ! $pip_cmd show "$package" &> /dev/null; then
+            missing_packages+=("$package")
+        else
+            echo "✅ $package is installed"
+        fi
+    done
+    
+    if [ ${#missing_packages[@]} -gt 0 ]; then
+        echo "⚠️  Missing packages detected: ${missing_packages[*]}"
+        echo "📦 Installing missing packages..."
+        for package in "${missing_packages[@]}"; do
+            echo "   Installing $package..."
+            $pip_cmd install "$package"
+        done
     fi
     
     return 0
@@ -293,13 +306,25 @@ check_and_setup_streamlit() {
         # Verify it works with the same Python
         if [ -n "$test_python_cmd" ] && $test_python_cmd -c "import streamlit" 2>/dev/null; then
             echo "✅ Streamlit import test passed"
-            # Also verify python-dotenv while we're at it
-            if $test_python_cmd -c "import dotenv" 2>/dev/null; then
-                echo "✅ python-dotenv import test passed"
+            # Check for critical dependencies
+            local missing_deps=()
+            if ! $test_python_cmd -c "import dotenv" 2>/dev/null; then
+                missing_deps+=("python-dotenv")
+            fi
+            if ! $test_python_cmd -c "import anthropic" 2>/dev/null; then
+                missing_deps+=("anthropic")
+            fi
+            if ! $test_python_cmd -c "import openai" 2>/dev/null; then
+                missing_deps+=("openai")
+            fi
+            
+            if [ ${#missing_deps[@]} -eq 0 ]; then
+                echo "✅ All critical dependencies verified"
                 cd .. || true
                 return 0
             else
-                echo "⚠️  python-dotenv import failed, will install dependencies"
+                echo "⚠️  Missing dependencies: ${missing_deps[*]}"
+                echo "   Will install all dependencies..."
             fi
         else
             echo "⚠️  Streamlit import failed, reinstalling..."
@@ -421,6 +446,27 @@ ensure_streamlit_ready() {
     if [ ! -d ".streamlit" ]; then
         echo "⚠️  Creating .streamlit directory"
         mkdir -p .streamlit
+    fi
+    
+    # Create Streamlit config if it doesn't exist
+    if [ ! -f ".streamlit/config.toml" ]; then
+        echo "📝 Creating Streamlit config file..."
+        cat > .streamlit/config.toml <<'EOF'
+[server]
+# Use localhost instead of 0.0.0.0 for security
+address = "localhost"
+port = 8501
+
+# Disable usage stats collection
+gatherUsageStats = false
+
+# Browser settings
+[browser]
+# Automatically open browser on launch
+serverAddress = "localhost"
+serverPort = 8501
+EOF
+        echo "✅ Created .streamlit/config.toml with localhost configuration"
     fi
     
     cd .. || true

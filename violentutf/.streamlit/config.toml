@@ -1,0 +1,21 @@
+[server]
+# Use localhost instead of 0.0.0.0 for security
+address = "localhost"
+port = 8501
+
+# Disable usage stats collection
+gatherUsageStats = false
+
+# Browser settings
+[browser]
+# Automatically open browser on launch
+serverAddress = "localhost"
+serverPort = 8501
+
+# Theme settings (optional)
+[theme]
+# You can customize the theme here if needed
+# primaryColor = "#F63366"
+# backgroundColor = "#FFFFFF"
+# secondaryBackgroundColor = "#F0F2F6"
+# textColor = "#262730"

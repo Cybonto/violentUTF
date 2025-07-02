@@ -415,7 +415,7 @@ fi
 
 # Launch Streamlit
 echo "🚀 Starting Streamlit server..."
-streamlit run Home.py --server.port=8501 --server.address=0.0.0.0 --browser.gatherUsageStats=false
+streamlit run Home.py --server.port=8501 --server.address=localhost --browser.gatherUsageStats=false
 EOF
     
     # Make the script executable
