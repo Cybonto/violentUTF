@@ -41,10 +41,14 @@ setup_python_venv() {
     
     # Create virtual environment if it doesn't exist
     if [ ! -d "$venv_dir" ]; then
-        echo "Creating new virtual environment at $venv_dir..."
+        echo ""
+        echo "🐍 Creating new Python virtual environment..."
+        echo "📍 Location: $(pwd)/$venv_dir"
+        echo "🔧 Using Python: $python_cmd"
         
         # Try different methods to create virtual environment
-        if ! $python_cmd -m venv "$venv_dir" 2>/dev/null; then
+        echo "⏳ Attempting to create virtual environment..."
+        if ! $python_cmd -m venv "$venv_dir"; then
             echo "⚠️  First attempt failed, trying alternative methods..."
             
             # Try virtualenv if available
@@ -90,14 +94,15 @@ setup_python_venv() {
     fi
     
     # Upgrade pip - use the python from virtual environment
-    echo "Upgrading pip..."
+    echo "📦 Upgrading pip to latest version..."
     if command -v python &> /dev/null; then
-        python -m pip install --upgrade pip --quiet
+        python -m pip install --upgrade pip
     elif command -v python3 &> /dev/null; then
-        python3 -m pip install --upgrade pip --quiet
+        python3 -m pip install --upgrade pip
     else
-        $python_cmd -m pip install --upgrade pip --quiet
+        $python_cmd -m pip install --upgrade pip
     fi
+    echo "✅ Pip upgraded successfully"
     
     return 0
 }
@@ -126,19 +131,40 @@ install_streamlit_dependencies() {
     
     # Install Streamlit
     echo "Installing Streamlit..."
-    $pip_cmd install streamlit --quiet
+    echo "📦 Running: $pip_cmd install streamlit"
+    echo "⏳ This may take a few minutes..."
+    $pip_cmd install streamlit
     
     if [ $? -ne 0 ]; then
         echo "❌ Failed to install Streamlit"
         return 1
     fi
     
+    echo "✅ Streamlit installed successfully"
+    
     # Install from requirements.txt if it exists
     if [ -f "$requirements_file" ]; then
-        echo "Installing dependencies from requirements.txt..."
-        $pip_cmd install -r "$requirements_file" --quiet
+        echo ""
+        echo "📋 Found requirements.txt, installing dependencies..."
+        echo "📦 Running: $pip_cmd install -r $requirements_file"
+        echo "⏳ This may take several minutes..."
+        $pip_cmd install -r "$requirements_file"
     else
-        echo "Installing common ViolentUTF dependencies..."
+        echo ""
+        echo "📋 No requirements.txt found, installing common ViolentUTF dependencies..."
+        echo "📦 Installing the following packages:"
+        echo "   • streamlit-authenticator (for authentication)"
+        echo "   • streamlit-option-menu (for UI components)"
+        echo "   • pyrit (Microsoft's AI Red Team framework)"
+        echo "   • garak (LLM vulnerability scanner)"
+        echo "   • duckdb (database for PyRIT)"
+        echo "   • pandas, numpy (data processing)"
+        echo "   • pydantic (data validation)"
+        echo "   • httpx, aiohttp (HTTP clients)"
+        echo "   • python-jose (JWT handling)"
+        echo "   • python-multipart (form data)"
+        echo ""
+        echo "⏳ This may take several minutes..."
         # Install common dependencies for ViolentUTF
         $pip_cmd install \
             streamlit-authenticator \
@@ -152,8 +178,7 @@ install_streamlit_dependencies() {
             httpx \
             aiohttp \
             python-jose \
-            python-multipart \
-            --quiet
+            python-multipart
     fi
     
     echo "✅ Dependencies installed successfully"
@@ -165,7 +190,9 @@ check_and_setup_streamlit() {
     local violentutf_dir="${1:-violentutf}"
     
     echo ""
+    echo "===================================="
     echo "🔍 Checking Streamlit installation..."
+    echo "===================================="
     
     # Change to violentutf directory
     if [ ! -d "$violentutf_dir" ]; then
@@ -248,7 +275,15 @@ check_and_setup_streamlit() {
     
     # Final verification
     if command -v streamlit &> /dev/null && $verify_python_cmd -c "import streamlit" 2>/dev/null; then
-        echo "✅ Streamlit setup completed successfully"
+        echo ""
+        echo "===================================="
+        echo "✅ Streamlit setup completed successfully!"
+        echo "===================================="
+        echo "📍 Virtual environment: $(pwd)/$venv_dir"
+        echo "🔧 Python version: $($verify_python_cmd --version 2>&1)"
+        echo "📦 Streamlit version: $(streamlit --version 2>&1)"
+        echo "🌐 Ready to launch at: http://localhost:8501"
+        echo "===================================="
         cd .. || true
         return 0
     else
