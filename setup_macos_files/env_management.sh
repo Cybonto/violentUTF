@@ -366,6 +366,13 @@ client_id = "violentutf"
 client_secret = "$VIOLENTUTF_CLIENT_SECRET"
 server_metadata_url = "http://localhost:8080/realms/ViolentUTF/.well-known/openid-configuration"
 
+[auth.providers.keycloak]
+issuer = "http://localhost:8080/realms/ViolentUTF"
+token_endpoint = "http://localhost:8080/realms/ViolentUTF/protocol/openid-connect/token"
+authorization_endpoint = "http://localhost:8080/realms/ViolentUTF/protocol/openid-connect/auth"
+userinfo_endpoint = "http://localhost:8080/realms/ViolentUTF/protocol/openid-connect/userinfo"
+jwks_uri = "http://localhost:8080/realms/ViolentUTF/protocol/openid-connect/certs"
+
 [apisix]
 client_id = "apisix"
 client_secret = "$APISIX_CLIENT_SECRET"
