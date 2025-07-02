@@ -62,8 +62,8 @@ make_api_call() {
     # Execute the curl command
     local RESPONSE=$(eval $CURL_CMD)
     API_CALL_STATUS=$(echo "$RESPONSE" | tail -n 1)
-    # Fix for macOS head command - use sed instead
-    API_CALL_RESPONSE=$(echo "$RESPONSE" | sed '$d')
+    # Get all lines except the last one (which is the status code)
+    API_CALL_RESPONSE=$(echo "$RESPONSE" | head -n -1 2>/dev/null || echo "$RESPONSE" | awk 'NR>1{print prev}{prev=$0}')
     
     export API_CALL_STATUS
     export API_CALL_RESPONSE
@@ -190,91 +190,99 @@ setup_keycloak() {
     echo "Configuring ViolentUTF client..."
     local VUTF_CLIENT_ID="violentutf"
     
-    # Get client UUID
+    # Get internal client ID (UUID) for the 'violentutf' client
     make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients?clientId=${VUTF_CLIENT_ID}"
     if [ "$API_CALL_STATUS" -ne 200 ]; then
-        echo "❌ Error: Could not get client info for 'violentutf'"
+        echo "Error: Could not get client info for '${VUTF_CLIENT_ID}'. Status: $API_CALL_STATUS"
         cd ..
         return 1
     fi
     
-    local KC_CLIENT_UUID=$(echo "$API_CALL_RESPONSE" | sed '$d' | jq -r '.[0].id')
+    local KC_CLIENT_UUID=$(echo "$API_CALL_RESPONSE" | jq -r '.[0].id')
     if [ -z "$KC_CLIENT_UUID" ] || [ "$KC_CLIENT_UUID" == "null" ]; then
-        echo "❌ Error: Client 'violentutf' not found"
+        echo "Error: Client '${VUTF_CLIENT_ID}' not found in realm '${TARGET_REALM_NAME}'"
         cd ..
         return 1
     fi
     echo "Found client '${VUTF_CLIENT_ID}' with UUID '${KC_CLIENT_UUID}'"
     
-    # Update client secret using PUT method (like original setup)
+    # Update client to use our pre-generated secret
     if [ -n "$VIOLENTUTF_CLIENT_SECRET" ]; then
-        echo "Updating client secret for 'violentutf'..."
+        echo "Updating client secret for '${VUTF_CLIENT_ID}' to use pre-generated value..."
         
         # Get current client configuration
         make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients/${KC_CLIENT_UUID}"
         if [ "$API_CALL_STATUS" -ne 200 ]; then
-            echo "❌ Error: Failed to get client configuration"
+            echo "Error: Failed to get client configuration. Status: $API_CALL_STATUS"
             cd ..
             return 1
         fi
         
         # Update the client configuration with our pre-generated secret
-        local CLIENT_CONFIG=$(echo "$API_CALL_RESPONSE" | sed '$d' | jq --arg secret "$VIOLENTUTF_CLIENT_SECRET" '.secret = $secret')
+        local CLIENT_CONFIG=$(echo "$API_CALL_RESPONSE" | jq --arg secret "$VIOLENTUTF_CLIENT_SECRET" '.secret = $secret')
         
         # Save to temp file for the PUT request
         echo "$CLIENT_CONFIG" > /tmp/client-update.json
         
         # Update the client
         make_api_call "PUT" "/realms/${TARGET_REALM_NAME}/clients/${KC_CLIENT_UUID}" "/tmp/client-update.json"
-        rm -f /tmp/client-update.json
-        
-        if [ "$API_CALL_STATUS" -eq 204 ]; then
-            echo "✅ Successfully updated client 'violentutf' with pre-generated secret"
-        else
-            echo "❌ Error: Failed to update client secret. Status: $API_CALL_STATUS"
+        if [ "$API_CALL_STATUS" -ne 204 ]; then
+            echo "Error: Failed to update client secret. Status: $API_CALL_STATUS"
             cd ..
             return 1
         fi
+        
+        echo "✅ Successfully updated client '${VUTF_CLIENT_ID}' with pre-generated secret"
+        rm -f /tmp/client-update.json
     fi
     
-    # Configure APISIX client
-    echo "Configuring APISIX client..."
-    local APISIX_CLIENT_ID="apisix"
+    # Update APISIX client secret
+    echo "Updating APISIX client secret..."
     
-    # Get client UUID
-    make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients?clientId=${APISIX_CLIENT_ID}"
+    # Find APISIX client UUID
+    make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients?clientId=apisix"
     if [ "$API_CALL_STATUS" -ne 200 ]; then
-        echo "⚠️  Warning: Could not get APISIX client info"
-    else
-        local APISIX_CLIENT_UUID=$(echo "$API_CALL_RESPONSE" | sed '$d' | jq -r '.[0].id')
-        if [ -n "$APISIX_CLIENT_UUID" ] && [ "$APISIX_CLIENT_UUID" != "null" ]; then
-            echo "Found APISIX client with UUID '${APISIX_CLIENT_UUID}'"
-            
-            # Update APISIX client secret if needed
-            if [ -n "$APISIX_CLIENT_SECRET" ]; then
-                echo "Updating APISIX client secret..."
-                
-                # Get current client configuration
-                make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients/${APISIX_CLIENT_UUID}"
-                if [ "$API_CALL_STATUS" -eq 200 ]; then
-                    # Update the client configuration with our pre-generated secret
-                    local APISIX_CONFIG=$(echo "$API_CALL_RESPONSE" | sed '$d' | jq --arg secret "$APISIX_CLIENT_SECRET" '.secret = $secret')
-                    
-                    # Save to temp file for the PUT request
-                    echo "$APISIX_CONFIG" > /tmp/apisix-update.json
-                    
-                    # Update the client
-                    make_api_call "PUT" "/realms/${TARGET_REALM_NAME}/clients/${APISIX_CLIENT_UUID}" "/tmp/apisix-update.json"
-                    rm -f /tmp/apisix-update.json
-                    
-                    if [ "$API_CALL_STATUS" -eq 204 ]; then
-                        echo "✅ Successfully updated APISIX client secret"
-                    else
-                        echo "⚠️  Warning: Could not update APISIX client secret"
-                    fi
-                fi
-            fi
+        echo "Error: Failed to find APISIX client. Status: $API_CALL_STATUS"
+        cd ..
+        return 1
+    fi
+    
+    local APISIX_CLIENT_UUID=$(echo "$API_CALL_RESPONSE" | jq -r '.[0].id')
+    if [ -z "$APISIX_CLIENT_UUID" ] || [ "$APISIX_CLIENT_UUID" == "null" ]; then
+        echo "Error: APISIX client not found in realm '${TARGET_REALM_NAME}'"
+        cd ..
+        return 1
+    fi
+    echo "Found APISIX client with UUID '${APISIX_CLIENT_UUID}'"
+    
+    # Update APISIX client secret if provided
+    if [ -n "$APISIX_CLIENT_SECRET" ]; then
+        echo "Updating APISIX client secret to use pre-generated value..."
+        
+        # Get current client configuration
+        make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients/${APISIX_CLIENT_UUID}"
+        if [ "$API_CALL_STATUS" -ne 200 ]; then
+            echo "Error: Failed to get APISIX client configuration. Status: $API_CALL_STATUS"
+            cd ..
+            return 1
         fi
+        
+        # Update the client configuration with our pre-generated secret
+        local APISIX_CONFIG=$(echo "$API_CALL_RESPONSE" | jq --arg secret "$APISIX_CLIENT_SECRET" '.secret = $secret')
+        
+        # Save to temp file for the PUT request
+        echo "$APISIX_CONFIG" > /tmp/apisix-update.json
+        
+        # Update the client
+        make_api_call "PUT" "/realms/${TARGET_REALM_NAME}/clients/${APISIX_CLIENT_UUID}" "/tmp/apisix-update.json"
+        if [ "$API_CALL_STATUS" -ne 204 ]; then
+            echo "Error: Failed to update APISIX client secret. Status: $API_CALL_STATUS"
+            cd ..
+            return 1
+        fi
+        
+        echo "✅ Successfully updated APISIX client with pre-generated secret"
+        rm -f /tmp/apisix-update.json
     fi
     
     # Create ViolentUTF users if needed
