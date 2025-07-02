@@ -147,7 +147,7 @@ jobs:
           bandit -r . -f txt -o bandit-report.txt
 
       - name: Upload bandit SARIF
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: bandit.sarif
 
@@ -250,7 +250,7 @@ jobs:
           done
 
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-*.sarif'
 
