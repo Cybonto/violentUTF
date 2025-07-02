@@ -35,24 +35,46 @@ setup_python_venv() {
     local python_cmd="${2:-python3}"
     
     echo "🐍 Setting up Python virtual environment..."
+    echo "Using Python command: $python_cmd"
     
     # Create virtual environment if it doesn't exist
     if [ ! -d "$venv_dir" ]; then
         echo "Creating new virtual environment at $venv_dir..."
-        $python_cmd -m venv "$venv_dir"
         
-        if [ $? -ne 0 ]; then
-            echo "❌ Failed to create virtual environment"
-            echo "Trying to install venv module..."
+        # Try different methods to create virtual environment
+        if ! $python_cmd -m venv "$venv_dir" 2>/dev/null; then
+            echo "⚠️  First attempt failed, trying alternative methods..."
             
-            # Try to install python3-venv if on Ubuntu/Debian
-            if command -v apt-get &> /dev/null; then
-                echo "Installing python3-venv package..."
-                sudo apt-get update && sudo apt-get install -y python3-venv
+            # Try virtualenv if available
+            if command -v virtualenv &> /dev/null; then
+                echo "Using virtualenv command..."
+                virtualenv -p $python_cmd "$venv_dir"
+            elif $python_cmd -m pip show virtualenv &> /dev/null; then
+                echo "Using python -m virtualenv..."
+                $python_cmd -m virtualenv "$venv_dir"
+            else
+                echo "Installing virtualenv..."
+                $python_cmd -m pip install virtualenv
+                if [ $? -eq 0 ]; then
+                    $python_cmd -m virtualenv "$venv_dir"
+                else
+                    # Last resort: try to install python3-venv if on Ubuntu/Debian
+                    if command -v apt-get &> /dev/null; then
+                        echo "Installing python3-venv package..."
+                        sudo apt-get update && sudo apt-get install -y python3-venv
+                        $python_cmd -m venv "$venv_dir"
+                    else
+                        echo "❌ Failed to create virtual environment"
+                        return 1
+                    fi
+                fi
             fi
-            
-            # Retry creating venv
-            $python_cmd -m venv "$venv_dir" || return 1
+        fi
+        
+        # Verify virtual environment was created
+        if [ ! -d "$venv_dir" ] || [ ! -f "$venv_dir/bin/activate" ]; then
+            echo "❌ Virtual environment creation failed"
+            return 1
         fi
     fi
     
@@ -65,9 +87,15 @@ setup_python_venv() {
         return 1
     fi
     
-    # Upgrade pip
+    # Upgrade pip - use the python from virtual environment
     echo "Upgrading pip..."
-    python -m pip install --upgrade pip --quiet
+    if command -v python &> /dev/null; then
+        python -m pip install --upgrade pip --quiet
+    elif command -v python3 &> /dev/null; then
+        python3 -m pip install --upgrade pip --quiet
+    else
+        $python_cmd -m pip install --upgrade pip --quiet
+    fi
     
     return 0
 }
@@ -78,6 +106,17 @@ install_streamlit_dependencies() {
     
     echo "📦 Installing Streamlit and dependencies..."
     
+    # Determine which python command to use
+    local pip_cmd="python -m pip"
+    if ! command -v python &> /dev/null; then
+        if command -v python3 &> /dev/null; then
+            pip_cmd="python3 -m pip"
+        else
+            echo "❌ No Python command found in PATH"
+            return 1
+        fi
+    fi
+    
     # Check if we're in a virtual environment
     if [ -z "$VIRTUAL_ENV" ]; then
         echo "⚠️  Warning: Not in a virtual environment"
@@ -85,7 +124,7 @@ install_streamlit_dependencies() {
     
     # Install Streamlit
     echo "Installing Streamlit..."
-    python -m pip install streamlit --quiet
+    $pip_cmd install streamlit --quiet
     
     if [ $? -ne 0 ]; then
         echo "❌ Failed to install Streamlit"
@@ -95,11 +134,11 @@ install_streamlit_dependencies() {
     # Install from requirements.txt if it exists
     if [ -f "$requirements_file" ]; then
         echo "Installing dependencies from requirements.txt..."
-        python -m pip install -r "$requirements_file" --quiet
+        $pip_cmd install -r "$requirements_file" --quiet
     else
         echo "Installing common ViolentUTF dependencies..."
         # Install common dependencies for ViolentUTF
-        python -m pip install \
+        $pip_cmd install \
             streamlit-authenticator \
             streamlit-option-menu \
             pyrit \
@@ -144,13 +183,21 @@ check_and_setup_streamlit() {
         using_venv=true
     fi
     
+    # Determine which python command to use for testing
+    local test_python_cmd="python"
+    if ! command -v python &> /dev/null; then
+        if command -v python3 &> /dev/null; then
+            test_python_cmd="python3"
+        fi
+    fi
+    
     # Check if Streamlit is installed
     if command -v streamlit &> /dev/null; then
         local streamlit_version=$(streamlit --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
         echo "✅ Streamlit is already installed (version $streamlit_version)"
         
         # Verify it works
-        if python -c "import streamlit" 2>/dev/null; then
+        if $test_python_cmd -c "import streamlit" 2>/dev/null; then
             echo "✅ Streamlit import test passed"
             cd .. || true
             return 0
@@ -189,8 +236,16 @@ check_and_setup_streamlit() {
         return 1
     fi
     
+    # Final verification - determine which python to use
+    local verify_python_cmd="python"
+    if ! command -v python &> /dev/null; then
+        if command -v python3 &> /dev/null; then
+            verify_python_cmd="python3"
+        fi
+    fi
+    
     # Final verification
-    if command -v streamlit &> /dev/null && python -c "import streamlit" 2>/dev/null; then
+    if command -v streamlit &> /dev/null && $verify_python_cmd -c "import streamlit" 2>/dev/null; then
         echo "✅ Streamlit setup completed successfully"
         cd .. || true
         return 0
