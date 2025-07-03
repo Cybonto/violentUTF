@@ -294,7 +294,7 @@ echo "======================================"
 
 # Extract hostname from BASE_URL
 GSAI_HOST=$(echo "${OPENAPI_1_BASE_URL}" | sed -E 's|https?://([^/]+).*|\1|')
-echo "GSAi host: $GSAI_HOST"
+echo "GSAi host: [REDACTED_HOST]"
 
 # First check if route 3001 exists
 echo "Checking if route 3001 exists..."
@@ -345,7 +345,7 @@ EOF
 
 # Show redacted configuration for debugging
 echo "Route configuration (redacted):"
-echo "$route_config" | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g' | sed 's/\\$/$/g' | jq -c . 2>/dev/null || echo "[Route config created but JSON display failed]"
+echo "$route_config" | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g' | sed -E 's/("nodes": \{[^}]*"[^"]*:443": 1\})/nodes": {"[REDACTED_HOST]:443": 1}/g' | sed 's/\\$/$/g' | jq -c . 2>/dev/null || echo "[Route config created but JSON display failed]"
 
 # Update the route
 response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/3001" \
@@ -357,7 +357,9 @@ if echo "$response" | grep -q '"id":"3001"'; then
     print_status 0 "Updated route 3001 with authentication"
 else
     print_status 1 "Failed to update route 3001"
-    echo "Response: $response" | jq . 2>/dev/null || echo "$response"
+    # Redact any sensitive data from route response
+    redacted_route_response=$(echo "$response" | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g')
+    echo "Response: $redacted_route_response" | jq . 2>/dev/null || echo "$redacted_route_response"
 fi
 
 echo
@@ -452,7 +454,9 @@ if echo "$auth_response" | jq -e '.access_token' >/dev/null 2>&1; then
         -H "Authorization: Bearer ${JWT_TOKEN}" 2>/dev/null || echo '{"error": "Failed"}')
 else
     print_status 1 "Authentication failed"
-    echo "Auth response: $auth_response" | jq . 2>/dev/null || echo "$auth_response"
+    # Redact any tokens in the response
+    redacted_auth_response=$(echo "$auth_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g' | sed -E 's/"refresh_token":"[^"]+"/refresh_token":"[REDACTED]"/g')
+    echo "Auth response: $redacted_auth_response" | jq . 2>/dev/null || echo "$redacted_auth_response"
     
     # Debug: Check if Keycloak is accessible
     echo
@@ -461,6 +465,231 @@ else
     keycloak_health=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/realms/ViolentUTF/.well-known/openid-configuration" 2>/dev/null || echo "000")
     if [ "$keycloak_health" = "200" ]; then
         echo "✅ Keycloak is accessible"
+        
+        # Test if we can authenticate directly with Keycloak (bypassing ViolentUTF)
+        echo "Testing direct Keycloak authentication..."
+        keycloak_auth_response=$(curl -s -X POST "http://localhost:8080/realms/ViolentUTF/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=password&username=violentutf.web&password=${USER_PASSWORD}&client_id=violentutf&client_secret=${VIOLENTUTF_CLIENT_SECRET:-}" 2>/dev/null || echo '{"error": "Failed"}')
+        
+        if echo "$keycloak_auth_response" | jq -e '.access_token' >/dev/null 2>&1; then
+            echo "✅ Direct Keycloak authentication works!"
+            echo "   This means the password in .env DOES match Keycloak"
+            echo
+            echo "🔍 INVESTIGATING 7 POSSIBLE AUTHENTICATION ISSUES:"
+            echo "=================================================="
+            
+            # Try using the Keycloak token directly
+            KEYCLOAK_JWT=$(echo "$keycloak_auth_response" | jq -r '.access_token')
+            echo "Testing provider discovery with direct Keycloak JWT..."
+            providers_response_keycloak=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
+                -H "Authorization: Bearer ${KEYCLOAK_JWT}" 2>/dev/null || echo '{"error": "Failed"}')
+            
+            if echo "$providers_response_keycloak" | jq -e '.[0]' >/dev/null 2>&1; then
+                provider_count=$(echo "$providers_response_keycloak" | jq '. | length' 2>/dev/null || echo "0")
+                echo "✅ Provider discovery works with direct Keycloak JWT! Found $provider_count provider(s)"
+                echo "   CONFIRMED: Issue #2 - ViolentUTF FastAPI authentication layer problem"
+            else
+                echo "❌ Provider discovery still fails even with direct Keycloak JWT"
+                echo "   This suggests Issue #4 (network) or #6 (JWT validation) problems"
+            fi
+            
+            echo
+            echo "1️⃣  Testing Client Secret Mismatch..."
+            # Test with FastAPI client credentials
+            echo "Checking FastAPI client configuration..."
+            if [ -n "${FASTAPI_CLIENT_SECRET:-}" ] && [ -n "${FASTAPI_CLIENT_ID:-}" ]; then
+                echo "Found FastAPI client config: ID=${FASTAPI_CLIENT_ID}, Secret=[REDACTED-${#FASTAPI_CLIENT_SECRET}]"
+                
+                fastapi_auth_response=$(curl -s -X POST "http://localhost:8080/realms/ViolentUTF/protocol/openid-connect/token" \
+                    -H "Content-Type: application/x-www-form-urlencoded" \
+                    -d "grant_type=password&username=violentutf.web&password=${USER_PASSWORD}&client_id=${FASTAPI_CLIENT_ID}&client_secret=${FASTAPI_CLIENT_SECRET}" 2>/dev/null || echo '{"error": "Failed"}')
+                
+                if echo "$fastapi_auth_response" | jq -e '.access_token' >/dev/null 2>&1; then
+                    echo "✅ FastAPI client credentials work with Keycloak"
+                    echo "   Issue #1 (client secret mismatch) is NOT the problem"
+                    
+                    # Test if ViolentUTF auth endpoint accepts these credentials
+                    echo "Testing ViolentUTF auth with FastAPI client credentials..."
+                    vutf_fastapi_auth=$(curl -s -X POST "http://localhost:9080/api/v1/auth/token" \
+                        -H "Content-Type: application/x-www-form-urlencoded" \
+                        -d "grant_type=password&username=violentutf.web&password=${USER_PASSWORD}" 2>/dev/null || echo '{"error": "Failed"}')
+                    
+                    if echo "$vutf_fastapi_auth" | jq -e '.access_token' >/dev/null 2>&1; then
+                        echo "✅ ViolentUTF auth works - this is unexpected!"
+                    else
+                        echo "❌ ViolentUTF auth still fails even though Keycloak works"
+                        echo "   CONFIRMED: Issue #2 - ViolentUTF FastAPI authentication layer problem"
+                    fi
+                else
+                    echo "❌ FastAPI client credentials fail with Keycloak"
+                    echo "   CONFIRMED: Issue #1 - Client secret mismatch"
+                    echo "   FastAPI is configured with wrong client credentials"
+                fi
+            else
+                echo "❌ FastAPI client credentials not found in environment"
+                echo "   CONFIRMED: Issue #3 - Configuration mismatch"
+            fi
+            
+            echo
+            echo "3️⃣  Testing Configuration Mismatches..."
+            echo "Checking Keycloak URL configurations..."
+            echo "   Streamlit config: KEYCLOAK_URL=http://localhost:8080/"
+            echo "   FastAPI config: KEYCLOAK_URL=http://keycloak:8080"
+            echo "   Different URLs detected - this could be Issue #3"
+            
+            echo
+            echo "4️⃣  Testing Network/Container Issues..."
+            echo "Testing if FastAPI container can reach Keycloak..."
+            keycloak_from_container=$(docker exec violentutf_api sh -c "curl -s -o /dev/null -w '%{http_code}' http://keycloak:8080/realms/ViolentUTF/.well-known/openid-configuration" 2>/dev/null || echo "000")
+            if [ "$keycloak_from_container" = "200" ]; then
+                echo "✅ FastAPI container can reach Keycloak at http://keycloak:8080"
+                echo "   Issue #4 (network) is NOT the problem"
+            else
+                echo "❌ FastAPI container CANNOT reach Keycloak (HTTP $keycloak_from_container)"
+                echo "   CONFIRMED: Issue #4 - Network/container connectivity problem"
+            fi
+            
+            echo
+            echo "5️⃣  Testing Client Configuration in Keycloak..."
+            if echo "$admin_token_response" | jq -e '.access_token' >/dev/null 2>&1; then
+                admin_token=$(echo "$admin_token_response" | jq -r '.access_token')
+                
+                # Check violentutf client
+                vutf_client_check=$(curl -s "http://localhost:8080/admin/realms/ViolentUTF/clients?clientId=violentutf" \
+                    -H "Authorization: Bearer ${admin_token}" 2>/dev/null || echo '[]')
+                vutf_client_count=$(echo "$vutf_client_check" | jq '. | length' 2>/dev/null || echo "0")
+                
+                if [ "$vutf_client_count" -gt 0 ]; then
+                    vutf_enabled=$(echo "$vutf_client_check" | jq -r '.[0].enabled' 2>/dev/null || echo "unknown")
+                    echo "✅ 'violentutf' client exists in Keycloak (enabled: $vutf_enabled)"
+                else
+                    echo "❌ 'violentutf' client does NOT exist in Keycloak"
+                    echo "   CONFIRMED: Issue #5 - Client configuration missing"
+                fi
+                
+                # Check fastapi client if it exists
+                if [ -n "${FASTAPI_CLIENT_ID:-}" ]; then
+                    fastapi_client_check=$(curl -s "http://localhost:8080/admin/realms/ViolentUTF/clients?clientId=${FASTAPI_CLIENT_ID}" \
+                        -H "Authorization: Bearer ${admin_token}" 2>/dev/null || echo '[]')
+                    fastapi_client_count=$(echo "$fastapi_client_check" | jq '. | length' 2>/dev/null || echo "0")
+                    
+                    if [ "$fastapi_client_count" -gt 0 ]; then
+                        fastapi_enabled=$(echo "$fastapi_client_check" | jq -r '.[0].enabled' 2>/dev/null || echo "unknown")
+                        echo "✅ '${FASTAPI_CLIENT_ID}' client exists in Keycloak (enabled: $fastapi_enabled)"
+                    else
+                        echo "❌ '${FASTAPI_CLIENT_ID}' client does NOT exist in Keycloak"
+                        echo "   CONFIRMED: Issue #5 - FastAPI client configuration missing"
+                    fi
+                fi
+            fi
+            
+            echo
+            echo "6️⃣  Testing JWT/Token Validation Issues..."
+            echo "Checking if FastAPI accepts the Keycloak JWT..."
+            # Test if FastAPI validates our Keycloak JWT correctly
+            jwt_test_response=$(curl -s "http://localhost:9080/api/v1/config" \
+                -H "Authorization: Bearer ${KEYCLOAK_JWT}" 2>/dev/null || echo '{"error": "Failed"}')
+            
+            if echo "$jwt_test_response" | grep -q '"error"'; then
+                echo "❌ FastAPI rejects valid Keycloak JWT"
+                echo "   CONFIRMED: Issue #6 - JWT validation problem"
+                echo "   FastAPI might be using different public keys or validation settings"
+                # Redact any sensitive data from JWT test response
+                redacted_jwt_response=$(echo "$jwt_test_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g' | sed -E 's/"refresh_token":"[^"]+"/refresh_token":"[REDACTED]"/g')
+                echo "   Response: $redacted_jwt_response" | head -100
+            else
+                echo "✅ FastAPI accepts Keycloak JWT"
+                echo "   Issue #6 (JWT validation) is NOT the problem"
+            fi
+            
+            echo
+            echo "7️⃣  Testing Environment Variable Loading..."
+            echo "Checking environment variables in FastAPI container..."
+            container_keycloak_url=$(docker exec violentutf_api printenv KEYCLOAK_URL 2>/dev/null || echo "NOT SET")
+            container_client_id=$(docker exec violentutf_api printenv KEYCLOAK_CLIENT_ID 2>/dev/null || echo "NOT SET")
+            container_client_secret=$(docker exec violentutf_api printenv KEYCLOAK_CLIENT_SECRET 2>/dev/null || echo "NOT SET")
+            
+            echo "   Container KEYCLOAK_URL: $container_keycloak_url"
+            echo "   Container KEYCLOAK_CLIENT_ID: $container_client_id"
+            if [ "$container_client_secret" != "NOT SET" ]; then
+                echo "   Container KEYCLOAK_CLIENT_SECRET: [REDACTED-${#container_client_secret}]"
+            else
+                echo "   Container KEYCLOAK_CLIENT_SECRET: NOT SET"
+            fi
+            
+            if [ "$container_keycloak_url" = "NOT SET" ] || [ "$container_client_id" = "NOT SET" ] || [ "$container_client_secret" = "NOT SET" ]; then
+                echo "❌ CONFIRMED: Issue #7 - Environment variables not loaded correctly"
+            else
+                echo "✅ Environment variables are loaded in container"
+                
+                # Test auth from within container using container's environment
+                echo "Testing Keycloak auth from within FastAPI container..."
+                container_auth_test=$(docker exec violentutf_api sh -c "curl -s -X POST 'http://keycloak:8080/realms/ViolentUTF/protocol/openid-connect/token' -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password&username=violentutf.web&password=${USER_PASSWORD}&client_id=${container_client_id}&client_secret=${container_client_secret}'" 2>/dev/null || echo '{"error": "Failed"}')
+                
+                if echo "$container_auth_test" | grep -q "access_token"; then
+                    echo "✅ Keycloak auth works from within container"
+                    echo "   Issue #7 (env loading) is NOT the problem"
+                else
+                    echo "❌ Keycloak auth fails from within container"
+                    echo "   Possible Issue #4 (network) or #6 (JWT validation)"
+                    # Redact any tokens from container auth response
+                    redacted_container_auth=$(echo "$container_auth_test" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g' | sed -E 's/"refresh_token":"[^"]+"/refresh_token":"[REDACTED]"/g')
+                    echo "   Response: $redacted_container_auth" | head -100
+                fi
+            fi
+            
+            echo
+            echo "🎯 ROOT CAUSE ANALYSIS COMPLETE"
+            echo "================================"
+            echo "Based on the tests above, look for 'CONFIRMED:' messages to identify the exact issue."
+            echo "The most common issues in order of likelihood:"
+            echo "1. Issue #3: Configuration mismatch (different URLs/clients between Streamlit and FastAPI)"
+            echo "2. Issue #5: Missing client configuration in Keycloak"
+            echo "3. Issue #7: Environment variables not loaded correctly in containers"
+            echo "4. Issue #4: Network connectivity between containers"
+        else
+            echo "❌ Direct Keycloak authentication failed"
+            echo "   This means the password in .env does NOT match Keycloak"
+            # Redact sensitive data from response
+            redacted_response=$(echo "$keycloak_auth_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g' | sed -E 's/"refresh_token":"[^"]+"/refresh_token":"[REDACTED]"/g')
+            echo "   Response: $redacted_response" | jq . 2>/dev/null || echo "$redacted_response"
+            
+            # Check what client secret is being used
+            if [ -n "${VIOLENTUTF_CLIENT_SECRET:-}" ]; then
+                echo "   Using client secret: [REDACTED - ${#VIOLENTUTF_CLIENT_SECRET} chars]"
+            else
+                echo "   No client secret found in environment"
+            fi
+            
+            # Check if user exists in Keycloak
+            echo
+            echo "Checking if violentutf.web user exists in Keycloak..."
+            # Get admin token first
+            admin_token_response=$(curl -s -X POST "http://localhost:8080/realms/master/protocol/openid-connect/token" \
+                -H "Content-Type: application/x-www-form-urlencoded" \
+                -d "username=admin&password=admin&grant_type=password&client_id=admin-cli" 2>/dev/null || echo '{"error": "Failed"}')
+            
+            if echo "$admin_token_response" | jq -e '.access_token' >/dev/null 2>&1; then
+                admin_token=$(echo "$admin_token_response" | jq -r '.access_token')
+                
+                # Check if user exists
+                user_check=$(curl -s "http://localhost:8080/admin/realms/ViolentUTF/users?username=violentutf.web" \
+                    -H "Authorization: Bearer ${admin_token}" 2>/dev/null || echo '[]')
+                
+                user_count=$(echo "$user_check" | jq '. | length' 2>/dev/null || echo "0")
+                if [ "$user_count" -gt 0 ]; then
+                    echo "✅ violentutf.web user exists in Keycloak"
+                    user_enabled=$(echo "$user_check" | jq -r '.[0].enabled' 2>/dev/null || echo "unknown")
+                    echo "   User enabled: $user_enabled"
+                else
+                    echo "❌ violentutf.web user does NOT exist in Keycloak"
+                    echo "   This is the root cause - user needs to be created"
+                fi
+            else
+                echo "❌ Could not get Keycloak admin token to check user"
+            fi
+        fi
     else
         echo "❌ Keycloak is not accessible (HTTP $keycloak_health)"
         echo "   Please ensure Keycloak is running: cd keycloak && docker compose ps"
@@ -479,7 +708,9 @@ else
     
     if echo "$api_test_response" | grep -q '"error"'; then
         echo "❌ API key is invalid for protected endpoints"
-        echo "Response: $api_test_response" | jq . 2>/dev/null || echo "$api_test_response"
+        # Redact any sensitive data from API response
+        redacted_api_response=$(echo "$api_test_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g' | sed -E 's/"api_key":"[^"]+"/api_key":"[REDACTED]"/g')
+        echo "Response: $redacted_api_response" | jq . 2>/dev/null || echo "$redacted_api_response"
         
         # Try to find the correct API key
         echo
@@ -518,14 +749,24 @@ else
         -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
 fi
 
+# Check if we got providers from either method
 if echo "$providers_response" | jq -e '.[0]' >/dev/null 2>&1; then
     provider_count=$(echo "$providers_response" | jq '. | length' 2>/dev/null || echo "0")
     print_status 0 "Provider discovery working - found $provider_count provider(s)"
     echo "Providers:"
     echo "$providers_response" | jq -r '.[] | "  - \(.id): \(.name)"' 2>/dev/null || echo "  Failed to parse"
+elif [ -n "${providers_response_keycloak:-}" ] && echo "$providers_response_keycloak" | jq -e '.[0]' >/dev/null 2>&1; then
+    provider_count=$(echo "$providers_response_keycloak" | jq '. | length' 2>/dev/null || echo "0")
+    print_status 0 "Provider discovery working with direct Keycloak JWT - found $provider_count provider(s)"
+    echo "Providers:"
+    echo "$providers_response_keycloak" | jq -r '.[] | "  - \(.id): \(.name)"' 2>/dev/null || echo "  Failed to parse"
+    # Use the successful response for further testing
+    providers_response="$providers_response_keycloak"
 else
     print_status 1 "Provider discovery not working"
-    echo "Response: $providers_response" | head -100
+    # Redact any sensitive data from providers response
+    redacted_providers_response=$(echo "$providers_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g' | sed -E 's/"api_key":"[^"]+"/api_key":"[REDACTED]"/g')
+    echo "Response: $redacted_providers_response" | head -100
     
     # Additional debugging
     echo
@@ -598,7 +839,9 @@ if echo "$response" | grep -q '"id":"3002"'; then
     print_status 0 "Created GSAi provider discovery route"
 else
     print_status 1 "Failed to create provider discovery route"
-    echo "Response: $response" | jq . 2>/dev/null || echo "$response"
+    # Redact any sensitive data from provider route response
+    redacted_provider_response=$(echo "$response" | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g')
+    echo "Response: $redacted_provider_response" | jq . 2>/dev/null || echo "$redacted_provider_response"
 fi
 
 echo
@@ -652,10 +895,13 @@ echo "==========================="
 if [ "${provider_count:-0}" -gt 0 ]; then
     echo "Testing model discovery for openapi-${OPENAPI_1_ID}..."
     
-    # Use JWT token if available, otherwise use API key
+    # Use JWT token if available (either ViolentUTF or direct Keycloak), otherwise use API key
     if [ -n "${JWT_TOKEN:-}" ]; then
         models_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/models?provider=openapi-${OPENAPI_1_ID}" \
             -H "Authorization: Bearer ${JWT_TOKEN}" 2>/dev/null || echo '{"error": "Failed"}')
+    elif [ -n "${KEYCLOAK_JWT:-}" ]; then
+        models_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/models?provider=openapi-${OPENAPI_1_ID}" \
+            -H "Authorization: Bearer ${KEYCLOAK_JWT}" 2>/dev/null || echo '{"error": "Failed"}')
     else
         models_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/models?provider=openapi-${OPENAPI_1_ID}" \
             -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
@@ -668,7 +914,9 @@ if [ "${provider_count:-0}" -gt 0 ]; then
         echo "$models_response" | jq -r '.[:3][]' 2>/dev/null | head -5
     else
         print_status 1 "Model discovery failed"
-        echo "Response: $models_response" | head -100
+        # Redact any sensitive data from models response
+        redacted_models_response=$(echo "$models_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g' | sed -E 's/"api_key":"[^"]+"/api_key":"[REDACTED]"/g')
+        echo "Response: $redacted_models_response" | head -100
     fi
 else
     echo "Skipping model discovery test (no providers found)"
@@ -693,8 +941,9 @@ else
     echo "❌ GSAi provider discovery is not working due to authentication issues"
     echo
     echo "Authentication Issues Detected:"
-    echo "- Password authentication with Keycloak is failing"
-    echo "- API key authentication is also failing for provider endpoints"
+    echo "- The ViolentUTF /api/v1/auth/token endpoint is failing"
+    echo "- OpenAPI provider discovery requires JWT authentication (not API key)"
+    echo "- Run the script again to see if password/Keycloak auth works directly"
     echo
     echo "Possible Solutions:"
     echo "1. Reset the violentutf.web user password in Keycloak:"
@@ -744,4 +993,4 @@ echo
 echo "To manually test GSAi integration:"
 echo "1. Get a valid JWT token or API key that works"
 echo "2. Test provider discovery: curl -H 'X-API-Key: [YOUR_KEY]' http://localhost:9080/api/v1/generators/apisix/openapi-providers"
-echo "3. Test GSAi directly: curl -H 'Authorization: Bearer ${OPENAPI_1_AUTH_TOKEN}' https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/chat/completions"
+echo "3. Test GSAi directly: curl -H 'Authorization: Bearer [YOUR_GSAI_TOKEN]' https://[GSAI_HOST]/api/v1/chat/completions"
