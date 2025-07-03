@@ -100,6 +100,11 @@ if echo "$routes_check" | jq -e '.list[] | select(.key == "/apisix/routes/9002")
     route_9002_methods=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.methods[]')
     echo "   URI: $route_9002_uri"
     echo "   Methods: $route_9002_methods"
+    
+    # Show full route config for debugging
+    echo "   Route 9002 configuration:"
+    route_9002_config=$(echo "$routes_check" | jq '.list[] | select(.key == "/apisix/routes/9002") | .value')
+    echo "$route_9002_config" | jq '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g'
 else
     echo "❌ Route 9002 (models) missing"
 fi
