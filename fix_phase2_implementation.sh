@@ -279,8 +279,29 @@ fi
 echo
 echo "Testing provider discovery..."
 provider_count=0
-providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
-    -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+
+# First, let's try to get a valid JWT token using the service account
+echo "Getting authentication token..."
+auth_response=$(curl -s -X POST "http://localhost:9080/api/v1/auth/login" \
+    -H "Content-Type: application/json" \
+    -d '{"username": "violentutf.web", "password": "violentutf.web"}' 2>/dev/null || echo '{"error": "Failed"}')
+
+if echo "$auth_response" | jq -e '.access_token' >/dev/null 2>&1; then
+    JWT_TOKEN=$(echo "$auth_response" | jq -r '.access_token')
+    print_status 0 "Successfully authenticated"
+    
+    # Use JWT token for provider discovery
+    providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
+        -H "Authorization: Bearer ${JWT_TOKEN}" 2>/dev/null || echo '{"error": "Failed"}')
+else
+    print_status 1 "Authentication failed"
+    echo "Auth response: $auth_response"
+    
+    # Try with API key as fallback
+    echo "Trying with API key..."
+    providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
+        -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+fi
 
 if echo "$providers_response" | jq -e '.[0]' >/dev/null 2>&1; then
     provider_count=$(echo "$providers_response" | jq '. | length' 2>/dev/null || echo "0")
@@ -308,8 +329,15 @@ echo "==========================="
 
 if [ "${provider_count:-0}" -gt 0 ]; then
     echo "Testing model discovery for openapi-${OPENAPI_1_ID}..."
-    models_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/models?provider=openapi-${OPENAPI_1_ID}" \
-        -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+    
+    # Use JWT token if available, otherwise use API key
+    if [ -n "${JWT_TOKEN:-}" ]; then
+        models_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/models?provider=openapi-${OPENAPI_1_ID}" \
+            -H "Authorization: Bearer ${JWT_TOKEN}" 2>/dev/null || echo '{"error": "Failed"}')
+    else
+        models_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/models?provider=openapi-${OPENAPI_1_ID}" \
+            -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+    fi
 
     if echo "$models_response" | jq -e '.[0]' >/dev/null 2>&1; then
         model_count=$(echo "$models_response" | jq '. | length' 2>/dev/null || echo "0")
