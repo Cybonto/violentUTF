@@ -81,10 +81,36 @@ else
 fi
 
 echo
+echo "Step 2: Verify routes exist"
+echo "=========================="
+
+# Check if routes 9001 and 9002 exist
+routes_check=$(curl -s "http://localhost:9180/apisix/admin/routes" \
+    -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+
+if echo "$routes_check" | jq -e '.list[] | select(.key == "/apisix/routes/9001")' >/dev/null 2>&1; then
+    echo "✅ Route 9001 (chat completions) exists"
+else
+    echo "❌ Route 9001 (chat completions) missing"
+fi
+
+if echo "$routes_check" | jq -e '.list[] | select(.key == "/apisix/routes/9002")' >/dev/null 2>&1; then
+    echo "✅ Route 9002 (models) exists"
+    route_9002_uri=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.uri')
+    route_9002_methods=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.methods[]')
+    echo "   URI: $route_9002_uri"
+    echo "   Methods: $route_9002_methods"
+else
+    echo "❌ Route 9002 (models) missing"
+fi
+
+echo
 echo "Step 3: Test GSAi endpoints with registered API key"
 echo "=================================================="
 
 echo "Testing models endpoint..."
+echo "URL: http://localhost:9080/ai/gsai/models"
+echo "Headers: X-API-Key: [REDACTED]"
 models_test=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H "X-API-Key: ${VIOLENTUTF_API_KEY}" \
     "http://localhost:9080/ai/gsai/models" 2>/dev/null)
