@@ -104,7 +104,7 @@ if echo "$routes_check" | jq -e '.list[] | select(.key == "/apisix/routes/9002")
     # Show full route config for debugging
     echo "   Route 9002 configuration:"
     route_9002_config=$(echo "$routes_check" | jq '.list[] | select(.key == "/apisix/routes/9002") | .value')
-    echo "$route_9002_config" | jq '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g'
+    echo "$route_9002_config" | jq '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/\"Authorization\": \"Bearer [REDACTED]\"/g'
     
     # Show upstream config too
     echo "   Route 9002 upstream:"
