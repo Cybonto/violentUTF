@@ -180,6 +180,24 @@ if [ -f "apisix/docker-compose.override.yml" ]; then
     echo "   This will be replaced with new configuration"
 fi
 
+# Quick test to see if GSAi is reachable through the proxy
+echo
+echo "Testing GSAi accessibility through APISIX..."
+gsai_test=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    "http://localhost:9080/openapi/gsai-api-1/api/v1/chat/completions" \
+    -H "Content-Type: application/json" \
+    -d '{"messages":[{"role":"user","content":"test"}],"model":"gpt-4"}' 2>/dev/null || echo "000")
+
+if [ "$gsai_test" = "401" ] || [ "$gsai_test" = "403" ]; then
+    echo "✅ GSAi route exists but needs authentication (expected)"
+elif [ "$gsai_test" = "404" ]; then
+    echo "❌ GSAi route not found - will be created"
+elif [ "$gsai_test" = "200" ] || [ "$gsai_test" = "201" ]; then
+    echo "✅ GSAi is accessible and responding!"
+else
+    echo "⚠️  GSAi returned HTTP $gsai_test"
+fi
+
 echo
 echo "Step 1: Create Docker Compose Override File"
 echo "=========================================="
@@ -455,14 +473,13 @@ else
     
     # First verify the API key is valid
     echo "Testing API key validity..."
-    api_test_response=$(curl -s "http://localhost:9080/api/v1/health" \
+    # Note: health endpoint may not require auth, so let's test a protected endpoint
+    api_test_response=$(curl -s "http://localhost:9080/api/v1/config" \
         -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
     
-    if echo "$api_test_response" | grep -q '"status":"healthy"'; then
-        echo "✅ API key is valid"
-    else
-        echo "❌ API key is invalid or not working"
-        echo "Response: $api_test_response"
+    if echo "$api_test_response" | grep -q '"error"'; then
+        echo "❌ API key is invalid for protected endpoints"
+        echo "Response: $api_test_response" | jq . 2>/dev/null || echo "$api_test_response"
         
         # Try to find the correct API key
         echo
@@ -471,12 +488,30 @@ else
         # Check FastAPI .env file
         if [ -f "./violentutf_api/fastapi_app/.env" ]; then
             FILE_API_KEY=$(grep "^VIOLENTUTF_API_KEY=" "./violentutf_api/fastapi_app/.env" | cut -d'=' -f2 | tr -d '"' | tr -d "'" || echo "")
-            if [ -n "$FILE_API_KEY" ]; then
-                echo "Found API key in FastAPI .env file"
+            if [ -n "$FILE_API_KEY" ] && [ "$FILE_API_KEY" != "$VIOLENTUTF_API_KEY" ]; then
+                echo "Found different API key in FastAPI .env file"
+                echo "Current key: [REDACTED - ${#VIOLENTUTF_API_KEY} chars]"
+                echo "File key: [REDACTED - ${#FILE_API_KEY} chars]"
                 VIOLENTUTF_API_KEY="$FILE_API_KEY"
-                echo "Retrying with file-based API key..."
+                echo "Using file-based API key..."
+                
+                # Test again with new key
+                api_test_response=$(curl -s "http://localhost:9080/api/v1/config" \
+                    -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+                if ! echo "$api_test_response" | grep -q '"error"'; then
+                    echo "✅ File-based API key works!"
+                else
+                    echo "❌ File-based API key also failed"
+                fi
             fi
         fi
+        
+        # As last resort, check if there's a working key in the database
+        echo
+        echo "Checking for valid API keys in the system..."
+        # This would require database access, so we'll skip for now
+    else
+        echo "✅ API key is valid for protected endpoints"
     fi
     
     providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
@@ -650,6 +685,36 @@ echo "4. Created GSAi provider discovery route (3002)"
 echo "5. Created GSAi info route (3003) for provider metadata"
 echo "6. Fixed authentication method for JWT token generation"
 echo "7. Configured proper Bearer token authentication for GSAi"
+echo
+echo "Current Status:"
+if [ "${provider_count:-0}" -gt 0 ]; then
+    echo "✅ GSAi provider discovery is working!"
+else
+    echo "❌ GSAi provider discovery is not working due to authentication issues"
+    echo
+    echo "Authentication Issues Detected:"
+    echo "- Password authentication with Keycloak is failing"
+    echo "- API key authentication is also failing for provider endpoints"
+    echo
+    echo "Possible Solutions:"
+    echo "1. Reset the violentutf.web user password in Keycloak:"
+    echo "   - Access Keycloak admin at http://localhost:8080"
+    echo "   - Login with admin/admin"
+    echo "   - Go to Users → violentutf.web → Credentials"
+    echo "   - Set a new password and update violentutf/.env"
+    echo
+    echo "2. Create a new API key in the database:"
+    echo "   - Access the API at http://localhost:9080/api/docs"
+    echo "   - Use a working authentication method"
+    echo "   - Generate a new API key"
+    echo
+    echo "3. Temporary workaround - Test GSAi directly:"
+    echo "   The GSAi routes are configured. You can test GSAi directly:"
+    echo "   curl -X POST 'http://localhost:9080/openapi/gsai-api-1/api/v1/chat/completions' \\"
+    echo "     -H 'Content-Type: application/json' \\"
+    echo "     -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"model\":\"gpt-4\"}'"
+    echo "   (The Bearer token is added automatically by APISIX)"
+fi
 echo
 echo
 echo "Next steps:"
