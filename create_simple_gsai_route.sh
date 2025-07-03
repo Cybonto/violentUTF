@@ -180,7 +180,7 @@ static_gsai_models_route='{
   }
 }'
 
-# Use simple approach with minimal headers to avoid the Authorization bug
+# Use jq to construct JSON properly to avoid escaping issues
 static_gsai_models_route_json=$(jq -n \
   --arg auth_token "${OPENAPI_1_AUTH_TOKEN}" \
   '{
@@ -202,16 +202,14 @@ static_gsai_models_route_json=$(jq -n \
         "header": "X-API-Key"
       },
       "proxy-rewrite": {
-        "uri": "/api/v1/models"
-      },
-      "request-transformer": {
-        "add": {
-          "headers": {
-            "Authorization": ("Bearer " + $auth_token)
-          }
-        },
-        "remove": {
-          "headers": ["Content-Type", "Content-Length"]
+        "uri": "/api/v1/models",
+        "method": "GET", 
+        "headers": {
+          "set": {
+            "Authorization": ("Bearer " + $auth_token),
+            "Content-Length": "0"
+          },
+          "remove": ["Content-Type"]
         }
       },
       "cors": {
