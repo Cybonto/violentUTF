@@ -81,6 +81,9 @@ static_gsai_route='{
     "scheme": "https",
     "nodes": {
       "api.dev.gsai.mcaas.fcs.gsa.gov:443": 1
+    },
+    "tls": {
+      "verify": false
     }
   },
   "plugins": {
@@ -145,6 +148,9 @@ static_gsai_models_route='{
     "scheme": "https",
     "nodes": {
       "api.dev.gsai.mcaas.fcs.gsa.gov:443": 1
+    },
+    "tls": {
+      "verify": false
     }
   },
   "plugins": {
@@ -158,9 +164,6 @@ static_gsai_models_route='{
           "Authorization": "Bearer '"${OPENAPI_1_AUTH_TOKEN}"'"
         }
       }
-    },
-    "proxy-ssl-verify": {
-      "upstream_ssl_verify": false
     },
     "cors": {
       "allow_origins": "*",
