@@ -43,6 +43,10 @@ setup_apisix() {
     # Wait for APISIX to be ready
     if wait_for_apisix_ready; then
         echo "✅ APISIX is ready"
+        
+        # Register API key consumer (critical for GSAi and other key-auth routes)
+        register_api_key_consumer
+        
         return 0
     else
         echo "❌ APISIX failed to become ready"
@@ -164,6 +168,78 @@ verify_apisix_config() {
         return 0
     else
         echo "❌ APISIX admin API is not accessible"
+        return 1
+    fi
+}
+
+# Function to register API key consumer
+# Critical for GSAi and other routes using key-auth plugin
+register_api_key_consumer() {
+    echo "🔑 Registering API key consumer for APISIX..."
+    
+    # Load APISIX admin key
+    if [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    # Load ViolentUTF API key
+    local violentutf_api_key=""
+    if [ -f "violentutf_api/fastapi_app/.env" ]; then
+        source "violentutf_api/fastapi_app/.env"
+        violentutf_api_key="$VIOLENTUTF_API_KEY"
+    fi
+    
+    # Try to get from container if not found in env files
+    if [ -z "$violentutf_api_key" ]; then
+        violentutf_api_key=$(docker exec violentutf_api printenv VIOLENTUTF_API_KEY 2>/dev/null || echo "")
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ] || [ -z "$violentutf_api_key" ]; then
+        echo "⚠️  Cannot register API key consumer - missing keys"
+        echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:+SET}"
+        echo "   VIOLENTUTF_API_KEY: ${violentutf_api_key:+SET}"
+        return 1
+    fi
+    
+    local admin_key="$APISIX_ADMIN_KEY"
+    local apisix_admin_url="http://localhost:9180"
+    local consumer_name="violentutf_api_user"
+    
+    # Check if consumer already exists
+    local consumer_check=$(curl -s "${apisix_admin_url}/apisix/admin/consumers/${consumer_name}" \
+        -H "X-API-KEY: ${admin_key}" 2>/dev/null || echo '{"error": "not found"}')
+    
+    if echo "$consumer_check" | grep -q "\"username\":\"${consumer_name}\""; then
+        echo "✅ API key consumer '${consumer_name}' already exists"
+        return 0
+    fi
+    
+    # Create consumer with API key using jq for proper JSON construction
+    local consumer_config=$(jq -n \
+      --arg api_key "${violentutf_api_key}" \
+      --arg username "${consumer_name}" \
+      '{
+        "username": $username,
+        "plugins": {
+          "key-auth": {
+            "key": $api_key
+          }
+        }
+      }')
+    
+    # Register the consumer
+    local consumer_response=$(curl -s -X PUT "${apisix_admin_url}/apisix/admin/consumers/${consumer_name}" \
+        -H "X-API-KEY: ${admin_key}" \
+        -H "Content-Type: application/json" \
+        -d "$consumer_config" 2>/dev/null || echo '{"error": "Failed"}')
+    
+    if echo "$consumer_response" | grep -q "\"username\":\"${consumer_name}\""; then
+        echo "✅ Created API key consumer '${consumer_name}' successfully"
+        echo "   This enables X-API-Key authentication for GSAi and other routes"
+        return 0
+    else
+        echo "❌ Failed to create API key consumer"
+        echo "Response: $consumer_response" | jq . 2>/dev/null || echo "$consumer_response"
         return 1
     fi
 }

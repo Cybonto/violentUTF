@@ -15,7 +15,154 @@ configure_openapi_routes() {
     return 0
 }
 
-# Function to setup OpenAPI provider routes
+# Function to create GSAi static routes (chat + models) 
+# Based on learnings from Environment B troubleshooting
+create_gsai_static_routes() {
+    local auth_token="$1"
+    local provider_num="$2"
+    
+    echo "🔧 Creating GSAi static routes with ai-proxy plugin..."
+    
+    # Load APISIX configuration
+    if [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not set"
+        return 1
+    fi
+    local admin_key="$APISIX_ADMIN_KEY"
+    local apisix_admin_url="http://localhost:9180"
+    
+    # Clean up any existing GSAi routes (9001, 9002, 9003)
+    for route_id in 9001 9002 9003; do
+        curl -s -X DELETE "${apisix_admin_url}/apisix/admin/routes/${route_id}" \
+            -H "X-API-KEY: ${admin_key}" >/dev/null 2>&1
+    done
+    
+    # Create chat completions route (9001) - WORKING configuration
+    local chat_route_json=$(jq -n \
+      --arg auth_token "${auth_token}" \
+      '{
+        "id": "9001",
+        "uri": "/ai/gsai/chat/completions",
+        "name": "gsai-static-chat-completions",
+        "methods": ["POST"],
+        "upstream": {
+          "type": "roundrobin",
+          "scheme": "https",
+          "nodes": {
+            "api.dev.gsai.mcaas.fcs.gsa.gov:443": 1
+          },
+          "pass_host": "pass",
+          "upstream_host": "api.dev.gsai.mcaas.fcs.gsa.gov"
+        },
+        "plugins": {
+          "key-auth": {
+            "header": "X-API-Key"
+          },
+          "ai-proxy": {
+            "provider": "openai-compatible",
+            "auth": {
+              "header": {
+                "Authorization": ("Bearer " + $auth_token)
+              }
+            },
+            "override": {
+              "endpoint": "https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/chat/completions"
+            },
+            "options": {
+              "model": "claude_3_5_sonnet"
+            },
+            "ssl_verify": false
+          },
+          "cors": {
+            "allow_origins": "*",
+            "allow_methods": "*",
+            "allow_headers": "*",
+            "expose_headers": "*",
+            "max_age": 3600,
+            "allow_credentials": true
+          }
+        }
+      }')
+    
+    # Create chat completions route
+    local chat_response=$(curl -s -X PUT "${apisix_admin_url}/apisix/admin/routes/9001" \
+        -H "X-API-KEY: ${admin_key}" \
+        -H "Content-Type: application/json" \
+        -d "$chat_route_json" 2>/dev/null || echo '{"error": "Failed"}')
+    
+    if ! echo "$chat_response" | grep -q '"id":"9001"'; then
+        echo "❌ Failed to create GSAi chat completions route"
+        return 1
+    fi
+    
+    # Create models route (9002) - ai-proxy approach for consistency
+    local models_route_json=$(jq -n \
+      --arg auth_token "${auth_token}" \
+      '{
+        "id": "9002",
+        "uri": "/ai/gsai/models",
+        "name": "gsai-static-models",
+        "methods": ["GET"],
+        "upstream": {
+          "type": "roundrobin",
+          "scheme": "https",
+          "nodes": {
+            "api.dev.gsai.mcaas.fcs.gsa.gov:443": 1
+          },
+          "pass_host": "pass",
+          "upstream_host": "api.dev.gsai.mcaas.fcs.gsa.gov"
+        },
+        "plugins": {
+          "key-auth": {
+            "header": "X-API-Key"
+          },
+          "ai-proxy": {
+            "provider": "openai-compatible",
+            "auth": {
+              "header": {
+                "Authorization": ("Bearer " + $auth_token)
+              }
+            },
+            "override": {
+              "endpoint": "https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models"
+            },
+            "ssl_verify": false
+          },
+          "cors": {
+            "allow_origins": "*",
+            "allow_methods": "*",
+            "allow_headers": "*",
+            "expose_headers": "*",
+            "max_age": 3600,
+            "allow_credentials": true
+          }
+        }
+      }')
+    
+    # Create models route
+    local models_response=$(curl -s -X PUT "${apisix_admin_url}/apisix/admin/routes/9002" \
+        -H "X-API-KEY: ${admin_key}" \
+        -H "Content-Type: application/json" \
+        -d "$models_route_json" 2>/dev/null || echo '{"error": "Failed"}')
+    
+    if ! echo "$models_response" | grep -q '"id":"9002"'; then
+        echo "⚠️  Warning: Failed to create GSAi models route (non-critical)"
+        echo "Chat completions will still work"
+    fi
+    
+    echo "✅ GSAi static routes created successfully"
+    echo "   - Chat: http://localhost:9080/ai/gsai/chat/completions"
+    echo "   - Models: http://localhost:9080/ai/gsai/models"
+    echo "   - Authentication: X-API-Key (static like OpenAI/Anthropic)"
+    
+    return 0
+}
+
+# Function to setup OpenAPI provider routes (including GSAi)
 setup_openapi_routes() {
     # Create local tmp directory if it doesn't exist
     mkdir -p "./tmp"
@@ -25,9 +172,26 @@ setup_openapi_routes() {
     echo "Setting up OpenAPI provider routes..."
     echo "$(date): OPENAPI_ENABLED = '${OPENAPI_ENABLED:-<not set>}'" >> "$log_file"
     
-    if [ "$OPENAPI_ENABLED" != "true" ]; then
+    # Check if any OpenAPI providers are enabled
+    local openapi_enabled=false
+    
+    # Check for OPENAPI_ENABLED (legacy)
+    if [ "$OPENAPI_ENABLED" = "true" ]; then
+        openapi_enabled=true
+    fi
+    
+    # Check for specific OpenAPI providers (OPENAPI_1, OPENAPI_2, etc.)
+    for i in {1..5}; do
+        local enabled_var="OPENAPI_${i}_ENABLED"
+        if [ "${!enabled_var}" = "true" ]; then
+            openapi_enabled=true
+            break
+        fi
+    done
+    
+    if [ "$openapi_enabled" != "true" ]; then
         echo "OpenAPI providers disabled. Skipping setup."
-        echo "$(date): Skipping - OPENAPI_ENABLED != 'true'" >> "$log_file"
+        echo "$(date): Skipping - No OpenAPI providers enabled" >> "$log_file"
         return 0
     fi
     
@@ -89,13 +253,25 @@ setup_openapi_routes() {
         echo "Setting up OpenAPI provider: $provider_name ($provider_id)"
         echo "$(date): Processing provider $i: $provider_id" >> "$log_file"
         
-        # Create route for this OpenAPI provider
-        if create_openapi_provider_route "$provider_id" "$base_url" "$auth_type" "$auth_token" "$i"; then
-            setup_count=$((setup_count + 1))
-            echo "✅ Created route for OpenAPI provider: $provider_id"
+        # Check if this is GSAi and use specialized setup
+        if [[ "$provider_id" =~ ^gsai$ ]] || [[ "$base_url" =~ gsai\.mcaas\.fcs\.gsa\.gov ]]; then
+            echo "🔧 Detected GSAi provider - using specialized static authentication setup"
+            if create_gsai_static_routes "$auth_token" "$i"; then
+                setup_count=$((setup_count + 1))
+                echo "✅ Created GSAi static routes (chat + models)"
+            else
+                error_count=$((error_count + 1))
+                echo "❌ Failed to create GSAi routes"
+            fi
         else
-            error_count=$((error_count + 1))
-            echo "❌ Failed to create route for OpenAPI provider: $provider_id"
+            # Create route for other OpenAPI providers
+            if create_openapi_provider_route "$provider_id" "$base_url" "$auth_type" "$auth_token" "$i"; then
+                setup_count=$((setup_count + 1))
+                echo "✅ Created route for OpenAPI provider: $provider_id"
+            else
+                error_count=$((error_count + 1))
+                echo "❌ Failed to create route for OpenAPI provider: $provider_id"
+            fi
         fi
     done
     
