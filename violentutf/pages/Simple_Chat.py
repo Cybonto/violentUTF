@@ -716,7 +716,7 @@ main_col_left, main_col_right = st.columns([3, 2])
 with main_col_left:
     # Input text from user
     st.subheader("Enter your prompt:")
-    user_input = st.text_area("", key="user_input_area")
+    user_input = st.text_area("Enter your prompt", label_visibility="collapsed", key="user_input_area")
 
     # Generate Response button with tight width
     generate_response = st.button("🚀 Generate Response", type="primary")

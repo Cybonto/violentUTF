@@ -446,7 +446,7 @@ class TokenManager:
 
     def _parse_ai_routes(self, routes_data: Dict) -> Dict[str, Dict[str, str]]:
         """Parse APISIX routes response to extract AI model endpoints."""
-        endpoints = {"openai": {}, "anthropic": {}, "ollama": {}, "webui": {}, "bedrock": {}}
+        endpoints = {"openai": {}, "anthropic": {}, "ollama": {}, "webui": {}, "bedrock": {}, "gsai": {}}
 
         try:
             routes_list = routes_data.get("list", [])
@@ -459,10 +459,17 @@ class TokenManager:
 
                 # Check if this is an AI proxy route
                 if "ai-proxy" in plugins and uri.startswith("/ai/"):
-                    provider, model_info = self._extract_provider_model(route_id, uri)
-                    if provider and model_info:
-                        model_name, endpoint_path = model_info
-                        endpoints[provider][model_name] = endpoint_path
+                    # Special handling for GSAi routes which use single endpoint for all models
+                    if uri == "/ai/gsai/chat/completions" and route_id in ["9001", "gsai-static-chat-completions"]:
+                        # Add all GSAi models to the same endpoint
+                        for model in self.fallback_apisix_endpoints.get("gsai", {}).keys():
+                            endpoints["gsai"][model] = uri
+                    else:
+                        # Standard provider/model extraction
+                        provider, model_info = self._extract_provider_model(route_id, uri)
+                        if provider and model_info:
+                            model_name, endpoint_path = model_info
+                            endpoints[provider][model_name] = endpoint_path
 
         except Exception as e:
             logger.error(f"Error parsing AI routes: {e}")
@@ -482,7 +489,7 @@ class TokenManager:
                 # Map endpoint back to model name using route_id or known patterns
                 model_name = self._map_endpoint_to_model(provider, model_endpoint, route_id)
 
-                if model_name and provider in ["openai", "anthropic", "ollama", "webui", "bedrock"]:
+                if model_name and provider in ["openai", "anthropic", "ollama", "webui", "bedrock", "gsai"]:
                     return provider, (model_name, uri)
 
         except Exception as e:
