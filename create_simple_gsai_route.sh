@@ -157,13 +157,17 @@ static_gsai_models_route='{
     "key-auth": {
       "header": "X-API-Key"
     },
-    "proxy-rewrite": {
-      "uri": "/api/v1/models",
-      "headers": {
-        "set": {
+    "ai-proxy": {
+      "provider": "openai-compatible",
+      "auth": {
+        "header": {
           "Authorization": "Bearer '"${OPENAPI_1_AUTH_TOKEN}"'"
         }
-      }
+      },
+      "override": {
+        "endpoint": "https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models"
+      },
+      "ssl_verify": false
     },
     "cors": {
       "allow_origins": "*",

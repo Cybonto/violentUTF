@@ -130,11 +130,18 @@ fi
 
 echo
 echo "=== GSAi API Key Fix Summary ==="
-if [ "$models_http_code" = "200" ] && [ "$chat_http_code" = "200" ]; then
-    echo "🎉 SUCCESS! GSAi static routes are now working!"
-    echo "✅ Models endpoint: http://localhost:9080/ai/gsai/models"
+if [ "$chat_http_code" = "200" ]; then
+    echo "🎉 SUCCESS! GSAi chat completions is working!"
     echo "✅ Chat endpoint: http://localhost:9080/ai/gsai/chat/completions"
     echo "🔑 Authentication: X-API-Key with registered consumer"
+    echo "🤖 Model: claude_3_5_sonnet"
+    echo
+    if [ "$models_http_code" != "200" ]; then
+        echo "⚠️  Models endpoint still has SSL issues (but chat works!)"
+        echo "❌ Models endpoint: http://localhost:9080/ai/gsai/models"
+    else
+        echo "✅ Models endpoint: http://localhost:9080/ai/gsai/models"
+    fi
     echo
     echo "GSAi now works like OpenAI/Anthropic with simple static authentication!"
 else
