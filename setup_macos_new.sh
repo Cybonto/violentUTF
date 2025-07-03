@@ -127,6 +127,7 @@ main_setup() {
     echo "=== Phase 6: Route and Integration Setup ==="
     configure_apisix_routes
     configure_openapi_routes
+    setup_openapi_routes  # Setup OpenAPI provider routes (if configured)
     setup_openai_routes
     setup_anthropic_routes
     setup_ollama_routes

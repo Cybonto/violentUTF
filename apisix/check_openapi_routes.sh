@@ -70,7 +70,7 @@ if ! echo "$routes_response" | jq -e '.list' > /dev/null 2>&1; then
 fi
 
 # Find OpenAPI routes and store as JSON array
-openapi_routes=$(echo "$routes_response" | jq -r '[.list[] | select(.value.uri | contains("/ai/openapi/"))]')
+openapi_routes=$(echo "$routes_response" | jq -r '[.list[] | select(.value.uri | contains("/openapi/"))]')
 
 # Check if any routes found
 route_count=$(echo "$openapi_routes" | jq 'length')
@@ -89,7 +89,7 @@ echo "$openapi_routes" | jq -c '.[]' | while IFS= read -r route; do
     route_uri=$(echo "$route" | jq -r '.value.uri')
     
     # Extract provider ID from URI
-    provider_id=$(echo "$route_uri" | sed -n 's|.*/ai/openapi/\([^/]*\)/.*|\1|p')
+    provider_id=$(echo "$route_uri" | sed -n 's|.*/openapi/\([^/]*\)/.*|\1|p')
     
     echo -e "${BLUE}Route: $route_id${NC}"
     echo "  URI: $route_uri"
@@ -196,7 +196,7 @@ echo -e "${BLUE}=== Test Commands ===${NC}"
 echo
 echo "Test an OpenAPI route with:"
 echo
-echo "curl -v -X POST http://localhost:9080/ai/openapi/{provider-id}/api/v1/chat/completions \\"
+echo "curl -v -X POST http://localhost:9080/openapi/{provider-id}/api/v1/chat/completions \\"
 echo "  -H \"apikey: \$VIOLENTUTF_API_KEY\" \\"
 echo "  -H \"Content-Type: application/json\" \\"
 echo "  -d '{\"model\": \"your-model\", \"messages\": [{\"role\": \"user\", \"content\": \"test\"}]}'"

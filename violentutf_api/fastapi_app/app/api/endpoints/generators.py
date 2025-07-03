@@ -128,7 +128,7 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
                             logger.debug(f"Checking route: id={route_id}, uri={uri}")
                         
                         # Look for the chat completions endpoint for this provider
-                        # Pattern: /ai/openapi/{provider-id}/api/v1/chat/completions
+                        # Pattern: /openapi/{provider-id}/api/v1/chat/completions
                         if (route_id.startswith(f"openapi-{provider_id}-") and 
                             uri.endswith("/chat/completions") and
                             f"/openapi/{provider_id}/" in uri):
