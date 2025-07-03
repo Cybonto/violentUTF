@@ -41,7 +41,11 @@ setup_openapi_routes() {
     if [ -f "apisix/.env" ]; then
         source "apisix/.env"
     fi
-    local admin_key="${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not set"
+        return 1
+    fi
+    local admin_key="$APISIX_ADMIN_KEY"
     
     # Check APISIX readiness
     echo "$(date): Checking APISIX readiness..." >> "$log_file"
@@ -274,7 +278,11 @@ create_fastapi_docs_routes() {
         source "apisix/.env"
     fi
     
-    local admin_key="${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not set"
+        return 1
+    fi
+    local admin_key="$APISIX_ADMIN_KEY"
     local apisix_admin_url="http://localhost:9180"
     
     # Create /api/docs route

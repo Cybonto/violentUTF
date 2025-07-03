@@ -116,7 +116,11 @@ wait_for_apisix_ready() {
         source "apisix/.env"
     fi
     
-    local admin_key="${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not set"
+        return 1
+    fi
+    local admin_key="$APISIX_ADMIN_KEY"
     
     while [ $retry_count -lt $max_retries ]; do
         if curl -s -H "X-API-KEY: $admin_key" "$apisix_admin_url/apisix/admin/routes" >/dev/null 2>&1; then
@@ -142,7 +146,11 @@ verify_apisix_config() {
         source "apisix/.env"
     fi
     
-    local admin_key="${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not set"
+        return 1
+    fi
+    local admin_key="$APISIX_ADMIN_KEY"
     local apisix_admin_url="http://localhost:9180"
     
     # Check if APISIX admin API is accessible
