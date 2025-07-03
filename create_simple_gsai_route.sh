@@ -101,7 +101,7 @@ static_gsai_route='{
         "endpoint": "https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/chat/completions"
       },
       "options": {
-        "model": "gpt-4"
+        "model": "claude_3_5_sonnet"
       },
       "ssl_verify": false
     },

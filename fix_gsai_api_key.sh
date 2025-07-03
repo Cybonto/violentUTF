@@ -110,7 +110,7 @@ echo "Testing chat completions endpoint..."
 chat_test=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H "X-API-Key: ${VIOLENTUTF_API_KEY}" \
     -H "Content-Type: application/json" \
-    -d '{"model":"gpt-4","messages":[{"role":"user","content":"Say: GSAi working!"}]}' \
+    -d '{"model":"claude_3_5_sonnet","messages":[{"role":"user","content":"Say: GSAi working!"}]}' \
     "http://localhost:9080/ai/gsai/chat/completions" 2>/dev/null)
 
 chat_http_code=$(echo "$chat_test" | grep "HTTP_CODE:" | cut -d: -f2)

@@ -211,7 +211,7 @@ echo "Headers: X-API-Key: [REDACTED], Content-Type: application/json"
 simple_chat_response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H "X-API-Key: ${VIOLENTUTF_API_KEY}" \
     -H "Content-Type: application/json" \
-    -d '{"model":"gpt-4","messages":[{"role":"user","content":"Hello, respond with just: GSAi working!"}]}' \
+    -d '{"model":"claude_3_5_sonnet","messages":[{"role":"user","content":"Hello, respond with just: GSAi working!"}]}' \
     "http://localhost:9080/ai/gsai/chat/completions" 2>/dev/null)
 
 # Extract HTTP code and body
