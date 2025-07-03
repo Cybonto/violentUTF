@@ -203,13 +203,10 @@ static_gsai_models_route_json=$(jq -n \
       },
       "proxy-rewrite": {
         "uri": "/api/v1/models",
-        "method": "GET", 
         "headers": {
           "set": {
-            "Authorization": ("Bearer " + $auth_token),
-            "Content-Length": "0"
-          },
-          "remove": ["Content-Type"]
+            "Authorization": ("Bearer " + $auth_token)
+          }
         }
       },
       "cors": {
