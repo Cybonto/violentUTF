@@ -99,7 +99,7 @@ fi
 if echo "$routes_check" | jq -e '.list[] | select(.key == "/apisix/routes/9002")' >/dev/null 2>&1; then
     echo "✅ Route 9002 (models) exists"
     route_9002_uri=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.uri')
-    route_9002_methods=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.methods[]')
+    route_9002_methods=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.methods[]? // "ALL"')
     route_9002_keyauth=$(echo "$routes_check" | jq '.list[] | select(.key == "/apisix/routes/9002") | .value.plugins."key-auth" // {}')
     echo "   URI: $route_9002_uri"
     echo "   Methods: $route_9002_methods"
