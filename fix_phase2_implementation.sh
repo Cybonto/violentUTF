@@ -280,7 +280,7 @@ echo
 echo "Testing provider discovery..."
 provider_count=0
 providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
-    -H "apikey: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+    -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
 
 if echo "$providers_response" | jq -e '.[0]' >/dev/null 2>&1; then
     provider_count=$(echo "$providers_response" | jq '. | length' 2>/dev/null || echo "0")
@@ -309,7 +309,7 @@ echo "==========================="
 if [ "${provider_count:-0}" -gt 0 ]; then
     echo "Testing model discovery for openapi-${OPENAPI_1_ID}..."
     models_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/models?provider=openapi-${OPENAPI_1_ID}" \
-        -H "apikey: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+        -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
 
     if echo "$models_response" | jq -e '.[0]' >/dev/null 2>&1; then
         model_count=$(echo "$models_response" | jq '. | length' 2>/dev/null || echo "0")
