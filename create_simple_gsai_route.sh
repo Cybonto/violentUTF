@@ -224,7 +224,7 @@ static_gsai_models_route_json=$(jq -n \
   }')
 
 echo "Debug: JSON payload for route 9002 (via jq):"
-echo "$static_gsai_models_route_json"
+echo "$static_gsai_models_route_json" | sed -E 's/"Authorization": "Bearer [^"]+"/\"Authorization\": \"Bearer [REDACTED]\"/g'
 
 response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9002" \
     -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
