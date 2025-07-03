@@ -163,7 +163,7 @@ static_gsai_models_route='{
       "method": "GET",
       "headers": {
         "set": {
-          "Authorization": "Bearer '"${OPENAPI_1_AUTH_TOKEN}"'",
+          "Authorization": "Bearer '${OPENAPI_1_AUTH_TOKEN}'",
           "Content-Length": "0"
         },
         "remove": ["Content-Type"]
