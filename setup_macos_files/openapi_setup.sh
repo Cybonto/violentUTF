@@ -254,7 +254,7 @@ setup_openapi_routes() {
         echo "$(date): Processing provider $i: $provider_id" >> "$log_file"
         
         # Check if this is GSAi and use specialized setup
-        if [[ "$provider_id" =~ ^gsai$ ]] || [[ "$base_url" =~ gsai\.mcaas\.fcs\.gsa\.gov ]]; then
+        if [[ "$provider_id" =~ gsai ]] || [[ "$base_url" =~ gsai\.mcaas\.fcs\.gsa\.gov ]]; then
             echo "🔧 Detected GSAi provider - using specialized static authentication setup"
             if create_gsai_static_routes "$auth_token" "$i"; then
                 setup_count=$((setup_count + 1))
