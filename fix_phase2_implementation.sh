@@ -95,11 +95,16 @@ if [ -z "${APISIX_ADMIN_KEY:-}" ]; then
 fi
 
 if [ -z "${VIOLENTUTF_API_KEY:-}" ]; then
-    echo -e "${YELLOW}⚠️  VIOLENTUTF_API_KEY not found, checking default${NC}"
-    # Try to get it from FastAPI .env or use known default
-    if [ -z "${VIOLENTUTF_API_KEY:-}" ]; then
-        VIOLENTUTF_API_KEY="CHbp3Tmw3COxM6LZwHrSC1skXTWaSiyR"
-        echo "Using default VIOLENTUTF_API_KEY"
+    echo -e "${YELLOW}⚠️  VIOLENTUTF_API_KEY not found in environment${NC}"
+    # Check if it's in the container
+    CONTAINER_API_KEY=$(docker exec violentutf_api printenv VIOLENTUTF_API_KEY 2>/dev/null || echo "")
+    if [ -n "${CONTAINER_API_KEY}" ]; then
+        VIOLENTUTF_API_KEY="${CONTAINER_API_KEY}"
+        echo "Found VIOLENTUTF_API_KEY in container"
+    else
+        echo -e "${RED}❌ VIOLENTUTF_API_KEY not found anywhere${NC}"
+        echo "Please check your configuration files"
+        exit 1
     fi
 fi
 
@@ -115,7 +120,11 @@ echo "  OPENAPI_1_ID: ${OPENAPI_1_ID:-NOT SET}"
 echo "  OPENAPI_1_NAME: ${OPENAPI_1_NAME:-NOT SET}"
 echo "  OPENAPI_1_BASE_URL: ${OPENAPI_1_BASE_URL:-NOT SET}"
 echo "  OPENAPI_1_AUTH_TYPE: ${OPENAPI_1_AUTH_TYPE:-NOT SET}"
-echo "  OPENAPI_1_AUTH_TOKEN: [${#OPENAPI_1_AUTH_TOKEN} chars]"
+if [ -n "${OPENAPI_1_AUTH_TOKEN}" ]; then
+    echo "  OPENAPI_1_AUTH_TOKEN: [REDACTED - ${#OPENAPI_1_AUTH_TOKEN} chars]"
+else
+    echo "  OPENAPI_1_AUTH_TOKEN: NOT SET"
+fi
 
 echo
 echo "Step 1: Create Docker Compose Override File"
@@ -197,8 +206,8 @@ echo "Verifying environment variables in container..."
 for var in APISIX_ADMIN_KEY OPENAPI_ENABLED OPENAPI_1_ENABLED OPENAPI_1_ID OPENAPI_1_BASE_URL; do
     value=$(docker exec violentutf_api printenv "$var" 2>/dev/null || echo "NOT SET")
     if [ "$value" != "NOT SET" ] && [ -n "$value" ]; then
-        if [[ "$var" == *"KEY"* ]] || [[ "$var" == *"TOKEN"* ]]; then
-            print_status 0 "$var is set [${#value} chars]"
+        if [[ "$var" == *"KEY"* ]] || [[ "$var" == *"TOKEN"* ]] || [[ "$var" == *"SECRET"* ]] || [[ "$var" == *"PASSWORD"* ]]; then
+            print_status 0 "$var is set [REDACTED - ${#value} chars]"
         else
             print_status 0 "$var: $value"
         fi
@@ -262,6 +271,10 @@ route_config=$(cat <<EOF
 EOF
 )
 
+# Show redacted configuration for debugging
+echo "Route configuration (redacted):"
+echo "$route_config" | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g' | jq . 2>/dev/null || echo "Failed to parse config"
+
 # Update the route
 response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/3001" \
     -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
@@ -276,7 +289,22 @@ else
 fi
 
 echo
-echo "Step 4: Test Provider Discovery"
+echo "Step 4: Fix API Key Configuration"
+echo "================================="
+
+# Ensure API key is properly set in the container
+echo "Verifying API key configuration..."
+CONTAINER_API_KEY=$(docker exec violentutf_api printenv VIOLENTUTF_API_KEY 2>/dev/null || echo "")
+if [ -n "${CONTAINER_API_KEY}" ]; then
+    print_status 0 "API key is set in container: [REDACTED - ${#CONTAINER_API_KEY} chars]"
+    # Use the container's API key for our tests
+    VIOLENTUTF_API_KEY="${CONTAINER_API_KEY}"
+else
+    print_status 1 "API key not found in container"
+fi
+
+echo
+echo "Step 5: Test Provider Discovery"
 echo "==============================="
 
 # Wait for services to stabilize
@@ -284,6 +312,7 @@ sleep 3
 
 # First, test if FastAPI can reach APISIX admin
 echo "Testing FastAPI → APISIX admin connectivity..."
+echo "Using APISIX admin key: [REDACTED - ${#APISIX_ADMIN_KEY} chars]"
 admin_test=$(docker exec violentutf_api sh -c "curl -s --max-time 5 -o /dev/null -w '%{http_code}' -H 'X-API-KEY: ${APISIX_ADMIN_KEY}' http://apisix:9180/apisix/admin/routes" 2>/dev/null || echo "000")
 
 if [ "$admin_test" = "200" ]; then
@@ -297,12 +326,26 @@ echo
 echo "Testing provider discovery..."
 provider_count=0
 
+# First, let's check what password we should use
+echo "Checking for user credentials..."
+if [ -n "${VIOLENTUTF_USER_PASSWORD}" ]; then
+    echo "Found VIOLENTUTF_USER_PASSWORD in environment [REDACTED - ${#VIOLENTUTF_USER_PASSWORD} chars]"
+    USER_PASSWORD="${VIOLENTUTF_USER_PASSWORD}"
+elif [ -n "${KEYCLOAK_PASSWORD}" ]; then
+    echo "Found KEYCLOAK_PASSWORD in environment [REDACTED - ${#KEYCLOAK_PASSWORD} chars]"
+    USER_PASSWORD="${KEYCLOAK_PASSWORD}"
+else
+    echo "No password found in environment, checking defaults..."
+    # Check if there's a default in the Keycloak setup
+    USER_PASSWORD="violentutf.web"
+fi
+
 # First, let's try to get a valid JWT token using the service account
 echo "Getting authentication token..."
-# Note: The password should be from VIOLENTUTF_USER_PASSWORD generated during setup
+echo "Using username: violentutf.web"
 auth_response=$(curl -s -X POST "http://localhost:9080/api/v1/auth/token" \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "grant_type=password&username=violentutf.web&password=${VIOLENTUTF_USER_PASSWORD:-violentutf.web}" 2>/dev/null || echo '{"error": "Failed"}')
+    -d "grant_type=password&username=violentutf.web&password=${USER_PASSWORD}" 2>/dev/null || echo '{"error": "Failed"}')
 
 if echo "$auth_response" | jq -e '.access_token' >/dev/null 2>&1; then
     JWT_TOKEN=$(echo "$auth_response" | jq -r '.access_token')
@@ -333,7 +376,16 @@ else
     # Additional debugging
     echo
     echo "Debugging: Checking container environment..."
-    docker exec violentutf_api sh -c 'env | grep -E "^(OPENAPI|APISIX_ADMIN)" | sort' | head -20
+    # Redact sensitive values when showing environment
+    docker exec violentutf_api sh -c 'env | grep -E "^(OPENAPI|APISIX_ADMIN)" | sort' | while read -r line; do
+        if echo "$line" | grep -qE "(KEY|TOKEN|SECRET|PASSWORD)="; then
+            var_name=$(echo "$line" | cut -d'=' -f1)
+            var_value=$(echo "$line" | cut -d'=' -f2-)
+            echo "${var_name}=[REDACTED - ${#var_value} chars]"
+        else
+            echo "$line"
+        fi
+    done | head -20
     
     # Check FastAPI logs for errors
     echo
@@ -342,7 +394,7 @@ else
 fi
 
 echo
-echo "Step 5: Fix OpenAPI Provider Routes"
+echo "Step 6: Fix OpenAPI Provider Routes"
 echo "==================================="
 
 # Create a proper proxy route for GSAi provider discovery
@@ -396,7 +448,7 @@ else
 fi
 
 echo
-echo "Step 6: Create Dedicated GSAi Discovery Endpoint"
+echo "Step 7: Create Dedicated GSAi Discovery Endpoint"
 echo "==============================================="
 
 # Since GSAi doesn't have a /providers endpoint, we need to create a mock response
@@ -440,7 +492,7 @@ else
 fi
 
 echo
-echo "Step 7: Test Model Discovery"
+echo "Step 8: Test Model Discovery"
 echo "==========================="
 
 if [ "${provider_count:-0}" -gt 0 ]; then
@@ -493,3 +545,9 @@ echo
 echo "To remove the override file and revert:"
 echo "  rm apisix/docker-compose.override.yml"
 echo "  cd apisix && docker compose restart fastapi"
+echo
+echo "Troubleshooting:"
+echo "1. If authentication fails, check the password in violentutf/.env"
+echo "2. If API key fails, verify VIOLENTUTF_API_KEY in violentutf_api/fastapi_app/.env"
+echo "3. Check container logs: docker logs violentutf_api --tail 50"
+echo "4. Verify routes: curl -H 'X-API-KEY: [YOUR_APISIX_ADMIN_KEY]' http://localhost:9180/apisix/admin/routes"
