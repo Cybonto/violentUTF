@@ -138,6 +138,8 @@ fi
 echo
 echo "Creating static GSAi models route..."
 
+echo "Debug: OPENAPI_1_AUTH_TOKEN length: ${#OPENAPI_1_AUTH_TOKEN}"
+
 static_gsai_models_route='{
   "id": "9002", 
   "uri": "/ai/gsai/models",
@@ -177,6 +179,9 @@ static_gsai_models_route='{
     }
   }
 }'
+
+echo "Debug: JSON payload for route 9002:"
+echo "$static_gsai_models_route" | jq . 2>/dev/null || echo "Invalid JSON: $static_gsai_models_route"
 
 response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9002" \
     -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
