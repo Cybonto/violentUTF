@@ -84,6 +84,10 @@ echo
 echo "Step 2: Verify routes exist"
 echo "=========================="
 
+# First check all routes that match /ai/gsai pattern
+echo "All routes matching /ai/gsai pattern:"
+echo "$routes_check" | jq -r '.list[]? | select(.value.uri? | test("/ai/gsai")) | "  " + .key + " -> " + .value.uri + " (" + (.value.methods[]? // "ALL" | tostring) + ")"' 2>/dev/null || echo "  No /ai/gsai routes found"
+
 # Check if routes 9001 and 9002 exist
 routes_check=$(curl -s "http://localhost:9180/apisix/admin/routes" \
     -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null || echo '{"error": "Failed"}')

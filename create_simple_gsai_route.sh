@@ -138,6 +138,11 @@ fi
 echo
 echo "Creating static GSAi models route..."
 
+# First delete old route 9002 if it exists
+echo "Deleting old route 9002 if it exists..."
+curl -s -X DELETE "http://localhost:9180/apisix/admin/routes/9002" \
+    -H "X-API-KEY: ${APISIX_ADMIN_KEY}" >/dev/null 2>&1
+
 echo "Debug: OPENAPI_1_AUTH_TOKEN length: ${#OPENAPI_1_AUTH_TOKEN}"
 
 static_gsai_models_route='{
@@ -200,13 +205,17 @@ static_gsai_models_route_json=$(jq -n \
       "key-auth": {
         "header": "X-API-Key"
       },
-      "proxy-rewrite": {
-        "uri": "/api/v1/models",
-        "headers": {
-          "set": {
+      "ai-proxy": {
+        "provider": "openai-compatible",
+        "auth": {
+          "header": {
             "Authorization": ("Bearer " + $auth_token)
           }
-        }
+        },
+        "override": {
+          "endpoint": "https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models"
+        },
+        "ssl_verify": false
       },
       "cors": {
         "allow_origins": "*",
