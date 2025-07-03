@@ -96,33 +96,40 @@ else
     echo "❌ Route 9001 (chat completions) missing"
 fi
 
-if echo "$routes_check" | jq -e '.list[] | select(.key == "/apisix/routes/9002")' >/dev/null 2>&1; then
-    echo "✅ Route 9002 (models) exists"
-    route_9002_uri=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.uri')
-    route_9002_methods=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.methods[]? // "ALL"')
-    route_9002_keyauth=$(echo "$routes_check" | jq '.list[] | select(.key == "/apisix/routes/9002") | .value.plugins."key-auth" // {}')
-    echo "   URI: $route_9002_uri"
-    echo "   Methods: $route_9002_methods"
-    echo "   Route 9002 key-auth: $route_9002_keyauth"
+# Check for both old route 9002 and new route 9003
+if echo "$routes_check" | jq -e '.list[] | select(.key == "/apisix/routes/9003")' >/dev/null 2>&1; then
+    echo "✅ Route 9003 (models) exists"
+    route_9003_uri=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9003") | .value.uri')
+    route_9003_methods=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9003") | .value.methods[]? // "ALL"')
+    route_9003_keyauth=$(echo "$routes_check" | jq '.list[] | select(.key == "/apisix/routes/9003") | .value.plugins."key-auth" // {}')
+    echo "   URI: $route_9003_uri"
+    echo "   Methods: $route_9003_methods"
+    echo "   Route 9003 key-auth: $route_9003_keyauth"
     
     # Show full route config for debugging
-    echo "   Route 9002 configuration:"
-    route_9002_config=$(echo "$routes_check" | jq '.list[] | select(.key == "/apisix/routes/9002") | .value')
-    echo "$route_9002_config" | jq '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/\"Authorization\": \"Bearer [REDACTED]\"/g'
+    echo "   Route 9003 configuration:"
+    route_9003_config=$(echo "$routes_check" | jq '.list[] | select(.key == "/apisix/routes/9003") | .value')
+    echo "$route_9003_config" | jq '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/\"Authorization\": \"Bearer [REDACTED]\"/g'
     
     # Show upstream config too
-    echo "   Route 9002 upstream:"
-    echo "$route_9002_config" | jq '.upstream // {}'
+    echo "   Route 9003 upstream:"
+    echo "$route_9003_config" | jq '.upstream // {}'
     
     # Check if route has any syntax issues
     echo "   Route JSON validity check:"
-    if echo "$route_9002_config" | jq . >/dev/null 2>&1; then
+    if echo "$route_9003_config" | jq . >/dev/null 2>&1; then
         echo "   ✅ Route JSON is valid"
     else
         echo "   ❌ Route JSON is invalid"
     fi
+elif echo "$routes_check" | jq -e '.list[] | select(.key == "/apisix/routes/9002")' >/dev/null 2>&1; then
+    echo "✅ Route 9002 (models - old) exists"
+    route_9002_uri=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.uri')
+    route_9002_methods=$(echo "$routes_check" | jq -r '.list[] | select(.key == "/apisix/routes/9002") | .value.methods[]? // "ALL"')
+    echo "   URI: $route_9002_uri (old route)"
+    echo "   Methods: $route_9002_methods"
 else
-    echo "❌ Route 9002 (models) missing"
+    echo "❌ No models route found (neither 9002 nor 9003)"
 fi
 
 echo
