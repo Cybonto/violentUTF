@@ -529,6 +529,104 @@ else
             else
                 echo "❌ FastAPI client credentials not found in environment"
                 echo "   CONFIRMED: Issue #3 - Configuration mismatch"
+                echo
+                echo "🔧 FIXING: Client ID Mismatch in FastAPI Container"
+                echo "=================================================="
+                echo "FastAPI container is using wrong client ID. Let's fix this..."
+                
+                # Check what client ID the container is using
+                container_client_id=$(docker exec violentutf_api printenv KEYCLOAK_CLIENT_ID 2>/dev/null || echo "NOT SET")
+                echo "Container client ID: $container_client_id"
+                echo "Expected client ID: violentutf"
+                
+                if [ "$container_client_id" != "violentutf" ]; then
+                    echo "Updating FastAPI environment with correct client configuration..."
+                    
+                    # Update violentutf_api/fastapi_app/.env with correct client settings
+                    echo "Fixing KEYCLOAK_CLIENT_ID in violentutf_api/fastapi_app/.env..."
+                    if grep -q "^KEYCLOAK_CLIENT_ID=" violentutf_api/fastapi_app/.env 2>/dev/null; then
+                        sed -i.bak "s/^KEYCLOAK_CLIENT_ID=.*/KEYCLOAK_CLIENT_ID=\"violentutf\"/" violentutf_api/fastapi_app/.env
+                    else
+                        echo "KEYCLOAK_CLIENT_ID=\"violentutf\"" >> violentutf_api/fastapi_app/.env
+                    fi
+                    echo "✅ Updated KEYCLOAK_CLIENT_ID to 'violentutf'"
+                    
+                    # Get the client secret from the environment (should already be set)
+                    if [ -n "${VIOLENTUTF_CLIENT_SECRET:-}" ]; then
+                        echo "Using existing client secret: [REDACTED - ${#VIOLENTUTF_CLIENT_SECRET} chars]"
+                        # Update client secret in FastAPI env
+                        if grep -q "^KEYCLOAK_CLIENT_SECRET=" violentutf_api/fastapi_app/.env 2>/dev/null; then
+                            sed -i.bak "s/^KEYCLOAK_CLIENT_SECRET=.*/KEYCLOAK_CLIENT_SECRET=\"${VIOLENTUTF_CLIENT_SECRET}\"/" violentutf_api/fastapi_app/.env
+                        else
+                            echo "KEYCLOAK_CLIENT_SECRET=\"${VIOLENTUTF_CLIENT_SECRET}\"" >> violentutf_api/fastapi_app/.env
+                        fi
+                        echo "✅ Updated KEYCLOAK_CLIENT_SECRET"
+                    else
+                        echo "⚠️  No VIOLENTUTF_CLIENT_SECRET found - will need to retrieve from Keycloak"
+                        # Trigger the client secret retrieval logic that follows
+                    fi
+                    
+                    echo "✅ Client configuration fix applied!"
+                    echo
+                    echo "🔄 RESTARTING FASTAPI CONTAINER..."
+                    echo "================================="
+                    cd apisix
+                    docker compose restart fastapi
+                    cd ..
+                    
+                    # Wait for container to restart
+                    echo "Waiting for FastAPI to restart..."
+                    sleep 5
+                    for i in {1..30}; do
+                        if docker exec violentutf_api curl -s http://localhost:8000/api/health &>/dev/null; then
+                            echo "✅ FastAPI restarted successfully"
+                            break
+                        fi
+                        echo -n "."
+                        sleep 2
+                    done
+                    echo
+                    
+                    echo "🔄 RETESTING AUTHENTICATION..."
+                    echo "=============================="
+                    
+                    # Retry ViolentUTF authentication with fixed client config
+                    fixed_vutf_auth_response=$(curl -s -X POST "http://localhost:9080/api/v1/auth/token" \
+                        -H "Content-Type: application/x-www-form-urlencoded" \
+                        -d "grant_type=password&username=violentutf.web&password=${USER_PASSWORD}" 2>/dev/null || echo '{"error": "Failed"}')
+                    
+                    if echo "$fixed_vutf_auth_response" | jq -e '.access_token' >/dev/null 2>&1; then
+                        echo "🎉 SUCCESS! ViolentUTF authentication now works with correct client config!"
+                        FIXED_JWT_TOKEN=$(echo "$fixed_vutf_auth_response" | jq -r '.access_token')
+                        
+                        # Test provider discovery with the working JWT
+                        echo "Testing provider discovery with fixed authentication..."
+                        fixed_providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
+                            -H "Authorization: Bearer ${FIXED_JWT_TOKEN}" 2>/dev/null || echo '{"error": "Failed"}')
+                        
+                        if echo "$fixed_providers_response" | jq -e '.[0]' >/dev/null 2>&1; then
+                            provider_count=$(echo "$fixed_providers_response" | jq '. | length' 2>/dev/null || echo "0")
+                            echo "🎉 FIXED! Provider discovery now works - found $provider_count provider(s)"
+                            echo "Providers:"
+                            echo "$fixed_providers_response" | jq -r '.[] | "  - \(.id): \(.name)"' 2>/dev/null || echo "  Failed to parse"
+                            
+                            # Update the global response for further processing
+                            providers_response="$fixed_providers_response"
+                            JWT_TOKEN="$FIXED_JWT_TOKEN"
+                        else
+                            echo "❌ Provider discovery still fails - there may be additional issues"
+                            redacted_fixed_response=$(echo "$fixed_providers_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g')
+                            echo "Response: $redacted_fixed_response"
+                        fi
+                    else
+                        echo "❌ ViolentUTF authentication still fails after client config fix"
+                        redacted_fixed_auth=$(echo "$fixed_vutf_auth_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g')
+                        echo "Response: $redacted_fixed_auth"
+                        echo "Need to investigate further..."
+                    fi
+                else
+                    echo "✅ Client ID is already correct"
+                fi
             fi
             
             echo
