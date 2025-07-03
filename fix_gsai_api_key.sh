@@ -105,6 +105,18 @@ if echo "$routes_check" | jq -e '.list[] | select(.key == "/apisix/routes/9002")
     echo "   Route 9002 configuration:"
     route_9002_config=$(echo "$routes_check" | jq '.list[] | select(.key == "/apisix/routes/9002") | .value')
     echo "$route_9002_config" | jq '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g'
+    
+    # Show upstream config too
+    echo "   Route 9002 upstream:"
+    echo "$route_9002_config" | jq '.upstream // {}'
+    
+    # Check if route has any syntax issues
+    echo "   Route JSON validity check:"
+    if echo "$route_9002_config" | jq . >/dev/null 2>&1; then
+        echo "   ✅ Route JSON is valid"
+    else
+        echo "   ❌ Route JSON is invalid"
+    fi
 else
     echo "❌ Route 9002 (models) missing"
 fi
@@ -116,9 +128,28 @@ echo "=================================================="
 echo "Testing models endpoint..."
 echo "URL: http://localhost:9080/ai/gsai/models"
 echo "Headers: X-API-Key: [REDACTED]"
+
+# Add verbose curl to see what's happening
+echo "Running curl with verbose output..."
 models_test=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H "X-API-Key: ${VIOLENTUTF_API_KEY}" \
     "http://localhost:9080/ai/gsai/models" 2>/dev/null)
+
+# Also test if the route responds to any request at all
+echo "Testing if route responds to any method..."
+route_test=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -X POST \
+    -H "X-API-Key: ${VIOLENTUTF_API_KEY}" \
+    "http://localhost:9080/ai/gsai/models" 2>/dev/null)
+route_test_code=$(echo "$route_test" | grep "HTTP_CODE:" | cut -d: -f2)
+echo "POST method response code: $route_test_code"
+
+# Test without API key to see auth behavior
+echo "Testing without API key..."
+no_auth_test=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    "http://localhost:9080/ai/gsai/models" 2>/dev/null)
+no_auth_code=$(echo "$no_auth_test" | grep "HTTP_CODE:" | cut -d: -f2)
+echo "No auth response code: $no_auth_code"
 
 models_http_code=$(echo "$models_test" | grep "HTTP_CODE:" | cut -d: -f2)
 models_body=$(echo "$models_test" | grep -v "HTTP_CODE:")
