@@ -5,7 +5,7 @@
 # 
 # IMPORTANT: Run this script in Environment B from the ViolentUTF root directory
 
-set -euo pipefail
+set -eo pipefail
 
 echo "=== Phase 2 Implementation Fixes for GSAi Integration ==="
 echo "This script will fix the issues preventing GSAi integration"
@@ -273,7 +273,7 @@ EOF
 
 # Show redacted configuration for debugging
 echo "Route configuration (redacted):"
-echo "$route_config" | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g' | jq . 2>/dev/null || echo "Failed to parse config"
+echo "$route_config" | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g' | sed 's/\\$/$/g' | jq -c . 2>/dev/null || echo "[Route config created but JSON display failed]"
 
 # Update the route
 response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/3001" \
@@ -328,21 +328,33 @@ provider_count=0
 
 # First, let's check what password we should use
 echo "Checking for user credentials..."
-if [ -n "${VIOLENTUTF_USER_PASSWORD}" ]; then
+if [ -n "${VIOLENTUTF_USER_PASSWORD:-}" ]; then
     echo "Found VIOLENTUTF_USER_PASSWORD in environment [REDACTED - ${#VIOLENTUTF_USER_PASSWORD} chars]"
     USER_PASSWORD="${VIOLENTUTF_USER_PASSWORD}"
-elif [ -n "${KEYCLOAK_PASSWORD}" ]; then
+elif [ -n "${KEYCLOAK_PASSWORD:-}" ]; then
     echo "Found KEYCLOAK_PASSWORD in environment [REDACTED - ${#KEYCLOAK_PASSWORD} chars]"
     USER_PASSWORD="${KEYCLOAK_PASSWORD}"
 else
-    echo "No password found in environment, checking defaults..."
-    # Check if there's a default in the Keycloak setup
+    echo "No password found in environment, using default..."
+    # Use default password for violentutf.web user
     USER_PASSWORD="violentutf.web"
 fi
 
 # First, let's try to get a valid JWT token using the service account
 echo "Getting authentication token..."
 echo "Using username: violentutf.web"
+echo "Using password: [REDACTED - ${#USER_PASSWORD} chars]"
+
+# If using default password, also try to find the actual password from container
+if [ "$USER_PASSWORD" = "violentutf.web" ]; then
+    echo "Checking for generated password in container..."
+    CONTAINER_PASSWORD=$(docker exec violentutf_api printenv KEYCLOAK_PASSWORD 2>/dev/null || echo "")
+    if [ -n "${CONTAINER_PASSWORD}" ] && [ "${CONTAINER_PASSWORD}" != "violentutf.web" ]; then
+        echo "Found different password in container, using that instead"
+        USER_PASSWORD="${CONTAINER_PASSWORD}"
+    fi
+fi
+
 auth_response=$(curl -s -X POST "http://localhost:9080/api/v1/auth/token" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "grant_type=password&username=violentutf.web&password=${USER_PASSWORD}" 2>/dev/null || echo '{"error": "Failed"}')
@@ -356,10 +368,23 @@ if echo "$auth_response" | jq -e '.access_token' >/dev/null 2>&1; then
         -H "Authorization: Bearer ${JWT_TOKEN}" 2>/dev/null || echo '{"error": "Failed"}')
 else
     print_status 1 "Authentication failed"
-    echo "Auth response: $auth_response"
+    echo "Auth response: $auth_response" | jq . 2>/dev/null || echo "$auth_response"
+    
+    # Debug: Check if Keycloak is accessible
+    echo
+    echo "Debugging authentication issue..."
+    echo "Checking Keycloak accessibility..."
+    keycloak_health=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/realms/ViolentUTF/.well-known/openid-configuration" 2>/dev/null || echo "000")
+    if [ "$keycloak_health" = "200" ]; then
+        echo "✅ Keycloak is accessible"
+    else
+        echo "❌ Keycloak is not accessible (HTTP $keycloak_health)"
+        echo "   Please ensure Keycloak is running: cd keycloak && docker compose ps"
+    fi
     
     # Try with API key as fallback
-    echo "Trying with API key..."
+    echo
+    echo "Trying with API key instead..."
     providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
         -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
 fi
