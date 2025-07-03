@@ -187,7 +187,6 @@ static_gsai_models_route_json=$(jq -n \
     "id": "9002",
     "uri": "/ai/gsai/models", 
     "name": "gsai-static-models",
-    "methods": ["GET"],
     "upstream": {
       "type": "roundrobin",
       "scheme": "https", 
