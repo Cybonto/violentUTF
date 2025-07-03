@@ -660,6 +660,112 @@ else
                 echo "   Using client secret: [REDACTED - ${#VIOLENTUTF_CLIENT_SECRET} chars]"
             else
                 echo "   No client secret found in environment"
+                echo
+                echo "🔧 FIXING: Missing VIOLENTUTF_CLIENT_SECRET"
+                echo "=========================================="
+                echo "This is the root cause! Environment B is missing the client secret."
+                echo "Let's retrieve it from Keycloak and add it to the environment files..."
+                
+                # Get admin token to retrieve client secret
+                admin_token_response=$(curl -s -X POST "http://localhost:8080/realms/master/protocol/openid-connect/token" \
+                    -H "Content-Type: application/x-www-form-urlencoded" \
+                    -d "username=admin&password=admin&grant_type=password&client_id=admin-cli" 2>/dev/null || echo '{"error": "Failed"}')
+                
+                if echo "$admin_token_response" | jq -e '.access_token' >/dev/null 2>&1; then
+                    admin_token=$(echo "$admin_token_response" | jq -r '.access_token')
+                    echo "✅ Got Keycloak admin token"
+                    
+                    # Get violentutf client details
+                    client_response=$(curl -s "http://localhost:8080/admin/realms/ViolentUTF/clients?clientId=violentutf" \
+                        -H "Authorization: Bearer ${admin_token}" 2>/dev/null || echo '[]')
+                    
+                    if echo "$client_response" | jq -e '.[0].id' >/dev/null 2>&1; then
+                        client_uuid=$(echo "$client_response" | jq -r '.[0].id')
+                        echo "✅ Found violentutf client: $client_uuid"
+                        
+                        # Get client secret
+                        secret_response=$(curl -s "http://localhost:8080/admin/realms/ViolentUTF/clients/${client_uuid}/client-secret" \
+                            -H "Authorization: Bearer ${admin_token}" 2>/dev/null || echo '{}')
+                        
+                        if echo "$secret_response" | jq -e '.value' >/dev/null 2>&1; then
+                            RETRIEVED_CLIENT_SECRET=$(echo "$secret_response" | jq -r '.value')
+                            echo "✅ Retrieved client secret: [REDACTED - ${#RETRIEVED_CLIENT_SECRET} chars]"
+                            
+                            # Update environment files
+                            echo "Updating violentutf/.env with client secret..."
+                            if grep -q "^VIOLENTUTF_CLIENT_SECRET=" violentutf/.env 2>/dev/null; then
+                                sed -i.bak "s/^VIOLENTUTF_CLIENT_SECRET=.*/VIOLENTUTF_CLIENT_SECRET=\"${RETRIEVED_CLIENT_SECRET}\"/" violentutf/.env
+                            else
+                                echo "VIOLENTUTF_CLIENT_SECRET=\"${RETRIEVED_CLIENT_SECRET}\"" >> violentutf/.env
+                            fi
+                            echo "✅ Updated violentutf/.env"
+                            
+                            # Update FastAPI env
+                            echo "Updating violentutf_api/fastapi_app/.env with client secret..."
+                            if grep -q "^KEYCLOAK_CLIENT_SECRET=" violentutf_api/fastapi_app/.env 2>/dev/null; then
+                                sed -i.bak "s/^KEYCLOAK_CLIENT_SECRET=.*/KEYCLOAK_CLIENT_SECRET=\"${RETRIEVED_CLIENT_SECRET}\"/" violentutf_api/fastapi_app/.env
+                            else
+                                echo "KEYCLOAK_CLIENT_SECRET=\"${RETRIEVED_CLIENT_SECRET}\"" >> violentutf_api/fastapi_app/.env
+                            fi
+                            echo "✅ Updated violentutf_api/fastapi_app/.env"
+                            
+                            # Update the current environment
+                            export VIOLENTUTF_CLIENT_SECRET="${RETRIEVED_CLIENT_SECRET}"
+                            export KEYCLOAK_CLIENT_SECRET="${RETRIEVED_CLIENT_SECRET}"
+                            
+                            echo "✅ Client secret fix applied!"
+                            echo
+                            echo "🔄 RETESTING AUTHENTICATION..."
+                            echo "=============================="
+                            
+                            # Retry Keycloak authentication with the retrieved secret
+                            fixed_auth_response=$(curl -s -X POST "http://localhost:8080/realms/ViolentUTF/protocol/openid-connect/token" \
+                                -H "Content-Type: application/x-www-form-urlencoded" \
+                                -d "grant_type=password&username=violentutf.web&password=${USER_PASSWORD}&client_id=violentutf&client_secret=${RETRIEVED_CLIENT_SECRET}" 2>/dev/null || echo '{"error": "Failed"}')
+                            
+                            if echo "$fixed_auth_response" | jq -e '.access_token' >/dev/null 2>&1; then
+                                echo "🎉 SUCCESS! Keycloak authentication now works with retrieved client secret!"
+                                KEYCLOAK_JWT=$(echo "$fixed_auth_response" | jq -r '.access_token')
+                                
+                                # Test provider discovery with the working JWT
+                                echo "Testing provider discovery with fixed authentication..."
+                                fixed_providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
+                                    -H "Authorization: Bearer ${KEYCLOAK_JWT}" 2>/dev/null || echo '{"error": "Failed"}')
+                                
+                                if echo "$fixed_providers_response" | jq -e '.[0]' >/dev/null 2>&1; then
+                                    provider_count=$(echo "$fixed_providers_response" | jq '. | length' 2>/dev/null || echo "0")
+                                    echo "🎉 FIXED! Provider discovery now works - found $provider_count provider(s)"
+                                    echo "Providers:"
+                                    echo "$fixed_providers_response" | jq -r '.[] | "  - \(.id): \(.name)"' 2>/dev/null || echo "  Failed to parse"
+                                    
+                                    # Update the global response for further processing
+                                    providers_response="$fixed_providers_response"
+                                    providers_response_keycloak="$fixed_providers_response"
+                                else
+                                    echo "❌ Provider discovery still fails - there may be additional issues"
+                                    redacted_fixed_response=$(echo "$fixed_providers_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g')
+                                    echo "Response: $redacted_fixed_response"
+                                fi
+                                
+                                echo
+                                echo "🚀 NEXT STEP: Restart containers to pick up the new environment variables"
+                                echo "cd apisix && docker compose restart fastapi"
+                                echo "Then test again with the updated authentication."
+                            else
+                                echo "❌ Authentication still fails even with retrieved client secret"
+                                redacted_fixed_auth=$(echo "$fixed_auth_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g')
+                                echo "Response: $redacted_fixed_auth"
+                            fi
+                        else
+                            echo "❌ Could not retrieve client secret from Keycloak"
+                            echo "Response: $secret_response"
+                        fi
+                    else
+                        echo "❌ Could not find violentutf client in Keycloak"
+                    fi
+                else
+                    echo "❌ Could not get Keycloak admin token to retrieve client secret"
+                fi
             fi
             
             # Check if user exists in Keycloak
@@ -984,11 +1090,17 @@ echo "1. If authentication fails, check the password in violentutf/.env"
 echo "2. If API key fails, verify VIOLENTUTF_API_KEY in violentutf_api/fastapi_app/.env"
 echo "3. Check container logs: docker logs violentutf_api --tail 50"
 echo "4. Verify routes: curl -H 'X-API-KEY: [YOUR_APISIX_ADMIN_KEY]' http://localhost:9180/apisix/admin/routes"
+echo "5. Check all services status: ./check_services.sh"
+echo "6. Restart all containers: cd apisix && docker compose restart"
+echo "7. If GSAi token expired: Update OPENAPI_1_AUTH_TOKEN in ai-tokens.env and rerun this script"
 echo
 echo "Common Issues:"
 echo "- Invalid credentials: The password in Keycloak may not match what's in .env files"
 echo "- Invalid API key: The API key in the container may be different from what's loaded"
 echo "- MCP server error: This is a known issue but doesn't affect GSAi integration"
+echo "- Network connectivity: Ensure all containers are on the same Docker network"
+echo "- Token expiration: GSAi Bearer tokens may expire and need renewal"
+echo "- Port conflicts: Ensure ports 8080, 9080, 8501 are not used by other services"
 echo
 echo "To manually test GSAi integration:"
 echo "1. Get a valid JWT token or API key that works"
