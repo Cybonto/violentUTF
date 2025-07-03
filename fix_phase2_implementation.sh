@@ -127,6 +127,60 @@ else
 fi
 
 echo
+echo "Step 0: Diagnostics - Checking Current System State"
+echo "=================================================="
+
+# Check if Keycloak is running
+echo "Checking Keycloak status..."
+keycloak_running=$(docker ps --filter "name=keycloak" --format "{{.Names}}" | grep -E "keycloak" | wc -l)
+if [ "$keycloak_running" -gt 0 ]; then
+    print_status 0 "Keycloak container is running"
+else
+    print_status 1 "Keycloak container is NOT running"
+    echo "   Run: cd keycloak && docker compose up -d"
+fi
+
+# Check current routes
+echo
+echo "Checking existing APISIX routes..."
+existing_routes=$(curl -s "http://localhost:9180/apisix/admin/routes" \
+    -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+
+if echo "$existing_routes" | grep -q '"list"'; then
+    route_count=$(echo "$existing_routes" | jq '.list | length' 2>/dev/null || echo "0")
+    print_status 0 "Found $route_count routes in APISIX"
+    
+    # Check specifically for our routes
+    for route_id in 3001 3002 3003; do
+        if echo "$existing_routes" | jq -e ".list[] | select(.key == \"/apisix/routes/$route_id\")" >/dev/null 2>&1; then
+            echo "   ✓ Route $route_id exists"
+        else
+            echo "   ✗ Route $route_id missing"
+        fi
+    done
+else
+    print_status 1 "Failed to retrieve APISIX routes"
+fi
+
+# Test basic connectivity
+echo
+echo "Testing basic service connectivity..."
+# Test API health without auth
+health_response=$(curl -s "http://localhost:9080/api/v1/health" 2>/dev/null || echo '{"error": "Failed"}')
+if echo "$health_response" | grep -q '"status":"healthy"'; then
+    print_status 0 "API health endpoint is accessible"
+else
+    print_status 1 "API health endpoint is NOT accessible"
+fi
+
+# Check if we already have an override file
+if [ -f "apisix/docker-compose.override.yml" ]; then
+    echo
+    echo "⚠️  Found existing docker-compose.override.yml"
+    echo "   This will be replaced with new configuration"
+fi
+
+echo
 echo "Step 1: Create Docker Compose Override File"
 echo "=========================================="
 
@@ -353,7 +407,19 @@ if [ "$USER_PASSWORD" = "violentutf.web" ]; then
         echo "Found different password in container, using that instead"
         USER_PASSWORD="${CONTAINER_PASSWORD}"
     fi
+    
+    # Also check if there's a different password in the Streamlit container
+    if docker ps | grep -q "8501"; then
+        echo "Checking Streamlit configuration..."
+        STREAMLIT_PASSWORD=$(docker exec $(docker ps --filter "publish=8501" --format "{{.Names}}" | head -1) printenv KEYCLOAK_PASSWORD 2>/dev/null || echo "")
+        if [ -n "${STREAMLIT_PASSWORD}" ] && [ "${STREAMLIT_PASSWORD}" != "violentutf.web" ]; then
+            echo "Found password in Streamlit container"
+            USER_PASSWORD="${STREAMLIT_PASSWORD}"
+        fi
+    fi
 fi
+
+echo "Final password selection: [REDACTED - ${#USER_PASSWORD} chars]"
 
 auth_response=$(curl -s -X POST "http://localhost:9080/api/v1/auth/token" \
     -H "Content-Type: application/x-www-form-urlencoded" \
@@ -385,6 +451,34 @@ else
     # Try with API key as fallback
     echo
     echo "Trying with API key instead..."
+    echo "Using API key: [REDACTED - ${#VIOLENTUTF_API_KEY} chars]"
+    
+    # First verify the API key is valid
+    echo "Testing API key validity..."
+    api_test_response=$(curl -s "http://localhost:9080/api/v1/health" \
+        -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+    
+    if echo "$api_test_response" | grep -q '"status":"healthy"'; then
+        echo "✅ API key is valid"
+    else
+        echo "❌ API key is invalid or not working"
+        echo "Response: $api_test_response"
+        
+        # Try to find the correct API key
+        echo
+        echo "Checking for correct API key in configuration files..."
+        
+        # Check FastAPI .env file
+        if [ -f "./violentutf_api/fastapi_app/.env" ]; then
+            FILE_API_KEY=$(grep "^VIOLENTUTF_API_KEY=" "./violentutf_api/fastapi_app/.env" | cut -d'=' -f2 | tr -d '"' | tr -d "'" || echo "")
+            if [ -n "$FILE_API_KEY" ]; then
+                echo "Found API key in FastAPI .env file"
+                VIOLENTUTF_API_KEY="$FILE_API_KEY"
+                echo "Retrying with file-based API key..."
+            fi
+        fi
+    fi
+    
     providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
         -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
 fi
@@ -576,3 +670,13 @@ echo "1. If authentication fails, check the password in violentutf/.env"
 echo "2. If API key fails, verify VIOLENTUTF_API_KEY in violentutf_api/fastapi_app/.env"
 echo "3. Check container logs: docker logs violentutf_api --tail 50"
 echo "4. Verify routes: curl -H 'X-API-KEY: [YOUR_APISIX_ADMIN_KEY]' http://localhost:9180/apisix/admin/routes"
+echo
+echo "Common Issues:"
+echo "- Invalid credentials: The password in Keycloak may not match what's in .env files"
+echo "- Invalid API key: The API key in the container may be different from what's loaded"
+echo "- MCP server error: This is a known issue but doesn't affect GSAi integration"
+echo
+echo "To manually test GSAi integration:"
+echo "1. Get a valid JWT token or API key that works"
+echo "2. Test provider discovery: curl -H 'X-API-Key: [YOUR_KEY]' http://localhost:9080/api/v1/generators/apisix/openapi-providers"
+echo "3. Test GSAi directly: curl -H 'Authorization: Bearer ${OPENAPI_1_AUTH_TOKEN}' https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/chat/completions"
