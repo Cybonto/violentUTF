@@ -9,23 +9,57 @@ echo "=== Creating Simple GSAi Route (Static Authentication) ==="
 echo "This approach treats GSAi like OpenAI/Anthropic with static token"
 echo
 
-# Load environment variables
+# Load environment variables from all relevant files
+echo "Loading environment configuration..."
+set -a  # Export all variables
+
+# Load main ai-tokens.env
 if [ -f "./ai-tokens.env" ]; then
-    echo "Loading GSAi configuration from ai-tokens.env..."
+    echo "Loading ./ai-tokens.env..."
     source "./ai-tokens.env"
-else
-    echo "❌ ai-tokens.env not found"
-    exit 1
 fi
 
+# Load APISIX configuration (where APISIX_ADMIN_KEY is stored)
+if [ -f "./apisix/.env" ]; then
+    echo "Loading ./apisix/.env..."
+    source "./apisix/.env"
+fi
+
+# Load FastAPI configuration
+if [ -f "./violentutf_api/fastapi_app/.env" ]; then
+    echo "Loading ./violentutf_api/fastapi_app/.env..."
+    source "./violentutf_api/fastapi_app/.env"
+fi
+
+# Load ViolentUTF configuration
+if [ -f "./violentutf/.env" ]; then
+    echo "Loading ./violentutf/.env..."
+    source "./violentutf/.env"
+fi
+
+set +a  # Stop exporting
+
+# Debug: Show which files exist
+echo
+echo "Environment files status:"
+[ -f "./ai-tokens.env" ] && echo "✅ ./ai-tokens.env exists" || echo "❌ ./ai-tokens.env missing"
+[ -f "./apisix/.env" ] && echo "✅ ./apisix/.env exists" || echo "❌ ./apisix/.env missing"
+[ -f "./violentutf_api/fastapi_app/.env" ] && echo "✅ ./violentutf_api/fastapi_app/.env exists" || echo "❌ ./violentutf_api/fastapi_app/.env missing"
+[ -f "./violentutf/.env" ] && echo "✅ ./violentutf/.env exists" || echo "❌ ./violentutf/.env missing"
+
 # Validate GSAi configuration
+echo
+echo "Validating configuration..."
 if [ -z "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
-    echo "❌ OPENAPI_1_AUTH_TOKEN not found in ai-tokens.env"
+    echo "❌ OPENAPI_1_AUTH_TOKEN not found in environment files"
+    echo "Please check that OPENAPI_1_AUTH_TOKEN is set in ./ai-tokens.env"
     exit 1
 fi
 
 if [ -z "${APISIX_ADMIN_KEY:-}" ]; then
-    echo "❌ APISIX_ADMIN_KEY not found"
+    echo "❌ APISIX_ADMIN_KEY not found in environment files"
+    echo "Please check that APISIX_ADMIN_KEY is set in ./apisix/.env"
+    echo "You can also try: export APISIX_ADMIN_KEY=\$(grep APISIX_ADMIN_KEY ./apisix/.env | cut -d'=' -f2)"
     exit 1
 fi
 
