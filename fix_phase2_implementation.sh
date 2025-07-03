@@ -69,6 +69,12 @@ if [ -f "./violentutf_api/fastapi_app/.env" ]; then
     source "./violentutf_api/fastapi_app/.env"
 fi
 
+# Load ViolentUTF configuration (for user password)
+if [ -f "./violentutf/.env" ]; then
+    echo "Loading ./violentutf/.env..."
+    source "./violentutf/.env"
+fi
+
 set +a  # Stop exporting
 
 # Validate GSAi configuration
@@ -209,8 +215,19 @@ echo "======================================"
 GSAI_HOST=$(echo "${OPENAPI_1_BASE_URL}" | sed -E 's|https?://([^/]+).*|\1|')
 echo "GSAi host: $GSAI_HOST"
 
+# First check if route 3001 exists
+echo "Checking if route 3001 exists..."
+existing_route=$(curl -s "http://localhost:9180/apisix/admin/routes/3001" \
+    -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null || echo '{}')
+
+if echo "$existing_route" | grep -q '"id":"3001"'; then
+    echo "Route 3001 exists, updating..."
+else
+    echo "Route 3001 does not exist, creating..."
+fi
+
 # Update route 3001 with authentication headers
-echo "Updating route 3001 with authentication headers..."
+echo "Configuring route 3001 with authentication headers..."
 
 route_config=$(cat <<EOF
 {
@@ -282,9 +299,10 @@ provider_count=0
 
 # First, let's try to get a valid JWT token using the service account
 echo "Getting authentication token..."
-auth_response=$(curl -s -X POST "http://localhost:9080/api/v1/auth/login" \
-    -H "Content-Type: application/json" \
-    -d '{"username": "violentutf.web", "password": "violentutf.web"}' 2>/dev/null || echo '{"error": "Failed"}')
+# Note: The password should be from VIOLENTUTF_USER_PASSWORD generated during setup
+auth_response=$(curl -s -X POST "http://localhost:9080/api/v1/auth/token" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "grant_type=password&username=violentutf.web&password=${VIOLENTUTF_USER_PASSWORD:-violentutf.web}" 2>/dev/null || echo '{"error": "Failed"}')
 
 if echo "$auth_response" | jq -e '.access_token' >/dev/null 2>&1; then
     JWT_TOKEN=$(echo "$auth_response" | jq -r '.access_token')
@@ -324,7 +342,105 @@ else
 fi
 
 echo
-echo "Step 5: Test Model Discovery"
+echo "Step 5: Fix OpenAPI Provider Routes"
+echo "==================================="
+
+# Create a proper proxy route for GSAi provider discovery
+echo "Creating GSAi provider proxy route..."
+
+# This route will forward requests from /openapi/gsai/* to the actual GSAi endpoints
+provider_route_config=$(cat <<EOF
+{
+  "uri": "/openapi/${OPENAPI_1_ID}/providers",
+  "name": "openapi-${OPENAPI_1_ID}-providers",
+  "upstream": {
+    "type": "roundrobin",
+    "scheme": "https",
+    "nodes": {
+      "${GSAI_HOST}:443": 1
+    }
+  },
+  "plugins": {
+    "cors": {
+      "allow_origins": "*",
+      "allow_methods": "*",
+      "allow_headers": "*",
+      "expose_headers": "*",
+      "max_age": 3600,
+      "allow_credentials": true
+    },
+    "proxy-rewrite": {
+      "uri": "/api/v1/chat/completions",
+      "headers": {
+        "set": {
+          "Authorization": "Bearer ${OPENAPI_1_AUTH_TOKEN}"
+        }
+      }
+    }
+  }
+}
+EOF
+)
+
+# Create the providers route
+response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/3002" \
+    -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
+    -H "Content-Type: application/json" \
+    -d "$provider_route_config" 2>/dev/null || echo '{"error": "Failed"}')
+
+if echo "$response" | grep -q '"id":"3002"'; then
+    print_status 0 "Created GSAi provider discovery route"
+else
+    print_status 1 "Failed to create provider discovery route"
+    echo "Response: $response" | jq . 2>/dev/null || echo "$response"
+fi
+
+echo
+echo "Step 6: Create Dedicated GSAi Discovery Endpoint"
+echo "==============================================="
+
+# Since GSAi doesn't have a /providers endpoint, we need to create a mock response
+# This will be handled by the FastAPI backend
+echo "Creating GSAi provider configuration in FastAPI..."
+
+# Create a special route that returns GSAi provider information
+gsai_info_route=$(cat <<EOF
+{
+  "uri": "/api/v1/openapi/${OPENAPI_1_ID}/info",
+  "name": "openapi-${OPENAPI_1_ID}-info",
+  "upstream": {
+    "type": "roundrobin",
+    "nodes": {
+      "violentutf_api:8000": 1
+    }
+  },
+  "plugins": {
+    "cors": {
+      "allow_origins": "*",
+      "allow_methods": "*",
+      "allow_headers": "*",
+      "expose_headers": "*",
+      "max_age": 3600,
+      "allow_credentials": true
+    }
+  }
+}
+EOF
+)
+
+response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/3003" \
+    -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
+    -H "Content-Type: application/json" \
+    -d "$gsai_info_route" 2>/dev/null || echo '{"error": "Failed"}')
+
+if echo "$response" | grep -q '"id":"3003"'; then
+    print_status 0 "Created GSAi info route"
+else
+    print_status 1 "Failed to create GSAi info route"
+fi
+
+echo
+echo "Step 7: Test Model Discovery"
 echo "==========================="
 
 if [ "${provider_count:-0}" -gt 0 ]; then
@@ -359,6 +475,10 @@ echo "Actions completed:"
 echo "1. Created docker-compose.override.yml with GSAi environment variables"
 echo "2. Restarted FastAPI container with new configuration"
 echo "3. Updated APISIX route 3001 with authentication headers"
+echo "4. Created GSAi provider discovery route (3002)"
+echo "5. Created GSAi info route (3003) for provider metadata"
+echo "6. Fixed authentication method for JWT token generation"
+echo "7. Configured proper Bearer token authentication for GSAi"
 echo
 echo
 echo "Next steps:"
