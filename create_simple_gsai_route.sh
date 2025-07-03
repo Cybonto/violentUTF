@@ -184,7 +184,7 @@ static_gsai_models_route='{
 static_gsai_models_route_json=$(jq -n \
   --arg auth_token "${OPENAPI_1_AUTH_TOKEN}" \
   '{
-    "id": "9002",
+    "id": "9003",
     "uri": "/ai/gsai/models", 
     "name": "gsai-static-models",
     "upstream": {
@@ -222,13 +222,13 @@ static_gsai_models_route_json=$(jq -n \
 echo "Debug: JSON payload for route 9002 (via jq):"
 echo "$static_gsai_models_route_json" | sed -E 's/"Authorization": "Bearer [^"]+"/\"Authorization\": \"Bearer [REDACTED]\"/g'
 
-response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9002" \
+response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9003" \
     -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
     -H "Content-Type: application/json" \
     -d "$static_gsai_models_route_json" 2>/dev/null || echo '{"error": "Failed"}')
 
-if echo "$response" | grep -q '"id":"9002"'; then
-    echo "✅ Created static GSAi models route (ID: 9002)"
+if echo "$response" | grep -q '"id":"9003"'; then
+    echo "✅ Created static GSAi models route (ID: 9003)"
     echo "✅ Endpoint: http://localhost:9080/ai/gsai/models"
 else
     echo "❌ Failed to create GSAi models route"
