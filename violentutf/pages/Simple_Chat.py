@@ -269,6 +269,17 @@ def view_prompt_variable(var_name, var_data):
     st.text_area("Variable Value:", value=var_data.get("value", ""), height=200)
 
 
+def get_provider_display_name(provider: str) -> str:
+    """Get user-friendly display name for AI provider"""
+    provider_names = {
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "ollama": "Ollama (Local)",
+        "webui": "Open WebUI",
+        "gsai": "GSAi (Government Services AI)"
+    }
+    return provider_names.get(provider, provider.title())
+
 with st.sidebar:
     st.header("Chat Endpoint Configuration")
 
@@ -306,6 +317,11 @@ with st.sidebar:
         ai_providers = list(apisix_endpoints.keys())
         selected_ai_provider = st.selectbox("Select AI Provider", options=ai_providers)
 
+        # Show provider-specific information
+        if selected_ai_provider == "gsai":
+            st.info("🏛️ **GSAi (Government Services AI)** - Static authentication, enterprise AI models")
+            st.caption("Authenticated via API gateway with government security protocols")
+
         # Model selection based on selected provider with display names
         available_models = list(apisix_endpoints[selected_ai_provider].keys())
 
@@ -328,7 +344,8 @@ with st.sidebar:
 
         # Set the selected model for use in chat
         model_display_name = token_manager.get_model_display_name(selected_ai_provider, selected_model)
-        selected_model_display = f"{selected_ai_provider.title()}/{model_display_name}"
+        provider_display_name = get_provider_display_name(selected_ai_provider)
+        selected_model_display = f"{provider_display_name}/{model_display_name}"
 
     elif selected_provider == "Ollama":
         st.subheader("Ollama Configuration")

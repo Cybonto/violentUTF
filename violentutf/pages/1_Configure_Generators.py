@@ -474,6 +474,18 @@ def get_apisix_models_from_api(provider: str):
     return []
 
 
+def get_provider_display_name(provider: str):
+    """Get user-friendly display name for provider"""
+    provider_names = {
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "ollama": "Ollama (Local)",
+        "webui": "Open WebUI",
+        "openapi-gsai": "GSAi (Government Services AI)"
+    }
+    return provider_names.get(provider, provider)
+
+
 def save_session_to_api(session_update: Dict[str, Any]):
     """Save session state to API"""
     data = api_request("PUT", API_ENDPOINTS["sessions_update"], json=session_update)
@@ -835,11 +847,15 @@ def handle_ai_gateway_provider_selection():
                 # Show model preview outside form
                 try:
                     models = get_apisix_models_from_api(selected_provider)
+                    provider_display = get_provider_display_name(selected_provider)
                     if models:
-                        st.info(f"📡 **Live Discovery**: Found {len(models)} models for {selected_provider} provider")
+                        if selected_provider == "openapi-gsai":
+                            st.info(f"🏛️ **GSAi Models**: Found {len(models)} models for {provider_display}")
+                        else:
+                            st.info(f"📡 **Live Discovery**: Found {len(models)} models for {provider_display}")
                         st.session_state["ai_gateway_available_models"] = models
                     else:
-                        st.warning(f"⚠️ No models found for {selected_provider} provider")
+                        st.warning(f"⚠️ No models found for {provider_display}")
                         st.session_state["ai_gateway_available_models"] = []
                 except Exception as e:
                     st.error(f"Error loading models: {e}")
@@ -913,15 +929,21 @@ def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
                 if current_model and current_model in available_models:
                     default_index = available_models.index(current_model)
 
+                provider_display = get_provider_display_name(selected_provider)
+                help_text = f"Available models for {provider_display} (Required)"
+                if selected_provider == "openapi-gsai":
+                    help_text += " - Uses static authentication like OpenAI/Anthropic"
+                
                 st.selectbox(
                     f"{model_param['description']}*",
                     options=available_models,
                     index=default_index,
                     key=model_key,
-                    help=f"Available models for {selected_provider} provider (Required)",
+                    help=help_text,
                 )
             else:
-                st.warning(f"⚠️ No models available for {selected_provider} provider")
+                provider_display = get_provider_display_name(selected_provider)
+                st.warning(f"⚠️ No models available for {provider_display}")
                 st.session_state["AI Gateway_model"] = None
 
         # Render other configuration parameters based on provider selection

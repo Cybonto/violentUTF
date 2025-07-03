@@ -55,6 +55,16 @@ class TokenManager:
                 "llama3": "/ai/ollama/llama3",
             },
             "webui": {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"},
+            "gsai": {
+                "claude_3_5_sonnet": "/ai/gsai/chat/completions",
+                "claude_3_7_sonnet": "/ai/gsai/chat/completions", 
+                "claude_3_haiku": "/ai/gsai/chat/completions",
+                "llama3211b": "/ai/gsai/chat/completions",
+                "cohere_english_v3": "/ai/gsai/chat/completions",
+                "gemini-2.0-flash": "/ai/gsai/chat/completions",
+                "gemini-2.0-flash-lite": "/ai/gsai/chat/completions",
+                "gemini-2.5-pro-preview-05-06": "/ai/gsai/chat/completions",
+            },
             "bedrock": {
                 "claude-opus-4": "/ai/bedrock/claude-opus-4",
                 "claude-sonnet-4": "/ai/bedrock/claude-sonnet-4",
@@ -569,6 +579,16 @@ class TokenManager:
             },
             "ollama": {"llama2": "Llama 2", "codellama": "Code Llama", "mistral": "Mistral", "llama3": "Llama 3"},
             "webui": {"llama2": "Llama 2 (WebUI)", "codellama": "Code Llama (WebUI)"},
+            "gsai": {
+                "claude_3_5_sonnet": "Claude 3.5 Sonnet",
+                "claude_3_7_sonnet": "Claude 3.7 Sonnet", 
+                "claude_3_haiku": "Claude 3 Haiku",
+                "llama3211b": "Llama 3.2 11B",
+                "cohere_english_v3": "Cohere English v3",
+                "gemini-2.0-flash": "Gemini 2.0 Flash",
+                "gemini-2.0-flash-lite": "Gemini 2.0 Flash Lite",
+                "gemini-2.5-pro-preview-05-06": "Gemini 2.5 Pro Preview",
+            },
             "bedrock": {
                 "claude-opus-4": "Claude Opus 4",
                 "claude-sonnet-4": "Claude Sonnet 4",

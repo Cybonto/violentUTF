@@ -93,6 +93,11 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
 
     # AWS Bedrock - REMOVED (not supported)
 
+    # GSAi (Government Services AI) - Static route we created
+    elif provider == "openapi-gsai":
+        # Use the static GSAi route we configured in the setup
+        return "/ai/gsai/chat/completions"
+    
     # OpenAPI provider mappings
     elif provider.startswith("openapi-"):
         # For OpenAPI providers, we need to find the chat completions endpoint
@@ -177,7 +182,7 @@ GENERATOR_TYPE_DEFINITIONS = {
                 "description": "AI Provider",
                 "required": True,
                 "default": "openai",
-                "options": ["openai", "anthropic", "ollama", "webui"],
+                "options": ["openai", "anthropic", "ollama", "webui", "openapi-gsai"],
                 "category": "configuration",
             },
             {
@@ -436,6 +441,18 @@ def get_fallback_models(provider: str) -> List[str]:
 
     # For OpenAPI providers, return empty list as models are discovered dynamically
     if provider.startswith("openapi-"):
+        # Exception: GSAi has hardcoded models since models endpoint has issues
+        if provider == "openapi-gsai":
+            return [
+                "claude_3_5_sonnet",
+                "claude_3_7_sonnet", 
+                "claude_3_haiku",
+                "llama3211b",
+                "cohere_english_v3",
+                "gemini-2.0-flash",
+                "gemini-2.0-flash-lite",
+                "gemini-2.5-pro-preview-05-06"
+            ]
         return []
 
     return fallback_mappings.get(provider, [])
@@ -543,6 +560,20 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
     """
     if provider.startswith("openapi-"):
         provider_id = provider.replace("openapi-", "")
+        
+        # Special handling for GSAi - use hardcoded models since models endpoint has issues
+        if provider_id == "gsai":
+            logger.info("Using hardcoded models for GSAi (models endpoint not working)")
+            return [
+                "claude_3_5_sonnet",
+                "claude_3_7_sonnet", 
+                "claude_3_haiku",
+                "llama3211b",
+                "cohere_english_v3",
+                "gemini-2.0-flash",
+                "gemini-2.0-flash-lite",
+                "gemini-2.5-pro-preview-05-06"
+            ]
 
         # Get provider configuration
         config = get_openapi_provider_config(provider_id)

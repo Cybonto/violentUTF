@@ -1,13 +1,45 @@
 #!/bin/bash
 
-# Simple GSAi Route Creation Script
-# This treats GSAi like a traditional AI provider with static authentication
+# GSAi Route Creation Script - Improved
+# Creates GSAi routes with static authentication like OpenAI/Anthropic
+# Includes better error handling, cleanup, and validation
 
 set -eo pipefail
 
-echo "=== Creating Simple GSAi Route (Static Authentication) ==="
-echo "This approach treats GSAi like OpenAI/Anthropic with static token"
+# Colors for better output
+readonly GREEN='\033[0;32m'
+readonly RED='\033[0;31m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m' # No Color
+
+print_status() {
+    local status=$1
+    local message=$2
+    if [ "$status" -eq 0 ]; then
+        echo -e "${GREEN}✅ $message${NC}"
+    else
+        echo -e "${RED}❌ $message${NC}"
+    fi
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+echo "=== GSAi Static Route Creation (Improved) ==="
+echo "Creating GSAi routes with static authentication like OpenAI/Anthropic"
 echo
+
+# Check directory
+if [ ! -f "ai-tokens.env" ] || [ ! -d "apisix" ]; then
+    echo -e "${RED}❌ Run from ViolentUTF root directory${NC}"
+    exit 1
+fi
 
 # Load environment variables from all relevant files
 echo "Loading environment configuration..."
