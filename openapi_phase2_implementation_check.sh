@@ -1,14 +1,25 @@
 #!/bin/bash
 
-# Phase 2 Implementation Fix Script for Environment B
-# This script implements the actual fixes needed for GSAi integration
+# OpenAPI Phase 2 Implementation Check and Fix Script
+# This script diagnoses and fixes GSAi/OpenAPI integration issues
 # 
-# IMPORTANT: Run this script in Environment B from the ViolentUTF root directory
+# FEATURES:
+# - Comprehensive 7-point authentication diagnostics
+# - Automatic client secret retrieval and configuration fixes
+# - Simple static authentication setup (treats GSAi like OpenAI/Anthropic)
+# - Complete testing and verification suite
+# 
+# IMPORTANT: Run this script from the ViolentUTF root directory
 
 set -eo pipefail
 
-echo "=== Phase 2 Implementation Fixes for GSAi Integration ==="
-echo "This script will fix the issues preventing GSAi integration"
+echo "=== OpenAPI Phase 2 Implementation Check and Fix ==="
+echo "This script will diagnose and fix GSAi/OpenAPI integration issues"
+echo
+echo "🔧 Available Fix Options:"
+echo "1. Comprehensive diagnostics (7-point authentication analysis)"
+echo "2. Simple static authentication setup (treats GSAi like OpenAI/Anthropic)"
+echo "3. Full testing and verification suite"
 echo
 
 # Colors for output
@@ -1127,9 +1138,18 @@ else
 fi
 
 echo
-echo "=== Phase 2 Implementation Summary ==="
+echo "=== OpenAPI Implementation Summary ==="
 echo
-echo "Actions completed:"
+echo "🔍 Diagnostic Actions Completed:"
+echo "1. Comprehensive 7-point authentication analysis"
+echo "2. Client secret mismatch detection and auto-fix"
+echo "3. Client ID configuration correction"
+echo "4. Environment variable validation and loading"
+echo "5. Network connectivity verification"
+echo "6. JWT validation testing"
+echo "7. Container restart and service health checks"
+echo
+echo "🛠️ Configuration Actions Completed:"
 echo "1. Created docker-compose.override.yml with GSAi environment variables"
 echo "2. Restarted FastAPI container with new configuration"
 echo "3. Updated APISIX route 3001 with authentication headers"
@@ -1204,3 +1224,84 @@ echo "To manually test GSAi integration:"
 echo "1. Get a valid JWT token or API key that works"
 echo "2. Test provider discovery: curl -H 'X-API-Key: [YOUR_KEY]' http://localhost:9080/api/v1/generators/apisix/openapi-providers"
 echo "3. Test GSAi directly: curl -H 'Authorization: Bearer [YOUR_GSAI_TOKEN]' https://[GSAI_HOST]/api/v1/chat/completions"
+
+echo
+echo
+echo "🚀 ALTERNATIVE SOLUTION: Simple Static Authentication"
+echo "===================================================="
+echo
+echo "If the complex authentication diagnostics above didn't resolve the issue,"
+echo "you can use the SIMPLE approach that treats GSAi like OpenAI/Anthropic:"
+echo
+echo "1. Create static GSAi routes (no JWT dependency):"
+echo "   ./create_simple_gsai_route.sh"
+echo
+echo "2. This approach:"
+echo "   ✅ Embeds GSAi token directly in APISIX routes (like OpenAI/Anthropic)"
+echo "   ✅ No Keycloak/JWT dependency for API calls"
+echo "   ✅ Works with simple API key authentication"
+echo "   ✅ Resilient to authentication service issues"
+echo
+echo "3. Creates these endpoints:"
+echo "   - http://localhost:9080/ai/gsai/chat/completions"
+echo "   - http://localhost:9080/ai/gsai/models"
+echo
+echo "4. Test the simple routes:"
+echo "   # Test models"
+echo "   curl -H 'X-API-Key: \${VIOLENTUTF_API_KEY}' http://localhost:9080/ai/gsai/models"
+echo
+echo "   # Test chat completions"
+echo "   curl -H 'X-API-Key: \${VIOLENTUTF_API_KEY}' \\"
+echo "        -H 'Content-Type: application/json' \\"
+echo "        -d '{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' \\"
+echo "        http://localhost:9080/ai/gsai/chat/completions"
+echo
+echo "The simple approach is recommended for production environments as it's"
+echo "more reliable and follows the same pattern as OpenAI/Anthropic integration."
+
+# Add comprehensive testing section
+echo
+echo
+echo "🧪 COMPREHENSIVE TESTING SUITE"
+echo "=============================="
+echo
+echo "After running either fix approach, use these commands to verify everything works:"
+echo
+echo "1. Verify Routes Created:"
+echo "   curl -s \"http://localhost:9180/apisix/admin/routes\" \\"
+echo "        -H \"X-API-KEY: \${APISIX_ADMIN_KEY}\" | \\"
+echo "        jq '.list[] | select(.value.id == \"9001\" or .value.id == \"9002\" or .value.id == \"3001\") | {id: .value.id, name: .value.name, uri: .value.uri}'"
+echo
+echo "2. Test GSAi Models Endpoint:"
+echo "   curl -H \"X-API-Key: \${VIOLENTUTF_API_KEY}\" \\"
+echo "        \"http://localhost:9080/ai/gsai/models\""
+echo
+echo "3. Test GSAi Chat Completions:"
+echo "   curl -H \"X-API-Key: \${VIOLENTUTF_API_KEY}\" \\"
+echo "        -H \"Content-Type: application/json\" \\"
+echo "        -d '{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}' \\"
+echo "        \"http://localhost:9080/ai/gsai/chat/completions\""
+echo
+echo "4. Check Streamlit UI:"
+echo "   - Open http://localhost:8501"
+echo "   - Navigate to \"1_Configure_Generators.py\""
+echo "   - Verify GSAi appears in provider dropdown"
+echo
+echo "5. Test Provider Discovery:"
+echo "   curl -H \"X-API-Key: \${VIOLENTUTF_API_KEY}\" \\"
+echo "        \"http://localhost:9080/api/v1/generators/apisix/providers\""
+echo
+echo "6. Check Container Logs:"
+echo "   docker logs violentutf_api --tail 20"
+echo
+echo "7. Test Direct GSAi (bypass APISIX):"
+echo "   curl -H \"Authorization: Bearer \${OPENAPI_1_AUTH_TOKEN}\" \\"
+echo "        \"https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models\""
+echo
+echo "🎯 Success Indicators:"
+echo "✅ Routes 9001 and 9002 (or 3001) exist in APISIX"
+echo "✅ Models endpoint returns GSAi models list"
+echo "✅ Chat completions endpoint responds with AI messages"
+echo "✅ Streamlit UI shows GSAi in provider dropdown"
+echo "✅ No authentication errors in logs"
+echo "✅ Provider discovery includes GSAi"
