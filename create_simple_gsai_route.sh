@@ -84,7 +84,9 @@ static_gsai_route='{
     }
   },
   "plugins": {
-    "key-auth": {},
+    "key-auth": {
+      "header": "X-API-Key"
+    },
     "ai-proxy": {
       "provider": "openai-compatible",
       "auth": {
@@ -122,7 +124,9 @@ if echo "$response" | grep -q '"id":"9001"'; then
     echo "✅ Endpoint: http://localhost:9080/ai/gsai/chat/completions"
 else
     echo "❌ Failed to create GSAi route"
-    echo "Response: $response"
+    # Redact any sensitive data from response
+    redacted_response=$(echo "$response" | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g')
+    echo "Response: $redacted_response" | jq . 2>/dev/null || echo "$redacted_response"
     exit 1
 fi
 
@@ -143,7 +147,9 @@ static_gsai_models_route='{
     }
   },
   "plugins": {
-    "key-auth": {},
+    "key-auth": {
+      "header": "X-API-Key"
+    },
     "proxy-rewrite": {
       "uri": "/api/v1/models",
       "headers": {
@@ -173,7 +179,9 @@ if echo "$response" | grep -q '"id":"9002"'; then
     echo "✅ Endpoint: http://localhost:9080/ai/gsai/models"
 else
     echo "❌ Failed to create GSAi models route"
-    echo "Response: $response"
+    # Redact any sensitive data from response
+    redacted_response=$(echo "$response" | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g')
+    echo "Response: $redacted_response" | jq . 2>/dev/null || echo "$redacted_response"
 fi
 
 echo

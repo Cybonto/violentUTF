@@ -139,13 +139,15 @@ echo "================================="
 echo "Checking route 9002 (models) configuration..."
 route_9002_config=$(echo "$simple_routes_response" | jq '.list[] | select(.key == "/apisix/routes/9002") | .value')
 echo "Route 9002 plugins:"
-echo "$route_9002_config" | jq '.plugins // {}'
+# Redact Bearer tokens from the output
+echo "$route_9002_config" | jq '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g'
 
 echo
 echo "Checking route 9001 (chat) configuration..."
 route_9001_config=$(echo "$simple_routes_response" | jq '.list[] | select(.key == "/apisix/routes/9001") | .value')
 echo "Route 9001 plugins:"
-echo "$route_9001_config" | jq '.plugins // {}'
+# Redact Bearer tokens from the output
+echo "$route_9001_config" | jq '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g'
 
 echo
 echo "Step 3: Test API Key Authentication"
@@ -240,8 +242,8 @@ if [ "$models_http_code" != "200" ] || [ "$chat_http_code" != "200" ]; then
     echo "🔍 TROUBLESHOOTING STEPS:"
     echo
     echo "1. Check if routes have key-auth plugin enabled:"
-    echo "   Route 9001 plugins: $(echo "$route_9001_config" | jq -c '.plugins // {}')"
-    echo "   Route 9002 plugins: $(echo "$route_9002_config" | jq -c '.plugins // {}')"
+    echo "   Route 9001 plugins: $(echo "$route_9001_config" | jq -c '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g')"
+    echo "   Route 9002 plugins: $(echo "$route_9002_config" | jq -c '.plugins // {}' | sed -E 's/"Authorization": "Bearer [^"]+"/Authorization": "Bearer [REDACTED]"/g')"
     echo
     echo "2. Verify API key format:"
     echo "   Length: ${#VIOLENTUTF_API_KEY} characters"
@@ -249,7 +251,7 @@ if [ "$models_http_code" != "200" ] || [ "$chat_http_code" != "200" ]; then
     echo
     echo "3. Test direct GSAi (bypass APISIX):"
     if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
-        echo "   curl -H 'Authorization: Bearer ${OPENAPI_1_AUTH_TOKEN}' https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models"
+        echo "   curl -H 'Authorization: Bearer [YOUR_GSAI_TOKEN]' https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models"
     else
         echo "   OPENAPI_1_AUTH_TOKEN not available for direct test"
     fi
