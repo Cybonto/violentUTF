@@ -169,6 +169,14 @@ setup_openapi_routes() {
     local log_file="./tmp/violentutf_openapi_setup.log"
     echo "$(date): Starting OpenAPI setup" > "$log_file"
     
+    # Load AI tokens to get OpenAPI configuration
+    if [ -f "./ai-tokens.env" ]; then
+        echo "Loading OpenAPI configuration from ai-tokens.env..."
+        source "./ai-tokens.env"
+    else
+        echo "⚠️  ai-tokens.env not found - OpenAPI providers may not be configured"
+    fi
+    
     echo "Setting up OpenAPI provider routes..."
     echo "$(date): OPENAPI_ENABLED = '${OPENAPI_ENABLED:-<not set>}'" >> "$log_file"
     
