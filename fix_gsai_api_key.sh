@@ -41,13 +41,13 @@ echo "Step 1: Check if consumer exists"
 echo "==============================="
 
 # Check if consumer already exists
-consumer_check=$(curl -s "http://localhost:9180/apisix/admin/consumers/violentutf-api-user" \
+consumer_check=$(curl -s "http://localhost:9180/apisix/admin/consumers/violentutf_api_user" \
     -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null || echo '{"error": "not found"}')
 
-if echo "$consumer_check" | grep -q '"username":"violentutf-api-user"'; then
-    echo "✅ Consumer 'violentutf-api-user' already exists"
+if echo "$consumer_check" | grep -q '"username":"violentutf_api_user"'; then
+    echo "✅ Consumer 'violentutf_api_user' already exists"
 else
-    echo "❌ Consumer 'violentutf-api-user' does not exist - creating..."
+    echo "❌ Consumer 'violentutf_api_user' does not exist - creating..."
     
     echo
     echo "Step 2: Create API key consumer"
@@ -55,7 +55,7 @@ else
     
     # Create consumer with API key
     consumer_config='{
-      "username": "violentutf-api-user",
+      "username": "violentutf_api_user",
       "plugins": {
         "key-auth": {
           "key": "'"${VIOLENTUTF_API_KEY}"'"
@@ -64,12 +64,12 @@ else
     }'
     
     echo "Creating consumer with API key..."
-    consumer_response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/consumers/violentutf-api-user" \
+    consumer_response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/consumers/violentutf_api_user" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
         -H "Content-Type: application/json" \
         -d "$consumer_config" 2>/dev/null || echo '{"error": "Failed"}')
     
-    if echo "$consumer_response" | grep -q '"username":"violentutf-api-user"'; then
+    if echo "$consumer_response" | grep -q '"username":"violentutf_api_user"'; then
         echo "✅ Created API key consumer successfully"
     else
         echo "❌ Failed to create consumer"
