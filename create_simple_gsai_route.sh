@@ -99,7 +99,8 @@ static_gsai_route='{
       },
       "options": {
         "model": "gpt-4"
-      }
+      },
+      "ssl_verify": false
     },
     "cors": {
       "allow_origins": "*",
@@ -157,6 +158,9 @@ static_gsai_models_route='{
           "Authorization": "Bearer '"${OPENAPI_1_AUTH_TOKEN}"'"
         }
       }
+    },
+    "proxy-ssl-verify": {
+      "upstream_ssl_verify": false
     },
     "cors": {
       "allow_origins": "*",
