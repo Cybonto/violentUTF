@@ -149,9 +149,8 @@ static_gsai_models_route='{
     "nodes": {
       "api.dev.gsai.mcaas.fcs.gsa.gov:443": 1
     },
-    "tls": {
-      "verify": false
-    }
+    "pass_host": "pass",
+    "upstream_host": "api.dev.gsai.mcaas.fcs.gsa.gov"
   },
   "plugins": {
     "key-auth": {
