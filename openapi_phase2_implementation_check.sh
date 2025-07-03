@@ -1104,10 +1104,112 @@ else
 fi
 
 echo
-echo "Step 8: Test Model Discovery"
-echo "==========================="
+echo "Step 8: Check for Simple Static GSAi Routes"
+echo "==========================================="
+
+# Check if simple static routes exist (routes 9001 and 9002)
+echo "Checking for simple static GSAi routes (created by ./create_simple_gsai_route.sh)..."
+simple_routes_response=$(curl -s "http://localhost:9180/apisix/admin/routes" \
+    -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+
+simple_route_9001_exists=false
+simple_route_9002_exists=false
+
+if echo "$simple_routes_response" | grep -q '"list"'; then
+    if echo "$simple_routes_response" | jq -e '.list[] | select(.key == "/apisix/routes/9001")' >/dev/null 2>&1; then
+        simple_route_9001_exists=true
+        echo "✅ Route 9001 (gsai-static-chat-completions) exists"
+    else
+        echo "❌ Route 9001 (gsai-static-chat-completions) missing"
+    fi
+    
+    if echo "$simple_routes_response" | jq -e '.list[] | select(.key == "/apisix/routes/9002")' >/dev/null 2>&1; then
+        simple_route_9002_exists=true
+        echo "✅ Route 9002 (gsai-static-models) exists"
+    else
+        echo "❌ Route 9002 (gsai-static-models) missing"
+    fi
+else
+    echo "❌ Failed to retrieve routes from APISIX"
+fi
+
+# If simple routes exist, test them
+if [ "$simple_route_9001_exists" = true ] && [ "$simple_route_9002_exists" = true ]; then
+    echo
+    echo "🎉 SIMPLE STATIC GSAI ROUTES DETECTED!"
+    echo "====================================="
+    echo "Found simple static GSAi routes created by ./create_simple_gsai_route.sh"
+    echo "Testing these routes now..."
+    
+    echo
+    echo "Step 8a: Test Simple GSAi Models Endpoint"
+    echo "========================================="
+    
+    simple_models_response=$(curl -s --max-time 10 "http://localhost:9080/ai/gsai/models" \
+        -H "X-API-Key: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
+    
+    if echo "$simple_models_response" | jq -e '.data[0]' >/dev/null 2>&1; then
+        model_count=$(echo "$simple_models_response" | jq '.data | length' 2>/dev/null || echo "0")
+        print_status 0 "Simple GSAi models endpoint working - found $model_count models"
+        echo "Available models:"
+        echo "$simple_models_response" | jq -r '.data[] | "  - \(.id)"' 2>/dev/null | head -5
+        simple_models_working=true
+    else
+        print_status 1 "Simple GSAi models endpoint failed"
+        # Redact any sensitive data from models response
+        redacted_simple_models=$(echo "$simple_models_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g')
+        echo "Response: $redacted_simple_models" | head -100
+        simple_models_working=false
+    fi
+    
+    echo
+    echo "Step 8b: Test Simple GSAi Chat Completions Endpoint"
+    echo "=================================================="
+    
+    simple_chat_response=$(curl -s --max-time 15 "http://localhost:9080/ai/gsai/chat/completions" \
+        -H "X-API-Key: ${VIOLENTUTF_API_KEY}" \
+        -H "Content-Type: application/json" \
+        -d '{"model":"gpt-4","messages":[{"role":"user","content":"Hello, respond with just: GSAi working!"}]}' 2>/dev/null || echo '{"error": "Failed"}')
+    
+    if echo "$simple_chat_response" | jq -e '.choices[0].message.content' >/dev/null 2>&1; then
+        chat_content=$(echo "$simple_chat_response" | jq -r '.choices[0].message.content' 2>/dev/null)
+        print_status 0 "Simple GSAi chat completions endpoint working"
+        echo "GSAi Response: \"$chat_content\""
+        simple_chat_working=true
+    else
+        print_status 1 "Simple GSAi chat completions endpoint failed"
+        # Redact any sensitive data from chat response
+        redacted_simple_chat=$(echo "$simple_chat_response" | sed -E 's/"access_token":"[^"]+"/access_token":"[REDACTED]"/g')
+        echo "Response: $redacted_simple_chat" | head -100
+        simple_chat_working=false
+    fi
+    
+    # Update provider count for summary
+    if [ "$simple_models_working" = true ] && [ "$simple_chat_working" = true ]; then
+        provider_count=1
+        echo
+        print_status 0 "Simple static GSAi integration is WORKING!"
+        echo "🎉 GSAi is now available via static routes (like OpenAI/Anthropic)"
+        echo "📍 Models endpoint: http://localhost:9080/ai/gsai/models"
+        echo "📍 Chat endpoint: http://localhost:9080/ai/gsai/chat/completions"
+    else
+        echo
+        print_status 1 "Simple static GSAi integration has issues"
+    fi
+else
+    echo
+    echo "ℹ️  Simple static GSAi routes not found"
+    echo "   To create them, run: ./create_simple_gsai_route.sh"
+    echo "   This creates resilient routes that work like OpenAI/Anthropic"
+fi
+
+echo
+echo "Step 9: Test Model Discovery (Complex OpenAPI Routes)"
+echo "===================================================="
 
 if [ "${provider_count:-0}" -gt 0 ]; then
+    echo "Skipping complex OpenAPI provider discovery - simple static routes are working"
+elif [ "${provider_count:-0}" -eq 0 ]; then
     echo "Testing model discovery for openapi-${OPENAPI_1_ID}..."
     
     # Use JWT token if available (either ViolentUTF or direct Keycloak), otherwise use API key
@@ -1160,9 +1262,24 @@ echo "7. Configured proper Bearer token authentication for GSAi"
 echo
 echo "Current Status:"
 if [ "${provider_count:-0}" -gt 0 ]; then
-    echo "✅ GSAi provider discovery is working!"
+    if [ "$simple_route_9001_exists" = true ] && [ "$simple_route_9002_exists" = true ]; then
+        echo "✅ GSAi integration is WORKING via simple static routes!"
+        echo "🎉 GSAi works like OpenAI/Anthropic - no complex authentication needed"
+        echo "📍 Available endpoints:"
+        echo "   - Models: http://localhost:9080/ai/gsai/models"
+        echo "   - Chat: http://localhost:9080/ai/gsai/chat/completions"
+        echo "🔧 Integration method: Static authentication (resilient)"
+    else
+        echo "✅ GSAi provider discovery is working via complex routes!"
+        echo "🔧 Integration method: Dynamic authentication (complex)"
+    fi
 else
-    echo "❌ GSAi provider discovery is not working due to authentication issues"
+    echo "❌ GSAi integration is not working"
+    
+    if [ "$simple_route_9001_exists" = true ] || [ "$simple_route_9002_exists" = true ]; then
+        echo "📍 Simple static routes detected but not fully working"
+        echo "   Check the diagnostic output above for specific issues"
+    fi
     echo
     echo "Authentication Issues Detected:"
     echo "- The ViolentUTF /api/v1/auth/token endpoint is failing"
@@ -1268,9 +1385,10 @@ echo
 echo "After running either fix approach, use these commands to verify everything works:"
 echo
 echo "1. Verify Routes Created:"
+echo "   # Check for simple static routes (9001, 9002) or complex routes (3001, 3002, 3003)"
 echo "   curl -s \"http://localhost:9180/apisix/admin/routes\" \\"
 echo "        -H \"X-API-KEY: \${APISIX_ADMIN_KEY}\" | \\"
-echo "        jq '.list[] | select(.value.id == \"9001\" or .value.id == \"9002\" or .value.id == \"3001\") | {id: .value.id, name: .value.name, uri: .value.uri}'"
+echo "        jq '.list[] | select(.value.id == \"9001\" or .value.id == \"9002\" or .value.id == \"3001\" or .value.id == \"3002\" or .value.id == \"3003\") | {id: .value.id, name: .value.name, uri: .value.uri}'"
 echo
 echo "2. Test GSAi Models Endpoint:"
 echo "   curl -H \"X-API-Key: \${VIOLENTUTF_API_KEY}\" \\"
@@ -1299,9 +1417,17 @@ echo "   curl -H \"Authorization: Bearer \${OPENAPI_1_AUTH_TOKEN}\" \\"
 echo "        \"https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models\""
 echo
 echo "🎯 Success Indicators:"
-echo "✅ Routes 9001 and 9002 (or 3001) exist in APISIX"
+echo "✅ Routes exist in APISIX:"
+echo "   - Simple static: Routes 9001 and 9002 (gsai-static-*)"  
+echo "   - Complex dynamic: Routes 3001, 3002, 3003 (openapi-gsai-*)"
 echo "✅ Models endpoint returns GSAi models list"
 echo "✅ Chat completions endpoint responds with AI messages"
 echo "✅ Streamlit UI shows GSAi in provider dropdown"
 echo "✅ No authentication errors in logs"
-echo "✅ Provider discovery includes GSAi"
+echo "✅ Provider discovery includes GSAi (if using complex routes)"
+echo
+echo "🏆 Preferred Success Pattern (Simple Static Routes):"
+echo "✅ Routes 9001 and 9002 working"
+echo "✅ Direct API calls work with X-API-Key authentication"
+echo "✅ No JWT/Keycloak dependency"
+echo "✅ Resilient like OpenAI/Anthropic integration"
