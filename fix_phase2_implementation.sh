@@ -162,14 +162,29 @@ cd ..
 
 # Wait for container to fully start
 echo "Waiting for container to start..."
-for i in {1..15}; do
-    if docker exec violentutf_api echo "Container is running" &>/dev/null; then
+for i in {1..30}; do
+    if docker exec violentutf_api curl -s http://localhost:8000/api/health &>/dev/null; then
+        echo
+        print_status 0 "FastAPI service is ready"
         break
     fi
     echo -n "."
-    sleep 1
+    sleep 2
 done
 echo
+
+# Check if container is actually running and healthy
+container_status=$(docker inspect violentutf_api --format='{{.State.Status}}' 2>/dev/null || echo "not found")
+if [ "$container_status" != "running" ]; then
+    print_status 1 "FastAPI container is not running (status: $container_status)"
+    echo "Container logs:"
+    docker logs violentutf_api --tail 50
+    exit 1
+fi
+
+# Extra wait for service initialization
+echo "Waiting for service initialization..."
+sleep 5
 
 # Verify environment variables in container
 echo "Verifying environment variables in container..."
@@ -263,6 +278,7 @@ fi
 # Test provider discovery
 echo
 echo "Testing provider discovery..."
+provider_count=0
 providers_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/openapi-providers" \
     -H "apikey: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
 
@@ -279,13 +295,18 @@ else
     echo
     echo "Debugging: Checking container environment..."
     docker exec violentutf_api sh -c 'env | grep -E "^(OPENAPI|APISIX_ADMIN)" | sort' | head -20
+    
+    # Check FastAPI logs for errors
+    echo
+    echo "Checking FastAPI logs for errors..."
+    docker logs violentutf_api --tail 20 2>&1 | grep -E "(ERROR|WARNING|openapi)" || echo "No relevant logs found"
 fi
 
 echo
 echo "Step 5: Test Model Discovery"
 echo "==========================="
 
-if [ "$provider_count" -gt 0 ]; then
+if [ "${provider_count:-0}" -gt 0 ]; then
     echo "Testing model discovery for openapi-${OPENAPI_1_ID}..."
     models_response=$(curl -s --max-time 10 "http://localhost:9080/api/v1/generators/apisix/models?provider=openapi-${OPENAPI_1_ID}" \
         -H "apikey: ${VIOLENTUTF_API_KEY}" 2>/dev/null || echo '{"error": "Failed"}')
