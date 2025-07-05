@@ -1,6 +1,220 @@
 #!/usr/bin/env bash
 # apisix_setup.sh - APISIX gateway configuration and route setup
 
+# Function to integrate Custom OpenAPI SSL certificates with APISIX
+# Note: This function is deprecated since GSAi now uses HTTP instead of HTTPS
+integrate_custom_openapi_certificates() {
+    echo "🔐 Integrating Custom OpenAPI SSL certificates with APISIX..."
+    echo "   ⚠️  Note: GSAi now uses HTTP, certificate integration may not be needed"
+    
+    # Look for related containers that might have certificates
+    local cert_containers=()
+    
+    # Check for ai-gov-api stack (GSAi)
+    if docker ps --format "table {{.Names}}" | grep -q "ai-gov-api-caddy"; then
+        cert_containers+=("ai-gov-api-caddy-1")
+    fi
+    
+    # Check for other custom API containers with 'caddy' in the name
+    while IFS= read -r container; do
+        if [[ "$container" != "ai-gov-api-caddy-1" ]]; then
+            cert_containers+=("$container")
+        fi
+    done < <(docker ps --format "{{.Names}}" | grep -E "(caddy|ssl|cert)" || true)
+    
+    if [ ${#cert_containers[@]} -eq 0 ]; then
+        echo "   No Custom OpenAPI certificate containers found"
+        return 0
+    fi
+    
+    local cert_container="${cert_containers[0]}"
+    echo "   Found certificate container: $cert_container"
+    
+    # Extract certificates from the container
+    echo "   Extracting SSL certificates from $cert_container..."
+    
+    # Common certificate paths for Caddy
+    local cert_paths=(
+        "/data/caddy/pki/authorities/local/root.crt"
+        "/data/caddy/certificates/local/localhost/localhost.crt"
+        "/data/caddy/pki/authorities/local/intermediate.crt"
+    )
+    
+    local extracted_certs=()
+    for cert_path in "${cert_paths[@]}"; do
+        if docker exec "$cert_container" test -f "$cert_path" 2>/dev/null; then
+            local cert_name=$(basename "$cert_path" .crt)
+            local temp_cert="/tmp/custom-openapi-${cert_name}.crt"
+            
+            if docker cp "${cert_container}:${cert_path}" "$temp_cert" 2>/dev/null; then
+                echo "   ✅ Extracted: $cert_path -> $temp_cert"
+                extracted_certs+=("$temp_cert")
+            else
+                echo "   ⚠️  Failed to extract: $cert_path"
+            fi
+        fi
+    done
+    
+    if [ ${#extracted_certs[@]} -eq 0 ]; then
+        echo "   No certificates found in $cert_container"
+        return 0
+    fi
+    
+    # Wait for APISIX container to be running (but not necessarily ready)
+    echo "   Waiting for APISIX container to be available..."
+    local retry_count=0
+    while ! docker ps --filter "name=apisix-apisix-1" --filter "status=running" --quiet | head -1 && [ $retry_count -lt 30 ]; do
+        echo "   Waiting for APISIX container... (attempt $((retry_count + 1))/30)"
+        sleep 2
+        retry_count=$((retry_count + 1))
+    done
+    
+    if [ $retry_count -eq 30 ]; then
+        echo "   ❌ APISIX container not available for certificate installation"
+        # Clean up temp files
+        for cert_file in "${extracted_certs[@]}"; do
+            rm -f "$cert_file"
+        done
+        return 1
+    fi
+    
+    # Copy certificates to APISIX container BEFORE it fully starts
+    echo "   Installing certificates in APISIX container..."
+    local installed_count=0
+    for cert_file in "${extracted_certs[@]}"; do
+        local cert_basename=$(basename "$cert_file")
+        
+        if docker cp "$cert_file" "apisix-apisix-1:/usr/local/share/ca-certificates/$cert_basename" 2>/dev/null; then
+            echo "   ✅ Installed: $cert_basename"
+            installed_count=$((installed_count + 1))
+        else
+            echo "   ⚠️  Failed to install: $cert_basename"
+        fi
+    done
+    
+    if [ $installed_count -gt 0 ]; then
+        echo "   Updating APISIX certificate store..."
+        if docker exec --user root apisix-apisix-1 update-ca-certificates 2>/dev/null; then
+            echo "   ✅ Certificate store updated successfully"
+        else
+            echo "   ⚠️  Failed to update certificate store (will retry after APISIX starts)"
+        fi
+        
+        # Clean up temporary certificate files
+        for cert_file in "${extracted_certs[@]}"; do
+            rm -f "$cert_file"
+        done
+        
+        return 0
+    else
+        echo "   ❌ No certificates were successfully installed"
+        # Clean up temp files
+        for cert_file in "${extracted_certs[@]}"; do
+            rm -f "$cert_file"
+        done
+        return 1
+    fi
+}
+
+# Function to wait for APISIX to be ready
+wait_for_apisix_ready() {
+    echo "Waiting for APISIX to be ready..."
+    
+    local max_attempts=30
+    local attempt=1
+    local admin_url="http://localhost:9180"
+    
+    # First wait for basic connectivity
+    while [ $attempt -le $max_attempts ]; do
+        if curl -s --max-time 5 "$admin_url" >/dev/null 2>&1; then
+            echo "APISIX admin port is responding (attempt $attempt/$max_attempts)"
+            break
+        fi
+        echo "Waiting for APISIX admin port... (attempt $attempt/$max_attempts)"
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+    
+    if [ $attempt -gt $max_attempts ]; then
+        echo "❌ APISIX admin port not responding after $max_attempts attempts"
+        return 1
+    fi
+    
+    # Now wait for admin API with key
+    echo "Testing APISIX admin API with authentication..."
+    
+    # Load admin key
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found in apisix/.env"
+        return 1
+    fi
+    
+    attempt=1
+    while [ $attempt -le 15 ]; do
+        if curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" "$admin_url/apisix/admin/routes" >/dev/null 2>&1; then
+            echo "✅ APISIX admin API is ready and authenticated"
+            return 0
+        fi
+        echo "Waiting for APISIX admin API... (attempt $attempt/15)"
+        sleep 3
+        attempt=$((attempt + 1))
+    done
+    
+    echo "❌ APISIX admin API not ready after 45 seconds"
+    return 1
+}
+
+# Function to register API key consumer
+register_api_key_consumer() {
+    echo "Registering API key consumer..."
+    
+    # Load admin key
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found"
+        return 1
+    fi
+    
+    local admin_url="http://localhost:9180"
+    local api_key="${VIOLENTUTF_API_KEY:-test-api-key}"
+    
+    # Create consumer configuration
+    local consumer_config='{
+        "username": "violentutf-user",
+        "plugins": {
+            "key-auth": {
+                "key": "'$api_key'"
+            }
+        }
+    }'
+    
+    local response=$(curl -s -w "%{http_code}" -X PUT "$admin_url/apisix/admin/consumers/violentutf-user" \
+        -H "X-API-KEY: $APISIX_ADMIN_KEY" \
+        -H "Content-Type: application/json" \
+        -d "$consumer_config" -o /dev/null)
+    
+    if [ "$response" = "200" ] || [ "$response" = "201" ]; then
+        echo "✅ API key consumer registered successfully"
+        return 0
+    else
+        echo "⚠️  API key consumer registration returned status: $response (may already exist)"
+        return 0
+    fi
+}
+
 # Function to setup APISIX
 setup_apisix() {
     echo "Setting up APISIX gateway..."
@@ -39,6 +253,9 @@ setup_apisix() {
     fi
     
     cd "$original_dir"
+    
+    # Note: Certificate integration disabled since GSAi now uses HTTP
+    # integrate_custom_openapi_certificates
     
     # Wait for APISIX to be ready
     if wait_for_apisix_ready; then
@@ -146,7 +363,10 @@ verify_apisix_config() {
     echo "Verifying APISIX configuration..."
     
     # Load admin key
-    if [ -f "apisix/.env" ]; then
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
         source "apisix/.env"
     fi
     

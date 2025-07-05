@@ -56,14 +56,14 @@ class TokenManager:
             },
             "webui": {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"},
             "gsai": {
-                "claude_3_5_sonnet": "/ai/gsai/chat/completions",
-                "claude_3_7_sonnet": "/ai/gsai/chat/completions", 
-                "claude_3_haiku": "/ai/gsai/chat/completions",
-                "llama3211b": "/ai/gsai/chat/completions",
-                "cohere_english_v3": "/ai/gsai/chat/completions",
-                "gemini-2.0-flash": "/ai/gsai/chat/completions",
-                "gemini-2.0-flash-lite": "/ai/gsai/chat/completions",
-                "gemini-2.5-pro-preview-05-06": "/ai/gsai/chat/completions",
+                "claude_3_5_sonnet": "/ai/gsai-api-1/chat/completions",
+                "claude_3_7_sonnet": "/ai/gsai-api-1/chat/completions", 
+                "claude_3_haiku": "/ai/gsai-api-1/chat/completions",
+                "llama3211b": "/ai/gsai-api-1/chat/completions",
+                "cohere_english_v3": "/ai/gsai-api-1/chat/completions",
+                "gemini-2.0-flash": "/ai/gsai-api-1/chat/completions",
+                "gemini-2.0-flash-lite": "/ai/gsai-api-1/chat/completions",
+                "gemini-2.5-pro-preview-05-06": "/ai/gsai-api-1/chat/completions",
             },
             "bedrock": {
                 "claude-opus-4": "/ai/bedrock/claude-opus-4",
@@ -457,10 +457,13 @@ class TokenManager:
                 uri = route.get("uri", "")
                 plugins = route.get("plugins", {})
 
-                # Check if this is an AI proxy route
-                if "ai-proxy" in plugins and uri.startswith("/ai/"):
+                # Check if this is an AI proxy route or GSAi proxy-rewrite route
+                is_ai_proxy = "ai-proxy" in plugins
+                is_gsai_proxy_rewrite = ("proxy-rewrite" in plugins and "gsai" in uri)
+                
+                if (is_ai_proxy or is_gsai_proxy_rewrite) and uri.startswith("/ai/"):
                     # Special handling for GSAi routes which use single endpoint for all models
-                    if uri == "/ai/gsai/chat/completions" and route_id in ["9001", "gsai-static-chat-completions"]:
+                    if uri == "/ai/gsai-api-1/chat/completions" and route_id in ["9001", "gsai-static-chat-completions", "gsai-api-1-chat-completions"]:
                         # Add all GSAi models to the same endpoint
                         for model in self.fallback_apisix_endpoints.get("gsai", {}).keys():
                             endpoints["gsai"][model] = uri
@@ -485,6 +488,10 @@ class TokenManager:
             if len(parts) >= 3 and parts[0] == "ai":
                 provider = parts[1]
                 model_endpoint = parts[2]
+                
+                # Handle gsai-api-1 -> gsai mapping
+                if provider.startswith("gsai-"):
+                    provider = "gsai"
 
                 # Map endpoint back to model name using route_id or known patterns
                 model_name = self._map_endpoint_to_model(provider, model_endpoint, route_id)
@@ -681,7 +688,7 @@ class TokenManager:
         headers = {"apikey": api_key, "Content-Type": "application/json"}
 
         # Handle special requirements for OpenAI o1 models
-        payload = {"messages": messages}
+        payload = {"model": model, "messages": messages}
 
         # Filter parameters based on model type
         if provider == "openai" and any(reasoning_model in model for reasoning_model in ["o1-", "o3-", "o4-"]):

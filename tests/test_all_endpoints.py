@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Comprehensive ViolentUTF API Endpoint Testing Script
 Tests all 69 API endpoints systematically to ensure they work properly
@@ -298,7 +298,7 @@ def test_generator_endpoints():
     )
 
     # Test generator creation with unique name to avoid conflicts
-    #     import time # F811: removed duplicate import
+    # import time # F811: removed duplicate import
 
     generator_payload = {
         "name": f"test_generator_{int(time.time())}",  # Unique name

@@ -235,9 +235,9 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
         # Check common PyRIT memory database locations
         potential_paths = [
             "/app/app_data/violentutf/api_memory",  # Docker API memory
-            "./violentutf / app_data / violentutf",  # Local Streamlit memory
+            "./violentutf/app_data/violentutf",  # Local Streamlit memory
             os.path.expanduser("~/.pyrit"),  # User PyRIT directory
-            "./app_data / violentutf",  # Relative app data
+            "./app_data/violentutf",  # Relative app data
         ]
 
         for base_path in potential_paths:

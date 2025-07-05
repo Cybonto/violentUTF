@@ -28,35 +28,35 @@ if not API_BASE_URL:
 
 API_ENDPOINTS = {
     # Authentication endpoints
-    "auth_token_info": f"{API_BASE_URL}/api / v1 / auth / token / info",
-    "auth_token_validate": f"{API_BASE_URL}/api / v1 / auth / token / validate",
+    "auth_token_info": f"{API_BASE_URL}/api/v1/auth/token/info",
+    "auth_token_validate": f"{API_BASE_URL}/api/v1/auth/token/validate",
     # Database endpoints
-    "database_status": f"{API_BASE_URL}/api / v1 / database / status",
-    "database_stats": f"{API_BASE_URL}/api / v1 / database / stats",
+    "database_status": f"{API_BASE_URL}/api/v1/database/status",
+    "database_stats": f"{API_BASE_URL}/api/v1/database/stats",
     # Scorer endpoints
-    "scorers": f"{API_BASE_URL}/api / v1 / scorers",
-    "scorer_types": f"{API_BASE_URL}/api / v1 / scorers / types",
-    "scorer_params": f"{API_BASE_URL}/api / v1 / scorers / params/{{scorer_type}}",
-    "scorer_clone": f"{API_BASE_URL}/api / v1 / scorers/{{scorer_id}}/clone",
-    "scorer_validate": f"{API_BASE_URL}/api / v1 / scorers / validate",
-    "scorer_health": f"{API_BASE_URL}/api / v1 / scorers / health",
-    "scorer_delete": f"{API_BASE_URL}/api / v1 / scorers/{{scorer_id}}",
+    "scorers": f"{API_BASE_URL}/api/v1/scorers",
+    "scorer_types": f"{API_BASE_URL}/api/v1/scorers/types",
+    "scorer_params": f"{API_BASE_URL}/api/v1/scorers/params/{{scorer_type}}",
+    "scorer_clone": f"{API_BASE_URL}/api/v1/scorers/{{scorer_id}}/clone",
+    "scorer_validate": f"{API_BASE_URL}/api/v1/scorers/validate",
+    "scorer_health": f"{API_BASE_URL}/api/v1/scorers/health",
+    "scorer_delete": f"{API_BASE_URL}/api/v1/scorers/{{scorer_id}}",
     # Generator endpoints (for scorer testing)
-    "generators": f"{API_BASE_URL}/api / v1 / generators",
+    "generators": f"{API_BASE_URL}/api/v1/generators",
     # Dataset endpoints (for scorer testing)
-    "datasets": f"{API_BASE_URL}/api / v1 / datasets",
+    "datasets": f"{API_BASE_URL}/api/v1/datasets",
     # Orchestrator endpoints (for scorer testing)
-    "orchestrators": f"{API_BASE_URL}/api / v1 / orchestrators",
-    "orchestrator_create": f"{API_BASE_URL}/api / v1 / orchestrators",
-    "orchestrator_types": f"{API_BASE_URL}/api / v1 / orchestrators / types",
-    "orchestrator_execute": f"{API_BASE_URL}/api / v1 / orchestrators/{{orchestrator_id}}/executions",
-    "orchestrator_memory": f"{API_BASE_URL}/api / v1 / orchestrators/{{orchestrator_id}}/memory",
+    "orchestrators": f"{API_BASE_URL}/api/v1/orchestrators",
+    "orchestrator_create": f"{API_BASE_URL}/api/v1/orchestrators",
+    "orchestrator_types": f"{API_BASE_URL}/api/v1/orchestrators/types",
+    "orchestrator_execute": f"{API_BASE_URL}/api/v1/orchestrators/{{orchestrator_id}}/executions",
+    "orchestrator_memory": f"{API_BASE_URL}/api/v1/orchestrators/{{orchestrator_id}}/memory",
     # Session endpoints
-    "sessions": f"{API_BASE_URL}/api / v1 / sessions",
-    "sessions_update": f"{API_BASE_URL}/api / v1 / sessions",
+    "sessions": f"{API_BASE_URL}/api/v1/sessions",
+    "sessions_update": f"{API_BASE_URL}/api/v1/sessions",
 }
 
-# Initialize session state for API - backed scorers
+# Initialize session state for API-backed scorers
 if "api_scorers" not in st.session_state:
     st.session_state.api_scorers = {}
 if "api_scorer_types" not in st.session_state:
@@ -116,7 +116,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         logger.warning("No authentication token available for API request")
         return None
 
-    # Allow custom timeout for long - running operations
+    # Allow custom timeout for long-running operations
     timeout = kwargs.pop("timeout", 30)
 
     try:
@@ -157,7 +157,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
 
 
 def create_compatible_api_token():
-    """Create a FastAPI - compatible token using JWT manager"""
+    """Create a FastAPI-compatible token using JWT manager"""
     try:
         from utils.jwt_manager import jwt_manager
         from utils.user_context import get_user_context_for_token
@@ -374,7 +374,7 @@ def _test_scorer_orchestrator_mode(
 
         # Create orchestrator configuration via API (AFTER all params are set)
         orchestrator_payload = {
-            "name": f"scorer_test_{scorer_info['name']}_{datetime.now().strftime('%Y % m%d_ % H%M % S')}",
+            "name": f"scorer_test_{scorer_info['name']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             "orchestrator_type": "PromptSendingOrchestrator",  # Basic orchestrator for scorer testing
             "description": f"Testing scorer '{scorer_info['name']}' with generator '{generator_info['name']}' and dataset '{dataset_info['name']}'",
             "parameters": orchestrator_params,
@@ -401,7 +401,7 @@ def _test_scorer_orchestrator_mode(
 
         # Execute orchestrator with dataset (EXACT same payload as dataset testing)
         execution_payload = {
-            "execution_name": f"{'full_exec' if save_to_db else 'test'}_{dataset_info['name']}_{datetime.now().strftime('%H % M%S')}",
+            "execution_name": f"{'full_exec' if save_to_db else 'test'}_{dataset_info['name']}_{datetime.now().strftime('%H%M%S')}",
             "execution_type": "dataset",
             "input_data": {
                 "dataset_id": dataset_info["id"],
@@ -516,7 +516,7 @@ def _test_scorer_orchestrator_mode(
             for score_data in scoring_results:
                 results.append(
                     {
-                        "score_value": score_data.get("score_value", "N / A"),
+                        "score_value": score_data.get("score_value", "N/A"),
                         "score_category": score_data.get("score_category", "Unknown"),
                         "score_rationale": score_data.get("score_rationale", "No rationale provided"),
                     }
@@ -699,7 +699,7 @@ def render_main_content():
     with st.expander("📖 Quick Start Guide", expanded=False):
         st.markdown(
             """
-        **New to Scorers?** Check out our comprehensive [Guide to PyRIT Scorers](../docs / Guide_scorers.md) for detailed information.
+        **New to Scorers?** Check out our comprehensive [Guide to PyRIT Scorers](../docs/Guide_scorers.md) for detailed information.
 
         **This page helps you:**
         1. **Select** scorer categories based on your needs
@@ -793,7 +793,7 @@ def render_scorer_parameters(scorer_type: str, category: str, test_cases: Dict[s
     if param_defs:
         st.markdown("**Parameters:**")
 
-        # Group parameters by required / optional
+        # Group parameters by required/optional
         required_params = [p for p in param_defs if p.get("required", False)]
         optional_params = [p for p in param_defs if not p.get("required", False)]
 
@@ -1158,7 +1158,7 @@ def _execute_full_dataset_with_progress(
             batch_prompts = batch_end - batch_start
 
             # Update progress
-            progress_percentage = batch_idx / num_batches
+            progress_percentage = batch_idx/num_batches
             progress_bar.progress(progress_percentage)
             status_text.text(
                 f"Processing batch {batch_idx + 1}/{num_batches} ({batch_start + 1}-{batch_end} of {full_dataset_size} prompts)"
@@ -1179,7 +1179,7 @@ def _execute_full_dataset_with_progress(
             }
 
             orchestrator_payload = {
-                "name": f"batch_{batch_idx}_{scorer_info['name']}_{datetime.now().strftime('%Y % m%d_ % H%M % S')}",
+                "name": f"batch_{batch_idx}_{scorer_info['name']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                 "orchestrator_type": "PromptSendingOrchestrator",
                 "description": f"Batch {batch_idx + 1} of scorer '{scorer_info['name']}' on dataset '{dataset_info['name']}'",
                 "parameters": orchestrator_params,
@@ -1287,7 +1287,7 @@ def _execute_full_dataset_with_progress(
             with col2:
                 st.metric("Successful", total_successful)
             with col3:
-                success_rate = (total_successful / full_dataset_size * 100) if full_dataset_size > 0 else 0
+                success_rate = (total_successful/full_dataset_size * 100) if full_dataset_size > 0 else 0
                 st.metric("Success Rate", f"{success_rate:.1f}%")
 
             # Save aggregated results
@@ -1296,7 +1296,7 @@ def _execute_full_dataset_with_progress(
             # Provide option to view results
             st.info("📊 View detailed results in the Red Team Dashboard")
             if st.button("Go to Dashboard", key=f"go_dashboard_{scorer_id}_full"):
-                st.switch_page("pages / 5_Dashboard.py")
+                st.switch_page("pages/5_Dashboard.py")
 
 
 def _render_orchestrator_testing(scorer_id: str, scorer_name: str, category: str):
@@ -1453,8 +1453,8 @@ def _display_test_results(
                 display_limit = min(len(test_results), num_samples) if num_samples else len(test_results)
                 for i, score in enumerate(test_results[:display_limit]):
                     st.markdown(f"**Score {i + 1}:**")
-                    st.write(f"• **Value:** {score.get('score_value', 'N / A')}")
-                    st.write(f"• **Category:** {score.get('score_category', 'N / A')}")
+                    st.write(f"• **Value:** {score.get('score_value', 'N/A')}")
+                    st.write(f"• **Category:** {score.get('score_category', 'N/A')}")
                     st.write(f"• **Rationale:** {score.get('score_rationale', 'No rationale provided')}")
                     if i < display_limit - 1:
                         st.divider()
@@ -1464,10 +1464,10 @@ def _display_test_results(
                 )
                 if test_mode == "orchestrator":
                     st.info("📊 Results have been saved to the database. View them in the Red Team Dashboard.")
-                    if st.button("Go to Dashboard", key=f"go_dashboard_{datetime.now().strftime('%H % M%S')}"):
-                        st.switch_page("pages / 5_Dashboard.py")
+                    if st.button("Go to Dashboard", key=f"go_dashboard_{datetime.now().strftime('%H%M%S')}"):
+                        st.switch_page("pages/5_Dashboard.py")
                 # Show raw result for debugging
-                debug_key = f"debug_raw_result_{test_mode}_{datetime.now().strftime('%H % M%S')}"
+                debug_key = f"debug_raw_result_{test_mode}_{datetime.now().strftime('%H%M%S')}"
                 if st.checkbox("🔍 Show Raw Result (Debug)", key=debug_key):
                     st.markdown("**Raw API Response:**")
                     st.json(result)
@@ -1476,9 +1476,9 @@ def _display_test_results(
                     st.markdown("**Debug Analysis:**")
                     if "execution_summary" in result:
                         st.write("• Execution Summary: ✅ Present")
-                        st.write(f"• Total Prompts: {result['execution_summary'].get('total_prompts', 'N / A')}")
+                        st.write(f"• Total Prompts: {result['execution_summary'].get('total_prompts', 'N/A')}")
                         st.write(
-                            f"• Successful Prompts: {result['execution_summary'].get('successful_prompts', 'N / A')}"
+                            f"• Successful Prompts: {result['execution_summary'].get('successful_prompts', 'N/A')}"
                         )
                     else:
                         st.write("• Execution Summary: ❌ Missing")

@@ -96,7 +96,7 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     # GSAi (Government Services AI) - Static route we created
     elif provider == "openapi-gsai":
         # Use the static GSAi route we configured in the setup
-        return "/ai/gsai/chat/completions"
+        return "/ai/gsai-api-1/chat/completions"
     
     # OpenAPI provider mappings
     elif provider.startswith("openapi-"):
@@ -931,6 +931,10 @@ def get_openapi_providers() -> List[str]:
                     if len(parts) >= 4:
                         provider_id = parts[3]
                         providers.add(f"openapi-{provider_id}")
+                
+                # Special case: Match GSAi pattern: /ai/gsai-api-1/...
+                elif uri.startswith("/ai/gsai-api-1/"):
+                    providers.add("openapi-gsai")
 
         return sorted(list(providers))
 

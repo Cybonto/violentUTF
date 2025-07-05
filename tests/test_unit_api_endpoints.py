@@ -198,7 +198,7 @@ class TestSessionEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024 - 01 - 01T00:00:00"}',
+        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024-01-01T00:00:00"}',
     )
     @patch("os.path.exists")
     def test_get_session_state(self, mock_exists, mock_file, auth_headers):
@@ -229,7 +229,7 @@ class TestSessionEndpoints:
             "workflow_state": {},
             "temporary_data": {},
             "cache_data": {},
-            "last_updated": "2024 - 01 - 01T00:00:00",
+            "last_updated": "2024-01-01T00:00:00",
         }
         mock_file.return_value.read.return_value = json.dumps(existing_data)
 

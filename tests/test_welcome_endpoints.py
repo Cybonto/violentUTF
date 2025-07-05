@@ -213,7 +213,7 @@ class TestSessionEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024 - 01 - 01T00:00:00"}',
+        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024-01-01T00:00:00"}',
     )
     @patch("os.path.exists")
     def test_get_session_state(self, mock_exists, mock_file, mock_get_user, auth_headers, mock_user):
@@ -247,7 +247,7 @@ class TestSessionEndpoints:
             "workflow_state": {},
             "temporary_data": {},
             "cache_data": {},
-            "last_updated": "2024 - 01 - 01T00:00:00",
+            "last_updated": "2024-01-01T00:00:00",
         }
         mock_file.return_value.read.return_value = json.dumps(existing_data)
 
@@ -495,7 +495,7 @@ class TestFileEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024 - 01 - 01T00:00:00", "uploaded_by": "testuser"}',
+        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
     )
     @patch("os.path.exists")
     def test_get_file_metadata(self, mock_exists, mock_file, mock_get_user, auth_headers, mock_user):
@@ -521,7 +521,7 @@ class TestFileEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024 - 01 - 01T00:00:00", "uploaded_by": "testuser"}',
+        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
     )
     @patch("os.makedirs")
     def test_list_files(self, mock_makedirs, mock_file, mock_glob, mock_get_user, auth_headers, mock_user):
@@ -542,7 +542,7 @@ class TestFileEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024 - 01 - 01T00:00:00", "uploaded_by": "testuser"}',
+        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
     )
     @patch("os.path.exists")
     @patch("os.remove")

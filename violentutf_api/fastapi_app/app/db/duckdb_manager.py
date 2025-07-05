@@ -39,7 +39,7 @@ class DuckDBManager:
     def __init__(self, username: str, salt: str = None, app_data_dir: str = None):
         self.username = username
         self.salt = salt or os.getenv("PYRIT_DB_SALT", "default_salt_2025")
-        self.app_data_dir = app_data_dir or os.getenv("APP_DATA_DIR", "./app_data / violentutf")
+        self.app_data_dir = app_data_dir or os.getenv("APP_DATA_DIR", "./app_data/violentutf")
         self.db_path = self._get_db_path()
         self._ensure_tables()
 
@@ -206,7 +206,7 @@ class DuckDBManager:
         if table_name not in self.ALLOWED_TABLES:
             raise ValueError(f"Invalid table name: {table_name}")
 
-        # Use string formatting with pre - validated table name (table_name is whitelisted above)
+        # Use string formatting with pre-validated table name (table_name is whitelisted above)
         query = 'SELECT COUNT(*) FROM "{}"'.format(table_name)  # nosec B608
         result = conn.execute(query).fetchone()
         return result[0] if result else 0

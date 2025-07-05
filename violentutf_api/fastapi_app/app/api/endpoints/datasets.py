@@ -62,7 +62,7 @@ router = APIRouter()
 NATIVE_DATASET_TYPES = {
     "aya_redteaming": {
         "name": "aya_redteaming",
-        "description": "Aya Red - teaming Dataset - Multilingual red - teaming prompts",
+        "description": "Aya Red-teaming Dataset - Multilingual red-teaming prompts",
         "category": "redteaming",
         "config_required": True,
         "available_configs": {
@@ -807,9 +807,9 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
         # Check common PyRIT memory database locations
         potential_paths = [
             "/app/app_data/violentutf/api_memory",  # Docker API memory
-            "./violentutf / app_data / violentutf",  # Local Streamlit memory
+            "./violentutf/app_data/violentutf",  # Local Streamlit memory
             os.path.expanduser("~/.pyrit"),  # User PyRIT directory
-            "./app_data / violentutf",  # Relative app data
+            "./app_data/violentutf",  # Relative app data
         ]
 
         for base_path in potential_paths:

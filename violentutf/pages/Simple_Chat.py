@@ -36,7 +36,7 @@ from utils.mcp_integration import ConfigurationIntentDetector, ContextAnalyzer, 
 from vertexai.preview.language_models import ChatModel
 
 # Get the path to the .env file relative to this script (pages directory -> parent directory)
-env_path = pathlib.Path(__file__).parent.parent / ".env"
+env_path = pathlib.Path(__file__).parent.parent/".env"
 load_dotenv(dotenv_path=env_path)
 
 # App configuration
@@ -49,7 +49,7 @@ app_icon = ":robot_face:"
 logger = logging.getLogger(__name__)
 
 # Define the data directory
-DATA_DIR = "app_data / simplechat"
+DATA_DIR = "app_data/simplechat"
 
 # Ensure the data directory exists
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -63,29 +63,29 @@ if not API_BASE_URL:
 # API Endpoints for ViolentUTF operations
 API_ENDPOINTS = {
     # Generator endpoints
-    "generators": f"{API_BASE_URL}/api / v1 / generators",
-    "generator_types": f"{API_BASE_URL}/api / v1 / generators / types",
-    "generator_params": f"{API_BASE_URL}/api / v1 / generators / types/{{generator_type}}/params",
-    "generator_delete": f"{API_BASE_URL}/api / v1 / generators/{{generator_id}}",
+    "generators": f"{API_BASE_URL}/api/v1/generators",
+    "generator_types": f"{API_BASE_URL}/api/v1/generators/types",
+    "generator_params": f"{API_BASE_URL}/api/v1/generators/types/{{generator_type}}/params",
+    "generator_delete": f"{API_BASE_URL}/api/v1/generators/{{generator_id}}",
     # Dataset endpoints
-    "datasets": f"{API_BASE_URL}/api / v1 / datasets",
-    "dataset_types": f"{API_BASE_URL}/api / v1 / datasets / types",
-    "dataset_preview": f"{API_BASE_URL}/api / v1 / datasets / preview",
-    "dataset_delete": f"{API_BASE_URL}/api / v1 / datasets/{{dataset_id}}",
+    "datasets": f"{API_BASE_URL}/api/v1/datasets",
+    "dataset_types": f"{API_BASE_URL}/api/v1/datasets/types",
+    "dataset_preview": f"{API_BASE_URL}/api/v1/datasets/preview",
+    "dataset_delete": f"{API_BASE_URL}/api/v1/datasets/{{dataset_id}}",
     # Scorer endpoints
-    "scorers": f"{API_BASE_URL}/api / v1 / scorers",
-    "scorer_types": f"{API_BASE_URL}/api / v1 / scorers / types",
-    "scorer_models": f"{API_BASE_URL}/api / v1 / scorers / models",
-    "scorer_delete": f"{API_BASE_URL}/api / v1 / scorers/{{scorer_id}}",
+    "scorers": f"{API_BASE_URL}/api/v1/scorers",
+    "scorer_types": f"{API_BASE_URL}/api/v1/scorers/types",
+    "scorer_models": f"{API_BASE_URL}/api/v1/scorers/models",
+    "scorer_delete": f"{API_BASE_URL}/api/v1/scorers/{{scorer_id}}",
     # Orchestrator endpoints
-    "orchestrators": f"{API_BASE_URL}/api / v1 / orchestrators",
-    "orchestrator_types": f"{API_BASE_URL}/api / v1 / orchestrators / types",
-    "orchestrator_execute": f"{API_BASE_URL}/api / v1 / orchestrators/{{orchestrator_id}}/executions",
+    "orchestrators": f"{API_BASE_URL}/api/v1/orchestrators",
+    "orchestrator_types": f"{API_BASE_URL}/api/v1/orchestrators/types",
+    "orchestrator_execute": f"{API_BASE_URL}/api/v1/orchestrators/{{orchestrator_id}}/executions",
     # Converter endpoints
-    "converters": f"{API_BASE_URL}/api / v1 / converters",
-    "converter_types": f"{API_BASE_URL}/api / v1 / converters / types",
-    "converter_params": f"{API_BASE_URL}/api / v1 / converters / types/{{converter_type}}/params",
-    "converter_delete": f"{API_BASE_URL}/api / v1 / converters/{{converter_id}}",
+    "converters": f"{API_BASE_URL}/api/v1/converters",
+    "converter_types": f"{API_BASE_URL}/api/v1/converters/types",
+    "converter_params": f"{API_BASE_URL}/api/v1/converters/types/{{converter_type}}/params",
+    "converter_delete": f"{API_BASE_URL}/api/v1/converters/{{converter_id}}",
 }
 
 # Streamlit application configuration
@@ -202,11 +202,11 @@ default_file_path = os.path.join(DATA_DIR, default_file)
 if default_file not in prompt_variable_files:
     # Create default file if it doesn't exist with helpful example
     default_content = {
-        "example_target": {"value": "ChatGPT", "num_tokens": 2, "timestamp": "2024 - 01 - 01 12:00:00"},
+        "example_target": {"value": "ChatGPT", "num_tokens": 2, "timestamp": "2024-01-01 12:00:00"},
         "example_task": {
             "value": "Write a creative story about artificial intelligence",
             "num_tokens": 10,
-            "timestamp": "2024 - 01 - 01 12:00:00",
+            "timestamp": "2024-01-01 12:00:00",
         },
     }
     with open(default_file_path, "w") as f:
@@ -264,8 +264,8 @@ def create_new_prompt_variable_file():
 @st.dialog("Prompt Variable Details")
 def view_prompt_variable(var_name, var_data):
     st.write(f"**Variable Name:** {var_name}")
-    st.write(f"**Number of Tokens:** {var_data.get('num_tokens', 'N / A')}")
-    st.write(f"**Timestamp:** {var_data.get('timestamp', 'N / A')}")
+    st.write(f"**Number of Tokens:** {var_data.get('num_tokens', 'N/A')}")
+    st.write(f"**Timestamp:** {var_data.get('timestamp', 'N/A')}")
     st.text_area("Variable Value:", value=var_data.get("value", ""), height=200)
 
 
@@ -279,6 +279,29 @@ def get_provider_display_name(provider: str) -> str:
         "gsai": "GSAi (Government Services AI)"
     }
     return provider_names.get(provider, provider.title())
+
+
+def _looks_like_mcp_command(text: str) -> bool:
+    """Check if text looks like it might be an MCP command"""
+    text = text.strip().lower()
+    
+    # Check for explicit MCP command patterns based on actual MCP patterns
+    mcp_indicators = [
+        # Explicit MCP commands
+        "/mcp",
+        
+        # Natural language patterns that MCP recognizes
+        "show mcp commands", "what can mcp do", "mcp usage", "mcp help",
+        "run test", "test for", "check for",
+        "load dataset", "use dataset", "show data",
+        "enhance this prompt", "improve this prompt", "make this prompt better",
+        "analyze this prompt", "analyze for", "find issues", "find issue",
+        "show mcp resources", "list available resources", "what resources are available",
+        "use prompt", "show template",
+        "list all", "show me all", "show available", "what are available"
+    ]
+    
+    return any(indicator in text for indicator in mcp_indicators)
 
 with st.sidebar:
     st.header("Chat Endpoint Configuration")
@@ -374,7 +397,7 @@ with st.sidebar:
 
             # Fetch available models
             try:
-                models_response = requests.get(f"{selected_endpoint}/v1 / models", timeout=30)
+                models_response = requests.get(f"{selected_endpoint}/v1/models", timeout=30)
                 if models_response.status_code == 200:
                     available_models_data = models_response.json()
                     # assume the response contains a list of models under 'data' key
@@ -427,8 +450,8 @@ with st.sidebar:
                 # st.write(str(models_response))
                 # Filter models to only include chat models
                 allowed_models = [
-                    "gpt - 4o",
-                    "gpt - 4.5 - preview",
+                    "gpt-4o",
+                    "gpt-4.5-preview",
                     "o1 - mini",
                     "o1 - preview",
                     "o1",
@@ -1111,7 +1134,7 @@ def handle_mcp_command(parsed_command):
         - "What converters are configured" - List configured converters
         - "Show available dataset options" - List dataset types
         - "What datasets are loaded" - List loaded datasets
-        - "Run a red team test on GPT - 4"
+        - "Run a red team test on GPT-4"
         """
         )
 
@@ -1119,7 +1142,7 @@ def handle_mcp_command(parsed_command):
         resource = params.get("resource", "")
         raw_text = parsed_command.raw_text.lower()
 
-        # Check if asking for available types / options
+        # Check if asking for available types/options
         is_asking_for_types = any(word in raw_text for word in ["available", "options", "types", "what"])
 
         if resource and "generator" in resource:
@@ -1169,8 +1192,12 @@ def handle_mcp_command(parsed_command):
 
     else:
         # This should not happen since we filter UNKNOWN types before calling this function
-        logger.error(f"Unhandled command type: {command_type} (type: {type(command_type)})")
-        st.warning(f"Unhandled command type: {command_type.value if hasattr(command_type, 'value') else command_type}")
+        # Don't show UI warnings for UNKNOWN types - they're normal chat messages
+        if command_type != MCPCommandType.UNKNOWN:
+            logger.error(f"Unhandled command type: {command_type} (type: {type(command_type)})")
+            st.warning(f"Unhandled command type: {command_type.value if hasattr(command_type, 'value') else command_type}")
+        else:
+            logger.debug("UNKNOWN command type reached else clause - ignoring UI warning")
 
 
 def handle_configuration_command(intent, user_input):
@@ -1185,7 +1212,7 @@ def handle_configuration_command(intent, user_input):
         create_generator(params)
 
     elif intent_type == "dataset":
-        # Check if asking for available types / options
+        # Check if asking for available types/options
         if any(word in user_input.lower() for word in ["available", "options", "types", "what datasets"]):
             list_dataset_types()
         else:
@@ -1215,7 +1242,7 @@ def handle_configuration_command(intent, user_input):
         # Handle converter commands
         action = intent.get("action", "list")
         if action == "list":
-            # Check if asking for available types / options
+            # Check if asking for available types/options
             if any(word in user_input.lower() for word in ["available", "options", "types", "what converter"]):
                 list_converter_types()
             else:
@@ -1258,7 +1285,7 @@ def list_generators():
                 with col1:
                     st.write(f"**Provider:** {gen.get('provider_type', 'Unknown')}")
                     st.write(f"**Model:** {gen.get('model_name', 'Unknown')}")
-                    st.write(f"**ID:** `{gen.get('id', 'N / A')}`")
+                    st.write(f"**ID:** `{gen.get('id', 'N/A')}`")
 
                 with col2:
                     params = gen.get("parameters", {})
@@ -1296,10 +1323,10 @@ def list_datasets():
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    st.write(f"**Name:** {ds.get('name', 'N / A')}")
+                    st.write(f"**Name:** {ds.get('name', 'N/A')}")
                     st.write(f"**Type:** {ds.get('dataset_type', 'Unknown')}")
                     st.write(f"**Source:** {ds.get('source_type', 'Unknown')}")
-                    st.write(f"**ID:** `{ds.get('id', 'N / A')}`")
+                    st.write(f"**ID:** `{ds.get('id', 'N/A')}`")
 
                 with col2:
                     st.write(f"**Items:** {ds.get('item_count', 0)}")
@@ -1412,7 +1439,7 @@ def list_converters():
 
                 with col1:
                     st.write(f"**Type:** {conv.get('converter_type', 'Unknown')}")
-                    st.write(f"**ID:** `{conv.get('id', 'N / A')}`")
+                    st.write(f"**ID:** `{conv.get('id', 'N/A')}`")
                     st.write(f"**Status:** {conv.get('status', 'Unknown')}")
 
                 with col2:
@@ -1450,7 +1477,7 @@ def list_scorers():
 
                 with col1:
                     st.write(f"**Type:** {scorer.get('scorer_type', 'Unknown')}")
-                    st.write(f"**ID:** `{scorer.get('id', 'N / A')}`")
+                    st.write(f"**ID:** `{scorer.get('id', 'N/A')}`")
 
                 with col2:
                     params = scorer.get("parameters", {})
@@ -1487,7 +1514,7 @@ def list_orchestrators():
 
                 with col1:
                     st.write(f"**Type:** {orch.get('orchestrator_type', 'Unknown')}")
-                    st.write(f"**ID:** `{orch.get('orchestrator_id', orch.get('id', 'N / A'))}`")
+                    st.write(f"**ID:** `{orch.get('orchestrator_id', orch.get('id', 'N/A'))}`")
                     st.write(f"**Status:** {orch.get('status', 'Unknown')}")
 
                 with col2:
@@ -1503,7 +1530,7 @@ def list_orchestrators():
 
 
 def list_dataset_types():
-    """List all available dataset types / options"""
+    """List all available dataset types/options"""
     st.info("📋 Listing available dataset types...")
 
     # Make API request to get dataset types
@@ -1564,7 +1591,7 @@ def list_dataset_types():
 
 
 def list_converter_types():
-    """List all available converter types / options"""
+    """List all available converter types/options"""
     st.info("📋 Listing available converter types...")
 
     # Make API request to get converter types
@@ -1619,7 +1646,7 @@ def list_converter_types():
 
 
 def list_scorer_types():
-    """List all available scorer types / options"""
+    """List all available scorer types/options"""
     st.info("📋 Listing available scorer types...")
 
     # Make API request to get scorer types
@@ -1672,14 +1699,14 @@ def create_generator(params):
     generator_type = provider_to_type_map.get(provider, "AI Gateway")
 
     # Create a unique name for the generator
-    timestamp = datetime.now().strftime("%Y % m%d_ % H%M % S")
-    generator_name = params.get("name", f"{provider}_{params.get('model', 'gpt - 4')}_{timestamp}")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    generator_name = params.get("name", f"{provider}_{params.get('model', 'gpt-4')}_{timestamp}")
 
     # Prepare generator data according to API requirements
     generator_data = {
         "name": generator_name,
         "type": generator_type,
-        "parameters": {"provider": provider, "model": params.get("model", "gpt - 4")},
+        "parameters": {"provider": provider, "model": params.get("model", "gpt-4")},
     }
 
     # Add optional parameters if provided
@@ -1783,7 +1810,7 @@ def configure_scorer(params):
     # Prepare scorer data with required name field
     from datetime import datetime
 
-    timestamp = datetime.now().strftime("%Y % m%d_ % H%M % S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     scorer_name = f"{scorer_type}_scorer_{timestamp}"
 
     scorer_data = {
@@ -1810,12 +1837,12 @@ def configure_scorer(params):
         # Add categories for SelfAskCategoryScorer
         scorer_data["parameters"]["categories"] = ["safe", "unsafe"]
 
-        # Add chat_target - required parameter for self - ask scorers
+        # Add chat_target - required parameter for self-ask scorers
         # First check if user specified a model
         model = params.get("model")
         if not model:
-            # Default to gpt - 4 for scoring
-            model = "gpt - 4"
+            # Default to gpt-4 for scoring
+            model = "gpt-4"
 
         # Create chat_target configuration
         scorer_data["parameters"]["chat_target"] = {
@@ -1880,7 +1907,7 @@ def setup_orchestrator(params):
     orchestrator_type = params.get("type", "red_team")
     from datetime import datetime
 
-    timestamp = datetime.now().strftime("%Y % m%d_ % H%M % S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     orchestrator_name = f"{orchestrator_type}_orchestrator_{timestamp}"
 
     # Find the target generator based on the request
@@ -1977,9 +2004,9 @@ def setup_orchestrator(params):
                         st.write("**Sample Result:**")
                         sample = responses[0]
                         if "request" in sample:
-                            st.write("**Prompt:**", sample["request"].get("prompt", "N / A"))
+                            st.write("**Prompt:**", sample["request"].get("prompt", "N/A"))
                         if "response" in sample:
-                            st.write("**Response:**", sample["response"].get("content", "N / A")[:200] + "...")
+                            st.write("**Response:**", sample["response"].get("content", "N/A")[:200] + "...")
             else:
                 st.info(f"⏳ Execution status: {exec_response.get('status', 'running')}")
                 st.write("Results will be available once execution completes.")
@@ -1998,9 +2025,9 @@ def extract_generator_params(text):
     if "gpt-4" in text.lower() or "gpt4" in text.lower():
         params["provider"] = "openai"
         params["model"] = "gpt-4"
-    elif "gpt - 3.5" in text.lower() or "gpt3.5" in text.lower():
+    elif "gpt-3.5" in text.lower() or "gpt3.5" in text.lower():
         params["provider"] = "openai"
-        params["model"] = "gpt - 3.5 - turbo"
+        params["model"] = "gpt-3.5-turbo"
     elif "claude" in text.lower():
         params["provider"] = "anthropic"
         if "3.5" in text:
@@ -2098,8 +2125,8 @@ def extract_orchestrator_params(text):
         params["type"] = "pair"
 
     # Extract target model
-    if "on gpt - 4" in text.lower() or "against gpt - 4" in text.lower():
-        params["target"] = "gpt - 4"
+    if "on gpt-4" in text.lower() or "against gpt-4" in text.lower():
+        params["target"] = "gpt-4"
     elif "on claude" in text.lower() or "against claude" in text.lower():
         params["target"] = "claude"
 
@@ -2160,7 +2187,7 @@ def get_active_plugins(provider: str, model: str) -> Dict[str, Any]:
 
             # Get all routes
             response = requests.get(
-                f"{violentutf_api_url}/api / v1 / apisix - admin / routes", headers=auth_headers, timeout=5
+                f"{violentutf_api_url}/api/v1/apisix-admin/routes", headers=auth_headers, timeout=5
             )
 
             if response.status_code == 200:
@@ -2240,22 +2267,20 @@ if generate_response:
                     st.stop()
 
                 # Then check if it's an explicit MCP command
-                parsed_command = nl_parser.parse(user_input)
-
-                # Only handle if it's a recognized MCP command (not UNKNOWN)
-                # Debug log to see what we're comparing
-                logger.debug(
-                    f"Command type: {parsed_command.type}, Is UNKNOWN: {parsed_command.type == MCPCommandType.UNKNOWN}"
-                )
-
-                # Skip UNKNOWN commands - these are normal chat messages
-                if parsed_command.type == MCPCommandType.UNKNOWN:
-                    logger.debug("Skipping UNKNOWN command type - treating as normal chat")
-                    # Don't call handle_mcp_command for UNKNOWN types
+                # Only parse text that looks like it might be an MCP command
+                if _looks_like_mcp_command(user_input):
+                    parsed_command = nl_parser.parse(user_input)
+                    
+                    # Only handle recognized MCP commands
+                    if parsed_command.type != MCPCommandType.UNKNOWN:
+                        logger.debug(f"Processing MCP command: {parsed_command.type}")
+                        handle_mcp_command(parsed_command)
+                        st.stop()
+                    else:
+                        logger.debug("Parsed as unknown MCP command - treating as normal chat")
                 else:
-                    # Handle recognized MCP command
-                    handle_mcp_command(parsed_command)
-                    st.stop()
+                    # Not an MCP command pattern, proceed with normal chat
+                    logger.debug("Does not look like MCP command - proceeding with normal chat")
 
                 # If neither configuration intent nor MCP command, proceed with normal chat
 

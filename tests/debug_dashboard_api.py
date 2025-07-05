@@ -172,7 +172,7 @@ def debug_orchestrator_flow():
         execution_id = execution.get("id")
         print(f"\n🔍 Testing execution {i + 1}: {execution_id}")
 
-        results_url = f"{API_BASE_URL}/api / v1 / orchestrators / executions/{execution_id}/results"
+        results_url = f"{API_BASE_URL}/api/v1/orchestrators/executions/{execution_id}/results"
         results_response = api_request("GET", results_url)
 
         if results_response:

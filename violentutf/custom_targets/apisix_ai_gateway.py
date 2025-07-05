@@ -39,7 +39,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         Initialize APISIX AI Gateway target.
 
         Args:
-            provider: AI provider (openai, anthropic, ollama, webui)
+            provider: AI provider (openai, anthropic, ollama, webui, gsai)
             model: Model name/identifier
             temperature: Sampling temperature (0.0-2.0)
             max_tokens: Maximum tokens to generate

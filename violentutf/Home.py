@@ -1,4 +1,4 @@
-# /Home.py
+#!/Home.py
 
 import logging  # Import base logging for potential direct use if needed
 import os
@@ -11,7 +11,7 @@ from utils.logging import get_logger, setup_logging
 
 app_version = "0.1"
 app_title = "ViolentUTF - Home"
-app_description = "Welcome Red - teamers to Vi - Tuff! Please use the tools wisely."
+app_description = "Welcome Red-teamers to Vi-Tuff! Please use the tools wisely."
 app_icon = "	:house:"
 
 load_dotenv()
@@ -45,8 +45,8 @@ st.markdown(
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    [data - testid="collapsedControl"] {display: none;}
-    [data - testid="stSidebarNav"] {display: none;}
+    [data-testid="collapsedControl"] {display: none;}
+    [data-testid="stSidebarNav"] {display: none;}
 
     </style>
     """,
@@ -57,12 +57,12 @@ st.markdown(
 st.markdown(
     """
     <style>
-    [data - testid="stSidebar"] > div:first - child {
+    [data-testid="stSidebar"] > div:first-child {
         display: flex;
-        flex - direction: column;
+        flex-direction: column;
     }
-    [data - testid="stSidebar"] button {
-        margin - top: auto;
+    [data-testid="stSidebar"] button {
+        margin-top: auto;
     }
     </style>
     """,

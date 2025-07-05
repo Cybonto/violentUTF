@@ -119,7 +119,7 @@ class APISIXAdmin:
     """Class to interact with APISIX Admin through ViolentUTF API"""
 
     def __init__(self):
-        self.api_url = f"{VIOLENTUTF_API_URL}/api / v1 / apisix - admin"
+        self.api_url = f"{VIOLENTUTF_API_URL}/api/v1/apisix-admin"
         self.headers = get_auth_headers()
 
     def get_all_routes(self) -> Optional[Dict]:
@@ -183,7 +183,7 @@ def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
         - Allowing only prompts that match certain criteria
         - Customizing error messages for blocked requests
 
-        [📚 Official Documentation](https://apisix.apache.org / docs / apisix / plugins / ai - prompt - guard/)
+        [📚 Official Documentation](https://apisix.apache.org/docs/apisix/plugins/ai-prompt-guard/)
         """
         )
 
@@ -292,15 +292,18 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
         if base_url.endswith("/api"):
             base_url = base_url[:-4]
 
-        # Extract endpoint from route_id
-        if "openai" in route_id:
-            endpoint = f"{base_url}/ai / openai/{model}"
+        # Extract endpoint from route_id or use URI directly for GSAi
+        if "gsai" in route_id:
+            # GSAi uses a single endpoint for all models
+            endpoint = f"{base_url}/ai/gsai-api-1/chat/completions"
+        elif "openai" in route_id:
+            endpoint = f"{base_url}/ai/openai/{model}"
         elif "anthropic" in route_id:
-            endpoint = f"{base_url}/ai / anthropic/{model}"
+            endpoint = f"{base_url}/ai/anthropic/{model}"
         elif "ollama" in route_id:
-            endpoint = f"{base_url}/ai / ollama/{model}"
+            endpoint = f"{base_url}/ai/ollama/{model}"
         elif "webui" in route_id:
-            endpoint = f"{base_url}/ai / webui/{model}"
+            endpoint = f"{base_url}/ai/webui/{model}"
         else:
             endpoint = f"{base_url}/ai/{provider}/{model}"
 
@@ -310,7 +313,7 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
         # Prepare request
         headers = {"apikey": api_key, "Content-Type": "application/json"}
 
-        payload = {"messages": [{"role": "user", "content": test_prompt}], "max_tokens": 50, "temperature": 0}
+        payload = {"model": model, "messages": [{"role": "user", "content": test_prompt}], "max_tokens": 50, "temperature": 0}
 
         # Make test request
         response = requests.post(endpoint, headers=headers, json=payload, timeout=10)
@@ -358,24 +361,42 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
 def detect_provider_type(route_config: Dict) -> str:
     """Detect the AI provider type from route configuration."""
     plugins = route_config.get("plugins", {})
-    ai_proxy = plugins.get("ai - proxy", {})
+    uri = route_config.get("uri", "")
+    
+    # Check for ai-proxy plugin first
+    ai_proxy = plugins.get("ai-proxy", {})
+    if ai_proxy:
+        provider = ai_proxy.get("provider", "")
+        override = ai_proxy.get("override", {})
+        endpoint = override.get("endpoint", "")
 
-    provider = ai_proxy.get("provider", "")
-    override = ai_proxy.get("override", {})
-    endpoint = override.get("endpoint", "")
-
-    # Direct provider detection
-    if provider == "openai":
+        # Direct provider detection
+        if provider == "openai":
+            return "openai"
+        elif provider == "openai-compatible":
+            # Check endpoint to determine actual provider
+            if "anthropic.com" in endpoint:
+                return "anthropic"
+            elif "localhost" in endpoint or "host.docker.internal" in endpoint:
+                if "ollama" in endpoint:
+                    return "ollama"
+                else:
+                    return "webui"
+    
+    # Check for proxy-rewrite plugin with GSAi (fallback detection)
+    proxy_rewrite = plugins.get("proxy-rewrite", {})
+    if proxy_rewrite and "gsai" in uri:
+        return "gsai"
+    
+    # Check URI for provider hints (final fallback)
+    if "gsai" in uri:
+        return "gsai"
+    elif "openai" in uri:
         return "openai"
-    elif provider == "openai - compatible":
-        # Check endpoint to determine actual provider
-        if "anthropic.com" in endpoint:
-            return "anthropic"
-        elif "localhost" in endpoint or "host.docker.internal" in endpoint:
-            if "ollama" in endpoint:
-                return "ollama"
-            else:
-                return "webui"
+    elif "anthropic" in uri:
+        return "anthropic"
+    elif "ollama" in uri:
+        return "ollama"
 
     return "unknown"
 
@@ -465,7 +486,7 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
 
         Messages are added as chat conversation entries with specified roles (system, user, assistant).
 
-        [📚 Official Documentation](https://apisix.apache.org / docs / apisix / plugins / ai - prompt - decorator/)
+        [📚 Official Documentation](https://apisix.apache.org/docs/apisix/plugins/ai-prompt-decorator/)
         """
         )
 

@@ -1,6 +1,46 @@
 #!/usr/bin/env bash
 # openapi_setup.sh - OpenAPI/Swagger documentation routes and configuration
 
+
+# Function to fetch available models from OpenAPI provider
+fetch_openapi_provider_models() {
+    local base_url="$1"
+    local auth_type="$2"
+    local auth_token="$3"
+    
+    echo "   Fetching available models from $base_url..."
+    
+    # Build auth headers
+    local auth_header=""
+    case "$auth_type" in
+        "bearer")
+            auth_header="Authorization: Bearer $auth_token"
+            ;;
+        "api_key")
+            auth_header="X-API-Key: $auth_token"
+            ;;
+        "basic")
+            auth_header="Authorization: Basic $auth_token"
+            ;;
+    esac
+    
+    # Fetch models from /api/v1/models endpoint
+    local models_json
+    if [ -n "$auth_header" ]; then
+        models_json=$(curl -s -k --max-time 10 -H "$auth_header" "$base_url/api/v1/models" 2>/dev/null)
+    else
+        models_json=$(curl -s -k --max-time 10 "$base_url/api/v1/models" 2>/dev/null)
+    fi
+    
+    # Extract model IDs using jq (if available) or grep/sed fallback
+    if command -v jq >/dev/null 2>&1; then
+        echo "$models_json" | jq -r '.data[]?.id // empty' 2>/dev/null | head -10
+    else
+        # Fallback without jq
+        echo "$models_json" | grep -o '"id":"[^"]*"' | sed 's/"id":"//' | sed 's/"//' | head -10
+    fi
+}
+
 # Function to configure OpenAPI documentation routes
 configure_openapi_routes() {
     echo "Configuring OpenAPI documentation routes..."
@@ -15,16 +55,40 @@ configure_openapi_routes() {
     return 0
 }
 
-# Function to create GSAi static routes (chat + models) 
-# Based on learnings from Environment B troubleshooting
-create_gsai_static_routes() {
-    local auth_token="$1"
-    local provider_num="$2"
+# Function to create OpenAPI provider routes (improved for local APIs)
+create_openapi_provider_routes() {
+    local provider_id="$1"
+    local provider_name="$2"
+    local base_url="$3"
+    local auth_type="$4"
+    local auth_token="$5"
+    local provider_num="$6"
     
-    echo "🔧 Creating GSAi static routes with ai-proxy plugin..."
+    echo "🔧 Creating OpenAPI routes for: $provider_name"
+    echo "   Base URL: $base_url"
+    echo "   Auth Type: $auth_type"
+    
+    # Fetch available models from the provider
+    local available_models
+    available_models=$(fetch_openapi_provider_models "$base_url" "$auth_type" "$auth_token")
+    
+    if [ -n "$available_models" ]; then
+        echo "   Available models: $(echo "$available_models" | tr '\n' ' ')"
+        # Store the first model as default for route creation
+        local default_model=$(echo "$available_models" | head -1)
+        if [ -n "$default_model" ]; then
+            echo "   Using default model: $default_model"
+        fi
+    else
+        echo "   ⚠️  Could not fetch models, will create generic routes"
+        local default_model=""
+    fi
     
     # Load APISIX configuration
-    if [ -f "apisix/.env" ]; then
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
         source "apisix/.env"
     fi
     
@@ -35,135 +99,435 @@ create_gsai_static_routes() {
     local admin_key="$APISIX_ADMIN_KEY"
     local apisix_admin_url="http://localhost:9180"
     
-    # Clean up any existing GSAi routes (9001, 9002, 9003)
-    for route_id in 9001 9002 9003; do
+    # Parse base URL to extract host and port
+    local scheme=$(echo "$base_url" | grep -o '^https\?')
+    local host_port=$(echo "$base_url" | sed -E 's|^https?://||' | sed -E 's|/.*||')
+    local default_port="443"
+    if [ "$scheme" = "http" ]; then
+        default_port="80"
+    fi
+    
+    # Add default port if not specified
+    if [[ "$host_port" != *":"* ]]; then
+        host_port="${host_port}:${default_port}"
+    fi
+    
+    # For Docker containers, convert localhost to custom OpenAPI container name or bridge IP
+    # This allows APISIX running in Docker to access services on the host machine or other Docker stacks
+    if [[ "$host_port" == "localhost:"* ]]; then
+        # Check if this is a GSAi provider and containers are on the same network
+        if [[ "$provider_id" == *"gsai"* ]] && docker network inspect vutf-network 2>/dev/null | grep -q "ai-gov-api-app-1"; then
+            # Use GSAi app container name for direct network access (HTTP on port 8080)
+            host_port="ai-gov-api-app-1:8080"
+            echo "   🔄 Converting localhost to ai-gov-api-app-1:8080 for direct Docker network access"
+        elif docker network inspect vutf-network 2>/dev/null | grep -q "apisix-apisix-1"; then
+            # Check for other custom API containers on vutf-network
+            local custom_container=$(docker network inspect vutf-network 2>/dev/null | jq -r '.[] | .Containers | to_entries[] | select(.value.Name | contains("app") or contains("api")) | .value.Name' | head -1)
+            if [ -n "$custom_container" ] && [ "$custom_container" != "null" ]; then
+                local custom_port=$(echo "$host_port" | cut -d':' -f2)
+                # For GSAi, always use port 8080 internally
+                if [[ "$custom_container" == *"ai-gov-api"* ]]; then
+                    host_port="${custom_container}:8080"
+                else
+                    host_port="${custom_container}:${custom_port}"
+                fi
+                echo "   🔄 Converting localhost to ${host_port} for direct Docker network access"
+            else
+                # Get Docker bridge gateway IP - fallback for other services
+                local bridge_ip=$(docker network inspect vutf-network 2>/dev/null | jq -r '.[0].IPAM.Config[0].Gateway' 2>/dev/null || echo "172.18.0.1")
+                host_port=$(echo "$host_port" | sed "s/^localhost:/${bridge_ip}:/")
+                echo "   🔄 Converting localhost to ${bridge_ip} for Docker-to-host access"
+            fi
+        else
+            # Get Docker bridge gateway IP - fallback for other services
+            local bridge_ip=$(docker network inspect vutf-network 2>/dev/null | jq -r '.[0].IPAM.Config[0].Gateway' 2>/dev/null || echo "172.18.0.1")
+            host_port=$(echo "$host_port" | sed "s/^localhost:/${bridge_ip}:/")
+            echo "   🔄 Converting localhost to ${bridge_ip} for Docker-to-host access"
+        fi
+    fi
+    
+    # Calculate unique route IDs
+    local chat_route_id=$((9000 + provider_num))
+    local models_route_id=$((9100 + provider_num))
+    
+    
+    # Clean up any existing routes for this provider
+    for route_id in $chat_route_id $models_route_id; do
         curl -s -X DELETE "${apisix_admin_url}/apisix/admin/routes/${route_id}" \
             -H "X-API-KEY: ${admin_key}" >/dev/null 2>&1
     done
     
-    # Create chat completions route (9001) - WORKING configuration
-    local chat_route_json=$(jq -n \
-      --arg auth_token "${auth_token}" \
-      '{
-        "id": "9001",
-        "uri": "/ai/gsai/chat/completions",
-        "name": "gsai-static-chat-completions",
-        "methods": ["POST"],
-        "upstream": {
-          "type": "roundrobin",
-          "scheme": "https",
-          "nodes": {
-            "api.dev.gsai.mcaas.fcs.gsa.gov:443": 1
-          },
-          "pass_host": "pass",
-          "upstream_host": "api.dev.gsai.mcaas.fcs.gsa.gov"
-        },
-        "plugins": {
-          "key-auth": {
-            "header": "X-API-Key"
-          },
-          "ai-proxy": {
-            "provider": "openai-compatible",
-            "auth": {
-              "header": {
-                "Authorization": ("Bearer " + $auth_token)
+    # Build authentication headers based on type
+    local auth_headers="{}"
+    case "$auth_type" in
+        "bearer")
+            auth_headers=$(jq -n --arg token "$auth_token" '{
+                "Authorization": ("Bearer " + $token)
+            }')
+            ;;
+        "api_key")
+            auth_headers=$(jq -n --arg token "$auth_token" '{
+                "X-API-Key": $token
+            }')
+            ;;
+        "basic")
+            auth_headers=$(jq -n --arg token "$auth_token" '{
+                "Authorization": ("Basic " + $token)
+            }')
+            ;;
+        *)
+            echo "⚠️  Unknown auth type: $auth_type, using bearer as fallback"
+            auth_headers=$(jq -n --arg token "$auth_token" '{
+                "Authorization": ("Bearer " + $token)
+            }')
+            ;;
+    esac
+    
+    # Determine SSL configuration - GSAi uses HTTP, others may use HTTPS
+    local ssl_verify="false"
+    if [[ "$scheme" == "https" ]] && [[ "$base_url" == "https://localhost"* ]] && [[ "$provider_id" != *"gsai"* ]]; then
+        # For local HTTPS providers (excluding GSAi), enable SSL verification
+        ssl_verify="true"
+    elif [[ "$provider_id" == *"gsai"* ]]; then
+        # GSAi uses HTTP, ensure scheme is set correctly
+        scheme="http"
+        ssl_verify="false"
+    fi
+    
+    # Create chat completions route - use ai-proxy for GSAi, proxy-rewrite for others
+    if [[ "$provider_id" == *"gsai"* ]]; then
+        # Use ai-proxy plugin for GSAi following OpenAI/Anthropic pattern
+        local auth_token="$auth_token"
+        
+        local chat_route_json=$(jq -n \
+          --arg route_id "$chat_route_id" \
+          --arg provider_id "$provider_id" \
+          --arg scheme "$scheme" \
+          --arg host_port "$host_port" \
+          --arg auth_token "$auth_token" \
+          '{
+            "id": $route_id,
+            "uri": ("/ai/" + $provider_id + "/chat/completions"),
+            "name": ($provider_id + "-chat-completions"),
+            "methods": ["POST"],
+            "plugins": {
+              "ai-proxy": {
+                "provider": "openai-compatible",
+                "auth": {
+                  "header": {
+                    "Authorization": ("Bearer " + $auth_token)
+                  }
+                },
+                "override": {
+                  "endpoint": ($scheme + "://" + $host_port + "/api/v1/chat/completions")
+                },
+                "timeout": 30000,
+                "keepalive": true,
+                "keepalive_pool": 30,
+                "ssl_verify": false
+              },
+              "cors": {
+                "allow_origins": "http://localhost:8501,http://localhost:3000",
+                "allow_methods": "GET,POST,OPTIONS",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_credential": true,
+                "max_age": 3600
+              }
+            }
+          }')
+    elif [[ "$ssl_verify" == "true" ]]; then
+        # Use proxy-rewrite for other providers with SSL
+        local chat_route_json=$(jq -n \
+          --arg route_id "$chat_route_id" \
+          --arg provider_id "$provider_id" \
+          --arg scheme "$scheme" \
+          --arg host_port "$host_port" \
+          --argjson auth_headers "$auth_headers" \
+          '{
+            "id": $route_id,
+            "uri": ("/ai/" + $provider_id + "/chat/completions"),
+            "name": ($provider_id + "-chat-completions"),
+            "methods": ["POST"],
+            "upstream": {
+              "type": "roundrobin",
+              "scheme": $scheme,
+              "nodes": {
+                ($host_port): 1
+              },
+              "pass_host": "rewrite",
+              "upstream_host": "localhost",
+              "tls": {
+                "verify": true
               }
             },
-            "override": {
-              "endpoint": "https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/chat/completions"
+            "plugins": {
+              "proxy-rewrite": {
+                "uri": "/api/v1/chat/completions",
+                "headers": {
+                  "set": ($auth_headers + {"Host": "localhost"})
+                },
+                "use_real_request_uri_unsafe": false
+              },
+              "cors": {
+                "allow_origins": "http://localhost:8501,http://localhost:3000",
+                "allow_methods": "GET,POST,OPTIONS",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_credential": true,
+                "max_age": 3600
+              }
+            }
+          }')
+    else
+        # Use proxy-rewrite for other providers without SSL
+        local chat_route_json=$(jq -n \
+          --arg route_id "$chat_route_id" \
+          --arg provider_id "$provider_id" \
+          --arg scheme "$scheme" \
+          --arg host_port "$host_port" \
+          --argjson auth_headers "$auth_headers" \
+          '{
+            "id": $route_id,
+            "uri": ("/ai/" + $provider_id + "/chat/completions"),
+            "name": ($provider_id + "-chat-completions"),
+            "methods": ["POST"],
+            "upstream": {
+              "type": "roundrobin",
+              "scheme": $scheme,
+              "nodes": {
+                ($host_port): 1
+              },
+              "pass_host": "rewrite",
+              "upstream_host": "localhost"
             },
-            "options": {
-              "model": "claude_3_5_sonnet"
-            },
-            "ssl_verify": false
-          },
-          "cors": {
-            "allow_origins": "*",
-            "allow_methods": "*",
-            "allow_headers": "*",
-            "expose_headers": "*",
-            "max_age": 3600,
-            "allow_credentials": true
-          }
-        }
-      }')
+            "plugins": {
+              "proxy-rewrite": {
+                "uri": "/api/v1/chat/completions",
+                "headers": {
+                  "set": ($auth_headers + {"Host": "localhost"})
+                },
+                "use_real_request_uri_unsafe": false
+              },
+              "cors": {
+                "allow_origins": "http://localhost:8501,http://localhost:3000",
+                "allow_methods": "GET,POST,OPTIONS",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_credential": true,
+                "max_age": 3600
+              }
+            }
+          }')
+    fi
     
     # Create chat completions route
-    local chat_response=$(curl -s -X PUT "${apisix_admin_url}/apisix/admin/routes/9001" \
+    local chat_response=$(curl -s -X PUT "${apisix_admin_url}/apisix/admin/routes/${chat_route_id}" \
         -H "X-API-KEY: ${admin_key}" \
         -H "Content-Type: application/json" \
         -d "$chat_route_json" 2>/dev/null || echo '{"error": "Failed"}')
     
-    if ! echo "$chat_response" | grep -q '"id":"9001"'; then
-        echo "❌ Failed to create GSAi chat completions route"
+    if ! echo "$chat_response" | grep -q "\"id\":\"$chat_route_id\""; then
+        echo "❌ Failed to create chat completions route for $provider_name"
+        echo "   Debug - Route ID: $chat_route_id"
+        echo "   Debug - Response: $(echo "$chat_response" | head -c 200)..."
+        echo "   Debug - Host Port: $host_port"
         return 1
     fi
     
-    # Create models route (9002) - ai-proxy approach for consistency
-    local models_route_json=$(jq -n \
-      --arg auth_token "${auth_token}" \
-      '{
-        "id": "9002",
-        "uri": "/ai/gsai/models",
-        "name": "gsai-static-models",
-        "methods": ["GET"],
-        "upstream": {
-          "type": "roundrobin",
-          "scheme": "https",
-          "nodes": {
-            "api.dev.gsai.mcaas.fcs.gsa.gov:443": 1
-          },
-          "pass_host": "pass",
-          "upstream_host": "api.dev.gsai.mcaas.fcs.gsa.gov"
-        },
-        "plugins": {
-          "key-auth": {
-            "header": "X-API-Key"
-          },
-          "ai-proxy": {
-            "provider": "openai-compatible",
-            "auth": {
-              "header": {
-                "Authorization": ("Bearer " + $auth_token)
+    # Create models route - use proxy-rewrite for all providers (ai-proxy has issues with GET)
+    if [[ "$provider_id" == *"gsai"* ]]; then
+        # GSAi models route with proxy-rewrite (hardcoded auth works better for GET)
+        local models_route_json=$(jq -n \
+          --arg route_id "$models_route_id" \
+          --arg provider_id "$provider_id" \
+          --arg scheme "$scheme" \
+          --arg host_port "$host_port" \
+          --arg auth_token "$auth_token" \
+          '{
+            "id": $route_id,
+            "uri": ("/ai/" + $provider_id + "/models"),
+            "name": ($provider_id + "-models"),
+            "methods": ["GET"],
+            "upstream": {
+              "type": "roundrobin",
+              "scheme": $scheme,
+              "nodes": {
+                ($host_port): 1
+              },
+              "pass_host": "rewrite",
+              "upstream_host": "localhost",
+              "timeout": {
+                "connect": 60,
+                "send": 60,
+                "read": 60
               }
             },
-            "override": {
-              "endpoint": "https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models"
+            "plugins": {
+              "proxy-rewrite": {
+                "uri": "/api/v1/models",
+                "headers": {
+                  "set": {
+                    "Host": "localhost",
+                    "Authorization": ("Bearer " + $auth_token)
+                  }
+                },
+                "use_real_request_uri_unsafe": false
+              },
+              "cors": {
+                "allow_origins": "http://localhost:8501,http://localhost:3000",
+                "allow_methods": "GET,POST,OPTIONS",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_credential": true,
+                "max_age": 3600
+              }
+            }
+          }')
+    elif [[ "$ssl_verify" == "true" ]]; then
+        local models_route_json=$(jq -n \
+          --arg route_id "$models_route_id" \
+          --arg provider_id "$provider_id" \
+          --arg scheme "$scheme" \
+          --arg host_port "$host_port" \
+          --argjson auth_headers "$auth_headers" \
+          '{
+            "id": $route_id,
+            "uri": ("/ai/" + $provider_id + "/models"),
+            "name": ($provider_id + "-models"),
+            "methods": ["GET"],
+            "upstream": {
+              "type": "roundrobin",
+              "scheme": $scheme,
+              "nodes": {
+                ($host_port): 1
+              },
+              "pass_host": "rewrite",
+              "upstream_host": "localhost",
+              "timeout": {
+                "connect": 60,
+                "send": 60,
+                "read": 60
+              },
+              "tls": {
+                "verify": true
+              }
             },
-            "ssl_verify": false
-          },
-          "cors": {
-            "allow_origins": "*",
-            "allow_methods": "*",
-            "allow_headers": "*",
-            "expose_headers": "*",
-            "max_age": 3600,
-            "allow_credentials": true
-          }
-        }
-      }')
+            "plugins": {
+              "proxy-rewrite": {
+                "uri": "/api/v1/models",
+                "headers": {
+                  "set": ($auth_headers + {"Host": "localhost"})
+                },
+                "use_real_request_uri_unsafe": false
+              },
+              "cors": {
+                "allow_origins": "http://localhost:8501,http://localhost:3000",
+                "allow_methods": "GET,POST,OPTIONS",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_credential": true,
+                "max_age": 3600
+              }
+            }
+          }')
+    else
+        local models_route_json=$(jq -n \
+          --arg route_id "$models_route_id" \
+          --arg provider_id "$provider_id" \
+          --arg scheme "$scheme" \
+          --arg host_port "$host_port" \
+          --argjson auth_headers "$auth_headers" \
+          '{
+            "id": $route_id,
+            "uri": ("/ai/" + $provider_id + "/models"),
+            "name": ($provider_id + "-models"),
+            "methods": ["GET"],
+            "upstream": {
+              "type": "roundrobin",
+              "scheme": $scheme,
+              "nodes": {
+                ($host_port): 1
+              },
+              "pass_host": "rewrite",
+              "upstream_host": "localhost",
+              "timeout": {
+                "connect": 60,
+                "send": 60,
+                "read": 60
+              }
+            },
+            "plugins": {
+              "proxy-rewrite": {
+                "uri": "/api/v1/models",
+                "headers": {
+                  "set": ($auth_headers + {"Host": "localhost"})
+                },
+                "use_real_request_uri_unsafe": false
+              },
+              "cors": {
+                "allow_origins": "http://localhost:8501,http://localhost:3000",
+                "allow_methods": "GET,POST,OPTIONS",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_credential": true,
+                "max_age": 3600
+              }
+            }
+          }')
+    fi
     
     # Create models route
-    local models_response=$(curl -s -X PUT "${apisix_admin_url}/apisix/admin/routes/9002" \
+    local models_response=$(curl -s -X PUT "${apisix_admin_url}/apisix/admin/routes/${models_route_id}" \
         -H "X-API-KEY: ${admin_key}" \
         -H "Content-Type: application/json" \
         -d "$models_route_json" 2>/dev/null || echo '{"error": "Failed"}')
     
-    if ! echo "$models_response" | grep -q '"id":"9002"'; then
-        echo "⚠️  Warning: Failed to create GSAi models route (non-critical)"
+    if ! echo "$models_response" | grep -q "\"id\":\"$models_route_id\""; then
+        echo "⚠️  Warning: Failed to create models route for $provider_name (non-critical)"
         echo "Chat completions will still work"
     fi
     
-    echo "✅ GSAi static routes created successfully"
-    echo "   - Chat: http://localhost:9080/ai/gsai/chat/completions"
-    echo "   - Models: http://localhost:9080/ai/gsai/models"
-    echo "   - Authentication: X-API-Key (static like OpenAI/Anthropic)"
+    echo "✅ OpenAPI routes created successfully for $provider_name"
+    echo "   - Chat: http://localhost:9080/ai/$provider_id/chat/completions"
+    echo "   - Models: http://localhost:9080/ai/$provider_id/models"
+    echo "   - Target: $base_url"
     
     return 0
 }
 
 # Function to setup OpenAPI provider routes (including GSAi)
 setup_openapi_routes() {
+    echo "Setting up OpenAPI provider routes..."
+    
+    # Wait for APISIX to be ready before creating routes
+    echo "Ensuring APISIX is ready for OpenAPI route creation..."
+    local retries=0
+    local max_retries=10
+    
+    # Load APISIX admin key
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found"
+        return 1
+    fi
+    
+    # Test APISIX readiness with a simple API call
+    while [ $retries -lt $max_retries ]; do
+        if curl -s --max-time 5 -H "X-API-KEY: $APISIX_ADMIN_KEY" "http://localhost:9180/apisix/admin/routes" >/dev/null 2>&1; then
+            echo "✅ APISIX admin API is ready for route creation"
+            break
+        fi
+        echo "⏳ Waiting for APISIX admin API (attempt $((retries + 1))/$max_retries)..."
+        sleep 3
+        retries=$((retries + 1))
+    done
+    
+    if [ $retries -eq $max_retries ]; then
+        echo "❌ APISIX admin API is not ready - cannot setup OpenAPI routes"
+        return 1
+    fi
+    
     # Create local tmp directory if it doesn't exist
     mkdir -p "./tmp"
     local log_file="./tmp/violentutf_openapi_setup.log"
@@ -203,14 +567,14 @@ setup_openapi_routes() {
         return 0
     fi
     
-    # Ensure APISIX admin URL is set
-    if [ -z "$APISIX_ADMIN_URL" ]; then
-        APISIX_ADMIN_URL="http://localhost:9180"
-        echo "⚠️  APISIX_ADMIN_URL not set, using default: $APISIX_ADMIN_URL"
-    fi
+    # Always use localhost for host-based script execution
+    local apisix_admin_url="http://localhost:9180"
     
     # Load APISIX admin key
-    if [ -f "apisix/.env" ]; then
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
         source "apisix/.env"
     fi
     if [ -z "$APISIX_ADMIN_KEY" ]; then
@@ -221,12 +585,13 @@ setup_openapi_routes() {
     
     # Check APISIX readiness
     echo "$(date): Checking APISIX readiness..." >> "$log_file"
-    if ! curl -s -H "X-API-KEY: $admin_key" "$APISIX_ADMIN_URL/apisix/admin/routes" > /dev/null 2>&1; then
+    if ! curl -s -H "X-API-KEY: $admin_key" "http://localhost:9180/apisix/admin/routes" > /dev/null 2>&1; then
         echo "❌ APISIX admin API is not ready - cannot setup OpenAPI routes"
         echo "$(date): APISIX readiness check failed" >> "$log_file"
         return 1
     fi
     echo "$(date): APISIX is ready" >> "$log_file"
+    
     
     # Process each OpenAPI provider (up to 10)
     local setup_count=0
@@ -261,25 +626,21 @@ setup_openapi_routes() {
         echo "Setting up OpenAPI provider: $provider_name ($provider_id)"
         echo "$(date): Processing provider $i: $provider_id" >> "$log_file"
         
-        # Check if this is GSAi and use specialized setup
-        if [[ "$provider_id" =~ gsai ]] || [[ "$base_url" =~ gsai\.mcaas\.fcs\.gsa\.gov ]]; then
-            echo "🔧 Detected GSAi provider - using specialized static authentication setup"
-            if create_gsai_static_routes "$auth_token" "$i"; then
-                setup_count=$((setup_count + 1))
-                echo "✅ Created GSAi static routes (chat + models)"
-            else
-                error_count=$((error_count + 1))
-                echo "❌ Failed to create GSAi routes"
-            fi
+        # Optional: Verify provider health before creating routes
+        if verify_openapi_provider_health "$provider_id" "$provider_name" "$base_url" "$auth_type" "$auth_token"; then
+            echo "$(date): Provider $provider_id health check passed" >> "$log_file"
         else
-            # Create route for other OpenAPI providers
-            if create_openapi_provider_route "$provider_id" "$base_url" "$auth_type" "$auth_token" "$i"; then
-                setup_count=$((setup_count + 1))
-                echo "✅ Created route for OpenAPI provider: $provider_id"
-            else
-                error_count=$((error_count + 1))
-                echo "❌ Failed to create route for OpenAPI provider: $provider_id"
-            fi
+            echo "$(date): Provider $provider_id health check failed (proceeding anyway)" >> "$log_file"
+            echo "⚠️  Warning: Provider $provider_name may not be accessible, but creating routes anyway"
+        fi
+        
+        # Create routes for OpenAPI provider (works with any OpenAPI-compliant API)
+        if create_openapi_provider_routes "$provider_id" "$provider_name" "$base_url" "$auth_type" "$auth_token" "$i"; then
+            setup_count=$((setup_count + 1))
+            echo "✅ Created routes for OpenAPI provider: $provider_name"
+        else
+            error_count=$((error_count + 1))
+            echo "❌ Failed to create routes for OpenAPI provider: $provider_name"
         fi
     done
     
@@ -298,107 +659,6 @@ setup_openapi_routes() {
     else
         echo "ℹ️  No OpenAPI providers configured"
         return 0
-    fi
-}
-
-# Function to create route for individual OpenAPI provider
-create_openapi_provider_route() {
-    local provider_id="$1"
-    local base_url="$2"
-    local auth_type="$3"
-    local auth_token="$4"
-    local provider_num="$5"
-    
-    # Calculate unique route ID (3000 + provider number)
-    local route_id=$((3000 + provider_num))
-    
-    # Parse base URL to get host and port
-    local host_port=$(echo "$base_url" | sed -E 's|https?://||' | sed -E 's|/.*||')
-    
-    # Build authentication plugin configuration
-    local auth_plugin=""
-    case "$auth_type" in
-        "bearer")
-            auth_plugin='"proxy-rewrite": {
-                "headers": {
-                    "set": {
-                        "Authorization": "Bearer '"$auth_token"'"
-                    }
-                }
-            },'
-            ;;
-        "api_key")
-            auth_plugin='"proxy-rewrite": {
-                "headers": {
-                    "set": {
-                        "X-API-Key": "'"$auth_token"'"
-                    }
-                }
-            },'
-            ;;
-        "basic")
-            # For basic auth, token should be base64(username:password)
-            auth_plugin='"proxy-rewrite": {
-                "headers": {
-                    "set": {
-                        "Authorization": "Basic '"$auth_token"'"
-                    }
-                }
-            },'
-            ;;
-    esac
-    
-    # Create the route configuration
-    cat > "/tmp/openapi-route-${provider_id}.json" <<EOF
-{
-    "id": "$route_id",
-    "uri": "/openapi/${provider_id}/*",
-    "name": "openapi-${provider_id}",
-    "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    "upstream": {
-        "type": "roundrobin",
-        "nodes": {
-            "${host_port}": 1
-        },
-        "scheme": "https",
-        "pass_host": "pass",
-        "timeout": {
-            "connect": 60,
-            "send": 60,
-            "read": 60
-        }
-    },
-    "plugins": {
-        $auth_plugin
-        "proxy-rewrite": {
-            "regex_uri": ["^/openapi/${provider_id}/(.*)", "/\$1"]
-        },
-        "cors": {
-            "allow_origins": "http://localhost:8501,http://localhost:3000",
-            "allow_methods": "GET,POST,PUT,DELETE,PATCH,OPTIONS",
-            "allow_headers": "Authorization,Content-Type,X-Requested-With,X-API-Key",
-            "allow_credential": true,
-            "max_age": 3600
-        }
-    },
-    "priority": 100
-}
-EOF
-    
-    # Create the route
-    local response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
-        -H "X-API-KEY: ${admin_key}" \
-        -H "Content-Type: application/json" \
-        -d @"/tmp/openapi-route-${provider_id}.json" \
-        "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}")
-    
-    rm -f "/tmp/openapi-route-${provider_id}.json"
-    
-    if [ "$response" = "200" ] || [ "$response" = "201" ]; then
-        return 0
-    else
-        echo "Failed to create route. HTTP status: $response"
-        return 1
     fi
 }
 
@@ -440,7 +700,7 @@ EOF
         -H "X-API-KEY: ${admin_key}" \
         -H "Content-Type: application/json" \
         -d @/tmp/openapi-discovery-route.json \
-        "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}")
+        "http://localhost:9180/apisix/admin/routes/${route_id}")
     
     rm -f /tmp/openapi-discovery-route.json
     
@@ -553,6 +813,82 @@ EOF
     rm -f /tmp/fastapi-docs-route.json /tmp/fastapi-redoc-route.json
     
     echo "FastAPI documentation routes configured."
+}
+
+# Function to verify OpenAPI provider endpoint health
+verify_openapi_provider_health() {
+    local provider_id="$1"
+    local provider_name="$2"
+    local base_url="$3"
+    local auth_type="$4"
+    local auth_token="$5"
+    
+    echo "🔍 Verifying health of OpenAPI provider: $provider_name"
+    
+    # Build auth headers for curl
+    local auth_header=""
+    case "$auth_type" in
+        "bearer")
+            auth_header="Authorization: Bearer $auth_token"
+            ;;
+        "api_key")
+            auth_header="X-API-Key: $auth_token"
+            ;;
+        "basic")
+            auth_header="Authorization: Basic $auth_token"
+            ;;
+    esac
+    
+    local test_count=0
+    local passed_count=0
+    
+    # Test models endpoint
+    echo "   Testing models endpoint: $base_url/api/v1/models"
+    if [ -n "$auth_header" ]; then
+        if curl -s -k --max-time 10 -H "$auth_header" "$base_url/api/v1/models" >/dev/null 2>&1; then
+            echo "   ✅ Models endpoint is accessible"
+            passed_count=$((passed_count + 1))
+        else
+            echo "   ❌ Models endpoint is not accessible"
+        fi
+    else
+        if curl -s -k --max-time 10 "$base_url/api/v1/models" >/dev/null 2>&1; then
+            echo "   ✅ Models endpoint is accessible"
+            passed_count=$((passed_count + 1))
+        else
+            echo "   ❌ Models endpoint is not accessible"
+        fi
+    fi
+    test_count=$((test_count + 1))
+    
+    # Test docs endpoint (optional)
+    echo "   Testing docs endpoint: $base_url/docs"
+    if [ -n "$auth_header" ]; then
+        if curl -s -k --max-time 10 -H "$auth_header" "$base_url/docs" >/dev/null 2>&1; then
+            echo "   ✅ Docs endpoint is accessible"
+            passed_count=$((passed_count + 1))
+        else
+            echo "   ⚠️  Docs endpoint is not accessible (optional)"
+        fi
+    else
+        if curl -s -k --max-time 10 "$base_url/docs" >/dev/null 2>&1; then
+            echo "   ✅ Docs endpoint is accessible"
+            passed_count=$((passed_count + 1))
+        else
+            echo "   ⚠️  Docs endpoint is not accessible (optional)"
+        fi
+    fi
+    test_count=$((test_count + 1))
+    
+    echo "   📊 Health check: $passed_count/$test_count endpoints accessible"
+    
+    # Return success if at least models endpoint works
+    if [ $passed_count -gt 0 ]; then
+        return 0
+    else
+        echo "   ❌ Provider $provider_name appears to be unavailable"
+        return 1
+    fi
 }
 
 # Function to verify documentation accessibility

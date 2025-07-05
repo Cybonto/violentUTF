@@ -94,7 +94,7 @@ GENERATOR_PARAMS = {
         {
             "name": "provider",
             "type": "selectbox",
-            "options": ["openai", "anthropic", "ollama", "webui"],
+            "options": ["openai", "anthropic", "ollama", "webui", "gsai"],
             "required": True,
             "default": "openai",
             "description": "AI Provider (openai, anthropic, ollama, webui)",

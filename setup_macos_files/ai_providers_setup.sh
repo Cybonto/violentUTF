@@ -5,8 +5,22 @@
 check_ai_proxy_plugin() {
     echo "Checking if ai-proxy plugin is available in APISIX..."
     
-    local apisix_admin_url="${APISIX_ADMIN_URL:-http://localhost:9180}"
-    local admin_key="${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"
+    local apisix_admin_url="http://localhost:9180"
+    
+    # Load APISIX admin key from .env file
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found in apisix/.env"
+        return 1
+    fi
+    
+    local admin_key="$APISIX_ADMIN_KEY"
     
     response=$(curl -w "%{http_code}" -X GET "${apisix_admin_url}/apisix/admin/plugins/ai-proxy" \
         -H "X-API-KEY: ${admin_key}" \
@@ -35,10 +49,28 @@ create_openai_route() {
     fi
     
     local route_id="openai-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]')"
-    local apisix_admin_url="${APISIX_ADMIN_URL:-http://localhost:9180}"
-    local admin_key="${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"
+    local apisix_admin_url="http://localhost:9180"
+    
+    # Load APISIX admin key from .env file
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found in apisix/.env"
+        echo "   Checked: $apisix_env_file"
+        echo "   Current working directory: $(pwd)"
+        return 1
+    fi
+    
+    local admin_key="$APISIX_ADMIN_KEY"
+    echo "   Using admin key: ${admin_key:0:10}..."
     
     echo "   Creating route for $model at $uri..."
+    echo "   Debug - Variables: model='$model', uri='$uri', api_key='${api_key:0:10}...', route_id='$route_id'"
     
     local route_config='{
         "uri": "'$uri'",
@@ -65,16 +97,25 @@ create_openai_route() {
         }
     }'
     
-    response=$(curl -s -X PUT "${apisix_admin_url}/apisix/admin/routes/$route_id" \
+    echo "   Debug - Route config (first 200 chars): ${route_config:0:200}..."
+    echo "   Debug - Curl URL: ${apisix_admin_url}/apisix/admin/routes/$route_id"
+    echo "   Debug - Admin key: ${admin_key:0:10}..."
+    
+    response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X PUT "${apisix_admin_url}/apisix/admin/routes/$route_id" \
         -H "X-API-KEY: ${admin_key}" \
         -H "Content-Type: application/json" \
         -d "$route_config" 2>/dev/null)
     
-    if echo "$response" | grep -q "\"id\":\"$route_id\""; then
+    # Extract HTTP status and response body
+    local http_status=$(echo "$response" | tail -1 | sed 's/HTTP_STATUS://')
+    local response_body=$(echo "$response" | sed '$d')
+    
+    if [ "$http_status" = "200" ] || [ "$http_status" = "201" ]; then
         echo "   ✅ Created route for $model"
         return 0
     else
-        echo "   ❌ Failed to create route for $model"
+        echo "   ❌ Failed to create route for $model (HTTP $http_status)"
+        echo "   Response: $response_body"
         return 1
     fi
 }
@@ -91,8 +132,25 @@ create_anthropic_route() {
     fi
     
     local route_id="anthropic-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]')"
-    local apisix_admin_url="${APISIX_ADMIN_URL:-http://localhost:9180}"
-    local admin_key="${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"
+    local apisix_admin_url="http://localhost:9180"
+    
+    # Load APISIX admin key from .env file
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found in apisix/.env"
+        echo "   Checked: $apisix_env_file"
+        echo "   Current working directory: $(pwd)"
+        return 1
+    fi
+    
+    local admin_key="$APISIX_ADMIN_KEY"
+    echo "   Using admin key: ${admin_key:0:10}..."
     
     echo "   Creating route for $model at $uri..."
     
@@ -125,16 +183,25 @@ create_anthropic_route() {
         }
     }'
     
-    response=$(curl -s -X PUT "${apisix_admin_url}/apisix/admin/routes/$route_id" \
+    echo "   Debug - Route config (first 200 chars): ${route_config:0:200}..."
+    echo "   Debug - Curl URL: ${apisix_admin_url}/apisix/admin/routes/$route_id"
+    echo "   Debug - Admin key: ${admin_key:0:10}..."
+    
+    response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X PUT "${apisix_admin_url}/apisix/admin/routes/$route_id" \
         -H "X-API-KEY: ${admin_key}" \
         -H "Content-Type: application/json" \
         -d "$route_config" 2>/dev/null)
     
-    if echo "$response" | grep -q "\"id\":\"$route_id\""; then
+    # Extract HTTP status and response body
+    local http_status=$(echo "$response" | tail -1 | sed 's/HTTP_STATUS://')
+    local response_body=$(echo "$response" | sed '$d')
+    
+    if [ "$http_status" = "200" ] || [ "$http_status" = "201" ]; then
         echo "   ✅ Created route for $model"
         return 0
     else
-        echo "   ❌ Failed to create route for $model"
+        echo "   ❌ Failed to create route for $model (HTTP $http_status)"
+        echo "   Response: $response_body"
         return 1
     fi
 }
@@ -142,6 +209,40 @@ create_anthropic_route() {
 # Function to setup OpenAI routes
 setup_openai_routes() {
     echo "Setting up OpenAI routes..."
+    
+    # Wait for APISIX to be ready before creating routes
+    echo "Ensuring APISIX is ready for OpenAI route creation..."
+    local retries=0
+    local max_retries=5
+    
+    # Load APISIX admin key
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found"
+        return 1
+    fi
+    
+    # Test APISIX readiness
+    while [ $retries -lt $max_retries ]; do
+        if curl -s --max-time 5 -H "X-API-KEY: $APISIX_ADMIN_KEY" "http://localhost:9180/apisix/admin/routes" >/dev/null 2>&1; then
+            echo "✅ APISIX admin API is ready"
+            break
+        fi
+        echo "⏳ Waiting for APISIX admin API (attempt $((retries + 1))/$max_retries)..."
+        sleep 2
+        retries=$((retries + 1))
+    done
+    
+    if [ $retries -eq $max_retries ]; then
+        echo "❌ APISIX admin API is not ready - skipping OpenAI routes"
+        return 1
+    fi
     
     # Load AI tokens to check if enabled
     load_ai_tokens
@@ -179,6 +280,40 @@ setup_openai_routes() {
 # Function to setup Anthropic routes
 setup_anthropic_routes() {
     echo "Setting up Anthropic routes..."
+    
+    # Wait for APISIX to be ready before creating routes
+    echo "Ensuring APISIX is ready for Anthropic route creation..."
+    local retries=0
+    local max_retries=5
+    
+    # Load APISIX admin key
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found"
+        return 1
+    fi
+    
+    # Test APISIX readiness
+    while [ $retries -lt $max_retries ]; do
+        if curl -s --max-time 5 -H "X-API-KEY: $APISIX_ADMIN_KEY" "http://localhost:9180/apisix/admin/routes" >/dev/null 2>&1; then
+            echo "✅ APISIX admin API is ready"
+            break
+        fi
+        echo "⏳ Waiting for APISIX admin API (attempt $((retries + 1))/$max_retries)..."
+        sleep 2
+        retries=$((retries + 1))
+    done
+    
+    if [ $retries -eq $max_retries ]; then
+        echo "❌ APISIX admin API is not ready - skipping Anthropic routes"
+        return 1
+    fi
     
     # Load AI tokens to check if enabled
     load_ai_tokens
@@ -259,8 +394,24 @@ create_apisix_consumer() {
         source "apisix/.env"
     fi
     
-    local admin_key="${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"
-    local apisix_admin_url="${APISIX_ADMIN_URL:-http://localhost:9180}"
+    # Load APISIX admin key from .env file
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found in apisix/.env"
+        echo "   Checked: $apisix_env_file"
+        echo "   Current working directory: $(pwd)"
+        return 1
+    fi
+    
+    local admin_key="$APISIX_ADMIN_KEY"
+    echo "   Using admin key: ${admin_key:0:10}..."
+    local apisix_admin_url="http://localhost:9180"
     local violentutf_api_key="${VIOLENTUTF_API_KEY:-test-api-key}"
     
     # Create consumer with key-auth plugin
@@ -312,9 +463,22 @@ test_ai_routes() {
     fi
     test_count=$((test_count + 1))
     
+    # Load APISIX admin key from .env file
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found"
+        return 1
+    fi
+    
     # Check if any AI routes exist
-    local admin_key="${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"
-    local ai_routes=$(curl -s -H "X-API-KEY: ${admin_key}" http://localhost:9180/apisix/admin/routes | \
+    local admin_key="$APISIX_ADMIN_KEY"
+    local ai_routes=$(curl -s -H "X-API-KEY: ${admin_key}" "http://localhost:9180/apisix/admin/routes" | \
         jq -r '.list[].value | select(.id | startswith("openai-") or startswith("anthropic-")) | .id' 2>/dev/null | wc -l)
     
     if [ "$ai_routes" -gt 0 ]; then

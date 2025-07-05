@@ -1,6 +1,6 @@
 """
 Test suite for MCP Client implementation
-Tests SSE connection, JSON - RPC handling, and all MCP operations
+Tests SSE connection, JSON-RPC handling, and all MCP operations
 """
 
 import asyncio

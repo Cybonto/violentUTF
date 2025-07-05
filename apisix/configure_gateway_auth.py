@@ -107,7 +107,7 @@ class APISIXGatewayAuth:
             plugin_config = {
                 "id": "gateway-auth-global",
                 "plugins": {
-                    "serverless - pre - function": {
+                    "serverless-pre-function": {
                         "phase": "rewrite",
                         "functions": [
                             """

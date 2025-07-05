@@ -28,15 +28,48 @@ OPEN_WEBUI_ENDPOINT=http://localhost:3000/ollama/v1/chat/completions
 OPEN_WEBUI_API_KEY=your_open_webui_api_key_here
 
 # OpenAPI Provider Configuration
+# Support for any OpenAPI-compliant API (including GSAi, custom APIs, etc.)
 OPENAPI_ENABLED=false
+
+# OpenAPI Provider 1 - Example: GSAi API (Local Development)
 OPENAPI_1_ENABLED=false
-OPENAPI_1_ID=custom-api-1
-OPENAPI_1_NAME="Custom API Provider 1"
-OPENAPI_1_BASE_URL=https://api.example.com
+OPENAPI_1_ID=gsai-api-local
+OPENAPI_1_NAME="GSAi API Local"
+OPENAPI_1_BASE_URL=https://localhost
 OPENAPI_1_SPEC_PATH=/openapi.json
 OPENAPI_1_AUTH_TYPE=bearer
-OPENAPI_1_AUTH_TOKEN=your_bearer_token_here
+OPENAPI_1_AUTH_TOKEN=your_gsai_bearer_token_here
 OPENAPI_1_CUSTOM_HEADERS=""
+
+# OpenAPI Provider 2 - Example: Custom API
+OPENAPI_2_ENABLED=false
+OPENAPI_2_ID=custom-api-1
+OPENAPI_2_NAME="Custom API Provider 1"
+OPENAPI_2_BASE_URL=https://api.example.com
+OPENAPI_2_SPEC_PATH=/openapi.json
+OPENAPI_2_AUTH_TYPE=api_key
+OPENAPI_2_AUTH_TOKEN=your_api_key_here
+OPENAPI_2_CUSTOM_HEADERS=""
+
+# OpenAPI Provider 3 - Example: Another Custom API
+OPENAPI_3_ENABLED=false
+OPENAPI_3_ID=custom-api-2
+OPENAPI_3_NAME="Custom API Provider 2"
+OPENAPI_3_BASE_URL=https://api.another-example.com:8080
+OPENAPI_3_SPEC_PATH=/v1/openapi.json
+OPENAPI_3_AUTH_TYPE=basic
+OPENAPI_3_AUTH_TOKEN=base64_encoded_credentials_here
+OPENAPI_3_CUSTOM_HEADERS=""
+
+# Available AUTH_TYPE values:
+# - bearer: Uses Authorization: Bearer {token}
+# - api_key: Uses X-API-Key: {token}
+# - basic: Uses Authorization: Basic {token} (token should be base64 encoded)
+
+# Routes will be created at:
+# - Chat: http://localhost:9080/ai/{PROVIDER_ID}/chat/completions
+# - Models: http://localhost:9080/ai/{PROVIDER_ID}/models
+# - Target: {BASE_URL}/api/v1/chat/completions and {BASE_URL}/api/v1/models
 EOF
         echo "✅ Created $AI_TOKENS_FILE template"
         echo "📝 Please edit $AI_TOKENS_FILE to add your actual API keys"

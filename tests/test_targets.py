@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "violen
 
 from keycloak import KeycloakOpenID
 
-# /tests/test_targets.py
+#!/tests/test_targets.py
 
 
 # Add project root to sys.path

@@ -214,7 +214,7 @@ class PyRITOrchestratorService:
                         else:
                             logger.info(f"Orchestrator has {attr_name}: {type(attr_value).__name__}")
                     else:
-                        logger.info(f"Orchestrator has {attr_name}: None / Empty")
+                        logger.info(f"Orchestrator has {attr_name}: None/Empty")
 
         except Exception as e:
             logger.error(f"Failed to create orchestrator instance: {e}", exc_info=True)

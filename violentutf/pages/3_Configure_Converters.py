@@ -30,25 +30,25 @@ if not API_BASE_URL:
 
 API_ENDPOINTS = {
     # Authentication endpoints
-    "auth_token_info": f"{API_BASE_URL}/api / v1 / auth / token / info",
-    "auth_token_validate": f"{API_BASE_URL}/api / v1 / auth / token / validate",
+    "auth_token_info": f"{API_BASE_URL}/api/v1/auth/token/info",
+    "auth_token_validate": f"{API_BASE_URL}/api/v1/auth/token/validate",
     # Database endpoints
-    "database_status": f"{API_BASE_URL}/api / v1 / database / status",
-    "database_stats": f"{API_BASE_URL}/api / v1 / database / stats",
+    "database_status": f"{API_BASE_URL}/api/v1/database/status",
+    "database_stats": f"{API_BASE_URL}/api/v1/database/stats",
     # Converter endpoints
-    "converters": f"{API_BASE_URL}/api / v1 / converters",
-    "converter_types": f"{API_BASE_URL}/api / v1 / converters / types",
-    "converter_params": f"{API_BASE_URL}/api / v1 / converters / params/{{converter_type}}",
-    "converter_preview": f"{API_BASE_URL}/api / v1 / converters/{{converter_id}}/preview",
-    "converter_apply": f"{API_BASE_URL}/api / v1 / converters/{{converter_id}}/apply",
-    "converter_delete": f"{API_BASE_URL}/api / v1 / converters/{{converter_id}}",
+    "converters": f"{API_BASE_URL}/api/v1/converters",
+    "converter_types": f"{API_BASE_URL}/api/v1/converters/types",
+    "converter_params": f"{API_BASE_URL}/api/v1/converters/params/{{converter_type}}",
+    "converter_preview": f"{API_BASE_URL}/api/v1/converters/{{converter_id}}/preview",
+    "converter_apply": f"{API_BASE_URL}/api/v1/converters/{{converter_id}}/apply",
+    "converter_delete": f"{API_BASE_URL}/api/v1/converters/{{converter_id}}",
     # Generator endpoints (for converter testing)
-    "generators": f"{API_BASE_URL}/api / v1 / generators",
+    "generators": f"{API_BASE_URL}/api/v1/generators",
     # Dataset endpoints (for converter application)
-    "datasets": f"{API_BASE_URL}/api / v1 / datasets",
+    "datasets": f"{API_BASE_URL}/api/v1/datasets",
     # Session endpoints
-    "sessions": f"{API_BASE_URL}/api / v1 / sessions",
-    "sessions_update": f"{API_BASE_URL}/api / v1 / sessions",
+    "sessions": f"{API_BASE_URL}/api/v1/sessions",
+    "sessions_update": f"{API_BASE_URL}/api/v1/sessions",
 }
 
 # Initialize session state for API - backed converters
@@ -383,7 +383,7 @@ def main():
         if not api_token:
             return
 
-    # Auto - load generators and datasets for consistency
+    # Auto-load generators and datasets for consistency
     auto_load_generators()
     auto_load_datasets()
 
@@ -405,7 +405,7 @@ def main():
 def display_header():
     """Displays the main header for the page."""
     st.title("🔄 Configure Converters")
-    st.markdown("*Configure prompt converters to transform and enhance red - teaming inputs*")
+    st.markdown("*Configure prompt converters to transform and enhance red-teaming inputs*")
 
 
 def select_generator_and_dataset():
@@ -529,7 +529,7 @@ def configure_converter_parameters():
         or st.session_state.get("last_converter_class") != converter_class
     ):
         st.session_state["generated_converter_name"] = (
-            f"{converter_class}_{datetime.now().strftime('%Y % m%d_ % H%M % S')}"
+            f"{converter_class}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         )
         st.session_state["last_converter_class"] = converter_class
 
@@ -574,7 +574,7 @@ def configure_converter_parameters():
         form_valid = True
         temp_params = {}
 
-        # Filter out UI - skipped parameters
+        # Filter out UI-skipped parameters
         ui_params = [p for p in params_info if not p.get("skip_in_ui", False)]
 
         for param_info in ui_params:
@@ -780,7 +780,7 @@ def preview_and_apply_converter():
                     # Use custom name if available, otherwise generate default
                     custom_name = st.session_state.get("custom_converter_name")
                     if not custom_name:
-                        custom_name = f"{converter_class}_{datetime.now().strftime('%Y % m%d_ % H%M % S')}"
+                        custom_name = f"{converter_class}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
                     # Get generator ID if converter requires target
                     generator_id = None
@@ -941,7 +941,7 @@ def preview_and_apply_converter():
                 st.markdown("4. Return here to apply converters")
 
                 if st.button("📊 Go to Configure Datasets", key="go_to_datasets_no_real"):
-                    st.switch_page("pages / 2_Configure_Datasets.py")
+                    st.switch_page("pages/2_Configure_Datasets.py")
             with col2:
                 if st.button("🔄 Refresh", help="Refresh dataset list", key="refresh_datasets_apply"):
                     st.session_state["force_reload_datasets"] = True
@@ -1000,7 +1000,7 @@ def preview_and_apply_converter():
             if new_dataset_name:
                 import re
 
-                if not re.match(r"^[a - zA - Z0 - 9_-]+$", new_dataset_name):
+                if not re.match(r"^[a-zA-Z0-9_-]+$", new_dataset_name):
                     st.error(
                         "Dataset name can only contain alphanumeric characters, underscores, and hyphens (no spaces)."
                     )
@@ -1124,7 +1124,7 @@ def proceed_to_next_step():
         "Next: Configure Scorers",
         type="primary",
         use_container_width=True,
-        help="Proceed to configure scorers for AI red - teaming evaluation",
+        help="Proceed to configure scorers for AI red-teaming evaluation",
     ):
         logger.info("User proceeded to next step after configuring converters.")
 
@@ -1136,7 +1136,7 @@ def proceed_to_next_step():
         }
         api_request("PUT", API_ENDPOINTS["sessions_update"], json=session_update)
 
-        st.switch_page("pages / 4_Configure_Scorers.py")
+        st.switch_page("pages/4_Configure_Scorers.py")
 
 
 # --- Helper Functions ---
