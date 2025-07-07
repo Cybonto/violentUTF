@@ -1390,6 +1390,26 @@ def extract_clean_response(ai_msg: str) -> str:
     if ai_msg.startswith("❌"):
         return ai_msg
 
+    # For API errors from GSAi, show the full error message
+    if ai_msg.startswith("API Error:"):
+        return ai_msg
+
+    # For direct AI responses (like from GSAi), the message is usually the complete response
+    # Check if this looks like a complete AI response (not technical details)
+    if not any(
+        indicator in ai_msg.lower()
+        for indicator in [
+            "🤖 real ai response",
+            "🔧 generator configuration",
+            "apisix endpoint:",
+            "📥 test prompt:",
+            "✅ test status:",
+            "⏱️ successfully called",
+        ]
+    ):
+        # This looks like a direct AI response, return it as-is
+        return ai_msg.strip()
+
     # Look for common patterns in the response that indicate the actual AI response
     lines = ai_msg.split("\n")
     clean_lines = []
@@ -1437,14 +1457,8 @@ def extract_clean_response(ai_msg: str) -> str:
     if clean_lines:
         return "\n".join(clean_lines)
 
-    # Fallback: try to extract quoted content
-    import re
-
-    quote_match = re.search(r'"([^"]*)"', ai_msg)
-    if quote_match:
-        return quote_match.group(1)
-
     # Last resort: return the original message but try to clean obvious technical parts
+    import re
     cleaned = ai_msg
     for pattern in [
         r"🤖 REAL AI Response from [^:]+:",

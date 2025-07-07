@@ -65,11 +65,11 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     # Anthropic model mappings
     elif provider == "anthropic":
         anthropic_mappings = {
-            "claude-3-opus-20240229": "/ai/anthropic/opus",
-            "claude-3-sonnet-20240229": "/ai/anthropic/sonnet",
-            "claude-3-haiku-20240307": "/ai/anthropic/haiku",
-            "claude-3-5-sonnet-20241022": "/ai/anthropic/sonnet35",
-            "claude-3-5-haiku-20241022": "/ai/anthropic/haiku35",
+            "claude-3-opus-20240229": "/ai/anthropic/claude3-opus",
+            "claude-3-sonnet-20240229": "/ai/anthropic/claude3-sonnet",
+            "claude-3-haiku-20240307": "/ai/anthropic/claude3-haiku",
+            "claude-3-5-sonnet-20241022": "/ai/anthropic/claude35-sonnet",
+            "claude-3-5-haiku-20241022": "/ai/anthropic/claude35-haiku",
             "claude-3-7-sonnet-latest": "/ai/anthropic/sonnet37",
             "claude-sonnet-4-20250514": "/ai/anthropic/sonnet4",
             "claude-opus-4-20250514": "/ai/anthropic/opus4",
@@ -404,11 +404,11 @@ def map_uri_to_model(provider: str, uri_key: str) -> str:
     # Anthropic URI mappings
     elif provider == "anthropic":
         uri_to_model = {
-            "opus": "claude-3-opus-20240229",
-            "sonnet": "claude-3-sonnet-20240229",
-            "haiku": "claude-3-haiku-20240307",
-            "sonnet35": "claude-3-5-sonnet-20241022",
-            "haiku35": "claude-3-5-haiku-20241022",
+            "claude3-opus": "claude-3-opus-20240229",
+            "claude3-sonnet": "claude-3-sonnet-20240229",
+            "claude3-haiku": "claude-3-haiku-20240307",
+            "claude35-sonnet": "claude-3-5-sonnet-20241022",
+            "claude35-haiku": "claude-3-5-haiku-20241022",
             "sonnet37": "claude-3-7-sonnet-latest",
             "sonnet4": "claude-sonnet-4-20250514",
             "opus4": "claude-opus-4-20250514",

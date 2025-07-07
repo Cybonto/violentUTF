@@ -89,8 +89,9 @@ echo "   Access the app at: http://localhost:8501"
 echo ""
 echo "Press Ctrl+C to stop the application"
 echo ""
-# Use full path for streamlit
-streamlit run "$SCRIPT_DIR/$APP_PATH"
+# Change to app directory and run streamlit
+cd "$SCRIPT_DIR/$APP_DIR"
+streamlit run "$(basename "$SCRIPT_DIR/$APP_PATH")"
 EOF
     chmod +x /tmp/launch_violentutf_session.sh
     osascript -e 'tell app "Terminal" to do script "/tmp/launch_violentutf_session.sh"'

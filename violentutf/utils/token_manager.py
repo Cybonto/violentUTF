@@ -39,11 +39,11 @@ class TokenManager:
                 "o4-mini": "/ai/openai/o4-mini",
             },
             "anthropic": {
-                "claude-3-opus-20240229": "/ai/anthropic/opus",
-                "claude-3-sonnet-20240229": "/ai/anthropic/sonnet",
-                "claude-3-haiku-20240307": "/ai/anthropic/haiku",
-                "claude-3-5-sonnet-20241022": "/ai/anthropic/sonnet35",
-                "claude-3-5-haiku-20241022": "/ai/anthropic/haiku35",
+                "claude-3-opus-20240229": "/ai/anthropic/claude3-opus",
+                "claude-3-sonnet-20240229": "/ai/anthropic/claude3-sonnet",
+                "claude-3-haiku-20240307": "/ai/anthropic/claude3-haiku",
+                "claude-3-5-sonnet-20241022": "/ai/anthropic/claude35-sonnet",
+                "claude-3-5-haiku-20241022": "/ai/anthropic/claude35-haiku",
                 "claude-3-7-sonnet-latest": "/ai/anthropic/sonnet37",
                 "claude-sonnet-4-20250514": "/ai/anthropic/sonnet4",
                 "claude-opus-4-20250514": "/ai/anthropic/opus4",
@@ -707,29 +707,48 @@ class TokenManager:
             # Regular models - use all provided parameters
             payload.update(kwargs)
 
-        try:
-            logger.info(f"Calling APISIX endpoint: {endpoint_url}")
-            response = requests.post(endpoint_url, headers=headers, json=payload, timeout=30)
+        import time
+        
+        max_retries = 3
+        retry_delay = 1  # Start with 1 second delay
+        
+        for attempt in range(max_retries + 1):
+            try:
+                if attempt > 0:
+                    logger.info(f"Retry attempt {attempt}/{max_retries} after {retry_delay}s delay")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                
+                logger.info(f"Calling APISIX endpoint: {endpoint_url}")
+                response = requests.post(endpoint_url, headers=headers, json=payload, timeout=45)
 
-            if response.status_code == 200:
-                logger.info("Successfully received response from APISIX")
-                return response.json()
-            elif response.status_code == 401:
-                logger.error("Authentication failed - API key may be invalid")
-                return None
-            elif response.status_code == 403:
-                logger.error("Access forbidden - check API key permissions")
-                return None
-            else:
-                logger.error(f"API call failed with status {response.status_code}: {response.text}")
-                return None
+                if response.status_code == 200:
+                    logger.info("Successfully received response from APISIX")
+                    return response.json()
+                elif response.status_code == 401:
+                    logger.error("Authentication failed - API key may be invalid")
+                    return None
+                elif response.status_code == 403:
+                    logger.error("Access forbidden - check API key permissions")
+                    return None
+                elif response.status_code == 429:
+                    logger.warning(f"Rate limit hit (429). Attempt {attempt + 1}/{max_retries + 1}")
+                    if attempt < max_retries:
+                        continue  # Retry on 429
+                    else:
+                        logger.error("Max retries exceeded for rate limiting")
+                        return None
+                else:
+                    logger.error(f"API call failed with status {response.status_code}: {response.text}")
+                    return None
 
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Network error calling APISIX endpoint: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Unexpected error calling APISIX endpoint: {e}")
-            return None
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Network error calling APISIX endpoint: {e}")
+                if attempt < max_retries:
+                    logger.info(f"Retrying due to network error...")
+                    continue
+                return None
+        
 
 
 # Global instance
