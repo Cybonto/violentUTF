@@ -3,7 +3,7 @@
 
 # Function to check if ai-proxy plugin is available
 check_ai_proxy_plugin() {
-    echo "Checking if ai-proxy plugin is available in APISIX..."
+    echo "🔍 Checking if ai-proxy plugin is available in APISIX..."
     
     local apisix_admin_url="http://localhost:9180"
     
@@ -30,11 +30,128 @@ check_ai_proxy_plugin() {
         echo "✅ ai-proxy plugin is available"
         return 0
     else
-        echo "❌ ai-proxy plugin is not available"
+        echo "❌ ai-proxy plugin is not available (HTTP $response)"
         echo "   This is needed for AI provider routes"
         echo "   Make sure you're using APISIX version 3.10.0 or later with ai-proxy plugin enabled"
         return 1
     fi
+}
+
+# Function to wait for APISIX and ai-proxy plugin to be fully ready
+wait_for_apisix_ai_ready() {
+    echo "⏳ Waiting for APISIX and ai-proxy plugin to be fully ready..."
+    
+    local max_attempts=20  # Increased from 5 to 20
+    local attempt=1
+    local apisix_admin_url="http://localhost:9180"
+    
+    # Load APISIX admin key
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ ERROR: APISIX_ADMIN_KEY not found"
+        return 1
+    fi
+    
+    local admin_key="$APISIX_ADMIN_KEY"
+    
+    while [ $attempt -le $max_attempts ]; do
+        # First check basic admin API connectivity
+        if curl -s --max-time 5 -H "X-API-KEY: $admin_key" "$apisix_admin_url/apisix/admin/routes" >/dev/null 2>&1; then
+            echo "   ✅ APISIX admin API is responding (attempt $attempt/$max_attempts)"
+            
+            # Then check if ai-proxy plugin is available
+            local plugin_response=$(curl -w "%{http_code}" -X GET "${apisix_admin_url}/apisix/admin/plugins/ai-proxy" \
+                -H "X-API-KEY: ${admin_key}" \
+                -s -o /dev/null 2>/dev/null)
+            
+            if [ "$plugin_response" = "200" ]; then
+                echo "   ✅ ai-proxy plugin is available and ready"
+                return 0
+            else
+                echo "   ⏳ ai-proxy plugin not ready yet (HTTP $plugin_response), waiting..."
+            fi
+        else
+            echo "   ⏳ APISIX admin API not ready yet (attempt $attempt/$max_attempts)"
+        fi
+        
+        sleep 5  # Increased from 2 to 5 seconds
+        attempt=$((attempt + 1))
+    done
+    
+    echo "❌ APISIX or ai-proxy plugin not ready after $((max_attempts * 5)) seconds"
+    echo "💡 Troubleshooting tips:"
+    echo "   • Check APISIX container logs: docker logs apisix-apisix-1"
+    echo "   • Verify ai-proxy plugin is in config: grep ai-proxy apisix/conf/config.yaml"
+    echo "   • Try restarting APISIX: docker restart apisix-apisix-1"
+    return 1
+}
+
+# Function to perform pre-flight checks for AI route setup
+ai_route_preflight_check() {
+    echo "🔍 Performing AI route setup pre-flight checks..."
+    
+    # Check if ai-proxy plugin is available
+    if ! check_ai_proxy_plugin; then
+        echo "⚠️  ai-proxy plugin not available on first check"
+        echo "🔄 Attempting APISIX restart to reload plugins..."
+        
+        # Try restarting APISIX to reload plugins
+        if docker restart apisix-apisix-1 >/dev/null 2>&1; then
+            echo "✅ APISIX restarted successfully"
+            
+            # Wait for APISIX to come back up
+            echo "⏳ Waiting for APISIX to restart and plugins to load..."
+            sleep 20
+            
+            # Check ai-proxy plugin again
+            if check_ai_proxy_plugin; then
+                echo "✅ ai-proxy plugin now available after restart"
+            else
+                echo "❌ ai-proxy plugin still not available after restart"
+                echo "💡 This suggests APISIX configuration may not include ai-proxy plugin"
+                echo "   Check: grep ai-proxy apisix/conf/config.yaml"
+                return 1
+            fi
+        else
+            echo "❌ Failed to restart APISIX container"
+            return 1
+        fi
+    fi
+    
+    # Check if any AI providers are enabled
+    load_ai_tokens
+    
+    local enabled_providers=0
+    
+    if [ "${OPENAI_ENABLED:-false}" = "true" ]; then
+        enabled_providers=$((enabled_providers + 1))
+        echo "   ✅ OpenAI provider enabled"
+    fi
+    
+    if [ "${ANTHROPIC_ENABLED:-false}" = "true" ]; then
+        enabled_providers=$((enabled_providers + 1))
+        echo "   ✅ Anthropic provider enabled"
+    fi
+    
+    if [ "${OLLAMA_ENABLED:-false}" = "true" ]; then
+        enabled_providers=$((enabled_providers + 1))
+        echo "   ✅ Ollama provider enabled"
+    fi
+    
+    if [ $enabled_providers -eq 0 ]; then
+        echo "⚠️  No AI providers are enabled in ai-tokens.env"
+        echo "   AI routes will be skipped"
+        return 0
+    fi
+    
+    echo "✅ Pre-flight checks passed - $enabled_providers AI provider(s) enabled"
+    return 0
 }
 
 # Function to create OpenAI route
@@ -208,39 +325,11 @@ create_anthropic_route() {
 
 # Function to setup OpenAI routes
 setup_openai_routes() {
-    echo "Setting up OpenAI routes..."
+    echo "🤖 Setting up OpenAI routes..."
     
-    # Wait for APISIX to be ready before creating routes
-    echo "Ensuring APISIX is ready for OpenAI route creation..."
-    local retries=0
-    local max_retries=5
-    
-    # Load APISIX admin key
-    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
-    if [ -f "$apisix_env_file" ]; then
-        source "$apisix_env_file"
-    elif [ -f "apisix/.env" ]; then
-        source "apisix/.env"
-    fi
-    
-    if [ -z "$APISIX_ADMIN_KEY" ]; then
-        echo "❌ ERROR: APISIX_ADMIN_KEY not found"
-        return 1
-    fi
-    
-    # Test APISIX readiness
-    while [ $retries -lt $max_retries ]; do
-        if curl -s --max-time 5 -H "X-API-KEY: $APISIX_ADMIN_KEY" "http://localhost:9180/apisix/admin/routes" >/dev/null 2>&1; then
-            echo "✅ APISIX admin API is ready"
-            break
-        fi
-        echo "⏳ Waiting for APISIX admin API (attempt $((retries + 1))/$max_retries)..."
-        sleep 2
-        retries=$((retries + 1))
-    done
-    
-    if [ $retries -eq $max_retries ]; then
-        echo "❌ APISIX admin API is not ready - skipping OpenAI routes"
+    # Use improved waiting mechanism that checks ai-proxy plugin
+    if ! wait_for_apisix_ai_ready; then
+        echo "❌ APISIX or ai-proxy plugin not ready - skipping OpenAI routes"
         return 1
     fi
     
@@ -279,39 +368,11 @@ setup_openai_routes() {
 
 # Function to setup Anthropic routes
 setup_anthropic_routes() {
-    echo "Setting up Anthropic routes..."
+    echo "🧠 Setting up Anthropic routes..."
     
-    # Wait for APISIX to be ready before creating routes
-    echo "Ensuring APISIX is ready for Anthropic route creation..."
-    local retries=0
-    local max_retries=5
-    
-    # Load APISIX admin key
-    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
-    if [ -f "$apisix_env_file" ]; then
-        source "$apisix_env_file"
-    elif [ -f "apisix/.env" ]; then
-        source "apisix/.env"
-    fi
-    
-    if [ -z "$APISIX_ADMIN_KEY" ]; then
-        echo "❌ ERROR: APISIX_ADMIN_KEY not found"
-        return 1
-    fi
-    
-    # Test APISIX readiness
-    while [ $retries -lt $max_retries ]; do
-        if curl -s --max-time 5 -H "X-API-KEY: $APISIX_ADMIN_KEY" "http://localhost:9180/apisix/admin/routes" >/dev/null 2>&1; then
-            echo "✅ APISIX admin API is ready"
-            break
-        fi
-        echo "⏳ Waiting for APISIX admin API (attempt $((retries + 1))/$max_retries)..."
-        sleep 2
-        retries=$((retries + 1))
-    done
-    
-    if [ $retries -eq $max_retries ]; then
-        echo "❌ APISIX admin API is not ready - skipping Anthropic routes"
+    # Use improved waiting mechanism that checks ai-proxy plugin
+    if ! wait_for_apisix_ai_ready; then
+        echo "❌ APISIX or ai-proxy plugin not ready - skipping Anthropic routes"
         return 1
     fi
     
@@ -438,6 +499,154 @@ create_apisix_consumer() {
     fi
 }
 
+# Function to verify specific AI route configuration
+verify_ai_route() {
+    local provider="$1"
+    local model="$2"
+    local expected_uri="$3"
+    
+    # Load APISIX admin key
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        return 1
+    fi
+    
+    local admin_key="$APISIX_ADMIN_KEY"
+    local route_id="${provider}-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]')"
+    
+    # Check if route exists and get its configuration
+    local route_response=$(curl -s -H "X-API-KEY: ${admin_key}" \
+        "http://localhost:9180/apisix/admin/routes/${route_id}" 2>/dev/null)
+    
+    if echo "$route_response" | grep -q "\"uri\":\"${expected_uri}\""; then
+        echo "✅ $provider $model route configured correctly"
+        return 0
+    else
+        echo "❌ $provider $model route missing or misconfigured"
+        return 1
+    fi
+}
+
+# Function to verify OpenAI routes
+verify_openai_routes() {
+    echo "🔍 Verifying OpenAI routes..."
+    
+    load_ai_tokens
+    
+    if [ "${OPENAI_ENABLED:-false}" != "true" ]; then
+        echo "⏭️  OpenAI disabled, skipping verification"
+        return 0
+    fi
+    
+    local models=("gpt-4" "gpt-3.5-turbo" "gpt-4-turbo" "gpt-4o" "gpt-4o-mini")
+    local uris=("/ai/openai/gpt4" "/ai/openai/gpt35" "/ai/openai/gpt4-turbo" "/ai/openai/gpt4o" "/ai/openai/gpt4o-mini")
+    
+    local verified=0
+    local total=${#models[@]}
+    
+    for i in "${!models[@]}"; do
+        if verify_ai_route "openai" "${models[$i]}" "${uris[$i]}"; then
+            verified=$((verified + 1))
+        fi
+    done
+    
+    echo "📊 OpenAI route verification: $verified/$total routes verified"
+    
+    if [ $verified -eq $total ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to verify Anthropic routes
+verify_anthropic_routes() {
+    echo "🔍 Verifying Anthropic routes..."
+    
+    load_ai_tokens
+    
+    if [ "${ANTHROPIC_ENABLED:-false}" != "true" ]; then
+        echo "⏭️  Anthropic disabled, skipping verification"
+        return 0
+    fi
+    
+    local models=("claude-3-opus-20240229" "claude-3-sonnet-20240229" "claude-3-haiku-20240307" "claude-3-5-sonnet-20241022" "claude-3-5-haiku-20241022")
+    local uris=("/ai/anthropic/claude3-opus" "/ai/anthropic/claude3-sonnet" "/ai/anthropic/claude3-haiku" "/ai/anthropic/claude35-sonnet" "/ai/anthropic/claude35-haiku")
+    
+    local verified=0
+    local total=${#models[@]}
+    
+    for i in "${!models[@]}"; do
+        if verify_ai_route "anthropic" "${models[$i]}" "${uris[$i]}"; then
+            verified=$((verified + 1))
+        fi
+    done
+    
+    echo "📊 Anthropic route verification: $verified/$total routes verified"
+    
+    if [ $verified -eq $total ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to test AI route functionality
+test_ai_route_functionality() {
+    local provider="$1"
+    local uri="$2"
+    local api_key="$3"
+    
+    local test_url="http://localhost:9080${uri}"
+    
+    # Test with actual AI request to verify ai-proxy plugin is working
+    local test_payload=""
+    local response_code=""
+    
+    if [ "$provider" = "anthropic" ]; then
+        # Anthropic requires max_tokens parameter
+        test_payload='{"model":"claude-3-sonnet-20240229","messages":[{"role":"user","content":"test"}],"max_tokens":1}'
+    else
+        # OpenAI format
+        test_payload='{"model":"gpt-4","messages":[{"role":"user","content":"test"}],"max_tokens":1}'
+    fi
+    
+    # Send a POST request to test actual functionality
+    response_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+        -X POST "$test_url" \
+        -H "Content-Type: application/json" \
+        -d "$test_payload" 2>/dev/null)
+    
+    # Consider success codes:
+    # 200 = Success
+    # 400 = Bad request (but route is working)
+    # 401 = Auth error (but route is working) 
+    # 429 = Rate limit (but route is working)
+    # Failure codes:
+    # 404 = Route not found
+    # 502/503 = Upstream issues
+    # 000 = Connection failed
+    
+    case "$response_code" in
+        200|400|401|429)
+            return 0  # Route is working
+            ;;
+        404|502|503|000)
+            return 1  # Route has issues
+            ;;
+        *)
+            # For other codes, consider it working if we got a response
+            return 0
+            ;;
+    esac
+}
+
 # Function to test AI routes
 test_ai_routes() {
     echo "Testing AI provider routes..."
@@ -489,11 +698,76 @@ test_ai_routes() {
     fi
     test_count=$((test_count + 1))
     
+    # Test specific AI provider routes
+    load_ai_tokens
+    
+    # Test OpenAI routes if enabled
+    if [ "${OPENAI_ENABLED:-false}" = "true" ]; then
+        echo "🧪 Testing OpenAI route functionality..."
+        if test_ai_route_functionality "openai" "/ai/openai/gpt4" "$OPENAI_API_KEY"; then
+            echo "✅ OpenAI routes are accessible"
+            passed_count=$((passed_count + 1))
+        else
+            echo "❌ OpenAI routes not accessible"
+        fi
+        test_count=$((test_count + 1))
+    fi
+    
+    # Test Anthropic routes if enabled
+    if [ "${ANTHROPIC_ENABLED:-false}" = "true" ]; then
+        echo "🧪 Testing Anthropic route functionality..."
+        if test_ai_route_functionality "anthropic" "/ai/anthropic/claude3-sonnet" "$ANTHROPIC_API_KEY"; then
+            echo "✅ Anthropic routes are accessible"
+            passed_count=$((passed_count + 1))
+        else
+            echo "❌ Anthropic routes not accessible"
+        fi
+        test_count=$((test_count + 1))
+    fi
+    
     echo "📊 AI route tests: $passed_count/$test_count passed"
     
     if [ $passed_count -eq $test_count ]; then
         return 0
     else
+        return 1
+    fi
+}
+
+# Function to perform comprehensive AI route verification
+comprehensive_ai_route_verification() {
+    echo "🔍 Comprehensive AI Route Verification"
+    echo "====================================="
+    
+    local verification_passed=true
+    
+    # Verify OpenAI routes
+    if ! verify_openai_routes; then
+        verification_passed=false
+    fi
+    
+    # Verify Anthropic routes  
+    if ! verify_anthropic_routes; then
+        verification_passed=false
+    fi
+    
+    # Test route functionality
+    if ! test_ai_routes; then
+        verification_passed=false
+    fi
+    
+    echo "====================================="
+    
+    if [ "$verification_passed" = true ]; then
+        echo "✅ Comprehensive AI route verification passed"
+        return 0
+    else
+        echo "❌ Comprehensive AI route verification failed"
+        echo "💡 Recommendations:"
+        echo "   • Check AI provider API keys are valid"
+        echo "   • Verify APISIX ai-proxy plugin is enabled"
+        echo "   • Review APISIX logs for detailed errors"
+        echo "   • Ensure all services are running and healthy"
         return 1
     fi
 }

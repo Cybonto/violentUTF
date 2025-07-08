@@ -25,6 +25,7 @@ load_modules() {
         "apisix_setup.sh"
         "ai_providers_setup.sh"
         "openapi_setup.sh"
+        "route_management.sh"
         "violentutf_api_setup.sh"
         "streamlit_setup.sh"
         "validation.sh"
@@ -122,15 +123,56 @@ main_setup() {
     setup_apisix
     setup_violentutf_api
     
-    # Phase 6: Route and Integration Setup (CRITICAL: After services are running)
+    # Phase 5b: Service Stabilization (CRITICAL: Wait for all services to be fully ready)
+    echo ""
+    echo "=== Phase 5b: Service Stabilization ==="
+    echo "⏳ Allowing services to fully stabilize before route configuration..."
+    sleep 15  # Additional stabilization time
+    
+    # Verify core services are stable
+    echo "🔍 Verifying core services are stable..."
+    if ! curl -s --max-time 10 http://localhost:9080/health >/dev/null 2>&1; then
+        echo "⚠️  APISIX gateway not responding, waiting longer..."
+        sleep 10
+    fi
+    
+    if ! curl -s --max-time 10 http://localhost:9080/api/v1/health >/dev/null 2>&1; then
+        echo "⚠️  ViolentUTF API not responding, waiting longer..."
+        sleep 10
+    fi
+    
+    echo "✅ Core services appear stable, proceeding with route configuration"
+    
+    # Phase 6: Route and Integration Setup (CRITICAL: After services are running and stable)
     echo ""
     echo "=== Phase 6: Route and Integration Setup ==="
     configure_apisix_routes
     configure_openapi_routes
     setup_openapi_routes  # Setup OpenAPI provider routes (if configured)
-    setup_openai_routes
-    setup_anthropic_routes
-    setup_ollama_routes
+    
+    # AI Routes with enhanced readiness checking
+    echo ""
+    echo "=== Phase 6a: AI Provider Route Setup ==="
+    echo "🤖 Setting up AI provider routes with enhanced readiness verification..."
+    
+    # Perform pre-flight checks for AI route setup
+    if ai_route_preflight_check; then
+        echo "✅ AI route pre-flight checks passed, proceeding with setup..."
+        setup_openai_routes
+        setup_anthropic_routes
+        setup_ollama_routes
+    else
+        echo "❌ AI route pre-flight checks failed, skipping AI route setup"
+        echo "💡 You can manually set up AI routes later by running:"
+        echo "   source setup_macos_files/ai_providers_setup.sh"
+        echo "   setup_openai_routes && setup_anthropic_routes"
+    fi
+    
+    # Enhanced route verification and management
+    echo ""
+    echo "=== Phase 6b: Comprehensive Route Verification ==="
+    comprehensive_ai_route_verification  # Enhanced AI route verification
+    comprehensive_route_management       # Full route discovery and verification
     
     # Phase 7: Validation and Verification
     echo ""
