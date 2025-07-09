@@ -294,7 +294,7 @@ class PyRITStreamProcessor:
             # Handle different dataset return types
             if hasattr(dataset, 'prompts'):
                 # Standard SeedPromptDataset format
-                for prompt in dataset.prompts:
+                for i, prompt in enumerate(dataset.prompts):
                     if hasattr(prompt, 'value'):
                         yield {
                             'text': prompt.value,
@@ -318,6 +318,10 @@ class PyRITStreamProcessor:
                                 'source': 'pyrit_dataset'
                             }
                         }
+                    
+                    # Yield control periodically to prevent blocking
+                    if i % 100 == 0:
+                        await asyncio.sleep(0)
                         
             elif isinstance(dataset, list):
                 # List format (e.g., many_shot_jailbreaking)
@@ -342,6 +346,10 @@ class PyRITStreamProcessor:
                                 'original_format': type(item).__name__
                             }
                         }
+                    
+                    # Yield control periodically to prevent blocking
+                    if i % 100 == 0:
+                        await asyncio.sleep(0)
                         
             elif hasattr(dataset, 'questions'):
                 # WMDP dataset format
@@ -373,6 +381,10 @@ class PyRITStreamProcessor:
                                 'question_type': 'unknown'
                             }
                         }
+                    
+                    # Yield control periodically to prevent blocking
+                    if i % 100 == 0:
+                        await asyncio.sleep(0)
             else:
                 logger.warning(f"Unknown dataset format: {type(dataset)}")
                 

@@ -630,12 +630,13 @@ async def _load_real_pyrit_dataset(
         # Check if streaming is enabled and limit is high enough
         import_config = DatasetImportConfig.from_env()
         
-        # For small requests or preview, use legacy mode
-        if limit and limit <= import_config.preview_limit:
+        # For small requests or preview, use legacy mode to avoid streaming overhead
+        if limit and limit <= 100:  # Use legacy for small requests (increased from preview_limit)
+            logger.info(f"Using legacy mode for small dataset request (limit: {limit})")
             return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
         
-        # For larger requests, use streaming
-        if import_config.enable_streaming:
+        # For larger requests, use streaming (temporarily disabled for testing)
+        if import_config.enable_streaming and False:  # Temporarily disabled
             try:
                 processor = PyRITStreamProcessor()
                 all_prompts = []
