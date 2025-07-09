@@ -932,7 +932,7 @@ def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
                 help_text = f"Available models for {provider_display} (Required)"
                 if selected_provider == "openapi-gsai":
                     help_text += " - Uses static authentication like OpenAI/Anthropic"
-                
+
                 st.selectbox(
                     f"{model_param['description']}*",
                     options=available_models,
@@ -1457,8 +1457,9 @@ def extract_clean_response(ai_msg: str) -> str:
         return "\n".join(clean_lines)
 
     # Last resort: return the original message but try to clean obvious technical parts
-    
+
     import re
+
     cleaned = ai_msg
     for pattern in [
         r"🤖 REAL AI Response from [^:]+:",

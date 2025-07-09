@@ -273,10 +273,10 @@ async def _load_real_memory_dataset_prompts(dataset_id: str, limit: Optional[int
                         AND original_value NOT LIKE '%test prompt%'
                         ORDER BY timestamp DESC
                     """
-                    
+
                     if limit and limit > 0:
                         query += f" LIMIT {limit}"
-                    
+
                     cursor.execute(query)
 
                     rows = cursor.fetchall()

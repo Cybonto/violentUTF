@@ -97,13 +97,13 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     elif provider == "openapi-gsai":
         # Use the static GSAi route we configured in the setup
         return "/ai/gsai-api-1/chat/completions"
-    
+
     # OpenAPI provider mappings
     elif provider.startswith("openapi-"):
         # For OpenAPI providers, we need to find the chat completions endpoint
         # The model is passed as a parameter, not part of the URL
         provider_id = provider.replace("openapi-", "")
-        
+
         # Query APISIX to find the chat completions route
         try:
             # When running in Docker, use container name; when local, use localhost
@@ -120,42 +120,48 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
                 if "list" in routes_data:
                     # Log total routes found
                     total_routes = len(routes_data["list"])
-                    openapi_routes = [r for r in routes_data["list"] if r.get("value", {}).get("id", "").startswith("openapi-")]
+                    openapi_routes = [
+                        r for r in routes_data["list"] if r.get("value", {}).get("id", "").startswith("openapi-")
+                    ]
                     logger.info(f"Found {total_routes} total routes, {len(openapi_routes)} OpenAPI routes")
-                    
+
                     for route_item in routes_data["list"]:
                         route = route_item.get("value", {})
                         route_id = route.get("id", "")
                         uri = route.get("uri", "")
-                        
+
                         # Log routes that match the provider
                         if route_id.startswith(f"openapi-{provider_id}-"):
                             logger.debug(f"Checking route: id={route_id}, uri={uri}")
-                        
+
                         # Look for the chat completions endpoint for this provider
                         # Pattern: /openapi/{provider-id}/api/v1/chat/completions
-                        if (route_id.startswith(f"openapi-{provider_id}-") and 
-                            uri.endswith("/chat/completions") and
-                            f"/openapi/{provider_id}/" in uri):
+                        if (
+                            route_id.startswith(f"openapi-{provider_id}-")
+                            and uri.endswith("/chat/completions")
+                            and f"/openapi/{provider_id}/" in uri
+                        ):
                             logger.info(f"Found OpenAPI chat endpoint for {provider}: {uri}")
                             return uri
-                            
+
                     # If no chat/completions endpoint found, try looking for "converse" operation
                     for route_item in routes_data["list"]:
                         route = route_item.get("value", {})
                         route_id = route.get("id", "")
                         uri = route.get("uri", "")
-                        
-                        if (route_id.startswith(f"openapi-{provider_id}-") and 
-                            "converse" in route_id.lower() and
-                            f"/openapi/{provider_id}/" in uri):
+
+                        if (
+                            route_id.startswith(f"openapi-{provider_id}-")
+                            and "converse" in route_id.lower()
+                            and f"/openapi/{provider_id}/" in uri
+                        ):
                             logger.info(f"Found OpenAPI converse endpoint for {provider}: {uri}")
                             return uri
-                            
+
             else:
                 logger.error(f"Failed to query APISIX admin API: HTTP {response.status_code}")
                 logger.error(f"Response: {response.text}")
-                
+
             logger.warning(f"No chat completions endpoint found for OpenAPI provider {provider}")
         except requests.exceptions.RequestException as e:
             logger.error(f"Network error querying APISIX admin API: {e}")
@@ -445,13 +451,13 @@ def get_fallback_models(provider: str) -> List[str]:
         if provider == "openapi-gsai":
             return [
                 "claude_3_5_sonnet",
-                "claude_3_7_sonnet", 
+                "claude_3_7_sonnet",
                 "claude_3_haiku",
                 "llama3211b",
                 "cohere_english_v3",
                 "gemini-2.0-flash",
                 "gemini-2.0-flash-lite",
-                "gemini-2.5-pro-preview-05-06"
+                "gemini-2.5-pro-preview-05-06",
             ]
         return []
 
@@ -560,19 +566,19 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
     """
     if provider.startswith("openapi-"):
         provider_id = provider.replace("openapi-", "")
-        
+
         # Special handling for GSAi - use hardcoded models since models endpoint has issues
         if provider_id == "gsai":
             logger.info("Using hardcoded models for GSAi (models endpoint not working)")
             return [
                 "claude_3_5_sonnet",
-                "claude_3_7_sonnet", 
+                "claude_3_7_sonnet",
                 "claude_3_haiku",
                 "llama3211b",
                 "cohere_english_v3",
                 "gemini-2.0-flash",
                 "gemini-2.0-flash-lite",
-                "gemini-2.5-pro-preview-05-06"
+                "gemini-2.5-pro-preview-05-06",
             ]
 
         # Get provider configuration
@@ -711,7 +717,7 @@ async def get_generators(current_user=Depends(get_current_user)):
                 except (ValueError, TypeError) as e:
                     logger.warning(f"Failed to parse last_test_time for generator {gen_data['id']}: {e}")
                     last_test_time = None
-            
+
             generators.append(
                 GeneratorInfo(
                     id=gen_data["id"],
@@ -931,7 +937,7 @@ def get_openapi_providers() -> List[str]:
                     if len(parts) >= 4:
                         provider_id = parts[3]
                         providers.add(f"openapi-{provider_id}")
-                
+
                 # Special case: Match GSAi pattern: /ai/gsai-api-1/...
                 elif uri.startswith("/ai/gsai-api-1/"):
                     providers.add("openapi-gsai")

@@ -18,6 +18,7 @@ router = APIRouter()
 
 class JWTDebugResponse(BaseModel):
     """Response model for JWT debug endpoint"""
+
     jwt_valid: bool
     jwt_secret_preview: str
     payload: Optional[Dict[str, Any]] = None

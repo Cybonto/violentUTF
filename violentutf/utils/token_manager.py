@@ -57,7 +57,7 @@ class TokenManager:
             "webui": {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"},
             "gsai": {
                 "claude_3_5_sonnet": "/ai/gsai-api-1/chat/completions",
-                "claude_3_7_sonnet": "/ai/gsai-api-1/chat/completions", 
+                "claude_3_7_sonnet": "/ai/gsai-api-1/chat/completions",
                 "claude_3_haiku": "/ai/gsai-api-1/chat/completions",
                 "llama3211b": "/ai/gsai-api-1/chat/completions",
                 "cohere_english_v3": "/ai/gsai-api-1/chat/completions",
@@ -459,11 +459,15 @@ class TokenManager:
 
                 # Check if this is an AI proxy route or GSAi proxy-rewrite route
                 is_ai_proxy = "ai-proxy" in plugins
-                is_gsai_proxy_rewrite = ("proxy-rewrite" in plugins and "gsai" in uri)
+                is_gsai_proxy_rewrite = "proxy-rewrite" in plugins and "gsai" in uri
 
                 if (is_ai_proxy or is_gsai_proxy_rewrite) and uri.startswith("/ai/"):
                     # Special handling for GSAi routes which use single endpoint for all models
-                    if uri == "/ai/gsai-api-1/chat/completions" and route_id in ["9001", "gsai-static-chat-completions", "gsai-api-1-chat-completions"]:
+                    if uri == "/ai/gsai-api-1/chat/completions" and route_id in [
+                        "9001",
+                        "gsai-static-chat-completions",
+                        "gsai-api-1-chat-completions",
+                    ]:
                         # Add all GSAi models to the same endpoint
                         for model in self.fallback_apisix_endpoints.get("gsai", {}).keys():
                             endpoints["gsai"][model] = uri
@@ -488,7 +492,7 @@ class TokenManager:
             if len(parts) >= 3 and parts[0] == "ai":
                 provider = parts[1]
                 model_endpoint = parts[2]
-                
+
                 # Handle gsai-api-1 -> gsai mapping
                 if provider.startswith("gsai-"):
                     provider = "gsai"
@@ -595,7 +599,7 @@ class TokenManager:
             "webui": {"llama2": "Llama 2 (WebUI)", "codellama": "Code Llama (WebUI)"},
             "gsai": {
                 "claude_3_5_sonnet": "Claude 3.5 Sonnet",
-                "claude_3_7_sonnet": "Claude 3.7 Sonnet", 
+                "claude_3_7_sonnet": "Claude 3.7 Sonnet",
                 "claude_3_haiku": "Claude 3 Haiku",
                 "llama3211b": "Llama 3.2 11B",
                 "cohere_english_v3": "Cohere English v3",
@@ -708,17 +712,17 @@ class TokenManager:
             payload.update(kwargs)
 
         import time
-        
+
         max_retries = 3
         retry_delay = 1  # Start with 1 second delay
-        
+
         for attempt in range(max_retries + 1):
             try:
                 if attempt > 0:
                     logger.info(f"Retry attempt {attempt}/{max_retries} after {retry_delay}s delay")
                     time.sleep(retry_delay)
                     retry_delay *= 2  # Exponential backoff
-                
+
                 logger.info(f"Calling APISIX endpoint: {endpoint_url}")
                 response = requests.post(endpoint_url, headers=headers, json=payload, timeout=45)
 
@@ -748,7 +752,6 @@ class TokenManager:
                     logger.info(f"Retrying due to network error...")
                     continue
                 return None
-        
 
 
 # Global instance

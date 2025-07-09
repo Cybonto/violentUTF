@@ -36,7 +36,7 @@ from utils.mcp_integration import ConfigurationIntentDetector, ContextAnalyzer, 
 from vertexai.preview.language_models import ChatModel
 
 # Get the path to the .env file relative to this script (pages directory -> parent directory)
-env_path = pathlib.Path(__file__).parent.parent/".env"
+env_path = pathlib.Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 # App configuration
@@ -276,7 +276,7 @@ def get_provider_display_name(provider: str) -> str:
         "anthropic": "Anthropic",
         "ollama": "Ollama (Local)",
         "webui": "Open WebUI",
-        "gsai": "GSAi (Government Services AI)"
+        "gsai": "GSAi (Government Services AI)",
     }
     return provider_names.get(provider, provider.title())
 
@@ -289,19 +289,37 @@ def _looks_like_mcp_command(text: str) -> bool:
     mcp_indicators = [
         # Explicit MCP commands
         "/mcp",
-        
         # Natural language patterns that MCP recognizes
-        "show mcp commands", "what can mcp do", "mcp usage", "mcp help",
-        "run test", "test for", "check for",
-        "load dataset", "use dataset", "show data",
-        "enhance this prompt", "improve this prompt", "make this prompt better",
-        "analyze this prompt", "analyze for", "find issues", "find issue",
-        "show mcp resources", "list available resources", "what resources are available",
-        "use prompt", "show template",
-        "list all", "show me all", "show available", "what are available"
+        "show mcp commands",
+        "what can mcp do",
+        "mcp usage",
+        "mcp help",
+        "run test",
+        "test for",
+        "check for",
+        "load dataset",
+        "use dataset",
+        "show data",
+        "enhance this prompt",
+        "improve this prompt",
+        "make this prompt better",
+        "analyze this prompt",
+        "analyze for",
+        "find issues",
+        "find issue",
+        "show mcp resources",
+        "list available resources",
+        "what resources are available",
+        "use prompt",
+        "show template",
+        "list all",
+        "show me all",
+        "show available",
+        "what are available",
     ]
-    
+
     return any(indicator in text for indicator in mcp_indicators)
+
 
 with st.sidebar:
     st.header("Chat Endpoint Configuration")
@@ -812,7 +830,7 @@ with main_col_right:
         """,
             unsafe_allow_html=True,
         )
-        
+
         # Create Variable buttons with green styling
         st.markdown("**Create Variables:**")
         create_col1, create_col2 = st.columns(2)
@@ -836,7 +854,6 @@ with main_col_right:
                 key="create_from_response",
             ):
                 create_prompt_variable(st.session_state["full_response"], "response")
-
 
         # Display Enhancement Results in the expander
         if st.session_state.get("show_enhancement_results"):
@@ -1206,7 +1223,9 @@ def handle_mcp_command(parsed_command):
         # Don't show UI warnings for UNKNOWN types - they're normal chat messages
         if command_type != MCPCommandType.UNKNOWN:
             logger.error(f"Unhandled command type: {command_type} (type: {type(command_type)})")
-            st.warning(f"Unhandled command type: {command_type.value if hasattr(command_type, 'value') else command_type}")
+            st.warning(
+                f"Unhandled command type: {command_type.value if hasattr(command_type, 'value') else command_type}"
+            )
         else:
             logger.debug("UNKNOWN command type reached else clause - ignoring UI warning")
 
@@ -2197,9 +2216,7 @@ def get_active_plugins(provider: str, model: str) -> Dict[str, Any]:
             }
 
             # Get all routes
-            response = requests.get(
-                f"{violentutf_api_url}/api/v1/apisix-admin/routes", headers=auth_headers, timeout=5
-            )
+            response = requests.get(f"{violentutf_api_url}/api/v1/apisix-admin/routes", headers=auth_headers, timeout=5)
 
             if response.status_code == 200:
                 routes = response.json().get("list", [])
@@ -2281,7 +2298,7 @@ if generate_response:
                 # Only parse text that looks like it might be an MCP command
                 if _looks_like_mcp_command(user_input):
                     parsed_command = nl_parser.parse(user_input)
-                    
+
                     # Only handle recognized MCP commands
                     if parsed_command.type != MCPCommandType.UNKNOWN:
                         logger.debug(f"Processing MCP command: {parsed_command.type}")

@@ -72,10 +72,7 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
             }
         elif provider.startswith("openapi-"):
             # OpenAPI format - always include model in payload
-            payload = {
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}]
-            }
+            payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
             # Add optional parameters if the OpenAPI spec supports them
             if generator_config["parameters"].get("temperature") is not None:
                 payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
@@ -103,7 +100,7 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
             logger.info(f"Using APISIX API key for authentication (provider: {provider})")
         else:
             logger.warning("No APISIX API key found in environment - requests may fail")
-        
+
         # For OpenAPI providers, APISIX proxy-rewrite plugin handles upstream auth
         if provider.startswith("openapi-"):
             provider_id = provider.replace("openapi-", "")
@@ -112,13 +109,13 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
         # Log request details for debugging
         logger.info(f"Making request to: {url}")
         logger.info(f"Request headers keys: {list(headers.keys())}")
-        if 'Authorization' in headers:
-            auth_header = headers['Authorization']
-            if auth_header.startswith('Bearer '):
+        if "Authorization" in headers:
+            auth_header = headers["Authorization"]
+            if auth_header.startswith("Bearer "):
                 token = auth_header[7:]
-                masked = token[:4] + '...' + token[-4:] if len(token) > 8 else '***'
+                masked = token[:4] + "..." + token[-4:] if len(token) > 8 else "***"
                 logger.info(f"Authorization header: Bearer {masked}")
-        
+
         response = requests.post(url, json=payload, headers=headers, timeout=30)
 
         logger.info(f"APISIX response status: {response.status_code}")
@@ -196,11 +193,12 @@ async def _execute_generic_generator(generator_config: Dict, prompt: str, conver
 
 def _get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     """Get APISIX endpoint for provider/model combination"""
-    
+
     # Handle OpenAPI providers
     if provider.startswith("openapi-"):
         # Use the function from generators.py to get the endpoint
         from app.api.endpoints.generators import get_apisix_endpoint_for_model
+
         endpoint = get_apisix_endpoint_for_model(provider, model)
         if endpoint:
             return endpoint

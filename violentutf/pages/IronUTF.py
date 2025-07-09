@@ -367,7 +367,7 @@ def detect_provider_type(route_config: Dict) -> str:
     """Detect the AI provider type from route configuration."""
     plugins = route_config.get("plugins", {})
     uri = route_config.get("uri", "")
-    
+
     # Check for ai-proxy plugin first
     ai_proxy = plugins.get("ai-proxy", {})
     if ai_proxy:
@@ -387,12 +387,12 @@ def detect_provider_type(route_config: Dict) -> str:
                     return "ollama"
                 else:
                     return "webui"
-    
+
     # Check for proxy-rewrite plugin with GSAi (fallback detection)
     proxy_rewrite = plugins.get("proxy-rewrite", {})
     if proxy_rewrite and "gsai" in uri:
         return "gsai"
-    
+
     # Check URI for provider hints (final fallback)
     if "gsai" in uri:
         return "gsai"

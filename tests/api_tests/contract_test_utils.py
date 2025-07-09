@@ -20,19 +20,19 @@ logger = logging.getLogger(__name__)
 
 class ContractTestError(Exception):
     """Exception for contract testing errors."""
+
     pass
 
 
 class APIContractValidator:
     """Validator for API contract compliance."""
-    
+
     def __init__(self, base_url: str = "http://testserver"):
         self.base_url = base_url
         self.errors: List[str] = []
         self.warnings: List[str] = []
-    
-    def validate_response_schema(self, response_data: Dict[str, Any], 
-                               expected_schema: Dict[str, Any]) -> bool:
+
+    def validate_response_schema(self, response_data: Dict[str, Any], expected_schema: Dict[str, Any]) -> bool:
         """Validate response data against expected schema."""
         try:
             jsonschema.validate(response_data, expected_schema)
@@ -43,30 +43,26 @@ class APIContractValidator:
         except Exception as e:
             self.errors.append(f"Schema validation error: {e}")
             return False
-    
-    def validate_status_code(self, response_code: int, 
-                           expected_codes: List[int]) -> bool:
+
+    def validate_status_code(self, response_code: int, expected_codes: List[int]) -> bool:
         """Validate response status code."""
         if response_code not in expected_codes:
-            self.errors.append(
-                f"Unexpected status code: {response_code}, expected one of {expected_codes}"
-            )
+            self.errors.append(f"Unexpected status code: {response_code}, expected one of {expected_codes}")
             return False
         return True
-    
-    def validate_headers(self, response_headers: Dict[str, str], 
-                        required_headers: List[str]) -> bool:
+
+    def validate_headers(self, response_headers: Dict[str, str], required_headers: List[str]) -> bool:
         """Validate required headers are present."""
         missing_headers = []
         for header in required_headers:
             if header.lower() not in [h.lower() for h in response_headers.keys()]:
                 missing_headers.append(header)
-        
+
         if missing_headers:
             self.errors.append(f"Missing required headers: {missing_headers}")
             return False
         return True
-    
+
     def validate_json_response(self, response_text: str) -> bool:
         """Validate that response is valid JSON."""
         try:
@@ -75,21 +71,20 @@ class APIContractValidator:
         except json.JSONDecodeError as e:
             self.errors.append(f"Invalid JSON response: {e}")
             return False
-    
-    def validate_authentication_required(self, endpoint: str, 
-                                       client, test_headers: Dict[str, str]) -> bool:
+
+    def validate_authentication_required(self, endpoint: str, client, test_headers: Dict[str, str]) -> bool:
         """Validate that authentication is required for protected endpoints."""
         # Test without authentication
         response = client.get(endpoint)
-        
+
         if response.status_code in [200]:
             self.warnings.append(f"Endpoint {endpoint} allows unauthenticated access")
-        
+
         # Test with authentication
         response = client.get(endpoint, headers=test_headers)
-        
+
         return response.status_code in [200, 404, 422]  # Allow various success codes
-    
+
     def get_validation_summary(self) -> Dict[str, Any]:
         """Get validation summary."""
         return {
@@ -97,56 +92,52 @@ class APIContractValidator:
             "errors": self.errors,
             "warnings": self.warnings,
             "error_count": len(self.errors),
-            "warning_count": len(self.warnings)
+            "warning_count": len(self.warnings),
         }
 
 
 class MockResponseBuilder:
     """Builder for creating mock API responses."""
-    
+
     def __init__(self):
         self.status_code = 200
         self.headers = {"Content-Type": "application/json"}
         self.data = {}
-    
-    def with_status(self, status_code: int) -> 'MockResponseBuilder':
+
+    def with_status(self, status_code: int) -> "MockResponseBuilder":
         """Set response status code."""
         self.status_code = status_code
         return self
-    
-    def with_header(self, key: str, value: str) -> 'MockResponseBuilder':
+
+    def with_header(self, key: str, value: str) -> "MockResponseBuilder":
         """Add response header."""
         self.headers[key] = value
         return self
-    
-    def with_data(self, data: Dict[str, Any]) -> 'MockResponseBuilder':
+
+    def with_data(self, data: Dict[str, Any]) -> "MockResponseBuilder":
         """Set response data."""
         self.data = data
         return self
-    
-    def with_error(self, message: str, code: int = 400) -> 'MockResponseBuilder':
+
+    def with_error(self, message: str, code: int = 400) -> "MockResponseBuilder":
         """Create error response."""
         self.status_code = code
         self.data = {"detail": message, "status_code": code}
         return self
-    
+
     def build(self) -> Dict[str, Any]:
         """Build mock response."""
-        return {
-            "status_code": self.status_code,
-            "headers": self.headers,
-            "json": self.data
-        }
+        return {"status_code": self.status_code, "headers": self.headers, "json": self.data}
 
 
 class EndpointTester:
     """Utility for testing API endpoints."""
-    
+
     def __init__(self, client, base_headers: Optional[Dict[str, str]] = None):
         self.client = client
         self.base_headers = base_headers or {}
         self.validator = APIContractValidator()
-    
+
     def test_endpoint_exists(self, endpoint: str, method: str = "GET") -> bool:
         """Test that endpoint exists and is accessible."""
         try:
@@ -154,91 +145,85 @@ class EndpointTester:
             return response.status_code != 404
         except Exception:
             return False
-    
+
     def test_endpoint_authentication(self, endpoint: str, method: str = "GET") -> Dict[str, Any]:
         """Test endpoint authentication requirements."""
         results = {}
-        
+
         # Test without authentication
         try:
             response = getattr(self.client, method.lower())(endpoint)
             results["without_auth"] = {
                 "status_code": response.status_code,
-                "allows_unauthenticated": response.status_code in [200, 201, 204]
+                "allows_unauthenticated": response.status_code in [200, 201, 204],
             }
         except Exception as e:
             results["without_auth"] = {"error": str(e)}
-        
+
         # Test with authentication
         try:
             response = getattr(self.client, method.lower())(endpoint, headers=self.base_headers)
             results["with_auth"] = {
                 "status_code": response.status_code,
-                "authenticates_successfully": response.status_code in [200, 201, 204, 404, 422]
+                "authenticates_successfully": response.status_code in [200, 201, 204, 404, 422],
             }
         except Exception as e:
             results["with_auth"] = {"error": str(e)}
-        
+
         return results
-    
-    def test_endpoint_performance(self, endpoint: str, method: str = "GET", 
-                                 timeout: float = 5.0) -> Dict[str, Any]:
+
+    def test_endpoint_performance(self, endpoint: str, method: str = "GET", timeout: float = 5.0) -> Dict[str, Any]:
         """Test endpoint performance."""
         start_time = time.time()
-        
+
         try:
             response = getattr(self.client, method.lower())(endpoint, headers=self.base_headers)
             end_time = time.time()
-            
+
             response_time = end_time - start_time
-            
+
             return {
                 "response_time": response_time,
                 "within_timeout": response_time < timeout,
                 "status_code": response.status_code,
-                "success": True
+                "success": True,
             }
         except Exception as e:
             end_time = time.time()
-            return {
-                "response_time": end_time - start_time,
-                "within_timeout": False,
-                "error": str(e),
-                "success": False
-            }
-    
-    def test_endpoint_data_validation(self, endpoint: str, 
-                                    valid_data: Dict[str, Any],
-                                    invalid_data: Dict[str, Any]) -> Dict[str, Any]:
+            return {"response_time": end_time - start_time, "within_timeout": False, "error": str(e), "success": False}
+
+    def test_endpoint_data_validation(
+        self, endpoint: str, valid_data: Dict[str, Any], invalid_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Test endpoint data validation."""
         results = {}
-        
+
         # Test with valid data
         try:
             response = self.client.post(endpoint, json=valid_data, headers=self.base_headers)
             results["valid_data"] = {
                 "status_code": response.status_code,
-                "accepts_valid_data": response.status_code in [200, 201, 204]
+                "accepts_valid_data": response.status_code in [200, 201, 204],
             }
         except Exception as e:
             results["valid_data"] = {"error": str(e)}
-        
+
         # Test with invalid data
         try:
             response = self.client.post(endpoint, json=invalid_data, headers=self.base_headers)
             results["invalid_data"] = {
                 "status_code": response.status_code,
-                "rejects_invalid_data": response.status_code in [400, 422]
+                "rejects_invalid_data": response.status_code in [400, 422],
             }
         except Exception as e:
             results["invalid_data"] = {"error": str(e)}
-        
+
         return results
 
 
 class SchemaGenerator:
     """Utility for generating test schemas."""
-    
+
     @staticmethod
     def generate_error_schema() -> Dict[str, Any]:
         """Generate standard error response schema."""
@@ -247,65 +232,55 @@ class SchemaGenerator:
             "properties": {
                 "detail": {"type": "string"},
                 "status_code": {"type": "integer"},
-                "error": {"type": "string"}
+                "error": {"type": "string"},
             },
-            "required": ["detail"]
+            "required": ["detail"],
         }
-    
+
     @staticmethod
     def generate_list_schema(item_schema: Dict[str, Any]) -> Dict[str, Any]:
         """Generate schema for list responses."""
-        return {
-            "type": "array",
-            "items": item_schema
-        }
-    
+        return {"type": "array", "items": item_schema}
+
     @staticmethod
     def generate_success_schema() -> Dict[str, Any]:
         """Generate standard success response schema."""
         return {
             "type": "object",
-            "properties": {
-                "status": {"type": "string", "enum": ["success"]},
-                "message": {"type": "string"}
-            },
-            "required": ["status"]
+            "properties": {"status": {"type": "string", "enum": ["success"]}, "message": {"type": "string"}},
+            "required": ["status"],
         }
 
 
 class ContractTestReporter:
     """Utility for reporting contract test results."""
-    
+
     def __init__(self):
         self.test_results = []
-    
-    def add_test_result(self, test_name: str, passed: bool, 
-                       details: Optional[Dict[str, Any]] = None):
+
+    def add_test_result(self, test_name: str, passed: bool, details: Optional[Dict[str, Any]] = None):
         """Add a test result."""
-        self.test_results.append({
-            "test_name": test_name,
-            "passed": passed,
-            "details": details or {},
-            "timestamp": time.time()
-        })
-    
+        self.test_results.append(
+            {"test_name": test_name, "passed": passed, "details": details or {}, "timestamp": time.time()}
+        )
+
     def get_summary(self) -> Dict[str, Any]:
         """Get test summary."""
         total_tests = len(self.test_results)
         passed_tests = sum(1 for r in self.test_results if r["passed"])
         failed_tests = total_tests - passed_tests
-        
+
         return {
             "total_tests": total_tests,
             "passed_tests": passed_tests,
             "failed_tests": failed_tests,
-            "success_rate": passed_tests / total_tests if total_tests > 0 else 0
+            "success_rate": passed_tests / total_tests if total_tests > 0 else 0,
         }
-    
+
     def generate_report(self, output_file: Optional[str] = None) -> str:
         """Generate detailed test report."""
         summary = self.get_summary()
-        
+
         report = []
         report.append("API Contract Test Report")
         report.append("=" * 50)
@@ -314,25 +289,25 @@ class ContractTestReporter:
         report.append(f"Failed: {summary['failed_tests']}")
         report.append(f"Success Rate: {summary['success_rate']:.2%}")
         report.append("")
-        
+
         # Detailed results
         report.append("Detailed Results:")
         report.append("-" * 30)
-        
+
         for result in self.test_results:
             status = "✅ PASS" if result["passed"] else "❌ FAIL"
             report.append(f"{status} {result['test_name']}")
-            
+
             if result["details"]:
                 for key, value in result["details"].items():
                     report.append(f"  {key}: {value}")
-        
+
         report_text = "\n".join(report)
-        
+
         if output_file:
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 f.write(report_text)
-        
+
         return report_text
 
 
@@ -356,52 +331,45 @@ def create_test_environment() -> Dict[str, str]:
 def validate_openapi_compliance(schema: Dict[str, Any]) -> List[str]:
     """Validate OpenAPI 3.0 compliance."""
     errors = []
-    
+
     try:
         validate_spec(schema)
     except Exception as e:
         errors.append(f"OpenAPI validation failed: {e}")
-    
+
     # Additional ViolentUTF-specific validations
     if "security" not in schema:
         errors.append("No security schemes defined")
-    
+
     if "paths" not in schema or len(schema["paths"]) == 0:
         errors.append("No API paths defined")
-    
+
     return errors
 
 
-def run_contract_test_suite(client, test_headers: Dict[str, str], 
-                          endpoints: List[str]) -> ContractTestReporter:
+def run_contract_test_suite(client, test_headers: Dict[str, str], endpoints: List[str]) -> ContractTestReporter:
     """Run a comprehensive contract test suite."""
     reporter = ContractTestReporter()
     tester = EndpointTester(client, test_headers)
-    
+
     for endpoint in endpoints:
         # Test endpoint exists
         exists = tester.test_endpoint_exists(endpoint)
-        reporter.add_test_result(
-            f"{endpoint} - Endpoint Exists",
-            exists,
-            {"endpoint": endpoint}
-        )
-        
+        reporter.add_test_result(f"{endpoint} - Endpoint Exists", exists, {"endpoint": endpoint})
+
         if exists:
             # Test authentication
             auth_results = tester.test_endpoint_authentication(endpoint)
             reporter.add_test_result(
                 f"{endpoint} - Authentication",
                 auth_results.get("with_auth", {}).get("authenticates_successfully", False),
-                auth_results
+                auth_results,
             )
-            
+
             # Test performance
             perf_results = tester.test_endpoint_performance(endpoint)
             reporter.add_test_result(
-                f"{endpoint} - Performance",
-                perf_results.get("within_timeout", False),
-                perf_results
+                f"{endpoint} - Performance", perf_results.get("within_timeout", False), perf_results
             )
-    
+
     return reporter

@@ -64,10 +64,10 @@ def setup_contract_testing_environment():
             "DUCKDB_PATH": ":memory:",
             "PYRIT_DB_PATH": ":memory:",
         }
-        
+
         for key, value in test_env_vars.items():
             os.environ.setdefault(key, value)
-        
+
         print("🧪 Contract testing environment configured")
 
 
@@ -296,13 +296,14 @@ def test_app(contract_testing_enabled):
     """Create FastAPI test app with authentication mocking."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
-    
+
     try:
         # Import after environment setup
         from tests.api_tests.test_auth_mock import ContractTestingPatches
-        
+
         with ContractTestingPatches():
             from violentutf_api.fastapi_app.app.main import app
+
             yield app
     except ImportError as e:
         pytest.skip(f"Could not import FastAPI app: {e}")
@@ -312,7 +313,7 @@ def test_app(contract_testing_enabled):
 def test_client(test_app):
     """Create test client with authentication mocking."""
     from fastapi.testclient import TestClient
-    
+
     with TestClient(test_app) as client:
         yield client
 
@@ -322,9 +323,10 @@ def test_headers(contract_testing_enabled):
     """Create test headers for API calls."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
-    
+
     try:
         from tests.api_tests.test_auth_mock import create_test_headers
+
         return create_test_headers()
     except ImportError:
         pytest.skip("Could not import test auth utilities")
@@ -335,10 +337,10 @@ def auth_patches(contract_testing_enabled):
     """Apply authentication patches for contract testing."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
-    
+
     try:
         from tests.api_tests.test_auth_mock import ContractTestingPatches
-        
+
         with ContractTestingPatches() as patches:
             yield patches
     except ImportError:
@@ -362,9 +364,10 @@ def mock_database(contract_testing_enabled):
     """Create mock database session for testing."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
-    
+
     try:
         from tests.api_tests.test_auth_mock import create_mock_database_session
+
         return create_mock_database_session()
     except ImportError:
         pytest.skip("Could not import mock database utilities")
@@ -375,15 +378,11 @@ def mock_database(contract_testing_enabled):
 def cleanup_contract_tests():
     """Cleanup after contract tests complete."""
     yield
-    
+
     # Cleanup test artifacts if contract testing was enabled
     if os.getenv("CONTRACT_TESTING", "false").lower() == "true":
-        test_files = [
-            "generated_openapi.json",
-            "contract-test-results.xml",
-            "test_output.log"
-        ]
-        
+        test_files = ["generated_openapi.json", "contract-test-results.xml", "test_output.log"]
+
         for file in test_files:
             if os.path.exists(file):
                 try:

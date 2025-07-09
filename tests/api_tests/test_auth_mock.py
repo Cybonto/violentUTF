@@ -23,7 +23,7 @@ TEST_API_KEY = "test_api_key_for_contract_testing"
 
 class MockTokenManager:
     """Mock token manager for contract testing."""
-    
+
     def __init__(self):
         self.test_user_payload = {
             "sub": "test_user",
@@ -32,22 +32,22 @@ class MockTokenManager:
             "roles": ["ai-api-access", "admin"],
             "exp": int(time.time()) + 3600,  # 1 hour from now
             "iat": int(time.time()),
-            "iss": "ViolentUTF-Test"
+            "iss": "ViolentUTF-Test",
         }
-    
+
     def generate_test_token(self, user_payload: Optional[Dict[str, Any]] = None) -> str:
         """Generate a test JWT token."""
         payload = user_payload or self.test_user_payload
         return jwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
-    
+
     def extract_user_token(self) -> Optional[str]:
         """Mock token extraction."""
         return self.generate_test_token()
-    
+
     def has_ai_access(self, token: str) -> bool:
         """Mock AI access check."""
         return True
-    
+
     def get_user_roles(self, token: str) -> list:
         """Mock user roles."""
         return ["ai-api-access", "admin"]
@@ -55,28 +55,28 @@ class MockTokenManager:
 
 class MockAuthenticationMiddleware:
     """Mock authentication middleware for contract testing."""
-    
+
     def __init__(self, app):
         self.app = app
         self.token_manager = MockTokenManager()
-    
+
     async def __call__(self, scope, receive, send):
         """Mock authentication middleware."""
         # Add test authentication headers
         if scope["type"] == "http":
             headers = dict(scope.get("headers", []))
-            
+
             # Add mock APISIX gateway header
             headers[b"x-api-gateway"] = b"APISIX"
-            
+
             # Add test authorization header if not present
             if b"authorization" not in headers:
                 test_token = self.token_manager.generate_test_token()
                 headers[b"authorization"] = f"Bearer {test_token}".encode()
-            
+
             # Update scope with mock headers
             scope["headers"] = [(k, v) for k, v in headers.items()]
-        
+
         await self.app(scope, receive, send)
 
 
@@ -96,9 +96,9 @@ def setup_test_environment():
         "KEYCLOAK_APISIX_CLIENT_SECRET": "test_secret",
         "VIOLENTUTF_API_URL": "http://localhost:8000",
         "TESTING": "true",
-        "CONTRACT_TESTING": "true"
+        "CONTRACT_TESTING": "true",
     }
-    
+
     for key, value in test_env_vars.items():
         if key not in os.environ:
             os.environ[key] = value
@@ -114,7 +114,7 @@ def mock_jwt_decode(token: str, secret: str = None, algorithms: list = None) -> 
         "roles": ["ai-api-access", "admin"],
         "exp": int(time.time()) + 3600,
         "iat": int(time.time()),
-        "iss": "ViolentUTF-Test"
+        "iss": "ViolentUTF-Test",
     }
 
 
@@ -126,7 +126,7 @@ def mock_requests_post(*args, **kwargs):
         "access_token": MockTokenManager().generate_test_token(),
         "token_type": "bearer",
         "expires_in": 3600,
-        "refresh_token": "test_refresh_token"
+        "refresh_token": "test_refresh_token",
     }
     return mock_response
 
@@ -134,52 +134,49 @@ def mock_requests_post(*args, **kwargs):
 def mock_apisix_endpoints():
     """Mock APISIX endpoints for testing."""
     return {
-        "openai": {
-            "gpt-4": "/ai/openai/gpt4",
-            "gpt-3.5-turbo": "/ai/openai/gpt35"
-        },
+        "openai": {"gpt-4": "/ai/openai/gpt4", "gpt-3.5-turbo": "/ai/openai/gpt35"},
         "anthropic": {
             "claude-3-sonnet-20240229": "/ai/anthropic/claude3-sonnet",
-            "claude-3-5-sonnet-20241022": "/ai/anthropic/claude35-sonnet"
+            "claude-3-5-sonnet-20241022": "/ai/anthropic/claude35-sonnet",
         },
-        "ollama": {
-            "llama2": "/ai/ollama/llama2"
-        }
+        "ollama": {"llama2": "/ai/ollama/llama2"},
     }
 
 
 class ContractTestingPatches:
     """Context manager for applying all contract testing patches."""
-    
+
     def __init__(self):
         self.patches = []
-    
+
     def __enter__(self):
         """Apply all contract testing patches."""
         setup_test_environment()
-        
+
         # Patch JWT decode
-        jwt_patch = patch('jwt.decode', side_effect=mock_jwt_decode)
+        jwt_patch = patch("jwt.decode", side_effect=mock_jwt_decode)
         self.patches.append(jwt_patch)
         jwt_patch.start()
-        
+
         # Patch requests.post for authentication
-        requests_patch = patch('requests.post', side_effect=mock_requests_post)
+        requests_patch = patch("requests.post", side_effect=mock_requests_post)
         self.patches.append(requests_patch)
         requests_patch.start()
-        
+
         # Patch token manager
-        token_manager_patch = patch('violentutf.utils.token_manager.token_manager', MockTokenManager())
+        token_manager_patch = patch("violentutf.utils.token_manager.token_manager", MockTokenManager())
         self.patches.append(token_manager_patch)
         token_manager_patch.start()
-        
+
         # Patch APISIX endpoints
-        endpoints_patch = patch('violentutf.utils.token_manager.TokenManager.get_apisix_endpoints', return_value=mock_apisix_endpoints())
+        endpoints_patch = patch(
+            "violentutf.utils.token_manager.TokenManager.get_apisix_endpoints", return_value=mock_apisix_endpoints()
+        )
         self.patches.append(endpoints_patch)
         endpoints_patch.start()
-        
+
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Stop all patches."""
         for patch_obj in self.patches:
@@ -189,17 +186,17 @@ class ContractTestingPatches:
 def create_test_client_with_auth():
     """Create a test client with authentication mocking."""
     from fastapi.testclient import TestClient
-    
+
     # Import the FastAPI app
     try:
         from violentutf_api.fastapi_app.app.main import app
     except ImportError:
         logger.error("Could not import FastAPI app for testing")
         return None
-    
+
     # Apply authentication middleware
     app.middleware("http")(MockAuthenticationMiddleware)
-    
+
     return TestClient(app)
 
 
@@ -219,12 +216,12 @@ def create_test_headers() -> Dict[str, str]:
     """Create test headers for API calls."""
     token_manager = MockTokenManager()
     test_token = token_manager.generate_test_token()
-    
+
     return {
         "Authorization": f"Bearer {test_token}",
         "X-API-Gateway": "APISIX",
         "Content-Type": "application/json",
-        "apikey": TEST_API_KEY
+        "apikey": TEST_API_KEY,
     }
 
 
@@ -232,6 +229,7 @@ def validate_response_schema(response_data: Dict[str, Any], expected_schema: Dic
     """Validate response data against expected schema."""
     try:
         import jsonschema
+
         jsonschema.validate(response_data, expected_schema)
         return True
     except jsonschema.ValidationError as e:
@@ -245,12 +243,12 @@ def validate_response_schema(response_data: Dict[str, Any], expected_schema: Dic
 def create_mock_database_session():
     """Create a mock database session for testing."""
     from unittest.mock import Mock
-    
+
     mock_db = Mock()
     mock_db.query.return_value = Mock()
     mock_db.add.return_value = None
     mock_db.commit.return_value = None
     mock_db.rollback.return_value = None
     mock_db.close.return_value = None
-    
+
     return mock_db

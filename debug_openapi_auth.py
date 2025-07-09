@@ -8,15 +8,15 @@ import sys
 # Check environment variables
 print("=== OpenAPI Environment Variables ===")
 env_vars = os.environ
-openapi_vars = {k: v for k, v in env_vars.items() if 'OPENAPI' in k}
+openapi_vars = {k: v for k, v in env_vars.items() if "OPENAPI" in k}
 
 if not openapi_vars:
     print("No OPENAPI environment variables found!")
 else:
     for key, value in sorted(openapi_vars.items()):
-        if 'TOKEN' in key or 'KEY' in key or 'SECRET' in key:
+        if "TOKEN" in key or "KEY" in key or "SECRET" in key:
             # Mask sensitive values
-            masked = value[:4] + '...' + value[-4:] if len(value) > 8 else '***'
+            masked = value[:4] + "..." + value[-4:] if len(value) > 8 else "***"
             print(f"{key}: {masked}")
         else:
             print(f"{key}: {value}")
