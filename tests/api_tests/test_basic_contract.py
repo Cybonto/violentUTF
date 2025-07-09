@@ -5,6 +5,7 @@ These tests validate the contract testing setup itself.
 
 import json
 import os
+
 import pytest
 
 
@@ -22,12 +23,12 @@ class TestBasicContract:
     def test_openapi_schema_exists(self):
         """Test that OpenAPI schema file was generated."""
         schema_file = "generated_openapi.json"
-        
+
         # Check if schema file exists
         if os.path.exists(schema_file):
-            with open(schema_file, 'r') as f:
+            with open(schema_file, "r") as f:
                 schema = json.load(f)
-            
+
             # Basic schema validation
             assert "openapi" in schema
             assert schema["openapi"].startswith("3.0")
@@ -45,19 +46,19 @@ class TestBasicContract:
             import fastapi
             import pydantic
             import pytest
+
             assert True
         except ImportError as e:
             pytest.fail(f"Required module not available: {e}")
 
     @pytest.mark.skipif(
-        not os.path.exists("tests/api_tests/test_auth_mock.py"),
-        reason="Auth mock module not available"
+        not os.path.exists("tests/api_tests/test_auth_mock.py"), reason="Auth mock module not available"
     )
     def test_auth_mock_available(self):
         """Test that auth mocking utilities are available."""
         try:
             from tests.api_tests.test_auth_mock import MockTokenManager
-            
+
             # Test basic mock functionality
             mock_tm = MockTokenManager()
             token = mock_tm.generate_test_token()
@@ -88,7 +89,7 @@ def test_api_contract_dependencies():
         "json",
         "os",
     ]
-    
+
     for module_name in required_modules:
         try:
             __import__(module_name)
