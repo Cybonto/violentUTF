@@ -79,13 +79,25 @@ jobs:
       - name: Security scan with bandit
         run: |
           bandit -r . -f json -o bandit-report.json
-          python -c "import json; data = json.load(open('bandit-report.json')); issues = data.get('results', []); print(f'Security issues found: {len(issues)}'); [print(f\"- {i['test_name']}: {i['filename']}:{i['line_number']}\") for i in issues[:10]]"
+          python -c "
+            import json
+            data = json.load(open('bandit-report.json'))
+            issues = data.get('results', [])
+            print(f'Security issues found: {len(issues)}')
+            [print(f\"- {i['test_name']}: {i['filename']}:{i['line_number']}\") for i in issues[:10]]
+          "
 
       - name: Dependency security check
         run: |
           safety check --json --output safety-report.json || true
           if [ -f safety-report.json ]; then
-            python -c "import json; data = json.load(open('safety-report.json')); vulns = data.get('vulnerabilities', []); print(f'Vulnerable dependencies: {len(vulns)}'); [print(f\"- {v['package_name']}=={v['analyzed_version']}\") for v in vulns[:5]]"
+            python -c "
+              import json
+              data = json.load(open('safety-report.json'))
+              vulns = data.get('vulnerabilities', [])
+              print(f'Vulnerable dependencies: {len(vulns)}')
+              [print(f\"- {v['package_name']}=={v['analyzed_version']}\") for v in vulns[:5]]
+            "
           fi
 
   test-matrix:
@@ -362,4 +374,3 @@ jobs:
                 body: comment
               });
             }
-
