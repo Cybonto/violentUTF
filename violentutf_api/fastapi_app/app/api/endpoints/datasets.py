@@ -611,10 +611,69 @@ async def delete_dataset(
 
 
 # Helper function for loading real PyRIT datasets
-async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any]) -> List[str]:
-    """Load real prompts from PyRIT datasets"""
+async def _load_real_pyrit_dataset(
+    dataset_type: str, 
+    config: Dict[str, Any], 
+    limit: Optional[int] = None
+) -> List[str]:
+    """Enhanced PyRIT dataset loading with streaming support and configurable limits"""
     try:
-        logger.info(f"Loading real PyRIT dataset: {dataset_type} with config: {config}")
+        logger.info(f"Loading real PyRIT dataset: {dataset_type} with config: {config}, limit: {limit}")
+
+        # Import configuration system
+        from app.core.dataset_config import DatasetImportConfig, validate_dataset_config
+        from app.services.dataset_stream_processor import PyRITStreamProcessor
+        
+        # Validate configuration
+        validate_dataset_config(dataset_type, config)
+        
+        # Check if streaming is enabled and limit is high enough
+        import_config = DatasetImportConfig.from_env()
+        
+        # For small requests or preview, use legacy mode
+        if limit and limit <= import_config.preview_limit:
+            return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
+        
+        # For larger requests, use streaming
+        if import_config.enable_streaming:
+            try:
+                processor = PyRITStreamProcessor()
+                all_prompts = []
+                
+                # Stream process but collect all results (for backward compatibility)
+                async for chunk in processor.process_pyrit_dataset_stream(
+                    dataset_type, config, limit
+                ):
+                    all_prompts.extend(chunk.prompts)
+                    
+                    # Apply limit if specified
+                    if limit and len(all_prompts) >= limit:
+                        all_prompts = all_prompts[:limit]
+                        break
+                
+                logger.info(f"Successfully loaded {len(all_prompts)} prompts using streaming")
+                return all_prompts
+                
+            except Exception as e:
+                logger.warning(f"Streaming failed, falling back to legacy mode: {e}")
+                return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
+        
+        # Fallback to legacy mode
+        return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
+        
+    except Exception as e:
+        logger.error(f"Error loading PyRIT dataset '{dataset_type}': {e}")
+        return []
+
+
+async def _load_real_pyrit_dataset_legacy(
+    dataset_type: str, 
+    config: Dict[str, Any], 
+    limit: Optional[int] = None
+) -> List[str]:
+    """Legacy PyRIT dataset loading (kept for backward compatibility)"""
+    try:
+        logger.info(f"Loading PyRIT dataset using legacy mode: {dataset_type}")
 
         # Import PyRIT dataset functions
         from pyrit.datasets import (

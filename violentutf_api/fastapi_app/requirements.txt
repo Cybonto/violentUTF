@@ -26,12 +26,17 @@ pyrit
 garak
 
 # Model Context Protocol (MCP) SDK
-mcp>=0.1.0
+mcp>=1.10.0  # Fixed CVE-2025-53365 server crash vulnerability
 sse-starlette>=1.6.5  # For SSE transport
 
 # Additional dependencies for PyRIT and Garak (constrained for compatibility)
-requests>=2.32.4  # Fixed CVE-2025-47287 credential leakage vulnerability
+requests>=2.32.4  # Fixed CVE-2024-47081 credential leakage vulnerability
 tornado>=6.5.0  # Fixed CVE-2025-47287 DoS vulnerability
+protobuf>=6.31.1  # Fixed CVE-2025-4565 recursion DoS vulnerability
+urllib3>=2.5.0  # Fixed CVE-2025-50182 and CVE-2025-50181 redirect vulnerabilities
+pillow>=11.3.0  # Fixed CVE-2025-48379 heap buffer overflow vulnerability
+transformers>=4.52.1  # Fixed CVE-2025-3777 URL injection vulnerability
+torch>=2.7.1rc1  # Fixed CVE-2025-3730 and CVE-2025-2953 DoS vulnerabilities (when available)
 protobuf>=6.31.1  # Fixed GHSA-8qvm-5x2c-j2w7 recursion DoS vulnerability
 urllib3>=2.5.0  # Fixed GHSA-48p4-8xcf-vxj5 and GHSA-pq67-6m6q-mj2v vulnerabilities
 azure-identity

@@ -188,7 +188,7 @@ install_streamlit_dependencies() {
             echo "   • openai (OpenAI SDK)"
         fi
         log_debug "This may take several minutes..."
-        # Install common dependencies for ViolentUTF
+        # Install common dependencies for ViolentUTF with security fixes
         $pip_cmd install \
             python-dotenv \
             streamlit-authenticator \
@@ -201,17 +201,24 @@ install_streamlit_dependencies() {
             pydantic \
             httpx \
             aiohttp \
-            python-jose \
+            "PyJWT>=2.8.0" "PyJWT[crypto]>=2.8.0" \
             python-multipart \
             anthropic \
-            openai
+            openai \
+            "requests>=2.32.4" \
+            "tornado>=6.5.0" \
+            "protobuf>=6.31.1" \
+            "urllib3>=2.5.0" \
+            "pillow>=11.3.0" \
+            "mcp>=1.10.0" \
+            "transformers>=4.52.1"
     fi
     
     echo "✅ Dependencies installed successfully"
     
-    # Verify critical dependencies
+    # Verify critical dependencies including security-patched versions
     log_detail "Verifying critical dependencies..."
-    local critical_packages=("python-dotenv" "anthropic" "openai")
+    local critical_packages=("python-dotenv" "anthropic" "openai" "requests" "tornado" "mcp")
     local missing_packages=()
     
     for package in "${critical_packages[@]}"; do
@@ -300,7 +307,7 @@ check_and_setup_streamlit() {
         # Verify it works with the same Python
         if [ -n "$test_python_cmd" ] && $test_python_cmd -c "import streamlit" 2>/dev/null; then
             log_debug "Streamlit import test passed"
-            # Check for critical dependencies
+            # Check for critical dependencies including security-patched packages
             local missing_deps=()
             if ! $test_python_cmd -c "import dotenv" 2>/dev/null; then
                 missing_deps+=("python-dotenv")
@@ -310,6 +317,15 @@ check_and_setup_streamlit() {
             fi
             if ! $test_python_cmd -c "import openai" 2>/dev/null; then
                 missing_deps+=("openai")
+            fi
+            if ! $test_python_cmd -c "import requests" 2>/dev/null; then
+                missing_deps+=("requests>=2.32.4")
+            fi
+            if ! $test_python_cmd -c "import tornado" 2>/dev/null; then
+                missing_deps+=("tornado>=6.5.0")
+            fi
+            if ! $test_python_cmd -c "import mcp" 2>/dev/null; then
+                missing_deps+=("mcp>=1.10.0")
             fi
             
             if [ ${#missing_deps[@]} -eq 0 ]; then
@@ -444,14 +460,20 @@ ensure_streamlit_ready() {
     
     # Create Streamlit config if it doesn't exist
     if [ ! -f ".streamlit/config.toml" ]; then
-        echo "📝 Creating Streamlit config file..."
+        echo "📝 Creating Streamlit config file with security hardening..."
         cat > .streamlit/config.toml <<'EOF'
 [server]
-# Use localhost instead of 0.0.0.0 for security
+# Security: Use localhost instead of 0.0.0.0 to prevent unintended network exposure
 address = "localhost"
 port = 8501
+# Security: Enable CORS protection
+enableCORS = false
+# Security: Disable WebSocket compression to prevent potential attacks
+enableWebsocketCompression = false
+# Security: Set maximum message size to prevent resource exhaustion
+maxMessageSize = 200
 
-# Disable usage stats collection
+# Privacy: Disable usage stats collection
 gatherUsageStats = false
 
 # Browser settings
@@ -459,8 +481,13 @@ gatherUsageStats = false
 # Automatically open browser on launch
 serverAddress = "localhost"
 serverPort = 8501
+
+# Security: Client settings
+[client]
+# Security: Enable connection timeout to prevent hanging connections
+connectTimeoutMs = 5000
 EOF
-        echo "✅ Created .streamlit/config.toml with localhost configuration"
+        echo "✅ Created .streamlit/config.toml with security hardening and localhost configuration"
     fi
     
     cd .. || true

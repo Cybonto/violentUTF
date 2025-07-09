@@ -9,7 +9,7 @@
 
 Comprehensive security analysis of the ViolentUTF platform revealed multiple security vulnerabilities across dependencies, code, and configurations. The assessment identified critical and high-severity issues requiring immediate attention:
 
-- **Dependency Vulnerabilities**: 10 vulnerabilities across 7 packages (from pip-audit and safety)
+- **Dependency Vulnerabilities**: 10 vulnerabilities across 7 packages (3 from Safety, 7 from pip-audit)
 - **Code Security Issues**: Bandit analysis identified multiple medium-severity vulnerabilities  
 - **Container Security**: 13 Docker images analyzed with potential security concerns
 - **Configuration Security**: Proper secret management practices identified with recommendations
@@ -18,6 +18,8 @@ Comprehensive security analysis of the ViolentUTF platform revealed multiple sec
 ## Detailed Findings
 
 ### 1. Dependency Vulnerabilities - CRITICAL PRIORITY
+
+**Total: 10 vulnerabilities across 7 packages identified by Safety and pip-audit scans**
 
 #### Safety Scan Results - 3 Vulnerabilities in 2 Packages
 
