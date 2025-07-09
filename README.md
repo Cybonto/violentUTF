@@ -435,7 +435,7 @@ pip install -r violentutf/requirements.txt
 ### **Code Quality**
 - **Type Checking**: Full mypy compliance
 - **Code Formatting**: Black and isort
-- **Linting**: flake8 and pylint
+- **Linting**: flake8 and pylint (Note: F541 f-string warnings are intentionally ignored - see [code style decisions](docs/development/code_style_decisions.md))
 - **Testing**: pytest with >90% coverage
 
 ## 📄 License

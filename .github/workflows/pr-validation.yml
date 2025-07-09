@@ -64,7 +64,7 @@ jobs:
 
       - name: Run comprehensive flake8
         run: |
-          flake8 . --count --statistics --show-source
+          flake8 . --count --statistics --show-source --config=.flake8
 
       - name: Run pylint
         continue-on-error: true
