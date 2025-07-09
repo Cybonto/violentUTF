@@ -5,7 +5,11 @@ pydantic==2.11.7
 pydantic-settings==2.1.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+<<<<<<< HEAD
 python-multipart==0.0.20
+=======
+python-multipart==0.0.6
+>>>>>>> fc71e80 (chore(api): bump httpx in /violentutf_api/fastapi_app (#31))
 httpx==0.28.1
 requests==2.31.0
 PyJWT==2.10.1
