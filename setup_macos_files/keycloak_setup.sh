@@ -7,8 +7,8 @@ get_keycloak_admin_token() {
     
     # Keycloak settings
     local KEYCLOAK_SERVER_URL="http://localhost:8080"
-    local KEYCLOAK_ADMIN_USERNAME="admin"
-    local KEYCLOAK_ADMIN_PASSWORD="admin"
+    local KEYCLOAK_ADMIN_USERNAME="${KEYCLOAK_ADMIN_USERNAME:-admin}"
+    local KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-admin}"
     
     # Get admin token
     local TOKEN_RESPONSE=$(curl -s -k -X POST "$KEYCLOAK_SERVER_URL/realms/master/protocol/openid-connect/token" \
@@ -122,7 +122,7 @@ setup_keycloak() {
     log_detail "Disabling SSL requirement for master realm..."
     local KEYCLOAK_CONTAINER=$(docker ps --filter "name=keycloak" --format "{{.Names}}" | grep -E "keycloak-keycloak|keycloak_keycloak" | head -n 1)
     if [ -n "$KEYCLOAK_CONTAINER" ]; then
-        docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin
+        docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "$KEYCLOAK_ADMIN_USERNAME" --password "$KEYCLOAK_ADMIN_PASSWORD"
         docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
         log_debug "SSL requirement disabled for master realm"
     fi

@@ -3,9 +3,19 @@ FROM python:3.11-slim as builder
 
 WORKDIR /build
 
-# Install build dependencies
+# Set shell for pipefail support
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Install build dependencies with version pinning
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc g++ git build-essential pkg-config curl libssl-dev ca-certificates \
+    gcc=4:11.2.0-1ubuntu1 \
+    g++=4:11.2.0-1ubuntu1 \
+    git=1:2.34.1-1ubuntu1.11 \
+    build-essential=12.9ubuntu3 \
+    pkg-config=0.29.2-1ubuntu3 \
+    curl=7.81.0-1ubuntu1.18 \
+    libssl-dev=3.0.2-0ubuntu1.18 \
+    ca-certificates=20240203~22.04.1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Zscaler certificates if they exist
@@ -37,9 +47,17 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Set shell for pipefail support
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Install runtime dependencies with version pinning
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl git gcc g++ build-essential ca-certificates \
+    curl=7.81.0-1ubuntu1.18 \
+    git=1:2.34.1-1ubuntu1.11 \
+    gcc=4:11.2.0-1ubuntu1 \
+    g++=4:11.2.0-1ubuntu1 \
+    build-essential=12.9ubuntu3 \
+    ca-certificates=20240203~22.04.1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy certificates from builder stage
@@ -60,7 +78,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
 # Copy wheels and install
 COPY --from=builder /build/wheels /wheels
 COPY requirements.txt ./
-RUN pip install --no-cache /wheels/*
+RUN pip install --no-cache-dir /wheels/*
 
 # Verify PyRIT and Garak installation
 COPY verify_redteam_install.py .

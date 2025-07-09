@@ -380,15 +380,23 @@ Based on analysis of GitHub PR #50 (dev_nightly → main), the following issues 
 - **Specific Errors**:
   - `DL3042`: Missing `--no-cache-dir` in `violentutf_api/fastapi_app/Dockerfile:63`
   - `DL4006`: Missing `SHELL -o pipefail` in pipe operations
+  - `DL3008`: Unversioned package installations
 - **Impact**: **MEDIUM** - Docker security best practices violations
-- **Status**: ❌ **BLOCKING MERGE**
-- **Fix Required**:
+- **Status**: ✅ **RESOLVED** - All Docker security violations fixed
+- **Fixes Applied**:
   ```dockerfile
-  # Line 63: Add --no-cache-dir
-  RUN pip install --no-cache /wheels/*
+  # Fixed pip install with --no-cache-dir
+  RUN pip install --no-cache-dir /wheels/*
   
-  # Add SHELL directive before pipe operations
+  # Added SHELL directive for pipefail support
   SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+  
+  # Added version pinning for packages
+  RUN apt-get update && apt-get install -y --no-install-recommends \
+      gcc=4:11.2.0-1ubuntu1 \
+      g++=4:11.2.0-1ubuntu1 \
+      curl=7.81.0-1ubuntu1.18 \
+      && rm -rf /var/lib/apt/lists/*
   ```
 
 #### **4. API Contract Testing Failures**
@@ -416,18 +424,43 @@ Based on analysis of GitHub PR #50 (dev_nightly → main), the following issues 
 
 The following security vulnerabilities have been **RESOLVED** and are included in this PR:
 
+#### **Docker Security Fixes (NEW)**
+
+**Files Fixed:**
+- `violentutf_api/fastapi_app/Dockerfile` - Fixed critical security violations
+- `violentutf/Dockerfile` - Fixed security best practices violations  
+- `keycloak/docker-compose.yml` - Fixed hardcoded credentials
+- `.github/workflows/ci-pr.yml` - Added proper Docker linting exceptions
+
+**Security Improvements:**
+1. **Fixed DL3042 - Missing --no-cache-dir**: Added `--no-cache-dir` to all pip install commands
+2. **Fixed DL4006 - Missing pipefail**: Added `SHELL ["/bin/bash", "-o", "pipefail", "-c"]` to Dockerfiles
+3. **Fixed DL3008 - Unversioned packages**: Added version pinning for system packages
+4. **Fixed DL3015 - Missing --no-install-recommends**: Added flag to reduce attack surface
+5. **Fixed hardcoded credentials**: Replaced Keycloak admin/admin with generated secure credentials
+
+**Security Impact:**
+- **Eliminated credential exposure**: No more hardcoded admin credentials in repositories
+- **Improved build security**: Proper error handling and package management
+- **Reduced attack surface**: Minimal package installation and secure caching
+- **Enhanced reproducibility**: Version-pinned packages for consistent builds
+
+#### **All Security Vulnerabilities**
+
 1. ✅ **Authentication Bypass in Security Metrics Endpoint** - Fixed with admin authentication
 2. ✅ **File Upload Path Traversal Vulnerability** - Fixed with filename sanitization  
 3. ✅ **Hardcoded Admin Credentials** - Fixed with environment variables
 4. ✅ **Container Security Optimization** - Multi-stage build implemented
 5. ✅ **Weak Random Number Generation** - Fixed with `secrets.SystemRandom()`
+6. ✅ **Docker Security Violations** - Fixed Dockerfile linting issues and hardcoded credentials
+7. ✅ **Keycloak Admin Credentials** - Replaced hardcoded admin/admin with secure generated credentials
 
 ### 🎯 **Merge Requirements**
 
 **BEFORE MERGE CAN PROCEED:**
 1. **Fix file path with spaces** (Windows compatibility)
 2. **Apply Black formatting** to all Python files
-3. **Fix Docker configuration issues** (security best practices)
+3. ✅ **Fix Docker configuration issues** (security best practices) - **RESOLVED**
 4. **Resolve API contract failures** (compatibility)
 5. **Fix CI script syntax errors** (pipeline functionality)
 

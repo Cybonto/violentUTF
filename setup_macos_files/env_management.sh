@@ -286,6 +286,7 @@ JWT_EXPIRATION_HOURS=24
 
 # API Configuration
 VIOLENTUTF_API_KEY=${api_key}
+VIOLENTUTF_API_URL=http://localhost:8000
 
 # Keycloak Configuration
 KEYCLOAK_URL=http://localhost:8080
@@ -323,6 +324,8 @@ generate_all_env_files() {
     mkdir -p keycloak
     cat > keycloak/.env <<EOF
 POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD
+KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_ADMIN_USERNAME
+KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
 EOF
     echo "✅ Created keycloak/.env"
     
@@ -438,6 +441,7 @@ APISIX_BASE_URL=http://apisix-apisix-1:9080
 APISIX_ADMIN_URL=http://apisix-apisix-1:9180
 APISIX_ADMIN_KEY=$APISIX_ADMIN_KEY
 VIOLENTUTF_API_KEY=$VIOLENTUTF_API_KEY
+VIOLENTUTF_API_URL=http://localhost:8000
 
 # Service Configuration
 DEFAULT_USERNAME=violentutf.web

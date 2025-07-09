@@ -249,9 +249,11 @@ run_test() {
 generate_all_secrets() {
     log_progress "Generating secure secrets for all services..."
 
-    # Keycloak admin credentials (hardcoded in docker-compose)
-    SENSITIVE_VALUES+=("Keycloak Admin Username: admin")
-    SENSITIVE_VALUES+=("Keycloak Admin Password: admin")
+    # Keycloak admin credentials (generated securely)
+    KEYCLOAK_ADMIN_USERNAME="admin"
+    KEYCLOAK_ADMIN_PASSWORD=$(generate_secure_string)
+    SENSITIVE_VALUES+=("Keycloak Admin Username: $KEYCLOAK_ADMIN_USERNAME")
+    SENSITIVE_VALUES+=("Keycloak Admin Password: $KEYCLOAK_ADMIN_PASSWORD")
 
     # Keycloak PostgreSQL password (for new setups)
     KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
@@ -293,6 +295,7 @@ generate_all_secrets() {
     SENSITIVE_VALUES+=("FastAPI Keycloak Client Secret: $FASTAPI_CLIENT_SECRET")
 
     # Export variables for use in other modules
+    export KEYCLOAK_ADMIN_USERNAME KEYCLOAK_ADMIN_PASSWORD
     export KEYCLOAK_POSTGRES_PASSWORD
     export VIOLENTUTF_CLIENT_SECRET VIOLENTUTF_COOKIE_SECRET VIOLENTUTF_PYRIT_SALT
     export VIOLENTUTF_API_KEY VIOLENTUTF_USER_PASSWORD
@@ -327,7 +330,7 @@ display_generated_secrets() {
     echo "👤 User Account Credentials:"
     echo "   ViolentUTF User: violentutf.web / $VIOLENTUTF_USER_PASSWORD"
     echo "   ViolentUTF Cookie Secret: $VIOLENTUTF_COOKIE_SECRET"
-    echo "   Keycloak Admin: admin / admin (default)"
+    echo "   Keycloak Admin: $KEYCLOAK_ADMIN_USERNAME / [GENERATED_PASSWORD]"
     echo ""
     
     echo "🔑 Service Client Secrets:"
@@ -364,7 +367,7 @@ display_generated_secrets() {
     echo "     Login: violentutf.web / $VIOLENTUTF_USER_PASSWORD"
     echo "   • API Documentation: http://localhost:9080/api/docs"
     echo "   • Keycloak Admin: http://localhost:8080"
-    echo "     Login: admin / admin"
+    echo "     Login: $KEYCLOAK_ADMIN_USERNAME / [GENERATED_PASSWORD]"
     echo "=================================================="
     echo ""
 }

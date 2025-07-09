@@ -1,4 +1,6 @@
 services:
+  # Infrastructure services using latest tags for automatic updates
+  # These are well-maintained upstream images with stable APIs
   etcd:
     image: bitnami/etcd:latest
     environment:
