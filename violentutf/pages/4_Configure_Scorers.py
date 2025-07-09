@@ -1158,7 +1158,7 @@ def _execute_full_dataset_with_progress(
             batch_prompts = batch_end - batch_start
 
             # Update progress
-            progress_percentage = batch_idx/num_batches
+            progress_percentage = batch_idx / num_batches
             progress_bar.progress(progress_percentage)
             status_text.text(
                 f"Processing batch {batch_idx + 1}/{num_batches} ({batch_start + 1}-{batch_end} of {full_dataset_size} prompts)"
@@ -1287,7 +1287,7 @@ def _execute_full_dataset_with_progress(
             with col2:
                 st.metric("Successful", total_successful)
             with col3:
-                success_rate = (total_successful/full_dataset_size * 100) if full_dataset_size > 0 else 0
+                success_rate = (total_successful / full_dataset_size * 100) if full_dataset_size > 0 else 0
                 st.metric("Success Rate", f"{success_rate:.1f}%")
 
             # Save aggregated results

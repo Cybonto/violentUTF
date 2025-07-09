@@ -460,7 +460,7 @@ class TokenManager:
                 # Check if this is an AI proxy route or GSAi proxy-rewrite route
                 is_ai_proxy = "ai-proxy" in plugins
                 is_gsai_proxy_rewrite = ("proxy-rewrite" in plugins and "gsai" in uri)
-                
+
                 if (is_ai_proxy or is_gsai_proxy_rewrite) and uri.startswith("/ai/"):
                     # Special handling for GSAi routes which use single endpoint for all models
                     if uri == "/ai/gsai-api-1/chat/completions" and route_id in ["9001", "gsai-static-chat-completions", "gsai-api-1-chat-completions"]:

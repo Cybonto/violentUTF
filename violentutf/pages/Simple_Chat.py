@@ -284,7 +284,7 @@ def get_provider_display_name(provider: str) -> str:
 def _looks_like_mcp_command(text: str) -> bool:
     """Check if text looks like it might be an MCP command"""
     text = text.strip().lower()
-    
+
     # Check for explicit MCP command patterns based on actual MCP patterns
     mcp_indicators = [
         # Explicit MCP commands

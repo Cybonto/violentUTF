@@ -481,7 +481,7 @@ def get_provider_display_name(provider: str):
         "anthropic": "Anthropic",
         "ollama": "Ollama (Local)",
         "webui": "Open WebUI",
-        "openapi-gsai": "GSAi (Government Services AI)"
+        "openapi-gsai": "GSAi (Government Services AI)",
     }
     return provider_names.get(provider, provider)
 
@@ -928,7 +928,6 @@ def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
                 current_model = st.session_state.get(model_key)
                 if current_model and current_model in available_models:
                     default_index = available_models.index(current_model)
-
                 provider_display = get_provider_display_name(selected_provider)
                 help_text = f"Available models for {provider_display} (Required)"
                 if selected_provider == "openapi-gsai":
@@ -1458,6 +1457,7 @@ def extract_clean_response(ai_msg: str) -> str:
         return "\n".join(clean_lines)
 
     # Last resort: return the original message but try to clean obvious technical parts
+    
     import re
     cleaned = ai_msg
     for pattern in [

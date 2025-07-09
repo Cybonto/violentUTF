@@ -313,7 +313,12 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
         # Prepare request
         headers = {"apikey": api_key, "Content-Type": "application/json"}
 
-        payload = {"model": model, "messages": [{"role": "user", "content": test_prompt}], "max_tokens": 50, "temperature": 0}
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": test_prompt}],
+            "max_tokens": 50,
+            "temperature": 0,
+        }
 
         # Make test request
         response = requests.post(endpoint, headers=headers, json=payload, timeout=10)

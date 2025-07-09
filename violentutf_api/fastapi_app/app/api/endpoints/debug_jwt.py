@@ -34,13 +34,12 @@ async def debug_jwt_validation(
 ) -> JWTDebugResponse:
     """
     Debug endpoint to test JWT validation without APISIX gateway check
-    
+
     This endpoint helps troubleshoot JWT authentication issues by:
     1. Showing what headers were received
     2. Attempting to decode the JWT token
     3. Showing the JWT secret being used (preview only)
     """
-    
     # Collect headers
     headers_received = {
         "authorization": authorization[:50] + "..." if authorization and len(authorization) > 50 else authorization,
@@ -48,11 +47,11 @@ async def debug_jwt_validation(
         "x-forwarded-for": x_forwarded_for,
         "x-real-ip": x_real_ip,
     }
-    
+
     # Get JWT secret preview
     jwt_secret = settings.JWT_SECRET_KEY or settings.SECRET_KEY
     jwt_secret_preview = f"***{jwt_secret[-8:]}" if jwt_secret else "NOT SET"
-    
+
     # Try to extract token
     if not authorization:
         return JWTDebugResponse(
@@ -61,7 +60,7 @@ async def debug_jwt_validation(
             error="No Authorization header provided",
             headers_received=headers_received,
         )
-    
+
     # Extract bearer token
     token = None
     if authorization.startswith("Bearer "):
@@ -73,7 +72,7 @@ async def debug_jwt_validation(
             error="Authorization header must start with 'Bearer '",
             headers_received=headers_received,
         )
-    
+
     # Try to decode token
     try:
         payload = decode_token(token)
