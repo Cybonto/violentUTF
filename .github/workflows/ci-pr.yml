@@ -167,7 +167,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@fbd16365eb88e12433951383f5e99bd901fc618f  # v0.14.0
+        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # v0.14.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
