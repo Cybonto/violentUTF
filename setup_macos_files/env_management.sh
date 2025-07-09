@@ -4,7 +4,7 @@
 # Function to create AI tokens template
 create_ai_tokens_template() {
     if [ ! -f "$AI_TOKENS_FILE" ]; then
-        echo "Creating AI tokens configuration file: $AI_TOKENS_FILE"
+        log_detail "Creating AI tokens configuration file: $AI_TOKENS_FILE"
         cat > "$AI_TOKENS_FILE" << 'EOF'
 # AI Provider Tokens and Settings
 # Set to true/false to enable/disable providers
@@ -71,24 +71,27 @@ OPENAPI_3_CUSTOM_HEADERS=""
 # - Models: http://localhost:9080/ai/{PROVIDER_ID}/models
 # - Target: {BASE_URL}/api/v1/chat/completions and {BASE_URL}/api/v1/models
 EOF
-        echo "✅ Created $AI_TOKENS_FILE template"
-        echo "📝 Please edit $AI_TOKENS_FILE to add your actual API keys"
+        log_success "Created $AI_TOKENS_FILE template"
+        log_detail "Please edit $AI_TOKENS_FILE to add your actual API keys"
     else
-        echo "AI tokens file already exists: $AI_TOKENS_FILE"
+        log_detail "AI tokens file already exists: $AI_TOKENS_FILE"
     fi
 }
 
 # Function to load AI tokens from .env file
 load_ai_tokens() {
     if [ -f "$AI_TOKENS_FILE" ]; then
-        echo "Loading AI tokens from $AI_TOKENS_FILE..."
+        log_debug "Loading AI tokens from $AI_TOKENS_FILE..."
         set -a  # automatically export all variables
         source "$AI_TOKENS_FILE"
         set +a  # turn off automatic export
-        echo "✅ AI tokens loaded"
+        if [ -z "$AI_TOKENS_LOADED" ]; then
+            log_debug "AI tokens loaded"
+            export AI_TOKENS_LOADED=1
+        fi
         return 0
     else
-        echo "⚠️  AI tokens file not found: $AI_TOKENS_FILE"
+        log_warn "AI tokens file not found: $AI_TOKENS_FILE"
         create_ai_tokens_template
         return 1
     fi
@@ -98,13 +101,13 @@ load_ai_tokens() {
 update_fastapi_env() {
     local fastapi_env_file="violentutf_api/fastapi_app/.env"
     
-    echo "Updating FastAPI environment with AI provider flags..."
+    log_detail "Updating FastAPI environment with AI provider flags..."
     
     # Load AI tokens first
     load_ai_tokens
     
     if [ ! -f "$fastapi_env_file" ]; then
-        echo "Creating FastAPI .env file..."
+        log_debug "Creating FastAPI .env file..."
         touch "$fastapi_env_file"
     fi
     
@@ -123,12 +126,12 @@ update_fastapi_env() {
         fi
     done
     
-    echo "✅ FastAPI environment updated with provider flags"
+    log_success "FastAPI environment updated with provider flags"
 }
 
 # Function to backup user configurations
 backup_user_configs() {
-    echo "Backing up user configurations..."
+    log_detail "Backing up user configurations..."
     
     # Create backup directory
     mkdir -p "/tmp/vutf_backup"
@@ -144,7 +147,7 @@ backup_user_configs() {
         tar -czf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf app_data 2>/dev/null || true
     fi
     
-    echo "✅ User configurations backed up to /tmp/vutf_backup"
+    log_debug "User configurations backed up to /tmp/vutf_backup"
 }
 
 # Function to restore user configurations
@@ -307,10 +310,7 @@ EOF
 
 # Function to generate all environment files (CRITICAL: After secrets are generated)
 generate_all_env_files() {
-    echo ""
-    echo "=========================================="
-    echo "CREATING CONFIGURATION FILES"
-    echo "=========================================="
+    log_detail "Creating configuration files..."
     
     # Ensure secrets are available
     if [ -z "$KEYCLOAK_POSTGRES_PASSWORD" ]; then
@@ -319,7 +319,7 @@ generate_all_env_files() {
     fi
     
     # Create Keycloak .env
-    echo "Creating Keycloak configuration..."
+    log_detail "Creating Keycloak configuration..."
     mkdir -p keycloak
     cat > keycloak/.env <<EOF
 POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD
@@ -327,7 +327,7 @@ EOF
     echo "✅ Created keycloak/.env"
     
     # Create APISIX configurations
-    echo "Creating APISIX configurations..."
+    log_detail "Creating APISIX configurations..."
     mkdir -p apisix/conf
     
     # Process config.yaml template if it exists
@@ -368,7 +368,7 @@ EOF
     echo "✅ Created apisix/.env"
     
     # Create ViolentUTF configurations
-    echo "Creating ViolentUTF configurations..."
+    log_detail "Creating ViolentUTF configurations..."
     mkdir -p violentutf/.streamlit
     
     # Create ViolentUTF .env file
@@ -413,7 +413,7 @@ EOF
     echo "✅ Created violentutf/.streamlit/secrets.toml"
     
     # Create FastAPI configuration
-    echo "Creating FastAPI configuration..."
+    log_detail "Creating FastAPI configuration..."
     mkdir -p violentutf_api/fastapi_app
     
     cat > violentutf_api/fastapi_app/.env <<EOF
@@ -461,7 +461,7 @@ EOF
 
 # Function to backup user configurations
 backup_existing_configs() {
-    echo "Backing up user configurations..."
+    log_detail "Backing up user configurations..."
     mkdir -p "/tmp/vutf_backup"
     
     # Backup AI tokens (user's API keys)
@@ -475,7 +475,7 @@ backup_existing_configs() {
         tar -czf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf app_data 2>/dev/null || true
     fi
     
-    echo "✅ User configurations backed up"
+    log_success "User configurations backed up"
 }
 
 # Function to restore user configurations

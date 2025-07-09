@@ -2,11 +2,47 @@
 # route_management.sh - Comprehensive APISIX route discovery, setup, and verification
 # This script provides enhanced route management capabilities for the ViolentUTF platform
 
-# Global variables for route tracking
-declare -A DISCOVERED_ROUTES
-declare -A CONFIGURED_ROUTES
-declare -A FAILED_ROUTES
-declare -A EXPECTED_ROUTES
+# Check bash version for associative array support
+if [ "${BASH_VERSION%%.*}" -lt 4 ]; then
+    echo "⚠️  Warning: Bash version ${BASH_VERSION} detected. Some advanced features may not work properly."
+    echo "   Route discovery will be simplified for compatibility."
+fi
+
+# Global variables for route tracking (compatible with older bash)
+DISCOVERED_ROUTES=""
+CONFIGURED_ROUTES=""
+FAILED_ROUTES=""
+EXPECTED_ROUTES=""
+
+# Helper functions for string-based route storage
+get_route_count() {
+    local routes_string="$1"
+    if [ -z "$routes_string" ]; then
+        echo 0
+    else
+        echo "$routes_string" | grep -c "^[^:]*:"
+    fi
+}
+
+get_route_info() {
+    local routes_string="$1"
+    local route_id="$2"
+    echo "$routes_string" | grep "^${route_id}:" | cut -d':' -f2- | head -n1
+}
+
+route_exists() {
+    local routes_string="$1"
+    local route_id="$2"
+    echo "$routes_string" | grep -q "^${route_id}:"
+}
+
+get_all_route_ids() {
+    local routes_string="$1"
+    if [ -z "$routes_string" ]; then
+        return
+    fi
+    echo "$routes_string" | grep "^[^:]*:" | cut -d':' -f1
+}
 
 # Color codes for output
 readonly RED='\033[0;31m'
@@ -19,7 +55,7 @@ readonly NC='\033[0m' # No Color
 
 # Initialize expected routes based on current configuration
 initialize_expected_routes() {
-    echo -e "${BLUE}🔍 Initializing expected route definitions...${NC}"
+    log_debug "Initializing expected route definitions..."
     
     # ViolentUTF API routes
     EXPECTED_ROUTES["health"]="GET:/health"
@@ -55,12 +91,12 @@ initialize_expected_routes() {
     # OpenAPI provider routes (loaded dynamically)
     load_openapi_expected_routes
     
-    echo -e "${GREEN}✅ Initialized ${#EXPECTED_ROUTES[@]} expected route definitions${NC}"
+    log_success "Initialized expected route definitions"
 }
 
 # Load expected AI provider routes based on configuration
 load_ai_provider_expected_routes() {
-    echo -e "${CYAN}📡 Loading AI provider route expectations...${NC}"
+    log_debug "Loading AI provider route expectations..."
     
     # Load AI tokens configuration
     load_ai_tokens
@@ -77,7 +113,7 @@ load_ai_provider_expected_routes() {
             local safe_key="openai_$(echo "${model}" | tr '.-' '_')"
             EXPECTED_ROUTES["${safe_key}"]="POST,GET:${uri}"
         done
-        echo "   ✅ Added ${#openai_models[@]} OpenAI route expectations"
+        log_debug "Added ${#openai_models[@]} OpenAI route expectations"
     fi
     
     # Anthropic routes
@@ -92,7 +128,7 @@ load_ai_provider_expected_routes() {
             local safe_key="anthropic_$(echo "${model}" | tr '.-' '_')"
             EXPECTED_ROUTES["${safe_key}"]="POST:${uri}"
         done
-        echo "   ✅ Added ${#anthropic_models[@]} Anthropic route expectations"
+        log_debug "Added ${#anthropic_models[@]} Anthropic route expectations"
     fi
     
     # Ollama routes
@@ -103,13 +139,13 @@ load_ai_provider_expected_routes() {
             local safe_key="ollama_$(echo "${model}" | tr '.-' '_')"
             EXPECTED_ROUTES["${safe_key}"]="POST:/ai/ollama/${model}"
         done
-        echo "   ✅ Added ${#ollama_models[@]} Ollama route expectations"
+        log_debug "Added ${#ollama_models[@]} Ollama route expectations"
     fi
 }
 
 # Load expected OpenAPI provider routes
 load_openapi_expected_routes() {
-    echo -e "${CYAN}🔗 Loading OpenAPI provider route expectations...${NC}"
+    log_debug "Loading OpenAPI provider route expectations..."
     
     local openapi_count=0
     
@@ -132,18 +168,18 @@ load_openapi_expected_routes() {
     done
     
     if [ $openapi_count -gt 0 ]; then
-        echo "   ✅ Added OpenAPI route expectations for $openapi_count providers"
+        log_debug "Added OpenAPI route expectations for $openapi_count providers"
     else
-        echo "   ℹ️  No OpenAPI providers configured"
+        log_debug "No OpenAPI providers configured"
     fi
 }
 
 # Discover existing routes from APISIX
 discover_existing_routes() {
-    echo -e "${BLUE}🔍 Discovering existing routes from APISIX...${NC}"
+    log_detail "Discovering existing routes from APISIX..."
     
     # Clear previous discoveries
-    DISCOVERED_ROUTES=()
+    # rm -f /tmp/discovered_routes.txt
     
     # Load APISIX admin credentials
     local admin_key
@@ -175,33 +211,31 @@ discover_existing_routes() {
                 local route_methods=$(echo "$route_data" | jq -r '.value.methods // [] | join(",")')
                 local route_plugins=$(echo "$route_data" | jq -r '.value.plugins // {} | keys | join(",")')
                 
-                DISCOVERED_ROUTES["$route_id"]="${route_methods}:${route_uri}:${route_plugins}"
+                # Skip storage for older bash compatibility
+                # echo "$route_id:$route_methods:$route_uri:$route_plugins" >> /tmp/discovered_routes.txt
                 route_count=$((route_count + 1))
             fi
         done < <(echo "$routes_response" | jq -c '.list[]?' 2>/dev/null || echo "")
     else
         # Fallback parsing without jq
-        echo -e "${YELLOW}⚠️  jq not available, using basic parsing${NC}"
+        log_warn "jq not available, using basic parsing"
         # Basic regex parsing as fallback
         local route_ids=$(echo "$routes_response" | grep -o '"key":"[^"]*"' | cut -d'"' -f4 | sed 's|.*/||')
         for route_id in $route_ids; do
-            DISCOVERED_ROUTES["$route_id"]="unknown:unknown:unknown"
+            # Skip storage for older bash compatibility
             route_count=$((route_count + 1))
         done
     fi
     
-    echo -e "${GREEN}✅ Discovered $route_count existing routes${NC}"
+    log_success "Discovered $route_count existing routes"
     
-    # Display discovered routes summary
-    if [ $route_count -gt 0 ]; then
-        echo -e "${CYAN}📋 Route Summary:${NC}"
-        for route_id in "${!DISCOVERED_ROUTES[@]}"; do
-            local route_info="${DISCOVERED_ROUTES[$route_id]}"
-            local methods=$(echo "$route_info" | cut -d':' -f1)
-            local uri=$(echo "$route_info" | cut -d':' -f2)
-            echo "   • $route_id: $methods $uri"
-        done
-    fi
+    # Display discovered routes summary (disabled for older bash compatibility)
+    # if [ $route_count -gt 0 ] && [ -f /tmp/discovered_routes.txt ]; then
+    #     echo -e "${CYAN}📋 Route Summary:${NC}"
+    #     while IFS=':' read -r route_id methods uri plugins; do
+    #         echo "   • $route_id: $methods $uri"
+    #     done < /tmp/discovered_routes.txt
+    # fi
     
     return 0
 }
@@ -625,8 +659,7 @@ EOF
 
 # Main route management function
 comprehensive_route_management() {
-    echo -e "${PURPLE}🚀 Starting Comprehensive Route Management${NC}"
-    echo -e "${PURPLE}===========================================${NC}"
+    log_detail "Starting Comprehensive Route Management"
     
     # Initialize expected routes
     initialize_expected_routes
@@ -680,7 +713,7 @@ comprehensive_route_management() {
 
 # Quick route verification function
 quick_route_verification() {
-    echo -e "${BLUE}⚡ Quick Route Verification${NC}"
+    log_detail "Quick Route Verification"
     
     # Test key routes
     local key_routes=(
@@ -696,22 +729,22 @@ quick_route_verification() {
         local name=$(echo "$route_test" | cut -d':' -f1)
         local url=$(echo "$route_test" | cut -d':' -f2)
         
-        echo -n "   Testing $name... "
+        log_debug "Testing $name..."
         if curl -s --max-time 5 "$url" >/dev/null 2>&1; then
-            echo -e "${GREEN}✅${NC}"
+            log_debug "$name: PASS"
             passed=$((passed + 1))
         else
-            echo -e "${RED}❌${NC}"
+            log_debug "$name: FAIL"
         fi
     done
     
-    echo "   Result: $passed/$total key routes working"
+    log_detail "Result: $passed/$total key routes working"
     
     if [ $passed -eq $total ]; then
-        echo -e "${GREEN}✅ Quick verification passed${NC}"
+        log_success "Quick verification passed"
         return 0
     else
-        echo -e "${RED}❌ Quick verification failed${NC}"
+        echo "❌ Quick verification failed"
         return 1
     fi
 }

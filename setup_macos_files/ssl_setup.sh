@@ -3,7 +3,7 @@
 
 # Function to detect and handle SSL certificate issues
 handle_ssl_certificate_issues() {
-    echo "Checking for SSL certificate issues (Zscaler/Corporate proxy)..."
+    log_detail "Checking for SSL certificate issues (Zscaler/Corporate proxy)..."
     
     # Test if we can reach common SSL sites
     if ! curl -s --connect-timeout 5 https://sh.rustup.rs > /dev/null 2>&1; then
@@ -46,7 +46,7 @@ handle_ssl_certificate_issues() {
         export SSL_WORKAROUND_APPLIED=false
         return 1
     else
-        echo "✅ SSL connectivity test passed - no corporate proxy detected"
+        log_success "SSL connectivity test passed - no corporate proxy detected"
         export SSL_WORKAROUND_APPLIED=false
         return 0
     fi

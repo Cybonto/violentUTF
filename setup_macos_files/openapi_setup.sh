@@ -65,19 +65,19 @@ create_openapi_provider_routes() {
     local provider_num="$6"
     
     echo "🔧 Creating OpenAPI routes for: $provider_name"
-    echo "   Base URL: $base_url"
-    echo "   Auth Type: $auth_type"
+    log_debug "Base URL: $base_url"
+    log_debug "Auth Type: $auth_type"
     
     # Fetch available models from the provider
     local available_models
     available_models=$(fetch_openapi_provider_models "$base_url" "$auth_type" "$auth_token")
     
     if [ -n "$available_models" ]; then
-        echo "   Available models: $(echo "$available_models" | tr '\n' ' ')"
+        log_debug "Available models: $(echo "$available_models" | tr '\n' ' ')"
         # Store the first model as default for route creation
         local default_model=$(echo "$available_models" | head -1)
         if [ -n "$default_model" ]; then
-            echo "   Using default model: $default_model"
+            log_debug "Using default model: $default_model"
         fi
     else
         echo "   ⚠️  Could not fetch models, will create generic routes"
@@ -483,9 +483,9 @@ create_openapi_provider_routes() {
     fi
     
     echo "✅ OpenAPI routes created successfully for $provider_name"
-    echo "   - Chat: http://localhost:9080/ai/$provider_id/chat/completions"
-    echo "   - Models: http://localhost:9080/ai/$provider_id/models"
-    echo "   - Target: $base_url"
+    log_debug "Chat: http://localhost:9080/ai/$provider_id/chat/completions"
+    log_debug "Models: http://localhost:9080/ai/$provider_id/models"
+    log_debug "Target: $base_url"
     
     return 0
 }

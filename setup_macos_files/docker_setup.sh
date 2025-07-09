@@ -3,27 +3,27 @@
 
 # Function to create shared network
 create_shared_network() {
-    echo "Creating shared Docker network: $SHARED_NETWORK_NAME"
+    log_detail "Creating shared Docker network: $SHARED_NETWORK_NAME"
     
     # Check if network already exists
     if docker network inspect "$SHARED_NETWORK_NAME" >/dev/null 2>&1; then
-        echo "✅ Network '$SHARED_NETWORK_NAME' already exists"
+        log_success "Network '$SHARED_NETWORK_NAME' ready"
         return 0
     fi
     
     # Create the network
     if docker network create "$SHARED_NETWORK_NAME" >/dev/null 2>&1; then
-        echo "✅ Created shared network '$SHARED_NETWORK_NAME'"
+        log_success "Created shared network '$SHARED_NETWORK_NAME'"
         return 0
     else
-        echo "❌ Failed to create shared network '$SHARED_NETWORK_NAME'"
+        log_error "Failed to create shared network '$SHARED_NETWORK_NAME'"
         return 1
     fi
 }
 
 # Function to verify Docker setup
 verify_docker_setup() {
-    echo "Verifying Docker setup..."
+    log_detail "Verifying Docker setup..."
     
     # Check if Docker daemon is running
     if ! docker info &> /dev/null || ! docker ps &> /dev/null; then
@@ -46,8 +46,8 @@ verify_docker_setup() {
     # Export for use in other modules
     export DOCKER_COMPOSE_CMD="$compose_cmd"
     
-    echo "✅ Docker and Docker Compose check passed"
-    echo "Using Docker Compose command: $compose_cmd"
+    log_success "Docker and Docker Compose check passed"
+    log_debug "Using Docker Compose command: $compose_cmd"
 }
 
 # Function to cleanup containers

@@ -27,7 +27,7 @@ replace_in_file() {
         SENSITIVE_VALUES+=("$description: $value")
     fi
     
-    echo "Replaced $placeholder in $file"
+    log_debug "Replaced $placeholder in $file"
 }
 
 # Function to backup and prepare config file from template
@@ -50,7 +50,7 @@ backup_and_prepare_config() {
     
     # Copy template to target
     cp "$template_file" "$target_file"
-    echo "Created $target_file from template"
+    log_debug "Created $target_file from template"
     
     return 0
 }
@@ -247,11 +247,7 @@ run_test() {
 
 # Function to generate all secrets upfront
 generate_all_secrets() {
-    echo ""
-    echo "=========================================="
-    echo "GENERATING ALL SECURE SECRETS"
-    echo "=========================================="
-    echo "Generating secure secrets for all services..."
+    log_progress "Generating secure secrets for all services..."
 
     # Keycloak admin credentials (hardcoded in docker-compose)
     SENSITIVE_VALUES+=("Keycloak Admin Username: admin")
@@ -304,12 +300,14 @@ generate_all_secrets() {
     export APISIX_KEYRING_VALUE_1 APISIX_KEYRING_VALUE_2 APISIX_CLIENT_SECRET
     export FASTAPI_SECRET_KEY FASTAPI_CLIENT_SECRET FASTAPI_CLIENT_ID
 
-    echo "✅ Generated ${#SENSITIVE_VALUES[@]} secure secrets"
+    log_success "Generated ${#SENSITIVE_VALUES[@]} secure secrets"
     return 0
 }
 
 # Function to display all generated secrets at the end of setup
+# This function always shows regardless of verbosity level (critical information)
 display_generated_secrets() {
+    # Always display secrets regardless of verbosity level
     echo ""
     echo "=================================================="
     echo "🔐 GENERATED SECRETS AND CREDENTIALS"
@@ -350,13 +348,16 @@ display_generated_secrets() {
     echo "   Keycloak Postgres Password: $KEYCLOAK_POSTGRES_PASSWORD"
     echo ""
     
-    echo "=================================================="
-    echo "💾 Secret Storage Locations:"
-    echo "   • Keycloak: keycloak/.env"
-    echo "   • APISIX: apisix/.env, apisix/conf/config.yaml, apisix/conf/dashboard.yaml"
-    echo "   • ViolentUTF: violentutf/.env, violentutf/.streamlit/secrets.toml"
-    echo "   • FastAPI: violentutf_api/fastapi_app/.env"
-    echo "=================================================="
+    # Show storage locations only in normal+ mode
+    if should_log 1; then
+        echo "=================================================="
+        echo "💾 Secret Storage Locations:"
+        echo "   • Keycloak: keycloak/.env"
+        echo "   • APISIX: apisix/.env, apisix/conf/config.yaml, apisix/conf/dashboard.yaml"
+        echo "   • ViolentUTF: violentutf/.env, violentutf/.streamlit/secrets.toml"
+        echo "   • FastAPI: violentutf_api/fastapi_app/.env"
+        echo "=================================================="
+    fi
     echo ""
     echo "🚀 Access Points:"
     echo "   • ViolentUTF App: http://localhost:8501"

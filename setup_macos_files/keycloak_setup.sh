@@ -3,7 +3,7 @@
 
 # Function to get Keycloak admin token
 get_keycloak_admin_token() {
-    echo "Obtaining Keycloak admin access token..."
+    log_debug "Obtaining Keycloak admin access token..."
     
     # Keycloak settings
     local KEYCLOAK_SERVER_URL="http://localhost:8080"
@@ -31,7 +31,7 @@ get_keycloak_admin_token() {
         return 1
     fi
     
-    echo "✅ Successfully obtained Keycloak admin access token"
+    log_debug "Successfully obtained Keycloak admin access token"
     export KEYCLOAK_ACCESS_TOKEN
     return 0
 }
@@ -71,10 +71,7 @@ make_api_call() {
 
 # Main Keycloak setup function
 setup_keycloak() {
-    echo ""
-    echo "==========================================="
-    echo "Setting up Keycloak"
-    echo "==========================================="
+    log_detail "Setting up Keycloak..."
     
     local KEYCLOAK_DIR="keycloak"
     local DOCKER_COMPOSE_CMD="docker compose"
@@ -92,11 +89,11 @@ setup_keycloak() {
     cd "$KEYCLOAK_DIR" || return 1
     
     # Start Keycloak if not already running
-    echo "Starting Keycloak services..."
+    log_detail "Starting Keycloak services..."
     $DOCKER_COMPOSE_CMD up -d
     
     # Wait for Keycloak to be ready
-    echo "Waiting for Keycloak to be ready..."
+    log_detail "Waiting for Keycloak to be ready..."
     local RETRY_COUNT=0
     local MAX_RETRIES=30
     local SUCCESS=false
@@ -106,11 +103,11 @@ setup_keycloak() {
         # Check Keycloak health
         local HTTP_STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" "http://localhost:8080/realms/master")
         if [ "$HTTP_STATUS" -eq 200 ]; then
-            echo "✅ Keycloak is up and responding"
+            log_success "Keycloak is up and responding"
             SUCCESS=true
             break
         fi
-        echo "Keycloak not ready yet (attempt $RETRY_COUNT/$MAX_RETRIES). Waiting 10 seconds..."
+        log_debug "Keycloak not ready yet (attempt $RETRY_COUNT/$MAX_RETRIES). Waiting 10 seconds..."
         sleep 10
     done
     
@@ -122,12 +119,12 @@ setup_keycloak() {
     fi
     
     # Disable SSL requirement for master realm
-    echo "Disabling SSL requirement for master realm..."
+    log_detail "Disabling SSL requirement for master realm..."
     local KEYCLOAK_CONTAINER=$(docker ps --filter "name=keycloak" --format "{{.Names}}" | grep -E "keycloak-keycloak|keycloak_keycloak" | head -n 1)
     if [ -n "$KEYCLOAK_CONTAINER" ]; then
         docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin
         docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
-        echo "✅ SSL requirement disabled for master realm"
+        log_debug "SSL requirement disabled for master realm"
     fi
     
     # Get admin token
@@ -138,7 +135,7 @@ setup_keycloak() {
     fi
     
     # Import ViolentUTF realm
-    echo "Importing ViolentUTF realm..."
+    log_detail "Importing ViolentUTF realm..."
     local REALM_EXPORT_FILE="realm-export.json"
     
     if [ ! -f "$REALM_EXPORT_FILE" ]; then
@@ -154,31 +151,31 @@ setup_keycloak() {
         cd ..
         return 1
     fi
-    echo "Target realm name: $TARGET_REALM_NAME"
+    log_debug "Target realm name: $TARGET_REALM_NAME"
     
     # Check if realm already exists
     make_api_call "GET" "/realms/${TARGET_REALM_NAME}"
     if [ "$API_CALL_STATUS" -eq 200 ]; then
-        echo "Realm '$TARGET_REALM_NAME' already exists. Deleting and re-importing..."
+        log_detail "Realm '$TARGET_REALM_NAME' already exists. Deleting and re-importing..."
         make_api_call "DELETE" "/realms/${TARGET_REALM_NAME}"
         if [ "$API_CALL_STATUS" -ne 204 ]; then
             echo "❌ Failed to delete existing realm"
             cd ..
             return 1
         fi
-        echo "Existing realm deleted"
+        log_debug "Existing realm deleted"
     fi
     
     # Import the realm
-    echo "Importing realm from $REALM_EXPORT_FILE..."
+    log_detail "Importing realm from $REALM_EXPORT_FILE..."
     make_api_call "POST" "/realms" "$REALM_EXPORT_FILE"
     if [ "$API_CALL_STATUS" -eq 201 ]; then
-        echo "✅ Realm '$TARGET_REALM_NAME' imported successfully"
+        log_success "Realm '$TARGET_REALM_NAME' imported successfully"
         
         # Disable SSL requirement for the imported realm
-        echo "Disabling SSL requirement for realm '$TARGET_REALM_NAME'..."
+        log_debug "Disabling SSL requirement for realm '$TARGET_REALM_NAME'..."
         docker exec "$KEYCLOAK_CONTAINER" /opt/keycloak/bin/kcadm.sh update realms/${TARGET_REALM_NAME} -s sslRequired=NONE
-        echo "✅ SSL requirement disabled for realm '$TARGET_REALM_NAME'"
+        log_debug "SSL requirement disabled for realm '$TARGET_REALM_NAME'"
     else
         echo "❌ Failed to import realm. Status: $API_CALL_STATUS"
         echo "Response: $API_CALL_RESPONSE"
@@ -187,7 +184,7 @@ setup_keycloak() {
     fi
     
     # Configure ViolentUTF client
-    echo "Configuring ViolentUTF client..."
+    log_detail "Configuring ViolentUTF client..."
     local VUTF_CLIENT_ID="violentutf"
     
     # Get internal client ID (UUID) for the 'violentutf' client
@@ -204,11 +201,11 @@ setup_keycloak() {
         cd ..
         return 1
     fi
-    echo "Found client '${VUTF_CLIENT_ID}' with UUID '${KC_CLIENT_UUID}'"
+    log_debug "Found client '${VUTF_CLIENT_ID}' with UUID '${KC_CLIENT_UUID}'"
     
     # Update client to use our pre-generated secret
     if [ -n "$VIOLENTUTF_CLIENT_SECRET" ]; then
-        echo "Updating client secret for '${VUTF_CLIENT_ID}' to use pre-generated value..."
+        log_detail "Updating client secret for '${VUTF_CLIENT_ID}' to use pre-generated value..."
         
         # Get current client configuration
         make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients/${KC_CLIENT_UUID}"
@@ -232,12 +229,12 @@ setup_keycloak() {
             return 1
         fi
         
-        echo "✅ Successfully updated client '${VUTF_CLIENT_ID}' with pre-generated secret"
+        log_debug "Successfully updated client '${VUTF_CLIENT_ID}' with pre-generated secret"
         rm -f /tmp/client-update.json
     fi
     
     # Update APISIX client secret
-    echo "Updating APISIX client secret..."
+    log_detail "Updating APISIX client secret..."
     
     # Find APISIX client UUID
     make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients?clientId=apisix"
@@ -253,11 +250,11 @@ setup_keycloak() {
         cd ..
         return 1
     fi
-    echo "Found APISIX client with UUID '${APISIX_CLIENT_UUID}'"
+    log_debug "Found APISIX client with UUID '${APISIX_CLIENT_UUID}'"
     
     # Update APISIX client secret if provided
     if [ -n "$APISIX_CLIENT_SECRET" ]; then
-        echo "Updating APISIX client secret to use pre-generated value..."
+        log_detail "Updating APISIX client secret to use pre-generated value..."
         
         # Get current client configuration
         make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients/${APISIX_CLIENT_UUID}"
@@ -281,7 +278,7 @@ setup_keycloak() {
             return 1
         fi
         
-        echo "✅ Successfully updated APISIX client with pre-generated secret"
+        log_debug "Successfully updated APISIX client with pre-generated secret"
         rm -f /tmp/apisix-update.json
     fi
     
@@ -297,7 +294,7 @@ setup_keycloak() {
 create_violentutf_users() {
     local REALM_NAME="$1"
     
-    echo "Creating ViolentUTF users..."
+    log_detail "Creating ViolentUTF users..."
     
     # Create violentutf.web user
     local USER_JSON=$(cat <<EOF
@@ -322,21 +319,21 @@ EOF
     rm -f /tmp/user.json
     
     if [ "$API_CALL_STATUS" -eq 201 ]; then
-        echo "✅ ViolentUTF user created successfully"
-        echo "   Username: violentutf.web"
-        echo "   Password: ${VIOLENTUTF_USER_PASSWORD:-password123}"
+        log_debug "ViolentUTF user created successfully"
+        log_debug "Username: violentutf.web"
+        log_debug "Password: ${VIOLENTUTF_USER_PASSWORD:-password123}"
     elif [ "$API_CALL_STATUS" -eq 409 ]; then
-        echo "ℹ️  ViolentUTF user already exists"
-        echo "   Username: violentutf.web"
-        echo "   Password: ${VIOLENTUTF_USER_PASSWORD:-password123}"
+        log_debug "ViolentUTF user already exists"
+        log_debug "Username: violentutf.web"
+        log_debug "Password: ${VIOLENTUTF_USER_PASSWORD:-password123}"
     else
-        echo "⚠️  Could not create ViolentUTF user. Status: $API_CALL_STATUS"
+        log_warn "Could not create ViolentUTF user. Status: $API_CALL_STATUS"
     fi
 }
 
 # Function to verify Keycloak is properly configured
 verify_keycloak_setup() {
-    echo "Verifying Keycloak setup..."
+    log_detail "Verifying Keycloak setup..."
     
     # Check if Keycloak is running
     if ! docker ps | grep -q keycloak; then
@@ -358,6 +355,6 @@ verify_keycloak_setup() {
         return 1
     fi
     
-    echo "✅ Keycloak is properly configured"
+    log_success "Keycloak is properly configured"
     return 0
 }

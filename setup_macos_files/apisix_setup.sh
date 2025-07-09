@@ -273,10 +273,10 @@ setup_apisix() {
 
 # Function to configure APISIX routes
 configure_apisix_routes() {
-    echo "Configuring APISIX routes..."
+    log_detail "Configuring APISIX routes..."
     
     # Give APISIX extra time to fully initialize
-    echo "Waiting additional time for APISIX to fully initialize..."
+    log_debug "Waiting additional time for APISIX to fully initialize..."
     sleep 10
     
     # Ensure APISIX environment is loaded

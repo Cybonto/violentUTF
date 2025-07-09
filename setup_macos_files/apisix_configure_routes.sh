@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Source logging utilities
+source "$(dirname "$0")/logging_utils.sh"
+
 # APISIX Route Configuration Script for ViolentUTF API
 # This script configures APISIX to proxy ViolentUTF API endpoints
 #
@@ -39,15 +42,15 @@ fi
 # This is the internal Docker network name, NOT localhost
 FASTAPI_UPSTREAM="http://violentutf_api:8000"  # Internal Docker service name
 
-echo "🚀 Configuring APISIX routes for ViolentUTF API..."
-echo "📊 Including orchestrator routes configuration..."
-echo "🏃 Running from: $(pwd)"
-echo "🔧 Admin URL: $APISIX_ADMIN_URL (localhost is correct for host execution)"
+log_detail "Configuring APISIX routes for ViolentUTF API..."
+log_debug "Including orchestrator routes configuration..."
+log_debug "Running from: $(pwd)"
+log_debug "Admin URL: $APISIX_ADMIN_URL (localhost is correct for host execution)"
 
 # Function to create/update upstream
 create_upstream() {
-    echo "📡 Creating upstream for ViolentUTF API..."
-    curl -H "X-API-KEY: $ADMIN_KEY" -X PUT -d '{
+    log_detail "Creating upstream for ViolentUTF API..."
+    local upstream_response=$(curl -s -H "X-API-KEY: $ADMIN_KEY" -X PUT -d '{
         "type": "roundrobin",
         "nodes": {
             "violentutf_api:8000": 1
@@ -65,7 +68,8 @@ create_upstream() {
         "retry_timeout": 0,
         "scheme": "http",
         "desc": "ViolentUTF FastAPI Service"
-    }' "$APISIX_ADMIN_URL/apisix/admin/upstreams/violentutf-api"
+    }' "$APISIX_ADMIN_URL/apisix/admin/upstreams/violentutf-api")
+    log_debug "Upstream creation response: $upstream_response"
 }
 
 # Function to create route
@@ -76,7 +80,7 @@ create_route() {
     local desc=$4
     local priority=${5:-0}  # Optional priority parameter, default 0
     
-    echo "🛣️  Creating route: $desc"
+    log_detail "Creating route: $desc"
     
     # Build the JSON with priority if specified
     local route_json="{
@@ -111,15 +115,14 @@ create_route() {
         \"desc\": \"$desc\"
     }"
     
-    curl -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "$route_json" "$APISIX_ADMIN_URL/apisix/admin/routes/$route_id"
-    echo
+    local response=$(curl -s -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "$route_json" "$APISIX_ADMIN_URL/apisix/admin/routes/$route_id")
+    log_debug "Route creation response: $response"
 }
 
 # Create upstream first
 create_upstream
 
-echo
-echo "🛣️  Creating ViolentUTF API routes..."
+log_detail "Creating ViolentUTF API routes..."
 
 # Health check endpoints (no auth required)
 create_route "1001" "/health" "[\"GET\"]" "Health check endpoint"
@@ -185,9 +188,8 @@ create_route "3001" "/mcp/*" "[\"GET\", \"POST\", \"OPTIONS\"]" "MCP Server-Sent
 create_route "3002" "/mcp/oauth/*" "[\"GET\", \"POST\"]" "MCP OAuth proxy endpoints"
 
 # Generic API catch-all route (lowest priority)
-echo
-echo "📡 Creating generic API catch-all route..."
-curl -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "{
+log_detail "Creating generic API catch-all route..."
+local catchall_response=$(curl -s -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "{
     \"id\": \"violentutf-api\",
     \"uri\": \"/api/*\",
     \"name\": \"violentutf-api\",
@@ -249,38 +251,41 @@ curl -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "{
             \"allow_degradation\": false
         }
     }
-}" $APISIX_ADMIN_URL/apisix/admin/routes/violentutf-api
+}" $APISIX_ADMIN_URL/apisix/admin/routes/violentutf-api)
+log_debug "Catchall route response: $catchall_response"
 
-echo
-echo "✅ APISIX route configuration completed!"
-echo
-echo "📋 Configured routes:"
-echo "  - Health: http://localhost:9080/health"
-echo "  - API Health: http://localhost:9080/api/v1/health"
-echo "  - API Docs: http://localhost:9080/docs"
-echo "  - Auth: http://localhost:9080/api/v1/auth/*"
-echo "  - Database: http://localhost:9080/api/v1/database/*"
-echo "  - Sessions: http://localhost:9080/api/v1/sessions*"
-echo "  - Config: http://localhost:9080/api/v1/config/*"
-echo "  - Files: http://localhost:9080/api/v1/files*"
-echo "  - JWT Keys: http://localhost:9080/api/v1/keys/*"
-echo "  - Test: http://localhost:9080/api/v1/test/*"
-echo "  - Generators: http://localhost:9080/api/v1/generators*"
-echo "  - Datasets: http://localhost:9080/api/v1/datasets*"
-echo "  - Converters: http://localhost:9080/api/v1/converters*"
-echo "  - Scorers: http://localhost:9080/api/v1/scorers*"
-echo "  - Red-teaming: http://localhost:9080/api/v1/redteam*"
-echo "  - Orchestrators: http://localhost:9080/api/v1/orchestrators*"
-echo "  - APISIX Admin: http://localhost:9080/api/v1/apisix-admin*"
-echo "  - MCP SSE: http://localhost:9080/mcp/*"
-echo "  - MCP OAuth: http://localhost:9080/mcp/oauth/*"
-echo
-echo "🔍 You can verify routes with:"
-echo "  curl -H 'X-API-KEY: $ADMIN_KEY' $APISIX_ADMIN_URL/apisix/admin/routes"
-echo
-echo "🔍 To verify routes, visit: http://localhost:9001/routes (APISIX Dashboard)"
-echo "📊 Admin API: $APISIX_ADMIN_URL"
-echo
-echo "🧪 Test with:"
-echo "curl http://localhost:9080/health"
-echo "curl -H 'Authorization: Bearer <token>' http://localhost:9080/api/v1/auth/token/info"
+log_success "APISIX route configuration completed!"
+
+# Show route summary in verbose mode
+if should_log 2; then
+    echo "📋 Configured routes:"
+    echo "  - Health: http://localhost:9080/health"
+    echo "  - API Health: http://localhost:9080/api/v1/health"
+    echo "  - API Docs: http://localhost:9080/docs"
+    echo "  - Auth: http://localhost:9080/api/v1/auth/*"
+    echo "  - Database: http://localhost:9080/api/v1/database/*"
+    echo "  - Sessions: http://localhost:9080/api/v1/sessions*"
+    echo "  - Config: http://localhost:9080/api/v1/config/*"
+    echo "  - Files: http://localhost:9080/api/v1/files*"
+    echo "  - JWT Keys: http://localhost:9080/api/v1/keys/*"
+    echo "  - Test: http://localhost:9080/api/v1/test/*"
+    echo "  - Generators: http://localhost:9080/api/v1/generators*"
+    echo "  - Datasets: http://localhost:9080/api/v1/datasets*"
+    echo "  - Converters: http://localhost:9080/api/v1/converters*"
+    echo "  - Scorers: http://localhost:9080/api/v1/scorers*"
+    echo "  - Red-teaming: http://localhost:9080/api/v1/redteam*"
+    echo "  - Orchestrators: http://localhost:9080/api/v1/orchestrators*"
+    echo "  - APISIX Admin: http://localhost:9080/api/v1/apisix-admin*"
+    echo "  - MCP SSE: http://localhost:9080/mcp/*"
+    echo "  - MCP OAuth: http://localhost:9080/mcp/oauth/*"
+    echo
+    echo "🔍 You can verify routes with:"
+    echo "  curl -H 'X-API-KEY: $ADMIN_KEY' $APISIX_ADMIN_URL/apisix/admin/routes"
+    echo
+    echo "🔍 To verify routes, visit: http://localhost:9001/routes (APISIX Dashboard)"
+    echo "📊 Admin API: $APISIX_ADMIN_URL"
+    echo
+    echo "🧪 Test with:"
+    echo "curl http://localhost:9080/health"
+    echo "curl -H 'Authorization: Bearer <token>' http://localhost:9080/api/v1/auth/token/info"
+fi

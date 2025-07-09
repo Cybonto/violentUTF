@@ -14,9 +14,79 @@ AI_TOKENS_FILE="ai-tokens.env"
 SENSITIVE_VALUES=()
 CREATED_AI_ROUTES=()
 
+# --- Command Line Argument Processing ---
+show_help() {
+    echo "ViolentUTF Setup Script for macOS"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help         Show this help message"
+    echo "  -q, --quiet        Quiet mode (minimal output)"
+    echo "  -v, --verbose      Verbose mode (detailed output)"
+    echo "  -d, --debug        Debug mode (full debugging output)"
+    echo "  --cleanup          Clean up existing containers and volumes"
+    echo "  --deepcleanup      Deep cleanup (remove all data and configurations)"
+    echo ""
+    echo "Verbosity Levels:"
+    echo "  quiet    - Errors, warnings, and minimal progress only"
+    echo "  normal   - Standard user experience (default)"
+    echo "  verbose  - Detailed information and configuration details"
+    echo "  debug    - Full debugging output with variable dumps"
+    echo ""
+    echo "Examples:"
+    echo "  $0                 # Normal setup"
+    echo "  $0 --quiet         # Quiet setup for automation"
+    echo "  $0 --verbose       # Verbose setup with detailed output"
+    echo "  $0 --debug         # Debug setup with full output"
+    echo "  $0 --cleanup       # Clean up existing deployment"
+    echo ""
+}
+
+# Process command line arguments
+process_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -q|--quiet)
+                export VUTF_VERBOSITY=0
+                shift
+                ;;
+            -v|--verbose)
+                export VUTF_VERBOSITY=2
+                shift
+                ;;
+            -d|--debug)
+                export VUTF_VERBOSITY=3
+                shift
+                ;;
+            --cleanup)
+                CLEANUP_MODE=true
+                shift
+                ;;
+            --deepcleanup)
+                DEEPCLEANUP_MODE=true
+                shift
+                ;;
+            *)
+                echo "Unknown option: $1" >&2
+                echo "Use --help for usage information" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Set default verbosity if not specified
+    export VUTF_VERBOSITY=${VUTF_VERBOSITY:-1}
+}
+
 # --- Load all modules ---
 load_modules() {
     local modules=(
+        "logging_utils.sh"
         "utils.sh"
         "env_management.sh" 
         "docker_setup.sh"
@@ -32,14 +102,24 @@ load_modules() {
         "cleanup.sh"
     )
     
+    # Load logging utilities first (silently)
+    if [ -f "$SETUP_MODULES_DIR/logging_utils.sh" ]; then
+        source "$SETUP_MODULES_DIR/logging_utils.sh"
+    fi
+    
+    log_detail "Loading setup modules..."
     for module in "${modules[@]}"; do
         if [ -f "$SETUP_MODULES_DIR/$module" ]; then
-            source "$SETUP_MODULES_DIR/$module"
-            echo "Loaded module: $module"
+            # Skip logging_utils.sh since it's already loaded
+            if [ "$module" != "logging_utils.sh" ]; then
+                source "$SETUP_MODULES_DIR/$module"
+                log_debug "Loaded module: $module"
+            fi
         else
-            echo "Warning: Module $module not found in $SETUP_MODULES_DIR"
+            log_warn "Module $module not found in $SETUP_MODULES_DIR"
         fi
     done
+    log_detail "All modules loaded successfully"
     
     # Export variables for use in modules
     export SETUP_MODULES_DIR
@@ -47,153 +127,107 @@ load_modules() {
     export AI_TOKENS_FILE
 }
 
-# --- Help function ---
-show_help() {
-    echo "ViolentUTF macOS Setup Script (Refactored)"
-    echo "Usage: $0 [OPTION]"
-    echo ""
-    echo "Options:"
-    echo "  (no options)     Normal setup - Install and configure ViolentUTF platform"
-    echo "  --cleanup        Standard cleanup - Remove containers, volumes, and config files"
-    echo "  --deepcleanup    Deep cleanup - Complete Docker environment reset"
-    echo "  --help, -h       Show this help message"
-    echo ""
-    echo "This refactored version uses modular components in setup_macos_files/"
-}
+# Use the enhanced show_help function defined above
 
-# --- Parse command line arguments ---
-parse_arguments() {
-    for arg in "$@"; do
-        case $arg in
-            --cleanup)
-                CLEANUP_MODE=true
-                shift
-                ;;
-            --deepcleanup)
-                DEEPCLEANUP_MODE=true
-                shift
-                ;;
-            --help|-h)
-                show_help
-                exit 0
-                ;;
-            *)
-                echo "Unknown option: $arg"
-                show_help
-                exit 1
-                ;;
-        esac
-    done
-}
+# Use the enhanced process_arguments function defined above
 
 # --- Main setup orchestration ---
 main_setup() {
-    echo "🚀 Starting ViolentUTF Setup (Refactored Version)"
-    echo "📁 Using modules from: $SETUP_MODULES_DIR"
+    log_progress "Starting ViolentUTF Setup (Refactored Version)"
+    log_info "Using modules from: $SETUP_MODULES_DIR"
     
     # Phase 1: Prerequisites and Environment Preparation  
-    echo ""
-    echo "=== Phase 1: Prerequisites and Environment Preparation ==="
+    log_phase "Phase 1: Prerequisites and Environment Preparation"
     verify_docker_setup
     handle_ssl_certificate_issues
     create_shared_network
     backup_existing_configs
     
     # Phase 2: AI Configuration Loading (CRITICAL: Must happen before env files)
-    echo ""
-    echo "=== Phase 2: AI Configuration Loading ==="
+    log_phase "Phase 2: AI Configuration Loading"
     # Create AI tokens template if it doesn't exist and load existing tokens
     create_ai_tokens_template
     load_ai_tokens  # This must happen before env file generation
     
     # Phase 3: Secret Generation (CRITICAL: Must happen before env files)
-    echo ""
-    echo "=== Phase 3: Secret Generation ==="
+    log_phase "Phase 3: Secret Generation"
     generate_all_secrets  # All secrets must be generated upfront
     
     # Phase 4: Configuration File Creation (CRITICAL: After secrets, before services)
-    echo ""
-    echo "=== Phase 4: Configuration File Creation ==="
+    log_phase "Phase 4: Configuration File Creation"
     generate_all_env_files  # Now we can create .env files with proper secrets
     
     # Phase 5: Service Deployment (CRITICAL: After all configs are ready)
-    echo ""
-    echo "=== Phase 5: Service Deployment ==="
+    log_phase "Phase 5: Service Deployment"
     setup_keycloak
     setup_apisix
     setup_violentutf_api
     
     # Phase 5b: Service Stabilization (CRITICAL: Wait for all services to be fully ready)
-    echo ""
-    echo "=== Phase 5b: Service Stabilization ==="
-    echo "⏳ Allowing services to fully stabilize before route configuration..."
+    log_detail "Waiting for services to stabilize..."
     sleep 15  # Additional stabilization time
     
     # Verify core services are stable
-    echo "🔍 Verifying core services are stable..."
+    log_debug "Verifying core services are stable..."
     if ! curl -s --max-time 10 http://localhost:9080/health >/dev/null 2>&1; then
-        echo "⚠️  APISIX gateway not responding, waiting longer..."
+        log_warn "APISIX gateway not responding, waiting longer..."
         sleep 10
     fi
     
     if ! curl -s --max-time 10 http://localhost:9080/api/v1/health >/dev/null 2>&1; then
-        echo "⚠️  ViolentUTF API not responding, waiting longer..."
+        log_warn "ViolentUTF API not responding, waiting longer..."
         sleep 10
     fi
     
-    echo "✅ Core services appear stable, proceeding with route configuration"
+    log_success "Core services appear stable, proceeding with route configuration"
     
     # Phase 6: Route and Integration Setup (CRITICAL: After services are running and stable)
-    echo ""
-    echo "=== Phase 6: Route and Integration Setup ==="
+    log_phase "Phase 6: Route and Integration Setup"
     configure_apisix_routes
     configure_openapi_routes
     setup_openapi_routes  # Setup OpenAPI provider routes (if configured)
     
     # AI Routes with enhanced readiness checking
-    echo ""
-    echo "=== Phase 6a: AI Provider Route Setup ==="
-    echo "🤖 Setting up AI provider routes with enhanced readiness verification..."
+    log_detail "Setting up AI provider routes..."
     
     # Perform pre-flight checks for AI route setup
     if ai_route_preflight_check; then
-        echo "✅ AI route pre-flight checks passed, proceeding with setup..."
+        log_debug "AI route pre-flight checks passed, proceeding with setup..."
         setup_openai_routes
         setup_anthropic_routes
         setup_ollama_routes
     else
-        echo "❌ AI route pre-flight checks failed, skipping AI route setup"
-        echo "💡 You can manually set up AI routes later by running:"
-        echo "   source setup_macos_files/ai_providers_setup.sh"
-        echo "   setup_openai_routes && setup_anthropic_routes"
+        log_warn "AI route pre-flight checks failed, skipping AI route setup"
+        log_info "You can manually set up AI routes later by running:"
+        log_info "   source setup_macos_files/ai_providers_setup.sh"
+        log_info "   setup_openai_routes && setup_anthropic_routes"
     fi
     
     # Enhanced route verification and management
-    echo ""
-    echo "=== Phase 6b: Comprehensive Route Verification ==="
+    log_detail "Verifying route configuration..."
     comprehensive_ai_route_verification  # Enhanced AI route verification
     comprehensive_route_management       # Full route discovery and verification
     
     # Phase 7: Validation and Verification
-    echo ""
-    echo "=== Phase 7: Validation and Verification ==="
+    log_detail "Validating system state..."
     verify_system_state
     validate_all_services
     
     # Phase 8: Cleanup and Restoration
-    echo ""
-    echo "=== Phase 8: Cleanup and Restoration ==="
+    log_detail "Restoring user configurations..."
     restore_user_configs
     
-    echo ""
-    echo "🎉 Setup completed successfully!"
-    echo ""
-    echo "📋 ViolentUTF Platform Access:"
-    echo "   • Application: http://localhost:8501"
-    echo "     Login with: violentutf.web / [see password below]"
-    echo "   • API Documentation: http://localhost:9080/api/docs"
-    echo "   • Keycloak Admin: http://localhost:8080/auth/admin"
-    echo "     Login with: admin / admin"
+    log_success "Setup completed successfully! 🎉"
+    
+    # Show access points in normal+ mode
+    if should_log 1; then
+        echo "📋 ViolentUTF Platform Access:"
+        echo "   • Application: http://localhost:8501"
+        echo "     Login with: violentutf.web / [see password below]"
+        echo "   • API Documentation: http://localhost:9080/api/docs"
+        echo "   • Keycloak Admin: http://localhost:8080/auth/admin"
+        echo "     Login with: admin / admin"
+    fi
     
     # Display all generated secrets
     display_generated_secrets
@@ -220,8 +254,8 @@ main() {
     # Load all modules first
     load_modules
     
-    # Parse command line arguments
-    parse_arguments "$@"
+    # Process command line arguments (includes verbosity settings)
+    process_arguments "$@"
     
     # Execute based on mode
     if [ "$CLEANUP_MODE" = true ] || [ "$DEEPCLEANUP_MODE" = true ]; then

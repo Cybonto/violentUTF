@@ -36,37 +36,36 @@ setup_python_venv() {
     local venv_dir="$1"
     local python_cmd="${2:-python3}"
     
-    echo "🐍 Setting up Python virtual environment..."
-    echo "Using Python command: $python_cmd"
+    log_progress "Setting up Python virtual environment..."
+    log_debug "Using Python command: $python_cmd"
     
     # Create virtual environment if it doesn't exist
     if [ ! -d "$venv_dir" ]; then
-        echo ""
-        echo "🐍 Creating new Python virtual environment..."
-        echo "📍 Location: $(pwd)/$venv_dir"
-        echo "🔧 Using Python: $python_cmd"
+        log_detail "Creating new Python virtual environment..."
+        log_debug "Location: $(pwd)/$venv_dir"
+        log_debug "Using Python: $python_cmd"
         
         # Try different methods to create virtual environment
-        echo "⏳ Attempting to create virtual environment..."
+        log_debug "Attempting to create virtual environment..."
         if ! $python_cmd -m venv "$venv_dir"; then
-            echo "⚠️  First attempt failed, trying alternative methods..."
+            log_debug "First attempt failed, trying alternative methods..."
             
             # Try virtualenv if available
             if command -v virtualenv &> /dev/null; then
-                echo "Using virtualenv command..."
+                log_debug "Using virtualenv command..."
                 virtualenv -p $python_cmd "$venv_dir"
             elif $python_cmd -m pip show virtualenv &> /dev/null; then
-                echo "Using python -m virtualenv..."
+                log_debug "Using python -m virtualenv..."
                 $python_cmd -m virtualenv "$venv_dir"
             else
-                echo "Installing virtualenv..."
+                log_debug "Installing virtualenv..."
                 $python_cmd -m pip install virtualenv
                 if [ $? -eq 0 ]; then
                     $python_cmd -m virtualenv "$venv_dir"
                 else
                     # Last resort: try to install python3-venv if on Ubuntu/Debian
                     if command -v apt-get &> /dev/null; then
-                        echo "Installing python3-venv package..."
+                        log_debug "Installing python3-venv package..."
                         sudo apt-get update && sudo apt-get install -y python3-venv
                         $python_cmd -m venv "$venv_dir"
                     else
@@ -104,7 +103,7 @@ setup_python_venv() {
     fi
     
     # Upgrade pip - use the python from virtual environment
-    echo "📦 Upgrading pip to latest version..."
+    log_detail "Upgrading pip to latest version..."
     if command -v python &> /dev/null; then
         python -m pip install --upgrade pip
     elif command -v python3 &> /dev/null; then
@@ -112,7 +111,7 @@ setup_python_venv() {
     else
         $python_cmd -m pip install --upgrade pip
     fi
-    echo "✅ Pip upgraded successfully"
+    log_debug "Pip upgraded successfully"
     
     return 0
 }
@@ -121,14 +120,14 @@ setup_python_venv() {
 install_streamlit_dependencies() {
     local requirements_file="$1"
     
-    echo "📦 Installing Streamlit and dependencies..."
+    log_detail "Installing Streamlit and dependencies..."
     
     # Determine which python command to use
     local pip_cmd=""
     
     # If in virtual environment, use its Python
     if [ -n "$VIRTUAL_ENV" ]; then
-        echo "📍 Using virtual environment at: $VIRTUAL_ENV"
+        log_debug "Using virtual environment at: $VIRTUAL_ENV"
         # In venv, python should always exist
         if [ -x "$VIRTUAL_ENV/bin/python" ]; then
             pip_cmd="$VIRTUAL_ENV/bin/python -m pip"
@@ -137,7 +136,7 @@ install_streamlit_dependencies() {
             return 1
         fi
     else
-        echo "⚠️  Warning: Not in a virtual environment"
+        log_warn "Warning: Not in a virtual environment"
         # Fall back to system Python
         if command -v python &> /dev/null; then
             pip_cmd="python -m pip"
@@ -149,12 +148,12 @@ install_streamlit_dependencies() {
         fi
     fi
     
-    echo "📦 Using pip command: $pip_cmd"
+    log_debug "Using pip command: $pip_cmd"
     
     # Install Streamlit
-    echo "Installing Streamlit..."
-    echo "📦 Running: $pip_cmd install streamlit"
-    echo "⏳ This may take a few minutes..."
+    log_detail "Installing Streamlit..."
+    log_debug "Running: $pip_cmd install streamlit"
+    log_debug "This may take a few minutes..."
     $pip_cmd install streamlit
     
     if [ $? -ne 0 ]; then
@@ -166,30 +165,29 @@ install_streamlit_dependencies() {
     
     # Install from requirements.txt if it exists
     if [ -f "$requirements_file" ]; then
-        echo ""
-        echo "📋 Found requirements.txt, installing dependencies..."
-        echo "📦 Running: $pip_cmd install -r $requirements_file"
-        echo "⏳ This may take several minutes..."
+        log_detail "Found requirements.txt, installing dependencies..."
+        log_debug "Running: $pip_cmd install -r $requirements_file"
+        log_debug "This may take several minutes..."
         $pip_cmd install -r "$requirements_file"
     else
-        echo ""
-        echo "📋 No requirements.txt found, installing common ViolentUTF dependencies..."
-        echo "📦 Installing the following packages:"
-        echo "   • python-dotenv (for environment variables)"
-        echo "   • streamlit-authenticator (for authentication)"
-        echo "   • streamlit-option-menu (for UI components)"
-        echo "   • pyrit (Microsoft's AI Red Team framework)"
-        echo "   • garak (LLM vulnerability scanner)"
-        echo "   • duckdb (database for PyRIT)"
-        echo "   • pandas, numpy (data processing)"
-        echo "   • pydantic (data validation)"
-        echo "   • httpx, aiohttp (HTTP clients)"
-        echo "   • python-jose (JWT handling)"
-        echo "   • python-multipart (form data)"
-        echo "   • anthropic (Anthropic AI SDK)"
-        echo "   • openai (OpenAI SDK)"
-        echo ""
-        echo "⏳ This may take several minutes..."
+        log_detail "No requirements.txt found, installing common ViolentUTF dependencies..."
+        if should_log 2; then
+            echo "📦 Installing the following packages:"
+            echo "   • python-dotenv (for environment variables)"
+            echo "   • streamlit-authenticator (for authentication)"
+            echo "   • streamlit-option-menu (for UI components)"
+            echo "   • pyrit (Microsoft's AI Red Team framework)"
+            echo "   • garak (LLM vulnerability scanner)"
+            echo "   • duckdb (database for PyRIT)"
+            echo "   • pandas, numpy (data processing)"
+            echo "   • pydantic (data validation)"
+            echo "   • httpx, aiohttp (HTTP clients)"
+            echo "   • python-jose (JWT handling)"
+            echo "   • python-multipart (form data)"
+            echo "   • anthropic (Anthropic AI SDK)"
+            echo "   • openai (OpenAI SDK)"
+        fi
+        log_debug "This may take several minutes..."
         # Install common dependencies for ViolentUTF
         $pip_cmd install \
             python-dotenv \
@@ -212,8 +210,7 @@ install_streamlit_dependencies() {
     echo "✅ Dependencies installed successfully"
     
     # Verify critical dependencies
-    echo ""
-    echo "🔍 Verifying critical dependencies..."
+    log_detail "Verifying critical dependencies..."
     local critical_packages=("python-dotenv" "anthropic" "openai")
     local missing_packages=()
     
@@ -221,15 +218,15 @@ install_streamlit_dependencies() {
         if ! $pip_cmd show "$package" &> /dev/null; then
             missing_packages+=("$package")
         else
-            echo "✅ $package is installed"
+            log_debug "$package is installed"
         fi
     done
     
     if [ ${#missing_packages[@]} -gt 0 ]; then
-        echo "⚠️  Missing packages detected: ${missing_packages[*]}"
-        echo "📦 Installing missing packages..."
+        log_warn "Missing packages detected: ${missing_packages[*]}"
+        log_detail "Installing missing packages..."
         for package in "${missing_packages[@]}"; do
-            echo "   Installing $package..."
+            log_debug "Installing $package..."
             $pip_cmd install "$package"
         done
     fi
@@ -241,10 +238,7 @@ install_streamlit_dependencies() {
 check_and_setup_streamlit() {
     local violentutf_dir="${1:-violentutf}"
     
-    echo ""
-    echo "===================================="
-    echo "🔍 Checking Streamlit installation..."
-    echo "===================================="
+    log_detail "Checking Streamlit installation..."
     
     # Change to violentutf directory
     if [ ! -d "$violentutf_dir" ]; then
@@ -259,7 +253,7 @@ check_and_setup_streamlit() {
     local using_venv=false
     
     if [ -d "$venv_dir" ]; then
-        echo "Found existing virtual environment at $venv_dir"
+        log_debug "Found existing virtual environment at $venv_dir"
         if [ -f "$venv_dir/bin/activate" ]; then
             source "$venv_dir/bin/activate"
             
@@ -268,13 +262,13 @@ check_and_setup_streamlit() {
                 using_venv=true
                 # Ensure venv binaries are first in PATH
                 export PATH="$VIRTUAL_ENV/bin:$PATH"
-                echo "✅ Activated virtual environment: $VIRTUAL_ENV"
+                log_debug "Activated virtual environment: $VIRTUAL_ENV"
             else
-                echo "⚠️  Failed to activate existing virtual environment"
+                log_warn "Failed to activate existing virtual environment"
                 using_venv=false
             fi
         else
-            echo "⚠️  Virtual environment missing activate script"
+            log_warn "Virtual environment missing activate script"
             using_venv=false
         fi
     fi
@@ -300,12 +294,12 @@ check_and_setup_streamlit() {
     # Check if Streamlit is installed in the right place
     if [ -n "$test_streamlit_cmd" ] && command -v "$test_streamlit_cmd" &> /dev/null; then
         local streamlit_version=$($test_streamlit_cmd --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-        echo "✅ Streamlit is already installed (version $streamlit_version)"
-        echo "📍 Location: $(which $test_streamlit_cmd)"
+        log_success "Streamlit is already installed (version $streamlit_version)"
+        log_debug "Location: $(which $test_streamlit_cmd)"
         
         # Verify it works with the same Python
         if [ -n "$test_python_cmd" ] && $test_python_cmd -c "import streamlit" 2>/dev/null; then
-            echo "✅ Streamlit import test passed"
+            log_debug "Streamlit import test passed"
             # Check for critical dependencies
             local missing_deps=()
             if ! $test_python_cmd -c "import dotenv" 2>/dev/null; then
@@ -319,23 +313,23 @@ check_and_setup_streamlit() {
             fi
             
             if [ ${#missing_deps[@]} -eq 0 ]; then
-                echo "✅ All critical dependencies verified"
+                log_success "All critical dependencies verified"
                 cd .. || true
                 return 0
             else
-                echo "⚠️  Missing dependencies: ${missing_deps[*]}"
-                echo "   Will install all dependencies..."
+                log_warn "Missing dependencies: ${missing_deps[*]}"
+                log_detail "Will install all dependencies..."
             fi
         else
-            echo "⚠️  Streamlit import failed, reinstalling..."
+            log_warn "Streamlit import failed, reinstalling..."
         fi
     else
-        echo "📋 Streamlit not found in expected location, will install it"
+        log_detail "Streamlit not found in expected location, will install it"
     fi
     
     # If not using venv, create one
     if [ "$using_venv" = false ]; then
-        echo "No virtual environment found, creating one..."
+        log_detail "No virtual environment found, creating one..."
         
         # Find suitable Python
         local python_cmd=$(find_python)
@@ -358,10 +352,10 @@ check_and_setup_streamlit() {
     
     # Check if requirements.txt exists in current directory
     if [ -f "$requirements_file" ]; then
-        echo "📋 Found requirements.txt in $(pwd)"
-        echo "   This includes all dependencies (anthropic, openai, etc.)"
+        log_debug "Found requirements.txt in $(pwd)"
+        log_debug "This includes all dependencies (anthropic, openai, etc.)"
     else
-        echo "📋 No requirements.txt found in $(pwd), will install default dependencies"
+        log_debug "No requirements.txt found in $(pwd), will install default dependencies"
     fi
     
     if ! install_streamlit_dependencies "$requirements_file"; then

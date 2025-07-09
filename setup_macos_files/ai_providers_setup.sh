@@ -3,7 +3,7 @@
 
 # Function to check if ai-proxy plugin is available
 check_ai_proxy_plugin() {
-    echo "🔍 Checking if ai-proxy plugin is available in APISIX..."
+    log_debug "Checking if ai-proxy plugin is available in APISIX..."
     
     local apisix_admin_url="http://localhost:9180"
     
@@ -27,7 +27,7 @@ check_ai_proxy_plugin() {
         -s -o /dev/null)
     
     if [ "$response" = "200" ]; then
-        echo "✅ ai-proxy plugin is available"
+        log_debug "ai-proxy plugin is available"
         return 0
     else
         echo "❌ ai-proxy plugin is not available (HTTP $response)"
@@ -39,7 +39,7 @@ check_ai_proxy_plugin() {
 
 # Function to wait for APISIX and ai-proxy plugin to be fully ready
 wait_for_apisix_ai_ready() {
-    echo "⏳ Waiting for APISIX and ai-proxy plugin to be fully ready..."
+    log_detail "Waiting for APISIX and ai-proxy plugin to be fully ready..."
     
     local max_attempts=20  # Increased from 5 to 20
     local attempt=1
@@ -63,7 +63,7 @@ wait_for_apisix_ai_ready() {
     while [ $attempt -le $max_attempts ]; do
         # First check basic admin API connectivity
         if curl -s --max-time 5 -H "X-API-KEY: $admin_key" "$apisix_admin_url/apisix/admin/routes" >/dev/null 2>&1; then
-            echo "   ✅ APISIX admin API is responding (attempt $attempt/$max_attempts)"
+            log_debug "APISIX admin API is responding (attempt $attempt/$max_attempts)"
             
             # Then check if ai-proxy plugin is available
             local plugin_response=$(curl -w "%{http_code}" -X GET "${apisix_admin_url}/apisix/admin/plugins/ai-proxy" \
@@ -71,13 +71,13 @@ wait_for_apisix_ai_ready() {
                 -s -o /dev/null 2>/dev/null)
             
             if [ "$plugin_response" = "200" ]; then
-                echo "   ✅ ai-proxy plugin is available and ready"
+                log_success "ai-proxy plugin is available and ready"
                 return 0
             else
-                echo "   ⏳ ai-proxy plugin not ready yet (HTTP $plugin_response), waiting..."
+                log_debug "ai-proxy plugin not ready yet (HTTP $plugin_response), waiting..."
             fi
         else
-            echo "   ⏳ APISIX admin API not ready yet (attempt $attempt/$max_attempts)"
+            log_debug "APISIX admin API not ready yet (attempt $attempt/$max_attempts)"
         fi
         
         sleep 5  # Increased from 2 to 5 seconds
@@ -94,24 +94,24 @@ wait_for_apisix_ai_ready() {
 
 # Function to perform pre-flight checks for AI route setup
 ai_route_preflight_check() {
-    echo "🔍 Performing AI route setup pre-flight checks..."
+    log_detail "Performing AI route setup pre-flight checks..."
     
     # Check if ai-proxy plugin is available
     if ! check_ai_proxy_plugin; then
-        echo "⚠️  ai-proxy plugin not available on first check"
-        echo "🔄 Attempting APISIX restart to reload plugins..."
+        log_warn "ai-proxy plugin not available on first check"
+        log_detail "Attempting APISIX restart to reload plugins..."
         
         # Try restarting APISIX to reload plugins
         if docker restart apisix-apisix-1 >/dev/null 2>&1; then
-            echo "✅ APISIX restarted successfully"
+            log_success "APISIX restarted successfully"
             
             # Wait for APISIX to come back up
-            echo "⏳ Waiting for APISIX to restart and plugins to load..."
+            log_debug "Waiting for APISIX to restart and plugins to load..."
             sleep 20
             
             # Check ai-proxy plugin again
             if check_ai_proxy_plugin; then
-                echo "✅ ai-proxy plugin now available after restart"
+                log_success "ai-proxy plugin now available after restart"
             else
                 echo "❌ ai-proxy plugin still not available after restart"
                 echo "💡 This suggests APISIX configuration may not include ai-proxy plugin"
@@ -131,26 +131,26 @@ ai_route_preflight_check() {
     
     if [ "${OPENAI_ENABLED:-false}" = "true" ]; then
         enabled_providers=$((enabled_providers + 1))
-        echo "   ✅ OpenAI provider enabled"
+        log_debug "OpenAI provider enabled"
     fi
     
     if [ "${ANTHROPIC_ENABLED:-false}" = "true" ]; then
         enabled_providers=$((enabled_providers + 1))
-        echo "   ✅ Anthropic provider enabled"
+        log_debug "Anthropic provider enabled"
     fi
     
     if [ "${OLLAMA_ENABLED:-false}" = "true" ]; then
         enabled_providers=$((enabled_providers + 1))
-        echo "   ✅ Ollama provider enabled"
+        log_debug "Ollama provider enabled"
     fi
     
     if [ $enabled_providers -eq 0 ]; then
-        echo "⚠️  No AI providers are enabled in ai-tokens.env"
-        echo "   AI routes will be skipped"
+        log_warn "No AI providers are enabled in ai-tokens.env"
+        log_detail "AI routes will be skipped"
         return 0
     fi
     
-    echo "✅ Pre-flight checks passed - $enabled_providers AI provider(s) enabled"
+    log_success "Pre-flight checks passed - $enabled_providers AI provider(s) enabled"
     return 0
 }
 
@@ -184,10 +184,10 @@ create_openai_route() {
     fi
     
     local admin_key="$APISIX_ADMIN_KEY"
-    echo "   Using admin key: ${admin_key:0:10}..."
+    log_debug "Using admin key: ${admin_key:0:10}..."
     
-    echo "   Creating route for $model at $uri..."
-    echo "   Debug - Variables: model='$model', uri='$uri', api_key='${api_key:0:10}...', route_id='$route_id'"
+    log_debug "Creating route for $model at $uri..."
+    log_debug "Variables: model='$model', uri='$uri', api_key='${api_key:0:10}...', route_id='$route_id'"
     
     local route_config='{
         "uri": "'$uri'",
@@ -214,9 +214,9 @@ create_openai_route() {
         }
     }'
     
-    echo "   Debug - Route config (first 200 chars): ${route_config:0:200}..."
-    echo "   Debug - Curl URL: ${apisix_admin_url}/apisix/admin/routes/$route_id"
-    echo "   Debug - Admin key: ${admin_key:0:10}..."
+    log_debug "Route config (first 200 chars): ${route_config:0:200}..."
+    log_debug "Curl URL: ${apisix_admin_url}/apisix/admin/routes/$route_id"
+    log_debug "Admin key: ${admin_key:0:10}..."
     
     response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X PUT "${apisix_admin_url}/apisix/admin/routes/$route_id" \
         -H "X-API-KEY: ${admin_key}" \
@@ -228,7 +228,7 @@ create_openai_route() {
     local response_body=$(echo "$response" | sed '$d')
     
     if [ "$http_status" = "200" ] || [ "$http_status" = "201" ]; then
-        echo "   ✅ Created route for $model"
+        log_debug "Created route for $model"
         return 0
     else
         echo "   ❌ Failed to create route for $model (HTTP $http_status)"
@@ -267,9 +267,9 @@ create_anthropic_route() {
     fi
     
     local admin_key="$APISIX_ADMIN_KEY"
-    echo "   Using admin key: ${admin_key:0:10}..."
+    log_debug "Using admin key: ${admin_key:0:10}..."
     
-    echo "   Creating route for $model at $uri..."
+    log_debug "Creating route for $model at $uri..."
     
     local route_config='{
         "uri": "'$uri'",
@@ -300,9 +300,9 @@ create_anthropic_route() {
         }
     }'
     
-    echo "   Debug - Route config (first 200 chars): ${route_config:0:200}..."
-    echo "   Debug - Curl URL: ${apisix_admin_url}/apisix/admin/routes/$route_id"
-    echo "   Debug - Admin key: ${admin_key:0:10}..."
+    log_debug "Route config (first 200 chars): ${route_config:0:200}..."
+    log_debug "Curl URL: ${apisix_admin_url}/apisix/admin/routes/$route_id"
+    log_debug "Admin key: ${admin_key:0:10}..."
     
     response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X PUT "${apisix_admin_url}/apisix/admin/routes/$route_id" \
         -H "X-API-KEY: ${admin_key}" \
@@ -314,7 +314,7 @@ create_anthropic_route() {
     local response_body=$(echo "$response" | sed '$d')
     
     if [ "$http_status" = "200" ] || [ "$http_status" = "201" ]; then
-        echo "   ✅ Created route for $model"
+        log_debug "Created route for $model"
         return 0
     else
         echo "   ❌ Failed to create route for $model (HTTP $http_status)"
@@ -325,7 +325,7 @@ create_anthropic_route() {
 
 # Function to setup OpenAI routes
 setup_openai_routes() {
-    echo "🤖 Setting up OpenAI routes..."
+    log_detail "Setting up OpenAI routes..."
     
     # Use improved waiting mechanism that checks ai-proxy plugin
     if ! wait_for_apisix_ai_ready; then
@@ -337,16 +337,16 @@ setup_openai_routes() {
     load_ai_tokens
     
     if [ "${OPENAI_ENABLED:-false}" != "true" ]; then
-        echo "⏭️  OpenAI is disabled, skipping route setup"
+        log_detail "OpenAI is disabled, skipping route setup"
         return 0
     fi
     
     if [ -z "$OPENAI_API_KEY" ] || [ "$OPENAI_API_KEY" = "your_openai_api_key_here" ]; then
-        echo "⚠️  OpenAI enabled but API key not configured. Skipping OpenAI setup."
+        log_warn "OpenAI enabled but API key not configured. Skipping OpenAI setup."
         return 0
     fi
     
-    echo "✅ OpenAI is enabled, configuring routes..."
+    log_success "OpenAI is enabled, configuring routes..."
     
     # OpenAI models and their URIs
     local models=("gpt-4" "gpt-3.5-turbo" "gpt-4-turbo" "gpt-4o" "gpt-4o-mini" "gpt-4-1106-preview" "gpt-4-vision-preview")
@@ -368,7 +368,7 @@ setup_openai_routes() {
 
 # Function to setup Anthropic routes
 setup_anthropic_routes() {
-    echo "🧠 Setting up Anthropic routes..."
+    log_detail "Setting up Anthropic routes..."
     
     # Use improved waiting mechanism that checks ai-proxy plugin
     if ! wait_for_apisix_ai_ready; then
@@ -380,16 +380,16 @@ setup_anthropic_routes() {
     load_ai_tokens
     
     if [ "${ANTHROPIC_ENABLED:-false}" != "true" ]; then
-        echo "⏭️  Anthropic is disabled, skipping route setup"
+        log_detail "Anthropic is disabled, skipping route setup"
         return 0
     fi
     
     if [ -z "$ANTHROPIC_API_KEY" ] || [ "$ANTHROPIC_API_KEY" = "your_anthropic_api_key_here" ]; then
-        echo "⚠️  Anthropic enabled but API key not configured. Skipping Anthropic setup."
+        log_warn "Anthropic enabled but API key not configured. Skipping Anthropic setup."
         return 0
     fi
     
-    echo "✅ Anthropic is enabled, configuring routes..."
+    log_success "Anthropic is enabled, configuring routes..."
     
     # Anthropic models and their URIs
     local models=("claude-3-opus-20240229" "claude-3-sonnet-20240229" "claude-3-haiku-20240307" "claude-3-5-sonnet-20241022" "claude-3-5-haiku-20241022")
@@ -411,44 +411,44 @@ setup_anthropic_routes() {
 
 # Function to setup Ollama routes
 setup_ollama_routes() {
-    echo "Setting up Ollama routes..."
+    log_detail "Setting up Ollama routes..."
     
     # Load AI tokens to check if enabled
     load_ai_tokens
     
     if [ "${OLLAMA_ENABLED:-true}" = "true" ]; then
-        echo "✅ Ollama is enabled, configuring routes..."
+        log_success "Ollama is enabled, configuring routes..."
         # Ollama routes would typically proxy to local Ollama instance
         # For now, this is a placeholder as Ollama runs locally
-        echo "   ℹ️  Ollama runs locally and doesn't need APISIX routes"
+        log_debug "Ollama runs locally and doesn't need APISIX routes"
         return 0
     else
-        echo "⏭️  Ollama is disabled, skipping route setup"
+        log_detail "Ollama is disabled, skipping route setup"
         return 0
     fi
 }
 
 # Function to setup Open WebUI routes
 setup_open_webui_routes() {
-    echo "Setting up Open WebUI routes..."
+    log_detail "Setting up Open WebUI routes..."
     
     # Load AI tokens to check if enabled
     load_ai_tokens
     
     if [ "${OPEN_WEBUI_ENABLED:-false}" = "true" ]; then
-        echo "✅ Open WebUI is enabled, configuring routes..."
+        log_success "Open WebUI is enabled, configuring routes..."
         # Open WebUI routes would proxy to the Open WebUI instance
-        echo "   ℹ️  Open WebUI configuration depends on your deployment"
+        log_debug "Open WebUI configuration depends on your deployment"
         return 0
     else
-        echo "⏭️  Open WebUI is disabled, skipping route setup"
+        log_detail "Open WebUI is disabled, skipping route setup"
         return 0
     fi
 }
 
 # Function to create APISIX consumer for API key authentication
 create_apisix_consumer() {
-    echo "Creating APISIX consumer for API key authentication..."
+    log_detail "Creating APISIX consumer for API key authentication..."
     
     # Load APISIX admin key
     if [ -f "apisix/.env" ]; then
@@ -471,7 +471,7 @@ create_apisix_consumer() {
     fi
     
     local admin_key="$APISIX_ADMIN_KEY"
-    echo "   Using admin key: ${admin_key:0:10}..."
+    log_debug "Using admin key: ${admin_key:0:10}..."
     local apisix_admin_url="http://localhost:9180"
     local violentutf_api_key="${VIOLENTUTF_API_KEY:-test-api-key}"
     
@@ -491,10 +491,10 @@ create_apisix_consumer() {
         -d "$consumer_config" 2>/dev/null)
     
     if echo "$response" | grep -q "\"username\":\"violentutf-user\""; then
-        echo "✅ Created APISIX consumer with API key"
+        log_success "Created APISIX consumer with API key"
         return 0
     else
-        echo "⚠️  Could not create APISIX consumer (may already exist)"
+        log_warn "Could not create APISIX consumer (may already exist)"
         return 0
     fi
 }
@@ -525,7 +525,7 @@ verify_ai_route() {
         "http://localhost:9180/apisix/admin/routes/${route_id}" 2>/dev/null)
     
     if echo "$route_response" | grep -q "\"uri\":\"${expected_uri}\""; then
-        echo "✅ $provider $model route configured correctly"
+        log_debug "$provider $model route configured correctly"
         return 0
     else
         echo "❌ $provider $model route missing or misconfigured"
@@ -535,12 +535,12 @@ verify_ai_route() {
 
 # Function to verify OpenAI routes
 verify_openai_routes() {
-    echo "🔍 Verifying OpenAI routes..."
+    log_detail "Verifying OpenAI routes..."
     
     load_ai_tokens
     
     if [ "${OPENAI_ENABLED:-false}" != "true" ]; then
-        echo "⏭️  OpenAI disabled, skipping verification"
+        log_detail "OpenAI disabled, skipping verification"
         return 0
     fi
     
@@ -556,7 +556,7 @@ verify_openai_routes() {
         fi
     done
     
-    echo "📊 OpenAI route verification: $verified/$total routes verified"
+    log_debug "OpenAI route verification: $verified/$total routes verified"
     
     if [ $verified -eq $total ]; then
         return 0
@@ -567,12 +567,12 @@ verify_openai_routes() {
 
 # Function to verify Anthropic routes
 verify_anthropic_routes() {
-    echo "🔍 Verifying Anthropic routes..."
+    log_detail "Verifying Anthropic routes..."
     
     load_ai_tokens
     
     if [ "${ANTHROPIC_ENABLED:-false}" != "true" ]; then
-        echo "⏭️  Anthropic disabled, skipping verification"
+        log_detail "Anthropic disabled, skipping verification"
         return 0
     fi
     
@@ -588,7 +588,7 @@ verify_anthropic_routes() {
         fi
     done
     
-    echo "📊 Anthropic route verification: $verified/$total routes verified"
+    log_debug "Anthropic route verification: $verified/$total routes verified"
     
     if [ $verified -eq $total ]; then
         return 0
@@ -649,14 +649,14 @@ test_ai_route_functionality() {
 
 # Function to test AI routes
 test_ai_routes() {
-    echo "Testing AI provider routes..."
+    log_detail "Testing AI provider routes..."
     
     local test_count=0
     local passed_count=0
     
     # Test basic APISIX connectivity
     if curl -s http://localhost:9080/health >/dev/null 2>&1; then
-        echo "✅ APISIX gateway is accessible"
+        log_success "APISIX gateway is accessible"
         passed_count=$((passed_count + 1))
     else
         echo "❌ APISIX gateway is not accessible"
@@ -665,7 +665,7 @@ test_ai_routes() {
     
     # Test API health endpoint
     if curl -s http://localhost:9080/api/v1/health >/dev/null 2>&1; then
-        echo "✅ ViolentUTF API health endpoint is accessible"
+        log_success "ViolentUTF API health endpoint is accessible"
         passed_count=$((passed_count + 1))
     else
         echo "❌ ViolentUTF API health endpoint is not accessible"
@@ -691,10 +691,10 @@ test_ai_routes() {
         jq -r '.list[].value | select(.id | startswith("openai-") or startswith("anthropic-")) | .id' 2>/dev/null | wc -l)
     
     if [ "$ai_routes" -gt 0 ]; then
-        echo "✅ Found $ai_routes AI provider routes"
+        log_success "Found $ai_routes AI provider routes"
         passed_count=$((passed_count + 1))
     else
-        echo "⚠️  No AI provider routes found"
+        log_warn "No AI provider routes found"
     fi
     test_count=$((test_count + 1))
     
@@ -703,9 +703,9 @@ test_ai_routes() {
     
     # Test OpenAI routes if enabled
     if [ "${OPENAI_ENABLED:-false}" = "true" ]; then
-        echo "🧪 Testing OpenAI route functionality..."
+        log_debug "Testing OpenAI route functionality..."
         if test_ai_route_functionality "openai" "/ai/openai/gpt4" "$OPENAI_API_KEY"; then
-            echo "✅ OpenAI routes are accessible"
+            log_success "OpenAI routes are accessible"
             passed_count=$((passed_count + 1))
         else
             echo "❌ OpenAI routes not accessible"
@@ -715,9 +715,9 @@ test_ai_routes() {
     
     # Test Anthropic routes if enabled
     if [ "${ANTHROPIC_ENABLED:-false}" = "true" ]; then
-        echo "🧪 Testing Anthropic route functionality..."
+        log_debug "Testing Anthropic route functionality..."
         if test_ai_route_functionality "anthropic" "/ai/anthropic/claude3-sonnet" "$ANTHROPIC_API_KEY"; then
-            echo "✅ Anthropic routes are accessible"
+            log_success "Anthropic routes are accessible"
             passed_count=$((passed_count + 1))
         else
             echo "❌ Anthropic routes not accessible"
@@ -725,7 +725,7 @@ test_ai_routes() {
         test_count=$((test_count + 1))
     fi
     
-    echo "📊 AI route tests: $passed_count/$test_count passed"
+    log_detail "AI route tests: $passed_count/$test_count passed"
     
     if [ $passed_count -eq $test_count ]; then
         return 0
@@ -736,8 +736,7 @@ test_ai_routes() {
 
 # Function to perform comprehensive AI route verification
 comprehensive_ai_route_verification() {
-    echo "🔍 Comprehensive AI Route Verification"
-    echo "====================================="
+    log_detail "Comprehensive AI Route Verification"
     
     local verification_passed=true
     

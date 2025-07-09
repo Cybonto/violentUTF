@@ -781,6 +781,38 @@ with main_col_right:
 
         st.markdown("---")
 
+        # Add styling for green create buttons first
+        st.markdown(
+            """
+        <style>
+        /* Style for create variable buttons with green theme */
+        div[data-testid="column"]:has(button[key="create_from_prompt"]) .stButton > button,
+        div[data-testid="column"]:has(button[key="create_from_response"]) .stButton > button {
+            background-color: #28a745 !important;
+            color: white !important;
+            border: 2px solid #28a745 !important;
+            font-weight: 600 !important;
+        }
+        div[data-testid="column"]:has(button[key="create_from_prompt"]) .stButton > button:hover,
+        div[data-testid="column"]:has(button[key="create_from_response"]) .stButton > button:hover {
+            background-color: #218838 !important;
+            border-color: #1e7e34 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3) !important;
+        }
+        div[data-testid="column"]:has(button[key="create_from_prompt"]) .stButton > button:disabled,
+        div[data-testid="column"]:has(button[key="create_from_response"]) .stButton > button:disabled {
+            background-color: #cccccc !important;
+            color: #666666 !important;
+            border-color: #cccccc !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+        </style>
+        """,
+            unsafe_allow_html=True,
+        )
+        
         # Create Variable buttons with green styling
         st.markdown("**Create Variables:**")
         create_col1, create_col2 = st.columns(2)
@@ -805,27 +837,6 @@ with main_col_right:
             ):
                 create_prompt_variable(st.session_state["full_response"], "response")
 
-        # Add styling for green create buttons
-        st.markdown(
-            """
-        <style>
-        /* Style for create variable buttons */
-        .stButton > button[kind="secondary"] {
-            background - color: #28a745 !important;
-            color: white !important;
-            border: 2px solid #28a745 !important;
-            font - weight: 600 !important;
-        }
-        .stButton > button[kind="secondary"]:hover {
-            background - color: #218838 !important;
-            border - color: #1e7e34 !important;
-            transform: translateY(-1px);
-            box - shadow: 0 4px 8px rgba(40, 167, 69, 0.3) !important;
-        }
-        </style>
-        """,
-            unsafe_allow_html=True,
-        )
 
         # Display Enhancement Results in the expander
         if st.session_state.get("show_enhancement_results"):
