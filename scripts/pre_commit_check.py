@@ -54,9 +54,7 @@ class PreCommitChecker:
             self.log(f"Running: {cmd}", "info")
 
         try:
-            result = subprocess.run(
-                cmd, shell=True, capture_output=True, text=True, timeout=300
-            )
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
 
             if result.returncode == 0:
                 return True, result.stdout
@@ -75,9 +73,7 @@ class PreCommitChecker:
         """Check Python code formatting with Black."""
         self.log("Checking Python formatting with Black...", "header")
 
-        success, output = self.run_command(
-            "black --check --diff . 2>&1", "Black formatting"
-        )
+        success, output = self.run_command("black --check --diff . 2>&1", "Black formatting")
 
         if not success and self.fix:
             self.log("Fixing Black formatting issues...", "warning")
@@ -91,15 +87,11 @@ class PreCommitChecker:
         """Check import sorting with isort."""
         self.log("Checking import sorting with isort...", "header")
 
-        success, output = self.run_command(
-            "isort --check-only --diff . --profile black 2>&1", "Import sorting"
-        )
+        success, output = self.run_command("isort --check-only --diff . --profile black 2>&1", "Import sorting")
 
         if not success and self.fix:
             self.log("Fixing import sorting issues...", "warning")
-            fix_success, _ = self.run_command(
-                "isort . --profile black", "isort fix", check_only=False
-            )
+            fix_success, _ = self.run_command("isort . --profile black", "isort fix", check_only=False)
             if fix_success:
                 self.fixed.append("Import sorting")
                 return True
@@ -120,9 +112,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 """
                 )
 
-        success, output = self.run_command(
-            "flake8 . --count --statistics", "Flake8 linting"
-        )
+        success, output = self.run_command("flake8 . --count --statistics", "Flake8 linting")
 
         if not success:
             # Parse flake8 output for common issues
@@ -131,15 +121,15 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             for line in lines:
                 if ":" in line and len(line.split(":")) >= 4:
                     parts = line.split(":")
-                    if len(parts) >= 4:
-                        error_code = parts[3].strip().split()[0]
-                        error_counts[error_code] = error_counts.get(error_code, 0) + 1
+                    if len(parts) >= 4 and parts[3].strip():
+                        error_parts = parts[3].strip().split()
+                        if error_parts:
+                            error_code = error_parts[0]
+                            error_counts[error_code] = error_counts.get(error_code, 0) + 1
 
             if error_counts:
                 self.log("Common flake8 issues:", "warning")
-                for code, count in sorted(
-                    error_counts.items(), key=lambda x: x[1], reverse=True
-                )[:5]:
+                for code, count in sorted(error_counts.items(), key=lambda x: x[1], reverse=True)[:5]:
                     print(f"  {code}: {count} occurrences")
 
         return success
@@ -157,9 +147,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                 if " " in name:
                     issues.append(f"Space in filename: {os.path.join(root, name)}")
                 if any(char in name for char in ["<", ">", ":", '"', "|", "?", "*"]):
-                    issues.append(
-                        f"Windows-incompatible character: {os.path.join(root, name)}"
-                    )
+                    issues.append(f"Windows-incompatible character: {os.path.join(root, name)}")
 
         if issues:
             self.issues.append(("File path issues", "\n".join(issues)))
@@ -207,9 +195,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ["venv", "__pycache__"]]
 
             for file in files:
-                if file.endswith((".py", ".yml", ".yaml", ".json")) and not file.endswith(
-                    ".example"
-                ):
+                if file.endswith((".py", ".yml", ".yaml", ".json")) and not file.endswith(".example"):
                     filepath = os.path.join(root, file)
                     try:
                         with open(filepath, "r", encoding="utf-8") as f:
@@ -248,9 +234,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                         self.issues.append((f"YAML syntax error in {yaml_file}", str(e)))
                         return False
             except ImportError:
-                self.warnings.append(
-                    ("YAML check skipped", "Install PyYAML for YAML validation")
-                )
+                self.warnings.append(("YAML check skipped", "Install PyYAML for YAML validation"))
 
         return True
 
@@ -289,9 +273,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                 with open(dockerfile, "r") as f:
                     content = f.read()
                     # Basic checks
-                    if "COPY . ." in content and "dockerignore" not in os.listdir(
-                        os.path.dirname(dockerfile)
-                    ):
+                    if "COPY . ." in content and "dockerignore" not in os.listdir(os.path.dirname(dockerfile)):
                         self.warnings.append(
                             (
                                 f"Dockerfile warning in {dockerfile}",
@@ -375,9 +357,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Pre-commit checker for ViolentUTF project"
-    )
+    parser = argparse.ArgumentParser(description="Pre-commit checker for ViolentUTF project")
     parser.add_argument(
         "--fix",
         action="store_true",

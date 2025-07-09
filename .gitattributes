@@ -1,0 +1,132 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force LF for cross-platform scripts and configs
+*.py text eol=lf
+*.pyx text eol=lf
+*.pxd text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.geojson text eol=lf
+*.sh text eol=lf
+*.bash text eol=lf
+*.md text eol=lf
+*.rst text eol=lf
+*.txt text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+*.toml text eol=lf
+requirements*.txt text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+.gitignore text eol=lf
+.env text eol=lf
+.env.* text eol=lf
+.flake8 text eol=lf
+.pylintrc text eol=lf
+Makefile text eol=lf
+
+# Windows specific files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+*.pkl binary
+*.pickle binary
+*.pyc binary
+*.pyo binary
+*.pyd binary
+*.so binary
+*.dylib binary
+*.dll binary
+*.exe binary
+*.bin binary
+*.tar binary
+*.gz binary
+*.tgz binary
+*.zip binary
+*.7z binary
+*.rar binary
+*.jar binary
+*.war binary
+*.ear binary
+*.class binary
+*.mo binary
+*.pot binary
+*.psd binary
+*.ai binary
+*.sketch binary
+*.fig binary
+*.xd binary
+*.svg text eol=lf
+*.eps binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.mp3 binary
+*.mp4 binary
+*.avi binary
+*.mkv binary
+*.webm binary
+*.webp binary
+*.ogg binary
+*.ogv binary
+*.mov binary
+*.flv binary
+*.wmv binary
+*.wav binary
+*.flac binary
+*.aac binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+*.odt binary
+*.ods binary
+*.odp binary
+
+# Jupyter notebooks
+*.ipynb text eol=lf
+
+# Data files
+*.csv text eol=lf
+*.tsv text eol=lf
+*.parquet binary
+*.feather binary
+*.h5 binary
+*.hdf5 binary
+*.npy binary
+*.npz binary
+
+# Model files
+*.pt binary
+*.pth binary
+*.onnx binary
+*.safetensors binary
+*.ckpt binary
+*.h5 binary
+*.pb binary
+*.tflite binary
+
+# Certificate files
+*.pem text eol=lf
+*.crt text eol=lf
+*.key text eol=lf
+*.p12 binary
+*.pfx binary
