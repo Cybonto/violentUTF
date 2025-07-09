@@ -30,7 +30,7 @@ async def get_dataset_prompts(
         elif dataset_config["source_type"] == "local":
             prompts = await _get_local_dataset_prompts(dataset_config)
         elif dataset_config["source_type"] == "memory":
-            prompts = await _get_memory_dataset_prompts(dataset_config)
+            prompts = await _get_memory_dataset_prompts(dataset_config, sample_size)
         elif dataset_config["source_type"] == "converter":
             prompts = await _get_converter_dataset_prompts(dataset_config)
         elif dataset_config["source_type"] == "transform":
@@ -172,7 +172,7 @@ async def _get_local_dataset_prompts(dataset_config: Dict) -> List[str]:
     return text_prompts
 
 
-async def _get_memory_dataset_prompts(dataset_config: Dict) -> List[str]:
+async def _get_memory_dataset_prompts(dataset_config: Dict, limit: Optional[int] = None) -> List[str]:
     """Get prompts from PyRIT memory dataset using real memory database access"""
     try:
         dataset_id = dataset_config.get("id", "memory_0")
@@ -181,7 +181,7 @@ async def _get_memory_dataset_prompts(dataset_config: Dict) -> List[str]:
         logger.info(f"Loading memory dataset prompts for {dataset_name} (ID: {dataset_id})")
 
         # Try to access real PyRIT memory database
-        prompts = await _load_real_memory_dataset_prompts(dataset_id)
+        prompts = await _load_real_memory_dataset_prompts(dataset_id, limit)
 
         if prompts:
             logger.info(f"Loaded {len(prompts)} real prompts from PyRIT memory dataset {dataset_name}")
@@ -197,7 +197,7 @@ async def _get_memory_dataset_prompts(dataset_config: Dict) -> List[str]:
         return []
 
 
-async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
+async def _load_real_memory_dataset_prompts(dataset_id: str, limit: Optional[int] = None) -> List[str]:
     """Load actual prompts from PyRIT memory database files"""
     try:
         #         import os # F811: removed duplicate import
@@ -224,7 +224,10 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
 
                 if prompts:
                     logger.info(f"Extracted {len(prompts)} prompts from active PyRIT memory")
-                    return prompts[:50]  # Limit for performance
+                    # Apply configurable limit if specified
+                    if limit and limit > 0:
+                        return prompts[:limit]
+                    return prompts
 
         except ValueError:
             logger.info("No active PyRIT memory instance found, trying direct database access")
@@ -257,8 +260,8 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
                     cursor = conn.cursor()
 
                     # Query for prompt request pieces with user role
-                    cursor.execute(
-                        """
+                    # Build query with optional limit
+                    query = """
                         SELECT original_value FROM PromptRequestPieces
                         WHERE role = 'user' AND original_value IS NOT NULL
                         AND LENGTH(original_value) > 0
@@ -269,9 +272,12 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
                         AND original_value NOT LIKE '%mock%'
                         AND original_value NOT LIKE '%test prompt%'
                         ORDER BY timestamp DESC
-                        LIMIT 50
                     """
-                    )
+                    
+                    if limit and limit > 0:
+                        query += f" LIMIT {limit}"
+                    
+                    cursor.execute(query)
 
                     rows = cursor.fetchall()
                     for row in rows:

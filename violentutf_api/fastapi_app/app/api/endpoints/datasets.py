@@ -731,7 +731,10 @@ async def _load_real_pyrit_dataset_legacy(
                     else:
                         prompts.append(str(item))
                 logger.info(f"Successfully loaded {len(prompts)} prompts from many_shot_jailbreaking (list format)")
-                return prompts[:50]  # Limit to 50 prompts for performance
+                # Apply configurable limit if specified
+                if limit and limit > 0:
+                    return prompts[:limit]
+                return prompts
 
         elif dataset_type == "wmdp":
             # fetch_wmdp_dataset returns QuestionAnsweringDataset with questions
@@ -744,7 +747,10 @@ async def _load_real_pyrit_dataset_legacy(
                     else:
                         prompts.append(str(question))
                 logger.info(f"Successfully loaded {len(prompts)} questions from wmdp dataset")
-                return prompts[:50]  # Limit to 50 prompts for performance
+                # Apply configurable limit if specified
+                if limit and limit > 0:
+                    return prompts[:limit]
+                return prompts
 
         elif dataset and hasattr(dataset, "prompts"):
             # Standard SeedPromptDataset format
@@ -757,7 +763,10 @@ async def _load_real_pyrit_dataset_legacy(
                     prompts.append(str(seed_prompt))
 
             logger.info(f"Successfully loaded {len(prompts)} real prompts from {dataset_type}")
-            return prompts[:50]  # Limit to 50 prompts for performance
+            # Apply configurable limit if specified
+            if limit and limit > 0:
+                return prompts[:limit]
+            return prompts
 
         logger.warning(f"Dataset '{dataset_type}' returned no prompts or unsupported format: {type(dataset)}")
         return []
