@@ -125,31 +125,21 @@ jobs:
         with:
           path: |
             ~/.cache/pip
+            ~\AppData\Local\pip\Cache
             .pytest_cache
           key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          # Install all requirements
-          for req in $(find . -name "requirements*.txt" -type f); do
-            echo "Installing from $req"
-            pip install -r "$req" || true
-          done
-          pip install pytest pytest-cov pytest-timeout pytest-xdist
+          # Use the cross-platform test runner to install dependencies
+          python scripts/run_tests_windows.py --install-deps || echo "Using fallback installation"
+          # Fallback: ensure core dependencies are installed
+          python -m pip install pytest pytest-cov pytest-timeout pytest-xdist
 
       - name: Run tests with coverage
         run: |
-          # Run unit tests only
-          if [ -d "tests/unit" ] && [ "$(find tests/unit -name '*.py' -type f | wc -l)" -gt 1 ]; then
-            echo "Running unit tests from tests/unit directory"
-            pytest tests/unit -v --cov=violentutf --cov=violentutf_api --cov-report=xml --cov-report=term-missing --timeout=300 -n auto
-          else
-            echo "Warning: No unit tests found in tests/unit directory"
-            # Create minimal test results
-            echo '<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="empty" tests="0"></testsuite></testsuites>' > junit.xml
-            echo '<?xml version="1.0" encoding="utf-8"?><coverage></coverage>' > coverage.xml
-          fi
+          python scripts/run_tests_windows.py --test-dir tests/unit
 
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
