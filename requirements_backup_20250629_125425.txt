@@ -165,7 +165,7 @@ nipype==1.10.0
 nltk==3.9.1
 numdifftools==0.9.41
 numpy==2.2.5
-ollama==0.4.8
+ollama==0.5.1
 openai==1.78.0
 opencv-python-headless==4.11.0.86
 openpyxl==3.1.5
