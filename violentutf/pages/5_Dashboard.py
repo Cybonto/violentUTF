@@ -57,9 +57,17 @@ SEVERITY_MAP = {
     "true_false": lambda val: "high" if val else "low",
     # Scale scorers - map float to severity
     "float_scale": lambda val: (
-        "critical"
-        if val >= 0.8
-        else "high" if val >= 0.6 else "medium" if val >= 0.4 else "low" if val >= 0.2 else "minimal"
+        (
+            "critical"
+            if float(val) >= 0.8
+            else (
+                "high"
+                if float(val) >= 0.6
+                else "medium" if float(val) >= 0.4 else "low" if float(val) >= 0.2 else "minimal"
+            )
+        )
+        if val is not None and str(val).replace(".", "").replace("-", "").isdigit()
+        else "unknown"
     ),
     # Category scorers - map categories to severity
     "str": lambda val: {
@@ -77,7 +85,7 @@ SEVERITY_MAP = {
         "role_play_manipulation": "medium",
         "compliant": "minimal",
         "safe": "minimal",
-    }.get(val, "unknown"),
+    }.get(str(val).lower() if val else "", "unknown"),
 }
 
 # Color schemes
@@ -367,6 +375,563 @@ def parse_scorer_results(executions: List[Dict[str, Any]]) -> List[Dict[str, Any
     return all_results
 
 
+# --- Dynamic Filtering Functions ---
+
+
+def initialize_filter_state():
+    """Initialize filter state in session state"""
+    if "filter_state" not in st.session_state:
+        st.session_state.filter_state = {
+            "time": {"preset": "all_time", "custom_start": None, "custom_end": None},
+            "entities": {"executions": [], "datasets": [], "generators": [], "scorers": []},
+            "results": {
+                "severity": [],
+                "score_type": "all",
+                "violation_only": False,
+                "score_range": {"min": 0.0, "max": 1.0},
+            },
+            "comparison_mode": False,
+            "active": False,
+        }
+
+
+def apply_time_filter(
+    results: List[Dict[str, Any]],
+    preset: str,
+    custom_start: Optional[datetime] = None,
+    custom_end: Optional[datetime] = None,
+) -> List[Dict[str, Any]]:
+    """Apply time-based filtering to results"""
+    if preset == "all_time":
+        return results
+
+    now = datetime.now()
+
+    # Define time ranges for presets
+    time_ranges = {
+        "last_hour": now - timedelta(hours=1),
+        "last_4h": now - timedelta(hours=4),
+        "last_24h": now - timedelta(hours=24),
+        "last_7d": now - timedelta(days=7),
+        "last_30d": now - timedelta(days=30),
+    }
+
+    if preset == "custom":
+        if not custom_start or not custom_end:
+            return results
+        start_time = custom_start
+        end_time = custom_end
+    else:
+        start_time = time_ranges.get(preset, now - timedelta(days=30))
+        end_time = now
+
+    # Filter results by timestamp
+    filtered = []
+    for r in results:
+        timestamp = r.get("timestamp")
+        if timestamp:
+            try:
+                if isinstance(timestamp, str):
+                    timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+
+                if isinstance(timestamp, datetime) and start_time <= timestamp <= end_time:
+                    filtered.append(r)
+            except (ValueError, AttributeError) as e:
+                logger.error(f"Failed to parse timestamp in apply_time_filter: {timestamp}, error: {e}")
+                continue
+
+    return filtered
+
+
+def apply_entity_filters(
+    results: List[Dict[str, Any]], executions: List[str], datasets: List[str], generators: List[str], scorers: List[str]
+) -> List[Dict[str, Any]]:
+    """Apply entity-based filters"""
+    filtered = results.copy()
+
+    if executions:
+        filtered = [r for r in filtered if r.get("execution_id") in executions or r.get("execution_name") in executions]
+
+    if datasets:
+        filtered = [r for r in filtered if r.get("dataset_name") in datasets]
+
+    if generators:
+        filtered = [r for r in filtered if r.get("generator_name") in generators]
+
+    if scorers:
+        filtered = [r for r in filtered if r.get("scorer_name") in scorers]
+
+    return filtered
+
+
+def apply_result_filters(
+    results: List[Dict[str, Any]],
+    severity: List[str],
+    score_type: str,
+    violation_only: bool,
+    score_range: Dict[str, float],
+) -> List[Dict[str, Any]]:
+    """Apply result-based filters"""
+    filtered = results.copy()
+
+    if severity:
+        filtered = [r for r in filtered if r.get("severity") in severity]
+
+    if score_type != "all":
+        filtered = [r for r in filtered if r.get("score_type") == score_type]
+
+    if violation_only:
+        violation_filtered = []
+        for r in filtered:
+            score_type = r.get("score_type")
+            score_value = r.get("score_value")
+            severity = r.get("severity")
+
+            if score_type == "true_false" and score_value is True:
+                violation_filtered.append(r)
+            elif score_type == "float_scale" and score_value is not None:
+                try:
+                    if float(score_value) >= 0.6:
+                        violation_filtered.append(r)
+                except (TypeError, ValueError):
+                    # Skip non-numeric scores
+                    pass
+            elif severity in ["high", "critical"]:
+                violation_filtered.append(r)
+        filtered = violation_filtered
+
+    # Apply score range filter for float scores
+    min_score = score_range.get("min", 0.0)
+    max_score = score_range.get("max", 1.0)
+    if min_score > 0.0 or max_score < 1.0:
+        range_filtered = []
+        for r in filtered:
+            if r.get("score_type") == "float_scale":
+                score_val = r.get("score_value", 0)
+                # Ensure score_val is numeric
+                try:
+                    score_val = float(score_val)
+                    if min_score <= score_val <= max_score:
+                        range_filtered.append(r)
+                except (TypeError, ValueError):
+                    # Skip non-numeric scores
+                    pass
+            else:
+                # Include non-float scores
+                range_filtered.append(r)
+        filtered = range_filtered
+
+    return filtered
+
+
+def get_unique_entities(results: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+    """Extract unique entity values from results for filter options"""
+    entities = {"executions": [], "datasets": [], "generators": [], "scorers": []}
+
+    # Collect unique values
+    exec_set = set()
+    dataset_set = set()
+    generator_set = set()
+    scorer_set = set()
+
+    for r in results:
+        # Collect both ID and name for executions
+        exec_id = r.get("execution_id")
+        if exec_id:
+            exec_set.add(exec_id)
+        exec_name = r.get("execution_name")
+        if exec_name:
+            exec_set.add(exec_name)
+
+        dataset_name = r.get("dataset_name")
+        if dataset_name:
+            dataset_set.add(dataset_name)
+
+        generator_name = r.get("generator_name")
+        if generator_name:
+            generator_set.add(generator_name)
+
+        scorer_name = r.get("scorer_name")
+        if scorer_name:
+            scorer_set.add(scorer_name)
+
+    entities["executions"] = sorted(list(exec_set))
+    entities["datasets"] = sorted(list(dataset_set))
+    entities["generators"] = sorted(list(generator_set))
+    entities["scorers"] = sorted(list(scorer_set))
+
+    return entities
+
+
+def count_active_filters() -> int:
+    """Count number of active filters"""
+    if "filter_state" not in st.session_state:
+        return 0
+
+    count = 0
+    fs = st.session_state.filter_state
+
+    # Time filter
+    if fs.get("time", {}).get("preset", "all_time") != "all_time":
+        count += 1
+
+    # Entity filters
+    entities = fs.get("entities", {})
+    for entity_list in entities.values():
+        if entity_list:
+            count += 1
+
+    # Result filters
+    results = fs.get("results", {})
+    if results.get("severity", []):
+        count += 1
+    if results.get("score_type", "all") != "all":
+        count += 1
+    if results.get("violation_only", False):
+        count += 1
+    score_range = fs.get("results", {}).get("score_range", {})
+    if score_range.get("min", 0.0) > 0.0 or score_range.get("max", 1.0) < 1.0:
+        count += 1
+
+    return count
+
+
+def apply_all_filters(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Apply all active filters to results"""
+    if "filter_state" not in st.session_state or not st.session_state.filter_state.get("active", False):
+        return results
+
+    fs = st.session_state.filter_state
+    filtered = results.copy()
+
+    # Apply time filter
+    time_config = fs.get("time", {})
+    filtered = apply_time_filter(
+        filtered, time_config.get("preset", "all_time"), time_config.get("custom_start"), time_config.get("custom_end")
+    )
+
+    # Apply entity filters
+    entities_config = fs.get("entities", {})
+    filtered = apply_entity_filters(
+        filtered,
+        entities_config.get("executions", []),
+        entities_config.get("datasets", []),
+        entities_config.get("generators", []),
+        entities_config.get("scorers", []),
+    )
+
+    # Apply result filters
+    results_config = fs.get("results", {})
+    filtered = apply_result_filters(
+        filtered,
+        results_config.get("severity", []),
+        results_config.get("score_type", "all"),
+        results_config.get("violation_only", False),
+        results_config.get("score_range", {"min": 0.0, "max": 1.0}),
+    )
+
+    return filtered
+
+
+def render_dynamic_filters(results: List[Dict[str, Any]], key_prefix: str = "main"):
+    """Render the complete dynamic filtering UI"""
+    initialize_filter_state()
+
+    # Get unique entities for filter options
+    entities = get_unique_entities(results)
+
+    # Filter header with count
+    active_filter_count = count_active_filters()
+    header_text = "🔍 Filters"
+    if active_filter_count > 0:
+        header_text += f" ({active_filter_count} active)"
+
+    with st.expander(header_text, expanded=active_filter_count > 0):
+        # Quick actions
+        col1, col2, col3 = st.columns([1, 1, 3])
+        with col1:
+            if st.button("🔄 Apply All", key=f"{key_prefix}_apply_all"):
+                st.session_state.filter_state["active"] = True
+                st.rerun()
+
+        with col2:
+            if st.button("🗑️ Clear All", key=f"{key_prefix}_clear_all"):
+                # Reset filter state
+                st.session_state.filter_state = {
+                    "time": {"preset": "all_time", "custom_start": None, "custom_end": None},
+                    "entities": {"executions": [], "datasets": [], "generators": [], "scorers": []},
+                    "results": {
+                        "severity": [],
+                        "score_type": "all",
+                        "violation_only": False,
+                        "score_range": {"min": 0.0, "max": 1.0},
+                    },
+                    "comparison_mode": False,
+                    "active": False,
+                }
+                st.rerun()
+
+        with col3:
+            st.session_state.filter_state["comparison_mode"] = st.checkbox(
+                "📊 Enable Comparison Mode",
+                value=st.session_state.filter_state["comparison_mode"],
+                key=f"{key_prefix}_comparison_mode",
+                help="Compare filtered metrics against baseline (all data)",
+            )
+
+        # Time filters section
+        st.markdown("### ⏱️ Time Range")
+        time_col1, time_col2 = st.columns([1, 2])
+
+        with time_col1:
+            time_preset = st.selectbox(
+                "Quick Select",
+                [
+                    "All Time",
+                    "Last Hour",
+                    "Last 4 Hours",
+                    "Last 24 Hours",
+                    "Last 7 Days",
+                    "Last 30 Days",
+                    "Custom Range",
+                ],
+                index=(
+                    ["all_time", "last_hour", "last_4h", "last_24h", "last_7d", "last_30d", "custom"].index(
+                        st.session_state.filter_state.get("time", {}).get("preset", "all_time")
+                    )
+                    if st.session_state.filter_state.get("time", {}).get("preset", "all_time")
+                    in ["all_time", "last_hour", "last_4h", "last_24h", "last_7d", "last_30d", "custom"]
+                    else 0
+                ),
+                key=f"{key_prefix}_time_preset",
+            )
+
+            # Map display text back to internal values
+            preset_map = {
+                "All Time": "all_time",
+                "Last Hour": "last_hour",
+                "Last 4 Hours": "last_4h",
+                "Last 24 Hours": "last_24h",
+                "Last 7 Days": "last_7d",
+                "Last 30 Days": "last_30d",
+                "Custom Range": "custom",
+            }
+            if "time" not in st.session_state.filter_state:
+                st.session_state.filter_state["time"] = {}
+            st.session_state.filter_state["time"]["preset"] = preset_map.get(time_preset, "all_time")
+
+        with time_col2:
+            if time_preset == "Custom Range":
+                date_col1, date_col2 = st.columns(2)
+                with date_col1:
+                    start_date = st.date_input(
+                        "Start Date",
+                        value=st.session_state.filter_state.get("time", {}).get("custom_start")
+                        or datetime.now() - timedelta(days=7),
+                        key=f"{key_prefix}_start_date",
+                    )
+                    if "time" not in st.session_state.filter_state:
+                        st.session_state.filter_state["time"] = {}
+                    st.session_state.filter_state["time"]["custom_start"] = datetime.combine(
+                        start_date, datetime.min.time()
+                    )
+
+                with date_col2:
+                    end_date = st.date_input(
+                        "End Date",
+                        value=st.session_state.filter_state.get("time", {}).get("custom_end") or datetime.now(),
+                        key=f"{key_prefix}_end_date",
+                    )
+                    if "time" not in st.session_state.filter_state:
+                        st.session_state.filter_state["time"] = {}
+                    st.session_state.filter_state["time"]["custom_end"] = datetime.combine(
+                        end_date, datetime.max.time()
+                    )
+
+        # Entity filters section
+        st.markdown("### 🎯 Entity Filters")
+        entity_col1, entity_col2 = st.columns(2)
+
+        with entity_col1:
+            # Executions filter
+            if "entities" not in st.session_state.filter_state:
+                st.session_state.filter_state["entities"] = {}
+            st.session_state.filter_state["entities"]["executions"] = st.multiselect(
+                "Executions",
+                options=entities.get("executions", []),
+                default=st.session_state.filter_state.get("entities", {}).get("executions", []),
+                key=f"{key_prefix}_execution_filter",
+                help="Filter by specific test executions",
+            )
+
+            # Generators filter
+            if "entities" not in st.session_state.filter_state:
+                st.session_state.filter_state["entities"] = {}
+            st.session_state.filter_state["entities"]["generators"] = st.multiselect(
+                "Generators",
+                options=entities.get("generators", []),
+                default=st.session_state.filter_state.get("entities", {}).get("generators", []),
+                key=f"{key_prefix}_generator_filter",
+                help="Filter by AI model/generator",
+            )
+
+        with entity_col2:
+            # Datasets filter
+            if "entities" not in st.session_state.filter_state:
+                st.session_state.filter_state["entities"] = {}
+            st.session_state.filter_state["entities"]["datasets"] = st.multiselect(
+                "Datasets",
+                options=entities.get("datasets", []),
+                default=st.session_state.filter_state.get("entities", {}).get("datasets", []),
+                key=f"{key_prefix}_dataset_filter",
+                help="Filter by dataset used",
+            )
+
+            # Scorers filter
+            if "entities" not in st.session_state.filter_state:
+                st.session_state.filter_state["entities"] = {}
+            st.session_state.filter_state["entities"]["scorers"] = st.multiselect(
+                "Scorers",
+                options=entities.get("scorers", []),
+                default=st.session_state.filter_state.get("entities", {}).get("scorers", []),
+                key=f"{key_prefix}_scorer_filter",
+                help="Filter by security scorer",
+            )
+
+        # Result filters section
+        st.markdown("### 📊 Result Filters")
+        result_col1, result_col2, result_col3 = st.columns(3)
+
+        with result_col1:
+            if "results" not in st.session_state.filter_state:
+                st.session_state.filter_state["results"] = {}
+            st.session_state.filter_state["results"]["severity"] = st.multiselect(
+                "Severity Levels",
+                options=["critical", "high", "medium", "low", "minimal"],
+                default=st.session_state.filter_state.get("results", {}).get("severity", []),
+                key=f"{key_prefix}_severity_filter",
+                help="Filter by severity level",
+            )
+
+        with result_col2:
+            score_types = ["All Types", "True/False", "Float Scale", "String"]
+            score_type_map = {
+                "All Types": "all",
+                "True/False": "true_false",
+                "Float Scale": "float_scale",
+                "String": "str",
+            }
+
+            display_type = st.selectbox(
+                "Score Type",
+                options=score_types,
+                index=(
+                    0
+                    if st.session_state.filter_state.get("results", {}).get("score_type", "all") == "all"
+                    else (
+                        list(score_type_map.values()).index(
+                            st.session_state.filter_state.get("results", {}).get("score_type", "all")
+                        )
+                        if st.session_state.filter_state.get("results", {}).get("score_type", "all")
+                        in score_type_map.values()
+                        else 0
+                    )
+                ),
+                key=f"{key_prefix}_score_type_filter",
+            )
+            if "results" not in st.session_state.filter_state:
+                st.session_state.filter_state["results"] = {}
+            st.session_state.filter_state["results"]["score_type"] = score_type_map.get(display_type, "all")
+
+        with result_col3:
+            if "results" not in st.session_state.filter_state:
+                st.session_state.filter_state["results"] = {}
+            st.session_state.filter_state["results"]["violation_only"] = st.checkbox(
+                "Violations Only",
+                value=st.session_state.filter_state.get("results", {}).get("violation_only", False),
+                key=f"{key_prefix}_violation_only",
+                help="Show only results that indicate violations",
+            )
+
+        # Score range filter (only for float scores)
+        if st.session_state.filter_state.get("results", {}).get("score_type", "all") in ["all", "float_scale"]:
+            score_range = st.slider(
+                "Score Range (for float scores)",
+                min_value=0.0,
+                max_value=1.0,
+                value=(
+                    st.session_state.filter_state.get("results", {}).get("score_range", {}).get("min", 0.0),
+                    st.session_state.filter_state.get("results", {}).get("score_range", {}).get("max", 1.0),
+                ),
+                step=0.1,
+                key=f"{key_prefix}_score_range",
+            )
+            if "results" not in st.session_state.filter_state:
+                st.session_state.filter_state["results"] = {}
+            if "score_range" not in st.session_state.filter_state["results"]:
+                st.session_state.filter_state["results"]["score_range"] = {}
+            st.session_state.filter_state["results"]["score_range"]["min"] = score_range[0]
+            st.session_state.filter_state["results"]["score_range"]["max"] = score_range[1]
+
+        # Show quick presets
+        st.markdown("### 🚀 Quick Presets")
+        preset_col1, preset_col2, preset_col3, preset_col4 = st.columns(4)
+
+        with preset_col1:
+            if st.button("🔴 Critical Only", key=f"{key_prefix}_preset_critical"):
+                if "results" not in st.session_state.filter_state:
+                    st.session_state.filter_state["results"] = {}
+                st.session_state.filter_state["results"]["severity"] = ["critical"]
+                st.session_state.filter_state["active"] = True
+                st.rerun()
+
+        with preset_col2:
+            if st.button("⚠️ High Risk", key=f"{key_prefix}_preset_high_risk"):
+                if "results" not in st.session_state.filter_state:
+                    st.session_state.filter_state["results"] = {}
+                st.session_state.filter_state["results"]["severity"] = ["critical", "high"]
+                st.session_state.filter_state["active"] = True
+                st.rerun()
+
+        with preset_col3:
+            if st.button("🕒 Recent Activity", key=f"{key_prefix}_preset_recent"):
+                if "time" not in st.session_state.filter_state:
+                    st.session_state.filter_state["time"] = {}
+                st.session_state.filter_state["time"]["preset"] = "last_24h"
+                st.session_state.filter_state["active"] = True
+                st.rerun()
+
+        with preset_col4:
+            if st.button("🚨 Violations", key=f"{key_prefix}_preset_violations"):
+                if "results" not in st.session_state.filter_state:
+                    st.session_state.filter_state["results"] = {}
+                st.session_state.filter_state["results"]["violation_only"] = True
+                st.session_state.filter_state["active"] = True
+                st.rerun()
+
+
+def render_filter_summary(results: List[Dict[str, Any]], filtered_results: List[Dict[str, Any]]):
+    """Show summary of filter impact"""
+    if st.session_state.get("filter_state", {}).get("active", False):
+        col1, col2, col3 = st.columns([2, 2, 1])
+
+        with col1:
+            reduction_pct = ((len(results) - len(filtered_results)) / len(results) * 100) if results else 0
+            st.info(
+                f"📊 Showing **{len(filtered_results):,}** of **{len(results):,}** results ({reduction_pct:.1f}% filtered)"
+            )
+
+        with col2:
+            active_count = count_active_filters()
+            if active_count > 0:
+                st.success(f"✅ {active_count} filter{'s' if active_count > 1 else ''} active")
+
+        with col3:
+            if st.button("❌ Clear Filters", key="clear_filters_summary"):
+                st.session_state.filter_state["active"] = False
+                st.rerun()
+
+
 # --- Metrics Calculation Functions ---
 
 
@@ -405,7 +970,9 @@ def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, A
     for exec_id, exec_results in execution_groups.items():
         # Identify unique batches in this execution
         batch_info = {}
-        execution_name = exec_results[0].get("execution_name", "Unknown")
+        execution_name = (
+            exec_results[0].get("execution_name", "Unknown") if exec_results and len(exec_results) > 0 else "Unknown"
+        )
 
         for r in exec_results:
             # Handle missing batch metadata gracefully
@@ -430,40 +997,63 @@ def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, A
             if r.get("timestamp"):
                 current_ts = r["timestamp"]
                 if isinstance(current_ts, str):
-                    current_ts = datetime.fromisoformat(current_ts.replace("Z", "+00:00"))
+                    try:
+                        current_ts = datetime.fromisoformat(current_ts.replace("Z", "+00:00"))
+                    except (ValueError, AttributeError) as e:
+                        logger.error(f"Failed to parse timestamp: {current_ts}, error: {e}")
+                        continue
 
-                if batch_info[batch_key]["first_timestamp"] is None:
+                first_ts = batch_info[batch_key].get("first_timestamp")
+                if first_ts is None:
                     batch_info[batch_key]["first_timestamp"] = current_ts
-                elif isinstance(batch_info[batch_key]["first_timestamp"], str):
-                    batch_info[batch_key]["first_timestamp"] = datetime.fromisoformat(
-                        batch_info[batch_key]["first_timestamp"].replace("Z", "+00:00")
-                    )
+                elif isinstance(first_ts, str):
+                    try:
+                        batch_info[batch_key]["first_timestamp"] = datetime.fromisoformat(
+                            first_ts.replace("Z", "+00:00")
+                        )
+                    except (ValueError, AttributeError) as e:
+                        logger.error(f"Failed to parse first_timestamp: {first_ts}, error: {e}")
+                        batch_info[batch_key]["first_timestamp"] = current_ts
 
-                if current_ts < batch_info[batch_key]["first_timestamp"]:
+                # Safe comparison with first_timestamp
+                first_ts_value = batch_info[batch_key].get("first_timestamp")
+                if first_ts_value and isinstance(first_ts_value, datetime) and current_ts < first_ts_value:
                     batch_info[batch_key]["first_timestamp"] = current_ts
 
                 # Also convert last_timestamp if it's a string
-                if isinstance(batch_info[batch_key]["last_timestamp"], str):
-                    batch_info[batch_key]["last_timestamp"] = datetime.fromisoformat(
-                        batch_info[batch_key]["last_timestamp"].replace("Z", "+00:00")
-                    )
+                last_ts = batch_info[batch_key].get("last_timestamp")
+                if isinstance(last_ts, str):
+                    try:
+                        batch_info[batch_key]["last_timestamp"] = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
+                    except (ValueError, AttributeError) as e:
+                        logger.error(f"Failed to parse last_timestamp: {last_ts}, error: {e}")
+                        batch_info[batch_key]["last_timestamp"] = current_ts
 
-                if current_ts > batch_info[batch_key]["last_timestamp"]:
+                # Safe comparison with last_timestamp
+                last_ts_value = batch_info[batch_key].get("last_timestamp")
+                if last_ts_value and isinstance(last_ts_value, datetime) and current_ts > last_ts_value:
                     batch_info[batch_key]["last_timestamp"] = current_ts
 
         # Calculate execution-level metrics
         unique_batches = len(batch_info)
-        expected_batches = max([b[1] for b in batch_info.keys()], default=1)
-        actual_batch_indices = set([b[0] for b in batch_info.keys()])
+        # Safely extract expected batches
+        batch_totals = [
+            b[1] for b in batch_info.keys() if isinstance(b, tuple) and len(b) > 1 and isinstance(b[1], int)
+        ]
+        expected_batches = max(batch_totals, default=1)
+        # Safely extract actual batch indices
+        actual_batch_indices = set([b[0] for b in batch_info.keys() if isinstance(b, tuple) and len(b) > 0])
         completed = len(actual_batch_indices) == expected_batches
 
         # Calculate execution duration if timestamps available
         all_timestamps = []
         for bi in batch_info.values():
-            if bi["first_timestamp"]:
-                all_timestamps.append(bi["first_timestamp"])
-            if bi["last_timestamp"]:
-                all_timestamps.append(bi["last_timestamp"])
+            first_ts = bi.get("first_timestamp")
+            if first_ts and isinstance(first_ts, datetime):
+                all_timestamps.append(first_ts)
+            last_ts = bi.get("last_timestamp")
+            if last_ts and isinstance(last_ts, datetime):
+                all_timestamps.append(last_ts)
 
         execution_duration = None
         if all_timestamps:
@@ -572,37 +1162,51 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
 
     # Basic counts
     total_scores = len(results)
-    unique_scorers = len(set(r["scorer_name"] for r in results))
-    unique_generators = len(set(r["generator_name"] for r in results))
-    unique_datasets = len(set(r["dataset_name"] for r in results))
-    unique_executions = hierarchical_metrics["test_runs"]  # Use hierarchical count
+    unique_scorers = len(set(r.get("scorer_name", "Unknown") for r in results))
+    unique_generators = len(set(r.get("generator_name", "Unknown") for r in results))
+    unique_datasets = len(set(r.get("dataset_name", "Unknown") for r in results))
+    unique_executions = hierarchical_metrics.get("test_runs", 0)  # Use hierarchical count
 
     # Violation analysis
     violations = 0
     for result in results:
-        if result["score_type"] == "true_false" and result["score_value"] is True:
+        score_type = result.get("score_type")
+        score_value = result.get("score_value")
+        severity = result.get("severity")
+
+        if score_type == "true_false" and score_value is True:
             violations += 1
-        elif result["score_type"] == "float_scale" and result["score_value"] >= 0.6:
-            violations += 1
-        elif result["score_type"] == "str" and result["severity"] in ["high", "critical"]:
+        elif score_type == "float_scale" and score_value is not None:
+            try:
+                if float(score_value) >= 0.6:
+                    violations += 1
+            except (TypeError, ValueError):
+                pass
+        elif score_type == "str" and severity in ["high", "critical"]:
             violations += 1
 
     violation_rate = (violations / total_scores * 100) if total_scores > 0 else 0
 
     # Severity breakdown
-    severity_counts = Counter(r["severity"] for r in results)
+    severity_counts = Counter(r.get("severity", "unknown") for r in results)
     severity_breakdown = dict(severity_counts)
 
     # Scorer performance
     scorer_performance = defaultdict(lambda: {"total": 0, "violations": 0, "avg_score": 0})
     for result in results:
-        scorer = result["scorer_name"]
+        scorer = result.get("scorer_name", "Unknown")
+        score_type = result.get("score_type")
+        score_value = result.get("score_value")
+
         scorer_performance[scorer]["total"] += 1
 
-        if result["score_type"] == "true_false" and result["score_value"] is True:
+        if score_type == "true_false" and score_value is True:
             scorer_performance[scorer]["violations"] += 1
-        elif result["score_type"] == "float_scale":
-            scorer_performance[scorer]["avg_score"] += result["score_value"]
+        elif score_type == "float_scale" and score_value is not None:
+            try:
+                scorer_performance[scorer]["avg_score"] += float(score_value)
+            except (TypeError, ValueError):
+                pass
 
     # Calculate averages
     for scorer, stats in scorer_performance.items():
@@ -614,11 +1218,13 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
     # Generator risk profile
     generator_risk = defaultdict(lambda: {"total": 0, "critical": 0, "high": 0})
     for result in results:
-        generator = result["generator_name"]
+        generator = result.get("generator_name", "Unknown")
+        severity = result.get("severity", "unknown")
+
         generator_risk[generator]["total"] += 1
-        if result["severity"] == "critical":
+        if severity == "critical":
             generator_risk[generator]["critical"] += 1
-        elif result["severity"] == "high":
+        elif severity == "high":
             generator_risk[generator]["high"] += 1
 
     # Temporal patterns
@@ -645,29 +1251,46 @@ def analyze_temporal_patterns(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         return {}
 
     # Convert timestamps and sort
+    valid_results = []
     for r in results:
-        if isinstance(r["timestamp"], str):
-            r["timestamp"] = datetime.fromisoformat(r["timestamp"].replace("Z", "+00:00"))
+        timestamp = r.get("timestamp")
+        if timestamp:
+            try:
+                if isinstance(timestamp, str):
+                    r["timestamp"] = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                    valid_results.append(r)
+                elif isinstance(timestamp, datetime):
+                    valid_results.append(r)
+            except (ValueError, AttributeError) as e:
+                logger.error(f"Failed to parse timestamp in analyze_temporal_patterns: {timestamp}, error: {e}")
+                continue
 
-    results_sorted = sorted(results, key=lambda x: x["timestamp"])
+    if not valid_results:
+        return {}
+
+    results_sorted = sorted(valid_results, key=lambda x: x.get("timestamp", datetime.min))
 
     # Hourly distribution
     hourly_violations = defaultdict(int)
     hourly_total = defaultdict(int)
 
     for result in results_sorted:
-        hour = result["timestamp"].hour
-        hourly_total[hour] += 1
-        if result["severity"] in ["high", "critical"]:
-            hourly_violations[hour] += 1
+        timestamp = result.get("timestamp")
+        if timestamp and isinstance(timestamp, datetime):
+            hour = timestamp.hour
+            hourly_total[hour] += 1
+            if result.get("severity") in ["high", "critical"]:
+                hourly_violations[hour] += 1
 
     # Daily trends
     daily_data = defaultdict(lambda: {"total": 0, "violations": 0})
     for result in results_sorted:
-        day = result["timestamp"].date()
-        daily_data[day]["total"] += 1
-        if result["severity"] in ["high", "critical"]:
-            daily_data[day]["violations"] += 1
+        timestamp = result.get("timestamp")
+        if timestamp and isinstance(timestamp, datetime):
+            day = timestamp.date()
+            daily_data[day]["total"] += 1
+            if result.get("severity") in ["high", "critical"]:
+                daily_data[day]["violations"] += 1
 
     return {
         "hourly_violations": dict(hourly_violations),
@@ -714,17 +1337,14 @@ def render_executive_dashboard(metrics: Dict[str, Any]):
             )
 
         with col4:
-            completion_rate = hierarchical_metrics["completion_rate"]
+            completion_rate = hierarchical_metrics.get("completion_rate", 0.0)
             color = "🟢" if completion_rate >= 95 else "🟡" if completion_rate >= 80 else "🔴"
+            incomplete_count = hierarchical_metrics.get("incomplete_executions_count", 0)
             st.metric(
                 "⚡ Completion Rate",
                 f"{color} {completion_rate:.1f}%",
-                delta=(
-                    f"{hierarchical_metrics['incomplete_executions_count']} incomplete"
-                    if hierarchical_metrics["incomplete_executions_count"] > 0
-                    else "All complete"
-                ),
-                delta_color="inverse" if hierarchical_metrics["incomplete_executions_count"] > 0 else "off",
+                delta=(f"{incomplete_count} incomplete" if incomplete_count > 0 else "All complete"),
+                delta_color="inverse" if incomplete_count > 0 else "off",
                 help="Percentage of test runs that completed all expected batches",
             )
 
@@ -1252,11 +1872,26 @@ def main():
             st.warning("⚠️ Executions found but no scorer results available.")
             return
 
-        # Calculate comprehensive metrics
-        metrics = calculate_comprehensive_metrics(results)
+        # Display success message
+        st.success(f"✅ Loaded {len(results)} scorer results from {len(executions)} executions")
 
-    # Display success message
-    st.success(f"✅ Loaded {len(results)} scorer results from {len(executions)} executions")
+        # Add dynamic filters
+        render_dynamic_filters(results)
+
+        # Apply filters if active
+        filtered_results = apply_all_filters(results)
+
+        # Show filter summary if filters are active
+        if st.session_state.get("filter_state", {}).get("active", False):
+            render_filter_summary(results, filtered_results)
+
+        # Calculate metrics on filtered or original results
+        metrics = calculate_comprehensive_metrics(filtered_results)
+
+        # If comparison mode is enabled, also calculate baseline metrics
+        baseline_metrics = None
+        if st.session_state.get("filter_state", {}).get("comparison_mode", False):
+            baseline_metrics = calculate_comprehensive_metrics(results)
 
     # Render dashboard sections
     tabs = st.tabs(
@@ -1270,19 +1905,29 @@ def main():
     )
 
     with tabs[0]:
-        render_executive_dashboard(metrics)
+        if baseline_metrics and st.session_state.get("filter_state", {}).get("comparison_mode", False):
+            # Render comparison view
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("### 📊 Baseline Metrics")
+                render_executive_dashboard(baseline_metrics)
+            with col2:
+                st.markdown("### 🔍 Filtered Metrics")
+                render_executive_dashboard(metrics)
+        else:
+            render_executive_dashboard(metrics)
 
     with tabs[1]:
-        render_scorer_performance(results, metrics)
+        render_scorer_performance(filtered_results, metrics)
 
     with tabs[2]:
         render_generator_risk_analysis(metrics)
 
     with tabs[3]:
-        render_temporal_analysis(results, metrics)
+        render_temporal_analysis(filtered_results, metrics)
 
     with tabs[4]:
-        render_detailed_results_table(results)
+        render_detailed_results_table(filtered_results)
 
 
 if __name__ == "__main__":
