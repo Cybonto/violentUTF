@@ -27,7 +27,7 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@94549999469dbfa032becf298d95c87a14c34394  # v40.2.0
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v40.2.0
         with:
           files_yaml: |
             python:
