@@ -55,7 +55,7 @@ class TokenManager:
                 "llama3": "/ai/ollama/llama3",
             },
             "webui": {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"},
-            "gsai": {
+            "gsai-api-1": {
                 "claude_3_5_sonnet": "/ai/gsai-api-1/chat/completions",
                 "claude_3_7_sonnet": "/ai/gsai-api-1/chat/completions",
                 "claude_3_haiku": "/ai/gsai-api-1/chat/completions",
@@ -446,7 +446,14 @@ class TokenManager:
 
     def _parse_ai_routes(self, routes_data: Dict) -> Dict[str, Dict[str, str]]:
         """Parse APISIX routes response to extract AI model endpoints."""
-        endpoints = {"openai": {}, "anthropic": {}, "ollama": {}, "webui": {}, "bedrock": {}, "gsai": {}}
+        endpoints = {
+            "openai": {},
+            "anthropic": {},
+            "ollama": {},
+            "webui": {},
+            "bedrock": {},
+            "gsai-api-1": {},
+        }
 
         try:
             routes_list = routes_data.get("list", [])
@@ -469,8 +476,8 @@ class TokenManager:
                         "gsai-api-1-chat-completions",
                     ]:
                         # Add all GSAi models to the same endpoint
-                        for model in self.fallback_apisix_endpoints.get("gsai", {}).keys():
-                            endpoints["gsai"][model] = uri
+                        for model in self.fallback_apisix_endpoints.get("gsai-api-1", {}).keys():
+                            endpoints["gsai-api-1"][model] = uri
                     else:
                         # Standard provider/model extraction
                         provider, model_info = self._extract_provider_model(route_id, uri)
@@ -493,14 +500,10 @@ class TokenManager:
                 provider = parts[1]
                 model_endpoint = parts[2]
 
-                # Handle gsai-api-1 -> gsai mapping
-                if provider.startswith("gsai-"):
-                    provider = "gsai"
-
                 # Map endpoint back to model name using route_id or known patterns
                 model_name = self._map_endpoint_to_model(provider, model_endpoint, route_id)
 
-                if model_name and provider in ["openai", "anthropic", "ollama", "webui", "bedrock", "gsai"]:
+                if model_name and provider in ["openai", "anthropic", "ollama", "webui", "bedrock", "gsai-api-1"]:
                     return provider, (model_name, uri)
 
         except Exception as e:
@@ -597,15 +600,15 @@ class TokenManager:
             },
             "ollama": {"llama2": "Llama 2", "codellama": "Code Llama", "mistral": "Mistral", "llama3": "Llama 3"},
             "webui": {"llama2": "Llama 2 (WebUI)", "codellama": "Code Llama (WebUI)"},
-            "gsai": {
-                "claude_3_5_sonnet": "Claude 3.5 Sonnet",
-                "claude_3_7_sonnet": "Claude 3.7 Sonnet",
-                "claude_3_haiku": "Claude 3 Haiku",
-                "llama3211b": "Llama 3.2 11B",
-                "cohere_english_v3": "Cohere English v3",
-                "gemini-2.0-flash": "Gemini 2.0 Flash",
-                "gemini-2.0-flash-lite": "Gemini 2.0 Flash Lite",
-                "gemini-2.5-pro-preview-05-06": "Gemini 2.5 Pro Preview",
+            "gsai-api-1": {
+                "claude_3_5_sonnet": "Claude 3.5 Sonnet (GSAi)",
+                "claude_3_7_sonnet": "Claude 3.7 Sonnet (GSAi)",
+                "claude_3_haiku": "Claude 3 Haiku (GSAi)",
+                "llama3211b": "Llama 3.2 11B (GSAi)",
+                "cohere_english_v3": "Cohere English v3 (GSAi)",
+                "gemini-2.0-flash": "Gemini 2.0 Flash (GSAi)",
+                "gemini-2.0-flash-lite": "Gemini 2.0 Flash Lite (GSAi)",
+                "gemini-2.5-pro-preview-05-06": "Gemini 2.5 Pro Preview (GSAi)",
             },
             "bedrock": {
                 "claude-opus-4": "Claude Opus 4",

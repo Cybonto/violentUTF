@@ -688,8 +688,37 @@ class DuckDBManager:
     def delete_scorer(self, scorer_id: str) -> bool:
         """Delete scorer"""
         with duckdb.connect(self.db_path) as conn:
-            conn.execute("DELETE FROM scorers WHERE id = ? AND user_id = ?", [scorer_id, self.username])
-            return conn.rowcount > 0
+            # First check if scorer exists
+            result = conn.execute(
+                """
+                SELECT COUNT(*) FROM scorers WHERE id = ? AND user_id = ?
+            """,
+                [scorer_id, self.username],
+            ).fetchone()
+
+            if result[0] == 0:
+                logger.warning(f"Scorer {scorer_id} not found for user {self.username}")
+                return False
+
+            # Delete the scorer
+            conn.execute(
+                """
+                DELETE FROM scorers WHERE id = ? AND user_id = ?
+            """,
+                [scorer_id, self.username],
+            )
+
+            # Verify deletion
+            result = conn.execute(
+                """
+                SELECT COUNT(*) FROM scorers WHERE id = ? AND user_id = ?
+            """,
+                [scorer_id, self.username],
+            ).fetchone()
+
+            success = result[0] == 0
+            logger.info(f"Scorer {scorer_id} deletion {'successful' if success else 'failed'} for user {self.username}")
+            return success
 
     # Utility methods
     def get_stats(self) -> Dict[str, Any]:

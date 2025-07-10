@@ -139,8 +139,54 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         elif response.status_code == 502:
             logger.error(f"502 Bad Gateway: {response.text}")
             return None
+        elif response.status_code == 500:
+            logger.error(f"500 Internal Server Error: {response.text}")
+            # Store error info for UI
+            try:
+                error_data = response.json()
+                st.session_state["last_api_error"] = {
+                    "status": 500,
+                    "message": error_data.get("message", "Internal server error"),
+                    "error_id": error_data.get("error_id"),
+                }
+            except:
+                st.session_state["last_api_error"] = {"status": 500, "message": "Internal server error"}
+            return None
         elif response.status_code == 503:
             logger.error(f"503 Service Unavailable: {response.text}")
+            return None
+        elif response.status_code == 422:
+            # Handle validation errors specifically
+            try:
+                error_data = response.json()
+                # Check for the new error format from FastAPI
+                if "validation_errors" in error_data:
+                    errors = error_data.get("validation_errors", [])
+                    error_msgs = []
+                    for err in errors:
+                        field = err.get("field", "unknown")
+                        msg = err.get("message", "validation error")
+                        error_msgs.append(f"{field}: {msg}")
+                    error_detail = "Validation errors: " + "; ".join(error_msgs)
+                    logger.error(f"422 Validation Error: {url} - {error_detail}")
+                    # Store detailed error for UI display
+                    st.session_state["last_api_error"] = {
+                        "status": 422,
+                        "message": error_data.get("message", "Validation failed"),
+                        "errors": errors,
+                    }
+                # Also check for the old format with 'detail'
+                elif "detail" in error_data:
+                    logger.error(f"422 Validation Error: {url} - {error_data}")
+                    st.session_state["last_api_error"] = {
+                        "status": 422,
+                        "message": "Validation failed",
+                        "detail": error_data.get("detail"),
+                    }
+                else:
+                    logger.error(f"422 Validation Error: {url} - {response.text}")
+            except Exception as e:
+                logger.error(f"Error parsing 422 response: {e}")
             return None
         else:
             logger.error(f"API Error {response.status_code}: {url} - {response.text}")
@@ -220,6 +266,10 @@ def get_scorer_params_from_api(scorer_type: str):
 
 def create_scorer_via_api(name: str, scorer_type: str, parameters: Dict[str, Any], generator_id: str = None):
     """Create a new scorer configuration via API"""
+    # Clear any previous error
+    if "last_api_error" in st.session_state:
+        del st.session_state["last_api_error"]
+
     payload = {"name": name, "scorer_type": scorer_type, "parameters": parameters}
     if generator_id:
         payload["generator_id"] = generator_id
@@ -568,11 +618,32 @@ def clone_scorer_via_api(scorer_id: str, new_name: str):
 
 def delete_scorer_via_api(scorer_id: str):
     """Delete a scorer via API"""
+    # Clear any previous error
+    if "last_api_error" in st.session_state:
+        del st.session_state["last_api_error"]
+
     url = API_ENDPOINTS["scorer_delete"].format(scorer_id=scorer_id)
     data = api_request("DELETE", url)
     if data and data.get("success"):
         return True, data.get("message", "Scorer deleted successfully")
-    return False, "Failed to delete scorer"
+
+    # Check for specific error details
+    error_msg = "Failed to delete scorer"
+    if "last_api_error" in st.session_state:
+        error_info = st.session_state["last_api_error"]
+        if error_info.get("status") == 404:
+            error_msg = "Scorer not found or already deleted"
+        elif error_info.get("status") == 403:
+            error_msg = "You don't have permission to delete this scorer"
+        elif error_info.get("status") == 500:
+            error_msg = "Server error while deleting scorer. Please try again."
+        else:
+            error_msg = error_info.get("message", error_msg)
+
+        # Clean up error state
+        del st.session_state["last_api_error"]
+
+    return False, error_msg
 
 
 def get_generators_from_api():
@@ -774,8 +845,33 @@ def render_scorer_parameters(scorer_type: str, category: str, test_cases: Dict[s
 
     # Scorer name input
     scorer_name = st.text_input(
-        "Unique Scorer Name*", key="scorer_name_input", help="A unique identifier for this scorer configuration"
+        "Unique Scorer Name*",
+        key="scorer_name_input",
+        help="A unique identifier for this scorer configuration. Only alphanumeric characters, underscores (_), and hyphens (-) are allowed. No spaces or periods.",
+        placeholder="e.g., scorer_TF_plain_gsaiSonnet3_5",
     )
+
+    # Validate scorer name on the client side
+    name_valid = True
+    if scorer_name:
+        import re
+
+        # Same pattern as backend: ^[a-zA-Z0-9_-]+$
+        if not re.match(r"^[a-zA-Z0-9_-]+$", scorer_name):
+            st.error("❌ Invalid scorer name format")
+            st.info(
+                "💡 Scorer names can only contain letters, numbers, underscores (_), and hyphens (-). No spaces or special characters."
+            )
+            # Show corrected suggestion
+            suggested_name = re.sub(r"[^a-zA-Z0-9_-]", "_", scorer_name)
+            st.code(f"Suggested: {suggested_name}")
+            name_valid = False
+        elif len(scorer_name) < 3:
+            st.error("❌ Scorer name must be at least 3 characters long")
+            name_valid = False
+        elif len(scorer_name) > 100:
+            st.error("❌ Scorer name must not exceed 100 characters")
+            name_valid = False
 
     # Get parameter definitions
     with st.spinner(f"Loading parameters for {scorer_type}..."):
@@ -819,12 +915,14 @@ def render_scorer_parameters(scorer_type: str, category: str, test_cases: Dict[s
                         generator_id = gen_id
 
     # Save and test button
-    if scorer_name and validation_passed:
+    if scorer_name and validation_passed and name_valid:
         if st.button("💾 Save and Test Scorer", type="primary", key="save_test_scorer"):
             save_and_test_scorer(scorer_name, scorer_type, parameters, category, test_cases, generator_id)
     else:
         if not scorer_name:
             st.info("💡 Enter a unique scorer name to continue")
+        elif not name_valid:
+            st.warning("⚠️ Please fix the scorer name format before continuing")
         elif not validation_passed:
             st.warning("⚠️ Please fill in all required parameters")
 
@@ -1573,6 +1671,56 @@ def save_and_test_scorer(
 
         if success:
             st.success(f"✅ Scorer '{scorer_name}' saved successfully!")
+        else:
+            # Check for specific validation errors
+            if "last_api_error" in st.session_state:
+                error_info = st.session_state["last_api_error"]
+                if error_info.get("status") == 422:
+                    st.error("❌ Validation Error")
+
+                    # Display specific field errors
+                    if "errors" in error_info:
+                        for err in error_info.get("errors", []):
+                            field = err.get("field", "unknown")
+                            msg = err.get("message", "validation error")
+                            if field == "name":
+                                st.error(f"📛 Scorer name: {msg}")
+                                st.info(
+                                    "💡 Tip: Use only letters, numbers, underscores (_), and hyphens (-). No spaces or periods allowed."
+                                )
+                                st.code(f"Example: {scorer_name.replace('.', '_')}")
+                            else:
+                                st.error(f"❌ {field}: {msg}")
+                    elif "detail" in error_info:
+                        # Handle old format
+                        detail = error_info.get("detail")
+                        if isinstance(detail, list) and len(detail) > 0:
+                            for err in detail:
+                                if isinstance(err, dict):
+                                    loc = err.get("loc", [])
+                                    msg = err.get("msg", "validation error")
+                                    field = loc[-1] if loc else "unknown"
+                                    if "name" in str(loc):
+                                        st.error(f"📛 Scorer name: {msg}")
+                                        st.info(
+                                            "💡 Tip: Use only letters, numbers, underscores (_), and hyphens (-). No spaces or periods allowed."
+                                        )
+                                        st.code(f"Example: {scorer_name.replace('.', '_')}")
+                                    else:
+                                        st.error(f"❌ {field}: {msg}")
+                                else:
+                                    st.error(f"❌ {err}")
+                        else:
+                            st.error(f"❌ {detail}")
+                else:
+                    st.error(
+                        f"❌ Failed to create scorer '{scorer_name}'. Please check your configuration and try again."
+                    )
+
+                # Clean up error state
+                del st.session_state["last_api_error"]
+            else:
+                st.error(f"❌ Failed to create scorer '{scorer_name}'. Please check the logs for details.")
 
             # Test with category - specific sample
             sample_inputs = test_cases.get(category, ["Sample text for testing"])
@@ -1597,8 +1745,6 @@ def save_and_test_scorer(
             # Refresh the page to show the new scorer
             load_scorers_from_api()
             st.rerun()
-        else:
-            st.error(f"❌ Failed to save scorer '{scorer_name}'")
 
 
 # --- Helper Functions ---
