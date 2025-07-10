@@ -335,8 +335,8 @@ class AutoCleanupManager:
             try:
                 loop = asyncio.get_event_loop()
                 loop.create_task(self.cleanup_on_failure(exc_val, "unknown"))
-            except:
-                # Fallback to synchronous cleanup
+            except RuntimeError:
+                # Fallback to synchronous cleanup if no event loop
                 for task in self.cleanup_tasks:
                     try:
                         if not asyncio.iscoroutinefunction(task):

@@ -194,7 +194,8 @@ class PerformanceMonitor:
 
     def _cleanup_old_data(self) -> None:
         """Clean up old monitoring data"""
-        cutoff_time = datetime.utcnow() - timedelta(hours=24)
+        # Note: cutoff_time would be used if we stored timestamps with timings
+        # cutoff_time = datetime.utcnow() - timedelta(hours=24)
 
         # Clean up operation timings older than 24 hours
         for operation, timings in self.operation_timings.items():

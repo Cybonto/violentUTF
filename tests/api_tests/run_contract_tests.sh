@@ -22,7 +22,7 @@ export KEYCLOAK_USERNAME="violentutf.test"
 export KEYCLOAK_PASSWORD="test_password"
 export KEYCLOAK_APISIX_CLIENT_ID="apisix-test"
 export KEYCLOAK_APISIX_CLIENT_SECRET="test_secret"
-export VIOLENTUTF_API_URL="http://localhost:8000"
+export VIOLENTUTF_API_URL="http://localhost:9080"
 export DUCKDB_PATH=":memory:"
 export PYRIT_DB_PATH=":memory:"
 

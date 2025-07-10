@@ -286,7 +286,7 @@ JWT_EXPIRATION_HOURS=24
 
 # API Configuration
 VIOLENTUTF_API_KEY=${api_key}
-VIOLENTUTF_API_URL=http://localhost:8000
+VIOLENTUTF_API_URL=http://localhost:9080
 
 # Keycloak Configuration
 KEYCLOAK_URL=http://localhost:8080
@@ -441,7 +441,7 @@ APISIX_BASE_URL=http://apisix-apisix-1:9080
 APISIX_ADMIN_URL=http://apisix-apisix-1:9180
 APISIX_ADMIN_KEY=$APISIX_ADMIN_KEY
 VIOLENTUTF_API_KEY=$VIOLENTUTF_API_KEY
-VIOLENTUTF_API_URL=http://localhost:8000
+VIOLENTUTF_API_URL=http://apisix-apisix-1:9080
 
 # Service Configuration
 DEFAULT_USERNAME=violentutf.web

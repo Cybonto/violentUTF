@@ -25,7 +25,7 @@ create_minimal_env_files() {
     cat > violentutf/.env << 'EOF'
 # Minimal .env for Docker build validation
 TESTING=true
-VIOLENTUTF_API_URL=http://localhost:8000
+VIOLENTUTF_API_URL=http://localhost:9080
 JWT_SECRET_KEY=docker_build_test_secret
 SECRET_KEY=docker_build_test_secret
 EOF

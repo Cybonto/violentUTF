@@ -5,13 +5,12 @@ Debug authentication flow for OpenAPI providers
 import os
 import sys
 
-import requests
-
 # Add the FastAPI app to path
 sys.path.insert(0, "/Users/tamnguyen/Documents/GitHub/ViolentUTF/violentutf_api/fastapi_app")
 
-from app.api.endpoints.generators import get_openapi_provider_config
-from app.core.config import settings
+import requests  # noqa: E402
+from app.api.endpoints.generators import get_openapi_provider_config  # noqa: E402
+from app.core.config import settings  # noqa: E402
 
 print("=== Debug OpenAPI Authentication Flow ===\n")
 

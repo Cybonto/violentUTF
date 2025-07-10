@@ -170,8 +170,8 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                     size_mb = os.path.getsize(filepath) / (1024 * 1024)
                     if size_mb > MAX_SIZE_MB:
                         large_files.append(f"{filepath}: {size_mb:.1f}MB")
-                except:
-                    pass
+                except (OSError, IOError):
+                    pass  # Skip files that can't be accessed
 
         if large_files:
             self.warnings.append(("Large files", "\n".join(large_files)))
@@ -204,8 +204,8 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                                 if pattern in content and '"""' not in content:
                                     # Basic check to avoid docstrings
                                     issues.append(f"{desc} in {filepath}")
-                    except:
-                        pass
+                    except (OSError, IOError, UnicodeDecodeError):
+                        pass  # Skip files that can't be read
 
         if issues:
             self.warnings.append(("Potential secrets", "\n".join(issues[:10])))
@@ -280,8 +280,8 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                                 "COPY . . without .dockerignore file",
                             )
                         )
-            except:
-                pass
+            except (OSError, IOError, UnicodeDecodeError):
+                pass  # Skip files that can't be read
 
         return True
 

@@ -49,7 +49,7 @@ class ValidationPatterns:
     # SECURITY CRITICAL: DO NOT MODIFY THESE PATTERNS
     # These regex patterns are security-critical and must not be modified by automated tools.
     # Any spaces added to character ranges (e.g., [A-Z] becoming [A - Z]) will break validation.
-    
+
     # Safe username pattern (alphanumeric, dash, underscore)
     USERNAME = re.compile(r"^[a-zA-Z0-9_-]+$")  # noqa: E501
 

@@ -268,7 +268,7 @@ class TestPerformanceContracts:
 
         for endpoint in endpoints:
             start_time = time.time()
-            response = test_client.get(endpoint, headers=test_headers)
+            _ = test_client.get(endpoint, headers=test_headers)  # Response not used, just timing
             end_time = time.time()
 
             response_time = end_time - start_time

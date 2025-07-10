@@ -88,7 +88,7 @@ st.markdown(
         color: #666666 !important;
         border-color: #cccccc !important;
     }
-    
+
     /* Ensure secondary buttons have proper contrast */
     .stButton > button[kind="secondary"] {
         background-color: #f8f9fa !important;
@@ -105,7 +105,7 @@ st.markdown(
         color: #6c757d !important;
         border-color: #dee2e6 !important;
     }
-    
+
     /* Default button styling for better contrast */
     .stButton > button {
         background-color: #f8f9fa !important;
@@ -117,7 +117,7 @@ st.markdown(
         color: #212529 !important;
         border-color: #adb5bd !important;
     }
-    
+
     /* Form submit buttons */
     .stFormSubmitButton > button {
         background-color: #1f77b4 !important;

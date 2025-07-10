@@ -106,7 +106,8 @@ def validate_common_patterns(filepath):
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
-    except:
+    except Exception as e:
+        warnings.append(f"Error reading file {filepath}: {e}")
         return warnings
 
     # Check for common pattern definitions
