@@ -96,13 +96,13 @@ class TestNaturalLanguageParser:
         # Test with phrases that match the actual patterns
         command = parser.parse("enhance this prompt")
         assert command.type == MCPCommandType.ENHANCE
-        
+
         command = parser.parse("analyze this prompt")
         assert command.type == MCPCommandType.ANALYZE
-        
+
         command = parser.parse("load dataset jailbreak")
         assert command.type == MCPCommandType.DATASET
-        
+
         command = parser.parse("hello world")
         assert command.type == MCPCommandType.UNKNOWN
 
