@@ -48,6 +48,6 @@ google-cloud-aiplatform
 huggingface-hub
 transformers
 torch>=2.7.1  # Fixed GHSA-887c-mr87-cxwp and GHSA-3749-ghw9-m3mg DoS vulnerabilities
-numpy>=1.26.4,<2.0.0  # Constrained for accelerate compatibility
+numpy>=1.26.4,<3.0.0  # Constrained for accelerate compatibility
 pandas
 scipy

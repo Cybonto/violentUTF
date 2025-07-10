@@ -40,6 +40,6 @@ google-cloud-aiplatform
 huggingface-hub
 transformers
 torch
-numpy>=1.26.4,<2.0.0  # Constrained for accelerate compatibility
+numpy>=1.26.4,<3.0.0  # Constrained for accelerate compatibility
 pandas
 scipy
