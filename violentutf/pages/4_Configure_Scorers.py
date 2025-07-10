@@ -203,20 +203,27 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
 
 
 def create_compatible_api_token():
-    """Create a FastAPI-compatible token using JWT manager"""
+    """Create a FastAPI-compatible token using JWT manager with user context standardization"""
     try:
         from utils.jwt_manager import jwt_manager
-        from utils.user_context import get_user_context_for_token
+        from utils.user_context_manager import UserContextManager
 
-        # Get consistent user context regardless of authentication source
-        user_context = get_user_context_for_token()
-        logger.info(f"Creating API token for consistent user: {user_context['preferred_username']}")
+        # Use the standardized user context manager
+        user_context = UserContextManager.get_user_context_for_token()
+        canonical_username = user_context["preferred_username"]
 
-        # Create token with consistent user context
+        logger.info(f"Creating API token for canonical user: {canonical_username}")
+
+        # Check if we already have a consistent token
+        if UserContextManager.verify_token_consistency():
+            logger.debug("Existing token is consistent with canonical username")
+            return st.session_state.get("api_token")
+
+        # Create token with canonical user context
         api_token = jwt_manager.create_token(user_context)
 
         if api_token:
-            logger.info("Successfully created API token using JWT manager")
+            logger.info(f"Successfully created API token for canonical user: {canonical_username}")
             # Store the token in session state for API calls
             st.session_state["api_token"] = api_token
             return api_token
@@ -707,6 +714,22 @@ def auto_load_generators():
             del st.session_state["force_reload_generators"]
 
 
+def auto_load_scorers():
+    """
+    Automatically load existing scorers on page load
+
+    This ensures that previously configured scorers are displayed
+    without requiring manual refresh.
+    """
+    # Always load scorers on page load to ensure we have the latest data
+    with st.spinner("Loading existing scorers..."):
+        data = load_scorers_from_api()
+        if data:
+            logger.info(f"Auto-loaded {len(st.session_state.api_scorers)} scorers")
+        else:
+            logger.info("No scorers found during auto-load")
+
+
 # --- Main Page Function ---
 def main():
     """Renders the Configure Scorers page content with API backend."""
@@ -731,6 +754,9 @@ def main():
 
     # Auto - load generators (like Configure Datasets page)
     auto_load_generators()
+
+    # Auto-load scorers to ensure they're displayed on page refresh
+    auto_load_scorers()
 
     # Main content
     render_main_content()

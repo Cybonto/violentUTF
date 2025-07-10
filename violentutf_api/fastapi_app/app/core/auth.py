@@ -168,21 +168,39 @@ class AuthMiddleware:
             if not payload:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-            # Extract user information
-            username = payload.get("sub")
-            if not username:
+            # Extract and normalize user information using standardized context manager
+            from app.core.user_context_manager import FastAPIUserContextManager
+
+            # Get canonical username (standardized across all operations)
+            canonical_username = FastAPIUserContextManager.extract_canonical_username(payload)
+            raw_username = payload.get("sub")
+
+            if not canonical_username:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
-            # IMPORTANT: Always use 'sub' claim as username, never 'name' or 'display_name'
-            # The 'name' field is a display name and using it causes data isolation issues
-            if "name" in payload:
-                logger.warning(f"JWT contains deprecated 'name' field: {payload.get('name')}, using sub: {username}")
-            if "display_name" in payload:
-                logger.debug(f"JWT contains display_name: {payload.get('display_name')}, using sub: {username}")
+            # Log username normalization for debugging
+            if canonical_username != raw_username:
+                logger.info(f"Normalized username: '{raw_username}' -> '{canonical_username}'")
 
-            # Create user with ONLY the username from 'sub' claim
-            user = User(username=username, email=payload.get("email"), roles=payload.get("roles", []), is_active=True)
-            logger.debug(f"Created User object with username: {user.username}")
+            # IMPORTANT: Always use canonical username for data isolation
+            # This prevents fragmentation of user data across different username formats
+            if "name" in payload:
+                logger.warning(
+                    f"JWT contains deprecated 'name' field: {payload.get('name')}, using canonical: {canonical_username}"
+                )
+            if "display_name" in payload:
+                logger.debug(
+                    f"JWT contains display_name: {payload.get('display_name')}, using canonical: {canonical_username}"
+                )
+
+            # Create user with canonical username for consistent data access
+            user = User(
+                username=canonical_username,
+                email=payload.get("email", f"{canonical_username}@violentutf.local"),
+                roles=payload.get("roles", []),
+                is_active=True,
+            )
+            logger.debug(f"Created User object with canonical username: {user.username}")
             return user
 
         except JWTError:
