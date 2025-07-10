@@ -78,12 +78,19 @@ jobs:
             if ('${{ steps.changed-files.outputs.test_any_changed }}' === 'true')
               labels.push('tests');
 
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: labels
-            });
+            // Try to add labels, but don't fail if we don't have permission
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: labels
+              });
+              console.log(`Successfully added labels: ${labels.join(', ')}`);
+            } catch (error) {
+              console.log(`Unable to add labels (${error.message}). This is expected for PRs from forks or with limited permissions.`);
+              // Don't fail the workflow, just log the issue
+            }
 
   # Fast Python linting
   python-lint:
