@@ -172,7 +172,9 @@ async def _get_local_dataset_prompts(dataset_config: Dict) -> List[str]:
     return text_prompts
 
 
-async def _get_memory_dataset_prompts(dataset_config: Dict, limit: Optional[int] = None, user_context: Optional[str] = None) -> List[str]:
+async def _get_memory_dataset_prompts(
+    dataset_config: Dict, limit: Optional[int] = None, user_context: Optional[str] = None
+) -> List[str]:
     """Get prompts from PyRIT memory dataset using real memory database access"""
     try:
         dataset_id = dataset_config.get("id", "memory_0")
