@@ -70,7 +70,9 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
                     username = user_info["username"]
                     email = user_info["email"]
                     roles = user_info["roles"]
-
+                    
+                    # Debug logging to track username consistency
+                    logger.info(f"Keycloak token verification - username: {username}, display_name: {user_info.get('name')}")
                     logger.info(f"Successfully verified Keycloak token for user: {username}")
 
                 except HTTPException:
@@ -88,12 +90,13 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
                 # Create our own JWT token with verified Keycloak information
                 access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
                 access_token_data = {
-                    "sub": username,
+                    "sub": username,  # ALWAYS use username from preferred_username, not display name
                     "email": email,
                     "roles": roles,
                     "keycloak_id": user_info["keycloak_id"],
                     "email_verified": user_info["email_verified"],
-                    "name": user_info.get("name"),
+                    # Note: We include 'name' for display purposes only, never use it as username
+                    "display_name": user_info.get("name"),  # Renamed to make it clear this is NOT the username
                     "session_state": user_info.get("session_state"),
                     "verified_by_keycloak": True,  # Mark as cryptographically verified
                     "keycloak_iat": user_info["issued_at"],

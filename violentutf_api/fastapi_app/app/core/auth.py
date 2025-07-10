@@ -173,8 +173,17 @@ class AuthMiddleware:
             if not username:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
-            # Return user object
-            return User(username=username, email=payload.get("email"), roles=payload.get("roles", []), is_active=True)
+            # IMPORTANT: Always use 'sub' claim as username, never 'name' or 'display_name'
+            # The 'name' field is a display name and using it causes data isolation issues
+            if "name" in payload:
+                logger.warning(f"JWT contains deprecated 'name' field: {payload.get('name')}, using sub: {username}")
+            if "display_name" in payload:
+                logger.debug(f"JWT contains display_name: {payload.get('display_name')}, using sub: {username}")
+
+            # Create user with ONLY the username from 'sub' claim
+            user = User(username=username, email=payload.get("email"), roles=payload.get("roles", []), is_active=True)
+            logger.debug(f"Created User object with username: {user.username}")
+            return user
 
         except JWTError:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate token")
