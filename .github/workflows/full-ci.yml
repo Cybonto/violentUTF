@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload coverage reports
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-reports
           path: |
@@ -202,7 +202,7 @@ jobs:
           python -m memory_profiler tests/memory_tests.py > memory-profile.txt || true
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: performance-results
           path: |
@@ -339,7 +339,7 @@ jobs:
 
       - name: Upload service logs
         if: always()
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: integration-logs
           path: docker-services.log
@@ -403,7 +403,7 @@ jobs:
           vulture . >> analysis-report.md || true
 
       - name: Upload analysis report
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: code-analysis
           path: |
@@ -439,7 +439,7 @@ jobs:
           tar -czf violentutf-release.tar.gz release-package/
 
       - name: Upload release artifacts
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-artifacts
           path: |
