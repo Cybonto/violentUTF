@@ -68,14 +68,14 @@ jobs:
             else labels.push('size/XL');
 
             // Add type labels based on changed files
-            const changedFiles = ${{ toJson(steps.changed-files.outputs) }};
-            if (changedFiles.python_any_changed === 'true')
+            // Use individual outputs to avoid argument list too long error
+            if ('${{ steps.changed-files.outputs.python_any_changed }}' === 'true')
               labels.push('python');
-            if (changedFiles.docker_any_changed === 'true')
+            if ('${{ steps.changed-files.outputs.docker_any_changed }}' === 'true')
               labels.push('docker');
-            if (changedFiles.docs_any_changed === 'true')
+            if ('${{ steps.changed-files.outputs.docs_any_changed }}' === 'true')
               labels.push('documentation');
-            if (changedFiles.test_any_changed === 'true')
+            if ('${{ steps.changed-files.outputs.test_any_changed }}' === 'true')
               labels.push('tests');
 
             await github.rest.issues.addLabels({
