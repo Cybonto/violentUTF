@@ -100,7 +100,7 @@ jobs:
               ref = context.ref;
               console.log(`Using context ref: ${ref}`);
             }
-            
+
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -131,7 +131,7 @@ jobs:
               ref = context.ref;
               console.log(`Using context ref: ${ref}`);
             }
-            
+
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -162,7 +162,7 @@ jobs:
               ref = context.ref;
               console.log(`Using context ref: ${ref}`);
             }
-            
+
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -194,7 +194,7 @@ jobs:
               ref = context.ref;
               console.log(`Using context ref: ${ref}`);
             }
-            
+
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,

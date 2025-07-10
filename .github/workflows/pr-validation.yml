@@ -184,20 +184,20 @@ jobs:
           pip install httpx pytest pytest-asyncio pydantic
           pip install jsonschema openapi-spec-validator
           pip install PyJWT fastapi uvicorn
-          
+
           # Install additional test dependencies first
           if [ -f tests/requirements.txt ]; then
             echo "Installing test requirements..."
             pip install -r tests/requirements.txt || echo "Warning: Some test dependencies failed to install"
           fi
-          
+
           # Install API specific requirements - but skip heavy ML dependencies for contract testing
           if [ -f violentutf_api/requirements.txt ]; then
             echo "Installing API requirements (minimal)..."
             # For contract testing, we only need the web framework dependencies
             pip install fastapi uvicorn pydantic sqlalchemy alembic python-multipart || echo "Warning: Some API dependencies failed to install"
           fi
-          
+
           # Verify key packages are installed
           echo "Verifying installations..."
           python -c "import pytest; print(f'pytest version: {pytest.__version__}')" || echo "pytest not installed"
@@ -216,7 +216,7 @@ jobs:
           echo "CONTRACT_TESTING=true" >> $GITHUB_ENV
           echo "DATABASE_URL=postgresql://violentutf_test:postgres_test_password@localhost:5432/violentutf_test" >> $GITHUB_ENV
           echo "PYTHONPATH=$PYTHONPATH:." >> $GITHUB_ENV
-          
+
           # Create test .env file for FastAPI app
           mkdir -p violentutf_api/fastapi_app
           cat > violentutf_api/fastapi_app/.env << 'EOF'
@@ -229,7 +229,7 @@ jobs:
           KEYCLOAK_REALM=ViolentUTF-Test
           VIOLENTUTF_API_KEY=test_api_key_for_contract_testing
           EOF
-          
+
           echo "Test environment configured"
 
       - name: Generate OpenAPI schema
@@ -244,14 +244,14 @@ jobs:
         run: |
           # Generate OpenAPI schema from FastAPI app
           echo "Attempting to generate OpenAPI schema..."
-          
+
           # First, check if we can find the FastAPI app
           if [ -f violentutf_api/fastapi_app/app/main.py ]; then
             echo "FastAPI app found at violentutf_api/fastapi_app/app/main.py"
           else
             echo "Warning: FastAPI app not found at expected location"
           fi
-          
+
           # Try using the generate_openapi_schema.py script if it exists
           if [ -f tests/api_tests/generate_openapi_schema.py ]; then
             echo "Using generate_openapi_schema.py script..."
@@ -283,7 +283,7 @@ jobs:
           import os
           import json
           sys.path.insert(0, '.')
-          
+
           # Set all required environment variables
           os.environ.update({
               'TESTING': 'true',
@@ -293,7 +293,7 @@ jobs:
               'DATABASE_URL': 'postgresql://violentutf_test:postgres_test_password@localhost:5432/violentutf_test',
               'VIOLENTUTF_API_KEY': 'test_api_key_for_contract_testing'
           })
-          
+
           try:
               from violentutf_api.fastapi_app.app.main import app
               schema = app.openapi()
@@ -334,7 +334,7 @@ jobs:
                   json.dump(minimal_schema, f, indent=2)
           " || echo "Python schema generation completed"
           fi
-          
+
           # Verify the schema was created
           if [ -f generated_openapi.json ]; then
             echo "OpenAPI schema file created successfully"
@@ -348,7 +348,7 @@ jobs:
         run: |
           # Run enhanced OpenAPI schema validation
           echo "Running OpenAPI schema validation..."
-          
+
           # Check if validation script exists
           if [ -f tests/api_tests/validate_openapi_schemas.py ]; then
             python tests/api_tests/validate_openapi_schemas.py || {
@@ -358,7 +358,7 @@ jobs:
           else
             echo "Warning: validate_openapi_schemas.py not found, skipping validation"
           fi
-          
+
           # Always continue to contract tests even if validation fails
           echo "OpenAPI validation step completed"
 
@@ -374,20 +374,20 @@ jobs:
         run: |
           # Run API specific tests with contract testing environment
           echo "Checking for API contract tests..."
-          
+
           # List available test files
           if [ -d tests/api_tests ]; then
             echo "Test files in tests/api_tests:"
             ls -la tests/api_tests/ || echo "Could not list test directory"
-            
+
             # Check for specific contract test files
             if [ -f tests/api_tests/test_contract_validation.py ]; then
               echo "Found contract validation tests"
             fi
-            
+
             # Run contract tests - try different test files
             echo "Running API contract tests..."
-            
+
             # First try the basic contract tests (should always work)
             if [ -f tests/api_tests/test_basic_contract.py ]; then
               echo "Running basic contract tests..."
@@ -395,21 +395,21 @@ jobs:
                 echo "Basic contract tests failed, trying other contract tests..."
               }
             fi
-            
+
             # Then try the full contract validation tests if available
             if [ -f tests/api_tests/test_contract_validation.py ]; then
               echo "Running full contract validation tests..."
               python -m pytest tests/api_tests/test_contract_validation.py -v --tb=short --junit-xml=contract-test-results-full.xml -m "contract" || {
                 exit_code=$?
                 echo "Full contract tests completed with exit code: $exit_code"
-                
+
                 # Check if it's just no tests collected
                 if [ $exit_code -eq 5 ]; then
                   echo "No contract tests were collected from test_contract_validation.py"
                 fi
               }
             fi
-            
+
             # Run any test marked with contract
             echo "Running all contract-marked tests..."
             python -m pytest tests/api_tests/ -v --tb=short -m "contract" -k "contract" --junit-xml=contract-test-results-all.xml || {
@@ -420,7 +420,7 @@ jobs:
                 python -m pytest tests/api_tests/test_basic_contract.py::test_contract_testing_enabled -v || echo "Fallback test also failed"
               fi
             }
-            
+
             # Check if we have any test results
             if [ -f contract-test-results.xml ] || [ -f contract-test-results-full.xml ] || [ -f contract-test-results-all.xml ]; then
               echo "Contract test results generated"
@@ -457,7 +457,7 @@ jobs:
           </testsuites>
           EOF
           fi
-          
+
           echo "API contract test step completed"
 
       - name: Upload test results
@@ -494,7 +494,7 @@ jobs:
         run: |
           # Create minimal .env files and configuration files that Docker expects
           echo "Creating minimal .env files and configs for Docker validation..."
-          
+
           # Main violentutf .env
           cat > violentutf/.env << 'EOF'
           # Minimal .env for Docker build validation
@@ -503,7 +503,7 @@ jobs:
           JWT_SECRET_KEY=docker_build_test_secret
           SECRET_KEY=docker_build_test_secret
           EOF
-          
+
           # FastAPI .env
           mkdir -p violentutf_api/fastapi_app
           cat > violentutf_api/fastapi_app/.env << 'EOF'
@@ -516,17 +516,17 @@ jobs:
           APISIX_BASE_URL=http://localhost:9080
           APISIX_ADMIN_URL=http://localhost:9180
           EOF
-          
+
           # Keycloak .env
           cat > keycloak/.env << 'EOF'
           # Minimal .env for Docker build validation
           POSTGRES_PASSWORD=docker_test_password
           KEYCLOAK_ADMIN_PASSWORD=docker_test_admin_password
           EOF
-          
+
           # APISIX configuration directory and files
           mkdir -p apisix/conf
-          
+
           # APISIX config.yaml
           cat > apisix/conf/config.yaml << 'EOF'
           apisix:
@@ -542,7 +542,7 @@ jobs:
             host:
               - "http://etcd:2379"
           EOF
-          
+
           # APISIX dashboard config
           cat > apisix/conf/dashboard.yaml << 'EOF'
           conf:
@@ -553,7 +553,7 @@ jobs:
               endpoints:
                 - "http://etcd:2379"
           EOF
-          
+
           # Prometheus config
           cat > apisix/conf/prometheus.yml << 'EOF'
           global:
@@ -563,13 +563,13 @@ jobs:
               static_configs:
                 - targets: ['apisix:9091']
           EOF
-          
+
           # APISIX .env
           cat > apisix/.env << 'EOF'
           # Minimal .env for Docker build validation
           APISIX_ADMIN_KEY=docker_test_admin_key
           EOF
-          
+
           echo "Minimal .env files and configs created for Docker validation"
 
       - name: Validate Docker Compose
@@ -597,10 +597,10 @@ jobs:
         run: |
           # Build main services with minimal environment
           echo "Building Docker images for validation..."
-          
+
           # Create external network required by docker-compose files
           docker network create vutf-network || echo "Network may already exist"
-          
+
           # Build FastAPI service from APISIX stack
           if [ -f "apisix/docker-compose.yml" ]; then
             echo "Building FastAPI service from APISIX stack..."
@@ -608,19 +608,19 @@ jobs:
             docker compose build fastapi || echo "Warning: FastAPI build failed but continuing"
             cd ..
           fi
-          
+
           # Try to build other Docker images if Dockerfiles exist
           echo "Looking for other Dockerfiles to build..."
           if [ -f "violentutf/Dockerfile" ]; then
             echo "Building violentutf image..."
             docker build -t violentutf:test violentutf/ || echo "Warning: violentutf build failed but continuing"
           fi
-          
+
           if [ -f "violentutf_api/fastapi_app/Dockerfile" ]; then
             echo "Building violentutf_api image directly..."
             docker build -t violentutf_api:test violentutf_api/fastapi_app/ || echo "Warning: violentutf_api build failed but continuing"
           fi
-          
+
           echo "Docker build validation completed"
 
       - name: Run Docker security scan
@@ -639,7 +639,7 @@ jobs:
               trivy image --severity HIGH,CRITICAL "$image" || echo "Warning: Security scan failed for $image but continuing"
             fi
           done
-          
+
           # If no images were built, still mark as successful
           image_count=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "violentutf|api|fastapi" | wc -l)
           if [ "$image_count" -eq "0" ]; then
