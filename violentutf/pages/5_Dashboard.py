@@ -370,8 +370,191 @@ def parse_scorer_results(executions: List[Dict[str, Any]]) -> List[Dict[str, Any
 # --- Metrics Calculation Functions ---
 
 
+def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Calculate hierarchical metrics accounting for batch operations.
+
+    This function properly counts test runs, batches, and scores while
+    handling edge cases like missing batch metadata.
+    """
+    if not results:
+        return {
+            "test_runs": 0,
+            "total_batches": 0,
+            "total_scores": 0,
+            "completion_rate": 0.0,
+            "avg_batches_per_run": 0.0,
+            "avg_scores_per_batch": 0.0,
+            "execution_details": {},
+            "incomplete_executions": [],
+        }
+
+    # Group results by execution_id
+    execution_groups = defaultdict(list)
+    for result in results:
+        exec_id = result.get("execution_id")
+        if exec_id:
+            execution_groups[exec_id].append(result)
+
+    # Calculate metrics for each execution
+    execution_details = {}
+    total_batches = 0
+    completed_executions = 0
+    incomplete_executions = []
+
+    for exec_id, exec_results in execution_groups.items():
+        # Identify unique batches in this execution
+        batch_info = {}
+        execution_name = exec_results[0].get("execution_name", "Unknown")
+
+        for r in exec_results:
+            # Handle missing batch metadata gracefully
+            batch_idx = r.get("batch_index", 0)
+            total_b = r.get("total_batches", 1)
+            batch_key = (batch_idx, total_b)
+
+            if batch_key not in batch_info:
+                batch_info[batch_key] = {
+                    "scores": 0,
+                    "first_timestamp": r.get("timestamp"),
+                    "last_timestamp": r.get("timestamp"),
+                    "scorers": set(),
+                    "generators": set(),
+                }
+
+            batch_info[batch_key]["scores"] += 1
+            batch_info[batch_key]["scorers"].add(r.get("scorer_name", "Unknown"))
+            batch_info[batch_key]["generators"].add(r.get("generator_name", "Unknown"))
+
+            # Update timestamps
+            if r.get("timestamp"):
+                current_ts = r["timestamp"]
+                if isinstance(current_ts, str):
+                    current_ts = datetime.fromisoformat(current_ts.replace("Z", "+00:00"))
+
+                if batch_info[batch_key]["first_timestamp"] is None:
+                    batch_info[batch_key]["first_timestamp"] = current_ts
+                elif isinstance(batch_info[batch_key]["first_timestamp"], str):
+                    batch_info[batch_key]["first_timestamp"] = datetime.fromisoformat(
+                        batch_info[batch_key]["first_timestamp"].replace("Z", "+00:00")
+                    )
+
+                if current_ts < batch_info[batch_key]["first_timestamp"]:
+                    batch_info[batch_key]["first_timestamp"] = current_ts
+
+                # Also convert last_timestamp if it's a string
+                if isinstance(batch_info[batch_key]["last_timestamp"], str):
+                    batch_info[batch_key]["last_timestamp"] = datetime.fromisoformat(
+                        batch_info[batch_key]["last_timestamp"].replace("Z", "+00:00")
+                    )
+
+                if current_ts > batch_info[batch_key]["last_timestamp"]:
+                    batch_info[batch_key]["last_timestamp"] = current_ts
+
+        # Calculate execution-level metrics
+        unique_batches = len(batch_info)
+        expected_batches = max([b[1] for b in batch_info.keys()], default=1)
+        actual_batch_indices = set([b[0] for b in batch_info.keys()])
+        completed = len(actual_batch_indices) == expected_batches
+
+        # Calculate execution duration if timestamps available
+        all_timestamps = []
+        for bi in batch_info.values():
+            if bi["first_timestamp"]:
+                all_timestamps.append(bi["first_timestamp"])
+            if bi["last_timestamp"]:
+                all_timestamps.append(bi["last_timestamp"])
+
+        execution_duration = None
+        if all_timestamps:
+            execution_duration = max(all_timestamps) - min(all_timestamps)
+
+        execution_details[exec_id] = {
+            "name": execution_name,
+            "unique_batches": unique_batches,
+            "expected_batches": expected_batches,
+            "completed": completed,
+            "completion_percentage": (
+                (len(actual_batch_indices) / expected_batches * 100) if expected_batches > 0 else 0
+            ),
+            "batch_info": {
+                str(k): {"scores": v["scores"], "scorers": list(v["scorers"]), "generators": list(v["generators"])}
+                for k, v in batch_info.items()
+            },
+            "total_scores": len(exec_results),
+            "execution_duration": str(execution_duration) if execution_duration else None,
+        }
+
+        total_batches += unique_batches
+        if completed:
+            completed_executions += 1
+        else:
+            incomplete_executions.append(
+                {
+                    "execution_id": exec_id,
+                    "name": execution_name,
+                    "completed_batches": len(actual_batch_indices),
+                    "expected_batches": expected_batches,
+                    "completion_percentage": execution_details[exec_id]["completion_percentage"],
+                }
+            )
+
+    # Calculate aggregate metrics
+    test_runs = len(execution_groups)
+    total_scores = len(results)
+    completion_rate = (completed_executions / test_runs * 100) if test_runs > 0 else 0.0
+    avg_batches_per_run = total_batches / test_runs if test_runs > 0 else 0.0
+    avg_scores_per_batch = total_scores / total_batches if total_batches > 0 else 0.0
+
+    # Calculate throughput if we have timing data
+    total_duration_seconds = 0
+    executions_with_duration = 0
+    for details in execution_details.values():
+        if details.get("execution_duration"):
+            try:
+                # Parse duration string back to timedelta
+                duration_str = details["execution_duration"]
+                if ":" in duration_str:
+                    parts = duration_str.split(":")
+                    hours = int(parts[0]) if len(parts) > 2 else 0
+                    minutes = int(parts[1] if len(parts) > 2 else parts[0])
+                    seconds = float(parts[2] if len(parts) > 2 else parts[1])
+                    total_seconds = hours * 3600 + minutes * 60 + seconds
+                    total_duration_seconds += total_seconds
+                    executions_with_duration += 1
+            except:
+                pass
+
+    avg_throughput = None
+    if total_duration_seconds > 0 and executions_with_duration > 0:
+        avg_duration_per_execution = total_duration_seconds / executions_with_duration
+        # Scores per minute
+        avg_throughput = (
+            (total_scores / executions_with_duration) / (avg_duration_per_execution / 60)
+            if avg_duration_per_execution > 0
+            else None
+        )
+
+    return {
+        "test_runs": test_runs,
+        "total_batches": total_batches,
+        "total_scores": total_scores,
+        "completion_rate": completion_rate,
+        "completed_executions": completed_executions,
+        "incomplete_executions_count": len(incomplete_executions),
+        "avg_batches_per_run": avg_batches_per_run,
+        "avg_scores_per_batch": avg_scores_per_batch,
+        "avg_throughput_per_minute": avg_throughput,
+        "execution_details": execution_details,
+        "incomplete_executions": incomplete_executions,
+    }
+
+
 def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Calculate comprehensive metrics from scorer results"""
+    # First, get hierarchical metrics
+    hierarchical_metrics = calculate_hierarchical_metrics(results)
+
     if not results:
         return {
             "total_executions": 0,
@@ -384,6 +567,7 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
             "scorer_performance": {},
             "generator_risk_profile": {},
             "temporal_patterns": {},
+            "hierarchical_metrics": hierarchical_metrics,
         }
 
     # Basic counts
@@ -391,7 +575,7 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
     unique_scorers = len(set(r["scorer_name"] for r in results))
     unique_generators = len(set(r["generator_name"] for r in results))
     unique_datasets = len(set(r["dataset_name"] for r in results))
-    unique_executions = len(set(r["execution_id"] for r in results))
+    unique_executions = hierarchical_metrics["test_runs"]  # Use hierarchical count
 
     # Violation analysis
     violations = 0
@@ -451,6 +635,7 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
         "scorer_performance": dict(scorer_performance),
         "generator_risk_profile": dict(generator_risk),
         "temporal_patterns": temporal_patterns,
+        "hierarchical_metrics": hierarchical_metrics,
     }
 
 
@@ -498,36 +683,141 @@ def render_executive_dashboard(metrics: Dict[str, Any]):
     """Render executive-level dashboard with key metrics"""
     st.header("📊 Executive Summary")
 
-    # Key metrics row
-    col1, col2, col3, col4, col5 = st.columns(5)
+    # Get hierarchical metrics if available
+    hierarchical_metrics = metrics.get("hierarchical_metrics", {})
 
-    with col1:
-        st.metric("Total Executions", f"{metrics['total_executions']:,}", help="Number of unique test executions")
+    if hierarchical_metrics:
+        # First row - Core hierarchical metrics
+        col1, col2, col3, col4, col5 = st.columns(5)
 
-    with col2:
-        st.metric("Total Scores", f"{metrics['total_scores']:,}", help="Total number of scores generated")
+        with col1:
+            st.metric(
+                "🎯 Test Runs",
+                f"{hierarchical_metrics['test_runs']:,}",
+                help="Number of unique security testing campaigns executed",
+            )
 
-    with col3:
-        violation_rate = metrics["violation_rate"]
-        st.metric(
-            "Violation Rate",
-            f"{violation_rate:.1f}%",
-            delta=f"{violation_rate - 50:.1f}%" if violation_rate != 0 else None,
-            delta_color="inverse",
-            help="Percentage of tests that detected violations",
-        )
+        with col2:
+            st.metric(
+                "📦 Batch Operations",
+                f"{hierarchical_metrics['total_batches']:,}",
+                delta=f"~{hierarchical_metrics['avg_batches_per_run']:.1f} per run",
+                help="Total processing batches across all test runs",
+            )
 
-    with col4:
-        defense_score = 100 - violation_rate
-        color = "🟢" if defense_score >= 80 else "🟡" if defense_score >= 60 else "🔴"
-        st.metric("Defense Score", f"{color} {defense_score:.0f}/100", help="Overall system defense effectiveness")
+        with col3:
+            st.metric(
+                "📊 Score Results",
+                f"{hierarchical_metrics['total_scores']:,}",
+                delta=f"~{hierarchical_metrics['avg_scores_per_batch']:.0f} per batch",
+                help="Individual security assessments performed",
+            )
 
-    with col5:
-        critical_count = metrics["severity_breakdown"].get("critical", 0)
-        high_count = metrics["severity_breakdown"].get("high", 0)
-        st.metric(
-            "Critical/High", f"{critical_count + high_count:,}", help="Number of critical and high severity findings"
-        )
+        with col4:
+            completion_rate = hierarchical_metrics["completion_rate"]
+            color = "🟢" if completion_rate >= 95 else "🟡" if completion_rate >= 80 else "🔴"
+            st.metric(
+                "⚡ Completion Rate",
+                f"{color} {completion_rate:.1f}%",
+                delta=(
+                    f"{hierarchical_metrics['incomplete_executions_count']} incomplete"
+                    if hierarchical_metrics["incomplete_executions_count"] > 0
+                    else "All complete"
+                ),
+                delta_color="inverse" if hierarchical_metrics["incomplete_executions_count"] > 0 else "off",
+                help="Percentage of test runs that completed all expected batches",
+            )
+
+        with col5:
+            if hierarchical_metrics.get("avg_throughput_per_minute"):
+                st.metric(
+                    "⚙️ Throughput",
+                    f"{hierarchical_metrics['avg_throughput_per_minute']:.0f}/min",
+                    help="Average scores processed per minute",
+                )
+            else:
+                # Fall back to violation rate
+                violation_rate = metrics.get("violation_rate", 0.0)
+                st.metric(
+                    "Violation Rate",
+                    f"{violation_rate:.1f}%",
+                    delta=f"{violation_rate - 50:.1f}%" if violation_rate != 0 else None,
+                    delta_color="inverse",
+                    help="Percentage of tests that detected violations",
+                )
+
+        # Second row - Additional insights
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric(
+                "Unique Scorers", f"{metrics['unique_scorers']:,}", help="Number of different security scorers used"
+            )
+
+        with col2:
+            st.metric(
+                "Unique Generators", f"{metrics['unique_generators']:,}", help="Number of different AI models tested"
+            )
+
+        with col3:
+            defense_score = 100 - metrics.get("violation_rate", 0)
+            color = "🟢" if defense_score >= 80 else "🟡" if defense_score >= 60 else "🔴"
+            st.metric("Defense Score", f"{color} {defense_score:.0f}/100", help="Overall system defense effectiveness")
+
+        with col4:
+            critical_count = metrics.get("severity_breakdown", {}).get("critical", 0)
+            high_count = metrics.get("severity_breakdown", {}).get("high", 0)
+            st.metric(
+                "Critical/High",
+                f"{critical_count + high_count:,}",
+                help="Number of critical and high severity findings",
+            )
+
+        # Show incomplete executions if any
+        if hierarchical_metrics.get("incomplete_executions"):
+            with st.expander(f"⚠️ Incomplete Executions ({len(hierarchical_metrics['incomplete_executions'])})"):
+                incomplete_df = pd.DataFrame(hierarchical_metrics["incomplete_executions"])
+                incomplete_df["completion_bar"] = incomplete_df["completion_percentage"].apply(
+                    lambda x: f"{'█' * int(x/10)}{'░' * (10-int(x/10))} {x:.0f}%"
+                )
+                st.dataframe(
+                    incomplete_df[["name", "execution_id", "completed_batches", "expected_batches", "completion_bar"]],
+                    hide_index=True,
+                    use_container_width=True,
+                )
+    else:
+        # Fallback to original metrics display if hierarchical metrics not available
+        col1, col2, col3, col4, col5 = st.columns(5)
+
+        with col1:
+            st.metric("Total Executions", f"{metrics['total_executions']:,}", help="Number of unique test executions")
+
+        with col2:
+            st.metric("Total Scores", f"{metrics['total_scores']:,}", help="Total number of scores generated")
+
+        with col3:
+            violation_rate = metrics["violation_rate"]
+            st.metric(
+                "Violation Rate",
+                f"{violation_rate:.1f}%",
+                delta=f"{violation_rate - 50:.1f}%" if violation_rate != 0 else None,
+                delta_color="inverse",
+                help="Percentage of tests that detected violations",
+            )
+
+        with col4:
+            defense_score = 100 - violation_rate
+            color = "🟢" if defense_score >= 80 else "🟡" if defense_score >= 60 else "🔴"
+            st.metric("Defense Score", f"{color} {defense_score:.0f}/100", help="Overall system defense effectiveness")
+
+        with col5:
+            critical_count = metrics["severity_breakdown"].get("critical", 0)
+            high_count = metrics["severity_breakdown"].get("high", 0)
+            st.metric(
+                "Critical/High",
+                f"{critical_count + high_count:,}",
+                help="Number of critical and high severity findings",
+            )
 
     # Severity distribution
     st.subheader("🎯 Severity Distribution")
@@ -810,9 +1100,14 @@ def render_detailed_results_table(results: List[Dict[str, Any]]):
     if filtered_results:
         display_data = []
         for r in filtered_results:
+            # Add batch information
+            batch_info = f"{r.get('batch_index', 0) + 1}/{r.get('total_batches', 1)}"
+
             display_data.append(
                 {
                     "Timestamp": r["timestamp"],
+                    "Execution": r.get("execution_name", "Unknown"),
+                    "Batch": batch_info,
                     "Scorer": r["scorer_name"],
                     "Generator": r["generator_name"],
                     "Dataset": r["dataset_name"],
@@ -831,6 +1126,8 @@ def render_detailed_results_table(results: List[Dict[str, Any]]):
         # Configure column display
         column_config = {
             "Timestamp": st.column_config.DatetimeColumn("Time", format="DD/MM/YYYY HH:mm:ss"),
+            "Execution": st.column_config.TextColumn("Execution", width="medium"),
+            "Batch": st.column_config.TextColumn("Batch", width="small", help="Current batch / Total batches"),
             "Severity": st.column_config.TextColumn("Severity", width="small"),
             "Rationale": st.column_config.TextColumn("Rationale", width="large"),
         }
