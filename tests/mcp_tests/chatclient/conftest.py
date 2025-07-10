@@ -2,8 +2,8 @@
 Local conftest for MCP client tests
 """
 
-import sys
 import os
+import sys
 
 # Add violentutf directory to Python path
 violentutf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../violentutf"))

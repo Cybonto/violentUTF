@@ -4,13 +4,14 @@ Token management utilities for ViolentUTF Keycloak integration.
 Handles JWT token extraction, validation, and APISIX endpoint access.
 """
 
-import os
-import streamlit as st
-import requests
-import jwt
-import time
-from typing import Optional, Dict, Any
 import logging
+import os
+import time
+from typing import Any, Dict, Optional
+
+import jwt
+import requests
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +39,11 @@ class TokenManager:
                 "o4-mini": "/ai/openai/o4-mini",
             },
             "anthropic": {
-                "claude-3-opus-20240229": "/ai/anthropic/opus",
-                "claude-3-sonnet-20240229": "/ai/anthropic/sonnet",
-                "claude-3-haiku-20240307": "/ai/anthropic/haiku",
-                "claude-3-5-sonnet-20241022": "/ai/anthropic/sonnet35",
-                "claude-3-5-haiku-20241022": "/ai/anthropic/haiku35",
+                "claude-3-opus-20240229": "/ai/anthropic/claude3-opus",
+                "claude-3-sonnet-20240229": "/ai/anthropic/claude3-sonnet",
+                "claude-3-haiku-20240307": "/ai/anthropic/claude3-haiku",
+                "claude-3-5-sonnet-20241022": "/ai/anthropic/claude35-sonnet",
+                "claude-3-5-haiku-20241022": "/ai/anthropic/claude35-haiku",
                 "claude-3-7-sonnet-latest": "/ai/anthropic/sonnet37",
                 "claude-sonnet-4-20250514": "/ai/anthropic/sonnet4",
                 "claude-opus-4-20250514": "/ai/anthropic/opus4",
@@ -54,6 +55,16 @@ class TokenManager:
                 "llama3": "/ai/ollama/llama3",
             },
             "webui": {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"},
+            "gsai": {
+                "claude_3_5_sonnet": "/ai/gsai-api-1/chat/completions",
+                "claude_3_7_sonnet": "/ai/gsai-api-1/chat/completions",
+                "claude_3_haiku": "/ai/gsai-api-1/chat/completions",
+                "llama3211b": "/ai/gsai-api-1/chat/completions",
+                "cohere_english_v3": "/ai/gsai-api-1/chat/completions",
+                "gemini-2.0-flash": "/ai/gsai-api-1/chat/completions",
+                "gemini-2.0-flash-lite": "/ai/gsai-api-1/chat/completions",
+                "gemini-2.5-pro-preview-05-06": "/ai/gsai-api-1/chat/completions",
+            },
             "bedrock": {
                 "claude-opus-4": "/ai/bedrock/claude-opus-4",
                 "claude-sonnet-4": "/ai/bedrock/claude-sonnet-4",
@@ -218,8 +229,9 @@ class TokenManager:
         Since the user is already authenticated via Streamlit OAuth, we'll use
         the password grant with the configured user credentials.
         """
-        import requests
         import os
+
+        import requests
 
         try:
             token_url = self.keycloak_config.get(
@@ -434,7 +446,7 @@ class TokenManager:
 
     def _parse_ai_routes(self, routes_data: Dict) -> Dict[str, Dict[str, str]]:
         """Parse APISIX routes response to extract AI model endpoints."""
-        endpoints = {"openai": {}, "anthropic": {}, "ollama": {}, "webui": {}, "bedrock": {}}
+        endpoints = {"openai": {}, "anthropic": {}, "ollama": {}, "webui": {}, "bedrock": {}, "gsai": {}}
 
         try:
             routes_list = routes_data.get("list", [])
@@ -445,12 +457,26 @@ class TokenManager:
                 uri = route.get("uri", "")
                 plugins = route.get("plugins", {})
 
-                # Check if this is an AI proxy route
-                if "ai-proxy" in plugins and uri.startswith("/ai/"):
-                    provider, model_info = self._extract_provider_model(route_id, uri)
-                    if provider and model_info:
-                        model_name, endpoint_path = model_info
-                        endpoints[provider][model_name] = endpoint_path
+                # Check if this is an AI proxy route or GSAi proxy-rewrite route
+                is_ai_proxy = "ai-proxy" in plugins
+                is_gsai_proxy_rewrite = "proxy-rewrite" in plugins and "gsai" in uri
+
+                if (is_ai_proxy or is_gsai_proxy_rewrite) and uri.startswith("/ai/"):
+                    # Special handling for GSAi routes which use single endpoint for all models
+                    if uri == "/ai/gsai-api-1/chat/completions" and route_id in [
+                        "9001",
+                        "gsai-static-chat-completions",
+                        "gsai-api-1-chat-completions",
+                    ]:
+                        # Add all GSAi models to the same endpoint
+                        for model in self.fallback_apisix_endpoints.get("gsai", {}).keys():
+                            endpoints["gsai"][model] = uri
+                    else:
+                        # Standard provider/model extraction
+                        provider, model_info = self._extract_provider_model(route_id, uri)
+                        if provider and model_info:
+                            model_name, endpoint_path = model_info
+                            endpoints[provider][model_name] = endpoint_path
 
         except Exception as e:
             logger.error(f"Error parsing AI routes: {e}")
@@ -467,10 +493,14 @@ class TokenManager:
                 provider = parts[1]
                 model_endpoint = parts[2]
 
+                # Handle gsai-api-1 -> gsai mapping
+                if provider.startswith("gsai-"):
+                    provider = "gsai"
+
                 # Map endpoint back to model name using route_id or known patterns
                 model_name = self._map_endpoint_to_model(provider, model_endpoint, route_id)
 
-                if model_name and provider in ["openai", "anthropic", "ollama", "webui", "bedrock"]:
+                if model_name and provider in ["openai", "anthropic", "ollama", "webui", "bedrock", "gsai"]:
                     return provider, (model_name, uri)
 
         except Exception as e:
@@ -567,6 +597,16 @@ class TokenManager:
             },
             "ollama": {"llama2": "Llama 2", "codellama": "Code Llama", "mistral": "Mistral", "llama3": "Llama 3"},
             "webui": {"llama2": "Llama 2 (WebUI)", "codellama": "Code Llama (WebUI)"},
+            "gsai": {
+                "claude_3_5_sonnet": "Claude 3.5 Sonnet",
+                "claude_3_7_sonnet": "Claude 3.7 Sonnet",
+                "claude_3_haiku": "Claude 3 Haiku",
+                "llama3211b": "Llama 3.2 11B",
+                "cohere_english_v3": "Cohere English v3",
+                "gemini-2.0-flash": "Gemini 2.0 Flash",
+                "gemini-2.0-flash-lite": "Gemini 2.0 Flash Lite",
+                "gemini-2.5-pro-preview-05-06": "Gemini 2.5 Pro Preview",
+            },
             "bedrock": {
                 "claude-opus-4": "Claude Opus 4",
                 "claude-sonnet-4": "Claude Sonnet 4",
@@ -652,7 +692,7 @@ class TokenManager:
         headers = {"apikey": api_key, "Content-Type": "application/json"}
 
         # Handle special requirements for OpenAI o1 models
-        payload = {"messages": messages}
+        payload = {"model": model, "messages": messages}
 
         # Filter parameters based on model type
         if provider == "openai" and any(reasoning_model in model for reasoning_model in ["o1-", "o3-", "o4-"]):
@@ -671,29 +711,47 @@ class TokenManager:
             # Regular models - use all provided parameters
             payload.update(kwargs)
 
-        try:
-            logger.info(f"Calling APISIX endpoint: {endpoint_url}")
-            response = requests.post(endpoint_url, headers=headers, json=payload, timeout=30)
+        import time
 
-            if response.status_code == 200:
-                logger.info("Successfully received response from APISIX")
-                return response.json()
-            elif response.status_code == 401:
-                logger.error("Authentication failed - API key may be invalid")
-                return None
-            elif response.status_code == 403:
-                logger.error("Access forbidden - check API key permissions")
-                return None
-            else:
-                logger.error(f"API call failed with status {response.status_code}: {response.text}")
-                return None
+        max_retries = 3
+        retry_delay = 1  # Start with 1 second delay
 
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Network error calling APISIX endpoint: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Unexpected error calling APISIX endpoint: {e}")
-            return None
+        for attempt in range(max_retries + 1):
+            try:
+                if attempt > 0:
+                    logger.info(f"Retry attempt {attempt}/{max_retries} after {retry_delay}s delay")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+
+                logger.info(f"Calling APISIX endpoint: {endpoint_url}")
+                response = requests.post(endpoint_url, headers=headers, json=payload, timeout=45)
+
+                if response.status_code == 200:
+                    logger.info("Successfully received response from APISIX")
+                    return response.json()
+                elif response.status_code == 401:
+                    logger.error("Authentication failed - API key may be invalid")
+                    return None
+                elif response.status_code == 403:
+                    logger.error("Access forbidden - check API key permissions")
+                    return None
+                elif response.status_code == 429:
+                    logger.warning(f"Rate limit hit (429). Attempt {attempt + 1}/{max_retries + 1}")
+                    if attempt < max_retries:
+                        continue  # Retry on 429
+                    else:
+                        logger.error("Max retries exceeded for rate limiting")
+                        return None
+                else:
+                    logger.error(f"API call failed with status {response.status_code}: {response.text}")
+                    return None
+
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Network error calling APISIX endpoint: {e}")
+                if attempt < max_retries:
+                    logger.info(f"Retrying due to network error...")
+                    continue
+                return None
 
 
 # Global instance

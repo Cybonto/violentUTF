@@ -63,7 +63,13 @@ cp ai-tokens.env.sample ai-tokens.env
 # Edit ai-tokens.env with your API keys
 
 # Run complete setup
-./setup_macos.sh
+./setup_macos_new.sh
+
+# Setup with different verbosity levels
+./setup_macos_new.sh --quiet     # Minimal output for automation
+./setup_macos_new.sh --verbose   # Detailed setup information
+./setup_macos_new.sh --debug     # Full debugging output
+./setup_macos_new.sh --help      # Show all options
 ```
 
 #### Linux
@@ -84,6 +90,39 @@ cd ViolentUTF
 copy ai-tokens.env.sample ai-tokens.env
 # Edit ai-tokens.env with your API keys
 setup_windows.bat
+```
+
+### Setup Verbosity Control
+
+ViolentUTF setup scripts now support multiple verbosity levels to provide the right amount of information for different use cases:
+
+| Verbosity Level | Flag | Use Case | Output Description |
+|----------------|------|----------|-------------------|
+| **Quiet** | `--quiet` / `-q` | CI/CD, Automation | Errors, warnings, and critical success messages only |
+| **Normal** | *(default)* | Interactive Setup | Standard user experience with progress indicators |
+| **Verbose** | `--verbose` / `-v` | Troubleshooting | Detailed information and configuration details |
+| **Debug** | `--debug` / `-d` | Development | Full debugging output with variable dumps |
+
+#### Examples:
+```bash
+# Standard interactive setup
+./setup_macos_new.sh
+
+# Automated/silent setup for CI/CD
+./setup_macos_new.sh --quiet
+
+# Detailed troubleshooting setup
+./setup_macos_new.sh --verbose
+
+# Full debugging with all command output
+./setup_macos_new.sh --debug
+
+# View all available options
+./setup_macos_new.sh --help
+
+# Alternative: Use environment variable
+export VUTF_VERBOSITY=2  # 0=quiet, 1=normal, 2=verbose, 3=debug
+./setup_macos_new.sh
 ```
 
 ### Access Points
@@ -322,6 +361,24 @@ cd apisix && ./verify_routes.sh
 
 ## 🔧 Troubleshooting
 
+### Setup Debugging
+
+If you encounter issues during setup, use different verbosity levels to get more information:
+
+```bash
+# For detailed troubleshooting information
+./setup_macos_new.sh --verbose
+
+# For full debugging output (includes all command execution)
+./setup_macos_new.sh --debug
+
+# Check specific service status
+./check_services.sh
+
+# Verify APISIX routes
+cd apisix && ./verify_routes.sh
+```
+
 ### Corporate Proxy / Zscaler SSL Issues
 
 The setup script automatically detects and handles SSL certificate issues. If you encounter SSL errors during setup, you have two options:
@@ -362,8 +419,11 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 # Clone repository
 git clone https://github.com/cybonto/ViolentUTF.git
 
-# Setup development environment
-./setup_macos.sh  # or setup_linux.sh/setup_windows.bat
+# Setup development environment with verbose output
+./setup_macos_new.sh --verbose  # or setup_linux.sh/setup_windows.bat
+
+# For debugging setup issues
+./setup_macos_new.sh --debug
 
 # Activate Python environment
 source .vitutf/bin/activate
@@ -375,7 +435,7 @@ pip install -r violentutf/requirements.txt
 ### **Code Quality**
 - **Type Checking**: Full mypy compliance
 - **Code Formatting**: Black and isort
-- **Linting**: flake8 and pylint
+- **Linting**: flake8 and pylint (Note: F541 f-string warnings are intentionally ignored - see [code style decisions](docs/development/code_style_decisions.md))
 - **Testing**: pytest with >90% coverage
 
 ## 📄 License

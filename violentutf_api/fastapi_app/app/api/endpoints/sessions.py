@@ -2,17 +2,17 @@
 Session management endpoints for user state persistence
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
-from typing import Optional, Dict, Any
 import json
 import os
 import uuid
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
 from app.models.auth import User
-from app.schemas.sessions import SessionStateResponse, UpdateSessionRequest, SessionSchemaResponse
+from app.schemas.sessions import SessionSchemaResponse, SessionStateResponse, UpdateSessionRequest
+from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
 
@@ -113,6 +113,9 @@ async def update_session_state(request: UpdateSessionRequest, current_user: User
 
         if session_result:
             session_data = session_result["data"]
+            # Ensure last_updated exists for backward compatibility
+            if "last_updated" not in session_data:
+                session_data["last_updated"] = datetime.utcnow().isoformat()
         else:
             # Create new session data
             session_data = {
@@ -121,6 +124,7 @@ async def update_session_state(request: UpdateSessionRequest, current_user: User
                 "workflow_state": {},
                 "temporary_data": {},
                 "cache_data": {},
+                "last_updated": datetime.utcnow().isoformat(),
             }
 
         # Update provided fields
@@ -135,6 +139,9 @@ async def update_session_state(request: UpdateSessionRequest, current_user: User
 
         if request.cache_data is not None:
             session_data["cache_data"].update(request.cache_data)
+
+        # Set last_updated timestamp
+        session_data["last_updated"] = datetime.utcnow().isoformat()
 
         # Save updated session data to DuckDB
         db_manager.save_session("main_session", session_data)

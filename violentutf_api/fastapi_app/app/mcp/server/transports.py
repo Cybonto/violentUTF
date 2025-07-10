@@ -2,16 +2,16 @@
 
 import json
 import logging
-from typing import AsyncIterator, Optional, Dict, Any
-from fastapi import FastAPI, Request, HTTPException, Depends
-from fastapi.responses import StreamingResponse
-from sse_starlette.sse import EventSourceResponse
-from starlette.types import Scope, Receive, Send
+from typing import Any, AsyncIterator, Dict, Optional
 
+from app.core.auth import get_current_user
+from app.mcp.auth import MCPAuthHandler
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
-from app.mcp.auth import MCPAuthHandler
-from app.core.auth import get_current_user
+from sse_starlette.sse import EventSourceResponse
+from starlette.types import Receive, Scope, Send
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +20,7 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
     """Create SSE transport for MCP server"""
     app = FastAPI()
 
-    # Create transport with endpoint path
-    transport = SseServerTransport("/mcp/sse")
+    # Note: SSE transport implementation handled by FastAPI endpoints below
 
     @app.post("/")
     async def handle_sse_request(request: Request, current_user=Depends(get_current_user)):

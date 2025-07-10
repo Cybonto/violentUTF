@@ -19,25 +19,23 @@ Dependencies:
 - Configuration storage mechanisms (e.g., files or databases)
 """
 
-import logging
-from typing import List, Dict, Any, Tuple, Union
-import os
-import json
-from pathlib import Path
-import inspect
 import asyncio
+import inspect
+import json
+import logging
+import os
+from pathlib import Path
+from typing import Any, Dict, List, Tuple, Union
 
 # Import PyRIT Orchestrator classes
 import pyrit.orchestrator as pyrit_orchestrator
 from pyrit.orchestrator import Orchestrator
-
 from utils.error_handling import (
-    OrchestratorLoadingError,
     OrchestratorConfigurationError,
-    OrchestratorInstantiationError,
     OrchestratorDeletionError,
+    OrchestratorInstantiationError,
+    OrchestratorLoadingError,
 )
-
 from utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -111,7 +109,7 @@ def get_orchestrator_params(orchestrator_class: str) -> List[Dict[str, Any]]:
 
             # Handle Optional types
             if hasattr(param_info["annotation"], "__origin__") and param_info["annotation"].__origin__ == Union:
-                types = [t for t in param_info["annotation"].__args__ if t != type(None)]
+                types = [t for t in param_info["annotation"].__args__ if t is not type(None)]
                 if types:
                     param_info["annotation"] = types[0]
 

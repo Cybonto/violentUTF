@@ -3,15 +3,16 @@ Test suite for MCP Enhancement Strip UI in Simple_Chat.py
 Tests UI components, session state management, and user interactions
 """
 
+import os
+import sys
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 import streamlit as st
-from unittest.mock import Mock, patch, MagicMock
-import sys
-import os
 
 # Import utilities
 from utils.mcp_client import MCPClientSync
-from utils.mcp_integration import NaturalLanguageParser, ContextAnalyzer, MCPCommandType
+from utils.mcp_integration import ContextAnalyzer, MCPCommandType, NaturalLanguageParser
 
 
 class TestEnhancementStripUI:
@@ -224,7 +225,7 @@ class TestEnhancementStripUI:
 
         # Attempt enhancement
         try:
-            result = mock_session_state["mcp_client"].get_prompt("prompt_enhancement", {"original_prompt": "test"})
+            mock_session_state["mcp_client"].get_prompt("prompt_enhancement", {"original_prompt": "test"})
         except Exception as e:
             error_msg = str(e)
             assert error_msg == "Test error"

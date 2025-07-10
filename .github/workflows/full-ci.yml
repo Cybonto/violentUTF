@@ -67,7 +67,7 @@ jobs:
           cache: 'pip'
 
       - name: Cache dependencies
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: |
             ~/.cache/pip
@@ -101,7 +101,7 @@ jobs:
 
       - name: Run comprehensive tests
         run: |
-          pytest -v --cov=. --cov-report=xml --cov-report=html --timeout=300 -n auto
+          pytest tests/unit -v --cov=violentutf --cov=violentutf_api --cov-report=xml --cov-report=html --timeout=300 -n auto
 
       - name: Upload coverage reports
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'

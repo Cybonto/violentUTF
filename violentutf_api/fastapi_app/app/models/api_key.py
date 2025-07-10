@@ -4,10 +4,10 @@ API Key database model
 
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import Column, String, DateTime, Boolean, JSON
-from sqlalchemy.sql import func
 
 from app.db.database import Base
+from sqlalchemy import JSON, Boolean, Column, DateTime, String
+from sqlalchemy.sql import func
 
 
 class APIKey(Base):

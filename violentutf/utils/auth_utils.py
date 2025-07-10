@@ -4,10 +4,11 @@ Common authentication utilities for ViolentUTF pages.
 Provides consistent token management and authentication handling.
 """
 
-import streamlit as st
 import logging
-import requests
 import os
+
+import requests
+import streamlit as st
 from utils.token_manager import token_manager
 
 logger = logging.getLogger(__name__)
@@ -266,7 +267,7 @@ def show_authenticated_sidebar(page_name: str = "") -> str:
                 else:  # active
                     st.success(f"🚀 AI Gateway: Active ({minutes_remaining}m left)")
 
-            except Exception as e:
+            except Exception:
                 # Fallback to simple display
                 st.success("🚀 AI Gateway Access: Enabled")
         else:

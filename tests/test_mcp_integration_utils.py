@@ -5,18 +5,19 @@ Unit Tests for MCP Integration Utilities
 Tests for natural language parsing and command interpretation.
 """
 
-import pytest
-import sys
 import os
+import sys
+
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from violentutf.utils.mcp_integration import (
-    NaturalLanguageParser,
+    ConfigurationIntentDetector,
+    ContextAnalyzer,
     MCPCommand,
     MCPCommandType,
-    ContextAnalyzer,
-    ConfigurationIntentDetector,
+    NaturalLanguageParser,
 )
 
 

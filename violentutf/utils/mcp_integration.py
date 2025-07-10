@@ -3,17 +3,17 @@ MCP Integration Utilities for ViolentUTF
 Provides natural language command parsing and context analysis for MCP features
 """
 
-import re
 import json
-from typing import Dict, List, Optional, Any, Tuple, Union
+import os
+import re
+import sys
 from dataclasses import dataclass
 from enum import Enum
-import os
-import sys
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Import existing utilities
 from .logging import get_logger
-from .mcp_client import MCPClientSync, MCPClient
+from .mcp_client import MCPClient, MCPClientSync
 
 # Import existing dataset utilities
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

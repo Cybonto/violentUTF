@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Test script to verify scorer orchestrator creation fix"""
 
-import requests
 import json
 from datetime import datetime
+
+import requests
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"  # APISIX Gateway
@@ -49,7 +50,7 @@ def test_orchestrator_creation():
         "save_results": False,
     }
 
-    print(f"\n📝 Orchestrator payload:")
+    print("\n📝 Orchestrator payload:")
     print(json.dumps(orchestrator_payload, indent=2))
 
     # Make request
@@ -63,7 +64,7 @@ def test_orchestrator_creation():
         print(f"   Orchestrator ID: {result.get('orchestrator_id')}")
         return True
     else:
-        print(f"❌ Failed to create orchestrator")
+        print("❌ Failed to create orchestrator")
         print(f"   Response: {response.text}")
         return False
 

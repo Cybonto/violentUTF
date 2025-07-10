@@ -18,9 +18,10 @@ Dependencies:
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
+from jinja2 import Environment, exceptions, select_autoescape
 from pyrit.models import SeedPrompt, SeedPromptDataset
-from jinja2 import Environment, exceptions
 from utils.error_handling import TemplateError
 from utils.logging import get_logger
 
@@ -89,7 +90,11 @@ def transform_dataset_with_template(dataset: SeedPromptDataset, template_content
         - utils.error_handling
     """
     try:
-        env = Environment()
+        env = Environment(
+            autoescape=select_autoescape(
+                enabled_extensions=["html", "xml", "j2", "jinja", "jinja2"], default_for_string=True, default=True
+            )
+        )
         template = env.from_string(template_content)
         transformed_prompts = []
         for prompt in dataset.prompts:

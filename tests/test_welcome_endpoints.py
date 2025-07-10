@@ -2,24 +2,24 @@
 Comprehensive tests for 0_Welcome.py backend API endpoints
 """
 
-import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import patch, mock_open, MagicMock
-import os
-import tempfile
 import json
-import yaml
-from datetime import datetime
+import os
 
 # Import the FastAPI app
 import sys
-import os
+import tempfile
+from datetime import datetime
+from unittest.mock import MagicMock, mock_open, patch
+
+import pytest
+import yaml
+from fastapi.testclient import TestClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "violentutf_api", "fastapi_app"))
 
-from main import app
-from app.models.auth import User
 from app.core.auth import get_current_user
+from app.models.auth import User
+from main import app
 
 client = TestClient(app)
 
@@ -58,8 +58,8 @@ class TestAuthenticationEndpoints:
         assert data["username"] == "testuser"
         assert data["email"] == "test@example.com"
         assert "ai-api-access" in data["roles"]
-        assert data["has_ai_access"] == True
-        assert data["token_valid"] == True
+        assert data["has_ai_access"] is True
+        assert data["token_valid"] is True
 
         # Clean up
         app.dependency_overrides.clear()
@@ -76,8 +76,8 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["valid"] == True
-        assert data["has_ai_access"] == True
+        assert data["valid"] is True
+        assert data["has_ai_access"] is True
         assert data["missing_roles"] == []
 
     @patch("app.core.auth.get_current_user")
@@ -92,7 +92,7 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["valid"] == False
+        assert data["valid"] is False
         assert "admin" in data["missing_roles"]
         assert "ai-api-access" in data["missing_roles"]
 
@@ -154,8 +154,8 @@ class TestDatabaseEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["is_initialized"] == True
-        assert data["connection_healthy"] == True
+        assert data["is_initialized"] is True
+        assert data["connection_healthy"] is True
         assert data["file_size_mb"] == 1.0
 
     @patch("app.core.auth.get_current_user")
@@ -261,7 +261,7 @@ class TestSessionEndpoints:
 
         data = response.json()
         assert data["ui_preferences"]["theme"] == "light"
-        assert data["ui_preferences"]["sidebar_collapsed"] == True
+        assert data["ui_preferences"]["sidebar_collapsed"] is True
         assert data["workflow_state"]["current_step"] == "database_init"
 
     @patch("app.core.auth.get_current_user")
@@ -346,12 +346,12 @@ test_param: test_value
 
         files = {"file": ("test_config.yaml", yaml_content, "application/x-yaml")}
 
-        with patch("builtins.open", mock_open()) as mock_file:
+        with patch("builtins.open", mock_open()):
             response = client.post("/api/v1/config/parameters/load", headers=auth_headers, files=files)
             assert response.status_code == 200
 
             data = response.json()
-            assert data["success"] == True
+            assert data["success"] is True
             assert "test_param" in data["parameters"]
 
     def test_load_invalid_yaml(self, auth_headers):
@@ -431,7 +431,7 @@ class TestEnvironmentConfigEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["configuration_complete"] == True
+        assert data["configuration_complete"] is True
 
     @patch("app.core.auth.get_current_user")
     def test_validate_environment_config(self, mock_get_user, auth_headers, mock_user):
@@ -454,7 +454,7 @@ class TestEnvironmentConfigEndpoints:
         data = response.json()
         assert "schema" in data
         assert "PYRIT_DB_SALT" in data["schema"]
-        assert data["schema"]["PYRIT_DB_SALT"]["required"] == True
+        assert data["schema"]["PYRIT_DB_SALT"]["required"] is True
 
     @patch("app.core.auth.get_current_user")
     def test_generate_salt(self, mock_get_user, auth_headers, mock_user):
@@ -487,7 +487,7 @@ class TestFileEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["success"] == True
+        assert data["success"] is True
         assert data["filename"] == "test.txt"
         assert "file_id" in data
 
@@ -509,7 +509,7 @@ class TestFileEndpoints:
         data = response.json()
         assert data["file_info"]["file_id"] == "test-id"
         assert data["file_info"]["filename"] == "test.txt"
-        assert data["available"] == True
+        assert data["available"] is True
 
     def test_get_file_not_found(self, auth_headers):
         """Test GET /files/{file_id} with non-existent file"""

@@ -4,40 +4,39 @@ Implements API backend for 4_Configure_Scorers.py page
 """
 
 import asyncio
+import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Dict, List, Any, Optional
 from io import StringIO
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from fastapi.responses import JSONResponse
-
-from app.schemas.scorers import (
-    ScorerTypesResponse,
-    ScorerParametersResponse,
-    ScorerParameter,
-    ScorersListResponse,
-    ScorerInfo,
-    ScorerCreateRequest,
-    ScorerCreateResponse,
-    ScorerCloneRequest,
-    ScorerUpdateRequest,
-    ScorerDeleteResponse,
-    ScorerValidationRequest,
-    ScorerValidationResponse,
-    ScorerAnalyticsResponse,
-    ScorerConfigExport,
-    ScorerConfigImport,
-    ScorerImportResponse,
-    ScorerHealthResponse,
-    ScorerError,
-    ScorerCategoryType,
-    ParameterType,
-)
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
-import logging
+from app.schemas.scorers import (
+    ParameterType,
+    ScorerAnalyticsResponse,
+    ScorerCategoryType,
+    ScorerCloneRequest,
+    ScorerConfigExport,
+    ScorerConfigImport,
+    ScorerCreateRequest,
+    ScorerCreateResponse,
+    ScorerDeleteResponse,
+    ScorerError,
+    ScorerHealthResponse,
+    ScorerImportResponse,
+    ScorerInfo,
+    ScorerParameter,
+    ScorerParametersResponse,
+    ScorersListResponse,
+    ScorerTypesResponse,
+    ScorerUpdateRequest,
+    ScorerValidationRequest,
+    ScorerValidationResponse,
+)
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -606,7 +605,7 @@ async def update_scorer(scorer_id: str, request: ScorerUpdateRequest, current_us
             logger.info(f"Scorer name update requested: {request.name} (update functionality needs implementation)")
 
         if request.parameters is not None:
-            logger.info(f"Scorer parameters update requested (update functionality needs implementation)")
+            logger.info("Scorer parameters update requested (update functionality needs implementation)")
 
         response = ScorerCreateResponse(
             success=True,
@@ -650,9 +649,7 @@ async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)):
         if not deleted:
             raise HTTPException(status_code=500, detail=f"Failed to delete scorer with ID '{scorer_id}'")
 
-        response = ScorerDeleteResponse(
-            success=True, message=f"Scorer deleted successfully", deleted_scorer=scorer_name
-        )
+        response = ScorerDeleteResponse(success=True, message="Scorer deleted successfully", deleted_scorer=scorer_name)
 
         logger.info(f"Successfully deleted scorer {scorer_id}")
         return response
@@ -669,9 +666,10 @@ async def _execute_real_pyrit_scorer(
 ) -> List[Dict[str, Any]]:
     """Execute real PyRIT scorer and return results"""
     try:
-        from pyrit.models import PromptRequestPiece, PromptRequestResponse
-        from datetime import datetime
         import uuid
+        from datetime import datetime
+
+        from pyrit.models import PromptRequestPiece, PromptRequestResponse
 
         logger.info(f"Executing real PyRIT scorer: {scorer_type} with parameters: {parameters}")
 
@@ -800,7 +798,7 @@ async def validate_scorer_config(request: ScorerValidationRequest, current_user=
             if param_name == "chat_target":
                 # Special handling for chat_target
                 if not request.generator_id and param_name not in request.parameters:
-                    errors.append(f"Chat target is required but no generator_id provided")
+                    errors.append("Chat target is required but no generator_id provided")
                     suggested_fixes.append("Select a generator to use as chat target")
             elif param_name not in request.parameters:
                 errors.append(f"Required parameter '{param_name}' is missing")

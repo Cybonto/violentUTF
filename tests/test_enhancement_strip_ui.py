@@ -5,12 +5,13 @@ UI Tests for MCP Enhancement Strip in Simple Chat
 Tests the enhancement strip UI components and interactions.
 """
 
+import os
+import sys
+from datetime import datetime
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 import streamlit as st
-from unittest.mock import Mock, patch, MagicMock
-import sys
-import os
-from datetime import datetime
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -58,9 +59,9 @@ class TestEnhancementStripUI:
         mock_button = Mock(side_effect=lambda label, **kwargs: button_calls.append(label) or False)
 
         # Simulate the enhancement strip button creation
-        enhance_button = mock_button("✨ Enhance", help="Improve prompt quality using MCP", use_container_width=True)
-        analyze_button = mock_button("🔍 Analyze", help="Analyze for security & bias issues", use_container_width=True)
-        test_button = mock_button("🧪 Test", help="Generate test variations", use_container_width=True)
+        mock_button("✨ Enhance", help="Improve prompt quality using MCP", use_container_width=True)
+        mock_button("🔍 Analyze", help="Analyze for security & bias issues", use_container_width=True)
+        mock_button("🧪 Test", help="Generate test variations", use_container_width=True)
 
         # Verify buttons were created with correct labels
         assert "✨ Enhance" in button_calls
@@ -85,7 +86,7 @@ class TestEnhancementStripUI:
             "Privacy analysis",
             "Security audit",
         ]
-        quick_actions = mock_selectbox("Quick Actions", options=expected_actions, label_visibility="collapsed")
+        mock_selectbox("Quick Actions", options=expected_actions, label_visibility="collapsed")
 
         # Verify selectbox was created with correct options
         assert len(selectbox_calls) > 0
@@ -97,8 +98,8 @@ class TestEnhancementStripUI:
         try:
             # These functions should be defined in Simple_Chat.py
             from violentutf.pages.Simple_Chat import (
-                enhance_prompt_with_mcp,
                 analyze_prompt_with_mcp,
+                enhance_prompt_with_mcp,
                 generate_test_variations_with_mcp,
             )
 

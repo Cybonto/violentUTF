@@ -5,10 +5,11 @@ Test script to verify the sequential execution implementation for avoiding 504 G
 This script demonstrates the batch processing approach implemented in 4_Configure_Scorers.py
 """
 
-import requests
-import time
 import json
+import time
 from datetime import datetime
+
+import requests
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"  # APISIX Gateway
@@ -35,7 +36,7 @@ def test_batch_processing():
     batch_size = 10
     num_batches = (full_dataset_size + batch_size - 1) // batch_size
 
-    print(f"\nDataset Configuration:")
+    print("\nDataset Configuration:")
     print(f"  Total prompts: {full_dataset_size}")
     print(f"  Batch size: {batch_size}")
     print(f"  Number of batches: {num_batches}")
@@ -54,32 +55,34 @@ def test_batch_processing():
         print(f"Processing prompts {batch_start + 1}-{batch_end}")
 
         # Step 1: Create orchestrator for this batch
-        orchestrator_payload = {
-            "name": f"test_batch_{batch_idx}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            "orchestrator_type": "PromptSendingOrchestrator",
-            "description": f"Test batch {batch_idx + 1}",
-            "parameters": {
-                "objective_target": {"type": "configured_generator", "generator_name": "test_generator"},
-                "scorers": [{"type": "configured_scorer", "scorer_id": "test_scorer_id", "scorer_name": "test_scorer"}],
-            },
-        }
+        # Expected payload structure:
+        # {
+        #     "name": f"test_batch_{batch_idx}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        #     "orchestrator_type": "PromptSendingOrchestrator",
+        #     "description": f"Test batch {batch_idx + 1}",
+        #     "parameters": {
+        #         "objective_target": {"type": "configured_generator", "generator_name": "test_generator"},
+        #         "scorers": [{"type": "configured_scorer", "scorer_id": "test_scorer_id", "scorer_name": "test_scorer"}],
+        #     },
+        # }
 
         print(f"Creating orchestrator for batch {batch_idx + 1}...")
         # Simulate orchestrator creation
         orchestrator_id = f"orch_{batch_idx}_{datetime.now().strftime('%H%M%S')}"
 
         # Step 2: Execute batch
-        execution_payload = {
-            "execution_name": f"batch_{batch_idx}_execution",
-            "execution_type": "dataset",
-            "input_data": {
-                "dataset_id": "test_dataset",
-                "sample_size": batch_prompts,
-                "randomize": False,
-                "offset": batch_start,
-                "metadata": {"batch_index": batch_idx, "total_batches": num_batches, "test_mode": "batch_processing"},
-            },
-        }
+        # Expected payload structure:
+        # {
+        #     "execution_name": f"batch_{batch_idx}_execution",
+        #     "execution_type": "dataset",
+        #     "input_data": {
+        #         "dataset_id": "test_dataset",
+        #         "sample_size": batch_prompts,
+        #         "randomize": False,
+        #         "offset": batch_start,
+        #         "metadata": {"batch_index": batch_idx, "total_batches": num_batches, "test_mode": "batch_processing"},
+        #     },
+        # }
 
         print(f"Executing batch {batch_idx + 1} with {batch_prompts} prompts...")
         start_time = time.time()
@@ -152,7 +155,7 @@ def test_api_timeout_handling():
             print(f"  ✓ Safe from timeout (under {timeout_threshold}s)")
         else:
             print(f"  ✗ Risk of timeout (over {timeout_threshold}s)")
-            print(f"  → Recommendation: Use smaller batch size")
+            print("  → Recommendation: Use smaller batch size")
 
     print("\nCONCLUSION:")
     print("The implementation uses batch_size=10 which keeps execution")

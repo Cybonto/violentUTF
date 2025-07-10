@@ -2,13 +2,15 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.1.4
     command: start
+    env_file:
+      - .env
     networks:
       - postgres-network
       - vutf-network    # Add this line
     environment:
       # --- Admin Credentials ---
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
 
       # --- Database Configuration ---
       KC_DB: postgres
@@ -23,6 +25,13 @@ services:
       KC_HOSTNAME: localhost
       KC_HTTP_ENABLED: true
       KC_HTTP_PORT: 8080
+
+      # --- Proxy Configuration ---
+      # This tells Keycloak to trust proxy headers
+      KC_PROXY: edge              # Trust edge proxy headers
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_STRICT: false   # Allow flexible hostname validation
+      KC_HOSTNAME_STRICT_HTTPS: false  # Allow HTTP when behind proxy
 
       # --- Optional: Health and Metrics ---
       KC_HEALTH_ENABLED: true

@@ -2,18 +2,18 @@
 Authentication and authorization middleware
 """
 
-from typing import Optional, Tuple
-from fastapi import HTTPException, Security, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
-from jose import JWTError
-import httpx
 import logging
+from typing import Optional, Tuple
 
+import httpx
 from app.core.config import settings
 from app.core.security import decode_token
-from app.models.auth import User
 from app.db.database import get_db_session
 from app.models.api_key import APIKey
+from app.models.auth import User
+from fastapi import HTTPException, Request, Security, status
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
+from jwt import InvalidTokenError as JWTError
 
 logger = logging.getLogger(__name__)
 
@@ -127,11 +127,11 @@ class AuthMiddleware:
             True if signature is valid, False otherwise
         """
         try:
-            import hmac
-            import hashlib
             import base64
-            from app.core.config import settings
+            import hashlib
+            import hmac
 
+            #             from app.core.config import settings # F811: removed duplicate import
             # Get the shared secret
             gateway_secret = settings.APISIX_GATEWAY_SECRET
             if not gateway_secret:
@@ -173,8 +173,17 @@ class AuthMiddleware:
             if not username:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
-            # Return user object
-            return User(username=username, email=payload.get("email"), roles=payload.get("roles", []), is_active=True)
+            # IMPORTANT: Always use 'sub' claim as username, never 'name' or 'display_name'
+            # The 'name' field is a display name and using it causes data isolation issues
+            if "name" in payload:
+                logger.warning(f"JWT contains deprecated 'name' field: {payload.get('name')}, using sub: {username}")
+            if "display_name" in payload:
+                logger.debug(f"JWT contains display_name: {payload.get('display_name')}, using sub: {username}")
+
+            # Create user with ONLY the username from 'sub' claim
+            user = User(username=username, email=payload.get("email"), roles=payload.get("roles", []), is_active=True)
+            logger.debug(f"Created User object with username: {user.username}")
+            return user
 
         except JWTError:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate token")

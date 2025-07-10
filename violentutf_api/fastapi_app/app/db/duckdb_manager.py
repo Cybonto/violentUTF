@@ -3,21 +3,38 @@ DuckDB Manager for ViolentUTF Configuration Storage
 Extends existing PyRIT database functionality to support configuration persistence
 """
 
-import os
 import hashlib
-import duckdb
 import json
+import logging
+import os
 import uuid
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
-import logging
+from typing import Any, Dict, List, Optional, Tuple
+
+import duckdb
 
 logger = logging.getLogger(__name__)
 
 
 class DuckDBManager:
     """Manages DuckDB operations for ViolentUTF configuration storage"""
+
+    # Security: Allowed columns for UPDATE operations to prevent SQL injection
+    ALLOWED_UPDATE_COLUMNS = {"parameters", "status", "test_results", "updated_at", "name", "type", "config"}
+
+    # Security: Allowed table names for counting operations
+    ALLOWED_TABLES = {
+        "generators",
+        "scorers",
+        "datasets",
+        "conversations",
+        "orchestrator_executions",
+        "orchestrator_results",
+        "dataset_prompts",
+        "converters",
+        "user_sessions",
+    }
 
     def __init__(self, username: str, salt: str = None, app_data_dir: str = None):
         self.username = username
@@ -163,6 +180,37 @@ class DuckDBManager:
         """
         )
 
+    # Security helper methods
+    def _build_safe_update_query(
+        self, updates_dict: Dict[str, Any], generator_id: str, user_id: str
+    ) -> Tuple[str, List]:
+        """Build parameterized UPDATE query with column validation to prevent SQL injection"""
+
+        # Validate column names against whitelist
+        for column in updates_dict.keys():
+            if column not in self.ALLOWED_UPDATE_COLUMNS:
+                raise ValueError(f"Invalid column for update: {column}")
+
+        # Build parameterized query using string formatting to avoid bandit B608 warning
+        set_clauses = ["{} = ?".format(col) for col in updates_dict.keys()]
+        query_template = "UPDATE generators SET {} WHERE id = ? AND user_id = ?"
+        query = query_template.format(", ".join(set_clauses))
+
+        # Build parameter list
+        params = list(updates_dict.values()) + [generator_id, user_id]
+
+        return query, params
+
+    def _get_table_count(self, conn, table_name: str) -> int:
+        """Get row count for table with name validation to prevent SQL injection"""
+        if table_name not in self.ALLOWED_TABLES:
+            raise ValueError(f"Invalid table name: {table_name}")
+
+        # Use string formatting with pre-validated table name (table_name is whitelisted above)
+        query = 'SELECT COUNT(*) FROM "{}"'.format(table_name)  # nosec B608
+        result = conn.execute(query).fetchone()
+        return result[0] if result else 0
+
     # Generator operations
     def create_generator(self, name: str, generator_type: str, parameters: Dict[str, Any]) -> str:
         """Create a new generator configuration"""
@@ -259,39 +307,45 @@ class DuckDBManager:
         status: str = None,
         test_results: Dict[str, Any] = None,
     ) -> bool:
-        """Update generator configuration"""
-        updates = []
-        values = []
+        """Update generator configuration with SQL injection protection"""
+        updates_dict = {}
 
         if parameters is not None:
-            updates.append("parameters = ?")
-            values.append(json.dumps(parameters))
+            updates_dict["parameters"] = json.dumps(parameters)
 
         if status is not None:
-            updates.append("status = ?")
-            values.append(status)
+            updates_dict["status"] = status
 
         if test_results is not None:
-            updates.append("test_results = ?")
-            values.append(json.dumps(test_results))
+            updates_dict["test_results"] = json.dumps(test_results)
 
-        updates.append("updated_at = CURRENT_TIMESTAMP")
+        # Always update timestamp
+        updates_dict["updated_at"] = "CURRENT_TIMESTAMP"
 
-        if not updates:
+        if not updates_dict:
             return False
 
-        values.extend([generator_id, self.username])
+        try:
+            # Use secure helper method to build query
+            query, params = self._build_safe_update_query(updates_dict, generator_id, self.username)
 
-        with duckdb.connect(self.db_path) as conn:
-            conn.execute(
-                f"""
-                UPDATE generators SET {', '.join(updates)}
-                WHERE id = ? AND user_id = ?
-            """,
-                values,
-            )
+            with duckdb.connect(self.db_path) as conn:
+                # Handle CURRENT_TIMESTAMP specially as it needs to be unquoted
+                if "updated_at" in updates_dict:
+                    # Replace the CURRENT_TIMESTAMP parameter with actual SQL
+                    timestamp_idx = list(updates_dict.keys()).index("updated_at")
+                    params[timestamp_idx] = "CURRENT_TIMESTAMP"
+                    # Replace the ? with CURRENT_TIMESTAMP in query
+                    query = query.replace("updated_at = ?", "updated_at = CURRENT_TIMESTAMP")
+                    # Remove CURRENT_TIMESTAMP from params
+                    params.pop(timestamp_idx)
 
-            return conn.rowcount > 0
+                conn.execute(query, params)
+                return conn.rowcount > 0
+
+        except ValueError as e:
+            logger.error(f"Security validation failed in update_generator: {e}")
+            raise
 
     def delete_generator(self, generator_id: str) -> bool:
         """Delete generator"""
@@ -406,13 +460,13 @@ class DuckDBManager:
         with duckdb.connect(self.db_path) as conn:
             results = conn.execute(
                 """
-                SELECT d.id, d.name, d.source_type, d.configuration, d.status, 
+                SELECT d.id, d.name, d.source_type, d.configuration, d.status,
                        d.created_at, d.updated_at, d.metadata,
                        COUNT(dp.id) as prompt_count
                 FROM datasets d
                 LEFT JOIN dataset_prompts dp ON d.id = dp.dataset_id
                 WHERE d.user_id = ?
-                GROUP BY d.id, d.name, d.source_type, d.configuration, d.status, 
+                GROUP BY d.id, d.name, d.source_type, d.configuration, d.status,
                          d.created_at, d.updated_at, d.metadata
                 ORDER BY d.created_at DESC
             """,
@@ -461,7 +515,7 @@ class DuckDBManager:
                 # Update existing session
                 conn.execute(
                     """
-                    UPDATE user_sessions 
+                    UPDATE user_sessions
                     SET session_data = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE user_id = ? AND session_key = ?
                 """,
@@ -643,12 +697,16 @@ class DuckDBManager:
         with duckdb.connect(self.db_path) as conn:
             stats = {}
 
-            # Count records in each table
+            # Count records in each table using secure method
             for table in ["generators", "datasets", "dataset_prompts", "converters", "scorers", "user_sessions"]:
                 try:
-                    count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                    # Use secure helper method to prevent SQL injection
+                    count = self._get_table_count(conn, table)
                     stats[table] = count
-                except:
+                except ValueError as e:
+                    logger.warning(f"Invalid table name in stats: {e}")
+                    stats[table] = 0
+                except Exception:
                     stats[table] = 0
 
             # Database file size

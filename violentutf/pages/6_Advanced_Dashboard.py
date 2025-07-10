@@ -1,32 +1,33 @@
-import streamlit as st
+import asyncio
+import json
 import os
 import sys
-import json
-import asyncio
-from typing import Optional, List, Dict, Any, Tuple, Union
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-import pandas as pd
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import requests
-from collections import Counter, defaultdict
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans, DBSCAN
-from sklearn.ensemble import IsolationForest
-from scipy import stats
+import streamlit as st
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
+from plotly.subplots import make_subplots
+from scipy import stats
+from sklearn.cluster import DBSCAN, KMeans
+from sklearn.decomposition import PCA
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
 
-load_dotenv()
-
-# Use the centralized logging setup
-from utils.logging import get_logger
+# Import utilities
 from utils.auth_utils import handle_authentication_and_sidebar
 from utils.jwt_manager import jwt_manager
+from utils.logging import get_logger
+
+load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -123,7 +124,7 @@ def create_compatible_api_token():
             return None
 
     except Exception as e:
-        st.error(f"❌ Failed to generate API token.")
+        st.error("❌ Failed to generate API token.")
         logger.error(f"Token creation failed: {e}")
         return None
 
@@ -135,10 +136,6 @@ def create_compatible_api_token():
 def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
     """Load comprehensive execution data for analysis"""
     try:
-        # Calculate time range
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days_back)
-
         # First get all orchestrators (same approach as Dashboard_2)
         orchestrators_response = api_request("GET", API_ENDPOINTS["orchestrators"])
         if not orchestrators_response:
@@ -240,7 +237,7 @@ def prepare_feature_matrix(results: List[Dict[str, Any]]) -> Tuple[pd.DataFrame,
                     if numbers:
                         return float(numbers[0])
                     return 0.0
-                except:
+                except Exception:
                     return 0.0
             return 0.0
 
@@ -379,7 +376,7 @@ def analyze_patterns_and_trends(results: List[Dict[str, Any]], df_features: pd.D
                 if numbers:
                     return float(numbers[0])
                 return 0.0
-            except:
+            except Exception:
                 return 0.0
         return 0.0
 
@@ -852,7 +849,7 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
                 {
                     "Priority": "🟡 Medium",
                     "Action": "Monitor high-risk time periods",
-                    "Details": f"Increased violations during specific hours",
+                    "Details": "Increased violations during specific hours",
                 }
             )
 

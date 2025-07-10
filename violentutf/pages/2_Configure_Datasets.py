@@ -1,23 +1,25 @@
-import streamlit as st
-import os
-import sys
-import json
 import asyncio
 import base64
-from typing import Optional, List, Dict, Any
+import json
+import os
+import pathlib
+import sys
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import requests
+import streamlit as st
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
-import pathlib
+from utils.auth_utils import handle_authentication_and_sidebar
+
+# Import utilities
+from utils.logging import get_logger
 
 # Get the path to the .env file relative to this script
 env_path = pathlib.Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
-
-# Use the centralized logging setup
-from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -185,7 +187,7 @@ def create_compatible_api_token():
             return None
 
     except Exception as e:
-        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+        st.error("❌ Failed to generate API token. Please try refreshing the page.")
         logger.error(f"Token creation failed: {e}")
         return None
 
@@ -256,7 +258,7 @@ def auto_load_datasets():
         with st.spinner("Loading existing datasets..."):
             datasets_data = load_datasets_from_api()
             if datasets_data:
-                logger.info(f"Auto-loaded datasets for display")
+                logger.info("Auto-loaded datasets for display")
             else:
                 logger.info("No existing datasets found during auto-load")
 
@@ -395,7 +397,7 @@ def run_orchestrator_dataset_test(
 
                 headers = get_auth_headers()
                 debug_response = requests.post(
-                    API_ENDPOINTS["orchestrator_create"], json=orchestrator_payload, headers=headers
+                    API_ENDPOINTS["orchestrator_create"], json=orchestrator_payload, headers=headers, timeout=30
                 )
                 logger.error(f"Debug response status: {debug_response.status_code}")
                 logger.error(f"Debug response text: {debug_response.text}")
@@ -405,7 +407,7 @@ def run_orchestrator_dataset_test(
                     error_details = debug_response.json()
                     error_msg = error_details.get("detail", debug_response.text)
                     st.error(f"❌ Orchestrator creation failed: {error_msg}")
-                except:
+                except Exception:
                     st.error(
                         f"❌ Failed to create orchestrator - API returned {debug_response.status_code}: {debug_response.text}"
                     )
@@ -916,7 +918,7 @@ def flow_upload_local_dataset():
                     "field_mappings": field_mappings,
                 }
 
-                with st.spinner(f"Processing uploaded file..."):
+                with st.spinner("Processing uploaded file..."):
                     success = create_dataset_via_api(dataset_name, "local", create_config)
 
                 if success:
@@ -1055,7 +1057,7 @@ def flow_transform_datasets():
                     data = api_request("POST", url, json=payload)
 
                 if data:
-                    st.success(f"✅ Transformed dataset created!")
+                    st.success("✅ Transformed dataset created!")
                     # Update local state with transformed dataset
                     transformed_dataset = data.get("transformed_dataset", {})
                     st.session_state.api_datasets[transformed_name] = transformed_dataset
@@ -1252,9 +1254,6 @@ def proceed_to_next_step():
 
         st.switch_page("pages/3_Configure_Converters.py")
 
-
-# Import centralized auth utility
-from utils.auth_utils import handle_authentication_and_sidebar
 
 # --- Run Main Function ---
 if __name__ == "__main__":

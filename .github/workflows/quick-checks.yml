@@ -36,7 +36,7 @@ jobs:
           cache: 'pip'
 
       - name: Cache pip dependencies
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-quick-${{ hashFiles('**/requirements*.txt') }}
@@ -60,14 +60,15 @@ jobs:
       - name: Run critical flake8 checks
         run: |
           # Only check for critical errors that would prevent code execution
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # F841: local variable assigned but never used (code quality issue)
+          flake8 . --count --select=E9,F63,F7,F82,F841 --show-source --statistics
 
       - name: Run high-severity security scan
         run: |
           # Only check for high severity issues
-          bandit -r . -ll -f json -o bandit-results.json || true
+          bandit -r . -ll -f json -o bandit-results.json --exclude ".vitutf,__pycache__,.git,venv,.venv,node_modules,htmlcov,.pytest_cache" || true
           if [ -f bandit-results.json ]; then
-            python -c "import json; data = json.load(open('bandit-results.json')); print(f'High severity issues: {len(data.get(\"results\", []))}'); exit(1 if len(data.get('results', [])) > 0 else 0)"
+            python -c "import json; data = json.load(open('bandit-results.json')); high_severity = [r for r in data.get('results', []) if r.get('issue_severity') == 'HIGH']; print(f'High severity issues: {len(high_severity)}'); exit(1 if len(high_severity) > 0 else 0)"
           fi
 
   core-tests:
@@ -86,7 +87,7 @@ jobs:
           cache: 'pip'
 
       - name: Cache test dependencies
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: |
             ~/.cache/pip
@@ -119,7 +120,7 @@ jobs:
           # If unit test directory doesn't exist, run basic tests
           if [ ! -d tests/unit/ ]; then
             echo "No unit test directory found, running basic tests"
-            pytest tests/ -v --tb=short --maxfail=5 -k "not integration and not e2e" || true
+            pytest tests/unit/ -v --tb=short --maxfail=5 || true
           fi
 
       - name: Generate test summary

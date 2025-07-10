@@ -1,7 +1,8 @@
 import logging
-from typing import Dict, Any
-import requests
 import os
+from typing import Any, Dict
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,15 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
                 "temperature": generator_config["parameters"].get("temperature", 0.7),
                 "max_tokens": generator_config["parameters"].get("max_tokens", 1000),
             }
+        elif provider.startswith("openapi-"):
+            # OpenAPI format - always include model in payload
+            payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
+            # Add optional parameters if the OpenAPI spec supports them
+            if generator_config["parameters"].get("temperature") is not None:
+                payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
+            if generator_config["parameters"].get("max_tokens") is not None:
+                payload["max_tokens"] = generator_config["parameters"].get("max_tokens", 1000)
+            logger.info(f"OpenAPI request payload: {payload}")
         else:
             # OpenAI format - handle o1-series models differently
             payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
@@ -82,12 +92,29 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
 
         headers = {"Content-Type": "application/json", "X-API-Gateway": "APISIX"}
 
-        # Add API key for APISIX key-auth plugin
+        # All requests go through APISIX, so we always need the APISIX API key
+        # APISIX will handle upstream authentication via proxy-rewrite plugin
         api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY")
         if api_key:
             headers["apikey"] = api_key
+            logger.info(f"Using APISIX API key for authentication (provider: {provider})")
         else:
             logger.warning("No APISIX API key found in environment - requests may fail")
+
+        # For OpenAPI providers, APISIX proxy-rewrite plugin handles upstream auth
+        if provider.startswith("openapi-"):
+            provider_id = provider.replace("openapi-", "")
+            logger.info(f"OpenAPI provider {provider_id} - authentication will be handled by APISIX proxy-rewrite")
+
+        # Log request details for debugging
+        logger.info(f"Making request to: {url}")
+        logger.info(f"Request headers keys: {list(headers.keys())}")
+        if "Authorization" in headers:
+            auth_header = headers["Authorization"]
+            if auth_header.startswith("Bearer "):
+                token = auth_header[7:]
+                masked = token[:4] + "..." + token[-4:] if len(token) > 8 else "***"
+                logger.info(f"Authorization header: Bearer {masked}")
 
         response = requests.post(url, json=payload, headers=headers, timeout=30)
 
@@ -97,7 +124,8 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
             result = response.json()
 
             # Extract response based on provider
-            if provider == "openai":
+            if provider == "openai" or provider.startswith("openapi-"):
+                # OpenAI and OpenAPI providers use the same response format
                 content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
             elif provider == "anthropic":
                 content = result.get("content", [{}])[0].get("text", "")
@@ -166,6 +194,18 @@ async def _execute_generic_generator(generator_config: Dict, prompt: str, conver
 def _get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     """Get APISIX endpoint for provider/model combination"""
 
+    # Handle OpenAPI providers
+    if provider.startswith("openapi-"):
+        # Use the function from generators.py to get the endpoint
+        from app.api.endpoints.generators import get_apisix_endpoint_for_model
+
+        endpoint = get_apisix_endpoint_for_model(provider, model)
+        if endpoint:
+            return endpoint
+        # If no endpoint found, log detailed error
+        logger.error(f"No APISIX endpoint found for OpenAPI provider {provider} with model {model}")
+        return None
+
     # Map model names to APISIX route endpoints
     # These should match the configured APISIX AI proxy routes
     model_endpoint_mapping = {
@@ -183,11 +223,11 @@ def _get_apisix_endpoint_for_model(provider: str, model: str) -> str:
         "o3-mini": "/ai/openai/o3-mini",
         "o4-mini": "/ai/openai/o4-mini",
         # Anthropic models
-        "claude-3-haiku-20240307": "/ai/anthropic/haiku",
-        "claude-3-sonnet-20240229": "/ai/anthropic/sonnet",
-        "claude-3-opus-20240229": "/ai/anthropic/opus",
-        "claude-3-5-sonnet-20241022": "/ai/anthropic/sonnet35",
-        "claude-3-5-haiku-20241022": "/ai/anthropic/haiku35",
+        "claude-3-haiku-20240307": "/ai/anthropic/claude3-haiku",
+        "claude-3-sonnet-20240229": "/ai/anthropic/claude3-sonnet",
+        "claude-3-opus-20240229": "/ai/anthropic/claude3-opus",
+        "claude-3-5-sonnet-20241022": "/ai/anthropic/claude35-sonnet",
+        "claude-3-5-haiku-20241022": "/ai/anthropic/claude35-haiku",
         "claude-3-7-sonnet-latest": "/ai/anthropic/sonnet37",
         "claude-opus-4-20250514": "/ai/anthropic/opus4",
         "claude-sonnet-4-20250514": "/ai/anthropic/sonnet4",

@@ -3,21 +3,22 @@ MCP (Model Context Protocol) Client for ViolentUTF
 Implements SSE client for real-time MCP server communication
 """
 
+import asyncio
 import json
 import logging
+import os
 import time
-from typing import Dict, List, Optional, Any, Callable, Union
-from urllib.parse import urljoin
-import httpx
-from httpx_sse import connect_sse, ServerSentEvent
-import asyncio
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Union
+from urllib.parse import urljoin
+
+import httpx
+from httpx_sse import ServerSentEvent, connect_sse
 
 # Import existing authentication utilities
 from .jwt_manager import jwt_manager
 from .logging import get_logger
-import os
 
 # Set up logger for this module
 logger = get_logger(__name__)
@@ -208,7 +209,7 @@ class MCPClient:
                     return MCPResponse(
                         id=data.get("id", request_id), result=data.get("result"), error=data.get("error")
                     )
-                except:
+                except Exception:
                     return MCPResponse(
                         id=request_id,
                         error={"code": -32700, "message": f"Invalid response format: {response.text[:200]}"},

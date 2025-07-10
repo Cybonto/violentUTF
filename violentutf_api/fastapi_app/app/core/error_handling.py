@@ -4,13 +4,14 @@ SECURITY: Sanitizes error messages and prevents internal system information leak
 """
 
 import logging
+import re
+import sys
 import traceback
-from typing import Dict, Any, Optional, Union
+from typing import Any, Dict, Optional, Union
+
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-import re
-import sys
 
 logger = logging.getLogger(__name__)
 

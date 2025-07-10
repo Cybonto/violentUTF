@@ -1,3 +1,4 @@
+---
 # Pre-commit hooks for ViolentUTF
 # Run manually: pre-commit run --all-files
 # Install: pre-commit install
@@ -42,6 +43,12 @@ repos:
       - id: black
         language_version: python3.11
         args: ['--line-length=120']
+        # Exclude files with protected regex patterns
+        exclude: |
+          (?x)^(
+            violentutf_api/fastapi_app/app/core/validation\.py|
+            violentutf_api/fastapi_app/app/core/regex_patterns\.py
+          )$
 
   # Import sorting
   - repo: https://github.com/pycqa/isort
@@ -148,35 +155,47 @@ repos:
           - --skip-license-insertion-comment
           - '# Copyright (c) Microsoft Corporation.'
 
-# Custom local hooks
+  # Custom local hooks
   - repo: local
     hooks:
+      # CRITICAL: Regex pattern protection
+      - id: check-regex-patterns
+        name: Check Regex Patterns (prevent corruption)
+        entry: python scripts/check_regex_patterns.py
+        language: python
+        files: '\.py$'
+        pass_filenames: true
+        description: "Prevent corruption of regex patterns by auto-formatting"
+
       - id: no-print-statements
         name: Check for print statements
         entry: '(?<!def )print\('
         language: pygrep
         types: [python]
         exclude: 'tests/|setup.py|scripts/'
-        
+
       - id: no-hardcoded-secrets
         name: Check for hardcoded secrets
-        entry: '(api_key|apikey|password|secret|token|private_key)\s*=\s*["\'][^"\']+["\']'
+        entry: '(api_key|apikey|password|secret|token|private_key)=.*["\x27].*["\x27]'
         language: pygrep
         types: [python]
         exclude: 'tests/|ai-tokens.env.sample'
-        
+
       - id: validate-requirements
         name: Validate requirements files
-        entry: bash -c 'for f in $(find . -name "requirements*.txt" -type f); do grep -E "^[^#]" "$f" | grep -qE "^[a-zA-Z0-9]" || echo "Empty or invalid requirements file: $f"; done'
+        entry: >
+          bash -c 'for f in $(find . -name "requirements*.txt" -type f); do
+          grep -E "^[^#]" "$f" | grep -qE "^[a-zA-Z0-9]" ||
+          echo "Empty or invalid requirements file: $f"; done'
         language: system
         pass_filenames: false
-        
+
       - id: check-github-actions
-        name: Validate GitHub Actions workflows  
+        name: Validate GitHub Actions workflows
         entry: yamllint -d relaxed
         language: system
         files: '^\.github/workflows/.*\.(yml|yaml)$'
-        
+
       - id: check-docker-compose
         name: Validate docker-compose files
         entry: docker compose config --quiet

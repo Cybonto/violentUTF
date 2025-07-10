@@ -3,28 +3,28 @@ Authentication endpoints for obtaining JWT tokens
 SECURITY: Rate limiting and secure error handling implemented to prevent attacks
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status, Request
-from fastapi.security import OAuth2PasswordRequestForm
-from typing import Optional
-import httpx
-from datetime import timedelta
 import logging
+from datetime import timedelta
+from typing import Optional
 
-from app.core.config import settings
-from app.core.security import create_access_token
+import httpx
 from app.core.auth import get_current_user
-from app.core.rate_limiting import auth_rate_limit
+from app.core.config import settings
 from app.core.error_handling import authentication_error, safe_error_response
-from app.core.password_policy import validate_password_strength, default_password_validator
+from app.core.password_policy import default_password_validator, validate_password_strength
+from app.core.rate_limiting import auth_rate_limit
+from app.core.security import create_access_token
 from app.core.security_logging import (
-    log_authentication_success,
     log_authentication_failure,
+    log_authentication_success,
+    log_suspicious_activity,
     log_token_event,
     log_weak_password_attempt,
-    log_suspicious_activity,
 )
-from app.schemas.auth import Token, UserInfo, TokenInfoResponse, TokenValidationRequest, TokenValidationResponse
 from app.models.auth import User
+from app.schemas.auth import Token, TokenInfoResponse, TokenValidationRequest, TokenValidationResponse, UserInfo
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.security import OAuth2PasswordRequestForm
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +71,10 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
                     email = user_info["email"]
                     roles = user_info["roles"]
 
+                    # Debug logging to track username consistency
+                    logger.info(
+                        f"Keycloak token verification - username: {username}, display_name: {user_info.get('name')}"
+                    )
                     logger.info(f"Successfully verified Keycloak token for user: {username}")
 
                 except HTTPException:
@@ -88,12 +92,13 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
                 # Create our own JWT token with verified Keycloak information
                 access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
                 access_token_data = {
-                    "sub": username,
+                    "sub": username,  # ALWAYS use username from preferred_username, not display name
                     "email": email,
                     "roles": roles,
                     "keycloak_id": user_info["keycloak_id"],
                     "email_verified": user_info["email_verified"],
-                    "name": user_info.get("name"),
+                    # Note: We include 'name' for display purposes only, never use it as username
+                    "display_name": user_info.get("name"),  # Renamed to make it clear this is NOT the username
                     "session_state": user_info.get("session_state"),
                     "verified_by_keycloak": True,  # Mark as cryptographically verified
                     "keycloak_iat": user_info["issued_at"],
@@ -167,8 +172,9 @@ async def get_token_info(request: Request, current_user: User = Depends(get_curr
     """
     Get decoded JWT token information for current user
     """
-    import jwt
     from datetime import datetime
+
+    import jwt
 
     # Check if user has AI access (ai-api-access role)
     has_ai_access = "ai-api-access" in current_user.roles

@@ -17,15 +17,32 @@ echo "=========================================="
 echo "🚀 ViolentUTF Application Launcher"
 echo "=========================================="
 
-# Check if virtual environment exists
-if [ ! -d ".vitutf" ]; then
-    echo -e "${RED}Error: Virtual environment not found!${NC}"
-    echo "Please run setup_macos.sh first."
-    exit 1
+# Source the streamlit setup functions if available
+if [ -f "setup_macos_files/streamlit_setup.sh" ]; then
+    source setup_macos_files/streamlit_setup.sh
+    
+    # Check and setup Streamlit environment
+    if ! ensure_streamlit_ready "violentutf"; then
+        echo -e "${RED}Failed to setup Streamlit environment${NC}"
+        exit 1
+    fi
+    
+    # Re-activate venv after setup (in case it was created)
+    if [ -d "violentutf/.vitutf" ]; then
+        source violentutf/.vitutf/bin/activate
+    fi
+else
+    # Fallback to old method
+    if [ -d "violentutf/.vitutf" ]; then
+        echo "🐍 Activating Python virtual environment..."
+        source violentutf/.vitutf/bin/activate
+    elif [ -d ".vitutf" ]; then
+        echo "🐍 Activating Python virtual environment..."
+        source .vitutf/bin/activate
+    else
+        echo -e "${YELLOW}Warning: Virtual environment not found, using system Python${NC}"
+    fi
 fi
-
-# Activate virtual environment
-source .vitutf/bin/activate
 
 # Check if Home.py exists
 if [ -f "violentutf/Home.py" ]; then
@@ -62,14 +79,19 @@ launch_new_terminal() {
     cat > /tmp/launch_violentutf_session.sh <<EOF
 #!/bin/bash
 cd "$SCRIPT_DIR"
-source .vitutf/bin/activate
+if [ -d "violentutf/.vitutf" ]; then
+    source violentutf/.vitutf/bin/activate
+elif [ -d ".vitutf" ]; then
+    source .vitutf/bin/activate
+fi
 echo "🚀 Starting ViolentUTF application..."
 echo "   Access the app at: http://localhost:8501"
 echo ""
 echo "Press Ctrl+C to stop the application"
 echo ""
-# Use full path for streamlit
-streamlit run "$SCRIPT_DIR/$APP_PATH"
+# Change to app directory and run streamlit
+cd "$SCRIPT_DIR/$APP_DIR"
+streamlit run "$(basename "$SCRIPT_DIR/$APP_PATH")"
 EOF
     chmod +x /tmp/launch_violentutf_session.sh
     osascript -e 'tell app "Terminal" to do script "/tmp/launch_violentutf_session.sh"'

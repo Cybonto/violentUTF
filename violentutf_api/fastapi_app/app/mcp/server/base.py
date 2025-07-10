@@ -2,15 +2,15 @@
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
+
+from app.core.config import settings
+from app.mcp.auth import MCPAuthHandler
+from app.mcp.config import mcp_settings
 from fastapi import FastAPI, HTTPException
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
-from mcp.types import ServerCapabilities, Tool, Resource, Prompt, CreateMessageRequest
-
-from app.core.config import settings
-from app.mcp.config import mcp_settings
-from app.mcp.auth import MCPAuthHandler
+from mcp.types import CreateMessageRequest, Prompt, Resource, ServerCapabilities, Tool
 
 logger = logging.getLogger(__name__)
 

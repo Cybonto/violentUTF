@@ -6,14 +6,14 @@ This script helps diagnose user context mismatches that prevent
 scorer testing from working properly.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add app directory to path
 sys.path.append(str(Path(__file__).parent / "app"))
 
-from app.db.duckdb_manager import DuckDBManager
+from app.db.duckdb_manager import DuckDBManager  # noqa: E402
 
 
 def diagnose_user_contexts():
@@ -61,20 +61,20 @@ def diagnose_user_contexts():
         except Exception as e:
             print(f"  ❌ Error: {e}")
 
-    print(f"\n📈 Summary:")
+    print("\n📈 Summary:")
     print(f"  Total generators across all contexts: {total_generators}")
     print(f"  Total datasets across all contexts: {total_datasets}")
 
     if total_generators == 0:
-        print(f"\n⚠️  ISSUE FOUND: No generators configured in any user context")
-        print(f"   SOLUTION: Go to 'Configure Generators' page and create a generator")
-        print(f"   Example: Create an 'AI Gateway' generator with provider and model")
+        print("\n⚠️  ISSUE FOUND: No generators configured in any user context")
+        print("   SOLUTION: Go to 'Configure Generators' page and create a generator")
+        print("   Example: Create an 'AI Gateway' generator with provider and model")
 
     if total_generators > 0:
-        print(f"\n💡 If scorer testing fails despite having generators:")
-        print(f"   1. Note which user context has generators above")
-        print(f"   2. Run migration script to move data to 'violentutf.web':")
-        print(f'      python3 migrate_user_context.py --from "SOURCE_USER" --to "violentutf.web"')
+        print("\n💡 If scorer testing fails despite having generators:")
+        print("   1. Note which user context has generators above")
+        print("   2. Run migration script to move data to 'violentutf.web':")
+        print('      python3 migrate_user_context.py --from "SOURCE_USER" --to "violentutf.web"')
 
 
 if __name__ == "__main__":

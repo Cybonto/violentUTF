@@ -9,31 +9,32 @@ These tests validate Phase 2 implementation with proper architecture:
 - Test actual implementation, not future phases
 """
 
-import pytest
 import asyncio
+import json
 import logging
 import os
-import json
-from typing import Dict, Any, List, Optional
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
+from app.mcp.auth import MCPAuthHandler
+from app.mcp.config import mcp_settings
+from app.mcp.resources import resource_registry
+from app.mcp.resources.manager import ViolentUTFResourceManager, resource_manager
+from app.mcp.server.base import ViolentUTFMCPServer
+
+# Test the actual implemented components
+from app.mcp.tools import tool_registry
+from app.mcp.tools.executor import tool_executor
+from app.mcp.tools.generator import tool_generator
+from app.mcp.tools.generators import GeneratorConfigurationTools, generator_tools
+from app.mcp.tools.introspection import EndpointIntrospector, ViolentUTFToolFilter, initialize_introspector
+from app.mcp.tools.orchestrators import OrchestratorManagementTools, orchestrator_tools
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
 # MCP and core imports
-from mcp.types import Tool, Resource, ServerCapabilities
-
-# Test the actual implemented components
-from app.mcp.tools import tool_registry
-from app.mcp.tools.introspection import EndpointIntrospector, ViolentUTFToolFilter, initialize_introspector
-from app.mcp.tools.generators import generator_tools, GeneratorConfigurationTools
-from app.mcp.tools.orchestrators import orchestrator_tools, OrchestratorManagementTools
-from app.mcp.tools.generator import tool_generator
-from app.mcp.tools.executor import tool_executor
-from app.mcp.resources import resource_registry
-from app.mcp.resources.manager import resource_manager, ViolentUTFResourceManager
-from app.mcp.server.base import ViolentUTFMCPServer
-from app.mcp.auth import MCPAuthHandler
-from app.mcp.config import mcp_settings
+from mcp.types import Resource, ServerCapabilities, Tool
 
 logger = logging.getLogger(__name__)
 
@@ -784,6 +785,9 @@ class TestPhase2AuthenticationIntegration(TestPhase2Architecture):
 
                 # Test tool execution with auth context
                 result = await generator_tools.execute_tool("list_generators", {}, {"token": "test_token"})
+
+                # Verify tool execution returned a result
+                assert result is not None, "Tool execution should return a result"
 
                 # Verify API call included auth headers
                 call_args = mock_client.return_value.__aenter__.return_value.request.call_args

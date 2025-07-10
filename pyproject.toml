@@ -12,6 +12,7 @@ extend-exclude = '''
   | \.mypy_cache
   | \.tox
   | \.venv
+  | \.vitutf
   | _build
   | buck-out
   | build
@@ -20,6 +21,12 @@ extend-exclude = '''
   | violentutf_logs
   | migrations
 )/
+|
+# Files with protected regex patterns - DO NOT AUTO-FORMAT
+(
+  violentutf_api/fastapi_app/app/core/validation\.py
+  | violentutf_api/fastapi_app/app/core/regex_patterns\.py
+)
 '''
 
 [tool.isort]
@@ -38,6 +45,7 @@ skip = [
     ".mypy_cache",
     ".tox",
     ".venv",
+    ".vitutf",
     "_build",
     "buck-out",
     "build",

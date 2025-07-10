@@ -2,11 +2,12 @@
 Health check endpoints
 """
 
-from fastapi import APIRouter, Request, Response
 from datetime import datetime
+
 from app.core.config import settings
 from app.core.security_headers import validate_security_headers
 from app.core.security_logging import security_metrics
+from fastapi import APIRouter, Request, Response
 
 router = APIRouter()
 

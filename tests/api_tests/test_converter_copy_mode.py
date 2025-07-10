@@ -6,11 +6,12 @@ This is a simplified test focused on verifying the fix for the issue
 where converters in COPY mode didn't actually create new datasets.
 """
 
+import json
 import os
 import sys
-import json
 import time
 import uuid
+
 import requests
 
 # Add parent directory to path for imports
@@ -115,7 +116,7 @@ def test_converter_copy_mode():
         return False
 
     apply_result = response.json()
-    print(f"✅ Converter applied successfully:")
+    print("✅ Converter applied successfully:")
     print(f"   - Success: {apply_result['success']}")
     print(f"   - New dataset: '{apply_result['dataset_name']}'")
     print(f"   - New dataset ID: {apply_result['dataset_id']}")
@@ -132,7 +133,7 @@ def test_converter_copy_mode():
         return False
 
     new_dataset = response.json()
-    print(f"✅ New dataset verified:")
+    print("✅ New dataset verified:")
     print(f"   - Name: {new_dataset['name']}")
     print(f"   - Source type: {new_dataset['source_type']}")
     print(f"   - Prompt count: {new_dataset['prompt_count']}")

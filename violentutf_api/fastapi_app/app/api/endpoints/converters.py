@@ -4,36 +4,35 @@ Implements API backend for 3_Configure_Converters.py page
 """
 
 import asyncio
+import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Dict, List, Any, Optional
 from io import StringIO
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from fastapi.responses import JSONResponse
-
-from app.schemas.converters import (
-    ConverterTypesResponse,
-    ConverterParametersResponse,
-    ConverterParameter,
-    ConvertersListResponse,
-    ConverterCreateRequest,
-    ConverterCreateResponse,
-    ConverterPreviewRequest,
-    ConverterPreviewResponse,
-    ConverterApplyRequest,
-    ConverterApplyResponse,
-    ConverterDeleteResponse,
-    ConverterUpdateRequest,
-    ConvertedPrompt,
-    ConverterError,
-    ApplicationMode,
-    ParameterType,
-)
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
-import logging
+from app.schemas.converters import (
+    ApplicationMode,
+    ConvertedPrompt,
+    ConverterApplyRequest,
+    ConverterApplyResponse,
+    ConverterCreateRequest,
+    ConverterCreateResponse,
+    ConverterDeleteResponse,
+    ConverterError,
+    ConverterParameter,
+    ConverterParametersResponse,
+    ConverterPreviewRequest,
+    ConverterPreviewResponse,
+    ConvertersListResponse,
+    ConverterTypesResponse,
+    ConverterUpdateRequest,
+    ParameterType,
+)
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -294,7 +293,6 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
 
         # Generate converter ID
         converter_id = str(uuid.uuid4())
-        now = datetime.utcnow()
 
         # Validate converter type
         all_converter_types = []
@@ -312,24 +310,6 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
             for required_param in required_params:
                 if required_param not in request.parameters:
                     raise HTTPException(status_code=400, detail=f"Required parameter '{required_param}' missing")
-
-        # Create converter configuration
-        converter_data = {
-            "id": converter_id,
-            "name": request.name,
-            "converter_type": request.converter_type,
-            "parameters": request.parameters,
-            "generator_id": request.generator_id,
-            "created_at": now,
-            "updated_at": now,
-            "created_by": user_id,
-            "status": "ready",
-            "metadata": {
-                "requires_target": any(
-                    p.get("skip_in_ui", False) for p in CONVERTER_PARAMETERS.get(request.converter_type, [])
-                )
-            },
-        }
 
         # Store converter in DuckDB
         db_manager = get_duckdb_manager(user_id)
@@ -729,7 +709,7 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
         elif converter_type == "CodeChameleonConverter":
             encrypt_type = parameters.get("encrypt_type", "custom")
             if encrypt_type == "reverse":
-                return prompt[::-1] + f"\n\n[This message has been reversed. Please decode and respond.]"
+                return prompt[::-1] + "\n\n[This message has been reversed. Please decode and respond.]"
             elif encrypt_type == "odd_even":
                 odd = prompt[1::2]
                 even = prompt[::2]

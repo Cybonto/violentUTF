@@ -4,6 +4,9 @@ FROM python:3.10-slim
 # Set the working directory in the container
 WORKDIR /app
 
+# Set shell for pipefail support
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Determine the correct Python command (python3 or python) and upgrade pip
 # This script checks for python3 first, then python.
 # It then uses the determined command to upgrade pip.
@@ -20,16 +23,22 @@ RUN if command -v python3 >/dev/null 2>&1; then \
 
 # Install curl, build-essential (if not already present, needed for Rust), then Rust and Cargo
 # Adjust package manager commands (apt-get) if your base image is not Debian/Ubuntu-based
-RUN apt-get update && apt-get install -y curl build-essential \
-    && curl https://sh.rustup.rs -sSf | sh -s -- -y
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl=7.81.0-1ubuntu1.18 \
+    build-essential=12.9ubuntu3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Install system dependencies
+# Install system dependencies with version pinning
 # libgraphviz-dev is needed for pygraphviz, which might be a sub-dependency of pyrit/garak
 # pkg-config is often needed for building some Python packages with C extensions
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libgraphviz-dev pkg-config gcc && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+    libgraphviz-dev=2.42.2-6ubuntu0.1 \
+    pkg-config=0.29.2-1ubuntu3 \
+    gcc=4:11.2.0-1ubuntu1 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
 COPY requirements.txt .

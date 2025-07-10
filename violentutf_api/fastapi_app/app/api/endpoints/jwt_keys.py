@@ -3,22 +3,21 @@ JWT API Key management endpoints
 SECURITY: Rate limiting applied to prevent API key enumeration attacks
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from typing import List
-from datetime import datetime
-import secrets
 import hashlib
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+import secrets
+from datetime import datetime
+from typing import List
 
 from app.core.auth import get_current_user
-from app.core.security import create_api_key_token
 from app.core.rate_limiting import auth_rate_limit
-from app.schemas.auth import UserInfo, APIKey, APIKeyCreate, APIKeyList
-from app.schemas.auth import APIKeyResponse
-from app.models.auth import User
-from app.models.api_key import APIKey as APIKeyModel
+from app.core.security import create_api_key_token
 from app.db.database import get_session
+from app.models.api_key import APIKey as APIKeyModel
+from app.models.auth import User
+from app.schemas.auth import APIKey, APIKeyCreate, APIKeyList, APIKeyResponse, UserInfo
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -85,7 +84,7 @@ async def list_api_keys(
     """
     # Query database for user's API keys
     result = await db.execute(
-        select(APIKeyModel).where(APIKeyModel.user_id == current_user.username, APIKeyModel.is_active == True)
+        select(APIKeyModel).where(APIKeyModel.user_id == current_user.username, APIKeyModel.is_active is True)
     )
     db_keys = result.scalars().all()
 

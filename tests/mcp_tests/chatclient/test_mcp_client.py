@@ -3,14 +3,15 @@ Test suite for MCP Client implementation
 Tests SSE connection, JSON-RPC handling, and all MCP operations
 """
 
-import pytest
 import asyncio
 import json
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-import httpx
-from httpx import Response
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import httpx
+import pytest
+from httpx import Response
 
 # Import from utils - conftest.py handles path setup
 from utils.mcp_client import MCPClient, MCPClientSync, MCPMethod, MCPResponse
@@ -45,7 +46,11 @@ class TestMCPClient:
     @pytest.fixture
     def mock_auth_headers(self):
         """Mock authentication headers"""
-        return {"Authorization": "Bearer test_token", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+        return {
+            "Authorization": "Bearer test_token",
+            "Content-Type": "application/json",
+            "X-API-Gateway": "APISIX",
+        }
 
     @pytest.mark.asyncio
     async def test_initialization(self, client, mock_auth_headers):
@@ -189,7 +194,7 @@ class TestMCPClient:
         mock_response.text = """data: {"jsonrpc": "2.0", "id": 6, "result": {"test": "sse_data"}}
 
 event: close
-data: 
+data:
 
 """
 
@@ -251,8 +256,6 @@ class TestMCPClientSync:
 
     def test_sync_initialization(self, client):
         """Test synchronous initialization"""
-        mock_response = {"jsonrpc": "2.0", "id": 1, "result": {"name": "ViolentUTF MCP Server", "version": "1.0.0"}}
-
         with patch.object(client.client, "initialize", new_callable=AsyncMock, return_value=True):
             result = client.initialize()
             assert result is True

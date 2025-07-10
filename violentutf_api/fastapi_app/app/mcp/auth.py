@@ -1,14 +1,14 @@
 """MCP Authentication Bridge"""
 
-import jwt
-from typing import Optional, Dict, Any
-from fastapi import HTTPException, status, Request
 import logging
+from typing import Any, Dict, Optional
 
-from app.core.config import settings
-from app.core.security import decode_token, create_access_token
+import jwt
 from app.core.auth import get_current_user
+from app.core.config import settings
+from app.core.security import create_access_token, decode_token
 from app.services.keycloak_verification import keycloak_verifier
+from fastapi import HTTPException, Request, status
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class MCPAuthHandler:
                     "email": user_info["email"],
                     "keycloak_verified": True,
                 }
-            except:
+            except Exception:
                 # Fall back to local JWT verification
                 payload = decode_token(token)
                 if payload:

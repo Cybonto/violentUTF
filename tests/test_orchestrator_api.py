@@ -1,6 +1,8 @@
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch, AsyncMock
+
 from violentutf_api.fastapi_app.main import app
 
 client = TestClient(app)

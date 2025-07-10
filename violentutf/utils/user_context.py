@@ -3,9 +3,10 @@ User Context Management for ViolentUTF
 Ensures consistent user identification across all pages
 """
 
-import os
-import streamlit as st
 import logging
+import os
+
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 

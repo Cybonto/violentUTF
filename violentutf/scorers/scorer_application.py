@@ -15,13 +15,14 @@ Dependencies:
 - utils.error_handling
 """
 
+import asyncio
 import logging
 from typing import List
-from pyrit.models import PromptRequestPiece, SeedPromptDataset, Score, SeedPrompt
+
+from pyrit.models import PromptRequestPiece, Score, SeedPrompt, SeedPromptDataset
 from pyrit.score import Scorer
-from utils.logging import get_logger
 from utils.error_handling import ScorerApplicationError
-import asyncio
+from utils.logging import get_logger
 
 # Configure logger
 logger = get_logger(__name__)

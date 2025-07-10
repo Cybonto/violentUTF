@@ -3,23 +3,24 @@ Test suite for MCP Integration Utilities
 Tests natural language parsing, context analysis, and integration features
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 import json
-import sys
 import os
+import sys
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+from utils.mcp_client import MCPClientSync
 
 # Import from utils - conftest.py handles path setup
 from utils.mcp_integration import (
-    NaturalLanguageParser,
+    ContextAnalyzer,
+    DatasetIntegration,
     MCPCommand,
     MCPCommandType,
-    ContextAnalyzer,
+    NaturalLanguageParser,
     ResourceSearcher,
     TestScenarioInterpreter,
-    DatasetIntegration,
 )
-from utils.mcp_client import MCPClientSync
 
 
 class TestNaturalLanguageParser:
@@ -262,7 +263,7 @@ class TestTestScenarioInterpreter:
     @pytest.fixture
     def interpreter(self):
         """Create interpreter with mock MCP client"""
-        from utils.mcp_integration import TestScenarioInterpreter
+        #         from utils.mcp_integration import TestScenarioInterpreter # F811: removed duplicate import
 
         mock_client = Mock(spec=MCPClientSync)
         mock_client.get_prompt.return_value = "Rendered test prompt"
@@ -397,7 +398,7 @@ class TestIntegration:
     def test_full_command_flow(self):
         """Test complete flow from parsing to execution"""
         # Import the class correctly
-        from utils.mcp_integration import TestScenarioInterpreter
+        #         from utils.mcp_integration import TestScenarioInterpreter # F811: removed duplicate import
 
         # Create components
         parser = NaturalLanguageParser()

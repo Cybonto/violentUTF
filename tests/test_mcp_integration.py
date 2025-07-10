@@ -6,18 +6,20 @@ Tests MCP client with actual ViolentUTF API endpoints.
 MUST use real MCP server, no mocks or simulated data.
 """
 
-import pytest
+import asyncio
+import logging
 import os
 import sys
 import time
-import asyncio
+from typing import Any, Dict, List
+
 import jwt
-from typing import Dict, Any, List
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from violentutf.utils.mcp_client import MCPClient, MCPClientSync
 from violentutf.utils.jwt_manager import jwt_manager
+from violentutf.utils.mcp_client import MCPClient, MCPClientSync
 
 
 def create_test_jwt_token() -> str:
@@ -108,7 +110,6 @@ class TestMCPIntegration:
 
         # Skip assertion on tool count if JSON serialization issue
         if len(tools) == 0:
-            import logging
 
             logger = logging.getLogger(__name__)
             logger.warning("No tools returned - possible JSON serialization issue in MCP server")
@@ -322,6 +323,7 @@ class TestMCPIntegration:
 
         response_time = end_time - start_time
         assert response_time < 5.0, f"List tools took too long: {response_time}s"
+        assert tools is not None, "Tools list should not be None"
         print(f"List tools response time: {response_time:.2f}s")
 
         # Measure health check performance

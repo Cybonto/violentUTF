@@ -1,20 +1,20 @@
 """OAuth Proxy for MCP Client Compatibility"""
 
-import httpx
-from typing import Dict, Any, Optional
-from fastapi import APIRouter, Request, HTTPException, Query
-from fastapi.responses import JSONResponse, RedirectResponse
+import base64
+import hashlib
 import logging
 import secrets
 import time
-import base64
-import hashlib
+from typing import Any, Dict, Optional
 from urllib.parse import urlencode
 
+import httpx
 from app.core.config import settings
-from app.services.keycloak_verification import keycloak_verifier
-from app.core.security import create_access_token
 from app.core.error_handling import safe_error_response
+from app.core.security import create_access_token
+from app.services.keycloak_verification import keycloak_verifier
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.responses import JSONResponse, RedirectResponse
 
 logger = logging.getLogger(__name__)
 

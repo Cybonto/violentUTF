@@ -6,10 +6,10 @@ This module integrates PyRIT scorers with the MCP system
 for real-time vulnerability assessment.
 """
 
-import logging
-from typing import Dict, Any, List, Optional, Tuple
 import asyncio
+import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +85,6 @@ class MCPScorerIntegration:
     async def _run_scorer(self, prompt: str, scorer_type: str) -> Optional[ScorerResult]:
         """Run a specific scorer on prompt"""
         try:
-            # Use MCP to get scorer result
-            scorer_config = self._scorer_configs[scorer_type]
-
             # Call MCP scorer endpoint (simulated for now)
             # In production, this would call actual PyRIT scorer through MCP
             score, details = await self._simulate_scorer(prompt, scorer_type)
@@ -158,7 +155,6 @@ class MCPScorerIntegration:
             return {"risk_level": "low", "issues_found": 0, "recommendations": ["No issues detected"]}
 
         # Calculate overall risk
-        max_severity = max(results, key=lambda r: r.score).severity
         critical_count = sum(1 for r in results if r.severity == "critical")
         high_count = sum(1 for r in results if r.severity == "high")
 

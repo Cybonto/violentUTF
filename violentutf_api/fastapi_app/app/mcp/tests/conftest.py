@@ -7,12 +7,14 @@ It sets up proper mocking and environment configuration to test the
 actual implementation without external dependencies.
 """
 
-import pytest
 import asyncio
 import os
 import sys
-from unittest.mock import patch, Mock
-from typing import Generator, Dict, Any
+import tempfile
+from typing import Any, Dict, Generator
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Add the app directory to Python path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
@@ -54,9 +56,9 @@ def mock_environment():
         "KEYCLOAK_REALM": "ViolentUTF",
         "KEYCLOAK_CLIENT_ID": "violentutf-fastapi",
         "KEYCLOAK_CLIENT_SECRET": "test_client_secret",
-        # Override data directories to prevent file system issues
-        "APP_DATA_DIR": "/tmp/test_app_data",
-        "CONFIG_DIR": "/tmp/test_config",
+        # Override data directories to use secure temporary directories
+        "APP_DATA_DIR": tempfile.mkdtemp(prefix="test_app_data_"),
+        "CONFIG_DIR": tempfile.mkdtemp(prefix="test_config_"),
         # Database (use in-memory for tests)
         "DATABASE_URL": "sqlite:///:memory:",
         # Performance settings for tests
@@ -103,8 +105,8 @@ def clean_registries():
     """Clean tool and resource registries before each test"""
     # Import after environment is set up
     try:
-        from app.mcp.tools import tool_registry
         from app.mcp.resources import resource_registry
+        from app.mcp.tools import tool_registry
 
         # Clear registries
         tool_registry.clear_tools()
@@ -124,7 +126,7 @@ def clean_registries():
 def mock_mcp_types():
     """Ensure MCP types are available for testing"""
     try:
-        from mcp.types import Tool, Resource, ServerCapabilities
+        from mcp.types import Resource, ServerCapabilities, Tool
 
         return {"Tool": Tool, "Resource": Resource, "ServerCapabilities": ServerCapabilities}
     except ImportError:
@@ -142,8 +144,9 @@ def mock_mcp_types():
 @pytest.fixture
 def sample_fastapi_routes():
     """Sample FastAPI routes for testing introspection"""
-    from fastapi.routing import APIRoute
     from unittest.mock import Mock
+
+    from fastapi.routing import APIRoute
 
     routes = []
 

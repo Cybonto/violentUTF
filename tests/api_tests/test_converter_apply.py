@@ -6,14 +6,15 @@ This test verifies that the converter apply endpoint properly creates new datase
 when used in COPY mode, fixing the issue where it only simulated the operation.
 """
 
+import json
 import os
 import sys
-import json
 import time
 import uuid
+from datetime import datetime
+
 import pytest
 import requests
-from datetime import datetime
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -75,14 +76,14 @@ class TestConverterApply:
         for dataset_id in self.created_resources["datasets"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
         # Delete created converters
         for converter_id in self.created_resources["converters"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
     def create_test_dataset(self, name: str, prompts: list) -> str:
@@ -237,7 +238,7 @@ class TestConverterApply:
         # Track new dataset for cleanup
         self.created_resources["datasets"].append(result["dataset_id"])
 
-        print(f"✅ Converter with custom parameters successfully applied")
+        print("✅ Converter with custom parameters successfully applied")
 
     def test_converter_apply_missing_dataset(self):
         """Test error handling for non-existent dataset"""
@@ -259,7 +260,7 @@ class TestConverterApply:
         assert response.status_code == 404
         assert "not found" in response.text.lower()
 
-        print(f"✅ Properly handles non-existent dataset error")
+        print("✅ Properly handles non-existent dataset error")
 
     def test_converter_apply_missing_new_name(self):
         """Test validation for missing new dataset name in COPY mode"""
@@ -282,7 +283,7 @@ class TestConverterApply:
         assert response.status_code == 400
         assert "new_dataset_name is required" in response.text
 
-        print(f"✅ Properly validates required fields for COPY mode")
+        print("✅ Properly validates required fields for COPY mode")
 
 
 def main():

@@ -89,13 +89,25 @@ jobs:
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
         with:
           script: |
+            // Use appropriate ref based on event type
+            let ref;
+            if (context.eventName === 'pull_request') {
+              // For PRs, use the head SHA to avoid issues with merge refs
+              ref = context.payload.pull_request.head.sha;
+              console.log(`Using PR head SHA: ${ref}`);
+            } else {
+              // For other events, use the normal ref
+              ref = context.ref;
+              console.log(`Using context ref: ${ref}`);
+            }
+
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'quick-checks.yml',
-              ref: context.ref
+              ref: ref
             });
-            console.log('Triggered quick-checks workflow');
+            console.log(`Triggered quick-checks workflow on ref: ${ref}`);
 
   # PR validation for pull requests
   trigger-pr-validation:
@@ -108,13 +120,25 @@ jobs:
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
         with:
           script: |
+            // Use appropriate ref based on event type
+            let ref;
+            if (context.eventName === 'pull_request') {
+              // For PRs, use the head SHA to avoid issues with merge refs
+              ref = context.payload.pull_request.head.sha;
+              console.log(`Using PR head SHA: ${ref}`);
+            } else {
+              // For other events, use the normal ref
+              ref = context.ref;
+              console.log(`Using context ref: ${ref}`);
+            }
+
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'pr-validation.yml',
-              ref: context.ref
+              ref: ref
             });
-            console.log('Triggered pr-validation workflow');
+            console.log(`Triggered pr-validation workflow on ref: ${ref}`);
   # Full CI for main branch and releases
   trigger-full-ci:
     name: Trigger Full CI
@@ -127,13 +151,25 @@ jobs:
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
         with:
           script: |
+            // Use appropriate ref based on event type
+            let ref;
+            if (context.eventName === 'pull_request') {
+              // For PRs, use the head SHA to avoid issues with merge refs
+              ref = context.payload.pull_request.head.sha;
+              console.log(`Using PR head SHA: ${ref}`);
+            } else {
+              // For other events, use the normal ref
+              ref = context.ref;
+              console.log(`Using context ref: ${ref}`);
+            }
+
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'full-ci.yml',
-              ref: context.ref
+              ref: ref
             });
-            console.log('Triggered full-ci workflow');
+            console.log(`Triggered full-ci workflow on ref: ${ref}`);
 
   # Nightly testing
   trigger-nightly:
@@ -147,13 +183,25 @@ jobs:
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
         with:
           script: |
+            // Use appropriate ref based on event type
+            let ref;
+            if (context.eventName === 'pull_request') {
+              // For PRs, use the head SHA to avoid issues with merge refs
+              ref = context.payload.pull_request.head.sha;
+              console.log(`Using PR head SHA: ${ref}`);
+            } else {
+              // For other events, use the normal ref
+              ref = context.ref;
+              console.log(`Using context ref: ${ref}`);
+            }
+
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'nightly.yml',
-              ref: context.ref
+              ref: ref
             });
-            console.log('Triggered nightly workflow');
+            console.log(`Triggered nightly workflow on ref: ${ref}`);
 
   # Skip notification
   skip-notification:

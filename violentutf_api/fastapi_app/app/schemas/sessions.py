@@ -2,9 +2,10 @@
 Session management schemas
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field
 
 
 class UpdateSessionRequest(BaseModel):

@@ -2,9 +2,10 @@
 Configuration management schemas
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List, Literal
 from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional
+
+from pydantic import BaseModel, Field
 
 
 class UpdateConfigRequest(BaseModel):

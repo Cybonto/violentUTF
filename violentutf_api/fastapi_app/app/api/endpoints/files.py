@@ -2,18 +2,18 @@
 File management endpoints
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File, Response
-from fastapi.responses import FileResponse
-from typing import Optional, List
 import os
 import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
+from typing import List, Optional
 
 from app.core.auth import get_current_user
 from app.models.auth import User
-from app.schemas.files import FileUploadResponse, FileMetadataResponse, FileListResponse, FileInfo
+from app.schemas.files import FileInfo, FileListResponse, FileMetadataResponse, FileUploadResponse
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from fastapi.responses import FileResponse
 
 router = APIRouter()
 

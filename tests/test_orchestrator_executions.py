@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Test script to verify orchestrator executions endpoint"""
 
-import requests
 import json
 import os
 from datetime import datetime
+
+import requests
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -40,7 +41,7 @@ if not jwt_token:
 # Headers
 headers = {"Authorization": f"Bearer {jwt_token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
 
-print(f"Testing orchestrator executions endpoint...")
+print("Testing orchestrator executions endpoint...")
 print(f"API Base URL: {API_BASE_URL}")
 print(f"JWT Token (first 20 chars): {jwt_token[:20]}...")
 print("-" * 50)

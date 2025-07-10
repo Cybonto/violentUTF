@@ -6,19 +6,19 @@ This module manages ViolentUTF resources for MCP access with enhanced
 features including advanced resource providers, caching, and metadata.
 """
 
-import logging
 import json
+import logging
 import os
-from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
 from pathlib import Path
-import httpx
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
 
-from mcp.types import Resource
+import httpx
 from app.core.config import settings
 from app.mcp.auth import MCPAuthHandler
-from app.mcp.resources.base import advanced_resource_registry, AdvancedResource
+from app.mcp.resources.base import AdvancedResource, advanced_resource_registry
+from mcp.types import Resource
 
 logger = logging.getLogger(__name__)
 

@@ -3,20 +3,20 @@ Authentication and authorization schemas
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks
 """
 
-from pydantic import BaseModel, Field, validator, EmailStr
-from typing import List, Optional
-from datetime import datetime
 import re
+from datetime import datetime
+from typing import List, Optional
 
+from app.core.password_policy import validate_password_strength
 from app.core.validation import (
-    validate_username,
-    validate_role_list,
-    sanitize_string,
     SecurityLimits,
     ValidationPatterns,
     create_validation_error,
+    sanitize_string,
+    validate_role_list,
+    validate_username,
 )
-from app.core.password_policy import validate_password_strength
+from pydantic import BaseModel, EmailStr, Field, validator
 
 
 class Token(BaseModel):

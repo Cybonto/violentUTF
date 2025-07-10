@@ -1,9 +1,9 @@
 """APISIX Route Configuration for MCP"""
 
-import httpx
-from typing import Dict, Any
 import logging
+from typing import Any, Dict
 
+import httpx
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class APISIXRouteManager:
         main_route = await self._create_route(
             route_id="mcp-main",
             uri="/mcp/*",
-            upstream_url=f"http://violentutf-api:8000",
+            upstream_url="http://violentutf-api:8000",
             plugins={
                 "cors": {
                     "allow_origins": "*",
@@ -42,7 +42,7 @@ class APISIXRouteManager:
         oauth_route = await self._create_route(
             route_id="mcp-oauth",
             uri="/mcp/oauth/*",
-            upstream_url=f"http://violentutf-api:8000",
+            upstream_url="http://violentutf-api:8000",
             plugins={"cors": {"allow_origins": "*"}, "limit-req": {"rate": 10, "burst": 5}},
         )
         routes.append(oauth_route)

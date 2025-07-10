@@ -4,22 +4,23 @@ Phase 3: Integration Tests
 Tests for command processing integration with MCP server
 """
 
-import pytest
 import asyncio
-import sys
-import os
 import json
-import tempfile
+import os
 import shutil
+import sys
+import tempfile
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from violentutf.utils.mcp_client import MCPClientSync
+from violentutf.utils.mcp_client import MCPClient, MCPClientSync
 from violentutf.utils.mcp_integration import (
-    NaturalLanguageParser,
     ConfigurationIntentDetector,
     ConversationContextAnalyzer,
+    NaturalLanguageParser,
 )
 
 
@@ -140,7 +141,6 @@ class TestCommandProcessingIntegration:
         mock_client.post.return_value.__aenter__.return_value = mock_response
 
         # Create client and test
-        from violentutf.utils.mcp_client import MCPClient
 
         client = MCPClient()
         client.set_test_token("test-token")

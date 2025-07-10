@@ -1,12 +1,12 @@
 """MCP Tool Executor - Executes MCP tools by calling FastAPI endpoints"""
 
 import asyncio
-import logging
 import json
-from typing import Dict, Any, Optional, List
-import httpx
+import logging
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
+import httpx
 from app.core.config import settings
 from app.mcp.tools.introspection import get_introspector
 
@@ -19,7 +19,7 @@ class MCPToolExecutor:
     def __init__(self):
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for direct API access from within container
-        if "localhost:9080" in self.base_url:
+        if self.base_url and "localhost:9080" in self.base_url:
             self.base_url = "http://violentutf-api:8000"
 
     async def execute_tool(
@@ -150,7 +150,7 @@ class MCPToolExecutor:
                     try:
                         error_data = response.json()
                         error_detail = error_data.get("detail", str(error_data))
-                    except:
+                    except Exception:
                         error_detail = response.text
 
                     return {
@@ -162,7 +162,7 @@ class MCPToolExecutor:
                 # Return successful response
                 try:
                     return response.json()
-                except:
+                except Exception:
                     return {"message": "Success", "raw_response": response.text}
 
             except httpx.TimeoutException:

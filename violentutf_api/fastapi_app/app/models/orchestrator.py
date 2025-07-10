@@ -1,9 +1,9 @@
-from sqlalchemy import Column, String, Text, JSON, DateTime, Boolean
-from sqlalchemy.dialects.postgresql import UUID
-from datetime import datetime
 import uuid
+from datetime import datetime
 
 from app.db.database import Base
+from sqlalchemy import JSON, Boolean, Column, DateTime, String, Text
+from sqlalchemy.dialects.postgresql import UUID
 
 
 class OrchestratorConfiguration(Base):

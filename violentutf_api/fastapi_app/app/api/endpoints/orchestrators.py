@@ -1,28 +1,27 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import List, Optional, Dict, Any
-from uuid import UUID
 import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from app.core.auth import get_current_user
-from app.schemas.orchestrator import (
-    OrchestratorTypeInfo,
+from app.db.database import get_session
+from app.models.orchestrator import OrchestratorConfiguration, OrchestratorExecution
+from app.schemas.orchestrator import OrchestratorExecuteResponse  # Keep for backward compatibility in RESTful endpoint
+from app.schemas.orchestrator import (  # RESTful schemas
+    ExecutionCreate,
+    ExecutionListResponse,
+    ExecutionResponse,
     OrchestratorConfigCreate,
     OrchestratorConfigResponse,
-    OrchestratorExecuteResponse,  # Keep for backward compatibility in RESTful endpoint
-    OrchestratorResultsResponse,
     OrchestratorMemoryResponse,
+    OrchestratorResultsResponse,
     OrchestratorScoresResponse,
-    # RESTful schemas
-    ExecutionCreate,
-    ExecutionResponse,
-    ExecutionListResponse,
+    OrchestratorTypeInfo,
 )
 from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
-from app.models.orchestrator import OrchestratorConfiguration, OrchestratorExecution
-from app.db.database import get_session
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -227,7 +226,7 @@ async def get_execution_results(
         config = result.scalar_one_or_none()
 
         if not config:
-            raise HTTPException(status_code=404, detail=f"Orchestrator configuration not found")
+            raise HTTPException(status_code=404, detail="Orchestrator configuration not found")
 
         if execution.status != "completed":
             raise HTTPException(status_code=400, detail=f"Execution not completed. Status: {execution.status}")
@@ -637,7 +636,7 @@ async def get_execution_results_restful(
         config = result.scalar_one_or_none()
 
         if not config:
-            raise HTTPException(status_code=404, detail=f"Orchestrator configuration not found")
+            raise HTTPException(status_code=404, detail="Orchestrator configuration not found")
 
         # Same status check as original (400 not 409)
         if execution.status != "completed":

@@ -5,18 +5,23 @@ ViolentUTF JWT CLI Tool - Command line interface for JWT key management
 Requirements:
     pip install click requests
 """
-import click
-import requests
 import json
 import os
-from pathlib import Path
-from datetime import datetime
-from typing import Optional
 import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+import click
+import requests
 
 # Configuration
 API_BASE_URL = os.getenv("VIOLENTUTF_API_URL", "http://localhost:8000")
 CONFIG_DIR = Path.home() / ".violentutf"
+
+# Security: HTTP timeout configuration to prevent DoS via hanging connections
+DEFAULT_TIMEOUT = 30  # seconds
+AUTH_TIMEOUT = 10  # shorter for auth operations
 TOKEN_FILE = CONFIG_DIR / "token.json"
 
 
@@ -65,6 +70,7 @@ def login(username: str, password: str):
         response = requests.post(
             f"{API_BASE_URL}/api/v1/auth/token",
             data={"username": username, "password": password, "grant_type": "password"},
+            timeout=30,
         )
 
         if response.status_code == 200:
@@ -100,7 +106,7 @@ def logout():
 def whoami():
     """Show current user information"""
     try:
-        response = requests.get(f"{API_BASE_URL}/api/v1/auth/me", headers=get_auth_header())
+        response = requests.get(f"{API_BASE_URL}/api/v1/auth/me", headers=get_auth_header(), timeout=30)
 
         if response.status_code == 200:
             user_info = response.json()
@@ -146,7 +152,7 @@ def get_token():
 def refresh():
     """Refresh the current token"""
     try:
-        response = requests.post(f"{API_BASE_URL}/api/v1/auth/refresh", headers=get_auth_header())
+        response = requests.post(f"{API_BASE_URL}/api/v1/auth/refresh", headers=get_auth_header(), timeout=AUTH_TIMEOUT)
 
         if response.status_code == 200:
             token_data = response.json()
@@ -179,11 +185,12 @@ def create_key(name: str, permissions: tuple):
             f"{API_BASE_URL}/api/v1/keys/create",
             headers=get_auth_header(),
             json={"name": name, "permissions": list(permissions)},
+            timeout=DEFAULT_TIMEOUT,
         )
 
         if response.status_code == 200:
             key_data = response.json()
-            click.echo(f"API Key created successfully!")
+            click.echo("API Key created successfully!")
             click.echo(f"Key ID: {key_data['key_id']}")
             click.echo(f"API Key: {key_data['api_key']}")
             click.echo(f"Name: {key_data['name']}")
@@ -201,7 +208,7 @@ def create_key(name: str, permissions: tuple):
 def list_keys():
     """List all API keys"""
     try:
-        response = requests.get(f"{API_BASE_URL}/api/v1/keys/list", headers=get_auth_header())
+        response = requests.get(f"{API_BASE_URL}/api/v1/keys/list", headers=get_auth_header(), timeout=DEFAULT_TIMEOUT)
 
         if response.status_code == 200:
             keys_data = response.json()
@@ -233,7 +240,9 @@ def list_keys():
 def revoke_key(key_id: str):
     """Revoke an API key"""
     try:
-        response = requests.delete(f"{API_BASE_URL}/api/v1/keys/{key_id}", headers=get_auth_header())
+        response = requests.delete(
+            f"{API_BASE_URL}/api/v1/keys/{key_id}", headers=get_auth_header(), timeout=DEFAULT_TIMEOUT
+        )
 
         if response.status_code == 200:
             click.echo(f"API key {key_id} revoked successfully")
@@ -249,11 +258,13 @@ def revoke_key(key_id: str):
 def get_current_key():
     """Get current session as API key format"""
     try:
-        response = requests.get(f"{API_BASE_URL}/api/v1/keys/current", headers=get_auth_header())
+        response = requests.get(
+            f"{API_BASE_URL}/api/v1/keys/current", headers=get_auth_header(), timeout=DEFAULT_TIMEOUT
+        )
 
         if response.status_code == 200:
             key_data = response.json()
-            click.echo(f"Session API Key:")
+            click.echo("Session API Key:")
             click.echo(f"API Key: {key_data['api_key']}")
             click.echo(f"Expires: {key_data['expires_at']}")
             click.echo(f"Permissions: {', '.join(key_data['permissions'])}")

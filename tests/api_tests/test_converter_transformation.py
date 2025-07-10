@@ -6,13 +6,14 @@ This test verifies that converters not only create new datasets but
 also properly transform the prompts according to the converter type.
 """
 
+import base64
+import json
 import os
 import sys
-import json
 import time
 import uuid
+
 import requests
-import base64
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -143,10 +144,10 @@ def test_converter_transformations():
         # Verify at least some prompts were converted
         if converted_dataset.get("prompts") and len(converted_dataset["prompts"]) > 0:
             sample_prompt = converted_dataset["prompts"][0]["value"]
-            print(f"   ✅ ROT13 conversion created dataset with transformed prompts")
+            print("   ✅ ROT13 conversion created dataset with transformed prompts")
             print(f"   📝 Sample converted prompt: '{sample_prompt}'")
         else:
-            print(f"   ✅ ROT13 converter applied successfully")
+            print("   ✅ ROT13 converter applied successfully")
 
         # Test 2: Base64 Converter
         print("\n2️⃣ Testing Base64 Converter...")
@@ -181,7 +182,7 @@ def test_converter_transformations():
         b64_dataset_id = response.json()["dataset_id"]
         resources_to_cleanup["datasets"].append(b64_dataset_id)
 
-        print(f"   ✅ Base64 converter applied successfully")
+        print("   ✅ Base64 converter applied successfully")
 
         # Test 3: Caesar Cipher with custom offset
         print("\n3️⃣ Testing Caesar Cipher Converter with custom offset...")
@@ -215,7 +216,7 @@ def test_converter_transformations():
         caesar_dataset_id = response.json()["dataset_id"]
         resources_to_cleanup["datasets"].append(caesar_dataset_id)
 
-        print(f"   ✅ Caesar cipher converter (offset=7) applied successfully")
+        print("   ✅ Caesar cipher converter (offset=7) applied successfully")
 
         print("\n✅ All converter transformations tested successfully!")
         print("\n📊 Summary:")
@@ -240,12 +241,12 @@ def test_converter_transformations():
         for converter_id in resources_to_cleanup["converters"]:
             try:
                 requests.delete(f"{API_BASE_URL}/api/v1/converters/{converter_id}", headers=headers)
-            except:
+            except Exception:
                 pass
         for dataset_id in resources_to_cleanup["datasets"]:
             try:
                 requests.delete(f"{API_BASE_URL}/api/v1/datasets/{dataset_id}", headers=headers)
-            except:
+            except Exception:
                 pass
 
 

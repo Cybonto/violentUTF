@@ -1,7 +1,8 @@
 """MCP Tool Generator - Converts FastAPI endpoints to MCP tools"""
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from mcp.types import Tool
 
 logger = logging.getLogger(__name__)

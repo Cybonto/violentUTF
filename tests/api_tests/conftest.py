@@ -3,22 +3,22 @@ Pytest configuration for API tests
 Inherits from main conftest.py and adds API-specific fixtures
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add parent directory to sys.path to access main conftest and utils
 parent_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(parent_dir))
 
-# Import all fixtures from the main conftest
-from conftest import *
+import pytest
+import requests
+
+# Import specific fixtures from the main conftest
+from conftest import api_headers, auth_token, service_health_check, setup_database
 
 # Import the keycloak_auth utility
 from utils.keycloak_auth import keycloak_auth
-
-import pytest
-import requests
 
 
 @pytest.fixture(scope="session")
@@ -28,7 +28,7 @@ def api_base_url():
 
 
 @pytest.fixture(scope="function")
-def cleanup_generators(api_headers, api_base_url):
+def cleanup_generators(headers, api_base_url):
     """
     Cleanup generators created during tests
     Tracks created generators and removes them after test completion
@@ -45,7 +45,7 @@ def cleanup_generators(api_headers, api_base_url):
     # Cleanup after test
     for gen_id in created_generators:
         try:
-            response = requests.delete(f"{api_base_url}/api/v1/generators/{gen_id}", headers=api_headers, timeout=10)
+            response = requests.delete(f"{api_base_url}/api/v1/generators/{gen_id}", headers=headers, timeout=10)
             if response.status_code in [200, 204, 404]:
                 print(f"✅ Cleaned up generator: {gen_id}")
             else:

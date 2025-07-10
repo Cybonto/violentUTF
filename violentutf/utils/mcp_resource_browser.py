@@ -6,11 +6,12 @@ This module provides a sidebar resource browser for MCP resources
 with search, filtering, and preview capabilities.
 """
 
-import streamlit as st
-from typing import Dict, Any, List, Optional, Tuple
+import json
 import logging
 from datetime import datetime
-import json
+from typing import Any, Dict, List, Optional, Tuple
+
+import streamlit as st
 
 from .mcp_client import MCPClientSync
 
@@ -213,7 +214,7 @@ class ResourcePreview:
                     st.write(f"Items: {len(content['content'])}")
                     # Show first few items
                     for i, item in enumerate(content["content"][:3]):
-                        st.write(f"**Item {i+1}:**")
+                        st.write(f"**Item {i + 1}:**")
                         st.json(item)
                     if len(content["content"]) > 3:
                         st.caption(f"...and {len(content['content']) - 3} more items")
@@ -231,7 +232,7 @@ class ResourcePreview:
 
         # Display first few items
         for i, item in enumerate(content[:5]):
-            with st.expander(f"Item {i+1}", expanded=i == 0):
+            with st.expander(f"Item {i + 1}", expanded=i == 0):
                 if isinstance(item, dict):
                     st.json(item)
                 else:
@@ -248,7 +249,7 @@ class ResourcePreview:
         try:
             json_content = json.loads(content)
             st.json(json_content)
-        except:
+        except Exception:
             # Display as text
             st.text_area("Content", value=content, height=300)
 

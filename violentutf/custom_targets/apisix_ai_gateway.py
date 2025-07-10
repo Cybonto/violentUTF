@@ -1,10 +1,11 @@
 # custom_targets/apisix_ai_gateway.py
 
+import logging
 import os
 import uuid
-import logging
-from typing import Optional, Dict, Any, List
-from pyrit.models import PromptRequestResponse, PromptRequestPiece
+from typing import Any, Dict, List, Optional
+
+from pyrit.models import PromptRequestPiece, PromptRequestResponse
 from pyrit.models.prompt_request_response import construct_response_from_request
 from pyrit.prompt_target import PromptChatTarget
 
@@ -38,7 +39,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         Initialize APISIX AI Gateway target.
 
         Args:
-            provider: AI provider (openai, anthropic, ollama, webui)
+            provider: AI provider (openai, anthropic, ollama, webui, gsai)
             model: Model name/identifier
             temperature: Sampling temperature (0.0-2.0)
             max_tokens: Maximum tokens to generate
@@ -154,7 +155,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
                 call_params["max_tokens"] = self.max_tokens
             elif self.provider == "anthropic":
                 call_params["max_tokens"] = 1000  # Default for Anthropic
-                logger.debug(f"Using default max_tokens=1000 for Anthropic provider")
+                logger.debug("Using default max_tokens=1000 for Anthropic provider")
 
             if self.top_p is not None:
                 call_params["top_p"] = self.top_p
@@ -263,7 +264,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
                 error="none",
             )
 
-            logger.debug(f"Successfully created response using construct_response_from_request")
+            logger.debug("Successfully created response using construct_response_from_request")
             return response
 
         except Exception as e:

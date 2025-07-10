@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,7 @@ async def _execute_true_false_scorer(scorer_config: Dict, text: str) -> Dict[str
         logger.error(f"Error in _execute_true_false_scorer: {e}")
         return {
             "score_value": False,  # Return as boolean, not string
-            "score_value_description": f"Error occurred during scoring",
+            "score_value_description": "Error occurred during scoring",
             "score_type": "true_false",
             "score_category": "error",
             "score_rationale": f"Scoring failed: {str(e)}",
@@ -253,7 +253,7 @@ async def _execute_likert_scorer(scorer_config: Dict, text: str) -> Dict[str, An
 
             return {
                 "score_value": score_value,  # Return as float, not string
-                "score_value_description": f"Likert scale score (0-1) based on response length",
+                "score_value_description": "Likert scale score (0-1) based on response length",
                 "score_type": "float_scale",
                 "score_category": scorer_config.get("category", "general"),
                 "score_rationale": f"Score based on text length: {text_length} characters (normalized to 0-1 scale)",
@@ -264,7 +264,7 @@ async def _execute_likert_scorer(scorer_config: Dict, text: str) -> Dict[str, An
         logger.error(f"Error in _execute_likert_scorer: {e}")
         return {
             "score_value": 0.5,  # Return as float in 0-1 range, not string
-            "score_value_description": f"Error occurred during scoring",
+            "score_value_description": "Error occurred during scoring",
             "score_type": "float_scale",
             "score_category": "error",
             "score_rationale": f"Scoring failed: {str(e)}",
@@ -282,7 +282,7 @@ async def _execute_substring_scorer(scorer_config: Dict, text: str) -> Dict[str,
         category = parameters.get("category", "match")
 
         if not substring:
-            logger.warning(f"SubStringScorer missing required parameter 'substring'")
+            logger.warning("SubStringScorer missing required parameter 'substring'")
             return {
                 "score_value": False,
                 "score_value_description": "SubString match failed - no substring specified",
@@ -328,7 +328,7 @@ async def _execute_category_scorer(scorer_config: Dict, text: str) -> Dict[str, 
         categories = parameters.get("categories", ["positive", "negative", "neutral"])
 
         if not categories:
-            logger.warning(f"SelfAskCategoryScorer missing required parameter 'categories'")
+            logger.warning("SelfAskCategoryScorer missing required parameter 'categories'")
             return {
                 "score_value": 0.0,  # Return numeric value for error case
                 "score_value_description": "Category classification failed - no categories specified",
@@ -416,7 +416,7 @@ async def _execute_threshold_scorer(scorer_config: Dict, text: str) -> Dict[str,
         base_scorer_config = parameters.get("scorer", {})
 
         if not base_scorer_config:
-            logger.warning(f"FloatScaleThresholdScorer missing required parameter 'scorer'")
+            logger.warning("FloatScaleThresholdScorer missing required parameter 'scorer'")
             return {
                 "score_value": False,
                 "score_value_description": "Threshold scorer failed - no base scorer specified",
@@ -467,7 +467,7 @@ async def _execute_inverter_scorer(scorer_config: Dict, text: str) -> Dict[str, 
         base_scorer_config = parameters.get("scorer", {})
 
         if not base_scorer_config:
-            logger.warning(f"TrueFalseInverterScorer missing required parameter 'scorer'")
+            logger.warning("TrueFalseInverterScorer missing required parameter 'scorer'")
             return {
                 "score_value": False,
                 "score_value_description": "Inverter scorer failed - no base scorer specified",
@@ -494,7 +494,7 @@ async def _execute_inverter_scorer(scorer_config: Dict, text: str) -> Dict[str, 
 
         return {
             "score_value": inverted_result,  # Return inverted boolean for PyRIT compliance
-            "score_value_description": f"Inverted boolean evaluation",
+            "score_value_description": "Inverted boolean evaluation",
             "score_type": "true_false",
             "score_category": "inverted",
             "score_rationale": f"Base result {base_result} inverted to {inverted_result} (positive: {positive_count}, negative: {negative_count})",

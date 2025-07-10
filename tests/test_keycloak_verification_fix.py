@@ -3,12 +3,13 @@
 Test script to verify the Keycloak JWT signature verification fix
 """
 
-import jwt
 import json
 import time
+from typing import Any, Dict
+
+import jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from typing import Dict, Any
 
 
 def generate_test_rsa_keys():
@@ -63,10 +64,14 @@ def test_keycloak_verification_implementation():
             "get_signing_key_from_jwt" in content,
         ]
 
-        print(f"   ✅ Signature verification enabled: {'verify_signature": True' in content}")
-        print(f"   ✅ Expiration verification enabled: {'verify_exp": True' in content}")
-        print(f"   ✅ Audience verification enabled: {'verify_aud": True' in content}")
-        print(f"   ✅ Issuer verification enabled: {'verify_iss": True' in content}")
+        verify_sig = '"verify_signature": True' in content
+        print(f"   ✅ Signature verification enabled: {verify_sig}")
+        verify_exp = '"verify_exp": True' in content
+        print(f"   ✅ Expiration verification enabled: {verify_exp}")
+        verify_aud = '"verify_aud": True' in content
+        print(f"   ✅ Audience verification enabled: {verify_aud}")
+        verify_iss = '"verify_iss": True' in content
+        print(f"   ✅ Issuer verification enabled: {verify_iss}")
         print(f"   ✅ JWKS client implemented: {'PyJWKClient' in content}")
         print(f"   ✅ Key retrieval implemented: {'get_signing_key_from_jwt' in content}")
 

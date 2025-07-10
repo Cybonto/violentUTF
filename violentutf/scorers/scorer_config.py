@@ -33,44 +33,32 @@ Dependencies:
 - utils.error_handling
 """
 
-import logging
-import inspect
-import yaml
-import os
 import asyncio
+import collections.abc  # To check for Callable if needed, though not typical for scorers
+import inspect
+import logging
+import os
 from pathlib import Path
-from typing import (
-    List,
-    Dict,
-    Any,
-    Type,
-    Optional,
-    Union,
-    Literal,
-    get_type_hints,
-    get_origin,
-    get_args,
-    Tuple,  # Added Tuple here
-)
-import collections.abc  # To check for Callable if needed
+from typing import Tuple  # Added Tuple here
+from typing import Any, Dict, List, Literal, Optional, Type, Union, get_args, get_origin, get_type_hints
 
 # PyRIT imports
 import pyrit.score as score  # Import the pyrit.score module as score
-from pyrit.score import Scorer, TrueFalseQuestion  # Import Scorer class
+import yaml
 from pyrit.models import Score  # Import Score class from pyrit.models
-from pyrit.prompt_target import PromptChatTarget, PromptShieldTarget
 from pyrit.models import PromptRequestPiece
+from pyrit.prompt_target import PromptChatTarget, PromptShieldTarget
+from pyrit.score import Scorer, TrueFalseQuestion  # Import Scorer class
+from utils.error_handling import (
+    ScorerConfigurationError,
+    ScorerDeletionError,
+    ScorerInstantiationError,
+    ScorerLoadingError,
+    ScorerTestingError,
+)
 
 # Project-specific imports
 from utils.logging import get_logger
-from utils.error_handling import (
-    ScorerLoadingError,
-    ScorerInstantiationError,
-    ScorerConfigurationError,
-    ScorerDeletionError,
-    ScorerTestingError,
-)
-import collections.abc  # To check for Callable if needed, though not typical for scorers
 
 # Configure logger
 logger = get_logger(__name__)
@@ -586,10 +574,8 @@ def test_scorer(scorer_name: str, sample_input: PromptRequestPiece) -> List[Scor
             logger.warning(
                 "Running test_scorer within an existing event loop. Consider calling test_scorer_async directly."
             )
-            task = loop.create_task(test_scorer_async(scorer_name, sample_input))
-            # Note: This sync wrapper cannot easily return the result here if loop is running.
+            # Note: Cannot run sync test_scorer reliably within an already running event loop.
             # It might be better to enforce using test_scorer_async in async contexts.
-            # Returning None or raising an error might be clearer.
             raise ScorerTestingError(
                 "Cannot run sync test_scorer reliably within an already running event loop. Use test_scorer_async."
             )

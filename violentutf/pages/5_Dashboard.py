@@ -1,27 +1,28 @@
-import streamlit as st
+import asyncio
+import json
 import os
 import sys
-import json
-import asyncio
-from typing import Optional, List, Dict, Any, Tuple, Union
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import requests
-from collections import Counter, defaultdict
-import numpy as np
+import streamlit as st
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
+from plotly.subplots import make_subplots
 
-load_dotenv()
-
-# Use the centralized logging setup
-from utils.logging import get_logger
+# Import utilities
 from utils.auth_utils import handle_authentication_and_sidebar
 from utils.jwt_manager import jwt_manager
+from utils.logging import get_logger
+
+load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -163,7 +164,7 @@ def create_compatible_api_token():
             return None
 
     except Exception as e:
-        st.error(f"❌ Failed to generate API token.")
+        st.error("❌ Failed to generate API token.")
         logger.error(f"Token creation failed: {e}")
         return None
 

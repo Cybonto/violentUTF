@@ -2,11 +2,13 @@
 Test the new /orchestrators/executions endpoint for Dashboard_2 support
 """
 
+from datetime import datetime
+from unittest.mock import Mock, patch
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch
-from datetime import datetime
-from uuid import uuid4
+
 from violentutf_api.fastapi_app.main import app
 
 client = TestClient(app)
@@ -118,7 +120,7 @@ def test_list_all_orchestrator_executions(mock_auth, mock_db):
     assert exec1["orchestrator_id"] == str(orchestrator1_id)
     assert exec1["name"] == "Security Test Orchestrator"
     assert exec1["orchestrator_type"] == "PromptSendingOrchestrator"
-    assert exec1["has_scorer_results"] == True
+    assert exec1["has_scorer_results"] is True
     assert exec1["status"] == "completed"
 
     # Check second execution (no scorer results)
@@ -127,7 +129,7 @@ def test_list_all_orchestrator_executions(mock_auth, mock_db):
     assert exec2["orchestrator_id"] == str(orchestrator2_id)
     assert exec2["name"] == "Dataset Test Orchestrator"
     assert exec2["orchestrator_type"] == "RedTeamingOrchestrator"
-    assert exec2["has_scorer_results"] == False
+    assert exec2["has_scorer_results"] is False
     assert exec2["status"] == "completed"
 
 

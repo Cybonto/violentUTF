@@ -1,18 +1,18 @@
 """Phase 2 Integration Tests for ViolentUTF MCP Server"""
 
-import pytest
 import asyncio
 import logging
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, AsyncMock
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
-from app.mcp.tools import tool_registry
-from app.mcp.tools.introspection import EndpointIntrospector, initialize_introspector
-from app.mcp.tools.generators import generator_tools
-from app.mcp.tools.orchestrators import orchestrator_tools
+import pytest
 from app.mcp.resources import resource_registry
 from app.mcp.server.base import ViolentUTFMCPServer
-from mcp.types import Tool, Resource
+from app.mcp.tools import tool_registry
+from app.mcp.tools.generators import generator_tools
+from app.mcp.tools.introspection import EndpointIntrospector, initialize_introspector
+from app.mcp.tools.orchestrators import orchestrator_tools
+from mcp.types import Resource, Tool
 
 logger = logging.getLogger(__name__)
 

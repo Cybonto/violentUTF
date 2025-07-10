@@ -4,18 +4,18 @@ SECURITY: Implements proper JWT signature verification using Keycloak public key
 """
 
 import json
-import time
 import logging
-from typing import Dict, Any, Optional, List
+import time
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
+
 import httpx
 import jwt
-from jwt import PyJWKClient
-from cryptography.hazmat.primitives import serialization
-from fastapi import HTTPException, status
-
 from app.core.config import settings
 from app.core.security_logging import log_authentication_failure, log_security_error
+from cryptography.hazmat.primitives import serialization
+from fastapi import HTTPException, status
+from jwt import PyJWKClient
 
 logger = logging.getLogger(__name__)
 

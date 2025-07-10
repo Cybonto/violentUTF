@@ -3,13 +3,13 @@ Red-teaming endpoints for PyRIT and Garak integration
 """
 
 import logging
-from typing import Dict, List, Any, Optional
-from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
 
 from app.core.auth import get_current_user
-from app.services.pyrit_integration import pyrit_service
 from app.services.garak_integration import garak_service
+from app.services.pyrit_integration import pyrit_service
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +100,10 @@ async def create_pyrit_target(request: PyRITTargetRequest, current_user=Depends(
 
         # Create PyRIT target
         target = await pyrit_service.create_prompt_target(target_config)
+
+        # Validate target was created successfully
+        if not target:
+            raise HTTPException(status_code=500, detail="Failed to create PyRIT target")
 
         # Generate a proper target ID for tracking
         import uuid

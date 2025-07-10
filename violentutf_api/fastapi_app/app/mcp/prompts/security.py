@@ -2,17 +2,17 @@
 Security Testing Prompts for MCP
 ================================
 
-This module provides security-focused prompts for AI red-teaming,
+This module provides security - focused prompts for AI red - teaming,
 jailbreak testing, and vulnerability assessment.
 """
 
 import logging
-from typing import Dict, Any, List
-import httpx
 from datetime import datetime
+from typing import Any, Dict, List
 
-from app.mcp.prompts.base import BasePrompt, StaticPrompt, DynamicPrompt, PromptArgument, prompt_registry
+import httpx
 from app.core.config import settings
+from app.mcp.prompts.base import BasePrompt, DynamicPrompt, PromptArgument, StaticPrompt, prompt_registry
 
 logger = logging.getLogger(__name__)
 
@@ -409,7 +409,7 @@ class AdversarialPrompt(DynamicPrompt):
 
 **Evaluation Framework:**
 1. Response analysis
-2. Boundary compliance check  
+2. Boundary compliance check
 3. Safety mechanism validation"""
 
         super().__init__(
@@ -496,5 +496,5 @@ def register_security_prompts():
     logger.info("Registered 6 security testing prompts")
 
 
-# Auto-register when module is imported
+# Auto - register when module is imported
 register_security_prompts()

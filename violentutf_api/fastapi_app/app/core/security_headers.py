@@ -3,10 +3,11 @@ Security headers middleware and configuration
 SECURITY: Implements comprehensive security headers to protect against common web vulnerabilities
 """
 
+import logging
+from typing import Callable, Dict, Optional
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Callable, Dict, Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -229,8 +230,8 @@ def get_csp_nonce() -> str:
     Generate a cryptographically secure nonce for CSP
     Useful for inline scripts/styles when needed
     """
-    import secrets
     import base64
+    import secrets
 
     # Generate 16 bytes of random data and base64 encode
     nonce_bytes = secrets.token_bytes(16)

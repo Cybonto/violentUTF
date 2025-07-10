@@ -1,27 +1,29 @@
-import streamlit as st
-import os
-import sys
-import yaml
-import pandas as pd
-import tempfile
-import shutil
 import hashlib
-import requests
 import json
-from typing import Optional, List, Dict, Any
+import os
+import pathlib
+import shutil
+import sys
+import tempfile
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import jwt
+import pandas as pd
+import requests
+import streamlit as st
+import yaml
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
-import pathlib
+from utils.auth_utils import handle_authentication_and_sidebar
+
+# Import utilities
+from utils.logging import get_logger
 
 # Get the path to the .env file relative to this script
 env_path = pathlib.Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
-
-# Use the centralized logging setup
-from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -160,7 +162,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
             logger.error(f"403 Forbidden: {response.text}")
             return None
         elif response.status_code == 404:
-            st.error(f"Endpoint not found. Check APISIX routing configuration.")
+            st.error("Endpoint not found. Check APISIX routing configuration.")
             logger.error(f"404 Not Found: {url} - {response.text}")
             return None
         elif response.status_code == 502:
@@ -231,7 +233,7 @@ def create_compatible_api_token():
             return None
 
     except Exception as e:
-        st.error(f"❌ Failed to generate API token. Please try refreshing the page.")
+        st.error("❌ Failed to generate API token. Please try refreshing the page.")
         logger.error(f"Token creation failed: {e}")
         return None
 
@@ -462,14 +464,11 @@ def main():
         help="Begin the AI red-teaming workflow by configuring generators, datasets, converters, and scoring engines",
     ):
         st.session_state["started"] = True
-        logger.info(f"User clicked 'Start'. Navigating to Configure Generators.")
+        logger.info("User clicked 'Start'. Navigating to Configure Generators.")
         st.switch_page("pages/1_Configure_Generators.py")
 
 
 # --- Helper Functions ---
-
-# Import centralized auth utility
-from utils.auth_utils import handle_authentication_and_sidebar
 
 
 def display_header():

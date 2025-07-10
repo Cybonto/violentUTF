@@ -3,11 +3,14 @@ Authentication models
 """
 
 from typing import List, Optional
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class User(BaseModel):
     """User model for authentication"""
+
+    model_config = ConfigDict(extra="forbid")  # Prevent extra fields from JWT
 
     username: str
     email: Optional[str] = None
@@ -34,3 +37,11 @@ class User(BaseModel):
     def has_all_roles(self, roles: List[str]) -> bool:
         """Check if user has all of the specified roles"""
         return all(role in self.roles for role in roles)
+
+    def __str__(self) -> str:
+        """String representation of user - ALWAYS use username"""
+        return self.username
+
+    def __repr__(self) -> str:
+        """Developer-friendly representation"""
+        return f"User(username='{self.username}', roles={self.roles})"

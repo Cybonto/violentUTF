@@ -3,12 +3,13 @@ Test suite for converter apply functionality
 Tests the ability to apply converters to datasets and create new datasets with converted prompts
 """
 
-import pytest
-import time
-from typing import Dict, Any
 import logging
 import os
 import sys
+import time
+from typing import Any, Dict
+
+import pytest
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -34,8 +35,9 @@ def get_auth_headers() -> Dict[str, str]:
         # Fallback to environment-based JWT if Keycloak not available
         jwt_secret = os.getenv("JWT_SECRET_KEY")
         if jwt_secret:
-            import jwt
             from datetime import datetime, timezone
+
+            import jwt
 
             now = datetime.now(timezone.utc)
             payload = {
@@ -75,14 +77,14 @@ class TestConverterApplyFunctionality:
         for dataset_id in self.created_resources["datasets"]:
             try:
                 requests.delete(f"{API_BASE}/datasets/{dataset_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
         # Delete converters
         for converter_id in self.created_resources["converters"]:
             try:
                 requests.delete(f"{API_BASE}/converters/{converter_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
     def test_converter_apply_copy_mode(self):
@@ -258,7 +260,7 @@ class TestConverterApplyFunctionality:
 
         self.created_resources["datasets"].append(result["dataset_id"])
 
-        logger.info(f"Successfully applied_Caesar_cipher converter with offset 7")
+        logger.info("Successfully applied_Caesar_cipher converter with offset 7")
 
     def test_converter_apply_invalid_dataset(self):
         """Test applying converter to non-existent dataset"""

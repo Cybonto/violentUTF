@@ -2,24 +2,24 @@
 Comprehensive tests for 0_Welcome.py backend API endpoints
 """
 
-import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import patch, mock_open, MagicMock
-import os
-import tempfile
 import json
-import yaml
-from datetime import datetime
+import os
 
 # Import the FastAPI app
 import sys
-import os
+import tempfile
+from datetime import datetime
+from unittest.mock import MagicMock, mock_open, patch
+
+import pytest
+import yaml
+from fastapi.testclient import TestClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../violentutf_api/fastapi_app"))
 
-from main import app
-from app.models.auth import User
 from app.core.auth import get_current_user
+from app.models.auth import User
+from main import app
 
 client = TestClient(app)
 
@@ -60,8 +60,8 @@ class TestAuthenticationEndpoints:
         assert data["username"] == "testuser"
         assert data["email"] == "test@example.com"
         assert "ai-api-access" in data["roles"]
-        assert data["has_ai_access"] == True
-        assert data["token_valid"] == True
+        assert data["has_ai_access"] is True
+        assert data["token_valid"] is True
 
     def test_validate_token(self, auth_headers):
         """Test POST /auth/token/validate endpoint"""
@@ -72,8 +72,8 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["valid"] == True
-        assert data["has_ai_access"] == True
+        assert data["valid"] is True
+        assert data["has_ai_access"] is True
         assert data["missing_roles"] == []
 
     def test_validate_token_missing_role(self, auth_headers):
@@ -84,7 +84,7 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["valid"] == False
+        assert data["valid"] is False
         assert "admin" in data["missing_roles"]
 
     def test_logout(self, auth_headers):
@@ -138,8 +138,8 @@ class TestDatabaseEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["is_initialized"] == True
-        assert data["connection_healthy"] == True
+        assert data["is_initialized"] is True
+        assert data["connection_healthy"] is True
         assert data["file_size_mb"] == 1.0
 
     @patch("os.path.exists")
@@ -243,7 +243,7 @@ class TestSessionEndpoints:
 
         data = response.json()
         assert data["ui_preferences"]["theme"] == "light"
-        assert data["ui_preferences"]["sidebar_collapsed"] == True
+        assert data["ui_preferences"]["sidebar_collapsed"] is True
         assert data["workflow_state"]["current_step"] == "database_init"
 
     @patch("builtins.open", new_callable=mock_open)
@@ -337,7 +337,7 @@ class TestFileEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data["success"] == True
+        assert data["success"] is True
         assert data["filename"] == "test.txt"
         assert "file_id" in data
 

@@ -3,16 +3,20 @@ Test cases for Save and Test Generator functionality in 1_Configure_Generators.p
 Tests the complete flow from generator creation to testing via API with live authentication
 """
 
+import json
+import os
+
+# import os # F811: removed duplicate import
+import sys
+import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any, Dict, Optional
+from unittest.mock import patch
+
+import jwt
 import pytest
 import requests
-import json
-import time
-import jwt
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, Optional
-import os
-import sys
-from pathlib import Path
 
 # Add tests directory to path for imports
 tests_dir = Path(__file__).parent.parent
@@ -386,7 +390,7 @@ class TestSaveAndTestGenerator:
                     # This could be the original authentication bug if it's not AI provider related
                     pytest.fail(f"APISIX API key issue still present: {error_data}")
 
-            except Exception as parse_error:
+            except Exception:
                 # If we can't parse the response, check the raw text for AI provider indicators
                 if any(pattern in response_text for pattern in ["/ai/", "gateway", "apisix"]):
                     pytest.skip("Cannot parse error response but appears to be AI provider configuration issue")
@@ -402,7 +406,7 @@ class TestSaveAndTestGenerator:
             try:
                 error_data = test_response.json() if test_response.text else {}
                 error_detail = error_data.get("detail", test_response.text)
-            except:
+            except Exception:
                 error_detail = test_response.text
 
             # These are acceptable failure reasons (actual AI provider issues)
@@ -449,8 +453,8 @@ class TestGeneratorParameterLogic:
         for model in standard_openai_models:
             # This test documents the expected behavior
             # In the UI, when provider=openai and model in standard_openai_models:
-            expected_hidden_params = ["api_key", "endpoint"]
-            expected_visible_params = ["provider", "model", "temperature", "max_tokens", "top_p"]
+            # Expected hidden params: ["api_key", "endpoint"]
+            # Expected visible params: ["provider", "model", "temperature", "max_tokens", "top_p"]
 
             # This would be tested against the actual UI logic
             assert True  # Placeholder - actual implementation would test UI state
@@ -463,8 +467,8 @@ class TestGeneratorParameterLogic:
         anthropic_models = ["claude-3-sonnet-20240229", "claude-3-5-sonnet-20241022"]
 
         for model in anthropic_models:
-            expected_hidden_params = ["api_key", "endpoint"]
-            expected_visible_params = ["provider", "model", "temperature", "max_tokens", "top_p"]
+            # Expected hidden params: ["api_key", "endpoint"]
+            # Expected visible params: ["provider", "model", "temperature", "max_tokens", "top_p"]
 
             assert True  # Placeholder for actual UI logic test
 
@@ -478,7 +482,7 @@ class TestGeneratorParameterLogic:
 
         for provider in local_providers:
             # For local providers, endpoint might be configurable
-            expected_visible_params = ["provider", "model", "endpoint", "temperature", "max_tokens", "top_p"]
+            # Expected visible params: ["provider", "model", "endpoint", "temperature", "max_tokens", "top_p"]
             # api_key might still be hidden for local providers
 
             assert True  # Placeholder for actual UI logic test
@@ -486,9 +490,6 @@ class TestGeneratorParameterLogic:
     def test_apisix_api_key_environment_variables(self):
         """Test environment variable priority for APISIX API key authentication"""
         # This test verifies the environment variable setup for the "Missing API key in request" fix
-
-        import os
-        from unittest.mock import patch
 
         # Test the priority order used in generators.py
         test_vars = {

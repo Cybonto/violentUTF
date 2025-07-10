@@ -4,15 +4,17 @@ This version is for local deployment with Keycloak, not Streamlit Community Clou
 """
 
 import streamlit as st
+
 from .logging import get_logger
+from .token_manager import token_manager
 
 logger = get_logger(__name__)
-from .token_manager import token_manager
 
 # Load environment variables from .env file
 try:
-    from dotenv import load_dotenv
     from pathlib import Path
+
+    from dotenv import load_dotenv
 
     env_file = Path(__file__).parent.parent / ".env"
     if env_file.exists():
@@ -50,8 +52,9 @@ def _clear_invalid_jwt_tokens():
 
             except ImportError:
                 # Fallback to direct validation if JWT manager not available
-                import jwt
                 import os
+
+                import jwt
 
                 secret_key = os.getenv("JWT_SECRET_KEY")
                 if secret_key:

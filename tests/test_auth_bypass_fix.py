@@ -3,11 +3,11 @@
 Test script to verify the authentication bypass vulnerability has been fixed
 """
 
-import hmac
 import hashlib
-import time
+import hmac
 import os
 import sys
+import time
 from typing import Dict, Tuple
 
 

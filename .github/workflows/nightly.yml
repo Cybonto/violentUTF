@@ -238,13 +238,13 @@ jobs:
       - name: Memory profiling
         run: |
           # Profile memory usage
-          mprof run python -m pytest tests/ -k "not integration" || true
+          mprof run python -m pytest tests/unit/ || true
           mprof plot -o memory-usage.png || true
 
       - name: CPU profiling
         run: |
           # Profile CPU usage
-          py-spy record -d 30 -o cpu-profile.svg -- python -m pytest tests/ || true
+          py-spy record -d 30 -o cpu-profile.svg -- python -m pytest tests/unit/ || true
 
       - name: Stress test with edge cases
         run: |
@@ -378,6 +378,7 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: nightly-artifacts
+          merge-multiple: true
 
       - name: Generate consolidated report
         run: |

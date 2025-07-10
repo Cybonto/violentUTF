@@ -6,8 +6,8 @@ Provides PyRIT-based AI red-teaming functionality for ViolentUTF platform
 import asyncio
 import logging
 import uuid
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +70,8 @@ class PyRITService:
 
     async def _create_apisix_target(self, config: Dict[str, Any]):
         """Create APISIX-based PyRIT target"""
-        from pyrit.prompt_target import PromptChatTarget
         from pyrit.models import PromptRequestPiece, PromptRequestResponse
+        from pyrit.prompt_target import PromptChatTarget
 
         class APISIXPromptTarget(PromptChatTarget):
             """Custom PyRIT target for APISIX AI Gateway"""
@@ -96,8 +96,9 @@ class PyRITService:
 
             async def send_prompt_async(self, prompt_request: PromptRequestPiece) -> PromptRequestResponse:
                 """Send prompt through APISIX gateway"""
-                import requests
                 import json
+
+                import requests
 
                 try:
                     # Prepare request payload
@@ -175,8 +176,8 @@ class PyRITService:
             raise RuntimeError("PyRIT is not available")
 
         try:
-            from pyrit.orchestrator import PromptSendingOrchestrator
             from pyrit.models import PromptRequestPiece
+            from pyrit.orchestrator import PromptSendingOrchestrator
 
             # Create orchestrator
             orchestrator = PromptSendingOrchestrator(prompt_target=target, memory=self.memory)

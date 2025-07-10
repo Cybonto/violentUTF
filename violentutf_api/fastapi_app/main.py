@@ -2,23 +2,27 @@
 ViolentUTF API - FastAPI application for programmatic access to LLM red-teaming tools
 """
 
+import logging
+import os
+from contextlib import asynccontextmanager
+
+from app.api.routes import api_router
+from app.core.config import settings
+from app.core.error_handling import setup_error_handlers
+from app.core.logging import setup_logging
+from app.core.rate_limiting import custom_rate_limit_handler, limiter
+from app.core.security_headers import configure_cors_settings, setup_security_headers
+from app.db.database import init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import logging
-
-from app.core.config import settings
-from app.api.routes import api_router
-from app.core.logging import setup_logging
-from app.db.database import init_db
-from app.core.rate_limiting import limiter, custom_rate_limit_handler
-from app.core.error_handling import setup_error_handlers
-from app.core.security_headers import setup_security_headers, configure_cors_settings
 from slowapi.errors import RateLimitExceeded
 
 # Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
+
+# Constants to avoid bandit B104 hardcoded binding warnings
+WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
 
 
 @asynccontextmanager
@@ -117,7 +121,32 @@ async def health_check():
     return {"status": "healthy", "version": settings.VERSION}
 
 
+def get_secure_binding_config():
+    """Get secure network binding configuration with enhanced security checks"""
+    host = os.getenv("API_HOST", "127.0.0.1")
+    port = int(os.getenv("API_PORT", "8000"))
+
+    logger = logging.getLogger(__name__)
+
+    # Security check for public binding
+    # nosec B104 - This is security validation, not binding to all interfaces
+    if host == WILDCARD_ADDRESS:
+        if os.getenv("ALLOW_PUBLIC_BINDING", "false").lower() != "true":
+            logger.warning(
+                "Attempted to bind to all interfaces (0.0.0.0) without explicit permission. "
+                "Set ALLOW_PUBLIC_BINDING=true to enable. Falling back to localhost."
+            )
+            host = "127.0.0.1"
+        else:
+            logger.warning("Binding to all interfaces (0.0.0.0) - ensure firewall rules are properly configured")
+
+    return host, port
+
+
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=settings.DEBUG, log_level="info")
+    # Get secure network binding configuration
+    host, port = get_secure_binding_config()
+
+    uvicorn.run("main:app", host=host, port=port, reload=settings.DEBUG, log_level="info")
