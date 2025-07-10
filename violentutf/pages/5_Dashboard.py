@@ -440,8 +440,17 @@ def load_orchestrator_executions_with_full_data(
                         scores = full_results.get("scores", [])
                         responses = full_results.get("prompt_request_responses", [])
 
+                        # Debug logging
+                        logger.info(f"Execution {execution_id}: {len(scores)} scores, {len(responses)} responses")
+
                         # Match scores to responses
                         matched_results = match_scores_to_responses(scores, responses)
+
+                        # Debug: Check matching success
+                        with_prompt_response = sum(1 for r in matched_results if r.get("prompt_response"))
+                        logger.info(
+                            f"Execution {execution_id}: {with_prompt_response}/{len(matched_results)} scores matched to responses"
+                        )
 
                         # Enrich the matched results
                         enriched_results = enrich_response_data(matched_results)
@@ -2355,6 +2364,30 @@ def render_expanded_result(result: Dict, idx: int):
                 if insights:
                     st.caption(f"Type: {insights.get('response_type', 'Unknown')}")
                     st.caption(f"Length: {insights.get('response_length', 0)} chars")
+        else:
+            # Debug information when no prompt_response data
+            st.warning("⚠️ No prompt/response data available for this result")
+
+            # Show what data we do have
+            with st.expander("🔍 Debug Information"):
+                st.write("**Available result keys:**")
+                st.write(list(result.keys()))
+
+                st.write("**Result structure (first 500 chars):**")
+                result_str = str(result)[:500]
+                st.text(result_str)
+
+                # Check if enhanced evidence is enabled
+                enhanced_evidence = st.session_state.get("enhanced_evidence", False)
+                st.write(f"**Enhanced Evidence Mode:** {enhanced_evidence}")
+
+                # Check execution status
+                exec_id = result.get("execution_id", "Unknown")
+                st.write(f"**Execution ID:** {exec_id}")
+
+                # Check batch info
+                batch_idx = result.get("batch_index", "Unknown")
+                st.write(f"**Batch Index:** {batch_idx}")
 
         # Action buttons
         action_col1, action_col2, action_col3, action_col4 = st.columns(4)
@@ -2673,6 +2706,963 @@ def generate_compliance_report(results: List[Dict]):
     st.info("Compliance report generation would create a formatted PDF report")
 
 
+# --- Multi-Dimensional Analysis Functions ---
+
+
+def calculate_scorer_generator_matrix(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calculate performance matrix for scorers × generators"""
+    if not results:
+        return {"matrix": {}, "scorers": [], "generators": []}
+
+    # Initialize matrix structure
+    matrix = defaultdict(
+        lambda: defaultdict(
+            lambda: {
+                "total": 0,
+                "violations": 0,
+                "detection_rate": 0.0,
+                "avg_score": 0.0,
+                "score_sum": 0.0,
+                "confidence": 0.0,
+                "samples": [],
+            }
+        )
+    )
+
+    # Collect unique scorers and generators
+    scorers = set()
+    generators = set()
+
+    # Build the matrix
+    for result in results:
+        scorer = result.get("scorer_name", "Unknown")
+        generator = result.get("generator_name", "Unknown")
+        score_type = result.get("score_type", "unknown")
+        score_value = result.get("score_value")
+
+        scorers.add(scorer)
+        generators.add(generator)
+
+        # Update matrix cell
+        cell = matrix[scorer][generator]
+        cell["total"] += 1
+
+        # Track violations
+        if score_type == "true_false" and score_value is True:
+            cell["violations"] += 1
+        elif score_type == "float_scale" and score_value is not None:
+            try:
+                score_float = float(score_value)
+                cell["score_sum"] += score_float
+                if score_float >= 0.6:  # Threshold for violations
+                    cell["violations"] += 1
+            except (TypeError, ValueError):
+                pass
+        elif result.get("severity") in ["high", "critical"]:
+            cell["violations"] += 1
+
+        # Keep sample results for drill-down
+        if len(cell["samples"]) < 5:  # Keep up to 5 samples
+            cell["samples"].append(
+                {
+                    "timestamp": result.get("timestamp"),
+                    "score_value": score_value,
+                    "severity": result.get("severity"),
+                    "rationale": result.get("score_rationale", "")[:100],
+                }
+            )
+
+    # Calculate metrics for each cell
+    for scorer in matrix:
+        for generator in matrix[scorer]:
+            cell = matrix[scorer][generator]
+            if cell["total"] > 0:
+                cell["detection_rate"] = (cell["violations"] / cell["total"]) * 100
+                cell["avg_score"] = cell["score_sum"] / cell["total"] if cell["score_sum"] > 0 else 0
+                # Calculate confidence based on sample size
+                cell["confidence"] = min(cell["total"] / 10, 1.0)  # Full confidence at 10+ samples
+
+    return {"matrix": dict(matrix), "scorers": sorted(list(scorers)), "generators": sorted(list(generators))}
+
+
+def calculate_vulnerability_taxonomy(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Categorize vulnerabilities using MITRE ATT&CK-inspired taxonomy for AI"""
+
+    # AI-specific vulnerability taxonomy
+    vulnerability_categories = {
+        "TA001": {
+            "name": "Initial Access",
+            "techniques": {"T001.1": "Prompt Injection", "T001.2": "Input Manipulation", "T001.3": "Context Overflow"},
+        },
+        "TA002": {
+            "name": "Execution",
+            "techniques": {"T002.1": "Code Generation", "T002.2": "Command Injection", "T002.3": "Script Execution"},
+        },
+        "TA003": {
+            "name": "Persistence",
+            "techniques": {
+                "T003.1": "Memory Manipulation",
+                "T003.2": "Context Retention",
+                "T003.3": "Session Hijacking",
+            },
+        },
+        "TA004": {
+            "name": "Privilege Escalation",
+            "techniques": {
+                "T004.1": "Role Manipulation",
+                "T004.2": "System Prompt Override",
+                "T004.3": "Capability Expansion",
+            },
+        },
+        "TA005": {
+            "name": "Defense Evasion",
+            "techniques": {"T005.1": "Encoding Evasion", "T005.2": "Logic Manipulation", "T005.3": "Safety Bypass"},
+        },
+        "TA006": {
+            "name": "Information Disclosure",
+            "techniques": {"T006.1": "Data Extraction", "T006.2": "Model Inversion", "T006.3": "Training Data Leakage"},
+        },
+    }
+
+    # Categorize findings
+    categorized_vulnerabilities = defaultdict(
+        lambda: defaultdict(
+            lambda: {"count": 0, "severity_breakdown": defaultdict(int), "affected_generators": set(), "examples": []}
+        )
+    )
+
+    # Map results to vulnerability categories
+    for result in results:
+        if result.get("severity") not in ["high", "critical"]:
+            continue
+
+        # Determine category based on various indicators
+        category = None
+        technique = None
+
+        # Analyze based on scorer name and rationale
+        scorer_name = result.get("scorer_name", "").lower()
+        rationale = result.get("score_rationale", "").lower()
+
+        # Categorization logic
+        if "injection" in scorer_name or "inject" in rationale:
+            category, technique = "TA001", "T001.1"
+        elif "code" in scorer_name or "script" in rationale:
+            category, technique = "TA002", "T002.1"
+        elif "privilege" in scorer_name or "admin" in rationale or "root" in rationale:
+            category, technique = "TA004", "T004.1"
+        elif "bypass" in scorer_name or "evade" in rationale:
+            category, technique = "TA005", "T005.3"
+        elif "data" in scorer_name or "extract" in rationale or "leak" in rationale:
+            category, technique = "TA006", "T006.1"
+        else:
+            # Default categorization based on response insights
+            if result.get("response_insights", {}).get("prompt_type") == "privilege_escalation":
+                category, technique = "TA004", "T004.2"
+            elif result.get("response_insights", {}).get("contains_code"):
+                category, technique = "TA002", "T002.1"
+            else:
+                category, technique = "TA001", "T001.2"  # Default to input manipulation
+
+        # Update vulnerability data
+        vuln_data = categorized_vulnerabilities[category][technique]
+        vuln_data["count"] += 1
+        vuln_data["severity_breakdown"][result.get("severity", "unknown")] += 1
+        vuln_data["affected_generators"].add(result.get("generator_name", "Unknown"))
+
+        # Keep examples
+        if len(vuln_data["examples"]) < 3:
+            vuln_data["examples"].append(
+                {
+                    "timestamp": result.get("timestamp"),
+                    "generator": result.get("generator_name"),
+                    "scorer": result.get("scorer_name"),
+                    "rationale": result.get("score_rationale", "")[:200],
+                }
+            )
+
+    # Convert sets to lists for JSON serialization
+    for category in categorized_vulnerabilities:
+        for technique in categorized_vulnerabilities[category]:
+            vuln_data = categorized_vulnerabilities[category][technique]
+            vuln_data["affected_generators"] = sorted(list(vuln_data["affected_generators"]))
+
+    return {
+        "taxonomy": vulnerability_categories,
+        "findings": dict(categorized_vulnerabilities),
+        "summary": {
+            "total_vulnerabilities": sum(
+                data["count"] for cat_data in categorized_vulnerabilities.values() for data in cat_data.values()
+            ),
+            "affected_categories": len(categorized_vulnerabilities),
+            "top_category": (
+                max(
+                    categorized_vulnerabilities.keys(),
+                    key=lambda c: sum(d["count"] for d in categorized_vulnerabilities[c].values()),
+                )
+                if categorized_vulnerabilities
+                else None
+            ),
+        },
+    }
+
+
+def calculate_advanced_risk_scores(
+    results: List[Dict[str, Any]], generator_groups: Dict[str, List[Dict]]
+) -> Dict[str, Any]:
+    """Calculate multi-factor risk scores for generators"""
+    risk_profiles = {}
+
+    for generator, gen_results in generator_groups.items():
+        if not gen_results:
+            continue
+
+        # 1. Base Risk Score (weighted severity)
+        severity_weights = {"critical": 10, "high": 5, "medium": 2, "low": 1, "minimal": 0.5}
+
+        base_risk = sum(severity_weights.get(r.get("severity", "unknown"), 0) for r in gen_results) / len(gen_results)
+
+        # 2. Exposure Factor (success rate of attacks)
+        violations = sum(1 for r in gen_results if r.get("severity") in ["high", "critical"])
+        exposure_factor = violations / len(gen_results) if gen_results else 0
+
+        # 3. Impact Multiplier (based on response characteristics)
+        impact_scores = []
+        for r in gen_results:
+            impact = 1.0
+            insights = r.get("response_insights", {})
+            if insights.get("contains_code"):
+                impact *= 1.5
+            if insights.get("contains_script"):
+                impact *= 2.0
+            if insights.get("response_type") == "verbose":
+                impact *= 1.2
+            impact_scores.append(impact)
+
+        avg_impact = sum(impact_scores) / len(impact_scores) if impact_scores else 1.0
+
+        # 4. Trend Modifier (compare recent vs historical)
+        recent_cutoff = datetime.now() - timedelta(days=7)
+        recent_results = [r for r in gen_results if parse_timestamp(r.get("timestamp")) > recent_cutoff]
+
+        if recent_results and len(recent_results) >= 5:
+            recent_violations = sum(1 for r in recent_results if r.get("severity") in ["high", "critical"])
+            recent_rate = recent_violations / len(recent_results)
+            overall_rate = violations / len(gen_results)
+            trend_modifier = 1 + (recent_rate - overall_rate)  # Positive if worsening
+        else:
+            trend_modifier = 1.0
+
+        # 5. Composite Risk Score
+        composite_score = base_risk * (1 + exposure_factor) * avg_impact * trend_modifier
+
+        # Normalize to 0-100 scale
+        normalized_score = min(composite_score * 10, 100)
+
+        risk_profiles[generator] = {
+            "risk_score": normalized_score,
+            "risk_level": (
+                "Critical"
+                if normalized_score >= 80
+                else (
+                    "High"
+                    if normalized_score >= 60
+                    else "Medium" if normalized_score >= 40 else "Low" if normalized_score >= 20 else "Minimal"
+                )
+            ),
+            "components": {
+                "base_risk": base_risk,
+                "exposure_factor": exposure_factor * 100,  # As percentage
+                "impact_multiplier": avg_impact,
+                "trend_modifier": trend_modifier,
+            },
+            "statistics": {
+                "total_tests": len(gen_results),
+                "violations": violations,
+                "violation_rate": (violations / len(gen_results) * 100) if gen_results else 0,
+                "recent_trend": (
+                    "Worsening" if trend_modifier > 1.1 else "Improving" if trend_modifier < 0.9 else "Stable"
+                ),
+            },
+        }
+
+    return risk_profiles
+
+
+def detect_cross_model_patterns(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Detect vulnerability patterns across multiple models"""
+
+    # Group results by prompt patterns
+    prompt_patterns = defaultdict(
+        lambda: {
+            "generators_affected": set(),
+            "scorers_triggered": set(),
+            "occurrences": 0,
+            "severity_distribution": defaultdict(int),
+            "examples": [],
+        }
+    )
+
+    # Extract patterns from successful attacks
+    for result in results:
+        if result.get("severity") not in ["high", "critical"]:
+            continue
+
+        # Extract pattern identifiers
+        prompt_data = result.get("prompt_response", {})
+        if not prompt_data:
+            continue
+
+        prompt = prompt_data.get("prompt", "").lower()
+
+        # Simple pattern extraction (in production, use NLP)
+        patterns = []
+
+        # Look for common attack patterns
+        if "ignore" in prompt and "instructions" in prompt:
+            patterns.append("instruction_override")
+        if "system" in prompt and ("admin" in prompt or "root" in prompt):
+            patterns.append("privilege_escalation")
+        if "```" in prompt or "<script" in prompt:
+            patterns.append("code_injection")
+        if "tell me" in prompt and "about" in prompt:
+            patterns.append("information_extraction")
+        if len(prompt) > 500:
+            patterns.append("context_overflow")
+
+        # Record pattern occurrences
+        for pattern in patterns:
+            pattern_data = prompt_patterns[pattern]
+            pattern_data["generators_affected"].add(result.get("generator_name", "Unknown"))
+            pattern_data["scorers_triggered"].add(result.get("scorer_name", "Unknown"))
+            pattern_data["occurrences"] += 1
+            pattern_data["severity_distribution"][result.get("severity", "unknown")] += 1
+
+            if len(pattern_data["examples"]) < 2:
+                pattern_data["examples"].append(
+                    {
+                        "generator": result.get("generator_name"),
+                        "scorer": result.get("scorer_name"),
+                        "prompt_preview": prompt[:100] + "..." if len(prompt) > 100 else prompt,
+                    }
+                )
+
+    # Identify cross-model vulnerabilities
+    cross_model_vulnerabilities = []
+
+    for pattern, data in prompt_patterns.items():
+        if len(data["generators_affected"]) >= 2:  # Affects multiple models
+            cross_model_vulnerabilities.append(
+                {
+                    "pattern": pattern,
+                    "risk_score": min(data["occurrences"] * len(data["generators_affected"]) * 2, 100),
+                    "affected_models": sorted(list(data["generators_affected"])),
+                    "detection_methods": sorted(list(data["scorers_triggered"])),
+                    "occurrences": data["occurrences"],
+                    "severity_distribution": dict(data["severity_distribution"]),
+                    "examples": data["examples"],
+                }
+            )
+
+    # Sort by risk score
+    cross_model_vulnerabilities.sort(key=lambda x: x["risk_score"], reverse=True)
+
+    return {
+        "vulnerabilities": cross_model_vulnerabilities,
+        "summary": {
+            "total_patterns": len(cross_model_vulnerabilities),
+            "max_affected_models": (
+                max(len(v["affected_models"]) for v in cross_model_vulnerabilities)
+                if cross_model_vulnerabilities
+                else 0
+            ),
+            "high_risk_patterns": sum(1 for v in cross_model_vulnerabilities if v["risk_score"] >= 60),
+        },
+    }
+
+
+def calculate_temporal_performance_metrics(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calculate performance metrics over time"""
+    if not results:
+        return {}
+
+    # Sort results by timestamp
+    sorted_results = sorted(
+        [r for r in results if r.get("timestamp")], key=lambda x: parse_timestamp(x.get("timestamp"))
+    )
+
+    if not sorted_results:
+        return {}
+
+    # Define time windows
+    time_windows = {"hourly": timedelta(hours=1), "daily": timedelta(days=1), "weekly": timedelta(weeks=1)}
+
+    temporal_metrics = {}
+
+    for window_name, window_delta in time_windows.items():
+        window_metrics = defaultdict(
+            lambda: {
+                "total": 0,
+                "violations": 0,
+                "scorers": defaultdict(int),
+                "generators": defaultdict(int),
+                "detection_rate": 0.0,
+            }
+        )
+
+        for result in sorted_results:
+            timestamp = parse_timestamp(result.get("timestamp"))
+            if not timestamp:
+                continue
+
+            # Determine window key
+            if window_name == "hourly":
+                window_key = timestamp.strftime("%Y-%m-%d %H:00")
+            elif window_name == "daily":
+                window_key = timestamp.strftime("%Y-%m-%d")
+            else:  # weekly
+                # Get start of week
+                week_start = timestamp - timedelta(days=timestamp.weekday())
+                window_key = week_start.strftime("%Y-%m-%d")
+
+            # Update metrics
+            metrics = window_metrics[window_key]
+            metrics["total"] += 1
+
+            if result.get("severity") in ["high", "critical"]:
+                metrics["violations"] += 1
+
+            metrics["scorers"][result.get("scorer_name", "Unknown")] += 1
+            metrics["generators"][result.get("generator_name", "Unknown")] += 1
+
+        # Calculate detection rates
+        for window_key, metrics in window_metrics.items():
+            if metrics["total"] > 0:
+                metrics["detection_rate"] = (metrics["violations"] / metrics["total"]) * 100
+                metrics["scorers"] = dict(metrics["scorers"])
+                metrics["generators"] = dict(metrics["generators"])
+
+        temporal_metrics[window_name] = dict(window_metrics)
+
+    # Calculate trends
+    daily_data = temporal_metrics.get("daily", {})
+    if len(daily_data) >= 3:
+        detection_rates = [m["detection_rate"] for m in daily_data.values()]
+        recent_avg = sum(detection_rates[-3:]) / 3
+        overall_avg = sum(detection_rates) / len(detection_rates)
+        trend = (
+            "increasing"
+            if recent_avg > overall_avg * 1.1
+            else "decreasing" if recent_avg < overall_avg * 0.9 else "stable"
+        )
+    else:
+        trend = "insufficient_data"
+
+    return {
+        "metrics": temporal_metrics,
+        "trend": trend,
+        "summary": {
+            "total_time_range": (
+                (
+                    parse_timestamp(sorted_results[-1].get("timestamp"))
+                    - parse_timestamp(sorted_results[0].get("timestamp"))
+                ).days
+                if len(sorted_results) >= 2
+                else 0
+            ),
+            "data_points": len(sorted_results),
+        },
+    }
+
+
+def parse_timestamp(timestamp_str: str) -> Optional[datetime]:
+    """Parse timestamp string to datetime object"""
+    if not timestamp_str:
+        return None
+    try:
+        if isinstance(timestamp_str, datetime):
+            return timestamp_str
+        return datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+    except:
+        return None
+
+
+# --- Multi-Dimensional Analysis Visualization Functions ---
+
+
+def render_scorer_generator_matrix(matrix_data: Dict[str, Any]):
+    """Render the scorer × generator performance matrix as a heatmap"""
+    st.subheader("🔥 Scorer × Generator Compatibility Matrix")
+
+    if not matrix_data.get("matrix"):
+        st.info("No matrix data available")
+        return
+
+    matrix = matrix_data["matrix"]
+    scorers = matrix_data["scorers"]
+    generators = matrix_data["generators"]
+
+    # Create detection rate matrix
+    detection_rates = []
+    for scorer in scorers:
+        row = []
+        for generator in generators:
+            cell = matrix.get(scorer, {}).get(generator, {})
+            rate = cell.get("detection_rate", 0)
+            row.append(rate)
+        detection_rates.append(row)
+
+    # Create heatmap
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=detection_rates,
+            x=generators,
+            y=scorers,
+            colorscale="RdYlBu_r",  # Red (high) to Blue (low)
+            text=[[f"{val:.1f}%" for val in row] for row in detection_rates],
+            texttemplate="%{text}",
+            textfont={"size": 10},
+            hovertemplate="Scorer: %{y}<br>Generator: %{x}<br>Detection Rate: %{z:.1f}%<extra></extra>",
+        )
+    )
+
+    fig.update_layout(
+        title="Detection Rate Heatmap (% of violations detected)",
+        xaxis_title="Generators",
+        yaxis_title="Scorers",
+        height=max(400, len(scorers) * 30),
+        width=max(600, len(generators) * 80),
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Show insights
+    with st.expander("🔍 Matrix Insights"):
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**🎯 Best Performing Combinations:**")
+            # Find top combinations
+            top_combos = []
+            for scorer in scorers:
+                for generator in generators:
+                    cell = matrix.get(scorer, {}).get(generator, {})
+                    if cell.get("total", 0) >= 5:  # Minimum sample size
+                        top_combos.append(
+                            {
+                                "combo": f"{scorer} × {generator}",
+                                "rate": cell.get("detection_rate", 0),
+                                "confidence": cell.get("confidence", 0),
+                            }
+                        )
+
+            top_combos.sort(key=lambda x: x["rate"], reverse=True)
+            for combo in top_combos[:5]:
+                st.write(f"- {combo['combo']}: {combo['rate']:.1f}% (confidence: {combo['confidence']:.0%})")
+
+        with col2:
+            st.markdown("**⚠️ Weak Combinations:**")
+            # Find weak combinations
+            weak_combos = sorted(top_combos, key=lambda x: x["rate"])[:5]
+            for combo in weak_combos:
+                if combo["rate"] < 50:  # Only show if detection rate is low
+                    st.write(f"- {combo['combo']}: {combo['rate']:.1f}%")
+
+
+def render_vulnerability_taxonomy(taxonomy_data: Dict[str, Any]):
+    """Render vulnerability taxonomy visualization"""
+    st.subheader("🛡️ Vulnerability Taxonomy Analysis")
+
+    findings = taxonomy_data.get("findings", {})
+    if not findings:
+        st.info("No vulnerabilities detected")
+        return
+
+    # Create sunburst chart for vulnerability hierarchy
+    labels = []
+    parents = []
+    values = []
+    colors = []
+
+    # Add categories
+    taxonomy = taxonomy_data.get("taxonomy", {})
+    for category_id, category_data in taxonomy.items():
+        if category_id in findings:
+            category_total = sum(findings[category_id][tech]["count"] for tech in findings[category_id])
+            if category_total > 0:
+                labels.append(category_data["name"])
+                parents.append("")
+                values.append(category_total)
+                colors.append(SEVERITY_COLORS.get("high", "#DC143C"))
+
+                # Add techniques
+                for tech_id, tech_name in category_data["techniques"].items():
+                    if tech_id in findings[category_id]:
+                        tech_count = findings[category_id][tech_id]["count"]
+                        if tech_count > 0:
+                            labels.append(tech_name)
+                            parents.append(category_data["name"])
+                            values.append(tech_count)
+                            # Color based on severity distribution
+                            severity_dist = findings[category_id][tech_id]["severity_breakdown"]
+                            if severity_dist.get("critical", 0) > severity_dist.get("high", 0):
+                                colors.append(SEVERITY_COLORS["critical"])
+                            else:
+                                colors.append(SEVERITY_COLORS["high"])
+
+    if labels:
+        fig = go.Figure(
+            go.Sunburst(
+                labels=labels,
+                parents=parents,
+                values=values,
+                branchvalues="total",
+                marker=dict(colors=colors),
+                hovertemplate="<b>%{label}</b><br>Count: %{value}<br>%{percentParent} of parent<br>%{percentRoot} of total<extra></extra>",
+            )
+        )
+
+        fig.update_layout(title="Vulnerability Distribution by Category", height=600)
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Show detailed breakdown
+    with st.expander("📊 Detailed Vulnerability Breakdown"):
+        for category_id, category_findings in findings.items():
+            if category_id in taxonomy:
+                st.markdown(f"### {taxonomy[category_id]['name']}")
+
+                for tech_id, tech_data in category_findings.items():
+                    if tech_id in taxonomy[category_id]["techniques"]:
+                        st.markdown(f"**{taxonomy[category_id]['techniques'][tech_id]}**")
+
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Occurrences", tech_data["count"])
+                        with col2:
+                            st.metric("Affected Models", len(tech_data["affected_generators"]))
+                        with col3:
+                            severity_str = ", ".join(
+                                f"{sev}: {count}" for sev, count in tech_data["severity_breakdown"].items()
+                            )
+                            st.metric("Severity", severity_str)
+
+                        if tech_data["examples"]:
+                            st.caption("Example:")
+                            ex = tech_data["examples"][0]
+                            st.text(f"Generator: {ex['generator']} | Scorer: {ex['scorer']}")
+                            st.text(f"Rationale: {ex['rationale']}")
+
+                        st.divider()
+
+
+def render_advanced_risk_profiles(risk_profiles: Dict[str, Any]):
+    """Render advanced risk profiling visualization"""
+    st.subheader("⚡ Advanced Generator Risk Profiles")
+
+    if not risk_profiles:
+        st.info("No risk profile data available")
+        return
+
+    # Create risk score comparison
+    risk_data = []
+    for generator, profile in risk_profiles.items():
+        risk_data.append(
+            {
+                "Generator": generator,
+                "Risk Score": profile["risk_score"],
+                "Risk Level": profile["risk_level"],
+                "Violation Rate": profile["statistics"]["violation_rate"],
+                "Trend": profile["statistics"]["recent_trend"],
+            }
+        )
+
+    df_risk = pd.DataFrame(risk_data).sort_values("Risk Score", ascending=False)
+
+    # Risk score bar chart with color coding
+    fig = go.Figure()
+
+    for _, row in df_risk.iterrows():
+        color = {
+            "Critical": "#8B0000",
+            "High": "#DC143C",
+            "Medium": "#FF8C00",
+            "Low": "#FFD700",
+            "Minimal": "#32CD32",
+        }.get(row["Risk Level"], "#808080")
+
+        fig.add_trace(
+            go.Bar(
+                x=[row["Generator"]],
+                y=[row["Risk Score"]],
+                name=row["Generator"],
+                marker_color=color,
+                text=f"{row['Risk Score']:.1f}",
+                textposition="outside",
+                hovertemplate=f"<b>{row['Generator']}</b><br>"
+                + f"Risk Score: {row['Risk Score']:.1f}<br>"
+                + f"Risk Level: {row['Risk Level']}<br>"
+                + f"Violation Rate: {row['Violation Rate']:.1f}%<br>"
+                + f"Trend: {row['Trend']}<extra></extra>",
+                showlegend=False,
+            )
+        )
+
+    fig.update_layout(
+        title="Generator Risk Scores (Multi-Factor Analysis)",
+        xaxis_title="Generator",
+        yaxis_title="Risk Score (0-100)",
+        height=400,
+        showlegend=False,
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Show detailed risk factors
+    with st.expander("🔍 Risk Factor Analysis"):
+        selected_generator = st.selectbox(
+            "Select a generator for detailed analysis:", options=df_risk["Generator"].tolist()
+        )
+
+        if selected_generator:
+            profile = risk_profiles[selected_generator]
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("**Risk Components:**")
+                components = profile["components"]
+
+                # Create radar chart for risk components
+                categories = ["Base Risk", "Exposure", "Impact", "Trend"]
+                values = [
+                    components["base_risk"] * 10,  # Scale to 0-100
+                    components["exposure_factor"],
+                    components["impact_multiplier"] * 20,  # Scale to 0-100
+                    (components["trend_modifier"] - 0.5) * 100,  # Center at 50
+                ]
+
+                fig_radar = go.Figure(
+                    data=go.Scatterpolar(r=values, theta=categories, fill="toself", name=selected_generator)
+                )
+
+                fig_radar.update_layout(
+                    polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+                    title=f"Risk Component Analysis - {selected_generator}",
+                    height=300,
+                )
+
+                st.plotly_chart(fig_radar, use_container_width=True)
+
+            with col2:
+                st.markdown("**Statistics:**")
+                stats = profile["statistics"]
+                st.metric("Total Tests", stats["total_tests"])
+                st.metric("Violations", f"{stats['violations']} ({stats['violation_rate']:.1f}%)")
+                st.metric(
+                    "Recent Trend",
+                    stats["recent_trend"],
+                    delta=(
+                        "Risk increasing"
+                        if stats["recent_trend"] == "Worsening"
+                        else "Risk decreasing" if stats["recent_trend"] == "Improving" else "Risk stable"
+                    ),
+                )
+
+
+def render_cross_model_patterns(pattern_data: Dict[str, Any]):
+    """Render cross-model vulnerability patterns"""
+    st.subheader("🔗 Cross-Model Vulnerability Patterns")
+
+    vulnerabilities = pattern_data.get("vulnerabilities", [])
+    if not vulnerabilities:
+        st.info("No cross-model patterns detected")
+        return
+
+    # Create network graph showing pattern connections
+    # For simplicity, we'll use a different visualization
+
+    # Pattern risk matrix
+    pattern_names = []
+    affected_counts = []
+    risk_scores = []
+
+    for vuln in vulnerabilities[:10]:  # Top 10 patterns
+        pattern_names.append(vuln["pattern"].replace("_", " ").title())
+        affected_counts.append(len(vuln["affected_models"]))
+        risk_scores.append(vuln["risk_score"])
+
+    # Create bubble chart
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=affected_counts,
+            y=risk_scores,
+            mode="markers+text",
+            marker=dict(
+                size=[r * 0.5 for r in risk_scores],  # Bubble size based on risk
+                color=risk_scores,
+                colorscale="Reds",
+                showscale=True,
+                colorbar=dict(title="Risk Score"),
+            ),
+            text=pattern_names,
+            textposition="top center",
+            hovertemplate="Pattern: %{text}<br>"
+            + "Affected Models: %{x}<br>"
+            + "Risk Score: %{y}<br>"
+            + "<extra></extra>",
+        )
+    )
+
+    fig.update_layout(
+        title="Cross-Model Vulnerability Patterns",
+        xaxis_title="Number of Affected Models",
+        yaxis_title="Risk Score",
+        height=500,
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Detailed pattern analysis
+    with st.expander("📋 Pattern Details"):
+        for vuln in vulnerabilities[:5]:  # Top 5 patterns
+            st.markdown(f"### {vuln['pattern'].replace('_', ' ').title()}")
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.metric("Risk Score", f"{vuln['risk_score']:.0f}/100")
+
+            with col2:
+                st.metric("Affected Models", len(vuln["affected_models"]))
+
+            with col3:
+                st.metric("Occurrences", vuln["occurrences"])
+
+            st.markdown("**Affected Models:**")
+            st.write(", ".join(vuln["affected_models"]))
+
+            st.markdown("**Detection Methods:**")
+            st.write(", ".join(vuln["detection_methods"]))
+
+            if vuln["examples"]:
+                st.markdown("**Example Attack:**")
+                ex = vuln["examples"][0]
+                st.caption(f"Model: {ex['generator']} | Detected by: {ex['scorer']}")
+                st.text(ex["prompt_preview"])
+
+            st.divider()
+
+
+def render_temporal_performance(temporal_data: Dict[str, Any]):
+    """Render temporal performance analysis"""
+    st.subheader("📈 Temporal Performance Analysis")
+
+    if not temporal_data.get("metrics"):
+        st.info("No temporal data available")
+        return
+
+    # Time window selector
+    time_window = st.radio("Select time window:", ["hourly", "daily", "weekly"], horizontal=True)
+
+    window_data = temporal_data["metrics"].get(time_window, {})
+    if not window_data:
+        st.info(f"No {time_window} data available")
+        return
+
+    # Prepare data for visualization
+    timestamps = []
+    detection_rates = []
+    totals = []
+
+    for timestamp, metrics in sorted(window_data.items()):
+        timestamps.append(timestamp)
+        detection_rates.append(metrics["detection_rate"])
+        totals.append(metrics["total"])
+
+    # Create dual-axis chart
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        subplot_titles=("Detection Rate Over Time", "Test Volume Over Time"),
+        shared_xaxes=True,
+        vertical_spacing=0.1,
+        row_heights=[0.6, 0.4],
+    )
+
+    # Detection rate line
+    fig.add_trace(
+        go.Scatter(
+            x=timestamps,
+            y=detection_rates,
+            mode="lines+markers",
+            name="Detection Rate",
+            line=dict(color="red", width=2),
+            marker=dict(size=6),
+            hovertemplate="%{x}<br>Detection Rate: %{y:.1f}%<extra></extra>",
+        ),
+        row=1,
+        col=1,
+    )
+
+    # Add trend line
+    if len(detection_rates) >= 3:
+        z = np.polyfit(range(len(detection_rates)), detection_rates, 1)
+        p = np.poly1d(z)
+        fig.add_trace(
+            go.Scatter(
+                x=timestamps,
+                y=p(range(len(detection_rates))),
+                mode="lines",
+                name="Trend",
+                line=dict(color="orange", width=1, dash="dash"),
+                hovertemplate="Trend: %{y:.1f}%<extra></extra>",
+            ),
+            row=1,
+            col=1,
+        )
+
+    # Test volume bars
+    fig.add_trace(
+        go.Bar(
+            x=timestamps,
+            y=totals,
+            name="Test Volume",
+            marker_color="lightblue",
+            hovertemplate="%{x}<br>Tests: %{y}<extra></extra>",
+        ),
+        row=2,
+        col=1,
+    )
+
+    fig.update_xaxes(title_text="Time", row=2, col=1)
+    fig.update_yaxes(title_text="Detection Rate (%)", row=1, col=1)
+    fig.update_yaxes(title_text="Number of Tests", row=2, col=1)
+
+    fig.update_layout(height=600, title=f"{time_window.capitalize()} Performance Metrics", showlegend=True)
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Show performance insights
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        trend = temporal_data.get("trend", "unknown")
+        trend_color = "🔴" if trend == "increasing" else "🟢" if trend == "decreasing" else "🟡"
+        st.metric("Overall Trend", f"{trend_color} {trend.capitalize()}")
+
+    with col2:
+        if detection_rates:
+            avg_rate = sum(detection_rates) / len(detection_rates)
+            st.metric("Average Detection Rate", f"{avg_rate:.1f}%")
+
+    with col3:
+        time_range = temporal_data.get("summary", {}).get("total_time_range", 0)
+        st.metric("Analysis Period", f"{time_range} days")
+
+
 # --- Main Dashboard Function ---
 
 
@@ -2734,8 +3724,12 @@ def main():
             help="Enable to load and display actual prompts/responses (may impact performance)",
         )
 
+        # Store in session state for debugging
+        st.session_state["enhanced_evidence"] = enhanced_evidence
+
         if enhanced_evidence:
             st.caption("⚠️ Loading response data may increase loading time")
+            st.caption(f"📊 Mode: {'Enhanced' if enhanced_evidence else 'Standard'}")  # Debug info
 
         # Manual refresh button
         if st.button("🔃 Refresh Now", use_container_width=True):
@@ -2764,13 +3758,23 @@ def main():
 
     # Load and process data using Dashboard_4 approach
     with st.spinner("🔄 Loading execution data from API..."):
+        # Debug info
+        st.write(f"🔍 Debug: Enhanced Evidence = {enhanced_evidence}")
+
         # Load orchestrator executions with their results
         if enhanced_evidence:
             # Load with full prompt/response data
+            st.write("📝 Loading with full prompt/response data...")
             executions, results = load_orchestrator_executions_with_full_data(days_back)
         else:
             # Load without response data (Dashboard_4 approach)
+            st.write("📊 Loading standard data (no responses)...")
             executions, results = load_orchestrator_executions_with_results(days_back)
+
+        # Debug: Check if we have prompt_response data
+        if results:
+            with_responses = sum(1 for r in results if r.get("prompt_response"))
+            st.write(f"🔍 Debug: {with_responses}/{len(results)} results have prompt_response data")
 
         if not executions:
             st.warning("📊 No scorer executions found in the selected date range.")
@@ -2808,13 +3812,35 @@ def main():
         if st.session_state.get("filter_state", {}).get("comparison_mode", False):
             baseline_metrics = calculate_comprehensive_metrics(results)
 
+    # Calculate multi-dimensional metrics for all tabs
+    with st.spinner("Calculating advanced analytics..."):
+        # Scorer × Generator Matrix
+        matrix_data = calculate_scorer_generator_matrix(filtered_results)
+
+        # Vulnerability Taxonomy
+        taxonomy_data = calculate_vulnerability_taxonomy(filtered_results)
+
+        # Advanced Risk Profiles
+        generator_groups = defaultdict(list)
+        for result in filtered_results:
+            generator_groups[result.get("generator_name", "Unknown")].append(result)
+        risk_profiles = calculate_advanced_risk_scores(filtered_results, dict(generator_groups))
+
+        # Cross-Model Patterns
+        pattern_data = detect_cross_model_patterns(filtered_results)
+
+        # Temporal Performance
+        temporal_perf_data = calculate_temporal_performance_metrics(filtered_results)
+
     # Render dashboard sections
     tabs = st.tabs(
         [
             "📊 Executive Summary",
-            "🔍 Scorer Performance",
-            "⚠️ Generator Risk",
-            "📈 Temporal Analysis",
+            "🔥 Compatibility Matrix",
+            "🛡️ Vulnerability Taxonomy",
+            "⚡ Risk Profiles",
+            "🔗 Cross-Model Patterns",
+            "📈 Performance Trends",
             "🔎 Detailed Results",
         ]
     )
@@ -2833,15 +3859,21 @@ def main():
             render_executive_dashboard(metrics)
 
     with tabs[1]:
-        render_scorer_performance(filtered_results, metrics)
+        render_scorer_generator_matrix(matrix_data)
 
     with tabs[2]:
-        render_generator_risk_analysis(metrics)
+        render_vulnerability_taxonomy(taxonomy_data)
 
     with tabs[3]:
-        render_temporal_analysis(filtered_results, metrics)
+        render_advanced_risk_profiles(risk_profiles)
 
     with tabs[4]:
+        render_cross_model_patterns(pattern_data)
+
+    with tabs[5]:
+        render_temporal_performance(temporal_perf_data)
+
+    with tabs[6]:
         if enhanced_evidence:
             render_detailed_results_table_with_responses(filtered_results)
         else:
