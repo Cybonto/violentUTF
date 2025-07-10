@@ -3,9 +3,9 @@
 Diagnose formatting differences between local and CI environment.
 """
 
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 
