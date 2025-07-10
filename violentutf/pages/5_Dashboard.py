@@ -1,6 +1,9 @@
 import asyncio
+import csv
+import io
 import json
 import os
+import re
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
@@ -373,6 +376,301 @@ def parse_scorer_results(executions: List[Dict[str, Any]]) -> List[Dict[str, Any
                 continue
 
     return all_results
+
+
+# --- Response Data Integration Functions ---
+
+
+@st.cache_data(ttl=60)  # 1-minute cache for real-time updates
+def load_orchestrator_executions_with_full_data(
+    days_back: int = 30,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Load orchestrator executions with results AND prompt/response data"""
+    try:
+        # Calculate time range
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_back)
+
+        # First get all orchestrators
+        orchestrators_response = api_request("GET", API_ENDPOINTS["orchestrators"])
+        if not orchestrators_response:
+            return [], []
+
+        # API returns list directly, not wrapped in 'orchestrators' key
+        orchestrators = (
+            orchestrators_response
+            if isinstance(orchestrators_response, list)
+            else orchestrators_response.get("orchestrators", [])
+        )
+        all_executions = []
+        all_results = []
+
+        # For each orchestrator, get its executions AND their results
+        for orchestrator in orchestrators:
+            orch_id = orchestrator.get("orchestrator_id")  # Use correct field name
+            if not orch_id:
+                continue
+
+            # Get executions for this orchestrator
+            exec_url = f"{API_BASE_URL}/api/v1/orchestrators/{orch_id}/executions"
+            exec_response = api_request("GET", exec_url)
+
+            if exec_response and "executions" in exec_response:
+                for execution in exec_response["executions"]:
+                    # Add orchestrator info to execution
+                    execution["orchestrator_name"] = orchestrator.get("name", "")
+                    execution["orchestrator_type"] = orchestrator.get("type", "")
+                    execution["execution_name"] = execution.get(
+                        "name", f"Execution {execution.get('id', 'Unknown')[:8]}"
+                    )
+                    all_executions.append(execution)
+
+                    # Load results for this execution immediately
+                    # Only try to load results for completed executions
+                    execution_id = execution.get("id")
+                    execution_status = execution.get("status", "")
+
+                    if not execution_id or execution_status != "completed":
+                        continue
+
+                    # Load full results with responses
+                    full_results = load_execution_results_with_responses(execution_id)
+
+                    if full_results:
+                        scores = full_results.get("scores", [])
+                        responses = full_results.get("prompt_request_responses", [])
+
+                        # Match scores to responses
+                        matched_results = match_scores_to_responses(scores, responses)
+
+                        # Enrich the matched results
+                        enriched_results = enrich_response_data(matched_results)
+
+                        # Process each enriched result
+                        for enriched_score in enriched_results:
+                            try:
+                                # Parse metadata if it's a JSON string
+                                metadata = enriched_score.get("score_metadata", "{}")
+                                if isinstance(metadata, str):
+                                    metadata = json.loads(metadata)
+
+                                # Create unified result object with response data
+                                result = {
+                                    "execution_id": execution_id,
+                                    "orchestrator_name": execution.get("orchestrator_name", "Unknown"),
+                                    "execution_name": execution.get("execution_name", "Unknown"),
+                                    "timestamp": enriched_score.get("timestamp", execution.get("created_at")),
+                                    "score_value": enriched_score.get("score_value"),
+                                    "score_type": enriched_score.get("score_type", "unknown"),
+                                    "score_category": enriched_score.get("score_category", "unknown"),
+                                    "score_rationale": enriched_score.get("score_rationale", ""),
+                                    "scorer_type": metadata.get("scorer_type", "Unknown"),
+                                    "scorer_name": metadata.get("scorer_name", "Unknown"),
+                                    "generator_name": metadata.get("generator_name", "Unknown"),
+                                    "generator_type": metadata.get("generator_type", "Unknown"),
+                                    "dataset_name": metadata.get("dataset_name", "Unknown"),
+                                    "test_mode": metadata.get("test_mode", "unknown"),
+                                    "batch_index": enriched_score.get("batch_index", 0),
+                                    "total_batches": enriched_score.get("total_batches", 1),
+                                    # Add response data
+                                    "prompt_response": enriched_score.get("prompt_response"),
+                                    "response_insights": enriched_score.get("response_insights"),
+                                    "searchable_content": enriched_score.get("searchable_content", []),
+                                }
+
+                                # Calculate severity
+                                score_type = result["score_type"]
+                                if score_type in SEVERITY_MAP:
+                                    result["severity"] = SEVERITY_MAP[score_type](result["score_value"])
+                                else:
+                                    result["severity"] = "unknown"
+
+                                all_results.append(result)
+
+                            except Exception as e:
+                                logger.error(f"Failed to parse enriched score result: {e}")
+                                continue
+
+        # Filter executions by time range
+        filtered_executions = []
+
+        for execution in all_executions:
+            created_at_str = execution.get("created_at", "")
+            if created_at_str:
+                try:
+                    created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+                    if start_date.date() <= created_at.date() <= end_date.date():
+                        filtered_executions.append(execution)
+                except Exception as e:
+                    logger.error(f"Failed to parse date {created_at_str}: {e}")
+            else:
+                filtered_executions.append(execution)  # Include executions without timestamps
+
+        # Filter results by time range too
+        filtered_results = []
+        for result in all_results:
+            timestamp_str = result.get("timestamp", "")
+            if timestamp_str:
+                try:
+                    timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+                    if start_date.date() <= timestamp.date() <= end_date.date():
+                        filtered_results.append(result)
+                except Exception as e:
+                    logger.error(f"Failed to parse result timestamp {timestamp_str}: {e}")
+
+        return filtered_executions, filtered_results
+    except Exception as e:
+        logger.error(f"Failed to load orchestrator executions with full data: {e}")
+        return [], []
+
+
+@st.cache_data(ttl=60)
+def load_execution_results_with_responses(execution_id: str) -> Dict[str, Any]:
+    """Load detailed results including prompt/response data for a specific execution"""
+    try:
+        url = API_ENDPOINTS["execution_results"].format(execution_id=execution_id)
+        response = api_request("GET", url)
+
+        if not response:
+            return {}
+
+        # Extract both scores and prompt_request_responses
+        result = {
+            "scores": response.get("scores", []),
+            "prompt_request_responses": response.get("prompt_request_responses", []),
+            "execution_id": execution_id,
+            "metadata": response.get("metadata", {}),
+        }
+
+        return result
+    except Exception as e:
+        logger.error(f"Failed to load execution results with responses: {e}")
+        return {}
+
+
+def match_scores_to_responses(scores: List[Dict], responses: List[Dict]) -> List[Dict]:
+    """Match scores to their corresponding prompt/response pairs using batch_index and timestamps"""
+    matched_results = []
+
+    # Create a lookup map for responses by batch_index
+    response_map = {}
+    for resp in responses:
+        batch_idx = resp.get("batch_index", 0)
+        if batch_idx not in response_map:
+            response_map[batch_idx] = []
+        response_map[batch_idx].append(resp)
+
+    # Match scores to responses
+    for score in scores:
+        batch_idx = score.get("batch_index", 0)
+        matched_score = score.copy()
+
+        # Find matching responses
+        batch_responses = response_map.get(batch_idx, [])
+
+        if batch_responses:
+            # Try to match by timestamp proximity if multiple responses in batch
+            score_timestamp = score.get("timestamp")
+            if score_timestamp and len(batch_responses) > 1:
+                # Find closest response by timestamp
+                closest_response = min(
+                    batch_responses,
+                    key=lambda r: (
+                        abs(
+                            datetime.fromisoformat(r.get("timestamp", "").replace("Z", "+00:00"))
+                            - datetime.fromisoformat(score_timestamp.replace("Z", "+00:00"))
+                        ).total_seconds()
+                        if r.get("timestamp")
+                        else float("inf")
+                    ),
+                )
+                matched_score["prompt_response"] = closest_response
+            else:
+                # Use first response if only one or no timestamp
+                matched_score["prompt_response"] = batch_responses[0]
+        else:
+            matched_score["prompt_response"] = None
+
+        matched_results.append(matched_score)
+
+    return matched_results
+
+
+def enrich_response_data(matched_results: List[Dict]) -> List[Dict]:
+    """Enrich response data with extracted insights and categorization"""
+    enriched_results = []
+
+    for result in matched_results:
+        enriched = result.copy()
+
+        if result.get("prompt_response"):
+            prompt = result["prompt_response"].get("prompt", "")
+            response = result["prompt_response"].get("response", "")
+
+            # Extract key insights
+            enriched["response_insights"] = {
+                "prompt_length": len(prompt),
+                "response_length": len(response),
+                "contains_code": bool(re.search(r"```[\s\S]*?```", response)),
+                "contains_url": bool(re.search(r"https?://\S+", response)),
+                "contains_script": bool(re.search(r"<script[\s\S]*?</script>", response, re.IGNORECASE)),
+                "prompt_type": categorize_prompt(prompt),
+                "response_type": categorize_response(response),
+            }
+
+            # Extract key phrases for search
+            enriched["searchable_content"] = extract_key_phrases(prompt + " " + response)
+
+        enriched_results.append(enriched)
+
+    return enriched_results
+
+
+def categorize_prompt(prompt: str) -> str:
+    """Categorize prompt type based on content analysis"""
+    prompt_lower = prompt.lower()
+
+    if any(keyword in prompt_lower for keyword in ["ignore", "forget", "disregard"]):
+        return "instruction_override"
+    elif any(keyword in prompt_lower for keyword in ["tell me", "what is", "explain"]):
+        return "information_extraction"
+    elif any(keyword in prompt_lower for keyword in ["code", "script", "program"]):
+        return "code_generation"
+    elif any(keyword in prompt_lower for keyword in ["system", "admin", "root"]):
+        return "privilege_escalation"
+    else:
+        return "general"
+
+
+def categorize_response(response: str) -> str:
+    """Categorize response type based on content analysis"""
+    response_lower = response.lower()
+
+    if "i cannot" in response_lower or "i'm unable" in response_lower:
+        return "refusal"
+    elif "```" in response:
+        return "code_output"
+    elif len(response) > 1000:
+        return "verbose"
+    elif any(keyword in response_lower for keyword in ["error", "exception", "failed"]):
+        return "error"
+    else:
+        return "standard"
+
+
+def extract_key_phrases(text: str, max_phrases: int = 10) -> List[str]:
+    """Extract key phrases from text for searchability"""
+    # Simple keyword extraction - in production, use NLP library
+    # Remove common words
+    stop_words = {"the", "is", "at", "which", "on", "a", "an", "and", "or", "but", "in", "with", "to", "for"}
+
+    # Extract words
+    words = re.findall(r"\b\w+\b", text.lower())
+    words = [w for w in words if len(w) > 3 and w not in stop_words]
+
+    # Get most common phrases
+    word_freq = Counter(words)
+    return [word for word, _ in word_freq.most_common(max_phrases)]
 
 
 # --- Dynamic Filtering Functions ---
@@ -1776,6 +2074,605 @@ def render_detailed_results_table(results: List[Dict[str, Any]]):
             )
 
 
+# --- Enhanced Evidence Explorer Functions ---
+
+
+def render_detailed_results_table_with_responses(results: List[Dict[str, Any]]):
+    """Render enhanced detailed results table with prompt/response data"""
+    st.header("🔎 Evidence Explorer - Enhanced View")
+
+    if not results:
+        st.info("No results available")
+        return
+
+    # Add view mode selector
+    view_mode = st.radio(
+        "View Mode",
+        ["Table View", "Card View", "Conversation View"],
+        horizontal=True,
+        help="Choose how to display the evidence",
+    )
+
+    # Filter controls with response search
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        scorer_filter = st.multiselect(
+            "Filter by Scorer",
+            options=sorted(set(r.get("scorer_name", "Unknown") for r in results)),
+            default=[],
+        )
+
+    with col2:
+        severity_filter = st.multiselect(
+            "Filter by Severity",
+            options=["critical", "high", "medium", "low", "minimal"],
+            default=[],
+        )
+
+    with col3:
+        # New response type filter
+        response_types = set()
+        for r in results:
+            if r.get("response_insights"):
+                response_types.add(r["response_insights"].get("response_type", "unknown"))
+
+        response_type_filter = st.multiselect(
+            "Filter by Response Type",
+            options=sorted(response_types) if response_types else ["No response data"],
+            default=[],
+        )
+
+    with col4:
+        # Search functionality
+        search_query = st.text_input(
+            "Search in prompts/responses",
+            placeholder="Enter keywords or regex pattern",
+            help="Search in prompt and response content",
+        )
+
+    # Advanced search options
+    with st.expander("Advanced Search Options"):
+        search_col1, search_col2 = st.columns(2)
+        with search_col1:
+            use_regex = st.checkbox("Use Regular Expression", value=False)
+            case_sensitive = st.checkbox("Case Sensitive", value=False)
+        with search_col2:
+            search_in = st.multiselect(
+                "Search in",
+                ["Prompts", "Responses", "Rationale"],
+                default=["Prompts", "Responses"],
+            )
+
+    # Apply filters
+    filtered_results = apply_evidence_filters(
+        results,
+        scorer_filter,
+        severity_filter,
+        response_type_filter,
+        search_query,
+        use_regex,
+        case_sensitive,
+        search_in,
+    )
+
+    # Display count
+    st.info(f"Showing {len(filtered_results)} of {len(results)} results")
+
+    # Render based on view mode
+    if view_mode == "Table View":
+        render_table_view_with_responses(filtered_results)
+    elif view_mode == "Card View":
+        render_card_view(filtered_results)
+    else:  # Conversation View
+        render_conversation_view(filtered_results)
+
+    # Export options
+    render_export_options(filtered_results)
+
+
+def apply_evidence_filters(
+    results: List[Dict],
+    scorer_filter: List[str],
+    severity_filter: List[str],
+    response_type_filter: List[str],
+    search_query: str,
+    use_regex: bool,
+    case_sensitive: bool,
+    search_in: List[str],
+) -> List[Dict]:
+    """Apply filters including response content search"""
+    filtered = results.copy()
+
+    # Basic filters
+    if scorer_filter:
+        filtered = [r for r in filtered if r.get("scorer_name") in scorer_filter]
+
+    if severity_filter:
+        filtered = [r for r in filtered if r.get("severity") in severity_filter]
+
+    if response_type_filter and response_type_filter != ["No response data"]:
+        filtered = [r for r in filtered if r.get("response_insights", {}).get("response_type") in response_type_filter]
+
+    # Search filter
+    if search_query:
+        search_results = []
+        for result in filtered:
+            if search_in_result(result, search_query, use_regex, case_sensitive, search_in):
+                search_results.append(result)
+        filtered = search_results
+
+    return filtered
+
+
+def search_in_result(
+    result: Dict,
+    query: str,
+    use_regex: bool,
+    case_sensitive: bool,
+    search_in: List[str],
+) -> bool:
+    """Search for query in result's prompt/response content"""
+    search_texts = []
+
+    if "Prompts" in search_in and result.get("prompt_response"):
+        search_texts.append(result["prompt_response"].get("prompt", ""))
+
+    if "Responses" in search_in and result.get("prompt_response"):
+        search_texts.append(result["prompt_response"].get("response", ""))
+
+    if "Rationale" in search_in:
+        search_texts.append(result.get("score_rationale", ""))
+
+    combined_text = " ".join(search_texts)
+
+    if not case_sensitive:
+        combined_text = combined_text.lower()
+        query = query.lower()
+
+    if use_regex:
+        try:
+            pattern = re.compile(query, re.IGNORECASE if not case_sensitive else 0)
+            return bool(pattern.search(combined_text))
+        except re.error:
+            return False
+    else:
+        return query in combined_text
+
+
+def render_table_view_with_responses(results: List[Dict]):
+    """Render enhanced table view with expandable rows for responses"""
+    if not results:
+        return
+
+    # Create expandable rows
+    for idx, result in enumerate(results):
+        with st.container():
+            # Main row
+            col1, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 1])
+
+            with col1:
+                # Execution info with timestamp
+                timestamp = result.get("timestamp", "")
+                if isinstance(timestamp, str):
+                    try:
+                        timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                        timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                    except:
+                        timestamp_str = timestamp
+                else:
+                    timestamp_str = str(timestamp)
+
+                st.markdown(f"**{timestamp_str}**")
+                st.caption(f"Execution: {result.get('execution_name', 'Unknown')}")
+
+            with col2:
+                st.markdown(f"**Scorer:** {result.get('scorer_name', 'Unknown')}")
+                score_value = result.get("score_value", "N/A")
+                if result.get("score_type") == "true_false":
+                    score_icon = "✅" if not score_value else "❌"
+                    st.markdown(f"Score: {score_icon}")
+                else:
+                    st.markdown(f"Score: {score_value}")
+
+            with col3:
+                severity = result.get("severity", "unknown")
+                severity_color = SEVERITY_COLORS.get(severity, "#808080")
+                st.markdown(
+                    f'<span style="color: {severity_color}">⬤</span> {severity.capitalize()}',
+                    unsafe_allow_html=True,
+                )
+
+            with col4:
+                insights = result.get("response_insights", {})
+                if insights:
+                    badges = []
+                    if insights.get("contains_code"):
+                        badges.append("💻 Code")
+                    if insights.get("contains_url"):
+                        badges.append("🔗 URL")
+                    if insights.get("contains_script"):
+                        badges.append("⚠️ Script")
+
+                    if badges:
+                        st.caption(" ".join(badges))
+
+            with col5:
+                # Expand button
+                if st.button("📄 Details", key=f"expand_{idx}"):
+                    st.session_state[f"expanded_{idx}"] = not st.session_state.get(f"expanded_{idx}", False)
+
+            # Expandable content
+            if st.session_state.get(f"expanded_{idx}", False):
+                render_expanded_result(result, idx)
+
+            st.divider()
+
+
+def render_expanded_result(result: Dict, idx: int):
+    """Render expanded view of a single result with prompt/response"""
+    with st.container():
+        # Score rationale
+        if result.get("score_rationale"):
+            st.markdown("**🎯 Score Rationale:**")
+            st.info(result["score_rationale"])
+
+        # Prompt and Response
+        if result.get("prompt_response"):
+            prompt_response = result["prompt_response"]
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("**📝 Prompt:**")
+                prompt_text = prompt_response.get("prompt", "No prompt available")
+                st.text_area(
+                    "Prompt Content",
+                    value=prompt_text,
+                    height=200,
+                    disabled=True,
+                    key=f"prompt_{idx}",
+                )
+
+                # Prompt metadata
+                insights = result.get("response_insights", {})
+                if insights:
+                    st.caption(f"Type: {insights.get('prompt_type', 'Unknown')}")
+                    st.caption(f"Length: {insights.get('prompt_length', 0)} chars")
+
+            with col2:
+                st.markdown("**💬 Response:**")
+                response_text = prompt_response.get("response", "No response available")
+                st.text_area(
+                    "Response Content",
+                    value=response_text,
+                    height=200,
+                    disabled=True,
+                    key=f"response_{idx}",
+                )
+
+                # Response metadata
+                if insights:
+                    st.caption(f"Type: {insights.get('response_type', 'Unknown')}")
+                    st.caption(f"Length: {insights.get('response_length', 0)} chars")
+
+        # Action buttons
+        action_col1, action_col2, action_col3, action_col4 = st.columns(4)
+
+        with action_col1:
+            if st.button("📋 Copy Evidence", key=f"copy_{idx}"):
+                copy_evidence_to_clipboard(result)
+
+        with action_col2:
+            if st.button("🔍 Find Similar", key=f"similar_{idx}"):
+                st.session_state[f"find_similar_{idx}"] = True
+
+        with action_col3:
+            if st.button("🏷️ Tag Evidence", key=f"tag_{idx}"):
+                st.session_state[f"tag_evidence_{idx}"] = True
+
+        with action_col4:
+            if st.button("📊 Analyze", key=f"analyze_{idx}"):
+                st.session_state[f"analyze_evidence_{idx}"] = True
+
+
+def render_card_view(results: List[Dict]):
+    """Render results as cards (Pinterest-style layout)"""
+    # Create columns for card layout
+    num_columns = 3
+    columns = st.columns(num_columns)
+
+    for idx, result in enumerate(results):
+        col_idx = idx % num_columns
+
+        with columns[col_idx]:
+            render_evidence_card(result, idx)
+
+
+def render_evidence_card(result: Dict, idx: int):
+    """Render a single evidence card"""
+    with st.container():
+        # Severity indicator
+        severity = result.get("severity", "unknown")
+        severity_color = SEVERITY_COLORS.get(severity, "#808080")
+
+        # Card container with border
+        with st.container():
+            st.markdown(
+                f"""
+                <div style="
+                    border: 2px solid {severity_color};
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                ">
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # Header with severity
+            st.markdown(f"### {severity.capitalize()} Finding")
+
+            # Scorer and score
+            st.caption(f"**{result.get('scorer_name', 'Unknown')}**")
+
+            score_value = result.get("score_value", "N/A")
+            if result.get("score_type") == "true_false":
+                st.markdown(f"Score: {'✅ Pass' if not score_value else '❌ Fail'}")
+            else:
+                st.markdown(f"Score: {score_value}")
+
+            # Rationale preview
+            rationale = result.get("score_rationale", "")
+            if rationale:
+                preview = rationale[:150] + "..." if len(rationale) > 150 else rationale
+                st.text(preview)
+
+            # Response preview if available
+            if result.get("prompt_response"):
+                response = result["prompt_response"].get("response", "")
+                if response:
+                    response_preview = response[:100] + "..." if len(response) > 100 else response
+                    st.info(f"Response: {response_preview}")
+
+            # Insights badges
+            insights = result.get("response_insights", {})
+            if insights:
+                badges = []
+                if insights.get("contains_code"):
+                    badges.append("💻")
+                if insights.get("contains_url"):
+                    badges.append("🔗")
+                if insights.get("contains_script"):
+                    badges.append("⚠️")
+
+                if badges:
+                    st.markdown(" ".join(badges))
+
+            # View full details button
+            if st.button(f"View Details", key=f"card_view_{idx}"):
+                st.session_state[f"show_card_details_{idx}"] = True
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Show details in modal-like expander
+        if st.session_state.get(f"show_card_details_{idx}", False):
+            with st.expander("Full Details", expanded=True):
+                render_expanded_result(result, idx)
+                if st.button("Close", key=f"close_card_{idx}"):
+                    st.session_state[f"show_card_details_{idx}"] = False
+                    st.rerun()
+
+
+def render_conversation_view(results: List[Dict]):
+    """Render results as conversations grouped by execution"""
+    # Group results by execution
+    executions = {}
+    for result in results:
+        exec_id = result.get("execution_id", "unknown")
+        if exec_id not in executions:
+            executions[exec_id] = {
+                "name": result.get("execution_name", "Unknown Execution"),
+                "results": [],
+            }
+        executions[exec_id]["results"].append(result)
+
+    # Render each execution as a conversation thread
+    for exec_id, execution_data in executions.items():
+        with st.expander(f"📋 {execution_data['name']} ({len(execution_data['results'])} results)"):
+            render_conversation_thread(execution_data["results"])
+
+
+def render_conversation_thread(results: List[Dict]):
+    """Render a conversation thread for an execution"""
+    # Sort by timestamp/batch_index
+    sorted_results = sorted(results, key=lambda x: (x.get("batch_index", 0), x.get("timestamp", "")))
+
+    for idx, result in enumerate(sorted_results):
+        # Conversation bubble style based on severity
+        severity = result.get("severity", "unknown")
+        severity_color = SEVERITY_COLORS.get(severity, "#808080")
+
+        col1, col2 = st.columns([1, 5])
+
+        with col1:
+            # Avatar/indicator
+            st.markdown(
+                f'<div style="text-align: center; font-size: 2em; color: {severity_color}">⬤</div>',
+                unsafe_allow_html=True,
+            )
+            st.caption(f"Batch {result.get('batch_index', 0) + 1}")
+
+        with col2:
+            # Message bubble
+            if result.get("prompt_response"):
+                prompt = result["prompt_response"].get("prompt", "")
+                response = result["prompt_response"].get("response", "")
+
+                # Prompt bubble
+                st.markdown(
+                    f'<div style="background-color: #e3f2fd; padding: 10px; border-radius: 10px; margin-bottom: 10px;">'
+                    f'<strong>Prompt:</strong><br>{prompt[:200]}{"..." if len(prompt) > 200 else ""}'
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+                # Response bubble
+                st.markdown(
+                    f'<div style="background-color: #f5f5f5; padding: 10px; border-radius: 10px; margin-bottom: 10px;">'
+                    f'<strong>Response:</strong><br>{response[:200]}{"..." if len(response) > 200 else ""}'
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+            # Score info
+            st.caption(f"**{result.get('scorer_name', 'Unknown')}** - Score: {result.get('score_value', 'N/A')}")
+
+            if result.get("score_rationale"):
+                st.caption(f"💭 {result['score_rationale'][:100]}...")
+
+        if idx < len(sorted_results) - 1:
+            st.divider()
+
+
+def copy_evidence_to_clipboard(result: Dict):
+    """Format and copy evidence to clipboard"""
+    evidence = f"""Evidence Report
+===============
+Timestamp: {result.get('timestamp', 'Unknown')}
+Execution: {result.get('execution_name', 'Unknown')}
+Scorer: {result.get('scorer_name', 'Unknown')}
+Score: {result.get('score_value', 'N/A')}
+Severity: {result.get('severity', 'Unknown')}
+
+Rationale:
+{result.get('score_rationale', 'No rationale provided')}
+
+"""
+
+    if result.get("prompt_response"):
+        prompt_response = result["prompt_response"]
+        evidence += f"""
+Prompt:
+{prompt_response.get('prompt', 'No prompt available')}
+
+Response:
+{prompt_response.get('response', 'No response available')}
+"""
+
+    # Show in text area for manual copy
+    st.text_area("Evidence (Copy manually):", evidence, height=300)
+
+
+def render_export_options(results: List[Dict]):
+    """Render export options for evidence"""
+    if not results:
+        return
+
+    st.markdown("### 📤 Export Options")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        # CSV export
+        csv_data = export_to_csv(results)
+        st.download_button(
+            "📊 Export as CSV",
+            csv_data,
+            f"evidence_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            "text/csv",
+        )
+
+    with col2:
+        # JSON export
+        json_data = json.dumps(results, indent=2, default=str)
+        st.download_button(
+            "📄 Export as JSON",
+            json_data,
+            f"evidence_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            "application/json",
+        )
+
+    with col3:
+        # Evidence package (filtered)
+        if st.button("📦 Create Evidence Package"):
+            create_evidence_package(results)
+
+    with col4:
+        # Compliance report
+        if st.button("📋 Generate Report"):
+            generate_compliance_report(results)
+
+
+def export_to_csv(results: List[Dict]) -> str:
+    """Export results to CSV format"""
+    output = io.StringIO()
+
+    # Define columns
+    fieldnames = [
+        "timestamp",
+        "execution_name",
+        "scorer_name",
+        "score_value",
+        "severity",
+        "score_rationale",
+        "prompt",
+        "response",
+        "prompt_type",
+        "response_type",
+        "contains_code",
+        "contains_url",
+    ]
+
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for result in results:
+        row = {
+            "timestamp": result.get("timestamp", ""),
+            "execution_name": result.get("execution_name", ""),
+            "scorer_name": result.get("scorer_name", ""),
+            "score_value": str(result.get("score_value", "")),
+            "severity": result.get("severity", ""),
+            "score_rationale": result.get("score_rationale", ""),
+        }
+
+        if result.get("prompt_response"):
+            row["prompt"] = result["prompt_response"].get("prompt", "")
+            row["response"] = result["prompt_response"].get("response", "")
+
+        if result.get("response_insights"):
+            insights = result["response_insights"]
+            row["prompt_type"] = insights.get("prompt_type", "")
+            row["response_type"] = insights.get("response_type", "")
+            row["contains_code"] = str(insights.get("contains_code", False))
+            row["contains_url"] = str(insights.get("contains_url", False))
+
+        writer.writerow(row)
+
+    return output.getvalue()
+
+
+def create_evidence_package(results: List[Dict]):
+    """Create a comprehensive evidence package"""
+    # This would create a ZIP file with:
+    # - Executive summary
+    # - Full results JSON
+    # - Screenshots/visualizations
+    # - Audit trail
+    st.info("Evidence package creation would generate a ZIP file with all relevant data")
+
+
+def generate_compliance_report(results: List[Dict]):
+    """Generate a compliance-focused report"""
+    # This would create a formatted report with:
+    # - Executive summary
+    # - Risk assessment
+    # - Detailed findings
+    # - Recommendations
+    st.info("Compliance report generation would create a formatted PDF report")
+
+
 # --- Main Dashboard Function ---
 
 
@@ -1828,6 +2725,18 @@ def main():
         # Auto-refresh toggle
         auto_refresh = st.checkbox("🔄 Auto-refresh (60s)", value=False)
 
+        # Enhanced Evidence Explorer toggle
+        st.divider()
+        st.markdown("### 🔍 Evidence Settings")
+        enhanced_evidence = st.checkbox(
+            "📝 Enhanced Evidence Explorer",
+            value=False,
+            help="Enable to load and display actual prompts/responses (may impact performance)",
+        )
+
+        if enhanced_evidence:
+            st.caption("⚠️ Loading response data may increase loading time")
+
         # Manual refresh button
         if st.button("🔃 Refresh Now", use_container_width=True):
             st.cache_data.clear()
@@ -1842,7 +2751,8 @@ def main():
             "- Comprehensive scorer analytics\n"
             "- Generator risk profiling\n"
             "- Temporal pattern analysis\n"
-            "- Export capabilities"
+            "- Export capabilities\n"
+            "- Enhanced evidence explorer (NEW)"
         )
 
     # Auto-refresh logic
@@ -1854,8 +2764,13 @@ def main():
 
     # Load and process data using Dashboard_4 approach
     with st.spinner("🔄 Loading execution data from API..."):
-        # Load orchestrator executions with their results (Dashboard_4 approach)
-        executions, results = load_orchestrator_executions_with_results(days_back)
+        # Load orchestrator executions with their results
+        if enhanced_evidence:
+            # Load with full prompt/response data
+            executions, results = load_orchestrator_executions_with_full_data(days_back)
+        else:
+            # Load without response data (Dashboard_4 approach)
+            executions, results = load_orchestrator_executions_with_results(days_back)
 
         if not executions:
             st.warning("📊 No scorer executions found in the selected date range.")
@@ -1927,7 +2842,10 @@ def main():
         render_temporal_analysis(filtered_results, metrics)
 
     with tabs[4]:
-        render_detailed_results_table(filtered_results)
+        if enhanced_evidence:
+            render_detailed_results_table_with_responses(filtered_results)
+        else:
+            render_detailed_results_table(filtered_results)
 
 
 if __name__ == "__main__":
