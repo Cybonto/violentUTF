@@ -28,7 +28,9 @@ ignore =
     # F401: imported but unused (handled separately)
     F401,
     # F541: f-string is missing placeholders (intentional - see docs/development/code_style_decisions.md)
-    F541
+    F541,
+    # E226: missing whitespace around arithmetic operator (intentional for string multiplication like '='*70)
+    E226
 per-file-ignores =
     # Allow unused imports in __init__.py files
     __init__.py:F401

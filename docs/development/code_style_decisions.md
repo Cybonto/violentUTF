@@ -1,6 +1,8 @@
 # Code Style Decisions for ViolentUTF
 
-## Important: F-String Formatting
+## Important Code Style Exceptions
+
+### F-String Formatting
 
 **⚠️ DO NOT AUTO-FIX F-STRING WARNINGS ⚠️**
 
@@ -37,3 +39,25 @@ July 9, 2025
 
 ### Rationale
 This decision was made after f-string "fixes" caused runtime issues in the application. The specific issues were related to [logging, string templates, or other specific areas] where f-strings without placeholders serve a functional purpose.
+
+## String Multiplication Formatting
+
+### Decision
+E226 warnings for missing whitespace around arithmetic operators in string multiplication (e.g., `'='*70`) are **ignored**.
+
+### Reason
+String multiplication patterns like `'='*70` or `'-'*50` are commonly used for creating visual separators in CLI output and logging. Adding spaces (`'=' * 70`) provides no functional benefit and can make the code less readable in these specific cases.
+
+### Implementation
+- **Flake8**: E226 errors are excluded in `.flake8` configuration
+- **CI/CD**: GitHub Actions will not fail on E226 warnings
+
+### Examples
+```python
+# These patterns are acceptable and should NOT be changed:
+print('='*80)  # OK - creates a line separator
+header = f"{'-'*20} Report {'-'*20}"  # OK - creates formatted header
+```
+
+### Date of Decision
+July 10, 2025
