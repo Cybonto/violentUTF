@@ -70,9 +70,11 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
                     username = user_info["username"]
                     email = user_info["email"]
                     roles = user_info["roles"]
-                    
+
                     # Debug logging to track username consistency
-                    logger.info(f"Keycloak token verification - username: {username}, display_name: {user_info.get('name')}")
+                    logger.info(
+                        f"Keycloak token verification - username: {username}, display_name: {user_info.get('name')}"
+                    )
                     logger.info(f"Successfully verified Keycloak token for user: {username}")
 
                 except HTTPException:

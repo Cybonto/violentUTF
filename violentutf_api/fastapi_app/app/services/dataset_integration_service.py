@@ -30,7 +30,7 @@ async def get_dataset_prompts(
         elif dataset_config["source_type"] == "local":
             prompts = await _get_local_dataset_prompts(dataset_config)
         elif dataset_config["source_type"] == "memory":
-            prompts = await _get_memory_dataset_prompts(dataset_config, sample_size)
+            prompts = await _get_memory_dataset_prompts(dataset_config, sample_size, user_context)
         elif dataset_config["source_type"] == "converter":
             prompts = await _get_converter_dataset_prompts(dataset_config)
         elif dataset_config["source_type"] == "transform":
@@ -172,7 +172,7 @@ async def _get_local_dataset_prompts(dataset_config: Dict) -> List[str]:
     return text_prompts
 
 
-async def _get_memory_dataset_prompts(dataset_config: Dict, limit: Optional[int] = None) -> List[str]:
+async def _get_memory_dataset_prompts(dataset_config: Dict, limit: Optional[int] = None, user_context: Optional[str] = None) -> List[str]:
     """Get prompts from PyRIT memory dataset using real memory database access"""
     try:
         dataset_id = dataset_config.get("id", "memory_0")
@@ -181,7 +181,7 @@ async def _get_memory_dataset_prompts(dataset_config: Dict, limit: Optional[int]
         logger.info(f"Loading memory dataset prompts for {dataset_name} (ID: {dataset_id})")
 
         # Try to access real PyRIT memory database
-        prompts = await _load_real_memory_dataset_prompts(dataset_id, limit)
+        prompts = await _load_real_memory_dataset_prompts(dataset_id, limit, user_context)
 
         if prompts:
             logger.info(f"Loaded {len(prompts)} real prompts from PyRIT memory dataset {dataset_name}")
@@ -197,8 +197,10 @@ async def _get_memory_dataset_prompts(dataset_config: Dict, limit: Optional[int]
         return []
 
 
-async def _load_real_memory_dataset_prompts(dataset_id: str, limit: Optional[int] = None) -> List[str]:
-    """Load actual prompts from PyRIT memory database files"""
+async def _load_real_memory_dataset_prompts(
+    dataset_id: str, limit: Optional[int] = None, user_id: Optional[str] = None
+) -> List[str]:
+    """Load actual prompts from PyRIT memory database files - WITH USER ISOLATION"""
     try:
         #         import os # F811: removed duplicate import
         import sqlite3
@@ -233,28 +235,42 @@ async def _load_real_memory_dataset_prompts(dataset_id: str, limit: Optional[int
             logger.info("No active PyRIT memory instance found, trying direct database access")
 
         # If no active memory or no prompts found, try direct database file access
-        memory_db_paths = []
+        # SECURITY: Only access the current user's specific database
+        import hashlib
 
-        # Check common PyRIT memory database locations
+        if not user_id:
+            logger.error(f"Cannot load memory dataset {dataset_id} without user context - security violation prevented")
+            return []
+
+        # Generate the user's specific database filename
+        salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
+        user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
+        user_db_filename = f"pyrit_memory_{user_hash}.db"
+
+        # Only check the user's specific database file in known locations
+        memory_db_paths = []
         potential_paths = [
-            "/app/app_data/violentutf/api_memory",  # Docker API memory
-            "./violentutf/app_data/violentutf",  # Local Streamlit memory
-            os.path.expanduser("~/.pyrit"),  # User PyRIT directory
+            "/app/app_data/violentutf",  # Docker API memory
             "./app_data/violentutf",  # Relative app data
         ]
 
         for base_path in potential_paths:
             if os.path.exists(base_path):
-                # Look for any .db files that might contain memory data
-                for file in os.listdir(base_path):
-                    if file.endswith(".db") and "memory" in file.lower():
-                        db_path = os.path.join(base_path, file)
-                        memory_db_paths.append(db_path)
+                user_db_path = os.path.join(base_path, user_db_filename)
+                if os.path.exists(user_db_path):
+                    memory_db_paths.append(user_db_path)
+                    logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
+                    break  # Only use the first found user database
 
         # Try to extract prompts from found database files
         for db_path in memory_db_paths:
             try:
-                logger.info(f"Attempting to read PyRIT memory database: {db_path}")
+                # SECURITY: Double-check that we're only accessing the user's database
+                if user_db_filename not in db_path:
+                    logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
+                    continue
+
+                logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
 
                 with sqlite3.connect(db_path) as conn:
                     cursor = conn.cursor()

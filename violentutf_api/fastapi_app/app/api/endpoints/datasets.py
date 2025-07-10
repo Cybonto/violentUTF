@@ -863,27 +863,38 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
             logger.info("No active PyRIT memory instance found, trying direct database access")
 
         # If no active memory, try direct database file access
-        memory_db_paths = []
+        # SECURITY: Only access the current user's specific database
+        import hashlib
 
-        # Check common PyRIT memory database locations
+        # Generate the user's specific database filename
+        salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
+        user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
+        user_db_filename = f"pyrit_memory_{user_hash}.db"
+
+        # Only check the user's specific database file in known locations
+        memory_db_paths = []
         potential_paths = [
-            "/app/app_data/violentutf/api_memory",  # Docker API memory
-            "./violentutf/app_data/violentutf",  # Local Streamlit memory
-            os.path.expanduser("~/.pyrit"),  # User PyRIT directory
+            "/app/app_data/violentutf",  # Docker API memory
             "./app_data/violentutf",  # Relative app data
         ]
 
         for base_path in potential_paths:
             if os.path.exists(base_path):
-                for file in os.listdir(base_path):
-                    if file.endswith(".db") and "memory" in file.lower():
-                        db_path = os.path.join(base_path, file)
-                        memory_db_paths.append(db_path)
+                user_db_path = os.path.join(base_path, user_db_filename)
+                if os.path.exists(user_db_path):
+                    memory_db_paths.append(user_db_path)
+                    logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
+                    break  # Only use the first found user database
 
         # Try to extract datasets from found database files
         for db_path in memory_db_paths:
             try:
-                logger.info(f"Attempting to read PyRIT memory database: {db_path}")
+                # SECURITY: Double-check that we're only accessing the user's database
+                if user_db_filename not in db_path:
+                    logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
+                    continue
+
+                logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
 
                 with sqlite3.connect(db_path) as conn:
                     cursor = conn.cursor()
