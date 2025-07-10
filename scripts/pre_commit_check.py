@@ -107,7 +107,7 @@ class PreCommitChecker:
                 f.write(
                     """[flake8]
 max-line-length = 120
-extend-ignore = E203, W503, E501
+extend-ignore = E203, W503, E501, E226
 exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 """
                 )

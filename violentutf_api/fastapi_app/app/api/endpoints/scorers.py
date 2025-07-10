@@ -638,26 +638,44 @@ async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)):
 
         # Find and delete scorer from DuckDB
         db_manager = get_duckdb_manager(user_id)
-        scorer_data = db_manager.get_scorer(scorer_id)
 
+        # Get scorer data before deletion
+        scorer_data = db_manager.get_scorer(scorer_id)
         if not scorer_data:
+            logger.warning(f"Scorer {scorer_id} not found for user {user_id}")
             raise HTTPException(status_code=404, detail=f"Scorer with ID '{scorer_id}' not found")
 
-        scorer_name = scorer_data["name"]
-        deleted = db_manager.delete_scorer(scorer_id)
+        scorer_name = scorer_data.get("name", "Unknown")
+        logger.info(f"Found scorer '{scorer_name}' with ID {scorer_id}, proceeding with deletion")
+
+        # Attempt deletion
+        try:
+            deleted = db_manager.delete_scorer(scorer_id)
+            logger.info(f"Delete operation result for scorer {scorer_id}: {deleted}")
+        except Exception as db_error:
+            logger.error(f"Database error during scorer deletion: {db_error}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Database error during deletion: {str(db_error)}")
 
         if not deleted:
+            logger.error(f"Delete operation returned False for scorer {scorer_id}")
             raise HTTPException(status_code=500, detail=f"Failed to delete scorer with ID '{scorer_id}'")
 
-        response = ScorerDeleteResponse(success=True, message="Scorer deleted successfully", deleted_scorer=scorer_name)
-
-        logger.info(f"Successfully deleted scorer {scorer_id}")
-        return response
+        # Create response
+        try:
+            response = ScorerDeleteResponse(
+                success=True, message="Scorer deleted successfully", deleted_scorer=scorer_name
+            )
+            logger.info(f"Successfully deleted scorer '{scorer_name}' (ID: {scorer_id})")
+            return response
+        except Exception as resp_error:
+            logger.error(f"Error creating response after successful deletion: {resp_error}", exc_info=True)
+            # Even if response creation fails, the deletion was successful
+            return {"success": True, "message": "Scorer deleted successfully", "deleted_scorer": scorer_name}
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting scorer: {e}")
+        logger.error(f"Unexpected error deleting scorer {scorer_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to delete scorer: {str(e)}")
 
 
