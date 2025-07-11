@@ -6,16 +6,16 @@ WORKDIR /build
 # Set shell for pipefail support
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install build dependencies with version pinning
+# Install build dependencies without Ubuntu-specific version pinning
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc=4:11.2.0-1ubuntu1 \
-    g++=4:11.2.0-1ubuntu1 \
-    git=1:2.34.1-1ubuntu1.11 \
-    build-essential=12.9ubuntu3 \
-    pkg-config=0.29.2-1ubuntu3 \
-    curl=7.81.0-1ubuntu1.18 \
-    libssl-dev=3.0.2-0ubuntu1.18 \
-    ca-certificates=20240203~22.04.1 \
+    gcc \
+    g++ \
+    git \
+    build-essential \
+    pkg-config \
+    curl \
+    libssl-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Zscaler certificates if they exist
@@ -37,9 +37,22 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
 # Verify Rust installation
 RUN rustc --version && cargo --version
 
-# Copy and install requirements
-COPY requirements.txt requirements-minimal.txt ./
-RUN pip install --no-cache-dir -r requirements.txt && \
+# Copy pip configuration for better reliability
+COPY pip.conf /etc/pip.conf
+
+# Copy and install requirements with staged approach for large packages
+COPY requirements.txt requirements-minimal.txt requirements-prebuild.txt ./
+
+# First install large packages that often timeout (with extended timeout)
+RUN pip install --no-cache-dir --timeout 600 --retries 10 -r requirements-prebuild.txt || \
+    (echo "Retrying with individual packages..." && \
+     pip install --no-cache-dir --timeout 600 botocore && \
+     pip install --no-cache-dir --timeout 600 boto3 && \
+     pip install --no-cache-dir --timeout 600 torch && \
+     pip install --no-cache-dir --timeout 600 transformers)
+
+# Then install remaining requirements
+RUN pip install --no-cache-dir --timeout 300 --retries 5 -r requirements.txt && \
     pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
 
 # Final stage
@@ -50,14 +63,14 @@ WORKDIR /app
 # Set shell for pipefail support
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install runtime dependencies with version pinning
+# Install runtime dependencies without Ubuntu-specific version pinning
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl=7.81.0-1ubuntu1.18 \
-    git=1:2.34.1-1ubuntu1.11 \
-    gcc=4:11.2.0-1ubuntu1 \
-    g++=4:11.2.0-1ubuntu1 \
-    build-essential=12.9ubuntu3 \
-    ca-certificates=20240203~22.04.1 \
+    curl \
+    git \
+    gcc \
+    g++ \
+    build-essential \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy certificates from builder stage

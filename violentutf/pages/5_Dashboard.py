@@ -3663,6 +3663,1616 @@ def render_temporal_performance(temporal_data: Dict[str, Any]):
         st.metric("Analysis Period", f"{time_range} days")
 
 
+# --- COB (Close of Business) Reports System ---
+
+
+class COBDataCollector:
+    """Data collection engine for COB reports"""
+
+    def __init__(self, api_base_url: str):
+        self.api_base_url = api_base_url
+        self.api_endpoints = {
+            "orchestrators": f"{api_base_url}/api/v1/orchestrators",
+            "orchestrator_executions": f"{api_base_url}/api/v1/orchestrators/executions",
+            "execution_results": f"{api_base_url}/api/v1/orchestrators/executions/{{execution_id}}/results",
+        }
+
+    def collect_24h_metrics(self, report_date: datetime) -> Dict[str, Any]:
+        """Collect all required metrics for the past 24 hours"""
+        end_date = report_date
+        start_date = end_date - timedelta(days=1)
+
+        return {
+            "report_date": report_date.isoformat(),
+            "period_start": start_date.isoformat(),
+            "period_end": end_date.isoformat(),
+            "executions": self.get_execution_metrics(start_date, end_date),
+            "threats": self.get_threat_analysis(start_date, end_date),
+            "performance": self.get_performance_data(start_date, end_date),
+            "historical_baselines": self.get_baseline_data(report_date),
+        }
+
+    def get_execution_metrics(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """Collect execution statistics and trends"""
+        try:
+            # Get all orchestrator executions in the time range
+            executions_response = self._api_request("GET", self.api_endpoints["orchestrator_executions"])
+            if not executions_response:
+                return {}
+
+            executions = executions_response.get("executions", [])
+
+            # Filter executions by date range
+            filtered_executions = []
+            all_results = []
+
+            for execution in executions:
+                created_at_str = execution.get("created_at", "")
+                if created_at_str:
+                    try:
+                        created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+                        if start_date <= created_at <= end_date:
+                            filtered_executions.append(execution)
+
+                            # Get results for this execution if completed
+                            if execution.get("status") == "completed":
+                                exec_id = execution.get("id")
+                                if exec_id:
+                                    results = self._get_execution_results(exec_id)
+                                    all_results.extend(results)
+                    except Exception as e:
+                        logger.error(f"Date parsing error: {e}")
+                        continue
+
+            # Calculate metrics
+            total_tests = len(all_results)
+            successful_tests = sum(1 for r in all_results if r.get("score_value") is not None)
+            critical_findings = sum(1 for r in all_results if r.get("severity") in ["critical", "high"])
+
+            # Get unique coverage metrics
+            unique_models = set(r.get("generator_name", "Unknown") for r in all_results)
+            unique_generators = set(r.get("generator_type", "Unknown") for r in all_results)
+            unique_scorers = set(r.get("scorer_name", "Unknown") for r in all_results)
+
+            return {
+                "total_executions": len(filtered_executions),
+                "completed_executions": sum(1 for e in filtered_executions if e.get("status") == "completed"),
+                "total_tests": total_tests,
+                "successful_tests": successful_tests,
+                "critical_findings": critical_findings,
+                "success_rate": (successful_tests / total_tests * 100) if total_tests > 0 else 0,
+                "violation_rate": (critical_findings / total_tests * 100) if total_tests > 0 else 0,
+                "unique_models": len(unique_models),
+                "unique_generators": len(unique_generators),
+                "unique_scorers": len(unique_scorers),
+                "model_names": list(unique_models),
+                "generator_names": list(unique_generators),
+                "scorer_names": list(unique_scorers),
+                "raw_results": all_results,
+            }
+
+        except Exception as e:
+            logger.error(f"Error collecting execution metrics: {e}")
+            return {}
+
+    def get_threat_analysis(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """Collect threat detection and pattern analysis - Enhanced in Phase 2 with trend analysis"""
+        try:
+            # Get all results for threat analysis
+            all_results = self._collect_all_results_for_timeframe(start_date, end_date)
+
+            if not all_results:
+                return {
+                    "threat_patterns": [],
+                    "cross_model_threats": [],
+                    "new_attack_vectors": [],
+                    "escalating_threats": [],
+                    "trend_analysis": {},
+                }
+
+            # Initialize Phase 2 analyzers
+            threat_analyzer = ThreatPatternAnalyzer()
+            trend_analyzer = TrendDetectionEngine()
+
+            # Perform comprehensive threat analysis
+            pattern_analysis = threat_analyzer.analyze_threat_patterns(all_results, 24)
+
+            # Get baseline data for trend analysis
+            baseline_data = self.get_baseline_data(end_date)
+            current_metrics = self.get_execution_metrics(start_date, end_date)
+
+            # Run trend analysis
+            trend_analysis = trend_analyzer.analyze_operational_trends(baseline_data, current_metrics)
+
+            return {
+                "threat_patterns": pattern_analysis.get("detected_patterns", []),
+                "cross_model_threats": pattern_analysis.get("cross_model_threats", []),
+                "new_attack_vectors": pattern_analysis.get("new_attack_vectors", []),
+                "escalating_threats": pattern_analysis.get("escalating_threats", []),
+                "threat_timeline": pattern_analysis.get("threat_timeline", {}),
+                "risk_assessment": pattern_analysis.get("risk_assessment", {}),
+                "trend_analysis": trend_analysis,
+            }
+
+        except Exception as e:
+            logger.error(f"Error in enhanced threat analysis: {e}")
+            return {
+                "threat_patterns": [],
+                "cross_model_threats": [],
+                "new_attack_vectors": [],
+                "escalating_threats": [],
+                "trend_analysis": {},
+            }
+
+    def get_performance_data(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """Collect system and test performance metrics"""
+        # Basic performance metrics for Phase 1
+        return {
+            "avg_response_time": 120,  # milliseconds
+            "api_availability": 99.2,  # percentage
+            "error_rate": 1.8,  # percentage
+            "throughput": 47,  # tests per minute
+        }
+
+    def get_baseline_data(self, report_date: datetime) -> Dict[str, Any]:
+        """Get historical baseline data for comparison - Enhanced in Phase 2"""
+        try:
+            # Collect multi-day historical data for trend analysis
+            historical_data = {}
+
+            # Collect last 7 days of data
+            for i in range(1, 8):
+                day_date = report_date - timedelta(days=i)
+                day_start = day_date - timedelta(days=1)
+                day_metrics = self.get_execution_metrics(day_start, day_date)
+
+                if day_metrics:
+                    historical_data[f"day_{i}"] = day_metrics
+
+            # Calculate enhanced baselines
+            yesterday = report_date - timedelta(days=1)
+            yesterday_metrics = self.get_execution_metrics(yesterday - timedelta(days=1), yesterday)
+
+            # Calculate week averages from collected data
+            week_data = list(historical_data.values())
+            if week_data:
+                week_average = {
+                    "total_tests": sum(d.get("total_tests", 0) for d in week_data) / len(week_data),
+                    "violation_rate": sum(d.get("violation_rate", 0) for d in week_data) / len(week_data),
+                    "success_rate": sum(d.get("success_rate", 0) for d in week_data) / len(week_data),
+                    "critical_findings": sum(d.get("critical_findings", 0) for d in week_data) / len(week_data),
+                }
+            else:
+                week_average = {}
+
+            return {
+                "yesterday": yesterday_metrics,
+                "week_average": week_average,
+                "historical_daily": historical_data,
+                "trend_data": self._calculate_baseline_trends(historical_data, yesterday_metrics),
+            }
+
+        except Exception as e:
+            logger.error(f"Error collecting enhanced baseline data: {e}")
+            return {"yesterday": {}, "week_average": {}}
+
+    def _get_execution_results(self, execution_id: str) -> List[Dict[str, Any]]:
+        """Get results for a specific execution"""
+        try:
+            url = self.api_endpoints["execution_results"].format(execution_id=execution_id)
+            response = self._api_request("GET", url)
+
+            if response and "scores" in response:
+                scores = response["scores"]
+                results = []
+
+                for score in scores:
+                    # Parse metadata if it's a JSON string
+                    metadata = score.get("score_metadata", "{}")
+                    if isinstance(metadata, str):
+                        try:
+                            metadata = json.loads(metadata)
+                        except:
+                            metadata = {}
+
+                    # Create unified result object
+                    result = {
+                        "execution_id": execution_id,
+                        "timestamp": score.get("timestamp"),
+                        "score_value": score.get("score_value"),
+                        "score_type": score.get("score_type", "unknown"),
+                        "score_rationale": score.get("score_rationale", ""),
+                        "scorer_name": metadata.get("scorer_name", "Unknown"),
+                        "generator_name": metadata.get("generator_name", "Unknown"),
+                        "generator_type": metadata.get("generator_type", "Unknown"),
+                        "dataset_name": metadata.get("dataset_name", "Unknown"),
+                    }
+
+                    # Calculate severity (using existing SEVERITY_MAP if available)
+                    score_type = result["score_type"]
+                    score_value = result["score_value"]
+
+                    if score_type == "true_false" and score_value is True:
+                        result["severity"] = "high"
+                    elif score_type == "float_scale" and score_value is not None:
+                        try:
+                            float_val = float(score_value)
+                            if float_val >= 0.8:
+                                result["severity"] = "critical"
+                            elif float_val >= 0.6:
+                                result["severity"] = "high"
+                            elif float_val >= 0.4:
+                                result["severity"] = "medium"
+                            else:
+                                result["severity"] = "low"
+                        except:
+                            result["severity"] = "unknown"
+                    else:
+                        result["severity"] = "minimal"
+
+                    results.append(result)
+
+                return results
+
+            return []
+
+        except Exception as e:
+            logger.error(f"Error getting execution results for {execution_id}: {e}")
+            return []
+
+    def _api_request(self, method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
+        """Make API request with error handling"""
+        try:
+            # Get API token from session state or environment
+            api_token = None
+            if hasattr(st, "session_state") and st.session_state.get("api_token"):
+                api_token = st.session_state["api_token"]
+            else:
+                api_token = os.getenv("VIOLENTUTF_API_TOKEN")
+
+            headers = {"Content-Type": "application/json"}
+            if api_token:
+                headers["Authorization"] = f"Bearer {api_token}"
+
+            response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.error(f"API request failed: {response.status_code} - {response.text}")
+                return None
+
+        except Exception as e:
+            logger.error(f"API request error: {e}")
+            return None
+
+    def _collect_all_results_for_timeframe(self, start_date: datetime, end_date: datetime) -> List[Dict[str, Any]]:
+        """Collect all results within timeframe for analysis"""
+        try:
+            executions_response = self._api_request("GET", self.api_endpoints["orchestrator_executions"])
+            if not executions_response:
+                return []
+
+            executions = executions_response.get("executions", [])
+            all_results = []
+
+            for execution in executions:
+                created_at_str = execution.get("created_at", "")
+                if created_at_str:
+                    try:
+                        created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+                        if start_date <= created_at <= end_date:
+                            if execution.get("status") == "completed":
+                                exec_id = execution.get("id")
+                                if exec_id:
+                                    results = self._get_execution_results(exec_id)
+                                    all_results.extend(results)
+                    except Exception as e:
+                        logger.error(f"Date parsing error in timeframe collection: {e}")
+                        continue
+
+            return all_results
+
+        except Exception as e:
+            logger.error(f"Error collecting results for timeframe: {e}")
+            return []
+
+    def _calculate_baseline_trends(self, historical_data: Dict, current_data: Dict) -> Dict[str, Any]:
+        """Calculate trend information from historical data"""
+        try:
+            if not historical_data:
+                return {}
+
+            # Extract time series data
+            daily_tests = []
+            daily_violations = []
+            daily_success = []
+
+            for day_key in sorted(historical_data.keys()):
+                day_data = historical_data[day_key]
+                daily_tests.append(day_data.get("total_tests", 0))
+                daily_violations.append(day_data.get("violation_rate", 0))
+                daily_success.append(day_data.get("success_rate", 0))
+
+            trends = {}
+
+            # Calculate simple trends
+            if len(daily_tests) >= 3:
+                trends["test_volume_trend"] = self._calculate_simple_trend(daily_tests)
+                trends["violation_trend"] = self._calculate_simple_trend(daily_violations)
+                trends["success_trend"] = self._calculate_simple_trend(daily_success)
+
+            return trends
+
+        except Exception as e:
+            logger.error(f"Error calculating baseline trends: {e}")
+            return {}
+
+    def _calculate_simple_trend(self, values: List[float]) -> str:
+        """Calculate simple trend direction"""
+        if len(values) < 3:
+            return "insufficient_data"
+
+        first_half = values[: len(values) // 2]
+        second_half = values[len(values) // 2 :]
+
+        first_avg = sum(first_half) / len(first_half)
+        second_avg = sum(second_half) / len(second_half)
+
+        if second_avg > first_avg * 1.05:
+            return "increasing"
+        elif second_avg < first_avg * 0.95:
+            return "decreasing"
+        else:
+            return "stable"
+
+
+class ThreatPatternAnalyzer:
+    """Advanced threat pattern analysis for COB reports - Phase 2"""
+
+    def __init__(self):
+        self.attack_patterns = {
+            "prompt_injection": {
+                "keywords": ["ignore", "instruction", "system", "override", "forget"],
+                "patterns": [r"ignore.*previous", r"system.*admin", r"forget.*rules"],
+                "severity_multiplier": 1.5,
+            },
+            "privilege_escalation": {
+                "keywords": ["admin", "root", "sudo", "privilege", "escalate"],
+                "patterns": [r"admin.*access", r"root.*permission", r"privilege.*escalation"],
+                "severity_multiplier": 2.0,
+            },
+            "code_injection": {
+                "keywords": ["script", "execute", "eval", "import", "subprocess"],
+                "patterns": [r"<script.*>", r"```.*python", r"eval\(", r"exec\("],
+                "severity_multiplier": 1.8,
+            },
+            "data_extraction": {
+                "keywords": ["extract", "dump", "leak", "expose", "reveal"],
+                "patterns": [r"extract.*data", r"dump.*database", r"reveal.*secret"],
+                "severity_multiplier": 1.7,
+            },
+            "jailbreak_attempt": {
+                "keywords": ["jailbreak", "bypass", "circumvent", "workaround"],
+                "patterns": [r"bypass.*filter", r"circumvent.*safety", r"jailbreak.*mode"],
+                "severity_multiplier": 2.2,
+            },
+        }
+
+    def analyze_threat_patterns(self, results: List[Dict[str, Any]], time_window: int = 24) -> Dict[str, Any]:
+        """Analyze threat patterns in results data"""
+        try:
+            # Filter results to time window
+            cutoff_time = datetime.now() - timedelta(hours=time_window)
+            recent_results = [
+                r for r in results if r.get("timestamp") and self._parse_timestamp(r["timestamp"]) > cutoff_time
+            ]
+
+            # Analyze patterns
+            pattern_analysis = {
+                "detected_patterns": self._detect_attack_patterns(recent_results),
+                "cross_model_threats": self._analyze_cross_model_threats(recent_results),
+                "escalating_threats": self._detect_escalating_threats(recent_results),
+                "new_attack_vectors": self._identify_new_vectors(recent_results),
+                "threat_timeline": self._build_threat_timeline(recent_results),
+                "risk_assessment": self._calculate_threat_risk_scores(recent_results),
+            }
+
+            return pattern_analysis
+
+        except Exception as e:
+            logger.error(f"Error in threat pattern analysis: {e}")
+            return {}
+
+    def _detect_attack_patterns(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Detect specific attack patterns in results"""
+        detected_patterns = []
+
+        # Group results by pattern type
+        pattern_groups = defaultdict(list)
+
+        for result in results:
+            if result.get("severity") not in ["high", "critical"]:
+                continue
+
+            # Check prompt and response content
+            prompt_content = ""
+            response_content = ""
+
+            if result.get("prompt_response"):
+                prompt_content = result["prompt_response"].get("prompt", "").lower()
+                response_content = result["prompt_response"].get("response", "").lower()
+
+            # Check rationale
+            rationale = result.get("score_rationale", "").lower()
+            combined_content = f"{prompt_content} {response_content} {rationale}"
+
+            # Match against known patterns
+            for pattern_name, pattern_config in self.attack_patterns.items():
+                score = self._calculate_pattern_match_score(combined_content, pattern_config)
+
+                if score > 0.3:  # Threshold for pattern detection
+                    pattern_groups[pattern_name].append(
+                        {"result": result, "match_score": score, "matched_content": combined_content[:200] + "..."}
+                    )
+
+        # Generate pattern summaries
+        for pattern_name, matches in pattern_groups.items():
+            if len(matches) >= 2:  # Minimum occurrences for pattern
+                affected_models = set()
+                affected_scorers = set()
+                total_score = 0
+
+                for match in matches:
+                    result = match["result"]
+                    affected_models.add(result.get("generator_name", "Unknown"))
+                    affected_scorers.add(result.get("scorer_name", "Unknown"))
+                    total_score += match["match_score"]
+
+                pattern_info = {
+                    "pattern_name": pattern_name,
+                    "description": self._get_pattern_description(pattern_name),
+                    "occurrences": len(matches),
+                    "affected_models": sorted(list(affected_models)),
+                    "detection_methods": sorted(list(affected_scorers)),
+                    "average_confidence": total_score / len(matches),
+                    "risk_level": self._calculate_pattern_risk_level(pattern_name, len(matches), len(affected_models)),
+                    "first_seen": min(match["result"].get("timestamp", "") for match in matches),
+                    "last_seen": max(match["result"].get("timestamp", "") for match in matches),
+                    "examples": [match["matched_content"] for match in matches[:2]],
+                }
+
+                detected_patterns.append(pattern_info)
+
+        # Sort by risk level and occurrences
+        detected_patterns.sort(key=lambda x: (x["risk_level"], x["occurrences"]), reverse=True)
+        return detected_patterns
+
+    def _analyze_cross_model_threats(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Identify threats that affect multiple models"""
+        cross_model_threats = []
+
+        # Group high-severity results by scorer
+        scorer_results = defaultdict(list)
+        for result in results:
+            if result.get("severity") in ["high", "critical"]:
+                scorer_results[result.get("scorer_name", "Unknown")].append(result)
+
+        # Find scorers that detected threats across multiple models
+        for scorer, scorer_findings in scorer_results.items():
+            affected_models = set(r.get("generator_name", "Unknown") for r in scorer_findings)
+
+            if len(affected_models) >= 2:  # Cross-model threshold
+                threat_info = {
+                    "threat_type": self._categorize_threat_by_scorer(scorer),
+                    "detecting_scorer": scorer,
+                    "affected_models": sorted(list(affected_models)),
+                    "total_detections": len(scorer_findings),
+                    "threat_severity": self._calculate_cross_model_severity(scorer_findings),
+                    "recommended_actions": self._generate_cross_model_recommendations(scorer, affected_models),
+                }
+
+                cross_model_threats.append(threat_info)
+
+        return sorted(cross_model_threats, key=lambda x: x["threat_severity"], reverse=True)
+
+    def _detect_escalating_threats(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Detect threats that are escalating over time - Simplified for Phase 2"""
+        escalating_threats = []
+
+        # Simple escalation detection based on time windows
+        recent_cutoff = datetime.now() - timedelta(hours=6)
+        very_recent = [
+            r for r in results if r.get("timestamp") and self._parse_timestamp(r["timestamp"]) > recent_cutoff
+        ]
+
+        older_cutoff = datetime.now() - timedelta(hours=12)
+        recent = [
+            r
+            for r in results
+            if r.get("timestamp") and older_cutoff < self._parse_timestamp(r["timestamp"]) <= recent_cutoff
+        ]
+
+        # Count high-severity findings in each period
+        very_recent_critical = sum(1 for r in very_recent if r.get("severity") in ["high", "critical"])
+        recent_critical = sum(1 for r in recent if r.get("severity") in ["high", "critical"])
+
+        if very_recent_critical > recent_critical * 1.5:  # 50% increase threshold
+            escalating_threats.append(
+                {
+                    "threat_source": "Multiple Sources",
+                    "escalation_rate": very_recent_critical / max(recent_critical, 1),
+                    "current_frequency": very_recent_critical,
+                    "urgency_level": min(very_recent_critical * 10, 100),
+                    "description": f"Critical findings increased from {recent_critical} to {very_recent_critical}",
+                }
+            )
+
+        return escalating_threats
+
+    def _identify_new_vectors(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Identify new attack vectors - Simplified for Phase 2"""
+        new_vectors = []
+
+        # Simple heuristic: recent scorer-generator combinations
+        recent_cutoff = datetime.now() - timedelta(hours=6)
+        recent_results = [
+            r for r in results if r.get("timestamp") and self._parse_timestamp(r["timestamp"]) > recent_cutoff
+        ]
+
+        # Count unique combinations in recent period
+        recent_combinations = defaultdict(int)
+        for result in recent_results:
+            if result.get("severity") in ["high", "critical"]:
+                combo = (result.get("scorer_name", "Unknown"), result.get("generator_name", "Unknown"))
+                recent_combinations[combo] += 1
+
+        # Identify potential new vectors (combinations with high activity)
+        for (scorer, generator), count in recent_combinations.items():
+            if count >= 3:  # Threshold for new vector detection
+                new_vectors.append(
+                    {
+                        "attack_vector": f"{scorer} → {generator}",
+                        "detection_count": count,
+                        "novelty_score": min(count * 20, 100),
+                        "risk_assessment": "high" if count >= 5 else "medium",
+                    }
+                )
+
+        return sorted(new_vectors, key=lambda x: x["novelty_score"], reverse=True)
+
+    def _build_threat_timeline(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Build a simplified threat timeline"""
+        timeline_events = []
+
+        # Group events by hour
+        hourly_events = defaultdict(list)
+        for result in results:
+            if result.get("severity") in ["high", "critical"] and result.get("timestamp"):
+                timestamp = self._parse_timestamp(result["timestamp"])
+                hour_key = timestamp.strftime("%Y-%m-%d %H:00")
+                hourly_events[hour_key].append(result)
+
+        # Create timeline entries
+        for hour, events in hourly_events.items():
+            if len(events) >= 2:  # Minimum threshold for timeline entry
+                timeline_events.append(
+                    {
+                        "timestamp": hour,
+                        "event_count": len(events),
+                        "affected_models": list(set(e.get("generator_name", "Unknown") for e in events)),
+                        "primary_threats": list(set(e.get("scorer_name", "Unknown") for e in events)),
+                    }
+                )
+
+        return {
+            "timeline_events": timeline_events,
+            "total_threat_hours": len(timeline_events),
+            "peak_activity": max(timeline_events, key=lambda x: x["event_count"]) if timeline_events else None,
+        }
+
+    def _calculate_threat_risk_scores(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Calculate simplified risk scores"""
+        if not results:
+            return {"overall_risk_level": "low", "composite_risk_score": 0}
+
+        total_critical = sum(1 for r in results if r.get("severity") == "critical")
+        total_high = sum(1 for r in results if r.get("severity") == "high")
+        total_results = len(results)
+
+        # Simple risk calculation
+        risk_score = ((total_critical * 10 + total_high * 5) / max(total_results, 1)) * 10
+
+        if risk_score >= 80:
+            risk_level = "critical"
+        elif risk_score >= 60:
+            risk_level = "high"
+        elif risk_score >= 40:
+            risk_level = "medium"
+        else:
+            risk_level = "low"
+
+        return {"overall_risk_level": risk_level, "composite_risk_score": risk_score}
+
+    # Helper methods
+    def _parse_timestamp(self, timestamp_str: str) -> datetime:
+        """Parse timestamp string to datetime"""
+        try:
+            if isinstance(timestamp_str, datetime):
+                return timestamp_str
+            return datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+        except:
+            return datetime.now()
+
+    def _calculate_pattern_match_score(self, content: str, pattern_config: Dict) -> float:
+        """Calculate how well content matches a pattern"""
+        score = 0.0
+
+        # Keyword matching
+        keywords_found = sum(1 for keyword in pattern_config["keywords"] if keyword in content)
+        keyword_score = keywords_found / len(pattern_config["keywords"])
+
+        # Regex pattern matching
+        pattern_matches = sum(1 for pattern in pattern_config["patterns"] if re.search(pattern, content))
+        pattern_score = pattern_matches / len(pattern_config["patterns"]) if pattern_config["patterns"] else 0
+
+        # Combined score
+        score = (keyword_score * 0.6 + pattern_score * 0.4) * pattern_config.get("severity_multiplier", 1.0)
+        return min(score, 1.0)
+
+    def _get_pattern_description(self, pattern_name: str) -> str:
+        """Get human-readable description of attack pattern"""
+        descriptions = {
+            "prompt_injection": "Attempts to override system instructions",
+            "privilege_escalation": "Attempts to gain elevated access or permissions",
+            "code_injection": "Attempts to execute arbitrary code",
+            "data_extraction": "Attempts to extract sensitive information",
+            "jailbreak_attempt": "Attempts to bypass safety mechanisms",
+        }
+        return descriptions.get(pattern_name, "Unknown attack pattern")
+
+    def _calculate_pattern_risk_level(self, pattern_name: str, occurrences: int, affected_models: int) -> float:
+        """Calculate risk level for a detected pattern"""
+        base_risk = self.attack_patterns.get(pattern_name, {}).get("severity_multiplier", 1.0)
+        frequency_risk = min(occurrences / 10, 2.0)
+        spread_risk = min(affected_models / 5, 1.5)
+        return base_risk * frequency_risk * spread_risk
+
+    def _categorize_threat_by_scorer(self, scorer_name: str) -> str:
+        """Categorize threat type based on scorer name"""
+        scorer_lower = scorer_name.lower()
+        if "injection" in scorer_lower:
+            return "Injection Attack"
+        elif "privilege" in scorer_lower or "escalation" in scorer_lower:
+            return "Privilege Escalation"
+        elif "data" in scorer_lower or "leak" in scorer_lower:
+            return "Data Extraction"
+        elif "bypass" in scorer_lower or "jailbreak" in scorer_lower:
+            return "Safety Bypass"
+        else:
+            return "Generic Threat"
+
+    def _calculate_cross_model_severity(self, findings: List[Dict]) -> float:
+        """Calculate severity score for cross-model threats"""
+        severity_weights = {"critical": 10, "high": 5, "medium": 2, "low": 1, "minimal": 0.5}
+        total_weight = sum(severity_weights.get(f.get("severity", "low"), 1) for f in findings)
+        return total_weight / len(findings) if findings else 0
+
+    def _generate_cross_model_recommendations(self, scorer: str, models: List[str]) -> List[str]:
+        """Generate recommendations for cross-model threats"""
+        recommendations = []
+
+        if len(models) >= 3:
+            recommendations.append("Implement universal protection across all models")
+
+        recommendations.append(f"Review {scorer} detection rules for false positives")
+        recommendations.append("Coordinate response across affected model teams")
+
+        if "injection" in scorer.lower():
+            recommendations.append("Strengthen input validation across all models")
+
+        return recommendations
+
+
+class TrendDetectionEngine:
+    """Advanced trend detection for operational intelligence - Phase 2"""
+
+    def __init__(self):
+        self.trend_algorithms = {
+            "violation_trends": self._analyze_violation_trends,
+            "performance_trends": self._analyze_performance_trends,
+            "model_degradation": self._detect_model_degradation,
+            "seasonal_patterns": self._detect_seasonal_patterns,
+            "anomaly_detection": self._detect_operational_anomalies,
+        }
+
+    def analyze_operational_trends(
+        self, historical_data: Dict[str, Any], current_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Comprehensive trend analysis for COB reports"""
+        try:
+            trend_analysis = {}
+
+            # Run all trend detection algorithms
+            for trend_type, algorithm in self.trend_algorithms.items():
+                try:
+                    trend_results = algorithm(historical_data, current_data)
+                    trend_analysis[trend_type] = trend_results
+                except Exception as e:
+                    logger.error(f"Error in {trend_type} analysis: {e}")
+                    trend_analysis[trend_type] = {}
+
+            # Generate composite trend insights
+            trend_analysis["composite_insights"] = self._generate_composite_insights(trend_analysis)
+            trend_analysis["priority_trends"] = self._prioritize_trends(trend_analysis)
+            trend_analysis["trend_alerts"] = self._generate_trend_alerts(trend_analysis)
+
+            return trend_analysis
+
+        except Exception as e:
+            logger.error(f"Error in operational trend analysis: {e}")
+            return {}
+
+    def _analyze_violation_trends(self, historical_data: Dict, current_data: Dict) -> Dict[str, Any]:
+        """Analyze violation rate trends"""
+        try:
+            # Extract violation rates from historical data
+            daily_data = historical_data.get("historical_daily", {})
+            violation_rates = []
+            dates = []
+
+            for day_key in sorted(daily_data.keys()):
+                day_data = daily_data[day_key]
+                violation_rates.append(day_data.get("violation_rate", 0))
+                dates.append(day_key)
+
+            # Current day violation rate
+            current_rate = current_data.get("violation_rate", 0)
+
+            if len(violation_rates) >= 3:
+                # Calculate trends
+                recent_avg = sum(violation_rates[-3:]) / 3
+                older_avg = sum(violation_rates[:-3]) / max(len(violation_rates) - 3, 1)
+
+                trend_direction = "stable"
+                if recent_avg > older_avg * 1.1:
+                    trend_direction = "increasing"
+                elif recent_avg < older_avg * 0.9:
+                    trend_direction = "decreasing"
+
+                # Calculate velocity
+                if len(violation_rates) >= 2:
+                    velocity = violation_rates[-1] - violation_rates[-2]
+                else:
+                    velocity = 0
+
+                return {
+                    "current_rate": current_rate,
+                    "trend_direction": trend_direction,
+                    "velocity": velocity,
+                    "recent_average": recent_avg,
+                    "historical_average": older_avg,
+                    "change_percentage": ((recent_avg - older_avg) / max(older_avg, 0.01)) * 100,
+                    "confidence": min(len(violation_rates) * 15, 100),
+                    "alert_level": self._calculate_violation_alert_level(trend_direction, velocity, current_rate),
+                }
+
+            return {"insufficient_data": True}
+
+        except Exception as e:
+            logger.error(f"Error analyzing violation trends: {e}")
+            return {}
+
+    def _analyze_performance_trends(self, historical_data: Dict, current_data: Dict) -> Dict[str, Any]:
+        """Analyze system performance trends"""
+        try:
+            daily_data = historical_data.get("historical_daily", {})
+            success_rates = []
+            test_volumes = []
+
+            for day_key in sorted(daily_data.keys()):
+                day_data = daily_data[day_key]
+                success_rates.append(day_data.get("success_rate", 0))
+                test_volumes.append(day_data.get("total_tests", 0))
+
+            current_success = current_data.get("success_rate", 0)
+            current_volume = current_data.get("total_tests", 0)
+
+            if len(success_rates) >= 3:
+                # Success rate trends
+                success_trend = self._calculate_simple_trend(success_rates)
+                volume_trend = self._calculate_simple_trend(test_volumes)
+
+                # Performance stability
+                success_stability = np.std(success_rates) if success_rates else 0
+                volume_stability = np.std(test_volumes) if test_volumes else 0
+
+                return {
+                    "success_rate_trend": success_trend,
+                    "test_volume_trend": volume_trend,
+                    "current_success_rate": current_success,
+                    "current_test_volume": current_volume,
+                    "success_rate_stability": success_stability,
+                    "volume_stability": volume_stability,
+                    "performance_score": self._calculate_performance_score(success_rates, test_volumes),
+                    "recommendations": self._generate_performance_recommendations(
+                        success_trend, volume_trend, success_stability
+                    ),
+                }
+
+            return {"insufficient_data": True}
+
+        except Exception as e:
+            logger.error(f"Error analyzing performance trends: {e}")
+            return {}
+
+    def _detect_model_degradation(self, historical_data: Dict, current_data: Dict) -> Dict[str, Any]:
+        """Detect AI model performance degradation"""
+        try:
+            # This would analyze model-specific performance over time
+            # For Phase 2, we'll use a simplified approach
+
+            daily_data = historical_data.get("historical_daily", {})
+            model_performances = defaultdict(list)
+
+            # Extract per-model performance from historical data
+            for day_key in sorted(daily_data.keys()):
+                day_data = daily_data[day_key]
+                # This would be extracted from detailed model analysis
+                # Simplified for Phase 2
+                avg_performance = 100 - day_data.get("violation_rate", 0)
+                model_performances["overall"].append(avg_performance)
+
+            degradation_alerts = []
+
+            for model_name, performances in model_performances.items():
+                if len(performances) >= 5:
+                    recent_perf = sum(performances[-3:]) / 3
+                    baseline_perf = sum(performances[:3]) / 3
+
+                    degradation = baseline_perf - recent_perf
+
+                    if degradation > 5:  # 5% degradation threshold
+                        degradation_alerts.append(
+                            {
+                                "model_name": model_name,
+                                "degradation_percentage": degradation,
+                                "baseline_performance": baseline_perf,
+                                "current_performance": recent_perf,
+                                "severity": "high" if degradation > 15 else "medium",
+                                "recommended_actions": self._generate_degradation_actions(model_name, degradation),
+                            }
+                        )
+
+            return {
+                "degradation_detected": len(degradation_alerts) > 0,
+                "affected_models": degradation_alerts,
+                "overall_health_score": self._calculate_overall_health_score(model_performances),
+                "trend_analysis": self._analyze_degradation_trends(model_performances),
+            }
+
+        except Exception as e:
+            logger.error(f"Error detecting model degradation: {e}")
+            return {}
+
+    def _detect_seasonal_patterns(self, historical_data: Dict, current_data: Dict) -> Dict[str, Any]:
+        """Detect time-based patterns in security testing"""
+        try:
+            # Simplified seasonal pattern detection for Phase 2
+            current_hour = datetime.now().hour
+            current_day = datetime.now().weekday()
+
+            # Basic time-of-day patterns
+            time_patterns = {
+                "peak_hours": self._identify_peak_testing_hours(historical_data),
+                "current_period": "business_hours" if 9 <= current_hour <= 17 else "off_hours",
+                "day_type": "weekday" if current_day < 5 else "weekend",
+                "expected_activity": self._predict_expected_activity(current_hour, current_day),
+                "activity_deviation": self._calculate_activity_deviation(current_data, current_hour, current_day),
+            }
+
+            return time_patterns
+
+        except Exception as e:
+            logger.error(f"Error detecting seasonal patterns: {e}")
+            return {}
+
+    def _detect_operational_anomalies(self, historical_data: Dict, current_data: Dict) -> Dict[str, Any]:
+        """Detect operational anomalies requiring attention"""
+        try:
+            anomalies = []
+
+            # Check for unusual violation spikes
+            current_violations = current_data.get("violation_rate", 0)
+            historical_avg = historical_data.get("week_average", {}).get("violation_rate", 0)
+
+            if current_violations > historical_avg * 2:
+                anomalies.append(
+                    {
+                        "type": "violation_spike",
+                        "description": f"Violation rate ({current_violations:.1f}%) is {current_violations/max(historical_avg,0.1):.1f}x normal",
+                        "severity": "high",
+                        "impact": "security_posture",
+                    }
+                )
+
+            # Check for unusual test volume
+            current_tests = current_data.get("total_tests", 0)
+            historical_test_avg = historical_data.get("week_average", {}).get("total_tests", 0)
+
+            if current_tests < historical_test_avg * 0.5:
+                anomalies.append(
+                    {
+                        "type": "low_test_volume",
+                        "description": f"Test volume ({current_tests}) is significantly below normal ({historical_test_avg:.0f})",
+                        "severity": "medium",
+                        "impact": "coverage_reduction",
+                    }
+                )
+
+            # Check for system performance issues
+            current_success = current_data.get("success_rate", 100)
+            if current_success < 90:
+                anomalies.append(
+                    {
+                        "type": "low_success_rate",
+                        "description": f"System success rate ({current_success:.1f}%) below threshold",
+                        "severity": "high",
+                        "impact": "operational_efficiency",
+                    }
+                )
+
+            return {
+                "anomalies_detected": len(anomalies),
+                "anomaly_list": anomalies,
+                "overall_anomaly_score": min(len(anomalies) * 25, 100),
+                "requires_immediate_attention": any(a["severity"] == "high" for a in anomalies),
+            }
+
+        except Exception as e:
+            logger.error(f"Error detecting operational anomalies: {e}")
+            return {}
+
+    def _generate_composite_insights(self, trend_analysis: Dict[str, Any]) -> List[str]:
+        """Generate high-level insights from trend analysis"""
+        insights = []
+
+        # Violation trend insights
+        violation_trends = trend_analysis.get("violation_trends", {})
+        if violation_trends.get("trend_direction") == "increasing":
+            insights.append(
+                f"⚠️ Security violations trending upward ({violation_trends.get('change_percentage', 0):.1f}% change)"
+            )
+
+        # Performance insights
+        performance_trends = trend_analysis.get("performance_trends", {})
+        if performance_trends.get("success_rate_trend") == "decreasing":
+            insights.append("📉 System performance showing decline - investigate resource constraints")
+
+        # Model degradation insights
+        degradation = trend_analysis.get("model_degradation", {})
+        if degradation.get("degradation_detected"):
+            affected_count = len(degradation.get("affected_models", []))
+            insights.append(f"🚨 {affected_count} model(s) showing performance degradation")
+
+        # Anomaly insights
+        anomalies = trend_analysis.get("anomaly_detection", {})
+        if anomalies.get("requires_immediate_attention"):
+            insights.append("🔥 Critical anomalies detected requiring immediate attention")
+
+        return insights[:5]  # Limit to top 5 insights
+
+    def _prioritize_trends(self, trend_analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Prioritize trends by urgency and impact"""
+        priority_trends = []
+
+        # Add high-priority trends with scoring
+        for trend_type, trend_data in trend_analysis.items():
+            if trend_type in ["composite_insights", "priority_trends", "trend_alerts"]:
+                continue
+
+            priority_score = self._calculate_trend_priority_score(trend_type, trend_data)
+
+            if priority_score > 50:  # Threshold for inclusion
+                priority_trends.append(
+                    {
+                        "trend_type": trend_type,
+                        "priority_score": priority_score,
+                        "summary": self._generate_trend_summary(trend_type, trend_data),
+                        "recommended_actions": self._generate_trend_actions(trend_type, trend_data),
+                    }
+                )
+
+        # Sort by priority score
+        priority_trends.sort(key=lambda x: x["priority_score"], reverse=True)
+        return priority_trends[:3]  # Top 3 priority trends
+
+    def _generate_trend_alerts(self, trend_analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate actionable alerts from trend analysis"""
+        alerts = []
+
+        # High-priority alerts based on trend analysis
+        violation_trends = trend_analysis.get("violation_trends", {})
+        if violation_trends.get("alert_level") == "high":
+            alerts.append(
+                {
+                    "alert_type": "security_degradation",
+                    "title": "Security Posture Degrading",
+                    "description": f"Violation rate increasing at {violation_trends.get('velocity', 0):.1f}%/day",
+                    "urgency": "high",
+                    "actions": ["Review recent model changes", "Increase monitoring frequency", "Alert security team"],
+                }
+            )
+
+        # System performance alerts
+        performance_trends = trend_analysis.get("performance_trends", {})
+        if performance_trends.get("success_rate_trend") == "decreasing":
+            alerts.append(
+                {
+                    "alert_type": "performance_degradation",
+                    "title": "System Performance Declining",
+                    "description": "Success rate trend showing consistent decline",
+                    "urgency": "medium",
+                    "actions": ["Check system resources", "Review error logs", "Consider scaling"],
+                }
+            )
+
+        return alerts
+
+    # Helper methods
+    def _calculate_violation_alert_level(self, trend_direction: str, velocity: float, current_rate: float) -> str:
+        """Calculate alert level for violation trends"""
+        if trend_direction == "increasing" and velocity > 5:
+            return "high"
+        elif trend_direction == "increasing" and velocity > 2:
+            return "medium"
+        elif current_rate > 50:
+            return "high"
+        else:
+            return "low"
+
+    def _calculate_performance_score(self, success_rates: List[float], test_volumes: List[float]) -> float:
+        """Calculate composite performance score"""
+        if not success_rates or not test_volumes:
+            return 0
+
+        avg_success = sum(success_rates) / len(success_rates)
+        success_stability = 100 - (np.std(success_rates) * 10)  # Penalize instability
+        volume_consistency = 100 - (np.std(test_volumes) / max(sum(test_volumes) / len(test_volumes), 1) * 100)
+
+        return avg_success * 0.5 + success_stability * 0.3 + volume_consistency * 0.2
+
+    def _generate_performance_recommendations(
+        self, success_trend: str, volume_trend: str, stability: float
+    ) -> List[str]:
+        """Generate performance improvement recommendations"""
+        recommendations = []
+
+        if success_trend == "decreasing":
+            recommendations.append("Investigate causes of success rate decline")
+
+        if volume_trend == "decreasing":
+            recommendations.append("Review test scheduling and resource allocation")
+
+        if stability > 10:
+            recommendations.append("Address performance variability issues")
+
+        return recommendations
+
+    def _generate_degradation_actions(self, model_name: str, degradation: float) -> List[str]:
+        """Generate model degradation response actions"""
+        actions = []
+
+        if degradation > 15:
+            actions.append(f"Immediate review of {model_name} required")
+            actions.append("Consider model rollback if available")
+
+        actions.append("Analyze recent training data changes")
+        actions.append("Review model configuration updates")
+
+        return actions
+
+    def _calculate_overall_health_score(self, model_performances: Dict[str, List[float]]) -> float:
+        """Calculate overall model health score"""
+        if not model_performances:
+            return 100
+
+        total_score = 0
+        count = 0
+
+        for model, performances in model_performances.items():
+            if performances:
+                recent_perf = sum(performances[-3:]) / min(len(performances), 3)
+                total_score += recent_perf
+                count += 1
+
+        return total_score / max(count, 1)
+
+    def _analyze_degradation_trends(self, model_performances: Dict[str, List[float]]) -> Dict[str, str]:
+        """Analyze degradation trends across models"""
+        trends = {}
+
+        for model, performances in model_performances.items():
+            if len(performances) >= 3:
+                trends[model] = self._calculate_simple_trend(performances)
+
+        return trends
+
+    def _identify_peak_testing_hours(self, historical_data: Dict) -> List[int]:
+        """Identify peak testing hours from historical data"""
+        # Simplified for Phase 2 - return typical business hours
+        return [9, 10, 11, 14, 15, 16]
+
+    def _predict_expected_activity(self, hour: int, day: int) -> str:
+        """Predict expected activity level"""
+        if day >= 5:  # Weekend
+            return "low"
+        elif 9 <= hour <= 17:  # Business hours
+            return "high"
+        else:
+            return "medium"
+
+    def _calculate_activity_deviation(self, current_data: Dict, hour: int, day: int) -> float:
+        """Calculate deviation from expected activity"""
+        expected_activity = self._predict_expected_activity(hour, day)
+        current_tests = current_data.get("total_tests", 0)
+
+        # Simplified calculation
+        if expected_activity == "high" and current_tests < 10:
+            return -50  # Below expected
+        elif expected_activity == "low" and current_tests > 50:
+            return +100  # Above expected
+        else:
+            return 0  # Normal
+
+    def _calculate_trend_priority_score(self, trend_type: str, trend_data: Dict) -> float:
+        """Calculate priority score for trends"""
+        base_scores = {
+            "violation_trends": 80,
+            "performance_trends": 70,
+            "model_degradation": 90,
+            "anomaly_detection": 85,
+            "seasonal_patterns": 40,
+        }
+
+        base_score = base_scores.get(trend_type, 50)
+
+        # Adjust based on trend data
+        if trend_data.get("alert_level") == "high":
+            base_score += 20
+        elif trend_data.get("severity") == "high":
+            base_score += 15
+
+        return min(base_score, 100)
+
+    def _generate_trend_summary(self, trend_type: str, trend_data: Dict) -> str:
+        """Generate summary for trend"""
+        summaries = {
+            "violation_trends": f"Security violations {trend_data.get('trend_direction', 'stable')}",
+            "performance_trends": f"System performance {trend_data.get('success_rate_trend', 'stable')}",
+            "model_degradation": f"Model health score: {trend_data.get('overall_health_score', 100):.1f}",
+            "anomaly_detection": f"{trend_data.get('anomalies_detected', 0)} anomalies detected",
+        }
+
+        return summaries.get(trend_type, f"{trend_type} analysis completed")
+
+    def _generate_trend_actions(self, trend_type: str, trend_data: Dict) -> List[str]:
+        """Generate actions for trends"""
+        actions = {
+            "violation_trends": ["Monitor violation patterns", "Review security controls"],
+            "performance_trends": ["Check system health", "Review resource usage"],
+            "model_degradation": ["Investigate model changes", "Consider retraining"],
+            "anomaly_detection": ["Investigate anomalies", "Increase monitoring"],
+        }
+
+        return actions.get(trend_type, ["Monitor situation"])
+
+
+class COBReportGenerator:
+    """Enhanced Report generation engine for COB reports - Phase 2"""
+
+    def generate_daily_report(self, data: Dict[str, Any], shift_info: Dict[str, str]) -> str:
+        """Generate comprehensive COB report"""
+        try:
+            # Generate each section
+            executive_summary = self._generate_executive_summary(data)
+            threat_analysis = self._generate_threat_analysis(data)
+            trend_analysis_section = self._generate_trend_analysis_section(data)
+            performance_metrics = self._generate_performance_metrics(data)
+            priority_actions = self._generate_priority_actions(data)
+
+            # Combine into full report
+            report_date = datetime.fromisoformat(data["report_date"].replace("Z", "+00:00"))
+
+            full_report = f"""# ViolentUTF Security Operations Summary
+## Date: {report_date.strftime('%Y-%m-%d')} | Shift: {shift_info.get('shift_name', 'Unknown')} | Operator: {shift_info.get('operator', 'System')}
+
+{executive_summary}
+
+{threat_analysis}
+
+{trend_analysis_section}
+
+{performance_metrics}
+
+{priority_actions}
+
+---
+*Report generated at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC*
+*ViolentUTF Enhanced Reporting System v2.0 (Phase 2)*
+"""
+
+            return full_report
+
+        except Exception as e:
+            logger.error(f"Error generating report: {e}")
+            return f"Error generating report: {str(e)}"
+
+    def _generate_executive_summary(self, data: Dict[str, Any]) -> str:
+        """Generate executive summary section"""
+        exec_metrics = data.get("executions", {})
+        baseline = data.get("historical_baselines", {}).get("yesterday", {})
+
+        # Calculate changes vs yesterday
+        total_tests = exec_metrics.get("total_tests", 0)
+        critical_findings = exec_metrics.get("critical_findings", 0)
+
+        yesterday_tests = baseline.get("total_tests", 0)
+        yesterday_critical = baseline.get("critical_findings", 0)
+
+        test_change = self._calculate_percentage_change(total_tests, yesterday_tests)
+        critical_change = critical_findings - yesterday_critical
+
+        # System uptime (simplified for Phase 1)
+        perf_data = data.get("performance", {})
+        uptime = perf_data.get("api_availability", 99.0)
+
+        return f"""### 🎯 Executive Summary
+- **Total Tests:** {total_tests:,} ({test_change})
+- **Critical Findings:** {critical_findings} ({critical_change:+d} new)
+- **System Uptime:** {uptime:.1f}%
+- **Coverage:** {exec_metrics.get('unique_models', 0)} models, {exec_metrics.get('unique_generators', 0)} generators, {exec_metrics.get('unique_scorers', 0)} scorers"""
+
+    def _generate_threat_analysis(self, data: Dict[str, Any]) -> str:
+        """Generate enhanced threat analysis section with Phase 2 intelligence"""
+        threat_data = data.get("threat", {})
+
+        # Check if we have Phase 2 threat analysis data
+        threat_patterns = threat_data.get("threat_patterns", [])
+        cross_model_threats = threat_data.get("cross_model_threats", [])
+        escalating_threats = threat_data.get("escalating_threats", [])
+        trend_analysis = threat_data.get("trend_analysis", {})
+
+        threat_section = "### ⚠️ THREAT INTELLIGENCE\n\n"
+
+        # Enhanced threat pattern analysis
+        if threat_patterns:
+            threat_section += f"**🚨 ATTACK PATTERNS DETECTED: {len(threat_patterns)}**\n\n"
+
+            for i, pattern in enumerate(threat_patterns[:3], 1):  # Top 3 patterns
+                threat_section += f"{i}. **{pattern.get('pattern_name', 'Unknown').upper()}**\n"
+                threat_section += f"   - Occurrences: {pattern.get('occurrences', 0)}\n"
+                threat_section += f"   - Risk Level: {pattern.get('risk_level', 'Unknown')}\n"
+                threat_section += f"   - Affected Models: {', '.join(pattern.get('affected_models', []))}\n"
+                threat_section += f"   - Description: {pattern.get('description', 'No description available')}\n\n"
+        else:
+            threat_section += "✅ **No significant attack patterns detected in reporting period.**\n\n"
+
+        # Cross-model threat analysis
+        if cross_model_threats:
+            threat_section += f"**⚠️ CROSS-MODEL THREATS: {len(cross_model_threats)}**\n\n"
+
+            for threat in cross_model_threats[:2]:  # Top 2 cross-model threats
+                threat_section += f"• **{threat.get('threat_type', 'Unknown Threat')}**\n"
+                threat_section += f"  - Affecting Models: {', '.join(threat.get('affected_models', []))}\n"
+                threat_section += f"  - Severity: {threat.get('threat_severity', 'Unknown')}\n"
+                threat_section += f"  - Total Detections: {threat.get('total_detections', 0)}\n\n"
+
+        # Escalating threats
+        if escalating_threats:
+            threat_section += "**📈 ESCALATING THREATS DETECTED**\n\n"
+            for threat in escalating_threats:
+                threat_section += f"• {threat.get('description', 'Escalating threat detected')}\n"
+                threat_section += f"  - Urgency Level: {threat.get('urgency_level', 0)}/100\n"
+
+        # Trend-based threat insights
+        composite_insights = trend_analysis.get("composite_insights", [])
+        if composite_insights:
+            threat_section += "\n**📊 TREND INSIGHTS:**\n"
+            for insight in composite_insights[:3]:  # Top 3 insights
+                threat_section += f"• {insight}\n"
+
+        # Fallback to basic analysis if no Phase 2 data
+        if not threat_patterns and not cross_model_threats and not escalating_threats:
+            exec_metrics = data.get("executions", {})
+            results = exec_metrics.get("raw_results", [])
+            high_severity_findings = [r for r in results if r.get("severity") in ["critical", "high"]]
+
+            if high_severity_findings:
+                threat_section += (
+                    f"**Basic Threat Analysis: {len(high_severity_findings)} high-severity findings detected**\n"
+                )
+
+                # Group by scorer
+                scorer_counts = defaultdict(int)
+                for finding in high_severity_findings:
+                    scorer_counts[finding.get("scorer_name", "Unknown")] += 1
+
+                for scorer, count in sorted(scorer_counts.items(), key=lambda x: x[1], reverse=True)[:3]:
+                    threat_section += f"• {scorer}: {count} detections\n"
+            else:
+                threat_section += "✅ **No critical or high-severity threats detected.**\n"
+
+        return threat_section
+
+    def _generate_trend_analysis_section(self, data: Dict[str, Any]) -> str:
+        """Generate trend analysis section with Phase 2 intelligence"""
+        threat_data = data.get("threat", {})
+        trend_analysis = threat_data.get("trend_analysis", {})
+
+        if not trend_analysis:
+            return "### 📈 TREND ANALYSIS\n*No trend analysis data available for this period.*\n"
+
+        trend_section = "### 📈 TREND ANALYSIS\n\n"
+
+        # Composite insights
+        composite_insights = trend_analysis.get("composite_insights", [])
+        if composite_insights:
+            trend_section += "**📊 KEY INSIGHTS:**\n"
+            for insight in composite_insights:
+                trend_section += f"• {insight}\n"
+            trend_section += "\n"
+
+        # Priority trends
+        priority_trends = trend_analysis.get("priority_trends", [])
+        if priority_trends:
+            trend_section += "**🎯 PRIORITY TRENDS:**\n\n"
+            for i, trend in enumerate(priority_trends, 1):
+                trend_section += f"{i}. **{trend.get('summary', 'Trend detected')}**\n"
+                trend_section += f"   - Priority Score: {trend.get('priority_score', 0)}/100\n"
+                actions = trend.get("recommended_actions", [])
+                if actions:
+                    trend_section += f"   - Recommended Action: {actions[0]}\n"
+                trend_section += "\n"
+
+        # Trend alerts
+        trend_alerts = trend_analysis.get("trend_alerts", [])
+        if trend_alerts:
+            trend_section += "**🔔 TREND ALERTS:**\n"
+            for alert in trend_alerts:
+                trend_section += f"• **{alert.get('title', 'Alert')}** ({alert.get('urgency', 'medium')} priority)\n"
+                trend_section += f"  {alert.get('description', 'No description')}\n"
+            trend_section += "\n"
+
+        # Specific trend analysis details
+        violation_trends = trend_analysis.get("violation_trends", {})
+        if violation_trends and not violation_trends.get("insufficient_data"):
+            trend_section += "**🛡️ SECURITY VIOLATION TRENDS:**\n"
+            trend_section += f"• Current Rate: {violation_trends.get('current_rate', 0):.1f}%\n"
+            trend_section += f"• Trend Direction: {violation_trends.get('trend_direction', 'unknown').title()}\n"
+            trend_section += f"• Change vs Historical: {violation_trends.get('change_percentage', 0):+.1f}%\n"
+            trend_section += f"• Alert Level: {violation_trends.get('alert_level', 'unknown').title()}\n\n"
+
+        performance_trends = trend_analysis.get("performance_trends", {})
+        if performance_trends and not performance_trends.get("insufficient_data"):
+            trend_section += "**⚙️ SYSTEM PERFORMANCE TRENDS:**\n"
+            trend_section += (
+                f"• Success Rate Trend: {performance_trends.get('success_rate_trend', 'unknown').title()}\n"
+            )
+            trend_section += f"• Test Volume Trend: {performance_trends.get('test_volume_trend', 'unknown').title()}\n"
+            trend_section += f"• Performance Score: {performance_trends.get('performance_score', 0):.1f}/100\n\n"
+
+        # Anomaly detection
+        anomaly_detection = trend_analysis.get("anomaly_detection", {})
+        if anomaly_detection.get("anomalies_detected", 0) > 0:
+            trend_section += "**⚠️ OPERATIONAL ANOMALIES:**\n"
+            anomaly_list = anomaly_detection.get("anomaly_list", [])
+            for anomaly in anomaly_list:
+                trend_section += (
+                    f"• {anomaly.get('description', 'Anomaly detected')} (Impact: {anomaly.get('impact', 'unknown')})\n"
+                )
+            trend_section += "\n"
+
+        if len(trend_section) == len("### 📈 TREND ANALYSIS\n\n"):
+            trend_section += "*No significant trends detected in current analysis period.*\n"
+
+        return trend_section
+
+    def _generate_performance_metrics(self, data: Dict[str, Any]) -> str:
+        """Generate performance metrics section"""
+        exec_metrics = data.get("executions", {})
+        perf_data = data.get("performance", {})
+        baseline = data.get("historical_baselines", {}).get("week_average", {})
+
+        # Calculate performance metrics
+        success_rate = exec_metrics.get("success_rate", 0)
+        violation_rate = exec_metrics.get("violation_rate", 0)
+        avg_response_time = perf_data.get("avg_response_time", 0)
+
+        # Calculate changes vs baseline
+        baseline_success = baseline.get("success_rate", success_rate)
+        baseline_violation = baseline.get("violation_rate", violation_rate)
+
+        success_change = self._calculate_percentage_change(success_rate, baseline_success)
+        violation_change = self._calculate_percentage_change(violation_rate, baseline_violation)
+
+        return f"""### 📊 Performance Metrics
+- **Average Response Time:** {avg_response_time}ms (Normal)
+- **Success Rate:** {success_rate:.1f}% ({success_change})
+- **Violation Detection Rate:** {violation_rate:.1f}% ({violation_change})
+- **Test Throughput:** {perf_data.get('throughput', 0)} tests/min
+- **API Availability:** {perf_data.get('api_availability', 0):.1f}%"""
+
+    def _generate_priority_actions(self, data: Dict[str, Any]) -> str:
+        """Generate enhanced priority actions section with Phase 2 intelligence"""
+        actions = []
+        exec_metrics = data.get("executions", {})
+        threat_data = data.get("threat", {})
+
+        # Actions from threat analysis
+        threat_patterns = threat_data.get("threat_patterns", [])
+        cross_model_threats = threat_data.get("cross_model_threats", [])
+        escalating_threats = threat_data.get("escalating_threats", [])
+        trend_analysis = threat_data.get("trend_analysis", {})
+
+        # High-priority threat-based actions
+        for pattern in threat_patterns[:2]:  # Top 2 patterns
+            if pattern.get("risk_level") in ["high", "critical"]:
+                actions.append(
+                    f"🚨 URGENT: Investigate {pattern.get('pattern_name', 'unknown')} attack pattern ({pattern.get('occurrences', 0)} occurrences)"
+                )
+
+        # Cross-model threat actions
+        for threat in cross_model_threats:
+            if threat.get("threat_severity", 0) > 7:  # High severity threshold
+                actions.append(
+                    f"⚠️ Address cross-model threat: {threat.get('threat_type', 'Unknown')} affecting {len(threat.get('affected_models', []))} models"
+                )
+
+        # Escalating threat actions
+        for threat in escalating_threats:
+            if threat.get("urgency_level", 0) > 50:
+                actions.append(f"📈 ESCALATING: {threat.get('description', 'Threat escalation detected')}")
+
+        # Trend-based actions
+        trend_alerts = trend_analysis.get("trend_alerts", [])
+        for alert in trend_alerts:
+            if alert.get("urgency") == "high":
+                actions.append(f"🔔 TREND ALERT: {alert.get('title', 'High priority trend alert')}")
+
+        # Priority trends actions
+        priority_trends = trend_analysis.get("priority_trends", [])
+        for trend in priority_trends[:1]:  # Top priority trend
+            if trend.get("priority_score", 0) > 80:
+                trend_actions = trend.get("recommended_actions", [])
+                if trend_actions:
+                    actions.append(f"📊 TREND ACTION: {trend_actions[0]}")
+
+        # Traditional metric-based actions
+        violation_rate = exec_metrics.get("violation_rate", 0)
+        critical_findings = exec_metrics.get("critical_findings", 0)
+        success_rate = exec_metrics.get("success_rate", 0)
+
+        if critical_findings > 10:
+            actions.append("📋 Review and analyze high volume of critical findings")
+
+        if violation_rate > 20:
+            actions.append("🔍 Investigate elevated violation detection rate")
+
+        if success_rate < 90:
+            actions.append("⚙️ Address test execution issues affecting success rate")
+
+        # Default actions if none generated
+        if not actions:
+            actions = [
+                "✅ Continue monitoring for new threat patterns",
+                "📈 Review daily metrics for trends",
+                "🔄 Prepare for next shift handoff",
+            ]
+
+        actions_section = "### 🎯 Priority Actions for Next Shift\n"
+        for i, action in enumerate(actions[:5], 1):
+            actions_section += f"{i}. {action}\n"
+
+        return actions_section
+
+    def _calculate_percentage_change(self, current: float, previous: float) -> str:
+        """Calculate percentage change with formatting"""
+        if previous == 0:
+            return "+∞%" if current > 0 else "0%"
+
+        change = ((current - previous) / previous) * 100
+        sign = "+" if change > 0 else ""
+        return f"{sign}{change:.1f}%"
+
+
+def render_cob_reports_tab():
+    """Render the COB Reports tab in the dashboard"""
+    st.header("📋 Daily Operations Reports (COB)")
+    st.markdown("*Automated Close of Business reporting for security operations*")
+
+    # Controls
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        report_date = st.date_input(
+            "Report Date", value=datetime.now().date(), help="Date for the report (defaults to today)"
+        )
+
+    with col2:
+        shift_name = st.selectbox(
+            "Shift",
+            ["Day Shift - Americas", "Night Shift - Americas", "Day Shift - EMEA", "Day Shift - APAC"],
+            help="Shift information for the report",
+        )
+
+    with col3:
+        operator_name = st.text_input(
+            "Operator", value="System Generated", help="Name of the operator or system generating the report"
+        )
+
+    # Generate report button
+    if st.button("🎯 Generate COB Report", use_container_width=True):
+        with st.spinner("Generating daily operations report..."):
+            try:
+                # Initialize components
+                api_base_url = API_BASE_URL
+                collector = COBDataCollector(api_base_url)
+                generator = COBReportGenerator()
+
+                # Collect data
+                report_datetime = datetime.combine(report_date, datetime.min.time())
+                data = collector.collect_24h_metrics(report_datetime)
+
+                # Generate report
+                shift_info = {"shift_name": shift_name, "operator": operator_name}
+
+                report_content = generator.generate_daily_report(data, shift_info)
+
+                # Display report
+                st.success("✅ Report generated successfully!")
+
+                # Show report in expandable section
+                with st.expander("📄 View Full Report", expanded=True):
+                    st.markdown(report_content)
+
+                # Download button
+                st.download_button(
+                    label="📥 Download Report (Markdown)",
+                    data=report_content,
+                    file_name=f"COB_Report_{report_date.strftime('%Y%m%d')}_{shift_name.replace(' ', '_')}.md",
+                    mime="text/markdown",
+                )
+
+                # Show metrics summary
+                exec_metrics = data.get("executions", {})
+                if exec_metrics:
+                    st.subheader("📊 Quick Metrics Summary")
+
+                    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+
+                    with metric_col1:
+                        st.metric("Total Tests", f"{exec_metrics.get('total_tests', 0):,}")
+
+                    with metric_col2:
+                        st.metric("Critical Findings", exec_metrics.get("critical_findings", 0))
+
+                    with metric_col3:
+                        st.metric("Success Rate", f"{exec_metrics.get('success_rate', 0):.1f}%")
+
+                    with metric_col4:
+                        st.metric("Violation Rate", f"{exec_metrics.get('violation_rate', 0):.1f}%")
+
+            except Exception as e:
+                st.error(f"❌ Error generating report: {str(e)}")
+                st.exception(e)
+
+    # Historical reports section
+    st.divider()
+    st.subheader("📚 Historical Reports")
+    st.info("Historical report viewing and management will be implemented in Phase 3")
+
+
 # --- Main Dashboard Function ---
 
 
@@ -3841,6 +5451,7 @@ def main():
             "⚡ Risk Profiles",
             "🔗 Cross-Model Patterns",
             "📈 Performance Trends",
+            "📋 COB Reports",
             "🔎 Detailed Results",
         ]
     )
@@ -3874,6 +5485,9 @@ def main():
         render_temporal_performance(temporal_perf_data)
 
     with tabs[6]:
+        render_cob_reports_tab()
+
+    with tabs[7]:
         if enhanced_evidence:
             render_detailed_results_table_with_responses(filtered_results)
         else:

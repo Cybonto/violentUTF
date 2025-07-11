@@ -100,6 +100,7 @@ load_modules() {
         "streamlit_setup.sh"
         "validation.sh"
         "cleanup.sh"
+        "pre_download_packages.sh"
     )
     
     # Load logging utilities first (silently)
@@ -159,6 +160,13 @@ main_setup() {
     
     # Phase 5: Service Deployment (CRITICAL: After all configs are ready)
     log_phase "Phase 5: Service Deployment"
+    
+    # Pre-download large packages if network is slow
+    if [ -f "$SETUP_MODULES_DIR/pre_download_packages.sh" ]; then
+        source "$SETUP_MODULES_DIR/pre_download_packages.sh"
+        pre_download_large_packages
+    fi
+    
     setup_keycloak
     setup_apisix
     setup_violentutf_api
@@ -185,6 +193,10 @@ main_setup() {
     log_phase "Phase 6: Route and Integration Setup"
     configure_apisix_routes
     configure_openapi_routes
+    
+    # Initialize AI Gateway if present (important after deep cleanup)
+    initialize_ai_gateway
+    
     setup_openapi_routes  # Setup OpenAPI provider routes (if configured)
     
     # AI Routes with enhanced readiness checking

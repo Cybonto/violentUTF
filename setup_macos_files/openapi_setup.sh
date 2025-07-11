@@ -592,6 +592,12 @@ setup_openapi_routes() {
     fi
     echo "$(date): APISIX is ready" >> "$log_file"
     
+    # Reload ai-tokens.env to pick up any updates from initialize_ai_gateway
+    if [ -f "./ai-tokens.env" ]; then
+        echo "$(date): Reloading ai-tokens.env to pick up any updates..." >> "$log_file"
+        source "./ai-tokens.env"
+    fi
+    
     
     # Process each OpenAPI provider (up to 10)
     local setup_count=0
@@ -625,6 +631,20 @@ setup_openapi_routes() {
         
         echo "Setting up OpenAPI provider: $provider_name ($provider_id)"
         echo "$(date): Processing provider $i: $provider_id" >> "$log_file"
+        
+        # Special handling for GSAi
+        if [[ "$provider_id" == *"gsai"* ]]; then
+            echo "   🔐 Detected GSAi provider - using dynamically generated token"
+            echo "$(date): GSAi provider detected" >> "$log_file"
+        fi
+        
+        # Log token info (masked for security)
+        if [ -n "$auth_token" ]; then
+            local token_prefix="${auth_token:0:10}"
+            echo "$(date): Using auth token: ${token_prefix}..." >> "$log_file"
+        else
+            echo "$(date): No auth token configured for provider $provider_id" >> "$log_file"
+        fi
         
         # Optional: Verify provider health before creating routes
         if verify_openapi_provider_health "$provider_id" "$provider_name" "$base_url" "$auth_type" "$auth_token"; then
@@ -931,5 +951,260 @@ verify_docs_accessibility() {
         return 0
     else
         return 1
+    fi
+}
+
+# Function to initialize AI Gateway (GSAi) after deep cleanup
+initialize_ai_gateway() {
+    echo "Initializing AI Gateway (GSAi) service..."
+    
+    # Check if AI Gateway is running
+    if ! docker ps --format "{{.Names}}" | grep -q "ai-gov-api-app"; then
+        echo "   ⚠️  AI Gateway service not found. Skipping initialization."
+        return 0
+    fi
+    
+    echo "   🔍 Found AI Gateway service running"
+    
+    # Check if database needs initialization
+    echo "   🗄️  Checking database status..."
+    
+    # Run database migrations
+    echo "   🔄 Running database migrations..."
+    if docker exec ai-gov-api-app-1 python -m alembic upgrade head 2>/dev/null; then
+        echo "   ✅ Database migrations completed successfully"
+    else
+        echo "   ⚠️  Database migrations may have already been applied"
+    fi
+    
+    # Wait a moment for migrations to settle
+    sleep 2
+    
+    # Verify the service is healthy
+    echo "   🏥 Verifying AI Gateway health..."
+    local retries=0
+    local max_retries=5
+    
+    while [ $retries -lt $max_retries ]; do
+        if curl -s --max-time 5 "http://localhost:8081/health" >/dev/null 2>&1; then
+            echo "   ✅ AI Gateway is healthy"
+            break
+        fi
+        echo "   ⏳ Waiting for AI Gateway to be ready (attempt $((retries + 1))/$max_retries)..."
+        sleep 3
+        retries=$((retries + 1))
+    done
+    
+    if [ $retries -eq $max_retries ]; then
+        echo "   ❌ AI Gateway health check failed"
+        return 1
+    fi
+    
+    # Check if the API key table exists
+    echo "   🔑 Checking API key configuration..."
+    local db_check=$(docker exec ai-gov-api-app-1 python -c "
+import asyncio
+from sqlalchemy import text
+from app.database import get_async_session
+
+async def check_tables():
+    async for session in get_async_session():
+        try:
+            result = await session.execute(text('SELECT COUNT(*) FROM api_keys'))
+            count = result.scalar()
+            print(f'API_KEYS_COUNT:{count}')
+            return True
+        except Exception as e:
+            if 'relation \"api_keys\" does not exist' in str(e):
+                print('API_KEYS_TABLE:MISSING')
+            else:
+                print(f'ERROR:{e}')
+            return False
+
+asyncio.run(check_tables())
+" 2>&1 || echo "CHECK_FAILED")
+    
+    if echo "$db_check" | grep -q "API_KEYS_TABLE:MISSING"; then
+        echo "   ❌ API keys table missing - migrations may have failed"
+        echo "   🔄 Attempting to recreate database schema..."
+        
+        # Try running migrations again with more verbose output
+        docker exec ai-gov-api-app-1 python -m alembic upgrade head || true
+        sleep 2
+    elif echo "$db_check" | grep -q "API_KEYS_COUNT:"; then
+        local key_count=$(echo "$db_check" | grep -o "API_KEYS_COUNT:[0-9]*" | cut -d: -f2)
+        echo "   ✅ API keys table exists (contains $key_count keys)"
+    else
+        echo "   ⚠️  Could not verify API keys table status"
+    fi
+    
+    # Create or verify the GSAi API key
+    echo "   🔐 Configuring GSAi API authentication..."
+    
+    # Check if GSAi is enabled in configuration
+    local gsai_enabled="false"
+    if [ -f "./ai-tokens.env" ]; then
+        source "./ai-tokens.env"
+        gsai_enabled="${OPENAPI_1_ENABLED:-false}"
+    fi
+    
+    if [ "$gsai_enabled" != "true" ]; then
+        echo "   ℹ️  GSAi is not enabled in ai-tokens.env, skipping API key setup"
+        return 0
+    fi
+    
+    # Check if we already have API keys in the database
+    local key_count=0
+    if echo "$db_check" | grep -q "API_KEYS_COUNT:"; then
+        key_count=$(echo "$db_check" | grep -o "API_KEYS_COUNT:[0-9]*" | cut -d: -f2)
+    fi
+    
+    if [ "$key_count" -eq 0 ]; then
+        echo "   🔑 No API keys found, creating admin user..."
+        
+        # Create admin user with the create_admin_user.py script
+        local admin_output=$(docker exec ai-gov-api-app-1 python /opt/project/scripts/create_admin_user.py \
+            --email "admin@violentutf.com" \
+            --name "ViolentUTF Admin" 2>&1)
+        
+        if echo "$admin_output" | grep -q "API Key:"; then
+            # Extract the API key from the output
+            local new_api_key=$(echo "$admin_output" | grep "API Key:" | sed 's/.*API Key: //')
+            echo "   ✅ Admin user created successfully"
+            echo "   🔑 New API Key: $new_api_key"
+            
+            # Update the ai-tokens.env file with the new key
+            if [ -f "./ai-tokens.env" ] && [ -n "$new_api_key" ]; then
+                # Backup the original file
+                cp "./ai-tokens.env" "./ai-tokens.env.backup"
+                
+                # Update the OPENAPI_1_AUTH_TOKEN with the new key
+                if grep -q "OPENAPI_1_AUTH_TOKEN=" "./ai-tokens.env"; then
+                    # Use macOS-compatible sed syntax
+                    if [[ "$OSTYPE" == "darwin"* ]]; then
+                        sed -i '' "s/OPENAPI_1_AUTH_TOKEN=.*/OPENAPI_1_AUTH_TOKEN=$new_api_key/" "./ai-tokens.env"
+                    else
+                        sed -i "s/OPENAPI_1_AUTH_TOKEN=.*/OPENAPI_1_AUTH_TOKEN=$new_api_key/" "./ai-tokens.env"
+                    fi
+                    echo "   ✅ Updated ai-tokens.env with new GSAi API key"
+                else
+                    echo "OPENAPI_1_AUTH_TOKEN=$new_api_key" >> "./ai-tokens.env"
+                    echo "   ✅ Added GSAi API key to ai-tokens.env"
+                fi
+                
+                # Export for immediate use
+                export OPENAPI_1_AUTH_TOKEN="$new_api_key"
+            fi
+        else
+            echo "   ❌ Failed to create admin user:"
+            echo "$admin_output" | sed 's/^/      /'
+            return 1
+        fi
+    else
+        echo "   ✅ API keys already exist in database ($key_count keys found)"
+        
+        # Get the token from configuration
+        local gsai_token=""
+        if [ -f "./ai-tokens.env" ]; then
+            source "./ai-tokens.env"
+            gsai_token="${OPENAPI_1_AUTH_TOKEN:-}"
+        fi
+        
+        if [ -z "$gsai_token" ]; then
+            echo "   ⚠️  No GSAi API token in ai-tokens.env"
+            echo "   ℹ️  Please manually create an API key and update ai-tokens.env"
+        else
+            echo "   ✅ GSAi API token found in configuration"
+        fi
+    fi
+    
+    echo "   ✅ AI Gateway initialization completed"
+    
+    # Fix the GSAi route if it exists
+    fix_gsai_route_after_init
+    
+    return 0
+}
+
+# Function to fix GSAi route after initialization
+fix_gsai_route_after_init() {
+    echo "   🔧 Fixing GSAi route configuration..."
+    
+    # Load APISIX admin key
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "   ❌ APISIX_ADMIN_KEY not found"
+        return 1
+    fi
+    
+    # Check if route 9001 exists
+    local route_check=$(curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" "http://localhost:9180/apisix/admin/routes/9001" 2>/dev/null)
+    
+    if echo "$route_check" | grep -q '"id":"9001"'; then
+        echo "   📍 Found GSAi route 9001, updating configuration..."
+        
+        # Get the GSAi token from configuration
+        local gsai_token=""
+        if [ -f "./ai-tokens.env" ]; then
+            source "./ai-tokens.env"
+            gsai_token="${OPENAPI_1_AUTH_TOKEN:-}"
+        fi
+        
+        if [ -z "$gsai_token" ]; then
+            echo "   ⚠️  No GSAi API token found in configuration"
+            return 1
+        fi
+        
+        # Update the route with proper authentication
+        local update_response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9001" \
+          -H "X-API-KEY: $APISIX_ADMIN_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "uri": "/ai/gsai-api-1/chat/completions",
+            "methods": ["GET", "POST"],
+            "upstream": {
+              "type": "roundrobin",
+              "scheme": "http",
+              "pass_host": "rewrite",
+              "upstream_host": "localhost",
+              "timeout": {
+                "connect": 60,
+                "send": 60,
+                "read": 60
+              },
+              "nodes": {
+                "host.docker.internal:8081": 1
+              }
+            },
+            "plugins": {
+              "proxy-rewrite": {
+                "regex_uri": ["^/ai/gsai-api-1/chat/completions(.*)$", "/api/v1/chat/completions$1"],
+                "headers": {
+                  "Authorization": "Bearer '"$gsai_token"'"
+                }
+              },
+              "cors": {
+                "allow_origins": "*",
+                "allow_methods": "GET,POST,OPTIONS",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_credential": true,
+                "max_age": 3600
+              }
+            }
+          }' 2>/dev/null)
+        
+        if echo "$update_response" | grep -q '"id":"9001"'; then
+            echo "   ✅ GSAi route updated successfully"
+        else
+            echo "   ❌ Failed to update GSAi route"
+        fi
+    else
+        echo "   ℹ️  GSAi route 9001 not found, skipping fix"
     fi
 }

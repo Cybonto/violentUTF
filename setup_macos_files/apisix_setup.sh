@@ -242,7 +242,56 @@ setup_apisix() {
         docker network create "$SHARED_NETWORK_NAME"
     fi
     
-    # Start APISIX containers
+    # Build images first with timeout handling
+    echo "Building APISIX service images..."
+    
+    # Set build timeout environment variables
+    export DOCKER_BUILDKIT=1
+    export COMPOSE_DOCKER_CLI_BUILD=1
+    export BUILDKIT_PROGRESS=plain
+    
+    # Create pip config for FastAPI build to handle timeouts
+    if [ -f "../violentutf_api/fastapi_app/Dockerfile" ]; then
+        echo "Configuring pip for better timeout handling..."
+        cat > ../violentutf_api/fastapi_app/pip.conf << 'EOF'
+[global]
+timeout = 600
+retries = 10
+index-url = https://pypi.org/simple
+trusted-host = pypi.org pypi.python.org files.pythonhosted.org
+EOF
+    fi
+    
+    # Try to build with extended timeout
+    echo "Building containers (this may take several minutes for first build)..."
+    if ${DOCKER_COMPOSE_CMD:-docker-compose} build; then
+        echo "✅ Container images built successfully"
+    else
+        echo "⚠️  Build failed, trying alternative approach..."
+        
+        # Alternative: Start without FastAPI first
+        echo "Starting APISIX core services only..."
+        if ${DOCKER_COMPOSE_CMD:-docker-compose} up -d apisix etcd prometheus grafana dashboard; then
+            echo "✅ APISIX core services started"
+            
+            # Try to build FastAPI separately with more control
+            echo "Building FastAPI service separately..."
+            if ${DOCKER_COMPOSE_CMD:-docker-compose} build fastapi; then
+                echo "✅ FastAPI built successfully"
+                ${DOCKER_COMPOSE_CMD:-docker-compose} up -d fastapi
+            else
+                echo "⚠️  FastAPI build failed - will continue without it"
+                echo "You can manually build it later with:"
+                echo "  cd apisix && docker-compose build fastapi"
+            fi
+        else
+            echo "❌ Failed to start APISIX core containers"
+            cd "$original_dir"
+            return 1
+        fi
+    fi
+    
+    # Start all containers
     echo "Starting APISIX containers..."
     if ${DOCKER_COMPOSE_CMD:-docker-compose} up -d; then
         echo "✅ APISIX containers started"
