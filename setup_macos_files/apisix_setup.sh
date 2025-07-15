@@ -228,11 +228,99 @@ setup_apisix() {
     
     cd "apisix" || { echo "Failed to cd into apisix directory"; exit 1; }
     
+    # Debug: Show current directory and list config files
+    echo "Current directory: $(pwd)"
+    echo "Checking for required configuration files..."
+    ls -la conf/ 2>/dev/null || echo "conf/ directory not found"
+    
     # Ensure .env file exists
     if [ ! -f ".env" ]; then
         echo "❌ APISIX .env file missing!"
         cd "$original_dir"
         return 1
+    fi
+    
+    # Ensure config.yaml exists before starting Docker
+    if [ ! -f "conf/config.yaml" ]; then
+        echo "⚠️  APISIX config.yaml missing!"
+        echo "This file should have been created during environment setup."
+        echo "Checking for template file..."
+        
+        if [ -f "conf/config.yaml.template" ]; then
+            echo "Found template, attempting to create config.yaml..."
+            
+            # Source necessary functions if not already available
+            if ! command -v prepare_config_from_template &> /dev/null; then
+                local setup_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+                if [ -f "$setup_dir/utils.sh" ]; then
+                    source "$setup_dir/utils.sh"
+                fi
+            fi
+            
+            # Try to create config.yaml from template
+            if command -v prepare_config_from_template &> /dev/null; then
+                prepare_config_from_template "conf/config.yaml.template"
+                
+                # Replace placeholders with values from .env if available
+                if [ -f ".env" ]; then
+                    source .env
+                    
+                    # Generate missing values if needed
+                    [ -z "$APISIX_ADMIN_KEY" ] && APISIX_ADMIN_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
+                    [ -z "$APISIX_KEYRING_VALUE_1" ] && APISIX_KEYRING_VALUE_1=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
+                    [ -z "$APISIX_KEYRING_VALUE_2" ] && APISIX_KEYRING_VALUE_2=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
+                    
+                    # Replace placeholders
+                    sed -i.bak "s/APISIX_ADMIN_KEY_PLACEHOLDER/$APISIX_ADMIN_KEY/g" conf/config.yaml
+                    sed -i.bak "s/APISIX_KEYRING_VALUE_1_PLACEHOLDER/$APISIX_KEYRING_VALUE_1/g" conf/config.yaml
+                    sed -i.bak "s/APISIX_KEYRING_VALUE_2_PLACEHOLDER/$APISIX_KEYRING_VALUE_2/g" conf/config.yaml
+                    rm -f conf/config.yaml.bak
+                    
+                    echo "✅ Successfully created config.yaml from template"
+                else
+                    echo "⚠️  Warning: .env file not found, using template as-is"
+                    cp conf/config.yaml.template conf/config.yaml
+                fi
+            else
+                # Fallback: simple copy
+                echo "Using simple copy method..."
+                cp conf/config.yaml.template conf/config.yaml
+                echo "⚠️  Warning: config.yaml created but placeholders not replaced"
+            fi
+            
+            # Verify the file was created
+            if [ ! -f "conf/config.yaml" ]; then
+                echo "❌ Failed to create config.yaml"
+                cd "$original_dir"
+                return 1
+            fi
+        else
+            echo "❌ Template file conf/config.yaml.template is also missing!"
+            echo "Cannot proceed without configuration files."
+            cd "$original_dir"
+            return 1
+        fi
+    fi
+    
+    # Verify other required config files
+    if [ ! -f "conf/dashboard.yaml" ]; then
+        echo "⚠️  Warning: dashboard.yaml missing"
+        
+        if [ -f "conf/dashboard.yaml.template" ]; then
+            echo "Creating dashboard.yaml from template..."
+            cp conf/dashboard.yaml.template conf/dashboard.yaml
+            
+            # Generate missing values if needed
+            [ -z "$APISIX_DASHBOARD_SECRET" ] && APISIX_DASHBOARD_SECRET=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
+            [ -z "$APISIX_DASHBOARD_PASSWORD" ] && APISIX_DASHBOARD_PASSWORD=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
+            
+            # Replace placeholders
+            sed -i.bak "s/APISIX_DASHBOARD_SECRET_PLACEHOLDER/$APISIX_DASHBOARD_SECRET/g" conf/dashboard.yaml
+            sed -i.bak "s/APISIX_DASHBOARD_PASSWORD_PLACEHOLDER/$APISIX_DASHBOARD_PASSWORD/g" conf/dashboard.yaml
+            rm -f conf/dashboard.yaml.bak
+            
+            echo "✅ Created dashboard.yaml"
+        fi
     fi
     
     # Ensure network exists and is available

@@ -15,6 +15,7 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
   - [PyRIT Scorers](guides/Guide_Scorers.md) - Response evaluation systems
   - [Simple Chat Enhancement](guides/Guide_SimpleChat_enhancementStrip.md) - MCP-powered chat tools
   - [MCP Workflows](guides/Guide_SimpleChat_mcp-workflows.md) - Natural language configuration
+  - [Database Cleanup](guides/Guide_Database_Cleanup.md) - Dashboard and PyRIT data management
 
 ### 🔧 **API Documentation**
 - **[API Hub](api/README.md)** - Complete API documentation ecosystem
@@ -81,6 +82,7 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
 2. **Authentication**: [SSO with Keycloak](guides/Guide_SSO_with_KeyCloak.md)
 3. **Gateway**: [APISIX Gateway Configuration](api/gateway.md)
 4. **Monitoring**: [Troubleshooting Guides](troubleshooting/)
+5. **Maintenance**: [Database Cleanup Guide](guides/Guide_Database_Cleanup.md)
 
 ## 🔑 Key Features Documented
 

@@ -6,7 +6,7 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -561,21 +561,50 @@ def match_scores_to_responses(scores: List[Dict], responses: List[Dict]) -> List
     """Match scores to their corresponding prompt/response pairs using batch_index and timestamps"""
     matched_results = []
 
-    # Create a lookup map for responses by batch_index
-    response_map = {}
+    # Debug logging to understand data structure
+    if responses:
+        logger.info(f"Sample response structure: {json.dumps(responses[0], indent=2, default=str)[:500]}")
+    if scores:
+        logger.info(f"Sample score structure: {json.dumps(scores[0], indent=2, default=str)[:500]}")
+
+    # Create lookup maps for responses by both batch_index and conversation_id
+    response_map_by_batch = {}
+    response_map_by_conversation = {}
+
     for resp in responses:
-        batch_idx = resp.get("batch_index", 0)
-        if batch_idx not in response_map:
-            response_map[batch_idx] = []
-        response_map[batch_idx].append(resp)
+        # Try batch_index first
+        batch_idx = resp.get("batch_index", None)
+        if batch_idx is not None:
+            if batch_idx not in response_map_by_batch:
+                response_map_by_batch[batch_idx] = []
+            response_map_by_batch[batch_idx].append(resp)
+
+        # Also map by conversation_id
+        conv_id = resp.get("conversation_id") or resp.get("request", {}).get("conversation_id")
+        if conv_id:
+            if conv_id not in response_map_by_conversation:
+                response_map_by_conversation[conv_id] = []
+            response_map_by_conversation[conv_id].append(resp)
 
     # Match scores to responses
     for score in scores:
-        batch_idx = score.get("batch_index", 0)
         matched_score = score.copy()
+        batch_responses = []
 
-        # Find matching responses
-        batch_responses = response_map.get(batch_idx, [])
+        # Try to find responses by batch_index first
+        batch_idx = score.get("batch_index", None)
+        if batch_idx is not None and batch_idx in response_map_by_batch:
+            batch_responses = response_map_by_batch[batch_idx]
+
+        # If no batch match, try conversation_id
+        if not batch_responses:
+            conv_id = score.get("conversation_id") or score.get("prompt_id")
+            if conv_id and conv_id in response_map_by_conversation:
+                batch_responses = response_map_by_conversation[conv_id]
+
+        # If still no match, try to match by index position (fallback)
+        if not batch_responses and scores.index(score) < len(responses):
+            batch_responses = [responses[scores.index(score)]]
 
         if batch_responses:
             # Try to match by timestamp proximity if multiple responses in batch
@@ -593,10 +622,24 @@ def match_scores_to_responses(scores: List[Dict], responses: List[Dict]) -> List
                         else float("inf")
                     ),
                 )
-                matched_score["prompt_response"] = closest_response
+                # Transform the response structure to match expected format
+                if closest_response:
+                    matched_score["prompt_response"] = {
+                        "prompt": closest_response.get("request", {}).get("prompt", ""),
+                        "response": closest_response.get("response", {}).get("content", ""),
+                    }
+                else:
+                    matched_score["prompt_response"] = None
             else:
                 # Use first response if only one or no timestamp
-                matched_score["prompt_response"] = batch_responses[0]
+                response = batch_responses[0]
+                if response:
+                    matched_score["prompt_response"] = {
+                        "prompt": response.get("request", {}).get("prompt", ""),
+                        "response": response.get("response", {}).get("content", ""),
+                    }
+                else:
+                    matched_score["prompt_response"] = None
         else:
             matched_score["prompt_response"] = None
 
@@ -712,9 +755,10 @@ def apply_time_filter(
     if preset == "all_time":
         return results
 
-    now = datetime.now()
+    # Use UTC for consistency
+    now = datetime.now(timezone.utc)
 
-    # Define time ranges for presets
+    # Define time ranges for presets (all in UTC)
     time_ranges = {
         "last_hour": now - timedelta(hours=1),
         "last_4h": now - timedelta(hours=4),
@@ -726,8 +770,9 @@ def apply_time_filter(
     if preset == "custom":
         if not custom_start or not custom_end:
             return results
-        start_time = custom_start
-        end_time = custom_end
+        # Ensure custom dates are timezone-aware
+        start_time = custom_start.replace(tzinfo=timezone.utc) if custom_start.tzinfo is None else custom_start
+        end_time = custom_end.replace(tzinfo=timezone.utc) if custom_end.tzinfo is None else custom_end
     else:
         start_time = time_ranges.get(preset, now - timedelta(days=30))
         end_time = now
@@ -739,10 +784,16 @@ def apply_time_filter(
         if timestamp:
             try:
                 if isinstance(timestamp, str):
+                    # Parse ISO format timestamp
                     timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
 
-                if isinstance(timestamp, datetime) and start_time <= timestamp <= end_time:
-                    filtered.append(r)
+                # Ensure timestamp is timezone-aware
+                if isinstance(timestamp, datetime):
+                    if timestamp.tzinfo is None:
+                        timestamp = timestamp.replace(tzinfo=timezone.utc)
+
+                    if start_time <= timestamp <= end_time:
+                        filtered.append(r)
             except (ValueError, AttributeError) as e:
                 logger.error(f"Failed to parse timestamp in apply_time_filter: {timestamp}, error: {e}")
                 continue
@@ -1350,7 +1401,10 @@ def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, A
         expected_batches = max(batch_totals, default=1)
         # Safely extract actual batch indices
         actual_batch_indices = set([b[0] for b in batch_info.keys() if isinstance(b, tuple) and len(b) > 0])
-        completed = len(actual_batch_indices) == expected_batches
+        # Check if we have all expected batch indices (0 to expected_batches-1)
+        expected_indices = set(range(expected_batches))
+        missing_batches = expected_indices - actual_batch_indices
+        completed = len(missing_batches) == 0
 
         # Calculate execution duration if timestamps available
         all_timestamps = []
@@ -2000,8 +2054,13 @@ def render_detailed_results_table(results: List[Dict[str, Any]]):
         )
 
     with col4:
+        # Update filter options to be clearer about True/False
+        score_type_options = ["All", "True/False", "Scale (0-1)", "Category"]
         score_type_filter = st.selectbox(
-            "Filter by Score Type", options=["All"] + list(SCORE_TYPE_MAP.values()), index=0
+            "Filter by Evaluation Type",
+            options=score_type_options,
+            index=0,
+            help="True/False: Boolean scorers, Scale: Numeric 0-1 scorers, Category: Text category scorers",
         )
 
     # Apply filters
@@ -2017,8 +2076,12 @@ def render_detailed_results_table(results: List[Dict[str, Any]]):
         filtered_results = [r for r in filtered_results if r["severity"] in severity_filter]
 
     if score_type_filter != "All":
-        type_key = [k for k, v in SCORE_TYPE_MAP.items() if v == score_type_filter][0]
-        filtered_results = [r for r in filtered_results if r["score_type"] == type_key]
+        if score_type_filter == "True/False":
+            filtered_results = [r for r in filtered_results if r["score_type"] == "true_false"]
+        elif score_type_filter == "Scale (0-1)":
+            filtered_results = [r for r in filtered_results if r["score_type"] == "float_scale"]
+        elif score_type_filter == "Category":
+            filtered_results = [r for r in filtered_results if r["score_type"] == "str"]
 
     # Display count
     st.info(f"Showing {len(filtered_results)} of {len(results)} results")
@@ -2029,6 +2092,13 @@ def render_detailed_results_table(results: List[Dict[str, Any]]):
         for r in filtered_results:
             # Add batch information
             batch_info = f"{r.get('batch_index', 0) + 1}/{r.get('total_batches', 1)}"
+
+            # Extract prompt and response for display
+            prompt_text = ""
+            response_text = ""
+            if r.get("prompt_response"):
+                prompt_text = r["prompt_response"].get("prompt", "")
+                response_text = r["prompt_response"].get("response", "")
 
             display_data.append(
                 {
@@ -2042,9 +2112,13 @@ def render_detailed_results_table(results: List[Dict[str, Any]]):
                     "Score Value": str(r["score_value"]),
                     "Severity": r["severity"].capitalize(),
                     "Category": r["score_category"],
+                    "Prompt": prompt_text[:100] + "..." if len(prompt_text) > 100 else prompt_text,
+                    "Response": response_text[:100] + "..." if len(response_text) > 100 else response_text,
                     "Rationale": (
                         r["score_rationale"][:100] + "..." if len(r["score_rationale"]) > 100 else r["score_rationale"]
                     ),
+                    "Full Prompt": prompt_text,  # Hidden column for export
+                    "Full Response": response_text,  # Hidden column for export
                 }
             )
 
@@ -2056,7 +2130,11 @@ def render_detailed_results_table(results: List[Dict[str, Any]]):
             "Execution": st.column_config.TextColumn("Execution", width="medium"),
             "Batch": st.column_config.TextColumn("Batch", width="small", help="Current batch / Total batches"),
             "Severity": st.column_config.TextColumn("Severity", width="small"),
+            "Prompt": st.column_config.TextColumn("Prompt", width="medium", help="Truncated to 100 chars"),
+            "Response": st.column_config.TextColumn("Response", width="medium", help="Truncated to 100 chars"),
             "Rationale": st.column_config.TextColumn("Rationale", width="large"),
+            "Full Prompt": None,  # Hide from display but keep for export
+            "Full Response": None,  # Hide from display but keep for export
         }
 
         st.dataframe(df_display, use_container_width=True, hide_index=True, column_config=column_config)
