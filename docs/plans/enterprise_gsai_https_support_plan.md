@@ -164,3 +164,185 @@ fi
 3. Test HTTPS with enterprise CA
 4. Test SSL verification on/off
 5. Verify error handling for certificate issues
+
+## Identified Gaps and Solutions
+
+### 1. URL Parsing Logic
+**Gap**: The plan doesn't show how to extract scheme from `OPENAPI_1_BASE_URL` automatically.
+**Solution**: Create a URL parsing function that extracts scheme, host, and port from the base URL:
+```bash
+parse_url() {
+    local url="$1"
+    # Extract scheme
+    if [[ "$url" =~ ^https:// ]]; then
+        echo "scheme=https"
+    elif [[ "$url" =~ ^http:// ]]; then
+        echo "scheme=http"
+    else
+        echo "scheme=http"  # Default
+    fi
+    # Extract host and port...
+}
+```
+
+### 2. Certificate Path Handling
+**Gap**: Need to handle multiple certificate locations and formats.
+**Solution**: Check common enterprise certificate locations:
+```bash
+CERT_SEARCH_PATHS=(
+    "/etc/ssl/certs/enterprise-ca.crt"
+    "/usr/local/share/ca-certificates/"
+    "/etc/pki/tls/certs/"
+    "$HOME/.ssl/enterprise/"
+)
+```
+
+### 3. Rollback Strategy
+**Gap**: No rollback mechanism if HTTPS setup fails.
+**Solution**: Implement configuration backup and restore:
+```bash
+# Backup current route before modification
+backup_route() {
+    curl -s "http://localhost:9180/apisix/admin/routes/$1" \
+        -H "X-API-KEY: $APISIX_ADMIN_KEY" > "/tmp/route_$1_backup.json"
+}
+
+# Restore on failure
+restore_route() {
+    curl -X PUT "http://localhost:9180/apisix/admin/routes/$1" \
+        -H "X-API-KEY: $APISIX_ADMIN_KEY" \
+        -d @"/tmp/route_$1_backup.json"
+}
+```
+
+### 4. Health Check Updates
+**Gap**: Health checks might still use HTTP even when main route uses HTTPS.
+**Solution**: Update health check configuration to match main route scheme.
+
+### 5. Migration Path
+**Gap**: No clear migration path for existing deployments.
+**Solution**: Create migration script that updates existing routes to support HTTPS.
+
+## Implementation Todo List
+
+### Phase 1: Configuration Updates (Priority: High)
+1. **Update ai-tokens.env.template**
+   - Add `OPENAPI_1_USE_HTTPS` flag
+   - Add `OPENAPI_1_SSL_VERIFY` flag
+   - Add `OPENAPI_1_CA_CERT_PATH` for custom CA certificates
+   - Add comments explaining enterprise vs local usage
+
+2. **Create URL parsing function**
+   - Extract scheme from `OPENAPI_1_BASE_URL` automatically
+   - Parse host and port correctly for both HTTP/HTTPS
+   - Handle edge cases (no scheme, custom ports)
+
+3. **Update environment validation**
+   - Check for conflicting settings (HTTPS URL with USE_HTTPS=false)
+   - Validate certificate paths if SSL_VERIFY=true
+   - Warn about insecure configurations
+
+### Phase 2: Route Creation Logic (Priority: High)
+4. **Modify openapi_setup.sh - create_openapi_route function**
+   - Auto-detect scheme from BASE_URL
+   - Set upstream scheme based on configuration
+   - Add SSL verification parameters
+   - Update both ai-proxy and proxy-rewrite plugins
+
+5. **Fix GSAi-specific route handling**
+   - Update `fix_gsai_route_after_init` function
+   - Ensure scheme matches configuration
+   - Handle both HTTP and HTTPS modes
+
+6. **Update health check endpoints**
+   - Ensure health checks use correct scheme
+   - Add SSL bypass for health checks if needed
+
+### Phase 3: Certificate Management (Priority: Medium)
+7. **Create certificate detection script**
+   - Check common enterprise CA locations
+   - Support multiple certificate formats (PEM, DER)
+   - Validate certificate chain
+
+8. **Implement certificate import function**
+   - Copy certificates to APISIX container
+   - Update APISIX SSL configuration
+   - Handle certificate updates/rotation
+
+9. **Add certificate troubleshooting**
+   - Verify certificate validity
+   - Test SSL handshake
+   - Provide clear error messages
+
+### Phase 4: Permission Management (Priority: Medium)
+10. **Update Keycloak configuration**
+    - Add configurable admin permissions
+    - Create separate roles for route viewing vs editing
+    - Document security implications
+
+11. **Fix API permission checks**
+    - Allow read-only route access for web users
+    - Maintain admin-only write access
+    - Add proper error messages
+
+### Phase 5: Testing & Validation (Priority: High)
+12. **Create test scripts**
+    - Test HTTP mode (existing behavior)
+    - Test HTTPS with self-signed certificates
+    - Test HTTPS with enterprise CA
+    - Test SSL verification on/off
+
+13. **Add integration tests**
+    - Test Streamlit → APISIX → GSAi flow
+    - Verify token passing
+    - Check error handling
+
+14. **Create validation script**
+    - Check route configuration
+    - Verify SSL settings
+    - Test actual API calls
+
+### Phase 6: Documentation (Priority: Medium)
+15. **Create enterprise deployment guide**
+    - Step-by-step HTTPS configuration
+    - Certificate management best practices
+    - Troubleshooting common issues
+
+16. **Update existing documentation**
+    - Add HTTPS options to setup guide
+    - Document new environment variables
+    - Add security recommendations
+
+17. **Create migration guide**
+    - Steps to update existing HTTP deployments
+    - Rollback procedures
+    - Testing checklist
+
+### Phase 7: Error Handling & Rollback (Priority: Medium)
+18. **Implement graceful fallback**
+    - Detect HTTPS failures
+    - Option to fall back to HTTP
+    - Clear error messages
+
+19. **Add rollback mechanism**
+    - Save previous route configuration
+    - Restore on failure
+    - Log all changes
+
+20. **Improve error messages**
+    - Clear SSL error descriptions
+    - Actionable troubleshooting steps
+    - Log correlation IDs
+
+### Execution Timeline
+- **Week 1**: Phase 1 & 2 (Configuration and core logic)
+- **Week 2**: Phase 3 & 5 (Certificates and testing)
+- **Week 3**: Phase 4 & 6 (Permissions and documentation)
+- **Week 4**: Phase 7 (Error handling and final testing)
+
+## Success Criteria
+1. GSAi works seamlessly in both HTTP (local) and HTTPS (enterprise) modes
+2. No manual intervention required for standard deployments
+3. Clear error messages guide users through troubleshooting
+4. Existing deployments can be migrated without downtime
+5. Security best practices are enforced by default

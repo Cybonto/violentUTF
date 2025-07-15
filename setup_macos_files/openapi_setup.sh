@@ -7,8 +7,23 @@ fetch_openapi_provider_models() {
     local base_url="$1"
     local auth_type="$2"
     local auth_token="$3"
+    local provider_num="${4:-1}"
     
     echo "   Fetching available models from $base_url..."
+    
+    # Get HTTPS configuration
+    if command -v get_https_config &> /dev/null; then
+        local https_config=$(get_https_config "$provider_num")
+        local ssl_verify=$(echo "$https_config" | grep "^ssl_verify=" | cut -d= -f2)
+    else
+        local ssl_verify="false"
+    fi
+    
+    # Set curl options
+    local curl_opts="-s --max-time 10"
+    if [ "$ssl_verify" = "false" ]; then
+        curl_opts="$curl_opts -k"
+    fi
     
     # Build auth headers
     local auth_header=""
@@ -27,9 +42,9 @@ fetch_openapi_provider_models() {
     # Fetch models from /api/v1/models endpoint
     local models_json
     if [ -n "$auth_header" ]; then
-        models_json=$(curl -s -k --max-time 10 -H "$auth_header" "$base_url/api/v1/models" 2>/dev/null)
+        models_json=$(curl $curl_opts -H "$auth_header" "$base_url/api/v1/models" 2>/dev/null)
     else
-        models_json=$(curl -s -k --max-time 10 "$base_url/api/v1/models" 2>/dev/null)
+        models_json=$(curl $curl_opts "$base_url/api/v1/models" 2>/dev/null)
     fi
     
     # Extract model IDs using jq (if available) or grep/sed fallback
@@ -70,7 +85,7 @@ create_openapi_provider_routes() {
     
     # Fetch available models from the provider
     local available_models
-    available_models=$(fetch_openapi_provider_models "$base_url" "$auth_type" "$auth_token")
+    available_models=$(fetch_openapi_provider_models "$base_url" "$auth_type" "$auth_token" "$provider_num")
     
     if [ -n "$available_models" ]; then
         log_debug "Available models: $(echo "$available_models" | tr '\n' ' ')"
@@ -99,18 +114,19 @@ create_openapi_provider_routes() {
     local admin_key="$APISIX_ADMIN_KEY"
     local apisix_admin_url="http://localhost:9180"
     
+    # Source utilities for URL parsing if not already loaded
+    if ! command -v parse_url &> /dev/null; then
+        source "$SETUP_MODULES_DIR/utils.sh"
+    fi
+
+    # Get HTTPS configuration for this provider
+    local https_config=$(get_https_config "$provider_num")
+    local scheme=$(echo "$https_config" | grep "^scheme=" | cut -d= -f2)
+    local ssl_verify=$(echo "$https_config" | grep "^ssl_verify=" | cut -d= -f2)
+    local ca_cert_path=$(echo "$https_config" | grep "^ca_cert_path=" | cut -d= -f2)
+
     # Parse base URL to extract host and port
-    local scheme=$(echo "$base_url" | grep -o '^https\?')
-    local host_port=$(echo "$base_url" | sed -E 's|^https?://||' | sed -E 's|/.*||')
-    local default_port="443"
-    if [ "$scheme" = "http" ]; then
-        default_port="80"
-    fi
-    
-    # Add default port if not specified
-    if [[ "$host_port" != *":"* ]]; then
-        host_port="${host_port}:${default_port}"
-    fi
+    local host_port=$(parse_url "$base_url" host_port)
     
     # For Docker containers, convert localhost to custom OpenAPI container name or bridge IP
     # This allows APISIX running in Docker to access services on the host machine or other Docker stacks
@@ -183,16 +199,9 @@ create_openapi_provider_routes() {
             ;;
     esac
     
-    # Determine SSL configuration - GSAi uses HTTP, others may use HTTPS
-    local ssl_verify="false"
-    if [[ "$scheme" == "https" ]] && [[ "$base_url" == "https://localhost"* ]] && [[ "$provider_id" != *"gsai"* ]]; then
-        # For local HTTPS providers (excluding GSAi), enable SSL verification
-        ssl_verify="true"
-    elif [[ "$provider_id" == *"gsai"* ]]; then
-        # GSAi uses HTTP, ensure scheme is set correctly
-        scheme="http"
-        ssl_verify="false"
-    fi
+    # SSL configuration is already determined by get_https_config
+    # Log the configuration for debugging
+    log_debug "Provider $provider_id HTTPS config: scheme=$scheme, ssl_verify=$ssl_verify, ca_cert=$ca_cert_path"
     
     # Create chat completions route - use ai-proxy for GSAi, proxy-rewrite for others
     if [[ "$provider_id" == *"gsai"* ]]; then
@@ -205,6 +214,7 @@ create_openapi_provider_routes() {
           --arg scheme "$scheme" \
           --arg host_port "$host_port" \
           --arg auth_token "$auth_token" \
+          --argjson ssl_verify "$ssl_verify" \
           '{
             "id": $route_id,
             "uri": ("/ai/" + $provider_id + "/chat/completions"),
@@ -224,7 +234,7 @@ create_openapi_provider_routes() {
                 "timeout": 30000,
                 "keepalive": true,
                 "keepalive_pool": 30,
-                "ssl_verify": false
+                "ssl_verify": $ssl_verify
               },
               "cors": {
                 "allow_origins": "http://localhost:8501,http://localhost:3000",
@@ -243,6 +253,7 @@ create_openapi_provider_routes() {
           --arg scheme "$scheme" \
           --arg host_port "$host_port" \
           --argjson auth_headers "$auth_headers" \
+          --argjson ssl_verify "$ssl_verify" \
           '{
             "id": $route_id,
             "uri": ("/ai/" + $provider_id + "/chat/completions"),
@@ -257,7 +268,7 @@ create_openapi_provider_routes() {
               "pass_host": "rewrite",
               "upstream_host": "localhost",
               "tls": {
-                "verify": true
+                "verify": $ssl_verify
               }
             },
             "plugins": {
@@ -285,6 +296,7 @@ create_openapi_provider_routes() {
           --arg scheme "$scheme" \
           --arg host_port "$host_port" \
           --argjson auth_headers "$auth_headers" \
+          --argjson ssl_verify "$ssl_verify" \
           '{
             "id": $route_id,
             "uri": ("/ai/" + $provider_id + "/chat/completions"),
@@ -406,7 +418,7 @@ create_openapi_provider_routes() {
                 "read": 60
               },
               "tls": {
-                "verify": true
+                "verify": $ssl_verify
               }
             },
             "plugins": {
@@ -539,6 +551,16 @@ setup_openapi_routes() {
         source "./ai-tokens.env"
     else
         echo "⚠️  ai-tokens.env not found - OpenAPI providers may not be configured"
+    fi
+    
+    # Validate HTTPS configuration before proceeding
+    echo "Validating HTTPS configuration for OpenAPI providers..."
+    if [ -f "$SETUP_MODULES_DIR/validate_https_config.sh" ]; then
+        source "$SETUP_MODULES_DIR/validate_https_config.sh"
+        if ! validate_all_providers; then
+            echo "❌ HTTPS configuration validation failed. Please fix errors and try again."
+            return 1
+        fi
     fi
     
     echo "Setting up OpenAPI provider routes..."
@@ -842,8 +864,19 @@ verify_openapi_provider_health() {
     local base_url="$3"
     local auth_type="$4"
     local auth_token="$5"
+    local provider_num="${6:-1}"
     
     echo "🔍 Verifying health of OpenAPI provider: $provider_name"
+    
+    # Source utilities for URL parsing if not already loaded
+    if ! command -v parse_url &> /dev/null; then
+        source "$SETUP_MODULES_DIR/utils.sh"
+    fi
+    
+    # Get HTTPS configuration
+    local https_config=$(get_https_config "$provider_num")
+    local scheme=$(echo "$https_config" | grep "^scheme=" | cut -d= -f2)
+    local ssl_verify=$(echo "$https_config" | grep "^ssl_verify=" | cut -d= -f2)
     
     # Build auth headers for curl
     local auth_header=""
@@ -862,17 +895,23 @@ verify_openapi_provider_health() {
     local test_count=0
     local passed_count=0
     
+    # Set curl options based on SSL configuration
+    local curl_opts="-s --max-time 10"
+    if [ "$ssl_verify" = "false" ]; then
+        curl_opts="$curl_opts -k"  # Skip SSL verification
+    fi
+    
     # Test models endpoint
     echo "   Testing models endpoint: $base_url/api/v1/models"
     if [ -n "$auth_header" ]; then
-        if curl -s -k --max-time 10 -H "$auth_header" "$base_url/api/v1/models" >/dev/null 2>&1; then
+        if curl $curl_opts -H "$auth_header" "$base_url/api/v1/models" >/dev/null 2>&1; then
             echo "   ✅ Models endpoint is accessible"
             passed_count=$((passed_count + 1))
         else
             echo "   ❌ Models endpoint is not accessible"
         fi
     else
-        if curl -s -k --max-time 10 "$base_url/api/v1/models" >/dev/null 2>&1; then
+        if curl $curl_opts "$base_url/api/v1/models" >/dev/null 2>&1; then
             echo "   ✅ Models endpoint is accessible"
             passed_count=$((passed_count + 1))
         else
@@ -884,14 +923,14 @@ verify_openapi_provider_health() {
     # Test docs endpoint (optional)
     echo "   Testing docs endpoint: $base_url/docs"
     if [ -n "$auth_header" ]; then
-        if curl -s -k --max-time 10 -H "$auth_header" "$base_url/docs" >/dev/null 2>&1; then
+        if curl $curl_opts -H "$auth_header" "$base_url/docs" >/dev/null 2>&1; then
             echo "   ✅ Docs endpoint is accessible"
             passed_count=$((passed_count + 1))
         else
             echo "   ⚠️  Docs endpoint is not accessible (optional)"
         fi
     else
-        if curl -s -k --max-time 10 "$base_url/docs" >/dev/null 2>&1; then
+        if curl $curl_opts "$base_url/docs" >/dev/null 2>&1; then
             echo "   ✅ Docs endpoint is accessible"
             passed_count=$((passed_count + 1))
         else
@@ -1149,7 +1188,7 @@ fix_gsai_route_after_init() {
     if echo "$route_check" | grep -q '"id":"9001"'; then
         echo "   📍 Found GSAi route 9001, updating configuration..."
         
-        # Get the GSAi token from configuration
+        # Get the GSAi configuration
         local gsai_token=""
         if [ -f "./ai-tokens.env" ]; then
             source "./ai-tokens.env"
@@ -1161,43 +1200,61 @@ fix_gsai_route_after_init() {
             return 1
         fi
         
+        # Source utilities for URL parsing if not already loaded
+        if ! command -v parse_url &> /dev/null; then
+            source "$SETUP_MODULES_DIR/utils.sh"
+        fi
+        
+        # Get HTTPS configuration for provider 1 (GSAi)
+        local https_config=$(get_https_config "1")
+        local scheme=$(echo "$https_config" | grep "^scheme=" | cut -d= -f2)
+        local ssl_verify=$(echo "$https_config" | grep "^ssl_verify=" | cut -d= -f2)
+        
+        echo "   📋 Using HTTPS config: scheme=$scheme, ssl_verify=$ssl_verify"
+        
         # Update the route with proper authentication
         local update_response=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9001" \
           -H "X-API-KEY: $APISIX_ADMIN_KEY" \
           -H "Content-Type: application/json" \
-          -d '{
-            "uri": "/ai/gsai-api-1/chat/completions",
-            "methods": ["GET", "POST"],
-            "upstream": {
-              "type": "roundrobin",
-              "scheme": "http",
-              "pass_host": "rewrite",
-              "upstream_host": "localhost",
-              "timeout": {
-                "connect": 60,
-                "send": 60,
-                "read": 60
+          -d "{
+            \"uri\": \"/ai/gsai-api-1/chat/completions\",
+            \"methods\": [\"GET\", \"POST\"],
+            \"upstream\": {
+              \"type\": \"roundrobin\",
+              \"scheme\": \"$scheme\",
+              \"pass_host\": \"rewrite\",
+              \"upstream_host\": \"localhost\",
+              \"timeout\": {
+                \"connect\": 60,
+                \"send\": 60,
+                \"read\": 60
               },
-              "nodes": {
-                "host.docker.internal:8081": 1
-              }
+              \"nodes\": {
+                \"host.docker.internal:8081\": 1
+              }$(if [ "$scheme" = "https" ] && [ "$ssl_verify" = "true" ]; then echo ",
+              \"tls\": {
+                \"verify\": true
+              }"; elif [ "$scheme" = "https" ]; then echo ",
+              \"tls\": {
+                \"verify\": false
+              }"; fi)
             },
-            "plugins": {
-              "proxy-rewrite": {
-                "regex_uri": ["^/ai/gsai-api-1/chat/completions(.*)$", "/api/v1/chat/completions$1"],
-                "headers": {
-                  "Authorization": "Bearer '"$gsai_token"'"
+            \"plugins\": {
+              \"proxy-rewrite\": {
+                \"regex_uri\": [\"^/ai/gsai-api-1/chat/completions(.*)$\", \"/api/v1/chat/completions$1\"],
+                \"headers\": {
+                  \"Authorization\": \"Bearer $gsai_token\"
                 }
               },
-              "cors": {
-                "allow_origins": "*",
-                "allow_methods": "GET,POST,OPTIONS",
-                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
-                "allow_credential": true,
-                "max_age": 3600
+              \"cors\": {
+                \"allow_origins\": \"*\",
+                \"allow_methods\": \"GET,POST,OPTIONS\",
+                \"allow_headers\": \"Authorization,Content-Type,X-Requested-With,apikey\",
+                \"allow_credential\": true,
+                \"max_age\": 3600
               }
             }
-          }' 2>/dev/null)
+          }" 2>/dev/null)
         
         if echo "$update_response" | grep -q '"id":"9001"'; then
             echo "   ✅ GSAi route updated successfully"

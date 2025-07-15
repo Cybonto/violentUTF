@@ -12,6 +12,108 @@ generate_secure_string() {
     generate_random_string "$@"
 }
 
+# Function to parse URL and extract components
+parse_url() {
+    local url="$1"
+    local component="${2:-all}"  # scheme, host, port, path, or all
+    
+    # Initialize variables
+    local scheme=""
+    local host=""
+    local port=""
+    local path="/"
+    
+    # Extract scheme
+    if [[ "$url" =~ ^(https?)://(.*)$ ]]; then
+        scheme="${BASH_REMATCH[1]}"
+        local remainder="${BASH_REMATCH[2]}"
+    else
+        # No scheme provided, default to http
+        scheme="http"
+        local remainder="$url"
+    fi
+    
+    # Extract host, port, and path
+    if [[ "$remainder" =~ ^([^/:]+)(:[0-9]+)?(/.*)?$ ]]; then
+        host="${BASH_REMATCH[1]}"
+        port="${BASH_REMATCH[2]#:}"  # Remove leading colon
+        path="${BASH_REMATCH[3]:-/}"
+    else
+        host="$remainder"
+    fi
+    
+    # Set default ports if not specified
+    if [ -z "$port" ]; then
+        if [ "$scheme" = "https" ]; then
+            port="443"
+        else
+            port="80"
+        fi
+    fi
+    
+    # Return requested component
+    case "$component" in
+        scheme)
+            echo "$scheme"
+            ;;
+        host)
+            echo "$host"
+            ;;
+        port)
+            echo "$port"
+            ;;
+        path)
+            echo "$path"
+            ;;
+        host_port)
+            if [[ ("$scheme" = "https" && "$port" = "443") || ("$scheme" = "http" && "$port" = "80") ]]; then
+                echo "$host"
+            else
+                echo "$host:$port"
+            fi
+            ;;
+        all)
+            echo "scheme=$scheme"
+            echo "host=$host"
+            echo "port=$port"
+            echo "path=$path"
+            ;;
+        *)
+            echo "Error: Unknown component '$component'" >&2
+            return 1
+            ;;
+    esac
+}
+
+# Function to determine HTTPS configuration from environment
+get_https_config() {
+    local provider_num="$1"
+    local base_url_var="OPENAPI_${provider_num}_BASE_URL"
+    local use_https_var="OPENAPI_${provider_num}_USE_HTTPS"
+    local ssl_verify_var="OPENAPI_${provider_num}_SSL_VERIFY"
+    local ca_cert_var="OPENAPI_${provider_num}_CA_CERT_PATH"
+    
+    local base_url="${!base_url_var:-}"
+    local use_https="${!use_https_var:-auto}"
+    local ssl_verify="${!ssl_verify_var:-true}"
+    local ca_cert_path="${!ca_cert_var:-}"
+    
+    # Determine scheme
+    local scheme
+    if [ "$use_https" = "auto" ]; then
+        scheme=$(parse_url "$base_url" scheme)
+    elif [ "$use_https" = "true" ]; then
+        scheme="https"
+    else
+        scheme="http"
+    fi
+    
+    # Output configuration
+    echo "scheme=$scheme"
+    echo "ssl_verify=$ssl_verify"
+    echo "ca_cert_path=$ca_cert_path"
+}
+
 # Function to replace placeholder in a file with a value
 replace_in_file() {
     local file="$1"

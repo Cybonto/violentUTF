@@ -2,18 +2,41 @@
 
 ## Overview
 
-This document covers challenges and solutions encountered when integrating Custom OpenAPI providers (like local API services) with APISIX AI Gateway, particularly focusing on SSL certificate handling and plugin compatibility.
+This document covers challenges and solutions encountered when integrating Custom OpenAPI providers (like local API services and enterprise AI gateways) with APISIX AI Gateway, particularly focusing on SSL certificate handling and plugin compatibility.
 
-## ✅ RESOLVED: HTTP Configuration Solution
+## Current Solution: Configurable HTTPS Support
 
-**Final Resolution (July 2025):** The SSL integration issues were resolved by configuring GSAi to use HTTP instead of HTTPS for container-to-container communication:
+**As of July 2025:** ViolentUTF now includes comprehensive HTTPS support with automatic scheme detection, SSL verification control, and custom CA certificate management. This allows seamless integration with enterprise AI gateways that use HTTPS with valid SSL certificates.
 
-- **GSAi Configuration**: Disabled HTTPS, runs on HTTP port 8081 externally, 8080 internally
-- **APISIX Routes**: Updated to use `scheme: "http"` and `ai-gov-api-app-1:8080` as upstream
-- **Setup Scripts**: Modified to detect GSAi and automatically configure HTTP routing
-- **SSL Certificates**: No longer required for GSAi integration
+### Configuration
 
-This approach eliminates SSL certificate complexity while maintaining security through the APISIX gateway authentication layer.
+```bash
+# In ai-tokens.env
+OPENAPI_1_BASE_URL=https://gsai.enterprise.com
+OPENAPI_1_USE_HTTPS=auto              # auto, true, or false
+OPENAPI_1_SSL_VERIFY=true             # Verify SSL certificates
+OPENAPI_1_CA_CERT_PATH=/path/to/enterprise-ca.crt  # Optional custom CA
+```
+
+### Key Features
+
+1. **Automatic HTTPS Detection**: The `auto` setting detects scheme from BASE_URL
+2. **SSL Verification Control**: Enable/disable certificate verification
+3. **Custom CA Support**: Import enterprise CA certificates for trusted connections
+4. **Backward Compatibility**: Existing HTTP deployments continue to work
+
+For detailed HTTPS configuration, see the [OpenAPI Integration Guide](../guides/openapi-integration.md#enterprise-https-support).
+
+## Alternative Solution: HTTP Configuration for Container-to-Container Communication
+
+**Alternative Resolution:** For local development or container-to-container communication, you can configure providers to use HTTP instead of HTTPS:
+
+- **Provider Configuration**: Run on HTTP port internally
+- **APISIX Routes**: Use `scheme: "http"` for internal communication
+- **Setup Scripts**: Automatically configure based on USE_HTTPS setting
+- **SSL Certificates**: Not required for internal HTTP communication
+
+This approach eliminates SSL certificate complexity for internal communication while maintaining security through the APISIX gateway authentication layer. However, for enterprise environments, the HTTPS configuration with proper certificates is recommended.
 
 ## Issue Summary
 
@@ -199,12 +222,57 @@ docker exec apisix-apisix-1 openssl x509 -in /usr/local/share/ca-certificates/cu
 3. **Plugin Compatibility:** Not all APISIX plugins support custom SSL configurations
 4. **Performance:** Additional SSL handshake overhead for container-to-container communication
 
+## Enterprise HTTPS Configuration
+
+### Overview
+
+For enterprise deployments where AI gateways use HTTPS with valid SSL certificates, ViolentUTF provides comprehensive support through configurable HTTPS settings.
+
+### Implementation Details
+
+1. **URL Parsing**: Automatic scheme detection from provider URLs
+2. **Dynamic Route Creation**: Routes created with proper HTTPS upstream configuration
+3. **Certificate Management**: Support for custom CA certificates
+4. **Validation**: Pre-setup validation to catch configuration issues early
+
+### Configuration Process
+
+1. **Set HTTPS Configuration in ai-tokens.env**:
+   ```bash
+   OPENAPI_1_USE_HTTPS=auto
+   OPENAPI_1_SSL_VERIFY=true
+   OPENAPI_1_CA_CERT_PATH=/path/to/ca.crt
+   ```
+
+2. **Validate Configuration**:
+   ```bash
+   ./setup_macos_files/validate_https_config.sh
+   ```
+
+3. **Import CA Certificate** (if needed):
+   ```bash
+   ./setup_macos_files/certificate_management.sh import /path/to/ca.crt
+   ```
+
+4. **Run Setup**:
+   ```bash
+   ./setup_macos_new.sh
+   ```
+
+### Testing
+
+Use the enterprise test script:
+```bash
+cd tests
+./test_enterprise_gsai.sh
+```
+
 ## Future Improvements
 
-1. **Automated Certificate Management:** Implement automatic certificate extraction and trust store updates
-2. **Health Monitoring:** Add specific health checks for Custom OpenAPI SSL connectivity
-3. **Plugin Enhancement:** Contribute improvements to `ai-proxy` plugin for custom SSL scenarios
-4. **Documentation:** Expand setup scripts to handle certificate integration automatically
+1. **Automated Certificate Renewal:** Handle certificate rotation automatically
+2. **Health Monitoring:** Enhanced SSL connectivity monitoring
+3. **Plugin Enhancement:** Continue improving HTTPS support in plugins
+4. **Multi-Environment Support:** Better support for dev/staging/prod configurations
 
 ## Related Files
 

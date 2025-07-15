@@ -46,6 +46,9 @@ OPENAPI_1_AUTH_TOKEN=sk-your-api-token-here
 | `OPENAPI_N_BASE_URL` | Base URL of the API | `https://api.myservice.com` |
 | `OPENAPI_N_SPEC_PATH` | Path to OpenAPI specification | `/openapi.json` |
 | `OPENAPI_N_AUTH_TYPE` | Authentication type | `bearer`, `api_key`, `basic` |
+| `OPENAPI_N_USE_HTTPS` | HTTPS configuration | `auto`, `true`, `false` |
+| `OPENAPI_N_SSL_VERIFY` | SSL certificate verification | `true`, `false` |
+| `OPENAPI_N_CA_CERT_PATH` | Path to custom CA certificate | `/path/to/ca.crt` |
 
 ### Authentication Types
 
@@ -76,6 +79,33 @@ Add custom headers if required by your API:
 ```bash
 OPENAPI_1_CUSTOM_HEADERS="X-Custom-Header:value,X-Another-Header:value2"
 ```
+
+### HTTPS/SSL Configuration (Enterprise Environments)
+
+For enterprise environments using HTTPS with custom SSL certificates:
+
+```bash
+# HTTPS/SSL Configuration
+OPENAPI_1_USE_HTTPS=auto              # auto (detect from URL), true, or false
+OPENAPI_1_SSL_VERIFY=true             # Verify SSL certificates
+OPENAPI_1_CA_CERT_PATH=/path/to/enterprise-ca.crt  # Optional custom CA
+```
+
+#### HTTPS Configuration Options
+
+**USE_HTTPS Settings:**
+- `auto` (recommended): Automatically detect from BASE_URL
+- `true`: Force HTTPS even if URL shows http://
+- `false`: Force HTTP even if URL shows https://
+
+**SSL_VERIFY Settings:**
+- `true` (recommended for production): Verify SSL certificates
+- `false`: Skip SSL verification (only for testing/self-signed certs)
+
+**CA_CERT_PATH:**
+- Leave empty to use system default CA certificates
+- Provide full path to custom CA certificate for enterprise environments
+- Supports PEM format certificates
 
 ## Multiple OpenAPI Providers
 
@@ -359,10 +389,135 @@ Creating APISIX routes for discovered endpoints...
 - Provider: `openapi-customllm`
 - Models: `createChatCompletion`, `createEmbedding`, etc.
 
+## Enterprise HTTPS Support
+
+### Overview
+
+ViolentUTF fully supports enterprise AI gateways (like GSAi) that use HTTPS with custom SSL certificates. The implementation handles both local development (HTTP) and enterprise production (HTTPS) environments seamlessly.
+
+### Common Enterprise Scenarios
+
+#### Scenario 1: Enterprise with Custom CA
+```bash
+OPENAPI_1_BASE_URL=https://internal-ai.company.com
+OPENAPI_1_USE_HTTPS=auto
+OPENAPI_1_SSL_VERIFY=true
+OPENAPI_1_CA_CERT_PATH=/etc/ssl/certs/company-ca.crt
+```
+
+#### Scenario 2: Development with Self-Signed Certificate
+```bash
+OPENAPI_1_BASE_URL=https://dev-ai.local:8443
+OPENAPI_1_USE_HTTPS=true
+OPENAPI_1_SSL_VERIFY=false  # Not recommended for production
+```
+
+#### Scenario 3: Local Development (HTTP)
+```bash
+OPENAPI_1_BASE_URL=http://localhost:8080
+OPENAPI_1_USE_HTTPS=auto    # Will use HTTP
+OPENAPI_1_SSL_VERIFY=false   # Ignored for HTTP
+```
+
+### Certificate Management
+
+#### Finding Your Enterprise CA Certificate
+
+Common locations for enterprise CA certificates:
+- `/etc/ssl/certs/enterprise-ca.crt`
+- `/usr/local/share/ca-certificates/`
+- `$HOME/.ssl/certs/`
+- Windows: Export from Certificate Manager
+
+#### Validating and Importing Certificates
+
+```bash
+cd setup_macos_files
+
+# Validate your configuration
+./validate_https_config.sh
+
+# Import enterprise CA certificate
+./certificate_management.sh import /path/to/enterprise-ca.crt
+
+# Validate a certificate
+./certificate_management.sh validate /path/to/ca.crt
+
+# Test SSL connection
+./certificate_management.sh test https://gsai.enterprise.com /path/to/ca.crt
+```
+
+### Troubleshooting HTTPS Issues
+
+#### Error: "The plain HTTP request was sent to HTTPS port"
+
+**Cause**: APISIX is sending HTTP requests to an HTTPS endpoint.
+
+**Solution**: 
+1. Ensure `OPENAPI_X_BASE_URL` uses `https://` scheme
+2. Set `OPENAPI_X_USE_HTTPS=true` or `auto`
+3. Re-run the setup script
+
+#### Error: "SSL certificate problem: unable to get local issuer certificate"
+
+**Cause**: The enterprise CA certificate is not trusted.
+
+**Solution**:
+1. Obtain your enterprise CA certificate
+2. Set `OPENAPI_X_CA_CERT_PATH` to the certificate path
+3. Import the certificate: `./certificate_management.sh import /path/to/ca.crt`
+
+### Testing Enterprise HTTPS Setup
+
+```bash
+cd tests
+export GSAI_URL=https://your-gsai-instance.com
+export GSAI_TOKEN=your-api-token
+export CA_CERT_PATH=/path/to/ca.crt  # Optional
+./test_enterprise_gsai.sh
+```
+
+### Manual Route Update for HTTPS
+
+If automatic configuration fails, manually update the route:
+
+```bash
+# Get your APISIX admin key
+source apisix/.env
+
+# Update the GSAi route for HTTPS
+curl -X PUT http://localhost:9180/apisix/admin/routes/9001 \
+  -H "X-API-KEY: $APISIX_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "uri": "/ai/gsai-api-1/chat/completions",
+    "upstream": {
+      "type": "roundrobin",
+      "scheme": "https",
+      "nodes": {
+        "gsai.enterprise.com:443": 1
+      },
+      "tls": {
+        "verify": true
+      }
+    },
+    "plugins": {
+      "proxy-rewrite": {
+        "headers": {
+          "Authorization": "Bearer YOUR_TOKEN"
+        }
+      }
+    }
+  }'
+```
+
 ## Security Considerations
 
 - **Credentials**: Store API tokens securely in `ai_tokens.env` (excluded from git)
 - **HTTPS**: Always use HTTPS for production APIs
+- **SSL Verification**: Always use SSL verification in production (`SSL_VERIFY=true`)
+- **CA Certificates**: Store CA certificates securely with appropriate file permissions
+- **Certificate Expiration**: Monitor SSL certificate expiration in your enterprise
 - **Network**: Ensure your ViolentUTF instance can reach the API endpoints
 - **Rate Limits**: Be aware of API rate limits when running security tests
 
