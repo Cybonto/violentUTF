@@ -333,21 +333,41 @@ EOF
     log_detail "Creating APISIX configurations..."
     mkdir -p apisix/conf
     
+    # Critical: Remove any directories that should be files
+    for file in config.yaml dashboard.yaml prometheus.yml; do
+        if [ -d "apisix/conf/$file" ]; then
+            echo "⚠️  Removing incorrectly created directory: apisix/conf/$file"
+            rm -rf "apisix/conf/$file"
+        fi
+    done
+    
     # Process config.yaml template if it exists
     if [ -f "apisix/conf/config.yaml.template" ]; then
         prepare_config_from_template "apisix/conf/config.yaml.template"
-        replace_in_file "apisix/conf/config.yaml" "APISIX_ADMIN_KEY_PLACEHOLDER" "$APISIX_ADMIN_KEY" "APISIX Admin API Key"
-        replace_in_file "apisix/conf/config.yaml" "APISIX_KEYRING_VALUE_1_PLACEHOLDER" "$APISIX_KEYRING_VALUE_1" "APISIX Keyring Value 1"
-        replace_in_file "apisix/conf/config.yaml" "APISIX_KEYRING_VALUE_2_PLACEHOLDER" "$APISIX_KEYRING_VALUE_2" "APISIX Keyring Value 2"
-        echo "✅ Created apisix/conf/config.yaml"
+        
+        # Verify it was created as a file, not a directory
+        if [ -f "apisix/conf/config.yaml" ]; then
+            replace_in_file "apisix/conf/config.yaml" "APISIX_ADMIN_KEY_PLACEHOLDER" "$APISIX_ADMIN_KEY" "APISIX Admin API Key"
+            replace_in_file "apisix/conf/config.yaml" "APISIX_KEYRING_VALUE_1_PLACEHOLDER" "$APISIX_KEYRING_VALUE_1" "APISIX Keyring Value 1"
+            replace_in_file "apisix/conf/config.yaml" "APISIX_KEYRING_VALUE_2_PLACEHOLDER" "$APISIX_KEYRING_VALUE_2" "APISIX Keyring Value 2"
+            echo "✅ Created apisix/conf/config.yaml"
+        else
+            echo "❌ Failed to create config.yaml as a file"
+        fi
     fi
     
     # Process dashboard.yaml template if it exists
     if [ -f "apisix/conf/dashboard.yaml.template" ]; then
         prepare_config_from_template "apisix/conf/dashboard.yaml.template"
-        replace_in_file "apisix/conf/dashboard.yaml" "APISIX_DASHBOARD_SECRET_PLACEHOLDER" "$APISIX_DASHBOARD_SECRET" "APISIX Dashboard JWT Secret"
-        replace_in_file "apisix/conf/dashboard.yaml" "APISIX_DASHBOARD_PASSWORD_PLACEHOLDER" "$APISIX_DASHBOARD_PASSWORD" "APISIX Dashboard Admin Password"
-        echo "✅ Created apisix/conf/dashboard.yaml"
+        
+        # Verify it was created as a file, not a directory
+        if [ -f "apisix/conf/dashboard.yaml" ]; then
+            replace_in_file "apisix/conf/dashboard.yaml" "APISIX_DASHBOARD_SECRET_PLACEHOLDER" "$APISIX_DASHBOARD_SECRET" "APISIX Dashboard JWT Secret"
+            replace_in_file "apisix/conf/dashboard.yaml" "APISIX_DASHBOARD_PASSWORD_PLACEHOLDER" "$APISIX_DASHBOARD_PASSWORD" "APISIX Dashboard Admin Password"
+            echo "✅ Created apisix/conf/dashboard.yaml"
+        else
+            echo "❌ Failed to create dashboard.yaml as a file"
+        fi
     fi
     
     # Create prometheus.yml configuration file

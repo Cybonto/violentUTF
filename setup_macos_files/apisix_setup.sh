@@ -233,6 +233,25 @@ setup_apisix() {
     echo "Checking for required configuration files..."
     ls -la conf/ 2>/dev/null || echo "conf/ directory not found"
     
+    # Critical: Check if config.yaml or dashboard.yaml were mistakenly created as directories
+    if [ -d "conf/config.yaml" ]; then
+        echo "❌ ERROR: config.yaml exists as a directory instead of a file!"
+        echo "Removing incorrect directory structure..."
+        rm -rf "conf/config.yaml"
+    fi
+    
+    if [ -d "conf/dashboard.yaml" ]; then
+        echo "❌ ERROR: dashboard.yaml exists as a directory instead of a file!"
+        echo "Removing incorrect directory structure..."
+        rm -rf "conf/dashboard.yaml"
+    fi
+    
+    if [ -d "conf/prometheus.yml" ]; then
+        echo "❌ ERROR: prometheus.yml exists as a directory instead of a file!"
+        echo "Removing incorrect directory structure..."
+        rm -rf "conf/prometheus.yml"
+    fi
+    
     # Ensure .env file exists
     if [ ! -f ".env" ]; then
         echo "❌ APISIX .env file missing!"

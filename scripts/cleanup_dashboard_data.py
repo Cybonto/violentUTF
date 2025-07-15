@@ -83,32 +83,20 @@ results = cursor.fetchall()
 print(json.dumps(results))
 conn.close()
 """
-            # Write script to temp file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-                f.write(script)
-                temp_script = f.name
+            # Execute directly via docker exec with escaped script
+            escaped_script = script.replace('"', '\\"').replace('$', '\\$')
             
-            try:
-                # Copy script to container
-                os.system(f"docker cp {temp_script} {self.container_name}:/tmp/query.py")
+            result = subprocess.run(
+                ["docker", "exec", self.container_name, "python3", "-c", script],
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode != 0:
+                raise Exception(f"Query failed: {result.stderr}")
                 
-                # Execute script
-                result = subprocess.run(
-                    ["docker", "exec", self.container_name, "python3", "/tmp/query.py"],
-                    capture_output=True,
-                    text=True
-                )
-                
-                if result.returncode != 0:
-                    raise Exception(f"Query failed: {result.stderr}")
-                    
-                # Parse JSON results
-                return json.loads(result.stdout) if result.stdout.strip() else []
-                
-            finally:
-                # Cleanup
-                os.unlink(temp_script)
-                os.system(f"docker exec {self.container_name} rm -f /tmp/query.py")
+            # Parse JSON results
+            return json.loads(result.stdout) if result.stdout.strip() else []
         else:
             # Direct SQLite execution
             cursor = self.conn.cursor()
@@ -132,27 +120,17 @@ conn.commit()
 conn.close()
 print(affected)
 """
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-                f.write(script)
-                temp_script = f.name
+            # Execute directly via docker exec
+            result = subprocess.run(
+                ["docker", "exec", self.container_name, "python3", "-c", script],
+                capture_output=True,
+                text=True
+            )
             
-            try:
-                os.system(f"docker cp {temp_script} {self.container_name}:/tmp/update.py")
+            if result.returncode != 0:
+                raise Exception(f"Update failed: {result.stderr}")
                 
-                result = subprocess.run(
-                    ["docker", "exec", self.container_name, "python3", "/tmp/update.py"],
-                    capture_output=True,
-                    text=True
-                )
-                
-                if result.returncode != 0:
-                    raise Exception(f"Update failed: {result.stderr}")
-                    
-                return int(result.stdout.strip()) if result.stdout.strip() else 0
-                
-            finally:
-                os.unlink(temp_script)
-                os.system(f"docker exec {self.container_name} rm -f /tmp/update.py")
+            return int(result.stdout.strip()) if result.stdout.strip() else 0
         else:
             cursor = self.conn.cursor()
             cursor.execute(query, params or [])
@@ -267,19 +245,46 @@ print(affected)
         console.print(f"\n[bold]Found {count} executions to delete:[/bold]")
         
         # Get sample
-        sample_query = f"""
-            SELECT 
-                oe.id,
-                oe.execution_name,
-                oe.status,
-                oe.started_at,
-                oc.name as orchestrator_name
-            FROM orchestrator_executions oe
-            LEFT JOIN orchestrator_configurations oc ON oe.orchestrator_id = oc.id
-            WHERE {where_clause}
-            ORDER BY oe.started_at DESC
-            LIMIT 10
-        """
+        if orchestrator_name:
+            # Use subquery to avoid ambiguous column names
+            sample_query = f"""
+                SELECT 
+                    id,
+                    execution_name,
+                    status,
+                    started_at,
+                    orchestrator_id
+                FROM orchestrator_executions
+                WHERE {where_clause}
+                ORDER BY started_at DESC
+                LIMIT 10
+            """
+        else:
+            # Need to rewrite where clause with table prefix for JOIN query
+            prefixed_conditions = []
+            for condition in conditions:
+                if "orchestrator_id IN" in condition:
+                    prefixed_conditions.append(f"oe.{condition}")
+                elif any(col in condition for col in ["started_at", "status"]):
+                    prefixed_conditions.append(f"oe.{condition}")
+                else:
+                    prefixed_conditions.append(condition)
+            
+            prefixed_where = " AND ".join(prefixed_conditions) if prefixed_conditions else "1=1"
+            
+            sample_query = f"""
+                SELECT 
+                    oe.id,
+                    oe.execution_name,
+                    oe.status,
+                    oe.started_at,
+                    oc.name as orchestrator_name
+                FROM orchestrator_executions oe
+                LEFT JOIN orchestrator_configurations oc ON oe.orchestrator_id = oc.id
+                WHERE {prefixed_where}
+                ORDER BY oe.started_at DESC
+                LIMIT 10
+            """
         
         samples = self._execute_query(sample_query, params)
         
@@ -293,13 +298,23 @@ print(affected)
             
             for sample in samples:
                 exec_id = sample[0] if sample[0] else "N/A"
-                table.add_row(
-                    exec_id[:8] + "..." if len(exec_id) > 8 else exec_id,
-                    sample[1] or "N/A",
-                    sample[2] or "N/A",
-                    sample[3][:16] if sample[3] else "N/A",
-                    sample[4] or "N/A"
-                )
+                if orchestrator_name:
+                    # When filtering by orchestrator, we don't have the name in results
+                    table.add_row(
+                        exec_id[:8] + "..." if len(exec_id) > 8 else exec_id,
+                        sample[1] or "N/A",
+                        sample[2] or "N/A",
+                        sample[3][:16] if sample[3] else "N/A",
+                        f"ID: {sample[4]}" if sample[4] else "N/A"
+                    )
+                else:
+                    table.add_row(
+                        exec_id[:8] + "..." if len(exec_id) > 8 else exec_id,
+                        sample[1] or "N/A",
+                        sample[2] or "N/A",
+                        sample[3][:16] if sample[3] else "N/A",
+                        sample[4] or "N/A"
+                    )
                 
             console.print(table)
             if len(samples) < count:
