@@ -59,9 +59,15 @@ When integrating Custom OpenAPI providers that use self-signed SSL certificates 
   [lua] ssl.lua:217: in function 'fetch_cert' 
   SSL certificate verification failed
   ```
+- ai-proxy plugin errors:
+  ```
+  [lua] openai-base.lua:198: phase_func(): failed to connect to LLM server: 19: self-signed certificate in certificate chain
+  ```
 
 **Root Cause:**
-Custom OpenAPI providers using Caddy or similar reverse proxies generate self-signed certificates that are not trusted by APISIX's default certificate store.
+- Custom OpenAPI providers using Caddy or similar reverse proxies generate self-signed certificates that are not trusted by APISIX's default certificate store
+- Enterprise AI gateways use internal CA certificates that APISIX doesn't trust by default
+- The ai-proxy plugin performs SSL verification but cannot handle custom CA certificates without proper configuration
 
 ### AI-Proxy Plugin Limitations
 
@@ -221,6 +227,55 @@ docker exec apisix-apisix-1 openssl x509 -in /usr/local/share/ca-certificates/cu
 2. **Container Restarts:** APISIX restart required after certificate updates
 3. **Plugin Compatibility:** Not all APISIX plugins support custom SSL configurations
 4. **Performance:** Additional SSL handshake overhead for container-to-container communication
+
+## Common SSL/TLS Errors and Solutions
+
+### Error: "failed to connect to LLM server: 19: self-signed certificate in certificate chain"
+
+This is the most common error when integrating with enterprise AI gateways or development environments using self-signed certificates.
+
+#### Quick Solution (Development/Testing)
+
+```bash
+# 1. Disable SSL verification in ai-tokens.env
+OPENAPI_1_SSL_VERIFY=false
+
+# 2. Update routes
+cd setup_macos_files
+./openapi_setup.sh
+
+# 3. Verify the change
+source ../apisix/.env
+curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" http://localhost:9180/apisix/admin/routes/9001 | \
+  jq '.value.plugins."ai-proxy".model.options.ssl_verify'
+# Should show: false
+```
+
+#### Proper Solution (Production)
+
+```bash
+# 1. Get the certificate chain from your server
+openssl s_client -connect your-ai-gateway.com:443 -showcerts < /dev/null 2>/dev/null | \
+  sed -n '/BEGIN CERTIFICATE/,/END CERTIFICATE/p' > cert-chain.pem
+
+# 2. Extract individual certificates
+csplit -f cert- -b %02d.pem cert-chain.pem '/-----BEGIN CERTIFICATE-----/' '{*}'
+
+# 3. Find the root CA (check each cert)
+for cert in cert-*.pem; do
+  echo "=== $cert ==="
+  openssl x509 -in $cert -noout -subject -issuer
+done
+
+# 4. Configure in ai-tokens.env
+OPENAPI_1_SSL_VERIFY=true
+OPENAPI_1_CA_CERT_PATH=/path/to/root-ca.pem
+
+# 5. Import and update
+cd setup_macos_files
+./certificate_management.sh import /path/to/root-ca.pem
+./openapi_setup.sh
+```
 
 ## Enterprise HTTPS Configuration
 

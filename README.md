@@ -141,6 +141,89 @@ After setup completion:
 | **APISIX Dashboard** | http://localhost:9001 | API gateway management |
 | **AI Proxy Endpoints** | http://localhost:9080/ai/* | Unified AI provider access |
 
+### AI Provider Configuration
+
+ViolentUTF supports multiple AI providers including OpenAI, Anthropic, local models, and **custom OpenAPI-compliant services** (including enterprise AI gateways):
+
+#### Basic Configuration
+
+Edit `ai-tokens.env` to configure your AI providers:
+
+```bash
+# Standard AI Providers
+OPENAI_API_KEY=sk-your-openai-key
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
+
+# Custom OpenAPI Provider (e.g., GSAi, enterprise AI gateway)
+OPENAPI_1_ENABLED=true
+OPENAPI_1_ID=gsai-api-1
+OPENAPI_1_NAME="Enterprise GSAi"
+OPENAPI_1_BASE_URL=https://gsai.enterprise.com
+OPENAPI_1_AUTH_TOKEN=your-api-token
+```
+
+#### Enterprise HTTPS Configuration
+
+For enterprise environments using HTTPS with custom SSL certificates:
+
+```bash
+# HTTPS/SSL Configuration (for enterprise deployments)
+OPENAPI_1_USE_HTTPS=auto              # auto (detect from URL), true, or false
+OPENAPI_1_SSL_VERIFY=true             # Verify SSL certificates
+OPENAPI_1_CA_CERT_PATH=/path/to/enterprise-ca.crt  # Optional custom CA
+```
+
+**Important Security Note**: Enterprise CA certificates should be obtained from your IT department, not generated locally. Always verify certificates before importing:
+
+```bash
+# Verify certificate details before trusting
+openssl x509 -in enterprise-ca.crt -text -noout | grep -E "Subject:|Issuer:|CA:TRUE"
+```
+
+#### Certificate Management
+
+For enterprise deployments with custom CA certificates:
+
+1. **Obtain your enterprise CA certificate** from:
+   - IT department/internal wiki
+   - Export from browser when visiting the HTTPS endpoint
+   - Extract from system trust store if already configured
+
+2. **Validate and import the certificate**:
+   ```bash
+   cd setup_macos_files
+   
+   # Validate certificate
+   ./certificate_management.sh validate /path/to/enterprise-ca.crt
+   
+   # Import to APISIX (required for HTTPS)
+   ./certificate_management.sh import /path/to/enterprise-ca.crt
+   ```
+
+3. **Validate your configuration**:
+   ```bash
+   ./validate_https_config.sh
+   ```
+
+4. **Run setup**:
+   ```bash
+   ./setup_macos_new.sh
+   ```
+
+#### Testing Enterprise HTTPS
+
+After setup, test your enterprise HTTPS configuration:
+
+```bash
+cd tests
+export GSAI_URL=https://your-gsai-instance.com
+export GSAI_TOKEN=your-api-token
+export CA_CERT_PATH=/path/to/ca.crt  # Optional
+./test_enterprise_gsai.sh
+```
+
+For detailed OpenAPI integration instructions, see the [OpenAPI Integration Guide](docs/guides/openapi-integration.md).
+
 ## 🎯 Core Capabilities
 
 ### **AI Red-Teaming**
@@ -401,6 +484,29 @@ If you have your Zscaler certificates:
    cp violentutf_api/fastapi_app/Dockerfile.zscaler violentutf_api/fastapi_app/Dockerfile
    ./setup_macos.sh
    ```
+
+### Enterprise HTTPS / SSL Issues
+
+If you encounter "The plain HTTP request was sent to HTTPS port" or SSL certificate errors:
+
+1. **Configure HTTPS settings** in `ai-tokens.env`:
+   ```bash
+   OPENAPI_1_USE_HTTPS=auto
+   OPENAPI_1_SSL_VERIFY=true
+   OPENAPI_1_CA_CERT_PATH=/path/to/enterprise-ca.crt
+   ```
+
+2. **Import enterprise CA certificate**:
+   ```bash
+   cd setup_macos_files
+   ./certificate_management.sh import /path/to/enterprise-ca.crt
+   ```
+
+3. **Re-run setup** to apply HTTPS configuration
+
+For detailed HTTPS troubleshooting:
+- **Quick Fixes**: [HTTPS/SSL Quick Troubleshooting](docs/troubleshooting/https_ssl_quick_fixes.md)
+- **Detailed Guide**: [Custom OpenAPI SSL Integration](docs/troubleshooting/Custom_OpenAPI_SSL_Integration.md)
 
 ### Other Common Issues
 

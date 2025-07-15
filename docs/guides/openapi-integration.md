@@ -467,6 +467,52 @@ cd setup_macos_files
 2. Set `OPENAPI_X_CA_CERT_PATH` to the certificate path
 3. Import the certificate: `./certificate_management.sh import /path/to/ca.crt`
 
+#### Error: "failed to connect to LLM server: 19: self-signed certificate in certificate chain"
+
+**Cause**: APISIX ai-proxy plugin cannot verify self-signed or enterprise CA certificates.
+
+**Quick Fix (Testing Only)**:
+```bash
+# In ai-tokens.env - disable SSL verification
+OPENAPI_1_USE_HTTPS=auto
+OPENAPI_1_SSL_VERIFY=false    # WARNING: Not for production!
+
+# Update the routes
+cd setup_macos_files
+./openapi_setup.sh
+```
+
+**Proper Fix (Production)**:
+```bash
+# 1. Extract certificate chain from your server
+openssl s_client -connect gsai.yourdomain.com:443 -showcerts < /dev/null 2>/dev/null | \
+  sed -n '/BEGIN CERTIFICATE/,/END CERTIFICATE/p' > gsai-cert-chain.pem
+
+# 2. Identify the root CA (usually the last certificate)
+# Split the chain into individual certificates and check each
+csplit -f cert- -b %02d.pem gsai-cert-chain.pem '/-----BEGIN CERTIFICATE-----/' '{*}'
+
+# 3. Configure with proper certificate
+# In ai-tokens.env:
+OPENAPI_1_USE_HTTPS=auto
+OPENAPI_1_SSL_VERIFY=true
+OPENAPI_1_CA_CERT_PATH=/path/to/enterprise-root-ca.crt
+
+# 4. Import the CA certificate to APISIX
+cd setup_macos_files
+./certificate_management.sh import /path/to/enterprise-root-ca.crt
+
+# 5. Re-run setup to update routes
+./openapi_setup.sh
+```
+
+**Verify the Fix**:
+```bash
+# Check if SSL verification is configured correctly
+curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" http://localhost:9180/apisix/admin/routes/9001 | \
+  jq '.value.plugins."ai-proxy".model.options.ssl_verify'
+```
+
 ### Testing Enterprise HTTPS Setup
 
 ```bash
