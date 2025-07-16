@@ -172,13 +172,13 @@ class APISIXAdmin:
 
 
 def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai - prompt - guard plugin configuration"""
+    """Render UI for ai-prompt-guard plugin configuration"""
     # st.subheader("🛡️ AI Prompt Guard Configuration")
 
     with st.expander("ℹ️ About AI Prompt Guard", expanded=False):
         st.markdown(
             """
-        The **ai - prompt - guard** plugin helps protect your AI models from harmful or inappropriate prompts by:
+        The **ai-prompt-guard** plugin helps protect your AI models from harmful or inappropriate prompts by:
         - Blocking prompts containing specific patterns or keywords
         - Allowing only prompts that match certain criteria
         - Customizing error messages for blocked requests
@@ -187,7 +187,7 @@ def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
         """
         )
 
-    config = current_config.get("ai - prompt - guard", {})
+    config = current_config.get("ai-prompt-guard", {})
 
     # Initialize session state only if not already initialized for this route
     deny_patterns_key = f"deny_patterns_{route_id}"
@@ -272,6 +272,83 @@ def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
     return new_config
 
 
+def fetch_available_models(provider_id: str) -> List[str]:
+    """Fetch available models for a provider from the API."""
+    # Hardcoded fallback models for known providers
+    # Based on token_manager.py fallback_apisix_endpoints
+    FALLBACK_MODELS = {
+        "gsai-api-1": [
+            "claude_3_5_sonnet",
+            "claude_3_7_sonnet",
+            "claude_3_haiku",
+            "llama3211b",
+            "cohere_english_v3",
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-2.5-pro-preview-05-06",
+        ],
+        "openai": [
+            "gpt-4",
+            "gpt-3.5-turbo",
+            "gpt-4-turbo",
+            "gpt-4o",
+            "gpt-4o-mini",
+            "o1-preview",
+            "o1-mini",
+        ],
+        "anthropic": [
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-haiku-20241022",
+        ],
+    }
+    
+    try:
+        headers = get_auth_headers()
+        api_base = VIOLENTUTF_API_URL
+        
+        # Call the same endpoint that Configure Generator uses
+        url = f"{api_base}/api/v1/generators/apisix/models?provider={provider_id}"
+        
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            models = data.get("models", [])
+            if models:
+                logger.info(f"Fetched {len(models)} models for provider {provider_id} from API")
+                return models
+            else:
+                # Empty response, try fallback
+                if provider_id in FALLBACK_MODELS:
+                    logger.info(f"API returned empty models for {provider_id}, using fallback")
+                    return FALLBACK_MODELS[provider_id]
+        else:
+            logger.warning(f"Failed to fetch models for {provider_id}: {response.status_code}")
+            # Use fallback if available
+            if provider_id in FALLBACK_MODELS:
+                logger.info(f"Using fallback models for {provider_id} after API error")
+                return FALLBACK_MODELS[provider_id]
+            return []
+    except Exception as e:
+        logger.error(f"Error fetching models for {provider_id}: {e}")
+        # Use fallback if available
+        if provider_id in FALLBACK_MODELS:
+            logger.info(f"Using fallback models for {provider_id} after exception")
+            return FALLBACK_MODELS[provider_id]
+        return []
+
+
+def extract_provider_id_from_route(route_uri: str) -> Optional[str]:
+    """Extract provider ID from route URI (e.g., /ai/gsai-api-1/chat/completions -> gsai-api-1)."""
+    parts = route_uri.strip("/").split("/")
+    if len(parts) >= 2 and parts[0] == "ai":
+        return parts[1]
+    return None
+
+
 def test_plugin_configuration(route_id: str, provider: str, model: str, plugins: Dict) -> Dict:
     """Test plugin configuration with a simple prompt."""
     import requests
@@ -292,10 +369,15 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
         if base_url.endswith("/api"):
             base_url = base_url[:-4]
 
-        # Extract endpoint from route_id or use URI directly for GSAi
-        if "gsai" in route_id:
-            # GSAi uses a single endpoint for all models
-            endpoint = f"{base_url}/ai/gsai-api-1/chat/completions"
+        # Extract endpoint from route_id or use URI directly for GSAi-like providers
+        if "gsai" in route_id or "openapi" in route_id:
+            # OpenAPI providers use a single endpoint for all models
+            # Extract provider ID from route_id
+            provider_id = extract_provider_id_from_route(f"/ai/{route_id}/")
+            if provider_id:
+                endpoint = f"{base_url}/ai/{provider_id}/chat/completions"
+            else:
+                endpoint = f"{base_url}/ai/{route_id}/chat/completions"
         elif "openai" in route_id:
             endpoint = f"{base_url}/ai/openai/{model}"
         elif "anthropic" in route_id:
@@ -465,7 +547,7 @@ def handle_append_role_change():
 
 
 def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai - prompt - decorator plugin configuration"""
+    """Render UI for ai-prompt-decorator plugin configuration"""
     # st.subheader("🎨 AI Prompt Decorator Configuration")
 
     # Detect provider type
@@ -484,7 +566,7 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
     with st.expander("ℹ️ About AI Prompt Decorator", expanded=False):
         st.markdown(
             """
-        The **ai - prompt - decorator** plugin allows you to modify prompts before they reach the AI model by:
+        The **ai-prompt-decorator** plugin allows you to modify prompts before they reach the AI model by:
         - Adding messages before the user prompt (prepend)
         - Adding messages after the user prompt (append)
         - Injecting system prompts or context
@@ -500,7 +582,7 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
     with col1:
         st.info(f"🤖 Detected Provider: **{provider_type.title()}**")
 
-    config = current_config.get("ai - prompt - decorator", {})
+    config = current_config.get("ai-prompt-decorator", {})
 
     # Extract existing prepend / append messages
     prepend_messages = config.get("prepend", [])
@@ -800,17 +882,53 @@ def main():
 
         # Update configuration
         st.markdown("---")
+        
+        # Check if this is an OpenAPI provider that supports multiple models
+        route_uri = route_value.get("uri", "")
+        provider_id = extract_provider_id_from_route(route_uri)
+        is_openapi_provider = provider_id and ("openapi" in provider_id or "gsai" in provider_id)
+        
+        # Model selection for OpenAPI providers
+        selected_model = None
+        if is_openapi_provider:
+            st.subheader("🎯 Model Selection")
+            model_col1, model_col2 = st.columns([2, 1])
+            
+            with model_col1:
+                # Fetch available models
+                with st.spinner(f"Fetching models for {provider_id}..."):
+                    available_models = fetch_available_models(provider_id)
+                
+                if available_models:
+                    # Create model selectbox
+                    model_key = f"selected_model_{route_id}"
+                    selected_model = st.selectbox(
+                        "Select AI Model",
+                        options=available_models,
+                        key=model_key,
+                        help=f"Choose from {len(available_models)} available models for {provider_id}"
+                    )
+                else:
+                    st.warning(f"No models found for {provider_id}. Using default.")
+                    selected_model = route_uri.split("/")[-1]  # Fallback to URI extraction
+            
+            with model_col2:
+                st.info(f"Provider: {provider_id}")
+                if available_models:
+                    st.success(f"✅ {len(available_models)} models available")
+        
+        # Plugin configuration checkboxes
         col1, col2, col3 = st.columns([2, 1, 1])
 
         with col1:
             # Update checkbox states based on current plugins
             guard_key = f"enable_guard_{route_id}"
             if guard_key not in st.session_state:
-                st.session_state[guard_key] = "ai - prompt - guard" in current_plugins
+                st.session_state[guard_key] = "ai-prompt-guard" in current_plugins
 
             decorator_key = f"enable_decorator_{route_id}"
             if decorator_key not in st.session_state:
-                st.session_state[decorator_key] = "ai - prompt - decorator" in current_plugins
+                st.session_state[decorator_key] = "ai-prompt-decorator" in current_plugins
 
             enable_guard = st.checkbox(
                 "Enable AI Prompt Guard", key=guard_key, help="Enable prompt filtering and blocking"
@@ -827,15 +945,20 @@ def main():
 
                 # Add the plugins as configured
                 if enable_guard:
-                    test_plugins["ai - prompt - guard"] = guard_config if guard_config else {}
+                    test_plugins["ai-prompt-guard"] = guard_config if guard_config else {}
                 if enable_decorator:
-                    test_plugins["ai - prompt - decorator"] = decorator_config if decorator_config else {}
+                    test_plugins["ai-prompt-decorator"] = decorator_config if decorator_config else {}
 
                 # Test with a simple prompt
                 with st.spinner("Testing configuration..."):
                     # Extract provider and model from route
                     provider_type = detect_provider_type(route_value)
-                    model_name = route_value.get("uri", "").split("/")[-1]
+                    
+                    # Use selected model if available, otherwise extract from URI
+                    if selected_model:
+                        model_name = selected_model
+                    else:
+                        model_name = route_value.get("uri", "").split("/")[-1]
 
                     test_result = test_plugin_configuration(route_id, provider_type, model_name, test_plugins)
 
@@ -856,19 +979,19 @@ def main():
                 # Build new plugins configuration
                 new_plugins = current_plugins.copy()
 
-                # Handle ai - prompt - guard
+                # Handle ai-prompt-guard
                 if enable_guard:
                     # Always add the guard config when enabled (even if empty)
-                    new_plugins["ai - prompt - guard"] = guard_config if guard_config else {}
-                elif "ai - prompt - guard" in new_plugins:
-                    del new_plugins["ai - prompt - guard"]
+                    new_plugins["ai-prompt-guard"] = guard_config if guard_config else {}
+                elif "ai-prompt-guard" in new_plugins:
+                    del new_plugins["ai-prompt-guard"]
 
-                # Handle ai - prompt - decorator
+                # Handle ai-prompt-decorator
                 if enable_decorator:
                     # Always add the decorator config when enabled (even if empty)
-                    new_plugins["ai - prompt - decorator"] = decorator_config if decorator_config else {}
-                elif "ai - prompt - decorator" in new_plugins:
-                    del new_plugins["ai - prompt - decorator"]
+                    new_plugins["ai-prompt-decorator"] = decorator_config if decorator_config else {}
+                elif "ai-prompt-decorator" in new_plugins:
+                    del new_plugins["ai-prompt-decorator"]
 
                 # Debug: Show what we're sending
                 logger.info(f"Updating route {route_id} with plugins: {new_plugins}")

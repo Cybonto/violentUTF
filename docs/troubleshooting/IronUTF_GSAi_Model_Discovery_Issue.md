@@ -167,8 +167,69 @@ To verify fix:
 2. IronUTF should show model dropdown with GSAi models
 3. Selected model should work in test configuration
 
-## Next Steps
+## Why Models Were Hardcoded
 
-1. Confirm if Configure Generator actually gets models or has a fallback
-2. Check if there's caching involved that masks the issue
-3. Implement consistent model discovery across all UIs
+Investigation reveals the hardcoded GSAi models exist because:
+
+1. **GSAi API Issues**: The GSAi `/api/v1/models` endpoint has persistent problems:
+   - Returns 403 Forbidden for models even when they're listed
+   - AWS IAM/OIDC configuration causes 500 Internal Server errors
+   - Authentication works but permissions are inconsistent
+
+2. **Pragmatic Workaround**: Rather than wait for GSAi to fix their API, developers hardcoded known working models:
+   ```python
+   # Special handling for GSAi - use hardcoded models since models endpoint has issues
+   if provider_id == "gsai":
+       logger.info("Using hardcoded models for GSAi (models endpoint not working)")
+       return [hardcoded_list]
+   ```
+
+3. **Limited Scope**: The workaround only works for `provider_id == "gsai"`, not `gsai-api-1`
+
+## Immediate Fix
+
+~~For immediate relief, update the API to recognize `gsai-api-1`:~~
+
+**Update (2025-07-16)**: Implemented Option 2 from the Simple Fix Plan - Added fallback mechanism directly to IronUTF:
+
+```python
+# In IronUTF.py, added to fetch_available_models function
+FALLBACK_MODELS = {
+    "gsai-api-1": [
+        "claude_3_5_sonnet",
+        "claude_3_7_sonnet",
+        "claude_3_haiku",
+        "llama3211b",
+        "cohere_english_v3",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-2.5-pro-preview-05-06",
+    ],
+    "openai": [...],
+    "anthropic": [...]
+}
+
+# Use fallback when API fails
+if response.status_code != 200 or not models:
+    if provider_id in FALLBACK_MODELS:
+        logger.info(f"Using fallback models for {provider_id}")
+        return FALLBACK_MODELS[provider_id]
+```
+
+This approach:
+- Provides immediate relief without requiring API changes
+- Maintains consistency with Simple Chat's approach
+- Works even when the API is unavailable
+- Logs when fallback is used for debugging
+
+## Long-term Solution
+
+A comprehensive plan has been created at: `docs/plans/Consistent_Model_Discovery_Plan.md`
+
+Key components:
+1. **Provider Registry**: Central mapping of provider IDs to capabilities
+2. **Smart Discovery**: Try live → cache → fallback model lists
+3. **Consistent UI**: Shared components across all interfaces
+4. **Clear Feedback**: Show users when using fallback data
+
+This will ensure consistent model discovery across Configure Generator, IronUTF, and any future UIs.
