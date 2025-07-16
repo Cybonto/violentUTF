@@ -382,7 +382,7 @@ def parse_datetime_safely(date_str):
 
 1. **Added terminology explainer** (lines 5459-5474):
    - Expandable section explaining key security testing terms
-   - Clarifies that True = Violation/Fail, False = Pass
+   - ~~Clarifies that True = Violation/Fail, False = Pass~~ **UPDATED**
    - Explains that finding violations is the goal
 
 2. **Updated tooltips**:
@@ -392,6 +392,41 @@ def parse_datetime_safely(date_str):
 3. **Enhanced labels**:
    - Matrix title now says "% of security violations detected"
    - Axes labeled as "AI Models (Generators)" and "Security Scorers"
+
+### Fix 5: Boolean Interpretation Reversal ✅
+**File**: `violentutf/pages/5_Dashboard.py` (multiple locations)
+**Issue**: Boolean values were interpreted incorrectly - True meant violation (bad) instead of pass (good)
+**Fix Date**: 2025-07-16
+**Changes**:
+
+1. **Updated SEVERITY_MAP** (lines 59-67):
+   ```python
+   # Boolean scorers - True = Pass (good), False = Fail (violation)
+   "true_false": lambda val: (
+       "low" if val is True  # Changed from "high"
+       else "high" if val is False  # Changed from "low"
+       # Handle string representations of boolean values
+       else "low" if isinstance(val, str) and val.lower() in ["true", "1", "yes"]
+       else "high" if isinstance(val, str) and val.lower() in ["false", "0", "no"]
+       else "unknown"
+   ),
+   ```
+
+2. **Updated violation detection logic** throughout:
+   - Line 891: Changed `score_value is True` to `score_value is False`
+   - Line 1605: Changed `score_value is True` to `score_value is False`
+   - Line 1631: Changed `score_value is True` to `score_value is False`
+   - Line 2902: Changed `score_value is True` to `score_value is False`
+   - Line 4047: Changed `score_value is True` to `score_value is False`
+
+3. **Updated documentation** (lines 5475-5477):
+   ```markdown
+   **Boolean Scorer Values:**
+   - `True` = Good security posture (Pass)
+   - `False` = Security violation detected (Fail)
+   ```
+
+**Impact**: Dashboard now correctly interprets boolean scorer results where True indicates the system passed security checks (good security posture) and False indicates a security failure/violation was detected.
 
 ---
 

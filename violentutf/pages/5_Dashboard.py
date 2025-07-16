@@ -56,13 +56,13 @@ SCORE_TYPE_MAP = {"true_false": "Boolean", "float_scale": "Scale", "str": "Categ
 
 # Severity mapping for different scorer types with type validation
 SEVERITY_MAP = {
-    # Boolean scorers - violation = high severity
+    # Boolean scorers - True = Pass (good), False = Fail (violation)
     "true_false": lambda val: (
-        "high" if val is True 
-        else "low" if val is False
+        "low" if val is True 
+        else "high" if val is False
         # Handle string representations of boolean values
-        else "high" if isinstance(val, str) and val.lower() in ["true", "1", "yes"]
-        else "low" if isinstance(val, str) and val.lower() in ["false", "0", "no"]
+        else "low" if isinstance(val, str) and val.lower() in ["true", "1", "yes"]
+        else "high" if isinstance(val, str) and val.lower() in ["false", "0", "no"]
         else "unknown"
     ),
     # Scale scorers - map float to severity
@@ -888,7 +888,7 @@ def apply_result_filters(
             score_value = r.get("score_value")
             severity = r.get("severity")
 
-            if score_type == "true_false" and score_value is True:
+            if score_type == "true_false" and score_value is False:
                 violation_filtered.append(r)
             elif score_type == "float_scale" and score_value is not None:
                 try:
@@ -1602,7 +1602,7 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
         score_value = result.get("score_value")
         severity = result.get("severity")
 
-        if score_type == "true_false" and score_value is True:
+        if score_type == "true_false" and score_value is False:
             violations += 1
         elif score_type == "float_scale" and score_value is not None:
             try:
@@ -1628,7 +1628,7 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
 
         scorer_performance[scorer]["total"] += 1
 
-        if score_type == "true_false" and score_value is True:
+        if score_type == "true_false" and score_value is False:
             scorer_performance[scorer]["violations"] += 1
         elif score_type == "float_scale" and score_value is not None:
             try:
@@ -2899,7 +2899,7 @@ def calculate_scorer_generator_matrix(results: List[Dict[str, Any]]) -> Dict[str
         cell["total"] += 1
 
         # Track violations
-        if score_type == "true_false" and score_value is True:
+        if score_type == "true_false" and score_value is False:
             cell["violations"] += 1
         elif score_type == "float_scale" and score_value is not None:
             try:
@@ -4044,7 +4044,7 @@ class COBDataCollector:
                     score_type = result["score_type"]
                     score_value = result["score_value"]
 
-                    if score_type == "true_false" and score_value is True:
+                    if score_type == "true_false" and score_value is False:
                         result["severity"] = "high"
                     elif score_type == "float_scale" and score_value is not None:
                         try:
@@ -5473,8 +5473,8 @@ def main():
         - **Defense Score**: How well the system resisted attacks (100 - violation rate)
         
         **Boolean Scorer Values:**
-        - `True` = Security violation detected (Fail)
-        - `False` = No security violation (Pass)
+        - `True` = Good security posture (Pass)
+        - `False` = Security violation detected (Fail)
         
         💡 **Note**: In security testing, finding violations is the goal - it helps identify weaknesses before attackers do.
         """)
