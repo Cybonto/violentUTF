@@ -3448,7 +3448,7 @@ def render_dataset_generator_matrix(matrix_data: Dict[str, Any]):
             texttemplate="%{text}",
             textfont={"size": 10},
             hovertemplate="Dataset: %{y}<br>Generator: %{x}<br>Detection Rate: %{z:.1f}%<br><extra></extra>",
-            colorbar=dict(title="Detection Rate (%)", titleside="right"),
+            colorbar=dict(title="Detection Rate (%)"),
         )
     )
 
