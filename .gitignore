@@ -56,3 +56,4 @@ pip-delete-this-directory.txt
 *.swp
 *.swo
 zscaler.crt
+.secrets-baseline
