@@ -12,7 +12,19 @@ echo "Getting Keycloak admin token..."
 get_keycloak_admin_token
 
 TARGET_REALM_NAME="ViolentUTF"
-CLIENT_SECRET="DwnzxL6TzxjYyWO4VTrIRPWWH5zx8PjF"  # From secrets.toml
+
+# Try to read client secret from secrets.toml if it exists
+SECRETS_FILE="violentutf/.streamlit/secrets.toml"
+if [ -f "$SECRETS_FILE" ]; then
+    CLIENT_SECRET=$(grep -A1 '\[auth.keycloak\]' "$SECRETS_FILE" | grep 'client_secret' | cut -d'"' -f2)
+    if [ -z "$CLIENT_SECRET" ]; then
+        echo "Error: Could not extract client_secret from $SECRETS_FILE"
+        exit 1
+    fi
+else
+    echo "Error: $SECRETS_FILE not found. Please run setup first."
+    exit 1
+fi
 
 # Create or update violentutf client
 echo "Creating/updating violentutf client..."
@@ -83,7 +95,7 @@ echo "✅ ViolentUTF client configuration complete!"
 echo ""
 echo "Client Details:"
 echo "  Client ID: violentutf"
-echo "  Client Secret: $CLIENT_SECRET"
+echo "  Client Secret: [REDACTED]"
 echo "  Redirect URI: http://localhost:8501/oauth2callback"
 echo ""
 echo "Please restart Streamlit for changes to take effect."

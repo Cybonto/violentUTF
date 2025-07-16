@@ -45,7 +45,7 @@ OPENAPI_1_ID=gsai-api-1
 OPENAPI_1_NAME="GSAi API Latest"
 OPENAPI_1_BASE_URL=https://localhost
 OPENAPI_1_AUTH_TYPE=bearer
-OPENAPI_1_AUTH_TOKEN=test_adm_D7DLw2z0ckgyd5Sd
+OPENAPI_1_AUTH_TOKEN=<REDACTED>
 ```
 
 ## Routes Created

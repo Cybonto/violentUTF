@@ -9,7 +9,7 @@ AccessDeniedException: You don't have access to the model with the specified mod
 
 ## Root Causes
 
-1. **API Token Permissions**: The GSAi API token (`test_adm_D7DLw2z0ckgyd5Sd`) doesn't have access permissions for the `claude_3_7_sonnet` model, even though the model is listed in the API's available models.
+1. **API Token Permissions**: The GSAi API token (`<REDACTED>`) doesn't have access permissions for the `claude_3_7_sonnet` model, even though the model is listed in the API's available models.
 
 2. **Provider Name Inconsistency**: The system had an inconsistency where:
    - The OpenAPI provider was configured with ID `gsai-api-1` in `ai-tokens.env`
@@ -31,7 +31,7 @@ AccessDeniedException: You don't have access to the model with the specified mod
 ## Remaining Issue
 
 The API token permission issue requires action from the GSAi API administrator:
-- The token `test_adm_D7DLw2z0ckgyd5Sd` needs to be granted access to the `claude_3_7_sonnet` model
+- The token `<REDACTED>` needs to be granted access to the `claude_3_7_sonnet` model
 - Alternatively, a new token with appropriate permissions should be generated
 
 ## Testing

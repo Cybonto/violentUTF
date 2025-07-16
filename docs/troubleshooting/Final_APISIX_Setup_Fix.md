@@ -93,7 +93,7 @@ The fix was verified with:
 curl -H "X-API-KEY: pXmwKwci24NmEFLZ7IslhuNf8Y3AAAJ7" http://localhost:9180/apisix/admin/routes
 
 # GSAi model fetching  
-curl -k -H "Authorization: Bearer test_adm_D7DLw2z0ckgyd5Sd" https://localhost/api/v1/models
+curl -k -H "Authorization: Bearer <REDACTED>" https://localhost/api/v1/models
 
 # Environment loading from modular setup
 SETUP_MODULES_DIR="$(pwd)/setup_macos_files" source "${SETUP_MODULES_DIR}/../apisix/.env"
