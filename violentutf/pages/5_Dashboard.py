@@ -2860,6 +2860,79 @@ def generate_compliance_report(results: List[Dict]):
 # --- Multi-Dimensional Analysis Functions ---
 
 
+def calculate_dataset_generator_matrix(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calculate performance matrix for datasets × generators"""
+    if not results:
+        return {"matrix": {}, "datasets": [], "generators": []}
+
+    # Initialize matrix structure
+    matrix = defaultdict(
+        lambda: defaultdict(
+            lambda: {
+                "total": 0,
+                "violations": 0,
+                "detection_rate": 0.0,
+                "avg_score": 0.0,
+                "score_sum": 0.0,
+                "confidence": 0.0,
+                "samples": [],
+            }
+        )
+    )
+
+    # Collect unique datasets and generators
+    datasets = set()
+    generators = set()
+
+    # Build the matrix
+    for result in results:
+        dataset = result.get("dataset_name", "Unknown")
+        generator = result.get("generator_name", "Unknown")
+        score_type = result.get("score_type", "unknown")
+        score_value = result.get("score_value")
+
+        datasets.add(dataset)
+        generators.add(generator)
+
+        # Update matrix cell
+        cell = matrix[dataset][generator]
+        cell["total"] += 1
+
+        # Track violations
+        if score_type == "true_false" and score_value is False:
+            cell["violations"] += 1
+        elif score_type == "float_scale" and score_value is not None:
+            try:
+                score_float = float(score_value)
+                cell["score_sum"] += score_float
+                if score_float >= 0.6:
+                    cell["violations"] += 1
+            except (TypeError, ValueError):
+                pass
+
+        # Collect sample prompts
+        if len(cell["samples"]) < 3:  # Keep max 3 samples
+            prompt_text = result.get("prompt_text", "N/A")[:100] + "..."
+            cell["samples"].append(prompt_text)
+
+    # Calculate detection rates and averages
+    for dataset in matrix:
+        for generator in matrix[dataset]:
+            cell = matrix[dataset][generator]
+            if cell["total"] > 0:
+                cell["detection_rate"] = (cell["violations"] / cell["total"]) * 100
+                if cell["score_sum"] > 0:
+                    cell["avg_score"] = cell["score_sum"] / cell["total"]
+                # Confidence based on sample size
+                cell["confidence"] = min(100, (cell["total"] / 10) * 100)
+
+    return {
+        "matrix": dict(matrix),
+        "datasets": sorted(list(datasets)),
+        "generators": sorted(list(generators)),
+    }
+
+
 def calculate_scorer_generator_matrix(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Calculate performance matrix for scorers × generators"""
     if not results:
@@ -3339,6 +3412,101 @@ def parse_timestamp(timestamp_str: str) -> Optional[datetime]:
 
 
 # --- Multi-Dimensional Analysis Visualization Functions ---
+
+
+def render_dataset_generator_matrix(matrix_data: Dict[str, Any]):
+    """Render the dataset × generator performance matrix as a heatmap"""
+    st.subheader("📊 Dataset × Generator Compatibility Matrix")
+    st.info("💡 **Understanding Results**: This matrix shows how different datasets perform with various AI models. Higher detection rates indicate more security vulnerabilities were found when testing that dataset-generator combination.")
+
+    if not matrix_data.get("matrix"):
+        st.info("No matrix data available")
+        return
+
+    matrix = matrix_data["matrix"]
+    datasets = matrix_data["datasets"]
+    generators = matrix_data["generators"]
+
+    # Create detection rate matrix
+    detection_rates = []
+    for dataset in datasets:
+        row = []
+        for generator in generators:
+            cell = matrix.get(dataset, {}).get(generator, {})
+            rate = cell.get("detection_rate", 0)
+            row.append(rate)
+        detection_rates.append(row)
+
+    # Create plotly heatmap
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=detection_rates,
+            x=generators,
+            y=datasets,
+            colorscale="RdYlBu_r",  # Red (high) to Blue (low)
+            text=[[f"{val:.1f}%" for val in row] for row in detection_rates],
+            texttemplate="%{text}",
+            textfont={"size": 10},
+            hovertemplate="Dataset: %{y}<br>Generator: %{x}<br>Detection Rate: %{z:.1f}%<br><extra></extra>",
+            colorbar=dict(title="Detection Rate (%)", titleside="right"),
+        )
+    )
+
+    fig.update_layout(
+        title={
+            "text": "Dataset × Generator Detection Rates<br><sub>Percentage of security violations detected</sub>",
+            "x": 0.5,
+            "xanchor": "center",
+        },
+        xaxis=dict(title="AI Models (Generators)", tickangle=-45),
+        yaxis=dict(title="Datasets", autorange="reversed"),
+        height=max(400, 50 * len(datasets) + 200),
+        margin=dict(l=150, r=50, t=100, b=100),
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Add insights
+    with st.expander("📊 Matrix Insights", expanded=True):
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**🎯 Most Effective Dataset-Generator Pairs:**")
+            # Find top performing pairs
+            top_pairs = []
+            for dataset in datasets:
+                for generator in generators:
+                    cell = matrix.get(dataset, {}).get(generator, {})
+                    if cell.get("total", 0) > 0:
+                        top_pairs.append(
+                            {
+                                "dataset": dataset,
+                                "generator": generator,
+                                "rate": cell.get("detection_rate", 0),
+                                "total": cell.get("total", 0),
+                            }
+                        )
+
+            top_pairs.sort(key=lambda x: x["rate"], reverse=True)
+            for pair in top_pairs[:5]:
+                st.write(f"• **{pair['dataset']} + {pair['generator']}**: {pair['rate']:.1f}% ({pair['total']} tests)")
+
+        with col2:
+            st.markdown("**📈 Dataset Performance Summary:**")
+            # Calculate average detection rate per dataset
+            dataset_avg = {}
+            for dataset in datasets:
+                rates = []
+                for generator in generators:
+                    cell = matrix.get(dataset, {}).get(generator, {})
+                    if cell.get("total", 0) > 0:
+                        rates.append(cell.get("detection_rate", 0))
+                if rates:
+                    dataset_avg[dataset] = sum(rates) / len(rates)
+
+            sorted_datasets = sorted(dataset_avg.items(), key=lambda x: x[1], reverse=True)
+            for dataset, avg_rate in sorted_datasets[:5]:
+                st.write(f"• **{dataset}**: {avg_rate:.1f}% avg detection rate")
 
 
 def render_scorer_generator_matrix(matrix_data: Dict[str, Any]):
@@ -5596,6 +5764,9 @@ def main():
     with st.spinner("Calculating advanced analytics..."):
         # Scorer × Generator Matrix
         matrix_data = calculate_scorer_generator_matrix(filtered_results)
+        
+        # Dataset × Generator Matrix
+        dataset_matrix_data = calculate_dataset_generator_matrix(filtered_results)
 
         # Vulnerability Taxonomy
         taxonomy_data = calculate_vulnerability_taxonomy(filtered_results)
@@ -5640,7 +5811,14 @@ def main():
             render_executive_dashboard(metrics)
 
     with tabs[1]:
+        # Render Scorer × Generator Matrix
         render_scorer_generator_matrix(matrix_data)
+        
+        # Add separator
+        st.markdown("---")
+        
+        # Render Dataset × Generator Matrix
+        render_dataset_generator_matrix(dataset_matrix_data)
 
     with tabs[2]:
         render_vulnerability_taxonomy(taxonomy_data)
