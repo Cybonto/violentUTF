@@ -222,6 +222,11 @@ This approach:
 - Works even when the API is unavailable
 - Logs when fallback is used for debugging
 
+**Additional Fix**: Also updated `test_plugin_configuration` to properly handle GSAi routes by:
+- Adding `route_uri` parameter to use the actual route URI
+- Special handling for GSAi provider to use the correct endpoint
+- This fixes the "404 Route Not Found" error when testing GSAi configurations
+
 ## Long-term Solution
 
 A comprehensive plan has been created at: `docs/plans/Consistent_Model_Discovery_Plan.md`

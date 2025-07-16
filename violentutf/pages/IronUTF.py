@@ -349,7 +349,7 @@ def extract_provider_id_from_route(route_uri: str) -> Optional[str]:
     return None
 
 
-def test_plugin_configuration(route_id: str, provider: str, model: str, plugins: Dict) -> Dict:
+def test_plugin_configuration(route_id: str, provider: str, model: str, plugins: Dict, route_uri: str = None) -> Dict:
     """Test plugin configuration with a simple prompt."""
     import requests
 
@@ -369,24 +369,23 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
         if base_url.endswith("/api"):
             base_url = base_url[:-4]
 
-        # Extract endpoint from route_id or use URI directly for GSAi-like providers
-        if "gsai" in route_id or "openapi" in route_id:
-            # OpenAPI providers use a single endpoint for all models
-            # Extract provider ID from route_id
-            provider_id = extract_provider_id_from_route(f"/ai/{route_id}/")
-            if provider_id:
-                endpoint = f"{base_url}/ai/{provider_id}/chat/completions"
-            else:
-                endpoint = f"{base_url}/ai/{route_id}/chat/completions"
-        elif "openai" in route_id:
+        # If route_uri is provided, use it directly
+        if route_uri:
+            endpoint = f"{base_url}{route_uri}"
+        # Otherwise try to construct from provider/model info
+        elif "gsai" in provider or provider == "gsai-api-1":
+            # GSAi uses a fixed endpoint for all models
+            endpoint = f"{base_url}/ai/gsai-api-1/chat/completions"
+        elif provider == "openai":
             endpoint = f"{base_url}/ai/openai/{model}"
-        elif "anthropic" in route_id:
+        elif provider == "anthropic":
             endpoint = f"{base_url}/ai/anthropic/{model}"
-        elif "ollama" in route_id:
+        elif provider == "ollama":
             endpoint = f"{base_url}/ai/ollama/{model}"
-        elif "webui" in route_id:
+        elif provider == "webui":
             endpoint = f"{base_url}/ai/webui/{model}"
         else:
+            # Fallback - try to guess
             endpoint = f"{base_url}/ai/{provider}/{model}"
 
         # Test prompt
@@ -960,7 +959,7 @@ def main():
                     else:
                         model_name = route_value.get("uri", "").split("/")[-1]
 
-                    test_result = test_plugin_configuration(route_id, provider_type, model_name, test_plugins)
+                    test_result = test_plugin_configuration(route_id, provider_type, model_name, test_plugins, route_value.get("uri"))
 
                     if test_result["success"]:
                         st.success("✅ Configuration test passed!")
