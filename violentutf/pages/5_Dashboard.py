@@ -54,10 +54,17 @@ API_ENDPOINTS = {
 # Score type mappings from API analysis
 SCORE_TYPE_MAP = {"true_false": "Boolean", "float_scale": "Scale", "str": "Category"}
 
-# Severity mapping for different scorer types
+# Severity mapping for different scorer types with type validation
 SEVERITY_MAP = {
     # Boolean scorers - violation = high severity
-    "true_false": lambda val: "high" if val else "low",
+    "true_false": lambda val: (
+        "high" if val is True 
+        else "low" if val is False
+        # Handle string representations of boolean values
+        else "high" if isinstance(val, str) and val.lower() in ["true", "1", "yes"]
+        else "low" if isinstance(val, str) and val.lower() in ["false", "0", "no"]
+        else "unknown"
+    ),
     # Scale scorers - map float to severity
     "float_scale": lambda val: (
         (
@@ -69,7 +76,7 @@ SEVERITY_MAP = {
                 else "medium" if float(val) >= 0.4 else "low" if float(val) >= 0.2 else "minimal"
             )
         )
-        if val is not None and str(val).replace(".", "").replace("-", "").isdigit()
+        if val is not None and (isinstance(val, (int, float)) or (isinstance(val, str) and val.replace(".", "").replace("-", "").isdigit()))
         else "unknown"
     ),
     # Category scorers - map categories to severity
@@ -180,6 +187,42 @@ def create_compatible_api_token():
         return None
 
 
+# --- Helper Functions ---
+
+
+def parse_datetime_safely(datetime_str: str) -> Optional[datetime]:
+    """
+    Safely parse datetime strings with various formats.
+    Handles timezone-aware and timezone-naive strings.
+    
+    Args:
+        datetime_str: DateTime string to parse
+        
+    Returns:
+        datetime object with UTC timezone, or None if parsing fails
+    """
+    if not datetime_str:
+        return None
+        
+    try:
+        # Handle different datetime formats
+        if datetime_str.endswith('Z'):
+            # Replace Z with +00:00 for ISO format
+            return datetime.fromisoformat(datetime_str[:-1] + '+00:00')
+        elif '+' in datetime_str or datetime_str.count('T') == 1 and datetime_str[-6] in ['+', '-']:
+            # Already has timezone info
+            return datetime.fromisoformat(datetime_str)
+        else:
+            # No timezone info - assume UTC
+            dt = datetime.fromisoformat(datetime_str)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+    except (ValueError, AttributeError) as e:
+        logger.error(f"Failed to parse datetime '{datetime_str}': {e}")
+        return None
+
+
 # --- Data Loading Functions ---
 
 
@@ -280,12 +323,12 @@ def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List
         for execution in all_executions:
             created_at_str = execution.get("created_at", "")
             if created_at_str:
-                try:
-                    created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
-                    if start_date.date() <= created_at.date() <= end_date.date():
-                        filtered_executions.append(execution)
-                except Exception as e:
-                    logger.error(f"Failed to parse date {created_at_str}: {e}")
+                created_at = parse_datetime_safely(created_at_str)
+                if created_at and start_date.date() <= created_at.date() <= end_date.date():
+                    filtered_executions.append(execution)
+                elif not created_at:
+                    # Include if we couldn't parse the date (log error already handled in helper)
+                    filtered_executions.append(execution)
             else:
                 filtered_executions.append(execution)  # Include executions without timestamps
 
@@ -294,12 +337,12 @@ def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List
         for result in all_results:
             timestamp_str = result.get("timestamp", "")
             if timestamp_str:
-                try:
-                    timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-                    if start_date.date() <= timestamp.date() <= end_date.date():
-                        filtered_results.append(result)
-                except Exception as e:
-                    logger.error(f"Failed to parse result timestamp {timestamp_str}: {e}")
+                timestamp = parse_datetime_safely(timestamp_str)
+                if timestamp and start_date.date() <= timestamp.date() <= end_date.date():
+                    filtered_results.append(result)
+                elif not timestamp:
+                    # Include if we couldn't parse the timestamp
+                    filtered_results.append(result)
 
         return filtered_executions, filtered_results
     except Exception as e:
@@ -506,12 +549,12 @@ def load_orchestrator_executions_with_full_data(
         for execution in all_executions:
             created_at_str = execution.get("created_at", "")
             if created_at_str:
-                try:
-                    created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
-                    if start_date.date() <= created_at.date() <= end_date.date():
-                        filtered_executions.append(execution)
-                except Exception as e:
-                    logger.error(f"Failed to parse date {created_at_str}: {e}")
+                created_at = parse_datetime_safely(created_at_str)
+                if created_at and start_date.date() <= created_at.date() <= end_date.date():
+                    filtered_executions.append(execution)
+                elif not created_at:
+                    # Include if we couldn't parse the date (log error already handled in helper)
+                    filtered_executions.append(execution)
             else:
                 filtered_executions.append(execution)  # Include executions without timestamps
 
@@ -520,12 +563,12 @@ def load_orchestrator_executions_with_full_data(
         for result in all_results:
             timestamp_str = result.get("timestamp", "")
             if timestamp_str:
-                try:
-                    timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-                    if start_date.date() <= timestamp.date() <= end_date.date():
-                        filtered_results.append(result)
-                except Exception as e:
-                    logger.error(f"Failed to parse result timestamp {timestamp_str}: {e}")
+                timestamp = parse_datetime_safely(timestamp_str)
+                if timestamp and start_date.date() <= timestamp.date() <= end_date.date():
+                    filtered_results.append(result)
+                elif not timestamp:
+                    # Include if we couldn't parse the timestamp
+                    filtered_results.append(result)
 
         return filtered_executions, filtered_results
     except Exception as e:
@@ -1355,22 +1398,20 @@ def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, A
             if r.get("timestamp"):
                 current_ts = r["timestamp"]
                 if isinstance(current_ts, str):
-                    try:
-                        current_ts = datetime.fromisoformat(current_ts.replace("Z", "+00:00"))
-                    except (ValueError, AttributeError) as e:
-                        logger.error(f"Failed to parse timestamp: {current_ts}, error: {e}")
+                    parsed_ts = parse_datetime_safely(current_ts)
+                    if parsed_ts:
+                        current_ts = parsed_ts
+                    else:
                         continue
 
                 first_ts = batch_info[batch_key].get("first_timestamp")
                 if first_ts is None:
                     batch_info[batch_key]["first_timestamp"] = current_ts
                 elif isinstance(first_ts, str):
-                    try:
-                        batch_info[batch_key]["first_timestamp"] = datetime.fromisoformat(
-                            first_ts.replace("Z", "+00:00")
-                        )
-                    except (ValueError, AttributeError) as e:
-                        logger.error(f"Failed to parse first_timestamp: {first_ts}, error: {e}")
+                    parsed_first_ts = parse_datetime_safely(first_ts)
+                    if parsed_first_ts:
+                        batch_info[batch_key]["first_timestamp"] = parsed_first_ts
+                    else:
                         batch_info[batch_key]["first_timestamp"] = current_ts
 
                 # Safe comparison with first_timestamp
@@ -1381,10 +1422,10 @@ def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, A
                 # Also convert last_timestamp if it's a string
                 last_ts = batch_info[batch_key].get("last_timestamp")
                 if isinstance(last_ts, str):
-                    try:
-                        batch_info[batch_key]["last_timestamp"] = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
-                    except (ValueError, AttributeError) as e:
-                        logger.error(f"Failed to parse last_timestamp: {last_ts}, error: {e}")
+                    parsed_last_ts = parse_datetime_safely(last_ts)
+                    if parsed_last_ts:
+                        batch_info[batch_key]["last_timestamp"] = parsed_last_ts
+                    else:
                         batch_info[batch_key]["last_timestamp"] = current_ts
 
                 # Safe comparison with last_timestamp
@@ -1401,10 +1442,24 @@ def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, A
         expected_batches = max(batch_totals, default=1)
         # Safely extract actual batch indices
         actual_batch_indices = set([b[0] for b in batch_info.keys() if isinstance(b, tuple) and len(b) > 0])
-        # Check if we have all expected batch indices (0 to expected_batches-1)
-        expected_indices = set(range(expected_batches))
-        missing_batches = expected_indices - actual_batch_indices
-        completed = len(missing_batches) == 0
+        
+        # Fixed logic: Check if THIS execution's batches are complete
+        # For single-batch executions (which is the common case), they are complete if they have their batch
+        if len(actual_batch_indices) == 1:
+            # Single batch execution - it's complete if it has its batch
+            completed = True
+        elif len(actual_batch_indices) == 0:
+            # No batch indices found - consider complete if there are results
+            completed = len(exec_results) > 0
+        else:
+            # Multi-batch execution - check if we have a continuous sequence
+            if actual_batch_indices:
+                min_idx = min(actual_batch_indices)
+                max_idx = max(actual_batch_indices)
+                expected_indices = set(range(min_idx, max_idx + 1))
+                completed = actual_batch_indices == expected_indices
+            else:
+                completed = False
 
         # Calculate execution duration if timestamps available
         all_timestamps = []
@@ -1420,14 +1475,26 @@ def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, A
         if all_timestamps:
             execution_duration = max(all_timestamps) - min(all_timestamps)
 
+        # Calculate completion percentage based on the execution type
+        if len(actual_batch_indices) <= 1:
+            # Single batch or no batch - 100% if completed, 0% if not
+            completion_percentage = 100.0 if completed else 0.0
+        else:
+            # Multi-batch - percentage of continuous sequence
+            if actual_batch_indices:
+                min_idx = min(actual_batch_indices)
+                max_idx = max(actual_batch_indices)
+                expected_count = max_idx - min_idx + 1
+                completion_percentage = (len(actual_batch_indices) / expected_count * 100)
+            else:
+                completion_percentage = 0.0
+        
         execution_details[exec_id] = {
             "name": execution_name,
             "unique_batches": unique_batches,
             "expected_batches": expected_batches,
             "completed": completed,
-            "completion_percentage": (
-                (len(actual_batch_indices) / expected_batches * 100) if expected_batches > 0 else 0
-            ),
+            "completion_percentage": completion_percentage,
             "batch_info": {
                 str(k): {"scores": v["scores"], "scorers": list(v["scorers"]), "generators": list(v["generators"])}
                 for k, v in batch_info.items()
@@ -1676,25 +1743,31 @@ def render_executive_dashboard(metrics: Dict[str, Any]):
 
         with col1:
             st.metric(
-                "🎯 Test Runs",
+                "🎯 Executions",
                 f"{hierarchical_metrics['test_runs']:,}",
-                help="Number of unique security testing campaigns executed",
+                help="Number of orchestrator executions performed",
             )
 
         with col2:
             st.metric(
-                "📦 Batch Operations",
-                f"{hierarchical_metrics['total_batches']:,}",
-                delta=f"~{hierarchical_metrics['avg_batches_per_run']:.1f} per run",
-                help="Total processing batches across all test runs",
+                "💬 Total Prompts",
+                f"{hierarchical_metrics['total_scores']:,}",
+                delta=f"~{hierarchical_metrics['total_scores'] // hierarchical_metrics['test_runs'] if hierarchical_metrics['test_runs'] > 0 else 0:.0f} per execution",
+                help="Total number of prompts sent to AI models for testing",
             )
 
         with col3:
+            # Use violation rate from metrics
+            violation_rate = metrics.get("violation_rate", 0.0)
+            # Calculate violation count from total scores and rate
+            total_scores = hierarchical_metrics.get("total_scores", 0)
+            violation_count = int(total_scores * violation_rate / 100)
             st.metric(
-                "📊 Score Results",
-                f"{hierarchical_metrics['total_scores']:,}",
-                delta=f"~{hierarchical_metrics['avg_scores_per_batch']:.0f} per batch",
-                help="Individual security assessments performed",
+                "🚨 Violation Rate",
+                f"{violation_rate:.1f}%",
+                delta=f"{violation_count:,} violations found",
+                delta_color="inverse",
+                help="Percentage of prompts that triggered security violations",
             )
 
         with col4:
@@ -1724,7 +1797,7 @@ def render_executive_dashboard(metrics: Dict[str, Any]):
                     f"{violation_rate:.1f}%",
                     delta=f"{violation_rate - 50:.1f}%" if violation_rate != 0 else None,
                     delta_color="inverse",
-                    help="Percentage of tests that detected violations",
+                    help="Percentage of tests that detected security violations. Higher rates indicate more potential security issues were found.",
                 )
 
         # Second row - Additional insights
@@ -1783,7 +1856,7 @@ def render_executive_dashboard(metrics: Dict[str, Any]):
                 f"{violation_rate:.1f}%",
                 delta=f"{violation_rate - 50:.1f}%" if violation_rate != 0 else None,
                 delta_color="inverse",
-                help="Percentage of tests that detected violations",
+                help="Percentage of tests that detected security violations. Higher rates indicate more potential security issues were found.",
             )
 
         with col4:
@@ -3271,6 +3344,7 @@ def parse_timestamp(timestamp_str: str) -> Optional[datetime]:
 def render_scorer_generator_matrix(matrix_data: Dict[str, Any]):
     """Render the scorer × generator performance matrix as a heatmap"""
     st.subheader("🔥 Scorer × Generator Compatibility Matrix")
+    st.info("💡 **Understanding Results**: In security testing, a 'detection' or 'violation' means the scorer identified a potential security issue. Higher detection rates indicate the scorer successfully caught more security violations.")
 
     if not matrix_data.get("matrix"):
         st.info("No matrix data available")
@@ -3305,9 +3379,9 @@ def render_scorer_generator_matrix(matrix_data: Dict[str, Any]):
     )
 
     fig.update_layout(
-        title="Detection Rate Heatmap (% of violations detected)",
-        xaxis_title="Generators",
-        yaxis_title="Scorers",
+        title="Detection Rate Heatmap (% of security violations detected)",
+        xaxis_title="AI Models (Generators)",
+        yaxis_title="Security Scorers",
         height=max(400, len(scorers) * 30),
         width=max(600, len(generators) * 80),
     )
@@ -5386,6 +5460,24 @@ def main():
     # Page header
     st.title("📊 ViolentUTF Dashboard")
     st.markdown("*Real-time analysis of actual scorer execution results from the ViolentUTF API*")
+    
+    # Add terminology clarification
+    with st.expander("ℹ️ Understanding Security Testing Terminology", expanded=False):
+        st.markdown("""
+        **Key Terms in ViolentUTF Security Testing:**
+        
+        - **Violation/Detection**: When a scorer identifies a potential security issue or vulnerability
+        - **Pass**: The AI model's response did NOT trigger security concerns (good)
+        - **Fail**: The AI model's response DID trigger security concerns (potential vulnerability)
+        - **Detection Rate**: Percentage of tests where security issues were found
+        - **Defense Score**: How well the system resisted attacks (100 - violation rate)
+        
+        **Boolean Scorer Values:**
+        - `True` = Security violation detected (Fail)
+        - `False` = No security violation (Pass)
+        
+        💡 **Note**: In security testing, finding violations is the goal - it helps identify weaknesses before attackers do.
+        """)
 
     # Sidebar controls
     with st.sidebar:
