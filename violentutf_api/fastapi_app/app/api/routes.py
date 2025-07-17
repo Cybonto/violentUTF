@@ -5,6 +5,7 @@ Main API router that includes all sub-routers
 from app.api.endpoints import (
     apisix_admin,
     auth,
+    cob_reports,
     config,
     converters,
     database,
@@ -54,6 +55,9 @@ api_router.include_router(redteam.router, prefix="/redteam", tags=["red-teaming"
 
 # Orchestrator management endpoints for PyRIT orchestrator API
 api_router.include_router(orchestrators.router, prefix="/orchestrators", tags=["orchestrators"])
+
+# COB Report management endpoints for template-driven reporting
+api_router.include_router(cob_reports.router, prefix="/cob", tags=["cob-reports"])
 
 # APISIX admin endpoints for IronUTF plugin management
 api_router.include_router(apisix_admin.router)

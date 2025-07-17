@@ -21,6 +21,11 @@ alembic>=1.13.1
 duckdb>=1.1.0
 PyYAML>=6.0.2
 
+# PDF generation dependencies for COB reports
+weasyprint>=60.0
+bleach>=6.1.0
+markdown>=3.5.0
+
 # AI Red-teaming frameworks (following official docs)
 pyrit
 garak
