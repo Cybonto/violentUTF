@@ -145,29 +145,22 @@ class PyRITOrchestratorService:
         # Ensure PyRIT memory is available BEFORE any orchestrator operations
         memory = self._get_memory()
         if memory is None:
-            # Create a separate memory instance for the API service to avoid database conflicts
-            import os
-
+            # FIXED: Use consistent user-specific database path instead of random orchestrator ID
+            from app.services.simple_connection_manager import get_simple_connection_manager
+            from app.utils.database_utils import get_user_memory_path
             from pyrit.memory import CentralMemory, DuckDBMemory
 
-            # Use API - specific database path to avoid conflicts with Streamlit
-            # Check if running in Docker or local environment
-            if os.path.exists("/app/app_data/violentutf"):
-                api_memory_dir = os.path.join("/app/app_data/violentutf", "api_memory")
-            else:
-                # Local development - use temp directory
-                import tempfile
+            # Get consistent database path for the user
+            user_memory_path = get_user_memory_path(user_context or "violentutf.web")
 
-                api_memory_dir = os.path.join(tempfile.gettempdir(), "violentutf_api_memory")
+            # Use connection manager to get database instance (prevents conflicts)
+            connection_manager = get_simple_connection_manager()
+            api_memory = connection_manager.get_connection_sync(user_memory_path)
 
-            os.makedirs(api_memory_dir, exist_ok=True)
-
-            # Create API - specific memory instance with proper file path
-            api_memory_file = os.path.join(api_memory_dir, f"orchestrator_memory_{orchestrator_id[:8]}.db")
-            api_memory = DuckDBMemory(db_path=api_memory_file)
+            # Set as global memory instance
             CentralMemory.set_memory_instance(api_memory)
             self.memory = api_memory  # Update service memory reference
-            logger.info(f"Created API - specific memory instance at: {api_memory_file}")
+            logger.info(f"Using consistent user-specific memory instance at: {user_memory_path}")
 
         # Validate memory access (now should always return True)
         if not self.validate_memory_access():
@@ -264,19 +257,24 @@ class PyRITOrchestratorService:
                 # Ensure memory is available
                 memory = self._get_memory()
                 if memory is None:
-                    # Create API - specific memory if needed
-                    import os
-
+                    # FIXED: Use consistent user-specific database path for reloaded orchestrator
+                    from app.services.simple_connection_manager import get_simple_connection_manager
+                    from app.utils.database_utils import get_user_memory_path
                     from pyrit.memory import CentralMemory, DuckDBMemory
 
-                    api_memory_dir = os.path.join("/app/app_data/violentutf", "api_memory")
-                    os.makedirs(api_memory_dir, exist_ok=True)
+                    # Get consistent database path for the user
+                    user_memory_path = get_user_memory_path(user_context or "violentutf.web")
 
-                    api_memory_file = os.path.join(api_memory_dir, "orchestrator_memory.db")
-                    api_memory = DuckDBMemory(db_path=api_memory_file)
+                    # Use connection manager to get database instance (prevents conflicts)
+                    connection_manager = get_simple_connection_manager()
+                    api_memory = connection_manager.get_connection_sync(user_memory_path)
+
+                    # Set as global memory instance
                     CentralMemory.set_memory_instance(api_memory)
                     self.memory = api_memory
-                    logger.info(f"Created API - specific memory for reloaded orchestrator at: {api_memory_file}")
+                    logger.info(
+                        f"Using consistent user-specific memory for reloaded orchestrator at: {user_memory_path}"
+                    )
 
                 # Resolve parameters and create instance
                 resolved_params = await self._resolve_orchestrator_parameters(

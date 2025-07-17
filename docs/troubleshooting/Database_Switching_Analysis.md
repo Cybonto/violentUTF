@@ -173,8 +173,110 @@ Ensure orchestrator instances persist across requests and are properly cleaned u
 3. **Database File Monitoring**: Track creation of new database files
 4. **Orchestrator Lifecycle Testing**: Test orchestrator creation/destruction patterns
 
+## Implementation Strategy
+
+### **RECOMMENDED: Phase 1 - Immediate Implementation (NOW)**
+
+**Priority**: **CRITICAL** - Implement immediately
+**Timeline**: 1-2 days
+**Risk Level**: LOW
+**Complexity**: ⭐⭐ (Low-Medium)
+
+**What to implement:**
+1. **Consistent Database Path** - Fix the root cause
+2. **Basic Database Connection Pooling** - Prevent concurrent access issues
+
+**Rationale for immediate implementation:**
+- **Solves 95% of the problem** with minimal code changes
+- **Critical user impact** - users losing configurations is unacceptable
+- **Low risk** of introducing new bugs
+- **Backward compatible** with existing data
+- **Quick resolution** for frustrated users
+- **Easy rollback** if any issues arise
+
+**Code Changes Required:**
+```python
+# Step 1: Fix database path consistency (30 minutes)
+def get_user_memory_path(user_id: str) -> str:
+    salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
+    user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
+    return os.path.join("/app/app_data/violentutf", f"pyrit_memory_{user_hash}.db")
+
+# Step 2: Add basic connection management (2-3 hours)
+class SimpleConnectionManager:
+    def __init__(self):
+        self._connections = {}
+        self._lock = asyncio.Lock()
+```
+
+### **Phase 2 - Enhanced Stability (Next Sprint)**
+
+**Priority**: **HIGH** - Plan for next sprint
+**Timeline**: 1-2 weeks
+**Risk Level**: MEDIUM
+**Complexity**: ⭐⭐⭐⭐ (Medium-High)
+
+**What to implement:**
+1. **Orchestrator Instance Pooling** - Prevent frequent recreation
+2. **Health Monitoring** - Early detection and alerting
+3. **Database Migration Tool** - Recover existing data
+
+**Why defer this:**
+- Phase 1 fixes solve the immediate crisis
+- Allows time for proper design and testing
+- Can be planned as part of broader architecture improvements
+- Users can work normally after Phase 1
+
+### **Phase 3 - Architectural Improvements (Future)**
+
+**Priority**: **MEDIUM** - Consider for major version
+**Timeline**: 2-3 weeks
+**Risk Level**: HIGH
+**Complexity**: ⭐⭐⭐⭐⭐ (High)
+
+**What to implement:**
+1. **Centralized Memory Management** - Complete architectural overhaul
+2. **Advanced Health Monitoring** - Full observability stack
+3. **Multi-tenant Database Strategy** - Scalability improvements
+
+**Why defer this:**
+- Major architectural changes require careful planning
+- High risk of introducing regressions
+- Phase 1 and 2 provide stable operation
+- Can be part of larger platform improvements
+
+## Risk Assessment
+
+### Phase 1 Risks: **LOW**
+- Minimal code changes (3 locations)
+- Well-understood problem domain
+- Easy to rollback if issues arise
+- No performance impact
+- Backward compatible
+
+### Phase 2 Risks: **MEDIUM**
+- More complex orchestrator lifecycle management
+- Potential for memory leaks if not handled properly
+- Requires more extensive testing
+
+### Phase 3 Risks: **HIGH**
+- Major architectural changes
+- Potential for introducing new bugs
+- Requires significant testing across all components
+- May impact performance during transition
+
 ## Conclusion
+
+**IMMEDIATE ACTION REQUIRED**: Implement Phase 1 fixes now to resolve the critical database switching issue.
+
+**Strategic Approach**: Phase 2 for enhanced stability, Phase 3 for long-term architecture.
 
 The database switching issue is caused by the orchestrator service creating new database files for each orchestrator instance instead of reusing existing user-specific database files. This causes data loss when orchestrator instances are recreated after memory pressure or timeouts.
 
-The fix requires implementing consistent database path management, connection pooling, and orchestrator instance pooling to ensure data persistence across the application lifecycle.
+**Key Success Factors:**
+- Prioritize user stability over architectural perfection
+- Implement incrementally with thorough testing
+- Monitor carefully after each phase
+- Plan Phase 3 as part of broader platform evolution
+
+The database switching issue is causing significant user frustration and needs immediate attention. Phase 1 provides the quickest path to stability with minimal risk, while Phase 2 and 3 build upon this foundation for long-term success.

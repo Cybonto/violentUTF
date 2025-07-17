@@ -42,6 +42,12 @@ configure_fastapi_env() {
         fi
     done
     
+    # Ensure APP_DATA_DIR is set for Phase 1 database improvements
+    if ! grep -q "^APP_DATA_DIR=" "$fastapi_env_file"; then
+        echo "APP_DATA_DIR=/app/app_data/violentutf" >> "$fastapi_env_file"
+        echo "   Added APP_DATA_DIR for consistent database paths"
+    fi
+    
     echo "✅ FastAPI environment configuration verified"
     return 0
 }

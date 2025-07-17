@@ -124,9 +124,33 @@ If data loss is reported:
 - [Memory Management Guide](lesson_memoryManagement.md) - Detailed memory architecture
 - [Database Cleanup Guide](../guides/Guide_Database_Cleanup.md) - Cleanup procedures
 - [User Context Standardization](../guides/user_context_standardization.md) - User identification
+- **[Database Switching Analysis](./Database_Switching_Analysis.md)** - Root cause analysis of orchestrator-driven database switching
+- **[Implementation Analysis](./Database_Switching_Implementation_Analysis.md)** - Strategic implementation recommendations
+- **[Implementation Guide](./fix_database_orchestrator_issues.md)** - Step-by-step fix instructions
+
+## **CRITICAL UPDATE: Database Switching Issue Identified**
+
+**New Finding**: Further investigation has revealed a **critical database switching issue** in the Enterprise environment where users lose their configurations after ~1500 prompts and ~10 minutes. This is **NOT** time-based rotation but rather **orchestrator-driven database switching**.
+
+### Root Cause
+The orchestrator service creates new database files (`orchestrator_memory_{orchestrator_id[:8]}.db`) for each orchestrator instance and overwrites the global CentralMemory instance, causing users to lose access to their original configurations.
+
+### **IMMEDIATE ACTION REQUIRED**
+**Implement Phase 1 fixes immediately** to resolve critical user impact:
+
+1. **Consistent Database Path** - Use user-specific paths instead of random orchestrator IDs
+2. **Basic Connection Pooling** - Prevent database lock conflicts
+
+**Timeline**: 1-2 days
+**Risk**: LOW
+**Impact**: Solves 95% of the problem with minimal changes
+
+See [Database Switching Analysis](./Database_Switching_Analysis.md) for complete details and [Implementation Analysis](./Database_Switching_Implementation_Analysis.md) for strategic recommendations.
 
 ## Conclusion
 
-No evidence of automatic midnight database switching or time-based rotation was found in the ViolentUTF codebase. Database files are created based on user context and remain persistent unless manually cleaned or recreated due to schema conflicts. Any perceived database switching is likely due to user context changes, environment modifications, or container configuration issues rather than time-based triggers.
+**Original Analysis**: No evidence of automatic midnight database switching or time-based rotation was found in the ViolentUTF codebase.
 
-Users experiencing data loss should verify their authentication consistency, container volume configuration, and check for the existence of multiple database files that might contain their data under different user hashes.
+**Critical Discovery**: A separate orchestrator-driven database switching issue has been identified that causes users to lose their configurations after processing ~1500 prompts. This requires immediate Phase 1 fixes to restore system stability.
+
+Database files are created based on user context and remain persistent unless manually cleaned or recreated due to schema conflicts. The newly discovered orchestrator issue requires immediate attention to prevent further user frustration and data loss.

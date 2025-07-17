@@ -244,25 +244,19 @@ async def _load_real_memory_dataset_prompts(
             logger.error(f"Cannot load memory dataset {dataset_id} without user context - security violation prevented")
             return []
 
-        # Generate the user's specific database filename
-        salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
-        user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
-        user_db_filename = f"pyrit_memory_{user_hash}.db"
+        # FIXED: Use consistent database path utilities
+        from app.utils.database_utils import get_user_memory_path
 
-        # Only check the user's specific database file in known locations
+        # Get consistent database path for the user
+        user_db_path = get_user_memory_path(user_id)
+
+        # Check if the database file exists
         memory_db_paths = []
-        potential_paths = [
-            "/app/app_data/violentutf",  # Docker API memory
-            "./app_data/violentutf",  # Relative app data
-        ]
-
-        for base_path in potential_paths:
-            if os.path.exists(base_path):
-                user_db_path = os.path.join(base_path, user_db_filename)
-                if os.path.exists(user_db_path):
-                    memory_db_paths.append(user_db_path)
-                    logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
-                    break  # Only use the first found user database
+        if os.path.exists(user_db_path):
+            memory_db_paths.append(user_db_path)
+            logger.info(f"Found user-specific database for {user_id}: {user_db_path}")
+        else:
+            logger.warning(f"User-specific database not found for {user_id}: {user_db_path}")
 
         # Try to extract prompts from found database files
         for db_path in memory_db_paths:
