@@ -16,7 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     libssl-dev \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy and install Zscaler certificates if they exist
 # Using a more Docker-friendly approach
@@ -63,7 +64,7 @@ WORKDIR /app
 # Set shell for pipefail support
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install runtime dependencies without Ubuntu-specific version pinning
+# Install runtime dependencies for weasyprint and general app needs
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
@@ -71,7 +72,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     build-essential \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    libglib2.0-0 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
+    libfontconfig1 \
+    libfreetype6 \
+    libxml2 \
+    libxslt1.1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy certificates from builder stage
 COPY --from=builder /usr/local/share/ca-certificates/ /usr/local/share/ca-certificates/
