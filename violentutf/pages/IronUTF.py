@@ -304,16 +304,16 @@ def fetch_available_models(provider_id: str) -> List[str]:
             "claude-3-5-haiku-20241022",
         ],
     }
-    
+
     try:
         headers = get_auth_headers()
         api_base = VIOLENTUTF_API_URL
-        
+
         # Call the same endpoint that Configure Generator uses
         url = f"{api_base}/api/v1/generators/apisix/models?provider={provider_id}"
-        
+
         response = requests.get(url, headers=headers, timeout=10)
-        
+
         if response.status_code == 200:
             data = response.json()
             models = data.get("models", [])
@@ -881,23 +881,23 @@ def main():
 
         # Update configuration
         st.markdown("---")
-        
+
         # Check if this is an OpenAPI provider that supports multiple models
         route_uri = route_value.get("uri", "")
         provider_id = extract_provider_id_from_route(route_uri)
         is_openapi_provider = provider_id and ("openapi" in provider_id or "gsai" in provider_id)
-        
+
         # Model selection for OpenAPI providers
         selected_model = None
         if is_openapi_provider:
             st.subheader("🎯 Model Selection")
             model_col1, model_col2 = st.columns([2, 1])
-            
+
             with model_col1:
                 # Fetch available models
                 with st.spinner(f"Fetching models for {provider_id}..."):
                     available_models = fetch_available_models(provider_id)
-                
+
                 if available_models:
                     # Create model selectbox
                     model_key = f"selected_model_{route_id}"
@@ -905,17 +905,17 @@ def main():
                         "Select AI Model",
                         options=available_models,
                         key=model_key,
-                        help=f"Choose from {len(available_models)} available models for {provider_id}"
+                        help=f"Choose from {len(available_models)} available models for {provider_id}",
                     )
                 else:
                     st.warning(f"No models found for {provider_id}. Using default.")
                     selected_model = route_uri.split("/")[-1]  # Fallback to URI extraction
-            
+
             with model_col2:
                 st.info(f"Provider: {provider_id}")
                 if available_models:
                     st.success(f"✅ {len(available_models)} models available")
-        
+
         # Plugin configuration checkboxes
         col1, col2, col3 = st.columns([2, 1, 1])
 
@@ -952,14 +952,16 @@ def main():
                 with st.spinner("Testing configuration..."):
                     # Extract provider and model from route
                     provider_type = detect_provider_type(route_value)
-                    
+
                     # Use selected model if available, otherwise extract from URI
                     if selected_model:
                         model_name = selected_model
                     else:
                         model_name = route_value.get("uri", "").split("/")[-1]
 
-                    test_result = test_plugin_configuration(route_id, provider_type, model_name, test_plugins, route_value.get("uri"))
+                    test_result = test_plugin_configuration(
+                        route_id, provider_type, model_name, test_plugins, route_value.get("uri")
+                    )
 
                     if test_result["success"]:
                         st.success("✅ Configuration test passed!")

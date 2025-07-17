@@ -171,6 +171,96 @@ wait_for_apisix_ready() {
     return 1
 }
 
+# Enhanced function to wait for APISIX with actual response verification
+wait_for_apisix_ready_enhanced() {
+    log_detail "Waiting for APISIX to be ready with enhanced verification..."
+    
+    local max_attempts=30
+    local attempt=1
+    local admin_url="http://localhost:9180"
+    local gateway_url="http://localhost:9080"
+    
+    # First wait for container to be running
+    log_debug "Checking APISIX container status..."
+    attempt=1
+    while [ $attempt -le 10 ]; do
+        if docker ps | grep -q "apisix-apisix-1"; then
+            log_debug "APISIX container is running"
+            break
+        fi
+        log_debug "Waiting for APISIX container... (attempt $attempt/10)"
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+    
+    if [ $attempt -gt 10 ]; then
+        log_error "APISIX container not running after 20 seconds"
+        return 1
+    fi
+    
+    # Wait for admin port with actual response check
+    log_detail "Testing APISIX admin port connectivity..."
+    attempt=1
+    while [ $attempt -le $max_attempts ]; do
+        # Test with a real HTTP response check
+        local response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$admin_url" 2>/dev/null || echo "000")
+        if [ "$response" != "000" ]; then
+            log_success "APISIX admin port is responding (HTTP $response)"
+            break
+        fi
+        log_debug "Waiting for APISIX admin port... (attempt $attempt/$max_attempts)"
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+    
+    if [ $attempt -gt $max_attempts ]; then
+        log_error "APISIX admin port not responding after $max_attempts attempts"
+        return 1
+    fi
+    
+    # Load admin key
+    local apisix_env_file="${SETUP_MODULES_DIR}/../apisix/.env"
+    if [ -f "$apisix_env_file" ]; then
+        source "$apisix_env_file"
+    elif [ -f "apisix/.env" ]; then
+        source "apisix/.env"
+    fi
+    
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        log_error "APISIX_ADMIN_KEY not found in apisix/.env"
+        return 1
+    fi
+    
+    # Test admin API with actual route listing
+    log_detail "Testing APISIX admin API with authentication..."
+    attempt=1
+    while [ $attempt -le 15 ]; do
+        local api_response=$(curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" "$admin_url/apisix/admin/routes" 2>/dev/null || echo '{"error":"failed"}')
+        
+        # Check if we got a valid JSON response
+        if echo "$api_response" | jq -e '.list' >/dev/null 2>&1 || echo "$api_response" | jq -e '.total' >/dev/null 2>&1; then
+            log_success "APISIX admin API is ready and returning valid responses"
+            
+            # Final check: test gateway port
+            local gateway_response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$gateway_url" 2>/dev/null || echo "000")
+            if [ "$gateway_response" != "000" ]; then
+                log_success "APISIX gateway port is also responding (HTTP $gateway_response)"
+                return 0
+            else
+                log_warn "APISIX gateway port not yet responding, but admin API is ready"
+                return 0  # Admin API ready is sufficient
+            fi
+        fi
+        
+        log_debug "Waiting for APISIX admin API... (attempt $attempt/15)"
+        sleep 3
+        attempt=$((attempt + 1))
+    done
+    
+    log_error "APISIX admin API not returning valid responses after 45 seconds"
+    return 1
+}
+
 # Function to register API key consumer
 register_api_key_consumer() {
     echo "Registering API key consumer..."
@@ -213,6 +303,104 @@ register_api_key_consumer() {
         echo "⚠️  API key consumer registration returned status: $response (may already exist)"
         return 0
     fi
+}
+
+# Function to create startup wrapper for APISIX
+create_apisix_startup_wrapper() {
+    log_detail "Creating APISIX startup wrapper..."
+    
+    cat > startup-wrapper.sh << 'EOF'
+#!/bin/sh
+# APISIX startup wrapper to handle socket cleanup
+# This ensures cleanup happens even when container is restarted
+
+echo "🧹 Cleaning up stale socket files..."
+rm -f /usr/local/apisix/logs/worker_events.sock 2>/dev/null || true
+rm -f /usr/local/apisix/logs/nginx.pid 2>/dev/null || true
+
+echo "🚀 Starting APISIX..."
+exec apisix start
+EOF
+    
+    chmod +x startup-wrapper.sh
+    log_success "Created startup-wrapper.sh with executable permissions"
+}
+
+# Function to create docker-compose override for APISIX
+create_apisix_compose_override() {
+    log_detail "Creating docker-compose.override.yml for APISIX..."
+    
+    # Load APISIX admin key if available
+    local admin_key="edd1c9f034335f136f87ad84b625c8f1"
+    if [ -f ".env" ]; then
+        source .env
+        admin_key="${APISIX_ADMIN_KEY:-$admin_key}"
+    fi
+    
+    cat > docker-compose.override.yml << EOF
+version: '3.8'
+
+services:
+  apisix:
+    # Use a wrapper script to ensure cleanup always happens
+    volumes:
+      - ./startup-wrapper.sh:/startup-wrapper.sh:ro
+    entrypoint: ["/bin/sh", "/startup-wrapper.sh"]
+    
+    # Add health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9180/apisix/admin/routes", "-H", "X-API-KEY: \${APISIX_ADMIN_KEY:-$admin_key}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    
+    # Add init flag to handle PID 1 issues
+    init: true
+    
+    # Ensure clean shutdown
+    stop_grace_period: 30s
+    
+    # Additional environment variables for better behavior
+    environment:
+      - APISIX_STAND_ALONE=false
+      - APISIX_ENABLE_HEARTBEAT=true
+EOF
+    
+    log_success "Created docker-compose.override.yml with health checks"
+}
+
+# Function to check and handle stuck APISIX processes
+check_and_cleanup_stuck_apisix() {
+    log_detail "Checking for stuck APISIX processes..."
+    
+    # Check if APISIX container exists but is not responding
+    if docker ps -a | grep -q "apisix-apisix-1"; then
+        # Check if container is running
+        if docker ps | grep -q "apisix-apisix-1"; then
+            # Test if APISIX is actually responding
+            if ! curl -s --max-time 5 http://localhost:9180 >/dev/null 2>&1; then
+                log_warn "APISIX container is running but not responding"
+                log_detail "Attempting to restart APISIX container..."
+                
+                # Stop the container forcefully
+                docker stop -t 10 apisix-apisix-1 2>/dev/null || true
+                docker rm -f apisix-apisix-1 2>/dev/null || true
+                
+                # Also check for other APISIX-related containers
+                docker ps -a | grep "apisix" | awk '{print $1}' | xargs -r docker rm -f 2>/dev/null || true
+                
+                log_success "Cleaned up stuck APISIX containers"
+                return 0
+            fi
+        else
+            # Container exists but is not running - remove it
+            log_detail "Removing stopped APISIX container..."
+            docker rm -f apisix-apisix-1 2>/dev/null || true
+        fi
+    fi
+    
+    return 0
 }
 
 # Function to setup APISIX
@@ -342,6 +530,13 @@ setup_apisix() {
         fi
     fi
     
+    # Create startup wrapper and override files
+    create_apisix_startup_wrapper
+    create_apisix_compose_override
+    
+    # Check and cleanup any stuck APISIX processes
+    check_and_cleanup_stuck_apisix
+    
     # Ensure network exists and is available
     echo "Ensuring Docker network is available for APISIX..."
     if ! docker network inspect "$SHARED_NETWORK_NAME" >/dev/null 2>&1; then
@@ -413,9 +608,9 @@ EOF
     # Note: Certificate integration disabled since GSAi now uses HTTP
     # integrate_custom_openapi_certificates
     
-    # Wait for APISIX to be ready
-    if wait_for_apisix_ready; then
-        echo "✅ APISIX is ready"
+    # Wait for APISIX to be ready with enhanced verification
+    if wait_for_apisix_ready_enhanced; then
+        echo "✅ APISIX is ready and verified responsive"
         
         # Register API key consumer (critical for GSAi and other key-auth routes)
         register_api_key_consumer
@@ -423,7 +618,20 @@ EOF
         return 0
     else
         echo "❌ APISIX failed to become ready"
-        return 1
+        
+        # Try one recovery attempt
+        log_warn "Attempting APISIX recovery..."
+        docker restart apisix-apisix-1 2>/dev/null || true
+        sleep 10
+        
+        if wait_for_apisix_ready_enhanced; then
+            log_success "APISIX recovered after restart"
+            register_api_key_consumer
+            return 0
+        else
+            log_error "APISIX recovery failed"
+            return 1
+        fi
     fi
 }
 

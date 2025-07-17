@@ -181,7 +181,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
     def check_secrets(self):
         """Enhanced check for potential secrets in code."""
         self.log("Checking for potential secrets...", "header")
-        
+
         import re
 
         # Pattern-based detection
@@ -194,7 +194,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             (r"CLIENT_SECRET\s*=\s*['\"](?!<REDACTED>)[^'\"]+['\"]", "Client secret"),
             (r"KEYCLOAK_.*_PASSWORD\s*=\s*['\"](?!<REDACTED>)[^'\"]+['\"]", "Keycloak password"),
         ]
-        
+
         # High-entropy string patterns (likely secrets)
         entropy_patterns = [
             (r"['\"][a-zA-Z0-9]{32,}['\"]", "High-entropy string (possible secret)"),
@@ -202,7 +202,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             (r"[a-fA-F0-9]{40}", "SHA1 hash (possible token)"),
             (r"[a-fA-F0-9]{64}", "SHA256 hash (possible secret)"),
         ]
-        
+
         # Load known secrets from baseline file
         known_secrets = []
         baseline_file = ".secrets-baseline"
@@ -217,80 +217,104 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                                 known_secrets.append(secret)
             except Exception:
                 pass
-        
+
         # Add any additional hardcoded secrets to check
-        known_secrets.extend([
-            "TDfUNK2bpHzoTbncvGArrhbSG7dGcJ9q",
-            "Dp28YSkBmwO4eOLFT1mLh4pZ930wLNKl",
-        ])
+        known_secrets.extend(
+            [
+                "TDfUNK2bpHzoTbncvGArrhbSG7dGcJ9q",
+                "Dp28YSkBmwO4eOLFT1mLh4pZ930wLNKl",
+            ]
+        )
 
         issues = []
         entropy_warnings = []
-        
+
         for root, dirs, files in os.walk("."):
             dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ["venv", "__pycache__", "node_modules"]]
 
             for file in files:
                 # Expanded file types including .md and .sh
-                if (file.endswith((".py", ".yml", ".yaml", ".json", ".md", ".sh", ".bash", ".txt", ".toml", ".ini", ".cfg", ".conf")) 
+                if (
+                    file.endswith(
+                        (
+                            ".py",
+                            ".yml",
+                            ".yaml",
+                            ".json",
+                            ".md",
+                            ".sh",
+                            ".bash",
+                            ".txt",
+                            ".toml",
+                            ".ini",
+                            ".cfg",
+                            ".conf",
+                        )
+                    )
                     and not file.endswith((".example", ".template"))
-                    and not file.startswith("test_")):
-                    
+                    and not file.startswith("test_")
+                ):
+
                     filepath = os.path.join(root, file)
-                    
+
                     # Skip .env files entirely (they should be in .gitignore)
                     if ".env" in file:
                         issues.append(f"Environment file should not be committed: {filepath}")
                         continue
-                    
+
                     try:
                         with open(filepath, "r", encoding="utf-8") as f:
                             content = f.read()
                             lines = content.split("\n")
-                            
+
                             # Check for known exposed secrets
                             for secret in known_secrets:
                                 if secret in content:
                                     for i, line in enumerate(lines):
                                         if secret in line:
                                             issues.append(f"KNOWN EXPOSED SECRET '{secret}' in {filepath}:{i+1}")
-                            
+
                             # Check pattern-based secrets
                             for pattern, desc in secret_patterns:
                                 matches = re.finditer(pattern, content, re.IGNORECASE | re.MULTILINE)
                                 for match in matches:
                                     # Find line number
-                                    line_no = content[:match.start()].count('\n') + 1
+                                    line_no = content[: match.start()].count("\n") + 1
                                     # Don't flag if it's in a comment or docstring
                                     line = lines[line_no - 1] if line_no <= len(lines) else ""
                                     if not line.strip().startswith(("#", "//", "*", "/*")):
                                         issues.append(f"{desc} in {filepath}:{line_no}")
-                            
+
                             # Check high-entropy patterns (but be more lenient)
                             for pattern, desc in entropy_patterns:
                                 matches = re.finditer(pattern, content)
                                 for match in matches:
                                     value = match.group()
-                                    line_no = content[:match.start()].count('\n') + 1
+                                    line_no = content[: match.start()].count("\n") + 1
                                     line = lines[line_no - 1] if line_no <= len(lines) else ""
-                                    
+
                                     # Skip if in comments, test files, or documentation examples
-                                    if (not line.strip().startswith(("#", "//", "*", "/*")) and
-                                        "example" not in filepath.lower() and
-                                        "test" not in filepath.lower() and
-                                        "/docs/" not in filepath and
-                                        ".git/" not in filepath and
-                                        "pip-audit-report" not in filepath and
-                                        "package-lock.json" not in filepath and
-                                        len(value) > 20):  # Only flag reasonably long strings
-                                        
+                                    if (
+                                        not line.strip().startswith(("#", "//", "*", "/*"))
+                                        and "example" not in filepath.lower()
+                                        and "test" not in filepath.lower()
+                                        and "/docs/" not in filepath
+                                        and ".git/" not in filepath
+                                        and "pip-audit-report" not in filepath
+                                        and "package-lock.json" not in filepath
+                                        and len(value) > 20
+                                    ):  # Only flag reasonably long strings
+
                                         # Skip common false positives
-                                        if any(fp in value.lower() for fp in ["sha256", "sha1", "md5", "hash", "digest", "checksum"]):
+                                        if any(
+                                            fp in value.lower()
+                                            for fp in ["sha256", "sha1", "md5", "hash", "digest", "checksum"]
+                                        ):
                                             continue
-                                            
+
                                         # Add to warnings, not issues
                                         entropy_warnings.append(f"{desc}: {value[:20]}... in {filepath}:{line_no}")
-                                        
+
                     except (OSError, IOError, UnicodeDecodeError):
                         pass  # Skip files that can't be read
 
@@ -302,7 +326,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             # This is now a blocking issue, not a warning
             self.issues.append(("Exposed secrets detected", "\n".join(issues)))
             return False
-            
+
         return True
 
     def check_yaml_files(self):

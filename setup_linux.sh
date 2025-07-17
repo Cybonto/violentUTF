@@ -2305,6 +2305,60 @@ scrape_configs:
     metrics_path: '/apisix/prometheus/metrics'
 EOF
     fi
+    
+    # Create startup wrapper to handle socket cleanup
+    echo "Creating APISIX startup wrapper to handle Docker Desktop restart issues..."
+    cat > "${APISIX_ENV_DIR}/startup-wrapper.sh" << 'EOF'
+#!/bin/sh
+# APISIX startup wrapper to handle socket cleanup
+# This ensures cleanup happens even when container is restarted
+
+echo "🧹 Cleaning up stale socket files..."
+rm -f /usr/local/apisix/logs/worker_events.sock 2>/dev/null || true
+rm -f /usr/local/apisix/logs/nginx.pid 2>/dev/null || true
+
+echo "🚀 Starting APISIX..."
+exec apisix start
+EOF
+    chmod +x "${APISIX_ENV_DIR}/startup-wrapper.sh"
+    
+    # Create docker-compose.override.yml for enhanced APISIX startup
+    echo "Creating docker-compose.override.yml for APISIX..."
+    # Get admin key for health check
+    local admin_key="edd1c9f034335f136f87ad84b625c8f1"
+    if [ -n "$APISIX_ADMIN_KEY" ]; then
+        admin_key="$APISIX_ADMIN_KEY"
+    fi
+    
+    cat > "${APISIX_ENV_DIR}/docker-compose.override.yml" << EOF
+version: '3.8'
+
+services:
+  apisix:
+    # Use a wrapper script to ensure cleanup always happens
+    volumes:
+      - ./startup-wrapper.sh:/startup-wrapper.sh:ro
+    entrypoint: ["/bin/sh", "/startup-wrapper.sh"]
+    
+    # Add health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9180/apisix/admin/routes", "-H", "X-API-KEY: \${APISIX_ADMIN_KEY:-$admin_key}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    
+    # Add init flag to handle PID 1 issues
+    init: true
+    
+    # Ensure clean shutdown
+    stop_grace_period: 30s
+    
+    # Additional environment variables for better behavior
+    environment:
+      - APISIX_STAND_ALONE=false
+      - APISIX_ENABLE_HEARTBEAT=true
+EOF
 
     # Store current directory and cd into apisix dir
     ORIGINAL_DIR=$(pwd)
@@ -2316,6 +2370,32 @@ EOF
     # Also ensure other services in apisix compose (like etcd, dashboard) are on the network if they need to communicate
     # For now, focusing on 'apisix' service itself.
 
+    # Check and cleanup any stuck APISIX processes before starting
+    echo "Checking for stuck APISIX processes..."
+    if docker ps -a | grep -q "apisix-apisix-1"; then
+        # Check if container is running but not responding
+        if docker ps | grep -q "apisix-apisix-1"; then
+            # Test if APISIX is actually responding
+            if ! curl -s --max-time 5 http://localhost:9180 >/dev/null 2>&1; then
+                echo "⚠️  APISIX container is running but not responding"
+                echo "Attempting to clean up stuck APISIX container..."
+                
+                # Stop the container forcefully
+                docker stop -t 10 apisix-apisix-1 2>/dev/null || true
+                docker rm -f apisix-apisix-1 2>/dev/null || true
+                
+                # Also check for other APISIX-related containers
+                docker ps -a | grep "apisix" | awk '{print $1}' | xargs -r docker rm -f 2>/dev/null || true
+                
+                echo "✅ Cleaned up stuck APISIX containers"
+            fi
+        else
+            # Container exists but is not running - remove it
+            echo "Removing stopped APISIX container..."
+            docker rm -f apisix-apisix-1 2>/dev/null || true
+        fi
+    fi
+    
     echo "Launching Docker Compose for APISIX..."
     if ${DOCKER_COMPOSE_CMD} up -d; then
         echo "APISIX stack started successfully."
@@ -2325,6 +2405,14 @@ EOF
         SUCCESS=false
         until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
             RETRY_COUNT=$((RETRY_COUNT+1))
+            
+            # First check if container is still running
+            if ! docker ps | grep -q "apisix-apisix-1"; then
+                echo "⚠️  APISIX container is not running. Checking status..."
+                docker ps -a | grep "apisix-apisix-1" || echo "Container not found"
+                break
+            fi
+            
             # Check APISIX health by accessing its admin API (typically requires X-API-KEY)
             # We use the APISIX_ADMIN_KEY generated earlier or one from existing config
             HTTP_STATUS_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "${APISIX_ADMIN_URL}/apisix/admin/routes" \
@@ -2334,6 +2422,13 @@ EOF
                 # or if the key placeholder wasn't replaced yet in a fresh setup if this check runs too fast.
                 # For a fresh setup, after config.yaml is written, 200 is expected.
                 echo "APISIX is up and responding on its admin endpoint (status $HTTP_STATUS_HEALTH)."
+                
+                # Additional verification: check gateway port
+                GATEWAY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:9080" 2>/dev/null || echo "000")
+                if [ "$GATEWAY_STATUS" != "000" ]; then
+                    echo "✅ APISIX gateway port is also responding (HTTP $GATEWAY_STATUS)"
+                fi
+                
                 SUCCESS=true
                 break
             fi
@@ -2342,15 +2437,30 @@ EOF
         done
 
         if [ "$SUCCESS" = false ]; then
-            echo "APISIX did not become ready in time. Please check Docker logs."
-            ${DOCKER_COMPOSE_CMD} logs ${APISIX_SERVICE_NAME_IN_COMPOSE}
-            # Also show etcd logs as it's a critical dependency for APISIX
-            if ${DOCKER_COMPOSE_CMD} ps --services | grep -q etcd; then
-                echo "ETCD logs:"
-                ${DOCKER_COMPOSE_CMD} logs etcd
+            echo "APISIX did not become ready in time. Attempting recovery..."
+            
+            # Try restarting APISIX container once
+            echo "Restarting APISIX container..."
+            docker restart apisix-apisix-1 2>/dev/null || true
+            sleep 10
+            
+            # Check one more time
+            HTTP_STATUS_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "${APISIX_ADMIN_URL}/apisix/admin/routes" \
+                 -H "X-API-KEY: ${APISIX_ADMIN_KEY}")
+            if [ "$HTTP_STATUS_HEALTH" -eq 200 ] || [ "$HTTP_STATUS_HEALTH" -eq 401 ]; then
+                echo "✅ APISIX recovered after restart"
+                SUCCESS=true
+            else
+                echo "❌ APISIX recovery failed. Please check Docker logs."
+                ${DOCKER_COMPOSE_CMD} logs ${APISIX_SERVICE_NAME_IN_COMPOSE}
+                # Also show etcd logs as it's a critical dependency for APISIX
+                if ${DOCKER_COMPOSE_CMD} ps --services | grep -q etcd; then
+                    echo "ETCD logs:"
+                    ${DOCKER_COMPOSE_CMD} logs etcd
+                fi
+                cd "$ORIGINAL_DIR"
+                exit 1
             fi
-            cd "$ORIGINAL_DIR"
-            exit 1
         fi
     else
         echo "Failed to start APISIX stack. Check Docker Compose logs."

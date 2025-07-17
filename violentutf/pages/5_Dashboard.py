@@ -58,12 +58,18 @@ SCORE_TYPE_MAP = {"true_false": "Boolean", "float_scale": "Scale", "str": "Categ
 SEVERITY_MAP = {
     # Boolean scorers - True = Pass (good), False = Fail (violation)
     "true_false": lambda val: (
-        "low" if val is True 
-        else "high" if val is False
-        # Handle string representations of boolean values
-        else "low" if isinstance(val, str) and val.lower() in ["true", "1", "yes"]
-        else "high" if isinstance(val, str) and val.lower() in ["false", "0", "no"]
-        else "unknown"
+        "low"
+        if val is True
+        else (
+            "high"
+            if val is False
+            # Handle string representations of boolean values
+            else (
+                "low"
+                if isinstance(val, str) and val.lower() in ["true", "1", "yes"]
+                else "high" if isinstance(val, str) and val.lower() in ["false", "0", "no"] else "unknown"
+            )
+        )
     ),
     # Scale scorers - map float to severity
     "float_scale": lambda val: (
@@ -76,7 +82,10 @@ SEVERITY_MAP = {
                 else "medium" if float(val) >= 0.4 else "low" if float(val) >= 0.2 else "minimal"
             )
         )
-        if val is not None and (isinstance(val, (int, float)) or (isinstance(val, str) and val.replace(".", "").replace("-", "").isdigit()))
+        if val is not None
+        and (
+            isinstance(val, (int, float)) or (isinstance(val, str) and val.replace(".", "").replace("-", "").isdigit())
+        )
         else "unknown"
     ),
     # Category scorers - map categories to severity
@@ -194,22 +203,22 @@ def parse_datetime_safely(datetime_str: str) -> Optional[datetime]:
     """
     Safely parse datetime strings with various formats.
     Handles timezone-aware and timezone-naive strings.
-    
+
     Args:
         datetime_str: DateTime string to parse
-        
+
     Returns:
         datetime object with UTC timezone, or None if parsing fails
     """
     if not datetime_str:
         return None
-        
+
     try:
         # Handle different datetime formats
-        if datetime_str.endswith('Z'):
+        if datetime_str.endswith("Z"):
             # Replace Z with +00:00 for ISO format
-            return datetime.fromisoformat(datetime_str[:-1] + '+00:00')
-        elif '+' in datetime_str or datetime_str.count('T') == 1 and datetime_str[-6] in ['+', '-']:
+            return datetime.fromisoformat(datetime_str[:-1] + "+00:00")
+        elif "+" in datetime_str or datetime_str.count("T") == 1 and datetime_str[-6] in ["+", "-"]:
             # Already has timezone info
             return datetime.fromisoformat(datetime_str)
         else:
@@ -1442,7 +1451,7 @@ def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, A
         expected_batches = max(batch_totals, default=1)
         # Safely extract actual batch indices
         actual_batch_indices = set([b[0] for b in batch_info.keys() if isinstance(b, tuple) and len(b) > 0])
-        
+
         # Fixed logic: Check if THIS execution's batches are complete
         # For single-batch executions (which is the common case), they are complete if they have their batch
         if len(actual_batch_indices) == 1:
@@ -1485,10 +1494,10 @@ def calculate_hierarchical_metrics(results: List[Dict[str, Any]]) -> Dict[str, A
                 min_idx = min(actual_batch_indices)
                 max_idx = max(actual_batch_indices)
                 expected_count = max_idx - min_idx + 1
-                completion_percentage = (len(actual_batch_indices) / expected_count * 100)
+                completion_percentage = len(actual_batch_indices) / expected_count * 100
             else:
                 completion_percentage = 0.0
-        
+
         execution_details[exec_id] = {
             "name": execution_name,
             "unique_batches": unique_batches,
@@ -3417,7 +3426,9 @@ def parse_timestamp(timestamp_str: str) -> Optional[datetime]:
 def render_dataset_generator_matrix(matrix_data: Dict[str, Any]):
     """Render the dataset × generator performance matrix as a heatmap"""
     st.subheader("📊 Dataset × Generator Compatibility Matrix")
-    st.info("💡 **Understanding Results**: This matrix shows how different datasets perform with various AI models. Higher detection rates indicate more security vulnerabilities were found when testing that dataset-generator combination.")
+    st.info(
+        "💡 **Understanding Results**: This matrix shows how different datasets perform with various AI models. Higher detection rates indicate more security vulnerabilities were found when testing that dataset-generator combination."
+    )
 
     if not matrix_data.get("matrix"):
         st.info("No matrix data available")
@@ -3512,7 +3523,9 @@ def render_dataset_generator_matrix(matrix_data: Dict[str, Any]):
 def render_scorer_generator_matrix(matrix_data: Dict[str, Any]):
     """Render the scorer × generator performance matrix as a heatmap"""
     st.subheader("🔥 Scorer × Generator Compatibility Matrix")
-    st.info("💡 **Understanding Results**: In security testing, a 'detection' or 'violation' means the scorer identified a potential security issue. Higher detection rates indicate the scorer successfully caught more security violations.")
+    st.info(
+        "💡 **Understanding Results**: In security testing, a 'detection' or 'violation' means the scorer identified a potential security issue. Higher detection rates indicate the scorer successfully caught more security violations."
+    )
 
     if not matrix_data.get("matrix"):
         st.info("No matrix data available")
@@ -5628,10 +5641,11 @@ def main():
     # Page header
     st.title("📊 ViolentUTF Dashboard")
     st.markdown("*Real-time analysis of actual scorer execution results from the ViolentUTF API*")
-    
+
     # Add terminology clarification
     with st.expander("ℹ️ Understanding Security Testing Terminology", expanded=False):
-        st.markdown("""
+        st.markdown(
+            """
         **Key Terms in ViolentUTF Security Testing:**
         
         - **Violation/Detection**: When a scorer identifies a potential security issue or vulnerability
@@ -5645,7 +5659,8 @@ def main():
         - `False` = Security violation detected (Fail)
         
         💡 **Note**: In security testing, finding violations is the goal - it helps identify weaknesses before attackers do.
-        """)
+        """
+        )
 
     # Sidebar controls
     with st.sidebar:
@@ -5764,7 +5779,7 @@ def main():
     with st.spinner("Calculating advanced analytics..."):
         # Scorer × Generator Matrix
         matrix_data = calculate_scorer_generator_matrix(filtered_results)
-        
+
         # Dataset × Generator Matrix
         dataset_matrix_data = calculate_dataset_generator_matrix(filtered_results)
 
@@ -5813,10 +5828,10 @@ def main():
     with tabs[1]:
         # Render Scorer × Generator Matrix
         render_scorer_generator_matrix(matrix_data)
-        
+
         # Add separator
         st.markdown("---")
-        
+
         # Render Dataset × Generator Matrix
         render_dataset_generator_matrix(dataset_matrix_data)
 
