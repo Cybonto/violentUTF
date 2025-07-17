@@ -4,6 +4,7 @@
 import asyncio
 import inspect
 import logging
+import time
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Type, Union
@@ -16,6 +17,57 @@ from pyrit.prompt_target import PromptChatTarget, PromptTarget
 from pyrit.score.scorer import Scorer
 
 logger = logging.getLogger(__name__)
+
+
+def with_retry_logic(max_retries: int = 3, base_delay: float = 1.0, exponential_backoff: bool = True):
+    """
+    Decorator to add retry logic with exponential backoff for orchestrator operations.
+    
+    Args:
+        max_retries: Maximum number of retry attempts
+        base_delay: Base delay in seconds between retries
+        exponential_backoff: Whether to use exponential backoff
+    """
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            last_exception = None
+            
+            for attempt in range(max_retries + 1):
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    last_exception = e
+                    
+                    # Check if this is a retriable error
+                    error_message = str(e).lower()
+                    is_retriable = any(keyword in error_message for keyword in [
+                        'throttling', '429', 'rate limit', 'too many requests',
+                        'timeout', 'connection', 'network', 'server error'
+                    ])
+                    
+                    if not is_retriable or attempt == max_retries:
+                        logger.error(f"Non-retriable error or max retries reached: {e}")
+                        raise e
+                    
+                    # Calculate delay with exponential backoff
+                    if exponential_backoff:
+                        delay = base_delay * (2 ** attempt)
+                    else:
+                        delay = base_delay
+                    
+                    logger.warning(
+                        f"Retriable error on attempt {attempt + 1}/{max_retries + 1}: {e}. "
+                        f"Retrying in {delay:.1f}s..."
+                    )
+                    
+                    await asyncio.sleep(delay)
+            
+            # Should never reach here, but just in case
+            if last_exception:
+                raise last_exception
+                
+        return wrapper
+    return decorator
 
 
 class PyRITOrchestratorService:
@@ -449,8 +501,9 @@ class PyRITOrchestratorService:
             memory_labels = input_data.get("memory_labels", {})
             metadata = input_data.get("metadata", {})
 
-            results = await orchestrator.send_prompts_async(
-                prompt_list=prompt_list, prompt_type=prompt_type, memory_labels=memory_labels, metadata=metadata
+            # Apply retry logic for direct prompt list execution
+            results = await self._send_prompt_list_with_retry(
+                orchestrator, prompt_list, prompt_type, memory_labels, metadata, execution_config
             )
 
         elif execution_type == "dataset":
@@ -498,8 +551,9 @@ class PyRITOrchestratorService:
                                         f"🎯   Scorer {i + 1}: {type(scorer).__name__} - {getattr(scorer, 'scorer_name', 'Unknown')}"
                                     )
 
-                results = await orchestrator.send_prompts_async(
-                    prompt_list=dataset_prompts, prompt_type="text", memory_labels=memory_labels
+                # Apply retry logic for prompt execution
+                results = await self._send_prompts_with_retry(
+                    orchestrator, dataset_prompts, memory_labels, execution_config
                 )
 
                 logger.info(f"🎯 Orchestrator execution completed, got {len(results)} results")
@@ -950,6 +1004,84 @@ class PyRITOrchestratorService:
             orchestrator.dispose_db_engine()
             del self._orchestrator_instances[orchestrator_id]
             logger.info(f"Disposed orchestrator: {orchestrator_id}")
+
+    async def _send_prompts_with_retry(
+        self, 
+        orchestrator: PromptSendingOrchestrator, 
+        dataset_prompts: List[str], 
+        memory_labels: Dict[str, Any], 
+        execution_config: Dict[str, Any]
+    ) -> List[PromptRequestResponse]:
+        """Send dataset prompts with retry logic and inter-prompt delays."""
+        retry_config = self._get_retry_config(execution_config)
+        
+        @with_retry_logic(
+            max_retries=retry_config["max_retries"],
+            base_delay=retry_config["base_delay"],
+            exponential_backoff=retry_config["exponential_backoff"]
+        )
+        async def _send_with_delay():
+            # Add inter-prompt delay for rate limiting prevention
+            if retry_config.get("inter_prompt_delay", 0) > 0:
+                logger.info(f"Using inter-prompt delay: {retry_config['inter_prompt_delay']}s")
+                
+            return await orchestrator.send_prompts_async(
+                prompt_list=dataset_prompts, 
+                prompt_type="text", 
+                memory_labels=memory_labels
+            )
+        
+        return await _send_with_delay()
+
+    async def _send_prompt_list_with_retry(
+        self,
+        orchestrator: PromptSendingOrchestrator,
+        prompt_list: List[str],
+        prompt_type: str,
+        memory_labels: Dict[str, Any],
+        metadata: Dict[str, Any],
+        execution_config: Dict[str, Any]
+    ) -> List[PromptRequestResponse]:
+        """Send prompt list with retry logic and inter-prompt delays."""
+        retry_config = self._get_retry_config(execution_config)
+        
+        @with_retry_logic(
+            max_retries=retry_config["max_retries"],
+            base_delay=retry_config["base_delay"],
+            exponential_backoff=retry_config["exponential_backoff"]
+        )
+        async def _send_with_delay():
+            return await orchestrator.send_prompts_async(
+                prompt_list=prompt_list,
+                prompt_type=prompt_type,
+                memory_labels=memory_labels,
+                metadata=metadata
+            )
+        
+        return await _send_with_delay()
+
+    def _get_retry_config(self, execution_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Get retry configuration based on execution type and user preferences."""
+        execution_metadata = execution_config.get("input_data", {}).get("metadata", {})
+        is_test_execution = execution_metadata.get("is_test_execution", False)
+        
+        # Different retry strategies for TEST vs FULL execution
+        if is_test_execution:
+            # TEST execution: Fast retry with shorter delays
+            return {
+                "max_retries": 2,
+                "base_delay": 0.5,
+                "exponential_backoff": True,
+                "inter_prompt_delay": 0.2
+            }
+        else:
+            # FULL execution: Robust retry with longer delays
+            return {
+                "max_retries": 5,
+                "base_delay": 2.0,
+                "exponential_backoff": True,
+                "inter_prompt_delay": 0.5
+            }
 
 
 class ConfiguredGeneratorTarget(PromptTarget):

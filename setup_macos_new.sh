@@ -9,6 +9,7 @@ SETUP_MODULES_DIR="$SCRIPT_DIR/setup_macos_files"
 # --- Global Variables ---
 CLEANUP_MODE=false
 DEEPCLEANUP_MODE=false
+CLEANUP_DASHBOARD_MODE=false
 SHARED_NETWORK_NAME="vutf-network"
 AI_TOKENS_FILE="ai-tokens.env"
 SENSITIVE_VALUES=()
@@ -25,8 +26,11 @@ show_help() {
     echo "  -q, --quiet        Quiet mode (minimal output)"
     echo "  -v, --verbose      Verbose mode (detailed output)"
     echo "  -d, --debug        Debug mode (full debugging output)"
-    echo "  --cleanup          Clean up existing containers and volumes"
-    echo "  --deepcleanup      Deep cleanup (remove all data and configurations)"
+    echo ""
+    echo "Cleanup Options:"
+    echo "  --cleanup          Remove containers, volumes, and configuration files"
+    echo "  --deepcleanup      Complete removal including all Docker data"
+    echo "  --cleanup-dashboard Remove only dashboard data (scores, executions, databases)"
     echo ""
     echo "Verbosity Levels:"
     echo "  quiet    - Errors, warnings, and minimal progress only"
@@ -40,6 +44,7 @@ show_help() {
     echo "  $0 --verbose       # Verbose setup with detailed output"
     echo "  $0 --debug         # Debug setup with full output"
     echo "  $0 --cleanup       # Clean up existing deployment"
+    echo "  $0 --cleanup-dashboard # Clean up dashboard data only"
     echo ""
 }
 
@@ -69,6 +74,10 @@ process_arguments() {
                 ;;
             --deepcleanup)
                 DEEPCLEANUP_MODE=true
+                shift
+                ;;
+            --cleanup-dashboard)
+                CLEANUP_DASHBOARD_MODE=true
                 shift
                 ;;
             *)
@@ -254,6 +263,8 @@ main_cleanup() {
     
     if [ "$DEEPCLEANUP_MODE" = true ]; then
         perform_deep_cleanup
+    elif [ "$CLEANUP_DASHBOARD_MODE" = true ]; then
+        perform_dashboard_cleanup
     else
         perform_cleanup
     fi
@@ -270,7 +281,7 @@ main() {
     process_arguments "$@"
     
     # Execute based on mode
-    if [ "$CLEANUP_MODE" = true ] || [ "$DEEPCLEANUP_MODE" = true ]; then
+    if [ "$CLEANUP_MODE" = true ] || [ "$DEEPCLEANUP_MODE" = true ] || [ "$CLEANUP_DASHBOARD_MODE" = true ]; then
         main_cleanup
     else
         main_setup
