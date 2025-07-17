@@ -205,8 +205,12 @@ perform_dashboard_cleanup() {
     # 4. Clean up logs related to executions
     cleanup_execution_logs
     
+    # 5. Restart containers to ensure clean state
+    restart_containers_for_clean_state
+    
     echo "✅ Dashboard data cleanup completed"
     echo "📊 All scoring results, execution history, and memory databases have been removed"
+    echo "🔄 Containers restarted to ensure clean application state"
 }
 
 # Helper function to cleanup PyRIT memory databases
@@ -223,7 +227,7 @@ cleanup_pyrit_databases() {
     
     local cleaned_count=0
     
-    # Check common PyRIT database locations
+    # 1. Clean host filesystem locations
     local search_paths=(
         "violentutf/app_data/violentutf"
         "violentutf_api/fastapi_app/app_data"
@@ -234,7 +238,7 @@ cleanup_pyrit_databases() {
     
     for search_path in "${search_paths[@]}"; do
         if [ -d "$search_path" ]; then
-            echo "  Checking $search_path for PyRIT databases..."
+            echo "  Checking host $search_path for PyRIT databases..."
             
             for pattern in "${db_patterns[@]}"; do
                 local found_files
@@ -244,7 +248,7 @@ cleanup_pyrit_databases() {
                     while IFS= read -r db_file; do
                         if [ -f "$db_file" ]; then
                             rm -f "$db_file"
-                            echo "    Removed: $db_file"
+                            echo "    Removed host file: $db_file"
                             ((cleaned_count++))
                         fi
                     done <<< "$found_files"
@@ -256,10 +260,62 @@ cleanup_pyrit_databases() {
         fi
     done
     
+    # 2. Clean database files inside running containers
+    cleanup_container_databases
+    
     if [ $cleaned_count -eq 0 ]; then
         echo "  No PyRIT database files found to clean"
     else
         echo "  Cleaned $cleaned_count PyRIT database files"
+    fi
+}
+
+# Helper function to cleanup databases inside Docker containers
+cleanup_container_databases() {
+    echo "  Cleaning databases inside running containers..."
+    
+    # Check if FastAPI container is running
+    if docker ps --format "{{.Names}}" | grep -q "violentutf_api"; then
+        echo "    Cleaning FastAPI container databases..."
+        
+        # Find and remove database files inside the container
+        local container_db_files
+        container_db_files=$(docker exec violentutf_api find /app -name "*.db" -o -name "*.db-*" -type f 2>/dev/null || true)
+        
+        if [ -n "$container_db_files" ]; then
+            while IFS= read -r db_file; do
+                if [ -n "$db_file" ]; then
+                    docker exec violentutf_api rm -f "$db_file" 2>/dev/null || true
+                    echo "      Removed container file: $db_file"
+                    ((cleaned_count++))
+                fi
+            done <<< "$container_db_files"
+        fi
+        
+        # Clean PyRIT memory directories inside container
+        docker exec violentutf_api find /app/app_data -name "*memory*" -type d -exec rm -rf {} + 2>/dev/null || true
+        docker exec violentutf_api find /app/app_data -name "*pyrit*" -type d -exec rm -rf {} + 2>/dev/null || true
+        
+        # Clean temporary and cache files
+        docker exec violentutf_api find /app -name "*.tmp" -o -name "temp_*" -type f -delete 2>/dev/null || true
+        docker exec violentutf_api find /app/app_data -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+        
+        echo "    FastAPI container databases cleaned"
+    else
+        echo "    FastAPI container not running, skipping container cleanup"
+    fi
+    
+    # Check for other ViolentUTF containers that might have data
+    local other_containers
+    other_containers=$(docker ps --format "{{.Names}}" | grep -E "(streamlit|violentutf)" | grep -v "violentutf_api" || true)
+    
+    if [ -n "$other_containers" ]; then
+        while IFS= read -r container_name; do
+            if [ -n "$container_name" ]; then
+                echo "    Cleaning $container_name container..."
+                docker exec "$container_name" find / -name "*.db" -o -name "*memory*.db" -type f -delete 2>/dev/null || true
+            fi
+        done <<< "$other_containers"
     fi
 }
 
@@ -385,4 +441,108 @@ cleanup_execution_logs() {
     else
         echo "  Cleaned $cleaned_count execution log files"
     fi
+}
+
+# Helper function to restart containers for clean state
+restart_containers_for_clean_state() {
+    echo "Restarting containers to ensure clean application state..."
+    
+    # Restart FastAPI container if running
+    if docker ps --format "{{.Names}}" | grep -q "violentutf_api"; then
+        echo "  Restarting FastAPI container..."
+        docker restart violentutf_api >/dev/null 2>&1 || true
+        
+        # Wait for container to be healthy
+        echo "  Waiting for FastAPI container to be ready..."
+        local wait_count=0
+        while [ $wait_count -lt 30 ]; do
+            if docker exec violentutf_api curl -s http://localhost:8000/health >/dev/null 2>&1; then
+                echo "  FastAPI container is ready"
+                break
+            fi
+            sleep 2
+            ((wait_count++))
+        done
+        
+        if [ $wait_count -eq 30 ]; then
+            echo "  Warning: FastAPI container may not be fully ready yet"
+        fi
+    fi
+    
+    # Kill any running Streamlit processes (since it runs on host)
+    echo "  Stopping any running Streamlit processes..."
+    pkill -f "streamlit.*violentutf" 2>/dev/null || true
+    pkill -f "streamlit run Dashboard.py" 2>/dev/null || true
+    pkill -f "streamlit run Home.py" 2>/dev/null || true
+    
+    # Give processes time to stop
+    sleep 3
+    
+    # Restart Streamlit if it was running before
+    restart_streamlit_if_needed
+    
+    echo "  Container restart completed"
+}
+
+# Helper function to restart Streamlit after cleanup
+restart_streamlit_if_needed() {
+    echo "  Restarting Streamlit application..."
+    
+    # Check if we're in the ViolentUTF directory or can find it
+    local violentutf_dir=""
+    if [ -d "violentutf" ]; then
+        violentutf_dir="$(pwd)/violentutf"
+    elif [ -d "../violentutf" ]; then
+        violentutf_dir="$(cd .. && pwd)/violentutf"
+    elif [ -f "Home.py" ]; then
+        violentutf_dir="$(pwd)"
+    else
+        echo "    Warning: Cannot locate ViolentUTF Streamlit directory"
+        echo "    You may need to manually restart Streamlit using:"
+        echo "    ./launch_violentutf.sh"
+        return 1
+    fi
+    
+    echo "    Located ViolentUTF directory: $violentutf_dir"
+    
+    # Create a background launch script
+    local restart_script="/tmp/restart_violentutf_streamlit.sh"
+    cat > "$restart_script" <<EOF
+#!/bin/bash
+echo "🔄 Restarting ViolentUTF Streamlit after dashboard cleanup..."
+cd "$violentutf_dir" || exit 1
+
+# Activate virtual environment if it exists
+if [ -d ".vitutf" ]; then
+    source .vitutf/bin/activate
+elif [ -d ".venv" ]; then
+    source .venv/bin/activate
+fi
+
+# Start Streamlit in background
+nohup streamlit run Home.py --server.port=8501 --server.address=localhost --browser.gatherUsageStats=false > /tmp/streamlit_restart.log 2>&1 &
+
+echo "✅ Streamlit restarted in background (PID: \$!)"
+echo "🌐 Dashboard available at: http://localhost:8501"
+EOF
+    
+    # Make script executable and run it
+    chmod +x "$restart_script"
+    bash "$restart_script" &
+    
+    # Give Streamlit time to start
+    sleep 5
+    
+    # Check if Streamlit is running
+    if pgrep -f "streamlit.*Home.py" >/dev/null 2>&1; then
+        echo "    ✅ Streamlit successfully restarted"
+        echo "    🌐 Dashboard available at: http://localhost:8501"
+    else
+        echo "    ⚠️  Streamlit restart may have failed"
+        echo "    📝 Check /tmp/streamlit_restart.log for details"
+        echo "    🔧 Manual restart: ./launch_violentutf.sh"
+    fi
+    
+    # Clean up restart script
+    rm -f "$restart_script"
 }
