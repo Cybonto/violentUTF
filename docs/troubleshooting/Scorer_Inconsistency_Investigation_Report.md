@@ -538,31 +538,36 @@ To:
 **Impact**: Test executions from Configure Scorer will now correctly show as TEST in the Dashboard, allowing proper filtering and metric calculation.
 
 ### Fix 9: Duplicate Score Entries in Dashboard ✅
-**File**: `violentutf_api/fastapi_app/app/services/pyrit_orchestrator_service.py` (lines 912-935)
+**File**: `violentutf_api/fastapi_app/app/services/pyrit_orchestrator_service.py` (lines 912-957)
 **Issue**: Each score appeared multiple times (6x) in Dashboard export
 **Fix Date**: 2025-07-17
-**Root Cause**: Multiple score collection methods finding and adding the same scores
+**Root Cause**: Multiple score collection methods finding and adding the same scores with different field structures
 **Problem Details**:
-- Method 1: PyRIT memory scores
-- Method 2: Tracked scorers collection
-- Method 3: Direct discovery from orchestrator attributes
-- All three methods were finding the same scores and adding them to the results
+- Method 1: PyRIT memory scores (has timestamp, prompt_request_response_id)
+- Method 2: Tracked scorers collection (has prompt_id, text_scored)
+- Method 3: Direct discovery from orchestrator attributes (same as Method 2)
+- All three methods were finding the same scores but with different field names
 
-**Fix Implementation**:
-Added deduplication logic after score collection:
+**Initial Fix Issue**: 
+The first deduplication attempt failed because it used fields that weren't present in all score types (timestamp, text_scored), causing false mismatches.
+
+**Improved Fix Implementation**:
+Enhanced deduplication logic that handles different score structures:
 ```python
 # Deduplicate scores to avoid showing same score multiple times
+# Since scores from different methods have different fields, normalize them first
 seen_scores = set()
 deduplicated_scores = []
 
 for score in formatted_scores:
-    # Create a unique key for each score
+    # Use prompt_id or prompt_request_response_id as the unique identifier
+    unique_id = score.get("prompt_id") or score.get("prompt_request_response_id", "")
+    
+    # Create a unique key based on essential fields only
     score_key = (
-        score.get("score_value"),
-        score.get("timestamp"),
-        score.get("text_scored", "")[:100],
-        score.get("prompt_id", ""),
-        score.get("score_category", "")
+        score.get("score_value"),  # The actual score value
+        score.get("score_category", ""),  # Category of score
+        unique_id,  # Unique ID for the prompt/conversation
     )
     
     if score_key not in seen_scores:
@@ -572,7 +577,55 @@ for score in formatted_scores:
 formatted_scores = deduplicated_scores
 ```
 
-**Impact**: Dashboard will now show each score only once, providing accurate counts and statistics without artificial inflation from duplicate entries.
+**Impact**: Dashboard will now correctly deduplicate scores regardless of which collection method found them, showing each score only once and providing accurate metrics.
+
+### Fix 10: Orchestrator Creation Failure - Missing Parameter ✅
+**File**: `violentutf_api/fastapi_app/app/services/pyrit_orchestrator_service.py` (lines 223, 334, 349)
+**Issue**: "Failed to create orchestrator for scorer testing" - 500 Internal Server Error
+**Fix Date**: 2025-07-17
+**Root Cause**: The `_resolve_orchestrator_parameters` method was using an undefined variable `orchestrator_id`
+**Problem Details**:
+- The method signature didn't include `orchestrator_id` parameter
+- Inside the method, code tried to access `orchestrator_id` at lines 367, 377
+- This caused NameError: name 'orchestrator_id' is not defined
+
+**Fix Implementation**:
+1. Updated method signature to include `orchestrator_id` parameter:
+   ```python
+   async def _resolve_orchestrator_parameters(
+       self, parameters: Dict[str, Any], user_context: str = None, orchestrator_id: str = None
+   ) -> Dict[str, Any]:
+   ```
+
+2. Updated all calls to pass the orchestrator_id:
+   - Line 223: `resolved_params = await self._resolve_orchestrator_parameters(parameters, user_context, orchestrator_id)`
+   - Line 334: `resolved_params = await self._resolve_orchestrator_parameters(orchestrator_config["parameters"], user_context, orchestrator_id)`
+
+**Impact**: Orchestrator creation now works correctly, allowing test execution in Configure Scorer to proceed without errors.
+
+### Known Issue: Generator Ownership Mismatch in Configure Scorer
+**Status**: Identified, Workaround Implemented
+**Symptoms**: "Failed to create orchestrator for scorer testing" error
+**Root Cause**: 
+- Generators are stored per-user in the backend
+- Configure Scorer page shows ALL generators regardless of owner
+- When creating an orchestrator, the backend can't find generators owned by other users
+
+**Current Behavior**:
+1. User sees all generators in the dropdown (including those created by other users)
+2. Selecting a generator not owned by the current user causes orchestrator creation to fail
+3. Error: "Generator 'X' not found for user 'Y'"
+
+**Workaround Implemented**:
+Enhanced error message to guide users:
+```
+Failed to create orchestrator for scorer testing. This often happens when the generator 
+'test_gpt3.5turbo' was created by a different user. Please ensure you're using a generator 
+created with your account (current user: violentutf.web).
+```
+
+**Proper Fix Required**:
+The Configure Scorer page should filter generators to show only those owned by the current user, matching the backend's user-specific storage model.
 
 ---
 

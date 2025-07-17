@@ -190,6 +190,20 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
             return None
         else:
             logger.error(f"API Error {response.status_code}: {url} - {response.text}")
+            # Store error details for all error codes
+            try:
+                error_data = response.json()
+                st.session_state["last_api_error"] = {
+                    "status": response.status_code,
+                    "message": error_data.get("detail", response.text),
+                    "raw": response.text
+                }
+            except:
+                st.session_state["last_api_error"] = {
+                    "status": response.status_code,
+                    "message": response.text,
+                    "raw": response.text
+                }
             return None
     except requests.exceptions.ConnectionError as e:
         logger.error(f"Connection error to {url}: {e}")
@@ -447,7 +461,24 @@ def _test_scorer_orchestrator_mode(
         orchestrator_response = api_request("POST", API_ENDPOINTS["orchestrator_create"], json=orchestrator_payload)
 
         if not orchestrator_response:
-            return False, {"error": "Failed to create orchestrator for scorer testing"}
+            # Try to get more error details
+            logger.error("Failed to create orchestrator - no response received")
+            logger.error(f"Generator name being used: '{generator_info['name']}'")
+            logger.error(f"User context being used: '{user_context}'")
+            
+            # Check if there's a stored error from the API request
+            last_error = st.session_state.get("last_api_error", {})
+            if last_error:
+                error_msg = f"Failed to create orchestrator: {last_error.get('message', 'Unknown error')}"
+                logger.error(f"API error details: {last_error}")
+            else:
+                # Fallback to generic error message
+                error_msg = (
+                    f"Failed to create orchestrator for scorer testing. "
+                    f"This often happens when the generator '{generator_info['name']}' was created by a different user. "
+                    f"Please ensure you're using a generator created with your account (current user: {user_context})."
+                )
+            return False, {"error": error_msg}
 
         orchestrator_id = orchestrator_response.get("orchestrator_id")
         if not orchestrator_id:

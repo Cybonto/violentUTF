@@ -3,6 +3,7 @@
 
 import asyncio
 import inspect
+import json
 import logging
 import time
 import uuid
@@ -219,7 +220,7 @@ class PyRITOrchestratorService:
             raise RuntimeError("PyRIT memory is not accessible. Cannot create orchestrator.")
 
         # Resolve parameters with user context for generator lookup
-        resolved_params = await self._resolve_orchestrator_parameters(parameters, user_context)
+        resolved_params = await self._resolve_orchestrator_parameters(parameters, user_context, orchestrator_id)
 
         # Create orchestrator instance
         orchestrator_class = self._orchestrator_registry[orchestrator_type]
@@ -330,7 +331,7 @@ class PyRITOrchestratorService:
 
                 # Resolve parameters and create instance
                 resolved_params = await self._resolve_orchestrator_parameters(
-                    orchestrator_config["parameters"], user_context
+                    orchestrator_config["parameters"], user_context, orchestrator_id
                 )
                 orchestrator_class = self._orchestrator_registry[orchestrator_config["orchestrator_type"]]
                 orchestrator_instance = orchestrator_class(**resolved_params)
@@ -346,7 +347,7 @@ class PyRITOrchestratorService:
             return False
 
     async def _resolve_orchestrator_parameters(
-        self, parameters: Dict[str, Any], user_context: str = None
+        self, parameters: Dict[str, Any], user_context: str = None, orchestrator_id: str = None
     ) -> Dict[str, Any]:
         """Resolve parameter references to actual objects"""
         resolved = {}
@@ -910,27 +911,29 @@ class PyRITOrchestratorService:
         logger.error(final_msg)
         
         # Deduplicate scores to avoid showing same score multiple times
-        # Use a combination of score value, timestamp, and text to identify duplicates
+        # Since scores from different methods have different fields, normalize them first
         seen_scores = set()
         deduplicated_scores = []
-        
+
         for score in formatted_scores:
-            # Create a unique key for each score
+            # Use prompt_id or prompt_request_response_id as the unique identifier
+            unique_id = score.get("prompt_id") or score.get("prompt_request_response_id", "")
+            
+            # Create a unique key based on essential fields only
             score_key = (
-                score.get("score_value"),
-                score.get("timestamp"),
-                score.get("text_scored", "")[:100],  # First 100 chars of text
-                score.get("prompt_id", ""),
-                score.get("score_category", "")
+                score.get("score_value"),  # The actual score value
+                score.get("score_category", ""),  # Category of score
+                unique_id,  # Unique ID for the prompt/conversation
             )
             
             if score_key not in seen_scores:
                 seen_scores.add(score_key)
                 deduplicated_scores.append(score)
-        
-        dedup_msg = f"🚨 DEDUPLICATION: {len(formatted_scores)} scores reduced to {len(deduplicated_scores)} unique scores"
+
+        # Log deduplication results
+        dedup_msg = f"🚨 DEDUPLICATION: Reduced {len(formatted_scores)} scores to {len(deduplicated_scores)} unique scores"
         print(dedup_msg, file=sys.stderr, flush=True)
-        logger.error(dedup_msg)
+        logger.info(dedup_msg)
         
         formatted_scores = deduplicated_scores
 
@@ -1336,8 +1339,6 @@ class ConfiguredScorerWrapper(Scorer):
             score_result = await _execute_generic_scorer(self.scorer_config, text_to_score)
 
         # Create PyRIT Score object
-        import json
-
         from pyrit.models import Score
 
         # Prepare metadata with execution context
