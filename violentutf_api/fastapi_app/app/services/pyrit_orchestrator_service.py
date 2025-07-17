@@ -363,7 +363,7 @@ class PyRITOrchestratorService:
             elif isinstance(param_value, dict) and param_value.get("type") == "configured_scorer":
                 # Resolve scorer
                 scorer_name = param_value["scorer_name"]
-                resolved[param_name] = await self._create_scorer_instance(scorer_name, user_context)
+                resolved[param_name] = await self._create_scorer_instance(scorer_name, user_context, orchestrator_id)
             elif isinstance(param_value, list) and param_name in ["scorers", "auxiliary_scorers"]:
                 # Handle scorers list - resolve each configured scorer
                 resolved_scorers = []
@@ -371,7 +371,11 @@ class PyRITOrchestratorService:
                     if isinstance(scorer_info, dict) and scorer_info.get("type") == "configured_scorer":
                         # Check if full config is provided to avoid lookup
                         if "scorer_config" in scorer_info:
-                            scorer_instance = ConfiguredScorerWrapper(scorer_info["scorer_config"])
+                            # Get execution metadata if available
+                            execution_metadata = {}
+                            if orchestrator_id and orchestrator_id in self._orchestrator_metadata:
+                                execution_metadata = self._orchestrator_metadata[orchestrator_id]
+                            scorer_instance = ConfiguredScorerWrapper(scorer_info["scorer_config"], execution_metadata)
                             resolved_scorers.append(scorer_instance)
                             logger.info(
                                 f"🎯 Created ConfiguredScorerWrapper for '{scorer_instance.scorer_name}' via config"
@@ -380,7 +384,7 @@ class PyRITOrchestratorService:
                             # Fallback to lookup by name
                             scorer_name = scorer_info.get("scorer_name")
                             if scorer_name:
-                                scorer_instance = await self._create_scorer_instance(scorer_name, user_context)
+                                scorer_instance = await self._create_scorer_instance(scorer_name, user_context, orchestrator_id)
                                 resolved_scorers.append(scorer_instance)
                                 logger.info(f"🎯 Created ConfiguredScorerWrapper for '{scorer_name}' via lookup")
 
@@ -419,7 +423,7 @@ class PyRITOrchestratorService:
         # Create ConfiguredGeneratorTarget
         return ConfiguredGeneratorTarget(generator_config)
 
-    async def _create_scorer_instance(self, scorer_name: str, user_context: str = None) -> Scorer:
+    async def _create_scorer_instance(self, scorer_name: str, user_context: str = None, orchestrator_id: str = None) -> Scorer:
         """Create Scorer from configured scorer"""
         # Import scorer service functions directly
         from app.services.scorer_integration_service import get_scorer_by_name
@@ -428,8 +432,13 @@ class PyRITOrchestratorService:
         if not scorer_config:
             raise ValueError(f"Scorer not found: {scorer_name}")
 
-        # Create scorer instance
-        return ConfiguredScorerWrapper(scorer_config)
+        # Get execution metadata if available
+        execution_metadata = {}
+        if orchestrator_id and orchestrator_id in self._orchestrator_metadata:
+            execution_metadata = self._orchestrator_metadata[orchestrator_id]
+
+        # Create scorer instance with execution metadata
+        return ConfiguredScorerWrapper(scorer_config, execution_metadata)
 
     async def _resolve_converter_configurations(self, configs: List[Dict]) -> List[PromptConverter]:
         """Resolve converter configurations"""
@@ -459,6 +468,12 @@ class PyRITOrchestratorService:
             # Extract and store metadata for this execution
             execution_metadata = input_data.get("metadata", {})
             if execution_metadata:
+                # Convert is_test_execution to test_mode for Dashboard compatibility
+                if "is_test_execution" in execution_metadata:
+                    is_test = execution_metadata.get("is_test_execution", False)
+                    execution_metadata["test_mode"] = "test_execution" if is_test else "full_execution"
+                    logger.info(f"Added test_mode: {execution_metadata['test_mode']} based on is_test_execution: {is_test}")
+                
                 self._orchestrator_metadata[orchestrator_id] = execution_metadata
                 logger.info(
                     f"Stored execution metadata for orchestrator {orchestrator_id}: {list(execution_metadata.keys())}"
@@ -893,6 +908,31 @@ class PyRITOrchestratorService:
         final_msg = f"🚨 FINAL SCORE COUNT: {len(formatted_scores)} scores to return"
         print(final_msg, file=sys.stderr, flush=True)
         logger.error(final_msg)
+        
+        # Deduplicate scores to avoid showing same score multiple times
+        # Use a combination of score value, timestamp, and text to identify duplicates
+        seen_scores = set()
+        deduplicated_scores = []
+        
+        for score in formatted_scores:
+            # Create a unique key for each score
+            score_key = (
+                score.get("score_value"),
+                score.get("timestamp"),
+                score.get("text_scored", "")[:100],  # First 100 chars of text
+                score.get("prompt_id", ""),
+                score.get("score_category", "")
+            )
+            
+            if score_key not in seen_scores:
+                seen_scores.add(score_key)
+                deduplicated_scores.append(score)
+        
+        dedup_msg = f"🚨 DEDUPLICATION: {len(formatted_scores)} scores reduced to {len(deduplicated_scores)} unique scores"
+        print(dedup_msg, file=sys.stderr, flush=True)
+        logger.error(dedup_msg)
+        
+        formatted_scores = deduplicated_scores
 
         # SAFETY NET: If no scores found but we know scoring should have happened, create mock scores
         if not formatted_scores and len(results) > 0:

@@ -327,6 +327,18 @@ def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List
                                 if isinstance(metadata, str):
                                     metadata = json.loads(metadata)
 
+                                # Also check execution-level metadata for test_mode
+                                exec_metadata = details.get("execution_summary", {}).get("metadata", {})
+                                test_mode = metadata.get("test_mode", "unknown")
+
+                                # Fallback to execution-level metadata if score doesn't have test_mode
+                                if test_mode == "unknown" and exec_metadata:
+                                    if "is_test_execution" in exec_metadata:
+                                        is_test = exec_metadata.get("is_test_execution", False)
+                                        test_mode = "test_execution" if is_test else "full_execution"
+                                    elif "test_mode" in exec_metadata:
+                                        test_mode = exec_metadata.get("test_mode", "unknown")
+
                                 # Create unified result object
                                 result = {
                                     "execution_id": execution_id,
@@ -342,7 +354,7 @@ def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List
                                     "generator_name": metadata.get("generator_name", "Unknown"),
                                     "generator_type": metadata.get("generator_type", "Unknown"),
                                     "dataset_name": metadata.get("dataset_name", "Unknown"),
-                                    "test_mode": metadata.get("test_mode", "unknown"),
+                                    "test_mode": test_mode,
                                     "batch_index": metadata.get("batch_index", 0),
                                     "total_batches": metadata.get("total_batches", 1),
                                 }
@@ -447,6 +459,16 @@ def parse_scorer_results(executions: List[Dict[str, Any]]) -> List[Dict[str, Any
                     "batch_index": metadata.get("batch_index", 0),
                     "total_batches": metadata.get("total_batches", 1),
                 }
+
+                # Fallback to execution-level metadata if test_mode is unknown
+                if result["test_mode"] == "unknown" and details:
+                    exec_metadata = details.get("execution_summary", {}).get("metadata", {})
+                    if exec_metadata:
+                        if "is_test_execution" in exec_metadata:
+                            is_test = exec_metadata.get("is_test_execution", False)
+                            result["test_mode"] = "test_execution" if is_test else "full_execution"
+                        elif "test_mode" in exec_metadata:
+                            result["test_mode"] = exec_metadata.get("test_mode", "unknown")
 
                 # Calculate severity
                 score_type = result["score_type"]
@@ -572,6 +594,16 @@ def load_orchestrator_executions_with_full_data(
                                     "response_insights": enriched_score.get("response_insights"),
                                     "searchable_content": enriched_score.get("searchable_content", []),
                                 }
+
+                                # Fallback to execution-level metadata if test_mode is unknown
+                                if result["test_mode"] == "unknown" and execution:
+                                    exec_metadata = execution.get("execution_summary", {}).get("metadata", {})
+                                    if exec_metadata:
+                                        if "is_test_execution" in exec_metadata:
+                                            is_test = exec_metadata.get("is_test_execution", False)
+                                            result["test_mode"] = "test_execution" if is_test else "full_execution"
+                                        elif "test_mode" in exec_metadata:
+                                            result["test_mode"] = exec_metadata.get("test_mode", "unknown")
 
                                 # Calculate severity
                                 score_type = result["score_type"]

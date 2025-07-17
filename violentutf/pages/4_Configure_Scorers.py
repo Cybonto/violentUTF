@@ -474,7 +474,7 @@ def _test_scorer_orchestrator_mode(
                     "scorer_id": scorer_id,
                     "scorer_name": scorer_info["name"],
                     "scorer_type": scorer_info.get("type", "Unknown"),
-                    "test_mode": "full_execution" if save_to_db else "test_execution",
+                    "test_mode": "test_execution",  # Always test_execution for Test button
                     "execution_timestamp": datetime.now().isoformat(),
                 },
             },
