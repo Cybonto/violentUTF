@@ -232,6 +232,39 @@ def parse_datetime_safely(datetime_str: str) -> Optional[datetime]:
         return None
 
 
+def get_execution_type_badge(metadata: Dict[str, Any]) -> str:
+    """
+    Get execution type badge based on metadata.
+
+    Args:
+        metadata: Execution metadata dictionary
+
+    Returns:
+        Badge string with emoji and label
+    """
+    test_mode = metadata.get("test_mode", "unknown")
+    if test_mode == "test_execution":
+        return "🧪 TEST"
+    elif test_mode == "full_execution":
+        return "🚀 FULL"
+    return "❓ UNKNOWN"
+
+
+def format_execution_name_with_type(exec_name: str, metadata: Dict[str, Any]) -> str:
+    """
+    Format execution name with type badge.
+
+    Args:
+        exec_name: Original execution name
+        metadata: Execution metadata
+
+    Returns:
+        Formatted execution name with type badge
+    """
+    badge = get_execution_type_badge(metadata)
+    return f"{exec_name} [{badge}]"
+
+
 # --- Data Loading Functions ---
 
 
@@ -297,6 +330,7 @@ def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List
                                 # Create unified result object
                                 result = {
                                     "execution_id": execution_id,
+                                    "execution_name": execution.get("name", f"Execution_{execution_id[:8]}"),
                                     "orchestrator_name": execution.get("orchestrator_name", "Unknown"),
                                     "timestamp": score.get("timestamp", execution.get("created_at")),
                                     "score_value": score.get("score_value"),
@@ -785,7 +819,13 @@ def initialize_filter_state():
     if "filter_state" not in st.session_state:
         st.session_state.filter_state = {
             "time": {"preset": "all_time", "custom_start": None, "custom_end": None},
-            "entities": {"executions": [], "datasets": [], "generators": [], "scorers": []},
+            "entities": {
+                "execution_type": "Full Only",  # Default to show only full executions
+                "executions": [],
+                "datasets": [],
+                "generators": [],
+                "scorers": [],
+            },
             "results": {
                 "severity": [],
                 "score_type": "all",
@@ -793,7 +833,7 @@ def initialize_filter_state():
                 "score_range": {"min": 0.0, "max": 1.0},
             },
             "comparison_mode": False,
-            "active": False,
+            "active": True,  # Set active by default since we have a default filter
         }
 
 
@@ -860,7 +900,23 @@ def apply_entity_filters(
     filtered = results.copy()
 
     if executions:
-        filtered = [r for r in filtered if r.get("execution_id") in executions or r.get("execution_name") in executions]
+        # Handle execution names that might have badges
+        execution_filtered = []
+        for r in filtered:
+            exec_name = r.get("execution_name")
+            if exec_name:
+                # Format with badge for comparison
+                metadata = {"test_mode": r.get("test_mode", "unknown")}
+                formatted_name = format_execution_name_with_type(exec_name, metadata)
+
+                # Check if either the raw name or formatted name matches
+                if exec_name in executions or formatted_name in executions:
+                    execution_filtered.append(r)
+                elif r.get("execution_id") in executions:
+                    execution_filtered.append(r)
+            elif r.get("execution_id") in executions:
+                execution_filtered.append(r)
+        filtered = execution_filtered
 
     if datasets:
         filtered = [r for r in filtered if r.get("dataset_name") in datasets]
@@ -938,20 +994,17 @@ def get_unique_entities(results: List[Dict[str, Any]]) -> Dict[str, List[str]]:
     """Extract unique entity values from results for filter options"""
     entities = {"executions": [], "datasets": [], "generators": [], "scorers": []}
 
-    # Collect unique values
-    exec_set = set()
+    # Collect unique values with execution type info
+    exec_dict = {}  # exec_name -> test_mode
     dataset_set = set()
     generator_set = set()
     scorer_set = set()
 
     for r in results:
-        # Collect both ID and name for executions
-        exec_id = r.get("execution_id")
-        if exec_id:
-            exec_set.add(exec_id)
+        # For executions, track the test_mode to add badges
         exec_name = r.get("execution_name")
-        if exec_name:
-            exec_set.add(exec_name)
+        if exec_name and exec_name not in exec_dict:
+            exec_dict[exec_name] = r.get("test_mode", "unknown")
 
         dataset_name = r.get("dataset_name")
         if dataset_name:
@@ -965,7 +1018,15 @@ def get_unique_entities(results: List[Dict[str, Any]]) -> Dict[str, List[str]]:
         if scorer_name:
             scorer_set.add(scorer_name)
 
-    entities["executions"] = sorted(list(exec_set))
+    # Format execution names with badges
+    formatted_executions = []
+    for exec_name, test_mode in exec_dict.items():
+        # Create minimal metadata for badge generation
+        metadata = {"test_mode": test_mode}
+        formatted_name = format_execution_name_with_type(exec_name, metadata)
+        formatted_executions.append(formatted_name)
+
+    entities["executions"] = sorted(formatted_executions)
     entities["datasets"] = sorted(list(dataset_set))
     entities["generators"] = sorted(list(generator_set))
     entities["scorers"] = sorted(list(scorer_set))
@@ -987,8 +1048,14 @@ def count_active_filters() -> int:
 
     # Entity filters
     entities = fs.get("entities", {})
-    for entity_list in entities.values():
-        if entity_list:
+
+    # Check execution type filter (only count if not default "Full Only")
+    if entities.get("execution_type", "Full Only") != "Full Only":
+        count += 1
+
+    # Check other entity filters
+    for key, entity_list in entities.items():
+        if key != "execution_type" and entity_list:
             count += 1
 
     # Result filters
@@ -1022,6 +1089,16 @@ def apply_all_filters(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     # Apply entity filters
     entities_config = fs.get("entities", {})
+
+    # Apply execution type filter first
+    exec_type = entities_config.get("execution_type", "Full Only")
+    if exec_type == "Test Only":
+        filtered = [r for r in filtered if r.get("test_mode") == "test_execution"]
+    elif exec_type == "Full Only":
+        filtered = [r for r in filtered if r.get("test_mode") == "full_execution"]
+    # "All Executions" - no filter needed
+
+    # Apply other entity filters
     filtered = apply_entity_filters(
         filtered,
         entities_config.get("executions", []),
@@ -1069,7 +1146,13 @@ def render_dynamic_filters(results: List[Dict[str, Any]], key_prefix: str = "mai
                 # Reset filter state
                 st.session_state.filter_state = {
                     "time": {"preset": "all_time", "custom_start": None, "custom_end": None},
-                    "entities": {"executions": [], "datasets": [], "generators": [], "scorers": []},
+                    "entities": {
+                        "execution_type": "Full Only",  # Reset to default
+                        "executions": [],
+                        "datasets": [],
+                        "generators": [],
+                        "scorers": [],
+                    },
                     "results": {
                         "severity": [],
                         "score_type": "all",
@@ -1077,7 +1160,7 @@ def render_dynamic_filters(results: List[Dict[str, Any]], key_prefix: str = "mai
                         "score_range": {"min": 0.0, "max": 1.0},
                     },
                     "comparison_mode": False,
-                    "active": False,
+                    "active": True,  # Keep active since we have default filter
                 }
                 st.rerun()
 
@@ -1160,6 +1243,36 @@ def render_dynamic_filters(results: List[Dict[str, Any]], key_prefix: str = "mai
 
         # Entity filters section
         st.markdown("### 🎯 Entity Filters")
+
+        # Execution Type Filter (NEW)
+        exec_type_col1, exec_type_col2 = st.columns([1, 3])
+        with exec_type_col1:
+            if "entities" not in st.session_state.filter_state:
+                st.session_state.filter_state["entities"] = {}
+
+            # Default to "Full Only" to filter out test executions by default
+            default_exec_type = st.session_state.filter_state.get("entities", {}).get("execution_type", "Full Only")
+
+            exec_type_options = ["All Executions", "Test Only", "Full Only"]
+            st.session_state.filter_state["entities"]["execution_type"] = st.selectbox(
+                "Execution Type",
+                options=exec_type_options,
+                index=exec_type_options.index(default_exec_type),
+                key=f"{key_prefix}_execution_type_filter",
+                help="Filter by execution type (Test vs Full). Default shows only full executions.",
+            )
+
+        with exec_type_col2:
+            # Show info about current filter
+            exec_type = st.session_state.filter_state["entities"]["execution_type"]
+            if exec_type == "Test Only":
+                st.info("🧪 Showing only test executions (limited samples)")
+            elif exec_type == "Full Only":
+                st.info("🚀 Showing only full executions (production results)")
+            else:
+                st.info("📊 Showing all executions (test and full)")
+
+        # Regular entity filters
         entity_col1, entity_col2 = st.columns(2)
 
         with entity_col1:
@@ -1664,6 +1777,17 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
         elif severity == "high":
             generator_risk[generator]["high"] += 1
 
+    # Execution type breakdown
+    execution_type_counts = {"test": 0, "full": 0, "unknown": 0}
+    for result in results:
+        test_mode = result.get("test_mode", "unknown")
+        if test_mode == "test_execution":
+            execution_type_counts["test"] += 1
+        elif test_mode == "full_execution":
+            execution_type_counts["full"] += 1
+        else:
+            execution_type_counts["unknown"] += 1
+
     # Temporal patterns
     temporal_patterns = analyze_temporal_patterns(results)
 
@@ -1675,6 +1799,7 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
         "unique_datasets": unique_datasets,
         "violation_rate": violation_rate,
         "severity_breakdown": severity_breakdown,
+        "execution_type_breakdown": execution_type_counts,
         "scorer_performance": dict(scorer_performance),
         "generator_risk_profile": dict(generator_risk),
         "temporal_patterns": temporal_patterns,
@@ -2182,10 +2307,15 @@ def render_detailed_results_table(results: List[Dict[str, Any]]):
                 prompt_text = r["prompt_response"].get("prompt", "")
                 response_text = r["prompt_response"].get("response", "")
 
+            # Format execution name with badge
+            exec_name = r.get("execution_name", "Unknown")
+            metadata = {"test_mode": r.get("test_mode", "unknown")}
+            formatted_exec_name = format_execution_name_with_type(exec_name, metadata)
+
             display_data.append(
                 {
                     "Timestamp": r["timestamp"],
-                    "Execution": r.get("execution_name", "Unknown"),
+                    "Execution": formatted_exec_name,
                     "Batch": batch_info,
                     "Scorer": r["scorer_name"],
                     "Generator": r["generator_name"],
