@@ -50,30 +50,42 @@ The scheduling system is the most critical component of the COB report enhanceme
 import asyncio
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta, timezone
-from croniter import croniter
-from celery import Celery
-from celery.schedules import crontab
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.executors.asyncio import AsyncIOExecutor
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 import pytz
-from ...database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from ...database import get_async_session
 from ..generator import ReportGenerator
 from ...utils.logger import get_logger
+from ...utils.security import SecureConfig
 
 logger = get_logger(__name__)
 
-# Initialize Celery
-celery_app = Celery(
-    'cob_scheduler',
-    broker='redis://localhost:6379/0',
-    backend='redis://localhost:6379/0'
-)
+# Initialize APScheduler with PostgreSQL job store
+jobstores = {
+    'default': SQLAlchemyJobStore(
+        url=SecureConfig.get_database_url(),
+        tableschema='cob_reports',
+        tablename='apscheduler_jobs'
+    )
+}
 
-celery_app.conf.update(
-    task_serializer='json',
-    accept_content=['json'],
-    result_serializer='json',
-    timezone='UTC',
-    enable_utc=True,
-    beat_schedule={}
+executors = {
+    'default': AsyncIOExecutor(),
+}
+
+scheduler = AsyncIOScheduler(
+    jobstores=jobstores,
+    executors=executors,
+    job_defaults={
+        'coalesce': True,
+        'max_instances': 3,
+        'misfire_grace_time': 30
+    },
+    timezone=pytz.UTC
 )
 
 class ReportScheduler:
@@ -1184,26 +1196,38 @@ class PromptLibrary:
 from typing import Dict, Any, Optional
 import asyncio
 from datetime import datetime
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-import matplotlib.pyplot as plt
+from weasyprint import HTML, CSS
+from markupsafe import Markup
+import bleach
+import markdown
 import io
 import base64
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from .base_exporter import BaseExporter
+from ...utils.security import sanitize_user_input
 
-class PDFExporter(BaseExporter):
-    """PDF export implementation"""
+class SecurePDFExporter(BaseExporter):
+    """Secure PDF export implementation with sanitization"""
+    
+    ALLOWED_TAGS = [
+        'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 
+        'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote',
+        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img'
+    ]
+    
+    ALLOWED_ATTRIBUTES = {
+        '*': ['class', 'id'],
+        'td': ['colspan', 'rowspan'],
+        'th': ['colspan', 'rowspan'],
+        'img': ['src', 'alt', 'width', 'height']
+    }
     
     def __init__(self):
         super().__init__()
-        self.styles = getSampleStyleSheet()
-        self._setup_custom_styles()
+        self.template_env = Environment(
+            loader=FileSystemLoader('templates/pdf'),
+            autoescape=select_autoescape(['html', 'xml'])
+        )
     
     def _setup_custom_styles(self):
         """Setup custom PDF styles"""
