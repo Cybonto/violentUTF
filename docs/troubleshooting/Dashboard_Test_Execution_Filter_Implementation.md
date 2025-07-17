@@ -38,10 +38,8 @@ Successfully implemented Options 1 and 2 from the Dashboard Test vs Full Executi
    - Clear All button resets to "Full Only" (maintains default filter)
 
 3. **Statistics and Metrics**
-   - Added `execution_type_breakdown` to comprehensive metrics
-   - Shows counts for test, full, and unknown execution types
-   - Executive dashboard displays execution type distribution with pie chart
-   - Includes helpful info message about hidden test results
+   - Execution type information is available through the filter system
+   - Filter shows informative messages about current execution type selection
 
 ## Technical Changes
 
@@ -60,8 +58,6 @@ Successfully implemented Options 1 and 2 from the Dashboard Test vs Full Executi
    - initialize_filter_state() - Sets "Full Only" as default
    - count_active_filters() - Counts execution type filter
    - apply_all_filters() - Applies execution type filtering
-   - calculate_comprehensive_metrics() - Adds execution type breakdown
-   - render_executive_dashboard() - Shows execution type distribution
    - render_detailed_results_table() - Displays badges in results
    ```
 

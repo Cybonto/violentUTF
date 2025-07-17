@@ -1777,17 +1777,6 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
         elif severity == "high":
             generator_risk[generator]["high"] += 1
 
-    # Execution type breakdown
-    execution_type_counts = {"test": 0, "full": 0, "unknown": 0}
-    for result in results:
-        test_mode = result.get("test_mode", "unknown")
-        if test_mode == "test_execution":
-            execution_type_counts["test"] += 1
-        elif test_mode == "full_execution":
-            execution_type_counts["full"] += 1
-        else:
-            execution_type_counts["unknown"] += 1
-
     # Temporal patterns
     temporal_patterns = analyze_temporal_patterns(results)
 
@@ -1799,7 +1788,6 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
         "unique_datasets": unique_datasets,
         "violation_rate": violation_rate,
         "severity_breakdown": severity_breakdown,
-        "execution_type_breakdown": execution_type_counts,
         "scorer_performance": dict(scorer_performance),
         "generator_risk_profile": dict(generator_risk),
         "temporal_patterns": temporal_patterns,
