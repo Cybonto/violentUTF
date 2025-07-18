@@ -42,12 +42,11 @@ async def get_dashboard_summary(
             .join(OrchestratorConfiguration, OrchestratorExecution.orchestrator_id == OrchestratorConfiguration.id)
             .where(
                 and_(
-                    OrchestratorExecution.created_at >= start_date,
-                    OrchestratorExecution.created_at <= end_date,
+                    OrchestratorExecution.started_at >= start_date,
+                    OrchestratorExecution.started_at <= end_date,
                     OrchestratorExecution.status == "completed",
                 )
             )
-            .options(selectinload(OrchestratorExecution.orchestrator_config))
         )
 
         result = await db.execute(stmt)
@@ -80,11 +79,11 @@ async def get_dashboard_summary(
             executions.append(
                 {
                     "id": str(execution.id),
-                    "name": execution.name,
+                    "name": execution.execution_name,
                     "orchestrator_name": orchestrator_name,
                     "orchestrator_type": orchestrator_type,
                     "status": execution.status,
-                    "created_at": execution.created_at.isoformat(),
+                    "created_at": execution.started_at.isoformat(),
                     "score_count": len(scores),
                     "test_mode": test_mode,
                     "metadata": execution_metadata,
@@ -127,15 +126,11 @@ async def get_dashboard_scores(
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days_back)
 
-        stmt = (
-            select(OrchestratorExecution)
-            .options(joinedload(OrchestratorExecution.orchestrator_config))
-            .where(
-                and_(
-                    OrchestratorExecution.created_at >= start_date,
-                    OrchestratorExecution.created_at <= end_date,
-                    OrchestratorExecution.status == "completed",
-                )
+        stmt = select(OrchestratorExecution).where(
+            and_(
+                OrchestratorExecution.started_at >= start_date,
+                OrchestratorExecution.started_at <= end_date,
+                OrchestratorExecution.status == "completed",
             )
         )
 
@@ -180,16 +175,14 @@ async def get_dashboard_scores(
                 score_data = {
                     # Execution info
                     "execution_id": str(execution.id),
-                    "execution_name": execution.name,
-                    "orchestrator_name": (
-                        execution.orchestrator_config.name if execution.orchestrator_config else "Unknown"
-                    ),
+                    "execution_name": execution.execution_name,
+                    "orchestrator_name": "Unknown",  # Would need a join to get this
                     # Score data
                     "score_value": score.get("score_value"),
                     "score_type": score.get("score_type", "unknown"),
                     "score_category": score.get("score_category", "unknown"),
                     "score_rationale": score.get("score_rationale", ""),
-                    "timestamp": score.get("timestamp", execution.created_at.isoformat()),
+                    "timestamp": score.get("timestamp", execution.started_at.isoformat()),
                     # Metadata fields
                     "scorer_type": score_metadata.get("scorer_type", "Unknown"),
                     "scorer_name": score_metadata.get("scorer_name", score.get("scorer_name", "Unknown")),

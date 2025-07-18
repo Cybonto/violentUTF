@@ -430,8 +430,8 @@ def parse_scorer_results(executions: List[Dict[str, Any]]) -> List[Dict[str, Any
                 # Create unified result object
                 result = {
                     "execution_id": execution_id,
-                    "orchestrator_name": execution.get("name", "Unknown"),
-                    "timestamp": score.get("timestamp", execution.get("created_at")),
+                    "orchestrator_name": execution.get("orchestrator_name", execution.get("name", "Unknown")),
+                    "timestamp": score.get("timestamp", execution.get("started_at", execution.get("created_at"))),
                     "score_value": score.get("score_value"),
                     "score_type": score.get("score_type", "unknown"),
                     "score_category": score.get("score_category", "unknown"),
@@ -562,7 +562,9 @@ def load_orchestrator_executions_with_full_data(
                                     "execution_id": execution_id,
                                     "orchestrator_name": execution.get("orchestrator_name", "Unknown"),
                                     "execution_name": execution.get("execution_name", "Unknown"),
-                                    "timestamp": enriched_score.get("timestamp", execution.get("created_at")),
+                                    "timestamp": enriched_score.get(
+                                        "timestamp", execution.get("started_at", execution.get("created_at"))
+                                    ),
                                     "score_value": enriched_score.get("score_value"),
                                     "score_type": enriched_score.get("score_type", "unknown"),
                                     "score_category": enriched_score.get("score_category", "unknown"),
@@ -608,7 +610,7 @@ def load_orchestrator_executions_with_full_data(
         filtered_executions = []
 
         for execution in all_executions:
-            created_at_str = execution.get("created_at", "")
+            created_at_str = execution.get("started_at", execution.get("created_at", ""))
             if created_at_str:
                 created_at = parse_datetime_safely(created_at_str)
                 if created_at and start_date.date() <= created_at.date() <= end_date.date():
@@ -4176,7 +4178,7 @@ class COBDataCollector:
             all_results = []
 
             for execution in executions:
-                created_at_str = execution.get("created_at", "")
+                created_at_str = execution.get("started_at", execution.get("created_at", ""))
                 if created_at_str:
                     try:
                         created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
@@ -4426,7 +4428,7 @@ class COBDataCollector:
             all_results = []
 
             for execution in executions:
-                created_at_str = execution.get("created_at", "")
+                created_at_str = execution.get("started_at", execution.get("created_at", ""))
                 if created_at_str:
                     try:
                         created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
@@ -5776,7 +5778,7 @@ def main():
 
     # Initialize filter state early
     initialize_filter_state()
-    
+
     # Page header
     st.title("📊 ViolentUTF Dashboard")
     st.markdown("*Real-time analysis of actual scorer execution results from the ViolentUTF API*")
