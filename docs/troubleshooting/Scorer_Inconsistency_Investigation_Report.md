@@ -601,7 +601,11 @@ formatted_scores = deduplicated_scores
    - Line 223: `resolved_params = await self._resolve_orchestrator_parameters(parameters, user_context, orchestrator_id)`
    - Line 334: `resolved_params = await self._resolve_orchestrator_parameters(orchestrator_config["parameters"], user_context, orchestrator_id)`
 
-**Impact**: Orchestrator creation now works correctly, allowing test execution in Configure Scorer to proceed without errors.
+3. Enhanced error handling in Configure Scorer to capture detailed error messages for better debugging
+
+**Impact**: Orchestrator creation now works correctly, allowing test execution in Configure Scorer to proceed without errors. Score deduplication has also been re-enabled to prevent duplicate entries.
+
+**Status**: ✅ RESOLVED - Confirmed working by user
 
 ### Known Issue: Generator Ownership Mismatch in Configure Scorer
 **Status**: Identified, Workaround Implemented
