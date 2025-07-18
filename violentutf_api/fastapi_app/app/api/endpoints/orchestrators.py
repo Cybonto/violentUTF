@@ -131,10 +131,12 @@ async def _create_orchestrator_configuration_impl(request: OrchestratorConfigCre
 async def list_orchestrator_configurations(
     orchestrator_type: Optional[str] = Query(None, description="Filter by orchestrator type"),
     status: Optional[str] = Query(None, description="Filter by status"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
     db: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):
-    """List all configured orchestrators with optional filtering"""
+    """List all configured orchestrators with optional filtering and pagination"""
     try:
         stmt = select(OrchestratorConfiguration)
 
@@ -143,6 +145,12 @@ async def list_orchestrator_configurations(
 
         if status:
             stmt = stmt.where(OrchestratorConfiguration.status == status)
+
+        # Add ordering for consistent pagination
+        stmt = stmt.order_by(OrchestratorConfiguration.created_at.desc())
+
+        # Apply pagination
+        stmt = stmt.offset(offset).limit(limit)
 
         result = await db.execute(stmt)
         configurations = result.scalars().all()
@@ -162,7 +170,7 @@ async def list_orchestrator_configurations(
         ]
 
     except Exception as e:
-        logger.error(f"Error listing orchestrator configurations: {e}")
+        logger.error(f"Error listing orchestrator configurations: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to list orchestrators: {str(e)}")
 
 

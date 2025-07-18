@@ -8,6 +8,7 @@ from app.api.endpoints import (
     cob_reports,
     config,
     converters,
+    dashboard,
     database,
     datasets,
     debug_jwt,
@@ -55,6 +56,9 @@ api_router.include_router(redteam.router, prefix="/redteam", tags=["red-teaming"
 
 # Orchestrator management endpoints for PyRIT orchestrator API
 api_router.include_router(orchestrators.router, prefix="/orchestrators", tags=["orchestrators"])
+
+# Dashboard endpoints for efficient data loading
+api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 
 # COB Report management endpoints for template-driven reporting
 api_router.include_router(cob_reports.router, prefix="/cob", tags=["cob-reports"])

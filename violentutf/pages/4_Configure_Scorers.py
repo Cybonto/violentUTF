@@ -196,13 +196,13 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
                 st.session_state["last_api_error"] = {
                     "status": response.status_code,
                     "message": error_data.get("detail", response.text),
-                    "raw": response.text
+                    "raw": response.text,
                 }
             except:
                 st.session_state["last_api_error"] = {
                     "status": response.status_code,
                     "message": response.text,
-                    "raw": response.text
+                    "raw": response.text,
                 }
             return None
     except requests.exceptions.ConnectionError as e:
@@ -465,7 +465,7 @@ def _test_scorer_orchestrator_mode(
             logger.error("Failed to create orchestrator - no response received")
             logger.error(f"Generator name being used: '{generator_info['name']}'")
             logger.error(f"User context being used: '{user_context}'")
-            
+
             # Check if there's a stored error from the API request
             last_error = st.session_state.get("last_api_error", {})
             if last_error:

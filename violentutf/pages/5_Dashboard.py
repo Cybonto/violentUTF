@@ -42,6 +42,9 @@ API_ENDPOINTS = {
     "orchestrators": f"{API_BASE_URL}/api/v1/orchestrators",
     "orchestrator_executions": f"{API_BASE_URL}/api/v1/orchestrators/executions",  # List all executions
     "execution_results": f"{API_BASE_URL}/api/v1/orchestrators/executions/{{execution_id}}/results",
+    # Dashboard optimized endpoints
+    "dashboard_summary": f"{API_BASE_URL}/api/v1/dashboard/summary",
+    "dashboard_scores": f"{API_BASE_URL}/api/v1/dashboard/scores",
     # Scorer endpoints
     "scorers": f"{API_BASE_URL}/api/v1/scorers",
     "scorer_test": f"{API_BASE_URL}/api/v1/scorers/{{scorer_id}}/test",
@@ -269,139 +272,122 @@ def format_execution_name_with_type(exec_name: str, metadata: Dict[str, Any]) ->
 
 
 @st.cache_data(ttl=60)  # 1-minute cache for real-time updates
-def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Load orchestrator executions with their results from API - same approach as Dashboard_4"""
+def load_dashboard_data_optimized(
+    days_back: int = 30, include_test: bool = True
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Load dashboard data using optimized endpoint - single API call for all data"""
     try:
-        # Calculate time range
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days_back)
+        # Use new dashboard summary endpoint
+        params = {"days_back": days_back, "include_test": include_test}
 
-        # First get all orchestrators
-        orchestrators_response = api_request("GET", API_ENDPOINTS["orchestrators"])
-        if not orchestrators_response:
+        summary_response = api_request("GET", API_ENDPOINTS["dashboard_summary"], params=params)
+        if not summary_response:
             return [], []
 
-        # API returns list directly, not wrapped in 'orchestrators' key
-        orchestrators = (
-            orchestrators_response
-            if isinstance(orchestrators_response, list)
-            else orchestrators_response.get("orchestrators", [])
-        )
-        all_executions = []
+        executions = summary_response.get("executions", [])
+
+        # Get paginated scores if needed
         all_results = []
+        page = 1
+        page_size = 500  # Larger page size for efficiency
 
-        # For each orchestrator, get its executions AND their results
-        for orchestrator in orchestrators:
-            orch_id = orchestrator.get("orchestrator_id")  # Use correct field name
-            if not orch_id:
-                continue
+        while True:
+            score_params = {
+                "days_back": days_back,
+                "page": page,
+                "page_size": page_size,
+                "include_test": include_test,
+                "include_responses": False,  # Standard mode doesn't need responses
+            }
 
-            # Get executions for this orchestrator
-            exec_url = f"{API_BASE_URL}/api/v1/orchestrators/{orch_id}/executions"
-            exec_response = api_request("GET", exec_url)
+            scores_response = api_request("GET", API_ENDPOINTS["dashboard_scores"], params=score_params)
+            if not scores_response:
+                break
 
-            if exec_response and "executions" in exec_response:
-                for execution in exec_response["executions"]:
-                    # Add orchestrator info to execution
-                    execution["orchestrator_name"] = orchestrator.get("name", "")
-                    execution["orchestrator_type"] = orchestrator.get("type", "")
-                    all_executions.append(execution)
+            scores = scores_response.get("scores", [])
+            all_results.extend(scores)
 
-                    # Load results for this execution immediately (Dashboard_4 approach)
-                    # Only try to load results for completed executions
-                    execution_id = execution.get("id")
-                    execution_status = execution.get("status", "")
+            # Check if there are more pages
+            pagination = scores_response.get("pagination", {})
+            if page >= pagination.get("total_pages", 1):
+                break
 
-                    if not execution_id or execution_status != "completed":
-                        continue
+            page += 1
 
-                    url = API_ENDPOINTS["execution_results"].format(execution_id=execution_id)
-                    details = api_request("GET", url)
+            # Safety limit to prevent infinite loops
+            if page > 100:
+                logger.warning("Reached maximum page limit, stopping pagination")
+                break
 
-                    # Extract scores directly from the response
-                    if details and "scores" in details:
-                        for score in details["scores"]:
-                            try:
-                                # Parse metadata if it's a JSON string
-                                metadata = score.get("score_metadata", "{}")
-                                if isinstance(metadata, str):
-                                    metadata = json.loads(metadata)
+        logger.info(f"Loaded {len(executions)} executions and {len(all_results)} scores using optimized endpoints")
+        return executions, all_results
 
-                                # Also check execution-level metadata for test_mode
-                                exec_metadata = details.get("execution_summary", {}).get("metadata", {})
-                                test_mode = metadata.get("test_mode", "unknown")
-
-                                # Fallback to execution-level metadata if score doesn't have test_mode
-                                if test_mode == "unknown" and exec_metadata:
-                                    if "is_test_execution" in exec_metadata:
-                                        is_test = exec_metadata.get("is_test_execution", False)
-                                        test_mode = "test_execution" if is_test else "full_execution"
-                                    elif "test_mode" in exec_metadata:
-                                        test_mode = exec_metadata.get("test_mode", "unknown")
-
-                                # Create unified result object
-                                result = {
-                                    "execution_id": execution_id,
-                                    "execution_name": execution.get("name", f"Execution_{execution_id[:8]}"),
-                                    "orchestrator_name": execution.get("orchestrator_name", "Unknown"),
-                                    "timestamp": score.get("timestamp", execution.get("created_at")),
-                                    "score_value": score.get("score_value"),
-                                    "score_type": score.get("score_type", "unknown"),
-                                    "score_category": score.get("score_category", "unknown"),
-                                    "score_rationale": score.get("score_rationale", ""),
-                                    "scorer_type": metadata.get("scorer_type", "Unknown"),
-                                    "scorer_name": metadata.get("scorer_name", "Unknown"),
-                                    "generator_name": metadata.get("generator_name", "Unknown"),
-                                    "generator_type": metadata.get("generator_type", "Unknown"),
-                                    "dataset_name": metadata.get("dataset_name", "Unknown"),
-                                    "test_mode": test_mode,
-                                    "batch_index": metadata.get("batch_index", 0),
-                                    "total_batches": metadata.get("total_batches", 1),
-                                }
-
-                                # Calculate severity
-                                score_type = result["score_type"]
-                                if score_type in SEVERITY_MAP:
-                                    result["severity"] = SEVERITY_MAP[score_type](result["score_value"])
-                                else:
-                                    result["severity"] = "unknown"
-
-                                all_results.append(result)
-
-                            except Exception as e:
-                                logger.error(f"Failed to parse score result: {e}")
-                                continue
-
-        # Filter executions by time range
-        filtered_executions = []
-
-        for execution in all_executions:
-            created_at_str = execution.get("created_at", "")
-            if created_at_str:
-                created_at = parse_datetime_safely(created_at_str)
-                if created_at and start_date.date() <= created_at.date() <= end_date.date():
-                    filtered_executions.append(execution)
-                elif not created_at:
-                    # Include if we couldn't parse the date (log error already handled in helper)
-                    filtered_executions.append(execution)
-            else:
-                filtered_executions.append(execution)  # Include executions without timestamps
-
-        # Filter results by time range too
-        filtered_results = []
-        for result in all_results:
-            timestamp_str = result.get("timestamp", "")
-            if timestamp_str:
-                timestamp = parse_datetime_safely(timestamp_str)
-                if timestamp and start_date.date() <= timestamp.date() <= end_date.date():
-                    filtered_results.append(result)
-                elif not timestamp:
-                    # Include if we couldn't parse the timestamp
-                    filtered_results.append(result)
-
-        return filtered_executions, filtered_results
     except Exception as e:
-        logger.error(f"Failed to load orchestrator executions: {e}")
+        logger.error(f"Error loading dashboard data: {e}", exc_info=True)
+        return [], []
+
+
+# Keep the old function for backwards compatibility but add a deprecation notice
+@st.cache_data(ttl=60)  # 1-minute cache for real-time updates
+def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """DEPRECATED: Use load_dashboard_data_optimized instead - this function makes too many API calls"""
+    logger.warning("Using deprecated load_orchestrator_executions_with_results - switching to optimized version")
+    return load_dashboard_data_optimized(days_back)
+
+
+@st.cache_data(ttl=60)  # 1-minute cache for real-time updates
+def load_dashboard_data_with_responses(
+    days_back: int = 30, include_test: bool = True
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Load dashboard data with prompt/response data using optimized endpoint"""
+    try:
+        # Use new dashboard summary endpoint
+        params = {"days_back": days_back, "include_test": include_test}
+
+        summary_response = api_request("GET", API_ENDPOINTS["dashboard_summary"], params=params)
+        if not summary_response:
+            return [], []
+
+        executions = summary_response.get("executions", [])
+
+        # Get paginated scores with responses
+        all_results = []
+        page = 1
+        page_size = 100  # Smaller page size when including responses
+
+        while True:
+            score_params = {
+                "days_back": days_back,
+                "page": page,
+                "page_size": page_size,
+                "include_test": include_test,
+                "include_responses": True,  # Include prompt/response data
+            }
+
+            scores_response = api_request("GET", API_ENDPOINTS["dashboard_scores"], params=score_params)
+            if not scores_response:
+                break
+
+            scores = scores_response.get("scores", [])
+            all_results.extend(scores)
+
+            # Check if there are more pages
+            pagination = scores_response.get("pagination", {})
+            if page >= pagination.get("total_pages", 1):
+                break
+
+            page += 1
+
+            # Safety limit to prevent infinite loops
+            if page > 100:
+                logger.warning("Reached maximum page limit, stopping pagination")
+                break
+
+        logger.info(f"Loaded {len(executions)} executions and {len(all_results)} scores with responses")
+        return executions, all_results
+
+    except Exception as e:
+        logger.error(f"Error loading dashboard data with responses: {e}", exc_info=True)
         return [], []
 
 
@@ -5874,15 +5860,31 @@ def main():
         # Debug info
         st.write(f"🔍 Debug: Enhanced Evidence = {enhanced_evidence}")
 
+        # Get execution type filter
+        exec_type_filter = st.session_state.filter_state.get("entities", {}).get("execution_type", "Full Only")
+        include_test = exec_type_filter != "Full Only"  # Include test executions unless "Full Only" is selected
+
         # Load orchestrator executions with their results
         if enhanced_evidence:
-            # Load with full prompt/response data
+            # Load with full prompt/response data using optimized endpoint
             st.write("📝 Loading with full prompt/response data...")
-            executions, results = load_orchestrator_executions_with_full_data(days_back)
+            try:
+                # Try optimized endpoint with responses
+                executions, results = load_dashboard_data_with_responses(days_back, include_test)
+            except Exception as e:
+                logger.warning(f"Optimized endpoint with responses failed, falling back to legacy method: {e}")
+                # Fallback to old method if new endpoint isn't available
+                executions, results = load_orchestrator_executions_with_full_data(days_back)
         else:
-            # Load without response data (Dashboard_4 approach)
+            # Load without response data using optimized endpoint
             st.write("📊 Loading standard data (no responses)...")
-            executions, results = load_orchestrator_executions_with_results(days_back)
+            try:
+                # Try optimized endpoint first
+                executions, results = load_dashboard_data_optimized(days_back, include_test)
+            except Exception as e:
+                logger.warning(f"Optimized endpoint failed, falling back to legacy method: {e}")
+                # Fallback to old method if new endpoint isn't available
+                executions, results = load_orchestrator_executions_with_results(days_back)
 
         # Debug: Check if we have prompt_response data
         if results:

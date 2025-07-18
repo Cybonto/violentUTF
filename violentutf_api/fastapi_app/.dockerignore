@@ -26,6 +26,12 @@ htmlcov/
 *.sqlite
 *.sqlite3
 
+# Data directories (managed by Docker volumes)
+app_data/
+logs/
+*.db-wal
+*.db-shm
+
 # IDE
 .vscode/
 .idea/

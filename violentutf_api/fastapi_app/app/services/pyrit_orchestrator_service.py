@@ -23,51 +23,62 @@ logger = logging.getLogger(__name__)
 def with_retry_logic(max_retries: int = 3, base_delay: float = 1.0, exponential_backoff: bool = True):
     """
     Decorator to add retry logic with exponential backoff for orchestrator operations.
-    
+
     Args:
         max_retries: Maximum number of retry attempts
         base_delay: Base delay in seconds between retries
         exponential_backoff: Whether to use exponential backoff
     """
+
     def decorator(func):
         async def wrapper(*args, **kwargs):
             last_exception = None
-            
+
             for attempt in range(max_retries + 1):
                 try:
                     return await func(*args, **kwargs)
                 except Exception as e:
                     last_exception = e
-                    
+
                     # Check if this is a retriable error
                     error_message = str(e).lower()
-                    is_retriable = any(keyword in error_message for keyword in [
-                        'throttling', '429', 'rate limit', 'too many requests',
-                        'timeout', 'connection', 'network', 'server error'
-                    ])
-                    
+                    is_retriable = any(
+                        keyword in error_message
+                        for keyword in [
+                            "throttling",
+                            "429",
+                            "rate limit",
+                            "too many requests",
+                            "timeout",
+                            "connection",
+                            "network",
+                            "server error",
+                        ]
+                    )
+
                     if not is_retriable or attempt == max_retries:
                         logger.error(f"Non-retriable error or max retries reached: {e}")
                         raise e
-                    
+
                     # Calculate delay with exponential backoff
                     if exponential_backoff:
-                        delay = base_delay * (2 ** attempt)
+                        delay = base_delay * (2**attempt)
                     else:
                         delay = base_delay
-                    
+
                     logger.warning(
                         f"Retriable error on attempt {attempt + 1}/{max_retries + 1}: {e}. "
                         f"Retrying in {delay:.1f}s..."
                     )
-                    
+
                     await asyncio.sleep(delay)
-            
+
             # Should never reach here, but just in case
             if last_exception:
                 raise last_exception
-                
+
         return wrapper
+
     return decorator
 
 
@@ -385,7 +396,9 @@ class PyRITOrchestratorService:
                             # Fallback to lookup by name
                             scorer_name = scorer_info.get("scorer_name")
                             if scorer_name:
-                                scorer_instance = await self._create_scorer_instance(scorer_name, user_context, orchestrator_id)
+                                scorer_instance = await self._create_scorer_instance(
+                                    scorer_name, user_context, orchestrator_id
+                                )
                                 resolved_scorers.append(scorer_instance)
                                 logger.info(f"🎯 Created ConfiguredScorerWrapper for '{scorer_name}' via lookup")
 
@@ -424,7 +437,9 @@ class PyRITOrchestratorService:
         # Create ConfiguredGeneratorTarget
         return ConfiguredGeneratorTarget(generator_config)
 
-    async def _create_scorer_instance(self, scorer_name: str, user_context: str = None, orchestrator_id: str = None) -> Scorer:
+    async def _create_scorer_instance(
+        self, scorer_name: str, user_context: str = None, orchestrator_id: str = None
+    ) -> Scorer:
         """Create Scorer from configured scorer"""
         # Import scorer service functions directly
         from app.services.scorer_integration_service import get_scorer_by_name
@@ -473,8 +488,10 @@ class PyRITOrchestratorService:
                 if "is_test_execution" in execution_metadata:
                     is_test = execution_metadata.get("is_test_execution", False)
                     execution_metadata["test_mode"] = "test_execution" if is_test else "full_execution"
-                    logger.info(f"Added test_mode: {execution_metadata['test_mode']} based on is_test_execution: {is_test}")
-                
+                    logger.info(
+                        f"Added test_mode: {execution_metadata['test_mode']} based on is_test_execution: {is_test}"
+                    )
+
                 self._orchestrator_metadata[orchestrator_id] = execution_metadata
                 logger.info(
                     f"Stored execution metadata for orchestrator {orchestrator_id}: {list(execution_metadata.keys())}"
@@ -909,7 +926,7 @@ class PyRITOrchestratorService:
         final_msg = f"🚨 FINAL SCORE COUNT: {len(formatted_scores)} scores to return"
         print(final_msg, file=sys.stderr, flush=True)
         logger.error(final_msg)
-        
+
         # Deduplicate scores to avoid showing same score multiple times
         # Since scores from different methods have different fields, normalize them first
         seen_scores = set()
@@ -918,23 +935,25 @@ class PyRITOrchestratorService:
         for score in formatted_scores:
             # Use prompt_id or prompt_request_response_id as the unique identifier
             unique_id = score.get("prompt_id") or score.get("prompt_request_response_id", "")
-            
+
             # Create a unique key based on essential fields only
             score_key = (
                 score.get("score_value"),  # The actual score value
                 score.get("score_category", ""),  # Category of score
                 unique_id,  # Unique ID for the prompt/conversation
             )
-            
+
             if score_key not in seen_scores:
                 seen_scores.add(score_key)
                 deduplicated_scores.append(score)
 
         # Log deduplication results
-        dedup_msg = f"🚨 DEDUPLICATION: Reduced {len(formatted_scores)} scores to {len(deduplicated_scores)} unique scores"
+        dedup_msg = (
+            f"🚨 DEDUPLICATION: Reduced {len(formatted_scores)} scores to {len(deduplicated_scores)} unique scores"
+        )
         print(dedup_msg, file=sys.stderr, flush=True)
         logger.info(dedup_msg)
-        
+
         formatted_scores = deduplicated_scores
 
         # SAFETY NET: If no scores found but we know scoring should have happened, create mock scores
@@ -1049,31 +1068,29 @@ class PyRITOrchestratorService:
             logger.info(f"Disposed orchestrator: {orchestrator_id}")
 
     async def _send_prompts_with_retry(
-        self, 
-        orchestrator: PromptSendingOrchestrator, 
-        dataset_prompts: List[str], 
-        memory_labels: Dict[str, Any], 
-        execution_config: Dict[str, Any]
+        self,
+        orchestrator: PromptSendingOrchestrator,
+        dataset_prompts: List[str],
+        memory_labels: Dict[str, Any],
+        execution_config: Dict[str, Any],
     ) -> List[PromptRequestResponse]:
         """Send dataset prompts with retry logic and inter-prompt delays."""
         retry_config = self._get_retry_config(execution_config)
-        
+
         @with_retry_logic(
             max_retries=retry_config["max_retries"],
             base_delay=retry_config["base_delay"],
-            exponential_backoff=retry_config["exponential_backoff"]
+            exponential_backoff=retry_config["exponential_backoff"],
         )
         async def _send_with_delay():
             # Add inter-prompt delay for rate limiting prevention
             if retry_config.get("inter_prompt_delay", 0) > 0:
                 logger.info(f"Using inter-prompt delay: {retry_config['inter_prompt_delay']}s")
-                
+
             return await orchestrator.send_prompts_async(
-                prompt_list=dataset_prompts, 
-                prompt_type="text", 
-                memory_labels=memory_labels
+                prompt_list=dataset_prompts, prompt_type="text", memory_labels=memory_labels
             )
-        
+
         return await _send_with_delay()
 
     async def _send_prompt_list_with_retry(
@@ -1083,48 +1100,35 @@ class PyRITOrchestratorService:
         prompt_type: str,
         memory_labels: Dict[str, Any],
         metadata: Dict[str, Any],
-        execution_config: Dict[str, Any]
+        execution_config: Dict[str, Any],
     ) -> List[PromptRequestResponse]:
         """Send prompt list with retry logic and inter-prompt delays."""
         retry_config = self._get_retry_config(execution_config)
-        
+
         @with_retry_logic(
             max_retries=retry_config["max_retries"],
             base_delay=retry_config["base_delay"],
-            exponential_backoff=retry_config["exponential_backoff"]
+            exponential_backoff=retry_config["exponential_backoff"],
         )
         async def _send_with_delay():
             return await orchestrator.send_prompts_async(
-                prompt_list=prompt_list,
-                prompt_type=prompt_type,
-                memory_labels=memory_labels,
-                metadata=metadata
+                prompt_list=prompt_list, prompt_type=prompt_type, memory_labels=memory_labels, metadata=metadata
             )
-        
+
         return await _send_with_delay()
 
     def _get_retry_config(self, execution_config: Dict[str, Any]) -> Dict[str, Any]:
         """Get retry configuration based on execution type and user preferences."""
         execution_metadata = execution_config.get("input_data", {}).get("metadata", {})
         is_test_execution = execution_metadata.get("is_test_execution", False)
-        
+
         # Different retry strategies for TEST vs FULL execution
         if is_test_execution:
             # TEST execution: Fast retry with shorter delays
-            return {
-                "max_retries": 2,
-                "base_delay": 0.5,
-                "exponential_backoff": True,
-                "inter_prompt_delay": 0.2
-            }
+            return {"max_retries": 2, "base_delay": 0.5, "exponential_backoff": True, "inter_prompt_delay": 0.2}
         else:
             # FULL execution: Robust retry with longer delays
-            return {
-                "max_retries": 5,
-                "base_delay": 2.0,
-                "exponential_backoff": True,
-                "inter_prompt_delay": 0.5
-            }
+            return {"max_retries": 5, "base_delay": 2.0, "exponential_backoff": True, "inter_prompt_delay": 0.5}
 
 
 class ConfiguredGeneratorTarget(PromptTarget):
