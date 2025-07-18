@@ -133,107 +133,129 @@ The Report Setup page is a comprehensive interface for managing COB (Close of Bu
 - Simple restore functionality instead of migration tools
 - Basic change notes instead of detailed changelogs
 
-### 2. Report Generation Section
+### 2. Report Generation Section - Improved Data-First Approach
 
-#### 2.1 Manual Report Generation - Single Report Focus
+#### Initial Template Library (Toxicity/Safety Focus)
 
-**Step-Based Workflow:**
-1. **Template Selection** → 2. **Scan Result Selection** → 3. **Report Configuration** → 4. **Generation Progress**
+**Core Templates:**
+1. **Basic Safety Assessment Report** - Comprehensive safety evaluation focusing on harmful content
+2. **Toxicity Analysis Deep Dive** - Detailed analysis of model responses to toxic prompts
+3. **Jailbreak Resilience Report** - Assessment of resistance to jailbreak attempts
+4. **Bias and Fairness Evaluation** - Comprehensive bias testing across dimensions
+5. **Safety Compliance Report** - Compliance-focused report for safety standards
 
-**Step 1: Template Selection**
-- **Search and Filter**: Quick search with category filtering
-- **Template Cards**: Display severity indicators, scanner compatibility, complexity level
-- **Template Preview**: Expandable details showing blocks and features
-- **Visual Selection**: Clear indication of selected template
+#### 2.1 Manual Report Generation - Reordered Workflow
 
-**Step 2: Scan Result Selection (Dashboard Filter Style)**
-- **Search Bar**: Search by model name, date, scanner type
-- **Quick Filters**: "All Scans", "Last 7 Days", "Critical Only", "PyRIT Only", "Garak Only"
-- **Advanced Filters** (Expandable):
-  - Time Range: Date range picker for scan dates
-  - Scanner Type: Multi-select (PyRIT, Garak, Custom)
-  - Target Models: Multi-select from scanned models
-  - Scan Status: Completed, Failed, Partial
-  - Severity Levels: Multi-select with Critical/High default
-  - Attack Categories: Prompt Injection, Jailbreak, etc.
-  - Results Thresholds: Min vulnerabilities, success rate
-- **Scan Result Cards**:
-  - Scanner icon and model name
-  - Vulnerability summary (Critical/High/Medium counts)
-  - Success rate metrics
-  - Attack category badges
-  - Selection checkbox with visual feedback
-  - Expandable details (configuration, key findings)
-- **Bulk Selection**: "Select All" and "Clear Selection" buttons
+**New Step-Based Workflow:**
+1. **Data Selection** → 2. **Template Recommendation** → 3. **Report Configuration** → 4. **Generation & Export**
+
+**Step 1: Data Selection (NEW FIRST STEP)**
+- **Data Source Tabs**: Recent Scans | Search by Model | Search by Date | Search by Type
+- **Enhanced Scan Cards**:
+  - Scanner type indicator (PyRIT/Garak)
+  - Score category badges (☠️ toxicity, 🛡️ safety, ⚖️ bias, 🔓 jailbreak)
+  - Key metrics display (tests run, avg toxicity score)
+  - Dataset/Orchestrator information
+  - Expandable score breakdown table
+- **Quick Filters**: "All", "Safety/Toxicity", "Jailbreak", "Bias", "Compliance"
+- **Scan Selection**: Checkbox with visual feedback for selected scans
+
+**Step 2: Template Recommendation (Based on Selected Data)**
+- **Data Analysis Summary**:
+  - Number of scans selected
+  - Score categories present
+  - Models tested
+  - Total tests run
+- **Recommended Templates**:
+  - Templates matched to scan data categories (>50% overlap)
+  - Visual "RECOMMENDED" indicator
+  - Automatic suggestion for safety assessment if toxicity data present
+- **Template Cards**:
+  - Template name and description
+  - "Best for" categories
+  - Template structure preview
+  - Selection buttons (primary for recommended)
 
 **Step 3: Report Configuration**
-- **Configuration Tabs**:
-  1. **Basic Settings**:
-     - Report name with smart defaults
-     - Report period (use scan dates or custom)
-     - Output formats (PDF, JSON, Markdown)
-     - Report focus (Comprehensive, Executive, Technical, Compliance)
-  
-  2. **Block Configuration**:
-     - Available variables display from selected scans
-     - Per-block settings based on block type:
-       - Executive Summary: Component selection, highlight threshold
-       - AI Analysis: Focus selection, data inclusion, custom prompts
-       - Security Metrics: Metric selection, visualization types
-       - Attack Results: Severity filter, column selection, row limits
-       - Custom Content: Markdown editor with variable insertion
-  
-  3. **AI Settings**:
-     - Global provider selection (OpenAI, Anthropic, GSAi, Local)
-     - Model parameters (temperature, etc.)
-     - Processing options (parallel, confidence scores, retry)
-     - Per-block overrides for multiple AI blocks
-  
-  4. **Advanced Options**:
-     - Performance settings (timeout, memory)
-     - Data processing (deduplication, aggregation)
-     - Export settings (PDF style, ToC, appendix)
+- **Multi-Format Default**:
+  - Output formats default to ["PDF", "JSON"]
+  - Format-specific options (PDF style, JSON structure)
+- **Enhanced Configuration**:
+  - Basic settings with smart defaults
+  - Block configuration with available variables
+  - AI settings with provider options
+  - Advanced data processing options
 
-**Step 4: Generation Progress**
-- **Real-time Updates**:
-  - Overall progress bar with percentage
-  - Stage indicators (7 stages from init to export)
-  - Current operation details
-  - Live metrics (time, scans processed, blocks completed)
-  - Generation log (expandable)
-- **Completion Actions**:
-  - Download buttons for each format
-  - Preview options (PDF/Markdown/JSON)
-  - Email report option
-  - Schedule this report
-  - Generate another
+**Step 4: Generation & Export**
+- **Progress Tracking**:
+  - 7-stage progress indicator
+  - Real-time metrics and logs
+- **Multi-Format Output**:
+  - Simultaneous generation of selected formats
+  - Individual download buttons per format
+  - Preview options for each format
 
-**Variable System Integration:**
-- **Scan Result Variables** (from Section 1):
-  - PyRIT: {{total_tests}}, {{successful_attacks}}, {{vulnerability_matrix}}, etc.
-  - Garak: {{probe_results}}, {{detector_findings}}, {{model_behavior}}
-  - Metrics: {{overall_risk_score}}, {{critical_count}}, {{compliance_scores}}
-- **Variable Mapping**: Automatic mapping of scan data to template variables
-- **Block Data Flow**: Each block receives appropriate processed data
+**Enhanced Variable System (ViolentUTF API):**
+- **Orchestrator Variables**: execution_id, orchestrator_name/type, execution_summary
+- **Scoring Variables**: score_value/type/category, score_rationale, scorer_class, avg_toxicity_score, safety_pass_rate
+- **Dataset Variables**: dataset_name/category/size, dataset_description
+- **Model Variables**: target_model, model_endpoint/version, deployment_name
+- **Garak Variables**: vulnerabilities_found, probe_names, generator_used, success_rate
+- **Compliance Variables**: owasp_coverage, nist_alignment, framework_gaps
 
-#### 2.2 Batch Report Generation (Lower Priority)
+#### 2.2 Extensible Block System
 
-**Batch Strategies:**
-- Same Template, Multiple Scan Sets
-- Multiple Templates, Same Scans
-- Custom Mapping
+**Backend Architecture:**
+```
+BaseReportBlock (Abstract)
+├── BlockDefinition (metadata, parameters, variables)
+├── Validation (config validation)
+├── Processing (data transformation)
+└── Rendering (PDF/JSON/Markdown output)
+```
 
-**Batch Configuration:**
-- Parallel execution limits (1-10 reports)
-- Batch timeout settings
-- Common output formats
-- Report name patterns with variables
+**Block Registry System:**
+- Dynamic block registration
+- Category-based organization
+- Frontend configuration generator
+- Parameter type support (text, select, multiselect, number, boolean, code)
 
-**Batch Execution:**
-- Configuration validation
-- Batch preview (first 5 reports)
-- Progress monitoring for all reports
-- Bulk download when complete
+**Example New Block - Toxicity Heatmap:**
+- Categories: hate, harassment, violence, sexual, self-harm
+- Aggregation: mean, max, p95, count
+- Color scales: red_yellow_green, blue_white_red, viridis
+- Output: toxicity_matrix, category_summary
+
+#### 2.3 Report Scheduling - Technology Stack
+
+**Leveraging Existing Infrastructure:**
+- **Scheduler**: APScheduler with SQLAlchemy persistence (existing DB)
+- **Execution**: FastAPI Background Tasks with asyncio
+- **Security**: JWT via APISIX, role-based authorization
+- **Reliability**: Exponential backoff retry, checkpoint recovery
+
+**Scheduling Features:**
+- **Frequency Options**: Daily, Weekly, Monthly, Custom Cron
+- **Timezone Support**: Full timezone selection
+- **Data Selection Strategies**:
+  - Latest scans matching criteria
+  - All scans since last report
+  - Fixed time window
+  - Saved data selection
+- **Reliability Options**:
+  - Retry on failure (1-5 attempts)
+  - Skip on persistent error
+  - Checkpoint-based recovery
+- **Notifications**:
+  - Email, Webhook, In-App
+  - Success/Failure notifications
+  - Configurable recipients
+
+**Security Implementation:**
+- Encrypted auth tokens in job context
+- Permission validation for scheduling
+- Audit logging for all operations
+- Secure execution isolation
 
 ### 3. Report Scheduling Section
 
