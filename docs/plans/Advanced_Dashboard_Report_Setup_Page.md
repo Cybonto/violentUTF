@@ -135,22 +135,105 @@ The Report Setup page is a comprehensive interface for managing COB (Close of Bu
 
 ### 2. Report Generation Section
 
-#### 2.1 Manual Report Generation
-- **Template Selection**: Dropdown to select from active templates
-- **Report Parameters**: Dynamic form based on template requirements
-- **Generation Options**:
-  - Report name customization
-  - Date range selection
-  - AI provider selection (OpenAI, Anthropic, GSAi, REST API)
-  - Analysis depth settings
-- **Real-time Progress**: Progress bar showing report generation status
-- **Preview Before Export**: Quick preview of generated report
+#### 2.1 Manual Report Generation - Single Report Focus
 
-#### 2.2 Batch Report Generation
-- **Multiple Template Selection**: Generate reports from multiple templates
-- **Bulk Parameters**: Apply common parameters to all reports
-- **Queue Management**: View and manage report generation queue
-- **Parallel Processing**: Generate multiple reports simultaneously
+**Step-Based Workflow:**
+1. **Template Selection** → 2. **Scan Result Selection** → 3. **Report Configuration** → 4. **Generation Progress**
+
+**Step 1: Template Selection**
+- **Search and Filter**: Quick search with category filtering
+- **Template Cards**: Display severity indicators, scanner compatibility, complexity level
+- **Template Preview**: Expandable details showing blocks and features
+- **Visual Selection**: Clear indication of selected template
+
+**Step 2: Scan Result Selection (Dashboard Filter Style)**
+- **Search Bar**: Search by model name, date, scanner type
+- **Quick Filters**: "All Scans", "Last 7 Days", "Critical Only", "PyRIT Only", "Garak Only"
+- **Advanced Filters** (Expandable):
+  - Time Range: Date range picker for scan dates
+  - Scanner Type: Multi-select (PyRIT, Garak, Custom)
+  - Target Models: Multi-select from scanned models
+  - Scan Status: Completed, Failed, Partial
+  - Severity Levels: Multi-select with Critical/High default
+  - Attack Categories: Prompt Injection, Jailbreak, etc.
+  - Results Thresholds: Min vulnerabilities, success rate
+- **Scan Result Cards**:
+  - Scanner icon and model name
+  - Vulnerability summary (Critical/High/Medium counts)
+  - Success rate metrics
+  - Attack category badges
+  - Selection checkbox with visual feedback
+  - Expandable details (configuration, key findings)
+- **Bulk Selection**: "Select All" and "Clear Selection" buttons
+
+**Step 3: Report Configuration**
+- **Configuration Tabs**:
+  1. **Basic Settings**:
+     - Report name with smart defaults
+     - Report period (use scan dates or custom)
+     - Output formats (PDF, JSON, Markdown)
+     - Report focus (Comprehensive, Executive, Technical, Compliance)
+  
+  2. **Block Configuration**:
+     - Available variables display from selected scans
+     - Per-block settings based on block type:
+       - Executive Summary: Component selection, highlight threshold
+       - AI Analysis: Focus selection, data inclusion, custom prompts
+       - Security Metrics: Metric selection, visualization types
+       - Attack Results: Severity filter, column selection, row limits
+       - Custom Content: Markdown editor with variable insertion
+  
+  3. **AI Settings**:
+     - Global provider selection (OpenAI, Anthropic, GSAi, Local)
+     - Model parameters (temperature, etc.)
+     - Processing options (parallel, confidence scores, retry)
+     - Per-block overrides for multiple AI blocks
+  
+  4. **Advanced Options**:
+     - Performance settings (timeout, memory)
+     - Data processing (deduplication, aggregation)
+     - Export settings (PDF style, ToC, appendix)
+
+**Step 4: Generation Progress**
+- **Real-time Updates**:
+  - Overall progress bar with percentage
+  - Stage indicators (7 stages from init to export)
+  - Current operation details
+  - Live metrics (time, scans processed, blocks completed)
+  - Generation log (expandable)
+- **Completion Actions**:
+  - Download buttons for each format
+  - Preview options (PDF/Markdown/JSON)
+  - Email report option
+  - Schedule this report
+  - Generate another
+
+**Variable System Integration:**
+- **Scan Result Variables** (from Section 1):
+  - PyRIT: {{total_tests}}, {{successful_attacks}}, {{vulnerability_matrix}}, etc.
+  - Garak: {{probe_results}}, {{detector_findings}}, {{model_behavior}}
+  - Metrics: {{overall_risk_score}}, {{critical_count}}, {{compliance_scores}}
+- **Variable Mapping**: Automatic mapping of scan data to template variables
+- **Block Data Flow**: Each block receives appropriate processed data
+
+#### 2.2 Batch Report Generation (Lower Priority)
+
+**Batch Strategies:**
+- Same Template, Multiple Scan Sets
+- Multiple Templates, Same Scans
+- Custom Mapping
+
+**Batch Configuration:**
+- Parallel execution limits (1-10 reports)
+- Batch timeout settings
+- Common output formats
+- Report name patterns with variables
+
+**Batch Execution:**
+- Configuration validation
+- Batch preview (first 5 reports)
+- Progress monitoring for all reports
+- Bulk download when complete
 
 ### 3. Report Scheduling Section
 
