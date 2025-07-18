@@ -8,140 +8,130 @@ The Report Setup page is a comprehensive interface for managing COB (Close of Bu
 
 ### 1. Template Management Section
 
-#### 1.1 Template Gallery - Enhanced with Advanced Metadata
+#### 1.1 Template Gallery - Red Teaming Focused
 
-**Extended Metadata Structure:**
-- **Core Identifiers**: ID, name, description, semantic version (e.g., 1.2.0)
-- **Classification**: Category (Security/Compliance/Operations/Executive), tags, industry, compliance frameworks (SOC2/ISO27001/HIPAA/GDPR/PCI-DSS/NIST), report type, complexity level
-- **Usage Analytics**: Total uses, last used, average generation time, success rate, user ratings, favorite count
-- **Lifecycle Tracking**: Created/modified by, approval status, expiry date, deprecation status
-- **Technical Requirements**: AI providers needed, minimum models, token estimates, data sources, dependencies, supported output formats
-- **Content Summary**: Block counts by type, estimated page count, supported languages
-- **Access Control**: Visibility levels, role-based access, sharing permissions
+**Core Metadata Structure:**
+- **Core Identifiers**: ID, name, description, version (e.g., 1.0.0)
+- **Red Teaming Classification**: 
+  - Testing category (Security/Safety/Reliability/Robustness/Compliance)
+  - Target model types (LLM/Vision/Multimodal/Embedding/Custom)
+  - Attack categories (Prompt Injection/Jailbreak/Data Leakage/Hallucination/Bias/Toxicity)
+  - Compliance frameworks (OWASP LLM/NIST AI RMF/ISO 23053/EU AI Act)
+  - Severity focus (Critical/High/Medium/Low/Informational)
+- **Testing Configuration**:
+  - Scanner compatibility (PyRIT scorers/orchestrators, Garak probes/detectors)
+  - Test data requirements (dataset types, minimum samples)
+  - Report sections (vulnerability assessment, attack success rates, defense recommendations)
+- **Technical Metadata**:
+  - AI analysis requirements (models, tokens, scan result processing)
+  - Output formats (PDF/JSON/Markdown)
+  - Estimated generation time
+  - Template complexity level
 
-**Advanced Search & Filter System:**
-- **Full-text Search**: Across names, descriptions, tags, block content, and AI prompts
-- **Faceted Filtering**: 
-  - Multi-select categories, frameworks, and report types
+**Search & Filter System:**
+- **Text Search**: Across names, descriptions, attack categories, testing notes
+- **Primary Filters**:
+  - Testing categories and target models
+  - Attack vectors with visual indicators
+  - Scanner type (PyRIT/Garak/Both/Any)
+  - Compliance framework with coverage display
+- **Advanced Filters**:
+  - Severity levels (default: Critical & High)
+  - Report components selection
   - Complexity slider
-  - Rating filters (minimum stars)
-  - Date range selection
-  - Usage frequency ranges
-  - Performance metrics (generation time)
-- **Smart Filters**: My templates, team favorites, recently used, trending, new arrivals, expiring soon, high-performance templates
-- **Sort Options**: Relevance, name, date created/modified, usage count, rating, generation time
+- **Quick Scenarios**: Security Audit, Injection Tests, Safety Testing, Compliance, Full Assessment, Quick Scan
+- **Sort Options**: Best Match, Severity Focus, Recently Updated, Name, Complexity
 
 **Gallery Implementation:**
-- **Responsive Grid Layout**: Card-based view with rich metadata display
-- **Performance Metrics**: Visual indicators for success rate, generation time, usage trends
-- **Quick Actions**: Use, preview, edit, clone buttons per template
-- **Bulk Operations**: Select multiple templates for export, archival, or comparison
+- **Card Layout**: Severity indicators, testing badges, scanner compatibility
+- **Key Metrics Display**: Scanner type, complexity, report sections, generation time
+- **Compliance Badges**: Framework coverage indicators
+- **Action Buttons**: Use Template, Preview, Edit, Clone
 
 #### 1.2 Template Editor - Streamlit-Compatible Implementation
 
 **Visual Block Editor Architecture:**
-- **Hybrid Approach**: Given Streamlit limitations, uses ordered lists with move up/down buttons, expandable configuration sections, and real-time preview
-- **Block Management**: Add/remove blocks, reorder with buttons or streamlit-sortables component, inline configuration
-- **Session State Management**: Maintains editor state across interactions, tracks unsaved changes
+- **Streamlit-Native Approach**: Uses expandable sections, button-based reordering, and session state management
+- **Block Management**: Add/remove blocks, reorder with up/down buttons, inline configuration
+- **Real-time Preview**: Side panel showing template structure and sample output
 
-**Comprehensive Block Types:**
+**Red Team Report Block Types:**
 
 1. **Executive Summary Block**
-   - Auto-summarization from other blocks
-   - Configurable summary length (100-500 words)
-   - Metric inclusion selector
-   - Tone adjustment (Professional/Technical/Executive/Simplified)
-   - Visual highlighting for critical findings
+   - Summary components: Overall Risk Score, Critical Vulnerabilities Count, Attack Success Rate, Top Attack Vectors, Compliance Status, Key Recommendations
+   - Auto-summarize from AI analysis and security metrics blocks
+   - Highlight threshold settings (Critical Only/High and Above/Medium and Above)
 
-2. **AI Analysis Block - Advanced Features**
-   - **Analysis Types**: Threat assessment, vulnerability analysis, compliance check, risk evaluation, trend analysis, custom
-   - **AI Provider Configuration**: 
-     - Primary and fallback providers
-     - Model selection with capability display
-     - Cost estimation
-   - **Prompt Engineering**:
-     - System prompt definition
-     - Template library with categories
-     - Variable support ({{report_date}}, {{metrics}}, {{context}})
-     - Prompt enhancement tools
-     - Test with sample data
-   - **Context Management**:
-     - Multiple context sources (previous blocks, historical reports, real-time metrics, external intelligence)
-     - Token allocation and prioritization
-     - Relevance filtering with embeddings
-   - **Generation Parameters**: Temperature, max tokens, top_p, frequency/presence penalties
-   - **Output Configuration**:
-     - Format selection (narrative, bullets, structured, Q&A)
-     - Quality controls (fact verification, confidence scoring, source attribution)
-     - Post-processing pipeline
+2. **AI Analysis Block - Scan Result Integration**
+   - **Analysis Focus**: Vulnerability assessment, attack pattern analysis, defense recommendations, compliance gaps, risk prioritization
+   - **Scan Result Sources**: PyRIT results, Garak results, custom scanner output, previous reports
+   - **Prompt Variables**:
+     - Scanner variables: {{scanner_type}}, {{target_model}}, {{scan_date}}, {{total_tests}}, {{successful_attacks}}
+     - Result variables: {{scan_results}}, {{vulnerability_matrix}}, {{attack_chains}}, {{scorer_outputs}}, {{probe_results}}
+   - **Result Processing**: Include raw results option, severity filtering, aggregation levels
+   - **AI Providers**: OpenAI GPT-4, Anthropic Claude, GSAi, Local Model
+   - **Output Format**: Structured Analysis, Narrative Report, Bullet Points
 
-3. **Data Table Block**
-   - Data source selection (PyRIT, Garak, custom query, API, CSV)
-   - Column configuration with custom columns
-   - Advanced filtering and sorting
-   - Aggregation functions
-   - Conditional formatting rules
-   - Export capabilities
+3. **Security Metrics Block - Compatibility Matrix Integration**
+   - **Metric Sources**: Compatibility Matrix Results, PyRIT Scan Metrics, Garak Test Metrics, Combined
+   - **Compatibility Matrix Metrics**:
+     - Overall Compatibility Score
+     - Framework Coverage (OWASP/NIST/ISO)
+     - Attack Success Rates by Category
+     - Vulnerability Distribution
+     - Risk Score Breakdown
+     - Compliance Percentage
+     - Defense Effectiveness
+   - **Visualizations**: Metric Cards, Risk Heatmap, Attack Success Chart, Vulnerability Timeline, Compliance Radar
+   - **Severity Thresholds**: Critical (≥9.0), High (≥7.0), Medium (≥4.0), Low (≥0.0)
 
-4. **Security Metrics Block**
-   - Pre-built metric templates
-   - Multiple visualization types
-   - Time range selection
-   - Comparison modes
-   - Threshold configuration
-   - Real-time data integration
+4. **Attack Results Table**
+   - **Data Sources**: PyRIT Attack Results, Garak Probe Results, Combined Results
+   - **Display Columns**: Attack Type, Target Component, Success Status, Severity Score, Response Analysis
+   - **Filters**: Severity Level, Attack Success, Attack Category, Time Range
+   - **Highlighting Rules**: Critical severity (red), Successful attacks (bold), New vulnerabilities (yellow)
 
-5. **Custom Content Block**
-   - Support for Markdown, HTML, plain text
-   - Variable mapping from other sources
-   - Template syntax with dynamic content
+5. **Custom Content Block - Simplified**
+   - **Markdown-only** content editor
+   - **Available Variables**:
+     - Scan Results: {{total_tests}}, {{successful_attacks}}, {{failure_rate}}
+     - Vulnerabilities: {{total_vulnerabilities}}, {{critical_count}}, {{high_count}}
+     - Model Info: {{target_model}}, {{model_version}}, {{deployment_date}}
+     - Test Info: {{test_date}}, {{scanner_type}}, {{test_duration}}
+     - Metrics: {{risk_score}}, {{compliance_score}}, {{defense_rating}}
 
-**Block Configuration UI:**
-- **Field Types**: Text inputs, selectboxes, multi-selects, sliders, checkboxes, code editors (via streamlit-ace)
-- **Conditional Visibility**: Fields shown/hidden based on other selections
-- **Validation**: Real-time validation with helpful error messages
-- **Preview**: Live preview of block output
+**Scan Result Variable System:**
+- **Variable Registry**: PyRIT variables, Garak variables, Compatibility Matrix variables, Common variables
+- **Variable Helper UI**: Grouped by source, click-to-insert functionality, usage examples
+- **Conditional Display**: Support for if-statements based on variable values
 
-#### 1.3 Template Versioning System
+#### 1.3 Simplified Template Versioning
 
-**Semantic Versioning (SemVer):**
-- **Version Format**: MAJOR.MINOR.PATCH (e.g., 2.1.0)
-- **Pre-release Support**: Beta, RC tags (e.g., v2.1.0-beta.1)
-- **Version Types**: Major (breaking changes), Minor (new features), Patch (bug fixes)
+**Basic Version Control:**
+- **Version Format**: Simple MAJOR.MINOR.PATCH (e.g., 1.2.0)
+- **Version Types**: 
+  - Patch: Bug fixes, minor updates
+  - Minor: New features, backwards compatible
+  - Major: Breaking changes
+- **Version Storage**: Each version saves a complete template snapshot with timestamp and change notes
 
-**Version Control Features:**
-- **Complete History**: Every version stored with full template snapshot
-- **Changelog Tracking**: 
-  - Categorized changes (Added/Changed/Deprecated/Removed/Fixed/Security)
-  - Impact levels and affected blocks
-  - Migration requirements
-- **Version Comparison**:
-  - Side-by-side diff view
-  - Block additions/removals/modifications
-  - Visual structure comparison
-  - Migration assistant
-- **Branching & Merging**:
-  - Create branches for parallel development
-  - Three-way merge with conflict resolution
-  - Branch visualization
+**Version Management UI:**
+- **Current Version Display**: Shows active version with creation info
+- **Create New Version**: 
+  - Select change type (patch/minor/major)
+  - Add change notes (required)
+  - Preview new version number
+  - One-click creation
+- **Version History**: 
+  - Simple list of last 10 versions
+  - Shows version number, change notes, author, date
+  - Restore button to revert to any previous version
 
-**Version Lifecycle Management:**
-- **States**: Draft → Pending Review → Approved → Published → Deprecated → Archived
-- **Approval Workflow**: Required approvers, approval notes, rejection handling
-- **Auto-transitions**: Configurable rules (e.g., auto-archive after 90 days deprecated)
-- **Access Control**: Role-based permissions for state transitions
-
-**Migration System:**
-- **Migration Analysis**: Identify breaking changes, suggest replacements
-- **Migration Scripts**: Auto-generated or custom migration code
-- **Compatibility Checking**: Validate template compatibility with API versions
-- **Batch Migration**: Migrate multiple reports/schedules to new template version
-
-**Version UI Components:**
-- **Timeline Visualization**: Interactive timeline of version history
-- **Version Comparison Tool**: Detailed diff with multiple view modes
-- **Migration Assistant**: Step-by-step migration guidance
-- **Lifecycle Controls**: State transition interface with validation
+**Streamlined Features:**
+- No complex branching or merging
+- No approval workflows (can be added later if needed)
+- Simple restore functionality instead of migration tools
+- Basic change notes instead of detailed changelogs
 
 ### 2. Report Generation Section
 
