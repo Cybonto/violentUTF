@@ -5774,6 +5774,9 @@ def main():
                 st.error("❌ Failed to generate API token. Please try refreshing the page.")
                 return
 
+    # Initialize filter state early
+    initialize_filter_state()
+    
     # Page header
     st.title("📊 ViolentUTF Dashboard")
     st.markdown("*Real-time analysis of actual scorer execution results from the ViolentUTF API*")
