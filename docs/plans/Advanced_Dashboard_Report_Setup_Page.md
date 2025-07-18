@@ -8,32 +8,140 @@ The Report Setup page is a comprehensive interface for managing COB (Close of Bu
 
 ### 1. Template Management Section
 
-#### 1.1 Template Gallery
-- **View Templates**: Display all existing report templates in a card-based gallery view
-- **Template Preview**: Quick preview of template structure and blocks
-- **Template Metadata**: Show creation date, last modified, usage count
-- **Active/Inactive Status**: Visual indicator for template status
-- **Search & Filter**: Search templates by name, filter by type or status
+#### 1.1 Template Gallery - Enhanced with Advanced Metadata
 
-#### 1.2 Template Editor
-- **Visual Block Editor**: Drag-and-drop interface for arranging report blocks
-- **Block Types Palette**: 
-  - Executive Summary
-  - AI Analysis (with prompt editor)
-  - Security Metrics
-  - Data Tables
-  - Custom Content
-  - Charts/Visualizations
-- **Block Configuration**: Per-block settings and parameters
-- **AI Prompt Builder**: Guided prompt creation for AI analysis blocks
-- **Template Preview**: Real-time preview of template structure
-- **Template Validation**: Automatic validation of template configuration
+**Extended Metadata Structure:**
+- **Core Identifiers**: ID, name, description, semantic version (e.g., 1.2.0)
+- **Classification**: Category (Security/Compliance/Operations/Executive), tags, industry, compliance frameworks (SOC2/ISO27001/HIPAA/GDPR/PCI-DSS/NIST), report type, complexity level
+- **Usage Analytics**: Total uses, last used, average generation time, success rate, user ratings, favorite count
+- **Lifecycle Tracking**: Created/modified by, approval status, expiry date, deprecation status
+- **Technical Requirements**: AI providers needed, minimum models, token estimates, data sources, dependencies, supported output formats
+- **Content Summary**: Block counts by type, estimated page count, supported languages
+- **Access Control**: Visibility levels, role-based access, sharing permissions
 
-#### 1.3 Template Import/Export
-- **Import Templates**: Upload JSON template configurations
-- **Export Templates**: Download templates for backup or sharing
-- **Template Library**: Pre-built template library for common use cases
-- **Version History**: Track template changes over time
+**Advanced Search & Filter System:**
+- **Full-text Search**: Across names, descriptions, tags, block content, and AI prompts
+- **Faceted Filtering**: 
+  - Multi-select categories, frameworks, and report types
+  - Complexity slider
+  - Rating filters (minimum stars)
+  - Date range selection
+  - Usage frequency ranges
+  - Performance metrics (generation time)
+- **Smart Filters**: My templates, team favorites, recently used, trending, new arrivals, expiring soon, high-performance templates
+- **Sort Options**: Relevance, name, date created/modified, usage count, rating, generation time
+
+**Gallery Implementation:**
+- **Responsive Grid Layout**: Card-based view with rich metadata display
+- **Performance Metrics**: Visual indicators for success rate, generation time, usage trends
+- **Quick Actions**: Use, preview, edit, clone buttons per template
+- **Bulk Operations**: Select multiple templates for export, archival, or comparison
+
+#### 1.2 Template Editor - Streamlit-Compatible Implementation
+
+**Visual Block Editor Architecture:**
+- **Hybrid Approach**: Given Streamlit limitations, uses ordered lists with move up/down buttons, expandable configuration sections, and real-time preview
+- **Block Management**: Add/remove blocks, reorder with buttons or streamlit-sortables component, inline configuration
+- **Session State Management**: Maintains editor state across interactions, tracks unsaved changes
+
+**Comprehensive Block Types:**
+
+1. **Executive Summary Block**
+   - Auto-summarization from other blocks
+   - Configurable summary length (100-500 words)
+   - Metric inclusion selector
+   - Tone adjustment (Professional/Technical/Executive/Simplified)
+   - Visual highlighting for critical findings
+
+2. **AI Analysis Block - Advanced Features**
+   - **Analysis Types**: Threat assessment, vulnerability analysis, compliance check, risk evaluation, trend analysis, custom
+   - **AI Provider Configuration**: 
+     - Primary and fallback providers
+     - Model selection with capability display
+     - Cost estimation
+   - **Prompt Engineering**:
+     - System prompt definition
+     - Template library with categories
+     - Variable support ({{report_date}}, {{metrics}}, {{context}})
+     - Prompt enhancement tools
+     - Test with sample data
+   - **Context Management**:
+     - Multiple context sources (previous blocks, historical reports, real-time metrics, external intelligence)
+     - Token allocation and prioritization
+     - Relevance filtering with embeddings
+   - **Generation Parameters**: Temperature, max tokens, top_p, frequency/presence penalties
+   - **Output Configuration**:
+     - Format selection (narrative, bullets, structured, Q&A)
+     - Quality controls (fact verification, confidence scoring, source attribution)
+     - Post-processing pipeline
+
+3. **Data Table Block**
+   - Data source selection (PyRIT, Garak, custom query, API, CSV)
+   - Column configuration with custom columns
+   - Advanced filtering and sorting
+   - Aggregation functions
+   - Conditional formatting rules
+   - Export capabilities
+
+4. **Security Metrics Block**
+   - Pre-built metric templates
+   - Multiple visualization types
+   - Time range selection
+   - Comparison modes
+   - Threshold configuration
+   - Real-time data integration
+
+5. **Custom Content Block**
+   - Support for Markdown, HTML, plain text
+   - Variable mapping from other sources
+   - Template syntax with dynamic content
+
+**Block Configuration UI:**
+- **Field Types**: Text inputs, selectboxes, multi-selects, sliders, checkboxes, code editors (via streamlit-ace)
+- **Conditional Visibility**: Fields shown/hidden based on other selections
+- **Validation**: Real-time validation with helpful error messages
+- **Preview**: Live preview of block output
+
+#### 1.3 Template Versioning System
+
+**Semantic Versioning (SemVer):**
+- **Version Format**: MAJOR.MINOR.PATCH (e.g., 2.1.0)
+- **Pre-release Support**: Beta, RC tags (e.g., v2.1.0-beta.1)
+- **Version Types**: Major (breaking changes), Minor (new features), Patch (bug fixes)
+
+**Version Control Features:**
+- **Complete History**: Every version stored with full template snapshot
+- **Changelog Tracking**: 
+  - Categorized changes (Added/Changed/Deprecated/Removed/Fixed/Security)
+  - Impact levels and affected blocks
+  - Migration requirements
+- **Version Comparison**:
+  - Side-by-side diff view
+  - Block additions/removals/modifications
+  - Visual structure comparison
+  - Migration assistant
+- **Branching & Merging**:
+  - Create branches for parallel development
+  - Three-way merge with conflict resolution
+  - Branch visualization
+
+**Version Lifecycle Management:**
+- **States**: Draft → Pending Review → Approved → Published → Deprecated → Archived
+- **Approval Workflow**: Required approvers, approval notes, rejection handling
+- **Auto-transitions**: Configurable rules (e.g., auto-archive after 90 days deprecated)
+- **Access Control**: Role-based permissions for state transitions
+
+**Migration System:**
+- **Migration Analysis**: Identify breaking changes, suggest replacements
+- **Migration Scripts**: Auto-generated or custom migration code
+- **Compatibility Checking**: Validate template compatibility with API versions
+- **Batch Migration**: Migrate multiple reports/schedules to new template version
+
+**Version UI Components:**
+- **Timeline Visualization**: Interactive timeline of version history
+- **Version Comparison Tool**: Detailed diff with multiple view modes
+- **Migration Assistant**: Step-by-step migration guidance
+- **Lifecycle Controls**: State transition interface with validation
 
 ### 2. Report Generation Section
 
