@@ -337,9 +337,15 @@ def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List
 
 @st.cache_data(ttl=60)  # 1-minute cache for real-time updates
 def load_dashboard_data_with_responses(
-    days_back: int = 30, include_test: bool = True
-) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Load dashboard data with prompt/response data using optimized endpoint"""
+    days_back: int = 30, include_test: bool = True, page: int = 1, page_size: int = 500
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], Dict[str, Any]]:
+    """Load dashboard data with prompt/response data using optimized endpoint
+
+    Args:
+        days_back: Number of days to look back
+        include_test: Whether to include test executions
+        max_results: Maximum number of results to load with responses (for performance)
+    """
     try:
         # Use new dashboard summary endpoint
         params = {"days_back": days_back, "include_test": include_test}
@@ -350,45 +356,41 @@ def load_dashboard_data_with_responses(
 
         executions = summary_response.get("executions", [])
 
-        # Get paginated scores with responses
-        all_results = []
-        page = 1
-        page_size = 100  # Smaller page size when including responses
+        # Get specific page of scores with responses - no loop needed for single page
+        score_params = {
+            "days_back": days_back,
+            "page": page,
+            "page_size": page_size,
+            "include_test": include_test,
+            "include_responses": True,  # Include prompt/response data
+        }
 
-        while True:
-            score_params = {
-                "days_back": days_back,
-                "page": page,
-                "page_size": page_size,
-                "include_test": include_test,
-                "include_responses": True,  # Include prompt/response data
-            }
+        scores_response = api_request("GET", API_ENDPOINTS["dashboard_scores"], params=score_params)
+        if not scores_response:
+            return executions, [], {"error": "Failed to load scores"}
 
-            scores_response = api_request("GET", API_ENDPOINTS["dashboard_scores"], params=score_params)
-            if not scores_response:
-                break
+        scores = scores_response.get("scores", [])
+        pagination_data = scores_response.get("pagination", {})
 
-            scores = scores_response.get("scores", [])
-            all_results.extend(scores)
+        # Build pagination info
+        pagination_info = {
+            "current_page": page,
+            "page_size": page_size,
+            "total_count": pagination_data.get("total_count", 0),
+            "total_pages": pagination_data.get("total_pages", 1),
+            "has_next": page < pagination_data.get("total_pages", 1),
+            "has_prev": page > 1,
+            "start_index": (page - 1) * page_size + 1,
+            "end_index": min(page * page_size, pagination_data.get("total_count", 0)),
+        }
 
-            # Check if there are more pages
-            pagination = scores_response.get("pagination", {})
-            if page >= pagination.get("total_pages", 1):
-                break
+        logger.info(f"Loaded page {page} with {len(scores)} results (total: {pagination_info['total_count']})")
 
-            page += 1
-
-            # Safety limit to prevent infinite loops
-            if page > 100:
-                logger.warning("Reached maximum page limit, stopping pagination")
-                break
-
-        logger.info(f"Loaded {len(executions)} executions and {len(all_results)} scores with responses")
-        return executions, all_results
+        return executions, scores, pagination_info
 
     except Exception as e:
         logger.error(f"Error loading dashboard data with responses: {e}", exc_info=True)
-        return [], []
+        return [], [], {"error": str(e)}
 
 
 @st.cache_data(ttl=60)
@@ -5832,7 +5834,60 @@ def main():
         st.session_state["enhanced_evidence"] = enhanced_evidence
 
         if enhanced_evidence:
-            st.caption("⚠️ Loading response data may increase loading time")
+            st.warning(
+                "⚠️ **Performance Notice**: Enhanced Evidence loads prompt/response data.\n"
+                "- Shows 500 results per page for performance\n"
+                "- Use filters to reduce dataset size\n"
+                "- Disable for faster loading with 1000+ results"
+            )
+
+            # Pagination controls for Enhanced Evidence
+            st.divider()
+            st.markdown("### 📄 Pagination")
+
+            # Initialize pagination state
+            if "evidence_page" not in st.session_state:
+                st.session_state.evidence_page = 1
+
+            col1, col2 = st.columns(2)
+            with col1:
+                page_num = st.number_input(
+                    "Page",
+                    min_value=1,
+                    value=st.session_state.evidence_page,
+                    key="evidence_page_input",
+                    help="Navigate through pages of results",
+                )
+                if page_num != st.session_state.evidence_page:
+                    st.session_state.evidence_page = page_num
+                    st.cache_data.clear()  # Clear cache to reload data
+
+            with col2:
+                results_per_page = st.selectbox(
+                    "Results per page",
+                    options=[100, 250, 500],
+                    index=2,  # Default to 500
+                    key="results_per_page",
+                    help="Number of results to load per page",
+                )
+
+            # Navigation buttons
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button("⬅️ Previous", disabled=st.session_state.evidence_page <= 1):
+                    st.session_state.evidence_page -= 1
+                    st.cache_data.clear()
+                    st.rerun()
+            with col2:
+                st.caption(f"Page {st.session_state.evidence_page}")
+            with col3:
+                # Disable next button if we don't know if there are more pages
+                # Will be updated after data loads
+                if st.button("Next ➡️", key="next_button"):
+                    st.session_state.evidence_page += 1
+                    st.cache_data.clear()
+                    st.rerun()
+
             st.caption(f"📊 Mode: {'Enhanced' if enhanced_evidence else 'Standard'}")  # Debug info
 
         # Manual refresh button
@@ -5874,12 +5929,27 @@ def main():
             # Load with full prompt/response data using optimized endpoint
             st.write("📝 Loading with full prompt/response data...")
             try:
-                # Try optimized endpoint with responses
-                executions, results = load_dashboard_data_with_responses(days_back, include_test)
+                # Get pagination parameters from session state
+                current_page = st.session_state.get("evidence_page", 1)
+                results_per_page = st.session_state.get("results_per_page", 500)
+
+                # Try optimized endpoint with responses and pagination
+                executions, results, pagination_info = load_dashboard_data_with_responses(
+                    days_back, include_test, current_page, results_per_page
+                )
+
+                # Display pagination info
+                if pagination_info and not pagination_info.get("error"):
+                    st.info(
+                        f"📄 Page {pagination_info['current_page']} of {pagination_info['total_pages']} | "
+                        f"Showing results {pagination_info['start_index']}-{pagination_info['end_index']} "
+                        f"of {pagination_info['total_count']} total"
+                    )
             except Exception as e:
                 logger.warning(f"Optimized endpoint with responses failed, falling back to legacy method: {e}")
                 # Fallback to old method if new endpoint isn't available
                 executions, results = load_orchestrator_executions_with_full_data(days_back)
+                pagination_info = None
         else:
             # Load without response data using optimized endpoint
             st.write("📊 Loading standard data (no responses)...")
