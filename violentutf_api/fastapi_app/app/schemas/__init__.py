@@ -18,6 +18,7 @@ from .cob_schemas import (
     COBTemplateResponse,
     COBTemplateUpdate,
 )
+from .dashboard import DataBrowseRequest, DataBrowseResponse, ScanDataSummary
 
 __all__ = [
     "COBTemplateCreate",
@@ -36,4 +37,7 @@ __all__ = [
     "COBSystemStatusResponse",
     "COBExportRequest",
     "COBExportResponse",
+    "DataBrowseRequest",
+    "DataBrowseResponse",
+    "ScanDataSummary",
 ]

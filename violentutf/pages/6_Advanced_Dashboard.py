@@ -89,7 +89,6 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
     try:
-        logger.debug(f"Making {method} request to {url} through APISIX Gateway")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
 
         if response.status_code in [200, 201]:
@@ -926,7 +925,6 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
 
 def main():
     """Main advanced analytics dashboard with ML insights"""
-    logger.debug("Advanced Analytics Dashboard loading.")
     st.set_page_config(
         page_title="ViolentUTF Advanced Dashboard", page_icon="🧬", layout="wide", initial_sidebar_state="expanded"
     )

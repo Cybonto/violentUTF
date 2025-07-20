@@ -159,7 +159,6 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
     try:
-        logger.debug(f"Making {method} request to {url} through APISIX Gateway")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
 
         if response.status_code in [200, 201]:
@@ -536,17 +535,8 @@ def load_orchestrator_executions_with_full_data(
                         scores = full_results.get("scores", [])
                         responses = full_results.get("prompt_request_responses", [])
 
-                        # Debug logging
-                        logger.info(f"Execution {execution_id}: {len(scores)} scores, {len(responses)} responses")
-
                         # Match scores to responses
                         matched_results = match_scores_to_responses(scores, responses)
-
-                        # Debug: Check matching success
-                        with_prompt_response = sum(1 for r in matched_results if r.get("prompt_response"))
-                        logger.info(
-                            f"Execution {execution_id}: {with_prompt_response}/{len(matched_results)} scores matched to responses"
-                        )
 
                         # Enrich the matched results
                         enriched_results = enrich_response_data(matched_results)
@@ -668,12 +658,6 @@ def load_execution_results_with_responses(execution_id: str) -> Dict[str, Any]:
 def match_scores_to_responses(scores: List[Dict], responses: List[Dict]) -> List[Dict]:
     """Match scores to their corresponding prompt/response pairs using batch_index and timestamps"""
     matched_results = []
-
-    # Debug logging to understand data structure
-    if responses:
-        logger.info(f"Sample response structure: {json.dumps(responses[0], indent=2, default=str)[:500]}")
-    if scores:
-        logger.info(f"Sample score structure: {json.dumps(scores[0], indent=2, default=str)[:500]}")
 
     # Create lookup maps for responses by both batch_index and conversation_id
     response_map_by_batch = {}
@@ -2665,29 +2649,8 @@ def render_expanded_result(result: Dict, idx: int):
                     st.caption(f"Type: {insights.get('response_type', 'Unknown')}")
                     st.caption(f"Length: {insights.get('response_length', 0)} chars")
         else:
-            # Debug information when no prompt_response data
+            # When no prompt_response data
             st.warning("⚠️ No prompt/response data available for this result")
-
-            # Show what data we do have
-            with st.expander("🔍 Debug Information"):
-                st.write("**Available result keys:**")
-                st.write(list(result.keys()))
-
-                st.write("**Result structure (first 500 chars):**")
-                result_str = str(result)[:500]
-                st.text(result_str)
-
-                # Check if enhanced evidence is enabled
-                enhanced_evidence = st.session_state.get("enhanced_evidence", False)
-                st.write(f"**Enhanced Evidence Mode:** {enhanced_evidence}")
-
-                # Check execution status
-                exec_id = result.get("execution_id", "Unknown")
-                st.write(f"**Execution ID:** {exec_id}")
-
-                # Check batch info
-                batch_idx = result.get("batch_index", "Unknown")
-                st.write(f"**Batch Index:** {batch_idx}")
 
         # Action buttons
         action_col1, action_col2, action_col3, action_col4 = st.columns(4)
@@ -5751,7 +5714,6 @@ def render_cob_reports_tab():
 
 def main():
     """Main API-integrated dashboard"""
-    logger.debug("API-Integrated Red Team Dashboard loading.")
     st.set_page_config(
         page_title="ViolentUTF Dashboard", page_icon="📊", layout="wide", initial_sidebar_state="expanded"
     )
@@ -5830,7 +5792,7 @@ def main():
             help="Enable to load and display actual prompts/responses (may impact performance)",
         )
 
-        # Store in session state for debugging
+        # Store in session state
         st.session_state["enhanced_evidence"] = enhanced_evidence
 
         if enhanced_evidence:
@@ -5888,8 +5850,6 @@ def main():
                     st.cache_data.clear()
                     st.rerun()
 
-            st.caption(f"📊 Mode: {'Enhanced' if enhanced_evidence else 'Standard'}")  # Debug info
-
         # Manual refresh button
         if st.button("🔃 Refresh Now", use_container_width=True):
             st.cache_data.clear()
@@ -5917,9 +5877,6 @@ def main():
 
     # Load and process data using Dashboard_4 approach
     with st.spinner("🔄 Loading execution data from API..."):
-        # Debug info
-        st.write(f"🔍 Debug: Enhanced Evidence = {enhanced_evidence}")
-
         # Get execution type filter
         exec_type_filter = st.session_state.filter_state.get("entities", {}).get("execution_type", "Full Only")
         include_test = exec_type_filter != "Full Only"  # Include test executions unless "Full Only" is selected
@@ -5927,7 +5884,6 @@ def main():
         # Load orchestrator executions with their results
         if enhanced_evidence:
             # Load with full prompt/response data using optimized endpoint
-            st.write("📝 Loading with full prompt/response data...")
             try:
                 # Get pagination parameters from session state
                 current_page = st.session_state.get("evidence_page", 1)
@@ -5960,11 +5916,6 @@ def main():
                 logger.warning(f"Optimized endpoint failed, falling back to legacy method: {e}")
                 # Fallback to old method if new endpoint isn't available
                 executions, results = load_orchestrator_executions_with_results(days_back)
-
-        # Debug: Check if we have prompt_response data
-        if results:
-            with_responses = sum(1 for r in results if r.get("prompt_response"))
-            st.write(f"🔍 Debug: {with_responses}/{len(results)} results have prompt_response data")
 
         if not executions:
             st.warning("📊 No scorer executions found in the selected date range.")
