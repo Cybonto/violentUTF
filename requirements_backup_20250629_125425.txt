@@ -58,7 +58,7 @@ cymem==2.0.11
 datasets==3.6.0
 defusedxml==0.7.1
 Deprecated==1.2.18
-dill==0.3.8
+dill==0.4.0
 distro==1.9.0
 docling==2.30.0
 docling-core==2.28.0
