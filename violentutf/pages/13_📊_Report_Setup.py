@@ -20,6 +20,12 @@ from utils.auth_utils import handle_authentication_and_sidebar
 from utils.jwt_manager import jwt_manager
 from utils.logging import get_logger
 
+# Additional imports for Configuration tab
+try:
+    import pytz
+except ImportError:
+    pytz = None
+
 load_dotenv()
 logger = get_logger(__name__)
 
@@ -42,6 +48,7 @@ API_ENDPOINTS = {
     "report_templates_init": f"{API_BASE_URL}/api/v1/reports/templates/initialize",
     "report_generate": f"{API_BASE_URL}/api/v1/reports/generate",
     "report_preview": f"{API_BASE_URL}/api/v1/reports/preview",
+    "report_blocks_registry": f"{API_BASE_URL}/api/v1/reports/blocks/registry",
 }
 
 # --- Authentication and Setup ---
@@ -924,7 +931,603 @@ with tabs[2]:
         st.warning("⚠️ Please select a template first.")
         st.stop()
 
-    st.info("🚧 Configuration functionality coming soon.")
+    # Initialize configuration state if not exists
+    if "configuration" not in state or not state["configuration"]:
+        state["configuration"] = {
+            "blocks": [],
+            "output_formats": ["PDF", "JSON"],
+            "schedule": None,
+            "notifications": {
+                "email": {"enabled": False, "recipients": []},
+                "webhook": {"enabled": False, "url": None},
+            },
+            "report_name_template": "Report_{date}_{time}",
+            "priority": "normal",
+        }
+
+    # Create subtabs for different configuration sections
+    config_subtabs = st.tabs(["📦 Blocks", "📅 Schedule", "🔔 Notifications", "📄 Output", "⚙️ Advanced"])
+
+    # --- Blocks Configuration ---
+    with config_subtabs[0]:
+        st.markdown("### Report Blocks Configuration")
+        st.markdown("Configure which blocks to include in your report and their settings.")
+
+        # Load available blocks from API
+        blocks_response = api_request("GET", API_ENDPOINTS['report_blocks_registry'])
+
+        if blocks_response and "blocks" in blocks_response:
+            # Convert blocks dictionary to list format
+            available_blocks = []
+            for block_type, block_data in blocks_response["blocks"].items():
+                block_def = block_data["definition"]
+                block_def["block_type"] = block_type
+                available_blocks.append(block_def)
+
+            # Load template configuration to get default blocks
+            if state["template_id"]:
+                template_config_response = api_request(
+                    "GET", f"{API_ENDPOINTS['report_templates']}/{state['template_id']}"
+                )
+
+                if template_config_response:
+                    template_blocks = template_config_response.get("config", {}).get("blocks", [])
+
+                    # Initialize blocks in configuration if not set
+                    if not state["configuration"]["blocks"]:
+                        state["configuration"]["blocks"] = template_blocks
+
+                    # Block management section
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.markdown("#### Active Blocks")
+                    with col2:
+                        if st.button("➕ Add Block", use_container_width=True):
+                            st.session_state.show_add_block = True
+
+                    # Show add block dialog
+                    if getattr(st.session_state, "show_add_block", False):
+                        with st.expander("Add New Block", expanded=True):
+                            available_types = [
+                                b["block_type"]
+                                for b in available_blocks
+                                if b["block_type"]
+                                not in [block.get("block_type") for block in state["configuration"]["blocks"]]
+                            ]
+
+                            if available_types:
+                                selected_type = st.selectbox("Select block type:", available_types)
+                                block_info = next(b for b in available_blocks if b["block_type"] == selected_type)
+
+                                st.info(f"**{block_info['display_name']}**: {block_info['description']}")
+
+                                if st.button("Add Block"):
+                                    new_block = {
+                                        "block_type": selected_type,
+                                        "config": block_info.get("default_config", {}),
+                                        "enabled": True,
+                                    }
+                                    state["configuration"]["blocks"].append(new_block)
+                                    st.session_state.show_add_block = False
+                                    st.rerun()
+                            else:
+                                st.info("All available blocks are already added.")
+
+                            if st.button("Cancel"):
+                                st.session_state.show_add_block = False
+                                st.rerun()
+
+                    # Display and configure active blocks
+                    if state["configuration"]["blocks"]:
+                        for idx, block in enumerate(state["configuration"]["blocks"]):
+                            block_type = block.get("block_type", "unknown")
+                            block_info = next((b for b in available_blocks if b["block_type"] == block_type), None)
+
+                            if block_info:
+                                with st.container():
+                                    # Block header with controls
+                                    col1, col2, col3, col4, col5 = st.columns([0.5, 4, 1, 1, 1])
+
+                                    with col1:
+                                        # Enable/disable toggle
+                                        enabled = st.checkbox(
+                                            "", value=block.get("enabled", True), key=f"block_enabled_{idx}"
+                                        )
+                                        block["enabled"] = enabled
+
+                                    with col2:
+                                        st.markdown(f"**{block_info['display_name']}**")
+                                        st.caption(block_info["description"])
+
+                                    with col3:
+                                        # Move up button
+                                        if idx > 0 and st.button("⬆️", key=f"move_up_{idx}", help="Move up"):
+                                            (
+                                                state["configuration"]["blocks"][idx],
+                                                state["configuration"]["blocks"][idx - 1],
+                                            ) = (
+                                                state["configuration"]["blocks"][idx - 1],
+                                                state["configuration"]["blocks"][idx],
+                                            )
+                                            st.rerun()
+
+                                    with col4:
+                                        # Move down button
+                                        if idx < len(state["configuration"]["blocks"]) - 1 and st.button(
+                                            "⬇️", key=f"move_down_{idx}", help="Move down"
+                                        ):
+                                            (
+                                                state["configuration"]["blocks"][idx],
+                                                state["configuration"]["blocks"][idx + 1],
+                                            ) = (
+                                                state["configuration"]["blocks"][idx + 1],
+                                                state["configuration"]["blocks"][idx],
+                                            )
+                                            st.rerun()
+
+                                    with col5:
+                                        # Remove button
+                                        if st.button("🗑️", key=f"remove_{idx}", help="Remove block"):
+                                            state["configuration"]["blocks"].pop(idx)
+                                            st.rerun()
+
+                                    # Block configuration (only if enabled)
+                                    if enabled and block_info.get("configuration_schema"):
+                                        with st.expander("Configuration", expanded=False):
+                                            block_config = block.get("config", {})
+                                            schema = block_info["configuration_schema"]
+
+                                            # Generate configuration UI based on schema
+                                            if "properties" in schema:
+                                                for prop_name, prop_schema in schema["properties"].items():
+                                                    prop_type = prop_schema.get("type", "string")
+                                                    prop_desc = prop_schema.get("description", "")
+
+                                                    if prop_type == "boolean":
+                                                        block_config[prop_name] = st.checkbox(
+                                                            prop_name.replace("_", " ").title(),
+                                                            value=block_config.get(
+                                                                prop_name, prop_schema.get("default", False)
+                                                            ),
+                                                            help=prop_desc,
+                                                            key=f"block_{idx}_{prop_name}",
+                                                        )
+                                                    elif prop_type == "number":
+                                                        min_val = prop_schema.get("minimum", 0)
+                                                        max_val = prop_schema.get("maximum", 100)
+                                                        default_val = prop_schema.get("default", min_val)
+                                                        
+                                                        # Determine if we should use int or float based on schema and values
+                                                        # If any value has a decimal part, use float for all
+                                                        values_to_check = [min_val, max_val, default_val, block_config.get(prop_name, default_val)]
+                                                        use_float = any(isinstance(v, float) and v != int(v) for v in values_to_check)
+                                                        
+                                                        # Convert all values to the same type
+                                                        if use_float:
+                                                            min_val = float(min_val)
+                                                            max_val = float(max_val)
+                                                            default_val = float(default_val)
+                                                        else:
+                                                            min_val = int(min_val)
+                                                            max_val = int(max_val)
+                                                            default_val = int(default_val)
+                                                        
+                                                        # Ensure default value respects min/max constraints
+                                                        default_val = max(min_val, min(max_val, default_val))
+                                                        current_val = block_config.get(prop_name, default_val)
+                                                        
+                                                        # Convert current value to the same type
+                                                        if use_float:
+                                                            current_val = float(current_val)
+                                                        else:
+                                                            current_val = int(current_val)
+                                                        
+                                                        # Ensure current value respects min/max constraints
+                                                        current_val = max(min_val, min(max_val, current_val))
+                                                        
+                                                        block_config[prop_name] = st.number_input(
+                                                            prop_name.replace("_", " ").title(),
+                                                            value=current_val,
+                                                            min_value=min_val,
+                                                            max_value=max_val,
+                                                            help=prop_desc,
+                                                            key=f"block_{idx}_{prop_name}",
+                                                        )
+                                                    elif prop_type == "string" and "enum" in prop_schema:
+                                                        block_config[prop_name] = st.selectbox(
+                                                            prop_name.replace("_", " ").title(),
+                                                            options=prop_schema["enum"],
+                                                            index=prop_schema["enum"].index(
+                                                                block_config.get(prop_name, prop_schema["enum"][0])
+                                                            ),
+                                                            help=prop_desc,
+                                                            key=f"block_{idx}_{prop_name}",
+                                                        )
+                                                    elif prop_type == "string" and prop_schema.get("x-dynamic-enum") == "generators":
+                                                        # Fetch generators list for AI model selection
+                                                        generators_response = api_request("GET", f"{API_BASE_URL}/api/v1/generators")
+                                                        if generators_response and "generators" in generators_response:
+                                                            generator_names = [g["name"] for g in generators_response["generators"]]
+                                                            if generator_names:
+                                                                current_value = block_config.get(prop_name, generator_names[0])
+                                                                # Ensure current value is in the list
+                                                                if current_value not in generator_names:
+                                                                    current_value = generator_names[0]
+                                                                block_config[prop_name] = st.selectbox(
+                                                                    prop_name.replace("_", " ").title(),
+                                                                    options=generator_names,
+                                                                    index=generator_names.index(current_value),
+                                                                    help=f"{prop_desc} (Available generators from your configuration)",
+                                                                    key=f"block_{idx}_{prop_name}",
+                                                                )
+                                                            else:
+                                                                st.warning("No generators configured. Please configure generators first.")
+                                                                block_config[prop_name] = st.text_input(
+                                                                    prop_name.replace("_", " ").title(),
+                                                                    value=block_config.get(prop_name, "gpt-4"),
+                                                                    help=prop_desc,
+                                                                    key=f"block_{idx}_{prop_name}",
+                                                                )
+                                                        else:
+                                                            st.error("Failed to fetch generators list")
+                                                            block_config[prop_name] = st.text_input(
+                                                                prop_name.replace("_", " ").title(),
+                                                                value=block_config.get(prop_name, "gpt-4"),
+                                                                help=prop_desc,
+                                                                key=f"block_{idx}_{prop_name}",
+                                                            )
+                                                    elif prop_type == "array":
+                                                        # Handle array types (like components selection)
+                                                        current_values = block_config.get(
+                                                            prop_name, prop_schema.get("default", [])
+                                                        )
+                                                        if "enum" in prop_schema.get("items", {}):
+                                                            block_config[prop_name] = st.multiselect(
+                                                                prop_name.replace("_", " ").title(),
+                                                                options=prop_schema["items"]["enum"],
+                                                                default=current_values,
+                                                                help=prop_desc,
+                                                                key=f"block_{idx}_{prop_name}",
+                                                            )
+                                                    else:
+                                                        # Default text input
+                                                        block_config[prop_name] = st.text_input(
+                                                            prop_name.replace("_", " ").title(),
+                                                            value=block_config.get(
+                                                                prop_name, prop_schema.get("default", "")
+                                                            ),
+                                                            help=prop_desc,
+                                                            key=f"block_{idx}_{prop_name}",
+                                                        )
+
+                                            block["config"] = block_config
+
+                                    st.divider()
+                    else:
+                        st.info("No blocks configured. Click 'Add Block' to get started.")
+        else:
+            st.error("Failed to load available blocks.")
+
+    # --- Schedule Configuration ---
+    with config_subtabs[1]:
+        st.markdown("### Schedule Configuration")
+        st.markdown("Set up automated report generation on a schedule.")
+
+        # Enable/disable scheduling
+        enable_schedule = st.checkbox(
+            "Enable Scheduled Report Generation", value=state["configuration"]["schedule"] is not None
+        )
+
+        if enable_schedule:
+            if state["configuration"]["schedule"] is None:
+                state["configuration"]["schedule"] = {
+                    "frequency": "weekly",
+                    "timezone": "UTC",
+                    "time": "09:00",
+                    "days_of_week": [1],  # Monday
+                    "day_of_month": 1,
+                    "target_config": {},
+                }
+
+            schedule = state["configuration"]["schedule"]
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                # Frequency selection
+                schedule["frequency"] = st.selectbox(
+                    "Frequency",
+                    options=["daily", "weekly", "monthly", "custom"],
+                    index=["daily", "weekly", "monthly", "custom"].index(schedule.get("frequency", "weekly")),
+                )
+
+                # Time selection
+                schedule["time"] = st.time_input(
+                    "Time", value=datetime.strptime(schedule.get("time", "09:00"), "%H:%M").time()
+                ).strftime("%H:%M")
+
+            with col2:
+                # Timezone selection
+                if pytz:
+                    timezones = pytz.common_timezones
+                    schedule["timezone"] = st.selectbox(
+                        "Timezone",
+                        options=timezones,
+                        index=(
+                            timezones.index(schedule.get("timezone", "UTC"))
+                            if schedule.get("timezone", "UTC") in timezones
+                            else 0
+                        ),
+                    )
+                else:
+                    schedule["timezone"] = st.text_input(
+                        "Timezone",
+                        value=schedule.get("timezone", "UTC"),
+                        help="Install pytz for timezone selection support",
+                    )
+
+            # Frequency-specific options
+            if schedule["frequency"] == "weekly":
+                days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                current_days = schedule.get("days_of_week", [0])
+                selected_days = st.multiselect(
+                    "Days of Week", options=days, default=[days[i] for i in current_days if i < len(days)]
+                )
+                schedule["days_of_week"] = [days.index(day) for day in selected_days]
+
+            elif schedule["frequency"] == "monthly":
+                schedule["day_of_month"] = st.number_input(
+                    "Day of Month", min_value=1, max_value=31, value=schedule.get("day_of_month", 1)
+                )
+
+            # Target configuration
+            st.markdown("#### Target Configuration")
+            st.info("Specify which models or endpoints to test for scheduled reports.")
+
+            target_type = st.radio(
+                "Target Type", options=["Latest Scan Data", "Specific Models", "All Active Models"], index=0
+            )
+
+            schedule["target_config"]["type"] = target_type
+
+            if target_type == "Specific Models":
+                # TODO: Load available models from API
+                schedule["target_config"]["models"] = st.multiselect(
+                    "Select Models",
+                    options=["Model A", "Model B", "Model C"],  # Replace with API call
+                    default=schedule["target_config"].get("models", []),
+                )
+        else:
+            state["configuration"]["schedule"] = None
+
+    # --- Notifications Configuration ---
+    with config_subtabs[2]:
+        st.markdown("### Notification Settings")
+        st.markdown("Configure how you'll be notified about report generation.")
+
+        # Email notifications
+        st.markdown("#### Email Notifications")
+        email_config = state["configuration"]["notifications"]["email"]
+
+        email_enabled = st.checkbox("Enable Email Notifications", value=email_config.get("enabled", False))
+        email_config["enabled"] = email_enabled
+
+        if email_enabled:
+            # Recipients
+            recipients_text = st.text_area(
+                "Recipients (one per line)",
+                value="\n".join(email_config.get("recipients", [])),
+                help="Enter email addresses, one per line",
+            )
+            email_config["recipients"] = [email.strip() for email in recipients_text.split("\n") if email.strip()]
+
+            # Notification triggers
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                email_config["on_success"] = st.checkbox("On Success", value=email_config.get("on_success", True))
+            with col2:
+                email_config["on_failure"] = st.checkbox("On Failure", value=email_config.get("on_failure", True))
+            with col3:
+                email_config["include_report"] = st.checkbox(
+                    "Attach Report", value=email_config.get("include_report", True)
+                )
+
+        st.divider()
+
+        # Webhook notifications
+        st.markdown("#### Webhook Notifications")
+        webhook_config = state["configuration"]["notifications"]["webhook"]
+
+        webhook_enabled = st.checkbox("Enable Webhook Notifications", value=webhook_config.get("enabled", False))
+        webhook_config["enabled"] = webhook_enabled
+
+        if webhook_enabled:
+            webhook_config["url"] = st.text_input(
+                "Webhook URL", value=webhook_config.get("url", ""), placeholder="https://example.com/webhook"
+            )
+
+            # Headers
+            with st.expander("Headers (Optional)"):
+                headers_text = st.text_area(
+                    "Custom Headers (JSON format)",
+                    value=json.dumps(webhook_config.get("headers", {}), indent=2),
+                    help="Enter headers in JSON format",
+                )
+                try:
+                    webhook_config["headers"] = json.loads(headers_text) if headers_text else {}
+                except json.JSONDecodeError:
+                    st.error("Invalid JSON format for headers")
+
+            # Advanced settings
+            col1, col2 = st.columns(2)
+            with col1:
+                webhook_config["retry_count"] = st.number_input(
+                    "Retry Count", min_value=0, max_value=5, value=webhook_config.get("retry_count", 3)
+                )
+            with col2:
+                webhook_config["timeout"] = st.number_input(
+                    "Timeout (seconds)", min_value=5, max_value=300, value=webhook_config.get("timeout", 30)
+                )
+
+    # --- Output Configuration ---
+    with config_subtabs[3]:
+        st.markdown("### Output Format Configuration")
+        st.markdown("Select which formats to generate for your report.")
+
+        # Format selection
+        available_formats = ["PDF", "JSON", "Markdown", "HTML", "CSV", "Excel"]
+        selected_formats = []
+
+        col1, col2 = st.columns(2)
+        for i, format_name in enumerate(available_formats):
+            with col1 if i % 2 == 0 else col2:
+                if st.checkbox(
+                    format_name,
+                    value=format_name in state["configuration"].get("output_formats", ["PDF", "JSON"]),
+                    key=f"format_{format_name}",
+                ):
+                    selected_formats.append(format_name)
+
+        state["configuration"]["output_formats"] = selected_formats
+
+        if not selected_formats:
+            st.warning("Please select at least one output format.")
+
+        # Format-specific options
+        if "PDF" in selected_formats:
+            with st.expander("PDF Options"):
+                pdf_options = state["configuration"].get("pdf_options", {})
+                pdf_options["include_toc"] = st.checkbox(
+                    "Include Table of Contents", value=pdf_options.get("include_toc", True)
+                )
+                pdf_options["include_charts"] = st.checkbox(
+                    "Include Charts and Visualizations", value=pdf_options.get("include_charts", True)
+                )
+                pdf_options["page_size"] = st.selectbox(
+                    "Page Size",
+                    options=["A4", "Letter", "Legal"],
+                    index=["A4", "Letter", "Legal"].index(pdf_options.get("page_size", "A4")),
+                )
+                state["configuration"]["pdf_options"] = pdf_options
+
+        if "CSV" in selected_formats:
+            with st.expander("CSV Options"):
+                csv_options = state["configuration"].get("csv_options", {})
+                csv_options["delimiter"] = st.selectbox(
+                    "Delimiter",
+                    options=[",", ";", "|", "\\t"],
+                    index=[",", ";", "|", "\\t"].index(csv_options.get("delimiter", ",")),
+                )
+                csv_options["include_headers"] = st.checkbox(
+                    "Include Headers", value=csv_options.get("include_headers", True)
+                )
+                state["configuration"]["csv_options"] = csv_options
+
+    # --- Advanced Configuration ---
+    with config_subtabs[4]:
+        st.markdown("### Advanced Settings")
+
+        # Report naming
+        st.markdown("#### Report Naming")
+        state["configuration"]["report_name_template"] = st.text_input(
+            "Report Name Template",
+            value=state["configuration"].get("report_name_template", "Report_{date}_{time}"),
+            help="Available variables: {date}, {time}, {template_name}, {scanner_type}",
+        )
+
+        # Priority
+        st.markdown("#### Processing Priority")
+        state["configuration"]["priority"] = st.select_slider(
+            "Priority", options=["low", "normal", "high"], value=state["configuration"].get("priority", "normal")
+        )
+
+        # Data retention
+        st.markdown("#### Data Retention")
+        retention_days = st.number_input(
+            "Keep reports for (days)",
+            min_value=1,
+            max_value=365,
+            value=state["configuration"].get("retention_days", 30),
+            help="Reports older than this will be automatically deleted",
+        )
+        state["configuration"]["retention_days"] = retention_days
+
+        # Custom metadata
+        st.markdown("#### Custom Metadata")
+        with st.expander("Add custom metadata to your report"):
+            metadata_text = st.text_area(
+                "Metadata (JSON format)",
+                value=json.dumps(state["configuration"].get("custom_metadata", {}), indent=2),
+                help="Add any custom key-value pairs",
+            )
+            try:
+                state["configuration"]["custom_metadata"] = json.loads(metadata_text) if metadata_text else {}
+            except json.JSONDecodeError:
+                st.error("Invalid JSON format for metadata")
+
+    # Save configuration button
+    st.divider()
+    col1, col2, col3 = st.columns([1, 1, 2])
+
+    with col1:
+        if st.button("💾 Save Configuration", type="primary", use_container_width=True):
+            # Validate configuration
+            validation_errors = []
+
+            # Check at least one block is enabled
+            enabled_blocks = [b for b in state["configuration"]["blocks"] if b.get("enabled", True)]
+            if not enabled_blocks:
+                validation_errors.append("At least one block must be enabled")
+
+            # Check output formats
+            if not state["configuration"]["output_formats"]:
+                validation_errors.append("At least one output format must be selected")
+
+            # Check email recipients if enabled
+            if state["configuration"]["notifications"]["email"]["enabled"]:
+                if not state["configuration"]["notifications"]["email"]["recipients"]:
+                    validation_errors.append("Email notifications enabled but no recipients specified")
+
+            # Check webhook URL if enabled
+            if state["configuration"]["notifications"]["webhook"]["enabled"]:
+                if not state["configuration"]["notifications"]["webhook"]["url"]:
+                    validation_errors.append("Webhook notifications enabled but no URL specified")
+
+            if validation_errors:
+                for error in validation_errors:
+                    st.error(f"❌ {error}")
+            else:
+                st.success("✅ Configuration saved successfully!")
+
+                # If schedule is enabled, create/update schedule
+                if state["configuration"]["schedule"]:
+                    # TODO: Call API to create/update schedule
+                    pass
+
+    with col2:
+        if st.button("🔄 Reset to Defaults", use_container_width=True):
+            if st.session_state.get("confirm_reset", False):
+                # Reset configuration
+                state["configuration"] = {
+                    "blocks": [],
+                    "output_formats": ["PDF", "JSON"],
+                    "schedule": None,
+                    "notifications": {
+                        "email": {"enabled": False, "recipients": []},
+                        "webhook": {"enabled": False, "url": None},
+                    },
+                    "report_name_template": "Report_{date}_{time}",
+                    "priority": "normal",
+                }
+                st.session_state.confirm_reset = False
+                st.rerun()
+            else:
+                st.session_state.confirm_reset = True
+                st.warning("Click again to confirm reset")
+
+    # Configuration summary
+    with st.expander("📋 Configuration Summary", expanded=False):
+        st.json(state["configuration"])
 
 # --- Tab 4: Preview ---
 with tabs[3]:
