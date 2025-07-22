@@ -9,6 +9,7 @@ from typing import Optional
 from app.db.database import Base
 from sqlalchemy import JSON, Boolean, Column, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 
@@ -28,6 +29,14 @@ class COBTemplate(Base):
     created_by = Column(String(255))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    # Note: COBTemplateVersion is defined in app.models.report_system.report_models
+    versions = relationship(
+        "app.models.report_system.report_models.COBTemplateVersion",
+        back_populates="template",
+        cascade="all, delete-orphan",
+    )
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""

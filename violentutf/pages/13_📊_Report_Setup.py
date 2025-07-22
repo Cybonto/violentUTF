@@ -37,9 +37,11 @@ API_ENDPOINTS = {
     "dashboard_summary": f"{API_BASE_URL}/api/v1/dashboard/summary",
     "dashboard_scores": f"{API_BASE_URL}/api/v1/dashboard/scores",
     "dashboard_browse": f"{API_BASE_URL}/api/v1/dashboard/browse",  # New enhanced endpoint
-    # Future report-specific endpoints
+    # Report endpoints
     "report_templates": f"{API_BASE_URL}/api/v1/reports/templates",
+    "report_templates_init": f"{API_BASE_URL}/api/v1/reports/templates/initialize",
     "report_generate": f"{API_BASE_URL}/api/v1/reports/generate",
+    "report_preview": f"{API_BASE_URL}/api/v1/reports/preview",
 }
 
 # --- Authentication and Setup ---
@@ -83,7 +85,13 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
 
     try:
         logger.debug(f"Making {method} request to {url} through APISIX Gateway")
+        logger.debug(f"Headers: {headers}")
+        logger.debug(f"Params: {kwargs.get('params', {})}")
+
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+
+        logger.debug(f"Response status: {response.status_code}")
+        logger.debug(f"Response headers: {dict(response.headers)}")
 
         if response.status_code in [200, 201]:
             return response.json()
@@ -96,7 +104,8 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
             elif response.status_code == 403:
                 st.error("🚫 Access denied to this resource.")
             elif response.status_code == 404:
-                st.error("❌ Resource not found.")
+                st.error(f"❌ Resource not found: {url}")
+                st.info("Debug: Check if the API service is running and routes are configured.")
             else:
                 st.error(f"❌ API Error: {response.status_code}")
 
@@ -105,6 +114,21 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         logger.error(f"Request exception to {url}: {e}")
         st.error("❌ Connection error. Please check if services are running.")
         return None
+
+
+# --- Helper function to ensure templates exist ---
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def ensure_templates_initialized():
+    """Ensure default templates are initialized"""
+    try:
+        # Try to initialize templates
+        init_response = api_request("POST", API_ENDPOINTS["report_templates_init"])
+        if init_response:
+            logger.info(f"Template initialization: {init_response.get('message', 'Unknown')}")
+        return True
+    except Exception as e:
+        logger.warning(f"Template initialization check failed: {e}")
+        return False
 
 
 # --- Session State Management ---
@@ -182,7 +206,7 @@ with tabs[0]:
                 "Select scanner",
                 options=["All", "PyRIT", "Garak"],
                 index=0,
-                key="filter_scanner_type",
+                key="data_filter_scanner_type",
                 help="Filter by scanner type",
             )
 
@@ -390,7 +414,502 @@ with tabs[1]:
         st.warning("⚠️ Please select scan data first in the Data Selection tab.")
         st.stop()
 
-    st.info("🚧 Template Selection functionality coming soon.")
+    # Advanced search and filters
+    with st.container():
+        st.markdown("### 🔍 Find Templates")
+
+        # Template selection
+        # First, load all templates to populate the selectbox
+        all_templates_response = api_request(
+            "GET", API_ENDPOINTS["report_templates"], params={"limit": 100, "is_active": True}
+        )
+
+        if all_templates_response and "templates" in all_templates_response:
+            template_names = ["All Templates"] + [t["name"] for t in all_templates_response["templates"]]
+            template_map = {t["name"]: t for t in all_templates_response["templates"]}
+        else:
+            template_names = ["All Templates"]
+            template_map = {}
+
+        selected_template_name = st.selectbox(
+            "Select Template",
+            options=template_names,
+            key="template_select",
+            help="Choose a specific template or view all templates",
+        )
+
+        # Filter columns
+        filter_cols = st.columns([1, 1, 1, 1])
+
+        with filter_cols[0]:
+            # Testing category filter - must match API enum values
+            testing_categories = ["All", "Security", "Safety", "Reliability", "Robustness", "Compliance"]
+            testing_category = st.selectbox(
+                "Testing Category", options=testing_categories, key="filter_testing_category"
+            )
+
+        with filter_cols[1]:
+            # Attack category filter - must match API enum values
+            attack_categories = [
+                "All",
+                "Prompt Injection",
+                "Jailbreak",
+                "Data Leakage",
+                "Hallucination",
+                "Bias",
+                "Toxicity",
+                "Harmful Content",
+                "Privacy Violation",
+                "Misinformation",
+            ]
+            attack_category = st.selectbox("Attack Category", options=attack_categories, key="filter_attack_category")
+
+        with filter_cols[2]:
+            # Scanner type filter - convert display values to API values
+            scanner_display = ["All", "PyRIT", "Garak", "Both"]
+            scanner_type_display = st.selectbox(
+                "Scanner Type", options=scanner_display, key="template_filter_scanner_type"
+            )
+            # Map display values to API values
+            scanner_type_map = {"PyRIT": "pyrit", "Garak": "garak", "Both": "both", "All": "All"}
+            scanner_type = scanner_type_map.get(scanner_type_display, scanner_type_display)
+
+        with filter_cols[3]:
+            # Complexity filter
+            complexity_levels = ["All", "Basic", "Intermediate", "Advanced", "Expert"]
+            complexity = st.selectbox("Complexity", options=complexity_levels, key="filter_complexity")
+
+        # Sort options
+        sort_cols = st.columns([2, 1])
+        with sort_cols[0]:
+            sort_by = st.selectbox(
+                "Sort by",
+                options=["name", "updated_at", "created_at", "usage_count"],
+                format_func=lambda x: {
+                    "name": "Name (A-Z)",
+                    "updated_at": "Recently Updated",
+                    "created_at": "Newest First",
+                    "usage_count": "Most Used",
+                }[x],
+                key="template_sort",
+                index=0,  # Default to "name"
+            )
+
+        with sort_cols[1]:
+            # View toggle
+            view_mode = st.radio("View", options=["Grid", "List"], horizontal=True, key="template_view_mode", index=0)
+
+    st.divider()
+
+    # Load templates with filters
+    with st.spinner("Loading templates..."):
+        # Build query parameters
+        params = {
+            "skip": 0,
+            "limit": 50,  # Load more templates
+            "sort_by": sort_by,
+            "sort_order": "desc" if sort_by != "name" else "asc",
+            # "is_active": True,  # Temporarily removed to see all templates
+        }
+
+        # Apply filters - send exact values that match the API enums
+        if testing_category != "All":
+            params["testing_category"] = testing_category  # API expects single value
+
+        if attack_category != "All":
+            params["attack_category"] = attack_category  # API expects single value
+
+        if scanner_type != "All":
+            params["scanner_type"] = scanner_type  # Already mapped to API value
+
+        if complexity != "All":
+            params["complexity_level"] = complexity  # Send as-is
+
+        # Get templates based on selection
+        if selected_template_name != "All Templates" and selected_template_name in template_map:
+            # Show only the selected template
+            selected_template = template_map[selected_template_name]
+            templates = [selected_template]
+
+            # Apply filters to the single template
+            if testing_category != "All":
+                template_categories = selected_template.get("metadata", {}).get("testing_categories", [])
+                # Check if category matches (case-insensitive)
+                if not any(cat.lower() == testing_category.lower() for cat in template_categories):
+                    templates = []
+
+            if attack_category != "All" and templates:
+                template_attacks = selected_template.get("metadata", {}).get("attack_categories", [])
+                # Check if attack category matches (case-insensitive)
+                if not any(cat.lower() == attack_category.lower() for cat in template_attacks):
+                    templates = []
+
+            if scanner_type != "All" and templates:
+                template_scanner = selected_template.get("metadata", {}).get("scanner_type", "")
+                if template_scanner.lower() != scanner_type.lower():
+                    templates = []
+
+            if complexity != "All" and templates:
+                template_complexity = selected_template.get("metadata", {}).get("complexity_level", "")
+                if template_complexity.lower() != complexity.lower():
+                    templates = []
+
+            response = {"templates": templates, "total": len(templates), "page": 1, "pages": 1}
+        else:
+            # Show all templates with filters
+            response = api_request("GET", API_ENDPOINTS["report_templates"], params=params)
+
+        if response and "templates" in response:
+            templates = response["templates"]
+            total_count = response.get("total", len(templates))
+
+            # Display results count
+            if templates:
+                st.info(
+                    f"Found {len(templates)} templates{f' (showing {len(templates)} of {total_count})' if total_count > len(templates) else ''}"
+                )
+
+            if templates:
+                # Get view mode
+                view_mode = st.session_state.get("template_view_mode", "Grid")
+
+                # Display based on view mode
+                if view_mode == "Grid":
+                    # Grid view with cards
+                    cols_per_row = 2 if len(templates) > 1 else 1
+
+                    for i in range(0, len(templates), cols_per_row):
+                        cols = st.columns(cols_per_row)
+
+                        for j, col in enumerate(cols):
+                            if i + j < len(templates):
+                                template = templates[i + j]
+
+                                with col:
+                                    # Template card
+                                    with st.container():
+                                        # Card styling with custom CSS
+                                        st.markdown(
+                                            f"""
+                                            <style>
+                                            .template-card {{
+                                                border: 1px solid #ddd;
+                                                border-radius: 8px;
+                                                padding: 16px;
+                                                margin-bottom: 16px;
+                                                transition: all 0.3s ease;
+                                            }}
+                                            .template-card:hover {{
+                                                border-color: #1f77b4;
+                                                box-shadow: 0 2px 8px rgba(31, 119, 180, 0.2);
+                                            }}
+                                            .template-selected {{
+                                                border-color: #1f77b4;
+                                                background-color: rgba(31, 119, 180, 0.05);
+                                            }}
+                                            </style>
+                                            """,
+                                            unsafe_allow_html=True,
+                                        )
+
+                                        # Template header
+                                        # Check if system template (created_by == "system" or has is_system flag)
+                                        is_system = template.get("created_by") == "system" or template.get(
+                                            "metadata", {}
+                                        ).get("is_system", False)
+                                        type_badge = "🏢" if is_system else "👤"
+
+                                        st.markdown(f"### {type_badge} {template['name']}")
+
+                                        # Template description
+                                        st.caption(template.get("description", "No description available"))
+
+                                        # Template metadata
+                                        metadata_cols = st.columns(2)
+                                        with metadata_cols[0]:
+                                            # Extract categories from metadata
+                                            metadata = template.get("metadata", {})
+                                            testing_cats = metadata.get("testing_categories", [])
+                                            if testing_cats:
+                                                category_text = (
+                                                    testing_cats[0]
+                                                    if isinstance(testing_cats, list)
+                                                    else str(testing_cats)
+                                                )
+                                                st.text(f"📁 {category_text.title()}")
+                                            else:
+                                                st.text("📁 General")
+
+                                            # Count blocks from config
+                                            config = template.get("config", {})
+                                            blocks = config.get("blocks", [])
+                                            st.text(f"📄 {len(blocks)} sections")
+
+                                        with metadata_cols[1]:
+                                            updated = template.get("updated_at", "")
+                                            if updated:
+                                                try:
+                                                    # Handle different date formats
+                                                    if isinstance(updated, str):
+                                                        updated_date = datetime.fromisoformat(
+                                                            updated.replace("Z", "+00:00")
+                                                        )
+                                                    else:
+                                                        updated_date = updated
+                                                    st.text(f"📅 {updated_date.strftime('%Y-%m-%d')}")
+                                                except:
+                                                    st.text("📅 Recently updated")
+
+                                            # Tags from metadata
+                                            tags = metadata.get("tags", [])
+                                            if tags:
+                                                st.text(f"🏷️ {', '.join(tags[:2])}")
+
+                                        # Action buttons
+                                        button_cols = st.columns(2)
+
+                                        with button_cols[0]:
+                                            # Preview button
+                                            if st.button(
+                                                "👁️ Preview", key=f"preview_{template['id']}", use_container_width=True
+                                            ):
+                                                # Store template for preview
+                                                st.session_state["preview_template"] = template
+                                                st.session_state["show_preview"] = True
+
+                                        with button_cols[1]:
+                                            # Selection state
+                                            is_selected = state.get("template_id") == template["id"]
+
+                                            # Select button
+                                            if st.button(
+                                                "✅ Selected" if is_selected else "Select",
+                                                key=f"select_{template['id']}",
+                                                type="primary" if is_selected else "secondary",
+                                                use_container_width=True,
+                                                disabled=is_selected,
+                                            ):
+                                                # Update state with selected template
+                                                state["template_id"] = template["id"]
+                                                state["template_name"] = template["name"]
+                                                state["template_details"] = template
+                                                st.rerun()
+                else:
+                    # List view
+                    for template in templates:
+                        # List item container
+                        with st.container():
+                            cols = st.columns([3, 1, 1, 1])
+
+                            with cols[0]:
+                                # Name and description
+                                metadata = template.get("metadata", {})
+                                is_system = template.get("created_by") == "system" or metadata.get("is_system", False)
+                                badge = "🏢" if is_system else "👤"
+                                st.markdown(f"**{badge} {template['name']}**")
+                                st.caption(template.get("description", ""))
+
+                            with cols[1]:
+                                # Key metadata
+                                testing_cats = metadata.get("testing_categories", [])
+                                if testing_cats:
+                                    st.text(f"🎯 {testing_cats[0].title()}")
+
+                                scanner = metadata.get("scanner_type", "")
+                                if scanner:
+                                    st.text(f"🔧 {scanner.upper()}")
+
+                            with cols[2]:
+                                # Stats
+                                config = template.get("config", {})
+                                blocks = config.get("blocks", [])
+                                st.text(f"📄 {len(blocks)} sections")
+
+                                usage = metadata.get("usage_stats", {}).get("total_uses", 0)
+                                st.text(f"📊 {usage} uses")
+
+                            with cols[3]:
+                                # Actions
+                                is_selected = state.get("template_id") == template["id"]
+                                button_cols = st.columns(2)
+
+                                with button_cols[0]:
+                                    if st.button("👁️", key=f"preview_list_{template['id']}", help="Preview"):
+                                        st.session_state["preview_template"] = template
+                                        st.session_state["show_preview"] = True
+
+                                with button_cols[1]:
+                                    if st.button(
+                                        "✅" if is_selected else "Select",
+                                        key=f"select_list_{template['id']}",
+                                        type="primary" if not is_selected else "secondary",
+                                        disabled=is_selected,
+                                        help="Selected" if is_selected else "Select this template",
+                                    ):
+                                        state["template_id"] = template["id"]
+                                        state["template_name"] = template["name"]
+                                        state["template_details"] = template
+                                        st.rerun()
+
+                            st.divider()
+
+                # Show selected template summary
+                if state.get("template_id"):
+                    st.divider()
+                    st.success(f"✅ **Selected Template:** {state.get('template_name', 'Unknown')}")
+                    st.info("💡 Proceed to the **Configuration** tab to customize the report settings.")
+
+            else:
+                # No templates found
+                st.warning("No templates found matching your criteria.")
+
+                # Suggest actions
+                st.markdown("### 💡 Suggestions")
+                suggestions = []
+
+                if selected_template_name != "All Templates":
+                    suggestions.append("- Try selecting 'All Templates' to see the full list")
+
+                if any(
+                    [testing_category != "All", attack_category != "All", scanner_type != "All", complexity != "All"]
+                ):
+                    suggestions.append("- Remove some filters to see more results")
+
+                suggestions.append("- Initialize default templates using the button below")
+                suggestions.append("- Check the Template Management tab to create a new template")
+
+                for suggestion in suggestions:
+                    st.markdown(suggestion)
+
+                # Add initialize templates button
+                st.divider()
+                if st.button("🚀 Initialize Default Templates", type="primary", use_container_width=True):
+                    with st.spinner("Initializing templates..."):
+                        init_response = api_request("POST", API_ENDPOINTS["report_templates_init"])
+                        if init_response:
+                            st.success(f"✅ Initialized {init_response.get('templates_created', 0)} templates!")
+                            st.rerun()
+                        else:
+                            st.error("Failed to initialize templates. Please check the logs.")
+        else:
+            st.error("Failed to load templates. Please try again.")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("🔄 Retry", use_container_width=True):
+                    st.rerun()
+            with col2:
+                if st.button("🚀 Initialize Templates", type="primary", use_container_width=True):
+                    with st.spinner("Initializing templates..."):
+                        init_response = api_request("POST", API_ENDPOINTS["report_templates_init"])
+                        if init_response:
+                            st.success(f"✅ Initialized {init_response.get('templates_created', 0)} templates!")
+                            st.rerun()
+                        else:
+                            st.error("Failed to initialize templates. Please check the logs.")
+
+    # Template Preview Modal
+    if st.session_state.get("show_preview", False) and st.session_state.get("preview_template"):
+        template = st.session_state["preview_template"]
+
+        # Create a modal-like experience with expander
+        with st.expander("📋 Template Preview", expanded=True):
+            # Preview header
+            preview_cols = st.columns([3, 1])
+            with preview_cols[0]:
+                st.subheader(template["name"])
+            with preview_cols[1]:
+                if st.button("❌ Close", key="close_preview"):
+                    st.session_state["show_preview"] = False
+                    st.session_state["preview_template"] = None
+                    st.rerun()
+
+            # Template details
+            st.markdown(f"**Description:** {template.get('description', 'N/A')}")
+
+            # Extract category from metadata
+            metadata = template.get("metadata", {})
+            testing_cats = metadata.get("testing_categories", [])
+            if testing_cats:
+                category_text = testing_cats[0] if isinstance(testing_cats, list) else str(testing_cats)
+                st.markdown(f"**Category:** {category_text.title()}")
+            else:
+                st.markdown("**Category:** General")
+
+            # Template type
+            is_system = template.get("created_by") == "system"
+            st.markdown(f"**Type:** {'System' if is_system else 'Custom'}")
+
+            # Preview sections/blocks
+            st.markdown("### Report Structure")
+
+            # Get blocks from template config
+            config = template.get("config", {})
+            blocks = config.get("blocks", [])
+
+            if blocks:
+                for idx, block in enumerate(blocks, 1):
+                    block_type = block.get("block_type", "unknown")
+                    config = block.get("config", {})
+
+                    # Show block info
+                    st.markdown(f"**{idx}. {block_type.replace('_', ' ').title()}**")
+
+                    # Show block configuration details
+                    if block_type == "title":
+                        st.caption(f"   Title: {config.get('title', 'Report Title')}")
+                        st.caption(f"   Subtitle: {config.get('subtitle', '')}")
+                    elif block_type == "executive_summary":
+                        st.caption("   Provides high-level overview of findings")
+                    elif block_type == "findings_by_severity":
+                        st.caption("   Groups findings by severity level")
+                        st.caption(f"   Include evidence: {config.get('include_evidence', False)}")
+                    elif block_type == "technical_details":
+                        st.caption("   Detailed technical analysis")
+                        st.caption(f"   Evidence limit: {config.get('max_evidence_per_finding', 5)}")
+                    elif block_type == "recommendations":
+                        st.caption("   Actionable recommendations")
+                        st.caption(f"   Group by: {config.get('group_by', 'severity')}")
+                    elif block_type == "metrics":
+                        st.caption("   Visual metrics and statistics")
+                        metrics = config.get("metrics", [])
+                        if metrics:
+                            st.caption(f"   Metrics: {', '.join(metrics)}")
+                    else:
+                        st.caption(f"   Configuration: {json.dumps(config, indent=2)}")
+
+                # Show data requirements
+                st.markdown("### Data Requirements")
+                requirements = template.get("metadata", {})
+
+                if requirements.get("min_scans", 1) > 1:
+                    st.info(f"📊 Requires at least {requirements['min_scans']} scan executions")
+
+                if requirements.get("requires_evidence"):
+                    st.info("📝 Requires prompt/response evidence data")
+
+                if requirements.get("requires_severity"):
+                    st.info("🎯 Requires severity scoring data")
+
+                # Compatibility check with selected data
+                st.markdown("### Compatibility Check")
+
+                selected_count = len(state.get("selected_scans", []))
+                min_required = requirements.get("min_scans", 1)
+
+                if selected_count >= min_required:
+                    st.success(f"✅ Selected data ({selected_count} scans) meets requirements")
+                else:
+                    st.error(f"❌ Need at least {min_required} scans (currently {selected_count})")
+
+            # Select from preview
+            st.divider()
+            if st.button("Select This Template", key="select_from_preview", type="primary", use_container_width=True):
+                state["template_id"] = template["id"]
+                state["template_name"] = template["name"]
+                state["template_details"] = template
+                st.session_state["show_preview"] = False
+                st.session_state["preview_template"] = None
+                st.rerun()
 
 # --- Tab 3: Configuration ---
 with tabs[2]:

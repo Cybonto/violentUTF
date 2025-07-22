@@ -5,7 +5,6 @@ Main API router that includes all sub-routers
 from app.api.endpoints import (
     apisix_admin,
     auth,
-    cob_reports,
     config,
     converters,
     dashboard,
@@ -19,6 +18,7 @@ from app.api.endpoints import (
     jwt_keys,
     orchestrators,
     redteam,
+    reports,
     scorers,
     sessions,
 )
@@ -60,8 +60,8 @@ api_router.include_router(orchestrators.router, prefix="/orchestrators", tags=["
 # Dashboard endpoints for efficient data loading
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 
-# COB Report management endpoints for template-driven reporting
-api_router.include_router(cob_reports.router, prefix="/cob", tags=["cob-reports"])
+# Reports and template management endpoints
+api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 
 # APISIX admin endpoints for IronUTF plugin management
 api_router.include_router(apisix_admin.router)

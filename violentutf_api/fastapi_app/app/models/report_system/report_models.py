@@ -10,17 +10,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-
-# Extended COB Template model fields (to be added to existing model)
-class COBTemplateExtensions:
-    """Extensions to add to existing COBTemplate model"""
-
-    metadata = Column(JSON, default={})
-    version = Column(String(20), default="1.0.0")
-    version_notes = Column(Text)
-
-    # Relationships
-    versions = relationship("COBTemplateVersion", back_populates="template", cascade="all, delete-orphan")
+# Note: COBTemplate extensions (metadata, version fields) should be added directly to COBTemplate model if needed
 
 
 class COBTemplateVersion(Base):
@@ -40,12 +30,7 @@ class COBTemplateVersion(Base):
     template = relationship("COBTemplate", back_populates="versions")
 
 
-# Extended COB Schedule model fields
-class COBScheduleExtensions:
-    """Extensions to add to existing COBSchedule model"""
-
-    data_selection = Column(JSON, default={})
-    notification_config = Column(JSON, default={})
+# Note: COBSchedule extensions (data_selection, notification_config) should be added directly to COBSchedule model if needed
 
 
 class COBScanDataCache(Base):
@@ -60,7 +45,7 @@ class COBScanDataCache(Base):
     scan_date = Column(DateTime)
     score_data = Column(JSON)  # Aggregated scores and metrics
     raw_results = Column(JSON)  # Full scan results (optional)
-    metadata = Column(JSON)  # Additional context
+    scan_metadata = Column(JSON)  # Additional context (renamed from metadata)
     created_at = Column(DateTime, server_default=func.now())
     expires_at = Column(DateTime, index=True)  # For cache cleanup
 
@@ -73,7 +58,7 @@ class COBScanDataCache(Base):
             "target_model": self.target_model,
             "scan_date": self.scan_date.isoformat() if self.scan_date else None,
             "score_data": self.score_data,
-            "metadata": self.metadata,
+            "metadata": self.scan_metadata,  # Keep API compatibility
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -138,19 +123,4 @@ class COBBlockDefinition(Base):
         }
 
 
-# Extended model for reports with progress tracking
-class COBReportExtensions:
-    """Extensions to add to existing COBReport model"""
-
-    progress = Column(Integer, default=0)  # 0-100
-    generation_metadata = Column(JSON, default={})  # Track generation details
-    error_message = Column(Text)  # Store error if generation fails
-
-    def update_progress(self, progress: int, message: str = None):
-        """Update report generation progress"""
-        self.progress = min(max(progress, 0), 100)
-        if message:
-            if not self.generation_metadata:
-                self.generation_metadata = {}
-            self.generation_metadata["last_message"] = message
-            self.generation_metadata["last_update"] = func.now()
+# Note: COBReport extensions (progress, generation_metadata, error_message) should be added directly to COBReport model if needed

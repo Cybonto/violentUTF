@@ -4,13 +4,26 @@ Enhanced API endpoints for Advanced Dashboard Report Setup
 
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from app.api.auth import get_current_user
-from app.core.database import get_db
+from app.core.auth import get_current_user
+from app.db.database import get_session
+from app.models.cob_models import COBReport, COBSchedule, COBScheduleExecution, COBTemplate
 from app.models.report_system.report_models import COBBlockDefinition, COBReportVariable, COBScanDataCache
-from app.models.user import User
+
+# Import schedule and export related schemas from COB system
+from app.schemas import (
+    COBExportRequest,
+    COBExportResponse,
+    COBScheduleCreate,
+    COBScheduleExecutionListResponse,
+    COBScheduleExecutionResponse,
+    COBScheduleListResponse,
+    COBScheduleResponse,
+    COBScheduleUpdate,
+    COBSystemStatusResponse,
+)
 
 # Import extended schemas and services
 from app.schemas.report_system.report_schemas import (
@@ -36,18 +49,20 @@ from app.schemas.report_system.report_schemas import (
     TemplateVersionResponse,
     TestingCategory,
 )
+from app.services.cob_pdf_service import cob_pdf_generator
 from app.services.report_system.block_base import block_registry
 from app.services.report_system.report_engine import ReportGenerationEngine
 from app.services.report_system.template_service import TemplateService, get_initial_templates
 from app.services.storage_service import get_storage_service
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Path, Query
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
 # Create router
-router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
+router = APIRouter(tags=["reports"])
 
 
 # Template Management Endpoints
@@ -55,12 +70,12 @@ router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
 
 @router.post("/templates", response_model=COBTemplateResponse)
 async def create_template(
-    template: COBTemplateCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    template: COBTemplateCreate, current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> COBTemplateResponse:
     """Create a new report template"""
     try:
         service = TemplateService(db)
-        return service.create_template(template, current_user.id)
+        return await service.create_template(template, current_user.id)
     except Exception as e:
         logger.error(f"Error creating template: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -77,12 +92,18 @@ async def list_templates(
     complexity_level: Optional[str] = Query(None),
     sort_by: str = Query("created_at", regex="^(created_at|updated_at|name|usage_count)$"),
     sort_order: str = Query("desc", regex="^(asc|desc)$"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> Dict[str, Any]:
     """List templates with filtering and pagination"""
     try:
         service = TemplateService(db)
+
+        logger.info(
+            f"List templates called with params: skip={skip}, limit={limit}, is_active={is_active}, "
+            f"testing_category={testing_category}, attack_category={attack_category}, "
+            f"scanner_type={scanner_type}, complexity_level={complexity_level}"
+        )
 
         # Build filters
         filters = {}
@@ -97,9 +118,11 @@ async def list_templates(
         if complexity_level:
             filters["complexity_level"] = complexity_level
 
-        templates, total = service.list_templates(
+        templates, total = await service.list_templates(
             skip=skip, limit=limit, filters=filters, sort_by=sort_by, sort_order=sort_order
         )
+
+        logger.info(f"Found {total} templates, returning {len(templates)} templates")
 
         return {
             "templates": templates,
@@ -114,12 +137,12 @@ async def list_templates(
 
 @router.get("/templates/search", response_model=List[COBTemplateResponse])
 async def search_templates(
-    q: str = Query(..., min_length=2), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    q: str = Query(..., min_length=2), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> List[COBTemplateResponse]:
     """Search templates by name, description, or metadata"""
     try:
         service = TemplateService(db)
-        return service.search_templates(q)
+        return await service.search_templates(q)
     except Exception as e:
         logger.error(f"Error searching templates: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -129,13 +152,13 @@ async def search_templates(
 async def recommend_templates(
     scan_data: Dict[str, Any] = Body(...),
     limit: int = Query(5, ge=1, le=10),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> List[TemplateRecommendation]:
     """Get template recommendations based on scan data"""
     try:
         service = TemplateService(db)
-        return service.recommend_templates(scan_data, limit)
+        return await service.recommend_templates(scan_data, limit)
     except Exception as e:
         logger.error(f"Error recommending templates: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -143,12 +166,12 @@ async def recommend_templates(
 
 @router.get("/templates/{template_id}", response_model=COBTemplateResponse)
 async def get_template(
-    template_id: str = Path(...), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    template_id: str = Path(...), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> COBTemplateResponse:
     """Get a specific template"""
     try:
         service = TemplateService(db)
-        return service.get_template(template_id)
+        return await service.get_template(template_id)
     except Exception as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
@@ -161,13 +184,13 @@ async def update_template(
     template_id: str = Path(...),
     template_update: COBTemplateUpdate = Body(...),
     create_version: bool = Query(True),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> COBTemplateResponse:
     """Update a template"""
     try:
         service = TemplateService(db)
-        return service.update_template(template_id, template_update, current_user.id, create_version)
+        return await service.update_template(template_id, template_update, current_user.id, create_version)
     except Exception as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
@@ -177,12 +200,12 @@ async def update_template(
 
 @router.delete("/templates/{template_id}")
 async def delete_template(
-    template_id: str = Path(...), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    template_id: str = Path(...), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> Dict[str, str]:
     """Soft delete a template"""
     try:
         service = TemplateService(db)
-        service.delete_template(template_id)
+        await service.delete_template(template_id)
         return {"message": "Template deleted successfully"}
     except Exception as e:
         if "not found" in str(e).lower():
@@ -198,13 +221,13 @@ async def delete_template(
 async def create_template_version(
     template_id: str = Path(...),
     version_data: TemplateVersionCreate = Body(...),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> TemplateVersionResponse:
     """Create a new version of a template"""
     try:
         service = TemplateService(db)
-        return service.create_template_version(template_id, version_data, current_user.id)
+        return await service.create_template_version(template_id, version_data, current_user.id)
     except Exception as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
@@ -216,13 +239,13 @@ async def create_template_version(
 async def get_template_versions(
     template_id: str = Path(...),
     limit: int = Query(10, ge=1, le=50),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> List[TemplateVersionResponse]:
     """Get version history for a template"""
     try:
         service = TemplateService(db)
-        return service.get_template_versions(template_id, limit)
+        return await service.get_template_versions(template_id, limit)
     except Exception as e:
         logger.error(f"Error getting template versions: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -232,13 +255,13 @@ async def get_template_versions(
 async def restore_template_version(
     template_id: str = Path(...),
     version_id: str = Path(...),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> COBTemplateResponse:
     """Restore a template to a previous version"""
     try:
         service = TemplateService(db)
-        return service.restore_template_version(template_id, version_id, current_user.id)
+        return await service.restore_template_version(template_id, version_id, current_user.id)
     except Exception as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
@@ -251,12 +274,12 @@ async def restore_template_version(
 
 @router.post("/templates/{template_id}/validate")
 async def validate_template(
-    template_id: str = Path(...), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    template_id: str = Path(...), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> Dict[str, Any]:
     """Validate all blocks in a template"""
     try:
         service = TemplateService(db)
-        return service.validate_template_blocks(template_id)
+        return await service.validate_template_blocks(template_id)
     except Exception as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
@@ -266,12 +289,12 @@ async def validate_template(
 
 @router.get("/templates/{template_id}/variables", response_model=List[str])
 async def get_template_variables(
-    template_id: str = Path(...), current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    template_id: str = Path(...), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> List[str]:
     """Get all variables required by a template"""
     try:
         service = TemplateService(db)
-        return service.get_template_variables(template_id)
+        return await service.get_template_variables(template_id)
     except Exception as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
@@ -284,7 +307,7 @@ async def get_template_variables(
 
 @router.post("/scan-data/browse", response_model=DataBrowseResponse)
 async def browse_scan_data(
-    request: DataBrowseRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    request: DataBrowseRequest, current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> DataBrowseResponse:
     """Browse available scan data with filtering"""
     try:
@@ -405,8 +428,8 @@ async def browse_scan_data(
 async def generate_report(
     request: ReportGenerationRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
     storage_service=Depends(get_storage_service),
 ) -> ReportGenerationResponse:
     """Generate a report from template and scan data"""
@@ -427,8 +450,8 @@ async def generate_report(
 @router.post("/preview", response_model=PreviewResponse)
 async def preview_template(
     request: PreviewRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
     storage_service=Depends(get_storage_service),
 ) -> PreviewResponse:
     """Generate a preview of template with sample data"""
@@ -443,8 +466,8 @@ async def preview_template(
 @router.get("/status/{report_id}", response_model=ReportStatus)
 async def get_report_status(
     report_id: str = Path(...),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
     storage_service=Depends(get_storage_service),
 ) -> ReportStatus:
     """Get the status of a report generation"""
@@ -462,8 +485,8 @@ async def get_report_status(
 async def download_report(
     report_id: str = Path(...),
     format: str = Path(..., regex="^(pdf|json|markdown|html)$"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
     storage_service=Depends(get_storage_service),
 ):
     """Download a generated report in specified format"""
@@ -518,8 +541,8 @@ async def download_report(
 @router.get("/download/{report_id}")
 async def get_download_links(
     report_id: str = Path(...),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
     storage_service=Depends(get_storage_service),
 ) -> Dict[str, Any]:
     """Get download links for all available formats of a report"""
@@ -568,8 +591,8 @@ async def get_download_links(
 async def generate_batch_reports(
     request: BatchReportRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
     storage_service=Depends(get_storage_service),
 ) -> Dict[str, Any]:
     """Generate multiple reports in batch"""
@@ -613,8 +636,8 @@ async def generate_batch_reports(
 async def list_block_definitions(
     category: Optional[str] = Query(None),
     is_active: bool = Query(True),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> List[BlockDefinitionResponse]:
     """List available block definitions"""
     try:
@@ -632,7 +655,7 @@ async def list_block_definitions(
 
 
 @router.get("/blocks/registry")
-async def get_block_registry(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_block_registry(current_user=Depends(get_current_user)) -> Dict[str, Any]:
     """Get the current block registry"""
     try:
         return block_registry.export_registry()
@@ -646,8 +669,8 @@ async def list_report_variables(
     category: Optional[str] = Query(None),
     source: Optional[str] = Query(None),
     is_active: bool = Query(True),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> List[ReportVariableResponse]:
     """List available report variables"""
     try:
@@ -669,7 +692,7 @@ async def list_report_variables(
 
 @router.get("/variables/categories")
 async def get_variable_categories(
-    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> List[str]:
     """Get all variable categories"""
     try:
@@ -685,7 +708,7 @@ async def get_variable_categories(
 
 @router.post("/templates/initialize")
 async def initialize_default_templates(
-    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> Dict[str, Any]:
     """Initialize default report templates"""
     try:
@@ -693,27 +716,342 @@ async def initialize_default_templates(
 
         initial_templates = get_initial_templates()
         created_count = 0
+        errors = []
+
+        logger.info(f"Initializing {len(initial_templates)} default templates")
 
         for template_data in initial_templates:
             try:
                 # Check if template already exists
-                existing = service.search_templates(template_data["name"])
+                existing = await service.search_templates(template_data["name"])
                 if not existing:
+                    logger.info(f"Creating template: {template_data['name']}")
                     template_create = COBTemplateCreate(**template_data)
-                    service.create_template(template_create, current_user.id)
+                    await service.create_template(template_create, current_user.username)
                     created_count += 1
+                    logger.info(f"Successfully created template: {template_data['name']}")
+                else:
+                    logger.info(f"Template already exists: {template_data['name']}")
             except Exception as e:
-                logger.warning(f"Error creating template '{template_data['name']}': {str(e)}")
+                error_msg = f"Error creating template '{template_data['name']}': {str(e)}"
+                logger.error(error_msg, exc_info=True)
+                errors.append(error_msg)
+
+        # Commit all changes
+        await db.commit()
+        logger.info(f"Database commit complete. Created {created_count} templates")
 
         return {
             "message": "Template initialization complete",
             "templates_created": created_count,
             "total_templates": len(initial_templates),
+            "errors": errors if errors else None,
         }
 
     except Exception as e:
         logger.error(f"Error initializing templates: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# Schedule Management Endpoints (migrated from COB system)
+
+
+@router.get("/schedules", response_model=COBScheduleListResponse, summary="List report schedules")
+async def list_schedules(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    active_only: bool = Query(True),
+    template_id: Optional[str] = Query(None),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    """List report schedules with pagination"""
+    try:
+        query = select(COBSchedule)
+        if active_only:
+            query = query.where(COBSchedule.is_active == True)
+        if template_id:
+            query = query.where(COBSchedule.template_id == uuid.UUID(template_id))
+        query = query.offset(skip).limit(limit)
+
+        result = await db.execute(query)
+        schedules = result.scalars().all()
+
+        # Get total count
+        count_query = select(func.count(COBSchedule.id))
+        if active_only:
+            count_query = count_query.where(COBSchedule.is_active == True)
+        if template_id:
+            count_query = count_query.where(COBSchedule.template_id == uuid.UUID(template_id))
+        total_result = await db.execute(count_query)
+        total = total_result.scalar()
+
+        schedule_responses = []
+        for schedule in schedules:
+            schedule_dict = schedule.to_dict()
+            schedule_dict["links"] = {
+                "self": f"/api/v1/reports/schedules/{schedule.id}",
+                "template": f"/api/v1/reports/templates/{schedule.template_id}",
+                "executions": f"/api/v1/reports/schedules/{schedule.id}/executions",
+            }
+            schedule_responses.append(COBScheduleResponse(**schedule_dict))
+
+        return COBScheduleListResponse(
+            schedules=schedule_responses,
+            total=total,
+            links={
+                "self": f"/api/v1/reports/schedules?skip={skip}&limit={limit}",
+                "create": "/api/v1/reports/schedules",
+            },
+        )
+
+    except Exception as e:
+        logger.error(f"Error listing schedules: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list schedules: {str(e)}")
+
+
+@router.post("/schedules", response_model=COBScheduleResponse, summary="Create report schedule")
+async def create_schedule(
+    schedule_data: COBScheduleCreate,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    """Create a new report schedule"""
+    try:
+        # Verify template exists
+        template_query = select(COBTemplate).where(COBTemplate.id == schedule_data.template_id)
+        template_result = await db.execute(template_query)
+        template = template_result.scalar()
+
+        if not template:
+            raise HTTPException(status_code=404, detail=f"Template not found: {schedule_data.template_id}")
+
+        # Create schedule
+        schedule = COBSchedule(
+            template_id=schedule_data.template_id,
+            name=schedule_data.name,
+            description=schedule_data.description,
+            frequency=schedule_data.frequency,
+            schedule_config=schedule_data.schedule_config,
+            notification_config=schedule_data.notification_config,
+            is_active=schedule_data.is_active,
+            created_by=current_user.username,
+        )
+
+        # Set next run time based on frequency
+        from datetime import timedelta
+
+        now = datetime.now(timezone.utc)
+        if schedule.frequency == "daily":
+            schedule.next_run_at = now + timedelta(days=1)
+        elif schedule.frequency == "weekly":
+            schedule.next_run_at = now + timedelta(weeks=1)
+        elif schedule.frequency == "monthly":
+            schedule.next_run_at = now + timedelta(days=30)
+
+        db.add(schedule)
+        await db.commit()
+        await db.refresh(schedule)
+
+        schedule_dict = schedule.to_dict()
+        schedule_dict["links"] = {
+            "self": f"/api/v1/reports/schedules/{schedule.id}",
+            "update": f"/api/v1/reports/schedules/{schedule.id}",
+            "delete": f"/api/v1/reports/schedules/{schedule.id}",
+            "template": f"/api/v1/reports/templates/{schedule.template_id}",
+        }
+
+        logger.info(f"Schedule created: {schedule.id} by {current_user.username}")
+        return COBScheduleResponse(**schedule_dict)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating schedule: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create schedule: {str(e)}")
+
+
+@router.post("/internal/check-schedules", summary="Check scheduled reports (Internal)")
+async def check_scheduled_reports(db: AsyncSession = Depends(get_session)):
+    """Internal endpoint for checking and executing scheduled reports"""
+    try:
+        # Get all active schedules that are due
+        now = datetime.now(timezone.utc)
+        query = select(COBSchedule).where(COBSchedule.is_active == True, COBSchedule.next_run_at <= now)
+        result = await db.execute(query)
+        due_schedules = result.scalars().all()
+
+        executed = []
+        for schedule in due_schedules:
+            try:
+                # Execute the schedule
+                await _execute_scheduled_report(schedule.id, db)
+                executed.append(str(schedule.id))
+            except Exception as e:
+                logger.error(f"Failed to execute schedule {schedule.id}: {e}")
+
+        return {
+            "checked_at": now.isoformat(),
+            "schedules_found": len(due_schedules),
+            "schedules_executed": len(executed),
+            "executed_ids": executed,
+        }
+
+    except Exception as e:
+        logger.error(f"Error checking schedules: {e}")
+        return {"error": str(e), "checked_at": datetime.now(timezone.utc).isoformat()}
+
+
+async def _execute_scheduled_report(schedule_id: uuid.UUID, db: AsyncSession):
+    """Execute a scheduled report generation"""
+    try:
+        # Get the schedule
+        query = select(COBSchedule).where(COBSchedule.id == schedule_id)
+        result = await db.execute(query)
+        schedule = result.scalar()
+
+        if not schedule:
+            raise ValueError(f"Schedule not found: {schedule_id}")
+
+        # Create execution record
+        execution = COBScheduleExecution(
+            schedule_id=schedule.id,
+            execution_status="started",
+            started_at=datetime.now(timezone.utc),
+        )
+        db.add(execution)
+        await db.commit()
+
+        # Generate report (simplified version)
+        try:
+            # Get the template
+            template_query = select(COBTemplate).where(COBTemplate.id == schedule.template_id)
+            template_result = await db.execute(template_query)
+            template = template_result.scalar()
+
+            if not template:
+                raise ValueError(f"Template not found: {schedule.template_id}")
+
+            # Create report name
+            report_name = f"{schedule.name} - {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}"
+
+            # Create report record
+            new_report = COBReport(
+                template_id=schedule.template_id,
+                schedule_id=schedule.id,
+                report_name=report_name,
+                report_period_start=datetime.now(timezone.utc).replace(hour=0, minute=0, second=0),
+                report_period_end=datetime.now(timezone.utc),
+                generation_status="completed",
+                content_blocks={},
+                ai_analysis_results={},
+                export_results={},
+                generation_metadata={
+                    "generated_by_schedule": True,
+                    "schedule_name": schedule.name,
+                },
+                generated_by="system_scheduler",
+            )
+
+            db.add(new_report)
+            await db.commit()
+            await db.refresh(new_report)
+
+            # Update execution
+            execution.execution_status = "completed"
+            execution.completed_at = datetime.now(timezone.utc)
+            execution.report_id = new_report.id
+            execution.execution_log = {"message": "Schedule execution completed"}
+
+            # Update schedule next run time
+            schedule.last_run_at = datetime.now(timezone.utc)
+            if schedule.frequency == "daily":
+                schedule.next_run_at = schedule.last_run_at + timedelta(days=1)
+            elif schedule.frequency == "weekly":
+                schedule.next_run_at = schedule.last_run_at + timedelta(weeks=1)
+            elif schedule.frequency == "monthly":
+                schedule.next_run_at = schedule.last_run_at + timedelta(days=30)
+
+            await db.commit()
+            logger.info(f"Scheduled report executed: {schedule_id}")
+
+        except Exception as e:
+            execution.execution_status = "failed"
+            execution.error_details = {"error": str(e)}
+            await db.commit()
+            raise
+
+    except Exception as e:
+        logger.error(f"Error executing scheduled report {schedule_id}: {e}")
+        raise
+
+
+# System Status Endpoint
+
+
+@router.get("/system/status", response_model=COBSystemStatusResponse, summary="Get report system status")
+async def get_system_status(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    """Get overall report system status"""
+    try:
+        # Count active templates
+        templates_result = await db.execute(select(func.count(COBTemplate.id)).where(COBTemplate.is_active == True))
+        active_templates = templates_result.scalar()
+
+        # Count active schedules
+        schedules_result = await db.execute(select(func.count(COBSchedule.id)).where(COBSchedule.is_active == True))
+        active_schedules = schedules_result.scalar()
+
+        # Count pending executions
+        pending_result = await db.execute(
+            select(func.count(COBScheduleExecution.id)).where(COBScheduleExecution.execution_status == "started")
+        )
+        pending_executions = pending_result.scalar()
+
+        # Get last execution time
+        last_execution_result = await db.execute(
+            select(COBScheduleExecution.completed_at)
+            .where(COBScheduleExecution.execution_status == "completed")
+            .order_by(COBScheduleExecution.completed_at.desc())
+            .limit(1)
+        )
+        last_execution = last_execution_result.scalar()
+
+        # Get next scheduled execution
+        next_execution_result = await db.execute(
+            select(COBSchedule.next_run_at)
+            .where(COBSchedule.is_active == True, COBSchedule.next_run_at.isnot(None))
+            .order_by(COBSchedule.next_run_at.asc())
+            .limit(1)
+        )
+        next_execution = next_execution_result.scalar()
+
+        # Determine system health
+        health = "healthy"
+        if pending_executions > 10:
+            health = "degraded"
+        elif pending_executions > 50:
+            health = "unhealthy"
+
+        return COBSystemStatusResponse(
+            status=health,
+            active_templates=active_templates,
+            active_schedules=active_schedules,
+            pending_executions=pending_executions,
+            last_execution_time=last_execution.isoformat() if last_execution else None,
+            next_scheduled_execution=next_execution.isoformat() if next_execution else None,
+            system_info={
+                "version": "2.0.0",
+                "report_engine": "COB Report System",
+                "features": ["templates", "scheduling", "ai_analysis", "multi_format_export"],
+            },
+        )
+
+    except Exception as e:
+        logger.error(f"Error getting system status: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get system status: {str(e)}")
 
 
 # Export the router

@@ -14,8 +14,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import aiofiles
 import markdown
-from app.core.database import get_db
-from app.core.exceptions import NotFoundError, ValidationError
+from app.db.database import get_session
 from app.models.cob_models import COBReport, COBTemplate
 from app.models.orchestrator import OrchestratorExecution
 
@@ -30,8 +29,9 @@ from app.schemas.report_system.report_schemas import (
     ReportStatus,
 )
 from app.services.storage_service import StorageService
+from fastapi import HTTPException
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from weasyprint import CSS, HTML
 from weasyprint.text.fonts import FontConfiguration
 
@@ -48,7 +48,7 @@ register_all_blocks(block_registry)
 class ReportGenerationEngine:
     """Engine for generating reports from templates"""
 
-    def __init__(self, db: Session, storage_service: StorageService):
+    def __init__(self, db: AsyncSession, storage_service: StorageService):
         self.db = db
         self.storage = storage_service
         self.template_service = TemplateService(db)
@@ -80,7 +80,7 @@ class ReportGenerationEngine:
             # Validate scan data exists
             scan_data = await self._load_scan_data(request.scan_data_ids)
             if not scan_data:
-                raise ValidationError("No valid scan data found")
+                raise HTTPException(status_code=400, detail="No valid scan data found")
 
             # Create report record
             report_id = str(uuid.uuid4())
@@ -143,7 +143,7 @@ class ReportGenerationEngine:
                 # Preview single block
                 blocks = [b for b in request.template_config.get("blocks", []) if b.get("id") == request.block_id]
                 if not blocks:
-                    raise ValidationError(f"Block not found: {request.block_id}")
+                    raise HTTPException(status_code=400, detail=f"Block not found: {request.block_id}")
                 template_config = {"blocks": blocks}
             else:
                 template_config = request.template_config
@@ -195,7 +195,7 @@ class ReportGenerationEngine:
         report = self.db.query(COBReport).filter(COBReport.id == report_id).first()
 
         if not report:
-            raise NotFoundError(f"Report not found: {report_id}")
+            raise HTTPException(status_code=404, detail=f"Report not found: {report_id}")
 
         # Get generation progress if active
         progress_info = self._active_generations.get(report_id, {})
@@ -304,7 +304,7 @@ class ReportGenerationEngine:
         """Create a single block instance"""
         block_type = block_config.get("type")
         if not block_type:
-            raise ValidationError("Block configuration missing 'type'")
+            raise HTTPException(status_code=400, detail="Block configuration missing 'type'")
 
         block = block_registry.create_block(
             block_type=block_type,

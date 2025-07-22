@@ -8,7 +8,7 @@ set -e
 # Configuration
 CRON_USER=${CRON_USER:-root}
 API_URL=${VIOLENTUTF_API_URL:-http://localhost:8000}
-CRON_ENDPOINT="${API_URL}/api/v1/cob/internal/check-schedules"
+CRON_ENDPOINT="${API_URL}/api/v1/reports/internal/check-schedules"
 
 echo "🔄 Setting up COB Report scheduling cron job..."
 

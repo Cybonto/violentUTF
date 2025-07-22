@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # Enums for constrained values
@@ -93,9 +93,10 @@ class DateRange(BaseModel):
     start: datetime
     end: datetime
 
-    @validator("end")
-    def end_after_start(cls, v, values):
-        if "start" in values and v < values["start"]:
+    @field_validator("end")
+    @classmethod
+    def end_after_start(cls, v, info):
+        if info.data.get("start") and v < info.data["start"]:
             raise ValueError("End date must be after start date")
         return v
 
@@ -111,13 +112,11 @@ class DataSelectionFilter(BaseModel):
     datasets: Optional[List[str]] = Field(None, min_items=1)
     scanner_types: Optional[List[ScannerType]] = None
 
-    @root_validator
-    def validate_severity_range(cls, values):
-        min_sev = values.get("min_severity")
-        max_sev = values.get("max_severity")
-        if min_sev is not None and max_sev is not None and min_sev > max_sev:
+    @model_validator(mode="after")
+    def validate_severity_range(self):
+        if self.min_severity is not None and self.max_severity is not None and self.min_severity > self.max_severity:
             raise ValueError("min_severity must be less than max_severity")
-        return values
+        return self
 
 
 class DataSelection(BaseModel):
@@ -139,12 +138,18 @@ class EmailNotification(BaseModel):
     on_failure: bool = True
     include_report: bool = True
 
-    @validator("recipients", each_item=True)
+    @field_validator("recipients")
+    @classmethod
     def validate_email(cls, v):
+        if not v:
+            return v
+        validated = []
         email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        if not re.match(email_pattern, v):
-            raise ValueError(f"Invalid email format: {v}")
-        return v.lower()
+        for email in v:
+            if not re.match(email_pattern, email):
+                raise ValueError(f"Invalid email format: {email}")
+            validated.append(email.lower())
+        return validated
 
 
 class WebhookNotification(BaseModel):
@@ -156,7 +161,8 @@ class WebhookNotification(BaseModel):
     retry_count: int = Field(default=3, ge=0, le=5)
     timeout: int = Field(default=30, ge=5, le=300)
 
-    @validator("url")
+    @field_validator("url")
+    @classmethod
     def validate_url(cls, v):
         if v and not v.startswith(("http://", "https://")):
             raise ValueError("URL must start with http:// or https://")
@@ -175,7 +181,7 @@ class NotificationConfig(BaseModel):
 class BlockConfiguration(BaseModel):
     """Base block configuration"""
 
-    id: str = Field(..., regex=r"^[a-zA-Z0-9_-]+$")
+    id: str = Field(..., pattern=r"^[a-zA-Z0-9_-]+$")
     type: str
     title: str = Field(..., min_length=1, max_length=255)
     configuration: Dict[str, Any] = Field(default_factory=dict)
@@ -197,7 +203,7 @@ class COBTemplateBase(BaseModel):
 class COBTemplateCreate(COBTemplateBase):
     """Schema for creating a template"""
 
-    version: str = Field("1.0.0", regex=r"^\d+\.\d+\.\d+$")
+    version: str = Field("1.0.0", pattern=r"^\d+\.\d+\.\d+$")
     version_notes: Optional[str] = None
 
 
@@ -259,7 +265,7 @@ class COBScheduleCreate(BaseModel):
     target_config: Dict[str, Any]  # Model/endpoint configuration
     data_selection: DataSelection = Field(default_factory=DataSelection)
     notification_config: NotificationConfig = Field(default_factory=NotificationConfig)
-    timezone: str = Field("UTC", regex=r"^[A-Za-z]+/[A-Za-z_]+$")
+    timezone: str = Field("UTC", pattern=r"^[A-Za-z]+/[A-Za-z_]+$")
     is_active: bool = True
 
 
@@ -272,7 +278,7 @@ class COBScheduleUpdate(BaseModel):
     target_config: Optional[Dict[str, Any]]
     data_selection: Optional[DataSelection]
     notification_config: Optional[NotificationConfig]
-    timezone: Optional[str] = Field(None, regex=r"^[A-Za-z]+/[A-Za-z_]+$")
+    timezone: Optional[str] = Field(None, pattern=r"^[A-Za-z]+/[A-Za-z_]+$")
     is_active: Optional[bool]
 
 
