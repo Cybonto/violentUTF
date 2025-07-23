@@ -9,7 +9,7 @@ services:
     
     # Add health check
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9180/apisix/admin/routes", "-H", "X-API-KEY: ${APISIX_ADMIN_KEY:-NWPlP66dEBFDyNMMDWe9TO2l7P3ceYIc}"]
+      test: ["CMD", "curl", "-f", "http://localhost:9180/apisix/admin/routes", "-H", "X-API-KEY: ${APISIX_ADMIN_KEY:-dwsDE1OMFwrnrncoChUb3DAEMdpilLCB}"]
       interval: 10s
       timeout: 10s
       retries: 5

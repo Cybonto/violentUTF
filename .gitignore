@@ -7,7 +7,6 @@ __pycache__/
 *.env
 secrets.toml
 *.log
-*temp*
 CA.crt
 !zscaler.pem
 *bak*
