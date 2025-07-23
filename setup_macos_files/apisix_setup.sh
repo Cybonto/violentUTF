@@ -319,6 +319,27 @@ register_api_key_consumer() {
     
     if [ "$response" = "200" ] || [ "$response" = "201" ]; then
         echo "✅ API key consumer 'violentutf-user' registered successfully"
+    else
+        echo "⚠️  API key consumer registration returned status: $response (may already exist)"
+    fi
+    
+    # Also create violentutf_api_user for additional compatibility
+    consumer_config='{
+        "username": "violentutf_api_user",
+        "plugins": {
+            "key-auth": {
+                "key": "'$api_key'"
+            }
+        }
+    }'
+    
+    response=$(curl -s -w "%{http_code}" -X PUT "$admin_url/apisix/admin/consumers/violentutf_api_user" \
+        -H "X-API-KEY: $APISIX_ADMIN_KEY" \
+        -H "Content-Type: application/json" \
+        -d "$consumer_config" -o /dev/null)
+    
+    if [ "$response" = "200" ] || [ "$response" = "201" ]; then
+        echo "✅ API key consumer 'violentutf_api_user' registered successfully"
         return 0
     else
         echo "⚠️  API key consumer registration returned status: $response (may already exist)"

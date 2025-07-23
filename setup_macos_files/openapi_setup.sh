@@ -220,7 +220,15 @@ create_openapi_provider_routes() {
             "uri": ("/ai/" + $provider_id + "/chat/completions"),
             "name": ($provider_id + "-chat-completions"),
             "methods": ["POST"],
+            "upstream": {
+              "type": "roundrobin",
+              "scheme": $scheme,
+              "nodes": {
+                ($host_port): 1
+              }
+            },
             "plugins": {
+              "key-auth": {},
               "ai-proxy": {
                 "provider": "openai-compatible",
                 "auth": {
@@ -228,18 +236,22 @@ create_openapi_provider_routes() {
                     "Authorization": ("Bearer " + $auth_token)
                   }
                 },
+                "model": {
+                  "passthrough": true
+                },
                 "override": {
                   "endpoint": ($scheme + "://" + $host_port + "/api/v1/chat/completions")
                 },
                 "timeout": 30000,
                 "keepalive": true,
+                "keepalive_timeout": 60000,
                 "keepalive_pool": 30,
                 "ssl_verify": $ssl_verify
               },
               "cors": {
                 "allow_origins": "http://localhost:8501,http://localhost:3000",
                 "allow_methods": "GET,POST,OPTIONS",
-                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey,X-API-KEY",
                 "allow_credential": true,
                 "max_age": 3600
               }
@@ -272,6 +284,7 @@ create_openapi_provider_routes() {
               }
             },
             "plugins": {
+              "key-auth": {},
               "proxy-rewrite": {
                 "uri": "/api/v1/chat/completions",
                 "headers": {
@@ -282,7 +295,7 @@ create_openapi_provider_routes() {
               "cors": {
                 "allow_origins": "http://localhost:8501,http://localhost:3000",
                 "allow_methods": "GET,POST,OPTIONS",
-                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey,X-API-KEY",
                 "allow_credential": true,
                 "max_age": 3600
               }
@@ -312,6 +325,7 @@ create_openapi_provider_routes() {
               "upstream_host": "localhost"
             },
             "plugins": {
+              "key-auth": {},
               "proxy-rewrite": {
                 "uri": "/api/v1/chat/completions",
                 "headers": {
@@ -322,7 +336,7 @@ create_openapi_provider_routes() {
               "cors": {
                 "allow_origins": "http://localhost:8501,http://localhost:3000",
                 "allow_methods": "GET,POST,OPTIONS",
-                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey,X-API-KEY",
                 "allow_credential": true,
                 "max_age": 3600
               }
@@ -373,6 +387,7 @@ create_openapi_provider_routes() {
               }
             },
             "plugins": {
+              "key-auth": {},
               "proxy-rewrite": {
                 "uri": "/api/v1/models",
                 "headers": {
@@ -386,7 +401,7 @@ create_openapi_provider_routes() {
               "cors": {
                 "allow_origins": "http://localhost:8501,http://localhost:3000",
                 "allow_methods": "GET,POST,OPTIONS",
-                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey,X-API-KEY",
                 "allow_credential": true,
                 "max_age": 3600
               }
@@ -422,6 +437,7 @@ create_openapi_provider_routes() {
               }
             },
             "plugins": {
+              "key-auth": {},
               "proxy-rewrite": {
                 "uri": "/api/v1/models",
                 "headers": {
@@ -432,7 +448,7 @@ create_openapi_provider_routes() {
               "cors": {
                 "allow_origins": "http://localhost:8501,http://localhost:3000",
                 "allow_methods": "GET,POST,OPTIONS",
-                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey,X-API-KEY",
                 "allow_credential": true,
                 "max_age": 3600
               }
@@ -465,6 +481,7 @@ create_openapi_provider_routes() {
               }
             },
             "plugins": {
+              "key-auth": {},
               "proxy-rewrite": {
                 "uri": "/api/v1/models",
                 "headers": {
@@ -475,7 +492,7 @@ create_openapi_provider_routes() {
               "cors": {
                 "allow_origins": "http://localhost:8501,http://localhost:3000",
                 "allow_methods": "GET,POST,OPTIONS",
-                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey",
+                "allow_headers": "Authorization,Content-Type,X-Requested-With,apikey,X-API-KEY",
                 "allow_credential": true,
                 "max_age": 3600
               }
