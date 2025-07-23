@@ -281,8 +281,29 @@ register_api_key_consumer() {
     local admin_url="http://localhost:9180"
     local api_key="${VIOLENTUTF_API_KEY:-test-api-key}"
     
-    # Create consumer configuration
+    # Create consumer configuration for violentutf-api (used by the application)
     local consumer_config='{
+        "username": "violentutf-api",
+        "plugins": {
+            "key-auth": {
+                "key": "'$api_key'"
+            }
+        }
+    }'
+    
+    local response=$(curl -s -w "%{http_code}" -X PUT "$admin_url/apisix/admin/consumers/violentutf-api" \
+        -H "X-API-KEY: $APISIX_ADMIN_KEY" \
+        -H "Content-Type: application/json" \
+        -d "$consumer_config" -o /dev/null)
+    
+    if [ "$response" = "200" ] || [ "$response" = "201" ]; then
+        echo "✅ API key consumer 'violentutf-api' registered successfully"
+    else
+        echo "⚠️  API key consumer registration returned status: $response (may already exist)"
+    fi
+    
+    # Also create violentutf-user for backward compatibility
+    consumer_config='{
         "username": "violentutf-user",
         "plugins": {
             "key-auth": {
@@ -291,13 +312,13 @@ register_api_key_consumer() {
         }
     }'
     
-    local response=$(curl -s -w "%{http_code}" -X PUT "$admin_url/apisix/admin/consumers/violentutf-user" \
+    response=$(curl -s -w "%{http_code}" -X PUT "$admin_url/apisix/admin/consumers/violentutf-user" \
         -H "X-API-KEY: $APISIX_ADMIN_KEY" \
         -H "Content-Type: application/json" \
         -d "$consumer_config" -o /dev/null)
     
     if [ "$response" = "200" ] || [ "$response" = "201" ]; then
-        echo "✅ API key consumer registered successfully"
+        echo "✅ API key consumer 'violentutf-user' registered successfully"
         return 0
     else
         echo "⚠️  API key consumer registration returned status: $response (may already exist)"

@@ -52,7 +52,10 @@ echo "APISIX Admin URL: $APISIX_ADMIN_URL"
 echo "API Key to configure: ${VIOLENTUTF_API_KEY:0:10}..."
 echo
 
-# Check if consumer already exists
+# Create both consumers to handle different naming conventions
+echo "Setting up APISIX consumers..."
+
+# First, create/update 'violentutf' consumer
 echo "Checking if consumer 'violentutf' exists..."
 existing_consumer=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf" \
   -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
@@ -74,20 +77,54 @@ consumer_config='{
 }'
 
 echo
-echo "Creating/updating consumer..."
+echo "Creating/updating consumer 'violentutf'..."
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf" \
   -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
   -H "Content-Type: application/json" \
   -d "${consumer_config}")
 
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+    echo -e "${GREEN}✅ Successfully created/updated consumer 'violentutf'${NC}"
+fi
+
+# Also create 'violentutf-api' consumer for compatibility
+echo
+echo "Checking if consumer 'violentutf-api' exists..."
+existing_api_consumer=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf-api" \
+  -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+
+if echo "$existing_api_consumer" | grep -q '"username":"violentutf-api"'; then
+    echo -e "${YELLOW}Consumer 'violentutf-api' already exists, will update it${NC}"
+else
+    echo "Consumer does not exist, will create it"
+fi
+
+# Create/update violentutf-api consumer
+api_consumer_config='{
+    "username": "violentutf-api",
+    "plugins": {
+        "key-auth": {
+            "key": "'$VIOLENTUTF_API_KEY'"
+        }
+    }
+}'
+
+echo
+echo "Creating/updating consumer 'violentutf-api'..."
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf-api" \
+  -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "${api_consumer_config}")
+
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
 
 if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
-    echo -e "${GREEN}✅ Successfully created/updated consumer 'violentutf'${NC}"
+    echo -e "${GREEN}✅ Successfully created/updated consumer 'violentutf-api'${NC}"
     echo "API Key configured: ${VIOLENTUTF_API_KEY:0:10}..."
 else
-    echo -e "${RED}❌ Failed to create consumer${NC}"
+    echo -e "${RED}❌ Failed to create consumer 'violentutf-api'${NC}"
     echo "HTTP Code: $http_code"
     echo "Response: $body" | jq '.' 2>/dev/null || echo "$body"
     exit 1

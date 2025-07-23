@@ -126,26 +126,10 @@ update_fastapi_env() {
         fi
     done
     
-    # Update API keys from ai-tokens.env
-    # Note: Always update API keys if they exist, regardless of enabled status
-    # This ensures keys are available when providers are enabled later
-    if [ -n "$OPENAI_API_KEY" ] && [ "$OPENAI_API_KEY" != "your_openai_api_key_here" ]; then
-        if grep -q "^OPENAI_API_KEY=" "$fastapi_env_file"; then
-            sed -i "s/^OPENAI_API_KEY=.*/OPENAI_API_KEY=${OPENAI_API_KEY}/" "$fastapi_env_file"
-        else
-            echo "OPENAI_API_KEY=${OPENAI_API_KEY}" >> "$fastapi_env_file"
-        fi
-        log_detail "Added OpenAI API key to FastAPI environment"
-    fi
-    
-    if [ -n "$ANTHROPIC_API_KEY" ] && [ "$ANTHROPIC_API_KEY" != "your_anthropic_api_key_here" ]; then
-        if grep -q "^ANTHROPIC_API_KEY=" "$fastapi_env_file"; then
-            sed -i "s/^ANTHROPIC_API_KEY=.*/ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}/" "$fastapi_env_file"
-        else
-            echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}" >> "$fastapi_env_file"
-        fi
-        log_detail "Added Anthropic API key to FastAPI environment"
-    fi
+    # Note: DO NOT add API keys to FastAPI environment
+    # The FastAPI Settings class doesn't have fields for API keys
+    # API keys are only used by APISIX for the AI proxy
+    # Adding them causes Pydantic validation errors and container crashes
     
     log_success "FastAPI environment updated with provider flags and API keys"
 }
@@ -417,29 +401,17 @@ OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}
 OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
 EOF
 
-    # Add AI provider keys if they exist (from ai-tokens.env or preserved)
-    if [ -n "$existing_openai_key" ]; then
-        echo "OPENAI_API_KEY=$existing_openai_key" >> violentutf_api/fastapi_app/.env
-    elif [ -n "$OPENAI_API_KEY" ] && [ "$OPENAI_API_KEY" != "your_openai_api_key_here" ]; then
-        echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> violentutf_api/fastapi_app/.env
-    fi
+    # Note: API keys are NOT added to FastAPI .env
+    # They are only needed in ai-tokens.env for APISIX AI proxy
+    # FastAPI Settings class only has ENABLED flags, not the actual keys
     
-    if [ -n "$existing_anthropic_key" ]; then
-        echo "ANTHROPIC_API_KEY=$existing_anthropic_key" >> violentutf_api/fastapi_app/.env
-    elif [ -n "$ANTHROPIC_API_KEY" ] && [ "$ANTHROPIC_API_KEY" != "your_anthropic_api_key_here" ]; then
-        echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" >> violentutf_api/fastapi_app/.env
-    fi
-    
-    # Add Ollama endpoint if configured
+    # Add Ollama endpoint if configured (this is used by FastAPI)
     if [ -n "$OLLAMA_ENDPOINT" ] && [ "$OLLAMA_ENABLED" = "true" ]; then
         echo "OLLAMA_ENDPOINT=$OLLAMA_ENDPOINT" >> violentutf_api/fastapi_app/.env
     fi
     
-    # Add Open WebUI configuration if enabled
-    if [ "$OPEN_WEBUI_ENABLED" = "true" ]; then
-        [ -n "$OPEN_WEBUI_ENDPOINT" ] && echo "OPEN_WEBUI_ENDPOINT=$OPEN_WEBUI_ENDPOINT" >> violentutf_api/fastapi_app/.env
-        [ -n "$OPEN_WEBUI_API_KEY" ] && [ "$OPEN_WEBUI_API_KEY" != "your_open_webui_api_key_here" ] && echo "OPEN_WEBUI_API_KEY=$OPEN_WEBUI_API_KEY" >> violentutf_api/fastapi_app/.env
-    fi
+    # Note: Open WebUI endpoint could be added here if needed by FastAPI
+    # Currently FastAPI doesn't use these directly
     echo "✅ Created violentutf_api/fastapi_app/.env"
     
     echo "✅ All configuration files created successfully"

@@ -966,10 +966,22 @@ create_apisix_consumer() {
 EOF
 )
     
-    echo "Creating APISIX consumer with API key authentication..."
+    echo "Creating APISIX consumers with API key authentication..."
     local response
     local http_code
     
+    # Create violentutf-api consumer (used by the application)
+    response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf-api" \
+      -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
+      -H "Content-Type: application/json" \
+      -d "${consumer_config}" 2>&1)
+    
+    http_code="${response: -3}"
+    if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+        echo "✅ Successfully created API key consumer 'violentutf-api'"
+    fi
+    
+    # Also create violentutf_user for backward compatibility
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf_user" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
@@ -979,7 +991,7 @@ EOF
     response_body="${response%???}"
     
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
-        echo "✅ Successfully created API key consumer"
+        echo "✅ Successfully created API key consumer 'violentutf_user'"
         echo "   API Key: $VIOLENTUTF_API_KEY"
         echo "   Use this key in the 'apikey' header for AI Gateway requests"
         return 0
@@ -1939,29 +1951,17 @@ OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}
 OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
 EOF
 
-# Add AI provider keys if they exist (from ai-tokens.env or preserved)
-if [ -n "$existing_openai_key" ]; then
-    echo "OPENAI_API_KEY=$existing_openai_key" >> violentutf_api/fastapi_app/.env
-elif [ -n "$OPENAI_API_KEY" ] && [ "$OPENAI_API_KEY" != "your_openai_api_key_here" ]; then
-    echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> violentutf_api/fastapi_app/.env
-fi
+# Note: API keys are NOT added to FastAPI .env
+# They are only needed in ai-tokens.env for APISIX AI proxy
+# FastAPI Settings class only has ENABLED flags, not the actual keys
 
-if [ -n "$existing_anthropic_key" ]; then
-    echo "ANTHROPIC_API_KEY=$existing_anthropic_key" >> violentutf_api/fastapi_app/.env
-elif [ -n "$ANTHROPIC_API_KEY" ] && [ "$ANTHROPIC_API_KEY" != "your_anthropic_api_key_here" ]; then
-    echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" >> violentutf_api/fastapi_app/.env
-fi
-
-# Add Ollama endpoint if configured
+# Add Ollama endpoint if configured (this is used by FastAPI)
 if [ -n "$OLLAMA_ENDPOINT" ] && [ "$OLLAMA_ENABLED" = "true" ]; then
     echo "OLLAMA_ENDPOINT=$OLLAMA_ENDPOINT" >> violentutf_api/fastapi_app/.env
 fi
 
-# Add Open WebUI configuration if enabled
-if [ "$OPEN_WEBUI_ENABLED" = "true" ]; then
-    [ -n "$OPEN_WEBUI_ENDPOINT" ] && echo "OPEN_WEBUI_ENDPOINT=$OPEN_WEBUI_ENDPOINT" >> violentutf_api/fastapi_app/.env
-    [ -n "$OPEN_WEBUI_API_KEY" ] && [ "$OPEN_WEBUI_API_KEY" != "your_open_webui_api_key_here" ] && echo "OPEN_WEBUI_API_KEY=$OPEN_WEBUI_API_KEY" >> violentutf_api/fastapi_app/.env
-fi
+# Note: Open WebUI endpoint could be added here if needed by FastAPI
+# Currently FastAPI doesn't use these directly
 
 echo "✅ Created violentutf_api/fastapi_app/.env"
 

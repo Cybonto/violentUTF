@@ -14,6 +14,9 @@ CA.crt
 docs/.DS_Store
 *.db
 *CLAUDE*.*
+*route_diagnostic*
+*.backup*
+*.bak*
 
 # Ignore all files with 'template' in the name
 *template*
@@ -65,3 +68,5 @@ pip-delete-this-directory.txt
 zscaler.crt
 .secrets-baseline
 *.backup
+*.*.backup
+.env.backup
