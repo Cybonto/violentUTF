@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 # Fix GSAi route to use ai-proxy with correct authentication
 
+echo "⚠️  DEPRECATION NOTICE"
+echo "===================="
+echo "This script is deprecated. Please use the consolidated fix script instead:"
+echo ""
+echo "  ./fix_violentutf_issues.sh --fix-gsai"
+echo ""
+echo "The new script provides better diagnostics, backup/rollback, and more fixes."
+echo "See: docs/guides/Fix_Script_Migration_Guide.md"
+echo ""
+read -p "Continue with deprecated script? (y/N) " -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 0
+fi
+
 echo "🔧 Fixing GSAi Route with AI-Proxy"
 echo "=================================="
 
@@ -161,8 +176,8 @@ fi
 
 # Test the route
 echo -e "\n🧪 Testing GSAi API access..."
+echo "Note: GSAi routes don't require API key since key-auth is removed"
 TEST_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
-  -H "apikey: $API_KEY" \
   -H "Content-Type: application/json" \
   -X POST \
   http://localhost:9080/ai/gsai-api-1/chat/completions \

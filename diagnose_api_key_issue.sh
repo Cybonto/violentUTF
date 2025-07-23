@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Diagnostic script for API key authentication issues
 
-echo "🔍 API Key Authentication Diagnostic"
-echo "===================================="
+echo "🔍 GSAi Authentication Diagnostic"
+echo "================================="
 
 # Get the APISIX admin key
 ADMIN_KEY=$(grep "^APISIX_ADMIN_KEY=" apisix/.env | cut -d'=' -f2)
@@ -76,13 +76,12 @@ fi
 
 # Test authentication
 echo ""
-echo "🧪 Testing Authentication:"
-echo "------------------------"
+echo "🧪 Testing GSAi Routes:"
+echo "----------------------"
 
-# Test with lowercase apikey header
-echo -n "Test 1 - lowercase 'apikey' header: "
+# Test without API key (since key-auth should be removed)
+echo -n "Test 1 - No API key header: "
 TEST1=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
-    -H "apikey: $API_KEY" \
     -H "Content-Type: application/json" \
     -X POST \
     http://localhost:9080/ai/gsai-api-1/chat/completions \
@@ -90,25 +89,40 @@ TEST1=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
 HTTP_CODE=$(echo "$TEST1" | grep "HTTP_CODE:" | cut -d: -f2)
 if [ "$HTTP_CODE" = "200" ]; then
     echo "✅ Success (HTTP 200)"
+elif [ "$HTTP_CODE" = "403" ]; then
+    echo "❌ Failed (HTTP 403 - GSAi API rejected request)"
+    BODY=$(echo "$TEST1" | sed '/HTTP_CODE:/d')
+    echo "   Response: $BODY"
+elif [ "$HTTP_CODE" = "500" ]; then
+    echo "❌ Failed (HTTP 500 - SSL or connection issue)"
+    BODY=$(echo "$TEST1" | sed '/HTTP_CODE:/d')
+    echo "   Response: $BODY"
 else
     echo "❌ Failed (HTTP $HTTP_CODE)"
     BODY=$(echo "$TEST1" | sed '/HTTP_CODE:/d')
     echo "   Response: $BODY"
 fi
 
-# Test with uppercase X-API-KEY header
-echo -n "Test 2 - uppercase 'X-API-KEY' header: "
-TEST2=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
-    -H "X-API-KEY: $API_KEY" \
-    -H "Content-Type: application/json" \
-    -X POST \
-    http://localhost:9080/ai/gsai-api-1/chat/completions \
-    -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "test"}], "max_tokens": 1}' 2>&1)
-HTTP_CODE=$(echo "$TEST2" | grep "HTTP_CODE:" | cut -d: -f2)
-if [ "$HTTP_CODE" = "200" ]; then
-    echo "✅ Success (HTTP 200)"
+# Test direct to GSAi (bypass APISIX)
+echo ""
+echo -n "Test 2 - Direct to GSAi API: "
+source ai-tokens.env
+if [ -n "$OPENAPI_1_BASE_URL" ] && [ -n "$OPENAPI_1_AUTH_TOKEN" ]; then
+    TEST2=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -H "Authorization: Bearer $OPENAPI_1_AUTH_TOKEN" \
+        -H "Content-Type: application/json" \
+        -X POST \
+        "$OPENAPI_1_BASE_URL/api/v1/chat/completions" \
+        -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "test"}], "max_tokens": 1}' 2>&1)
+    HTTP_CODE=$(echo "$TEST2" | grep "HTTP_CODE:" | cut -d: -f2)
+    if [ "$HTTP_CODE" = "200" ]; then
+        echo "✅ Direct access works"
+    else
+        echo "❌ Direct access failed (HTTP $HTTP_CODE)"
+        echo "   This suggests the issue is with GSAi API, not APISIX"
+    fi
 else
-    echo "❌ Failed (HTTP $HTTP_CODE)"
+    echo "⚠️  Cannot test - OPENAPI_1 not configured"
 fi
 
 # Check route details
@@ -131,11 +145,30 @@ else
 fi
 
 echo ""
+echo "🔐 SSL/TLS Configuration:"
+echo "-----------------------"
+source ai-tokens.env
+echo "OPENAPI_1_SSL_VERIFY: ${OPENAPI_1_SSL_VERIFY:-not set (defaults to true)}"
+echo "OPENAPI_1_BASE_URL: $OPENAPI_1_BASE_URL"
+if [[ "$OPENAPI_1_BASE_URL" =~ ^https:// ]]; then
+    echo "⚠️  Using HTTPS - ensure SSL_VERIFY is set correctly for self-signed certs"
+fi
+
+echo ""
 echo "💡 Recommendations:"
 echo "-----------------"
-if [ "$HTTP_CODE" != "200" ]; then
+if [ "$HTTP_CODE" = "403" ]; then
+    echo "1. GSAi is rejecting the request. Check:"
+    echo "   - Is your Bearer token valid?"
+    echo "   - Do you have access to the 'llama3211b' model?"
+    echo "   - Try a different model like 'claude_3_haiku'"
+elif [ "$HTTP_CODE" = "500" ]; then
+    echo "1. Server error. Check:"
+    echo "   - SSL certificate issues (set OPENAPI_1_SSL_VERIFY=false for self-signed)"
+    echo "   - Run ./fix_gsai_ai_proxy.sh to update routes"
+    echo "   - Check APISIX logs: docker logs apisix-apisix-1 --tail 20"
+elif [ "$HTTP_CODE" != "200" ]; then
     echo "1. Run ./fix_gsai_ai_proxy.sh to fix GSAi routes"
     echo "2. Ensure OPENAPI_1_AUTH_TOKEN in ai-tokens.env is valid"
-    echo "3. Check if the API key matches between Streamlit and APISIX"
-    echo "4. Verify Docker network connectivity"
+    echo "3. Check Docker network connectivity"
 fi
