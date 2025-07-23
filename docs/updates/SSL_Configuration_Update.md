@@ -5,7 +5,13 @@ Updated the ViolentUTF setup to properly handle SSL certificate verification for
 
 ## Changes Made
 
-### 1. Environment Configuration Template
+### 1. GSAi Route Configuration Fix
+**Critical**: GSAi routes must NOT use the `key-auth` plugin as it interferes with the Authorization header:
+- GSAi routes use only `ai-proxy` and `cors` plugins
+- Other OpenAPI providers can use `key-auth` + `proxy-rewrite` + `cors`
+- This prevents the "Invalid key=value pair" error from GSAi
+
+### 2. Environment Configuration Template
 Updated `setup_macos_files/env_management.sh` to include SSL configuration options for all OpenAPI providers:
 
 ```bash

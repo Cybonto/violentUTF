@@ -88,6 +88,9 @@ OPENAPI_3_CA_CERT_PATH=""
 #
 # For enterprise certificates:
 #   Set SSL_VERIFY=true and provide CA_CERT_PATH=/path/to/enterprise-ca.crt
+#
+# NOTE: GSAi routes do NOT use key-auth plugin to avoid Authorization header conflicts.
+#       Authentication is handled by the ai-proxy plugin using the AUTH_TOKEN.
 
 # Routes will be created at:
 # - Chat: http://localhost:9080/ai/{PROVIDER_ID}/chat/completions

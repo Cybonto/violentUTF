@@ -206,6 +206,7 @@ create_openapi_provider_routes() {
     # Create chat completions route - use ai-proxy for GSAi, proxy-rewrite for others
     if [[ "$provider_id" == *"gsai"* ]]; then
         # Use ai-proxy plugin for GSAi following OpenAI/Anthropic pattern
+        # IMPORTANT: GSAi routes do NOT use key-auth plugin as it interferes with Authorization header
         local auth_token="$auth_token"
         
         local chat_route_json=$(jq -n \
@@ -360,6 +361,7 @@ create_openapi_provider_routes() {
     # Create models route - use proxy-rewrite for all providers (ai-proxy has issues with GET)
     if [[ "$provider_id" == *"gsai"* ]]; then
         # GSAi models route with proxy-rewrite (hardcoded auth works better for GET)
+        # IMPORTANT: GSAi routes do NOT use key-auth plugin as it interferes with Authorization header
         local models_route_json=$(jq -n \
           --arg route_id "$models_route_id" \
           --arg provider_id "$provider_id" \
