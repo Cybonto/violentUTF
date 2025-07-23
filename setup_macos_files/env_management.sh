@@ -40,6 +40,10 @@ OPENAPI_1_SPEC_PATH=/openapi.json
 OPENAPI_1_AUTH_TYPE=bearer
 OPENAPI_1_AUTH_TOKEN=your_gsai_bearer_token_here
 OPENAPI_1_CUSTOM_HEADERS=""
+# SSL/TLS Configuration (for HTTPS endpoints)
+OPENAPI_1_USE_HTTPS=auto        # auto (detect from URL), true, or false
+OPENAPI_1_SSL_VERIFY=true       # true or false (set to false for self-signed certs)
+OPENAPI_1_CA_CERT_PATH=""       # Path to custom CA certificate (optional)
 
 # OpenAPI Provider 2 - Example: Custom API
 OPENAPI_2_ENABLED=false
@@ -50,6 +54,10 @@ OPENAPI_2_SPEC_PATH=/openapi.json
 OPENAPI_2_AUTH_TYPE=api_key
 OPENAPI_2_AUTH_TOKEN=your_api_key_here
 OPENAPI_2_CUSTOM_HEADERS=""
+# SSL/TLS Configuration
+OPENAPI_2_USE_HTTPS=auto
+OPENAPI_2_SSL_VERIFY=true
+OPENAPI_2_CA_CERT_PATH=""
 
 # OpenAPI Provider 3 - Example: Another Custom API
 OPENAPI_3_ENABLED=false
@@ -60,11 +68,26 @@ OPENAPI_3_SPEC_PATH=/v1/openapi.json
 OPENAPI_3_AUTH_TYPE=basic
 OPENAPI_3_AUTH_TOKEN=base64_encoded_credentials_here
 OPENAPI_3_CUSTOM_HEADERS=""
+# SSL/TLS Configuration
+OPENAPI_3_USE_HTTPS=auto
+OPENAPI_3_SSL_VERIFY=true
+OPENAPI_3_CA_CERT_PATH=""
 
 # Available AUTH_TYPE values:
 # - bearer: Uses Authorization: Bearer {token}
 # - api_key: Uses X-API-Key: {token}
 # - basic: Uses Authorization: Basic {token} (token should be base64 encoded)
+
+# SSL/TLS Configuration Options:
+# - USE_HTTPS: auto (detect from URL), true (force HTTPS), false (force HTTP)
+# - SSL_VERIFY: true (verify certificates), false (skip verification for self-signed certs)
+# - CA_CERT_PATH: Path to custom CA certificate file (for enterprise CAs)
+#
+# For self-signed certificates (development/testing):
+#   Set SSL_VERIFY=false
+#
+# For enterprise certificates:
+#   Set SSL_VERIFY=true and provide CA_CERT_PATH=/path/to/enterprise-ca.crt
 
 # Routes will be created at:
 # - Chat: http://localhost:9080/ai/{PROVIDER_ID}/chat/completions

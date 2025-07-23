@@ -234,8 +234,26 @@ docker exec apisix-apisix-1 openssl x509 -in /usr/local/share/ca-certificates/cu
 
 This is the most common error when integrating with enterprise AI gateways or development environments using self-signed certificates.
 
+**Error in APISIX logs:**
+```
+[warn] [lua] openai-base.lua:198: phase_func(): failed to connect to LLM server: 19: self-signed certificate in certificate chain
+[warn] [lua] plugin.lua:1207: common_phase(): ai-proxy exits with http status code 500
+```
+
 #### Quick Solution (Development/Testing)
 
+**Method 1: Using the fix script**
+```bash
+# Run the GSAi fix script which disables SSL verification
+./fix_gsai_ai_proxy.sh
+
+# This will:
+# - Set ssl_verify to false in the ai-proxy plugin
+# - Update both chat and models routes
+# - Test the connection
+```
+
+**Method 2: Manual configuration**
 ```bash
 # 1. Disable SSL verification in ai-tokens.env
 OPENAPI_1_SSL_VERIFY=false
@@ -247,7 +265,7 @@ cd setup_macos_files
 # 3. Verify the change
 source ../apisix/.env
 curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" http://localhost:9180/apisix/admin/routes/9001 | \
-  jq '.value.plugins."ai-proxy".model.options.ssl_verify'
+  jq '.value.plugins."ai-proxy".ssl_verify'
 # Should show: false
 ```
 
@@ -320,6 +338,53 @@ Use the enterprise test script:
 ```bash
 cd tests
 ./test_enterprise_gsai.sh
+```
+
+## Troubleshooting Enterprise Environments
+
+### Combined Issues: SSL + Authentication
+
+In enterprise environments, you may encounter multiple issues simultaneously:
+
+1. **SSL Certificate Error (500)**: Self-signed certificate rejection
+2. **API Key Authentication (403)**: Missing key-auth plugin or incorrect consumer
+3. **APISIX Admin Permission (403)**: User not in allowed list
+
+**Complete Fix Process:**
+```bash
+# 1. Run comprehensive enterprise fix
+./fix_enterprise_api_key.sh
+
+# This checks:
+# - API key consumers
+# - GSAi route configuration  
+# - APISIX admin permissions
+
+# 2. If SSL error persists, run GSAi fix
+./fix_gsai_ai_proxy.sh
+
+# This will:
+# - Disable SSL verification for self-signed certs
+# - Update upstream configuration
+# - Test the connection
+```
+
+### Diagnostic Commands
+
+```bash
+# Check current route configuration
+curl -s -H "X-API-KEY: $(grep '^APISIX_ADMIN_KEY=' apisix/.env | cut -d'=' -f2)" \
+  http://localhost:9180/apisix/admin/routes/9001 | jq '.value.plugins'
+
+# Check APISIX logs for SSL errors
+docker logs apisix-apisix-1 --tail 50 | grep -i "ssl\|certificate"
+
+# Test direct connection to GSAi
+source ai-tokens.env
+curl -k -X POST "$OPENAPI_1_BASE_URL/api/v1/chat/completions" \
+  -H "Authorization: Bearer $OPENAPI_1_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "test"}]}'
 ```
 
 ## Future Improvements

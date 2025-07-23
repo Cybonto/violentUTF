@@ -20,11 +20,20 @@ echo "  OPENAPI_1_AUTH_TOKEN: ${OPENAPI_1_AUTH_TOKEN:0:10}..."
 echo "  OPENAPI_1_BASE_URL: $OPENAPI_1_BASE_URL"
 echo "  APISIX Admin Key: ${ADMIN_KEY:0:10}..."
 
+# Warn about SSL if using HTTPS
+if [[ "$OPENAPI_1_BASE_URL" =~ ^https:// ]]; then
+    echo "  ⚠️  Using HTTPS - SSL verification will be disabled for self-signed certificates"
+fi
+
 # First, let's check if we need HTTPS
 SCHEME="http"
 if [[ "$OPENAPI_1_BASE_URL" =~ ^https:// ]]; then
     SCHEME="https"
 fi
+
+# Extract host and port from the base URL
+HOST_PORT=$(echo "$OPENAPI_1_BASE_URL" | sed -E 's|https?://||' | sed 's|/.*||')
+echo "  Upstream: $SCHEME://$HOST_PORT"
 
 # Update the GSAi chat route to use ai-proxy properly
 echo -e "\n📝 Updating GSAi chat route (9001) with ai-proxy..."
@@ -55,7 +64,7 @@ UPDATE_RESPONSE=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9001
         \"keepalive\": true,
         \"keepalive_timeout\": 60000,
         \"keepalive_pool\": 30,
-        \"ssl_verify\": true
+        \"ssl_verify\": false
       },
       \"cors\": {
         \"allow_origins\": \"http://localhost:8501,http://localhost:3000\",
@@ -69,7 +78,7 @@ UPDATE_RESPONSE=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9001
       \"type\": \"roundrobin\",
       \"scheme\": \"$SCHEME\",
       \"nodes\": {
-        \"host.docker.internal:8081\": 1
+        \"$HOST_PORT\": 1
       }
     }
   }")
@@ -113,7 +122,7 @@ UPDATE_RESPONSE=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9101
       \"type\": \"roundrobin\",
       \"scheme\": \"$SCHEME\",
       \"nodes\": {
-        \"host.docker.internal:8081\": 1
+        \"$HOST_PORT\": 1
       }
     }
   }")
