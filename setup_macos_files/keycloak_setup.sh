@@ -7,6 +7,12 @@ get_keycloak_admin_token() {
     
     # Keycloak settings
     local KEYCLOAK_SERVER_URL="http://localhost:8080"
+    
+    # Read credentials from .env file if it exists
+    if [ -f "keycloak/.env" ]; then
+        source keycloak/.env
+    fi
+    
     local KEYCLOAK_ADMIN_USERNAME="${KEYCLOAK_ADMIN_USERNAME:-admin}"
     local KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-admin}"
     

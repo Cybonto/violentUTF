@@ -349,37 +349,92 @@ run_test() {
 
 # Function to generate all secrets upfront
 generate_all_secrets() {
-    log_progress "Generating secure secrets for all services..."
+    log_progress "Generating or loading secure secrets for all services..."
 
-    # Keycloak admin credentials (generated securely)
-    KEYCLOAK_ADMIN_USERNAME="admin"
-    KEYCLOAK_ADMIN_PASSWORD=$(generate_secure_string)
+    # Check for existing Keycloak credentials
+    if [ -f "keycloak/.env" ]; then
+        log_detail "Found existing Keycloak credentials, reusing..."
+        source keycloak/.env
+        # Use existing values if available
+        KEYCLOAK_ADMIN_USERNAME="${KEYCLOAK_ADMIN_USERNAME:-admin}"
+        KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-}"
+        KEYCLOAK_POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}"
+        
+        # Generate new passwords only if not found
+        if [ -z "$KEYCLOAK_ADMIN_PASSWORD" ]; then
+            KEYCLOAK_ADMIN_PASSWORD=$(generate_secure_string)
+            log_detail "Generated new Keycloak admin password"
+        else
+            log_detail "Reusing existing Keycloak admin password"
+        fi
+        
+        if [ -z "$KEYCLOAK_POSTGRES_PASSWORD" ]; then
+            KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
+            log_detail "Generated new Keycloak PostgreSQL password"
+        else
+            log_detail "Reusing existing Keycloak PostgreSQL password"
+        fi
+    else
+        # Generate new credentials
+        log_detail "No existing Keycloak credentials found, generating new..."
+        KEYCLOAK_ADMIN_USERNAME="admin"
+        KEYCLOAK_ADMIN_PASSWORD=$(generate_secure_string)
+        KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
+    fi
+    
     SENSITIVE_VALUES+=("Keycloak Admin Username: $KEYCLOAK_ADMIN_USERNAME")
     SENSITIVE_VALUES+=("Keycloak Admin Password: $KEYCLOAK_ADMIN_PASSWORD")
-
-    # Keycloak PostgreSQL password (for new setups)
-    KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
     SENSITIVE_VALUES+=("Keycloak PostgreSQL Password: $KEYCLOAK_POSTGRES_PASSWORD")
 
-    # ViolentUTF application secrets
-    VIOLENTUTF_CLIENT_SECRET=$(generate_secure_string)
-    VIOLENTUTF_COOKIE_SECRET=$(generate_secure_string)
-    VIOLENTUTF_PYRIT_SALT=$(generate_secure_string)
-    VIOLENTUTF_API_KEY=$(generate_secure_string)
-    VIOLENTUTF_USER_PASSWORD=$(generate_secure_string)
+    # Check for existing ViolentUTF credentials
+    if [ -f "violentutf/.env" ]; then
+        log_detail "Found existing ViolentUTF credentials, reusing..."
+        # Extract specific values from the .env file
+        VIOLENTUTF_CLIENT_SECRET=$(grep "^KEYCLOAK_CLIENT_SECRET=" violentutf/.env | cut -d'=' -f2- || echo "")
+        VIOLENTUTF_USER_PASSWORD=$(grep "^KEYCLOAK_PASSWORD=" violentutf/.env | cut -d'=' -f2- || echo "")
+        VIOLENTUTF_PYRIT_SALT=$(grep "^PYRIT_DB_SALT=" violentutf/.env | cut -d'=' -f2- || echo "")
+        VIOLENTUTF_API_KEY=$(grep "^VIOLENTUTF_API_KEY=" violentutf/.env | cut -d'=' -f2- || echo "")
+        
+        # Check for cookie secret in secrets.toml
+        if [ -f "violentutf/.streamlit/secrets.toml" ]; then
+            VIOLENTUTF_COOKIE_SECRET=$(grep "^cookie_secret" violentutf/.streamlit/secrets.toml | cut -d'"' -f2 || echo "")
+        fi
+    fi
+    
+    # Generate any missing ViolentUTF secrets
+    VIOLENTUTF_CLIENT_SECRET="${VIOLENTUTF_CLIENT_SECRET:-$(generate_secure_string)}"
+    VIOLENTUTF_COOKIE_SECRET="${VIOLENTUTF_COOKIE_SECRET:-$(generate_secure_string)}"
+    VIOLENTUTF_PYRIT_SALT="${VIOLENTUTF_PYRIT_SALT:-$(generate_secure_string)}"
+    VIOLENTUTF_API_KEY="${VIOLENTUTF_API_KEY:-$(generate_secure_string)}"
+    VIOLENTUTF_USER_PASSWORD="${VIOLENTUTF_USER_PASSWORD:-$(generate_secure_string)}"
+    
     SENSITIVE_VALUES+=("ViolentUTF Keycloak Client Secret: $VIOLENTUTF_CLIENT_SECRET")
     SENSITIVE_VALUES+=("ViolentUTF Cookie Secret: $VIOLENTUTF_COOKIE_SECRET")
     SENSITIVE_VALUES+=("ViolentUTF PyRIT DB Salt: $VIOLENTUTF_PYRIT_SALT")
     SENSITIVE_VALUES+=("ViolentUTF AI Gateway API Key: $VIOLENTUTF_API_KEY")
     SENSITIVE_VALUES+=("ViolentUTF User Password: $VIOLENTUTF_USER_PASSWORD")
 
-    # APISIX secrets
-    APISIX_ADMIN_KEY=$(generate_secure_string)
-    APISIX_DASHBOARD_SECRET=$(generate_secure_string)
-    APISIX_DASHBOARD_PASSWORD=$(generate_secure_string)
+    # Check for existing APISIX credentials
+    if [ -f "apisix/.env" ]; then
+        log_detail "Found existing APISIX credentials, reusing..."
+        source apisix/.env
+        APISIX_ADMIN_KEY="${APISIX_ADMIN_KEY:-}"
+    fi
+    
+    # Check for existing APISIX client secret in ViolentUTF secrets
+    if [ -f "violentutf/.streamlit/secrets.toml" ]; then
+        EXISTING_APISIX_SECRET=$(grep -A2 "\[apisix\]" violentutf/.streamlit/secrets.toml | grep "client_secret" | cut -d'"' -f2 || echo "")
+        APISIX_CLIENT_SECRET="${EXISTING_APISIX_SECRET:-}"
+    fi
+    
+    # Generate any missing APISIX secrets
+    APISIX_ADMIN_KEY="${APISIX_ADMIN_KEY:-$(generate_secure_string)}"
+    APISIX_DASHBOARD_SECRET=$(generate_secure_string)  # Always regenerate for security
+    APISIX_DASHBOARD_PASSWORD=$(generate_secure_string)  # Always regenerate for security
     APISIX_KEYRING_VALUE_1=$(generate_secure_string | cut -c1-16)
     APISIX_KEYRING_VALUE_2=$(generate_secure_string | cut -c1-16)
-    APISIX_CLIENT_SECRET=$(generate_secure_string)
+    APISIX_CLIENT_SECRET="${APISIX_CLIENT_SECRET:-$(generate_secure_string)}"
+    
     SENSITIVE_VALUES+=("APISIX Admin API Key: $APISIX_ADMIN_KEY")
     SENSITIVE_VALUES+=("APISIX Dashboard Username: admin")
     SENSITIVE_VALUES+=("APISIX Dashboard JWT Secret: $APISIX_DASHBOARD_SECRET")
@@ -388,11 +443,24 @@ generate_all_secrets() {
     SENSITIVE_VALUES+=("APISIX Keyring Value 2: $APISIX_KEYRING_VALUE_2")
     SENSITIVE_VALUES+=("APISIX Keycloak Client Secret: $APISIX_CLIENT_SECRET")
 
-    # FastAPI secrets - ALWAYS regenerate for consistency
-    echo "🆕 Generating new FastAPI secrets (ensuring fresh configuration)"
-    FASTAPI_SECRET_KEY=$(generate_secure_string)
-    FASTAPI_CLIENT_SECRET=$(generate_secure_string)
+    # Check for existing FastAPI credentials
+    if [ -f "violentutf_api/fastapi_app/.env" ]; then
+        log_detail "Found existing FastAPI credentials, reusing..."
+        FASTAPI_SECRET_KEY=$(grep "^JWT_SECRET_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+        FASTAPI_API_KEY=$(grep "^VIOLENTUTF_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+        
+        # Ensure API keys match between services
+        if [ -n "$FASTAPI_API_KEY" ] && [ "$FASTAPI_API_KEY" != "$VIOLENTUTF_API_KEY" ]; then
+            log_warn "API key mismatch detected, using ViolentUTF API key"
+            FASTAPI_API_KEY="$VIOLENTUTF_API_KEY"
+        fi
+    fi
+    
+    # Generate any missing FastAPI secrets
+    FASTAPI_SECRET_KEY="${FASTAPI_SECRET_KEY:-$(generate_secure_string)}"
+    FASTAPI_CLIENT_SECRET=$(generate_secure_string)  # Always generate new for Keycloak client
     FASTAPI_CLIENT_ID="violentutf-fastapi"
+    
     SENSITIVE_VALUES+=("FastAPI JWT Secret Key: $FASTAPI_SECRET_KEY")
     SENSITIVE_VALUES+=("FastAPI Keycloak Client Secret: $FASTAPI_CLIENT_SECRET")
 
@@ -405,7 +473,19 @@ generate_all_secrets() {
     export APISIX_KEYRING_VALUE_1 APISIX_KEYRING_VALUE_2 APISIX_CLIENT_SECRET
     export FASTAPI_SECRET_KEY FASTAPI_CLIENT_SECRET FASTAPI_CLIENT_ID
 
-    log_success "Generated ${#SENSITIVE_VALUES[@]} secure secrets"
+    local reused_count=0
+    local new_count=0
+    
+    # Count reused vs new secrets
+    for value in "${SENSITIVE_VALUES[@]}"; do
+        if [[ "$value" == *"Reusing"* ]]; then
+            ((reused_count++))
+        else
+            ((new_count++))
+        fi
+    done
+    
+    log_success "Loaded ${#SENSITIVE_VALUES[@]} secrets (reused existing where available)"
     return 0
 }
 
@@ -432,7 +512,7 @@ display_generated_secrets() {
     echo "👤 User Account Credentials:"
     echo "   ViolentUTF User: violentutf.web / $VIOLENTUTF_USER_PASSWORD"
     echo "   ViolentUTF Cookie Secret: $VIOLENTUTF_COOKIE_SECRET"
-    echo "   Keycloak Admin: $KEYCLOAK_ADMIN_USERNAME / [GENERATED_PASSWORD]"
+    echo "   Keycloak Admin: $KEYCLOAK_ADMIN_USERNAME / $KEYCLOAK_ADMIN_PASSWORD"
     echo ""
     
     echo "🔑 Service Client Secrets:"
@@ -469,7 +549,7 @@ display_generated_secrets() {
     echo "     Login: violentutf.web / $VIOLENTUTF_USER_PASSWORD"
     echo "   • API Documentation: http://localhost:9080/api/docs"
     echo "   • Keycloak Admin: http://localhost:8080"
-    echo "     Login: $KEYCLOAK_ADMIN_USERNAME / [GENERATED_PASSWORD]"
+    echo "     Login: $KEYCLOAK_ADMIN_USERNAME / $KEYCLOAK_ADMIN_PASSWORD"
     echo "=================================================="
     echo ""
 }

@@ -14,14 +14,8 @@ perform_cleanup() {
     # 2. Stop and remove containers
     cleanup_containers
     
-    # 3. Remove configuration files but preserve directories
-    echo "Removing configuration files..."
-    
-    # Keycloak files
-    if [ -f "keycloak/.env" ]; then
-        rm "keycloak/.env"
-        echo "Removed keycloak/.env"
-    fi
+    # 3. Clean configuration files but preserve .env files and directories
+    echo "Cleaning configuration files (preserving credentials)..."
     
     # APISIX files - remove all non-template configurations
     if [ -d "apisix/conf" ]; then
@@ -29,36 +23,27 @@ perform_cleanup() {
         mkdir -p "/tmp/apisix_templates"
         find "apisix/conf" -name "*.template" -exec cp {} "/tmp/apisix_templates/" \; 2>/dev/null || true
         
-        # Remove all config files
-        rm -rf "apisix/conf/"*
+        # Remove all config files EXCEPT .env files
+        find "apisix/conf" -type f ! -name "*.template" ! -name ".env" -delete 2>/dev/null || true
         
         # Move templates back
-        mkdir -p "apisix/conf"
         cp "/tmp/apisix_templates/"* "apisix/conf/" 2>/dev/null || true
         rm -rf "/tmp/apisix_templates"
-        echo "Cleaned apisix/conf/ (preserved templates)"
+        echo "Cleaned apisix/conf/ (preserved templates and .env)"
     fi
     
-    # Remove APISIX .env
-    if [ -f "apisix/.env" ]; then
-        rm "apisix/.env"
-        echo "Removed apisix/.env"
-    fi
-    
-    # ViolentUTF files
-    if [ -f "violentutf/.env" ]; then
-        rm "violentutf/.env"
-        echo "Removed violentutf/.env"
-    fi
-    
-    # FastAPI files
-    if [ -f "violentutf_api/fastapi_app/.env" ]; then
-        rm "violentutf_api/fastapi_app/.env"
-        echo "Removed violentutf_api/fastapi_app/.env"
-    fi
+    # NOTE: .env files are preserved to maintain credentials
+    echo "📝 Preserved .env files:"
+    [ -f "keycloak/.env" ] && echo "  ✓ keycloak/.env"
+    [ -f "apisix/.env" ] && echo "  ✓ apisix/.env"
+    [ -f "violentutf/.env" ] && echo "  ✓ violentutf/.env"  
+    [ -f "violentutf_api/fastapi_app/.env" ] && echo "  ✓ violentutf_api/fastapi_app/.env"
     
     echo "✅ Standard cleanup completed"
-    echo "📝 User configurations (AI tokens, app data) have been preserved"
+    echo "📝 User configurations preserved:"
+    echo "   - AI tokens (ai-tokens.env)"
+    echo "   - Generated credentials (.env files)"
+    echo "   - Application data (app_data/)"
 }
 
 # Function to perform deep cleanup

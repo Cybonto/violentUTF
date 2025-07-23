@@ -203,13 +203,20 @@ create_keycloak_env() {
     if [ ! -f "$env_file" ]; then
         echo "Creating Keycloak environment file..."
         local postgres_password=$(generate_random_string 32)
+        local keycloak_admin_password=$(generate_random_string 16)
         
         cat > "$env_file" << EOF
+# PostgreSQL password for Keycloak database
 POSTGRES_PASSWORD=${postgres_password}
+
+# Keycloak admin credentials (auto-generated, save these!)
+KEYCLOAK_ADMIN_USERNAME=admin
+KEYCLOAK_ADMIN_PASSWORD=${keycloak_admin_password}
 EOF
         echo "✅ Created $env_file"
+        echo "⚠️  IMPORTANT: Save the Keycloak admin password: ${keycloak_admin_password}"
     else
-        echo "Keycloak .env already exists: $env_file"
+        echo "Keycloak .env already exists: $env_file (preserving existing credentials)"
     fi
 }
 
@@ -485,11 +492,20 @@ EOF
 
 # Function to backup user configurations
 backup_existing_configs() {
-    log_detail "Backing up user configurations..."
+    log_detail "Backing up user configurations and credentials..."
     mkdir -p "/tmp/vutf_backup"
     
     # Backup AI tokens (user's API keys)
     [ -f "$AI_TOKENS_FILE" ] && cp "$AI_TOKENS_FILE" "/tmp/vutf_backup/"
+    
+    # Backup all .env files (preserve credentials)
+    [ -f "keycloak/.env" ] && cp "keycloak/.env" "/tmp/vutf_backup/keycloak.env"
+    [ -f "apisix/.env" ] && cp "apisix/.env" "/tmp/vutf_backup/apisix.env"
+    [ -f "violentutf/.env" ] && cp "violentutf/.env" "/tmp/vutf_backup/violentutf.env"
+    [ -f "violentutf_api/fastapi_app/.env" ] && cp "violentutf_api/fastapi_app/.env" "/tmp/vutf_backup/fastapi.env"
+    
+    # Backup Streamlit secrets
+    [ -f "violentutf/.streamlit/secrets.toml" ] && cp "violentutf/.streamlit/secrets.toml" "/tmp/vutf_backup/streamlit_secrets.toml"
     
     # Backup any custom APISIX routes
     [ -f "apisix/conf/custom_routes.yml" ] && cp "apisix/conf/custom_routes.yml" "/tmp/vutf_backup/"
@@ -499,7 +515,7 @@ backup_existing_configs() {
         tar -czf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf app_data 2>/dev/null || true
     fi
     
-    log_success "User configurations backed up"
+    log_success "User configurations and credentials backed up"
 }
 
 # Function to restore user configurations
@@ -510,6 +526,38 @@ restore_user_configs() {
         # Restore AI tokens
         [ -f "/tmp/vutf_backup/$AI_TOKENS_FILE" ] && cp "/tmp/vutf_backup/$AI_TOKENS_FILE" .
         
+        # Restore .env files (preserve credentials)
+        if [ -f "/tmp/vutf_backup/keycloak.env" ]; then
+            mkdir -p keycloak
+            cp "/tmp/vutf_backup/keycloak.env" "keycloak/.env"
+            echo "  ✓ Restored Keycloak credentials"
+        fi
+        
+        if [ -f "/tmp/vutf_backup/apisix.env" ]; then
+            mkdir -p apisix
+            cp "/tmp/vutf_backup/apisix.env" "apisix/.env"
+            echo "  ✓ Restored APISIX credentials"
+        fi
+        
+        if [ -f "/tmp/vutf_backup/violentutf.env" ]; then
+            mkdir -p violentutf
+            cp "/tmp/vutf_backup/violentutf.env" "violentutf/.env"
+            echo "  ✓ Restored ViolentUTF credentials"
+        fi
+        
+        if [ -f "/tmp/vutf_backup/fastapi.env" ]; then
+            mkdir -p violentutf_api/fastapi_app
+            cp "/tmp/vutf_backup/fastapi.env" "violentutf_api/fastapi_app/.env"
+            echo "  ✓ Restored FastAPI credentials"
+        fi
+        
+        # Restore Streamlit secrets
+        if [ -f "/tmp/vutf_backup/streamlit_secrets.toml" ]; then
+            mkdir -p violentutf/.streamlit
+            cp "/tmp/vutf_backup/streamlit_secrets.toml" "violentutf/.streamlit/secrets.toml"
+            echo "  ✓ Restored Streamlit secrets"
+        fi
+        
         # Restore custom routes
         [ -f "/tmp/vutf_backup/custom_routes.yml" ] && cp "/tmp/vutf_backup/custom_routes.yml" "apisix/conf/"
         
@@ -517,9 +565,12 @@ restore_user_configs() {
         if [ -f "/tmp/vutf_backup/app_data_backup.tar.gz" ]; then
             mkdir -p violentutf
             tar -xzf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf 2>/dev/null || true
+            echo "  ✓ Restored application data"
         fi
         
         rm -rf "/tmp/vutf_backup"
         echo "✅ User configurations restored"
+    else
+        echo "No backup found to restore"
     fi
 }
