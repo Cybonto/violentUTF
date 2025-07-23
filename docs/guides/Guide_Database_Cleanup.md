@@ -122,6 +122,53 @@ rm ./violentutf/app_data/violentutf/pyrit_memory_*.db
 3. **User-Specific**: Each user's data is isolated, clean up only inactive users
 4. **Backup First**: Consider backing up before bulk deletion
 
+## Setup Script Cleanup Options
+
+ViolentUTF setup scripts now include built-in cleanup commands that handle both container management and data cleanup:
+
+### Dashboard Data Cleanup (New)
+```bash
+# macOS
+./setup_macos_new.sh --cleanup-dashboard
+
+# Linux
+sudo ./setup_linux_new.sh --cleanup-dashboard
+```
+
+This command will:
+- Remove all PyRIT memory databases
+- Clean up scoring results and execution data
+- Delete orchestrator execution history
+- Clear execution logs
+- Restart containers to ensure clean state
+- **Preserve all credentials and configurations**
+
+### Standard Cleanup (Preserves Credentials)
+```bash
+# macOS
+./setup_macos_new.sh --cleanup
+
+# Linux
+sudo ./setup_linux_new.sh --cleanup
+```
+
+This will:
+- Stop and remove containers
+- Clean configuration files
+- **Preserve all .env files and credentials**
+- Allow quick re-setup with existing credentials
+
+### Deep Cleanup (Complete Reset)
+```bash
+# macOS
+./setup_macos_new.sh --deepcleanup
+
+# Linux
+sudo ./setup_linux_new.sh --deepcleanup
+```
+
+⚠️ **Warning**: This removes EVERYTHING including credentials
+
 ## Automated Cleanup
 
 ### Scheduled Dashboard Cleanup

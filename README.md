@@ -74,12 +74,22 @@ cp ai-tokens.env.sample ai-tokens.env
 
 #### Linux
 ```bash
-# Clone and setup
+# Clone repository
 git clone https://github.com/cybonto/ViolentUTF.git
 cd ViolentUTF
+
+# Configure AI provider keys
 cp ai-tokens.env.sample ai-tokens.env
 # Edit ai-tokens.env with your API keys
-./setup_linux.sh
+
+# Run complete setup (new modular version)
+sudo ./setup_linux_new.sh
+
+# Setup with different verbosity levels
+sudo ./setup_linux_new.sh --quiet     # Minimal output for automation
+sudo ./setup_linux_new.sh --verbose   # Detailed setup information
+sudo ./setup_linux_new.sh --debug     # Full debugging output
+sudo ./setup_linux_new.sh --help      # Show all options
 ```
 
 #### Windows
@@ -124,6 +134,59 @@ ViolentUTF setup scripts now support multiple verbosity levels to provide the ri
 export VUTF_VERBOSITY=2  # 0=quiet, 1=normal, 2=verbose, 3=debug
 ./setup_macos_new.sh
 ```
+
+### Cleanup and Maintenance
+
+ViolentUTF now supports intelligent cleanup operations that preserve your credentials and configurations:
+
+#### Standard Cleanup (Preserves Credentials)
+```bash
+# macOS
+./setup_macos_new.sh --cleanup
+
+# Linux  
+sudo ./setup_linux_new.sh --cleanup
+
+# Windows
+setup_windows.bat --cleanup
+```
+
+This will:
+- ✅ Stop and remove containers
+- ✅ Clean up configuration files
+- ✅ **Preserve all .env files and credentials**
+- ✅ Backup user configurations before cleanup
+- ✅ Allow quick re-setup with existing credentials
+
+#### Deep Cleanup (Complete Reset)
+```bash
+# macOS
+./setup_macos_new.sh --deepcleanup
+
+# Linux
+sudo ./setup_linux_new.sh --deepcleanup
+
+# Windows
+setup_windows.bat --deepcleanup
+```
+
+⚠️ **Warning**: Deep cleanup will:
+- Remove ALL Docker containers, images, volumes, and networks
+- Delete all configuration files including credentials
+- Perform complete system reset
+
+#### Dashboard Data Cleanup
+```bash
+# macOS/Linux - Remove only dashboard data
+./setup_macos_new.sh --cleanup-dashboard
+sudo ./setup_linux_new.sh --cleanup-dashboard
+```
+
+This will remove:
+- PyRIT memory databases
+- Scoring results and execution history
+- Dashboard analytics data
+- Execution logs
 
 ### Access Points
 
@@ -450,10 +513,12 @@ If you encounter issues during setup, use different verbosity levels to get more
 
 ```bash
 # For detailed troubleshooting information
-./setup_macos_new.sh --verbose
+./setup_macos_new.sh --verbose        # macOS
+sudo ./setup_linux_new.sh --verbose   # Linux
 
 # For full debugging output (includes all command execution)
-./setup_macos_new.sh --debug
+./setup_macos_new.sh --debug          # macOS
+sudo ./setup_linux_new.sh --debug     # Linux
 
 # Check specific service status
 ./check_services.sh
@@ -461,6 +526,14 @@ If you encounter issues during setup, use different verbosity levels to get more
 # Verify APISIX routes
 cd apisix && ./verify_routes.sh
 ```
+
+### Migration from Old Setup Scripts
+
+If you're upgrading from the old setup scripts (`setup_linux.sh`, `setup_macos.sh`), see the [Setup Script Migration Guide](docs/troubleshooting/setup_script_migration.md) for:
+- Key differences between old and new scripts
+- Credential preservation features
+- Common migration issues and solutions
+- Best practices for migration
 
 ### Corporate Proxy / Zscaler SSL Issues
 
@@ -526,7 +599,9 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 git clone https://github.com/cybonto/ViolentUTF.git
 
 # Setup development environment with verbose output
-./setup_macos_new.sh --verbose  # or setup_linux.sh/setup_windows.bat
+./setup_macos_new.sh --verbose      # macOS
+sudo ./setup_linux_new.sh --verbose  # Linux  
+setup_windows.bat --verbose          # Windows
 
 # For debugging setup issues
 ./setup_macos_new.sh --debug
