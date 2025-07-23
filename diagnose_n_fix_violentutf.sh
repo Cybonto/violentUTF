@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Comprehensive ViolentUTF Fix Script with Diagnostics
-# Consolidates all fix scripts into one with proper diagnostics and branching
+# ViolentUTF Comprehensive Diagnose & Fix Script
+# Advanced diagnostics with automated fixes for all ViolentUTF issues
 
 set -euo pipefail
 
@@ -9,16 +9,19 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Script version
-VERSION="3.0.0"
+VERSION="4.0.0"
 
 # Global variables
 ISSUES_FOUND=0
 FIXES_APPLIED=0
 BACKUP_DIR=".violentutf_backups/$(date +%Y%m%d_%H%M%S)"
-LOG_FILE="fix_violentutf_$(date +%Y%m%d_%H%M%S).log"
+LOG_FILE="diagnose_n_fix_violentutf_$(date +%Y%m%d_%H%M%S).log"
+GSAI_AUTH_FORMAT_ISSUE=false
 
 # Function to print colored output
 print_color() {
@@ -43,17 +46,19 @@ command_exists() {
 # Show help
 show_help() {
     cat << EOF
-ViolentUTF Comprehensive Fix Script v${VERSION}
+ViolentUTF Comprehensive Diagnose & Fix Script v${VERSION}
 
 Usage: $0 [OPTIONS]
 
 OPTIONS:
     --diagnose-only     Only run diagnostics without applying fixes
+    --deep-diagnose     Run extended diagnostics with logs and route analysis
     --fix-api-keys      Fix API key and consumer issues
     --fix-gsai          Fix GSAi routing and authentication
     --fix-permissions   Fix APISIX admin permissions
     --fix-network       Fix Docker network connectivity issues
     --fix-all           Apply all fixes (default)
+    --auto-fix          Run diagnostics and apply fixes automatically
     --backup            Create backup before applying fixes (default: true)
     --no-backup         Skip backup creation
     --rollback [dir]    Rollback to a previous backup
@@ -64,24 +69,28 @@ OPTIONS:
 
 EXAMPLES:
     $0                  # Run full diagnostics and apply all fixes
-    $0 --diagnose-only  # Only show issues without fixing
+    $0 --deep-diagnose  # Extended diagnostics with logs and route details
+    $0 --auto-fix       # Automatically diagnose and fix all issues
     $0 --fix-gsai       # Only fix GSAi-related issues
     $0 --rollback       # List available backups and rollback
-    $0 --force --no-log # Apply all fixes without prompting or logging
 
 This script diagnoses and fixes common ViolentUTF issues:
 - API key authentication and synchronization
-- GSAi routing configuration (key-auth removal)
+- GSAi routing configuration (key-auth removal, SSL verification)
 - SSL certificate and verification issues
 - APISIX admin permissions
 - Consumer registration and management
 - Docker network connectivity
 - Service health checks
+- Authentication header format issues
+- Container logs analysis
 EOF
 }
 
 # Parse command line arguments
 DIAGNOSE_ONLY=false
+DEEP_DIAGNOSE=false
+AUTO_FIX=false
 FIX_API_KEYS=false
 FIX_GSAI=false
 FIX_PERMISSIONS=false
@@ -99,6 +108,17 @@ while [[ $# -gt 0 ]]; do
         --diagnose-only)
             DIAGNOSE_ONLY=true
             FIX_ALL=false
+            shift
+            ;;
+        --deep-diagnose)
+            DEEP_DIAGNOSE=true
+            DIAGNOSE_ONLY=true
+            FIX_ALL=false
+            shift
+            ;;
+        --auto-fix)
+            AUTO_FIX=true
+            FORCE=true
             shift
             ;;
         --fix-api-keys)
@@ -180,9 +200,9 @@ if [ "$LOG_OUTPUT" = true ]; then
 fi
 
 # Header
-print_color "$GREEN" "╔═══════════════════════════════════════════════════╗"
-print_color "$GREEN" "║   ViolentUTF Comprehensive Fix Script v${VERSION}    ║"
-print_color "$GREEN" "╚═══════════════════════════════════════════════════╝"
+print_color "$GREEN" "╔═══════════════════════════════════════════════════════╗"
+print_color "$GREEN" "║   ViolentUTF Diagnose & Fix Script v${VERSION}         ║"
+print_color "$GREEN" "╚═══════════════════════════════════════════════════════╝"
 
 # Backup functions
 create_backup() {
@@ -479,16 +499,29 @@ diagnose_gsai_routes() {
                 print_color "$GREEN" "  ✅ No key-auth plugin (correct)"
             fi
             
-            # Check SSL verification
-            SSL_VERIFY=$(echo "$ROUTE" | jq -r '.value.plugins."ai-proxy".ssl_verify // .value.upstream.tls.verify // "not set"' 2>/dev/null)
+            # Check SSL verification - Fixed detection logic
+            SSL_VERIFY=$(echo "$ROUTE" | jq -r '.value.plugins."ai-proxy".ssl_verify // "not set"' 2>/dev/null)
             if [[ "$OPENAPI_1_BASE_URL" =~ ^https:// ]]; then
                 local expected_verify="${OPENAPI_1_SSL_VERIFY:-true}"
-                if [ "$SSL_VERIFY" != "$expected_verify" ] && [ "$SSL_VERIFY" != "not set" ]; then
-                    print_color "$RED" "  ❌ SSL verification mismatch (route: $SSL_VERIFY, expected: $expected_verify)"
-                    ((issues++))
-                elif [ "$SSL_VERIFY" = "not set" ] && [ "$expected_verify" = "false" ]; then
-                    print_color "$YELLOW" "  ⚠️  SSL verification not explicitly set (should be: false for self-signed certs)"
-                    ((issues++))
+                if [ "$SSL_VERIFY" = "not set" ]; then
+                    # Check if it's actually set but jq path is wrong
+                    local alt_ssl=$(echo "$ROUTE" | jq '.value.plugins."ai-proxy"' 2>/dev/null | grep -o '"ssl_verify":[^,}]*' | cut -d: -f2 | tr -d ' ')
+                    if [ -n "$alt_ssl" ]; then
+                        SSL_VERIFY="$alt_ssl"
+                    fi
+                fi
+                
+                if [ "$expected_verify" = "false" ]; then
+                    if [ "$SSL_VERIFY" != "false" ]; then
+                        print_color "$RED" "  ❌ SSL verification not disabled (current: $SSL_VERIFY, expected: false)"
+                        ((issues++))
+                    else
+                        print_color "$GREEN" "  ✅ SSL verification disabled (correct for self-signed certs)"
+                    fi
+                else
+                    if [ "$SSL_VERIFY" = "false" ] && [ "$expected_verify" = "true" ]; then
+                        print_color "$YELLOW" "  ⚠️  SSL verification disabled (expected: true)"
+                    fi
                 fi
             fi
             
@@ -511,27 +544,36 @@ diagnose_gsai_routes() {
     
     # Test without API key (correct for GSAi routes without key-auth)
     echo -n "  APISIX → GSAi: "
-    HTTP_CODE=$(curl -s -w "%{http_code}" -o /dev/null \
+    local TEST_OUTPUT=$(mktemp)
+    HTTP_CODE=$(curl -s -w "%{http_code}" -o "$TEST_OUTPUT" \
         -H "Content-Type: application/json" \
         -X POST \
         http://localhost:9080/ai/gsai-api-1/chat/completions \
         -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "test"}], "max_tokens": 1}' 2>&1)
+    
+    local RESPONSE_BODY=$(cat "$TEST_OUTPUT")
+    rm -f "$TEST_OUTPUT"
     
     case $HTTP_CODE in
         200) print_color "$GREEN" "✅ Success" ;;
         401) print_color "$RED" "❌ Unauthorized (missing/invalid API key)" ; ((issues++)) ;;
         403) 
             print_color "$RED" "❌ Forbidden"
-            # Get detailed error
-            local ERROR_RESPONSE=$(curl -s -H "Content-Type: application/json" -X POST \
-                http://localhost:9080/ai/gsai-api-1/chat/completions \
-                -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "test"}], "max_tokens": 1}' 2>&1)
-            if echo "$ERROR_RESPONSE" | grep -q "Invalid key=value pair"; then
-                echo "      ⚠️  GSAi expecting different auth format - check route plugins"
-            elif echo "$ERROR_RESPONSE" | grep -q "Invalid API key"; then
+            # Analyze the error response
+            if echo "$RESPONSE_BODY" | grep -q "Invalid key=value pair"; then
+                echo "      ⚠️  GSAi expecting different auth format - route needs ai-proxy fix"
+                echo "      💡  This indicates the Authorization header format is wrong"
+                [ "$VERBOSE" = true ] && echo "      Response: $RESPONSE_BODY"
+                # Set a flag for specific fix
+                GSAI_AUTH_FORMAT_ISSUE=true
+            elif echo "$RESPONSE_BODY" | grep -q "Invalid API key"; then
                 echo "      ⚠️  API key rejected by consumer auth"
+            elif echo "$RESPONSE_BODY" | grep -q "access forbidden"; then
+                echo "      ⚠️  Access forbidden - check API key permissions"
+                [ "$VERBOSE" = true ] && echo "      Response: $RESPONSE_BODY"
             else
-                echo "      ⚠️  GSAi rejected request (check model access)"
+                echo "      ⚠️  GSAi rejected request"
+                [ "$VERBOSE" = true ] && echo "      Response: $RESPONSE_BODY"
             fi
             ((issues++))
             ;;
@@ -553,7 +595,8 @@ diagnose_gsai_routes() {
     # Test direct to GSAi
     if [ -n "$OPENAPI_1_BASE_URL" ] && [ -n "$OPENAPI_1_AUTH_TOKEN" ]; then
         echo -n "  Direct → GSAi: "
-        CURL_OPTS="-s -w %{http_code} -o /dev/null"
+        local DIRECT_OUTPUT=$(mktemp)
+        CURL_OPTS="-s -w %{http_code} -o $DIRECT_OUTPUT"
         [ "${OPENAPI_1_SSL_VERIFY:-true}" = "false" ] && CURL_OPTS="$CURL_OPTS -k"
         
         HTTP_CODE=$(curl $CURL_OPTS \
@@ -563,10 +606,25 @@ diagnose_gsai_routes() {
             "$OPENAPI_1_BASE_URL/api/v1/chat/completions" \
             -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "test"}], "max_tokens": 1}' 2>&1)
         
+        local DIRECT_RESPONSE=$(cat "$DIRECT_OUTPUT" 2>/dev/null)
+        rm -f "$DIRECT_OUTPUT"
+        
         case $HTTP_CODE in
             200) print_color "$GREEN" "✅ Success" ;;
-            403) print_color "$YELLOW" "⚠️  Token/Model access issue" ;;
-            *) print_color "$RED" "❌ Failed (HTTP $HTTP_CODE)" ;;
+            403) 
+                print_color "$YELLOW" "⚠️  Token/Model access issue"
+                if [ "$VERBOSE" = true ] && [ -n "$DIRECT_RESPONSE" ]; then
+                    echo "      Direct response: $(echo "$DIRECT_RESPONSE" | head -c 200)"
+                fi
+                ;;
+            000)
+                print_color "$RED" "❌ Connection failed (SSL/Network issue)"
+                echo "      Check: SSL certificates, network connectivity"
+                ;;
+            *) 
+                print_color "$RED" "❌ Failed (HTTP $HTTP_CODE)"
+                [ "$VERBOSE" = true ] && [ -n "$DIRECT_RESPONSE" ] && echo "      Response: $(echo "$DIRECT_RESPONSE" | head -c 200)"
+                ;;
         esac
     fi
     
@@ -593,6 +651,106 @@ diagnose_permissions() {
     fi
     
     return $issues
+}
+
+# Deep diagnostic function for GSAi
+deep_diagnose_gsai() {
+    print_section "🔬 Deep GSAi Route Analysis"
+    
+    echo "📋 Detailed Route Configuration:"
+    echo ""
+    
+    # Get and display full route configuration
+    for route_id in 9001 9101; do
+        echo "Route $route_id:"
+        local ROUTE_JSON=$(curl -s -H "X-API-KEY: $ADMIN_KEY" http://localhost:9180/apisix/admin/routes/$route_id 2>/dev/null)
+        
+        if echo "$ROUTE_JSON" | jq -e '.value' >/dev/null 2>&1; then
+            # Show ai-proxy configuration
+            if echo "$ROUTE_JSON" | jq -e '.value.plugins."ai-proxy"' >/dev/null 2>&1; then
+                echo "  AI-Proxy Plugin Configuration:"
+                echo "$ROUTE_JSON" | jq '.value.plugins."ai-proxy"' | sed 's/^/    /'
+                
+                # Check actual SSL verify value
+                local ssl_verify=$(echo "$ROUTE_JSON" | jq -r '.value.plugins."ai-proxy".ssl_verify // "not set"')
+                echo "  SSL Verify Status: $ssl_verify"
+            fi
+            
+            # Show proxy-rewrite configuration
+            if echo "$ROUTE_JSON" | jq -e '.value.plugins."proxy-rewrite"' >/dev/null 2>&1; then
+                echo "  Proxy-Rewrite Plugin Configuration:"
+                echo "$ROUTE_JSON" | jq '.value.plugins."proxy-rewrite"' | sed 's/^/    /'
+            fi
+            
+            # Show upstream configuration
+            echo "  Upstream Configuration:"
+            echo "$ROUTE_JSON" | jq '.value.upstream' | sed 's/^/    /'
+        else
+            print_color "$RED" "  ❌ Route not found or error retrieving"
+        fi
+        echo ""
+    done
+    
+    # Test with different auth methods
+    echo "🧪 Testing Different Authentication Methods:"
+    echo ""
+    
+    # Test 1: No auth header
+    echo -n "  1. No auth header: "
+    local RESP=$(curl -s -w "\\nHTTP:%{http_code}" -X POST http://localhost:9080/ai/gsai-api-1/chat/completions \
+        -H "Content-Type: application/json" \
+        -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1}' 2>&1)
+    local CODE=$(echo "$RESP" | grep "HTTP:" | cut -d: -f2)
+    local BODY=$(echo "$RESP" | grep -v "HTTP:")
+    echo "HTTP $CODE"
+    
+    # Always show the error for 403
+    if [ "$CODE" = "403" ]; then
+        echo "     Error: $(echo "$BODY" | grep -o '"message":"[^"]*"' | cut -d'"' -f4 || echo "$BODY" | head -c 100)"
+    elif [ "$VERBOSE" = true ]; then
+        echo "     Response: $(echo "$BODY" | head -c 200)"
+    fi
+    
+    # Test 2: With API key header
+    echo -n "  2. With apikey header: "
+    RESP=$(curl -s -w "\\nHTTP:%{http_code}" -X POST http://localhost:9080/ai/gsai-api-1/chat/completions \
+        -H "Content-Type: application/json" \
+        -H "apikey: $VIOLENTUTF_API_KEY" \
+        -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1}' 2>&1)
+    CODE=$(echo "$RESP" | grep "HTTP:" | cut -d: -f2)
+    BODY=$(echo "$RESP" | grep -v "HTTP:")
+    echo "HTTP $CODE"
+    
+    if [ "$CODE" = "403" ]; then
+        echo "     Error: $(echo "$BODY" | grep -o '"message":"[^"]*"' | cut -d'"' -f4 || echo "$BODY" | head -c 100)"
+    elif [ "$VERBOSE" = true ]; then
+        echo "     Response: $(echo "$BODY" | head -c 200)"
+    fi
+    
+    # Test 3: Direct test bypassing APISIX (for comparison)
+    echo -n "  3. Direct to upstream: "
+    local CURL_DIRECT="-s -w \\nHTTP:%{http_code}"
+    [ "${OPENAPI_1_SSL_VERIFY:-true}" = "false" ] && CURL_DIRECT="$CURL_DIRECT -k"
+    
+    RESP=$(curl $CURL_DIRECT -X POST "$OPENAPI_1_BASE_URL/api/v1/chat/completions" \
+        -H "Authorization: Bearer $OPENAPI_1_AUTH_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1}' 2>&1)
+    CODE=$(echo "$RESP" | grep "HTTP:" | cut -d: -f2)
+    echo "HTTP $CODE"
+    
+    # Check APISIX error logs
+    echo ""
+    echo "📜 Recent APISIX Error Logs:"
+    docker logs apisix-apisix-1 --tail 20 2>&1 | grep -E "(error|ERROR|forbidden|403|ssl|SSL|certificate)" | tail -5 | sed 's/^/  /'
+    
+    # Check route hits
+    echo ""
+    echo "📊 Route Access Statistics:"
+    for route_id in 9001 9101; do
+        local stats=$(curl -s -H "X-API-KEY: $ADMIN_KEY" http://localhost:9180/apisix/admin/routes/$route_id/stats 2>/dev/null || echo "{}")
+        echo "  Route $route_id hits: $(echo "$stats" | jq -r '.hits // "N/A"')"
+    done
 }
 
 diagnose_network() {
@@ -745,6 +903,29 @@ fix_gsai_routes() {
         return 0
     fi
     
+    # First check current route configuration
+    echo "🔍 Checking current route configuration..."
+    local CURRENT_ROUTE=$(curl -s -H "X-API-KEY: $ADMIN_KEY" http://localhost:9180/apisix/admin/routes/9001 2>/dev/null)
+    if echo "$CURRENT_ROUTE" | jq -e '.value' >/dev/null 2>&1; then
+        local current_ssl=$(echo "$CURRENT_ROUTE" | jq -r '.value.plugins."ai-proxy".ssl_verify // "not set"' 2>/dev/null)
+        echo "  Current SSL verify setting: $current_ssl"
+        echo "  Expected SSL verify setting: ${OPENAPI_1_SSL_VERIFY:-true}"
+        
+        # Check if ai-proxy plugin is properly configured
+        local has_ai_proxy=$(echo "$CURRENT_ROUTE" | jq -e '.value.plugins."ai-proxy"' >/dev/null 2>&1 && echo "true" || echo "false")
+        local has_auth_header=$(echo "$CURRENT_ROUTE" | jq -e '.value.plugins."ai-proxy".auth.header.Authorization' >/dev/null 2>&1 && echo "true" || echo "false")
+        
+        if [ "$has_ai_proxy" = "false" ]; then
+            print_color "$YELLOW" "  ⚠️  Route missing ai-proxy plugin"
+        elif [ "$has_auth_header" = "false" ]; then
+            print_color "$YELLOW" "  ⚠️  ai-proxy missing Authorization header configuration"
+        fi
+        
+        if [ "$GSAI_AUTH_FORMAT_ISSUE" = true ]; then
+            print_color "$CYAN" "  🔧 Detected auth format issue - will reconfigure ai-proxy"
+        fi
+    fi
+    
     # Determine scheme and host
     SCHEME="http"
     if [[ "$OPENAPI_1_BASE_URL" =~ ^https:// ]]; then
@@ -753,9 +934,11 @@ fix_gsai_routes() {
     
     HOST_PORT=$(echo "$OPENAPI_1_BASE_URL" | sed -E 's|https?://||' | sed 's|/.*||')
     
+    echo ""
     echo "Configuration:"
     echo "  Upstream: $SCHEME://$HOST_PORT"
     echo "  SSL Verify: ${OPENAPI_1_SSL_VERIFY:-true}"
+    echo "  Auth Token: ${OPENAPI_1_AUTH_TOKEN:0:20}..."
     
     # Update chat route (9001) - NO key-auth for GSAi
     echo ""
@@ -854,6 +1037,28 @@ fix_gsai_routes() {
     else
         print_color "$RED" "❌ Failed to update route 9101"
     fi
+    
+    # Verify the fix
+    echo ""
+    echo "🔍 Verifying GSAi route fixes..."
+    sleep 2  # Give APISIX time to apply changes
+    
+    # Test the route again
+    echo -n "  Testing GSAi access: "
+    local TEST_RESP=$(curl -s -w "\\nHTTP:%{http_code}" -X POST http://localhost:9080/ai/gsai-api-1/chat/completions \
+        -H "Content-Type: application/json" \
+        -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "test"}], "max_tokens": 1}' 2>&1)
+    local TEST_CODE=$(echo "$TEST_RESP" | grep "HTTP:" | cut -d: -f2)
+    
+    case $TEST_CODE in
+        200) print_color "$GREEN" "✅ Success - GSAi is now accessible!" ;;
+        403) 
+            print_color "$YELLOW" "⚠️  Still getting 403 - may need additional fixes"
+            echo "     Try running with --deep-diagnose for more details"
+            ;;
+        500) print_color "$RED" "❌ Server error - check logs" ;;
+        *) print_color "$RED" "❌ Failed (HTTP $TEST_CODE)" ;;
+    esac
 }
 
 fix_permissions() {
@@ -976,6 +1181,11 @@ main() {
     
     ISSUES_FOUND=$total_issues
     
+    # Run deep diagnostics if requested
+    if [ "$DEEP_DIAGNOSE" = true ]; then
+        deep_diagnose_gsai
+    fi
+    
     # Summary
     print_section "📊 Diagnostic Summary"
     
@@ -984,9 +1194,32 @@ main() {
     else
         print_color "$YELLOW" "⚠️  Found $ISSUES_FOUND issue(s)"
         
+        # Provide specific recommendations based on detected issues
+        echo ""
+        print_color "$CYAN" "🎯 Recommended Actions:"
+        
+        if [ "$GSAI_AUTH_FORMAT_ISSUE" = true ]; then
+            echo "  1. GSAi auth format issue detected - run: $0 --fix-gsai"
+        fi
+        
+        local missing_consumers=$(diagnose_api_keys 2>/dev/null | grep -c "missing" || echo 0)
+        if [ $missing_consumers -gt 0 ]; then
+            echo "  2. Missing consumers detected - run: $0 --fix-api-keys"
+        fi
+        
+        local network_issues=$(diagnose_network 2>/dev/null | grep -c "failed" || echo 0)
+        if [ $network_issues -gt 0 ]; then
+            echo "  3. Network connectivity issues - run: $0 --fix-network"
+        fi
+        
+        echo ""
+        echo "  Or run '$0 --auto-fix' to fix all issues automatically"
+        
         if [ "$DIAGNOSE_ONLY" = false ]; then
             echo ""
-            if [ "$FORCE" = false ]; then
+            if [ "$AUTO_FIX" = true ]; then
+                print_color "$CYAN" "🤖 Auto-fix mode enabled - applying fixes automatically"
+            elif [ "$FORCE" = false ]; then
                 read -p "Apply fixes? (y/N) " -n 1 -r
                 echo
                 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -1027,10 +1260,20 @@ main() {
             
             echo ""
             print_color "$BLUE" "💡 Troubleshooting Tips:"
-            echo "• For 403 errors: Check if GSAi route has key-auth plugin (should NOT have it)"
-            echo "• For SSL errors: Set OPENAPI_1_SSL_VERIFY=false in ai-tokens.env"
-            echo "• For API key issues: Ensure all consumers use the same key"
-            echo "• Run './fix_violentutf_issues.sh --rollback' to undo changes if needed"
+            echo "• For 403 'Invalid key=value pair' errors:"
+            echo "  - GSAi routes must NOT have key-auth plugin"
+            echo "  - Must use ai-proxy plugin with proper Authorization header"
+            echo "  - Run with --deep-diagnose to see route configuration"
+            echo "• For SSL certificate errors (500):"
+            echo "  - Set OPENAPI_1_SSL_VERIFY=false in ai-tokens.env"
+            echo "  - Ensure route has ssl_verify: false in ai-proxy config"
+            echo "• For API key issues:"
+            echo "  - All consumers should use the same key"
+            echo "  - Check FastAPI and Streamlit env files match"
+            echo "• Network issues:"
+            echo "  - Ensure all containers are on vutf-network"
+            echo "  - Check container health with docker ps"
+            echo "• To undo changes: ./diagnose_n_fix_violentutf.sh --rollback"
         fi
     fi
 }
