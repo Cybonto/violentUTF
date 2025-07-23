@@ -671,8 +671,12 @@ deep_diagnose_gsai() {
                 echo "  AI-Proxy Plugin Configuration:"
                 echo "$ROUTE_JSON" | jq '.value.plugins."ai-proxy"' | sed 's/^/    /'
                 
-                # Check actual SSL verify value
+                # Check actual SSL verify value - fix the jq path
                 local ssl_verify=$(echo "$ROUTE_JSON" | jq -r '.value.plugins."ai-proxy".ssl_verify // "not set"')
+                # Double-check in case jq path is different
+                if [ "$ssl_verify" = "not set" ]; then
+                    ssl_verify=$(echo "$ROUTE_JSON" | jq '.value.plugins."ai-proxy"' | grep -o '"ssl_verify":[^,}]*' | cut -d: -f2 | tr -d ' ' || echo "not set")
+                fi
                 echo "  SSL Verify Status: $ssl_verify"
             fi
             
@@ -742,7 +746,22 @@ deep_diagnose_gsai() {
     # Check APISIX error logs
     echo ""
     echo "📜 Recent APISIX Error Logs:"
-    docker logs apisix-apisix-1 --tail 20 2>&1 | grep -E "(error|ERROR|forbidden|403|ssl|SSL|certificate)" | tail -5 | sed 's/^/  /'
+    docker logs apisix-apisix-1 --tail 20 2>&1 | grep -E "(error|ERROR|forbidden|403|ssl|SSL|certificate|ai-proxy)" | tail -5 | sed 's/^/  /'
+    
+    # Check what headers are being sent
+    echo ""
+    echo "🔍 Analyzing Request Headers:"
+    echo "  Testing with curl verbose mode to see actual headers..."
+    local VERBOSE_TEST=$(curl -sv -X POST http://localhost:9080/ai/gsai-api-1/chat/completions \
+        -H "Content-Type: application/json" \
+        -d '{"model": "llama3211b", "messages": [{"role": "user", "content": "test"}], "max_tokens": 1}' 2>&1)
+    
+    echo "  Request headers sent:"
+    echo "$VERBOSE_TEST" | grep -E "^> " | head -10 | sed 's/^/    /'
+    
+    echo ""
+    echo "  Response headers received:"
+    echo "$VERBOSE_TEST" | grep -E "^< " | head -10 | sed 's/^/    /'
     
     # Check route hits
     echo ""
@@ -1202,13 +1221,13 @@ main() {
             echo "  1. GSAi auth format issue detected - run: $0 --fix-gsai"
         fi
         
-        local missing_consumers=$(diagnose_api_keys 2>/dev/null | grep -c "missing" || echo 0)
-        if [ $missing_consumers -gt 0 ]; then
+        local missing_consumers=$(diagnose_api_keys 2>/dev/null | grep -c "missing" || echo "0")
+        if [ "$missing_consumers" -gt 0 ]; then
             echo "  2. Missing consumers detected - run: $0 --fix-api-keys"
         fi
         
-        local network_issues=$(diagnose_network 2>/dev/null | grep -c "failed" || echo 0)
-        if [ $network_issues -gt 0 ]; then
+        local network_issues=$(diagnose_network 2>/dev/null | grep -c "failed" || echo "0")
+        if [ "$network_issues" -gt 0 ]; then
             echo "  3. Network connectivity issues - run: $0 --fix-network"
         fi
         
