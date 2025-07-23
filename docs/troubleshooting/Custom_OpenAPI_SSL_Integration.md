@@ -347,8 +347,16 @@ cd tests
 In enterprise environments, you may encounter multiple issues simultaneously:
 
 1. **SSL Certificate Error (500)**: Self-signed certificate rejection
-2. **API Key Authentication (403)**: Missing key-auth plugin or incorrect consumer
+2. **API Key Authentication (403)**: For GSAi specifically, this can be caused by key-auth plugin interfering with ai-proxy
 3. **APISIX Admin Permission (403)**: User not in allowed list
+
+#### GSAi-Specific Authentication Issue
+
+GSAi routes must NOT use the `key-auth` plugin because it interferes with the Authorization header that ai-proxy needs to send to GSAi. The error:
+```
+"Invalid key=value pair (missing equal-sign) in Authorization header (hashed with SHA-256)"
+```
+indicates that key-auth has modified the Authorization header before ai-proxy can use it.
 
 **Complete Fix Process:**
 ```bash

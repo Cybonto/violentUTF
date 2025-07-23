@@ -25,6 +25,9 @@ if [[ "$OPENAPI_1_BASE_URL" =~ ^https:// ]]; then
     echo "  ⚠️  Using HTTPS - SSL verification will be disabled for self-signed certificates"
 fi
 
+# Note: GSAi routes do not use key-auth plugin to avoid header conflicts
+echo "  ℹ️  GSAi routes use ai-proxy without key-auth for proper authentication"
+
 # First, let's check if we need HTTPS
 SCHEME="http"
 if [[ "$OPENAPI_1_BASE_URL" =~ ^https:// ]]; then
@@ -46,7 +49,6 @@ UPDATE_RESPONSE=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9001
     \"name\": \"gsai-api-1-chat-completions\",
     \"methods\": [\"POST\"],
     \"plugins\": {
-      \"key-auth\": {},
       \"ai-proxy\": {
         \"provider\": \"openai-compatible\",
         \"auth\": {
@@ -101,7 +103,6 @@ UPDATE_RESPONSE=$(curl -s -X PUT "http://localhost:9180/apisix/admin/routes/9101
     \"name\": \"gsai-api-1-models\",
     \"methods\": [\"GET\"],
     \"plugins\": {
-      \"key-auth\": {},
       \"proxy-rewrite\": {
         \"uri\": \"/api/v1/models\",
         \"headers\": {

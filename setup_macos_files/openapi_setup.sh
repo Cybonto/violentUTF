@@ -228,7 +228,6 @@ create_openapi_provider_routes() {
               }
             },
             "plugins": {
-              "key-auth": {},
               "ai-proxy": {
                 "provider": "openai-compatible",
                 "auth": {
@@ -387,7 +386,6 @@ create_openapi_provider_routes() {
               }
             },
             "plugins": {
-              "key-auth": {},
               "proxy-rewrite": {
                 "uri": "/api/v1/models",
                 "headers": {
