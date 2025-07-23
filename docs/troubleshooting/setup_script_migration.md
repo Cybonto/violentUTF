@@ -230,5 +230,7 @@ docker network ls | grep vutf-network
 
 ## Related Documentation
 - [Credential Preservation](credential_preservation_setup.md)
+- [Cleanup and Recovery Guide](../guides/Guide_Cleanup_and_Recovery.md)
+- [Backup and Recovery Troubleshooting](Troubleshooting_Backup_Recovery.md)
 - [Linux Setup Modernization](../guides/Guide_Linux_Setup_Modernization.md)
 - [Database Cleanup Guide](../guides/Guide_Database_Cleanup.md)

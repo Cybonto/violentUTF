@@ -7,6 +7,7 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
 ### 🚀 **Getting Started**
 - **[Project Structure](structure.md)** - Complete project architecture and file organization
 - **[Setup Guides](../setup_macos.sh)** - Platform-specific installation instructions
+- **[Cleanup and Recovery Guide](guides/Guide_Cleanup_and_Recovery.md)** - Managing deployments and backups
 
 ### 📖 **User Guides**
 - **[User Guides Hub](guides/README.md)** - Complete collection of user documentation
@@ -16,6 +17,7 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
   - [Simple Chat Enhancement](guides/Guide_SimpleChat_enhancementStrip.md) - MCP-powered chat tools
   - [MCP Workflows](guides/Guide_SimpleChat_mcp-workflows.md) - Natural language configuration
   - [Database Cleanup](guides/Guide_Database_Cleanup.md) - Dashboard and PyRIT data management
+  - [Cleanup and Recovery](guides/Guide_Cleanup_and_Recovery.md) - Deployment management and backup/restore
 
 ### 🔧 **API Documentation**
 - **[API Hub](api/README.md)** - Complete API documentation ecosystem
@@ -49,6 +51,7 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
   - [Certificate Preparation](troubleshooting/cert_preparation.md)
   - [Memory Management](troubleshooting/lesson_memoryManagement.md)
   - [MCP Connection Issues](troubleshooting/mcp-connection.md)
+  - [Backup and Recovery Issues](troubleshooting/Troubleshooting_Backup_Recovery.md)
 - **[MCP Troubleshooting](mcp/troubleshooting.md)** - MCP-specific issue resolution
 
 ### 🔧 **Technical Documentation**

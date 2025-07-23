@@ -10,6 +10,11 @@ SETUP_MODULES_DIR="$SCRIPT_DIR/setup_macos_files"
 CLEANUP_MODE=false
 DEEPCLEANUP_MODE=false
 CLEANUP_DASHBOARD_MODE=false
+RECOVER_MODE=false
+RECOVER_PATH=""
+BACKUP_MODE=false
+BACKUP_NAME=""
+LIST_BACKUPS_MODE=false
 SHARED_NETWORK_NAME="vutf-network"
 AI_TOKENS_FILE="ai-tokens.env"
 SENSITIVE_VALUES=()
@@ -28,9 +33,12 @@ show_help() {
     echo "  -d, --debug        Debug mode (full debugging output)"
     echo ""
     echo "Cleanup Options:"
-    echo "  --cleanup          Remove containers, volumes, and configuration files"
+    echo "  --cleanup          Remove containers and configs (preserves data/logs/secrets)"
     echo "  --deepcleanup      Complete removal including all Docker data"
     echo "  --cleanup-dashboard Remove only dashboard data (scores, executions, databases)"
+    echo "  --recover [path]   Recover from backup (optional: specify backup path)"
+    echo "  --backup [name]    Create a permanent backup (optional: specify name)"
+    echo "  --list-backups     List all available backups"
     echo ""
     echo "Verbosity Levels:"
     echo "  quiet    - Errors, warnings, and minimal progress only"
@@ -43,8 +51,13 @@ show_help() {
     echo "  $0 --quiet         # Quiet setup for automation"
     echo "  $0 --verbose       # Verbose setup with detailed output"
     echo "  $0 --debug         # Debug setup with full output"
-    echo "  $0 --cleanup       # Clean up existing deployment"
+    echo "  $0 --cleanup       # Clean up deployment (preserves data)"
     echo "  $0 --cleanup-dashboard # Clean up dashboard data only"
+    echo "  $0 --recover       # Recover from latest backup"
+    echo "  $0 --recover /path/to/backup # Recover from specific backup"
+    echo "  $0 --backup        # Create backup with timestamp"
+    echo "  $0 --backup prod   # Create backup named 'prod_timestamp'"
+    echo "  $0 --list-backups  # Show all available backups"
     echo ""
 }
 
@@ -78,6 +91,28 @@ process_arguments() {
                 ;;
             --cleanup-dashboard)
                 CLEANUP_DASHBOARD_MODE=true
+                shift
+                ;;
+            --recover)
+                RECOVER_MODE=true
+                # Check if next argument is a path
+                if [[ $# -gt 1 && ! "$2" =~ ^-- ]]; then
+                    RECOVER_PATH="$2"
+                    shift
+                fi
+                shift
+                ;;
+            --backup)
+                BACKUP_MODE=true
+                # Check if next argument is a name
+                if [[ $# -gt 1 && ! "$2" =~ ^-- ]]; then
+                    BACKUP_NAME="$2"
+                    shift
+                fi
+                shift
+                ;;
+            --list-backups)
+                LIST_BACKUPS_MODE=true
                 shift
                 ;;
             *)
@@ -272,6 +307,18 @@ main_cleanup() {
     echo "✅ Cleanup completed"
 }
 
+# --- Recovery orchestration ---
+main_recovery() {
+    echo "🔄 Starting Recovery Operations"
+    
+    # Pass the backup path if specified
+    if [ -n "$RECOVER_PATH" ]; then
+        perform_recovery "$RECOVER_PATH"
+    else
+        perform_recovery
+    fi
+}
+
 # --- Main execution ---
 main() {
     # Load all modules first
@@ -283,6 +330,12 @@ main() {
     # Execute based on mode
     if [ "$CLEANUP_MODE" = true ] || [ "$DEEPCLEANUP_MODE" = true ] || [ "$CLEANUP_DASHBOARD_MODE" = true ]; then
         main_cleanup
+    elif [ "$RECOVER_MODE" = true ]; then
+        main_recovery
+    elif [ "$BACKUP_MODE" = true ]; then
+        create_permanent_backup "$BACKUP_NAME"
+    elif [ "$LIST_BACKUPS_MODE" = true ]; then
+        list_backups
     else
         main_setup
     fi

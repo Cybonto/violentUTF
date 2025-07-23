@@ -3,7 +3,7 @@
 
 # Function to perform cleanup
 perform_cleanup() {
-    echo "Starting cleanup process..."
+    echo "Starting cleanup process (preserving data and logs)..."
     
     # 0. Backup user configurations before cleanup
     backup_user_configs
@@ -11,11 +11,11 @@ perform_cleanup() {
     # 1. Gracefully shutdown ViolentUTF Streamlit server
     graceful_streamlit_shutdown
     
-    # 2. Stop and remove containers
-    cleanup_containers
+    # 2. Stop and remove containers (preserving volumes)
+    cleanup_containers_preserve_data
     
     # 3. Clean configuration files but preserve .env files and directories
-    echo "Cleaning configuration files (preserving credentials)..."
+    echo "Cleaning configuration files (preserving credentials, data, and logs)..."
     
     # APISIX files - remove all non-template configurations
     if [ -d "apisix/conf" ]; then
@@ -33,17 +33,33 @@ perform_cleanup() {
     fi
     
     # NOTE: .env files are preserved to maintain credentials
-    echo "📝 Preserved .env files:"
+    echo "📝 Preserved files and directories:"
     [ -f "keycloak/.env" ] && echo "  ✓ keycloak/.env"
     [ -f "apisix/.env" ] && echo "  ✓ apisix/.env"
     [ -f "violentutf/.env" ] && echo "  ✓ violentutf/.env"  
     [ -f "violentutf_api/fastapi_app/.env" ] && echo "  ✓ violentutf_api/fastapi_app/.env"
+    [ -d "violentutf_logs" ] && echo "  ✓ violentutf_logs/"
+    [ -d "apisix/logs" ] && echo "  ✓ apisix/logs/"
+    [ -d "violentutf/app_data" ] && echo "  ✓ violentutf/app_data/"
+    [ -d "violentutf_api/fastapi_app/app_data" ] && echo "  ✓ violentutf_api/fastapi_app/app_data/"
     
+    # List Docker volumes that are preserved
+    echo ""
+    echo "📦 Preserved Docker volumes:"
+    docker volume ls --filter "name=keycloak" --format "  ✓ {{.Name}}" 2>/dev/null || true
+    docker volume ls --filter "name=apisix" --format "  ✓ {{.Name}}" 2>/dev/null || true
+    docker volume ls --filter "name=violentutf" --format "  ✓ {{.Name}}" 2>/dev/null || true
+    
+    echo ""
     echo "✅ Standard cleanup completed"
-    echo "📝 User configurations preserved:"
+    echo "📝 Preserved:"
     echo "   - AI tokens (ai-tokens.env)"
     echo "   - Generated credentials (.env files)"
     echo "   - Application data (app_data/)"
+    echo "   - Logs (violentutf_logs/, apisix/logs/)"
+    echo "   - Docker volumes (databases)"
+    echo ""
+    echo "💡 To remove data/logs, use --cleanup-dashboard or --deepcleanup"
 }
 
 # Function to perform deep cleanup
@@ -530,4 +546,224 @@ EOF
     
     # Clean up restart script
     rm -f "$restart_script"
+}
+
+# Function to cleanup containers while preserving data volumes
+cleanup_containers_preserve_data() {
+    echo "Cleaning up ViolentUTF containers (preserving data volumes)..."
+    
+    # Remember current directory
+    local original_dir=$(pwd)
+    
+    # Stop and remove Keycloak containers (WITHOUT -v flag to preserve volumes)
+    echo "Stopping Keycloak containers..."
+    if [ -d "keycloak" ]; then
+        cd "keycloak" || { echo "Failed to cd into keycloak directory"; return 1; }
+        ${DOCKER_COMPOSE_CMD:-docker-compose} down 2>/dev/null || true  # Removed -v flag
+        cd "$original_dir"
+    fi
+    
+    # Stop and remove APISIX containers (WITHOUT -v flag to preserve volumes)
+    echo "Stopping APISIX containers..."
+    if [ -d "apisix" ]; then
+        cd "apisix" || { echo "Failed to cd into apisix directory"; return 1; }
+        ${DOCKER_COMPOSE_CMD:-docker-compose} down 2>/dev/null || true  # Removed -v flag
+        cd "$original_dir"
+    fi
+    
+    # Stop ViolentUTF API container
+    echo "Stopping ViolentUTF API container..."
+    local api_container=$(docker ps -aq --filter "name=violentutf_api")
+    if [ -n "$api_container" ]; then
+        docker stop "$api_container" 2>/dev/null || true
+        docker rm "$api_container" 2>/dev/null || true
+    fi
+    
+    # Remove orphaned containers
+    echo "Removing orphaned containers..."
+    docker container prune -f 2>/dev/null || true
+    
+    echo "✅ Containers cleaned up (data volumes preserved)"
+}
+
+# Function to perform recovery from backup
+perform_recovery() {
+    echo "🔄 Starting recovery process..."
+    
+    local backup_dir="$1"
+    
+    # If no backup directory specified, use default temp backup
+    if [ -z "$backup_dir" ]; then
+        backup_dir="/tmp/vutf_backup"
+        echo "Using default backup location: $backup_dir"
+    fi
+    
+    if [ ! -d "$backup_dir" ]; then
+        echo "❌ No backup found in $backup_dir"
+        echo "Recovery requires a previous backup from setup or cleanup operations."
+        
+        # Check if there are any permanent backups
+        if [ -d "$HOME/.violentutf/backups" ]; then
+            echo ""
+            echo "Found permanent backups:"
+            list_backups
+            echo "💡 To restore from a permanent backup, use:"
+            echo "   ./setup_macos_new.sh --recover <backup_path>"
+        fi
+        return 1
+    fi
+    
+    echo "Found backup directory. Contents:"
+    ls -la "$backup_dir/"
+    echo ""
+    
+    # Ask for confirmation unless in quiet mode
+    if [ "${VUTF_VERBOSITY:-1}" -ge 1 ]; then
+        read -p "Do you want to restore from this backup? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Recovery cancelled."
+            return 0
+        fi
+    fi
+    
+    # Restore configurations
+    echo "Restoring configurations..."
+    
+    # Restore AI tokens
+    if [ -f "$backup_dir/ai-tokens.env" ]; then
+        cp "$backup_dir/ai-tokens.env" .
+        echo "  ✓ Restored ai-tokens.env"
+    fi
+    
+    # Restore .env files
+    if [ -f "$backup_dir/keycloak.env" ]; then
+        mkdir -p keycloak
+        cp "$backup_dir/keycloak.env" "keycloak/.env"
+        echo "  ✓ Restored keycloak/.env"
+    fi
+    
+    if [ -f "$backup_dir/apisix.env" ]; then
+        mkdir -p apisix
+        cp "$backup_dir/apisix.env" "apisix/.env"
+        echo "  ✓ Restored apisix/.env"
+    fi
+    
+    if [ -f "$backup_dir/violentutf.env" ]; then
+        mkdir -p violentutf
+        cp "$backup_dir/violentutf.env" "violentutf/.env"
+        echo "  ✓ Restored violentutf/.env"
+    fi
+    
+    if [ -f "$backup_dir/violentutf_api.env" ]; then
+        mkdir -p violentutf_api/fastapi_app
+        cp "$backup_dir/violentutf_api.env" "violentutf_api/fastapi_app/.env"
+        echo "  ✓ Restored violentutf_api/fastapi_app/.env"
+    fi
+    
+    # Restore Streamlit secrets
+    if [ -f "$backup_dir/secrets.toml" ]; then
+        mkdir -p violentutf/.streamlit
+        cp "$backup_dir/secrets.toml" "violentutf/.streamlit/"
+        echo "  ✓ Restored violentutf/.streamlit/secrets.toml"
+    fi
+    
+    # Restore custom APISIX routes
+    if [ -f "$backup_dir/custom_routes.yml" ]; then
+        mkdir -p apisix/conf
+        cp "$backup_dir/custom_routes.yml" "apisix/conf/"
+        echo "  ✓ Restored custom APISIX routes"
+    fi
+    
+    # Restore app data if backed up
+    if [ -f "$backup_dir/app_data_backup.tar.gz" ]; then
+        echo "Found app_data backup, restoring..."
+        mkdir -p violentutf
+        tar -xzf "$backup_dir/app_data_backup.tar.gz" -C violentutf
+        echo "  ✓ Restored application data"
+    fi
+    
+    echo ""
+    echo "✅ Recovery completed successfully!"
+    echo ""
+    echo "Next steps:"
+    echo "1. Run './setup_macos_new.sh' to set up the platform with restored credentials"
+    echo "2. Your existing data in Docker volumes should still be intact"
+    echo "3. Check the restored files to ensure everything is correct"
+    
+    # Show what was restored
+    echo ""
+    echo "📋 Restored files summary:"
+    [ -f "ai-tokens.env" ] && echo "  ✓ AI tokens configuration"
+    [ -f "keycloak/.env" ] && echo "  ✓ Keycloak credentials"
+    [ -f "apisix/.env" ] && echo "  ✓ APISIX credentials"
+    [ -f "violentutf/.env" ] && echo "  ✓ ViolentUTF credentials"
+    [ -f "violentutf_api/fastapi_app/.env" ] && echo "  ✓ FastAPI credentials"
+    [ -f "violentutf/.streamlit/secrets.toml" ] && echo "  ✓ Streamlit secrets"
+    [ -d "violentutf/app_data" ] && echo "  ✓ Application data"
+}
+
+# Function to create a permanent backup
+create_permanent_backup() {
+    local backup_name="${1:-vutf_backup}"
+    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local backup_dir="$HOME/.violentutf/backups/${backup_name}_${timestamp}"
+    
+    echo "Creating permanent backup in $backup_dir..."
+    mkdir -p "$backup_dir"
+    
+    # Copy all important files
+    [ -f "ai-tokens.env" ] && cp "ai-tokens.env" "$backup_dir/"
+    [ -f "keycloak/.env" ] && cp "keycloak/.env" "$backup_dir/keycloak.env"
+    [ -f "apisix/.env" ] && cp "apisix/.env" "$backup_dir/apisix.env"
+    [ -f "violentutf/.env" ] && cp "violentutf/.env" "$backup_dir/violentutf.env"
+    [ -f "violentutf_api/fastapi_app/.env" ] && cp "violentutf_api/fastapi_app/.env" "$backup_dir/violentutf_api.env"
+    [ -f "violentutf/.streamlit/secrets.toml" ] && cp "violentutf/.streamlit/secrets.toml" "$backup_dir/secrets.toml"
+    [ -f "apisix/conf/custom_routes.yml" ] && cp "apisix/conf/custom_routes.yml" "$backup_dir/"
+    
+    # Backup app data if exists
+    if [ -d "violentutf/app_data" ]; then
+        echo "Backing up application data..."
+        tar -czf "$backup_dir/app_data_backup.tar.gz" -C violentutf app_data 2>/dev/null || true
+    fi
+    
+    # Create backup metadata
+    cat > "$backup_dir/backup_info.txt" << EOF
+ViolentUTF Backup
+Created: $(date)
+Version: $(git describe --tags --always 2>/dev/null || echo "unknown")
+Directory: $(pwd)
+EOF
+    
+    echo "✅ Permanent backup created: $backup_dir"
+    echo "💡 To restore from this backup later, use:"
+    echo "   ./setup_macos_new.sh --recover $backup_dir"
+}
+
+# Function to list available backups
+list_backups() {
+    local backup_root="$HOME/.violentutf/backups"
+    
+    if [ ! -d "$backup_root" ]; then
+        echo "No permanent backups found."
+        return
+    fi
+    
+    echo "Available permanent backups:"
+    echo ""
+    
+    for backup in "$backup_root"/*; do
+        if [ -d "$backup" ]; then
+            local backup_name=$(basename "$backup")
+            local info_file="$backup/backup_info.txt"
+            
+            echo "📁 $backup_name"
+            if [ -f "$info_file" ]; then
+                grep "Created:" "$info_file" | sed 's/^/   /'
+                grep "Version:" "$info_file" | sed 's/^/   /'
+            fi
+            echo "   Path: $backup"
+            echo ""
+        fi
+    done
 }

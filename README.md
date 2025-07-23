@@ -135,11 +135,11 @@ export VUTF_VERBOSITY=2  # 0=quiet, 1=normal, 2=verbose, 3=debug
 ./setup_macos_new.sh
 ```
 
-### Cleanup and Maintenance
+### Cleanup, Backup, and Recovery
 
-ViolentUTF now supports intelligent cleanup operations that preserve your credentials and configurations:
+ViolentUTF supports intelligent cleanup, backup, and recovery operations:
 
-#### Standard Cleanup (Preserves Credentials)
+#### Standard Cleanup (Preserves Everything Important)
 ```bash
 # macOS
 ./setup_macos_new.sh --cleanup
@@ -155,8 +155,25 @@ This will:
 - ✅ Stop and remove containers
 - ✅ Clean up configuration files
 - ✅ **Preserve all .env files and credentials**
-- ✅ Backup user configurations before cleanup
+- ✅ **Preserve application data (app_data/)**
+- ✅ **Preserve logs (violentutf_logs/, apisix/logs/)**
+- ✅ **Preserve Docker volumes (databases)**
+- ✅ Backup user configurations automatically
 - ✅ Allow quick re-setup with existing credentials
+
+#### Backup and Recovery
+```bash
+# Create a permanent backup
+./setup_macos_new.sh --backup
+./setup_macos_new.sh --backup production  # Named backup
+
+# List available backups
+./setup_macos_new.sh --list-backups
+
+# Recover from backup
+./setup_macos_new.sh --recover  # From latest backup
+./setup_macos_new.sh --recover ~/.violentutf/backups/production_20240115  # Specific backup
+```
 
 #### Deep Cleanup (Complete Reset)
 ```bash
@@ -185,6 +202,10 @@ sudo ./setup_linux_new.sh --cleanup-dashboard
 This will remove:
 - PyRIT memory databases
 - Scoring results and execution history
+- Dashboard analytics data
+- Execution logs
+
+**Note**: Credentials and configurations remain untouched.
 - Dashboard analytics data
 - Execution logs
 
