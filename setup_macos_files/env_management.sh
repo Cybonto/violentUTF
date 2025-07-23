@@ -101,7 +101,7 @@ load_ai_tokens() {
 update_fastapi_env() {
     local fastapi_env_file="violentutf_api/fastapi_app/.env"
     
-    log_detail "Updating FastAPI environment with AI provider flags..."
+    log_detail "Updating FastAPI environment with AI provider flags and tokens..."
     
     # Load AI tokens first
     load_ai_tokens
@@ -126,7 +126,28 @@ update_fastapi_env() {
         fi
     done
     
-    log_success "FastAPI environment updated with provider flags"
+    # Update API keys from ai-tokens.env
+    # Note: Always update API keys if they exist, regardless of enabled status
+    # This ensures keys are available when providers are enabled later
+    if [ -n "$OPENAI_API_KEY" ] && [ "$OPENAI_API_KEY" != "your_openai_api_key_here" ]; then
+        if grep -q "^OPENAI_API_KEY=" "$fastapi_env_file"; then
+            sed -i '' "s/^OPENAI_API_KEY=.*/OPENAI_API_KEY=${OPENAI_API_KEY}/" "$fastapi_env_file"
+        else
+            echo "OPENAI_API_KEY=${OPENAI_API_KEY}" >> "$fastapi_env_file"
+        fi
+        log_detail "Added OpenAI API key to FastAPI environment"
+    fi
+    
+    if [ -n "$ANTHROPIC_API_KEY" ] && [ "$ANTHROPIC_API_KEY" != "your_anthropic_api_key_here" ]; then
+        if grep -q "^ANTHROPIC_API_KEY=" "$fastapi_env_file"; then
+            sed -i '' "s/^ANTHROPIC_API_KEY=.*/ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}/" "$fastapi_env_file"
+        else
+            echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}" >> "$fastapi_env_file"
+        fi
+        log_detail "Added Anthropic API key to FastAPI environment"
+    fi
+    
+    log_success "FastAPI environment updated with provider flags and API keys"
 }
 
 # Function to backup user configurations
@@ -446,6 +467,21 @@ EOF
     log_detail "Creating FastAPI configuration..."
     mkdir -p violentutf_api/fastapi_app
     
+    # Check if we're overwriting an existing file with preserved credentials
+    local existing_api_key=""
+    local existing_openai_key=""
+    local existing_anthropic_key=""
+    if [ -f "violentutf_api/fastapi_app/.env" ]; then
+        existing_api_key=$(grep "^VIOLENTUTF_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+        existing_openai_key=$(grep "^OPENAI_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+        existing_anthropic_key=$(grep "^ANTHROPIC_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+    fi
+    
+    # Use existing API key if available
+    if [ -n "$existing_api_key" ]; then
+        VIOLENTUTF_API_KEY="$existing_api_key"
+    fi
+    
     cat > violentutf_api/fastapi_app/.env <<EOF
 # FastAPI Configuration
 SECRET_KEY=$FASTAPI_SECRET_KEY
@@ -478,12 +514,36 @@ SERVICE_VERSION=1.0.0
 DEBUG=false
 
 # AI Provider Configuration (from ai-tokens.env)
-OPENAI_ENABLED=\${OPENAI_ENABLED:-false}
-ANTHROPIC_ENABLED=\${ANTHROPIC_ENABLED:-false}
-OLLAMA_ENABLED=\${OLLAMA_ENABLED:-false}
-OPEN_WEBUI_ENABLED=\${OPEN_WEBUI_ENABLED:-false}
-OPENAPI_ENABLED=\${OPENAPI_ENABLED:-false}
+OPENAI_ENABLED=${OPENAI_ENABLED:-false}
+ANTHROPIC_ENABLED=${ANTHROPIC_ENABLED:-false}
+OLLAMA_ENABLED=${OLLAMA_ENABLED:-false}
+OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}
+OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
 EOF
+
+    # Add AI provider keys if they exist (from ai-tokens.env or preserved)
+    if [ -n "$existing_openai_key" ]; then
+        echo "OPENAI_API_KEY=$existing_openai_key" >> violentutf_api/fastapi_app/.env
+    elif [ -n "$OPENAI_API_KEY" ] && [ "$OPENAI_API_KEY" != "your_openai_api_key_here" ]; then
+        echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> violentutf_api/fastapi_app/.env
+    fi
+    
+    if [ -n "$existing_anthropic_key" ]; then
+        echo "ANTHROPIC_API_KEY=$existing_anthropic_key" >> violentutf_api/fastapi_app/.env
+    elif [ -n "$ANTHROPIC_API_KEY" ] && [ "$ANTHROPIC_API_KEY" != "your_anthropic_api_key_here" ]; then
+        echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" >> violentutf_api/fastapi_app/.env
+    fi
+    
+    # Add Ollama endpoint if configured
+    if [ -n "$OLLAMA_ENDPOINT" ] && [ "$OLLAMA_ENABLED" = "true" ]; then
+        echo "OLLAMA_ENDPOINT=$OLLAMA_ENDPOINT" >> violentutf_api/fastapi_app/.env
+    fi
+    
+    # Add Open WebUI configuration if enabled
+    if [ "$OPEN_WEBUI_ENABLED" = "true" ]; then
+        [ -n "$OPEN_WEBUI_ENDPOINT" ] && echo "OPEN_WEBUI_ENDPOINT=$OPEN_WEBUI_ENDPOINT" >> violentutf_api/fastapi_app/.env
+        [ -n "$OPEN_WEBUI_API_KEY" ] && [ "$OPEN_WEBUI_API_KEY" != "your_open_webui_api_key_here" ] && echo "OPEN_WEBUI_API_KEY=$OPEN_WEBUI_API_KEY" >> violentutf_api/fastapi_app/.env
+    fi
     echo "✅ Created violentutf_api/fastapi_app/.env"
     
     echo "✅ All configuration files created successfully"

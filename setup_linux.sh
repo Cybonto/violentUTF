@@ -1885,9 +1885,25 @@ echo "✅ Created violentutf/.streamlit/secrets.toml"
 echo "Creating FastAPI configuration..."
 mkdir -p violentutf_api/fastapi_app
 
+# Check if we're overwriting an existing file with preserved credentials
+existing_api_key=""
+existing_openai_key=""
+existing_anthropic_key=""
+if [ -f "violentutf_api/fastapi_app/.env" ]; then
+    existing_api_key=$(grep "^VIOLENTUTF_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+    existing_openai_key=$(grep "^OPENAI_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+    existing_anthropic_key=$(grep "^ANTHROPIC_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+fi
+
+# Use existing API key if available
+if [ -n "$existing_api_key" ]; then
+    VIOLENTUTF_API_KEY="$existing_api_key"
+fi
+
 cat > violentutf_api/fastapi_app/.env <<EOF
 # FastAPI Configuration
 SECRET_KEY=$FASTAPI_SECRET_KEY
+JWT_SECRET_KEY=$FASTAPI_SECRET_KEY
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 API_KEY_EXPIRE_DAYS=365
@@ -1905,12 +1921,48 @@ KEYCLOAK_CLIENT_SECRET=$FASTAPI_CLIENT_SECRET
 APISIX_BASE_URL=http://apisix:9080
 APISIX_ADMIN_URL=http://apisix:9180
 APISIX_ADMIN_KEY=$APISIX_ADMIN_KEY
+VIOLENTUTF_API_KEY=$VIOLENTUTF_API_KEY
+VIOLENTUTF_API_URL=http://apisix:9080
 
 # Service Configuration
-SERVICE_NAME=ViolentUTF API
+DEFAULT_USERNAME=violentutf.web
+PYRIT_DB_SALT=$VIOLENTUTF_PYRIT_SALT
+SERVICE_NAME="ViolentUTF API"
 SERVICE_VERSION=1.0.0
 DEBUG=false
+
+# AI Provider Configuration (from ai-tokens.env)
+OPENAI_ENABLED=${OPENAI_ENABLED:-false}
+ANTHROPIC_ENABLED=${ANTHROPIC_ENABLED:-false}
+OLLAMA_ENABLED=${OLLAMA_ENABLED:-true}
+OPEN_WEBUI_ENABLED=${OPEN_WEBUI_ENABLED:-false}
+OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
 EOF
+
+# Add AI provider keys if they exist (from ai-tokens.env or preserved)
+if [ -n "$existing_openai_key" ]; then
+    echo "OPENAI_API_KEY=$existing_openai_key" >> violentutf_api/fastapi_app/.env
+elif [ -n "$OPENAI_API_KEY" ] && [ "$OPENAI_API_KEY" != "your_openai_api_key_here" ]; then
+    echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> violentutf_api/fastapi_app/.env
+fi
+
+if [ -n "$existing_anthropic_key" ]; then
+    echo "ANTHROPIC_API_KEY=$existing_anthropic_key" >> violentutf_api/fastapi_app/.env
+elif [ -n "$ANTHROPIC_API_KEY" ] && [ "$ANTHROPIC_API_KEY" != "your_anthropic_api_key_here" ]; then
+    echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" >> violentutf_api/fastapi_app/.env
+fi
+
+# Add Ollama endpoint if configured
+if [ -n "$OLLAMA_ENDPOINT" ] && [ "$OLLAMA_ENABLED" = "true" ]; then
+    echo "OLLAMA_ENDPOINT=$OLLAMA_ENDPOINT" >> violentutf_api/fastapi_app/.env
+fi
+
+# Add Open WebUI configuration if enabled
+if [ "$OPEN_WEBUI_ENABLED" = "true" ]; then
+    [ -n "$OPEN_WEBUI_ENDPOINT" ] && echo "OPEN_WEBUI_ENDPOINT=$OPEN_WEBUI_ENDPOINT" >> violentutf_api/fastapi_app/.env
+    [ -n "$OPEN_WEBUI_API_KEY" ] && [ "$OPEN_WEBUI_API_KEY" != "your_open_webui_api_key_here" ] && echo "OPEN_WEBUI_API_KEY=$OPEN_WEBUI_API_KEY" >> violentutf_api/fastapi_app/.env
+fi
+
 echo "✅ Created violentutf_api/fastapi_app/.env"
 
 echo ""

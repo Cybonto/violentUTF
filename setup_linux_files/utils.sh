@@ -366,8 +366,22 @@ generate_all_secrets() {
         FASTAPI_SECRET_KEY=$(grep "^JWT_SECRET_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
         FASTAPI_API_KEY=$(grep "^VIOLENTUTF_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
         
+        # If we found an API key in FastAPI but not in ViolentUTF, use the FastAPI one
+        if [ -n "$FASTAPI_API_KEY" ] && [ -z "$VIOLENTUTF_API_KEY" ]; then
+            log_detail "Using API key from FastAPI .env file"
+            VIOLENTUTF_API_KEY="$FASTAPI_API_KEY"
+        fi
+        
+        # Also check for AI provider keys in FastAPI .env
+        if [ -z "$OPENAI_API_KEY" ]; then
+            OPENAI_API_KEY=$(grep "^OPENAI_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+        fi
+        if [ -z "$ANTHROPIC_API_KEY" ]; then
+            ANTHROPIC_API_KEY=$(grep "^ANTHROPIC_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
+        fi
+        
         # Ensure API keys match between services
-        if [ -n "$FASTAPI_API_KEY" ] && [ "$FASTAPI_API_KEY" != "$VIOLENTUTF_API_KEY" ]; then
+        if [ -n "$FASTAPI_API_KEY" ] && [ -n "$VIOLENTUTF_API_KEY" ] && [ "$FASTAPI_API_KEY" != "$VIOLENTUTF_API_KEY" ]; then
             log_warn "API key mismatch detected, using ViolentUTF API key"
             FASTAPI_API_KEY="$VIOLENTUTF_API_KEY"
         fi

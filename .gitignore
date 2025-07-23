@@ -15,6 +15,14 @@ docs/.DS_Store
 *.db
 *CLAUDE*.*
 
+# Ignore all files with 'template' in the name
+*template*
+# But keep essential configuration templates
+!apisix/conf/*.template
+!apisix/docker-compose.yml.template
+!keycloak/docker-compose.yml.template
+!apisix/configure_routes_template.sh
+
 # CI/CD artifacts
 coverage.xml
 coverage-*.xml

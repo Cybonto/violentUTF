@@ -201,6 +201,7 @@ main_setup() {
     # Phase 4: Configuration File Creation (CRITICAL: After secrets, before services)
     log_phase "Phase 4: Configuration File Creation"
     generate_all_env_files  # Now we can create .env files with proper secrets
+    update_fastapi_env      # Update FastAPI env with AI tokens and flags
     
     # Phase 5: Service Deployment (CRITICAL: After all configs are ready)
     log_phase "Phase 5: Service Deployment"
