@@ -89,8 +89,33 @@ else
 fi
 
 echo ""
+echo "🔍 Checking APISIX admin permissions..."
+APISIX_ADMIN_FILE="violentutf_api/fastapi_app/app/api/endpoints/apisix_admin.py"
+if [ -f "$APISIX_ADMIN_FILE" ]; then
+    if grep -q '"violentutf.web"' "$APISIX_ADMIN_FILE"; then
+        echo "✅ User 'violentutf.web' is already in allowed users list"
+    else
+        echo "❌ User 'violentutf.web' is NOT in allowed users list"
+        echo "   This will cause '403 Forbidden' errors in Simple Chat"
+        echo ""
+        echo "   To fix, add 'violentutf.web' to the allowed_users list in:"
+        echo "   $APISIX_ADMIN_FILE"
+        echo ""
+        echo "   Change:"
+        echo '   allowed_users = ["admin", "keycloak_user"]'
+        echo "   To:"
+        echo '   allowed_users = ["admin", "violentutf.web", "keycloak_user"]'
+        echo ""
+        echo "   Then restart FastAPI: docker restart violentutf_api"
+    fi
+else
+    echo "⚠️  Cannot check permissions - file not found: $APISIX_ADMIN_FILE"
+fi
+
+echo ""
 echo "💡 Next Steps:"
 echo "1. If still failing, check that Streamlit is using the correct API key"
 echo "2. Verify OPENAPI_1_AUTH_TOKEN in ai-tokens.env is valid"
 echo "3. Run ./fix_gsai_ai_proxy.sh if routes need updating"
 echo "4. Check Docker logs: docker logs apisix-apisix-1 --tail 50"
+echo "5. If getting 403 on APISIX admin, fix the allowed_users list as shown above"
