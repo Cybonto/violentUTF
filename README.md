@@ -1,11 +1,3 @@
-## Status
-
-![CI Status](https://img.shields.io/github/actions/workflow/status/ViolentUTF/ViolentUTF/ci.yml?branch=main&label=CI)
-![Coverage](https://img.shields.io/codecov/c/github/ViolentUTF/ViolentUTF?label=coverage)
-![Security](https://img.shields.io/github/actions/workflow/status/ViolentUTF/ViolentUTF/ci.yml?branch=main&label=security)
-![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
-![License](https://img.shields.io/github/license/ViolentUTF/ViolentUTF)
-
 # ViolentUTF
 
 > **Enterprise-Grade AI Red-Teaming Platform**
