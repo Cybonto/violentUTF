@@ -177,7 +177,7 @@ pathlib==1.0.1
 pathspec==0.12.1
 patsy==1.0.1
 pbr==6.1.1
-peft==0.15.2
+peft==0.17.0
 pillow==11.2.1
 pip-api==0.0.34
 pip-requirements-parser==32.0.1
