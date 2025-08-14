@@ -14,6 +14,9 @@ setup_violentutf_api() {
     # Update AI provider flags
     update_fastapi_env
     
+    # Initialize documentation system
+    initialize_documentation_system
+    
     echo "✅ ViolentUTF API configuration completed"
     echo "📝 Note: API service is started with APISIX container stack"
     
@@ -79,4 +82,50 @@ verify_api_health() {
     
     echo "❌ API health check failed - service may not be accessible"
     return 1
+}
+
+# Function to initialize MCP documentation system
+initialize_documentation_system() {
+    log_detail "Initializing MCP documentation system..."
+    
+    local docs_dir="./docs"
+    local api_dir="violentutf_api/fastapi_app"
+    
+    # Check if documentation directory exists
+    if [ ! -d "$docs_dir" ]; then
+        log_warn "Documentation directory not found: $docs_dir"
+        return 1
+    fi
+    
+    # Count documentation files
+    local doc_count=$(find "$docs_dir" -name "*.md" | wc -l)
+    log_debug "Found $doc_count documentation files in $docs_dir"
+    
+    # Verify documentation provider exists
+    if [ ! -f "$api_dir/app/mcp/resources/documentation.py" ]; then
+        log_warn "Documentation provider not found: $api_dir/app/mcp/resources/documentation.py"
+        return 1
+    fi
+    
+    # Add documentation provider flag to FastAPI environment
+    local fastapi_env_file="$api_dir/.env"
+    if [ -f "$fastapi_env_file" ]; then
+        if ! grep -q "^MCP_ENABLE_DOCUMENTATION=" "$fastapi_env_file"; then
+            echo "MCP_ENABLE_DOCUMENTATION=true" >> "$fastapi_env_file"
+            log_debug "Added MCP_ENABLE_DOCUMENTATION=true to FastAPI environment"
+        fi
+        
+        # Set documentation directory path
+        if ! grep -q "^DOCUMENTATION_ROOT_PATH=" "$fastapi_env_file"; then
+            echo "DOCUMENTATION_ROOT_PATH=./docs" >> "$fastapi_env_file"
+            log_debug "Added DOCUMENTATION_ROOT_PATH=./docs to FastAPI environment"
+        fi
+    else
+        log_warn "FastAPI environment file not found: $fastapi_env_file"
+        return 1
+    fi
+    
+    log_success "MCP documentation system initialized successfully"
+    log_info "📚 Documentation: $doc_count MD files will be accessible via SimpleChat"
+    return 0
 }

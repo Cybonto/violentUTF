@@ -29,9 +29,9 @@ class DatasetResourceProvider(BaseResourceProvider):
 
     def _get_api_url(self) -> str:
         """Get internal API URL for container communication"""
-        api_url = getattr(settings, "VIOLENTUTF_API_URL", "http://localhost:8000")
+        api_url = getattr(settings, "VIOLENTUTF_API_URL", None) or "http://localhost:8000"
         # Convert external gateway URL to internal service URL
-        if "localhost:9080" in api_url or "apisix" in api_url:
+        if api_url and ("localhost:9080" in api_url or "apisix" in api_url):
             return "http://violentutf-api:8000"
         return api_url
 
@@ -304,8 +304,8 @@ class ResultsResourceProvider(BaseResourceProvider):
 
     def _get_api_url(self) -> str:
         """Get internal API URL for container communication"""
-        api_url = getattr(settings, "VIOLENTUTF_API_URL", "http://localhost:8000")
-        if "localhost:9080" in api_url or "apisix" in api_url:
+        api_url = getattr(settings, "VIOLENTUTF_API_URL", None) or "http://localhost:8000"
+        if api_url and ("localhost:9080" in api_url or "apisix" in api_url):
             return "http://violentutf-api:8000"
         return api_url
 

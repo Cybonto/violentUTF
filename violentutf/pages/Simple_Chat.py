@@ -316,6 +316,23 @@ def _looks_like_mcp_command(text: str) -> bool:
         "show me all",
         "show available",
         "what are available",
+        # Documentation query patterns
+        "what is",
+        "how to",
+        "how do i",
+        "troubleshoot",
+        "troubleshooting",
+        "setup",
+        "configure",
+        "install",
+        "installing",
+        "show docs",
+        "show documentation",
+        "find docs",
+        "search docs",
+        "help with",
+        "guide for",
+        "guide on",
     ]
 
     return any(indicator in text for indicator in mcp_indicators)
@@ -1129,21 +1146,287 @@ if quick_actions != "Select an action..." and user_input:
                 st.error(f"{quick_actions} failed: {error}")
 
 
+# Documentation query handler
+def handle_documentation_query(query: str, command_type, provider=None, ai_provider=None, model=None, ollama_url=None):
+    """Handle documentation search queries through MCP"""
+    try:
+        from utils.jwt_manager import jwt_manager
+        
+        # Initialize MCP client if needed
+        if "mcp_client" not in st.session_state:
+            st.session_state["mcp_client"] = MCPClientSync()
+            
+            # Ensure MCP client has a valid JWT token
+            token = jwt_manager.get_valid_token()
+            if token:
+                st.session_state["mcp_client"].set_test_token(token)
+        
+        mcp_client = st.session_state["mcp_client"]
+        
+        if not mcp_client:
+            st.error("❌ MCP client not available for documentation search")
+            return
+        
+        # Ensure MCP client is initialized
+        if not mcp_client.initialize():
+            st.error("❌ Failed to connect to MCP server for documentation search")
+            return
+        
+        with st.spinner("🔍 Searching documentation..."):
+            try:
+                # Query the documentation resource
+                search_uri = "violentutf://docs/search/query"
+                search_params = {
+                    "query": query,
+                    "limit": 5
+                }
+                
+                result = mcp_client.read_resource(search_uri, search_params)
+                
+                if result and not result.get("error"):
+                    content = result.get("content", {})
+                    results = content.get("results", [])
+                    
+                    if results:
+                        st.success(f"📚 Found {len(results)} relevant document(s):")
+                        
+                        for i, doc in enumerate(results, 1):
+                            with st.expander(f"📄 {doc.get('title', 'Untitled')} (Score: {doc.get('score', 0)})"):
+                                col1, col2 = st.columns([2, 1])
+                                
+                                with col1:
+                                    st.markdown(f"**Category:** {doc.get('category', 'Unknown')}")
+                                    st.markdown(f"**Snippet:** {doc.get('snippet', 'No preview available')}")
+                                    
+                                    # Provide link to full document
+                                    doc_uri = doc.get('uri')
+                                    if doc_uri:
+                                        if st.button(f"📖 Read Full Document", key=f"read_doc_{i}"):
+                                            full_doc = mcp_client.read_resource(doc_uri, {})
+                                            if full_doc and not full_doc.get("error"):
+                                                st.markdown("---")
+                                                st.markdown("### Full Document Content:")
+                                                st.markdown(full_doc.get("content", "Content not available"))
+                                            else:
+                                                st.error("Failed to load full document")
+                                
+                                with col2:
+                                    st.markdown(f"**Tags:** {', '.join(doc.get('tags', []))}")
+                                    st.markdown(f"**Words:** {doc.get('word_count', 'Unknown')}")
+                        
+                        # Show related suggestions if available
+                        if content.get("total_found", 0) > len(results):
+                            st.info(f"📝 Showing top {len(results)} results. Total found: {content.get('total_found', 0)}")
+                        
+                        # Add LLM synthesis of the documentation results
+                        if results:
+                            synthesize_documentation_response(query, results, provider, ai_provider, model, ollama_url)
+                        
+                    else:
+                        st.warning("🔍 No documentation found for your query.")
+                        
+                        # Show suggestions if available
+                        suggestions = content.get("suggestions", [])
+                        if suggestions:
+                            st.info("💡 **Try these searches instead:**")
+                            for suggestion in suggestions:
+                                if st.button(f"🔍 {suggestion}", key=f"suggest_{hash(suggestion)}"):
+                                    # Trigger a new search with the suggestion
+                                    handle_documentation_query(suggestion, command_type, provider, ai_provider, model, ollama_url)
+                        
+                        # Show available categories
+                        categories = content.get("categories", [])
+                        if categories:
+                            st.info(f"📁 **Available documentation categories:** {', '.join(categories)}")
+                
+                else:
+                    error_msg = result.get("message", "Unknown error occurred") if result else "No response from documentation service"
+                    st.error(f"❌ Documentation search failed: {error_msg}")
+                    
+                    # Provide fallback suggestions
+                    st.info("💡 **Try these common queries:**")
+                    common_queries = [
+                        "how to setup ViolentUTF",
+                        "API authentication",
+                        "troubleshooting Docker",
+                        "MCP configuration",
+                        "Keycloak setup"
+                    ]
+                    
+                    cols = st.columns(len(common_queries))
+                    for i, query_suggestion in enumerate(common_queries):
+                        with cols[i]:
+                            if st.button(f"🔍 {query_suggestion}", key=f"common_{i}"):
+                                handle_documentation_query(query_suggestion, command_type, provider, ai_provider, model, ollama_url)
+                
+            except Exception as e:
+                logger.error(f"Error querying documentation: {e}")
+                st.error(f"❌ Documentation search error: {str(e)}")
+                
+                # Provide manual navigation suggestions
+                st.info("🧭 **Manual Navigation Suggestions:**")
+                st.markdown("""
+                - For **setup**: Check the setup guides in the repository
+                - For **API**: Look for API documentation in `/docs/api/`
+                - For **troubleshooting**: Check `/docs/troubleshooting/`
+                - For **MCP**: Check `/docs/mcp/`
+                """)
+                
+    except Exception as e:
+        logger.error(f"Error in documentation query handler: {e}")
+        st.error(f"❌ Documentation handler error: {str(e)}")
+
+
+def synthesize_documentation_response(query: str, results: List[Dict[str, Any]], 
+                                    provider: str = None, ai_provider: str = None, 
+                                    model: str = None, ollama_url: str = None) -> None:
+    """
+    Synthesize an AI response based on retrieved documentation results.
+    
+    Args:
+        query: Original user query
+        results: List of documentation search results
+        provider: Current AI provider (AI Gateway, Ollama, etc.)
+        ai_provider: Specific AI provider for AI Gateway (openai, anthropic, etc.)
+        model: Selected model name
+        ollama_url: Ollama URL if using Ollama provider
+    """
+    try:
+        # Use the passed provider or show helpful message
+        if not provider:
+            st.info("💡 **AI Synthesis:** Please select an AI provider in the sidebar to get synthesized answers from documentation.")
+            return
+            
+        # Prepare context from documentation results
+        context_parts = []
+        for doc in results:
+            title = doc.get('title', 'Untitled')
+            category = doc.get('category', 'Unknown')
+            snippet = doc.get('snippet', 'No content available')
+            context_parts.append(f"**{title}** (Category: {category}):\n{snippet}")
+        
+        documentation_context = "\n\n".join(context_parts)
+        
+        # Create synthesis prompt
+        synthesis_prompt = f"""Based on the following ViolentUTF documentation, please provide a comprehensive answer to the user's question: "{query}"
+
+Documentation Context:
+{documentation_context}
+
+Please provide a helpful, accurate answer based on the documentation provided. If the documentation doesn't fully answer the question, indicate what aspects are covered and what might need additional information. Be specific and reference the relevant documentation sections when appropriate."""
+
+        with st.spinner("🤖 Synthesizing AI response based on documentation..."):
+            try:
+                # Use the same approach as the main chat - handle different providers
+                if provider == "AI Gateway":
+                    # Use AI Gateway with APISIX authentication
+                    from utils.auth_utils import get_current_token
+                    from utils.token_manager import token_manager
+                    
+                    token = get_current_token()
+                    if not token:
+                        st.warning("🔒 Authentication required for AI synthesis.")
+                        return
+                        
+                    if not ai_provider or not model:
+                        st.warning("🤖 Please configure AI provider and model for synthesis.")
+                        return
+                    
+                    # Call AI Gateway for synthesis
+                    response_data = token_manager.call_ai_endpoint(
+                        token=token,
+                        provider=ai_provider,
+                        model=model,
+                        messages=[{"role": "user", "content": synthesis_prompt}],
+                        max_tokens=1000,
+                        temperature=0.3,  # Lower temperature for more focused responses
+                    )
+                    
+                    if response_data:
+                        response_content = None
+                        
+                        # Handle different response formats
+                        if "choices" in response_data:
+                            # OpenAI-compatible response format
+                            response_content = response_data["choices"][0]["message"]["content"]
+                        elif "content" in response_data and isinstance(response_data["content"], list):
+                            # Anthropic response format
+                            if response_data["content"] and "text" in response_data["content"][0]:
+                                response_content = response_data["content"][0]["text"]
+                        elif "content" in response_data and isinstance(response_data["content"], str):
+                            # Simple content format
+                            response_content = response_data["content"]
+                        
+                        if response_content:
+                            st.markdown("---")
+                            st.markdown("### 🤖 AI Synthesis")
+                            model_display = token_manager.get_model_display_name(ai_provider, model)
+                            st.info(f"Generated by {model_display} based on the documentation above:")
+                            st.markdown(response_content)
+                            st.markdown("---")
+                        else:
+                            st.error("❌ Failed to parse synthesis response from AI Gateway")
+                            logger.error(f"Failed to parse AI Gateway synthesis response: {response_data}")
+                    else:
+                        st.error("❌ Failed to get synthesis response from AI Gateway")
+                        
+                elif provider == "Ollama":
+                    # Handle Ollama provider
+                    if not model:
+                        st.warning("🤖 Please select an Ollama model for synthesis.")
+                        return
+                    
+                    from ollama import Client
+                    client = Client(host=ollama_url or "http://localhost:11434")
+                    
+                    response = client.chat(
+                        model=model,
+                        messages=[{"role": "user", "content": synthesis_prompt}]
+                    )
+                    
+                    if response and "message" in response:
+                        response_content = response["message"]["content"]
+                        st.markdown("---")
+                        st.markdown("### 🤖 AI Synthesis")
+                        st.info(f"Generated by {model} (Ollama) based on the documentation above:")
+                        st.markdown(response_content)
+                        st.markdown("---")
+                    else:
+                        st.error("❌ Failed to get synthesis response from Ollama")
+                        
+                else:
+                    # For other providers (OpenAI, Anthropic, etc.), show helpful message
+                    st.info(f"💡 **AI Synthesis:** Synthesis is currently supported for AI Gateway and Ollama providers. You're using {provider}.")
+                    st.info("Switch to AI Gateway or Ollama to get synthesized answers from documentation.")
+                    
+            except Exception as e:
+                st.error(f"❌ AI synthesis error: {str(e)}")
+                logger.error(f"Error in AI synthesis: {e}")
+                
+    except Exception as e:
+        st.error(f"❌ Documentation synthesis error: {str(e)}")
+        logger.error(f"Error in synthesize_documentation_response: {e}")
+
+
 # Handler functions for MCP commands
-def handle_mcp_command(parsed_command):
+def handle_mcp_command(parsed_command, provider=None, ai_provider=None, model=None, ollama_url=None):
     """Handle explicit MCP commands like /mcp help, /mcp list generators"""
     command_type = parsed_command.type
     params = parsed_command.arguments or {}
+    
+    # Debug logging for MCP command handling
+    logger.debug(f"Handling MCP command: {command_type.value} with params: {params}")
 
     # Safety check - this should never happen due to filtering before calling this function
-    if command_type == MCPCommandType.UNKNOWN:
+    if command_type.value == "unknown":
         logger.debug("UNKNOWN command type reached handle_mcp_command - ignoring")
         return  # Just return without doing anything
 
-    if command_type == MCPCommandType.HELP:
+    if command_type.value == "help":
         st.info("📚 **MCP Commands Available:**")
         st.write(
             """
+        **Explicit MCP Commands:**
         - `/mcp help` - Show this help message
         - `/mcp list generators` - List configured generators
         - `/mcp list datasets` - List loaded datasets
@@ -1153,11 +1436,21 @@ def handle_mcp_command(parsed_command):
         - `/mcp dataset <name>` - Load a specific dataset
         - `/mcp test jailbreak` - Run jailbreak tests
         - `/mcp test bias` - Run bias tests
+        - `/mcp docs <query>` - Search documentation
+        - `/mcp search <query>` - Search for information
+
+        **Documentation & Help Commands:**
+        - "What is ViolentUTF?" - Get information about ViolentUTF
+        - "How to setup ViolentUTF" - Setup instructions
+        - "Troubleshooting Docker" - Get help with issues
+        - "Configure authentication" - Configuration guidance
+        - "Install dependencies" - Installation help
+        - "Show documentation" - Browse available docs
 
         **Natural Language Commands:**
-        - "Create a GPT - 4 generator with temperature 0.8"
+        - "Create a GPT-4 generator with temperature 0.8"
         - "Load the jailbreak dataset"
-        - "Configure a bias scorer"
+        - "Configure a bias scorer" 
         - "Show me available converters" - List converter types
         - "What converters are configured" - List configured converters
         - "Show available dataset options" - List dataset types
@@ -1166,7 +1459,7 @@ def handle_mcp_command(parsed_command):
         """
         )
 
-    elif command_type == MCPCommandType.LIST:
+    elif command_type.value == "list":
         resource = params.get("resource", "")
         raw_text = parsed_command.raw_text.lower()
 
@@ -1195,37 +1488,43 @@ def handle_mcp_command(parsed_command):
         else:
             st.warning("Please specify what to list: generators, datasets, converters, scorers, or orchestrators")
 
-    elif command_type == MCPCommandType.DATASET:
+    elif command_type.value == "dataset":
         dataset_name = params.get("dataset_name", "")
         if dataset_name:
             load_dataset(dataset_name)
         else:
             st.error("Please specify a dataset name")
 
-    elif command_type == MCPCommandType.TEST:
+    elif command_type.value == "test":
         test_type = params.get("test_type", "general")
         st.info(f"🧪 Running {test_type} test...")
         # In Phase 4, this would actually run tests
         st.warning("Test execution will be implemented in Phase 4")
 
-    elif command_type == MCPCommandType.ENHANCE:
+    elif command_type.value == "enhance":
         st.info("✨ Enhancing prompt...")
         st.warning(
             "Direct command enhancement will be implemented in Phase 4. Use the Enhancement Strip buttons for now."
         )
 
-    elif command_type == MCPCommandType.ANALYZE:
+    elif command_type.value == "analyze":
         st.info("🔍 Analyzing prompt...")
         st.warning("Direct command analysis will be implemented in Phase 4. Use the Enhancement Strip buttons for now.")
+
+    elif command_type.value == "documentation" or command_type.value == "search":
+        query = parsed_command.arguments.get("query", "").strip()
+        if query:
+            st.info(f"📚 Searching documentation for: '{query}'")
+            handle_documentation_query(query, command_type, provider, ai_provider, model, ollama_url)
+        else:
+            st.warning("Please provide a search query. Example: 'how to setup ViolentUTF' or '/mcp docs API'")
 
     else:
         # This should not happen since we filter UNKNOWN types before calling this function
         # Don't show UI warnings for UNKNOWN types - they're normal chat messages
-        if command_type != MCPCommandType.UNKNOWN:
-            logger.error(f"Unhandled command type: {command_type} (type: {type(command_type)})")
-            st.warning(
-                f"Unhandled command type: {command_type.value if hasattr(command_type, 'value') else command_type}"
-            )
+        if command_type.value != "unknown":
+            logger.error(f"Unhandled command type: {command_type.value}")
+            st.warning(f"Unhandled command type: {command_type.value}")
         else:
             logger.debug("UNKNOWN command type reached else clause - ignoring UI warning")
 
@@ -2300,9 +2599,12 @@ if generate_response:
                     parsed_command = nl_parser.parse(user_input)
 
                     # Only handle recognized MCP commands
-                    if parsed_command.type != MCPCommandType.UNKNOWN:
+                    if parsed_command.type.value != "unknown":
                         logger.debug(f"Processing MCP command: {parsed_command.type}")
-                        handle_mcp_command(parsed_command)
+                        handle_mcp_command(parsed_command, selected_provider, 
+                                         locals().get('selected_ai_provider'), 
+                                         locals().get('selected_model'),
+                                         locals().get('ollama_url'))
                         st.stop()
                     else:
                         logger.debug("Parsed as unknown MCP command - treating as normal chat")

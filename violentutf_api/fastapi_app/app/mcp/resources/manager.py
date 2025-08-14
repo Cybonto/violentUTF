@@ -69,16 +69,16 @@ class ViolentUTFResourceManager:
             logger.error(f"Error listing resources: {e}")
             return []
 
-    async def read_resource(self, uri: str) -> Dict[str, Any]:
+    async def read_resource(self, uri: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Read a specific resource by URI using advanced resource registry"""
-        logger.info(f"Reading resource: {uri}")
+        logger.info(f"Reading resource: {uri} with params: {params}")
 
         try:
             # Initialize advanced resource registry
             await advanced_resource_registry.initialize()
 
             # Try to get resource from advanced registry first
-            advanced_resource = await advanced_resource_registry.get_resource(uri)
+            advanced_resource = await advanced_resource_registry.get_resource(uri, params or {})
 
             if advanced_resource:
                 # Return advanced resource content

@@ -284,6 +284,11 @@ main_setup() {
         echo "   • API Documentation: http://localhost:9080/api/docs"
         echo "   • Keycloak Admin: http://localhost:8080/auth/admin"
         echo "     Login with: admin / admin"
+        echo ""
+        echo "📚 SimpleChat Documentation Features:"
+        echo "   • Ask natural language questions about ViolentUTF"
+        echo "   • Example: 'How do I set up ViolentUTF?' or 'What is PyRIT?'"
+        echo "   • Documentation search available via MCP integration"
     fi
     
     # Display all generated secrets

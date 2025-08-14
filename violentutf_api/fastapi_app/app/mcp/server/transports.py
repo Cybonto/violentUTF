@@ -161,7 +161,9 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                                 }
                             else:
                                 try:
-                                    content = await server.read_resource(resource_uri)
+                                    # Pass all parameters except uri as params
+                                    resource_params = {k: v for k, v in params.items() if k != "uri"}
+                                    content = await server.read_resource(resource_uri, resource_params)
                                     response = {"jsonrpc": "2.0", "result": content, "id": request_id}
                                 except Exception as e:
                                     response = {

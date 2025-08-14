@@ -1221,13 +1221,15 @@ main() {
             echo "  1. GSAi auth format issue detected - run: $0 --fix-gsai"
         fi
         
-        local missing_consumers=$(diagnose_api_keys 2>/dev/null | grep -c "missing" || echo "0")
-        if [ "$missing_consumers" -gt 0 ]; then
+        local missing_consumers=$(diagnose_api_keys 2>/dev/null | grep -c "missing" || true)
+        missing_consumers=${missing_consumers:-0}
+        if [ "$missing_consumers" -gt "0" ]; then
             echo "  2. Missing consumers detected - run: $0 --fix-api-keys"
         fi
         
-        local network_issues=$(diagnose_network 2>/dev/null | grep -c "failed" || echo "0")
-        if [ "$network_issues" -gt 0 ]; then
+        local network_issues=$(diagnose_network 2>/dev/null | grep -c "failed" || true)
+        network_issues=${network_issues:-0}
+        if [ "$network_issues" -gt "0" ]; then
             echo "  3. Network connectivity issues - run: $0 --fix-network"
         fi
         

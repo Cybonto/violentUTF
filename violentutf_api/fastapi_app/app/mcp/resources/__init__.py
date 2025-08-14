@@ -7,10 +7,10 @@ with enhanced features including advanced resource providers, caching, and metad
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 # Import resource providers to auto-register them
-from app.mcp.resources import configuration, datasets
+from app.mcp.resources import configuration, datasets, documentation
 from app.mcp.resources.base import advanced_resource_registry
 from app.mcp.resources.manager import resource_manager
 from mcp.types import Resource
@@ -59,13 +59,13 @@ class ResourceRegistry:
             logger.error(f"Error listing resources: {e}")
             return []
 
-    async def read_resource(self, uri: str) -> Any:
-        """Read a resource by URI"""
+    async def read_resource(self, uri: str, params: Optional[Dict[str, Any]] = None) -> Any:
+        """Read a resource by URI with optional parameters"""
         if not self._initialized:
             await self.initialize()
 
         try:
-            return await self.manager.read_resource(uri)
+            return await self.manager.read_resource(uri, params)
         except Exception as e:
             logger.error(f"Error reading resource {uri}: {e}")
             return {"error": "resource_read_failed", "message": str(e), "uri": uri}

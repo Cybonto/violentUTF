@@ -159,11 +159,11 @@ class ViolentUTFMCPServer:
 
         return await resource_registry.list_resources()
 
-    async def _read_resource(self, uri: str) -> Any:
+    async def _read_resource(self, uri: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Read a resource"""
         from app.mcp.resources import resource_registry
 
-        return await resource_registry.read_resource(uri)
+        return await resource_registry.read_resource(uri, params)
 
     # Prompt handlers
     async def _list_prompts(self) -> List[Prompt]:

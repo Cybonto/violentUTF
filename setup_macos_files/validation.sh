@@ -44,6 +44,15 @@ verify_system_state() {
     fi
     total_checks=$((total_checks + 1))
     
+    # Check MCP Documentation System
+    if validate_documentation_system; then
+        echo "✅ MCP documentation system is accessible"
+        passed_checks=$((passed_checks + 1))
+    else
+        echo "❌ MCP documentation system is not accessible"
+    fi
+    total_checks=$((total_checks + 1))
+    
     echo "📊 System verification: $passed_checks/$total_checks checks passed"
     
     if [ $passed_checks -eq $total_checks ]; then
@@ -128,4 +137,48 @@ check_service_connectivity() {
     
     echo "✅ Service connectivity check completed"
     return 0
+}
+
+# Function to validate MCP documentation system
+validate_documentation_system() {
+    log_detail "Validating MCP documentation system..."
+    
+    local docs_dir="./docs"
+    local checks_passed=0
+    local total_checks=3
+    
+    # Check 1: Verify docs directory exists and has content
+    if [ -d "$docs_dir" ] && [ "$(find "$docs_dir" -name "*.md" | wc -l)" -gt 0 ]; then
+        log_debug "✅ Documentation directory exists with MD files"
+        checks_passed=$((checks_passed + 1))
+    else
+        log_debug "❌ Documentation directory missing or empty"
+    fi
+    
+    # Check 2: Test MCP resources endpoint
+    if curl -s -H "Content-Type: application/json" \
+            -H "X-API-Gateway: MCP-Test" \
+            -d '{"jsonrpc":"2.0","method":"resources/list","id":1}' \
+            http://localhost:9080/mcp/sse/ >/dev/null 2>&1; then
+        log_debug "✅ MCP resources endpoint is responding"
+        checks_passed=$((checks_passed + 1))
+    else
+        log_debug "❌ MCP resources endpoint not responding"
+    fi
+    
+    # Check 3: Verify documentation provider is initialized
+    if [ -f "violentutf_api/fastapi_app/app/mcp/resources/documentation.py" ]; then
+        log_debug "✅ Documentation provider file exists"
+        checks_passed=$((checks_passed + 1))
+    else
+        log_debug "❌ Documentation provider file missing"
+    fi
+    
+    if [ $checks_passed -eq $total_checks ]; then
+        log_debug "📚 Documentation system validation: $checks_passed/$total_checks passed"
+        return 0
+    else
+        log_warn "📚 Documentation system validation: $checks_passed/$total_checks passed"
+        return 1
+    fi
 }

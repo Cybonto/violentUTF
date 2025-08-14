@@ -312,12 +312,13 @@ class MCPClient:
             self.logger.error(f"Failed to list resources: {response.error_message}")
             return []
 
-    async def read_resource(self, uri: str) -> Optional[Union[str, Dict[str, Any]]]:
+    async def read_resource(self, uri: str, params: Optional[Dict[str, Any]] = None) -> Optional[Union[str, Dict[str, Any]]]:
         """
         Read a specific resource by URI
 
         Args:
             uri: Resource URI to read
+            params: Optional parameters for resource reading
 
         Returns:
             Resource content (string or dict) or None if error
@@ -325,7 +326,11 @@ class MCPClient:
         if not self._initialized:
             await self.initialize()
 
-        response = await self._send_request(MCPMethod.RESOURCES_READ, {"uri": uri})
+        request_params = {"uri": uri}
+        if params:
+            request_params.update(params)
+
+        response = await self._send_request(MCPMethod.RESOURCES_READ, request_params)
 
         if not response.is_error and response.result:
             contents = response.result.get("contents", [])
@@ -453,9 +458,9 @@ class MCPClientSync:
         """List all available resources"""
         return self._run_async(self.client.list_resources())
 
-    def read_resource(self, uri: str) -> Optional[Union[str, Dict[str, Any]]]:
+    def read_resource(self, uri: str, params: Optional[Dict[str, Any]] = None) -> Optional[Union[str, Dict[str, Any]]]:
         """Read a specific resource"""
-        return self._run_async(self.client.read_resource(uri))
+        return self._run_async(self.client.read_resource(uri, params))
 
     def list_tools(self) -> List[Dict[str, Any]]:
         """List all available tools"""
