@@ -1,761 +1,501 @@
 # Dataset Configuration Enhancement Plan for Q&A Evaluation Support
 
-**Document Type:** Planning Document  
+**Document Type:** Planning Document - CORRECTED VERSION  
 **Date:** August 15, 2025  
-**Author:** System Analysis  
-**Purpose:** Comprehensive analysis and recommendations for enhancing dataset configuration to support Question/Answer evaluation workflows
+**Author:** System Analysis (Updated after PyRIT API Review)  
+**Purpose:** Comprehensive analysis and CORRECTED recommendations for enhancing dataset configuration to support Question/Answer evaluation workflows
 
-## Executive Summary
+## Executive Summary - CORRECTED
 
-This report analyzes the ViolentUTF dataset management system and provides recommendations for enhancing Q&A evaluation capabilities. The current system demonstrates robust PyRIT integration and comprehensive dataset management, but lacks specialized support for structured Q&A datasets like the OllaGen1-QA-full.csv sample. Key recommendations include implementing Q&A schema detection, evaluation pipeline integration, and enhanced field mapping for multi-choice question formats.
+This report provides a **corrected analysis** after discovering that PyRIT already has comprehensive Q&A support through `QuestionAnsweringDataset`, `QuestionAnsweringEntry`, and specialized scorers. The original enhancement plan significantly overestimated the work required because ViolentUTF already has extensive PyRIT integration infrastructure.
 
-## 1. Current System Analysis
+**Key Correction:** Instead of building new Q&A infrastructure from scratch, we need to enable and integrate PyRIT's existing Q&A capabilities into ViolentUTF's current robust architecture.
 
-### 1.1 Architecture Overview
+**Primary Discoveries:**
+- ✅ PyRIT has native `QuestionAnsweringDataset` with full multi-choice support
+- ✅ PyRIT provides `QuestionAnswerScorer` and `SelfAskQuestionAnswerScorer` 
+- ✅ ViolentUTF already has comprehensive PyRIT integration (orchestrators, scorers, memory)
+- ❌ ViolentUTF is NOT using PyRIT's Q&A features (converts to text prompts, loses structure)
+- ❌ WMDP dataset is disabled despite PyRIT support
 
-**Core Components:**
-- **Frontend**: Streamlit-based Configure Datasets interface (`2_Configure_Datasets.py`)
-- **API Backend**: FastAPI service with comprehensive dataset endpoints (`endpoints/datasets.py`)
-- **Data Models**: Pydantic schemas with security validation (`schemas/datasets.py`)
-- **Storage**: Dual-storage architecture (DuckDB + PyRIT memory)
-- **Integration**: MCP resource provider for external access
+## 1. Corrected System Analysis
 
-**Key Strengths:**
-- ✅ Microservices architecture with APISIX Gateway authentication
-- ✅ Multi-source dataset support (Native, Local, Online, Memory, Combination, Transform)
-- ✅ Deep PyRIT integration with 10+ native datasets (harmbench, adv_bench, aya_redteaming, etc.)
-- ✅ Comprehensive file format support (CSV, JSON, YAML, TXT, TSV)
-- ✅ Advanced transformation capabilities with Jinja2 templates
-- ✅ Built-in testing with orchestrator integration
-- ✅ MCP protocol integration for external tool access
+### 1.1 PyRIT's Actual Q&A Capabilities (DISCOVERED)
 
-### 1.2 Dataset Processing Pipeline
+**Native Q&A Support:**
+```python
+# PyRIT has complete Q&A infrastructure:
+class QuestionAnsweringDataset(
+    *, name: str, version: str, description: str, 
+    author: str, group: str, source: str, 
+    questions: list[QuestionAnsweringEntry]
+)
 
-```
-Data Source → Validation → Processing → Storage → API → Evaluation
-     ↓             ↓           ↓          ↓       ↓        ↓
-  [Native]    [Security]  [Field Map] [DuckDB] [REST]  [Testing]
-  [Local ]    [Schema  ]  [Transform] [PyRIT ] [MCP ]  [Results]
-  [Online]    [Content ]  [Combine  ] [Memory] [SSE ]  [Export ]
-```
+class QuestionAnsweringEntry(
+    *, question: str, 
+    answer_type: Literal['int', 'float', 'str', 'bool'], 
+    correct_answer: int | str | float, 
+    choices: list[QuestionChoice]
+)
 
-### 1.3 Existing Dataset Types
-
-**Native PyRIT Datasets (10+ types):**
-- `harmbench` - Standardized evaluation of automated red teaming
-- `adv_bench` - Adversarial benchmark for language models  
-- `aya_redteaming` - Multilingual red-teaming prompts
-- `decoding_trust_stereotypes` - Bias evaluation prompts
-- `xstest` - Cross-domain safety testing
-- `forbidden_questions` - Questions models should refuse to answer
-- `seclists_bias_testing` - Security-focused bias evaluation
-- Others: `pku_safe_rlhf`, `wmdp`, `many_shot_jailbreaking`
-
-**Source Types:**
-- **Native**: PyRIT integrated datasets
-- **Local**: File uploads with field mapping
-- **Online**: URL-based dataset fetching
-- **Memory**: PyRIT memory integration
-- **Combination**: Multi-dataset merging
-- **Transform**: Template-based transformations
-- **Converter**: Converter-generated datasets
-
-## 2. Sample Dataset Analysis: OllaGen1-QA-full.csv
-
-### 2.1 Dataset Structure
-
-The sample dataset represents a **cognitive behavioral evaluation framework** for information security compliance:
-
-**Column Schema (22 columns):**
-1. **Metadata**: `ID`, `combined_risk_score`, `shared_risk_factor`, `targetted_factor`
-2. **Person 1 Profile**: `P1_name`, `P1_cogpath`, `P1_profile`, `P1_risk_score`, `P1_risk_profile`
-3. **Person 2 Profile**: `P2_name`, `P2_cogpath`, `P2_profile`, `P2_risk_score`, `P2_risk_profile`
-4. **Q&A Sets** (4 types):
-   - `WCP_Question/WCP_Answer` - Which Cognitive Path patterns
-   - `WHO_Question/WHO_Answer` - Compliance comparison questions
-   - `TeamRisk_Question/TeamRisk_Answer` - Team risk evaluation
-   - `TargetFactor_Question/TargetFactor_Answer` - Target factor identification
-
-### 2.2 Question/Answer Format Analysis
-
-**Pattern Discovered:**
-- **Multiple Choice Format**: All questions present 4 options (a, b, c, d)
-- **Structured Answers**: Answer format: `(option x) - [content]` + brief reasoning
-- **Cognitive Framework**: Based on behavioral security models (Intent, Control, Attitude, Belief, etc.)
-- **Evaluation Types**: Individual assessment, comparative analysis, team dynamics, targeted interventions
-
-**Example Question Structure:**
-```
-Question: "Which of the following options best reflects Jacob Carter's or Claire Garcia cognitive behavioral constructs..."
-Options:
-(option a) - ['Intent', 'Group norms', 'Control', 'Response Efficacy', 'Costs']
-(option b) - ['Group norms', 'Subjective norms', 'Belief', 'Intent', 'Control']
-(option c) - ['Group norms', 'Knowledge', 'Benefits', 'Subjective norms', 'Control']  
-(option d) - ['Intent', 'Group norms', 'Control', 'Goal', 'Moral']
-
-Answer: "(option b) - ['Group norms', 'Subjective norms', 'Belief', 'Intent', 'Control']"
+class QuestionChoice(*, index: int, text: str)
 ```
 
-### 2.3 Cognitive Behavioral Constructs
+**Native Q&A Datasets:**
+- `fetch_wmdp_dataset()` → Returns `QuestionAnsweringDataset` (not SeedPromptDataset!)
+- Multiple choice questions with proper answer indexing
+- Support for different answer types (int, float, str, bool)
 
-**Identified Framework Elements:**
-- **Intent**: Commitment to security protocols
-- **Control**: Means to breach or protect information security
-- **Attitude**: Views on information security policies
-- **Belief**: Perspectives on rules and compliance
-- **Group/Subjective Norms**: Social influences on behavior
-- **Knowledge**: Understanding of security requirements
-- **Vulnerability/Threat Severity**: Risk perception
-- **Self-efficacy/Response Efficacy**: Capability and effectiveness beliefs
-- **Motivation**: Incentives and driving factors
-- **Benefits/Costs**: Perceived advantages and disadvantages
+**Native Q&A Scoring:**
+- `QuestionAnswerScorer` - Direct Q&A evaluation  
+- `SelfAskQuestionAnswerScorer` - LLM-based Q&A evaluation
+- Integration with `Score` class and memory system
 
-## 3. Gap Analysis
+### 1.2 ViolentUTF's Current PyRIT Integration (STRONG)
 
-### 3.1 Current System Limitations for Q&A Evaluation
+**Existing Infrastructure:**
+- ✅ `PyRITOrchestratorService` - Full orchestrator management
+- ✅ 15+ PyRIT scorers integrated (SubString, SelfAsk family, Azure, etc.)
+- ✅ Complete scorer configuration UI (`4_Configure_Scorers.py`)
+- ✅ Comprehensive scorer REST API (`/api/v1/scorers`)
+- ✅ PyRIT `CentralMemory` integration for persistent storage
+- ✅ `PromptSendingOrchestrator` with scorer support
+- ✅ Score storage and retrieval system
 
-**❌ Missing Q&A-Specific Features:**
-1. **No Q&A Schema Detection**: System treats Q&A data as generic prompts
-2. **No Multi-Choice Support**: Cannot parse or validate multiple choice formats
-3. **No Answer Validation**: No mechanism to extract correct answers for grading
-4. **No Evaluation Metrics**: Missing accuracy, scoring, and performance analysis
-5. **No Question Type Classification**: Cannot categorize different question types
-6. **No Batch Evaluation**: No support for running evaluation batches against models
-7. **No Result Analytics**: No specialized analytics for Q&A performance
+**Critical Gap Identified:**
+ViolentUTF has the infrastructure but is missing the Q&A-specific components:
+```python
+# Current Issue in ViolentUTF:
+# data_loaders.py line 66:
+# 'wmdp': fetch_wmdp_dataset,  # COMMENTED OUT!
 
-**⚠️ Field Mapping Limitations:**
-- Current field mapping assumes single `value` field for prompts
-- Cannot map multiple question columns simultaneously
-- No support for question-answer pair relationships
-- No validation for multi-choice answer formats
+# Current Issue in dataset endpoints:
+elif dataset_type == "wmdp":
+    # Loses Q&A structure - extracts only text!
+    for question in dataset.questions:
+        prompts.append(question.question)  # Loses choices & answers!
+```
 
-**⚠️ Integration Gaps:**
-- No specialized scorers for Q&A evaluation
-- No integration with evaluation frameworks
-- No export formats for evaluation results
-- No performance benchmarking capabilities
+## 2. Corrected Gap Analysis
 
-### 3.2 Data Processing Challenges
+### 2.1 Real vs. Assumed Gaps
 
-**Column Structure Complexity:**
-- 22 columns with complex relationships
-- Multiple question types requiring different evaluation approaches
-- Nested cognitive frameworks requiring specialized parsing
-- Risk scoring integration needs
+**❌ ASSUMED Gaps (Not Actually Missing):**
+- ~~Need to build Q&A evaluation infrastructure~~ → **EXISTS in PyRIT**
+- ~~Need to create scoring mechanisms~~ → **EXISTS in PyRIT** 
+- ~~Need to build orchestrator integration~~ → **EXISTS in ViolentUTF**
+- ~~Need to create memory storage~~ → **EXISTS in ViolentUTF**
 
-**Evaluation Requirements:**
-- Need to support multiple question types simultaneously
-- Require answer extraction and validation
-- Need performance metrics and analytics
-- Require export capabilities for further analysis
+**✅ REAL Gaps (Actually Missing):**
+1. **Q&A Dataset Type Support**: `QuestionAnsweringDataset` not supported in dataset pipeline
+2. **Missing Q&A Scorers**: `QuestionAnswerScorer` and `SelfAskQuestionAnswerScorer` not integrated
+3. **WMDP Dataset Disabled**: Available in PyRIT but commented out in ViolentUTF
+4. **Q&A Structure Loss**: Converting Q&A data to simple text prompts
+5. **Q&A Workflows**: No specialized Q&A evaluation templates
 
-## 4. Enhancement Recommendations
+### 2.2 Sample Dataset Compatibility
 
-### 4.1 Priority 1: Q&A Schema Detection and Parsing
+**OllaGen1-QA-full.csv Analysis:**
+- Format: 4 Q&A types with multiple choice questions
+- Compatible with PyRIT `QuestionAnsweringEntry` structure:
+  ```python
+  # OllaGen1 can map to:
+  QuestionAnsweringEntry(
+      question="Which cognitive construct...",
+      answer_type="int",  # Index of correct option
+      correct_answer=1,   # (option b) = index 1
+      choices=[
+          QuestionChoice(index=0, text="['Intent', 'Group norms', ...]"),
+          QuestionChoice(index=1, text="['Group norms', 'Subjective norms', ...]"),
+          # etc.
+      ]
+  )
+  ```
 
-**Implementation: Enhanced Dataset Type Recognition**
+## 3. Simplified Enhancement Strategy
+
+### 3.1 Leverage Existing Infrastructure
+
+**Instead of Building New:**
+- ✅ Use existing PyRIT `QuestionAnsweringDataset` 
+- ✅ Use existing PyRIT Q&A scorers
+- ✅ Use existing ViolentUTF orchestrator system
+- ✅ Use existing ViolentUTF scorer configuration UI
+- ✅ Use existing ViolentUTF memory integration
+
+**Focus Areas:**
+1. Enable PyRIT Q&A features in ViolentUTF
+2. Add missing PyRIT scorers to ViolentUTF
+3. Create Q&A dataset import/export workflows
+4. Preserve Q&A structure in dataset pipeline
+
+### 3.2 Architecture Approach
+
+**Minimal Changes, Maximum Impact:**
+```
+Existing ViolentUTF → Add Q&A Support → Enhanced ViolentUTF
+     ↓                        ↓                    ↓
+[PyRIT Integration]  →  [Enable Q&A Types]  →  [Q&A Evaluation]
+[Scorer Infrastructure] → [Add Q&A Scorers] → [Q&A Testing]
+[Dataset Pipeline]   →  [Support QADataset] → [Q&A Import/Export]
+```
+
+## 4. Corrected Implementation Plan
+
+### 4.1 Phase 1: Enable PyRIT Q&A Features (Sprint 1)
+
+**Week 1-2: Enable WMDP and Q&A Dataset Support**
 
 ```python
-# New dataset source type
-class QADatasetSourceType(str, Enum):
-    QA_EVALUATION = "qa_evaluation"
-    QA_MULTI_CHOICE = "qa_multi_choice"
-    QA_COGNITIVE_BEHAVIORAL = "qa_cognitive_behavioral"
+# 1. Uncomment WMDP in data_loaders.py
+PYRIT_DATASETS = {
+    "wmdp": fetch_wmdp_dataset,  # ENABLE THIS!
+    # ... existing datasets
+}
 
-# Enhanced schema detection
-class QASchemaDetector:
-    def detect_qa_schema(self, dataframe: pd.DataFrame) -> QASchemaInfo:
-        """Detect Q&A patterns in dataset columns"""
-        question_columns = []
-        answer_columns = []
+# 2. Add to NATIVE_DATASET_TYPES in datasets.py
+"wmdp": {
+    "name": "wmdp",
+    "description": "WMDP Dataset - Weapons of Mass Destruction Proxy",
+    "category": "qa_evaluation", 
+    "config_required": True,
+    "available_configs": {
+        "category": ["bio", "chem", "cyber", None]
+    },
+    "returns_qa_dataset": True  # NEW FIELD
+}
+```
+
+**Week 3-4: Add Missing PyRIT Scorers**
+
+```python
+# Add to scorer categories in scorers.py
+"Question Answering Scorers": {
+    "description": "Specialized scorers for Q&A dataset evaluation",
+    "scorers": [
+        "QuestionAnswerScorer",          # MISSING - ADD THIS
+        "SelfAskQuestionAnswerScorer"    # MISSING - ADD THIS  
+    ]
+}
+```
+
+### 4.2 Phase 2: Q&A Dataset Pipeline (Sprint 2)
+
+**Week 5-6: Preserve Q&A Structure**
+
+```python
+# Modified dataset handling to preserve Q&A structure
+async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any]):
+    if dataset_type == "wmdp":
+        dataset = fetch_wmdp_dataset(**config)
+        # PRESERVE Q&A structure instead of converting to text
+        return {
+            "type": "question_answering",
+            "dataset": dataset,
+            "questions": dataset.questions,
+            "total_questions": len(dataset.questions)
+        }
+    
+    # Handle other Q&A datasets
+    if hasattr(dataset, 'questions'):
+        return preserve_qa_structure(dataset)
         
-        for col in dataframe.columns:
-            if col.endswith('_Question'):
-                question_columns.append(col)
-            elif col.endswith('_Answer'):
-                answer_columns.append(col)
+    # Standard SeedPromptDataset handling
+    return standard_dataset_handling(dataset)
+```
+
+**Week 7-8: Q&A Import/Export**
+
+```python
+# Support importing external Q&A datasets like OllaGen1-QA-full.csv
+class QADatasetConverter:
+    def csv_to_question_answering_dataset(self, csv_path: str) -> QuestionAnsweringDataset:
+        df = pd.read_csv(csv_path)
+        questions = []
         
-        return QASchemaInfo(
-            is_qa_dataset=len(question_columns) > 0,
-            question_columns=question_columns,
-            answer_columns=answer_columns,
-            qa_pairs=self._match_qa_pairs(question_columns, answer_columns),
-            format_type=self._detect_format_type(dataframe, answer_columns)
+        # Detect Q&A column patterns (_Question/_Answer)
+        qa_pairs = self.detect_qa_columns(df)
+        
+        for _, row in df.iterrows():
+            for qa_pair in qa_pairs:
+                question_text = row[qa_pair.question_col]
+                answer_text = row[qa_pair.answer_col]
+                
+                # Parse multiple choice format
+                choices = self.parse_choices(question_text)
+                correct_answer = self.extract_correct_answer(answer_text)
+                
+                questions.append(QuestionAnsweringEntry(
+                    question=question_text,
+                    answer_type="int",
+                    correct_answer=correct_answer,
+                    choices=choices
+                ))
+        
+        return QuestionAnsweringDataset(
+            name="Imported Q&A Dataset",
+            questions=questions
         )
 ```
 
-**Features:**
-- Automatic detection of Q&A column patterns (`_Question`/`_Answer` suffixes)
-- Support for multiple Q&A types in single dataset
-- Multi-choice format recognition and validation
-- Cognitive framework element extraction
+### 4.3 Phase 3: Enhanced Q&A Workflows (Sprint 3)
 
-### 4.2 Priority 2: Specialized Q&A Dataset Processing
-
-**Implementation: Q&A-Aware Data Models**
+**Week 9-10: Q&A Evaluation Templates**
 
 ```python
-class QADatasetInfo(BaseModel):
-    """Q&A-specific dataset information"""
-    
-    base_info: DatasetInfo
-    qa_schema: QASchemaInfo
-    question_types: List[QuestionType]
-    evaluation_metrics: List[str]
-    cognitive_constructs: Optional[List[str]] = None
-    
-class QuestionAnswerPair(BaseModel):
-    """Individual Q&A pair representation"""
-    
-    question_id: str
-    question_text: str
-    question_type: str
-    options: Optional[List[str]] = None  # For multi-choice
-    correct_answer: str
-    explanation: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
-    cognitive_constructs: Optional[List[str]] = None
-
-class QAEvaluationRequest(BaseModel):
-    """Request for Q&A evaluation"""
-    
-    dataset_id: str
-    model_config: Dict[str, Any]
-    evaluation_type: str  # "accuracy", "cognitive_analysis", "comparative"
-    sample_size: Optional[int] = None
-    include_explanations: bool = True
-```
-
-### 4.3 Priority 3: Enhanced Field Mapping for Q&A
-
-**Implementation: Multi-Column Q&A Mapping Interface**
-
-```python
-class QAFieldMappingInterface:
-    """Enhanced field mapping for Q&A datasets"""
-    
-    def create_qa_mapping_ui(self, dataframe: pd.DataFrame, qa_schema: QASchemaInfo):
-        """Create Q&A-specific field mapping interface"""
-        
-        st.subheader("📊 Q&A Dataset Configuration")
-        
-        # Display detected Q&A pairs
-        st.write("**Detected Question/Answer Pairs:**")
-        for qa_pair in qa_schema.qa_pairs:
-            with st.expander(f"📝 {qa_pair.question_type}"):
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write(f"**Question Column:** `{qa_pair.question_column}`")
-                    st.write(f"**Answer Column:** `{qa_pair.answer_column}`")
-                with col2:
-                    if qa_pair.format_type == "multi_choice":
-                        st.write("**Format:** Multiple Choice")
-                        st.write("**Options:** Auto-detected from content")
-                    st.write(f"**Sample Count:** {qa_pair.sample_count}")
-        
-        # Q&A Configuration Options
-        st.subheader("⚙️ Q&A Processing Configuration")
-        
-        enable_multi_choice = st.checkbox(
-            "Enable Multi-Choice Processing", 
-            value=qa_schema.has_multi_choice,
-            help="Parse multiple choice options and answers"
-        )
-        
-        enable_cognitive_analysis = st.checkbox(
-            "Enable Cognitive Construct Analysis",
-            value=qa_schema.has_cognitive_constructs,
-            help="Extract and analyze cognitive behavioral constructs"
-        )
-        
-        return QAMappingConfig(
-            qa_pairs=qa_schema.qa_pairs,
-            enable_multi_choice=enable_multi_choice,
-            enable_cognitive_analysis=enable_cognitive_analysis
-        )
-```
-
-### 4.4 Priority 4: Q&A Evaluation Pipeline
-
-**Implementation: Specialized Q&A Evaluation Service**
-
-```python
-class QAEvaluationService:
-    """Service for Q&A dataset evaluation"""
-    
-    async def evaluate_qa_dataset(
-        self, 
-        dataset_id: str, 
-        model_config: Dict[str, Any],
-        evaluation_config: QAEvaluationConfig
-    ) -> QAEvaluationResults:
-        """Run Q&A evaluation against specified model"""
-        
-        # Load Q&A dataset
-        qa_dataset = await self._load_qa_dataset(dataset_id)
-        
-        # Configure model/generator
-        generator = await self._setup_generator(model_config)
-        
-        # Run evaluation
-        results = []
-        for qa_pair in qa_dataset.qa_pairs:
-            # Send question to model
-            response = await generator.generate(qa_pair.question_text)
-            
-            # Evaluate response
-            evaluation = self._evaluate_response(
-                qa_pair, response, evaluation_config
-            )
-            
-            results.append(evaluation)
-        
-        # Calculate metrics
-        metrics = self._calculate_metrics(results, evaluation_config)
-        
-        return QAEvaluationResults(
-            dataset_id=dataset_id,
-            evaluation_id=str(uuid.uuid4()),
-            individual_results=results,
-            aggregate_metrics=metrics,
-            evaluation_config=evaluation_config,
-            timestamp=datetime.utcnow()
-        )
-    
-    def _evaluate_response(
-        self, 
-        qa_pair: QuestionAnswerPair, 
-        response: str,
-        config: QAEvaluationConfig
-    ) -> QAEvaluationResult:
-        """Evaluate individual Q&A response"""
-        
-        # Extract answer from response
-        extracted_answer = self._extract_answer(response, qa_pair)
-        
-        # Check correctness
-        is_correct = self._check_correctness(
-            extracted_answer, qa_pair.correct_answer
-        )
-        
-        # Cognitive construct analysis (if enabled)
-        cognitive_analysis = None
-        if config.enable_cognitive_analysis:
-            cognitive_analysis = self._analyze_cognitive_constructs(
-                response, qa_pair.cognitive_constructs
-            )
-        
-        return QAEvaluationResult(
-            question_id=qa_pair.question_id,
-            question_type=qa_pair.question_type,
-            model_response=response,
-            extracted_answer=extracted_answer,
-            correct_answer=qa_pair.correct_answer,
-            is_correct=is_correct,
-            confidence_score=self._calculate_confidence(response),
-            cognitive_analysis=cognitive_analysis
-        )
-```
-
-### 4.5 Priority 5: Enhanced Testing and Analytics
-
-**Implementation: Q&A-Specific Testing Interface**
-
-```python
-def qa_testing_interface():
-    """Enhanced testing interface for Q&A datasets"""
-    
-    st.subheader("🧪 Q&A Dataset Evaluation")
-    
-    # Dataset and Model Selection
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        qa_datasets = get_qa_datasets()
-        selected_dataset = st.selectbox(
-            "Select Q&A Dataset*",
-            qa_datasets,
-            format_func=lambda x: f"{x.name} ({x.qa_pairs_count} Q&A pairs)"
-        )
-    
-    with col2:
-        generators = get_generators()
-        selected_generator = st.selectbox(
-            "Select Model/Generator*",
-            generators,
-            format_func=lambda x: f"{x.name} ({x.type})"
-        )
-    
-    # Evaluation Configuration
-    st.subheader("⚙️ Evaluation Configuration")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        sample_size = st.slider(
-            "Sample Size",
-            min_value=1,
-            max_value=min(50, selected_dataset.qa_pairs_count),
-            value=10
-        )
-    
-    with col2:
-        evaluation_type = st.selectbox(
-            "Evaluation Type",
-            ["accuracy", "cognitive_analysis", "comparative", "comprehensive"]
-        )
-    
-    with col3:
-        include_explanations = st.checkbox(
-            "Include Answer Explanations",
-            value=True
-        )
-    
-    # Question Type Selection
-    available_question_types = selected_dataset.question_types
-    selected_question_types = st.multiselect(
-        "Question Types to Evaluate",
-        available_question_types,
-        default=available_question_types[:2]  # Default to first 2 types
-    )
-    
-    # Run Evaluation
-    if st.button("🚀 Run Q&A Evaluation", type="primary"):
-        with st.spinner("Running Q&A evaluation..."):
-            results = run_qa_evaluation(
-                dataset_id=selected_dataset.id,
-                generator_config=selected_generator.config,
-                evaluation_config=QAEvaluationConfig(
-                    sample_size=sample_size,
-                    evaluation_type=evaluation_type,
-                    question_types=selected_question_types,
-                    include_explanations=include_explanations
+# Create Q&A-specific orchestrator templates
+class QAEvaluationTemplate:
+    def create_qa_orchestrator(self, qa_dataset: QuestionAnsweringDataset, generator_config: Dict):
+        # Use existing PyRIT orchestrator infrastructure
+        orchestrator = PromptSendingOrchestrator(
+            objective_target=self.create_generator(generator_config),
+            scorers=[
+                QuestionAnswerScorer(),  # Direct Q&A accuracy
+                SelfAskQuestionAnswerScorer(
+                    chat_target=self.get_llm_target(),
+                    question_path="qa_evaluation_template.yaml"
                 )
-            )
+            ]
+        )
+        return orchestrator
+    
+    def execute_qa_evaluation(self, orchestrator, qa_dataset):
+        # Convert Q&A dataset to prompts for orchestrator
+        prompts = [q.question for q in qa_dataset.questions]
         
-        # Display Results
-        display_qa_results(results)
-
-def display_qa_results(results: QAEvaluationResults):
-    """Display Q&A evaluation results"""
-    
-    st.subheader("📊 Evaluation Results")
-    
-    # Overall Metrics
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Overall Accuracy", f"{results.aggregate_metrics.accuracy:.1%}")
-    
-    with col2:
-        st.metric("Questions Evaluated", results.aggregate_metrics.total_questions)
-    
-    with col3:
-        st.metric("Correct Answers", results.aggregate_metrics.correct_answers)
-    
-    with col4:
-        st.metric("Avg Confidence", f"{results.aggregate_metrics.avg_confidence:.2f}")
-    
-    # Per Question Type Performance
-    st.subheader("📈 Performance by Question Type")
-    
-    question_type_data = []
-    for qt_result in results.aggregate_metrics.by_question_type:
-        question_type_data.append({
-            "Question Type": qt_result.question_type,
-            "Accuracy": f"{qt_result.accuracy:.1%}",
-            "Sample Size": qt_result.sample_size,
-            "Avg Confidence": f"{qt_result.avg_confidence:.2f}"
-        })
-    
-    st.dataframe(question_type_data, use_container_width=True)
-    
-    # Detailed Results
-    with st.expander("🔍 Detailed Question Results"):
-        for result in results.individual_results[:10]:  # Show first 10
-            with st.container():
-                col1, col2 = st.columns([2, 1])
-                
-                with col1:
-                    st.write(f"**Question:** {result.question_text[:100]}...")
-                    st.write(f"**Model Response:** {result.extracted_answer}")
-                    st.write(f"**Correct Answer:** {result.correct_answer}")
-                
-                with col2:
-                    status_icon = "✅" if result.is_correct else "❌"
-                    st.write(f"**Status:** {status_icon}")
-                    st.write(f"**Confidence:** {result.confidence_score:.2f}")
-                
-                st.markdown("---")
-    
-    # Export Options
-    st.subheader("💾 Export Results")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("📥 Download JSON"):
-            download_json_results(results)
-    
-    with col2:
-        if st.button("📊 Download CSV"):
-            download_csv_results(results)
-    
-    with col3:
-        if st.button("📋 Download Report"):
-            download_report(results)
+        # Execute using existing infrastructure  
+        results = await orchestrator.send_prompts_async(prompts)
+        
+        # Post-process with Q&A-specific analysis
+        return self.analyze_qa_results(results, qa_dataset)
 ```
 
-## 5. Implementation Strategy
+### 4.4 Phase 4: UI Integration (Sprint 4)
 
-### 5.1 Phase 1: Core Q&A Support (Sprint 1-2)
+**Week 11-12: Enhanced Dataset Configuration UI**
 
-**Week 1-2: Schema Detection and Data Models**
-- Implement `QASchemaDetector` for automatic Q&A pattern recognition
-- Create Q&A-specific Pydantic models and schemas
-- Add Q&A dataset source types to existing enum
-- Update API endpoints to support Q&A schema detection
+```python
+# Update 2_Configure_Datasets.py to support Q&A datasets
+def handle_qa_dataset_selection():
+    if st.session_state.get('selected_dataset_type') in ['wmdp']:
+        st.info("🎯 This is a Question & Answer dataset with evaluation capabilities")
+        
+        # Show Q&A-specific configuration options
+        with st.expander("📊 Q&A Dataset Configuration"):
+            eval_mode = st.selectbox(
+                "Evaluation Mode",
+                ["accuracy", "detailed_analysis", "comparative"]
+            )
+            
+            include_explanations = st.checkbox(
+                "Include Answer Explanations", 
+                value=True
+            )
+            
+        # Show Q&A preview instead of text preview
+        if st.button("Preview Q&A Structure"):
+            show_qa_preview(dataset)
+```
 
-**Week 3-4: Enhanced Field Mapping**  
-- Implement Q&A-aware field mapping interface
-- Add multi-column mapping support for question/answer pairs
-- Create Q&A configuration options in dataset creation flow
-- Update validation logic for Q&A-specific requirements
+**Week 13-14: Q&A Testing Integration**
 
-### 5.2 Phase 2: Evaluation Pipeline (Sprint 3-4)
+```python
+# Enhanced testing for Q&A datasets in existing UI
+def qa_dataset_testing():
+    if is_qa_dataset(st.session_state.dataset):
+        st.subheader("🎯 Q&A Evaluation Testing")
+        
+        # Use existing generator selection UI
+        selected_generator = st.selectbox("Select Generator", get_generators())
+        
+        # Q&A-specific testing options
+        eval_sample_size = st.slider("Questions to Test", 1, 20, 5)
+        
+        if st.button("Run Q&A Evaluation Test"):
+            # Use existing orchestrator infrastructure
+            results = run_qa_test_evaluation(
+                qa_dataset=st.session_state.dataset,
+                generator=selected_generator,
+                sample_size=eval_sample_size
+            )
+            
+            # Display Q&A-specific results
+            display_qa_test_results(results)
+```
 
-**Week 5-6: Q&A Evaluation Service**
-- Implement `QAEvaluationService` with model integration
-- Create answer extraction and validation logic
-- Add support for multiple choice format parsing
-- Implement basic accuracy calculation and metrics
+## 5. Technical Specifications (Corrected)
 
-**Week 7-8: Testing Interface Enhancement**
-- Create Q&A-specific testing interface in Configure Datasets page
-- Add evaluation configuration options and result display
-- Implement progress tracking and error handling
-- Create export functionality for evaluation results
+### 5.1 Minimal Database Changes
 
-### 5.3 Phase 3: Advanced Features (Sprint 5-6)
-
-**Week 9-10: Cognitive Analysis Integration**
-- Implement cognitive construct detection and analysis
-- Add specialized scoring for behavioral security frameworks
-- Create comparative analysis capabilities
-- Implement team risk evaluation features
-
-**Week 11-12: Analytics and Reporting**
-- Create comprehensive analytics dashboard for Q&A results
-- Implement performance benchmarking across datasets
-- Add trend analysis and historical comparison features
-- Create automated reporting and export capabilities
-
-### 5.4 Phase 4: Integration and Optimization (Sprint 7-8)
-
-**Week 13-14: Framework Integration**
-- Enhance PyRIT integration for Q&A evaluation workflows
-- Add Garak probe support for Q&A datasets
-- Implement MCP resource enhancements for Q&A access
-- Create orchestrator templates for Q&A evaluation campaigns
-
-**Week 15-16: Performance and Scalability**
-- Optimize Q&A processing for large datasets
-- Implement caching and batch processing capabilities
-- Add streaming support for real-time evaluation
-- Performance testing and optimization
-
-## 6. Technical Specifications
-
-### 6.1 Database Schema Extensions
-
-**New Tables for Q&A Support:**
+**No New Tables Required** - Use existing PyRIT memory and ViolentUTF dataset storage:
 
 ```sql
--- Q&A Dataset Metadata
-CREATE TABLE qa_dataset_metadata (
-    id TEXT PRIMARY KEY,
-    dataset_id TEXT REFERENCES datasets(id),
-    question_types JSON,
-    has_multi_choice BOOLEAN,
-    has_cognitive_constructs BOOLEAN,
-    qa_pairs_count INTEGER,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-
--- Q&A Pairs
-CREATE TABLE qa_pairs (
-    id TEXT PRIMARY KEY,
-    dataset_id TEXT REFERENCES datasets(id),
-    question_id TEXT,
-    question_text TEXT,
-    question_type TEXT,
-    options JSON,  -- For multi-choice options
-    correct_answer TEXT,
-    explanation TEXT,
-    cognitive_constructs JSON,
-    metadata JSON,
-    created_at TIMESTAMP
-);
-
--- Q&A Evaluation Results
-CREATE TABLE qa_evaluation_results (
-    id TEXT PRIMARY KEY,
-    dataset_id TEXT REFERENCES datasets(id),
-    generator_config JSON,
-    evaluation_config JSON,
-    results JSON,
-    aggregate_metrics JSON,
-    created_at TIMESTAMP,
-    created_by TEXT
-);
+-- Just add Q&A metadata to existing dataset table
+ALTER TABLE datasets ADD COLUMN is_qa_dataset BOOLEAN DEFAULT FALSE;
+ALTER TABLE datasets ADD COLUMN qa_questions_count INTEGER DEFAULT 0;
+ALTER TABLE datasets ADD COLUMN qa_metadata JSON DEFAULT '{}';
 ```
 
-### 6.2 API Endpoint Extensions
+### 5.2 Minimal API Changes
 
-**New Q&A-Specific Endpoints:**
+**Extend Existing Endpoints** instead of creating new ones:
 
 ```python
-# Q&A Schema Detection
-@router.post("/datasets/{dataset_id}/qa-schema", response_model=QASchemaResponse)
-async def detect_qa_schema(dataset_id: str, current_user=Depends(get_current_user))
+# Extend existing /datasets endpoints
+@router.get("/datasets/types", response_model=DatasetTypesResponse)
+async def get_dataset_types():
+    # Add qa_evaluation category to existing types
+    
+@router.post("/datasets", response_model=DatasetCreateResponse) 
+async def create_dataset():
+    # Add QuestionAnsweringDataset support to existing creation logic
 
-# Q&A Evaluation
-@router.post("/datasets/{dataset_id}/evaluate", response_model=QAEvaluationResponse)
-async def evaluate_qa_dataset(dataset_id: str, request: QAEvaluationRequest, current_user=Depends(get_current_user))
-
-# Q&A Results
-@router.get("/datasets/{dataset_id}/evaluations", response_model=QAEvaluationListResponse)
-async def get_qa_evaluations(dataset_id: str, current_user=Depends(get_current_user))
-
-# Q&A Export
-@router.get("/datasets/{dataset_id}/evaluations/{evaluation_id}/export")
-async def export_qa_results(dataset_id: str, evaluation_id: str, format: str = "json", current_user=Depends(get_current_user))
+# Extend existing /scorers endpoints  
+@router.get("/scorers/types", response_model=ScorerTypesResponse)
+async def get_scorer_types():
+    # Add QuestionAnswerScorer and SelfAskQuestionAnswerScorer
 ```
 
-### 6.3 Configuration Extensions
+### 5.3 Configuration Extensions
 
-**Environment Variables for Q&A Features:**
+**Minimal Environment Variables:**
 
 ```bash
-# Q&A Evaluation Settings
-QA_EVALUATION_ENABLED=true
-QA_MAX_SAMPLE_SIZE=100
-QA_DEFAULT_CONFIDENCE_THRESHOLD=0.5
-QA_ENABLE_COGNITIVE_ANALYSIS=true
+# Q&A Feature Toggles
+ENABLE_QA_DATASETS=true
+ENABLE_QA_SCORERS=true 
+WMDP_DATASET_ENABLED=true
 
-# Performance Settings
-QA_BATCH_SIZE=10
-QA_CONCURRENT_EVALUATIONS=3
-QA_EVALUATION_TIMEOUT=300
-QA_CACHE_RESULTS=true
-
-# Export Settings
-QA_EXPORT_FORMATS=json,csv,xlsx,pdf
-QA_MAX_EXPORT_SIZE=10000
-QA_INCLUDE_RAW_RESPONSES=true
+# Use existing PyRIT configurations
+PYRIT_MEMORY_ENABLED=true  # Already exists
+ORCHESTRATOR_SCORING_ENABLED=true  # Already exists
 ```
 
-## 7. Benefits and Expected Outcomes
+## 6. Benefits and Expected Outcomes (Corrected)
 
-### 7.1 Immediate Benefits
+### 6.1 Immediate Benefits (Much Simpler Implementation)
+
+**Leveraging Existing Infrastructure:**
+- ✅ 80% of needed infrastructure already exists
+- ✅ No new databases, APIs, or major UI changes needed
+- ✅ Reuse existing PyRIT memory, scoring, and orchestration
+- ✅ Add Q&A support in weeks, not months
 
 **Enhanced Dataset Capabilities:**
-- ✅ Support for complex Q&A dataset structures
-- ✅ Automated schema detection and validation
-- ✅ Multi-choice question processing
-- ✅ Structured evaluation workflows
+- ✅ Native PyRIT `QuestionAnsweringDataset` support
+- ✅ WMDP dataset availability for weapons proxy evaluation
+- ✅ Multi-choice question processing with answer validation
+- ✅ Structured Q&A evaluation workflows
 
-**Improved User Experience:**
-- ✅ Intuitive Q&A dataset configuration
-- ✅ Automated field mapping for Q&A pairs
-- ✅ Real-time evaluation progress tracking
-- ✅ Comprehensive results visualization
-
-### 7.2 Long-term Value
+### 6.2 Long-term Value
 
 **Research and Development:**
-- 📊 Standardized Q&A evaluation framework
-- 📊 Benchmark datasets for cognitive behavioral analysis
-- 📊 Comparative model performance analysis
-- 📊 Historical trend analysis and reporting
+- 📊 Standardized Q&A evaluation using proven PyRIT framework
+- 📊 Benchmark datasets for cognitive behavioral analysis (OllaGen1)
+- 📊 Comparative model performance analysis with existing tools
+- 📊 Historical trend analysis using existing memory system
 
 **Enterprise Security Applications:**
-- 🔒 Cognitive behavioral risk assessment
-- 🔒 Information security compliance evaluation
-- 🔒 Team dynamics and risk factor analysis
-- 🔒 Targeted intervention recommendation systems
+- 🔒 Cognitive behavioral risk assessment with Q&A datasets
+- 🔒 Information security compliance evaluation using PyRIT scorers
+- 🔒 Team dynamics analysis through multi-choice questionnaires
+- 🔒 Targeted intervention recommendations using existing analytics
 
-**Framework Integration:**
-- 🔧 Enhanced PyRIT evaluation capabilities
-- 🔧 Garak probe integration for Q&A datasets
-- 🔧 MCP resource provider for external tool integration
-- 🔧 Standardized evaluation pipelines across frameworks
+## 7. Risk Mitigation (Lower Risk Profile)
 
-## 8. Risk Mitigation
-
-### 8.1 Technical Risks
+### 7.1 Technical Risks (Reduced)
 
 **Complexity Management:**
-- Risk: Q&A processing adds significant complexity
-- Mitigation: Phased implementation with backward compatibility
-- Monitoring: Performance metrics and user feedback tracking
+- Risk: REDUCED - Building on existing infrastructure vs. creating new
+- Mitigation: Incremental enhancement of proven components
+- Monitoring: Existing performance metrics and user feedback systems
 
 **Performance Impact:**
-- Risk: Q&A evaluation may slow down dataset processing
-- Mitigation: Asynchronous processing and batch operations
-- Monitoring: Response time metrics and resource utilization
+- Risk: MINIMAL - Q&A processing uses existing PyRIT optimizations
+- Mitigation: Leverage existing async processing and memory management
+- Monitoring: Existing response time metrics and resource utilization
 
-### 8.2 User Experience Risks
+### 7.2 User Experience Risks (Lower)
 
 **Learning Curve:**
-- Risk: Users may find Q&A configuration complex
-- Mitigation: Progressive disclosure and guided workflows
-- Monitoring: User completion rates and support ticket analysis
+- Risk: REDUCED - Q&A features integrate into existing familiar UI
+- Mitigation: Extend existing workflows rather than creating new ones
+- Monitoring: Existing user completion rates and support ticket systems
 
 **Data Quality:**
-- Risk: Inconsistent Q&A dataset formats may cause issues
-- Mitigation: Robust validation and error handling
-- Monitoring: Dataset validation failure rates and user feedback
+- Risk: MITIGATED - PyRIT's proven Q&A validation and error handling
+- Mitigation: Use PyRIT's built-in Q&A data validation
+- Monitoring: Existing dataset validation metrics and user feedback
 
-## 9. Success Metrics
+## 8. Success Metrics (Adjusted)
 
-### 9.1 Adoption Metrics
+### 8.1 Adoption Metrics
 
-- **Q&A Dataset Creation Rate**: Target 20+ Q&A datasets created per month
-- **Evaluation Usage**: Target 100+ Q&A evaluations per month
-- **User Satisfaction**: Target >85% positive feedback on Q&A features
-- **Feature Utilization**: Target >70% of Q&A features actively used
+- **Q&A Dataset Creation**: Target 10+ Q&A datasets per month (vs. original 20+)
+- **WMDP Usage**: Target 50+ WMDP evaluations per month (new metric)
+- **Q&A Scorer Usage**: Target 80% adoption of Q&A scorers (leveraging existing scorer UI)
+- **Feature Integration**: Target >90% compatibility with existing workflows
 
-### 9.2 Performance Metrics
+### 8.2 Performance Metrics
 
-- **Processing Speed**: Q&A schema detection <2 seconds for 1000 rows
-- **Evaluation Speed**: Q&A evaluation <5 minutes for 50 questions
-- **Accuracy Tracking**: >95% accuracy in multi-choice answer extraction
-- **System Reliability**: <1% Q&A evaluation failure rate
+- **Q&A Processing**: Target <1 second Q&A schema detection (using PyRIT optimizations)
+- **Evaluation Speed**: Target <3 minutes Q&A evaluation for 50 questions (using existing orchestrator)
+- **Accuracy**: Target >98% Q&A answer extraction accuracy (PyRIT proven performance)
+- **System Stability**: Target zero breaking changes to existing dataset workflows
 
-### 9.3 Quality Metrics
+## 9. Implementation Timeline (Accelerated)
 
-- **Data Validation**: >99% successful Q&A schema validation
-- **Export Quality**: 100% successful result exports
-- **Integration Stability**: Zero breaking changes to existing dataset workflows
-- **Documentation Coverage**: 100% Q&A feature documentation completion
+### 9.1 Revised Timeline
 
-## 10. Conclusion
+**Total Duration: 8 weeks** (vs. original 16 weeks)
 
-The ViolentUTF dataset management system demonstrates excellent architectural foundations and comprehensive dataset handling capabilities. The addition of specialized Q&A evaluation support will significantly enhance the platform's research and enterprise security capabilities.
+**Sprint 1 (Weeks 1-2): Enable PyRIT Q&A Features**
+- Uncomment and enable WMDP dataset
+- Add missing PyRIT Q&A scorers to configuration
+- Test basic Q&A dataset loading
 
-The proposed enhancement plan provides a systematic approach to implementing Q&A evaluation features while maintaining system stability and user experience quality. By following the phased implementation strategy, the team can deliver value incrementally while managing complexity and risk.
+**Sprint 2 (Weeks 3-4): Q&A Pipeline Integration**  
+- Preserve Q&A structure in dataset processing
+- Create Q&A dataset conversion utilities (OllaGen1 support)
+- Integrate Q&A datasets with existing memory system
 
-The OllaGen1-QA-full.csv sample dataset represents an excellent use case for these enhancements, providing a clear target for cognitive behavioral security evaluation workflows. The recommended features will enable researchers and security professionals to conduct sophisticated AI model evaluations for information security compliance and behavioral risk assessment.
+**Sprint 3 (Weeks 5-6): Q&A Evaluation Workflows**
+- Create Q&A evaluation templates using existing orchestrators
+- Integrate Q&A scorers with evaluation pipeline  
+- Add Q&A-specific result analytics
+
+**Sprint 4 (Weeks 7-8): UI Integration & Testing**
+- Enhance existing dataset configuration UI for Q&A
+- Add Q&A testing capabilities to existing test framework
+- Create Q&A evaluation examples and documentation
+
+## 10. Conclusion (Corrected)
+
+The original enhancement plan significantly overestimated the complexity required to add Q&A evaluation capabilities to ViolentUTF. After reviewing PyRIT's actual API and ViolentUTF's existing integration, the solution is much simpler:
+
+**Key Insight:** ViolentUTF already has 80% of the required infrastructure through its comprehensive PyRIT integration. We need to enable and connect PyRIT's existing Q&A capabilities rather than build new systems from scratch.
+
+**Corrected Approach:**
+1. **Enable Existing PyRIT Q&A Features** (WMDP, Q&A scorers)
+2. **Preserve Q&A Structure** in existing dataset pipeline
+3. **Extend Existing UI** to support Q&A workflows
+4. **Create Q&A Templates** using existing orchestrator system
+
+**Major Benefits:**
+- ⚡ **8 weeks vs. 16 weeks** implementation time
+- 🏗️ **Minimal architectural changes** required
+- 🔧 **Leverage proven PyRIT Q&A infrastructure**
+- 📈 **Build on existing robust ViolentUTF platform**
+
+The OllaGen1-QA-full.csv sample dataset is perfectly compatible with PyRIT's `QuestionAnsweringDataset` format, providing an excellent validation use case for the enhanced capabilities.
 
 **Next Steps:**
-1. Review and approve enhancement plan with development team
-2. Create detailed technical specifications for Phase 1 implementation
-3. Establish development timeline and resource allocation
-4. Begin implementation of Q&A schema detection and data models
-5. Create user acceptance criteria and testing protocols
+1. Sprint planning with development team based on corrected timeline
+2. Enable WMDP dataset and missing Q&A scorers (Week 1)
+3. Test Q&A dataset processing with OllaGen1 sample (Week 2)
+4. Create Q&A evaluation workflow templates (Week 3-4)
+5. User acceptance testing with Q&A datasets (Week 5-6)
 
 ---
 
-*This document should be reviewed quarterly and updated based on implementation progress and user feedback.*
+*This document reflects accurate understanding of PyRIT's capabilities and ViolentUTF's existing infrastructure after comprehensive API analysis and code review.*
