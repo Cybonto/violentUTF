@@ -58,3 +58,4 @@ pip-delete-this-directory.txt
 zscaler.crt
 /.implement_checkpoints
 /agent_orchestrator
+/logs
