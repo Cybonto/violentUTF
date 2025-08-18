@@ -152,7 +152,7 @@ async def read_users_me(request: Request, current_user: User = Depends(get_curre
     """
     Get current user information.
     """
-    return UserInfo(username=current_user.username, email=current_user.email, roles=current_user.roles).
+    return UserInfo(username=current_user.username, email=current_user.email, roles=current_user.roles)
 
 
 @router.post("/refresh", response_model=Token)
@@ -175,7 +175,7 @@ async def get_token_info(request: Request, current_user: User = Depends(get_curr
     """
     Get decoded JWT token information for current user.
     """
-    from datetime import datetime.
+    from datetime import datetime
 
     import jwt
 

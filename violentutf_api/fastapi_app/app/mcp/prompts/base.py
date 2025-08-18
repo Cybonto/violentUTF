@@ -154,7 +154,9 @@ class StaticPrompt(BasePrompt):
 class DynamicPrompt(BasePrompt):
     """A prompt that fetches dynamic context from external sources."""
 
-    def __init__(self, name: str, description: str, template: str, context_provider=None, category: str = "dynamic") -> None:
+    def __init__(
+        self, name: str, description: str, template: str, context_provider=None, category: str = "dynamic"
+    ) -> None:
         super().__init__(name, description, template, category)
         self.context_provider = context_provider
 

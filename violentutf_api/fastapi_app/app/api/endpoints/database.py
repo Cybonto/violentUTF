@@ -126,7 +126,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
                     user_id TEXT
                 )
             """
-            ).
+            )
 
             conn.execute(
                 """
@@ -137,7 +137,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
                     metadata TEXT
                 )
             """
-            ).
+            )
 
             conn.execute(
                 """
@@ -151,7 +151,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
                     FOREIGN KEY (prompt_piece_id) REFERENCES prompt_pieces(id)
                 )
             """
-            ).
+            )
 
         return DatabaseInitResponse(
             database_path=db_path,
@@ -298,7 +298,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
                     user_id TEXT
                 )
             """
-            ).
+            )
 
             conn.execute(
                 """
@@ -309,7 +309,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
                     metadata TEXT
                 )
             """
-            ).
+            )
 
             conn.execute(
                 """

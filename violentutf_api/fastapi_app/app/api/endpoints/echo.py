@@ -40,7 +40,7 @@ async def echo(request: EchoRequest):
     Returns:
         Echo response with the same message and metadata
     """
-    from datetime import datetime.
+    from datetime import datetime
 
     return EchoResponse(echo=request.message, metadata=request.metadata, timestamp=datetime.utcnow().isoformat())
 
@@ -56,6 +56,6 @@ async def echo_get(message: str):
     Returns:
         Dictionary with echoed message
     """
-    from datetime import datetime.
+    from datetime import datetime
 
     return {"echo": message, "method": "GET", "timestamp": datetime.utcnow().isoformat()}

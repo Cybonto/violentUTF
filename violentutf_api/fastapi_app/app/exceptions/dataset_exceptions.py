@@ -52,7 +52,9 @@ class DatasetNotFoundError(DatasetImportBaseException):
 class DatasetStreamingError(DatasetImportBaseException):
     """Raised when streaming operations fail."""
 
-    def __init__(self, message: str, chunk_index: Optional[int] = None, total_chunks: Optional[int] = None, **kwargs) -> None:
+    def __init__(
+        self, message: str, chunk_index: Optional[int] = None, total_chunks: Optional[int] = None, **kwargs
+    ) -> None:
         super().__init__(message, **kwargs)
         self.chunk_index = chunk_index
         self.total_chunks = total_chunks
@@ -66,7 +68,9 @@ class DatasetStreamingError(DatasetImportBaseException):
 class DatasetMemoryError(DatasetImportBaseException):
     """Raised when PyRIT memory operations fail."""
 
-    def __init__(self, message: str, memory_path: Optional[str] = None, operation: Optional[str] = None, **kwargs) -> None:
+    def __init__(
+        self, message: str, memory_path: Optional[str] = None, operation: Optional[str] = None, **kwargs
+    ) -> None:
         super().__init__(message, **kwargs)
         self.memory_path = memory_path
         self.operation = operation
@@ -126,7 +130,9 @@ class DatasetConcurrencyError(DatasetImportBaseException):
 class DatasetStorageError(DatasetImportBaseException):
     """Raised when storage operations fail."""
 
-    def __init__(self, message: str, storage_type: Optional[str] = None, storage_path: Optional[str] = None, **kwargs) -> None:
+    def __init__(
+        self, message: str, storage_type: Optional[str] = None, storage_path: Optional[str] = None, **kwargs
+    ) -> None:
         super().__init__(message, **kwargs)
         self.storage_type = storage_type
         self.storage_path = storage_path

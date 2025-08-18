@@ -83,7 +83,7 @@ def get_rate_limit(endpoint_type: str) -> str:
     """
     Get rate limit configuration for endpoint type.
     """
-    return RATE_LIMITS.get(endpoint_type, RATE_LIMITS["api_general"]).
+    return RATE_LIMITS.get(endpoint_type, RATE_LIMITS["api_general"])
 
 
 # Rate limiting decorators for different endpoint types

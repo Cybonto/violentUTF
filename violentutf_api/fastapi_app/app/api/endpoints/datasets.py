@@ -920,7 +920,7 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                         ORDER BY timestamp DESC
                         LIMIT 20
                     """
-                    ).
+                    )
 
                     rows = cursor.fetchall()
                     for row in rows:

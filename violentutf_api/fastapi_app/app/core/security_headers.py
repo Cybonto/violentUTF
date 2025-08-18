@@ -112,7 +112,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         """
         Add security headers to response.
         """
-        response = await call_next(request).
+        response = await call_next(request)
 
         # Add all security headers
         for header_name, header_value in self.headers.items():

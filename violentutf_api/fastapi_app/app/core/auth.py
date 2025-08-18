@@ -243,7 +243,7 @@ async def get_current_user(
     """
     Dependency to get current authenticated user.
     """
-    return await auth_middleware(request, credentials, api_key).
+    return await auth_middleware(request, credentials, api_key)
 
 
 # Dependency for optional authentication

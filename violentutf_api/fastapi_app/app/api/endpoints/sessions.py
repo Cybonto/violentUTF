@@ -103,7 +103,9 @@ async def get_session_state(current_user: User = Depends(get_current_user)) -> S
 
 
 @router.put("", response_model=SessionStateResponse)
-async def update_session_state(request: UpdateSessionRequest, current_user: User = Depends(get_current_user)) -> SessionStateResponse:
+async def update_session_state(
+    request: UpdateSessionRequest, current_user: User = Depends(get_current_user)
+) -> SessionStateResponse:
     """Update session state (UI preferences, workflow state, temporary data)."""
     try:
         # Get DuckDB manager and load existing session data

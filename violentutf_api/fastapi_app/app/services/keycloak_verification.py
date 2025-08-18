@@ -51,7 +51,7 @@ class KeycloakJWTVerifier:
         Returns:
             Dictionary containing Keycloak configuration
         """
-        current_time = time.time().
+        current_time = time.time()
 
         # Check cache
         if self._config_cache and current_time - self._config_cache_time < self._cache_ttl:

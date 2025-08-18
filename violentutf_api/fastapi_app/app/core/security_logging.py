@@ -363,7 +363,9 @@ def log_access_denied(
     )
 
 
-def log_rate_limit_exceeded(username: str = None, request: Request = None, limit_type: str = "general", **kwargs) -> None:
+def log_rate_limit_exceeded(
+    username: str = None, request: Request = None, limit_type: str = "general", **kwargs
+) -> None:
     """Log rate limit exceeded event."""
     security_logger.log_security_event(
         event_type=SecurityEventType.RATE_LIMIT_EXCEEDED,

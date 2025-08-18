@@ -39,7 +39,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     Returns:
         Encoded JWT token
     """
-    to_encode = data.copy().
+    to_encode = data.copy()
 
     if expires_delta:
         expire = datetime.utcnow() + expires_delta

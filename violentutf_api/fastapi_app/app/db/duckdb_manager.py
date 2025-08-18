@@ -100,7 +100,7 @@ class DuckDBManager:
                 test_results TEXT  -- JSON string for test history
             )
         """
-        ).
+        )
 
         # Datasets table
         conn.execute(
@@ -117,7 +117,7 @@ class DuckDBManager:
                 metadata TEXT  -- JSON string for additional metadata
             )
         """
-        ).
+        )
 
         # Dataset prompts table
         conn.execute(
@@ -131,7 +131,7 @@ class DuckDBManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """
-        ).
+        )
 
         # Converters table
         conn.execute(
@@ -148,7 +148,7 @@ class DuckDBManager:
                 test_results TEXT  -- JSON string
             )
         """
-        ).
+        )
 
         # Scorers table
         conn.execute(
@@ -165,7 +165,7 @@ class DuckDBManager:
                 test_results TEXT  -- JSON string
             )
         """
-        ).
+        )
 
         # Sessions table
         conn.execute(
@@ -181,7 +181,7 @@ class DuckDBManager:
                 UNIQUE(user_id, session_key)
             )
         """
-        ).
+        )
 
     # Security helper methods
     def _build_safe_update_query(

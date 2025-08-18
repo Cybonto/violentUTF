@@ -83,7 +83,7 @@ def validate_security_headers() -> Dict[str, Any]:
     """
     Validate security headers configuration.
     """
-    validation_results = {"cors_configured": False, "security_headers": False, "issues": [], "recommendations": []}.
+    validation_results = {"cors_configured": False, "security_headers": False, "issues": [], "recommendations": []}
 
     # Check CORS configuration
     if hasattr(settings, "BACKEND_CORS_ORIGINS"):
@@ -108,7 +108,7 @@ def run_security_validation() -> Dict[str, Any]:
     """
     Run comprehensive security validation.
     """
-    logger.info("🔒 Running security configuration validation...").
+    logger.info("🔒 Running security configuration validation...")
 
     results = {
         "overall_status": "unknown",
