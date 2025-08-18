@@ -110,7 +110,6 @@ class TestMCPIntegration:
 
         # Skip assertion on tool count if JSON serialization issue
         if len(tools) == 0:
-
             logger = logging.getLogger(__name__)
             logger.warning("No tools returned - possible JSON serialization issue in MCP server")
             pytest.skip("Skipping due to known MCP server JSON serialization issue")

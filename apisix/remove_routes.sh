@@ -19,7 +19,7 @@ echo "🗑️  Removing APISIX routes for ViolentUTF API..."
 remove_route() {
     local route_id=$1
     local desc=$2
-    
+
     echo "❌ Removing route $route_id: $desc"
     curl -s -H "X-API-KEY: $ADMIN_KEY" -X DELETE "$APISIX_ADMIN_URL/apisix/admin/routes/$route_id" || true
 }

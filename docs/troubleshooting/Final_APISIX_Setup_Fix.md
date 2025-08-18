@@ -8,7 +8,7 @@
 
 **Files Modified:**
 - `setup_macos_files/ai_providers_setup.sh`
-- `setup_macos_files/openapi_setup.sh` 
+- `setup_macos_files/openapi_setup.sh`
 - `setup_macos_files/apisix_setup.sh`
 
 **Fix Applied:**
@@ -33,7 +33,7 @@ fi
 
 **Your GSAi API Models Found:**
 - `claude_3_5_sonnet`
-- `claude_3_7_sonnet` 
+- `claude_3_7_sonnet`
 - `claude_3_haiku`
 - `llama3211b`
 - `cohere_english_v3`
@@ -92,7 +92,7 @@ The fix was verified with:
 # APISIX admin access
 curl -H "X-API-KEY: pXmwKwci24NmEFLZ7IslhuNf8Y3AAAJ7" http://localhost:9180/apisix/admin/routes
 
-# GSAi model fetching  
+# GSAi model fetching
 curl -k -H "Authorization: Bearer test_adm_D7DLw2z0ckgyd5Sd" https://localhost/api/v1/models
 
 # Environment loading from modular setup

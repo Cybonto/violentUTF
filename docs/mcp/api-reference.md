@@ -27,7 +27,7 @@ List and filter generator configurations.
     "required": false
   },
   "include_test_results": {
-    "type": "boolean", 
+    "type": "boolean",
     "description": "Include latest test results",
     "default": false,
     "required": false
@@ -72,7 +72,7 @@ Retrieve detailed information about a specific generator.
   },
   "include_test_history": {
     "type": "boolean",
-    "description": "Include test execution history", 
+    "description": "Include test execution history",
     "default": false,
     "required": false
   }
@@ -328,7 +328,7 @@ Validate a generator configuration without creating it.
     "required": true
   },
   "model_name": {
-    "type": "string", 
+    "type": "string",
     "description": "Model name to validate",
     "required": true
   },
@@ -949,7 +949,7 @@ violentutf://{resource_type}/{resource_id}
 **`auth_token_expired`**
 ```json
 {
-  "error": "auth_token_expired", 
+  "error": "auth_token_expired",
   "message": "Authentication token has expired",
   "details": "Refresh token or re-authenticate",
   "expires_at": "2024-01-15T12:00:00Z"
@@ -1098,5 +1098,5 @@ When rate limits are exceeded, the API returns a `rate_limit_exceeded` error wit
 
 ---
 
-*For configuration and deployment information, see [Configuration Guide](./configuration.md).*  
+*For configuration and deployment information, see [Configuration Guide](./configuration.md).*
 *For troubleshooting help, see [Troubleshooting Guide](./troubleshooting.md).*

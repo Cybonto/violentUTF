@@ -19,11 +19,11 @@ This guide covers extending and customizing the ViolentUTF Model Context Protoco
    ```bash
    git clone https://github.com/your-org/ViolentUTF_nightly.git
    cd ViolentUTF_nightly
-   
+
    # Create virtual environment
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   
+
    # Install dependencies
    pip install -r violentutf_api/fastapi_app/requirements.txt
    pip install -r requirements-dev.txt
@@ -33,7 +33,7 @@ This guide covers extending and customizing the ViolentUTF Model Context Protoco
    ```bash
    # Copy environment template
    cp violentutf/.env.sample violentutf/.env
-   
+
    # Set development-specific variables
    export MCP_DEVELOPMENT_MODE=true
    export MCP_DEBUG_MODE=true
@@ -45,7 +45,7 @@ This guide covers extending and customizing the ViolentUTF Model Context Protoco
    ```bash
    # Start core services
    docker-compose up -d keycloak apisix-apisix-1
-   
+
    # Run FastAPI with hot reload
    cd violentutf_api/fastapi_app
    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -134,15 +134,15 @@ logger = logging.getLogger(__name__)
 
 class DatasetManagementTools:
     """MCP tools for dataset management"""
-    
+
     def __init__(self):
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for container-to-container communication
         if "localhost:9080" in self.base_url:
             self.base_url = "http://violentutf-api:8000"
-        
+
         self.auth_handler = MCPAuthHandler()
-    
+
     def get_tools(self) -> List[Tool]:
         """Get all dataset management tools"""
         return [
@@ -152,7 +152,7 @@ class DatasetManagementTools:
             self._create_delete_dataset_tool(),
             self._create_validate_dataset_tool()
         ]
-    
+
     def _create_list_datasets_tool(self) -> Tool:
         """Create tool for listing datasets"""
         return Tool(
@@ -167,7 +167,7 @@ class DatasetManagementTools:
                         "enum": ["harmful_behaviors", "bias_detection", "privacy", "custom"]
                     },
                     "format": {
-                        "type": "string", 
+                        "type": "string",
                         "description": "Filter by dataset format",
                         "enum": ["json", "csv", "parquet"]
                     },
@@ -185,7 +185,7 @@ class DatasetManagementTools:
                 "required": []
             }
         )
-    
+
     def _create_get_dataset_tool(self) -> Tool:
         """Create tool for getting dataset details"""
         return Tool(
@@ -219,7 +219,7 @@ class DatasetManagementTools:
                 "required": ["dataset_name"]
             }
         )
-    
+
     def _create_upload_dataset_tool(self) -> Tool:
         """Create tool for uploading new datasets"""
         return Tool(
@@ -259,7 +259,7 @@ class DatasetManagementTools:
                 "required": ["name", "category", "format", "file_content"]
             }
         )
-    
+
     def _create_delete_dataset_tool(self) -> Tool:
         """Create tool for deleting datasets"""
         return Tool(
@@ -286,7 +286,7 @@ class DatasetManagementTools:
                 "required": ["dataset_name"]
             }
         )
-    
+
     def _create_validate_dataset_tool(self) -> Tool:
         """Create tool for validating dataset format and content"""
         return Tool(
@@ -316,11 +316,11 @@ class DatasetManagementTools:
                 "required": ["dataset_name"]
             }
         )
-    
+
     async def execute_tool(self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Execute a dataset management tool"""
         logger.info(f"Executing dataset tool: {tool_name}")
-        
+
         try:
             if tool_name == "list_datasets":
                 return await self._execute_list_datasets(arguments)
@@ -337,7 +337,7 @@ class DatasetManagementTools:
                     "error": "unknown_tool",
                     "message": f"Unknown dataset tool: {tool_name}"
                 }
-                
+
         except Exception as e:
             logger.error(f"Error executing dataset tool {tool_name}: {e}")
             return {
@@ -345,44 +345,44 @@ class DatasetManagementTools:
                 "message": str(e),
                 "tool_name": tool_name
             }
-    
+
     async def _execute_list_datasets(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute list datasets tool"""
         return await self._api_request("GET", "/api/v1/datasets", params=args)
-    
+
     async def _execute_get_dataset(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute get dataset tool"""
         dataset_name = args.pop("dataset_name")
         return await self._api_request("GET", f"/api/v1/datasets/{dataset_name}", params=args)
-    
+
     async def _execute_upload_dataset(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute upload dataset tool"""
         return await self._api_request("POST", "/api/v1/datasets", json=args)
-    
+
     async def _execute_delete_dataset(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute delete dataset tool"""
         dataset_name = args.pop("dataset_name")
         return await self._api_request("DELETE", f"/api/v1/datasets/{dataset_name}", params=args)
-    
+
     async def _execute_validate_dataset(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute validate dataset tool"""
         dataset_name = args.pop("dataset_name")
         return await self._api_request("POST", f"/api/v1/datasets/{dataset_name}/validate", json=args)
-    
+
     async def _api_request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
         """Make authenticated API request"""
         headers = {
             "Content-Type": "application/json",
             "X-API-Gateway": "MCP-Dataset"
         }
-        
+
         # Add authentication headers
         auth_headers = await self.auth_handler.get_auth_headers()
         headers.update(auth_headers)
-        
+
         url = urljoin(self.base_url, path)
         timeout = 60.0
-        
+
         async with httpx.AsyncClient(timeout=timeout) as client:
             try:
                 response = await client.request(
@@ -391,9 +391,9 @@ class DatasetManagementTools:
                     headers=headers,
                     **kwargs
                 )
-                
+
                 logger.debug(f"Dataset API call: {method} {url} -> {response.status_code}")
-                
+
                 if response.status_code >= 400:
                     error_detail = "Unknown error"
                     try:
@@ -401,15 +401,15 @@ class DatasetManagementTools:
                         error_detail = error_data.get("detail", str(error_data))
                     except:
                         error_detail = response.text
-                    
+
                     return {
                         "error": f"api_error_{response.status_code}",
                         "message": error_detail,
                         "status_code": response.status_code
                     }
-                
+
                 return response.json()
-                
+
             except httpx.TimeoutException:
                 logger.error(f"Timeout on dataset API call: {url}")
                 return {
@@ -446,23 +446,23 @@ class ToolRegistry:
     async def discover_tools(self, app=None):
         """Discover and register tools from multiple sources"""
         # ... existing code ...
-        
+
         # Add dataset tools
         dataset_tools_list = dataset_tools.get_tools()
         for tool in dataset_tools_list:
             self.tools[tool.name] = tool
         logger.info(f"Registered {len(dataset_tools_list)} dataset tools")
-        
+
         # ... rest of discovery code ...
-    
+
     async def call_tool(self, name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None):
         """Execute tools with intelligent routing"""
         # ... existing routing ...
-        
+
         # Add dataset tool routing
         elif name in [tool.name for tool in dataset_tools.get_tools()]:
             result = await dataset_tools.execute_tool(name, arguments, user_context)
-        
+
         # ... rest of execution code ...
 ```
 
@@ -489,18 +489,18 @@ logger = logging.getLogger(__name__)
 
 class AnalysisResourceProvider:
     """Provides analysis and reporting resources"""
-    
+
     def __init__(self):
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         if "localhost:9080" in self.base_url:
             self.base_url = "http://violentutf-api:8000"
-        
+
         self.auth_handler = MCPAuthHandler()
-    
+
     async def list_resources(self) -> List[Resource]:
         """List all analysis resources"""
         resources = []
-        
+
         try:
             # Get analysis reports
             reports = await self._get_analysis_reports()
@@ -513,7 +513,7 @@ class AnalysisResourceProvider:
                         mimeType="application/json"
                     )
                     resources.append(resource)
-            
+
             # Get performance metrics
             metrics = await self._get_performance_metrics()
             if metrics:
@@ -524,7 +524,7 @@ class AnalysisResourceProvider:
                     mimeType="application/json"
                 )
                 resources.append(resource)
-            
+
             # Get security insights
             insights = await self._get_security_insights()
             if insights:
@@ -535,13 +535,13 @@ class AnalysisResourceProvider:
                     mimeType="application/json"
                 )
                 resources.append(resource)
-            
+
             return resources
-            
+
         except Exception as e:
             logger.error(f"Error listing analysis resources: {e}")
             return []
-    
+
     async def read_resource(self, resource_id: str) -> Dict[str, Any]:
         """Read specific analysis resource"""
         try:
@@ -552,7 +552,7 @@ class AnalysisResourceProvider:
             else:
                 # Assume it's an analysis report ID
                 return await self._get_analysis_report(resource_id)
-            
+
         except Exception as e:
             logger.error(f"Error reading analysis resource {resource_id}: {e}")
             return {
@@ -560,37 +560,37 @@ class AnalysisResourceProvider:
                 "message": str(e),
                 "resource_id": resource_id
             }
-    
+
     async def _get_analysis_reports(self) -> Optional[List[Dict[str, Any]]]:
         """Get list of analysis reports"""
         response = await self._api_request("GET", "/api/v1/analysis/reports")
         return response.get("reports") if response else None
-    
+
     async def _get_analysis_report(self, report_id: str) -> Optional[Dict[str, Any]]:
         """Get specific analysis report"""
         return await self._api_request("GET", f"/api/v1/analysis/reports/{report_id}")
-    
+
     async def _get_performance_metrics(self) -> Optional[Dict[str, Any]]:
         """Get system performance metrics"""
         return await self._api_request("GET", "/api/v1/analysis/performance")
-    
+
     async def _get_security_insights(self) -> Optional[Dict[str, Any]]:
         """Get security analysis insights"""
         return await self._api_request("GET", "/api/v1/analysis/security")
-    
+
     async def _api_request(self, method: str, path: str, **kwargs) -> Optional[Dict[str, Any]]:
         """Make authenticated API request"""
         headers = {
             "Content-Type": "application/json",
             "X-API-Gateway": "MCP-Analysis"
         }
-        
+
         auth_headers = await self.auth_handler.get_auth_headers()
         headers.update(auth_headers)
-        
+
         url = urljoin(self.base_url, path)
         timeout = 30.0
-        
+
         async with httpx.AsyncClient(timeout=timeout) as client:
             try:
                 response = await client.request(
@@ -599,13 +599,13 @@ class AnalysisResourceProvider:
                     headers=headers,
                     **kwargs
                 )
-                
+
                 if response.status_code >= 400:
                     logger.warning(f"API error {response.status_code}: {response.text}")
                     return None
-                
+
                 return response.json()
-                
+
             except Exception as e:
                 logger.error(f"API request failed {url}: {e}")
                 return None
@@ -627,25 +627,25 @@ class ViolentUTFResourceManager:
     async def list_resources(self) -> List[Resource]:
         """List all available resources"""
         resources = []
-        
+
         # ... existing resource providers ...
-        
+
         # Add analysis resources
         analysis_resources = await analysis_resource_provider.list_resources()
         resources.extend(analysis_resources)
-        
+
         logger.info(f"Listed {len(resources)} MCP resources")
         return resources
-    
+
     async def read_resource(self, uri: str) -> Dict[str, Any]:
         """Read a specific resource by URI"""
         # ... existing URI parsing ...
-        
+
         # Add analysis resource handling
         if resource_type == "analysis":
             data = await analysis_resource_provider.read_resource(resource_id)
         # ... existing resource types ...
-        
+
         # ... rest of method ...
 ```
 
@@ -668,56 +668,56 @@ logger = logging.getLogger(__name__)
 
 class WebSocketTransport:
     """WebSocket transport for MCP communication"""
-    
+
     def __init__(self, mcp_server, auth_handler):
         self.mcp_server = mcp_server
         self.auth_handler = auth_handler
         self.active_connections: Dict[str, WebSocket] = {}
-    
+
     def create_app(self) -> FastAPI:
         """Create WebSocket transport FastAPI app"""
         app = FastAPI(title="MCP WebSocket Transport")
-        
+
         @app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
             await self.handle_websocket_connection(websocket)
-        
+
         return app
-    
+
     async def handle_websocket_connection(self, websocket: WebSocket):
         """Handle WebSocket connection"""
         connection_id = f"ws_{id(websocket)}"
-        
+
         try:
             await websocket.accept()
             self.active_connections[connection_id] = websocket
             logger.info(f"WebSocket connection established: {connection_id}")
-            
+
             # Authentication handshake
             auth_result = await self.authenticate_connection(websocket)
             if not auth_result:
                 await websocket.close(code=4001, reason="Authentication failed")
                 return
-            
+
             # Message handling loop
             while True:
                 try:
                     # Receive message
                     data = await websocket.receive_text()
                     message = json.loads(data)
-                    
+
                     # Process MCP message
                     response = await self.process_mcp_message(message, auth_result)
-                    
+
                     # Send response
                     if response:
                         await websocket.send_text(json.dumps(response))
-                        
+
                 except json.JSONDecodeError:
                     await websocket.send_text(json.dumps({
                         "error": {"code": -32700, "message": "Parse error"}
                     }))
-                
+
         except WebSocketDisconnect:
             logger.info(f"WebSocket connection closed: {connection_id}")
         except Exception as e:
@@ -725,7 +725,7 @@ class WebSocketTransport:
         finally:
             if connection_id in self.active_connections:
                 del self.active_connections[connection_id]
-    
+
     async def authenticate_connection(self, websocket: WebSocket) -> Optional[Dict[str, Any]]:
         """Authenticate WebSocket connection"""
         try:
@@ -734,13 +734,13 @@ class WebSocketTransport:
                 websocket.receive_text(),
                 timeout=10.0
             )
-            
+
             auth_message = json.loads(auth_data)
             token = auth_message.get("token")
-            
+
             if not token:
                 return None
-            
+
             # Validate token
             user_info = await self.auth_handler.validate_token(token)
             if user_info:
@@ -755,18 +755,18 @@ class WebSocketTransport:
                     "message": "Invalid token"
                 }))
                 return None
-                
+
         except Exception as e:
             logger.error(f"Authentication error: {e}")
             return None
-    
+
     async def process_mcp_message(self, message: Dict[str, Any], user_context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Process MCP JSON-RPC message"""
         try:
             method = message.get("method")
             params = message.get("params", {})
             message_id = message.get("id")
-            
+
             if method == "tools/list":
                 result = await self.mcp_server._list_tools()
                 return {
@@ -774,18 +774,18 @@ class WebSocketTransport:
                     "id": message_id,
                     "result": [tool.dict() for tool in result]
                 }
-            
+
             elif method == "tools/call":
                 tool_name = params.get("name")
                 arguments = params.get("arguments", {})
-                
+
                 result = await self.mcp_server._call_tool(tool_name, arguments)
                 return {
                     "jsonrpc": "2.0",
                     "id": message_id,
                     "result": result
                 }
-            
+
             elif method == "resources/list":
                 result = await self.mcp_server._list_resources()
                 return {
@@ -793,7 +793,7 @@ class WebSocketTransport:
                     "id": message_id,
                     "result": [resource.dict() for resource in result]
                 }
-            
+
             elif method == "resources/read":
                 uri = params.get("uri")
                 result = await self.mcp_server._read_resource(uri)
@@ -802,7 +802,7 @@ class WebSocketTransport:
                     "id": message_id,
                     "result": result
                 }
-            
+
             else:
                 return {
                     "jsonrpc": "2.0",
@@ -812,7 +812,7 @@ class WebSocketTransport:
                         "message": f"Method not found: {method}"
                     }
                 }
-                
+
         except Exception as e:
             logger.error(f"Message processing error: {e}")
             return {
@@ -823,11 +823,11 @@ class WebSocketTransport:
                     "message": f"Internal error: {str(e)}"
                 }
             }
-    
+
     async def broadcast_notification(self, notification: Dict[str, Any]):
         """Broadcast notification to all connected clients"""
         message = json.dumps(notification)
-        
+
         for connection_id, websocket in self.active_connections.items():
             try:
                 await websocket.send_text(message)
@@ -850,7 +850,7 @@ Update the MCP server to support your new transport:
 def mount_to_app(self, app: FastAPI) -> None:
     """Mount MCP server to existing ViolentUTF FastAPI app"""
     # ... existing SSE transport ...
-    
+
     # Add WebSocket transport
     if mcp_settings.MCP_TRANSPORT_TYPE == "websocket":
         from app.mcp.server.transports import create_websocket_transport
@@ -874,16 +874,16 @@ from app.mcp.tools.datasets import DatasetManagementTools
 
 class TestDatasetTools:
     """Unit tests for dataset management tools"""
-    
+
     @pytest.fixture
     def dataset_tools(self):
         """Create DatasetManagementTools instance"""
         return DatasetManagementTools()
-    
+
     def test_get_tools(self, dataset_tools):
         """Test tool creation"""
         tools = dataset_tools.get_tools()
-        
+
         assert len(tools) == 5
         tool_names = [tool.name for tool in tools]
         assert "list_datasets" in tool_names
@@ -891,18 +891,18 @@ class TestDatasetTools:
         assert "upload_dataset" in tool_names
         assert "delete_dataset" in tool_names
         assert "validate_dataset" in tool_names
-    
+
     def test_tool_schemas(self, dataset_tools):
         """Test tool input schemas"""
         tools = dataset_tools.get_tools()
-        
+
         for tool in tools:
             assert tool.name
             assert tool.description
             assert tool.inputSchema
             assert tool.inputSchema["type"] == "object"
             assert "properties" in tool.inputSchema
-    
+
     @pytest.mark.asyncio
     async def test_list_datasets_execution(self, dataset_tools):
         """Test list datasets tool execution"""
@@ -915,22 +915,22 @@ class TestDatasetTools:
                     {"name": "test_dataset", "category": "custom", "size": 100}
                 ]
             }
-            
+
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
                 return_value=mock_response
             )
-            
+
             # Execute tool
             result = await dataset_tools.execute_tool(
                 "list_datasets",
                 {"category": "custom"},
                 {"token": "test_token"}
             )
-            
+
             assert "datasets" in result
             assert len(result["datasets"]) == 1
             assert result["datasets"][0]["name"] == "test_dataset"
-    
+
     @pytest.mark.asyncio
     async def test_error_handling(self, dataset_tools):
         """Test error handling in tool execution"""
@@ -939,22 +939,22 @@ class TestDatasetTools:
             mock_response = Mock()
             mock_response.status_code = 404
             mock_response.json.return_value = {"detail": "Dataset not found"}
-            
+
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
                 return_value=mock_response
             )
-            
+
             # Execute tool
             result = await dataset_tools.execute_tool(
                 "get_dataset",
                 {"dataset_name": "nonexistent"},
                 {"token": "test_token"}
             )
-            
+
             assert "error" in result
             assert result["error"] == "api_error_404"
             assert "Dataset not found" in result["message"]
-    
+
     @pytest.mark.asyncio
     async def test_unknown_tool(self, dataset_tools):
         """Test unknown tool handling"""
@@ -963,7 +963,7 @@ class TestDatasetTools:
             {},
             None
         )
-        
+
         assert result["error"] == "unknown_tool"
         assert "unknown_tool" in result["message"]
 ```
@@ -983,27 +983,27 @@ from app.mcp.server import mcp_server
 
 class TestMCPIntegration:
     """Integration tests for MCP server"""
-    
+
     @pytest.fixture
     def client(self):
         """Create test client"""
         return TestClient(app)
-    
+
     @pytest.fixture
     async def mcp_initialized(self):
         """Initialize MCP server for testing"""
         await mcp_server.initialize()
         yield mcp_server
-    
+
     def test_health_endpoint(self, client):
         """Test MCP health endpoint"""
         response = client.get("/mcp/health")
         assert response.status_code == 200
-        
+
         data = response.json()
         assert data["status"] == "healthy"
         assert "version" in data
-    
+
     @pytest.mark.asyncio
     async def test_tool_discovery(self, mcp_initialized):
         """Test tool discovery process"""
@@ -1011,26 +1011,26 @@ class TestMCPIntegration:
         from fastapi import FastAPI
         test_app = FastAPI()
         mcp_initialized.mount_to_app(test_app)
-        
+
         # Test tool listing
         tools = await mcp_initialized._list_tools()
         assert len(tools) > 0
-        
+
         # Verify specialized tools are present
         tool_names = [tool.name for tool in tools]
         assert "list_generators" in tool_names
         assert "list_orchestrators" in tool_names
-    
+
     @pytest.mark.asyncio
     async def test_resource_access(self, mcp_initialized):
         """Test resource access"""
         # Test resource listing
         resources = await mcp_initialized._list_resources()
         assert isinstance(resources, list)
-        
+
         # Resources might be empty in test environment
         # Just verify the call succeeds
-    
+
     def test_oauth_endpoints(self, client):
         """Test OAuth proxy endpoints"""
         # Test authorization endpoint
@@ -1039,7 +1039,7 @@ class TestMCPIntegration:
             "redirect_uri": "http://localhost:3000/callback",
             "state": "test_state"
         })
-        
+
         # Should redirect to Keycloak (or return error in test env)
         assert response.status_code in [302, 500]  # 500 expected in test without Keycloak
 ```
@@ -1060,62 +1060,62 @@ from app.mcp.resources import resource_registry
 
 class TestPerformance:
     """Performance tests for MCP components"""
-    
+
     @pytest.mark.asyncio
     async def test_tool_discovery_performance(self):
         """Test tool discovery performance"""
         start_time = time.time()
-        
+
         await tool_registry.discover_tools()
         tools = await tool_registry.list_tools()
-        
+
         discovery_time = time.time() - start_time
-        
+
         # Should complete within 2 seconds
         assert discovery_time < 2.0
         assert len(tools) > 0
-    
+
     @pytest.mark.asyncio
     async def test_concurrent_tool_execution(self):
         """Test concurrent tool execution"""
         # Initialize tools
         await tool_registry.discover_tools()
-        
+
         async def execute_tool():
             return await tool_registry.call_tool(
                 "list_generators",
                 {},
                 {"token": "test_token"}
             )
-        
+
         # Execute 10 concurrent tool calls
         start_time = time.time()
         tasks = [execute_tool() for _ in range(10)]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         execution_time = time.time() - start_time
-        
+
         # Should complete within 5 seconds
         assert execution_time < 5.0
-        
+
         # Most calls should succeed (some may fail due to no API in test)
         successful_calls = sum(1 for result in results if not isinstance(result, Exception))
         assert successful_calls >= 0  # At least some should work
-    
+
     @pytest.mark.asyncio
     async def test_resource_cache_performance(self):
         """Test resource caching performance"""
         await resource_registry.initialize()
-        
+
         # First access (cache miss)
         start_time = time.time()
         resources1 = await resource_registry.list_resources()
         first_access_time = time.time() - start_time
-        
+
         # Second access (cache hit)
         start_time = time.time()
         resources2 = await resource_registry.list_resources()
         second_access_time = time.time() - start_time
-        
+
         # Second access should be faster (or at least not slower)
         assert second_access_time <= first_access_time * 1.1  # Allow 10% variance
 ```
@@ -1132,11 +1132,11 @@ class MCPSettings(BaseSettings):
     MCP_DEBUG_MODE: bool = False
     MCP_LOG_LEVEL: str = "INFO"
     MCP_DEVELOPMENT_MODE: bool = False
-    
+
     # Development overrides
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
+
         if self.MCP_DEVELOPMENT_MODE:
             self.MCP_DEBUG_MODE = True
             self.MCP_LOG_LEVEL = "DEBUG"
@@ -1155,22 +1155,22 @@ from typing import Dict, Any
 
 def setup_mcp_logging(config: Dict[str, Any]):
     """Setup MCP-specific logging"""
-    
+
     # Create formatter
     formatter = logging.Formatter(
         fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    
+
     # Setup console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
-    
+
     # Setup file handler if configured
     if config.get("log_file"):
         file_handler = logging.FileHandler(config["log_file"])
         file_handler.setFormatter(formatter)
-    
+
     # Configure MCP loggers
     mcp_loggers = [
         'app.mcp',
@@ -1179,12 +1179,12 @@ def setup_mcp_logging(config: Dict[str, Any]):
         'app.mcp.resources',
         'app.mcp.auth'
     ]
-    
+
     for logger_name in mcp_loggers:
         logger = logging.getLogger(logger_name)
         logger.setLevel(config.get("log_level", "INFO"))
         logger.addHandler(console_handler)
-        
+
         if config.get("log_file"):
             logger.addHandler(file_handler)
 ```
@@ -1209,7 +1209,7 @@ def profile_execution(func_name: str = None):
         async def async_wrapper(*args, **kwargs) -> Any:
             name = func_name or f"{func.__module__}.{func.__qualname__}"
             start_time = time.time()
-            
+
             try:
                 result = await func(*args, **kwargs)
                 execution_time = time.time() - start_time
@@ -1219,12 +1219,12 @@ def profile_execution(func_name: str = None):
                 execution_time = time.time() - start_time
                 logger.error(f"Profile: {name} failed after {execution_time:.3f}s - {e}")
                 raise
-        
+
         @functools.wraps(func)
         def sync_wrapper(*args, **kwargs) -> Any:
             name = func_name or f"{func.__module__}.{func.__qualname__}"
             start_time = time.time()
-            
+
             try:
                 result = func(*args, **kwargs)
                 execution_time = time.time() - start_time
@@ -1234,9 +1234,9 @@ def profile_execution(func_name: str = None):
                 execution_time = time.time() - start_time
                 logger.error(f"Profile: {name} failed after {execution_time:.3f}s - {e}")
                 raise
-        
+
         return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
-    
+
     return decorator
 
 # Usage example:
@@ -1382,6 +1382,6 @@ networks:
 
 ---
 
-*For configuration options, see [Configuration Guide](./configuration.md).*  
-*For troubleshooting help, see [Troubleshooting Guide](./troubleshooting.md).*  
+*For configuration options, see [Configuration Guide](./configuration.md).*
+*For troubleshooting help, see [Troubleshooting Guide](./troubleshooting.md).*
 *For API usage, see [API Reference](./api-reference.md).*

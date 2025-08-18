@@ -17,12 +17,12 @@ echo
 echo "🚀 Sending rapid login requests..."
 for i in {1..8}; do
     echo -n "Request $i: "
-    
+
     response=$(curl -s -w "%{http_code}" -o /dev/null \
         -X POST "$LOGIN_ENDPOINT" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "username=test&password=test")
-    
+
     case $response in
         200|201)
             echo "✅ Success ($response)"
@@ -38,7 +38,7 @@ for i in {1..8}; do
             echo "❓ Other ($response)"
             ;;
     esac
-    
+
     # Small delay between requests
     sleep 0.2
 done

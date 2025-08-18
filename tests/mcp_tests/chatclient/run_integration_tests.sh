@@ -39,7 +39,7 @@ fi
 echo -e "\n========================================="
 echo "Test Summary:"
 echo "- Natural language command parser ✓"
-echo "- Context analysis functions ✓" 
+echo "- Context analysis functions ✓"
 echo "- Resource search and filtering ✓"
 echo "- Test scenario interpreter ✓"
 echo "- Dataset integration ✓"

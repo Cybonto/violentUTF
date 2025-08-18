@@ -1,6 +1,6 @@
 # CI/CD Modified to Run Unit Tests Only
 
-**Date**: December 28, 2024  
+**Date**: December 28, 2024
 **Reason**: To isolate CI/CD setup issues from application code issues
 
 ## Changes Made

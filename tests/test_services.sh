@@ -16,11 +16,11 @@ test_endpoint() {
     local name=$1
     local url=$2
     local expected_status=$3
-    
+
     echo -n "Testing $name: "
-    
+
     response=$(curl -s -o /dev/null -w "%{http_code}" "$url")
-    
+
     if [ "$response" = "$expected_status" ]; then
         echo -e "${GREEN}PASS${NC} (HTTP $response)"
     else

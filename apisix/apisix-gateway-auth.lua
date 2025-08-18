@@ -36,30 +36,30 @@ end
 function _M.rewrite(conf, ctx)
     -- Get current timestamp
     local timestamp = tostring(ngx_time())
-    
+
     -- Get request details
     local method = ngx_var.request_method
     local path = ngx_var.uri
-    
+
     -- Create signature payload: METHOD:PATH:TIMESTAMP
     local signature_payload = method .. ":" .. path .. ":" .. timestamp
-    
+
     -- Generate HMAC-SHA256 signature
     local hmac_sha256 = hmac:new(conf.gateway_secret, hmac.ALGOS.SHA256)
     hmac_sha256:update(signature_payload)
     local signature = hmac_sha256:final()
-    
+
     -- Convert to hex string
     local signature_hex = ""
     for i = 1, #signature do
         signature_hex = signature_hex .. string.format("%02x", signature:byte(i))
     end
-    
+
     -- Add required headers for FastAPI authentication
     ngx.req.set_header("X-API-Gateway", "APISIX")
     ngx.req.set_header("X-APISIX-Signature", signature_hex)
     ngx.req.set_header("X-APISIX-Timestamp", timestamp)
-    
+
     core.log.info("Added APISIX gateway authentication headers for ", method, " ", path)
 end
 

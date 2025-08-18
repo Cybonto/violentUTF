@@ -14,7 +14,7 @@ import pytest
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from tests.utils.keycloak_auth import keycloak_auth
+from tests.utils.keycloak_auth_helper import keycloak_auth
 
 logger = logging.getLogger(__name__)
 

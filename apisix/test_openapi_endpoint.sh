@@ -76,16 +76,16 @@ if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
         echo "Using auth token: [SHORT TOKEN: $OPENAPI_1_AUTH_TOKEN]"
     fi
     echo
-    
+
     # Test models endpoint
     echo "Models endpoint response:"
     response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
         -H "Authorization: Bearer $OPENAPI_1_AUTH_TOKEN" \
         https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models)
-    
+
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
     body=$(echo "$response" | sed '/HTTP_CODE:/d')
-    
+
     if [ "$http_code" = "200" ]; then
         echo -e "${GREEN}✓ Models endpoint works (HTTP $http_code)${NC}"
         echo "$body" | jq -r '.data[].id' 2>/dev/null | head -5 || echo "$body" | head -100
@@ -94,7 +94,7 @@ if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
         echo "$body" | head -100
     fi
     echo
-    
+
     # Test chat completions endpoint
     echo "Chat completions endpoint response:"
     response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
@@ -102,10 +102,10 @@ if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
         -H "Authorization: Bearer $OPENAPI_1_AUTH_TOKEN" \
         -H "Content-Type: application/json" \
         -d '{"model": "claude_3_5_sonnet", "messages": [{"role": "user", "content": "Say hello"}]}')
-    
+
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
     body=$(echo "$response" | sed '/HTTP_CODE:/d')
-    
+
     if [ "$http_code" = "200" ]; then
         echo -e "${GREEN}✓ Chat endpoint works (HTTP $http_code)${NC}"
         echo "$body" | jq -r '.choices[0].message.content' 2>/dev/null | head -50 || echo "$body" | head -100
@@ -114,10 +114,10 @@ if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
         echo "$body" | head -100
     fi
     echo
-    
+
     # Try alternative endpoints
     echo -e "${BLUE}Testing alternative endpoint paths:${NC}"
-    
+
     # Test without /api prefix
     echo "Trying /v1/chat/completions (no /api prefix):"
     response=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -126,7 +126,7 @@ if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
         -H "Content-Type: application/json" \
         -d '{"model": "claude_3_5_sonnet", "messages": [{"role": "user", "content": "test"}]}')
     echo "HTTP Status: $response"
-    
+
     # Test with /chat endpoint
     echo "Trying /api/v1/chat:"
     response=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -135,7 +135,7 @@ if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
         -H "Content-Type: application/json" \
         -d '{"model": "claude_3_5_sonnet", "messages": [{"role": "user", "content": "test"}]}')
     echo "HTTP Status: $response"
-    
+
 else
     echo -e "${RED}No OPENAPI_1_AUTH_TOKEN found in environment${NC}"
 fi
@@ -152,17 +152,17 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
         echo "Using APISIX API key: [SHORT KEY]"
     fi
     echo
-    
+
     echo "Testing through APISIX gateway:"
     response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
         -X POST http://localhost:9080/ai/openapi/gsai-api-1/api/v1/chat/completions \
         -H "apikey: $VIOLENTUTF_API_KEY" \
         -H "Content-Type: application/json" \
         -d '{"model": "claude_3_5_sonnet", "messages": [{"role": "user", "content": "Say hello"}]}')
-    
+
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
     body=$(echo "$response" | sed '/HTTP_CODE:/d')
-    
+
     if [ "$http_code" = "200" ]; then
         echo -e "${GREEN}✓ APISIX route works (HTTP $http_code)${NC}"
         echo "$body" | jq -r '.choices[0].message.content' 2>/dev/null | head -50 || echo "$body" | head -100

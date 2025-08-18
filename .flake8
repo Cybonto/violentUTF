@@ -2,7 +2,7 @@
 # Configuration for flake8 linting
 max-line-length = 120
 max-complexity = 15
-exclude = 
+exclude =
     .git,
     __pycache__,
     build,
@@ -18,7 +18,7 @@ exclude =
     app_data,
     violentutf_logs,
     tests/fixtures
-ignore = 
+ignore =
     # E203: whitespace before ':' (conflicts with Black)
     E203,
     # W503: line break before binary operator (conflicts with Black)
@@ -47,7 +47,7 @@ per-file-ignores =
     */settings.py:E501
 
 # Additional flake8 plugins configuration
-extend-ignore = 
+extend-ignore =
     # D100: Missing docstring in public module
     D100,
     # D104: Missing docstring in public package

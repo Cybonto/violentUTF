@@ -19,7 +19,7 @@ ISSUES_FOUND=0
 check_item() {
     local name=$1
     local condition=$2
-    
+
     if eval "$condition"; then
         echo -e "  ${GREEN}✓${NC} $name"
     else

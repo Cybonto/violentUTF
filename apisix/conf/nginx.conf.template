@@ -138,7 +138,7 @@ http {
 
     lua_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
     # http configuration snippet starts
-    
+
     # http configuration snippet ends
 
     upstream apisix_backend {
@@ -263,7 +263,7 @@ http {
         # zipkin_set_ngx_var ends
 
         # http server configuration snippet starts
-        
+
         # http server configuration snippet ends
 
         location = /apisix/nginx_status {
@@ -297,7 +297,7 @@ http {
 
 
             # http server location configuration snippet starts
-            
+
             # http server location configuration snippet ends
 
 
@@ -415,6 +415,6 @@ http {
     }
 
     # http end configuration snippet starts
-    
+
     # http end configuration snippet ends
 }

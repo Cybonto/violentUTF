@@ -7,7 +7,7 @@ Developer: Tam (aka Tom) Nguyen
 ## Setup Steps
 ### 1. Setting up KeyCloak with Docker
 * ViolentUTF is protected by KeyCloak by default. Please follow [ViolentUTF KeyCloak Setup Guide](https://github.com/Cybonto/ViolentUTF_nightly/tree/main/keycloak). The main idea is to have KeyCloak running first. Then, if the ViolentUTF realm is not there in KeyCloak, you can import an exported realm file (included) and you should be good to go with KeyCloak.
-* Make sure to get the information from KeyCloak and fill out the [env.sample file](https://github.com/Cybonto/ViolentUTF_nightly/blob/main/env.sample) and then rename it to `.env`. 
+* Make sure to get the information from KeyCloak and fill out the [env.sample file](https://github.com/Cybonto/ViolentUTF_nightly/blob/main/env.sample) and then rename it to `.env`.
 ### 2. Run ViolentUTF setup script
 Once your KeyCloak is up, you just need to run the ViolentUTF script per your OS. I tested the Mac OS script and it works. The script will automatically launch ViolentUTF at the end, in your default browser.
 ### 3. Login and play with ViolentUTF

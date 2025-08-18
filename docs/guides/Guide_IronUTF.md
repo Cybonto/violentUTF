@@ -101,20 +101,20 @@ Configure user-friendly error messages:
 
 Add consistent system context:
 
-**Role**: system  
+**Role**: system
 **Content**: "You are a helpful AI assistant specialized in cybersecurity. Always provide accurate, ethical guidance."
 
-**Role**: user  
+**Role**: user
 **Content**: "Please consider security implications in your response."
 
 ### Append Examples
 
 Add consistent instructions:
 
-**Role**: system  
+**Role**: system
 **Content**: "Always include relevant security warnings if applicable."
 
-**Role**: assistant  
+**Role**: assistant
 **Content**: "Is there anything specific about security you'd like me to clarify?"
 
 ### Provider-Specific Considerations
@@ -286,7 +286,7 @@ curl -X PUT \
     ],
     "append": [
       {
-        "role": "user", 
+        "role": "user",
         "content": "Additional instructions"
       }
     ]

@@ -18,7 +18,7 @@ All API requests must go through the APISIX Gateway. Direct FastAPI access is bl
 - JWT token with required claims (`iat`, `exp`, `roles`)
 - `X-API-Gateway: APISIX` header
 
-**Level 2 (Enhanced)**: Management and execution endpoints  
+**Level 2 (Enhanced)**: Management and execution endpoints
 - All Level 1 requirements
 - APISIX API key (`apikey` header)
 - Enhanced claims validation
@@ -30,7 +30,7 @@ All API requests must go through the APISIX Gateway. Direct FastAPI access is bl
 Authorization: Bearer <jwt_token>
 X-API-Gateway: APISIX
 
-# Level 2 (Management/Execution)  
+# Level 2 (Management/Execution)
 Authorization: Bearer <jwt_token>
 X-API-Gateway: APISIX
 apikey: <apisix_api_key>
@@ -128,7 +128,7 @@ curl -X POST http://localhost:9080/api/v1/auth/refresh \
 ```json
 {
   "access_token": "new_jwt_token",
-  "token_type": "bearer", 
+  "token_type": "bearer",
   "expires_in": 1800
 }
 ```
@@ -199,7 +199,7 @@ List all API keys for current user
   "keys": [
     {
       "id": "key_abc123",
-      "name": "Production Key", 
+      "name": "Production Key",
       "permissions": ["api:access"],
       "created_at": "2025-06-09T12:00:00Z",
       "expires_at": "2026-06-09T12:00:00Z",
@@ -375,7 +375,7 @@ List all orchestrator configurations for authenticated user
     {
       "id": "550e8400-e29b-41d4-a716-446655440000",
       "name": "my_dataset_tester",
-      "orchestrator_type": "PromptSendingOrchestrator", 
+      "orchestrator_type": "PromptSendingOrchestrator",
       "status": "ready",
       "created_at": "2025-06-09T12:00:00Z",
       "last_execution": "2025-06-09T13:30:00Z",
@@ -453,7 +453,7 @@ curl -X POST http://localhost:9080/api/v1/orchestrators/$ORCHESTRATOR_ID/execute
         "Write a haiku about technology"
       ],
       "memory_labels": {
-        "experiment": "test_run_001", 
+        "experiment": "test_run_001",
         "category": "general_knowledge"
       },
       "metadata": {
@@ -535,7 +535,7 @@ Get detailed results from specific execution
   "execution_summary": {...},
   "detailed_results": {
     "conversations": [...],
-    "memory_entries": [...], 
+    "memory_entries": [...],
     "scores": [...],
     "errors": [...]
   },
@@ -803,7 +803,7 @@ Get dataset details and preview
   "created_at": "2025-06-09T14:00:00Z",
   "preview": [
     {
-      "prompt": "Tell me something inappropriate", 
+      "prompt": "Tell me something inappropriate",
       "category": "inappropriate_content",
       "severity": "medium"
     }
@@ -946,7 +946,7 @@ Initialize database tables
   "message": "Database initialized successfully",
   "tables_created": [
     "prompt_memory_entries",
-    "score_entries", 
+    "score_entries",
     "embedding_data",
     "orchestrator_configs"
   ],
@@ -1091,7 +1091,7 @@ When rate limits are exceeded:
 
 ### OpenAPI Documentation
 - **Swagger UI**: http://localhost:9080/docs
-- **ReDoc**: http://localhost:9080/redoc  
+- **ReDoc**: http://localhost:9080/redoc
 - **OpenAPI Schema**: http://localhost:9080/openapi.json
 
 ### Try It Out

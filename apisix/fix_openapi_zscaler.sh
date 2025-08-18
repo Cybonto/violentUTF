@@ -92,12 +92,12 @@ if [ "$test_result" != "FAILED" ] && [ "$test_result" -ge 200 ] && [ "$test_resu
     echo -e "${GREEN}✓ SSL connection successful with system certificates (HTTP $test_result)${NC}"
 else
     echo -e "${YELLOW}⚠️  SSL connection failed with system certificates${NC}"
-    
+
     # Try without certificate verification
     echo "Testing without certificate verification..."
     test_insecure=$(docker exec apisix-apisix-1 curl -k -s -o /dev/null -w "%{http_code}" \
         https://api.dev.gsai.mcaas.fcs.gsa.gov 2>&1 || echo "FAILED")
-    
+
     if [ "$test_insecure" != "FAILED" ] && [ "$test_insecure" -ge 200 ] && [ "$test_insecure" -lt 500 ]; then
         echo -e "${YELLOW}Connection works without certificate verification (HTTP $test_insecure)${NC}"
         echo "This indicates a certificate trust issue"
@@ -128,12 +128,12 @@ echo
 echo "$routes" | jq -c '.' | while IFS= read -r route; do
     route_id=$(echo "$route" | jq -r '.key | split("/") | last')
     uri=$(echo "$route" | jq -r '.value.uri')
-    
+
     echo "Updating route: $uri"
-    
+
     # Get current config
     current_config=$(echo "$route" | jq -r '.value')
-    
+
     # Update upstream configuration
     # Instead of disabling SSL, we ensure proper host passing
     updated_config=$(echo "$current_config" | jq '
@@ -144,16 +144,16 @@ echo "$routes" | jq -c '.' | while IFS= read -r route; do
             "requests": 1000
         }
     ')
-    
+
     # Update the route
     response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X PUT \
         "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
         -H "Content-Type: application/json" \
         -d "$updated_config" 2>&1)
-    
+
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo -e "${GREEN}✓ Updated${NC}"
     else
@@ -169,10 +169,10 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
     response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
         -H "apikey: $VIOLENTUTF_API_KEY" \
         http://localhost:9080/ai/openapi/gsai-api-1/api/v1/models)
-    
+
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
     body=$(echo "$response" | sed '/HTTP_CODE:/d')
-    
+
     if [ "$http_code" = "200" ]; then
         echo -e "${GREEN}✓ Routes are working!${NC}"
         echo "Models found: $(echo "$body" | jq -r '.data[].id' 2>/dev/null | wc -l | xargs)"

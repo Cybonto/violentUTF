@@ -1,7 +1,13 @@
 name: 🔒 Security Issue
 description: Report or fix a security vulnerability in ViolentUTF
 title: "[SECURITY] "
-labels: ["type:security", "status:pending-acceptance", "priority:high", "project:violentutf"]
+labels:
+  [
+    "type:security",
+    "status:pending-acceptance",
+    "priority:high",
+    "project:violentutf",
+  ]
 body:
   - type: markdown
     attributes:

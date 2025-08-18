@@ -20,13 +20,13 @@ echo "=========================================="
 # Source the streamlit setup functions if available
 if [ -f "setup_macos_files/streamlit_setup.sh" ]; then
     source setup_macos_files/streamlit_setup.sh
-    
+
     # Check and setup Streamlit environment
     if ! ensure_streamlit_ready "violentutf"; then
         echo -e "${RED}Failed to setup Streamlit environment${NC}"
         exit 1
     fi
-    
+
     # Re-activate venv after setup (in case it was created)
     if [ -d "violentutf/.vitutf" ]; then
         source violentutf/.vitutf/bin/activate

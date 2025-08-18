@@ -33,7 +33,7 @@ When integrating Custom OpenAPI providers that use self-signed SSL certificates 
 - APISIX logs showing SSL certificate parsing failures:
   ```
   [lua] ssl.lua:211: in function 'create_obj_fun'
-  [lua] ssl.lua:217: in function 'fetch_cert' 
+  [lua] ssl.lua:217: in function 'fetch_cert'
   SSL certificate verification failed
   ```
 
@@ -59,7 +59,7 @@ Use `proxy-rewrite` plugin instead, which provides more flexibility for custom S
    ```bash
    # Extract root CA certificate
    docker cp custom-api-caddy-1:/data/caddy/pki/authorities/local/root.crt /tmp/custom-root-ca.crt
-   
+
    # Extract localhost certificate
    docker cp custom-api-caddy-1:/data/caddy/certificates/local/localhost/localhost.crt /tmp/custom-localhost.crt
    ```

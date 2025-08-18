@@ -399,7 +399,6 @@ class ResourceSearcher:
                 or query_lower in resource.get("description", "").lower()
                 or query_lower in resource.get("uri", "").lower()
             ):
-
                 # Filter by type if specified
                 if resource_type:
                     if resource_type in resource.get("uri", ""):
@@ -432,7 +431,6 @@ class ResourceSearcher:
         for prompt in prompts:
             # Check name and description
             if query_lower in prompt.get("name", "").lower() or query_lower in prompt.get("description", "").lower():
-
                 # Filter by category if specified
                 if category:
                     # Category might be in name or tags

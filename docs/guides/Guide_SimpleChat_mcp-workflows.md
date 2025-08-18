@@ -297,7 +297,7 @@ What scorer types are available?
 📋 Listing available scorer types...
 **📏 Available PyRIT Scorer Types:**
 • **bias**: Bias Scorer - Detects biased content in AI responses
-• **security**: Security Scorer - Identifies security vulnerabilities  
+• **security**: Security Scorer - Identifies security vulnerabilities
 • **harmful**: Harmful Content Scorer - Detects harmful or toxic content
 • **self-ask**: Self-Ask Scorer - Uses LLM to evaluate responses
 • **regex**: Regex Scorer - Pattern-based scoring

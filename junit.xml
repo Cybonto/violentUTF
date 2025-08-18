@@ -4,7 +4,7 @@ parser = &lt;violentutf.utils.mcp_integration.NaturalLanguageParser object at 0x
     def test_parse_mcp_help_command(self, parser):
         """Test parsing help commands"""
         test_cases = ["/mcp help", "show mcp commands", "what can mcp do", "mcp usage"]
-    
+
         for text in test_cases:
 &gt;           command = parser.parse_command(text)
 E           AttributeError: 'NaturalLanguageParser' object has no attribute 'parse_command'
@@ -19,7 +19,7 @@ analyzer = &lt;violentutf.utils.mcp_integration.ContextAnalyzer object at 0x114a
             {"role": "assistant", "content": "Loaded jailbreak dataset"},
             {"role": "user", "content": "Also load the bias-test dataset"},
         ]
-    
+
 &gt;       analysis = analyzer.analyze_context(messages)
 E       AttributeError: 'ContextAnalyzer' object has no attribute 'analyze_context'
 
@@ -33,7 +33,7 @@ analyzer = &lt;violentutf.utils.mcp_integration.ContextAnalyzer object at 0x11ab
             {"role": "assistant", "content": "I can help you test for jailbreak vulnerabilities"},
             {"role": "user", "content": "What datasets should I use?"},
         ]
-    
+
 &gt;       analysis = analyzer.analyze_context(messages)
 E       AttributeError: 'ContextAnalyzer' object has no attribute 'analyze_context'
 
@@ -85,7 +85,7 @@ parser = &lt;violentutf.utils.mcp_integration.NaturalLanguageParser object at 0x
         params = parser.extract_parameters("create a generator with temperature 0.8 and max_tokens 1000")
         assert params.get("temperature") == 0.8
         assert params.get("max_tokens") == 1000
-    
+
         params = parser.extract_parameters("use gpt-4 model with top_p 0.9")
 &gt;       assert params.get("model") == "gpt-4"
 E       AssertionError: assert None == 'gpt-4'
@@ -98,7 +98,7 @@ parser = &lt;violentutf.utils.mcp_integration.NaturalLanguageParser object at 0x
     def test_parse_enhance_commands(self, parser):
         """Test parsing enhance commands"""
         test_cases = ["/mcp enhance", "enhance this prompt", "improve this prompt", "make this prompt better"]
-    
+
         for text in test_cases:
 &gt;           command = parser.parse_command(text)
 E           AttributeError: 'NaturalLanguageParser' object has no attribute 'parse_command'
@@ -112,7 +112,7 @@ analyzer = &lt;violentutf.utils.mcp_integration.ContextAnalyzer object at 0x11ac
             {"role": "user", "content": "I created a GPT-4 generator"},
             {"role": "assistant", "content": "Generator created successfully"},
         ]
-    
+
 &gt;       analysis = analyzer.analyze_context(messages)
 E       AttributeError: 'ContextAnalyzer' object has no attribute 'analyze_context'
 

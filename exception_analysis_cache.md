@@ -10,8 +10,8 @@ Analyzing 13 instances of B110/B112 Bandit findings related to try/except/pass a
 ---
 
 ## Instance 1: config.py:46
-**File**: `violentutf_api/fastapi_app/app/api/endpoints/config.py`  
-**Line**: 46  
+**File**: `violentutf_api/fastapi_app/app/api/endpoints/config.py`
+**Line**: 46
 **Pattern**: `try/except/pass`
 
 **Context**:
@@ -38,8 +38,8 @@ def load_default_parameters() -> Dict[str, Any]:
 - **Recommendation**: Could benefit from debug logging but current behavior is safe
 
 ## Instance 2: files.py:211
-**File**: `violentutf_api/fastapi_app/app/api/endpoints/files.py`  
-**Line**: 211  
+**File**: `violentutf_api/fastapi_app/app/api/endpoints/files.py`
+**Line**: 211
 **Pattern**: `try/except/continue`
 
 **Context**:
@@ -71,8 +71,8 @@ for metadata_file in metadata_files:
 - **Recommendation**: Could log corrupted files for debugging but current behavior is safe
 
 ## Instance 3: sessions.py:38
-**File**: `violentutf_api/fastapi_app/app/api/endpoints/sessions.py`  
-**Line**: 38  
+**File**: `violentutf_api/fastapi_app/app/api/endpoints/sessions.py`
+**Line**: 38
 **Pattern**: `try/except/pass`
 
 **Context**:
@@ -80,7 +80,7 @@ for metadata_file in metadata_files:
 def get_session_data(username: str) -> Dict[str, Any]:
     """Get session data for a user"""
     session_file = get_session_file_path(username)
-    
+
     if os.path.exists(session_file):
         try:
             with open(session_file, "r") as f:
@@ -106,8 +106,8 @@ def get_session_data(username: str) -> Dict[str, Any]:
 - **Recommendation**: Could benefit from logging but current behavior is safe
 
 ## Instance 4: dataset_monitoring.py:415
-**File**: `violentutf_api/fastapi_app/app/core/dataset_monitoring.py`  
-**Line**: 415  
+**File**: `violentutf_api/fastapi_app/app/core/dataset_monitoring.py`
+**Line**: 415
 **Pattern**: `try/except/pass`
 
 **Context**:
@@ -129,8 +129,8 @@ def __del__(self):
 - **Recommendation**: Current behavior is appropriate for destructor cleanup
 
 ## Instance 5: pyrit_memory_bridge.py:329
-**File**: `violentutf_api/fastapi_app/app/services/pyrit_memory_bridge.py`  
-**Line**: 329  
+**File**: `violentutf_api/fastapi_app/app/services/pyrit_memory_bridge.py`
+**Line**: 329
 **Pattern**: `try/except/pass`
 
 **Context**:
@@ -151,8 +151,8 @@ def __del__(self):
 - **Recommendation**: Current behavior is appropriate for destructor cleanup
 
 ## Instance 6: generator_config.py:852
-**File**: `violentutf/generators/generator_config.py`  
-**Line**: 852  
+**File**: `violentutf/generators/generator_config.py`
+**Line**: 852
 **Pattern**: `try/except/pass`
 
 **Context**:
@@ -172,8 +172,8 @@ except Exception:
 - **Recommendation**: Current behavior is appropriate for error message enhancement
 
 ## Instance 7: generator_config.py:1124
-**File**: `violentutf/generators/generator_config.py`  
-**Line**: 1124  
+**File**: `violentutf/generators/generator_config.py`
+**Line**: 1124
 **Pattern**: `try/except/pass`
 
 **Context**:

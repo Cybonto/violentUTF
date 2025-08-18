@@ -52,7 +52,7 @@ cd apisix && ./verify_routes.sh
 
 **Windows:**
 ```cmd
-# Clone repository  
+# Clone repository
 git clone <repository-url> violentutf
 cd violentutf
 
@@ -166,15 +166,15 @@ streamlit run Home.py --server.port 8501 --server.address 0.0.0.0
 server {
     listen 443 ssl http2;
     server_name api.violentutf.com;
-    
+
     ssl_certificate /etc/ssl/certs/violentutf.crt;
     ssl_certificate_key /etc/ssl/private/violentutf.key;
-    
+
     # Security headers
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Frame-Options DENY always;
     add_header X-Content-Type-Options nosniff always;
-    
+
     location / {
         proxy_pass http://apisix_backend;
         proxy_set_header Host $host;
@@ -604,12 +604,12 @@ scrape_configs:
     static_configs:
       - targets: ['apisix:9091']
     metrics_path: '/apisix/prometheus/metrics'
-    
+
   - job_name: 'fastapi'
     static_configs:
       - targets: ['fastapi:8000']
     metrics_path: '/metrics'
-    
+
   - job_name: 'keycloak'
     static_configs:
       - targets: ['keycloak:8080']
@@ -641,7 +641,7 @@ alerting:
       },
       {
         "title": "Response Time",
-        "type": "graph", 
+        "type": "graph",
         "targets": [
           {
             "expr": "histogram_quantile(0.95, rate(apisix_http_request_duration_seconds_bucket[5m]))",
@@ -679,7 +679,7 @@ groups:
         annotations:
           summary: "High error rate detected"
           description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
-          
+
       - alert: HighResponseTime
         expr: histogram_quantile(0.95, rate(apisix_http_request_duration_seconds_bucket[5m])) > 2
         for: 5m
@@ -688,7 +688,7 @@ groups:
         annotations:
           summary: "High response time detected"
           description: "95th percentile response time is {{ $value }}s"
-          
+
       - alert: ServiceDown
         expr: up{job=~"fastapi|apisix|keycloak"} == 0
         for: 1m
@@ -720,20 +720,20 @@ REQUEST_DURATION = Histogram(
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
     start_time = time.time()
-    
+
     response = await call_next(request)
-    
+
     REQUEST_COUNT.labels(
         method=request.method,
         endpoint=request.url.path,
         status=response.status_code
     ).inc()
-    
+
     REQUEST_DURATION.labels(
         method=request.method,
         endpoint=request.url.path
     ).observe(time.time() - start_time)
-    
+
     return response
 
 @app.get("/metrics")
@@ -841,9 +841,8 @@ ssl:
     ...
     -----END CERTIFICATE-----
   key: |
-    -----BEGIN PRIVATE KEY-----
-    ...
-    -----END PRIVATE KEY-----
+    # Private key content goes here (PEM format)
+    # Do not commit actual private keys
   sni: api.violentutf.com
 ```
 
@@ -943,7 +942,7 @@ upstream fastapi_backend {
     server fastapi1:8000 weight=1 max_fails=3 fail_timeout=30s;
     server fastapi2:8000 weight=1 max_fails=3 fail_timeout=30s;
     server fastapi3:8000 weight=1 max_fails=3 fail_timeout=30s;
-    
+
     # Health check
     check interval=5000 rise=2 fall=3 timeout=1000;
 }
@@ -992,10 +991,10 @@ services:
       POSTGRES_REPLICATION_USER: replicator
       POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
     command: |
-      postgres 
-      -c wal_level=replica 
-      -c hot_standby=on 
-      -c max_wal_senders=10 
+      postgres
+      -c wal_level=replica
+      -c hot_standby=on
+      -c max_wal_senders=10
       -c max_replication_slots=10
 
   postgres-replica:
@@ -1094,7 +1093,7 @@ async def detailed_health():
         "timestamp": datetime.utcnow().isoformat(),
         "services": {}
     }
-    
+
     # Database check
     try:
         db.execute("SELECT 1")
@@ -1102,14 +1101,14 @@ async def detailed_health():
     except Exception as e:
         health_status["services"]["database"] = f"error: {e}"
         health_status["status"] = "unhealthy"
-    
+
     # Keycloak check
     try:
         response = requests.get(f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}", timeout=5)
         health_status["services"]["keycloak"] = "reachable" if response.status_code == 200 else "unreachable"
     except Exception as e:
         health_status["services"]["keycloak"] = f"error: {e}"
-    
+
     # PyRIT check
     try:
         from pyrit.memory import CentralMemory
@@ -1117,7 +1116,7 @@ async def detailed_health():
         health_status["services"]["pyrit"] = "available"
     except Exception as e:
         health_status["services"]["pyrit"] = f"error: {e}"
-    
+
     return health_status
 ```
 
@@ -1182,7 +1181,7 @@ import sqlalchemy as sa
 
 def upgrade():
     """Add new columns for v2.0 features"""
-    op.add_column('orchestrator_configs', 
+    op.add_column('orchestrator_configs',
                   sa.Column('config_version', sa.String(10), nullable=True))
     op.add_column('orchestrator_configs',
                   sa.Column('created_by', sa.String(255), nullable=True))

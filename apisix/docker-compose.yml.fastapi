@@ -1,5 +1,5 @@
 # FastAPI service configuration to be added to APISIX docker-compose.yml
-  
+
   # ViolentUTF API Service
   fastapi:
     container_name: violentutf_api

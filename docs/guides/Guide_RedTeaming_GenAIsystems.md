@@ -96,11 +96,11 @@
         - [Triggers](#triggers)
     - [6c. Reports and Dashboards](#6c-reports-and-dashboards)
     - [6d. Integration](#6d-integration)
-    
+
 ## 1. Target System Description
 To effectively describe a production Generative AI system for risk assessment and penetration testing, we first need to understand the basics of the system.
 - **1. System Architecture:**
-  - **System Flows:** Present a diagram of the system flows. 
+  - **System Flows:** Present a diagram of the system flows.
   - **Model Type and Architecture:** Specify the type of Generative AI model used (e.g., LLM, GAN) and its architecture, including the number of layers, parameters, and any specific design choices.
   - **Training Data and Preprocessing:** Describe the data used to train the model, including its source, size, and any preprocessing steps.
   - **Deployment Environment and Infrastructure:** Describe the infrastructure and environment where the model is deployed (e.g., cloud platform, on-premises servers).

@@ -155,10 +155,10 @@ def _attempt_proactive_refresh(self):
     try:
         if not self._should_refresh():
             return
-            
+
         self._refresh_in_progress = True
         new_token = self._create_fresh_token()
-        
+
         if new_token:
             st.session_state['api_token'] = new_token
             self._last_refresh_time = time.time()
@@ -286,7 +286,7 @@ OPENAPI_1_ENABLED=true
 OPENAPI_1_AUTH_TYPE=bearer
 OPENAPI_1_AUTH_TOKEN=sk-your-provider-token
 
-# OpenAPI Provider 2  
+# OpenAPI Provider 2
 OPENAPI_2_ENABLED=true
 OPENAPI_2_AUTH_TYPE=api_key
 OPENAPI_2_API_KEY=your-api-key
@@ -337,15 +337,15 @@ def main():
     # MANDATORY: Use centralized authentication handler
     from utils.auth_utils import handle_authentication_and_sidebar
     handle_authentication_and_sidebar("Page Name")
-    
+
     # MANDATORY: Check authentication status
     has_keycloak_token = bool(st.session_state.get('access_token'))
     has_env_credentials = bool(os.getenv('KEYCLOAK_USERNAME'))
-    
+
     if not has_keycloak_token and not has_env_credentials:
         st.warning("⚠️ Authentication required")
         return
-    
+
     # MANDATORY: Ensure API token exists
     if not st.session_state.get('api_token'):
         api_token = create_compatible_api_token()
@@ -363,25 +363,25 @@ def get_auth_headers() -> Dict[str, str]:
     """Get authentication headers for API requests through APISIX Gateway"""
     try:
         from utils.jwt_manager import jwt_manager
-        
+
         # Get valid token (automatically handles refresh if needed)
         token = jwt_manager.get_valid_token()
-        
+
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "X-API-Gateway": "APISIX"  # Gateway identification
         }
-        
+
         # Add APISIX API key for AI model access
         apisix_api_key = (
-            os.getenv("VIOLENTUTF_API_KEY") or 
+            os.getenv("VIOLENTUTF_API_KEY") or
             os.getenv("APISIX_API_KEY") or
             os.getenv("AI_GATEWAY_API_KEY")
         )
         if apisix_api_key:
             headers["apikey"] = apisix_api_key
-        
+
         return headers
     except Exception as e:
         logger.error(f"Failed to get auth headers: {e}")
@@ -398,7 +398,7 @@ def show_authenticated_sidebar(page_name: str = "") -> str:
         try:
             from utils.jwt_manager import jwt_manager
             status, minutes_remaining = jwt_manager.get_refresh_status()
-            
+
             if status == "refreshing":
                 st.info("🔄 AI Gateway: Refreshing Token...")
             elif status == "expired":
@@ -528,7 +528,7 @@ cd apisix && ./update_openapi_auth.sh
 # Check if authentication headers are configured
 curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" \
      http://localhost:9180/apisix/admin/routes | \
-     jq '.list[] | select(.value.uri | contains("/ai/openapi/")) | 
+     jq '.list[] | select(.value.uri | contains("/ai/openapi/")) |
          {id: .key, auth: .value.plugins."proxy-rewrite".headers.set}'
 ```
 

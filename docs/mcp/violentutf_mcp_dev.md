@@ -1,8 +1,8 @@
 # ViolentUTF MCP Implementation Plan
 
-> **Document Type**: Development Implementation Guide  
-> **Scope**: Phases 1-3 Detailed Implementation  
-> **Approach**: Milestone-Based Testing with Integrated Documentation  
+> **Document Type**: Development Implementation Guide
+> **Scope**: Phases 1-3 Detailed Implementation
+> **Approach**: Milestone-Based Testing with Integrated Documentation
 > **Last Updated**: January 2025
 
 ## Overview
@@ -58,19 +58,19 @@ Rather than following strict test-driven development, this implementation plan u
         server_name: str = "ViolentUTF Security Testing"
         server_version: str = "0.1.0"
         server_description: str = "AI red-teaming platform via MCP"
-        
+
         # Transport configuration
         enabled_transports: List[str] = ["stdio", "http"]
         http_port: int = 8001
-        
+
         # Authentication
         oauth_proxy_enabled: bool = True
         require_authentication: bool = True
-        
+
         # Performance
         max_concurrent_operations: int = 10
         operation_timeout: int = 30
-        
+
         class Config:
             env_prefix = "MCP_"
 ```
@@ -117,47 +117,47 @@ Rather than following strict test-driven development, this implementation plan u
 
     class ViolentUTFMCPServer:
         """MCP Server that integrates with the existing ViolentUTF FastAPI instance"""
-        
+
         def __init__(self, settings: MCPSettings = None):
             self.settings = settings or MCPSettings()
             self.server = None
             self.mcp_app = None
-            
+
         def create_server(self) -> Server:
             """Create and configure MCP server"""
             logger.info(f"Creating MCP server: {self.settings.server_name}")
-            
+
             # Create base server
             server = Server(
                 name=self.settings.server_name,
                 version=self.settings.server_version,
                 description=self.settings.server_description
             )
-            
+
             # Configure transports for external clients
             if "http" in self.settings.enabled_transports:
                 # HTTP/SSE for external clients (Claude Desktop, Cursor, etc)
                 server.enable_http_transport()
-                
+
             if "stdio" in self.settings.enabled_transports:
                 # Stdio for development/testing
                 server.enable_stdio_transport()
-            
+
             # ASGI transport is implicit when mounted to FastAPI
-            
+
             self.server = server
             return server
-            
+
         def mount_to_app(self, app: FastAPI) -> None:
             """Mount MCP server to existing ViolentUTF FastAPI app"""
             if not self.server:
                 self.create_server()
-                
+
             # Create FastAPI-MCP integration
             auth_handler = None
             if self.settings.require_authentication:
                 auth_handler = MCPAuthHandler()
-                
+
             self.mcp_app = FastAPIMCP(
                 server=self.server,
                 auth_handler=auth_handler,
@@ -167,11 +167,11 @@ Rather than following strict test-driven development, this implementation plan u
                     "description": self.settings.server_description
                 }
             )
-            
+
             # Mount to the existing app at /mcp path
             app.mount("/mcp", self.mcp_app)
             logger.info(f"MCP server mounted at /mcp on existing FastAPI instance")
-            
+
         def configure_tools(self):
             """Configure MCP tools from existing ViolentUTF endpoints"""
             # This will be implemented in Phase 2
@@ -204,7 +204,7 @@ Rather than following strict test-driven development, this implementation plan u
 
     ## Components
     1. **ViolentUTFMCPServer**: Main server class that mounts to existing FastAPI
-    2. **Transport Layer**: 
+    2. **Transport Layer**:
     - HTTP/SSE: For external MCP clients (Claude Desktop, Cursor, etc)
     - ASGI: Internal transport for optimal performance
     - Stdio: Development and testing
@@ -244,15 +244,15 @@ Rather than following strict test-driven development, this implementation plan u
 
     class MCPAuthHandler:
         """Handles authentication for MCP operations"""
-        
+
         def __init__(self):
             # Use the existing keycloak_verifier instance
             self.keycloak_verifier = keycloak_verifier
-            
+
         async def authenticate(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
             """Authenticate MCP client"""
             auth_type = credentials.get("type", "bearer")
-            
+
             if auth_type == "bearer":
                 return await self._handle_bearer_auth(credentials)
             elif auth_type == "oauth":
@@ -262,7 +262,7 @@ Rather than following strict test-driven development, this implementation plan u
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail=f"Unsupported authentication type: {auth_type}"
                 )
-                
+
         async def _handle_bearer_auth(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
             """Handle bearer token authentication"""
             token = credentials.get("token")
@@ -271,7 +271,7 @@ Rather than following strict test-driven development, this implementation plan u
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Bearer token required"
                 )
-                
+
             # Verify JWT token using existing verification
             try:
                 # First try to verify as Keycloak token
@@ -305,7 +305,7 @@ Rather than following strict test-driven development, this implementation plan u
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid token"
                 )
-                
+
         async def _handle_oauth_auth(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
             """Handle OAuth authentication flow"""
             code = credentials.get("code")
@@ -314,12 +314,12 @@ Rather than following strict test-driven development, this implementation plan u
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Authorization code required"
                 )
-                
+
             # Exchange code for token via Keycloak
             try:
                 # Use httpx to call Keycloak token endpoint directly
                 token_url = f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}/protocol/openid-connect/token"
-                
+
                 async with httpx.AsyncClient() as client:
                     response = await client.post(
                         token_url,
@@ -332,18 +332,18 @@ Rather than following strict test-driven development, this implementation plan u
                             "code_verifier": code_verifier
                         }
                     )
-                    
+
                     if response.status_code != 200:
                         raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Failed to exchange code"
                         )
-                        
+
                     token_response = response.json()
                 user_info = await self.keycloak.get_user_info(
                     token_response["access_token"]
                 )
-                
+
                 return {
                     "user_id": user_info["sub"],
                     "roles": user_info.get("roles", []),
@@ -411,15 +411,15 @@ Rather than following strict test-driven development, this implementation plan u
 
     class APISIXRouteManager:
         """Manages APISIX routes for MCP endpoints"""
-        
+
         def __init__(self):
             self.admin_url = settings.APISIX_ADMIN_URL
             self.admin_key = settings.APISIX_ADMIN_KEY
-            
+
         async def create_mcp_routes(self) -> Dict[str, Any]:
             """Create all required MCP routes in APISIX"""
             routes = []
-            
+
             # Main MCP route
             main_route = await self._create_route(
                 route_id="mcp-main",
@@ -447,7 +447,7 @@ Rather than following strict test-driven development, this implementation plan u
                 }
             )
             routes.append(main_route)
-            
+
             # OAuth callback route (no JWT required)
             oauth_route = await self._create_route(
                 route_id="mcp-oauth",
@@ -464,13 +464,13 @@ Rather than following strict test-driven development, this implementation plan u
                 }
             )
             routes.append(oauth_route)
-            
+
             return {"routes": routes, "status": "created"}
-            
+
         async def _create_route(
-            self, 
-            route_id: str, 
-            uri: str, 
+            self,
+            route_id: str,
+            uri: str,
             upstream_url: str,
             plugins: Dict[str, Any]
         ) -> Dict[str, Any]:
@@ -485,18 +485,18 @@ Rather than following strict test-driven development, this implementation plan u
                 },
                 "plugins": plugins
             }
-            
+
             async with httpx.AsyncClient() as client:
                 response = await client.put(
                     f"{self.admin_url}/routes/{route_id}",
                     json=route_config,
                     headers={"X-API-KEY": self.admin_key}
                 )
-                
+
                 if response.status_code not in [200, 201]:
                     logger.error(f"Failed to create route {route_id}: {response.text}")
                     raise Exception(f"Route creation failed: {response.status_code}")
-                    
+
                 logger.info(f"Created APISIX route: {route_id}")
                 return response.json()
 ```
@@ -562,24 +562,24 @@ Rather than following strict test-driven development, this implementation plan u
 
     class MCPOAuthProxy:
         """Provides OAuth proxy endpoints for MCP client compatibility"""
-        
+
         def __init__(self):
             self.keycloak_verifier = keycloak_verifier
             self.router = APIRouter(prefix="/mcp/oauth")
             self.pkce_verifiers: Dict[str, str] = {}  # Store PKCE verifiers
             self._setup_routes()
-            
+
         def _setup_routes(self):
             """Configure OAuth proxy routes"""
             self.router.get("/.well-known/oauth-authorization-server")(self.get_oauth_metadata)
             self.router.get("/authorize")(self.proxy_authorize)
             self.router.post("/token")(self.proxy_token_exchange)
             self.router.get("/callback")(self.handle_callback)
-            
+
         async def get_oauth_metadata(self) -> JSONResponse:
             """Provide OAuth metadata for MCP clients"""
             base_url = settings.EXTERNAL_URL or "http://localhost:9080"
-            
+
             metadata = {
                 "issuer": f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}",
                 "authorization_endpoint": f"{base_url}/mcp/oauth/authorize",
@@ -606,29 +606,29 @@ Rather than following strict test-driven development, this implementation plan u
                     "sub", "name", "email", "preferred_username"
                 ]
             }
-            
+
             # Add client configuration for development
             if settings.ENVIRONMENT == "development":
                 metadata["client_id"] = "mcp-server"
                 metadata["client_secret"] = settings.MCP_CLIENT_SECRET
-                
+
             return JSONResponse(metadata)
-            
+
         async def proxy_authorize(self, request: Request) -> JSONResponse:
             """Proxy authorization request to Keycloak"""
             params = dict(request.query_params)
-            
+
             # Store PKCE code verifier if provided
             if "code_challenge" in params:
                 state = params.get("state", secrets.token_urlsafe(16))
                 self.pkce_verifiers[state] = params.get("code_verifier", "")
-                
+
             # Build Keycloak authorization URL
             keycloak_auth_url = (
                 f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}"
                 f"/protocol/openid-connect/auth"
             )
-            
+
             # Forward to Keycloak with proxy callback
             proxy_params = {
                 "client_id": "mcp-server",
@@ -639,32 +639,32 @@ Rather than following strict test-driven development, this implementation plan u
                 "code_challenge": params.get("code_challenge"),
                 "code_challenge_method": params.get("code_challenge_method", "S256")
             }
-            
+
             # Remove None values
             proxy_params = {k: v for k, v in proxy_params.items() if v is not None}
-            
+
             # Build redirect URL
             redirect_url = f"{keycloak_auth_url}?" + "&".join(
                 f"{k}={v}" for k, v in proxy_params.items()
             )
-            
+
             return JSONResponse({
                 "redirect_url": redirect_url
             }, status_code=302, headers={"Location": redirect_url})
-            
+
         async def handle_callback(self, request: Request) -> JSONResponse:
             """Handle OAuth callback from Keycloak"""
             code = request.query_params.get("code")
             state = request.query_params.get("state")
             error = request.query_params.get("error")
-            
+
             if error:
                 logger.error(f"OAuth callback error: {error}")
                 raise HTTPException(status_code=400, detail=error)
-                
+
             if not code:
                 raise HTTPException(status_code=400, detail="Missing authorization code")
-                
+
             # Redirect back to MCP client with code
             client_redirect = request.query_params.get("redirect_uri", "")
             if client_redirect:
@@ -679,18 +679,18 @@ Rather than following strict test-driven development, this implementation plan u
                     "code": code,
                     "state": state
                 })
-                
+
         async def proxy_token_exchange(self, request: Request) -> JSONResponse:
             """Proxy token exchange to Keycloak"""
             form_data = await request.form()
-            
+
             # Extract parameters
             code = form_data.get("code")
             grant_type = form_data.get("grant_type", "authorization_code")
             redirect_uri = form_data.get("redirect_uri")
             code_verifier = form_data.get("code_verifier")
             refresh_token = form_data.get("refresh_token")
-            
+
             try:
                 if grant_type == "authorization_code":
                     # Exchange code for tokens
@@ -707,16 +707,16 @@ Rather than following strict test-driven development, this implementation plan u
                         status_code=400,
                         detail=f"Unsupported grant type: {grant_type}"
                     )
-                    
+
                 # Create ViolentUTF API token from Keycloak token
                 from utils.jwt_manager import jwt_manager
-                
+
                 # Decode Keycloak token to get user info
                 keycloak_payload = jwt.decode(
                     token_data["access_token"],
                     options={"verify_signature": False}  # Keycloak already verified
                 )
-                
+
                 # Create ViolentUTF token
                 api_token = jwt_manager.create_token({
                     "sub": keycloak_payload.get("sub"),
@@ -725,7 +725,7 @@ Rather than following strict test-driven development, this implementation plan u
                     "name": keycloak_payload.get("name"),
                     "roles": keycloak_payload.get("realm_access", {}).get("roles", [])
                 })
-                
+
                 # Return both tokens
                 return JSONResponse({
                     "access_token": api_token,  # ViolentUTF API token for MCP
@@ -735,7 +735,7 @@ Rather than following strict test-driven development, this implementation plan u
                     "refresh_token": token_data.get("refresh_token"),
                     "scope": token_data.get("scope", "openid profile email violentutf-api")
                 })
-                
+
             except Exception as e:
                 logger.error(f"Token exchange failed: {e}")
                 raise HTTPException(
@@ -756,7 +756,7 @@ Rather than following strict test-driven development, this implementation plan u
     # In mount_to_app method, add:
     def mount_to_app(self, app: FastAPI) -> None:
         # ... existing mount code ...
-        
+
         # Mount OAuth proxy routes
         app.include_router(oauth_proxy.router)
         logger.info("OAuth proxy routes mounted for MCP client compatibility")
@@ -843,59 +843,59 @@ import os
 
 class TestPhase1Milestone:
     """Integration tests for Phase 1 foundation components"""
-    
+
     def test_environment_configuration(self):
         """Verify MCP environment is properly configured"""
         # Test default settings
         settings = MCPSettings()
         assert settings.server_name == "ViolentUTF Security Testing"
         assert "stdio" in settings.enabled_transports
-        
+
         # Test environment override
         os.environ["MCP_SERVER_NAME"] = "Test Server"
         settings = MCPSettings()
         assert settings.server_name == "Test Server"
-    
+
     def test_server_initialization(self):
         """Verify MCP server initializes correctly"""
         server = ViolentUTFMCPServer()
         assert server is not None
-        
+
         # Create server instance
         mcp_instance = server.create_server()
         assert mcp_instance.name == "ViolentUTF Security Testing"
-    
+
     def test_mcp_mount_to_existing_app(self):
         """Verify MCP server mounts to existing FastAPI app"""
         # Test with the actual ViolentUTF API app
         client = TestClient(app)
-        
+
         # MCP should be mounted at /mcp
         response = client.get("/mcp/health")
         assert response.status_code == 200
-        
+
         # Verify main API still works
         response = client.get("/api/v1/health")
         assert response.status_code == 200
-        
+
     def test_authentication_components(self):
         """Verify authentication components are functional"""
         auth_handler = MCPAuthHandler()
         assert auth_handler is not None
         assert hasattr(auth_handler, 'authenticate')
-        
+
     @pytest.mark.asyncio
     async def test_bearer_token_auth(self):
         """Test bearer token authentication flow"""
         auth_handler = MCPAuthHandler()
         # Test with valid token scenario
         # This would use a mock token in real tests
-        
+
     def test_apisix_route_configuration(self):
         """Verify APISIX routes are properly configured"""
         # This would test the route configuration
         # In real implementation, would check APISIX admin API
-        
+
     def test_oauth_proxy_endpoints(self, test_client):
         """Test OAuth proxy endpoints"""
         response = test_client.get("/mcp/oauth/.well-known/oauth-authorization-server")
@@ -953,24 +953,24 @@ class ToolDefinition(BaseModel):
     name: str
     description: str
     parameters: List[ToolParameter] = []
-    
+
 class BaseTool(ABC):
     """Base class for all MCP tools"""
-    
+
     def __init__(self, name: str, description: str):
         self.name = name
         self.description = description
         self.parameters: List[ToolParameter] = []
-        
+
     @abstractmethod
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Execute the tool with given parameters"""
         pass
-        
+
     def add_parameter(self, parameter: ToolParameter):
         """Add parameter to tool definition"""
         self.parameters.append(parameter)
-        
+
     def get_definition(self) -> ToolDefinition:
         """Get complete tool definition"""
         return ToolDefinition(
@@ -978,52 +978,52 @@ class BaseTool(ABC):
             description=self.description,
             parameters=self.parameters
         )
-        
+
     def validate_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Validate parameters against definition"""
         validated = {}
-        
+
         for param_def in self.parameters:
             value = params.get(param_def.name)
-            
+
             # Check required parameters
             if param_def.required and value is None:
                 raise ValueError(f"Required parameter '{param_def.name}' missing")
-                
+
             # Apply default if not provided
             if value is None and param_def.default is not None:
                 value = param_def.default
-                
+
             # Validate enum values
             if value is not None and param_def.enum:
                 if value not in param_def.enum:
                     raise ValueError(
                         f"Parameter '{param_def.name}' must be one of {param_def.enum}"
                     )
-                    
+
             validated[param_def.name] = value
-            
+
         return validated
 
 class ToolRegistry:
     """Registry for all available tools"""
-    
+
     def __init__(self):
         self._tools: Dict[str, BaseTool] = {}
-        
+
     def register(self, tool: BaseTool):
         """Register a tool"""
         logger.info(f"Registering tool: {tool.name}")
         self._tools[tool.name] = tool
-        
+
     def get(self, name: str) -> Optional[BaseTool]:
         """Get tool by name"""
         return self._tools.get(name)
-        
+
     def list_tools(self) -> List[ToolDefinition]:
         """List all available tools"""
         return [tool.get_definition() for tool in self._tools.values()]
-        
+
 # Global tool registry
 tool_registry = ToolRegistry()
 ```
@@ -1038,7 +1038,7 @@ from violentutf_api.mcp.tools.base import (
 
 class MockTool(BaseTool):
     """Mock tool for testing"""
-    
+
     async def execute(self, params):
         return {"result": f"Executed with {params}"}
 
@@ -1051,12 +1051,12 @@ def test_tool_definition():
         description="Test input",
         required=True
     ))
-    
+
     definition = tool.get_definition()
     assert definition.name == "test_tool"
     assert len(definition.parameters) == 1
     assert definition.parameters[0].required == True
-    
+
 def test_parameter_validation():
     """Test parameter validation"""
     tool = MockTool("validator", "Validation test")
@@ -1067,33 +1067,33 @@ def test_parameter_validation():
         required=True,
         enum=["option1", "option2"]
     ))
-    
+
     # Valid parameter
     validated = tool.validate_params({"choice": "option1"})
     assert validated["choice"] == "option1"
-    
+
     # Missing required parameter
     with pytest.raises(ValueError) as exc_info:
         tool.validate_params({})
     assert "Required parameter 'choice' missing" in str(exc_info.value)
-    
+
     # Invalid enum value
     with pytest.raises(ValueError) as exc_info:
         tool.validate_params({"choice": "option3"})
     assert "must be one of" in str(exc_info.value)
-    
+
 def test_tool_registry():
     """Test tool registration and retrieval"""
     registry = ToolRegistry()
     tool = MockTool("registry_test", "Registry test tool")
-    
+
     registry.register(tool)
-    
+
     # Retrieve tool
     retrieved = registry.get("registry_test")
     assert retrieved is not None
     assert retrieved.name == "registry_test"
-    
+
     # List tools
     tools = registry.list_tools()
     assert len(tools) >= 1
@@ -1116,7 +1116,7 @@ class MyTool(BaseTool):
             description="What this tool does"
         )
         self._setup_parameters()
-        
+
     def _setup_parameters(self):
         self.add_parameter(ToolParameter(
             name="param1",
@@ -1131,10 +1131,10 @@ class MyTool(BaseTool):
 async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
     # Validate parameters
     validated = self.validate_params(params)
-    
+
     # Tool logic here
     result = await self._do_work(validated)
-    
+
     # Return structured response
     return {
         "success": True,
@@ -1182,7 +1182,7 @@ logger = logging.getLogger(__name__)
 
 class ViolentUTFToolFilter(ToolFilter):
     """Custom tool filter for ViolentUTF API endpoints"""
-    
+
     # Endpoints to include in MCP exposure
     INCLUDE_PATTERNS = [
         r"^/api/v1/orchestrators",
@@ -1196,7 +1196,7 @@ class ViolentUTFToolFilter(ToolFilter):
         r"^/api/v1/files",
         r"^/api/v1/database"
     ]
-    
+
     # Endpoints to exclude from MCP exposure
     EXCLUDE_PATTERNS = [
         r"/admin",
@@ -1206,7 +1206,7 @@ class ViolentUTFToolFilter(ToolFilter):
         r"/delete",  # Destructive operations
         r"/reset",   # Reset operations
     ]
-    
+
     # HTTP method to tool name mapping
     METHOD_PREFIX_MAP = {
         "GET": "get_",
@@ -1215,7 +1215,7 @@ class ViolentUTFToolFilter(ToolFilter):
         "PATCH": "modify_",
         "DELETE": "remove_"
     }
-    
+
     def should_include_endpoint(self, path: str, method: str) -> bool:
         """Determine if endpoint should be exposed as MCP tool"""
         # Check exclude patterns first
@@ -1223,29 +1223,29 @@ class ViolentUTFToolFilter(ToolFilter):
             if re.search(pattern, path, re.IGNORECASE):
                 logger.debug(f"Excluding {method} {path} - matches exclude pattern")
                 return False
-                
+
         # Check include patterns
         for pattern in self.INCLUDE_PATTERNS:
             if re.search(pattern, path):
                 logger.debug(f"Including {method} {path} - matches include pattern")
                 return True
-                
+
         # Default to exclude
         return False
-        
+
     def generate_tool_name(self, path: str, method: str) -> str:
         """Generate MCP-compliant tool name from endpoint"""
         # Get method prefix
         prefix = self.METHOD_PREFIX_MAP.get(method, "")
-        
+
         # Extract resource name from path
         # /api/v1/orchestrators/{id}/executions -> orchestrator_executions
         path_parts = path.strip("/").split("/")
-        
+
         # Skip api/v1 prefix
         if len(path_parts) > 2 and path_parts[0] == "api" and path_parts[1] == "v1":
             path_parts = path_parts[2:]
-            
+
         # Build tool name
         resource_parts = []
         for part in path_parts:
@@ -1254,26 +1254,26 @@ class ViolentUTFToolFilter(ToolFilter):
                 part = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', part)
                 part = re.sub(r'([a-z\d])([A-Z])', r'\1_\2', part)
                 resource_parts.append(part.lower())
-                
+
         tool_name = prefix + "_".join(resource_parts)
-        
+
         # Ensure MCP compliance
         tool_name = re.sub(r'[^a-zA-Z0-9_]', '_', tool_name)
         tool_name = re.sub(r'_+', '_', tool_name).strip('_')
-        
+
         # Truncate if too long
         if len(tool_name) > 64:
             tool_name = tool_name[:64].rstrip('_')
-            
+
         return tool_name
-        
+
     def enhance_tool_metadata(self, tool_name: str, endpoint_info: Dict[str, Any]) -> Dict[str, Any]:
         """Add ViolentUTF-specific metadata to tools"""
         # Categorize tools
         category = "general"
         risk_level = "low"
         requires_approval = False
-        
+
         if "orchestrator" in tool_name:
             category = "orchestration"
             if "start" in tool_name or "execute" in tool_name:
@@ -1286,19 +1286,19 @@ class ViolentUTFToolFilter(ToolFilter):
             category = "evaluation"
         elif "converter" in tool_name:
             category = "transformation"
-            
+
         # High-risk operations
         if any(action in tool_name for action in ["delete", "reset", "purge"]):
             risk_level = "high"
             requires_approval = True
-            
+
         return {
             "category": category,
             "risk_level": risk_level,
             "requires_approval": requires_approval,
             "workflow_phase": self._get_workflow_phase(category)
         }
-        
+
     def _get_workflow_phase(self, category: str) -> str:
         """Map category to ViolentUTF workflow phase"""
         phase_map = {
@@ -1313,22 +1313,22 @@ class ViolentUTFToolFilter(ToolFilter):
 
 class FastAPIMCPIntegration:
     """Handles FastAPI-MCP zero-configuration integration"""
-    
+
     def __init__(self, app: FastAPI):
         self.app = app
         self.tool_filter = ViolentUTFToolFilter()
         self.discovered_tools: Dict[str, Any] = {}
-        
+
     def discover_and_register_tools(self) -> Dict[str, Any]:
         """Automatically discover and register FastAPI endpoints as MCP tools"""
         tool_count = 0
-        
+
         for route in self.app.routes:
             if hasattr(route, "endpoint") and hasattr(route, "methods"):
                 for method in route.methods:
                     if self.tool_filter.should_include_endpoint(route.path, method):
                         tool_name = self.tool_filter.generate_tool_name(route.path, method)
-                        
+
                         # Get endpoint metadata
                         endpoint_info = {
                             "path": route.path,
@@ -1337,23 +1337,23 @@ class FastAPIMCPIntegration:
                             "description": route.endpoint.__doc__ or f"{method} {route.path}",
                             "parameters": self._extract_parameters(route)
                         }
-                        
+
                         # Enhance with ViolentUTF metadata
                         metadata = self.tool_filter.enhance_tool_metadata(tool_name, endpoint_info)
                         endpoint_info.update(metadata)
-                        
+
                         self.discovered_tools[tool_name] = endpoint_info
                         tool_count += 1
-                        
+
                         logger.info(f"Discovered tool: {tool_name} ({method} {route.path})")
-                        
+
         logger.info(f"Auto-discovered {tool_count} tools from FastAPI endpoints")
         return self.discovered_tools
-        
+
     def _extract_parameters(self, route) -> List[Dict[str, Any]]:
         """Extract parameter information from FastAPI route"""
         parameters = []
-        
+
         # Extract path parameters
         if hasattr(route, "param_converters"):
             for param_name, converter in route.param_converters.items():
@@ -1363,10 +1363,10 @@ class FastAPIMCPIntegration:
                     "required": True,
                     "location": "path"
                 })
-                
+
         # Extract query/body parameters from endpoint signature
         # This would require more sophisticated inspection in real implementation
-        
+
         return parameters
 ```
 
@@ -1381,21 +1381,21 @@ class ViolentUTFMCPServer:
     def __init__(self):
         # ... existing init code ...
         self.auto_discovery = None
-        
+
     def mount_to_app(self, app: FastAPI) -> None:
         """Mount MCP server to existing ViolentUTF FastAPI app"""
         # ... existing mount code ...
-        
+
         # Initialize auto-discovery after mounting
         self.auto_discovery = FastAPIMCPIntegration(app)
         discovered_tools = self.auto_discovery.discover_and_register_tools()
-        
+
         # Register discovered tools with MCP
         for tool_name, tool_info in discovered_tools.items():
             self._register_auto_discovered_tool(tool_name, tool_info)
-            
+
         logger.info(f"Registered {len(discovered_tools)} auto-discovered tools")
-        
+
     def _register_auto_discovered_tool(self, tool_name: str, tool_info: Dict[str, Any]):
         """Register an auto-discovered tool with the MCP server"""
         # This would integrate with fastapi-mcp library
@@ -1490,13 +1490,13 @@ logger = logging.getLogger(__name__)
 
 class DatabaseStatusTool(BaseTool):
     """Check database status and health"""
-    
+
     def __init__(self):
         super().__init__(
             name="database_status",
             description="Check PyRIT database status and statistics"
         )
-        
+
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get database status"""
         try:
@@ -1505,7 +1505,7 @@ class DatabaseStatusTool(BaseTool):
                     f"{settings.VIOLENTUTF_API_URL}/api/v1/database/status",
                     headers=self._get_headers(params)
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     return {
@@ -1527,14 +1527,14 @@ class DatabaseStatusTool(BaseTool):
                         "error": f"Database status check failed: {response.status_code}",
                         "details": response.text
                     }
-                    
+
         except Exception as e:
             logger.error(f"Database status check error: {e}")
             return {
                 "success": False,
                 "error": str(e)
             }
-            
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -1544,7 +1544,7 @@ class DatabaseStatusTool(BaseTool):
 
 class InitializeDatabaseTool(BaseTool):
     """Initialize PyRIT database"""
-    
+
     def __init__(self):
         super().__init__(
             name="database_initialize",
@@ -1556,11 +1556,11 @@ class InitializeDatabaseTool(BaseTool):
             description="Reset existing database",
             default=False
         ))
-        
+
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Initialize database"""
         validated = self.validate_params(params)
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -1568,7 +1568,7 @@ class InitializeDatabaseTool(BaseTool):
                     json={"reset": validated["reset"]},
                     headers=self._get_headers(params)
                 )
-                
+
                 if response.status_code in [200, 201]:
                     return {
                         "success": True,
@@ -1581,14 +1581,14 @@ class InitializeDatabaseTool(BaseTool):
                         "error": f"Initialization failed: {response.status_code}",
                         "details": response.text
                     }
-                    
+
         except Exception as e:
             logger.error(f"Database initialization error: {e}")
             return {
                 "success": False,
                 "error": str(e)
             }
-            
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -1598,7 +1598,7 @@ class InitializeDatabaseTool(BaseTool):
 
 class SessionManagementTool(BaseTool):
     """Manage ViolentUTF sessions"""
-    
+
     def __init__(self):
         super().__init__(
             name="session_manage",
@@ -1623,12 +1623,12 @@ class SessionManagementTool(BaseTool):
             description="Session name (for create)",
             required=False
         ))
-        
+
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Execute session management action"""
         validated = self.validate_params(params)
         action = validated["action"]
-        
+
         try:
             if action == "create":
                 return await self._create_session(params, validated)
@@ -1638,14 +1638,14 @@ class SessionManagementTool(BaseTool):
                 return await self._list_sessions(params)
             elif action == "delete":
                 return await self._delete_session(params, validated)
-                
+
         except Exception as e:
             logger.error(f"Session management error: {e}")
             return {
                 "success": False,
                 "error": str(e)
             }
-            
+
     async def _create_session(self, params: Dict[str, Any], validated: Dict[str, Any]) -> Dict[str, Any]:
         """Create new session"""
         async with httpx.AsyncClient() as client:
@@ -1654,7 +1654,7 @@ class SessionManagementTool(BaseTool):
                 json={"name": validated.get("name", "MCP Session")},
                 headers=self._get_headers(params)
             )
-            
+
             if response.status_code == 201:
                 session_data = response.json()
                 return {
@@ -1671,7 +1671,7 @@ class SessionManagementTool(BaseTool):
                     "success": False,
                     "error": f"Session creation failed: {response.status_code}"
                 }
-                
+
     async def _load_session(self, params: Dict[str, Any], validated: Dict[str, Any]) -> Dict[str, Any]:
         """Load existing session"""
         session_id = validated.get("session_id")
@@ -1680,13 +1680,13 @@ class SessionManagementTool(BaseTool):
                 "success": False,
                 "error": "session_id required for load action"
             }
-            
+
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{settings.VIOLENTUTF_API_URL}/api/v1/sessions/{session_id}",
                 headers=self._get_headers(params)
             )
-            
+
             if response.status_code == 200:
                 return {
                     "success": True,
@@ -1697,7 +1697,7 @@ class SessionManagementTool(BaseTool):
                     "success": False,
                     "error": f"Session load failed: {response.status_code}"
                 }
-                
+
     async def _list_sessions(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """List all sessions"""
         async with httpx.AsyncClient() as client:
@@ -1705,7 +1705,7 @@ class SessionManagementTool(BaseTool):
                 f"{settings.VIOLENTUTF_API_URL}/api/v1/sessions",
                 headers=self._get_headers(params)
             )
-            
+
             if response.status_code == 200:
                 return {
                     "success": True,
@@ -1719,7 +1719,7 @@ class SessionManagementTool(BaseTool):
                     "success": False,
                     "error": f"Session list failed: {response.status_code}"
                 }
-                
+
     async def _delete_session(self, params: Dict[str, Any], validated: Dict[str, Any]) -> Dict[str, Any]:
         """Delete session"""
         session_id = validated.get("session_id")
@@ -1728,13 +1728,13 @@ class SessionManagementTool(BaseTool):
                 "success": False,
                 "error": "session_id required for delete action"
             }
-            
+
         async with httpx.AsyncClient() as client:
             response = await client.delete(
                 f"{settings.VIOLENTUTF_API_URL}/api/v1/sessions/{session_id}",
                 headers=self._get_headers(params)
             )
-            
+
             if response.status_code == 204:
                 return {
                     "success": True,
@@ -1745,7 +1745,7 @@ class SessionManagementTool(BaseTool):
                     "success": False,
                     "error": f"Session deletion failed: {response.status_code}"
                 }
-                
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -1781,14 +1781,14 @@ def mock_httpx_success():
             "tables": {"users": 10, "sessions": 5},
             "total_records": 15
         }
-        
+
         mock_client.return_value.__aenter__.return_value.get = AsyncMock(
             return_value=mock_response
         )
         mock_client.return_value.__aenter__.return_value.post = AsyncMock(
             return_value=mock_response
         )
-        
+
         yield mock_client
 
 @pytest.mark.asyncio
@@ -1796,38 +1796,38 @@ async def test_database_status_tool(mock_httpx_success):
     """Test database status tool execution"""
     tool = DatabaseStatusTool()
     result = await tool.execute({"_auth_token": "test_token"})
-    
+
     assert result["success"] == True
     assert result["data"]["status"] == "healthy"
     assert result["data"]["total_records"] == 15
-    
+
 @pytest.mark.asyncio
 async def test_database_initialize_tool():
     """Test database initialization tool"""
     tool = InitializeDatabaseTool()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         mock_response = AsyncMock()
         mock_response.status_code = 201
         mock_response.json.return_value = {"initialized": True}
-        
+
         mock_client.return_value.__aenter__.return_value.post = AsyncMock(
             return_value=mock_response
         )
-        
+
         result = await tool.execute({
             "_auth_token": "test_token",
             "reset": True
         })
-        
+
         assert result["success"] == True
         assert "Database initialized successfully" in result["message"]
-        
+
 @pytest.mark.asyncio
 async def test_session_create():
     """Test session creation"""
     tool = SessionManagementTool()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         mock_response = AsyncMock()
         mock_response.status_code = 201
@@ -1836,25 +1836,25 @@ async def test_session_create():
             "name": "Test Session",
             "created_at": "2025-01-01T00:00:00Z"
         }
-        
+
         mock_client.return_value.__aenter__.return_value.post = AsyncMock(
             return_value=mock_response
         )
-        
+
         result = await tool.execute({
             "_auth_token": "test_token",
             "action": "create",
             "name": "Test Session"
         })
-        
+
         assert result["success"] == True
         assert result["data"]["session_id"] == "session123"
-        
+
 @pytest.mark.asyncio
 async def test_session_list():
     """Test session listing"""
     tool = SessionManagementTool()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         mock_response = AsyncMock()
         mock_response.status_code = 200
@@ -1862,16 +1862,16 @@ async def test_session_list():
             {"id": "session1", "name": "Session 1"},
             {"id": "session2", "name": "Session 2"}
         ]
-        
+
         mock_client.return_value.__aenter__.return_value.get = AsyncMock(
             return_value=mock_response
         )
-        
+
         result = await tool.execute({
             "_auth_token": "test_token",
             "action": "list"
         })
-        
+
         assert result["success"] == True
         assert result["data"]["count"] == 2
         assert len(result["data"]["sessions"]) == 2
@@ -1976,13 +1976,13 @@ logger = logging.getLogger(__name__)
 
 class DiscoverGeneratorsTool(BaseTool):
     """Discover available AI model generators"""
-    
+
     def __init__(self):
         super().__init__(
             name="discover_generators",
             description="List all available AI model types and providers"
         )
-        
+
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get available generator types"""
         try:
@@ -1991,22 +1991,22 @@ class DiscoverGeneratorsTool(BaseTool):
                     f"{settings.VIOLENTUTF_API_URL}/api/v1/generators/types",
                     headers=self._get_headers(params)
                 )
-                
+
                 if response.status_code == 200:
                     types = response.json()
-                    
+
                     # Get APISIX models for each provider
                     enhanced_types = []
                     for gen_type in types:
                         if gen_type.get("supports_apisix"):
                             models = await self._get_apisix_models(
-                                client, 
+                                client,
                                 gen_type["provider"],
                                 params
                             )
                             gen_type["available_models"] = models
                         enhanced_types.append(gen_type)
-                    
+
                     return {
                         "success": True,
                         "data": {
@@ -2019,17 +2019,17 @@ class DiscoverGeneratorsTool(BaseTool):
                         "success": False,
                         "error": f"Failed to discover generators: {response.status_code}"
                     }
-                    
+
         except Exception as e:
             logger.error(f"Generator discovery error: {e}")
             return {
                 "success": False,
                 "error": str(e)
             }
-            
+
     async def _get_apisix_models(
-        self, 
-        client: httpx.AsyncClient, 
+        self,
+        client: httpx.AsyncClient,
         provider: str,
         params: Dict[str, Any]
     ) -> List[str]:
@@ -2040,15 +2040,15 @@ class DiscoverGeneratorsTool(BaseTool):
                 params={"provider": provider},
                 headers=self._get_headers(params)
             )
-            
+
             if response.status_code == 200:
                 return response.json().get("models", [])
             else:
                 return []
-                
+
         except Exception:
             return []
-            
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -2058,7 +2058,7 @@ class DiscoverGeneratorsTool(BaseTool):
 
 class ConfigureGeneratorTool(BaseTool):
     """Configure an AI model generator"""
-    
+
     def __init__(self):
         super().__init__(
             name="configure_generator",
@@ -2072,7 +2072,7 @@ class ConfigureGeneratorTool(BaseTool):
         ))
         self.add_parameter(ToolParameter(
             name="name",
-            type="string", 
+            type="string",
             description="Friendly name for this generator",
             required=True
         ))
@@ -2088,27 +2088,27 @@ class ConfigureGeneratorTool(BaseTool):
             description="Additional generator-specific parameters",
             default={}
         ))
-        
+
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Configure a generator"""
         validated = self.validate_params(params)
-        
+
         try:
             # First get parameter schema for the generator type
             schema = await self._get_parameter_schema(
-                validated["generator_type"], 
+                validated["generator_type"],
                 params
             )
-            
+
             if not schema["success"]:
                 return schema
-                
+
             # Merge default parameters with provided ones
             full_params = self._merge_parameters(
                 schema["data"],
                 validated["parameters"]
             )
-            
+
             # Create the generator
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -2121,7 +2121,7 @@ class ConfigureGeneratorTool(BaseTool):
                     },
                     headers=self._get_headers(params)
                 )
-                
+
                 if response.status_code == 201:
                     generator_data = response.json()
                     return {
@@ -2141,16 +2141,16 @@ class ConfigureGeneratorTool(BaseTool):
                         "error": f"Configuration failed: {response.status_code}",
                         "details": response.text
                     }
-                    
+
         except Exception as e:
             logger.error(f"Generator configuration error: {e}")
             return {
                 "success": False,
                 "error": str(e)
             }
-            
+
     async def _get_parameter_schema(
-        self, 
+        self,
         generator_type: str,
         params: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -2160,7 +2160,7 @@ class ConfigureGeneratorTool(BaseTool):
                 f"{settings.VIOLENTUTF_API_URL}/api/v1/generators/types/{generator_type}/params",
                 headers=self._get_headers(params)
             )
-            
+
             if response.status_code == 200:
                 return {
                     "success": True,
@@ -2171,23 +2171,23 @@ class ConfigureGeneratorTool(BaseTool):
                     "success": False,
                     "error": f"Failed to get parameter schema: {response.status_code}"
                 }
-                
+
     def _merge_parameters(
-        self, 
-        schema: Dict[str, Any], 
+        self,
+        schema: Dict[str, Any],
         provided: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Merge provided parameters with defaults from schema"""
         result = {}
-        
+
         for param_name, param_info in schema.items():
             if param_name in provided:
                 result[param_name] = provided[param_name]
             elif "default" in param_info:
                 result[param_name] = param_info["default"]
-                
+
         return result
-        
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -2197,7 +2197,7 @@ class ConfigureGeneratorTool(BaseTool):
 
 class TestGeneratorTool(BaseTool):
     """Test a configured generator"""
-    
+
     def __init__(self):
         super().__init__(
             name="test_generator",
@@ -2215,30 +2215,30 @@ class TestGeneratorTool(BaseTool):
             description="Test prompt to send",
             default="Hello, please respond with 'Test successful' if you receive this."
         ))
-        
+
     async def execute(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Test a generator"""
         validated = self.validate_params(params)
-        
+
         try:
             # Create a test orchestrator
             orchestrator_result = await self._create_test_orchestrator(
                 validated["generator_id"],
                 params
             )
-            
+
             if not orchestrator_result["success"]:
                 return orchestrator_result
-                
+
             orchestrator_id = orchestrator_result["data"]["orchestrator_id"]
-            
+
             # Execute the test
             execution_result = await self._execute_test(
                 orchestrator_id,
                 validated["test_prompt"],
                 params
             )
-            
+
             if execution_result["success"]:
                 return {
                     "success": True,
@@ -2252,14 +2252,14 @@ class TestGeneratorTool(BaseTool):
                 }
             else:
                 return execution_result
-                
+
         except Exception as e:
             logger.error(f"Generator test error: {e}")
             return {
                 "success": False,
                 "error": str(e)
             }
-            
+
     async def _create_test_orchestrator(
         self,
         generator_id: str,
@@ -2277,7 +2277,7 @@ class TestGeneratorTool(BaseTool):
                 },
                 headers=self._get_headers(params)
             )
-            
+
             if response.status_code == 201:
                 return {
                     "success": True,
@@ -2288,7 +2288,7 @@ class TestGeneratorTool(BaseTool):
                     "success": False,
                     "error": f"Failed to create test orchestrator: {response.status_code}"
                 }
-                
+
     async def _execute_test(
         self,
         orchestrator_id: str,
@@ -2306,7 +2306,7 @@ class TestGeneratorTool(BaseTool):
                 headers=self._get_headers(params),
                 timeout=30.0
             )
-            
+
             if response.status_code in [200, 201]:
                 execution_data = response.json()
                 return {
@@ -2322,7 +2322,7 @@ class TestGeneratorTool(BaseTool):
                     "error": f"Test execution failed: {response.status_code}",
                     "details": response.text
                 }
-                
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -2351,7 +2351,7 @@ from violentutf_api.mcp.tools.generators import (
 async def test_discover_generators():
     """Test generator discovery with APISIX models"""
     tool = DiscoverGeneratorsTool()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         # Mock generator types response
         mock_types_response = AsyncMock()
@@ -2363,35 +2363,35 @@ async def test_discover_generators():
                 "supports_apisix": True
             }
         ]
-        
+
         # Mock APISIX models response
         mock_models_response = AsyncMock()
         mock_models_response.status_code = 200
         mock_models_response.json.return_value = {
             "models": ["gpt-4", "gpt-3.5-turbo"]
         }
-        
+
         # Configure mock client
         mock_async_client = MagicMock()
         mock_async_client.get = AsyncMock(side_effect=[
             mock_types_response,
             mock_models_response
         ])
-        
+
         mock_client.return_value.__aenter__.return_value = mock_async_client
-        
+
         result = await tool.execute({"_auth_token": "test_token"})
-        
+
         assert result["success"] == True
         assert result["data"]["count"] == 1
         assert result["data"]["generator_types"][0]["type"] == "openai"
         assert "gpt-4" in result["data"]["generator_types"][0]["available_models"]
-        
+
 @pytest.mark.asyncio
 async def test_configure_generator():
     """Test generator configuration"""
     tool = ConfigureGeneratorTool()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         # Mock parameter schema response
         mock_schema_response = AsyncMock()
@@ -2400,7 +2400,7 @@ async def test_configure_generator():
             "temperature": {"type": "number", "default": 0.7},
             "max_tokens": {"type": "integer", "default": 1000}
         }
-        
+
         # Mock generator creation response
         mock_create_response = AsyncMock()
         mock_create_response.status_code = 201
@@ -2410,14 +2410,14 @@ async def test_configure_generator():
             "type": "openai",
             "model": "gpt-4"
         }
-        
+
         # Configure mock client
         mock_async_client = MagicMock()
         mock_async_client.get = AsyncMock(return_value=mock_schema_response)
         mock_async_client.post = AsyncMock(return_value=mock_create_response)
-        
+
         mock_client.return_value.__aenter__.return_value = mock_async_client
-        
+
         result = await tool.execute({
             "_auth_token": "test_token",
             "generator_type": "openai",
@@ -2425,22 +2425,22 @@ async def test_configure_generator():
             "model": "gpt-4",
             "parameters": {"temperature": 0.5}
         })
-        
+
         assert result["success"] == True
         assert result["data"]["generator_id"] == "gen123"
         assert result["data"]["name"] == "Test Generator"
-        
+
         # Verify parameter merging
         call_args = mock_async_client.post.call_args
         posted_data = call_args[1]["json"]
         assert posted_data["parameters"]["temperature"] == 0.5
         assert posted_data["parameters"]["max_tokens"] == 1000  # Default
-        
+
 @pytest.mark.asyncio
 async def test_test_generator():
     """Test generator testing tool"""
     tool = TestGeneratorTool()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         # Mock orchestrator creation
         mock_orch_response = AsyncMock()
@@ -2448,7 +2448,7 @@ async def test_test_generator():
         mock_orch_response.json.return_value = {
             "orchestrator_id": "orch123"
         }
-        
+
         # Mock test execution
         mock_exec_response = AsyncMock()
         mock_exec_response.status_code = 200
@@ -2456,22 +2456,22 @@ async def test_test_generator():
             "result": {"content": "Test successful"},
             "duration_ms": 150
         }
-        
+
         # Configure mock client
         mock_async_client = MagicMock()
         mock_async_client.post = AsyncMock(side_effect=[
             mock_orch_response,
             mock_exec_response
         ])
-        
+
         mock_client.return_value.__aenter__.return_value = mock_async_client
-        
+
         result = await tool.execute({
             "_auth_token": "test_token",
             "generator_id": "gen123",
             "test_prompt": "Test prompt"
         })
-        
+
         assert result["success"] == True
         assert result["data"]["test_passed"] == True
         assert result["data"]["response"] == "Test successful"
@@ -2595,13 +2595,13 @@ import asyncio
 
 class TestPhase2ToolsMilestone:
     """Integration tests for Phase 2 Tools implementation"""
-    
+
     def test_tool_registry_population(self):
         """Verify all expected tools are registered"""
         # Check tool registry has expected tools
         registered_tools = tool_registry.list_tools()
         tool_names = [tool.name for tool in registered_tools]
-        
+
         # Core tools that should be registered
         expected_tools = [
             "discover_generators",
@@ -2614,24 +2614,24 @@ class TestPhase2ToolsMilestone:
             "start_orchestrator",
             "get_orchestrator_status"
         ]
-        
+
         for tool_name in expected_tools:
             assert tool_name in tool_names, f"Tool {tool_name} not registered"
-    
+
     def test_tool_definitions(self):
         """Verify tool definitions are complete"""
         tools = tool_registry.list_tools()
-        
+
         for tool in tools:
             # Each tool should have required attributes
             assert hasattr(tool, 'name')
             assert hasattr(tool, 'description')
             assert hasattr(tool, 'parameters')
             assert hasattr(tool, 'execute')
-            
+
             # Verify execute is async
             assert asyncio.iscoroutinefunction(tool.execute)
-    
+
     @pytest.mark.asyncio
     async def test_generator_workflow_integration(self):
         """Test complete generator configuration workflow"""
@@ -2639,15 +2639,15 @@ class TestPhase2ToolsMilestone:
         discover_tool = tool_registry.get("discover_generators")
         discover_result = await discover_tool.execute({"_auth_token": "test_token"})
         assert discover_result["success"] == True
-        
+
         # 2. Configure a generator (mock)
         configure_tool = tool_registry.get("configure_generator")
         # Would test with mock data in real implementation
-        
+
         # 3. Test generator (mock)
         test_tool = tool_registry.get("test_generator")
         # Would test with mock data in real implementation
-    
+
     @pytest.mark.asyncio
     async def test_dataset_operations(self):
         """Test dataset tool operations"""
@@ -2655,20 +2655,20 @@ class TestPhase2ToolsMilestone:
         list_tool = tool_registry.get("list_datasets")
         list_result = await list_tool.execute({"_auth_token": "test_token"})
         assert "success" in list_result
-        
+
         # Validate dataset format
         validate_tool = tool_registry.get("validate_dataset")
         # Would test validation with mock data
-    
+
     def test_tool_parameter_validation(self):
         """Test parameter validation for all tools"""
         tools = tool_registry.list_tools()
-        
+
         for tool in tools:
             # Test missing required parameters
             if tool.parameters:
                 required_params = [
-                    p for p in tool.parameters 
+                    p for p in tool.parameters
                     if p.required and p.name != "_auth_token"
                 ]
                 if required_params:
@@ -2690,11 +2690,11 @@ from violentutf_api.mcp.resources.providers import (
 
 class TestPhase2ResourcesMilestone:
     """Integration tests for Phase 2 Resources implementation"""
-    
+
     @pytest.fixture
     def resource_manager(self):
         return ResourceManager()
-    
+
     def test_resource_providers_registered(self, resource_manager):
         """Verify resource providers are registered"""
         # Check that providers are registered for different URI patterns
@@ -2703,11 +2703,11 @@ class TestPhase2ResourcesMilestone:
             "vutf://datasets/test-dataset",
             "vutf://results/session123/result456"
         ]
-        
+
         for uri in test_uris:
             provider = resource_manager._get_provider(uri)
             assert provider is not None, f"No provider for URI: {uri}"
-    
+
     @pytest.mark.asyncio
     async def test_resource_retrieval(self, resource_manager):
         """Test resource retrieval through manager"""
@@ -2716,23 +2716,23 @@ class TestPhase2ResourcesMilestone:
             "vutf://config/database/status",
             {"_auth_token": "test_token"}
         )
-        
+
         if config_resource:
             assert config_resource.uri == "vutf://config/database/status"
             assert config_resource.mimeType == "application/json"
             assert "status" in config_resource.content or "error" in config_resource.content
-    
+
     def test_resource_listing(self, resource_manager):
         """Test resource listing capabilities"""
         # List all resources
         all_resources = resource_manager.list_resources()
         assert isinstance(all_resources, list)
-        
+
         # List by type
         config_resources = resource_manager.list_resources(resource_type="config")
         for resource in config_resources:
             assert resource.uri.startswith("vutf://config/")
-    
+
     @pytest.mark.asyncio
     async def test_resource_subscription(self, resource_manager):
         """Test resource subscription mechanism"""
@@ -2741,13 +2741,13 @@ class TestPhase2ResourcesMilestone:
             "vutf://results/test-session/progress",
             callback=lambda update: None
         )
-        
+
         assert subscription_id is not None
-        
+
         # Unsubscribe
         success = await resource_manager.unsubscribe(subscription_id)
         assert success == True
-    
+
     def test_resource_uri_validation(self, resource_manager):
         """Test URI validation"""
         # Valid URIs
@@ -2756,17 +2756,17 @@ class TestPhase2ResourcesMilestone:
             "vutf://datasets/my-dataset",
             "vutf://results/session/result"
         ]
-        
+
         for uri in valid_uris:
             assert resource_manager._validate_uri(uri) == True
-        
+
         # Invalid URIs
         invalid_uris = [
             "http://example.com",
             "vutf:/invalid",
             "//no-scheme"
         ]
-        
+
         for uri in invalid_uris:
             assert resource_manager._validate_uri(uri) == False
 ```
@@ -2829,80 +2829,80 @@ class Resource(BaseModel):
 
 class BaseResourceProvider(ABC):
     """Base class for resource providers"""
-    
+
     def __init__(self, uri_pattern: str):
         self.uri_pattern = uri_pattern
-        
+
     @abstractmethod
     async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[Resource]:
         """Get a specific resource by URI"""
         pass
-        
+
     @abstractmethod
     async def list_resources(self, params: Dict[str, Any]) -> List[Resource]:
         """List available resources"""
         pass
-        
+
     def matches_uri(self, uri: str) -> bool:
         """Check if URI matches this provider's pattern"""
         # Simple pattern matching (can be enhanced)
         pattern_parts = self.uri_pattern.split("/")
         uri_parts = uri.split("/")
-        
+
         if len(pattern_parts) != len(uri_parts):
             return False
-            
+
         for pattern_part, uri_part in zip(pattern_parts, uri_parts):
             if pattern_part.startswith("{") and pattern_part.endswith("}"):
                 # Variable part, matches anything
                 continue
             elif pattern_part != uri_part:
                 return False
-                
+
         return True
-        
+
     def extract_params(self, uri: str) -> Dict[str, str]:
         """Extract parameters from URI"""
         params = {}
         pattern_parts = self.uri_pattern.split("/")
         uri_parts = uri.split("/")
-        
+
         for pattern_part, uri_part in zip(pattern_parts, uri_parts):
             if pattern_part.startswith("{") and pattern_part.endswith("}"):
                 param_name = pattern_part[1:-1]
                 params[param_name] = uri_part
-                
+
         return params
 
 class ResourceRegistry:
     """Registry for resource providers"""
-    
+
     def __init__(self):
         self._providers: List[BaseResourceProvider] = []
-        
+
     def register(self, provider: BaseResourceProvider):
         """Register a resource provider"""
         logger.info(f"Registering resource provider for pattern: {provider.uri_pattern}")
         self._providers.append(provider)
-        
+
     async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[Resource]:
         """Get resource from appropriate provider"""
         for provider in self._providers:
             if provider.matches_uri(uri):
                 return await provider.get_resource(uri, params)
-                
+
         logger.warning(f"No provider found for URI: {uri}")
         return None
-        
+
     async def list_resources(self, pattern: Optional[str] = None) -> List[Resource]:
         """List all available resources"""
         all_resources = []
-        
+
         for provider in self._providers:
             if pattern is None or pattern in provider.uri_pattern:
                 resources = await provider.list_resources({})
                 all_resources.extend(resources)
-                
+
         return all_resources
 
 # Global resource registry
@@ -2926,18 +2926,18 @@ logger = logging.getLogger(__name__)
 
 class DatasetResourceProvider(BaseResourceProvider):
     """Provides access to security datasets"""
-    
+
     def __init__(self):
         super().__init__("vutf://datasets/{dataset_id}")
-        
+
     async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[Resource]:
         """Get specific dataset resource"""
         uri_params = self.extract_params(uri)
         dataset_id = uri_params.get("dataset_id")
-        
+
         if not dataset_id:
             return None
-            
+
         try:
             async with httpx.AsyncClient() as client:
                 # Get dataset details
@@ -2945,18 +2945,18 @@ class DatasetResourceProvider(BaseResourceProvider):
                     f"{settings.VIOLENTUTF_API_URL}/api/v1/datasets/{dataset_id}",
                     headers=self._get_headers(params)
                 )
-                
+
                 if response.status_code == 200:
                     dataset = response.json()
-                    
+
                     # Get dataset content
                     content_response = await client.get(
                         f"{settings.VIOLENTUTF_API_URL}/api/v1/datasets/{dataset_id}/content",
                         headers=self._get_headers(params)
                     )
-                    
+
                     content = content_response.json() if content_response.status_code == 200 else []
-                    
+
                     return Resource(
                         uri=uri,
                         name=dataset["name"],
@@ -2978,25 +2978,25 @@ class DatasetResourceProvider(BaseResourceProvider):
                 else:
                     logger.error(f"Failed to get dataset {dataset_id}: {response.status_code}")
                     return None
-                    
+
         except Exception as e:
             logger.error(f"Error getting dataset resource: {e}")
             return None
-            
+
     async def list_resources(self, params: Dict[str, Any]) -> List[Resource]:
         """List all available datasets"""
         resources = []
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     f"{settings.VIOLENTUTF_API_URL}/api/v1/datasets",
                     headers=self._get_headers(params)
                 )
-                
+
                 if response.status_code == 200:
                     datasets = response.json()
-                    
+
                     for dataset in datasets:
                         resources.append(Resource(
                             uri=f"vutf://datasets/{dataset['id']}",
@@ -3015,12 +3015,12 @@ class DatasetResourceProvider(BaseResourceProvider):
                                 tags=dataset.get("tags", [])
                             )
                         ))
-                        
+
         except Exception as e:
             logger.error(f"Error listing dataset resources: {e}")
-            
+
         return resources
-        
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -3030,23 +3030,23 @@ class DatasetResourceProvider(BaseResourceProvider):
 
 class ConfigurationResourceProvider(BaseResourceProvider):
     """Provides access to configuration resources"""
-    
+
     def __init__(self):
         super().__init__("vutf://config/{component}/{config_id}")
-        
+
     async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[Resource]:
         """Get configuration resource"""
         uri_params = self.extract_params(uri)
         component = uri_params.get("component")
         config_id = uri_params.get("config_id")
-        
+
         if component == "database" and config_id == "status":
             return await self._get_database_status(uri, params)
         elif component == "environment" and config_id == "current":
             return await self._get_environment_config(uri, params)
         else:
             return None
-            
+
     async def _get_database_status(self, uri: str, params: Dict[str, Any]) -> Optional[Resource]:
         """Get database status resource"""
         try:
@@ -3055,10 +3055,10 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                     f"{settings.VIOLENTUTF_API_URL}/api/v1/database/status",
                     headers=self._get_headers(params)
                 )
-                
+
                 if response.status_code == 200:
                     status = response.json()
-                    
+
                     return Resource(
                         uri=uri,
                         name="Database Status",
@@ -3071,12 +3071,12 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                             tags=["system", "database", "status"]
                         )
                     )
-                    
+
         except Exception as e:
             logger.error(f"Error getting database status: {e}")
-            
+
         return None
-        
+
     async def _get_environment_config(self, uri: str, params: Dict[str, Any]) -> Optional[Resource]:
         """Get environment configuration"""
         try:
@@ -3085,10 +3085,10 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                     f"{settings.VIOLENTUTF_API_URL}/api/v1/config/environment",
                     headers=self._get_headers(params)
                 )
-                
+
                 if response.status_code == 200:
                     config = response.json()
-                    
+
                     return Resource(
                         uri=uri,
                         name="Environment Configuration",
@@ -3101,16 +3101,16 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                             tags=["system", "configuration", "environment"]
                         )
                     )
-                    
+
         except Exception as e:
             logger.error(f"Error getting environment config: {e}")
-            
+
         return None
-        
+
     async def list_resources(self, params: Dict[str, Any]) -> List[Resource]:
         """List configuration resources"""
         resources = []
-        
+
         # Add known configuration resources
         resources.append(Resource(
             uri="vutf://config/database/status",
@@ -3119,7 +3119,7 @@ class ConfigurationResourceProvider(BaseResourceProvider):
             mimeType="application/json",
             content={"available": True}
         ))
-        
+
         resources.append(Resource(
             uri="vutf://config/environment/current",
             name="Environment Configuration",
@@ -3127,9 +3127,9 @@ class ConfigurationResourceProvider(BaseResourceProvider):
             mimeType="application/json",
             content={"available": True}
         ))
-        
+
         return resources
-        
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -3157,7 +3157,7 @@ from violentutf_api.mcp.resources.datasets import (
 async def test_dataset_resource_get():
     """Test getting a specific dataset resource"""
     provider = DatasetResourceProvider()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         # Mock dataset details
         mock_details_response = AsyncMock()
@@ -3169,7 +3169,7 @@ async def test_dataset_resource_get():
             "created_at": "2025-01-01T00:00:00",
             "description": "Test dataset for security"
         }
-        
+
         # Mock dataset content
         mock_content_response = AsyncMock()
         mock_content_response.status_code = 200
@@ -3177,30 +3177,30 @@ async def test_dataset_resource_get():
             {"prompt": "test1"},
             {"prompt": "test2"}
         ]
-        
+
         mock_async_client = AsyncMock()
         mock_async_client.get = AsyncMock(side_effect=[
             mock_details_response,
             mock_content_response
         ])
-        
+
         mock_client.return_value.__aenter__.return_value = mock_async_client
-        
+
         resource = await provider.get_resource(
             "vutf://datasets/dataset123",
             {"_auth_token": "test_token"}
         )
-        
+
         assert resource is not None
         assert resource.uri == "vutf://datasets/dataset123"
         assert resource.name == "Test Dataset"
         assert len(resource.content["data"]) == 2
-        
+
 @pytest.mark.asyncio
 async def test_dataset_resource_list():
     """Test listing dataset resources"""
     provider = DatasetResourceProvider()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         mock_response = AsyncMock()
         mock_response.status_code = 200
@@ -3218,28 +3218,28 @@ async def test_dataset_resource_list():
                 "created_at": "2025-01-01T00:00:00"
             }
         ]
-        
+
         mock_async_client = AsyncMock()
         mock_async_client.get = AsyncMock(return_value=mock_response)
-        
+
         mock_client.return_value.__aenter__.return_value = mock_async_client
-        
+
         resources = await provider.list_resources({"_auth_token": "test_token"})
-        
+
         assert len(resources) == 2
         assert resources[0].uri == "vutf://datasets/ds1"
         assert resources[1].uri == "vutf://datasets/ds2"
-        
+
 @pytest.mark.asyncio
 async def test_configuration_resources():
     """Test configuration resource provider"""
     provider = ConfigurationResourceProvider()
-    
+
     # Test URI matching
     assert provider.matches_uri("vutf://config/database/status")
     assert provider.matches_uri("vutf://config/environment/current")
     assert not provider.matches_uri("vutf://datasets/123")
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         mock_response = AsyncMock()
         mock_response.status_code = 200
@@ -3248,35 +3248,35 @@ async def test_configuration_resources():
             "tables": 5,
             "records": 100
         }
-        
+
         mock_async_client = AsyncMock()
         mock_async_client.get = AsyncMock(return_value=mock_response)
-        
+
         mock_client.return_value.__aenter__.return_value = mock_async_client
-        
+
         resource = await provider.get_resource(
             "vutf://config/database/status",
             {"_auth_token": "test_token"}
         )
-        
+
         assert resource is not None
         assert resource.name == "Database Status"
         assert resource.content["status"] == "healthy"
-        
+
 @pytest.mark.asyncio
 async def test_resource_registry():
     """Test resource registry functionality"""
     # Registry should already have providers registered
-    
+
     # Test getting a dataset resource
     resource = await resource_registry.get_resource(
         "vutf://datasets/test123",
         {"_auth_token": "test_token"}
     )
-    
+
     # Will be None without mocked HTTP calls, but registry should find provider
     assert resource is None or resource.uri == "vutf://datasets/test123"
-    
+
     # Test listing resources
     resources = await resource_registry.list_resources()
     assert isinstance(resources, list)
@@ -3402,25 +3402,25 @@ class PromptDefinition(BaseModel):
     name: str
     description: str
     arguments: List[PromptArgument] = []
-    
+
 class BasePrompt(ABC):
     """Base class for all MCP prompts"""
-    
+
     def __init__(self, name: str, description: str, template: str):
         self.name = name
         self.description = description
         self.template = Template(template)
         self.arguments: List[PromptArgument] = []
-        
+
     @abstractmethod
     async def get_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get additional context for the prompt"""
         pass
-        
+
     def add_argument(self, argument: PromptArgument):
         """Add argument to prompt definition"""
         self.arguments.append(argument)
-        
+
     def get_definition(self) -> PromptDefinition:
         """Get complete prompt definition"""
         return PromptDefinition(
@@ -3428,20 +3428,20 @@ class BasePrompt(ABC):
             description=self.description,
             arguments=self.arguments
         )
-        
+
     async def render(self, params: Dict[str, Any]) -> str:
         """Render the prompt with given parameters"""
         # Get additional context
         context = await self.get_context(params)
-        
+
         # Merge with provided parameters
         full_context = {**params, **context}
-        
+
         # Apply defaults for missing arguments
         for arg in self.arguments:
             if arg.name not in full_context and arg.default is not None:
                 full_context[arg.name] = arg.default
-                
+
         # Render template
         try:
             return self.template.render(**full_context)
@@ -3451,19 +3451,19 @@ class BasePrompt(ABC):
 
 class PromptRegistry:
     """Registry for all available prompts"""
-    
+
     def __init__(self):
         self._prompts: Dict[str, BasePrompt] = {}
-        
+
     def register(self, prompt: BasePrompt):
         """Register a prompt"""
         logger.info(f"Registering prompt: {prompt.name}")
         self._prompts[prompt.name] = prompt
-        
+
     def get(self, name: str) -> Optional[BasePrompt]:
         """Get prompt by name"""
         return self._prompts.get(name)
-        
+
     def list_prompts(self) -> List[PromptDefinition]:
         """List all available prompts"""
         return [prompt.get_definition() for prompt in self._prompts.values()]
@@ -3527,37 +3527,37 @@ Ensure all recommendations are ethical and for defensive purposes only."""
 
 class AttackScenarioPrompt(BasePrompt):
     """Generate comprehensive attack scenarios"""
-    
+
     def __init__(self):
         super().__init__(
             name="generate_attack_scenario",
             description="Create a detailed security testing scenario for AI models",
             template=ATTACK_SCENARIO_TEMPLATE
         )
-        
+
         self.add_argument(PromptArgument(
             name="target_model",
             description="The AI model to test",
             required=True
         ))
-        
+
         self.add_argument(PromptArgument(
             name="attack_vector",
             description="Type of attack (e.g., jailbreak, injection)",
             required=True
         ))
-        
+
         self.add_argument(PromptArgument(
             name="complexity_level",
             description="Attack complexity (basic, intermediate, advanced)",
             required=False,
             default="intermediate"
         ))
-        
+
     async def get_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get additional context for attack scenario"""
         context = {}
-        
+
         # Get available datasets
         try:
             datasets = await self._get_available_datasets(params)
@@ -3565,7 +3565,7 @@ class AttackScenarioPrompt(BasePrompt):
         except Exception as e:
             logger.error(f"Failed to get datasets: {e}")
             context["available_datasets"] = "No datasets available"
-            
+
         # Get previous results summary
         try:
             results = await self._get_previous_results(params)
@@ -3573,9 +3573,9 @@ class AttackScenarioPrompt(BasePrompt):
         except Exception as e:
             logger.error(f"Failed to get results: {e}")
             context["previous_results"] = "No previous results"
-            
+
         return context
-        
+
     async def _get_available_datasets(self, params: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Get available security datasets"""
         async with httpx.AsyncClient() as client:
@@ -3584,43 +3584,43 @@ class AttackScenarioPrompt(BasePrompt):
                 headers=self._get_headers(params),
                 params={"type": "attack_patterns"}
             )
-            
+
             if response.status_code == 200:
                 return response.json()
             else:
                 return []
-                
+
     async def _get_previous_results(self, params: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Get relevant previous test results"""
         # This would query for recent results with similar parameters
         # For now, return empty list
         return []
-        
+
     def _format_datasets(self, datasets: List[Dict[str, Any]]) -> str:
         """Format datasets for prompt"""
         if not datasets:
             return "No relevant datasets found"
-            
+
         lines = []
         for ds in datasets[:5]:  # Limit to 5 most relevant
             lines.append(f"- {ds['name']}: {ds.get('description', 'No description')}")
-            
+
         return "\n".join(lines)
-        
+
     def _format_results(self, results: List[Dict[str, Any]]) -> str:
         """Format previous results for prompt"""
         if not results:
             return "No previous test results for this target"
-            
+
         lines = []
         for result in results[:3]:  # Show 3 most recent
             lines.append(
                 f"- Test on {result.get('date', 'Unknown')}: "
                 f"{result.get('outcome', 'Unknown outcome')}"
             )
-            
+
         return "\n".join(lines)
-        
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -3670,34 +3670,34 @@ Focus on actionable insights and practical recommendations."""
 
 class VulnerabilityAnalysisPrompt(BasePrompt):
     """Analyze security test results"""
-    
+
     def __init__(self):
         super().__init__(
             name="analyze_vulnerability",
             description="Provide comprehensive analysis of security findings",
             template=VULNERABILITY_ANALYSIS_TEMPLATE
         )
-        
+
         self.add_argument(PromptArgument(
             name="session_id",
             description="Test session to analyze",
             required=True
         ))
-        
+
         self.add_argument(PromptArgument(
             name="target_model",
             description="Model that was tested",
             required=True
         ))
-        
+
     async def get_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get test results context"""
         session_id = params.get("session_id")
-        
+
         try:
             # Get session results
             results = await self._get_session_results(session_id, params)
-            
+
             return {
                 "duration": results.get("duration", "Unknown"),
                 "total_tests": results.get("total_tests", 0),
@@ -3710,7 +3710,7 @@ class VulnerabilityAnalysisPrompt(BasePrompt):
                 "total_tests": 0,
                 "findings_summary": "Unable to retrieve findings"
             }
-            
+
     async def _get_session_results(self, session_id: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """Get results for a test session"""
         async with httpx.AsyncClient() as client:
@@ -3718,25 +3718,25 @@ class VulnerabilityAnalysisPrompt(BasePrompt):
                 f"{settings.VIOLENTUTF_API_URL}/api/v1/orchestrators/executions/{session_id}/results",
                 headers=self._get_headers(params)
             )
-            
+
             if response.status_code == 200:
                 return response.json()
             else:
                 return {}
-                
+
     def _format_findings(self, findings: List[Dict[str, Any]]) -> str:
         """Format findings for analysis"""
         if not findings:
             return "No specific findings recorded"
-            
+
         lines = []
         for finding in findings[:10]:  # Top 10 findings
             severity = finding.get("severity", "Unknown")
             desc = finding.get("description", "No description")
             lines.append(f"- [{severity}] {desc}")
-            
+
         return "\n".join(lines)
-        
+
     def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication"""
         return {
@@ -3762,7 +3762,7 @@ from violentutf_api.mcp.prompts.security import (
 async def test_attack_scenario_prompt():
     """Test attack scenario prompt rendering"""
     prompt = AttackScenarioPrompt()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         # Mock datasets response
         mock_datasets = AsyncMock()
@@ -3773,41 +3773,41 @@ async def test_attack_scenario_prompt():
                 "description": "Collection of jailbreak patterns"
             }
         ]
-        
+
         mock_async_client = AsyncMock()
         mock_async_client.get = AsyncMock(return_value=mock_datasets)
-        
+
         mock_client.return_value.__aenter__.return_value = mock_async_client
-        
+
         rendered = await prompt.render({
             "_auth_token": "test_token",
             "target_model": "GPT-4",
             "attack_vector": "jailbreak",
             "complexity_level": "advanced"
         })
-        
+
         assert "Target Model: GPT-4" in rendered
         assert "Attack Vector: jailbreak" in rendered
         assert "Complexity Level: advanced" in rendered
         assert "Common Jailbreaks" in rendered
-        
+
 def test_prompt_argument_defaults():
     """Test prompt argument default values"""
     prompt = AttackScenarioPrompt()
-    
+
     # Check argument definitions
     args = {arg.name: arg for arg in prompt.arguments}
-    
+
     assert args["target_model"].required == True
     assert args["attack_vector"].required == True
     assert args["complexity_level"].required == False
     assert args["complexity_level"].default == "intermediate"
-    
+
 @pytest.mark.asyncio
 async def test_vulnerability_analysis_prompt():
     """Test vulnerability analysis prompt"""
     prompt = VulnerabilityAnalysisPrompt()
-    
+
     with patch('httpx.AsyncClient') as mock_client:
         # Mock session results
         mock_results = AsyncMock()
@@ -3826,29 +3826,29 @@ async def test_vulnerability_analysis_prompt():
                 }
             ]
         }
-        
+
         mock_async_client = AsyncMock()
         mock_async_client.get = AsyncMock(return_value=mock_results)
-        
+
         mock_client.return_value.__aenter__.return_value = mock_async_client
-        
+
         rendered = await prompt.render({
             "_auth_token": "test_token",
             "session_id": "session123",
             "target_model": "Claude-3"
         })
-        
+
         assert "Test Session: session123" in rendered
         assert "Target Model: Claude-3" in rendered
         assert "Test Duration: 5 minutes" in rendered
         assert "Total Tests Run: 50" in rendered
         assert "[High] Model bypassed safety filters" in rendered
-        
+
 @pytest.mark.asyncio
 async def test_prompt_error_handling():
     """Test prompt error handling"""
     prompt = AttackScenarioPrompt()
-    
+
     # Test with missing required argument
     with pytest.raises(Exception):  # Jinja2 will raise an error
         await prompt.render({
@@ -4115,36 +4115,36 @@ from violentutf_api.mcp.prompts.templates import (
 
 class TestPhase3PromptsMilestone:
     """Integration tests for Phase 3 Prompts implementation"""
-    
+
     @pytest.fixture
     def prompt_manager(self):
         return PromptManager()
-    
+
     def test_prompt_registration(self, prompt_manager):
         """Verify all expected prompts are registered"""
         prompts = prompt_manager.list_prompts()
         prompt_names = [p.name for p in prompts]
-        
+
         expected_prompts = [
             "generate_attack_scenario",
             "analyze_vulnerability",
             "optimize_orchestrator_config",
             "suggest_remediation"
         ]
-        
+
         for prompt_name in expected_prompts:
             assert prompt_name in prompt_names, f"Prompt {prompt_name} not registered"
-    
+
     def test_prompt_arguments(self, prompt_manager):
         """Verify prompt argument definitions"""
         attack_prompt = prompt_manager.get_prompt("generate_attack_scenario")
-        
+
         # Check required arguments
         assert "target_model" in attack_prompt.arguments
         assert "attack_vector" in attack_prompt.arguments
         assert attack_prompt.arguments["target_model"]["required"] == True
         assert attack_prompt.arguments["attack_vector"]["required"] == True
-    
+
     @pytest.mark.asyncio
     async def test_prompt_execution(self, prompt_manager):
         """Test prompt template rendering"""
@@ -4156,12 +4156,12 @@ class TestPhase3PromptsMilestone:
                 "complexity_level": "advanced"
             }
         )
-        
+
         assert prompt is not None
         assert "GPT-4" in prompt
         assert "prompt_injection" in prompt
         assert "advanced" in prompt
-    
+
     def test_prompt_validation(self, prompt_manager):
         """Test prompt argument validation"""
         # Missing required argument should fail
@@ -4186,24 +4186,24 @@ from violentutf_api.mcp.sampling.requests import (
 
 class TestPhase3SamplingMilestone:
     """Integration tests for Phase 3 Sampling implementation"""
-    
+
     @pytest.fixture
     def sampling_manager(self):
         return SamplingManager()
-    
+
     def test_sampling_request_types(self, sampling_manager):
         """Verify sampling request types are registered"""
         request_types = sampling_manager.get_request_types()
-        
+
         expected_types = [
             "attack_generation",
             "vulnerability_analysis",
             "remediation_suggestion"
         ]
-        
+
         for req_type in expected_types:
             assert req_type in request_types
-    
+
     @pytest.mark.asyncio
     async def test_create_sampling_request(self, sampling_manager):
         """Test creating a sampling request"""
@@ -4216,11 +4216,11 @@ class TestPhase3SamplingMilestone:
                 ]
             }
         )
-        
+
         assert request.name == "vulnerability_analysis"
         assert request.risk_level in ["low", "medium", "high"]
         assert "session_id" in request.context
-    
+
     def test_safety_filtering(self, sampling_manager):
         """Test safety filters are applied"""
         # Test harmful content filtering
@@ -4231,10 +4231,10 @@ class TestPhase3SamplingMilestone:
                 "attack_type": "ddos"
             }
         )
-        
+
         assert safety_result["allowed"] == False
         assert "production_system" in safety_result["reason"]
-    
+
     @pytest.mark.asyncio
     async def test_human_approval_requirement(self, sampling_manager):
         """Test human approval flags"""
@@ -4243,15 +4243,15 @@ class TestPhase3SamplingMilestone:
             request_type="attack_generation",
             context={"attack_type": "advanced_jailbreak"}
         )
-        
+
         assert high_risk_request.approval_required == True
-        
+
         # Low-risk requests may not require approval
         low_risk_request = await sampling_manager.create_request(
             request_type="vulnerability_analysis",
             context={"session_id": "test"}
         )
-        
+
         assert low_risk_request.risk_level == "low"
 ```
 
@@ -4265,21 +4265,21 @@ import json
 
 class TestPhase3EndToEnd:
     """End-to-end tests for complete MCP server"""
-    
+
     @pytest.fixture
     def client(self):
         return TestClient(app)
-    
+
     def test_mcp_server_info(self, client):
         """Test MCP server information endpoint"""
         response = client.get("/mcp/info")
         assert response.status_code == 200
-        
+
         info = response.json()
         assert info["name"] == "ViolentUTF Security Testing"
         assert "version" in info
         assert "capabilities" in info
-    
+
     def test_list_tools(self, client):
         """Test listing available tools"""
         response = client.post(
@@ -4290,13 +4290,13 @@ class TestPhase3EndToEnd:
                 "id": 1
             }
         )
-        
+
         assert response.status_code == 200
         result = response.json()
         assert "result" in result
         assert isinstance(result["result"], list)
         assert len(result["result"]) > 0
-    
+
     def test_list_prompts(self, client):
         """Test listing available prompts"""
         response = client.post(
@@ -4307,12 +4307,12 @@ class TestPhase3EndToEnd:
                 "id": 2
             }
         )
-        
+
         assert response.status_code == 200
         result = response.json()
         assert "result" in result
         assert isinstance(result["result"], list)
-    
+
     @pytest.mark.asyncio
     async def test_complete_workflow(self, client):
         """Test a complete security testing workflow"""
@@ -4329,7 +4329,7 @@ class TestPhase3EndToEnd:
             }
         )
         assert response.status_code == 200
-        
+
         # 2. Use a prompt to generate attack scenario
         response = client.post(
             "/mcp/rpc",

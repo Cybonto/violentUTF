@@ -179,10 +179,10 @@ from utils.mcp_client import MCPClient
 async def main():
     client = MCPClient()
     await client.initialize()
-    
+
     tools = await client.list_tools()
     result = await client.execute_tool("test_generator", {"generator_id": "gpt-4"})
-    
+
 asyncio.run(main())
 ```
 

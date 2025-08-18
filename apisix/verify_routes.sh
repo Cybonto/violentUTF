@@ -105,9 +105,9 @@ else:
 test_api_endpoint() {
     echo "🔐 Testing protected API endpoint..."
     echo "   (This will fail without valid JWT token - expected behavior)"
-    
+
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/auth/token/info" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "✅ Protected endpoint working (returns $response_code as expected without token)"
@@ -132,11 +132,11 @@ test_api_endpoint() {
 test_generator_endpoints() {
     echo "⚙️ Testing generator endpoints..."
     echo "   (These will fail without valid JWT token - expected behavior)"
-    
+
     # Test generator types endpoint
     echo "   Testing /api/v1/generators/types..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/generators/types" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Generator types endpoint routed (returns $response_code as expected)"
@@ -151,11 +151,11 @@ test_generator_endpoints() {
             echo "   ⚠️  Generator types endpoint response: $response_code"
             ;;
     esac
-    
+
     # Test generators list endpoint
     echo "   Testing /api/v1/generators..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/generators" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Generators list endpoint routed (returns $response_code as expected)"
@@ -177,11 +177,11 @@ test_generator_endpoints() {
 test_dataset_endpoints() {
     echo "📊 Testing dataset endpoints..."
     echo "   (These will fail without valid JWT token - expected behavior)"
-    
+
     # Test dataset types endpoint
     echo "   Testing /api/v1/datasets/types..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/datasets/types" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Dataset types endpoint routed (returns $response_code as expected)"
@@ -196,11 +196,11 @@ test_dataset_endpoints() {
             echo "   ⚠️  Dataset types endpoint response: $response_code"
             ;;
     esac
-    
+
     # Test datasets list endpoint
     echo "   Testing /api/v1/datasets..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/datasets" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Datasets list endpoint routed (returns $response_code as expected)"
@@ -215,11 +215,11 @@ test_dataset_endpoints() {
             echo "   ⚠️  Datasets list endpoint response: $response_code"
             ;;
     esac
-    
+
     # Test memory datasets endpoint
     echo "   Testing /api/v1/datasets/memory..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/datasets/memory" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Memory datasets endpoint routed (returns $response_code as expected)"
@@ -241,11 +241,11 @@ test_dataset_endpoints() {
 test_converter_endpoints() {
     echo "🔄 Testing converter endpoints..."
     echo "   (These will fail without valid JWT token - expected behavior)"
-    
+
     # Test converter types endpoint
     echo "   Testing /api/v1/converters/types..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/converters/types" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Converter types endpoint routed (returns $response_code as expected)"
@@ -260,11 +260,11 @@ test_converter_endpoints() {
             echo "   ⚠️  Converter types endpoint response: $response_code"
             ;;
     esac
-    
+
     # Test converters list endpoint
     echo "   Testing /api/v1/converters..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/converters" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Converters list endpoint routed (returns $response_code as expected)"
@@ -279,11 +279,11 @@ test_converter_endpoints() {
             echo "   ⚠️  Converters list endpoint response: $response_code"
             ;;
     esac
-    
+
     # Test converter parameters endpoint
     echo "   Testing /api/v1/converters/params/ROT13Converter..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/converters/params/ROT13Converter" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Converter params endpoint routed (returns $response_code as expected)"
@@ -305,11 +305,11 @@ test_converter_endpoints() {
 test_scorer_endpoints() {
     echo "🎯 Testing scorer endpoints..."
     echo "   (These will fail without valid JWT token - expected behavior)"
-    
+
     # Test scorer types endpoint
     echo "   Testing /api/v1/scorers/types..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/scorers/types" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Scorer types endpoint routed (returns $response_code as expected)"
@@ -324,11 +324,11 @@ test_scorer_endpoints() {
             echo "   ⚠️  Scorer types endpoint response: $response_code"
             ;;
     esac
-    
+
     # Test scorers list endpoint
     echo "   Testing /api/v1/scorers..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/scorers" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Scorers list endpoint routed (returns $response_code as expected)"
@@ -343,11 +343,11 @@ test_scorer_endpoints() {
             echo "   ⚠️  Scorers list endpoint response: $response_code"
             ;;
     esac
-    
+
     # Test scorer parameters endpoint
     echo "   Testing /api/v1/scorers/params/SubStringScorer..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/scorers/params/SubStringScorer" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Scorer params endpoint routed (returns $response_code as expected)"
@@ -362,11 +362,11 @@ test_scorer_endpoints() {
             echo "   ⚠️  Scorer params endpoint response: $response_code"
             ;;
     esac
-    
+
     # Test scorer health endpoint
     echo "   Testing /api/v1/scorers/health..."
     response_code=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/scorers/health" 2>/dev/null || echo "000")
-    
+
     case $response_code in
         "401"|"403")
             echo "   ✅ Scorer health endpoint routed (returns $response_code as expected)"

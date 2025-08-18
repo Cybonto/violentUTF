@@ -1,8 +1,8 @@
 # CI/CD Pipeline Hardening Plan for ViolentUTF
 
-**GitHub Issue**: [#3 - Harden CI/CD Pipeline](https://github.com/Cybonto/violentUTF/issues/3)  
-**Created**: December 28, 2024  
-**Status**: Planning Phase  
+**GitHub Issue**: [#3 - Harden CI/CD Pipeline](https://github.com/Cybonto/violentUTF/issues/3)
+**Created**: December 28, 2024
+**Status**: Planning Phase
 
 ## Executive Summary
 

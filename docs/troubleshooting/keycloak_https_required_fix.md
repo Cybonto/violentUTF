@@ -21,7 +21,7 @@ Add these environment variables to `keycloak/docker-compose.yml`:
 ```yaml
 environment:
   # ... existing config ...
-  
+
   # --- Proxy Configuration ---
   KC_PROXY: edge              # Trust edge proxy headers
   KC_HOSTNAME_STRICT: false   # Allow flexible hostname validation

@@ -64,7 +64,7 @@ update_route_auth() {
     local route_id="$1"
     local provider_id="$2"
     local existing_config="$3"
-    
+
     # Extract provider configuration
     local provider_num=""
     for i in {1..10}; do
@@ -74,12 +74,12 @@ update_route_auth() {
             break
         fi
     done
-    
+
     if [ -z "$provider_num" ]; then
         echo -e "${YELLOW}Warning: No configuration found for provider $provider_id${NC}"
         return 1
     fi
-    
+
     # Get authentication details
     local auth_type=$(eval echo "\${OPENAPI_${provider_num}_AUTH_TYPE:-}")
     local auth_token=$(eval echo "\${OPENAPI_${provider_num}_AUTH_TOKEN:-}")
@@ -87,7 +87,7 @@ update_route_auth() {
     local api_key_header=$(eval echo "\${OPENAPI_${provider_num}_API_KEY_HEADER:-X-API-Key}")
     local basic_username=$(eval echo "\${OPENAPI_${provider_num}_BASIC_USERNAME:-}")
     local basic_password=$(eval echo "\${OPENAPI_${provider_num}_BASIC_PASSWORD:-}")
-    
+
     # Build authentication headers based on auth_type
     local auth_headers=""
     case "$auth_type" in
@@ -112,26 +112,26 @@ update_route_auth() {
             return 1
             ;;
     esac
-    
+
     if [ -z "$auth_headers" ]; then
         echo -e "${YELLOW}No authentication configured for provider $provider_id${NC}"
         return 1
     fi
-    
+
     # Extract current route configuration
     local current_plugins=$(echo "$existing_config" | jq -r '.value.plugins // {}')
     local current_proxy_rewrite=$(echo "$current_plugins" | jq -r '."proxy-rewrite" // {}')
-    
+
     # Update proxy-rewrite plugin with authentication headers
     local updated_proxy_rewrite=$(echo "$current_proxy_rewrite" | jq --argjson headers "{$auth_headers}" '.headers.set = ($headers + (.headers.set // {}))')
     local updated_plugins=$(echo "$current_plugins" | jq --argjson pr "$updated_proxy_rewrite" '."proxy-rewrite" = $pr')
-    
+
     # Update the route
     local update_response=$(curl -s -X PATCH "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
         -H "Content-Type: application/json" \
         -d "{\"plugins\": $updated_plugins}")
-    
+
     if echo "$update_response" | jq -e '.value' > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Updated route $route_id with authentication headers${NC}"
         return 0
@@ -175,35 +175,35 @@ failed_count=0
 echo "$openapi_routes" | jq -c '.[]' | while IFS= read -r route; do
     route_id=$(echo "$route" | jq -r '.key | split("/") | last')
     route_uri=$(echo "$route" | jq -r '.value.uri')
-    
+
     # Extract provider ID from URI
     provider_id=$(echo "$route_uri" | sed -n 's|.*/ai/openapi/\([^/]*\)/.*|\1|p')
-    
+
     if [ -z "$provider_id" ]; then
         echo -e "${YELLOW}Could not extract provider ID from URI: $route_uri${NC}"
         ((skipped_count++))
         continue
     fi
-    
+
     echo -e "${BLUE}Checking route: $route_id (Provider: $provider_id)${NC}"
-    
+
     # Check if route already has authentication headers
     existing_auth=$(echo "$route" | jq -r '.value.plugins."proxy-rewrite".headers.set.Authorization // empty')
     existing_api_key=$(echo "$route" | jq -r '.value.plugins."proxy-rewrite".headers.set | to_entries[] | select(.key | contains("Key") or contains("key")) | .value // empty' | head -1)
-    
+
     if [ -n "$existing_auth" ] || [ -n "$existing_api_key" ]; then
         echo -e "${GREEN}✓ Route already has authentication headers${NC}"
         ((skipped_count++))
         continue
     fi
-    
+
     # Update the route
     if update_route_auth "$route_id" "$provider_id" "$route"; then
         ((updated_count++))
     else
         ((failed_count++))
     fi
-    
+
     echo
 done
 

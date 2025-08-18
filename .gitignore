@@ -56,3 +56,5 @@ pip-delete-this-directory.txt
 *.swp
 *.swo
 zscaler.crt
+/.implement_checkpoints
+/agent_orchestrator

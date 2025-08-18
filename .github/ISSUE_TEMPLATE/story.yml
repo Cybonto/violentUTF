@@ -157,4 +157,3 @@ body:
         - Custom
     validations:
       required: true
-

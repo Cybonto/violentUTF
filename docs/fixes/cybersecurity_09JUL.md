@@ -1,16 +1,16 @@
 # Security Vulnerability Assessment Report - July 9, 2025
 
-**Date**: July 9, 2025  
-**Branch**: dev_nightly  
-**Analysis Tools**: Safety, pip-audit, Bandit, Container analysis, Secret scanning  
-**CI/CD Integration**: Full CI matrix security scanning workflow analyzed  
+**Date**: July 9, 2025
+**Branch**: dev_nightly
+**Analysis Tools**: Safety, pip-audit, Bandit, Container analysis, Secret scanning
+**CI/CD Integration**: Full CI matrix security scanning workflow analyzed
 
 ## Executive Summary
 
 Comprehensive security analysis of the ViolentUTF platform revealed multiple security vulnerabilities across dependencies, code, and configurations. The assessment identified critical and high-severity issues requiring immediate attention:
 
 - **Dependency Vulnerabilities**: 10 vulnerabilities across 7 packages (3 from Safety, 7 from pip-audit)
-- **Code Security Issues**: Bandit analysis identified multiple medium-severity vulnerabilities  
+- **Code Security Issues**: Bandit analysis identified multiple medium-severity vulnerabilities
 - **Container Security**: 13 Docker images analyzed with potential security concerns
 - **Configuration Security**: Proper secret management practices identified with recommendations
 - **CI/CD Security**: Advanced security scanning pipeline configured but requires enhancement
@@ -47,7 +47,7 @@ Comprehensive security analysis of the ViolentUTF platform revealed multiple sec
 - **Fix**: Upgrade to 4.25.8, 5.29.5, or 6.31.1
 
 **requests 2.32.3**:
-- **GHSA-9hjg-9r4m-mvj7**: .netrc credential leakage to third parties  
+- **GHSA-9hjg-9r4m-mvj7**: .netrc credential leakage to third parties
 - **CVE-2024-47081**: URL parsing issue causing credential exposure
 - **Severity**: High
 - **Risk**: Credential theft in enterprise environments
@@ -105,7 +105,7 @@ Based on the CI/CD security scanning configuration and historical patterns:
 - **Impact**: Service exposure beyond intended network boundaries
 
 **HTTP Request Vulnerabilities**:
-- **Requests without timeout** - Estimated 5+ instances  
+- **Requests without timeout** - Estimated 5+ instances
 - **Risk**: DoS through hanging connections
 - **CWE**: CWE-400 (Resource Exhaustion)
 - **Pattern**: HTTP requests in JWT and API client modules
@@ -146,7 +146,7 @@ apache/apisix-dashboard     latest           549MB     ✅ LOW
 ### 4. Configuration Security Analysis
 
 **Secret Management Analysis**:
-- ✅ Proper use of `.env.sample` files with placeholder values  
+- ✅ Proper use of `.env.sample` files with placeholder values
 - ✅ No hardcoded secrets found in configuration files
 - ✅ Environment variable-based configuration
 - ✅ AI tokens properly templated in sample files
@@ -155,7 +155,7 @@ apache/apisix-dashboard     latest           549MB     ✅ LOW
 **Environment Files Identified** (10 files):
 ```
 ./ai-tokens.env.sample          ✅ Template
-./ai-tokens.env                 ⚠️ Contains actual tokens  
+./ai-tokens.env                 ⚠️ Contains actual tokens
 ./apisix/.env                   ⚠️ Service credentials
 ./violentutf_api/fastapi_app/.env ⚠️ API credentials
 ./violentutf/.env               ⚠️ App credentials
@@ -182,7 +182,7 @@ apache/apisix-dashboard     latest           549MB     ✅ LOW
 
 **⚠️ Security Pipeline Gaps**:
 - Security scans only run on full CI (main branch, tags, manual dispatch)
-- No security gates on development branches (dev_*) 
+- No security gates on development branches (dev_*)
 - Missing security policy enforcement
 - No automated security reporting/notifications
 - Limited security metrics collection
@@ -232,7 +232,7 @@ chmod 600 */.env */.*env                 # Restrict permissions
 1. **Upgrade Remaining Dependencies**:
 ```bash
 pip install "tornado>=6.5.0"
-pip install "protobuf>=6.31.1" 
+pip install "protobuf>=6.31.1"
 pip install "urllib3>=2.5.0"
 pip install "torch>=2.7.1rc1"            # When available
 ```
@@ -359,7 +359,7 @@ Based on analysis of GitHub PR #50 (dev_nightly → main), the following issues 
 - **Root Cause**: Directory path contains spaces around forward slash
 - **Impact**: **CRITICAL** - Blocks Windows compatibility entirely
 - **Status**: ❌ **BLOCKING MERGE**
-- **Fix Required**: 
+- **Fix Required**:
   ```bash
   mv "violentutf/app_data / simplechat" "violentutf/app_data/simplechat"
   ```
@@ -387,10 +387,10 @@ Based on analysis of GitHub PR #50 (dev_nightly → main), the following issues 
   ```dockerfile
   # Fixed pip install with --no-cache-dir
   RUN pip install --no-cache-dir /wheels/*
-  
+
   # Added SHELL directive for pipefail support
   SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-  
+
   # Added version pinning for packages
   RUN apt-get update && apt-get install -y --no-install-recommends \
       gcc=4:11.2.0-1ubuntu1 \
@@ -428,7 +428,7 @@ The following security vulnerabilities have been **RESOLVED** and are included i
 
 **Files Fixed:**
 - `violentutf_api/fastapi_app/Dockerfile` - Fixed critical security violations
-- `violentutf/Dockerfile` - Fixed security best practices violations  
+- `violentutf/Dockerfile` - Fixed security best practices violations
 - `keycloak/docker-compose.yml` - Fixed hardcoded credentials
 - `.github/workflows/ci-pr.yml` - Added proper Docker linting exceptions
 
@@ -448,7 +448,7 @@ The following security vulnerabilities have been **RESOLVED** and are included i
 #### **All Security Vulnerabilities**
 
 1. ✅ **Authentication Bypass in Security Metrics Endpoint** - Fixed with admin authentication
-2. ✅ **File Upload Path Traversal Vulnerability** - Fixed with filename sanitization  
+2. ✅ **File Upload Path Traversal Vulnerability** - Fixed with filename sanitization
 3. ✅ **Hardcoded Admin Credentials** - Fixed with environment variables
 4. ✅ **Container Security Optimization** - Multi-stage build implemented
 5. ✅ **Weak Random Number Generation** - Fixed with `secrets.SystemRandom()`
@@ -474,7 +474,7 @@ The following security vulnerabilities have been **RESOLVED** and are included i
 
 The ViolentUTF platform demonstrates strong architectural security with proper authentication, network segmentation, and secret management practices. **All major security vulnerabilities have been fixed** and are ready for deployment. However, **CI/CD pipeline issues are currently blocking the merge** and must be resolved before the security improvements can be deployed to production.
 
-**Immediate Priority**: 
+**Immediate Priority**:
 1. 🚨 **Fix CI/CD pipeline blockers** (file paths, formatting, Docker config)
 2. 🚨 **Resolve API contract issues** (compatibility)
 3. ✅ **Security fixes are complete and ready** for deployment
