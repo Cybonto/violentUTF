@@ -150,16 +150,16 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
 @auth_rate_limit("auth_token")
 async def read_users_me(request: Request, current_user: User = Depends(get_current_user)):
     """
-    Get current user information
+    Get current user information.
     """
-    return UserInfo(username=current_user.username, email=current_user.email, roles=current_user.roles)
+    return UserInfo(username=current_user.username, email=current_user.email, roles=current_user.roles).
 
 
 @router.post("/refresh", response_model=Token)
 @auth_rate_limit("auth_refresh")
 async def refresh_token(request: Request, current_user: User = Depends(get_current_user)):
     """
-    Refresh access token
+    Refresh access token.
     """
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token_data = {"sub": current_user.username, "email": current_user.email, "roles": current_user.roles}
@@ -173,9 +173,9 @@ async def refresh_token(request: Request, current_user: User = Depends(get_curre
 @auth_rate_limit("auth_validate")
 async def get_token_info(request: Request, current_user: User = Depends(get_current_user)):
     """
-    Get decoded JWT token information for current user
+    Get decoded JWT token information for current user.
     """
-    from datetime import datetime
+    from datetime import datetime.
 
     import jwt
 
@@ -199,7 +199,7 @@ async def validate_token(
     request_data: TokenValidationRequest, request: Request, current_user: User = Depends(get_current_user)
 ):
     """
-    Validate JWT token and check specific roles/permissions
+    Validate JWT token and check specific roles/permissions.
     """
     try:
         # Check if user has AI access
@@ -235,7 +235,7 @@ async def validate_token(
 @auth_rate_limit("auth_token")
 async def logout(request: Request, current_user: User = Depends(get_current_user)):
     """
-    Invalidate current session and tokens
+    Invalidate current session and tokens.
     """
     # In a real implementation, you would:
     # 1. Add token to blacklist
@@ -247,7 +247,7 @@ async def logout(request: Request, current_user: User = Depends(get_current_user
 @router.get("/password-requirements")
 async def get_password_requirements():
     """
-    Get password security requirements and policy
+    Get password security requirements and policy.
     """
     return {
         "requirements": default_password_validator.generate_password_requirements(),

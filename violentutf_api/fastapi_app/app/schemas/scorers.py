@@ -43,7 +43,7 @@ class ParameterType(str, Enum):
 
 # Parameter definition models
 class ScorerParameter(BaseModel):
-    """Definition of a scorer parameter"""
+    """Definition of a scorer parameter."""
 
     name: str = Field(..., description="Parameter name")
     description: str = Field(..., description="Human-readable parameter description")
@@ -56,7 +56,7 @@ class ScorerParameter(BaseModel):
 
 # Scorer category information
 class ScorerCategoryInfo(BaseModel):
-    """Information about a scorer category"""
+    """Information about a scorer category."""
 
     description: str = Field(..., description="Category description")
     strengths: List[str] = Field(..., description="Category strengths")
@@ -67,7 +67,7 @@ class ScorerCategoryInfo(BaseModel):
 
 # Test case models
 class CategoryTestCase(BaseModel):
-    """Test case for a scorer category"""
+    """Test case for a scorer category."""
 
     category: str = Field(..., description="Scorer category")
     test_inputs: List[str] = Field(..., description="Sample test inputs")
@@ -75,7 +75,7 @@ class CategoryTestCase(BaseModel):
 
 # Scorer operation models
 class ScorerCreateRequest(BaseModel):
-    """Request model for creating a scorer"""
+    """Request model for creating a scorer."""
 
     name: str = Field(
         ..., min_length=3, max_length=SecurityLimits.MAX_NAME_LENGTH, description="Unique scorer configuration name"
@@ -86,7 +86,7 @@ class ScorerCreateRequest(BaseModel):
 
     @validator("name")
     def validate_name_field(cls, v):
-        """Validate scorer name"""
+        """Validate scorer name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
             raise ValueError("Name must contain only alphanumeric characters, underscores, and hyphens")
@@ -94,7 +94,7 @@ class ScorerCreateRequest(BaseModel):
 
     @validator("scorer_type")
     def validate_scorer_type_field(cls, v):
-        """Validate scorer type"""
+        """Validate scorer type."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
             raise ValueError("Scorer type must contain only alphanumeric characters, underscores, and hyphens")
@@ -102,12 +102,12 @@ class ScorerCreateRequest(BaseModel):
 
     @validator("parameters")
     def validate_parameters_field(cls, v):
-        """Validate scorer parameters"""
+        """Validate scorer parameters."""
         return validate_generator_parameters(v)
 
     @validator("generator_id")
     def validate_generator_id_field(cls, v):
-        """Validate generator ID"""
+        """Validate generator ID."""
         if v is not None:
             v = sanitize_string(v)
             if len(v) > 100:
@@ -116,7 +116,7 @@ class ScorerCreateRequest(BaseModel):
 
 
 class ScorerCreateResponse(BaseModel):
-    """Response model for scorer creation"""
+    """Response model for scorer creation."""
 
     success: bool = Field(..., description="Whether creation was successful")
     scorer: Dict[str, Any] = Field(..., description="Created scorer information")
@@ -124,7 +124,7 @@ class ScorerCreateResponse(BaseModel):
 
 
 class ScorerCloneRequest(BaseModel):
-    """Request model for cloning a scorer"""
+    """Request model for cloning a scorer."""
 
     new_name: str = Field(
         ..., min_length=3, max_length=SecurityLimits.MAX_NAME_LENGTH, description="Name for the cloned scorer"
@@ -133,7 +133,7 @@ class ScorerCloneRequest(BaseModel):
 
     @validator("new_name")
     def validate_new_name_field(cls, v):
-        """Validate new scorer name"""
+        """Validate new scorer name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
             raise ValueError("Name must contain only alphanumeric characters, underscores, and hyphens")
@@ -141,7 +141,7 @@ class ScorerCloneRequest(BaseModel):
 
 
 class ScorerUpdateRequest(BaseModel):
-    """Request model for updating a scorer"""
+    """Request model for updating a scorer."""
 
     name: Optional[str] = Field(
         None, min_length=3, max_length=SecurityLimits.MAX_NAME_LENGTH, description="New name for scorer"
@@ -150,7 +150,7 @@ class ScorerUpdateRequest(BaseModel):
 
     @validator("name")
     def validate_name_field(cls, v):
-        """Validate scorer name"""
+        """Validate scorer name."""
         if v is not None:
             v = sanitize_string(v)
             if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
@@ -159,14 +159,14 @@ class ScorerUpdateRequest(BaseModel):
 
     @validator("parameters")
     def validate_parameters_field(cls, v):
-        """Validate scorer parameters"""
+        """Validate scorer parameters."""
         if v is not None:
             return validate_generator_parameters(v)
         return v
 
 
 class ScorerInfo(BaseModel):
-    """Information about a configured scorer"""
+    """Information about a configured scorer."""
 
     id: str = Field(..., description="Unique scorer ID")
     name: str = Field(..., description="Scorer name")
@@ -180,7 +180,7 @@ class ScorerInfo(BaseModel):
 
 # Response models
 class ScorerTypesResponse(BaseModel):
-    """Response model for available scorer types"""
+    """Response model for available scorer types."""
 
     categories: Dict[str, ScorerCategoryInfo] = Field(..., description="Scorer categories and their info")
     available_scorers: List[str] = Field(..., description="All available scorer types")
@@ -188,7 +188,7 @@ class ScorerTypesResponse(BaseModel):
 
 
 class ScorerParametersResponse(BaseModel):
-    """Response model for scorer parameters"""
+    """Response model for scorer parameters."""
 
     scorer_type: str = Field(..., description="Scorer type")
     parameters: List[ScorerParameter] = Field(..., description="Parameter definitions")
@@ -198,7 +198,7 @@ class ScorerParametersResponse(BaseModel):
 
 
 class ScorersListResponse(BaseModel):
-    """Response model for listing scorers"""
+    """Response model for listing scorers."""
 
     scorers: List[ScorerInfo] = Field(..., description="List of configured scorers")
     total: int = Field(..., description="Total number of scorers")
@@ -206,7 +206,7 @@ class ScorersListResponse(BaseModel):
 
 
 class ScorerDeleteResponse(BaseModel):
-    """Response model for scorer deletion"""
+    """Response model for scorer deletion."""
 
     success: bool = Field(..., description="Whether deletion was successful")
     message: str = Field(..., description="Success or error message")
@@ -218,7 +218,7 @@ class ScorerDeleteResponse(BaseModel):
 
 # Error models
 class ScorerError(BaseModel):
-    """Error model for scorer operations"""
+    """Error model for scorer operations."""
 
     error_type: str = Field(..., description="Type of error")
     message: str = Field(..., description="Error message")
@@ -228,7 +228,7 @@ class ScorerError(BaseModel):
 
 # Utility models
 class ScorerValidationRequest(BaseModel):
-    """Request model for validating scorer configuration"""
+    """Request model for validating scorer configuration."""
 
     scorer_type: str = Field(..., min_length=3, max_length=100, description="Scorer type to validate")
     parameters: Dict[str, Any] = Field(..., description="Parameters to validate")
@@ -236,7 +236,7 @@ class ScorerValidationRequest(BaseModel):
 
     @validator("scorer_type")
     def validate_scorer_type_field(cls, v):
-        """Validate scorer type"""
+        """Validate scorer type."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
             raise ValueError("Scorer type must contain only alphanumeric characters, underscores, and hyphens")
@@ -244,12 +244,12 @@ class ScorerValidationRequest(BaseModel):
 
     @validator("parameters")
     def validate_parameters_field(cls, v):
-        """Validate scorer parameters"""
+        """Validate scorer parameters."""
         return validate_generator_parameters(v)
 
     @validator("generator_id")
     def validate_generator_id_field(cls, v):
-        """Validate generator ID"""
+        """Validate generator ID."""
         if v is not None:
             v = sanitize_string(v)
             if len(v) > 100:
@@ -258,7 +258,7 @@ class ScorerValidationRequest(BaseModel):
 
 
 class ScorerValidationResponse(BaseModel):
-    """Response model for scorer validation"""
+    """Response model for scorer validation."""
 
     valid: bool = Field(..., description="Whether configuration is valid")
     errors: List[str] = Field(..., description="Validation errors")
@@ -268,7 +268,7 @@ class ScorerValidationResponse(BaseModel):
 
 # Advanced operations
 class ScorerAnalyticsRequest(BaseModel):
-    """Request model for scorer analytics"""
+    """Request model for scorer analytics."""
 
     scorer_id: str = Field(..., max_length=100, description="Scorer ID")
     start_date: Optional[datetime] = Field(None, description="Start date for analytics")
@@ -276,7 +276,7 @@ class ScorerAnalyticsRequest(BaseModel):
 
     @validator("scorer_id")
     def validate_scorer_id_field(cls, v):
-        """Validate scorer ID"""
+        """Validate scorer ID."""
         v = sanitize_string(v)
         if len(v) > 100:
             raise ValueError("Scorer ID too long")
@@ -284,7 +284,7 @@ class ScorerAnalyticsRequest(BaseModel):
 
 
 class ScorerAnalyticsResponse(BaseModel):
-    """Response model for scorer analytics"""
+    """Response model for scorer analytics."""
 
     scorer_id: str = Field(..., description="Scorer ID")
     total_tests: int = Field(..., description="Total number of tests")
@@ -296,7 +296,7 @@ class ScorerAnalyticsResponse(BaseModel):
 
 # Export/Import models
 class ScorerConfigExport(BaseModel):
-    """Model for exporting scorer configurations"""
+    """Model for exporting scorer configurations."""
 
     scorers: List[ScorerInfo] = Field(..., description="Scorer configurations")
     export_date: datetime = Field(..., description="Export timestamp")
@@ -305,7 +305,7 @@ class ScorerConfigExport(BaseModel):
 
 
 class ScorerConfigImport(BaseModel):
-    """Model for importing scorer configurations"""
+    """Model for importing scorer configurations."""
 
     scorers: List[Dict[str, Any]] = Field(..., max_items=50, description="Scorer configurations to import")
     overwrite_existing: bool = Field(default=False, description="Overwrite existing scorers")
@@ -313,7 +313,7 @@ class ScorerConfigImport(BaseModel):
 
     @validator("scorers")
     def validate_scorers_field(cls, v):
-        """Validate scorer configurations"""
+        """Validate scorer configurations."""
         validated = []
         for scorer_config in v:
             if not isinstance(scorer_config, dict):
@@ -333,7 +333,7 @@ class ScorerConfigImport(BaseModel):
 
 
 class ScorerImportResponse(BaseModel):
-    """Response model for scorer import"""
+    """Response model for scorer import."""
 
     success: bool = Field(..., description="Whether import was successful")
     imported_count: int = Field(..., description="Number of scorers imported")
@@ -344,7 +344,7 @@ class ScorerImportResponse(BaseModel):
 
 # Health and status models
 class ScorerHealthResponse(BaseModel):
-    """Response model for scorer health check"""
+    """Response model for scorer health check."""
 
     healthy: bool = Field(..., description="Whether scorer system is healthy")
     total_scorers: int = Field(..., description="Total number of configured scorers")

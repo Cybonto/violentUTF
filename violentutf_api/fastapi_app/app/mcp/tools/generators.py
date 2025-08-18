@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""MCP Generator Configuration Tools"""
+"""MCP Generator Configuration Tools."""
 
 import logging
 from typing import Any, Dict, List, Optional
@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class GeneratorConfigurationTools:
-    """MCP tools for generator configuration and management"""
+    """MCP tools for generator configuration and management."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for direct API access from within container
         if self.base_url and "localhost:9080" in self.base_url:
@@ -27,7 +27,7 @@ class GeneratorConfigurationTools:
         self.auth_handler = MCPAuthHandler()
 
     def get_tools(self) -> List[Tool]:
-        """Get all generator configuration tools"""
+        """Get all generator configuration tools."""
         return [
             self._create_list_generators_tool(),
             self._create_get_generator_tool(),
@@ -42,7 +42,7 @@ class GeneratorConfigurationTools:
         ]
 
     def _create_list_generators_tool(self) -> Tool:
-        """Create tool for listing generators"""
+        """Create tool for listing generators."""
         return Tool(
             name="list_generators",
             description="List all configured generators with filtering options",
@@ -70,7 +70,7 @@ class GeneratorConfigurationTools:
         )
 
     def _create_get_generator_tool(self) -> Tool:
-        """Create tool for getting generator details"""
+        """Create tool for getting generator details."""
         return Tool(
             name="get_generator",
             description="Get detailed configuration and status of a specific generator",
@@ -89,7 +89,7 @@ class GeneratorConfigurationTools:
         )
 
     def _create_create_generator_tool(self) -> Tool:
-        """Create tool for creating new generators"""
+        """Create tool for creating new generators."""
         return Tool(
             name="create_generator",
             description="Create a new generator configuration",
@@ -127,7 +127,7 @@ class GeneratorConfigurationTools:
         )
 
     def _create_update_generator_tool(self) -> Tool:
-        """Create tool for updating generators"""
+        """Create tool for updating generators."""
         return Tool(
             name="update_generator",
             description="Update an existing generator configuration",
@@ -150,7 +150,7 @@ class GeneratorConfigurationTools:
         )
 
     def _create_delete_generator_tool(self) -> Tool:
-        """Create tool for deleting generators"""
+        """Create tool for deleting generators."""
         return Tool(
             name="delete_generator",
             description="Delete a generator configuration",
@@ -169,7 +169,7 @@ class GeneratorConfigurationTools:
         )
 
     def _create_test_generator_tool(self) -> Tool:
-        """Create tool for testing generators"""
+        """Create tool for testing generators."""
         return Tool(
             name="test_generator",
             description="Test a generator with a sample prompt",
@@ -195,7 +195,7 @@ class GeneratorConfigurationTools:
         )
 
     def _create_list_provider_models_tool(self) -> Tool:
-        """Create tool for listing available models"""
+        """Create tool for listing available models."""
         return Tool(
             name="list_provider_models",
             description="List available models for a specific provider",
@@ -218,7 +218,7 @@ class GeneratorConfigurationTools:
         )
 
     def _create_validate_generator_config_tool(self) -> Tool:
-        """Create tool for validating generator configuration"""
+        """Create tool for validating generator configuration."""
         return Tool(
             name="validate_generator_config",
             description="Validate a generator configuration without creating it",
@@ -243,7 +243,7 @@ class GeneratorConfigurationTools:
         )
 
     def _create_clone_generator_tool(self) -> Tool:
-        """Create tool for cloning generators"""
+        """Create tool for cloning generators."""
         return Tool(
             name="clone_generator",
             description="Clone an existing generator with modifications",
@@ -265,7 +265,7 @@ class GeneratorConfigurationTools:
         )
 
     def _create_batch_test_generators_tool(self) -> Tool:
-        """Create tool for batch testing generators"""
+        """Create tool for batch testing generators."""
         return Tool(
             name="batch_test_generators",
             description="Test multiple generators with the same prompt",
@@ -302,7 +302,7 @@ class GeneratorConfigurationTools:
     async def execute_tool(
         self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Execute a generator configuration tool"""
+        """Execute a generator configuration tool."""
         logger.info(f"Executing generator tool: {tool_name}")
 
         try:
@@ -334,7 +334,7 @@ class GeneratorConfigurationTools:
             return {"error": "execution_failed", "message": str(e), "tool_name": tool_name}
 
     async def _execute_list_generators(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute list generators tool"""
+        """Execute list generators tool."""
         params = {}
         if "provider_type" in args:
             params["provider_type"] = args["provider_type"]
@@ -346,7 +346,7 @@ class GeneratorConfigurationTools:
         return await self._api_request("GET", "/api/v1/generators", params=params)
 
     async def _execute_get_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute get generator tool"""
+        """Execute get generator tool."""
         generator_id = args["generator_id"]
         params = {}
         if "include_test_history" in args:
@@ -355,16 +355,16 @@ class GeneratorConfigurationTools:
         return await self._api_request("GET", f"/api/v1/generators/{generator_id}", params=params)
 
     async def _execute_create_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute create generator tool"""
+        """Execute create generator tool."""
         return await self._api_request("POST", "/api/v1/generators", json=args)
 
     async def _execute_update_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute update generator tool"""
+        """Execute update generator tool."""
         generator_id = args.pop("generator_id")
         return await self._api_request("PUT", f"/api/v1/generators/{generator_id}", json=args)
 
     async def _execute_delete_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute delete generator tool"""
+        """Execute delete generator tool."""
         generator_id = args["generator_id"]
         params = {}
         if "force" in args:
@@ -373,7 +373,7 @@ class GeneratorConfigurationTools:
         return await self._api_request("DELETE", f"/api/v1/generators/{generator_id}", params=params)
 
     async def _execute_test_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute test generator tool"""
+        """Execute test generator tool."""
         generator_id = args["generator_id"]
         test_data = {
             "test_prompt": args.get("test_prompt", "Hello, please respond with a brief greeting."),
@@ -383,7 +383,7 @@ class GeneratorConfigurationTools:
         return await self._api_request("POST", f"/api/v1/generators/{generator_id}/test", json=test_data)
 
     async def _execute_list_provider_models(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute list provider models tool"""
+        """Execute list provider models tool."""
         provider_type = args["provider_type"]
         params = {}
         if "include_pricing" in args:
@@ -392,11 +392,11 @@ class GeneratorConfigurationTools:
         return await self._api_request("GET", f"/api/v1/generators/providers/{provider_type}/models", params=params)
 
     async def _execute_validate_generator_config(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute validate generator config tool"""
+        """Execute validate generator config tool."""
         return await self._api_request("POST", "/api/v1/generators/validate", json=args)
 
     async def _execute_clone_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute clone generator tool"""
+        """Execute clone generator tool."""
         source_id = args["source_generator_id"]
         clone_data = {
             "new_name": args["new_name"],
@@ -408,11 +408,11 @@ class GeneratorConfigurationTools:
         return await self._api_request("POST", f"/api/v1/generators/{source_id}/clone", json=clone_data)
 
     async def _execute_batch_test_generators(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute batch test generators tool"""
+        """Execute batch test generators tool."""
         return await self._api_request("POST", "/api/v1/generators/batch-test", json=args)
 
     async def _api_request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
-        """Make authenticated API request"""
+        """Make authenticated API request."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Generator"}
 
         # Add authentication headers if available

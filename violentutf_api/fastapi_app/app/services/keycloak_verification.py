@@ -25,10 +25,10 @@ logger = logging.getLogger(__name__)
 
 class KeycloakJWTVerifier:
     """
-    Keycloak JWT token verification with proper signature validation
+    Keycloak JWT token verification with proper signature validation.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.keycloak_url = settings.KEYCLOAK_URL
         self.realm = settings.KEYCLOAK_REALM
         self.client_id = settings.KEYCLOAK_CLIENT_ID
@@ -46,12 +46,12 @@ class KeycloakJWTVerifier:
 
     async def _get_keycloak_config(self) -> Dict[str, Any]:
         """
-        Get Keycloak OpenID Connect configuration
+        Get Keycloak OpenID Connect configuration.
 
         Returns:
             Dictionary containing Keycloak configuration
         """
-        current_time = time.time()
+        current_time = time.time().
 
         # Check cache
         if self._config_cache and current_time - self._config_cache_time < self._cache_ttl:
@@ -81,7 +81,7 @@ class KeycloakJWTVerifier:
 
     async def _get_jwks_client(self) -> PyJWKClient:
         """
-        Get or create JWKS client for key retrieval
+        Get or create JWKS client for key retrieval.
 
         Returns:
             PyJWKClient instance
@@ -108,7 +108,7 @@ class KeycloakJWTVerifier:
 
     async def verify_keycloak_token(self, token: str) -> Dict[str, Any]:
         """
-        Verify Keycloak JWT token with proper signature validation
+        Verify Keycloak JWT token with proper signature validation.
 
         Args:
             token: Keycloak JWT token to verify
@@ -199,7 +199,7 @@ class KeycloakJWTVerifier:
 
     def _validate_token_claims(self, decoded_token: Dict[str, Any]) -> None:
         """
-        Perform additional validation on token claims
+        Perform additional validation on token claims.
 
         Args:
             decoded_token: Decoded JWT payload
@@ -248,7 +248,7 @@ class KeycloakJWTVerifier:
 
     def extract_user_info(self, decoded_token: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Extract user information from verified Keycloak token
+        Extract user information from verified Keycloak token.
 
         Args:
             decoded_token: Verified Keycloak JWT payload
@@ -290,7 +290,7 @@ class KeycloakJWTVerifier:
 
     def _map_keycloak_roles(self, keycloak_roles: List[str]) -> List[str]:
         """
-        Map Keycloak roles to ViolentUTF application roles
+        Map Keycloak roles to ViolentUTF application roles.
 
         Args:
             keycloak_roles: List of Keycloak roles

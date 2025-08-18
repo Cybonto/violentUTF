@@ -30,7 +30,7 @@ SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """
-    Create a JWT access token
+    Create a JWT access token.
 
     Args:
         data: Payload data to encode
@@ -39,7 +39,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     Returns:
         Encoded JWT token
     """
-    to_encode = data.copy()
+    to_encode = data.copy().
 
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -54,7 +54,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 def decode_token(token: str) -> Optional[Dict[str, Any]]:
     """
-    Decode and validate a JWT token with comprehensive security checks
+    Decode and validate a JWT token with comprehensive security checks.
 
     Args:
         token: JWT token to decode
@@ -135,7 +135,7 @@ def decode_token(token: str) -> Optional[Dict[str, Any]]:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verify a plain password against a hashed password with input validation
+    Verify a plain password against a hashed password with input validation.
 
     Args:
         plain_password: Plain text password
@@ -162,7 +162,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str, username: str = None, email: str = None) -> str:
     """
-    Hash a password using bcrypt with comprehensive security validation
+    Hash a password using bcrypt with comprehensive security validation.
 
     Args:
         password: Plain text password
@@ -207,7 +207,7 @@ def get_password_hash(password: str, username: str = None, email: str = None) ->
 
 def create_api_key_token(user_id: str, key_name: str, permissions: list = None, key_id: str = None) -> Dict[str, Any]:
     """
-    Create an API key token with extended expiration and input validation
+    Create an API key token with extended expiration and input validation.
 
     Args:
         user_id: User identifier

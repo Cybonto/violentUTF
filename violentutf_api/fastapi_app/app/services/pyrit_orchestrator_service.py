@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 class PyRITOrchestratorService:
-    """Service for managing PyRIT orchestrators in ViolentUTF API"""
+    """Service for managing PyRIT orchestrators in ViolentUTF API."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.memory = None  # Will be initialized on startup
         self._orchestrator_instances: Dict[str, Orchestrator] = {}
         self._orchestrator_scorers: Dict[str, List] = {}  # Track scorers by orchestrator ID
@@ -30,7 +30,7 @@ class PyRITOrchestratorService:
         self._initialize_memory()  # Initialize memory immediately
 
     def _initialize_memory(self):
-        """Initialize PyRIT memory with database concurrency handling"""
+        """Initialize PyRIT memory with database concurrency handling."""
         try:
             # First try to get existing memory instance
             self.memory = CentralMemory.get_memory_instance()
@@ -42,11 +42,11 @@ class PyRITOrchestratorService:
             self.memory = None  # Will create per - orchestrator to avoid concurrency issues
 
     def _get_memory(self):
-        """Get PyRIT memory instance (may be None if using per - orchestrator memory)"""
+        """Get PyRIT memory instance (may be None if using per - orchestrator memory)."""
         return self.memory
 
     def validate_memory_access(self) -> bool:
-        """Validate that PyRIT memory is accessible or can work without global memory"""
+        """Validate that PyRIT memory is accessible or can work without global memory."""
         try:
             memory = self._get_memory()
 
@@ -64,7 +64,7 @@ class PyRITOrchestratorService:
             return False
 
     def _discover_orchestrator_types(self) -> Dict[str, Type[Orchestrator]]:
-        """Discover all available PyRIT orchestrator types"""
+        """Discover all available PyRIT orchestrator types."""
         orchestrator_types = {}
 
         # For Phase 1, focus on PromptSendingOrchestrator
@@ -77,7 +77,7 @@ class PyRITOrchestratorService:
         return orchestrator_types
 
     def get_orchestrator_types(self) -> List[Dict[str, Any]]:
-        """Get list of available orchestrator types with metadata"""
+        """Get list of available orchestrator types with metadata."""
         types_info = []
 
         for name, orchestrator_class in self._orchestrator_registry.items():
@@ -111,7 +111,7 @@ class PyRITOrchestratorService:
         return types_info
 
     def _get_parameter_description(self, orchestrator_class: Type, param_name: str) -> str:
-        """Get parameter description from docstring or provide default"""
+        """Get parameter description from docstring or provide default."""
         descriptions = {
             "objective_target": "The target for sending prompts (configured generator)",
             "request_converter_configurations": "List of prompt converter configurations for requests",
@@ -126,14 +126,14 @@ class PyRITOrchestratorService:
         return descriptions.get(param_name, f"Parameter {param_name}")
 
     def _get_use_cases(self, orchestrator_name: str) -> List[str]:
-        """Get use cases for orchestrator type"""
+        """Get use cases for orchestrator type."""
         use_cases_map = {
             "PromptSendingOrchestrator": ["basic_prompting", "dataset_testing", "prompt_evaluation", "batch_processing"]
         }
         return use_cases_map.get(orchestrator_name, ["general_purpose"])
 
     async def create_orchestrator_instance(self, config: Dict[str, Any]) -> str:
-        """Create and configure orchestrator instance"""
+        """Create and configure orchestrator instance."""
         orchestrator_id = str(uuid.uuid4())
         orchestrator_type = config["orchestrator_type"]
         parameters = config["parameters"]
@@ -239,7 +239,7 @@ class PyRITOrchestratorService:
         return orchestrator_id
 
     async def _reload_orchestrator_from_db(self, orchestrator_id: str, user_context: str = None) -> bool:
-        """Reload orchestrator instance from database configuration"""
+        """Reload orchestrator instance from database configuration."""
         try:
             from uuid import UUID
 
@@ -298,7 +298,7 @@ class PyRITOrchestratorService:
     async def _resolve_orchestrator_parameters(
         self, parameters: Dict[str, Any], user_context: str = None
     ) -> Dict[str, Any]:
-        """Resolve parameter references to actual objects"""
+        """Resolve parameter references to actual objects."""
         resolved = {}
 
         for param_name, param_value in parameters.items():
@@ -347,7 +347,7 @@ class PyRITOrchestratorService:
         return resolved
 
     async def _create_generator_target(self, generator_name: str, user_context: str = None) -> PromptTarget:
-        """Create PromptTarget from configured generator"""
+        """Create PromptTarget from configured generator."""
         # Import generator service functions directly
         from app.services.generator_integration_service import get_generator_by_name
 
@@ -370,7 +370,7 @@ class PyRITOrchestratorService:
         return ConfiguredGeneratorTarget(generator_config)
 
     async def _create_scorer_instance(self, scorer_name: str, user_context: str = None) -> Scorer:
-        """Create Scorer from configured scorer"""
+        """Create Scorer from configured scorer."""
         # Import scorer service functions directly
         from app.services.scorer_integration_service import get_scorer_by_name
 
@@ -382,13 +382,13 @@ class PyRITOrchestratorService:
         return ConfiguredScorerWrapper(scorer_config)
 
     async def _resolve_converter_configurations(self, configs: List[Dict]) -> List[PromptConverter]:
-        """Resolve converter configurations"""
+        """Resolve converter configurations."""
         # For Phase 1, return empty list (no converters)
         # TODO: Implement converter resolution in future phases
         return []
 
     async def execute_orchestrator(self, orchestrator_id: str, execution_config: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute orchestrator with given configuration"""
+        """Execute orchestrator with given configuration."""
         try:
             # Get user context from execution config
             user_context = execution_config.get("user_context")
@@ -442,7 +442,7 @@ class PyRITOrchestratorService:
         input_data: Dict[str, Any],
         execution_config: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Execute PromptSendingOrchestrator with specific input type"""
+        """Execute PromptSendingOrchestrator with specific input type."""
 
         if execution_type == "prompt_list":
             # Direct prompt list execution
@@ -570,7 +570,7 @@ class PyRITOrchestratorService:
     async def _load_dataset_prompts(
         self, dataset_id: str, sample_size: Optional[int] = None, user_context: Optional[str] = None
     ) -> List[str]:
-        """Load prompts from dataset - use shared memory access for memory datasets"""
+        """Load prompts from dataset - use shared memory access for memory datasets."""
         try:
             # For memory datasets, read directly from PyRIT memory database files
             if dataset_id.startswith("memory_dataset_") or dataset_id.startswith("memory_"):
@@ -589,7 +589,7 @@ class PyRITOrchestratorService:
             return await get_dataset_prompts(dataset_id, sample_size, user_context)
 
     async def _load_memory_dataset_prompts(self, dataset_id: str, sample_size: Optional[int] = None) -> List[str]:
-        """Load prompts from PyRIT memory dataset using real database access"""
+        """Load prompts from PyRIT memory dataset using real database access."""
         try:
             logger.info(f"Loading real memory dataset prompts for {dataset_id}")
 
@@ -621,7 +621,7 @@ class PyRITOrchestratorService:
         execution_type: str,
         input_data: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Format orchestrator results for API response"""
+        """Format orchestrator results for API response."""
 
         # EMERGENCY DEBUG: Add at the very start with guaranteed visibility
         import sys
@@ -900,7 +900,7 @@ class PyRITOrchestratorService:
         return result
 
     def get_orchestrator_memory(self, orchestrator_id: str) -> List[Dict[str, Any]]:
-        """Get memory entries for orchestrator"""
+        """Get memory entries for orchestrator."""
         if orchestrator_id not in self._orchestrator_instances:
             raise ValueError(f"Orchestrator not found: {orchestrator_id}")
 
@@ -923,7 +923,7 @@ class PyRITOrchestratorService:
         return formatted_pieces
 
     def get_orchestrator_scores(self, orchestrator_id: str) -> List[Dict[str, Any]]:
-        """Get scores for orchestrator"""
+        """Get scores for orchestrator."""
         if orchestrator_id not in self._orchestrator_instances:
             raise ValueError(f"Orchestrator not found: {orchestrator_id}")
 
@@ -946,7 +946,7 @@ class PyRITOrchestratorService:
         return formatted_scores
 
     def dispose_orchestrator(self, orchestrator_id: str):
-        """Clean up orchestrator instance"""
+        """Clean up orchestrator instance."""
         if orchestrator_id in self._orchestrator_instances:
             orchestrator = self._orchestrator_instances[orchestrator_id]
             orchestrator.dispose_db_engine()
@@ -955,9 +955,9 @@ class PyRITOrchestratorService:
 
 
 class ConfiguredGeneratorTarget(PromptTarget):
-    """Bridge between ViolentUTF configured generators and PyRIT PromptTarget"""
+    """Bridge between ViolentUTF configured generators and PyRIT PromptTarget."""
 
-    def __init__(self, generator_config: Dict[str, Any]):
+    def __init__(self, generator_config: Dict[str, Any]) -> None:
         super().__init__()
         self.generator_config = generator_config
         self.generator_name = generator_config["name"]
@@ -984,7 +984,7 @@ class ConfiguredGeneratorTarget(PromptTarget):
                 )
 
     async def send_prompt_async(self, *, prompt_request: PromptRequestResponse) -> PromptRequestResponse:
-        """Send prompt through configured generator and return PyRIT response"""
+        """Send prompt through configured generator and return PyRIT response."""
         # Import generator execution functions directly
         from app.services.generator_integration_service import _execute_apisix_generator, _execute_generic_generator
 
@@ -1073,7 +1073,7 @@ class ConfiguredGeneratorTarget(PromptTarget):
         return PromptRequestResponse(request_pieces=[assistant_piece])
 
     def get_identifier(self) -> Dict[str, str]:
-        """Get identifier for this target"""
+        """Get identifier for this target."""
         return {
             "__type__": "ConfiguredGeneratorTarget",
             "generator_name": self.generator_name,
@@ -1081,7 +1081,7 @@ class ConfiguredGeneratorTarget(PromptTarget):
         }
 
     def _validate_request(self, prompt_request: PromptRequestPiece) -> None:
-        """Validate prompt request (required by PyRIT PromptTarget)"""
+        """Validate prompt request (required by PyRIT PromptTarget)."""
         if not prompt_request:
             raise ValueError("Prompt request cannot be None")
         if not prompt_request.original_value:
@@ -1090,9 +1090,9 @@ class ConfiguredGeneratorTarget(PromptTarget):
 
 
 class ConfiguredScorerWrapper(Scorer):
-    """Bridge between ViolentUTF configured scorers and PyRIT Scorer"""
+    """Bridge between ViolentUTF configured scorers and PyRIT Scorer."""
 
-    def __init__(self, scorer_config: Dict[str, Any], execution_metadata: Dict[str, Any] = None):
+    def __init__(self, scorer_config: Dict[str, Any], execution_metadata: Dict[str, Any] = None) -> None:
         super().__init__()
         self.scorer_config = scorer_config
         self.scorer_name = scorer_config["name"]
@@ -1100,7 +1100,7 @@ class ConfiguredScorerWrapper(Scorer):
         self.execution_metadata = execution_metadata or {}  # Store execution context
 
     async def score_async(self, request_response: PromptRequestPiece, *, task: str = None) -> List:
-        """Score response using configured scorer"""
+        """Score response using configured scorer."""
         import sys
 
         score_start_msg = f"🎯 ConfiguredScorerWrapper.score_async called for scorer '{self.scorer_name}'"
@@ -1237,7 +1237,7 @@ class ConfiguredScorerWrapper(Scorer):
         return [score]
 
     def validate(self, request_response: PromptRequestPiece, *, task: str = None) -> None:
-        """Validate the prompt request piece for scoring (required by PyRIT Scorer)"""
+        """Validate the prompt request piece for scoring (required by PyRIT Scorer)."""
         if not request_response:
             raise ValueError("PromptRequestPiece cannot be None")
         if not hasattr(request_response, "role"):
@@ -1246,7 +1246,7 @@ class ConfiguredScorerWrapper(Scorer):
             raise ValueError("PromptRequestPiece must have content to score")
 
     def get_identifier(self) -> Dict[str, str]:
-        """Get identifier for this scorer"""
+        """Get identifier for this scorer."""
         return {"__type__": "ConfiguredScorerWrapper", "scorer_name": self.scorer_name}
 
 

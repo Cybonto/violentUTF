@@ -23,7 +23,7 @@ from pydantic import BaseModel, EmailStr, Field, validator
 
 
 class Token(BaseModel):
-    """OAuth2 token response"""
+    """OAuth2 token response."""
 
     access_token: str = Field(..., min_length=50, max_length=2048, description="JWT access token")
     token_type: str = Field(default="bearer", pattern="^bearer$", description="Token type")
@@ -31,14 +31,14 @@ class Token(BaseModel):
 
     @validator("access_token")
     def validate_access_token(cls, v):
-        """Validate JWT token format"""
+        """Validate JWT token format."""
         if not ValidationPatterns.JWT_TOKEN.match(v):
             raise ValueError("Invalid JWT token format")
         return v
 
 
 class TokenData(BaseModel):
-    """Token payload data"""
+    """Token payload data."""
 
     username: Optional[str] = Field(None, min_length=3, max_length=50)
     email: Optional[EmailStr] = None
@@ -46,19 +46,19 @@ class TokenData(BaseModel):
 
     @validator("username")
     def validate_username_field(cls, v):
-        """Validate username format"""
+        """Validate username format."""
         if v is not None:
             return validate_username(v)
         return v
 
     @validator("roles")
     def validate_roles_field(cls, v):
-        """Validate roles list"""
+        """Validate roles list."""
         return validate_role_list(v)
 
 
 class UserInfo(BaseModel):
-    """User information"""
+    """User information."""
 
     username: str = Field(..., min_length=3, max_length=50)
     email: Optional[EmailStr] = None
@@ -66,24 +66,24 @@ class UserInfo(BaseModel):
 
     @validator("username")
     def validate_username_field(cls, v):
-        """Validate username format"""
+        """Validate username format."""
         return validate_username(v)
 
     @validator("roles")
     def validate_roles_field(cls, v):
-        """Validate roles list"""
+        """Validate roles list."""
         return validate_role_list(v)
 
 
 class APIKeyCreate(BaseModel):
-    """Request to create a new API key"""
+    """Request to create a new API key."""
 
     name: str = Field(..., min_length=3, max_length=100, description="Name/description for the API key")
     permissions: List[str] = Field(default=["api:access"], max_items=20, description="List of permissions for this key")
 
     @validator("name")
     def validate_name_field(cls, v):
-        """Validate API key name"""
+        """Validate API key name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_NAME.match(v):
             raise ValueError("Name contains invalid characters")
@@ -91,7 +91,7 @@ class APIKeyCreate(BaseModel):
 
     @validator("permissions")
     def validate_permissions_field(cls, v):
-        """Validate permissions list"""
+        """Validate permissions list."""
         validated = []
         for perm in v:
             perm = sanitize_string(perm).lower()
@@ -104,7 +104,7 @@ class APIKeyCreate(BaseModel):
 
 
 class APIKey(BaseModel):
-    """API key information"""
+    """API key information."""
 
     id: str
     name: str
@@ -116,7 +116,7 @@ class APIKey(BaseModel):
 
 
 class APIKeyResponse(BaseModel):
-    """Response when creating a new API key"""
+    """Response when creating a new API key."""
 
     key_id: str
     api_key: str = Field(description="The actual JWT token to use")
@@ -127,13 +127,13 @@ class APIKeyResponse(BaseModel):
 
 
 class APIKeyList(BaseModel):
-    """List of API keys"""
+    """List of API keys."""
 
     keys: List[APIKey]
 
 
 class TokenInfoResponse(BaseModel):
-    """JWT token information response"""
+    """JWT token information response."""
 
     username: str
     email: Optional[str] = None
@@ -145,21 +145,21 @@ class TokenInfoResponse(BaseModel):
 
 
 class TokenValidationRequest(BaseModel):
-    """Token validation request"""
+    """Token validation request."""
 
     required_roles: Optional[List[str]] = Field(default_factory=list, max_items=20)
     check_ai_access: Optional[bool] = Field(default=True)
 
     @validator("required_roles")
     def validate_required_roles_field(cls, v):
-        """Validate required roles list"""
+        """Validate required roles list."""
         if v:
             return validate_role_list(v)
         return []
 
 
 class TokenValidationResponse(BaseModel):
-    """Token validation response"""
+    """Token validation response."""
 
     valid: bool
     username: Optional[str] = None
@@ -170,7 +170,7 @@ class TokenValidationResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    """Login request"""
+    """Login request."""
 
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8, max_length=128)
@@ -178,12 +178,12 @@ class LoginRequest(BaseModel):
 
     @validator("username")
     def validate_username_field(cls, v):
-        """Validate username format"""
+        """Validate username format."""
         return validate_username(v)
 
     @validator("password")
     def validate_password_field(cls, v, values):
-        """Validate password strength and security requirements"""
+        """Validate password strength and security requirements."""
         username = values.get("username")
 
         # Comprehensive password strength validation
@@ -198,7 +198,7 @@ class LoginRequest(BaseModel):
 
 
 class AuthResponse(BaseModel):
-    """Enhanced authentication response"""
+    """Enhanced authentication response."""
 
     access_token: str
     refresh_token: Optional[str] = None

@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Logging configuration for ViolentUTF API
+Logging configuration for ViolentUTF API.
 """
 
 import json
@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 class JSONFormatter(logging.Formatter):
-    """Custom JSON formatter for structured logging"""
+    """Custom JSON formatter for structured logging."""
 
     def format(self, record):
         log_obj = {
@@ -60,7 +60,7 @@ class JSONFormatter(logging.Formatter):
 
 def setup_logging(log_level: str = "INFO", log_dir: Path = None):
     """
-    Setup logging configuration for the application
+    Setup logging configuration for the application.
 
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)

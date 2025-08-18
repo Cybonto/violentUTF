@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 class JWTDebugResponse(BaseModel):
-    """Response model for JWT debug endpoint"""
+    """Response model for JWT debug endpoint."""
 
     jwt_valid: bool
     jwt_secret_preview: str
@@ -37,7 +37,7 @@ async def debug_jwt_validation(
     x_real_ip: Optional[str] = Header(None),
 ) -> JWTDebugResponse:
     """
-    Debug endpoint to test JWT validation without APISIX gateway check
+    Debug endpoint to test JWT validation without APISIX gateway check.
 
     This endpoint helps troubleshoot JWT authentication issues by:
     1. Showing what headers were received

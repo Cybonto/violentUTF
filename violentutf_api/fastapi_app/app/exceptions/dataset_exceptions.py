@@ -52,7 +52,7 @@ class DatasetNotFoundError(DatasetImportBaseException):
 class DatasetStreamingError(DatasetImportBaseException):
     """Raised when streaming operations fail."""
 
-    def __init__(self, message: str, chunk_index: Optional[int] = None, total_chunks: Optional[int] = None, **kwargs):
+    def __init__(self, message: str, chunk_index: Optional[int] = None, total_chunks: Optional[int] = None, **kwargs) -> None:
         super().__init__(message, **kwargs)
         self.chunk_index = chunk_index
         self.total_chunks = total_chunks
@@ -66,7 +66,7 @@ class DatasetStreamingError(DatasetImportBaseException):
 class DatasetMemoryError(DatasetImportBaseException):
     """Raised when PyRIT memory operations fail."""
 
-    def __init__(self, message: str, memory_path: Optional[str] = None, operation: Optional[str] = None, **kwargs):
+    def __init__(self, message: str, memory_path: Optional[str] = None, operation: Optional[str] = None, **kwargs) -> None:
         super().__init__(message, **kwargs)
         self.memory_path = memory_path
         self.operation = operation
@@ -96,7 +96,7 @@ class DatasetValidationError(DatasetImportBaseException):
 class DatasetRetryExhaustedException(DatasetImportBaseException):
     """Raised when maximum retry attempts are exceeded."""
 
-    def __init__(self, message: str, max_retries: int, last_error: Optional[Exception] = None, **kwargs):
+    def __init__(self, message: str, max_retries: int, last_error: Optional[Exception] = None, **kwargs) -> None:
         super().__init__(message, **kwargs)
         self.max_retries = max_retries
         self.last_error = last_error
@@ -112,7 +112,7 @@ class DatasetRetryExhaustedException(DatasetImportBaseException):
 class DatasetConcurrencyError(DatasetImportBaseException):
     """Raised when concurrent import limits are exceeded."""
 
-    def __init__(self, message: str, active_imports: int, max_concurrent: int, **kwargs):
+    def __init__(self, message: str, active_imports: int, max_concurrent: int, **kwargs) -> None:
         super().__init__(message, **kwargs)
         self.active_imports = active_imports
         self.max_concurrent = max_concurrent
@@ -126,7 +126,7 @@ class DatasetConcurrencyError(DatasetImportBaseException):
 class DatasetStorageError(DatasetImportBaseException):
     """Raised when storage operations fail."""
 
-    def __init__(self, message: str, storage_type: Optional[str] = None, storage_path: Optional[str] = None, **kwargs):
+    def __init__(self, message: str, storage_type: Optional[str] = None, storage_path: Optional[str] = None, **kwargs) -> None:
         super().__init__(message, **kwargs)
         self.storage_type = storage_type
         self.storage_path = storage_path

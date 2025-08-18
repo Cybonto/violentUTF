@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Configuration management endpoints
+Configuration management endpoints.
 """
 
 import json
@@ -33,14 +33,14 @@ DEFAULT_PARAMETERS_FILE = "parameters/default_parameters.yaml"
 
 
 def get_config_file_path() -> str:
-    """Get path to main configuration file"""
+    """Get path to main configuration file."""
     config_dir = os.getenv("CONFIG_DIR", "./app_data/config")
     os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, "global_parameters.yaml")
 
 
 def load_default_parameters() -> Dict[str, Any]:
-    """Load default parameters from file"""
+    """Load default parameters from file."""
     try:
         # First try to load from configured path
         if os.path.exists(DEFAULT_PARAMETERS_FILE):
@@ -54,7 +54,7 @@ def load_default_parameters() -> Dict[str, Any]:
 
 
 def save_parameters(params: Dict[str, Any]) -> None:
-    """Save parameters to configuration file"""
+    """Save parameters to configuration file."""
     config_file = get_config_file_path()
     try:
         with open(config_file, "w") as f:
@@ -68,7 +68,7 @@ def save_parameters(params: Dict[str, Any]) -> None:
 @router.get("/parameters", response_model=ConfigParametersResponse)
 async def get_config_parameters(current_user: User = Depends(get_current_user)):
     """
-    Get current global configuration parameters
+    Get current global configuration parameters.
     """
     try:
         config_file = get_config_file_path()
@@ -100,7 +100,7 @@ async def get_config_parameters(current_user: User = Depends(get_current_user)):
 @router.put("/parameters", response_model=ConfigParametersResponse)
 async def update_config_parameters(request: UpdateConfigRequest, current_user: User = Depends(get_current_user)):
     """
-    Update global configuration parameters
+    Update global configuration parameters.
     """
     try:
         config_file = get_config_file_path()
@@ -141,7 +141,7 @@ async def update_config_parameters(request: UpdateConfigRequest, current_user: U
 @router.post("/parameters/load", response_model=ConfigLoadResponse)
 async def load_config_from_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
     """
-    Load configuration from uploaded YAML file
+    Load configuration from uploaded YAML file.
     """
     try:
         # Validate file type
@@ -189,7 +189,7 @@ async def load_config_from_file(file: UploadFile = File(...), current_user: User
 @router.get("/parameters/files", response_model=ParameterFilesListResponse)
 async def list_parameter_files(current_user: User = Depends(get_current_user)):
     """
-    List available parameter files in the system
+    List available parameter files in the system.
     """
     try:
         parameter_files = []
@@ -250,7 +250,7 @@ async def list_parameter_files(current_user: User = Depends(get_current_user)):
 @router.get("/environment", response_model=EnvironmentConfigResponse)
 async def get_environment_config(current_user: User = Depends(get_current_user)):
     """
-    Get current environment configuration including database salt, API keys, and system paths
+    Get current environment configuration including database salt, API keys, and system paths.
     """
     try:
         # Get environment variables (mask sensitive ones)
@@ -301,7 +301,7 @@ async def update_environment_config(
     request: UpdateEnvironmentConfigRequest, current_user: User = Depends(get_current_user)
 ):
     """
-    Update environment configuration variables
+    Update environment configuration variables.
     """
     try:
         # In a real implementation, you would update environment variables
@@ -349,7 +349,7 @@ async def update_environment_config(
 @router.post("/environment/validate", response_model=EnvironmentValidationResponse)
 async def validate_environment_config(current_user: User = Depends(get_current_user)):
     """
-    Validate current environment configuration for completeness and correctness
+    Validate current environment configuration for completeness and correctness.
     """
     try:
         required_vars = [
@@ -402,7 +402,7 @@ async def validate_environment_config(current_user: User = Depends(get_current_u
 @router.get("/environment/schema", response_model=EnvironmentSchemaResponse)
 async def get_environment_schema():
     """
-    Get the schema of required environment variables and their purposes
+    Get the schema of required environment variables and their purposes.
     """
     schema = {
         "PYRIT_DB_SALT": {
@@ -460,7 +460,7 @@ async def get_environment_schema():
 @router.post("/environment/generate-salt", response_model=SaltGenerationResponse)
 async def generate_database_salt(current_user: User = Depends(get_current_user)):
     """
-    Generate a new cryptographically secure database salt for PyRIT operations
+    Generate a new cryptographically secure database salt for PyRIT operations.
     """
     try:
         import secrets

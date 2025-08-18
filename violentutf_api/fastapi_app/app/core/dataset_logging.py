@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Structured logging utilities for dataset import operations
+Structured logging utilities for dataset import operations.
 
 This module provides enhanced logging capabilities with structured data,
 metrics tracking, and comprehensive error reporting for dataset operations.
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class LogLevel(Enum):
-    """Logging level enumeration"""
+    """Logging level enumeration."""
 
     DEBUG = "DEBUG"
     INFO = "INFO"
@@ -38,7 +38,7 @@ class LogLevel(Enum):
 
 
 class OperationType(Enum):
-    """Dataset operation types for categorization"""
+    """Dataset operation types for categorization."""
 
     CONVERSION = "dataset_conversion"
     IMPORT = "dataset_import"
@@ -52,7 +52,7 @@ class OperationType(Enum):
 
 @dataclass
 class ImportMetrics:
-    """Metrics collected during dataset import operations"""
+    """Metrics collected during dataset import operations."""
 
     # Basic metrics
     total_prompts: int = 0
@@ -97,7 +97,7 @@ class ImportMetrics:
     correlation_id: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert metrics to dictionary"""
+        """Convert metrics to dictionary."""
         result = asdict(self)
         # Convert datetime objects to ISO strings
         if self.start_time:
@@ -107,7 +107,7 @@ class ImportMetrics:
         return result
 
     def calculate_rates(self) -> Dict[str, float]:
-        """Calculate derived rates and percentages"""
+        """Calculate derived rates and percentages."""
         rates = {}
 
         if self.total_prompts > 0:
@@ -138,7 +138,7 @@ class ImportMetrics:
 
 @dataclass
 class LogConfig:
-    """Configuration for dataset logging"""
+    """Configuration for dataset logging."""
 
     # Environment
     environment: str = "development"  # development, staging, production
@@ -172,7 +172,7 @@ class LogConfig:
 
     @classmethod
     def from_environment(cls) -> "LogConfig":
-        """Load configuration from environment variables"""
+        """Load configuration from environment variables."""
         env = os.getenv("ENVIRONMENT", "development")
 
         # Environment-specific defaults
@@ -225,10 +225,10 @@ class LogConfig:
 
 
 class JSONFormatter(logging.Formatter):
-    """JSON formatter for structured logging to files"""
+    """JSON formatter for structured logging to files."""
 
     def format(self, record):
-        """Format log record as JSON"""
+        """Format log record as JSON."""
         log_obj = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
@@ -292,10 +292,10 @@ class JSONFormatter(logging.Formatter):
 
 
 class StructuredFormatter(logging.Formatter):
-    """Structured formatter for console output"""
+    """Structured formatter for console output."""
 
     def format(self, record):
-        """Format log record with structured data"""
+        """Format log record with structured data."""
         # Build structured suffix
         structured_parts = []
 
@@ -319,9 +319,9 @@ class StructuredFormatter(logging.Formatter):
 
 
 class DatasetLogger:
-    """Enhanced logger for dataset operations with structured logging"""
+    """Enhanced logger for dataset operations with structured logging."""
 
-    def __init__(self, logger_name: str = __name__, config: Optional[LogConfig] = None):
+    def __init__(self, logger_name: str = __name__, config: Optional[LogConfig] = None) -> None:
         self.logger_name = logger_name
         self.logger = logging.getLogger(logger_name)
         self.config = config or LogConfig.from_environment()
@@ -332,7 +332,7 @@ class DatasetLogger:
         self._setup_logging()
 
     def _setup_logging(self) -> None:
-        """Setup logging handlers based on configuration"""
+        """Setup logging handlers based on configuration."""
         # Set base logger level
         self.logger.setLevel(getattr(logging, self.config.log_level))
         self.logger.handlers = []  # Clear existing handlers
@@ -352,7 +352,7 @@ class DatasetLogger:
             self._setup_file_handler()
 
     def _setup_file_handler(self) -> None:
-        """Setup file handler with rotation and compression"""
+        """Setup file handler with rotation and compression."""
         # Create log directory
         self.config.log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -398,14 +398,14 @@ class DatasetLogger:
         self._cleanup_old_logs()
 
     def _compress_log(self, source: str, dest: str) -> None:
-        """Compress rotated log files"""
+        """Compress rotated log files."""
         with open(source, "rb") as f_in:
             with gzip.open(f"{dest}.gz", "wb") as f_out:
                 shutil.copyfileobj(f_in, f_out)
         os.remove(source)
 
     def _cleanup_old_logs(self) -> None:
-        """Remove logs older than retention period"""
+        """Remove logs older than retention period."""
         if self.config.retention_days <= 0:
             return
 
@@ -438,7 +438,7 @@ class DatasetLogger:
         user_id: Optional[str] = None,
         **kwargs,
     ) -> None:
-        """Log with structured data"""
+        """Log with structured data."""
 
         structured_data = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -490,35 +490,35 @@ class DatasetLogger:
             self.logger.log(level, log_message)
 
     def info(self, message: str, **kwargs) -> None:
-        """Log info message with structured data"""
+        """Log info message with structured data."""
         # Early exit if info logging is disabled to avoid overhead
         if not self.logger.isEnabledFor(logging.INFO):
             return
         self._log_structured(logging.INFO, message, **kwargs)
 
     def warning(self, message: str, **kwargs) -> None:
-        """Log warning message with structured data"""
+        """Log warning message with structured data."""
         # Early exit if warning logging is disabled to avoid overhead
         if not self.logger.isEnabledFor(logging.WARNING):
             return
         self._log_structured(logging.WARNING, message, **kwargs)
 
     def error(self, message: str, **kwargs) -> None:
-        """Log error message with structured data"""
+        """Log error message with structured data."""
         # Early exit if error logging is disabled to avoid overhead
         if not self.logger.isEnabledFor(logging.ERROR):
             return
         self._log_structured(logging.ERROR, message, **kwargs)
 
     def debug(self, message: str, **kwargs) -> None:
-        """Log debug message with structured data"""
+        """Log debug message with structured data."""
         # Early exit if debug logging is disabled to avoid overhead
         if not self.logger.isEnabledFor(logging.DEBUG):
             return
         self._log_structured(logging.DEBUG, message, **kwargs)
 
     def set_correlation_id(self, correlation_id: Optional[str] = None) -> str:
-        """Set or generate correlation ID for tracking related operations"""
+        """Set or generate correlation ID for tracking related operations."""
         if correlation_id:
             self.correlation_id = correlation_id
         else:
@@ -527,7 +527,7 @@ class DatasetLogger:
         return self.correlation_id
 
     def set_user_context(self, user_id: str, session_id: Optional[str] = None) -> None:
-        """Set user context for all subsequent logs"""
+        """Set user context for all subsequent logs."""
         self.metrics.user_id = user_id
         self.metrics.session_id = session_id or str(uuid.uuid4())
 
@@ -540,7 +540,7 @@ class DatasetLogger:
         user_id: Optional[str] = None,
         correlation_id: Optional[str] = None,
     ):
-        """Context manager for tracking operations"""
+        """Context manager for tracking operations."""
 
         previous_operation = self.current_operation
         previous_correlation_id = self.correlation_id
@@ -598,7 +598,7 @@ class DatasetLogger:
         processing_time: Optional[float] = None,
         **kwargs,
     ) -> None:
-        """Log chunk processing progress"""
+        """Log chunk processing progress."""
 
         progress_percent = (chunk_index + 1) / total_chunks * 100
 
@@ -630,7 +630,7 @@ class DatasetLogger:
             ) / self.metrics.successful_chunks
 
     def log_memory_usage(self, memory_mb: float, operation: str = "unknown") -> None:
-        """Log current memory usage"""
+        """Log current memory usage."""
 
         self.debug(f"Memory usage: {memory_mb:.2f} MB", memory_mb=memory_mb, operation=operation)
 
@@ -644,7 +644,7 @@ class DatasetLogger:
             self.metrics.avg_memory_mb = sum(self.metrics.memory_samples) / len(self.metrics.memory_samples)
 
     def log_retry_attempt(self, attempt: int, max_attempts: int, error: Optional[Exception] = None, **kwargs) -> None:
-        """Log retry attempts"""
+        """Log retry attempts."""
 
         error_msg = str(error) if error else "Unknown error"
         self.warning(
@@ -666,7 +666,7 @@ class DatasetLogger:
     def log_pyrit_storage(
         self, prompts_stored: int, storage_time_seconds: float, storage_size_mb: float, **kwargs
     ) -> None:
-        """Log PyRIT memory storage operations"""
+        """Log PyRIT memory storage operations."""
 
         self.info(
             f"Stored {prompts_stored} prompts to PyRIT memory",
@@ -681,7 +681,7 @@ class DatasetLogger:
         self.metrics.pyrit_storage_size_mb += storage_size_mb
 
     def log_import_summary(self, dataset_id: str, dataset_type: str, success: bool = True, **kwargs) -> None:
-        """Log comprehensive import summary"""
+        """Log comprehensive import summary."""
 
         # Calculate final metrics
         rates = self.metrics.calculate_rates()
@@ -708,7 +708,7 @@ class DatasetLogger:
         output_format: str,
         **kwargs,
     ) -> None:
-        """Log dataset conversion details"""
+        """Log dataset conversion details."""
         self.info(
             f"Dataset conversion: {dataset_type} using {conversion_strategy}",
             dataset_type=dataset_type,
@@ -723,7 +723,7 @@ class DatasetLogger:
         self.metrics.conversion_strategy = conversion_strategy
 
     def reset_metrics(self) -> None:
-        """Reset metrics for a new operation"""
+        """Reset metrics for a new operation."""
         # Preserve user context
         user_id = self.metrics.user_id
         session_id = self.metrics.session_id
@@ -736,7 +736,7 @@ class DatasetLogger:
         self.metrics.session_id = session_id
 
     def finalize_metrics(self) -> ImportMetrics:
-        """Finalize metrics and return copy"""
+        """Finalize metrics and return copy."""
         self.metrics.end_time = datetime.now(timezone.utc)
 
         if self.metrics.start_time and self.metrics.end_time:
@@ -753,7 +753,7 @@ dataset_logger = DatasetLogger("violentutf.datasets")
 def log_dataset_operation_start(
     operation: str, dataset_id: str, dataset_type: str, user_id: Optional[str] = None, **kwargs
 ) -> None:
-    """Log the start of a dataset operation"""
+    """Log the start of a dataset operation."""
     dataset_logger.info(
         f"Starting {operation}",
         operation=operation,
@@ -765,7 +765,7 @@ def log_dataset_operation_start(
 
 
 def log_dataset_operation_error(operation: str, dataset_id: str, error: Exception, **kwargs) -> None:
-    """Log a dataset operation error"""
+    """Log a dataset operation error."""
     dataset_logger.error(
         f"Error in {operation}: {str(error)}",
         operation=operation,
@@ -777,13 +777,13 @@ def log_dataset_operation_error(operation: str, dataset_id: str, error: Exceptio
 
 
 def log_dataset_operation_success(operation: str, dataset_id: str, **kwargs) -> None:
-    """Log successful completion of a dataset operation"""
+    """Log successful completion of a dataset operation."""
     dataset_logger.info(f"Successfully completed {operation}", operation=operation, dataset_id=dataset_id, **kwargs)
 
 
 # Log analysis utilities
 class LogAnalyzer:
-    """Utilities for analyzing dataset operation logs"""
+    """Utilities for analyzing dataset operation logs."""
 
     def __init__(self, log_dir: Path = Path("logs/datasets")):
         self.log_dir = log_dir
@@ -797,7 +797,7 @@ class LogAnalyzer:
         user_id: Optional[str] = None,
         correlation_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        """Read and filter log entries"""
+        """Read and filter log entries."""
         logs = []
 
         # Find log files in the directory
@@ -838,7 +838,7 @@ class LogAnalyzer:
         return logs
 
     def analyze_performance(self, logs: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Analyze performance metrics from logs"""
+        """Analyze performance metrics from logs."""
         if not logs:
             return {}
 
@@ -914,14 +914,14 @@ class LogAnalyzer:
         return performance_metrics
 
     def find_errors(self, logs: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
-        """Find all error entries in logs"""
+        """Find all error entries in logs."""
         if logs is None:
             logs = self.read_logs()
 
         return [log for log in logs if log.get("level") in ["ERROR", "CRITICAL"]]
 
     def get_operation_trace(self, correlation_id: str) -> List[Dict[str, Any]]:
-        """Get complete trace of an operation by correlation ID"""
+        """Get complete trace of an operation by correlation ID."""
         logs = self.read_logs(correlation_id=correlation_id)
         return sorted(logs, key=lambda x: x.get("timestamp", ""))
 
@@ -930,7 +930,7 @@ class LogAnalyzer:
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
     ) -> Dict[str, Any]:
-        """Generate a comprehensive summary report"""
+        """Generate a comprehensive summary report."""
         logs = self.read_logs(start_time=start_time, end_time=end_time)
 
         performance = self.analyze_performance(logs)

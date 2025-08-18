@@ -34,7 +34,7 @@ async def create_api_key(
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Create a new API key for the authenticated user
+    Create a new API key for the authenticated user.
     """
     # Check if user has ai-api-access role
     if "ai-api-access" not in current_user.roles:
@@ -83,7 +83,7 @@ async def list_api_keys(
     request: Request, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ):
     """
-    List all API keys for the authenticated user
+    List all API keys for the authenticated user.
     """
     # Query database for user's API keys
     result = await db.execute(
@@ -117,7 +117,7 @@ async def revoke_api_key(
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Revoke an API key
+    Revoke an API key.
     """
     # Find the API key
     result = await db.execute(

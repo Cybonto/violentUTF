@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Application configuration using Pydantic Settings
+Application configuration using Pydantic Settings.
 """
 
 import os
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     @validator("JWT_SECRET_KEY", always=True)
     def set_jwt_secret_key(cls, v, values):
-        """Use SECRET_KEY if JWT_SECRET_KEY is not set"""
+        """Use SECRET_KEY if JWT_SECRET_KEY is not set."""
         return v or values.get("SECRET_KEY", "")
 
     # CORS

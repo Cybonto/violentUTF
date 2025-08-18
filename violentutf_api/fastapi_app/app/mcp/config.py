@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""MCP Server Configuration"""
+"""MCP Server Configuration."""
 
 from typing import List, Optional
 
@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings
 
 
 class MCPSettings(BaseSettings):
-    """MCP-specific configuration settings"""
+    """MCP-specific configuration settings."""
 
     # Server settings
     MCP_SERVER_NAME: str = Field(default="ViolentUTF MCP Server", env="MCP_SERVER_NAME")

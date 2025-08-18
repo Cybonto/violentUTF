@@ -52,7 +52,7 @@ RATE_LIMITS = {
 
 def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """
-    Custom rate limit exceeded handler with security logging
+    Custom rate limit exceeded handler with security logging.
     """
     client_ip = get_client_ip(request)
     endpoint = request.url.path
@@ -81,15 +81,15 @@ def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONR
 
 def get_rate_limit(endpoint_type: str) -> str:
     """
-    Get rate limit configuration for endpoint type
+    Get rate limit configuration for endpoint type.
     """
-    return RATE_LIMITS.get(endpoint_type, RATE_LIMITS["api_general"])
+    return RATE_LIMITS.get(endpoint_type, RATE_LIMITS["api_general"]).
 
 
 # Rate limiting decorators for different endpoint types
 def auth_rate_limit(endpoint_type: str = "auth_login"):
     """
-    Rate limiting decorator for authentication endpoints
+    Rate limiting decorator for authentication endpoints.
     """
     rate_limit = get_rate_limit(endpoint_type)
     return limiter.limit(rate_limit)
@@ -97,7 +97,7 @@ def auth_rate_limit(endpoint_type: str = "auth_login"):
 
 def api_rate_limit(endpoint_type: str = "api_general"):
     """
-    Rate limiting decorator for general API endpoints
+    Rate limiting decorator for general API endpoints.
     """
     rate_limit = get_rate_limit(endpoint_type)
     return limiter.limit(rate_limit)

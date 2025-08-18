@@ -216,7 +216,7 @@ CONVERTER_PARAMETERS = {
 
 @router.get("/types", response_model=ConverterTypesResponse, summary="Get available converter types")
 async def get_converter_types(current_user=Depends(get_current_user)):
-    """Get list of available converter categories and classes"""
+    """Get list of available converter categories and classes."""
     try:
         logger.info(f"User {current_user.username} requested converter types")
 
@@ -230,7 +230,7 @@ async def get_converter_types(current_user=Depends(get_current_user)):
 
 @router.get("/params/{converter_type}", response_model=ConverterParametersResponse, summary="Get converter parameters")
 async def get_converter_parameters(converter_type: str, current_user=Depends(get_current_user)):
-    """Get parameter definitions for a specific converter type"""
+    """Get parameter definitions for a specific converter type."""
     try:
         logger.info(f"User {current_user.username} requested parameters for converter: {converter_type}")
 
@@ -257,7 +257,7 @@ async def get_converter_parameters(converter_type: str, current_user=Depends(get
 
 @router.get("", response_model=ConvertersListResponse, summary="Get configured converters")
 async def get_converters(current_user=Depends(get_current_user)):
-    """Get list of configured converters from session"""
+    """Get list of configured converters from session."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} requested converters list")
@@ -289,7 +289,7 @@ async def get_converters(current_user=Depends(get_current_user)):
 
 @router.post("", response_model=ConverterCreateResponse, summary="Create a new converter")
 async def create_converter(request: ConverterCreateRequest, current_user=Depends(get_current_user)):
-    """Create a new converter configuration"""
+    """Create a new converter configuration."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} creating converter: {request.name}")
@@ -349,7 +349,7 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
 async def preview_converter(
     converter_id: str, request: ConverterPreviewRequest, current_user=Depends(get_current_user)
 ):
-    """Preview the effect of a converter on sample prompts"""
+    """Preview the effect of a converter on sample prompts."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} previewing converter: {converter_id}")
@@ -422,7 +422,7 @@ async def preview_converter(
 
 @router.post("/{converter_id}/apply", response_model=ConverterApplyResponse, summary="Apply converter to dataset")
 async def apply_converter(converter_id: str, request: ConverterApplyRequest, current_user=Depends(get_current_user)):
-    """Apply a converter to an entire dataset"""
+    """Apply a converter to an entire dataset."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} applying converter {converter_id} to dataset {request.dataset_id}")
@@ -539,7 +539,7 @@ async def apply_converter(converter_id: str, request: ConverterApplyRequest, cur
 
 @router.delete("/{converter_id}", response_model=ConverterDeleteResponse, summary="Delete a converter")
 async def delete_converter(converter_id: str, current_user=Depends(get_current_user)):
-    """Delete a converter configuration"""
+    """Delete a converter configuration."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} deleting converter: {converter_id}")
@@ -565,7 +565,7 @@ async def delete_converter(converter_id: str, current_user=Depends(get_current_u
 
 @router.put("/{converter_id}", response_model=Dict[str, Any], summary="Update a converter")
 async def update_converter(converter_id: str, request: ConverterUpdateRequest, current_user=Depends(get_current_user)):
-    """Update an existing converter configuration"""
+    """Update an existing converter configuration."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} updating converter: {converter_id}")
@@ -609,7 +609,7 @@ async def update_converter(converter_id: str, request: ConverterUpdateRequest, c
 
 @router.get("/{converter_id}", response_model=Dict[str, Any], summary="Get converter details")
 async def get_converter(converter_id: str, current_user=Depends(get_current_user)):
-    """Get detailed information about a specific converter"""
+    """Get detailed information about a specific converter."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} requested converter details: {converter_id}")
@@ -641,7 +641,7 @@ async def get_converter(converter_id: str, current_user=Depends(get_current_user
 
 
 def simulate_converter_application(converter_type: str, prompt: str, parameters: Dict[str, Any]) -> str:
-    """Simulate applying a converter to a prompt"""
+    """Simulate applying a converter to a prompt."""
     try:
         if converter_type == "ROT13Converter":
             # Simple ROT13 simulation

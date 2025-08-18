@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 async def execute_generator_prompt(generator_name: str, prompt: str, conversation_id: str = None) -> Dict[str, Any]:
-    """Execute prompt through configured generator"""
+    """Execute prompt through configured generator."""
     try:
         # Get generator configuration by calling the backend function directly
         generator_config = await get_generator_by_name(generator_name)
@@ -43,7 +43,7 @@ async def execute_generator_prompt(generator_name: str, prompt: str, conversatio
 
 
 async def _execute_apisix_generator(generator_config: Dict, prompt: str, conversation_id: str) -> Dict[str, Any]:
-    """Execute prompt through APISIX AI Gateway"""
+    """Execute prompt through APISIX AI Gateway."""
     try:
         # Get APISIX endpoint for generator
         provider = generator_config["parameters"]["provider"]
@@ -178,7 +178,7 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
 
 
 async def _execute_generic_generator(generator_config: Dict, prompt: str, conversation_id: str) -> Dict[str, Any]:
-    """Execute prompt through generic generator"""
+    """Execute prompt through generic generator."""
     # Generic generators are not yet implemented
     generator_type = generator_config.get("type", "unknown")
     generator_name = generator_config.get("name", "unknown")
@@ -195,7 +195,7 @@ async def _execute_generic_generator(generator_config: Dict, prompt: str, conver
 
 
 def _get_apisix_endpoint_for_model(provider: str, model: str) -> str:
-    """Get APISIX endpoint for provider/model combination"""
+    """Get APISIX endpoint for provider/model combination."""
 
     # Handle OpenAPI providers
     if provider.startswith("openapi-"):
@@ -253,7 +253,7 @@ def _get_apisix_endpoint_for_model(provider: str, model: str) -> str:
 
 
 async def get_generator_by_name(generator_name: str, user_context: str = None) -> Dict[str, Any]:
-    """Get generator configuration by name from backend service"""
+    """Get generator configuration by name from backend service."""
     try:
         # Get generators from DuckDB using proper user context
         from app.db.duckdb_manager import get_duckdb_manager

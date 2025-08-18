@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 async def get_dataset_prompts(
     dataset_id: str, sample_size: Optional[int] = None, user_context: Optional[str] = None
 ) -> List[str]:
-    """Get prompts from dataset for orchestrator execution"""
+    """Get prompts from dataset for orchestrator execution."""
     try:
         # Get dataset configuration
         dataset_config = await _get_dataset_by_id(dataset_id, user_context)
@@ -58,7 +58,7 @@ async def get_dataset_prompts(
 
 
 async def _get_dataset_by_id(dataset_id: str, user_context: Optional[str] = None) -> Dict[str, Any]:
-    """Get dataset configuration by ID from backend service"""
+    """Get dataset configuration by ID from backend service."""
     try:
         # Get datasets directly from DuckDB without authentication context
         # This is safe for internal service - to - service calls
@@ -125,7 +125,7 @@ async def _get_dataset_by_id(dataset_id: str, user_context: Optional[str] = None
 
 
 async def _get_native_dataset_prompts(dataset_config: Dict) -> List[str]:
-    """Get prompts from native dataset"""
+    """Get prompts from native dataset."""
     # Extract prompts from native dataset
     dataset_type = dataset_config.get("dataset_type")
     logger.debug(f"Processing native dataset of type: {dataset_type}")
@@ -154,7 +154,7 @@ async def _get_native_dataset_prompts(dataset_config: Dict) -> List[str]:
 
 
 async def _get_local_dataset_prompts(dataset_config: Dict) -> List[str]:
-    """Get prompts from local uploaded dataset"""
+    """Get prompts from local uploaded dataset."""
     # Extract prompts from local dataset
     prompts = dataset_config.get("prompts", [])
 
@@ -178,7 +178,7 @@ async def _get_local_dataset_prompts(dataset_config: Dict) -> List[str]:
 async def _get_memory_dataset_prompts(
     dataset_config: Dict, limit: Optional[int] = None, user_context: Optional[str] = None
 ) -> List[str]:
-    """Get prompts from PyRIT memory dataset using real memory database access"""
+    """Get prompts from PyRIT memory dataset using real memory database access."""
     try:
         dataset_id = dataset_config.get("id", "memory_0")
         dataset_name = dataset_config.get("name", "Unknown")
@@ -205,7 +205,7 @@ async def _get_memory_dataset_prompts(
 async def _load_real_memory_dataset_prompts(
     dataset_id: str, limit: Optional[int] = None, user_id: Optional[str] = None
 ) -> List[str]:
-    """Load actual prompts from PyRIT memory database files - WITH USER ISOLATION"""
+    """Load actual prompts from PyRIT memory database files - WITH USER ISOLATION."""
     try:
         #         import os # F811: removed duplicate import
         import sqlite3
@@ -325,7 +325,7 @@ async def _load_real_memory_dataset_prompts(
 
 
 async def _get_converter_dataset_prompts(dataset_config: Dict) -> List[str]:
-    """Get prompts from converter - generated dataset"""
+    """Get prompts from converter - generated dataset."""
     try:
         logger.info(f"Loading converter dataset: {dataset_config.get('name')}")
 
@@ -364,7 +364,7 @@ async def _get_converter_dataset_prompts(dataset_config: Dict) -> List[str]:
 
 
 async def _get_transform_dataset_prompts(dataset_config: Dict) -> List[str]:
-    """Get prompts from transform - generated dataset"""
+    """Get prompts from transform - generated dataset."""
     try:
         logger.info(f"Loading transform dataset: {dataset_config.get('name')}")
 
@@ -398,7 +398,7 @@ async def _get_transform_dataset_prompts(dataset_config: Dict) -> List[str]:
 
 
 async def _get_combination_dataset_prompts(dataset_config: Dict) -> List[str]:
-    """Get prompts from combination dataset (combines multiple datasets)"""
+    """Get prompts from combination dataset (combines multiple datasets)."""
     try:
         logger.info(f"Loading combination dataset: {dataset_config.get('name')}")
 

@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Echo endpoint for testing API connectivity
+Echo endpoint for testing API connectivity.
 """
 
 from typing import Any, Dict, Optional
@@ -14,14 +14,14 @@ router = APIRouter()
 
 
 class EchoRequest(BaseModel):
-    """Echo request model"""
+    """Echo request model."""
 
     message: str
     metadata: Optional[Dict[str, Any]] = None
 
 
 class EchoResponse(BaseModel):
-    """Echo response model"""
+    """Echo response model."""
 
     echo: str
     metadata: Optional[Dict[str, Any]] = None
@@ -40,7 +40,7 @@ async def echo(request: EchoRequest):
     Returns:
         Echo response with the same message and metadata
     """
-    from datetime import datetime
+    from datetime import datetime.
 
     return EchoResponse(echo=request.message, metadata=request.metadata, timestamp=datetime.utcnow().isoformat())
 
@@ -56,6 +56,6 @@ async def echo_get(message: str):
     Returns:
         Dictionary with echoed message
     """
-    from datetime import datetime
+    from datetime import datetime.
 
     return {"echo": message, "method": "GET", "timestamp": datetime.utcnow().isoformat()}

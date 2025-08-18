@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""MCP Tools Module"""
+"""MCP Tools Module."""
 
 import logging
 from typing import Any, Dict, List, Optional
@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 
 
 class ToolRegistry:
-    """Registry for MCP tools with FastAPI endpoint introspection"""
+    """Registry for MCP tools with FastAPI endpoint introspection."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.tools: Dict[str, Tool] = {}
         self.endpoints_discovered = False
 
     async def discover_tools(self, app=None):
-        """Discover and register available tools from FastAPI endpoints and specialized tools"""
+        """Discover and register available tools from FastAPI endpoints and specialized tools."""
         logger.info("Discovering MCP tools from FastAPI endpoints and specialized tools...")
 
         try:
@@ -78,7 +78,7 @@ class ToolRegistry:
             # Don't raise, allow MCP server to continue with available tools
 
     async def list_tools(self) -> List[Tool]:
-        """List all available tools"""
+        """List all available tools."""
         if not self.endpoints_discovered:
             # Attempt discovery if not done yet
             await self.discover_tools()
@@ -90,7 +90,7 @@ class ToolRegistry:
     async def call_tool(
         self, name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
     ) -> Any:
-        """Execute a tool by name"""
+        """Execute a tool by name."""
         logger.info(f"Executing tool: {name} with arguments: {list(arguments.keys())}")
 
         if name not in self.tools:
@@ -134,15 +134,15 @@ class ToolRegistry:
             return {"error": "execution_failed", "message": str(e), "tool_name": name}
 
     def get_tool(self, name: str) -> Optional[Tool]:
-        """Get a specific tool by name"""
+        """Get a specific tool by name."""
         return self.tools.get(name)
 
     def get_tool_count(self) -> int:
-        """Get the number of registered tools"""
+        """Get the number of registered tools."""
         return len(self.tools)
 
     def clear_tools(self):
-        """Clear all registered tools"""
+        """Clear all registered tools."""
         self.tools.clear()
         self.endpoints_discovered = False
         tool_generator.clear_tools()

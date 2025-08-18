@@ -23,15 +23,15 @@ logger = logging.getLogger(__name__)
 
 
 class DatasetResourceProvider(BaseResourceProvider):
-    """Provides comprehensive access to security datasets"""
+    """Provides comprehensive access to security datasets."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("violentutf://datasets/{dataset_id}", "DatasetProvider")
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()
 
     def _get_api_url(self) -> str:
-        """Get internal API URL for container communication"""
+        """Get internal API URL for container communication."""
         api_url = getattr(settings, "VIOLENTUTF_API_URL", "http://localhost:8000")
         # Convert external gateway URL to internal service URL
         if "localhost:9080" in api_url or "apisix" in api_url:
@@ -39,7 +39,7 @@ class DatasetResourceProvider(BaseResourceProvider):
         return api_url
 
     async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
-        """Get specific dataset resource with full content"""
+        """Get specific dataset resource with full content."""
         uri_params = self.extract_params(uri)
         dataset_id = uri_params.get("dataset_id")
 
@@ -121,7 +121,7 @@ class DatasetResourceProvider(BaseResourceProvider):
     async def _get_dataset_content(
         self, client: httpx.AsyncClient, dataset_id: str, headers: Dict[str, str], params: Dict[str, Any]
     ) -> Any:
-        """Get dataset content with pagination support"""
+        """Get dataset content with pagination support."""
         try:
             # Check if content endpoint exists
             content_response = await client.get(
@@ -141,7 +141,7 @@ class DatasetResourceProvider(BaseResourceProvider):
             return []
 
     async def _get_dataset_statistics(self, content: Any) -> Dict[str, Any]:
-        """Generate statistics for dataset content"""
+        """Generate statistics for dataset content."""
         if not content:
             return {"total_entries": 0}
 
@@ -174,7 +174,7 @@ class DatasetResourceProvider(BaseResourceProvider):
         return stats
 
     async def _infer_dataset_schema(self, content: Any) -> Dict[str, Any]:
-        """Infer schema from dataset content"""
+        """Infer schema from dataset content."""
         schema = {"type": "unknown"}
 
         if isinstance(content, list) and content:
@@ -204,7 +204,7 @@ class DatasetResourceProvider(BaseResourceProvider):
         return schema
 
     async def list_resources(self, params: Dict[str, Any]) -> List[AdvancedResource]:
-        """List all available datasets with metadata"""
+        """List all available datasets with metadata."""
         resources = []
 
         try:
@@ -283,7 +283,7 @@ class DatasetResourceProvider(BaseResourceProvider):
         return resources
 
     async def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
-        """Get API headers with authentication"""
+        """Get API headers with authentication."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Dataset"}
 
         # Add authentication if available
@@ -298,22 +298,22 @@ class DatasetResourceProvider(BaseResourceProvider):
 
 
 class ResultsResourceProvider(BaseResourceProvider):
-    """Provides access to orchestrator execution results"""
+    """Provides access to orchestrator execution results."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("violentutf://results/{execution_id}", "ResultsProvider")
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()
 
     def _get_api_url(self) -> str:
-        """Get internal API URL for container communication"""
+        """Get internal API URL for container communication."""
         api_url = getattr(settings, "VIOLENTUTF_API_URL", "http://localhost:8000")
         if "localhost:9080" in api_url or "apisix" in api_url:
             return "http://violentutf-api:8000"
         return api_url
 
     async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
-        """Get specific execution results"""
+        """Get specific execution results."""
         uri_params = self.extract_params(uri)
         execution_id = uri_params.get("execution_id")
 
@@ -373,7 +373,7 @@ class ResultsResourceProvider(BaseResourceProvider):
         return None
 
     async def _generate_results_summary(self, results: Any) -> Dict[str, Any]:
-        """Generate summary statistics for results"""
+        """Generate summary statistics for results."""
         summary = {"total_results": 0, "status": "unknown"}
 
         if isinstance(results, dict):
@@ -389,7 +389,7 @@ class ResultsResourceProvider(BaseResourceProvider):
         return summary
 
     async def list_resources(self, params: Dict[str, Any]) -> List[AdvancedResource]:
-        """List available execution results"""
+        """List available execution results."""
         resources = []
 
         try:
@@ -438,7 +438,7 @@ class ResultsResourceProvider(BaseResourceProvider):
         return resources
 
     async def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
-        """Get API headers with authentication"""
+        """Get API headers with authentication."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Results"}
 
         auth_headers = await self.auth_handler.get_auth_headers()
@@ -452,7 +452,7 @@ class ResultsResourceProvider(BaseResourceProvider):
 
 # Register the new resource providers
 def register_dataset_providers():
-    """Register all dataset-related resource providers"""
+    """Register all dataset-related resource providers."""
     advanced_resource_registry.register(DatasetResourceProvider())
     advanced_resource_registry.register(ResultsResourceProvider())
     logger.info("Registered dataset and results resource providers")

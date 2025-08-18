@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Authentication and authorization middleware
+Authentication and authorization middleware.
 """
 
 import logging
@@ -27,7 +27,7 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 class AuthMiddleware:
     """
-    Authentication middleware that supports both JWT and API keys
+    Authentication middleware that supports both JWT and API keys.
     """
 
     async def __call__(
@@ -37,7 +37,7 @@ class AuthMiddleware:
         api_key: Optional[str] = Security(api_key_header),
     ) -> User:
         """
-        Authenticate request using either JWT or API key
+        Authenticate request using either JWT or API key.
         """
         # Check if request is from APISIX (cryptographically verified)
         if not self._is_from_apisix(request):
@@ -70,7 +70,7 @@ class AuthMiddleware:
 
     def _is_from_apisix(self, request: Request) -> bool:
         """
-        Verify request is coming from APISIX using practical security measures
+        Verify request is coming from APISIX using practical security measures.
         """
         # Check for basic APISIX gateway identification header
         apisix_gateway_header = request.headers.get("X-API-Gateway")
@@ -119,7 +119,7 @@ class AuthMiddleware:
 
     def _verify_apisix_signature(self, request: Request, signature: str, timestamp: str) -> bool:
         """
-        Verify HMAC signature from APISIX gateway
+        Verify HMAC signature from APISIX gateway.
 
         Args:
             request: FastAPI request object
@@ -163,7 +163,7 @@ class AuthMiddleware:
 
     async def _authenticate_jwt(self, token: str) -> User:
         """
-        Authenticate using JWT token
+        Authenticate using JWT token.
         """
         try:
             # Decode our internal JWT
@@ -193,7 +193,7 @@ class AuthMiddleware:
 
     async def _authenticate_api_key(self, api_key: str) -> User:
         """
-        Authenticate using API key
+        Authenticate using API key.
         """
         # Decode API key (which is actually a JWT)
         try:
@@ -241,9 +241,9 @@ async def get_current_user(
     api_key: Optional[str] = Security(api_key_header),
 ) -> User:
     """
-    Dependency to get current authenticated user
+    Dependency to get current authenticated user.
     """
-    return await auth_middleware(request, credentials, api_key)
+    return await auth_middleware(request, credentials, api_key).
 
 
 # Dependency for optional authentication
@@ -253,7 +253,7 @@ async def get_current_user_optional(
     api_key: Optional[str] = Security(api_key_header),
 ) -> Optional[User]:
     """
-    Dependency to get current user if authenticated, None otherwise
+    Dependency to get current user if authenticated, None otherwise.
     """
     try:
         return await auth_middleware(request, credentials, api_key)
@@ -264,7 +264,7 @@ async def get_current_user_optional(
 # Role-based access control
 def require_role(role: str):
     """
-    Dependency factory for role-based access control
+    Dependency factory for role-based access control.
     """
 
     async def role_checker(current_user: User = Security(get_current_user)):
@@ -278,7 +278,7 @@ def require_role(role: str):
 # Permission-based access control
 def require_permission(permission: str):
     """
-    Dependency factory for permission-based access control
+    Dependency factory for permission-based access control.
     """
 
     async def permission_checker(current_user: User = Security(get_current_user)):

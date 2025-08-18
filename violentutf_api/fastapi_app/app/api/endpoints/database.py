@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Database management endpoints for PyRIT Memory (DuckDB) operations
+Database management endpoints for PyRIT Memory (DuckDB) operations.
 """
 
 import hashlib
@@ -31,7 +31,7 @@ router = APIRouter()
 
 
 def get_db_filename(username: str, salt: str) -> str:
-    """Generate database filename based on salted hash of username"""
+    """Generate database filename based on salted hash of username."""
     if not username or not salt:
         return ""
     salt_bytes = salt.encode("utf-8") if isinstance(salt, str) else salt
@@ -40,7 +40,7 @@ def get_db_filename(username: str, salt: str) -> str:
 
 
 def get_db_path(username: str, salt: str, app_data_dir: str) -> str:
-    """Construct full path for user's database file"""
+    """Construct full path for user's database file."""
     if not app_data_dir:
         return ""
     filename = get_db_filename(username, salt)
@@ -63,7 +63,7 @@ ALLOWED_PYRIT_TABLES = {
 
 
 def get_secure_table_count(conn, table_name: str) -> int:
-    """Get row count for table with name validation to prevent SQL injection"""
+    """Get row count for table with name validation to prevent SQL injection."""
     if table_name not in ALLOWED_PYRIT_TABLES:
         raise ValueError(f"Invalid table name: {table_name}")
 
@@ -76,7 +76,7 @@ def get_secure_table_count(conn, table_name: str) -> int:
 @router.post("/initialize", response_model=DatabaseInitResponse)
 async def initialize_database(request: InitializeDatabaseRequest, current_user: User = Depends(get_current_user)):
     """
-    Initialize user-specific PyRIT DuckDB database using salted hash-based path generation
+    Initialize user-specific PyRIT DuckDB database using salted hash-based path generation.
     """
     try:
         # Get configuration
@@ -126,7 +126,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
                     user_id TEXT
                 )
             """
-            )
+            ).
 
             conn.execute(
                 """
@@ -137,7 +137,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
                     metadata TEXT
                 )
             """
-            )
+            ).
 
             conn.execute(
                 """
@@ -151,7 +151,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
                     FOREIGN KEY (prompt_piece_id) REFERENCES prompt_pieces(id)
                 )
             """
-            )
+            ).
 
         return DatabaseInitResponse(
             database_path=db_path,
@@ -171,7 +171,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
 @router.get("/status", response_model=DatabaseStatusResponse)
 async def get_database_status(current_user: User = Depends(get_current_user)):
     """
-    Check database initialization status and health
+    Check database initialization status and health.
     """
     try:
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
@@ -219,7 +219,7 @@ async def get_database_status(current_user: User = Depends(get_current_user)):
 @router.get("/stats", response_model=DatabaseStatsResponse)
 async def get_database_stats(current_user: User = Depends(get_current_user)):
     """
-    Get comprehensive database statistics and table information
+    Get comprehensive database statistics and table information.
     """
     try:
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
@@ -272,7 +272,7 @@ async def get_database_stats(current_user: User = Depends(get_current_user)):
 
 
 async def reset_database_task(db_path: str, preserve_user_data: bool = False):
-    """Background task to reset database"""
+    """Background task to reset database."""
     try:
         with duckdb.connect(db_path) as conn:
             if not preserve_user_data:
@@ -298,7 +298,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
                     user_id TEXT
                 )
             """
-            )
+            ).
 
             conn.execute(
                 """
@@ -309,7 +309,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
                     metadata TEXT
                 )
             """
-            )
+            ).
 
             conn.execute(
                 """
@@ -369,7 +369,7 @@ async def reset_database(
 @router.post("/backup")
 async def backup_database(background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
     """
-    Create database backup
+    Create database backup.
     """
     try:
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")

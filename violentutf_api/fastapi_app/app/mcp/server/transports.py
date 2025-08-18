@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""MCP Transport Implementations"""
+"""MCP Transport Implementations."""
 
 import json
 import logging
@@ -20,14 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAPI:
-    """Create SSE transport for MCP server"""
+    """Create SSE transport for MCP server."""
     app = FastAPI()
 
     # Note: SSE transport implementation handled by FastAPI endpoints below
 
     @app.post("/")
     async def handle_sse_request(request: Request, current_user=Depends(get_current_user)):
-        """Handle SSE requests with authentication"""
+        """Handle SSE requests with authentication."""
         try:
             # Read request body
             body = await request.body()
@@ -45,7 +45,7 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
 
             # Create SSE response generator
             async def event_generator() -> AsyncIterator[Dict[str, Any]]:
-                """Generate SSE events from MCP server"""
+                """Generate SSE events from MCP server."""
                 try:
                     # Process JSON-RPC request directly through the server
                     if "method" in rpc_request:
@@ -232,11 +232,11 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
 
     @app.get("/stream")
     async def handle_sse_stream(request: Request, current_user=Depends(get_current_user)):
-        """Handle SSE streaming connection"""
+        """Handle SSE streaming connection."""
         logger.info(f"MCP SSE stream connection from {current_user.username}")
 
         async def event_stream() -> AsyncIterator[Dict[str, Any]]:
-            """Generate SSE event stream"""
+            """Generate SSE event stream."""
             try:
                 # Send initial connection event
                 yield {

@@ -103,7 +103,7 @@ class SecurityEvent:
 class SecurityLogger:
     """Comprehensive security logging system."""
 
-    def __init__(self, logger_name: str = "security"):
+    def __init__(self, logger_name: str = "security") -> None:
         self.logger = logging.getLogger(logger_name)
         self._setup_security_logger()
 
@@ -135,7 +135,7 @@ class SecurityLogger:
         **kwargs,
     ):
         """
-        Log a security event with comprehensive context
+        Log a security event with comprehensive context.
 
         Args:
             event_type: Type of security event
@@ -492,7 +492,7 @@ def log_token_event(
 class SecurityMetrics:
     """Track security metrics for monitoring."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.metrics = {
             "auth_failures": 0,
             "rate_limit_exceeded": 0,

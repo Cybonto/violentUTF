@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""Phase 2 Integration Tests for ViolentUTF MCP Server"""
+"""Phase 2 Integration Tests for ViolentUTF MCP Server."""
 
 import asyncio
 import logging
@@ -21,11 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 class TestPhase2Integration:
-    """Integration tests for Phase 2 MCP implementation"""
+    """Integration tests for Phase 2 MCP implementation."""
 
     @pytest.fixture
     def mock_fastapi_app(self):
-        """Create a mock FastAPI app for testing"""
+        """Create a mock FastAPI app for testing."""
         from fastapi import FastAPI
         from fastapi.routing import APIRoute
 
@@ -57,8 +57,8 @@ class TestPhase2Integration:
         return app
 
     @pytest.mark.asyncio
-    async def test_endpoint_introspection(self, mock_fastapi_app):
-        """Test FastAPI endpoint introspection functionality"""
+    async def test_endpoint_introspection(self, mock_fastapi_app) -> None:
+        """Test FastAPI endpoint introspection functionality."""
         # Initialize introspector
         introspector = initialize_introspector(mock_fastapi_app)
 
@@ -79,8 +79,8 @@ class TestPhase2Integration:
             assert "description" in endpoint
 
     @pytest.mark.asyncio
-    async def test_tool_discovery_and_registration(self, mock_fastapi_app):
-        """Test tool discovery and registration process"""
+    async def test_tool_discovery_and_registration(self, mock_fastapi_app) -> None:
+        """Test tool discovery and registration process."""
         # Clear existing tools
         tool_registry.clear_tools()
 
@@ -119,8 +119,8 @@ class TestPhase2Integration:
             assert tool_name in tool_names, f"Missing orchestrator tool: {tool_name}"
 
     @pytest.mark.asyncio
-    async def test_generator_tools_functionality(self):
-        """Test generator tools functionality"""
+    async def test_generator_tools_functionality(self) -> None:
+        """Test generator tools functionality."""
         tools = generator_tools.get_tools()
 
         assert len(tools) > 0
@@ -136,8 +136,8 @@ class TestPhase2Integration:
             assert tool.inputSchema["type"] == "object"
 
     @pytest.mark.asyncio
-    async def test_orchestrator_tools_functionality(self):
-        """Test orchestrator tools functionality"""
+    async def test_orchestrator_tools_functionality(self) -> None:
+        """Test orchestrator tools functionality."""
         tools = orchestrator_tools.get_tools()
 
         assert len(tools) > 0
@@ -153,8 +153,8 @@ class TestPhase2Integration:
             assert tool.inputSchema["type"] == "object"
 
     @pytest.mark.asyncio
-    async def test_resource_management_system(self):
-        """Test resource management system"""
+    async def test_resource_management_system(self) -> None:
+        """Test resource management system."""
         # Initialize resource registry
         await resource_registry.initialize()
 
@@ -171,8 +171,8 @@ class TestPhase2Integration:
         assert "cache_ttl_seconds" in cache_stats
 
     @pytest.mark.asyncio
-    async def test_tool_execution_routing(self, mock_fastapi_app):
-        """Test tool execution routing to specialized tools"""
+    async def test_tool_execution_routing(self, mock_fastapi_app) -> None:
+        """Test tool execution routing to specialized tools."""
         # Setup tools
         await tool_registry.discover_tools(mock_fastapi_app)
 
@@ -196,8 +196,8 @@ class TestPhase2Integration:
                 assert result["error"] in ["connection_error", "timeout"]
 
     @pytest.mark.asyncio
-    async def test_mcp_server_integration(self, mock_fastapi_app):
-        """Test MCP server integration with all Phase 2 components"""
+    async def test_mcp_server_integration(self, mock_fastapi_app) -> None:
+        """Test MCP server integration with all Phase 2 components."""
         # Create MCP server
         mcp_server = ViolentUTFMCPServer()
 
@@ -221,8 +221,8 @@ class TestPhase2Integration:
         assert isinstance(resources, list)
 
     @pytest.mark.asyncio
-    async def test_tool_validation_system(self):
-        """Test tool argument validation system"""
+    async def test_tool_validation_system(self) -> None:
+        """Test tool argument validation system."""
         # Test with valid generator tool arguments
         valid_args = {"generator_id": "test-generator-id"}
 
@@ -236,8 +236,8 @@ class TestPhase2Integration:
             assert len(validation_result["errors"]) == 0
 
     @pytest.mark.asyncio
-    async def test_error_handling_and_recovery(self, mock_fastapi_app):
-        """Test error handling and recovery mechanisms"""
+    async def test_error_handling_and_recovery(self, mock_fastapi_app) -> None:
+        """Test error handling and recovery mechanisms."""
         # Test tool registry with invalid app
         await tool_registry.discover_tools(None)
 
@@ -256,8 +256,8 @@ class TestPhase2Integration:
             assert len(resources) == 0  # Empty list on error
 
     @pytest.mark.asyncio
-    async def test_authentication_integration(self):
-        """Test authentication integration across all components"""
+    async def test_authentication_integration(self) -> None:
+        """Test authentication integration across all components."""
         from app.mcp.auth import MCPAuthHandler
 
         # Test auth handler initialization
@@ -271,8 +271,8 @@ class TestPhase2Integration:
         # Headers might be empty if no token available, but should not error
 
     @pytest.mark.asyncio
-    async def test_concurrent_tool_execution(self, mock_fastapi_app):
-        """Test concurrent tool execution"""
+    async def test_concurrent_tool_execution(self, mock_fastapi_app) -> None:
+        """Test concurrent tool execution."""
         await tool_registry.discover_tools(mock_fastapi_app)
 
         # Mock HTTP responses
@@ -296,8 +296,8 @@ class TestPhase2Integration:
                 assert isinstance(result, dict)
 
     @pytest.mark.asyncio
-    async def test_configuration_validation(self):
-        """Test configuration validation across components"""
+    async def test_configuration_validation(self) -> None:
+        """Test configuration validation across components."""
         from app.mcp.config import mcp_settings
 
         # Test MCP settings
@@ -310,8 +310,8 @@ class TestPhase2Integration:
         assert mcp_settings.MCP_ENABLE_TOOLS is True
         assert mcp_settings.MCP_ENABLE_RESOURCES is True
 
-    def test_tool_schema_compliance(self):
-        """Test that all tools comply with MCP schema requirements"""
+    def test_tool_schema_compliance(self) -> None:
+        """Test that all tools comply with MCP schema requirements."""
         # Get all tools
         all_tools = []
         all_tools.extend(generator_tools.get_tools())
@@ -343,8 +343,8 @@ class TestPhase2Integration:
                 assert isinstance(schema["required"], list)
 
     @pytest.mark.asyncio
-    async def test_resource_uri_parsing(self):
-        """Test resource URI parsing and validation"""
+    async def test_resource_uri_parsing(self) -> None:
+        """Test resource URI parsing and validation."""
         from app.mcp.resources.manager import resource_manager
 
         # Test valid URI parsing

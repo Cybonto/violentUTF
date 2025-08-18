@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Health check endpoints
+Health check endpoints.
 """
 
 from datetime import datetime
@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.get("/health")
 async def health_check():
-    """Basic health check endpoint"""
+    """Basic health check endpoint."""
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
@@ -29,7 +29,7 @@ async def health_check():
 @router.get("/ready")
 async def readiness_check():
     """
-    Readiness check - verifies all dependencies are available
+    Readiness check - verifies all dependencies are available.
     """
     checks = {
         "api": True,
@@ -45,7 +45,7 @@ async def readiness_check():
 @router.get("/security-headers")
 async def security_headers_check(request: Request, response: Response):
     """
-    Test endpoint to verify security headers are properly applied
+    Test endpoint to verify security headers are properly applied.
     """
     # This endpoint will automatically get security headers applied by middleware
     # We can validate them here for testing purposes

@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""ViolentUTF MCP Server Base Implementation"""
+"""ViolentUTF MCP Server Base Implementation."""
 
 import asyncio
 import logging
@@ -19,16 +19,16 @@ logger = logging.getLogger(__name__)
 
 
 class ViolentUTFMCPServer:
-    """MCP Server that integrates with the existing ViolentUTF FastAPI instance"""
+    """MCP Server that integrates with the existing ViolentUTF FastAPI instance."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.server = Server(mcp_settings.MCP_SERVER_NAME)
         self.auth_handler = MCPAuthHandler()
         self._setup_handlers()
         self._initialized = False
 
     def _setup_handlers(self):
-        """Set up MCP server handlers"""
+        """Set up MCP server handlers."""
         # Tool handlers
         if mcp_settings.MCP_ENABLE_TOOLS:
             self.server.list_tools = self._list_tools
@@ -49,7 +49,7 @@ class ViolentUTFMCPServer:
             self.server.create_message = self._create_message
 
     async def initialize(self):
-        """Initialize the MCP server"""
+        """Initialize the MCP server."""
         if self._initialized:
             return
 
@@ -77,7 +77,7 @@ class ViolentUTFMCPServer:
         logger.info("MCP server initialized successfully")
 
     def mount_to_app(self, app: FastAPI) -> None:
-        """Mount MCP server to existing ViolentUTF FastAPI app"""
+        """Mount MCP server to existing ViolentUTF FastAPI app."""
         logger.info("Mounting MCP server to FastAPI app")
 
         # Initialize tool discovery with FastAPI app
@@ -124,7 +124,7 @@ class ViolentUTFMCPServer:
                     logger.error(f"Failed to discover tools: {e}")
 
     def get_capabilities(self) -> ServerCapabilities:
-        """Get server capabilities"""
+        """Get server capabilities."""
         capabilities = {}
 
         if mcp_settings.MCP_ENABLE_TOOLS:
@@ -144,33 +144,33 @@ class ViolentUTFMCPServer:
 
     # Tool handlers
     async def _list_tools(self) -> List[Tool]:
-        """List available tools"""
+        """List available tools."""
         from app.mcp.tools import tool_registry
 
         return await tool_registry.list_tools()
 
     async def _call_tool(self, name: str, arguments: Dict[str, Any]) -> Any:
-        """Execute a tool"""
+        """Execute a tool."""
         from app.mcp.tools import tool_registry
 
         return await tool_registry.call_tool(name, arguments)
 
     # Resource handlers
     async def _list_resources(self) -> List[Resource]:
-        """List available resources"""
+        """List available resources."""
         from app.mcp.resources import resource_registry
 
         return await resource_registry.list_resources()
 
     async def _read_resource(self, uri: str) -> Any:
-        """Read a resource"""
+        """Read a resource."""
         from app.mcp.resources import resource_registry
 
         return await resource_registry.read_resource(uri)
 
     # Prompt handlers
     async def _list_prompts(self) -> List[Prompt]:
-        """List available prompts"""
+        """List available prompts."""
         try:
             from app.mcp.prompts import prompts_manager
 
@@ -194,7 +194,7 @@ class ViolentUTFMCPServer:
             return []
 
     async def _get_prompt(self, name: str, arguments: Dict[str, Any]) -> Any:
-        """Get and render a prompt"""
+        """Get and render a prompt."""
         try:
             from app.mcp.prompts import prompts_manager
 
@@ -221,7 +221,7 @@ class ViolentUTFMCPServer:
 
     # Sampling handlers
     async def _create_message(self, request: CreateMessageRequest) -> Any:
-        """Create a message using sampling"""
+        """Create a message using sampling."""
         # Implementation will be added in Phase 3
         raise HTTPException(status_code=501, detail="Sampling not yet implemented")
 

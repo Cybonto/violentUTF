@@ -140,7 +140,7 @@ NATIVE_DATASET_TYPES = {
 
 @router.get("/types", response_model=DatasetTypesResponse, summary="Get available dataset types")
 async def get_dataset_types(current_user=Depends(get_current_user)):
-    """Get list of available dataset types"""
+    """Get list of available dataset types."""
     try:
         logger.info(f"User {current_user.username} requested dataset types")
 
@@ -156,7 +156,7 @@ async def get_dataset_types(current_user=Depends(get_current_user)):
 
 @router.get("", response_model=DatasetsListResponse, summary="Get configured datasets")
 async def get_datasets(current_user=Depends(get_current_user)):
-    """Get list of configured datasets from session and memory"""
+    """Get list of configured datasets from session and memory."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} requested datasets list")
@@ -227,7 +227,7 @@ async def get_datasets(current_user=Depends(get_current_user)):
 
 @router.post("/preview", response_model=DatasetPreviewResponse, summary="Preview a dataset before creation")
 async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(get_current_user)):
-    """Preview a dataset before creating it"""
+    """Preview a dataset before creating it."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} previewing dataset of type: {request.source_type}")
@@ -311,7 +311,7 @@ async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(g
 
 @router.post("", response_model=DatasetCreateResponse, summary="Create a new dataset")
 async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get_current_user)):
-    """Create a new dataset configuration"""
+    """Create a new dataset configuration."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} creating dataset: {request.name}")
@@ -421,7 +421,7 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
 
 @router.post("/{dataset_id}/transform", response_model=DatasetTransformResponse, summary="Transform a dataset")
 async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, current_user=Depends(get_current_user)):
-    """Transform a dataset using a template"""
+    """Transform a dataset using a template."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} transforming dataset: {dataset_id}")
@@ -494,7 +494,7 @@ async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, c
 
 @router.get("/memory", response_model=MemoryDatasetsResponse, summary="Get datasets from PyRIT memory")
 async def get_memory_datasets(current_user=Depends(get_current_user)):
-    """Get datasets saved in PyRIT memory"""
+    """Get datasets saved in PyRIT memory."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} requested memory datasets")
@@ -517,7 +517,7 @@ async def get_memory_datasets(current_user=Depends(get_current_user)):
     summary="Get field mapping options for uploaded file",
 )
 async def get_field_mapping(request: DatasetFieldMappingRequest, current_user=Depends(get_current_user)):
-    """Analyze an uploaded file and return field mapping options"""
+    """Analyze an uploaded file and return field mapping options."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} requesting field mapping for {request.file_type} file")
@@ -564,7 +564,7 @@ async def delete_dataset(
     delete_from_memory: bool = Query(default=False, description="Delete from PyRIT memory"),
     current_user=Depends(get_current_user),
 ):
-    """Delete a dataset from session and / or PyRIT memory"""
+    """Delete a dataset from session and / or PyRIT memory."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} deleting dataset: {dataset_id}")
@@ -615,7 +615,7 @@ async def delete_dataset(
 
 # Helper function for loading real PyRIT datasets
 async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any], limit: Optional[int] = None) -> List[str]:
-    """Enhanced PyRIT dataset loading with streaming support and configurable limits"""
+    """Enhanced PyRIT dataset loading with streaming support and configurable limits."""
     try:
         logger.info(f"Loading real PyRIT dataset: {dataset_type} with config: {config}, limit: {limit}")
 
@@ -667,7 +667,7 @@ async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any], li
 async def _load_real_pyrit_dataset_legacy(
     dataset_type: str, config: Dict[str, Any], limit: Optional[int] = None
 ) -> List[str]:
-    """Legacy PyRIT dataset loading (kept for backward compatibility)"""
+    """Legacy PyRIT dataset loading (kept for backward compatibility)."""
     try:
         logger.info(f"Loading PyRIT dataset using legacy mode: {dataset_type}")
 
@@ -776,7 +776,7 @@ async def _load_real_pyrit_dataset_legacy(
 
 
 async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
-    """Get real PyRIT memory datasets instead of mock data"""
+    """Get real PyRIT memory datasets instead of mock data."""
     try:
         import os
         import sqlite3
@@ -920,7 +920,7 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                         ORDER BY timestamp DESC
                         LIMIT 20
                     """
-                    )
+                    ).
 
                     rows = cursor.fetchall()
                     for row in rows:
@@ -957,7 +957,7 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
 
 @router.get("/{dataset_id}", response_model=DatasetInfo, summary="Get dataset details")
 async def get_dataset(dataset_id: str, current_user=Depends(get_current_user)):
-    """Get detailed information about a specific dataset"""
+    """Get detailed information about a specific dataset."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} requested dataset details: {dataset_id}")
@@ -1002,7 +1002,7 @@ async def get_dataset(dataset_id: str, current_user=Depends(get_current_user)):
 
 @router.put("/{dataset_id}", response_model=DatasetUpdateResponse, summary="Update a dataset")
 async def update_dataset(dataset_id: str, request: DatasetUpdateRequest, current_user=Depends(get_current_user)):
-    """Update an existing dataset, with optional save functionality"""
+    """Update an existing dataset, with optional save functionality."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} updating dataset: {dataset_id}")

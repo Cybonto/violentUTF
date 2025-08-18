@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class PasswordStrength(Enum):
-    """Password strength levels"""
+    """Password strength levels."""
 
     VERY_WEAK = "very_weak"
     WEAK = "weak"
@@ -27,7 +27,7 @@ class PasswordStrength(Enum):
 
 @dataclass
 class PasswordPolicy:
-    """Password policy configuration"""
+    """Password policy configuration."""
 
     min_length: int = 12
     max_length: int = 128
@@ -53,7 +53,7 @@ class PasswordPolicy:
 
 @dataclass
 class PasswordValidationResult:
-    """Result of password validation"""
+    """Result of password validation."""
 
     is_valid: bool
     strength: PasswordStrength
@@ -65,16 +65,16 @@ class PasswordValidationResult:
 
 class PasswordValidator:
     """
-    Comprehensive password validation and strength assessment
+    Comprehensive password validation and strength assessment.
     """
 
-    def __init__(self, policy: Optional[PasswordPolicy] = None):
+    def __init__(self, policy: Optional[PasswordPolicy] = None) -> None:
         self.policy = policy or PasswordPolicy()
         self._load_common_passwords()
         self._load_keyboard_patterns()
 
     def _load_common_passwords(self):
-        """Load common/weak passwords list"""
+        """Load common/weak passwords list."""
         # Top 100 most common passwords - in production, load from file
         self.common_passwords = {
             "password",
@@ -187,7 +187,7 @@ class PasswordValidator:
         }
 
     def _load_keyboard_patterns(self):
-        """Load keyboard pattern sequences"""
+        """Load keyboard pattern sequences."""
         self.keyboard_patterns = [
             # QWERTY rows
             "qwertyuiop",
@@ -238,7 +238,7 @@ class PasswordValidator:
         personal_info: Optional[List[str]] = None,
     ) -> PasswordValidationResult:
         """
-        Comprehensive password validation
+        Comprehensive password validation.
 
         Args:
             password: Password to validate
@@ -384,7 +384,7 @@ class PasswordValidator:
         )
 
     def _check_repeated_characters(self, password: str) -> int:
-        """Check for repeated character sequences"""
+        """Check for repeated character sequences."""
         max_repeated = 0
         current_repeated = 1
 
@@ -398,7 +398,7 @@ class PasswordValidator:
         return max(max_repeated, current_repeated)
 
     def _check_sequential_characters(self, password: str) -> int:
-        """Check for sequential character patterns"""
+        """Check for sequential character patterns."""
         max_sequential = 0
 
         # Check ascending sequences
@@ -424,7 +424,7 @@ class PasswordValidator:
         return max_sequential
 
     def _check_keyboard_patterns(self, password: str) -> Optional[str]:
-        """Check for keyboard walking patterns"""
+        """Check for keyboard walking patterns."""
         password_lower = password.lower()
 
         for pattern in self.keyboard_patterns:
@@ -445,7 +445,7 @@ class PasswordValidator:
         email: Optional[str] = None,
         personal_info: Optional[List[str]] = None,
     ) -> Optional[str]:
-        """Check if password contains personal information"""
+        """Check if password contains personal information."""
         password_lower = password.lower()
 
         # Check username
@@ -473,7 +473,7 @@ class PasswordValidator:
         return None
 
     def _calculate_strength(self, score: int) -> PasswordStrength:
-        """Calculate password strength based on score"""
+        """Calculate password strength based on score."""
         if score < 30:
             return PasswordStrength.VERY_WEAK
         elif score < 50:
@@ -486,7 +486,7 @@ class PasswordValidator:
             return PasswordStrength.VERY_STRONG
 
     def generate_password_requirements(self) -> Dict:
-        """Generate password requirements description for UI"""
+        """Generate password requirements description for UI."""
         return {
             "min_length": self.policy.min_length,
             "max_length": self.policy.max_length,
@@ -520,7 +520,7 @@ def validate_password_strength(
     personal_info: Optional[List[str]] = None,
 ) -> PasswordValidationResult:
     """
-    Convenience function for password validation
+    Convenience function for password validation.
 
     Args:
         password: Password to validate
@@ -538,7 +538,7 @@ def validate_password_strength(
 
 def is_password_secure(password: str, **kwargs) -> bool:
     """
-    Quick check if password meets security requirements
+    Quick check if password meets security requirements.
 
     Args:
         password: Password to check

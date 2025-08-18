@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-File management schemas
+File management schemas.
 """
 
 from datetime import datetime
@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 
 class FileInfo(BaseModel):
-    """File information"""
+    """File information."""
 
     file_id: str
     filename: str
@@ -25,7 +25,7 @@ class FileInfo(BaseModel):
 
 
 class FileUploadResponse(BaseModel):
-    """Response from file upload"""
+    """Response from file upload."""
 
     file_id: str
     filename: str
@@ -37,7 +37,7 @@ class FileUploadResponse(BaseModel):
 
 
 class FileMetadataResponse(BaseModel):
-    """File metadata response"""
+    """File metadata response."""
 
     file_info: FileInfo
     download_url: str
@@ -45,7 +45,7 @@ class FileMetadataResponse(BaseModel):
 
 
 class FileListResponse(BaseModel):
-    """List of files response"""
+    """List of files response."""
 
     files: List[FileInfo]
     total_count: int

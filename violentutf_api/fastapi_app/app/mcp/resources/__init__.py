@@ -22,14 +22,14 @@ logger = logging.getLogger(__name__)
 
 
 class ResourceRegistry:
-    """Registry for MCP resources with ViolentUTF integration"""
+    """Registry for MCP resources with ViolentUTF integration."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.manager = resource_manager
         self._initialized = False
 
     async def initialize(self):
-        """Initialize resource registry"""
+        """Initialize resource registry."""
         if self._initialized:
             return
 
@@ -50,7 +50,7 @@ class ResourceRegistry:
         logger.info("MCP resource registry initialized")
 
     async def list_resources(self) -> List[Resource]:
-        """List all available resources"""
+        """List all available resources."""
         if not self._initialized:
             await self.initialize()
 
@@ -63,7 +63,7 @@ class ResourceRegistry:
             return []
 
     async def read_resource(self, uri: str) -> Any:
-        """Read a resource by URI"""
+        """Read a resource by URI."""
         if not self._initialized:
             await self.initialize()
 
@@ -74,19 +74,19 @@ class ResourceRegistry:
             return {"error": "resource_read_failed", "message": str(e), "uri": uri}
 
     def get_cache_stats(self) -> Dict[str, Any]:
-        """Get comprehensive resource cache statistics"""
+        """Get comprehensive resource cache statistics."""
         return self.manager.get_cache_stats()
 
     def clear_cache(self):
-        """Clear resource cache"""
+        """Clear resource cache."""
         self.manager.clear_cache()
 
     def get_providers(self) -> List[str]:
-        """Get list of registered resource providers"""
+        """Get list of registered resource providers."""
         return advanced_resource_registry.get_providers()
 
     async def get_resource_summary(self) -> Dict[str, Any]:
-        """Get summary of all available resources"""
+        """Get summary of all available resources."""
         return await self.manager.get_resource_summary()
 
 

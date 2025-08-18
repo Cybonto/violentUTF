@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 
 class OrchestratorTypeInfo(BaseModel):
-    """Schema for orchestrator type information"""
+    """Schema for orchestrator type information."""
 
     name: str
     module: str
@@ -20,7 +20,7 @@ class OrchestratorTypeInfo(BaseModel):
 
 
 class OrchestratorConfigCreate(BaseModel):
-    """Schema for creating orchestrator configuration"""
+    """Schema for creating orchestrator configuration."""
 
     name: str = Field(..., description="Unique name for the orchestrator")
     orchestrator_type: str = Field(..., description="Type of orchestrator (e.g., PromptSendingOrchestrator)")
@@ -30,7 +30,7 @@ class OrchestratorConfigCreate(BaseModel):
 
 
 class OrchestratorConfigResponse(BaseModel):
-    """Schema for orchestrator configuration response"""
+    """Schema for orchestrator configuration response."""
 
     orchestrator_id: UUID
     name: str
@@ -48,7 +48,7 @@ class OrchestratorConfigResponse(BaseModel):
 
 
 class OrchestratorExecuteRequest(BaseModel):
-    """DEPRECATED: Use ExecutionCreate for RESTful API"""
+    """DEPRECATED: Use ExecutionCreate for RESTful API."""
 
     execution_type: str = Field(..., description="Type of execution (prompt_list, dataset)")
     execution_name: Optional[str] = Field(None, description="Name for this execution")
@@ -56,7 +56,7 @@ class OrchestratorExecuteRequest(BaseModel):
 
 
 class OrchestratorExecuteResponse(BaseModel):
-    """DEPRECATED: Use ExecutionResponse for RESTful API"""
+    """DEPRECATED: Use ExecutionResponse for RESTful API."""
 
     execution_id: UUID
     status: str
@@ -71,7 +71,7 @@ class OrchestratorExecuteResponse(BaseModel):
 
 # New RESTful schemas for Phase 1 implementation
 class ExecutionCreate(BaseModel):
-    """Schema for creating a new execution (RESTful)"""
+    """Schema for creating a new execution (RESTful)."""
 
     execution_type: str = Field(..., description="Type of execution (prompt_list, dataset)")
     execution_name: Optional[str] = Field(None, description="Name for this execution")
@@ -79,7 +79,7 @@ class ExecutionCreate(BaseModel):
 
 
 class ExecutionResponse(BaseModel):
-    """Schema for execution resource response (RESTful)"""
+    """Schema for execution resource response (RESTful)."""
 
     id: UUID
     orchestrator_id: UUID
@@ -97,7 +97,7 @@ class ExecutionResponse(BaseModel):
 
 
 class ExecutionListResponse(BaseModel):
-    """Schema for listing executions (RESTful)"""
+    """Schema for listing executions (RESTful)."""
 
     executions: List[ExecutionResponse]
     total: int
@@ -105,7 +105,7 @@ class ExecutionListResponse(BaseModel):
 
 
 class OrchestratorResultsResponse(BaseModel):
-    """Schema for orchestrator execution results"""
+    """Schema for orchestrator execution results."""
 
     execution_id: UUID
     status: str
@@ -118,7 +118,7 @@ class OrchestratorResultsResponse(BaseModel):
 
 
 class OrchestratorMemoryResponse(BaseModel):
-    """Schema for orchestrator memory response"""
+    """Schema for orchestrator memory response."""
 
     orchestrator_id: UUID
     memory_pieces: List[Dict[str, Any]]
@@ -127,7 +127,7 @@ class OrchestratorMemoryResponse(BaseModel):
 
 
 class OrchestratorScoresResponse(BaseModel):
-    """Schema for orchestrator scores response"""
+    """Schema for orchestrator scores response."""
 
     orchestrator_id: UUID
     scores: List[Dict[str, Any]]

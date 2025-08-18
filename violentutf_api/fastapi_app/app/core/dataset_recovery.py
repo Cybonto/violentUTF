@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Error recovery mechanisms for dataset import operations
+Error recovery mechanisms for dataset import operations.
 
 This module provides robust error recovery strategies including retry logic,
 partial import recovery, and automated cleanup procedures.
@@ -30,7 +30,7 @@ T = TypeVar("T")
 
 
 class RetryStrategy:
-    """Configurable retry strategy for dataset operations"""
+    """Configurable retry strategy for dataset operations."""
 
     def __init__(
         self,
@@ -47,7 +47,7 @@ class RetryStrategy:
         self.jitter = jitter
 
     def calculate_delay(self, attempt: int) -> float:
-        """Calculate delay for given attempt number"""
+        """Calculate delay for given attempt number."""
         delay = self.base_delay * (self.backoff_factor**attempt)
         delay = min(delay, self.max_delay)
 
@@ -62,7 +62,7 @@ class RetryStrategy:
 
     @classmethod
     def from_config(cls, config: DatasetImportConfig, dataset_type: str = "") -> "RetryStrategy":
-        """Create retry strategy from configuration"""
+        """Create retry strategy from configuration."""
         retry_config = config.get_effective_retry_config(dataset_type)
 
         return cls(
@@ -76,7 +76,7 @@ class RetryStrategy:
 def with_retry(
     retry_strategy: Optional[RetryStrategy] = None, exceptions: tuple = (Exception,), operation_name: str = "operation"
 ):
-    """Decorator for adding retry logic to functions"""
+    """Decorator for adding retry logic to functions."""
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
@@ -133,9 +133,9 @@ def with_retry(
 
 
 class PartialImportRecovery:
-    """Handles recovery of partial dataset imports"""
+    """Handles recovery of partial dataset imports."""
 
-    def __init__(self, config: DatasetImportConfig):
+    def __init__(self, config: DatasetImportConfig) -> None:
         self.config = config
         self.successful_chunks: List[Dict[str, Any]] = []
         self.failed_chunks: List[Dict[str, Any]] = []
@@ -144,7 +144,7 @@ class PartialImportRecovery:
     def record_successful_chunk(
         self, chunk_index: int, chunk_data: List[str], metadata: Optional[Dict[str, Any]] = None
     ) -> None:
-        """Record a successfully processed chunk"""
+        """Record a successfully processed chunk."""
         self.successful_chunks.append(
             {"chunk_index": chunk_index, "size": len(chunk_data), "timestamp": time.time(), "metadata": metadata or {}}
         )
@@ -160,7 +160,7 @@ class PartialImportRecovery:
         chunk_data: Optional[List[str]] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """Record a failed chunk for potential recovery"""
+        """Record a failed chunk for potential recovery."""
         self.failed_chunks.append(
             {
                 "chunk_index": chunk_index,
@@ -180,7 +180,7 @@ class PartialImportRecovery:
         )
 
     async def attempt_recovery(self) -> Dict[str, Any]:
-        """Attempt to recover failed chunks"""
+        """Attempt to recover failed chunks."""
         if not self.config.enable_partial_import:
             raise DatasetStreamingError("Partial import recovery is disabled in configuration")
 
@@ -222,7 +222,7 @@ class PartialImportRecovery:
         return recovery_results
 
     async def _recover_single_chunk(self, chunk_info: Dict[str, Any], retry_strategy: RetryStrategy) -> None:
-        """Attempt to recover a single failed chunk"""
+        """Attempt to recover a single failed chunk."""
         # This is a placeholder - actual recovery logic would depend on
         # the specific failure type and data available
 
@@ -240,7 +240,7 @@ class PartialImportRecovery:
         dataset_logger.debug(f"Successfully recovered chunk {chunk_index}", chunk_index=chunk_index)
 
     def get_recovery_summary(self) -> Dict[str, Any]:
-        """Get summary of recovery status"""
+        """Get summary of recovery status."""
         total_chunks = len(self.successful_chunks) + len(self.failed_chunks)
         success_rate = len(self.successful_chunks) / total_chunks if total_chunks > 0 else 0
 
@@ -255,30 +255,30 @@ class PartialImportRecovery:
 
 
 class AutoCleanupManager:
-    """Manages automatic cleanup of failed or partial imports"""
+    """Manages automatic cleanup of failed or partial imports."""
 
-    def __init__(self, config: DatasetImportConfig):
+    def __init__(self, config: DatasetImportConfig) -> None:
         self.config = config
         self.cleanup_tasks: List[Callable] = []
         self.temp_files: List[str] = []
         self.temp_data: List[Any] = []
 
     def register_cleanup_task(self, task: Callable) -> None:
-        """Register a cleanup task to be executed on failure"""
+        """Register a cleanup task to be executed on failure."""
         self.cleanup_tasks.append(task)
 
     def register_temp_file(self, file_path: str) -> None:
-        """Register a temporary file for cleanup"""
+        """Register a temporary file for cleanup."""
         self.temp_files.append(file_path)
 
     def register_temp_data(self, data: Any) -> None:
-        """Register temporary data for cleanup"""
+        """Register temporary data for cleanup."""
         self.temp_data.append(data)
 
     async def cleanup_on_failure(
         self, error: Exception, dataset_id: str, partial_recovery: Optional[PartialImportRecovery] = None
     ) -> None:
-        """Perform cleanup operations after a failure"""
+        """Perform cleanup operations after a failure."""
 
         if not self.config.cleanup_on_failure:
             dataset_logger.info("Cleanup on failure is disabled, skipping cleanup", dataset_id=dataset_id)
@@ -352,7 +352,7 @@ class AutoCleanupManager:
 async def with_timeout(
     operation: Callable[..., T], timeout_seconds: float, operation_name: str = "operation", *args, **kwargs
 ) -> T:
-    """Execute operation with timeout"""
+    """Execute operation with timeout."""
     try:
         if asyncio.iscoroutinefunction(operation):
             return await asyncio.wait_for(operation(*args, **kwargs), timeout=timeout_seconds)
@@ -374,7 +374,7 @@ async def with_timeout(
 def create_recovery_context(
     config: DatasetImportConfig, dataset_id: str, dataset_type: str
 ) -> tuple[PartialImportRecovery, AutoCleanupManager]:
-    """Create recovery context for dataset operations"""
+    """Create recovery context for dataset operations."""
 
     partial_recovery = PartialImportRecovery(config)
     cleanup_manager = AutoCleanupManager(config)

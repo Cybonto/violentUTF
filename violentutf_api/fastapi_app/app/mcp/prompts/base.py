@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class PromptArgument(BaseModel):
-    """Defines a prompt argument with validation"""
+    """Defines a prompt argument with validation."""
 
     name: str
     description: str
@@ -30,7 +30,7 @@ class PromptArgument(BaseModel):
     enum: Optional[List[Any]] = None
 
     def validate_value(self, value: Any) -> bool:
-        """Validate a value against this argument definition"""
+        """Validate a value against this argument definition."""
         if self.required and value is None:
             return False
 
@@ -56,7 +56,7 @@ class PromptArgument(BaseModel):
 
 
 class PromptDefinition(BaseModel):
-    """Complete prompt definition for MCP protocol"""
+    """Complete prompt definition for MCP protocol."""
 
     name: str
     description: str
@@ -64,9 +64,9 @@ class PromptDefinition(BaseModel):
 
 
 class BasePrompt(ABC):
-    """Base class for all MCP prompts with template rendering"""
+    """Base class for all MCP prompts with template rendering."""
 
-    def __init__(self, name: str, description: str, template: str, category: str = "general"):
+    def __init__(self, name: str, description: str, template: str, category: str = "general") -> None:
         self.name = name
         self.description = description
         self.template_string = template
@@ -84,19 +84,19 @@ class BasePrompt(ABC):
 
     @abstractmethod
     async def get_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get additional context for the prompt"""
+        """Get additional context for the prompt."""
         pass
 
     def add_argument(self, argument: PromptArgument):
-        """Add argument to prompt definition"""
+        """Add argument to prompt definition."""
         self.arguments.append(argument)
 
     def get_definition(self) -> PromptDefinition:
-        """Get complete prompt definition for MCP"""
+        """Get complete prompt definition for MCP."""
         return PromptDefinition(name=self.name, description=self.description, arguments=self.arguments)
 
     def validate_arguments(self, params: Dict[str, Any]) -> tuple[bool, List[str]]:
-        """Validate provided arguments against prompt definition"""
+        """Validate provided arguments against prompt definition."""
         errors = []
 
         # Check required arguments
@@ -109,7 +109,7 @@ class BasePrompt(ABC):
         return len(errors) == 0, errors
 
     async def render(self, params: Dict[str, Any]) -> str:
-        """Render the prompt with given parameters"""
+        """Render the prompt with given parameters."""
         if not self.template:
             raise ValueError(f"Template not available for prompt: {self.name}")
 
@@ -144,22 +144,22 @@ class BasePrompt(ABC):
 
 
 class StaticPrompt(BasePrompt):
-    """A prompt that doesn't require additional context"""
+    """A prompt that doesn't require additional context."""
 
     async def get_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Static prompts return empty context"""
+        """Static prompts return empty context."""
         return {}
 
 
 class DynamicPrompt(BasePrompt):
-    """A prompt that fetches dynamic context from external sources"""
+    """A prompt that fetches dynamic context from external sources."""
 
-    def __init__(self, name: str, description: str, template: str, context_provider=None, category: str = "dynamic"):
+    def __init__(self, name: str, description: str, template: str, context_provider=None, category: str = "dynamic") -> None:
         super().__init__(name, description, template, category)
         self.context_provider = context_provider
 
     async def get_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get dynamic context from provider"""
+        """Get dynamic context from provider."""
         if self.context_provider:
             try:
                 return await self.context_provider(params)
@@ -170,14 +170,14 @@ class DynamicPrompt(BasePrompt):
 
 
 class PromptRegistry:
-    """Registry for all available prompts with categorization"""
+    """Registry for all available prompts with categorization."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._prompts: Dict[str, BasePrompt] = {}
         self._categories: Dict[str, List[str]] = {}
 
     def register(self, prompt: BasePrompt):
-        """Register a prompt"""
+        """Register a prompt."""
         logger.info(f"Registering prompt: {prompt.name} (category: {prompt.category})")
         self._prompts[prompt.name] = prompt
 
@@ -187,24 +187,24 @@ class PromptRegistry:
         self._categories[prompt.category].append(prompt.name)
 
     def get(self, name: str) -> Optional[BasePrompt]:
-        """Get prompt by name"""
+        """Get prompt by name."""
         return self._prompts.get(name)
 
     def list_prompts(self) -> List[PromptDefinition]:
-        """List all available prompts"""
+        """List all available prompts."""
         return [prompt.get_definition() for prompt in self._prompts.values()]
 
     def list_by_category(self, category: str) -> List[PromptDefinition]:
-        """List prompts by category"""
+        """List prompts by category."""
         prompt_names = self._categories.get(category, [])
         return [self._prompts[name].get_definition() for name in prompt_names if name in self._prompts]
 
     def get_categories(self) -> List[str]:
-        """Get all available categories"""
+        """Get all available categories."""
         return list(self._categories.keys())
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get registry statistics"""
+        """Get registry statistics."""
         return {
             "total_prompts": len(self._prompts),
             "categories": {cat: len(prompts) for cat, prompts in self._categories.items()},

@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, validator
 
 
 class ConverterCategory(str, Enum):
-    """Converter categories available in PyRIT"""
+    """Converter categories available in PyRIT."""
 
     ENCRYPTION = "encryption"
     JAILBREAK = "jailbreak"
@@ -35,7 +35,7 @@ class ConverterCategory(str, Enum):
 
 
 class ConverterType(str, Enum):
-    """Common converter types"""
+    """Common converter types."""
 
     ROT13_CONVERTER = "ROT13Converter"
     BASE64_CONVERTER = "Base64Converter"
@@ -50,7 +50,7 @@ class ConverterType(str, Enum):
 
 
 class ParameterType(str, Enum):
-    """Parameter types for converter configuration"""
+    """Parameter types for converter configuration."""
 
     STRING = "str"
     INTEGER = "int"
@@ -64,7 +64,7 @@ class ParameterType(str, Enum):
 
 
 class ApplicationMode(str, Enum):
-    """How to apply converter to dataset"""
+    """How to apply converter to dataset."""
 
     OVERWRITE = "overwrite"
     COPY = "copy"
@@ -74,7 +74,7 @@ class ApplicationMode(str, Enum):
 
 
 class ConverterParameter(BaseModel):
-    """Single converter parameter definition"""
+    """Single converter parameter definition."""
 
     name: str = Field(..., description="Parameter name")
     type_str: str = Field(..., description="Parameter type as string")
@@ -87,7 +87,7 @@ class ConverterParameter(BaseModel):
 
 
 class ConverterInfo(BaseModel):
-    """Information about a converter class"""
+    """Information about a converter class."""
 
     name: str = Field(..., description="Converter class name")
     category: ConverterCategory = Field(..., description="Converter category")
@@ -97,7 +97,7 @@ class ConverterInfo(BaseModel):
 
 
 class ConvertedPrompt(BaseModel):
-    """A converted prompt result"""
+    """A converted prompt result."""
 
     id: str = Field(..., description="Prompt ID")
     original_value: str = Field(..., description="Original prompt text")
@@ -110,14 +110,14 @@ class ConvertedPrompt(BaseModel):
 
 
 class ConverterTypesResponse(BaseModel):
-    """Response for getting converter types"""
+    """Response for getting converter types."""
 
     categories: Dict[str, List[str]] = Field(..., description="Converter categories and their classes")
     total: int = Field(..., description="Total number of converter classes")
 
 
 class ConverterParametersResponse(BaseModel):
-    """Response for getting converter parameters"""
+    """Response for getting converter parameters."""
 
     converter_name: str = Field(..., description="Converter class name")
     parameters: List[ConverterParameter] = Field(..., description="Parameter definitions")
@@ -125,7 +125,7 @@ class ConverterParametersResponse(BaseModel):
 
 
 class ConverterCreateRequest(BaseModel):
-    """Request to create a converter configuration"""
+    """Request to create a converter configuration."""
 
     name: str = Field(
         ..., min_length=3, max_length=SecurityLimits.MAX_NAME_LENGTH, description="Unique converter configuration name"
@@ -136,7 +136,7 @@ class ConverterCreateRequest(BaseModel):
 
     @validator("name")
     def validate_name_field(cls, v):
-        """Validate converter name"""
+        """Validate converter name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
             raise ValueError("Name must contain only alphanumeric characters, underscores, and hyphens")
@@ -144,7 +144,7 @@ class ConverterCreateRequest(BaseModel):
 
     @validator("converter_type")
     def validate_converter_type_field(cls, v):
-        """Validate converter type"""
+        """Validate converter type."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
             raise ValueError("Converter type must contain only alphanumeric characters, underscores, and hyphens")
@@ -152,12 +152,12 @@ class ConverterCreateRequest(BaseModel):
 
     @validator("parameters")
     def validate_parameters_field(cls, v):
-        """Validate converter parameters"""
+        """Validate converter parameters."""
         return validate_generator_parameters(v)
 
     @validator("generator_id")
     def validate_generator_id_field(cls, v):
-        """Validate generator ID"""
+        """Validate generator ID."""
         if v is not None:
             v = sanitize_string(v)
             if len(v) > 100:
@@ -166,14 +166,14 @@ class ConverterCreateRequest(BaseModel):
 
 
 class ConverterCreateResponse(BaseModel):
-    """Response for creating a converter"""
+    """Response for creating a converter."""
 
     converter: Dict[str, Any] = Field(..., description="Created converter configuration")
     message: str = Field(..., description="Success message")
 
 
 class ConverterPreviewRequest(BaseModel):
-    """Request to preview converter effect"""
+    """Request to preview converter effect."""
 
     sample_prompts: Optional[List[str]] = Field(
         None, max_items=20, description="Specific prompts to preview (optional)"
@@ -183,7 +183,7 @@ class ConverterPreviewRequest(BaseModel):
 
     @validator("sample_prompts")
     def validate_sample_prompts_field(cls, v):
-        """Validate sample prompts"""
+        """Validate sample prompts."""
         if v is not None:
             validated = []
             for prompt in v:
@@ -198,7 +198,7 @@ class ConverterPreviewRequest(BaseModel):
 
     @validator("dataset_id")
     def validate_dataset_id_field(cls, v):
-        """Validate dataset ID"""
+        """Validate dataset ID."""
         if v is not None:
             v = sanitize_string(v)
             if len(v) > 100:
@@ -207,7 +207,7 @@ class ConverterPreviewRequest(BaseModel):
 
 
 class ConverterPreviewResponse(BaseModel):
-    """Response for converter preview"""
+    """Response for converter preview."""
 
     converter_id: str = Field(..., description="Converter configuration ID")
     preview_results: List[ConvertedPrompt] = Field(..., description="Preview conversion results")
@@ -215,7 +215,7 @@ class ConverterPreviewResponse(BaseModel):
 
 
 class ConverterApplyRequest(BaseModel):
-    """Request to apply converter to dataset"""
+    """Request to apply converter to dataset."""
 
     dataset_id: str = Field(..., max_length=100, description="Dataset ID to apply converter to")
     mode: ApplicationMode = Field(..., description="Application mode (overwrite or copy)")
@@ -230,7 +230,7 @@ class ConverterApplyRequest(BaseModel):
 
     @validator("dataset_id")
     def validate_dataset_id_field(cls, v):
-        """Validate dataset ID"""
+        """Validate dataset ID."""
         v = sanitize_string(v)
         if len(v) > 100:
             raise ValueError("Dataset ID too long")
@@ -238,7 +238,7 @@ class ConverterApplyRequest(BaseModel):
 
     @validator("new_dataset_name")
     def validate_new_dataset_name_field(cls, v, values):
-        """Validate new dataset name"""
+        """Validate new dataset name."""
         if v is not None:
             v = sanitize_string(v)
             if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
@@ -251,7 +251,7 @@ class ConverterApplyRequest(BaseModel):
 
 
 class ConverterApplyResponse(BaseModel):
-    """Response for applying converter"""
+    """Response for applying converter."""
 
     success: bool = Field(..., description="Whether application succeeded")
     dataset_id: str = Field(..., description="Resulting dataset ID")
@@ -262,14 +262,14 @@ class ConverterApplyResponse(BaseModel):
 
 
 class ConvertersListResponse(BaseModel):
-    """Response for listing converter configurations"""
+    """Response for listing converter configurations."""
 
     converters: List[Dict[str, Any]] = Field(..., description="Configured converters")
     total: int = Field(..., description="Total number of converters")
 
 
 class ConverterDeleteResponse(BaseModel):
-    """Response for deleting a converter"""
+    """Response for deleting a converter."""
 
     success: bool = Field(..., description="Whether deletion succeeded")
     message: str = Field(..., description="Result message")
@@ -277,7 +277,7 @@ class ConverterDeleteResponse(BaseModel):
 
 
 class ConverterUpdateRequest(BaseModel):
-    """Request to update converter configuration"""
+    """Request to update converter configuration."""
 
     name: Optional[str] = Field(
         None, min_length=3, max_length=SecurityLimits.MAX_NAME_LENGTH, description="New converter name"
@@ -287,7 +287,7 @@ class ConverterUpdateRequest(BaseModel):
 
     @validator("name")
     def validate_name_field(cls, v):
-        """Validate converter name"""
+        """Validate converter name."""
         if v is not None:
             v = sanitize_string(v)
             if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
@@ -296,14 +296,14 @@ class ConverterUpdateRequest(BaseModel):
 
     @validator("parameters")
     def validate_parameters_field(cls, v):
-        """Validate converter parameters"""
+        """Validate converter parameters."""
         if v is not None:
             return validate_generator_parameters(v)
         return v
 
     @validator("generator_id")
     def validate_generator_id_field(cls, v):
-        """Validate generator ID"""
+        """Validate generator ID."""
         if v is not None:
             v = sanitize_string(v)
             if len(v) > 100:
@@ -312,7 +312,7 @@ class ConverterUpdateRequest(BaseModel):
 
 
 class ConverterError(BaseModel):
-    """Error response for converter operations"""
+    """Error response for converter operations."""
 
     error_type: str = Field(..., description="Type of error")
     message: str = Field(..., description="Error message")
@@ -324,7 +324,7 @@ class ConverterError(BaseModel):
 
 
 class ConverterApplicationStatus(BaseModel):
-    """Status of converter application process"""
+    """Status of converter application process."""
 
     converter_id: str = Field(..., description="Converter ID")
     dataset_id: str = Field(..., description="Dataset ID")
@@ -336,7 +336,7 @@ class ConverterApplicationStatus(BaseModel):
 
 
 class ConverterBatchRequest(BaseModel):
-    """Request to apply multiple converters"""
+    """Request to apply multiple converters."""
 
     dataset_id: str = Field(..., max_length=100, description="Dataset to apply converters to")
     converter_ids: List[str] = Field(..., max_items=10, description="List of converter IDs to apply")
@@ -345,7 +345,7 @@ class ConverterBatchRequest(BaseModel):
 
     @validator("dataset_id")
     def validate_dataset_id_field(cls, v):
-        """Validate dataset ID"""
+        """Validate dataset ID."""
         v = sanitize_string(v)
         if len(v) > 100:
             raise ValueError("Dataset ID too long")
@@ -353,7 +353,7 @@ class ConverterBatchRequest(BaseModel):
 
     @validator("converter_ids")
     def validate_converter_ids_field(cls, v):
-        """Validate converter IDs list"""
+        """Validate converter IDs list."""
         validated = []
         for converter_id in v:
             if not isinstance(converter_id, str):
@@ -366,7 +366,7 @@ class ConverterBatchRequest(BaseModel):
 
 
 class ConverterBatchResponse(BaseModel):
-    """Response for batch converter application"""
+    """Response for batch converter application."""
 
     batch_id: str = Field(..., description="Batch operation ID")
     results: List[ConverterApplyResponse] = Field(..., description="Individual application results")
@@ -375,7 +375,7 @@ class ConverterBatchResponse(BaseModel):
 
 
 class ConverterStats(BaseModel):
-    """Statistics about converter usage"""
+    """Statistics about converter usage."""
 
     total_converters: int = Field(..., description="Total converter configurations")
     total_applications: int = Field(..., description="Total converter applications")
@@ -384,7 +384,7 @@ class ConverterStats(BaseModel):
 
 
 class ConverterExportRequest(BaseModel):
-    """Request to export converter configuration"""
+    """Request to export converter configuration."""
 
     converter_ids: List[str] = Field(..., max_items=50, description="Converter IDs to export")
     include_results: bool = Field(default=False, description="Include application results")
@@ -392,7 +392,7 @@ class ConverterExportRequest(BaseModel):
 
     @validator("converter_ids")
     def validate_converter_ids_field(cls, v):
-        """Validate converter IDs list"""
+        """Validate converter IDs list."""
         validated = []
         for converter_id in v:
             if not isinstance(converter_id, str):
@@ -405,7 +405,7 @@ class ConverterExportRequest(BaseModel):
 
 
 class ConverterImportRequest(BaseModel):
-    """Request to import converter configuration"""
+    """Request to import converter configuration."""
 
     config_data: str = Field(
         ..., min_length=1, max_length=SecurityLimits.MAX_JSON_SIZE, description="Configuration data to import"
@@ -415,7 +415,7 @@ class ConverterImportRequest(BaseModel):
 
     @validator("config_data")
     def validate_config_data_field(cls, v):
-        """Validate configuration data"""
+        """Validate configuration data."""
         v = sanitize_string(v)
         if len(v.encode("utf-8")) > SecurityLimits.MAX_JSON_SIZE:
             raise ValueError(f"Configuration data too large (max {SecurityLimits.MAX_JSON_SIZE} bytes)")

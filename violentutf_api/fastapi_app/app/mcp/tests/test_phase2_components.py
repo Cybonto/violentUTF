@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""Phase 2 Component Tests for ViolentUTF MCP Server"""
+"""Phase 2 Component Tests for ViolentUTF MCP Server."""
 
 import asyncio
 import logging
@@ -39,10 +39,10 @@ logger = logging.getLogger(__name__)
 
 
 class TestPhase2Components:
-    """Unit tests for Phase 2 MCP components"""
+    """Unit tests for Phase 2 MCP components."""
 
-    def test_generator_tools_creation(self):
-        """Test generator tools creation and structure"""
+    def test_generator_tools_creation(self) -> None:
+        """Test generator tools creation and structure."""
         generator_tools = GeneratorConfigurationTools()
         tools = generator_tools.get_tools()
 
@@ -73,8 +73,8 @@ class TestPhase2Components:
             assert tool.inputSchema.get("type") == "object"
             assert "properties" in tool.inputSchema
 
-    def test_orchestrator_tools_creation(self):
-        """Test orchestrator tools creation and structure"""
+    def test_orchestrator_tools_creation(self) -> None:
+        """Test orchestrator tools creation and structure."""
         orchestrator_tools = OrchestratorManagementTools()
         tools = orchestrator_tools.get_tools()
 
@@ -104,8 +104,8 @@ class TestPhase2Components:
             assert tool.inputSchema.get("type") == "object"
             assert "properties" in tool.inputSchema
 
-    def test_tool_filter_functionality(self):
-        """Test ViolentUTF tool filter functionality"""
+    def test_tool_filter_functionality(self) -> None:
+        """Test ViolentUTF tool filter functionality."""
         tool_filter = ViolentUTFToolFilter()
 
         # Test included endpoints
@@ -126,8 +126,8 @@ class TestPhase2Components:
         for endpoint in excluded_endpoints:
             assert not tool_filter.should_include_endpoint(endpoint, "GET"), f"Should exclude {endpoint}"
 
-    def test_endpoint_introspector_initialization(self):
-        """Test endpoint introspector initialization"""
+    def test_endpoint_introspector_initialization(self) -> None:
+        """Test endpoint introspector initialization."""
         from fastapi import FastAPI
 
         app = FastAPI()
@@ -137,8 +137,8 @@ class TestPhase2Components:
         assert introspector.tool_filter is not None
         assert isinstance(introspector.tool_filter, ViolentUTFToolFilter)
 
-    def test_mcp_configuration(self):
-        """Test MCP configuration settings"""
+    def test_mcp_configuration(self) -> None:
+        """Test MCP configuration settings."""
         # Test configuration values
         assert mcp_settings.MCP_SERVER_NAME
         assert mcp_settings.MCP_SERVER_VERSION
@@ -149,8 +149,8 @@ class TestPhase2Components:
         assert mcp_settings.MCP_ENABLE_TOOLS is True
         assert mcp_settings.MCP_ENABLE_RESOURCES is True
 
-    def test_generator_tool_schemas(self):
-        """Test generator tool input schemas"""
+    def test_generator_tool_schemas(self) -> None:
+        """Test generator tool input schemas."""
         generator_tools = GeneratorConfigurationTools()
         tools = generator_tools.get_tools()
 
@@ -173,8 +173,8 @@ class TestPhase2Components:
         assert "model_name" in properties
         assert "parameters" in properties
 
-    def test_orchestrator_tool_schemas(self):
-        """Test orchestrator tool input schemas"""
+    def test_orchestrator_tool_schemas(self) -> None:
+        """Test orchestrator tool input schemas."""
         orchestrator_tools = OrchestratorManagementTools()
         tools = orchestrator_tools.get_tools()
 
@@ -199,8 +199,8 @@ class TestPhase2Components:
         assert "dataset_name" in properties
 
     @pytest.mark.asyncio
-    async def test_generator_tool_execution_mock(self):
-        """Test generator tool execution with mocked HTTP calls"""
+    async def test_generator_tool_execution_mock(self) -> None:
+        """Test generator tool execution with mocked HTTP calls."""
         generator_tools = GeneratorConfigurationTools()
 
         # Mock HTTP client
@@ -225,8 +225,8 @@ class TestPhase2Components:
             assert len(result["generators"]) > 0
 
     @pytest.mark.asyncio
-    async def test_orchestrator_tool_execution_mock(self):
-        """Test orchestrator tool execution with mocked HTTP calls"""
+    async def test_orchestrator_tool_execution_mock(self) -> None:
+        """Test orchestrator tool execution with mocked HTTP calls."""
         orchestrator_tools = OrchestratorManagementTools()
 
         # Mock HTTP client
@@ -256,8 +256,8 @@ class TestPhase2Components:
             assert len(result["orchestrators"]) > 0
 
     @pytest.mark.asyncio
-    async def test_error_handling(self):
-        """Test error handling in tool execution"""
+    async def test_error_handling(self) -> None:
+        """Test error handling in tool execution."""
         generator_tools = GeneratorConfigurationTools()
 
         # Test unknown tool
@@ -277,8 +277,8 @@ class TestPhase2Components:
             assert "error" in result
             assert result["error"] == "execution_failed"
 
-    def test_tool_naming_conventions(self):
-        """Test that tool names follow proper conventions"""
+    def test_tool_naming_conventions(self) -> None:
+        """Test that tool names follow proper conventions."""
         generator_tools = GeneratorConfigurationTools()
         orchestrator_tools = OrchestratorManagementTools()
 
@@ -295,8 +295,8 @@ class TestPhase2Components:
             if len(tool.name.split("_")) > 1:
                 assert "_" in tool.name, f"Multi-word tool name should use underscores: {tool.name}"
 
-    def test_tool_description_quality(self):
-        """Test that tool descriptions are meaningful"""
+    def test_tool_description_quality(self) -> None:
+        """Test that tool descriptions are meaningful."""
         generator_tools = GeneratorConfigurationTools()
         orchestrator_tools = OrchestratorManagementTools()
 
@@ -312,8 +312,8 @@ class TestPhase2Components:
             # Should start with capital letter
             assert tool.description[0].isupper(), f"Tool description should start with capital: {tool.name}"
 
-    def test_schema_validation_completeness(self):
-        """Test that schemas have proper validation rules"""
+    def test_schema_validation_completeness(self) -> None:
+        """Test that schemas have proper validation rules."""
         generator_tools = GeneratorConfigurationTools()
         tools = generator_tools.get_tools()
 

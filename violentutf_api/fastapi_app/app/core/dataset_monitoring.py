@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Monitoring and metrics integration for dataset import operations
+Monitoring and metrics integration for dataset import operations.
 
 This module provides comprehensive monitoring capabilities including
 performance metrics, health checks, and integration with monitoring systems.
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SystemMetrics:
-    """System-level metrics for monitoring"""
+    """System-level metrics for monitoring."""
 
     # CPU metrics
     cpu_percent: float = 0.0
@@ -57,7 +57,7 @@ class SystemMetrics:
 
     @classmethod
     def collect_current(cls) -> "SystemMetrics":
-        """Collect current system metrics"""
+        """Collect current system metrics."""
         try:
             # CPU metrics
             cpu_percent = psutil.cpu_percent(interval=0.1)
@@ -125,9 +125,9 @@ class SystemMetrics:
 
 
 class PerformanceMonitor:
-    """Monitors performance of dataset operations"""
+    """Monitors performance of dataset operations."""
 
-    def __init__(self, config: DatasetImportConfig):
+    def __init__(self, config: DatasetImportConfig) -> None:
         self.config = config
         self.metrics_history: deque = deque(maxlen=1000)  # Store last 1000 metrics
         self.operation_timings: Dict[str, List[float]] = defaultdict(list)
@@ -141,7 +141,7 @@ class PerformanceMonitor:
             self._start_background_monitoring()
 
     def _start_background_monitoring(self) -> None:
-        """Start background system monitoring"""
+        """Start background system monitoring."""
 
         async def monitor_loop():
             while True:
@@ -169,7 +169,7 @@ class PerformanceMonitor:
             logger.debug("No event loop for background monitoring")
 
     async def _check_resource_alerts(self, metrics: SystemMetrics) -> None:
-        """Check for resource usage alerts"""
+        """Check for resource usage alerts."""
         alerts = []
 
         # Memory alerts
@@ -196,7 +196,7 @@ class PerformanceMonitor:
             logger.warning(f"Resource alert: {alert}")
 
     def _cleanup_old_data(self) -> None:
-        """Clean up old monitoring data"""
+        """Clean up old monitoring data."""
         # Note: cutoff_time would be used if we stored timestamps with timings
         # cutoff_time = datetime.utcnow() - timedelta(hours=24)
 
@@ -207,7 +207,7 @@ class PerformanceMonitor:
                 self.operation_timings[operation] = timings[-1000:]
 
     def start_operation(self, operation_id: str, operation_type: str) -> None:
-        """Start tracking an operation"""
+        """Start tracking an operation."""
         self.active_operations[operation_id] = datetime.utcnow()
 
         logger.debug(
@@ -217,7 +217,7 @@ class PerformanceMonitor:
     def end_operation(
         self, operation_id: str, operation_type: str, success: bool = True, metrics: Optional[ImportMetrics] = None
     ) -> float:
-        """End tracking an operation and return duration"""
+        """End tracking an operation and return duration."""
 
         start_time = self.active_operations.pop(operation_id, None)
         if not start_time:
@@ -257,7 +257,7 @@ class PerformanceMonitor:
         return duration
 
     def record_error(self, operation_type: str, error: Exception) -> None:
-        """Record an error occurrence"""
+        """Record an error occurrence."""
         self.error_counts[f"{operation_type}_error"] += 1
         self.error_counts[f"{type(error).__name__}"] += 1
 
@@ -269,7 +269,7 @@ class PerformanceMonitor:
         )
 
     def get_performance_summary(self, operation_type: Optional[str] = None) -> Dict[str, Any]:
-        """Get performance summary for operations"""
+        """Get performance summary for operations."""
 
         if operation_type:
             timings = self.operation_timings.get(operation_type, [])
@@ -303,7 +303,7 @@ class PerformanceMonitor:
         }
 
     def get_system_health(self) -> Dict[str, Any]:
-        """Get current system health status"""
+        """Get current system health status."""
 
         if not self.system_metrics_history:
             current_metrics = SystemMetrics.collect_current()
@@ -357,7 +357,7 @@ class PerformanceMonitor:
         }
 
     def get_detailed_metrics(self) -> Dict[str, Any]:
-        """Get detailed metrics for debugging and analysis"""
+        """Get detailed metrics for debugging and analysis."""
 
         return {
             "performance_summary": {
@@ -385,7 +385,7 @@ class PerformanceMonitor:
         }
 
     def export_metrics(self, format: str = "json") -> Union[str, Dict[str, Any]]:
-        """Export metrics in specified format"""
+        """Export metrics in specified format."""
 
         metrics_data = {
             "export_timestamp": datetime.utcnow().isoformat(),
@@ -403,7 +403,7 @@ class PerformanceMonitor:
             return metrics_data
 
     def reset_metrics(self) -> None:
-        """Reset all metrics (useful for testing)"""
+        """Reset all metrics (useful for testing)."""
         self.metrics_history.clear()
         self.operation_timings.clear()
         self.error_counts.clear()
@@ -413,7 +413,7 @@ class PerformanceMonitor:
         logger.info("All monitoring metrics have been reset")
 
     def __del__(self):
-        """Cleanup monitoring task"""
+        """Cleanup monitoring task."""
         if hasattr(self, "_monitoring_task") and self._monitoring_task:
             try:
                 self._monitoring_task.cancel()
@@ -426,7 +426,7 @@ _global_monitor: Optional[PerformanceMonitor] = None
 
 
 def get_global_monitor(config: Optional[DatasetImportConfig] = None) -> PerformanceMonitor:
-    """Get or create global performance monitor"""
+    """Get or create global performance monitor."""
     global _global_monitor
 
     if _global_monitor is None:
@@ -441,7 +441,7 @@ def get_global_monitor(config: Optional[DatasetImportConfig] = None) -> Performa
 
 
 def reset_global_monitor() -> None:
-    """Reset global performance monitor (useful for testing)"""
+    """Reset global performance monitor (useful for testing)."""
     global _global_monitor
     if _global_monitor:
         _global_monitor.reset_metrics()
@@ -450,7 +450,7 @@ def reset_global_monitor() -> None:
 
 # Convenience functions for common monitoring patterns
 def start_monitoring_operation(operation_id: str, operation_type: str) -> None:
-    """Start monitoring an operation"""
+    """Start monitoring an operation."""
     monitor = get_global_monitor()
     monitor.start_operation(operation_id, operation_type)
 
@@ -458,18 +458,18 @@ def start_monitoring_operation(operation_id: str, operation_type: str) -> None:
 def end_monitoring_operation(
     operation_id: str, operation_type: str, success: bool = True, metrics: Optional[ImportMetrics] = None
 ) -> float:
-    """End monitoring an operation"""
+    """End monitoring an operation."""
     monitor = get_global_monitor()
     return monitor.end_operation(operation_id, operation_type, success, metrics)
 
 
 def record_monitoring_error(operation_type: str, error: Exception) -> None:
-    """Record an error in monitoring"""
+    """Record an error in monitoring."""
     monitor = get_global_monitor()
     monitor.record_error(operation_type, error)
 
 
 def get_system_health_status() -> Dict[str, Any]:
-    """Get current system health status"""
+    """Get current system health status."""
     monitor = get_global_monitor()
     return monitor.get_system_health()

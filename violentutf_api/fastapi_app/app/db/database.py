@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Database configuration and session management
+Database configuration and session management.
 """
 
 import os
@@ -29,7 +29,7 @@ Base = declarative_base()
 
 async def init_db():
     """
-    Initialize database tables
+    Initialize database tables.
     """
     # Ensure the database directory exists
     if "sqlite" in DATABASE_URL:
@@ -44,7 +44,7 @@ async def init_db():
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """
-    Dependency to get database session
+    Dependency to get database session.
     """
     async with async_session() as session:
         try:
@@ -60,7 +60,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 @asynccontextmanager
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
-    Context manager for database session
+    Context manager for database session.
     """
     async with async_session() as session:
         try:

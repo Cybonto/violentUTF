@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""MCP Orchestrator Management Tools"""
+"""MCP Orchestrator Management Tools."""
 
 import logging
 from typing import Any, Dict, List, Optional
@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class OrchestratorManagementTools:
-    """MCP tools for orchestrator management and execution"""
+    """MCP tools for orchestrator management and execution."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for direct API access from within container
         if self.base_url and "localhost:9080" in self.base_url:
@@ -27,7 +27,7 @@ class OrchestratorManagementTools:
         self.auth_handler = MCPAuthHandler()
 
     def get_tools(self) -> List[Tool]:
-        """Get all orchestrator management tools"""
+        """Get all orchestrator management tools."""
         return [
             self._create_list_orchestrators_tool(),
             self._create_get_orchestrator_tool(),
@@ -46,7 +46,7 @@ class OrchestratorManagementTools:
         ]
 
     def _create_list_orchestrators_tool(self) -> Tool:
-        """Create tool for listing orchestrators"""
+        """Create tool for listing orchestrators."""
         return Tool(
             name="list_orchestrators",
             description="List all orchestrator executions with filtering options",
@@ -86,7 +86,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_get_orchestrator_tool(self) -> Tool:
-        """Create tool for getting orchestrator details"""
+        """Create tool for getting orchestrator details."""
         return Tool(
             name="get_orchestrator",
             description="Get detailed information about a specific orchestrator execution",
@@ -115,7 +115,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_create_orchestrator_tool(self) -> Tool:
-        """Create tool for creating new orchestrators"""
+        """Create tool for creating new orchestrators."""
         return Tool(
             name="create_orchestrator",
             description="Create a new orchestrator execution with specified configuration",
@@ -172,7 +172,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_start_orchestrator_tool(self) -> Tool:
-        """Create tool for starting orchestrators"""
+        """Create tool for starting orchestrators."""
         return Tool(
             name="start_orchestrator",
             description="Start execution of a configured orchestrator",
@@ -200,7 +200,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_stop_orchestrator_tool(self) -> Tool:
-        """Create tool for stopping orchestrators"""
+        """Create tool for stopping orchestrators."""
         return Tool(
             name="stop_orchestrator",
             description="Stop a running orchestrator execution",
@@ -227,7 +227,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_pause_orchestrator_tool(self) -> Tool:
-        """Create tool for pausing orchestrators"""
+        """Create tool for pausing orchestrators."""
         return Tool(
             name="pause_orchestrator",
             description="Pause a running orchestrator execution",
@@ -245,7 +245,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_resume_orchestrator_tool(self) -> Tool:
-        """Create tool for resuming orchestrators"""
+        """Create tool for resuming orchestrators."""
         return Tool(
             name="resume_orchestrator",
             description="Resume a paused orchestrator execution",
@@ -268,7 +268,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_get_orchestrator_results_tool(self) -> Tool:
-        """Create tool for getting orchestrator results"""
+        """Create tool for getting orchestrator results."""
         return Tool(
             name="get_orchestrator_results",
             description="Get execution results from an orchestrator",
@@ -305,7 +305,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_get_orchestrator_logs_tool(self) -> Tool:
-        """Create tool for getting orchestrator logs"""
+        """Create tool for getting orchestrator logs."""
         return Tool(
             name="get_orchestrator_logs",
             description="Get execution logs from an orchestrator",
@@ -337,7 +337,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_delete_orchestrator_tool(self) -> Tool:
-        """Create tool for deleting orchestrators"""
+        """Create tool for deleting orchestrators."""
         return Tool(
             name="delete_orchestrator",
             description="Delete an orchestrator and its results",
@@ -360,7 +360,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_clone_orchestrator_tool(self) -> Tool:
-        """Create tool for cloning orchestrators"""
+        """Create tool for cloning orchestrators."""
         return Tool(
             name="clone_orchestrator",
             description="Clone an existing orchestrator configuration",
@@ -384,7 +384,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_get_orchestrator_stats_tool(self) -> Tool:
-        """Create tool for getting orchestrator statistics"""
+        """Create tool for getting orchestrator statistics."""
         return Tool(
             name="get_orchestrator_stats",
             description="Get execution statistics and metrics for an orchestrator",
@@ -413,7 +413,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_export_orchestrator_results_tool(self) -> Tool:
-        """Create tool for exporting orchestrator results"""
+        """Create tool for exporting orchestrator results."""
         return Tool(
             name="export_orchestrator_results",
             description="Export orchestrator results in various formats",
@@ -444,7 +444,7 @@ class OrchestratorManagementTools:
         )
 
     def _create_validate_orchestrator_config_tool(self) -> Tool:
-        """Create tool for validating orchestrator configuration"""
+        """Create tool for validating orchestrator configuration."""
         return Tool(
             name="validate_orchestrator_config",
             description="Validate an orchestrator configuration without creating it",
@@ -490,7 +490,7 @@ class OrchestratorManagementTools:
     async def execute_tool(
         self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Execute an orchestrator management tool"""
+        """Execute an orchestrator management tool."""
         logger.info(f"Executing orchestrator tool: {tool_name}")
 
         try:
@@ -560,7 +560,7 @@ class OrchestratorManagementTools:
         return await self._api_request("POST", "/api/v1/orchestrators/validate", json=args)
 
     async def _api_request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
-        """Make authenticated API request"""
+        """Make authenticated API request."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Orchestrator"}
 
         # Add authentication headers if available

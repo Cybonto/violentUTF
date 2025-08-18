@@ -389,7 +389,7 @@ def discover_apisix_models(provider: str) -> List[str]:
 
 def map_uri_to_model(provider: str, uri_key: str) -> str:
     """
-    Map URI key back to actual model name based on setup_macos.sh configuration
+    Map URI key back to actual model name based on setup_macos.sh configuration.
     """
     # OpenAI URI mappings (reverse of setup_macos.sh)
     if provider == "openai":
@@ -434,7 +434,7 @@ def map_uri_to_model(provider: str, uri_key: str) -> str:
 
 def get_fallback_models(provider: str) -> List[str]:
     """
-    Fallback model lists if APISIX discovery fails
+    Fallback model lists if APISIX discovery fails.
     """
     fallback_mappings = {
         "openai": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-4o", "gpt-4o-mini"],
@@ -613,7 +613,7 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
 
 @router.get("/types", response_model=GeneratorTypesResponse, summary="Get available generator types")
 async def get_generator_types(current_user=Depends(get_current_user)):
-    """Get list of available generator types"""
+    """Get list of available generator types."""
     try:
         logger.info(f"User {current_user.username} requested generator types")
 
@@ -631,7 +631,7 @@ async def get_generator_types(current_user=Depends(get_current_user)):
     summary="Get parameter definitions for a generator type",
 )
 async def get_generator_type_params(generator_type: str, current_user=Depends(get_current_user)):
-    """Get parameter definitions for a specific generator type"""
+    """Get parameter definitions for a specific generator type."""
     try:
         logger.info(f"User {current_user.username} requested params for type: {generator_type}")
 
@@ -698,7 +698,7 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
 
 @router.get("", response_model=GeneratorsListResponse, summary="Get configured generators")
 async def get_generators(current_user=Depends(get_current_user)):
-    """Get list of configured generators"""
+    """Get list of configured generators."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} requested generators list")
@@ -744,7 +744,7 @@ async def get_generators(current_user=Depends(get_current_user)):
 
 @router.post("", response_model=GeneratorInfo, summary="Create a new generator")
 async def create_generator(request: GeneratorCreateRequest, current_user=Depends(get_current_user)):
-    """Create a new generator configuration"""
+    """Create a new generator configuration."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} creating generator: {request.name}")
@@ -790,7 +790,7 @@ async def create_generator(request: GeneratorCreateRequest, current_user=Depends
 
 @router.delete("/{generator_id}", response_model=GeneratorDeleteResponse, summary="Delete a generator")
 async def delete_generator(generator_id: str, current_user=Depends(get_current_user)):
-    """Delete a generator configuration"""
+    """Delete a generator configuration."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} deleting generator: {generator_id}")
@@ -826,7 +826,7 @@ async def delete_generator(generator_id: str, current_user=Depends(get_current_u
 async def get_apisix_models(
     provider: str = Query(..., description="AI provider name"), current_user=Depends(get_current_user)
 ):
-    """Get available models for a specific APISIX AI Gateway provider"""
+    """Get available models for a specific APISIX AI Gateway provider."""
     try:
         logger.info(f"User {current_user.username} requested models for provider: {provider}")
 
@@ -851,7 +851,7 @@ async def get_apisix_models(
 
 @router.put("/{generator_id}", response_model=GeneratorInfo, summary="Update a generator")
 async def update_generator(generator_id: str, request: GeneratorUpdateRequest, current_user=Depends(get_current_user)):
-    """Update an existing generator configuration"""
+    """Update an existing generator configuration."""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} updating generator: {generator_id}")
@@ -912,7 +912,7 @@ async def update_generator(generator_id: str, request: GeneratorUpdateRequest, c
 
 def get_openapi_providers() -> List[str]:
     """
-    Discover available OpenAPI providers from APISIX routes
+    Discover available OpenAPI providers from APISIX routes.
     """
     try:
         apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
@@ -953,7 +953,7 @@ def get_openapi_providers() -> List[str]:
 
 @router.get("/apisix/openapi-providers", response_model=List[str], summary="Get list of available OpenAPI providers")
 async def get_openapi_providers_endpoint(current_user=Depends(get_current_user)) -> List[str]:
-    """Get list of available OpenAPI providers"""
+    """Get list of available OpenAPI providers."""
     try:
         providers = get_openapi_providers()
         return providers

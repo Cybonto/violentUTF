@@ -27,21 +27,21 @@ APISIX_ADMIN_KEY = settings.APISIX_ADMIN_KEY
 
 
 class PluginConfig(BaseModel):
-    """Model for plugin configuration"""
+    """Model for plugin configuration."""
 
     plugin_name: str
     config: Dict[str, Any]
 
 
 class RouteUpdate(BaseModel):
-    """Model for route update request"""
+    """Model for route update request."""
 
     route_id: str
     plugins: Dict[str, Dict[str, Any]]
 
 
 class AIPromptGuardConfig(BaseModel):
-    """Configuration for ai-prompt-guard plugin"""
+    """Configuration for ai-prompt-guard plugin."""
 
     deny_patterns: Optional[List[str]] = Field(default=[], description="Patterns to deny")
     allow_patterns: Optional[List[str]] = Field(default=[], description="Patterns to allow")
@@ -50,7 +50,7 @@ class AIPromptGuardConfig(BaseModel):
 
 
 class AIPromptDecoratorConfig(BaseModel):
-    """Configuration for ai-prompt-decorator plugin"""
+    """Configuration for ai-prompt-decorator plugin."""
 
     prefix: Optional[str] = Field(default="", description="Text to prepend to prompts")
     suffix: Optional[str] = Field(default="", description="Text to append to prompts")
@@ -59,12 +59,12 @@ class AIPromptDecoratorConfig(BaseModel):
 
 
 def get_apisix_admin_key():
-    """Get APISIX admin key from settings"""
+    """Get APISIX admin key from settings."""
     return APISIX_ADMIN_KEY if APISIX_ADMIN_KEY else None
 
 
 def check_admin_permission(user: User) -> bool:
-    """Check if user has admin permissions for APISIX management"""
+    """Check if user has admin permissions for APISIX management."""
     # Check for admin role or specific permission
     if hasattr(user, "roles"):
         return "admin" in user.roles or "apisix-admin" in user.roles

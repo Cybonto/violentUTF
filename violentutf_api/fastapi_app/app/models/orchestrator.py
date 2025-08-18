@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 
 class OrchestratorConfiguration(Base):
-    """Database model for orchestrator configurations"""
+    """Database model for orchestrator configurations."""
 
     __tablename__ = "orchestrator_configurations"
 
@@ -31,7 +31,7 @@ class OrchestratorConfiguration(Base):
 
 
 class OrchestratorExecution(Base):
-    """Database model for orchestrator executions"""
+    """Database model for orchestrator executions."""
 
     __tablename__ = "orchestrator_executions"
 

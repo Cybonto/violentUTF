@@ -20,14 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class PromptsManager:
-    """Manages MCP prompts for ViolentUTF"""
+    """Manages MCP prompts for ViolentUTF."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.registry = prompt_registry
         self._initialized = False
 
     async def initialize(self):
-        """Initialize prompts manager"""
+        """Initialize prompts manager."""
         if self._initialized:
             return
 
@@ -36,7 +36,7 @@ class PromptsManager:
         logger.info(f"Prompts manager initialized with {len(self.registry._prompts)} prompts")
 
     async def list_prompts(self) -> List[Dict[str, Any]]:
-        """List all available prompts"""
+        """List all available prompts."""
         if not self._initialized:
             await self.initialize()
 
@@ -44,7 +44,7 @@ class PromptsManager:
         return [prompt.dict() for prompt in prompts]
 
     async def get_prompt(self, name: str, args: Dict[str, Any] = None) -> str:
-        """Get and render a prompt by name"""
+        """Get and render a prompt by name."""
         if not self._initialized:
             await self.initialize()
 
@@ -55,7 +55,7 @@ class PromptsManager:
         return await prompt.render(args or {})
 
     def get_prompt_info(self, name: str) -> Dict[str, Any]:
-        """Get prompt definition and metadata"""
+        """Get prompt definition and metadata."""
         prompt = self.registry.get(name)
         if not prompt:
             return {"error": f"Prompt not found: {name}"}

@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Session management schemas
+Session management schemas.
 """
 
 from datetime import datetime
@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 
 class UpdateSessionRequest(BaseModel):
-    """Request to update session state"""
+    """Request to update session state."""
 
     ui_preferences: Optional[Dict[str, Any]] = None
     workflow_state: Optional[Dict[str, Any]] = None
@@ -21,7 +21,7 @@ class UpdateSessionRequest(BaseModel):
 
 
 class SessionStateResponse(BaseModel):
-    """Session state response"""
+    """Session state response."""
 
     session_id: str
     user_id: str
@@ -33,7 +33,7 @@ class SessionStateResponse(BaseModel):
 
 
 class SessionSchemaResponse(BaseModel):
-    """Session state schema definition"""
+    """Session state schema definition."""
 
     schema: Dict[str, Any]
     version: str

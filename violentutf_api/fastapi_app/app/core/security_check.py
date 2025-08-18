@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def validate_rate_limiting_config() -> Dict[str, Any]:
     """
-    Validate rate limiting configuration
+    Validate rate limiting configuration.
     """
     validation_results = {
         "rate_limiting_enabled": False,
@@ -81,9 +81,9 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
 
 def validate_security_headers() -> Dict[str, Any]:
     """
-    Validate security headers configuration
+    Validate security headers configuration.
     """
-    validation_results = {"cors_configured": False, "security_headers": False, "issues": [], "recommendations": []}
+    validation_results = {"cors_configured": False, "security_headers": False, "issues": [], "recommendations": []}.
 
     # Check CORS configuration
     if hasattr(settings, "BACKEND_CORS_ORIGINS"):
@@ -106,9 +106,9 @@ def validate_security_headers() -> Dict[str, Any]:
 
 def run_security_validation() -> Dict[str, Any]:
     """
-    Run comprehensive security validation
+    Run comprehensive security validation.
     """
-    logger.info("🔒 Running security configuration validation...")
+    logger.info("🔒 Running security configuration validation...").
 
     results = {
         "overall_status": "unknown",

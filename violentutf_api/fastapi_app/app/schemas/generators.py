@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field, validator
 
 
 class GeneratorType(BaseModel):
-    """Generator type information"""
+    """Generator type information."""
 
     name: str = Field(..., description="Generator type name")
     description: str = Field(..., description="Description of the generator type")
@@ -28,7 +28,7 @@ class GeneratorType(BaseModel):
 
 
 class GeneratorParameter(BaseModel):
-    """Parameter definition for a generator type"""
+    """Parameter definition for a generator type."""
 
     name: str = Field(..., description="Parameter name")
     type: str = Field(..., description="Parameter type (str, int, float, bool, dict, list, selectbox)")
@@ -41,7 +41,7 @@ class GeneratorParameter(BaseModel):
 
 
 class GeneratorCreateRequest(BaseModel):
-    """Request model for creating a new generator"""
+    """Request model for creating a new generator."""
 
     name: str = Field(..., min_length=3, max_length=100, description="Unique generator name")
     type: str = Field(..., min_length=3, max_length=50, description="Generator type")
@@ -49,7 +49,7 @@ class GeneratorCreateRequest(BaseModel):
 
     @validator("name")
     def validate_name_field(cls, v):
-        """Validate generator name"""
+        """Validate generator name."""
         v = sanitize_string(v)
         if not ValidationPatterns.GENERATOR_NAME.match(v):
             raise ValueError("Name must contain only alphanumeric characters, dots, underscores, and hyphens")
@@ -57,7 +57,7 @@ class GeneratorCreateRequest(BaseModel):
 
     @validator("type")
     def validate_type_field(cls, v):
-        """Validate generator type"""
+        """Validate generator type."""
         v = sanitize_string(v)
         if not ValidationPatterns.GENERATOR_TYPE.match(v):
             raise ValueError("Type must contain only alphanumeric characters, spaces, underscores, and hyphens")
@@ -65,19 +65,19 @@ class GeneratorCreateRequest(BaseModel):
 
     @validator("parameters")
     def validate_parameters_field(cls, v):
-        """Validate generator parameters"""
+        """Validate generator parameters."""
         return validate_generator_parameters(v)
 
 
 class GeneratorUpdateRequest(BaseModel):
-    """Request model for updating a generator"""
+    """Request model for updating a generator."""
 
     name: Optional[str] = Field(default=None, description="New generator name")
     parameters: Optional[Dict[str, Any]] = Field(default=None, description="Updated parameters")
 
     @validator("name")
     def validate_name_field(cls, v):
-        """Validate generator name if provided"""
+        """Validate generator name if provided."""
         if v is not None:
             v = sanitize_string(v)
             if not ValidationPatterns.GENERATOR_NAME.match(v):
@@ -86,7 +86,7 @@ class GeneratorUpdateRequest(BaseModel):
 
 
 class GeneratorInfo(BaseModel):
-    """Generator information response"""
+    """Generator information response."""
 
     id: str = Field(..., description="Generator unique identifier")
     name: str = Field(..., description="Generator name")
@@ -100,28 +100,28 @@ class GeneratorInfo(BaseModel):
 
 
 class GeneratorTypesResponse(BaseModel):
-    """Response model for generator types list"""
+    """Response model for generator types list."""
 
     generator_types: List[str] = Field(..., description="List of available generator types")
     total: int = Field(..., description="Total number of generator types")
 
 
 class GeneratorParametersResponse(BaseModel):
-    """Response model for generator type parameters"""
+    """Response model for generator type parameters."""
 
     generator_type: str = Field(..., description="Generator type name")
     parameters: List[GeneratorParameter] = Field(..., description="Parameter definitions")
 
 
 class GeneratorsListResponse(BaseModel):
-    """Response model for generators list"""
+    """Response model for generators list."""
 
     generators: List[GeneratorInfo] = Field(..., description="List of configured generators")
     total: int = Field(..., description="Total number of generators")
 
 
 class APIXModelsResponse(BaseModel):
-    """Response model for APISIX AI Gateway models"""
+    """Response model for APISIX AI Gateway models."""
 
     provider: str = Field(..., description="AI provider name")
     models: List[str] = Field(..., description="Available models for the provider")
@@ -129,7 +129,7 @@ class APIXModelsResponse(BaseModel):
 
 
 class GeneratorDeleteResponse(BaseModel):
-    """Response model for generator deletion"""
+    """Response model for generator deletion."""
 
     success: bool = Field(..., description="Whether the deletion was successful")
     message: str = Field(..., description="Deletion result message")
@@ -138,7 +138,7 @@ class GeneratorDeleteResponse(BaseModel):
 
 # Error response models
 class GeneratorError(BaseModel):
-    """Error response for generator operations"""
+    """Error response for generator operations."""
 
     error: str = Field(..., description="Error message")
     details: Optional[str] = Field(default=None, description="Additional error details")
@@ -147,7 +147,7 @@ class GeneratorError(BaseModel):
 
 
 class ValidationError(BaseModel):
-    """Validation error response"""
+    """Validation error response."""
 
     error: str = Field(..., description="Validation error message")
     field: str = Field(..., description="Field that failed validation")

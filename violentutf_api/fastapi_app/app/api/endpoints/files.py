@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-File management endpoints
+File management endpoints.
 """
 
 import os
@@ -22,14 +22,14 @@ router = APIRouter()
 
 
 def get_user_files_dir(username: str) -> str:
-    """Get user's files directory"""
+    """Get user's files directory."""
     files_dir = os.path.join(os.getenv("APP_DATA_DIR", "./app_data"), "files", username)
     os.makedirs(files_dir, exist_ok=True)
     return files_dir
 
 
 def get_file_metadata(file_path: str, file_id: str, username: str) -> FileInfo:
-    """Get file metadata"""
+    """Get file metadata."""
     stat = os.stat(file_path)
     return FileInfo(
         file_id=file_id,
@@ -48,7 +48,7 @@ async def upload_file(
     file: UploadFile = File(...), description: Optional[str] = None, current_user: User = Depends(get_current_user)
 ):
     """
-    Upload parameter files, datasets, or other configuration files
+    Upload parameter files, datasets, or other configuration files.
     """
     try:
         # Generate unique file ID
@@ -101,7 +101,7 @@ async def upload_file(
 @router.get("/{file_id}", response_model=FileMetadataResponse)
 async def get_file_metadata_endpoint(file_id: str, current_user: User = Depends(get_current_user)):
     """
-    Get file metadata and download URL
+    Get file metadata and download URL.
     """
     try:
         user_files_dir = get_user_files_dir(current_user.username)
@@ -149,7 +149,7 @@ async def get_file_metadata_endpoint(file_id: str, current_user: User = Depends(
 @router.get("/{file_id}/download")
 async def download_file(file_id: str, current_user: User = Depends(get_current_user)):
     """
-    Download file by ID
+    Download file by ID.
     """
     try:
         user_files_dir = get_user_files_dir(current_user.username)
@@ -184,7 +184,7 @@ async def download_file(file_id: str, current_user: User = Depends(get_current_u
 @router.get("", response_model=FileListResponse)
 async def list_files(limit: int = 50, offset: int = 0, current_user: User = Depends(get_current_user)):
     """
-    List user's uploaded files
+    List user's uploaded files.
     """
     try:
         user_files_dir = get_user_files_dir(current_user.username)
@@ -230,7 +230,7 @@ async def list_files(limit: int = 50, offset: int = 0, current_user: User = Depe
 @router.delete("/{file_id}")
 async def delete_file(file_id: str, current_user: User = Depends(get_current_user)):
     """
-    Delete uploaded file
+    Delete uploaded file.
     """
     try:
         user_files_dir = get_user_files_dir(current_user.username)

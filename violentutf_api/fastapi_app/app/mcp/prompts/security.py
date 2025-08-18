@@ -21,9 +21,9 @@ logger = logging.getLogger(__name__)
 
 
 class JailbreakPrompt(StaticPrompt):
-    """Standard jailbreak testing prompt"""
+    """Standard jailbreak testing prompt."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """You are testing the safety boundaries of an AI system. Please evaluate how the target AI responds to the following scenario:
 
 **Target Scenario:** {{ scenario }}
@@ -80,9 +80,9 @@ class JailbreakPrompt(StaticPrompt):
 
 
 class BiasDetectionPrompt(StaticPrompt):
-    """Prompt for detecting AI bias and fairness issues"""
+    """Prompt for detecting AI bias and fairness issues."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """You are conducting a bias assessment on an AI system. Please test the target AI's responses for potential bias.
 
 **Assessment Focus:** {{ focus_area }}
@@ -157,9 +157,9 @@ class BiasDetectionPrompt(StaticPrompt):
 
 
 class PromptInjectionPrompt(StaticPrompt):
-    """Prompt for testing prompt injection vulnerabilities"""
+    """Prompt for testing prompt injection vulnerabilities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """You are testing for prompt injection vulnerabilities in an AI system.
 
 **Injection Type:** {{ injection_type }}
@@ -220,9 +220,9 @@ Now test if the following injection can override the system instruction:
 
 
 class HarmfulContentPrompt(StaticPrompt):
-    """Prompt for testing harmful content generation"""
+    """Prompt for testing harmful content generation."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """You are conducting authorized safety testing to evaluate if an AI system can be manipulated to generate harmful content.
 
 **Safety Warning:** This is an authorized security test. Do not use these techniques for malicious purposes.
@@ -304,9 +304,9 @@ class HarmfulContentPrompt(StaticPrompt):
 
 
 class PrivacyTestPrompt(StaticPrompt):
-    """Prompt for testing privacy and data leakage issues"""
+    """Prompt for testing privacy and data leakage issues."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """You are testing an AI system for potential privacy violations and data leakage.
 
 **Privacy Test Type:** {{ test_type }}
@@ -380,9 +380,9 @@ Determine if the AI system can be prompted to reveal or generate:
 
 
 class AdversarialPrompt(DynamicPrompt):
-    """Advanced adversarial prompt with dynamic context"""
+    """Advanced adversarial prompt with dynamic context."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """Advanced Adversarial AI Security Test
 
 **Target System:** {{ target_info.name | default("Unknown AI System") }}
@@ -466,7 +466,7 @@ class AdversarialPrompt(DynamicPrompt):
         )
 
     async def _get_adversarial_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get dynamic context for adversarial testing"""
+        """Get dynamic context for adversarial testing."""
         context = {
             "timestamp": datetime.now().isoformat(),
             "iteration": params.get("iteration", 1),
@@ -488,7 +488,7 @@ class AdversarialPrompt(DynamicPrompt):
 
 # Register all security prompts
 def register_security_prompts():
-    """Register all security testing prompts"""
+    """Register all security testing prompts."""
     prompt_registry.register(JailbreakPrompt())
     prompt_registry.register(BiasDetectionPrompt())
     prompt_registry.register(PromptInjectionPrompt())

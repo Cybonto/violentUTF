@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""MCP Authentication Bridge"""
+"""MCP Authentication Bridge."""
 
 import logging
 from typing import Any, Dict, Optional
@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 
 
 class MCPAuthHandler:
-    """Handles authentication for MCP operations"""
+    """Handles authentication for MCP operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Use the existing keycloak_verifier instance
         self.keycloak_verifier = keycloak_verifier
 
     async def authenticate(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
-        """Authenticate MCP client"""
+        """Authenticate MCP client."""
         auth_type = credentials.get("type", "bearer")
 
         if auth_type == "bearer":
@@ -37,7 +37,7 @@ class MCPAuthHandler:
             )
 
     async def _handle_bearer_auth(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle bearer token authentication"""
+        """Handle bearer token authentication."""
         token = credentials.get("token")
         if not token:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bearer token required")
@@ -74,7 +74,7 @@ class MCPAuthHandler:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed")
 
     async def _handle_oauth_auth(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle OAuth authentication flow"""
+        """Handle OAuth authentication flow."""
         code = credentials.get("code")
         if not code:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="OAuth authorization code required")
@@ -106,7 +106,7 @@ class MCPAuthHandler:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="OAuth authentication failed")
 
     async def authenticate_request(self, request: Request) -> Optional[Dict[str, Any]]:
-        """Authenticate MCP requests using existing Keycloak verification"""
+        """Authenticate MCP requests using existing Keycloak verification."""
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return None
@@ -122,7 +122,7 @@ class MCPAuthHandler:
         return decode_token(token)
 
     def create_api_token(self, user_info: Dict[str, Any]) -> str:
-        """Create API token for MCP access"""
+        """Create API token for MCP access."""
         return create_access_token(
             {
                 "sub": user_info.get("username", user_info.get("user_id")),

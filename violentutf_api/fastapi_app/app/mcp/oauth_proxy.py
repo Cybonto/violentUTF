@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""OAuth Proxy for MCP Client Compatibility"""
+"""OAuth Proxy for MCP Client Compatibility."""
 
 import base64
 import hashlib
@@ -23,23 +23,23 @@ logger = logging.getLogger(__name__)
 
 
 class MCPOAuthProxy:
-    """Provides OAuth proxy endpoints for MCP client compatibility"""
+    """Provides OAuth proxy endpoints for MCP client compatibility."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.keycloak_verifier = keycloak_verifier
         self.router = APIRouter(prefix="/mcp/oauth")
         self.pkce_verifiers: Dict[str, str] = {}  # Store PKCE verifiers
         self._setup_routes()
 
     def _setup_routes(self):
-        """Configure OAuth proxy routes"""
+        """Configure OAuth proxy routes."""
         self.router.get("/.well-known/oauth-authorization-server")(self.get_oauth_metadata)
         self.router.get("/authorize")(self.proxy_authorize)
         self.router.post("/token")(self.proxy_token_exchange)
         self.router.get("/callback")(self.handle_callback)
 
     async def get_oauth_metadata(self) -> JSONResponse:
-        """Provide OAuth metadata for MCP clients"""
+        """Provide OAuth metadata for MCP clients."""
         base_url = settings.EXTERNAL_URL or "http://localhost:9080"
 
         metadata = {
@@ -68,7 +68,7 @@ class MCPOAuthProxy:
         code_challenge: Optional[str] = Query(None),
         code_challenge_method: Optional[str] = Query(None),
     ) -> RedirectResponse:
-        """Proxy authorization request to Keycloak"""
+        """Proxy authorization request to Keycloak."""
 
         # Build Keycloak authorization URL
         keycloak_auth_url = f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}/protocol/openid-connect/auth"
@@ -112,7 +112,7 @@ class MCPOAuthProxy:
         error: Optional[str] = Query(None),
         error_description: Optional[str] = Query(None),
     ) -> JSONResponse:
-        """Handle OAuth callback from Keycloak"""
+        """Handle OAuth callback from Keycloak."""
 
         if error:
             return JSONResponse(
@@ -136,7 +136,7 @@ class MCPOAuthProxy:
         )
 
     async def proxy_token_exchange(self, request: Request) -> JSONResponse:
-        """Exchange authorization code for tokens"""
+        """Exchange authorization code for tokens."""
 
         # Parse form data
         form_data = await request.form()
@@ -156,7 +156,7 @@ class MCPOAuthProxy:
             )
 
     async def _handle_authorization_code_exchange(self, form_data) -> JSONResponse:
-        """Handle authorization code exchange"""
+        """Handle authorization code exchange."""
 
         code = form_data.get("code")
         redirect_uri = form_data.get("redirect_uri")
@@ -229,7 +229,7 @@ class MCPOAuthProxy:
             )
 
     async def _handle_refresh_token_exchange(self, form_data) -> JSONResponse:
-        """Handle refresh token exchange"""
+        """Handle refresh token exchange."""
 
         refresh_token = form_data.get("refresh_token")
 

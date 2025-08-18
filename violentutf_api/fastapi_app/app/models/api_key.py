@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-API Key database model
+API Key database model.
 """
 
 from datetime import datetime
@@ -14,7 +14,7 @@ from sqlalchemy.sql import func
 
 
 class APIKey(Base):
-    """API Key model for database storage"""
+    """API Key model for database storage."""
 
     __tablename__ = "api_keys"
 
@@ -29,17 +29,17 @@ class APIKey(Base):
     is_active = Column(Boolean, default=True)
 
     async def update_last_used(self):
-        """Update last used timestamp"""
+        """Update last used timestamp."""
         self.last_used_at = datetime.utcnow()
 
     def is_expired(self) -> bool:
-        """Check if key is expired"""
+        """Check if key is expired."""
         if not self.expires_at:
             return False
         return datetime.utcnow() > self.expires_at
 
     def to_dict(self) -> dict:
-        """Convert to dictionary"""
+        """Convert to dictionary."""
         return {
             "id": self.id,
             "user_id": self.user_id,

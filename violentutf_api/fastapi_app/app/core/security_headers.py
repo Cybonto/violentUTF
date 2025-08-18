@@ -21,14 +21,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     Protects against XSS, clickjacking, MIME sniffing, and other attacks
     """
 
-    def __init__(self, app, environment: str = "production"):
+    def __init__(self, app, environment: str = "production") -> None:
         super().__init__(app)
         self.environment = environment.lower()
         self.headers = self._get_security_headers()
 
     def _get_security_headers(self) -> Dict[str, str]:
         """
-        Generate security headers based on environment
+        Generate security headers based on environment.
         """
         # Base security headers for all environments
         headers = {
@@ -110,9 +110,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
-        Add security headers to response
+        Add security headers to response.
         """
-        response = await call_next(request)
+        response = await call_next(request).
 
         # Add all security headers
         for header_name, header_value in self.headers.items():
@@ -127,7 +127,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 def configure_cors_settings(environment: str = "production") -> Dict:
     """
-    Configure CORS settings based on environment
+    Configure CORS settings based on environment.
 
     Args:
         environment: Environment name (production, development, testing)
@@ -186,7 +186,7 @@ class APISecurityHeadersMiddleware(BaseHTTPMiddleware):
     Adds headers specific to API security concerns
     """
 
-    def __init__(self, app, api_version: str = "1.0"):
+    def __init__(self, app, api_version: str = "1.0") -> None:
         super().__init__(app)
         self.api_version = api_version
 
@@ -212,7 +212,7 @@ class APISecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 def setup_security_headers(app, environment: str = "production", api_version: str = "1.0"):
     """
-    Setup all security headers middleware for the FastAPI application
+    Setup all security headers middleware for the FastAPI application.
 
     Args:
         app: FastAPI application instance
@@ -291,7 +291,7 @@ SECURITY_HEADER_TEMPLATES = {
 
 def apply_response_headers(response: Response, template_name: str = "json_api"):
     """
-    Apply response-specific headers from templates
+    Apply response-specific headers from templates.
 
     Args:
         response: FastAPI Response object

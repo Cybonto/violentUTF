@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Red-teaming endpoints for PyRIT and Garak integration
+Red-teaming endpoints for PyRIT and Garak integration.
 """
 
 import logging
@@ -59,7 +59,7 @@ class GarakScanResponse(BaseModel):
 
 @router.get("/status", response_model=RedTeamStatusResponse, summary="Get red-teaming tools status")
 async def get_redteam_status(current_user=Depends(get_current_user)):
-    """Get status of PyRIT and Garak availability"""
+    """Get status of PyRIT and Garak availability."""
     try:
         import sys
 
@@ -91,7 +91,7 @@ async def get_redteam_status(current_user=Depends(get_current_user)):
 
 @router.post("/pyrit/target", summary="Create PyRIT target")
 async def create_pyrit_target(request: PyRITTargetRequest, current_user=Depends(get_current_user)):
-    """Create a PyRIT target for red-teaming"""
+    """Create a PyRIT target for red-teaming."""
     try:
         if not pyrit_service.is_available():
             raise HTTPException(status_code=503, detail="PyRIT is not available")
@@ -129,7 +129,7 @@ async def create_pyrit_target(request: PyRITTargetRequest, current_user=Depends(
 
 @router.post("/pyrit/orchestrate", summary="Run PyRIT orchestration")
 async def run_pyrit_orchestration(request: PyRITOrchestrationRequest, current_user=Depends(get_current_user)):
-    """Run PyRIT red-teaming orchestration"""
+    """Run PyRIT red-teaming orchestration."""
     try:
         if not pyrit_service.is_available():
             raise HTTPException(status_code=503, detail="PyRIT is not available")
@@ -166,7 +166,7 @@ async def run_pyrit_orchestration(request: PyRITOrchestrationRequest, current_us
 
 @router.get("/garak/probes", response_model=GarakProbesResponse, summary="List Garak vulnerability probes")
 async def list_garak_probes(current_user=Depends(get_current_user)):
-    """List all available Garak vulnerability probes"""
+    """List all available Garak vulnerability probes."""
     try:
         if not garak_service.is_available():
             raise HTTPException(status_code=503, detail="Garak is not available")
@@ -184,7 +184,7 @@ async def list_garak_probes(current_user=Depends(get_current_user)):
 
 @router.get("/garak/generators", summary="List Garak generators")
 async def list_garak_generators(current_user=Depends(get_current_user)):
-    """List all available Garak generators"""
+    """List all available Garak generators."""
     try:
         if not garak_service.is_available():
             raise HTTPException(status_code=503, detail="Garak is not available")
@@ -202,7 +202,7 @@ async def list_garak_generators(current_user=Depends(get_current_user)):
 
 @router.post("/garak/scan", response_model=GarakScanResponse, summary="Run Garak vulnerability scan")
 async def run_garak_scan(request: GarakScanRequest, current_user=Depends(get_current_user)):
-    """Run Garak vulnerability scan against a target"""
+    """Run Garak vulnerability scan against a target."""
     try:
         if not garak_service.is_available():
             raise HTTPException(status_code=503, detail="Garak is not available")
@@ -226,7 +226,7 @@ async def run_garak_scan(request: GarakScanRequest, current_user=Depends(get_cur
 
 @router.get("/garak/scan/{scan_id}", summary="Get Garak scan results")
 async def get_garak_scan_results(scan_id: str, current_user=Depends(get_current_user)):
-    """Get results for a specific Garak scan"""
+    """Get results for a specific Garak scan."""
     try:
         if not garak_service.is_available():
             raise HTTPException(status_code=503, detail="Garak is not available")

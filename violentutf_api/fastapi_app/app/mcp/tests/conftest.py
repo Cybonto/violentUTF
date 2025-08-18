@@ -33,7 +33,7 @@ def event_loop():
 
 @pytest.fixture(autouse=True)
 def mock_environment():
-    """Mock environment variables for testing"""
+    """Mock environment variables for testing."""
     test_env = {
         # Basic MCP configuration
         "MCP_SERVER_NAME": "ViolentUTF-MCP-Test",
@@ -77,7 +77,7 @@ def mock_environment():
 
 @pytest.fixture
 def mock_settings():
-    """Mock settings with test-appropriate values"""
+    """Mock settings with test-appropriate values."""
     settings_mock = Mock()
     settings_mock.VIOLENTUTF_API_URL = "http://violentutf-api:8000"
     settings_mock.JWT_SECRET_KEY = "test_secret_key"
@@ -90,7 +90,7 @@ def mock_settings():
 
 @pytest.fixture
 def disable_external_requests():
-    """Disable all external HTTP requests during tests"""
+    """Disable all external HTTP requests during tests."""
 
     def mock_request(*args, **kwargs):
         raise Exception("External HTTP requests not allowed in tests. Use proper mocks.")
@@ -105,7 +105,7 @@ def disable_external_requests():
 
 @pytest.fixture
 def clean_registries():
-    """Clean tool and resource registries before each test"""
+    """Clean tool and resource registries before each test."""
     # Import after environment is set up
     try:
         from app.mcp.resources import resource_registry
@@ -127,7 +127,7 @@ def clean_registries():
 
 @pytest.fixture
 def mock_mcp_types():
-    """Ensure MCP types are available for testing"""
+    """Ensure MCP types are available for testing."""
     try:
         from mcp.types import Resource, ServerCapabilities, Tool
 
@@ -146,7 +146,7 @@ def mock_mcp_types():
 
 @pytest.fixture
 def sample_fastapi_routes():
-    """Sample FastAPI routes for testing introspection"""
+    """Sample FastAPI routes for testing introspection."""
     from unittest.mock import Mock
 
     from fastapi.routing import APIRoute
@@ -182,7 +182,7 @@ def sample_fastapi_routes():
 
 @pytest.fixture
 def mock_api_responses():
-    """Mock API responses for different endpoints"""
+    """Mock API responses for different endpoints."""
     return {
         "generators": {
             "generators": [
@@ -259,13 +259,13 @@ pytest_markers = [
 
 
 def pytest_configure(config):
-    """Configure pytest with custom markers"""
+    """Configure pytest with custom markers."""
     for marker in pytest_markers:
         config.addinivalue_line("markers", marker)
 
 
 def pytest_collection_modifyitems(config, items):
-    """Modify test collection to add markers automatically"""
+    """Modify test collection to add markers automatically."""
     for item in items:
         # Mark async tests
         if asyncio.iscoroutinefunction(item.function):

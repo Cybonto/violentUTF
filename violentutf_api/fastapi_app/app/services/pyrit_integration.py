@@ -16,14 +16,14 @@ logger = logging.getLogger(__name__)
 
 
 class PyRITService:
-    """Service class for PyRIT integration"""
+    """Service class for PyRIT integration."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.memory = None
         self._initialize_pyrit()
 
     def _initialize_pyrit(self):
-        """Initialize PyRIT memory and core components"""
+        """Initialize PyRIT memory and core components."""
         try:
             from pyrit.memory import DuckDBMemory
             from pyrit.models import PromptRequestPiece, PromptRequestResponse
@@ -41,7 +41,7 @@ class PyRITService:
             self.memory = None
 
     def is_available(self) -> bool:
-        """Check if PyRIT is properly initialized"""
+        """Check if PyRIT is properly initialized."""
         try:
             from pyrit.models import PromptRequestPiece
 
@@ -72,14 +72,14 @@ class PyRITService:
             raise
 
     async def _create_apisix_target(self, config: Dict[str, Any]):
-        """Create APISIX-based PyRIT target"""
+        """Create APISIX-based PyRIT target."""
         from pyrit.models import PromptRequestPiece, PromptRequestResponse
         from pyrit.prompt_target import PromptChatTarget
 
         class APISIXPromptTarget(PromptChatTarget):
-            """Custom PyRIT target for APISIX AI Gateway"""
+            """Custom PyRIT target for APISIX AI Gateway."""
 
-            def __init__(self, provider: str, model: str, base_url: str, **kwargs):
+            def __init__(self, provider: str, model: str, base_url: str, **kwargs) -> None:
                 super().__init__()
                 self.provider = provider
                 self.model = model
@@ -87,7 +87,7 @@ class PyRITService:
                 self.endpoint_url = self._get_endpoint_url(provider, model)
 
             def _get_endpoint_url(self, provider: str, model: str) -> str:
-                """Map provider/model to APISIX endpoint"""
+                """Map provider/model to APISIX endpoint."""
                 # Import the mapping function from generators.py
                 from app.api.endpoints.generators import get_apisix_endpoint_for_model
 
@@ -98,7 +98,7 @@ class PyRITService:
                     raise ValueError(f"No APISIX route for {provider}/{model}")
 
             async def send_prompt_async(self, prompt_request: PromptRequestPiece) -> PromptRequestResponse:
-                """Send prompt through APISIX gateway"""
+                """Send prompt through APISIX gateway."""
                 import json
 
                 import requests
@@ -161,7 +161,7 @@ class PyRITService:
         return APISIXPromptTarget(provider, model, base_url)
 
     async def _create_http_target(self, config: Dict[str, Any]):
-        """Create HTTP-based PyRIT target"""
+        """Create HTTP-based PyRIT target."""
         from pyrit.prompt_target import PromptTarget
 
         # This would implement a generic HTTP target
@@ -217,7 +217,7 @@ class PyRITService:
             raise
 
     def get_conversation_history(self, conversation_id: str) -> List[Dict[str, Any]]:
-        """Get conversation history from PyRIT memory"""
+        """Get conversation history from PyRIT memory."""
         if not self.is_available():
             return []
 

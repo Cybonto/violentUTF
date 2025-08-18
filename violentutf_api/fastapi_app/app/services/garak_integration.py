@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 
 
 class GarakService:
-    """Service class for Garak integration"""
+    """Service class for Garak integration."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.available = False
         self._initialize_garak()
 
     def _initialize_garak(self):
-        """Initialize Garak scanner and core components"""
+        """Initialize Garak scanner and core components."""
         try:
             import garak
             from garak import _plugins
@@ -42,11 +42,11 @@ class GarakService:
             self.available = False
 
     def is_available(self) -> bool:
-        """Check if Garak is properly initialized"""
+        """Check if Garak is properly initialized."""
         return self.available
 
     def list_available_probes(self) -> List[Dict[str, Any]]:
-        """List all available Garak vulnerability probes"""
+        """List all available Garak vulnerability probes."""
         if not self.is_available():
             return []
 
@@ -86,7 +86,7 @@ class GarakService:
             return []
 
     def list_available_generators(self) -> List[Dict[str, Any]]:
-        """List all available Garak generators"""
+        """List all available Garak generators."""
         if not self.is_available():
             return []
 
@@ -129,7 +129,7 @@ class GarakService:
         self, target_config: Dict[str, Any], probe_config: Dict[str, Any], scan_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Run Garak vulnerability scan against a target
+        Run Garak vulnerability scan against a target.
         """
         if not self.is_available():
             raise RuntimeError("Garak is not available")
@@ -194,7 +194,7 @@ class GarakService:
             }
 
     async def _create_garak_generator(self, target_config: Dict[str, Any]):
-        """Create Garak generator from target configuration"""
+        """Create Garak generator from target configuration."""
         try:
             import garak._plugins
 
@@ -232,13 +232,13 @@ class GarakService:
             raise
 
     def get_scan_results(self, scan_id: str) -> Optional[Dict[str, Any]]:
-        """Get results for a specific scan"""
+        """Get results for a specific scan."""
         # In a real implementation, this would query a database or file system
         # For now, return None
         return None
 
     def list_scan_history(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """List recent scan history"""
+        """List recent scan history."""
         # In a real implementation, this would query stored scan results
         # For now, return empty list
         return []

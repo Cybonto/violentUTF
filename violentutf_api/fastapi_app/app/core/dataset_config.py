@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Dataset Import Configuration System
+Dataset Import Configuration System.
 
 This module provides enhanced configuration management for dataset imports
 with adaptive settings, validation, and environment variable support.
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DatasetImportConfig:
-    """Enhanced configuration with adaptive and context-aware settings"""
+    """Enhanced configuration with adaptive and context-aware settings."""
 
     # Basic limits
     preview_limit: int = 10
@@ -60,7 +60,7 @@ class DatasetImportConfig:
 
     @classmethod
     def from_env(cls) -> "DatasetImportConfig":
-        """Load configuration from environment variables"""
+        """Load configuration from environment variables."""
 
         def get_bool_env(key: str, default: bool) -> bool:
             return os.getenv(key, str(default)).lower() == "true"
@@ -111,7 +111,7 @@ class DatasetImportConfig:
         return config
 
     def validate(self) -> None:
-        """Validate configuration values"""
+        """Validate configuration values."""
         errors = []
 
         # Validate numeric ranges
@@ -160,7 +160,7 @@ class DatasetImportConfig:
             raise ValueError(error_msg)
 
     def get_effective_chunk_size(self, dataset_size: int = 0, avg_prompt_size: int = 0) -> int:
-        """Calculate effective chunk size based on dataset characteristics"""
+        """Calculate effective chunk size based on dataset characteristics."""
         if not self.adaptive_chunk_size:
             return self.chunk_size
 
@@ -188,7 +188,7 @@ class DatasetImportConfig:
         return self.chunk_size
 
     def get_effective_retry_config(self, dataset_type: str = "") -> Dict[str, Any]:
-        """Get retry configuration based on dataset type"""
+        """Get retry configuration based on dataset type."""
         # Some datasets might need different retry strategies
         retry_config = {
             "max_retries": self.max_retries,
@@ -206,15 +206,15 @@ class DatasetImportConfig:
         return retry_config
 
     def should_use_pyrit_memory(self) -> bool:
-        """Determine if PyRIT memory should be used based on configuration"""
+        """Determine if PyRIT memory should be used based on configuration."""
         return self.use_pyrit_memory and self.storage_mode in ["dual", "pyrit_only"]
 
     def should_use_violentutf_db(self) -> bool:
-        """Determine if ViolentUTF database should be used based on configuration"""
+        """Determine if ViolentUTF database should be used based on configuration."""
         return self.storage_mode in ["dual", "violentutf_only"]
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert configuration to dictionary for serialization"""
+        """Convert configuration to dictionary for serialization."""
         return {
             "preview_limit": self.preview_limit,
             "chunk_size": self.chunk_size,
@@ -242,17 +242,17 @@ class DatasetImportConfig:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "DatasetImportConfig":
-        """Create configuration from dictionary"""
+        """Create configuration from dictionary."""
         return cls(**data)
 
     def __str__(self) -> str:
-        """String representation of configuration"""
+        """String representation of configuration."""
         return f"DatasetImportConfig(chunk_size={self.chunk_size}, max_import_size={self.max_import_size}, storage_mode={self.storage_mode})"
 
 
 # Configuration validation functions
 def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
-    """Validate dataset-specific configuration"""
+    """Validate dataset-specific configuration."""
     if not isinstance(config, dict):
         raise ValueError("Configuration must be a dictionary")
 
@@ -335,7 +335,7 @@ def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
 
 # Environment configuration helper
 def setup_dataset_environment() -> None:
-    """Setup environment variables for dataset import if not already set"""
+    """Setup environment variables for dataset import if not already set."""
     default_env_vars = {
         "DATASET_PREVIEW_LIMIT": "10",
         "DATASET_CHUNK_SIZE": "1000",
@@ -373,7 +373,7 @@ _global_config: Optional[DatasetImportConfig] = None
 
 
 def get_global_config() -> DatasetImportConfig:
-    """Get the global dataset import configuration"""
+    """Get the global dataset import configuration."""
     global _global_config
     if _global_config is None:
         _global_config = DatasetImportConfig.from_env()
@@ -381,6 +381,6 @@ def get_global_config() -> DatasetImportConfig:
 
 
 def reset_global_config() -> None:
-    """Reset the global configuration (useful for testing)"""
+    """Reset the global configuration (useful for testing)."""
     global _global_config
     _global_config = None

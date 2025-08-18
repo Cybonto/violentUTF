@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 async def execute_scorer(scorer_name: str, text: str) -> Dict[str, Any]:
-    """Execute scorer on text and return score result"""
+    """Execute scorer on text and return score result."""
     try:
         # Get scorer configuration
         scorer_config = await get_scorer_by_name(scorer_name)
@@ -41,7 +41,7 @@ async def execute_scorer(scorer_name: str, text: str) -> Dict[str, Any]:
 
 
 async def _execute_true_false_scorer(scorer_config: Dict, text: str) -> Dict[str, Any]:
-    """Execute true/false scorer - handles SelfAskTrueFalseScorer type"""
+    """Execute true/false scorer - handles SelfAskTrueFalseScorer type."""
     try:
         logger.info(f"🎯 Executing true/false scorer: {scorer_config.get('name', 'Unknown')}")
         logger.info(f"🎯 Scorer type: {scorer_config.get('type', 'Unknown')}")
@@ -139,7 +139,7 @@ async def _execute_true_false_scorer(scorer_config: Dict, text: str) -> Dict[str
 
 
 async def _execute_likert_scorer(scorer_config: Dict, text: str) -> Dict[str, Any]:
-    """Execute Likert scale scorer - handles SelfAskLikertScorer type"""
+    """Execute Likert scale scorer - handles SelfAskLikertScorer type."""
     try:
         logger.info(f"🎯 Executing Likert scorer: {scorer_config.get('name', 'Unknown')}")
         logger.info(f"🎯 Scorer type: {scorer_config.get('type', 'Unknown')}")
@@ -276,7 +276,7 @@ async def _execute_likert_scorer(scorer_config: Dict, text: str) -> Dict[str, An
 
 
 async def _execute_substring_scorer(scorer_config: Dict, text: str) -> Dict[str, Any]:
-    """Execute SubStringScorer - pattern matching scorer"""
+    """Execute SubStringScorer - pattern matching scorer."""
     try:
         logger.info(f"🎯 Executing SubStringScorer: {scorer_config.get('name', 'Unknown')}")
 
@@ -322,7 +322,7 @@ async def _execute_substring_scorer(scorer_config: Dict, text: str) -> Dict[str,
 
 
 async def _execute_category_scorer(scorer_config: Dict, text: str) -> Dict[str, Any]:
-    """Execute SelfAskCategoryScorer - category classification scorer"""
+    """Execute SelfAskCategoryScorer - category classification scorer."""
     try:
         logger.info(f"🎯 Executing SelfAskCategoryScorer: {scorer_config.get('name', 'Unknown')}")
 
@@ -410,7 +410,7 @@ async def _execute_category_scorer(scorer_config: Dict, text: str) -> Dict[str, 
 
 
 async def _execute_threshold_scorer(scorer_config: Dict, text: str) -> Dict[str, Any]:
-    """Execute FloatScaleThresholdScorer - converts float scores to boolean based on threshold"""
+    """Execute FloatScaleThresholdScorer - converts float scores to boolean based on threshold."""
     try:
         logger.info(f"🎯 Executing FloatScaleThresholdScorer: {scorer_config.get('name', 'Unknown')}")
 
@@ -462,7 +462,7 @@ async def _execute_threshold_scorer(scorer_config: Dict, text: str) -> Dict[str,
 
 
 async def _execute_inverter_scorer(scorer_config: Dict, text: str) -> Dict[str, Any]:
-    """Execute TrueFalseInverterScorer - inverts boolean results from base scorer"""
+    """Execute TrueFalseInverterScorer - inverts boolean results from base scorer."""
     try:
         logger.info(f"🎯 Executing TrueFalseInverterScorer: {scorer_config.get('name', 'Unknown')}")
 
@@ -517,7 +517,7 @@ async def _execute_inverter_scorer(scorer_config: Dict, text: str) -> Dict[str, 
 
 
 async def _execute_generic_scorer(scorer_config: Dict, text: str) -> Dict[str, Any]:
-    """Execute generic scorer"""
+    """Execute generic scorer."""
     # Default mock scorer
     return {
         "score_value": 0.5,  # Return as float, not string
@@ -530,7 +530,7 @@ async def _execute_generic_scorer(scorer_config: Dict, text: str) -> Dict[str, A
 
 
 async def get_scorer_by_name(scorer_name: str) -> Dict[str, Any]:
-    """Get scorer configuration by name from backend service"""
+    """Get scorer configuration by name from backend service."""
     try:
         # This function is deprecated - scorer configs should be passed directly
         # to avoid complex lookups. Return None to force using direct config passing.

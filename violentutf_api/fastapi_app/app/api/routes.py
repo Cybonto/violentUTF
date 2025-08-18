@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Main API router that includes all sub-routers
+Main API router that includes all sub-routers.
 """
 
 from app.api.endpoints import (

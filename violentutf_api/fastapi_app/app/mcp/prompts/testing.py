@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 class CapabilityTestPrompt(StaticPrompt):
-    """Test AI system capabilities and limitations"""
+    """Test AI system capabilities and limitations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """AI Capability Assessment Test
 
 **Assessment Type:** {{ assessment_type }}
@@ -114,9 +114,9 @@ Please evaluate the response based on the criteria above."""
 
 
 class ReasoningTestPrompt(StaticPrompt):
-    """Test logical reasoning and problem - solving abilities"""
+    """Test logical reasoning and problem - solving abilities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """Logical Reasoning Assessment
 
 **Reasoning Type:** {{ reasoning_type }}
@@ -207,9 +207,9 @@ Please solve the following problem step by step:
 
 
 class CreativityTestPrompt(StaticPrompt):
-    """Test creative and generative capabilities"""
+    """Test creative and generative capabilities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """Creativity Assessment Test
 
 **Creative Task Type:** {{ task_type }}
@@ -304,9 +304,9 @@ Please assess the response for creativity, originality, and adherence to require
 
 
 class KnowledgeTestPrompt(StaticPrompt):
-    """Test knowledge and factual accuracy"""
+    """Test knowledge and factual accuracy."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """Knowledge Assessment Test
 
 **Knowledge Domain:** {{ domain }}
@@ -405,9 +405,9 @@ Please answer the following question(s) about {{ domain }}. Provide accurate, de
 
 
 class ConversationTestPrompt(StaticPrompt):
-    """Test conversational abilities and communication skills"""
+    """Test conversational abilities and communication skills."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """Conversational Skills Assessment
 
 **Conversation Type:** {{ conversation_type }}
@@ -517,9 +517,9 @@ You are testing an AI's conversational abilities. The AI should demonstrate:
 
 
 class BenchmarkTestPrompt(DynamicPrompt):
-    """Advanced benchmark testing with dynamic comparison"""
+    """Advanced benchmark testing with dynamic comparison."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         template = """AI System Benchmark Assessment
 
 **Benchmark Suite:** {{ benchmark_name }}
@@ -607,7 +607,7 @@ class BenchmarkTestPrompt(DynamicPrompt):
         )
 
     async def _get_benchmark_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Get dynamic context for benchmark testing"""
+        """Get dynamic context for benchmark testing."""
         return {
             "timestamp": datetime.now().isoformat(),
             "benchmark_version": "2024.1",
@@ -618,7 +618,7 @@ class BenchmarkTestPrompt(DynamicPrompt):
 
 # Register all testing prompts
 def register_testing_prompts():
-    """Register all general testing prompts"""
+    """Register all general testing prompts."""
     prompt_registry.register(CapabilityTestPrompt())
     prompt_registry.register(ReasoningTestPrompt())
     prompt_registry.register(CreativityTestPrompt())

@@ -25,7 +25,7 @@ WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
 
 # Security constants for validation
 class SecurityLimits:
-    """Security limits for input validation"""
+    """Security limits for input validation."""
 
     MAX_STRING_LENGTH = 1000
     MAX_DESCRIPTION_LENGTH = 2000
@@ -47,7 +47,7 @@ class SecurityLimits:
 
 # Validation patterns
 class ValidationPatterns:
-    """Regex patterns for validation"""
+    """Regex patterns for validation."""
     # fmt: off
     # SECURITY CRITICAL: DO NOT MODIFY THESE PATTERNS
     # These regex patterns are security-critical and must not be modified by automated tools.
@@ -83,7 +83,7 @@ class ValidationPatterns:
 
 
 class SafeString(str):
-    """String type that ensures content is sanitized"""
+    """String type that ensures content is sanitized."""
 
     @classmethod
     def __get_validators__(cls):  # type: ignore[misc]
@@ -132,7 +132,7 @@ class SafeIdentifier(str):
 
 def sanitize_string(value: str) -> str:
     """
-    Sanitize string input to prevent injection attacks
+    Sanitize string input to prevent injection attacks.
     """
     if not isinstance(value, str):
         return str(value)
@@ -150,7 +150,7 @@ def sanitize_string(value: str) -> str:
 
 def validate_email(email: str) -> str:
     """
-    Validate email address format
+    Validate email address format.
     """
     if not email:
         raise ValueError("Email is required")
@@ -169,7 +169,7 @@ def validate_email(email: str) -> str:
 
 def validate_username(username: str) -> str:
     """
-    Validate username format and length
+    Validate username format and length.
     """
     if not username:
         raise ValueError("Username is required")
@@ -190,7 +190,7 @@ def validate_username(username: str) -> str:
 
 def validate_role_list(roles: List[str]) -> List[str]:
     """
-    Validate list of roles
+    Validate list of roles.
     """
     if not roles:
         return []
@@ -224,7 +224,7 @@ def validate_role_list(roles: List[str]) -> List[str]:
 
 def validate_jwt_token(token: str) -> Dict[str, Any]:
     """
-    Validate JWT token structure and basic format
+    Validate JWT token structure and basic format.
     """
     if not token:
         raise ValueError("Token is required")
@@ -278,7 +278,7 @@ def validate_jwt_token(token: str) -> Dict[str, Any]:
 
 def validate_url(url: str) -> str:
     """
-    Validate URL format and security
+    Validate URL format and security.
     """
     if not url:
         raise ValueError("URL is required")
@@ -347,7 +347,7 @@ def validate_url(url: str) -> str:
 
 def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLimits.MAX_NESTED_DEPTH) -> Any:
     """
-    Validate JSON data structure and prevent deeply nested objects
+    Validate JSON data structure and prevent deeply nested objects.
     """
     if isinstance(data, str):
         if len(data.encode("utf-8")) > SecurityLimits.MAX_JSON_SIZE:
@@ -390,7 +390,7 @@ def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLi
 
 def validate_file_upload(filename: str, content_type: str, file_size: int) -> str:
     """
-    Validate file upload parameters
+    Validate file upload parameters.
     """
     if not filename:
         raise ValueError("Filename is required")
@@ -433,14 +433,14 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
 
 
 class ValidationError(HTTPException):
-    """Custom validation error with proper HTTP status"""
+    """Custom validation error with proper HTTP status."""
 
-    def __init__(self, detail: str):
+    def __init__(self, detail: str) -> None:
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Validation error: {detail}")
 
 
 def create_validation_error(detail: str) -> ValidationError:
-    """Create a validation error with security logging"""
+    """Create a validation error with security logging."""
     logger.warning(f"Validation error: {detail}")
     return ValidationError(detail)
 
@@ -448,7 +448,7 @@ def create_validation_error(detail: str) -> ValidationError:
 # Enhanced validators for common patterns
 def validate_generator_parameters(parameters: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Validate generator parameters dictionary
+    Validate generator parameters dictionary.
     """
     if not isinstance(parameters, dict):
         raise ValueError("Parameters must be a dictionary")
