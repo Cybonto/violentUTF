@@ -70,3 +70,5 @@ zscaler.crt
 *.backup
 *.*.backup
 .env.backup
+agent_orchestrator/
+/.implement_checkpoints

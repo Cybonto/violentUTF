@@ -1,0 +1,6 @@
+[submodule "agent_orchestrator"]
+	path = agent_orchestrator
+	url = https://github.com/Cybonto/agent_orchestrator.git
+[submodule "violentutf_api/agent_orchestrator"]
+	path = violentutf_api/agent_orchestrator
+	url = https://github.com/Cybonto/agent_orchestrator.git
