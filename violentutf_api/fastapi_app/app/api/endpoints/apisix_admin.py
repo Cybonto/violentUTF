@@ -3,6 +3,7 @@
 
 """
 APISIX Admin API proxy endpoints with proper authentication and authorization.
+
 This module provides secure access to APISIX admin functions for authorized users.
 """
 
@@ -78,6 +79,7 @@ def check_admin_permission(user: User) -> bool:
 async def get_ai_routes(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
     """
     Get all AI-related routes from APISIX.
+
     Only returns routes with ai-proxy plugin or /ai/ prefix.
     """
     if not check_admin_permission(current_user):
@@ -165,6 +167,7 @@ async def update_route_plugins(
 ) -> Dict[str, Any]:
     """
     Update plugins configuration for a specific route.
+
     This endpoint allows updating the entire route configuration including plugins.
     """
     if not check_admin_permission(current_user):
@@ -219,6 +222,7 @@ async def configure_prompt_guard(
 ) -> Dict[str, Any]:
     """
     Configure ai-prompt-guard plugin for a specific route.
+
     This is a convenience endpoint for updating just the prompt guard plugin.
     """
     if not check_admin_permission(current_user):
@@ -248,6 +252,7 @@ async def configure_prompt_decorator(
 ) -> Dict[str, Any]:
     """
     Configure ai-prompt-decorator plugin for a specific route.
+
     This is a convenience endpoint for updating just the prompt decorator plugin.
     """
     if not check_admin_permission(current_user):

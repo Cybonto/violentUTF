@@ -3,6 +3,7 @@
 
 """
 Authentication and authorization schemas
+
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks
 """
 

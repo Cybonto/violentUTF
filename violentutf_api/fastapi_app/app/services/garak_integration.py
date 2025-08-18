@@ -3,6 +3,7 @@
 
 """
 Garak Integration Service
+
 Provides NVIDIA Garak LLM vulnerability scanning functionality for ViolentUTF platform
 """
 
@@ -20,6 +21,7 @@ class GarakService:
     """Service class for Garak integration."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.available = False
         self._initialize_garak()
 

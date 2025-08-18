@@ -3,6 +3,7 @@
 
 """
 Secure error handling module to prevent information disclosure
+
 SECURITY: Sanitizes error messages and prevents internal system information leakage
 """
 
@@ -50,6 +51,7 @@ class SecurityError(HTTPException):
     """Security-related error that requires special handling."""
 
     def __init__(self, detail: str, status_code: int = status.HTTP_403_FORBIDDEN) -> None:
+        """Initialize the instance."""
         super().__init__(status_code=status_code, detail=detail)
 
 
@@ -57,6 +59,7 @@ class RateLimitError(HTTPException):
     """Rate limit exceeded error."""
 
     def __init__(self, detail: str = "Rate limit exceeded") -> None:
+        """Initialize the instance."""
         super().__init__(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=detail)
 
 
@@ -64,6 +67,7 @@ class ValidationSecurityError(HTTPException):
     """Validation error with security implications."""
 
     def __init__(self, detail: str) -> None:
+        """Initialize the instance."""
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail)
 
 

@@ -3,6 +3,7 @@
 
 """
 DuckDB Manager for ViolentUTF Configuration Storage
+
 Extends existing PyRIT database functionality to support configuration persistence
 """
 
@@ -40,6 +41,7 @@ class DuckDBManager:
     }
 
     def __init__(self, username: str, salt: str = None, app_data_dir: str = None) -> None:
+        """Initialize the instance."""
         self.username = username
         self.salt = salt or os.getenv("PYRIT_DB_SALT", "default_salt_2025")
         self.app_data_dir = app_data_dir or os.getenv("APP_DATA_DIR", "./app_data/violentutf")
@@ -89,6 +91,7 @@ class DuckDBManager:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS generators (
+
                 id TEXT PRIMARY KEY,
                 name TEXT UNIQUE NOT NULL,
                 type TEXT NOT NULL,
@@ -106,6 +109,7 @@ class DuckDBManager:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS datasets (
+
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 source_type TEXT NOT NULL,
@@ -123,6 +127,7 @@ class DuckDBManager:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS dataset_prompts (
+
                 id TEXT PRIMARY KEY,
                 dataset_id TEXT NOT NULL,
                 prompt_text TEXT NOT NULL,
@@ -137,6 +142,7 @@ class DuckDBManager:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS converters (
+
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 type TEXT NOT NULL,
@@ -154,6 +160,7 @@ class DuckDBManager:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS scorers (
+
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 type TEXT NOT NULL,
@@ -171,6 +178,7 @@ class DuckDBManager:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS user_sessions (
+
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 session_key TEXT NOT NULL,
@@ -188,7 +196,6 @@ class DuckDBManager:
         self, updates_dict: Dict[str, Any], generator_id: str, user_id: str
     ) -> Tuple[str, List]:
         """Build parameterized UPDATE query with column validation to prevent SQL injection."""
-
         # Validate column names against whitelist
         for column in updates_dict.keys():
             if column not in self.ALLOWED_UPDATE_COLUMNS:
@@ -223,6 +230,7 @@ class DuckDBManager:
             conn.execute(
                 """
                 INSERT INTO generators (id, name, type, parameters, user_id)
+
                 VALUES (?, ?, ?, ?, ?)
             """,
                 [generator_id, name, generator_type, json.dumps(parameters), self.username],
@@ -236,6 +244,7 @@ class DuckDBManager:
             result = conn.execute(
                 """
                 SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+
                 FROM generators WHERE id = ? AND user_id = ?
             """,
                 [generator_id, self.username],
@@ -260,6 +269,7 @@ class DuckDBManager:
             result = conn.execute(
                 """
                 SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+
                 FROM generators WHERE name = ? AND user_id = ?
             """,
                 [name, self.username],
@@ -284,6 +294,7 @@ class DuckDBManager:
             results = conn.execute(
                 """
                 SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+
                 FROM generators WHERE user_id = ? ORDER BY created_at DESC
             """,
                 [self.username],
@@ -399,6 +410,7 @@ class DuckDBManager:
             conn.execute(
                 """
                 INSERT INTO datasets (id, name, source_type, configuration, user_id)
+
                 VALUES (?, ?, ?, ?, ?)
             """,
                 [dataset_id, name, source_type, json.dumps(configuration), self.username],
@@ -411,6 +423,7 @@ class DuckDBManager:
                     conn.execute(
                         """
                         INSERT INTO dataset_prompts (id, dataset_id, prompt_text, prompt_index)
+
                         VALUES (?, ?, ?, ?)
                     """,
                         [prompt_id, dataset_id, prompt, i],
@@ -425,6 +438,7 @@ class DuckDBManager:
             dataset_result = conn.execute(
                 """
                 SELECT id, name, source_type, configuration, status, created_at, updated_at, metadata
+
                 FROM datasets WHERE id = ? AND user_id = ?
             """,
                 [dataset_id, self.username],
@@ -437,6 +451,7 @@ class DuckDBManager:
             prompts_results = conn.execute(
                 """
                 SELECT prompt_text, prompt_index, metadata
+
                 FROM dataset_prompts WHERE dataset_id = ?
                 ORDER BY prompt_index
             """,
@@ -464,6 +479,7 @@ class DuckDBManager:
             results = conn.execute(
                 """
                 SELECT d.id, d.name, d.source_type, d.configuration, d.status,
+
                        d.created_at, d.updated_at, d.metadata,
                        COUNT(dp.id) as prompt_count
                 FROM datasets d
@@ -519,6 +535,7 @@ class DuckDBManager:
                 conn.execute(
                     """
                     UPDATE user_sessions
+
                     SET session_data = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE user_id = ? AND session_key = ?
                 """,
@@ -530,6 +547,7 @@ class DuckDBManager:
                 conn.execute(
                     """
                     INSERT INTO user_sessions (id, user_id, session_key, session_data)
+
                     VALUES (?, ?, ?, ?)
                 """,
                     [session_id, self.username, session_key, json.dumps(session_data)],
@@ -543,6 +561,7 @@ class DuckDBManager:
             result = conn.execute(
                 """
                 SELECT session_data, created_at, updated_at
+
                 FROM user_sessions WHERE user_id = ? AND session_key = ?
             """,
                 [self.username, session_key],
@@ -561,6 +580,7 @@ class DuckDBManager:
             conn.execute(
                 """
                 INSERT INTO converters (id, name, type, parameters, user_id)
+
                 VALUES (?, ?, ?, ?, ?)
             """,
                 [converter_id, name, converter_type, json.dumps(parameters), self.username],
@@ -574,6 +594,7 @@ class DuckDBManager:
             results = conn.execute(
                 """
                 SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+
                 FROM converters WHERE user_id = ? ORDER BY created_at DESC
             """,
                 [self.username],
@@ -599,6 +620,7 @@ class DuckDBManager:
             result = conn.execute(
                 """
                 SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+
                 FROM converters WHERE id = ? AND user_id = ?
             """,
                 [converter_id, self.username],
@@ -632,6 +654,7 @@ class DuckDBManager:
             conn.execute(
                 """
                 INSERT INTO scorers (id, name, type, parameters, user_id)
+
                 VALUES (?, ?, ?, ?, ?)
             """,
                 [scorer_id, name, scorer_type, json.dumps(parameters), self.username],
@@ -645,6 +668,7 @@ class DuckDBManager:
             results = conn.execute(
                 """
                 SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+
                 FROM scorers WHERE user_id = ? ORDER BY created_at DESC
             """,
                 [self.username],
@@ -670,6 +694,7 @@ class DuckDBManager:
             result = conn.execute(
                 """
                 SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+
                 FROM scorers WHERE id = ? AND user_id = ?
             """,
                 [scorer_id, self.username],

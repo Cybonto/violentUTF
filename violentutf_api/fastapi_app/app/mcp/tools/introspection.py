@@ -2,7 +2,6 @@
 # # Licensed under MIT License
 
 """FastAPI Endpoint Introspection for MCP Tool Discovery."""
-
 import inspect
 import logging
 from typing import Any, Dict, List, Optional, Union, get_type_hints
@@ -74,6 +73,7 @@ class EndpointIntrospector:
     """Introspects FastAPI application for available endpoints."""
 
     def __init__(self, app: FastAPI) -> None:
+        """Initialize the instance."""
         self.app = app
         self.tool_filter = ViolentUTFToolFilter()
 

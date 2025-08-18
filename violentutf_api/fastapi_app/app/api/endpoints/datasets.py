@@ -3,6 +3,7 @@
 
 """
 FastAPI endpoints for dataset management
+
 Implements API backend for 2_Configure_Datasets.py page
 """
 
@@ -906,6 +907,7 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                     cursor.execute(
                         """
                         SELECT conversation_id, COUNT(*) as prompt_count,
+
                                MIN(original_value) as first_prompt
                         FROM PromptRequestPieces
                         WHERE role = 'user' AND original_value IS NOT NULL

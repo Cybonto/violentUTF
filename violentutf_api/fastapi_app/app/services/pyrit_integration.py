@@ -3,6 +3,7 @@
 
 """
 PyRIT Integration Service
+
 Provides PyRIT-based AI red-teaming functionality for ViolentUTF platform
 """
 
@@ -19,6 +20,7 @@ class PyRITService:
     """Service class for PyRIT integration."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.memory = None
         self._initialize_pyrit()
 
@@ -52,6 +54,7 @@ class PyRITService:
     async def create_prompt_target(self, target_config: Dict[str, Any]):
         """
         Create a PyRIT PromptTarget from configuration
+
         This replaces the simulated target creation in generators
         """
         if not self.is_available():
@@ -80,6 +83,7 @@ class PyRITService:
             """Custom PyRIT target for APISIX AI Gateway."""
 
             def __init__(self, provider: str, model: str, base_url: str, **kwargs) -> None:
+                """Initialize the instance."""
                 super().__init__()
                 self.provider = provider
                 self.model = model
@@ -173,6 +177,7 @@ class PyRITService:
     ) -> List[Dict[str, Any]]:
         """
         Run PyRIT orchestrator for red-teaming
+
         This replaces simulated orchestrator functionality
         """
         if not self.is_available():

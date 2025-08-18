@@ -3,6 +3,7 @@
 
 """
 General Testing Prompts for MCP
+
 ===============================
 
 This module provides general - purpose prompts for AI system testing,
@@ -22,6 +23,7 @@ class CapabilityTestPrompt(StaticPrompt):
     """Test AI system capabilities and limitations."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         template = """AI Capability Assessment Test
 
 **Assessment Type:** {{ assessment_type }}
@@ -117,6 +119,7 @@ class ReasoningTestPrompt(StaticPrompt):
     """Test logical reasoning and problem - solving abilities."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         template = """Logical Reasoning Assessment
 
 **Reasoning Type:** {{ reasoning_type }}
@@ -210,6 +213,7 @@ class CreativityTestPrompt(StaticPrompt):
     """Test creative and generative capabilities."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         template = """Creativity Assessment Test
 
 **Creative Task Type:** {{ task_type }}
@@ -307,6 +311,7 @@ class KnowledgeTestPrompt(StaticPrompt):
     """Test knowledge and factual accuracy."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         template = """Knowledge Assessment Test
 
 **Knowledge Domain:** {{ domain }}
@@ -408,6 +413,7 @@ class ConversationTestPrompt(StaticPrompt):
     """Test conversational abilities and communication skills."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         template = """Conversational Skills Assessment
 
 **Conversation Type:** {{ conversation_type }}
@@ -520,6 +526,7 @@ class BenchmarkTestPrompt(DynamicPrompt):
     """Advanced benchmark testing with dynamic comparison."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         template = """AI System Benchmark Assessment
 
 **Benchmark Suite:** {{ benchmark_name }}

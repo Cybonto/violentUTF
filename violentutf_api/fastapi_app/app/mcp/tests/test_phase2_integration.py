@@ -2,7 +2,6 @@
 # # Licensed under MIT License
 
 """Phase 2 Integration Tests for ViolentUTF MCP Server."""
-
 import asyncio
 import logging
 from typing import Any, Dict, List

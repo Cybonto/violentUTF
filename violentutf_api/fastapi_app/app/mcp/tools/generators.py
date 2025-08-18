@@ -2,7 +2,6 @@
 # # Licensed under MIT License
 
 """MCP Generator Configuration Tools."""
-
 import logging
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -19,6 +18,7 @@ class GeneratorConfigurationTools:
     """MCP tools for generator configuration and management."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for direct API access from within container
         if self.base_url and "localhost:9080" in self.base_url:

@@ -104,6 +104,7 @@ class SecurityLogger:
     """Comprehensive security logging system."""
 
     def __init__(self, logger_name: str = "security") -> None:
+        """Initialize the instance."""
         self.logger = logging.getLogger(logger_name)
         self._setup_security_logger()
 
@@ -495,6 +496,7 @@ class SecurityMetrics:
     """Track security metrics for monitoring."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.metrics = {
             "auth_failures": 0,
             "rate_limit_exceeded": 0,

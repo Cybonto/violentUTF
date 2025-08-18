@@ -3,6 +3,7 @@
 
 """
 MCP Prompts Module
+
 =================
 
 This module provides MCP prompt functionality for ViolentUTF with
@@ -23,6 +24,7 @@ class PromptsManager:
     """Manages MCP prompts for ViolentUTF."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.registry = prompt_registry
         self._initialized = False
 

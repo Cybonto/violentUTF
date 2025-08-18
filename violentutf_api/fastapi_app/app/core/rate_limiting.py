@@ -3,6 +3,7 @@
 
 """
 Rate limiting implementation for authentication endpoints
+
 SECURITY: Implements rate limiting to prevent brute force attacks
 """
 
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 def get_client_ip(request: Request) -> str:
     """
     Get client IP for rate limiting.
+
     SECURITY: Uses proper forwarded headers from APISIX gateway
     """
     # Check for forwarded IP from APISIX gateway

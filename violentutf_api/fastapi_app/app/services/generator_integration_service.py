@@ -196,7 +196,6 @@ async def _execute_generic_generator(generator_config: Dict, prompt: str, conver
 
 def _get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     """Get APISIX endpoint for provider/model combination."""
-
     # Handle OpenAPI providers
     if provider.startswith("openapi-"):
         # Use the function from generators.py to get the endpoint

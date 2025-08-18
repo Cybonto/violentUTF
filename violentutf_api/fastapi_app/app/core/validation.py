@@ -26,7 +26,6 @@ WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
 # Security constants for validation
 class SecurityLimits:
     """Security limits for input validation."""
-
     MAX_STRING_LENGTH = 1000
     MAX_DESCRIPTION_LENGTH = 2000
     MAX_LIST_ITEMS = 100
@@ -84,7 +83,6 @@ class ValidationPatterns:
 
 class SafeString(str):
     """String type that ensures content is sanitized."""
-
     @classmethod
     def __get_validators__(cls):  # type: ignore[misc]
         yield cls.validate
@@ -105,7 +103,6 @@ class SafeString(str):
 
 class SafeIdentifier(str):
     """Safe identifier for API keys, usernames, etc."""
-
     @classmethod
     def __get_validators__(cls):  # type: ignore[misc]
         yield cls.validate
@@ -436,6 +433,7 @@ class ValidationError(HTTPException):
     """Custom validation error with proper HTTP status."""
 
     def __init__(self, detail: str) -> None:
+        """Initialize the instance."""
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Validation error: {detail}")
 
 

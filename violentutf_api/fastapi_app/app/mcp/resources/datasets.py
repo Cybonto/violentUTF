@@ -3,6 +3,7 @@
 
 """
 Dataset Resources for MCP
+
 ========================
 
 This module provides access to ViolentUTF security datasets through the MCP protocol.
@@ -26,6 +27,7 @@ class DatasetResourceProvider(BaseResourceProvider):
     """Provides comprehensive access to security datasets."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         super().__init__("violentutf://datasets/{dataset_id}", "DatasetProvider")
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()
@@ -301,6 +303,7 @@ class ResultsResourceProvider(BaseResourceProvider):
     """Provides access to orchestrator execution results."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         super().__init__("violentutf://results/{execution_id}", "ResultsProvider")
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()

@@ -2,7 +2,6 @@
 # # Licensed under MIT License
 
 """ViolentUTF MCP Server Base Implementation."""
-
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional
@@ -22,6 +21,7 @@ class ViolentUTFMCPServer:
     """MCP Server that integrates with the existing ViolentUTF FastAPI instance."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.server = Server(mcp_settings.MCP_SERVER_NAME)
         self.auth_handler = MCPAuthHandler()
         self._setup_handlers()

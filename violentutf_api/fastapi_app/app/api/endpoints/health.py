@@ -63,6 +63,7 @@ async def security_headers_check(request: Request, response: Response):
 async def security_metrics_check():
     """
     Get current security metrics for monitoring
+
     Note: In production, this should require admin authentication
     """
     return {

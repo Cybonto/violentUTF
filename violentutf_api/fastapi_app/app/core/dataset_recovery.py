@@ -40,6 +40,7 @@ class RetryStrategy:
         max_delay: float = 60.0,
         jitter: bool = True,
     ):
+        """Initialize the instance."""
         self.max_retries = max_retries
         self.base_delay = base_delay
         self.backoff_factor = backoff_factor
@@ -136,6 +137,7 @@ class PartialImportRecovery:
     """Handles recovery of partial dataset imports."""
 
     def __init__(self, config: DatasetImportConfig) -> None:
+        """Initialize the instance."""
         self.config = config
         self.successful_chunks: List[Dict[str, Any]] = []
         self.failed_chunks: List[Dict[str, Any]] = []
@@ -258,6 +260,7 @@ class AutoCleanupManager:
     """Manages automatic cleanup of failed or partial imports."""
 
     def __init__(self, config: DatasetImportConfig) -> None:
+        """Initialize the instance."""
         self.config = config
         self.cleanup_tasks: List[Callable] = []
         self.temp_files: List[str] = []
@@ -279,7 +282,6 @@ class AutoCleanupManager:
         self, error: Exception, dataset_id: str, partial_recovery: Optional[PartialImportRecovery] = None
     ) -> None:
         """Perform cleanup operations after a failure."""
-
         if not self.config.cleanup_on_failure:
             dataset_logger.info("Cleanup on failure is disabled, skipping cleanup", dataset_id=dataset_id)
             return
@@ -375,7 +377,6 @@ def create_recovery_context(
     config: DatasetImportConfig, dataset_id: str, dataset_type: str
 ) -> tuple[PartialImportRecovery, AutoCleanupManager]:
     """Create recovery context for dataset operations."""
-
     partial_recovery = PartialImportRecovery(config)
     cleanup_manager = AutoCleanupManager(config)
 

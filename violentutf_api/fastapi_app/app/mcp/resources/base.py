@@ -3,6 +3,7 @@
 
 """
 Advanced Base Classes for MCP Resources
+
 ======================================
 
 This module provides enhanced base classes for MCP resource providers with
@@ -54,6 +55,7 @@ class ResourcePattern:
     """Advanced URI pattern matching with parameter extraction."""
 
     def __init__(self, pattern: str) -> None:
+        """Initialize the instance."""
         self.pattern = pattern
         self._regex = self._compile_pattern(pattern)
         self._param_names = self._extract_param_names(pattern)
@@ -91,6 +93,7 @@ class CacheEntry:
     """Represents a cached resource with TTL."""
 
     def __init__(self, resource: AdvancedResource, ttl_seconds: int = 300) -> None:
+        """Initialize the instance."""
         self.resource = resource
         self.ttl_seconds = ttl_seconds
         self.created_at = datetime.now()
@@ -110,6 +113,7 @@ class BaseResourceProvider(ABC):
     """Enhanced base class for resource providers."""
 
     def __init__(self, uri_pattern: str, provider_name: str = None) -> None:
+        """Initialize the instance."""
         self.pattern = ResourcePattern(uri_pattern)
         self.provider_name = provider_name or self.__class__.__name__
         self._cache: Dict[str, AdvancedResource] = {}
@@ -183,6 +187,7 @@ class AdvancedResourceRegistry:
     """Enhanced registry for resource providers with advanced features."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self._providers: List[BaseResourceProvider] = []
         self._provider_map: Dict[str, BaseResourceProvider] = {}
         self._initialized = False

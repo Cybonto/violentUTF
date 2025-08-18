@@ -3,6 +3,7 @@
 
 """
 MCP Resources Module - Enhanced
+
 ==============================
 
 This module provides access to ViolentUTF resources through the MCP protocol
@@ -25,6 +26,7 @@ class ResourceRegistry:
     """Registry for MCP resources with ViolentUTF integration."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.manager = resource_manager
         self._initialized = False
 

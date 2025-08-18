@@ -322,6 +322,7 @@ class DatasetLogger:
     """Enhanced logger for dataset operations with structured logging."""
 
     def __init__(self, logger_name: str = __name__, config: Optional[LogConfig] = None) -> None:
+        """Initialize the instance."""
         self.logger_name = logger_name
         self.logger = logging.getLogger(logger_name)
         self.config = config or LogConfig.from_environment()
@@ -439,7 +440,6 @@ class DatasetLogger:
         **kwargs,
     ) -> None:
         """Log with structured data."""
-
         structured_data = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "log_message": message,  # Changed from "message" to avoid conflict
@@ -541,7 +541,6 @@ class DatasetLogger:
         correlation_id: Optional[str] = None,
     ):
         """Context manager for tracking operations."""
-
         previous_operation = self.current_operation
         previous_correlation_id = self.correlation_id
 
@@ -599,7 +598,6 @@ class DatasetLogger:
         **kwargs,
     ) -> None:
         """Log chunk processing progress."""
-
         progress_percent = (chunk_index + 1) / total_chunks * 100
 
         self.debug(
@@ -631,7 +629,6 @@ class DatasetLogger:
 
     def log_memory_usage(self, memory_mb: float, operation: str = "unknown") -> None:
         """Log current memory usage."""
-
         self.debug(f"Memory usage: {memory_mb:.2f} MB", memory_mb=memory_mb, operation=operation)
 
         # Update metrics
@@ -645,7 +642,6 @@ class DatasetLogger:
 
     def log_retry_attempt(self, attempt: int, max_attempts: int, error: Optional[Exception] = None, **kwargs) -> None:
         """Log retry attempts."""
-
         error_msg = str(error) if error else "Unknown error"
         self.warning(
             f"Retry attempt {attempt}/{max_attempts}: {error_msg}",
@@ -667,7 +663,6 @@ class DatasetLogger:
         self, prompts_stored: int, storage_time_seconds: float, storage_size_mb: float, **kwargs
     ) -> None:
         """Log PyRIT memory storage operations."""
-
         self.info(
             f"Stored {prompts_stored} prompts to PyRIT memory",
             prompts_stored=prompts_stored,
@@ -682,7 +677,6 @@ class DatasetLogger:
 
     def log_import_summary(self, dataset_id: str, dataset_type: str, success: bool = True, **kwargs) -> None:
         """Log comprehensive import summary."""
-
         # Calculate final metrics
         rates = self.metrics.calculate_rates()
 
@@ -786,6 +780,7 @@ class LogAnalyzer:
     """Utilities for analyzing dataset operation logs."""
 
     def __init__(self, log_dir: Path = Path("logs/datasets")):
+        """Initialize the instance."""
         self.log_dir = log_dir
 
     def read_logs(

@@ -128,6 +128,7 @@ class PerformanceMonitor:
     """Monitors performance of dataset operations."""
 
     def __init__(self, config: DatasetImportConfig) -> None:
+        """Initialize the instance."""
         self.config = config
         self.metrics_history: deque = deque(maxlen=1000)  # Store last 1000 metrics
         self.operation_timings: Dict[str, List[float]] = defaultdict(list)
@@ -218,7 +219,6 @@ class PerformanceMonitor:
         self, operation_id: str, operation_type: str, success: bool = True, metrics: Optional[ImportMetrics] = None
     ) -> float:
         """End tracking an operation and return duration."""
-
         start_time = self.active_operations.pop(operation_id, None)
         if not start_time:
             logger.warning(f"No start time found for operation: {operation_id}")
@@ -270,7 +270,6 @@ class PerformanceMonitor:
 
     def get_performance_summary(self, operation_type: Optional[str] = None) -> Dict[str, Any]:
         """Get performance summary for operations."""
-
         if operation_type:
             timings = self.operation_timings.get(operation_type, [])
         else:
@@ -304,7 +303,6 @@ class PerformanceMonitor:
 
     def get_system_health(self) -> Dict[str, Any]:
         """Get current system health status."""
-
         if not self.system_metrics_history:
             current_metrics = SystemMetrics.collect_current()
         else:
@@ -358,7 +356,6 @@ class PerformanceMonitor:
 
     def get_detailed_metrics(self) -> Dict[str, Any]:
         """Get detailed metrics for debugging and analysis."""
-
         return {
             "performance_summary": {
                 op_type: self.get_performance_summary(op_type) for op_type in self.operation_timings.keys()
@@ -386,7 +383,6 @@ class PerformanceMonitor:
 
     def export_metrics(self, format: str = "json") -> Union[str, Dict[str, Any]]:
         """Export metrics in specified format."""
-
         metrics_data = {
             "export_timestamp": datetime.utcnow().isoformat(),
             "metrics_count": len(self.metrics_history),

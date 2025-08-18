@@ -2,7 +2,6 @@
 # # Licensed under MIT License
 
 """MCP Tools Module."""
-
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -20,6 +19,7 @@ class ToolRegistry:
     """Registry for MCP tools with FastAPI endpoint introspection."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.tools: Dict[str, Tool] = {}
         self.endpoints_discovered = False
 

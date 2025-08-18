@@ -296,6 +296,7 @@ async def _load_real_memory_dataset_prompts(
                     """
 
                     if limit and limit > 0:
+
                         query += f" LIMIT {limit}"
 
                     cursor.execute(query)

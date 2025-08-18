@@ -32,6 +32,7 @@ class EchoResponse(BaseModel):
 async def echo(request: EchoRequest):
     """
     Echo endpoint for testing API connectivity.
+
     Returns the same message that was sent.
 
     Args:

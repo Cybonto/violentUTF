@@ -55,6 +55,7 @@ class PyRITStreamProcessor:
     """Enhanced streaming processor with memory-aware chunking."""
 
     def __init__(self, memory_interface: Optional[MemoryInterface] = None) -> None:
+        """Initialize the instance."""
         self.memory = memory_interface or CentralMemory.get_memory_instance()
         self.chunk_size = int(os.getenv("DATASET_CHUNK_SIZE", 1000))
         self.max_memory_mb = int(os.getenv("DATASET_MAX_MEMORY_MB", 512))
@@ -69,7 +70,6 @@ class PyRITStreamProcessor:
         progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> AsyncIterator[DatasetChunk]:
         """Stream process PyRIT datasets with intelligent chunking."""
-
         logger.info(f"Starting stream processing for dataset: {dataset_type}")
 
         # Initialize statistics

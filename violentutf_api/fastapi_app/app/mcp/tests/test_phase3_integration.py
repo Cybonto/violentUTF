@@ -3,6 +3,7 @@
 
 """
 Phase 3 Integration Tests for ViolentUTF MCP Server
+
 ==================================================
 
 These tests validate the advanced features implemented in Phase 3:

@@ -2,7 +2,6 @@
 # # Licensed under MIT License
 
 """MCP Tool Generator - Converts FastAPI endpoints to MCP tools."""
-
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -15,6 +14,7 @@ class MCPToolGenerator:
     """Generates MCP tools from FastAPI endpoint information."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.generated_tools: Dict[str, Tool] = {}
 
     def generate_tools_from_endpoints(self, endpoints: List[Dict[str, Any]]) -> List[Tool]:

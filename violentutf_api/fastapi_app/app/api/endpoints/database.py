@@ -118,6 +118,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS prompt_pieces (
+
                     id INTEGER PRIMARY KEY,
                     conversation_id TEXT,
                     role TEXT,
@@ -131,6 +132,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS conversations (
+
                     id TEXT PRIMARY KEY,
                     user_id TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -142,6 +144,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS scores (
+
                     id INTEGER PRIMARY KEY,
                     prompt_piece_id INTEGER,
                     scorer_name TEXT,
@@ -290,6 +293,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS prompt_pieces (
+
                     id INTEGER PRIMARY KEY,
                     conversation_id TEXT,
                     role TEXT,
@@ -303,6 +307,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS conversations (
+
                     id TEXT PRIMARY KEY,
                     user_id TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -314,6 +319,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS scores (
+
                     id INTEGER PRIMARY KEY,
                     prompt_piece_id INTEGER,
                     scorer_name TEXT,

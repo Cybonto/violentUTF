@@ -2,7 +2,6 @@
 # # Licensed under MIT License
 
 """APISIX Route Configuration for MCP."""
-
 import logging
 from typing import Any, Dict
 
@@ -16,6 +15,7 @@ class APISIXRouteManager:
     """Manages APISIX routes for MCP endpoints."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.admin_url = settings.APISIX_ADMIN_URL
         self.admin_key = settings.APISIX_ADMIN_KEY
 

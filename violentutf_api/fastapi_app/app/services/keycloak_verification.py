@@ -3,6 +3,7 @@
 
 """
 Keycloak JWT Token Verification Service
+
 SECURITY: Implements proper JWT signature verification using Keycloak public keys
 """
 
@@ -29,6 +30,7 @@ class KeycloakJWTVerifier:
     """
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.keycloak_url = settings.KEYCLOAK_URL
         self.realm = settings.KEYCLOAK_REALM
         self.client_id = settings.KEYCLOAK_CLIENT_ID

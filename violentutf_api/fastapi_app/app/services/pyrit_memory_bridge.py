@@ -44,6 +44,7 @@ class PyRITMemoryBridge:
     """Enhanced bridge between ViolentUTF and PyRIT memory systems."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.memory_cache: Dict[str, DuckDBMemory] = {}
         self.user_context_manager = UserContextManager()
 

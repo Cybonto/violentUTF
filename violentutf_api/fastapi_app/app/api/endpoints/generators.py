@@ -3,6 +3,7 @@
 
 """
 FastAPI endpoints for generator management
+
 Implements API backend for 1_Configure_Generators.py page
 SECURITY: Enhanced with secure error handling to prevent information disclosure
 """
@@ -45,6 +46,7 @@ router = APIRouter()
 def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     """
     Map AI provider and model to APISIX endpoint path
+
     Based on the setup_macos.sh AI proxy route configuration
     """
     # OpenAI model mappings
@@ -293,6 +295,7 @@ GENERATOR_TYPE_DEFINITIONS = {
 def discover_apisix_models(provider: str) -> List[str]:
     """
     Dynamically discover available models for a provider by querying APISIX routes
+
     This replaces hardcoded model lists with real-time discovery
     """
     try:
@@ -472,6 +475,7 @@ def get_fallback_models(provider: str) -> List[str]:
 async def discover_openapi_models_from_provider(provider_id: str, base_url: str, auth_token: str) -> List[str]:
     """
     Discover available models directly from OpenAPI provider's /api/v1/models endpoint
+
     Phase 1 Enhancement: Query actual provider APIs for real-time model discovery
     """
     try:
@@ -529,6 +533,7 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
 def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
     """
     Get configuration for an OpenAPI provider from settings
+
     Phase 1 Enhancement: Centralized provider configuration mapping
     """
     # Try numbered format first (OPENAPI_1_*, OPENAPI_2_*, etc.)
@@ -564,6 +569,7 @@ def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
 async def discover_apisix_models_enhanced(provider: str) -> List[str]:
     """
     Enhanced model discovery that queries actual OpenAPI providers
+
     Phase 1 Enhancement: Dynamic model discovery with fallback to route parsing
     """
     if provider.startswith("openapi-"):
@@ -968,6 +974,7 @@ async def get_openapi_providers_endpoint(current_user=Depends(get_current_user))
 async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict[str, List[str]]:
     """
     Get available models for all configured OpenAPI providers
+
     Phase 1 Enhancement: Provides comprehensive model listing for debugging and validation
     """
     try:
@@ -1006,6 +1013,7 @@ async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict
 async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dict[str, Any]:
     """
     Debug endpoint for OpenAPI provider configurations
+
     Phase 1 Enhancement: Provides detailed debugging information
     """
     try:

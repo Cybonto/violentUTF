@@ -2,7 +2,6 @@
 # # Licensed under MIT License
 
 """OAuth Proxy for MCP Client Compatibility."""
-
 import base64
 import hashlib
 import logging
@@ -26,6 +25,7 @@ class MCPOAuthProxy:
     """Provides OAuth proxy endpoints for MCP client compatibility."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.keycloak_verifier = keycloak_verifier
         self.router = APIRouter(prefix="/mcp/oauth")
         self.pkce_verifiers: Dict[str, str] = {}  # Store PKCE verifiers
@@ -69,7 +69,6 @@ class MCPOAuthProxy:
         code_challenge_method: Optional[str] = Query(None),
     ) -> RedirectResponse:
         """Proxy authorization request to Keycloak."""
-
         # Build Keycloak authorization URL
         keycloak_auth_url = f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}/protocol/openid-connect/auth"
 
@@ -113,7 +112,6 @@ class MCPOAuthProxy:
         error_description: Optional[str] = Query(None),
     ) -> JSONResponse:
         """Handle OAuth callback from Keycloak."""
-
         if error:
             return JSONResponse(
                 status_code=400,
@@ -137,7 +135,6 @@ class MCPOAuthProxy:
 
     async def proxy_token_exchange(self, request: Request) -> JSONResponse:
         """Exchange authorization code for tokens."""
-
         # Parse form data
         form_data = await request.form()
         grant_type = form_data.get("grant_type")
@@ -157,7 +154,6 @@ class MCPOAuthProxy:
 
     async def _handle_authorization_code_exchange(self, form_data) -> JSONResponse:
         """Handle authorization code exchange."""
-
         code = form_data.get("code")
         redirect_uri = form_data.get("redirect_uri")
         code_verifier = form_data.get("code_verifier")
@@ -230,7 +226,6 @@ class MCPOAuthProxy:
 
     async def _handle_refresh_token_exchange(self, form_data) -> JSONResponse:
         """Handle refresh token exchange."""
-
         refresh_token = form_data.get("refresh_token")
 
         if not refresh_token:

@@ -3,6 +3,7 @@
 
 """
 Security configuration validation
+
 SECURITY: Validates that security measures are properly configured
 """
 

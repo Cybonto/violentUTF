@@ -3,6 +3,7 @@
 
 """
 Debug endpoint for JWT validation testing
+
 Temporarily bypasses APISIX gateway check for troubleshooting
 """
 
@@ -114,6 +115,7 @@ async def debug_headers(
 ) -> Dict[str, Any]:
     """
     Debug endpoint to show all headers received by FastAPI
+
     This helps verify what APISIX is forwarding
     """
     return {

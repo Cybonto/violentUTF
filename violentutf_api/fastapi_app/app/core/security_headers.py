@@ -3,6 +3,7 @@
 
 """
 Security headers middleware and configuration
+
 SECURITY: Implements comprehensive security headers to protect against common web vulnerabilities
 """
 
@@ -18,10 +19,12 @@ logger = logging.getLogger(__name__)
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
     Middleware to add security headers to all responses
+
     Protects against XSS, clickjacking, MIME sniffing, and other attacks
     """
 
     def __init__(self, app, environment: str = "production") -> None:
+        """Initialize the instance."""
         super().__init__(app)
         self.environment = environment.lower()
         self.headers = self._get_security_headers()
@@ -183,10 +186,12 @@ def configure_cors_settings(environment: str = "production") -> Dict:
 class APISecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
     Additional API-specific security headers middleware
+
     Adds headers specific to API security concerns
     """
 
     def __init__(self, app, api_version: str = "1.0") -> None:
+        """Initialize the instance."""
         super().__init__(app)
         self.api_version = api_version
 
@@ -231,6 +236,7 @@ def setup_security_headers(app, environment: str = "production", api_version: st
 def get_csp_nonce() -> str:
     """
     Generate a cryptographically secure nonce for CSP
+
     Useful for inline scripts/styles when needed
     """
     import base64
@@ -246,6 +252,7 @@ def get_csp_nonce() -> str:
 def validate_security_headers(response_headers: Dict[str, str]) -> Dict[str, bool]:
     """
     Validate that required security headers are present
+
     Useful for testing and monitoring
 
     Args:

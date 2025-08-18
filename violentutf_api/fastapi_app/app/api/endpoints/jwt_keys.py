@@ -3,6 +3,7 @@
 
 """
 JWT API Key management endpoints
+
 SECURITY: Rate limiting applied to prevent API key enumeration attacks
 """
 
@@ -140,6 +141,7 @@ async def revoke_api_key(
 async def get_current_token(request: Request, current_user: User = Depends(get_current_user)):
     """
     Get the current user's JWT token (from their session)
+
     This is useful for displaying the token in the UI
     """
     # Create a session-based API key that expires with the current session

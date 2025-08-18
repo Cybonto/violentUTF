@@ -3,6 +3,7 @@
 
 """
 Phase 2 Integration Tests for ViolentUTF MCP Server - Revised
+
 ============================================================
 
 These tests validate Phase 2 implementation with proper architecture:
@@ -389,7 +390,6 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
     @pytest.mark.asyncio
     async def test_generator_tool_execution_with_apisix_mock(self, mock_apisix_responses) -> None:
         """Test generator tool execution with mocked APISIX responses."""
-
         with patch("httpx.AsyncClient") as mock_client:
             # Mock successful API response through APISIX
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
@@ -421,7 +421,6 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
     @pytest.mark.asyncio
     async def test_orchestrator_tool_execution_with_apisix_mock(self, mock_apisix_responses) -> None:
         """Test orchestrator tool execution with mocked APISIX responses."""
-
         with patch("httpx.AsyncClient") as mock_client:
             # Mock successful API response
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
@@ -448,7 +447,6 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
     @pytest.mark.asyncio
     async def test_tool_error_handling_apisix_failures(self, mock_apisix_responses) -> None:
         """Test tool error handling when APISIX returns errors."""
-
         with patch("httpx.AsyncClient") as mock_client:
             # Mock API error response
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
@@ -468,7 +466,6 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
     @pytest.mark.asyncio
     async def test_tool_network_error_handling(self) -> None:
         """Test tool handling of network errors (APISIX unreachable)."""
-
         with patch("httpx.AsyncClient") as mock_client:
             # Mock connection error
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
@@ -536,7 +533,6 @@ class TestPhase2ResourceManagement(TestPhase2Architecture):
     @pytest.mark.asyncio
     async def test_resource_listing_with_apisix_mock(self, mock_apisix_responses) -> None:
         """Test resource listing with mocked APISIX responses."""
-
         with patch("httpx.AsyncClient") as mock_client:
             # Mock responses for different resource types
             def mock_request(*args, **kwargs):
@@ -568,7 +564,6 @@ class TestPhase2ResourceManagement(TestPhase2Architecture):
     @pytest.mark.asyncio
     async def test_resource_caching_functionality(self, mock_apisix_responses) -> None:
         """Test resource caching functionality."""
-
         with patch("httpx.AsyncClient") as mock_client:
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
                 return_value=mock_apisix_responses["generators_list"]
@@ -778,7 +773,6 @@ class TestPhase2AuthenticationIntegration(TestPhase2Architecture):
     @pytest.mark.asyncio
     async def test_tool_authentication_flow(self, mock_apisix_responses) -> None:
         """Test authentication flow in tool execution."""
-
         # Mock environment variables for auth
         with patch.dict(os.environ, {"KEYCLOAK_USERNAME": "test_user", "KEYCLOAK_PASSWORD": "test_pass"}):
             with patch("httpx.AsyncClient") as mock_client:
@@ -846,7 +840,6 @@ class TestPhase2PerformanceAndReliability(TestPhase2Architecture):
     @pytest.mark.asyncio
     async def test_error_recovery_and_resilience(self, realistic_fastapi_app) -> None:
         """Test error recovery and system resilience."""
-
         # Test tool discovery with no app
         await tool_registry.discover_tools(None)
         tools = await tool_registry.list_tools()

@@ -3,6 +3,7 @@
 
 """
 Test Configuration for ViolentUTF MCP Tests
+
 ============================================
 
 This file configures the test environment for MCP integration tests.

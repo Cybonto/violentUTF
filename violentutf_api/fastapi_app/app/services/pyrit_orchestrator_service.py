@@ -22,6 +22,7 @@ class PyRITOrchestratorService:
     """Service for managing PyRIT orchestrators in ViolentUTF API."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.memory = None  # Will be initialized on startup
         self._orchestrator_instances: Dict[str, Orchestrator] = {}
         self._orchestrator_scorers: Dict[str, List] = {}  # Track scorers by orchestrator ID
@@ -443,7 +444,6 @@ class PyRITOrchestratorService:
         execution_config: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Execute PromptSendingOrchestrator with specific input type."""
-
         if execution_type == "prompt_list":
             # Direct prompt list execution
             prompt_list = input_data["prompt_list"]
@@ -622,7 +622,6 @@ class PyRITOrchestratorService:
         input_data: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Format orchestrator results for API response."""
-
         # EMERGENCY DEBUG: Add at the very start with guaranteed visibility
         import sys
 
@@ -958,6 +957,7 @@ class ConfiguredGeneratorTarget(PromptTarget):
     """Bridge between ViolentUTF configured generators and PyRIT PromptTarget."""
 
     def __init__(self, generator_config: Dict[str, Any]) -> None:
+        """Initialize the instance."""
         super().__init__()
         self.generator_config = generator_config
         self.generator_name = generator_config["name"]
@@ -1093,6 +1093,7 @@ class ConfiguredScorerWrapper(Scorer):
     """Bridge between ViolentUTF configured scorers and PyRIT Scorer."""
 
     def __init__(self, scorer_config: Dict[str, Any], execution_metadata: Dict[str, Any] = None) -> None:
+        """Initialize the instance."""
         super().__init__()
         self.scorer_config = scorer_config
         self.scorer_name = scorer_config["name"]

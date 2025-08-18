@@ -3,6 +3,7 @@
 
 """
 Password strength validation and policy enforcement
+
 SECURITY: Implements comprehensive password security requirements to prevent weak passwords
 """
 
@@ -69,6 +70,7 @@ class PasswordValidator:
     """
 
     def __init__(self, policy: Optional[PasswordPolicy] = None) -> None:
+        """Initialize the instance."""
         self.policy = policy or PasswordPolicy()
         self._load_common_passwords()
         self._load_keyboard_patterns()

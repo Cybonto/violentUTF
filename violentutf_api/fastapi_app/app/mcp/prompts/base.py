@@ -3,6 +3,7 @@
 
 """
 Base Classes for MCP Prompts
+
 ============================
 
 This module provides the foundation for MCP prompt system with
@@ -67,6 +68,7 @@ class BasePrompt(ABC):
     """Base class for all MCP prompts with template rendering."""
 
     def __init__(self, name: str, description: str, template: str, category: str = "general") -> None:
+        """Initialize the instance."""
         self.name = name
         self.description = description
         self.template_string = template
@@ -175,6 +177,7 @@ class PromptRegistry:
     """Registry for all available prompts with categorization."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self._prompts: Dict[str, BasePrompt] = {}
         self._categories: Dict[str, List[str]] = {}
 

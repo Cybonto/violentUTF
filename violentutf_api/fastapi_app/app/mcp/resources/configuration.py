@@ -3,6 +3,7 @@
 
 """
 Configuration Resources for MCP
+
 ==============================
 
 This module provides access to ViolentUTF system configuration and status
@@ -26,6 +27,7 @@ class ConfigurationResourceProvider(BaseResourceProvider):
     """Provides access to system configuration resources."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         super().__init__("violentutf://config/{component}/{config_id}", "ConfigProvider")
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()
@@ -367,6 +369,7 @@ class StatusResourceProvider(BaseResourceProvider):
     """Provides access to system status resources."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         super().__init__("violentutf://status/{component}", "StatusProvider")
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()

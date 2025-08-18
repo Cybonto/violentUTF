@@ -3,6 +3,7 @@
 
 """
 MCP Resource Manager - Enhanced Provides access to ViolentUTF resources
+
 ======================================================================
 
 This module manages ViolentUTF resources for MCP access with enhanced
@@ -30,6 +31,7 @@ class ViolentUTFResourceManager:
     """Manages ViolentUTF resources for MCP access."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for direct API access from within container
         if "localhost:9080" in self.base_url:

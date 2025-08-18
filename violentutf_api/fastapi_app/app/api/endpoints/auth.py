@@ -3,6 +3,7 @@
 
 """
 Authentication endpoints for obtaining JWT tokens
+
 SECURITY: Rate limiting and secure error handling implemented to prevent attacks
 """
 
@@ -39,6 +40,7 @@ router = APIRouter()
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     """
     OAuth2 compatible token endpoint.
+
     Authenticates against Keycloak and returns a JWT token.
     """
     # Prepare request to Keycloak
@@ -260,6 +262,7 @@ async def get_password_requirements():
 async def check_password_strength(request: Request):
     """
     Check password strength without storing or logging the password
+
     Expects JSON: {"password": "string", "username": "optional", "email": "optional"}
     """
     try:

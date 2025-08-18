@@ -2,7 +2,6 @@
 # # Licensed under MIT License
 
 """MCP Authentication Bridge."""
-
 import logging
 from typing import Any, Dict, Optional
 
@@ -20,6 +19,7 @@ class MCPAuthHandler:
     """Handles authentication for MCP operations."""
 
     def __init__(self) -> None:
+        """Initialize the instance."""
         # Use the existing keycloak_verifier instance
         self.keycloak_verifier = keycloak_verifier
 
