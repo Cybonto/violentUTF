@@ -9,7 +9,7 @@ import os
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
 import duckdb
 from app.core.auth import get_current_user

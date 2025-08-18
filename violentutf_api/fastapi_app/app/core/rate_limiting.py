@@ -8,13 +8,13 @@ SECURITY: Implements rate limiting to prevent brute force attacks
 """
 
 import logging
+from typing import Any
 
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-from typing import Any
 
 logger = logging.getLogger(__name__)
 

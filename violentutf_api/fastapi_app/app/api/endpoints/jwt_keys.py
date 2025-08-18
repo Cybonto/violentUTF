@@ -10,7 +10,7 @@ SECURITY: Rate limiting applied to prevent API key enumeration attacks
 import hashlib
 import secrets
 from datetime import datetime
-from typing import List, Any
+from typing import Any, List
 
 from app.core.auth import get_current_user
 from app.core.rate_limiting import auth_rate_limit

@@ -9,7 +9,7 @@ SECURITY: Rate limiting and secure error handling implemented to prevent attacks
 
 import logging
 from datetime import timedelta
-from typing import Optional, Any
+from typing import Any, Optional
 
 import httpx
 from app.core.auth import get_current_user

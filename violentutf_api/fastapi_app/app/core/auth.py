@@ -4,7 +4,7 @@
 """Authentication and authorization middleware."""
 
 import logging
-from typing import Optional, Tuple, Any
+from typing import Any, Optional, Tuple
 
 import httpx
 from app.core.config import settings

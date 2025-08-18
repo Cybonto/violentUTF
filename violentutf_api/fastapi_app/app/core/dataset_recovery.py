@@ -12,7 +12,7 @@ import asyncio
 import logging
 import time
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, Self
+from typing import Any, Callable, Dict, List, Optional, Self, TypeVar, Union
 
 from app.core.dataset_config import DatasetImportConfig
 from app.core.dataset_logging import dataset_logger
