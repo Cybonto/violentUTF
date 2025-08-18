@@ -33,6 +33,7 @@ repos:
         args: ["--fix=lf"]
       - id: name-tests-test
         args: ["--pytest-test-first"]
+        exclude: 'tests/(utils|scripts|api_tests/(utils|scripts))/.*\.py$'
       - id: requirements-txt-fixer
       - id: trailing-whitespace
 

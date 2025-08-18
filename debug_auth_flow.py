@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Debug authentication flow for OpenAPI providers
-"""
+"""Debug authentication flow for OpenAPI providers."""
 import os
 import sys
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Diagnose formatting differences between local and CI environment.
-"""
+"""Diagnose formatting differences between local and CI environment."""
 
 import os
 import subprocess
@@ -9,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-def run_command(cmd):
+def run_command(cmd: str) -> str:
     """Run a command and return output."""
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -18,7 +16,8 @@ def run_command(cmd):
         return f"Error: {e}"
 
 
-def main():
+def main() -> None:
+    """Run diagnostic checks for formatting tools."""
     print("=== Formatting Diagnostics ===\n")
 
     # Check versions

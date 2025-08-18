@@ -101,7 +101,7 @@ class TestImportMetrics(unittest.TestCase):
         metrics.memory_samples = [100, 150, 200, 120, 130]
 
         rates = metrics.calculate_rates()
-        
+
         self.assertEqual(rates["success_rate"], 0.9)
         self.assertEqual(rates["failure_rate"], 0.1)
         self.assertEqual(rates["prompts_per_second"], 9.0)
@@ -123,7 +123,7 @@ class TestImportMetrics(unittest.TestCase):
         metrics.user_id = "test_user"
 
         result = metrics.to_dict()
-        
+
         self.assertIsInstance(result, dict)
         self.assertIn("start_time", result)
         self.assertIn("end_time", result)
@@ -142,7 +142,7 @@ class TestDatasetLogger(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.log_dir = Path(self.temp_dir) / "logs"
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.config = LogConfig(
             environment="test",
             log_level="DEBUG",
@@ -151,7 +151,7 @@ class TestDatasetLogger(unittest.TestCase):
             retention_days=1,
             compression=False,
         )
-        
+
         self.logger = DatasetLogger("test_logger", config=self.config)
 
     def tearDown(self):
@@ -202,7 +202,7 @@ class TestDatasetLogger(unittest.TestCase):
             self.assertEqual(logger.current_operation, "test_operation")
             self.assertIsNotNone(logger.operation_start_time)
             self.assertIsNotNone(logger.correlation_id)
-            
+
             # Simulate some work
             time.sleep(0.1)
             logger.log_memory_usage(100.5)
@@ -219,7 +219,7 @@ class TestDatasetLogger(unittest.TestCase):
     def test_log_chunk_progress(self):
         """Test logging chunk progress"""
         self.logger.reset_metrics()
-        
+
         # Log multiple chunks
         for i in range(5):
             self.logger.log_chunk_progress(
@@ -239,7 +239,7 @@ class TestDatasetLogger(unittest.TestCase):
     def test_log_memory_usage(self):
         """Test logging memory usage"""
         self.logger.reset_metrics()
-        
+
         # Log memory samples
         memory_values = [50.0, 75.0, 100.0, 60.0]
         for mem in memory_values:
@@ -252,7 +252,7 @@ class TestDatasetLogger(unittest.TestCase):
     def test_log_retry_attempt(self):
         """Test logging retry attempts"""
         self.logger.reset_metrics()
-        
+
         # Log retry attempts
         test_error = ConnectionError("Connection failed")
         self.logger.log_retry_attempt(1, 3, test_error)
@@ -281,18 +281,18 @@ class TestDatasetLogger(unittest.TestCase):
         """Test resetting metrics while preserving user context"""
         # Set user context
         self.logger.set_user_context("user123", "session456")
-        
+
         # Add some metrics
         self.logger.metrics.total_prompts = 100
         self.logger.metrics.successful_prompts = 90
-        
+
         # Reset metrics
         self.logger.reset_metrics()
-        
+
         # Check metrics are reset
         self.assertEqual(self.logger.metrics.total_prompts, 0)
         self.assertEqual(self.logger.metrics.successful_prompts, 0)
-        
+
         # Check user context is preserved
         self.assertEqual(self.logger.metrics.user_id, "user123")
         self.assertEqual(self.logger.metrics.session_id, "session456")
@@ -301,9 +301,9 @@ class TestDatasetLogger(unittest.TestCase):
         """Test finalizing metrics"""
         self.logger.reset_metrics()
         time.sleep(0.1)  # Simulate some processing time
-        
+
         metrics = self.logger.finalize_metrics()
-        
+
         self.assertIsNotNone(metrics.start_time)
         self.assertIsNotNone(metrics.end_time)
         self.assertGreater(metrics.processing_time_seconds, 0)
@@ -312,11 +312,11 @@ class TestDatasetLogger(unittest.TestCase):
         """Test that logs are written to files"""
         self.logger.info("Test message", test_field="test_value")
         self.logger.error("Error message", error="test_error")
-        
+
         # Check that log file exists
         log_files = list(self.log_dir.glob("*.log"))
         self.assertGreater(len(log_files), 0)
-        
+
         # Read and verify log content
         with open(log_files[0], "r") as f:
             content = f.read()
@@ -332,9 +332,9 @@ class TestLogAnalyzer(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.log_dir = Path(self.temp_dir) / "logs"
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.analyzer = LogAnalyzer(self.log_dir)
-        
+
         # Create sample log entries
         self.sample_logs = self._create_sample_logs()
         self._write_sample_logs()
@@ -347,7 +347,7 @@ class TestLogAnalyzer(unittest.TestCase):
         """Create sample log entries for testing"""
         base_time = datetime.now(timezone.utc)
         logs = []
-        
+
         # Successful operation
         logs.append({
             "timestamp": base_time.isoformat(),
@@ -359,7 +359,7 @@ class TestLogAnalyzer(unittest.TestCase):
             "user_id": "user1",
             "correlation_id": "corr1",
         })
-        
+
         logs.append({
             "timestamp": (base_time + timedelta(seconds=5)).isoformat(),
             "level": "INFO",
@@ -369,7 +369,7 @@ class TestLogAnalyzer(unittest.TestCase):
             "operation_time_seconds": 5.0,
             "correlation_id": "corr1",
         })
-        
+
         # Failed operation
         logs.append({
             "timestamp": (base_time + timedelta(seconds=10)).isoformat(),
@@ -380,7 +380,7 @@ class TestLogAnalyzer(unittest.TestCase):
             "error": "Conversion error",
             "correlation_id": "corr2",
         })
-        
+
         # Memory and retry logs
         logs.append({
             "timestamp": (base_time + timedelta(seconds=15)).isoformat(),
@@ -389,7 +389,7 @@ class TestLogAnalyzer(unittest.TestCase):
             "memory_mb": 150.0,
             "operation": "import",
         })
-        
+
         logs.append({
             "timestamp": (base_time + timedelta(seconds=20)).isoformat(),
             "level": "WARNING",
@@ -397,7 +397,7 @@ class TestLogAnalyzer(unittest.TestCase):
             "retry_attempt": 1,
             "operation": "conversion",
         })
-        
+
         return logs
 
     def _write_sample_logs(self):
@@ -416,13 +416,13 @@ class TestLogAnalyzer(unittest.TestCase):
         """Test reading logs with filters"""
         # Filter by operation
         logs = self.analyzer.read_logs(operation="import")
-        self.assertEqual(len([l for l in logs if l.get("operation") == "import"]), 
+        self.assertEqual(len([l for l in logs if l.get("operation") == "import"]),
                         len([l for l in self.sample_logs if l.get("operation") == "import"]))
-        
+
         # Filter by correlation ID
         logs = self.analyzer.read_logs(correlation_id="corr1")
         self.assertEqual(len([l for l in logs if l.get("correlation_id") == "corr1"]), 2)
-        
+
         # Filter by user ID
         logs = self.analyzer.read_logs(user_id="user1")
         self.assertEqual(len([l for l in logs if l.get("user_id") == "user1"]), 1)
@@ -431,12 +431,12 @@ class TestLogAnalyzer(unittest.TestCase):
         """Test performance analysis"""
         logs = self.analyzer.read_logs()
         performance = self.analyzer.analyze_performance(logs)
-        
+
         self.assertIn("total_operations", performance)
         self.assertIn("failed_operations", performance)
         self.assertIn("memory_usage", performance)
         self.assertIn("retry_statistics", performance)
-        
+
         self.assertEqual(performance["total_operations"], 1)  # One completed operation
         self.assertEqual(performance["failed_operations"], 1)
         self.assertEqual(performance["memory_usage"]["peak"], 150.0)
@@ -460,13 +460,13 @@ class TestLogAnalyzer(unittest.TestCase):
     def test_generate_summary_report(self):
         """Test generating summary report"""
         report = self.analyzer.generate_summary_report()
-        
+
         self.assertIn("summary", report)
         self.assertIn("performance", report)
         self.assertIn("errors", report)
         self.assertIn("operations", report)
         self.assertIn("datasets", report)
-        
+
         self.assertEqual(report["summary"]["total_log_entries"], len(self.sample_logs))
         self.assertEqual(report["errors"]["total_errors"], 1)
         self.assertIn("import", report["operations"])
@@ -479,7 +479,7 @@ class TestLogAnalyzer(unittest.TestCase):
         with gzip.open(compressed_file, "wt") as f:
             for log in self.sample_logs[:2]:
                 f.write(json.dumps(log) + "\n")
-        
+
         # Read logs (should include both regular and compressed)
         logs = self.analyzer.read_logs()
         self.assertGreater(len(logs), len(self.sample_logs))
@@ -498,7 +498,7 @@ class TestConvenienceFunctions(unittest.TestCase):
             "user1",
             extra_field="extra_value"
         )
-        
+
         mock_logger.info.assert_called_once()
         call_args = mock_logger.info.call_args
         self.assertIn("Starting test_op", call_args[0][0])
@@ -511,7 +511,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         """Test log_dataset_operation_error function"""
         error = ValueError("Test error")
         log_dataset_operation_error("test_op", "dataset1", error)
-        
+
         mock_logger.error.assert_called_once()
         call_args = mock_logger.error.call_args
         self.assertIn("Error in test_op", call_args[0][0])
@@ -522,7 +522,7 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_log_dataset_operation_success(self, mock_logger):
         """Test log_dataset_operation_success function"""
         log_dataset_operation_success("test_op", "dataset1", result="success")
-        
+
         mock_logger.info.assert_called_once()
         call_args = mock_logger.info.call_args
         self.assertIn("Successfully completed test_op", call_args[0][0])
@@ -549,20 +549,20 @@ class TestLogCleanup(unittest.TestCase):
             retention_days=1,
             enable_file_logging=True,
         )
-        
+
         # Create old log file (2 days old)
         old_log = self.log_dir / "old_dataset_ops.log"
         old_log.touch()
         old_time = time.time() - (2 * 24 * 60 * 60)  # 2 days ago
         os.utime(old_log, (old_time, old_time))
-        
+
         # Create recent log file
         recent_log = self.log_dir / "recent_dataset_ops.log"
         recent_log.touch()
-        
+
         # Initialize logger (triggers cleanup)
         logger = DatasetLogger("test_cleanup", config=config)
-        
+
         # Check that old log is removed
         self.assertFalse(old_log.exists())
         self.assertTrue(recent_log.exists())
@@ -582,7 +582,7 @@ class TestPerformanceImpact(unittest.TestCase):
             enable_performance_tracking=False,
         )
         logger = DatasetLogger("perf_test", config=config)
-        
+
         # Simulate more realistic work (I/O bound operation)
         def simulate_work():
             """Simulate a more realistic workload"""
@@ -590,14 +590,14 @@ class TestPerformanceImpact(unittest.TestCase):
             for i in range(100):
                 data.append({"id": i, "value": i * 2})
             return json.dumps(data)
-        
+
         # Measure time without logging
         iterations = 100
         start_time = time.time()
         for _ in range(iterations):
             result = simulate_work()
         time_without_logging = time.time() - start_time
-        
+
         # Measure time with logging (debug messages will be skipped due to log level)
         start_time = time.time()
         for i in range(iterations):
@@ -606,13 +606,13 @@ class TestPerformanceImpact(unittest.TestCase):
             logger.debug(f"Processing item {i}", index=i)
             logger.debug(f"Result size: {len(result)}")
         time_with_logging = time.time() - start_time
-        
+
         # Calculate overhead
         if time_without_logging > 0:
             overhead = (time_with_logging - time_without_logging) / time_without_logging
         else:
             overhead = 0.0
-        
+
         # Assert overhead is less than 5%
         # Note: In practice, the overhead should be near zero since debug messages aren't processed
         # We use 10% threshold to account for timing variations in tests

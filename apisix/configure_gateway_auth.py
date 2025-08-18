@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-APISIX Gateway Authentication Configuration Script
+APISIX Gateway Authentication Configuration Script.
+
 Configures HMAC-based authentication between APISIX and FastAPI
 """
 
@@ -16,18 +17,24 @@ import requests
 
 
 class APISIXGatewayAuth:
-    """Manage APISIX Gateway Authentication configuration"""
+    """Manage APISIX Gateway Authentication configuration."""
 
-    def __init__(self, admin_url: str = "http://localhost:9180", admin_key: str = ""):
+    def __init__(self: "APISIXGatewayAuth", admin_url: str = "http://localhost:9180", admin_key: str = "") -> None:
+        """Initialize APISIX Gateway Authentication manager.
+
+        Args:
+            admin_url: APISIX admin API URL
+            admin_key: APISIX admin API key
+        """
         self.admin_url = admin_url.rstrip("/")
         self.admin_key = admin_key
         self.headers = {"X-API-KEY": admin_key, "Content-Type": "application/json"}
 
     def generate_hmac_signature(
-        self, gateway_secret: str, method: str, path: str, timestamp: Optional[str] = None
+        self: "APISIXGatewayAuth", gateway_secret: str, method: str, path: str, timestamp: Optional[str] = None
     ) -> tuple:
         """
-        Generate HMAC signature for APISIX gateway authentication
+        Generate HMAC signature for APISIX gateway authentication.
 
         Args:
             gateway_secret: Shared secret between APISIX and FastAPI
@@ -51,9 +58,11 @@ class APISIXGatewayAuth:
 
         return signature, timestamp
 
-    def test_authentication(self, gateway_secret: str, fastapi_url: str = "http://localhost:8000") -> bool:
+    def test_authentication(
+        self: "APISIXGatewayAuth", gateway_secret: str, fastapi_url: str = "http://localhost:8000"
+    ) -> bool:
         """
-        Test HMAC authentication with FastAPI
+        Test HMAC authentication with FastAPI.
 
         Args:
             gateway_secret: Shared secret
@@ -92,9 +101,9 @@ class APISIXGatewayAuth:
             print(f"❌ Gateway authentication test error: {str(e)}")
             return False
 
-    def configure_plugin_config(self, gateway_secret: str) -> bool:
+    def configure_plugin_config(self: "APISIXGatewayAuth", gateway_secret: str) -> bool:
         """
-        Configure APISIX plugin for gateway authentication
+        Configure APISIX plugin for gateway authentication.
 
         Args:
             gateway_secret: Shared secret for HMAC
@@ -169,8 +178,8 @@ class APISIXGatewayAuth:
             return False
 
 
-def main():
-    """Main configuration function"""
+def main() -> None:
+    """Configure main authentication function."""
     print("🔐 APISIX Gateway Authentication Configuration")
     print("=" * 50)
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Debug OpenAPI authentication configuration
-"""
+"""Debug OpenAPI authentication configuration."""
 import os
 import sys
 

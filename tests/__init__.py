@@ -1,5 +1,5 @@
 """
-ViolentUTF Testing Suite
+ViolentUTF Testing Suite.
 
 This package contains comprehensive tests for the ViolentUTF API system,
 including unit tests, integration tests, and endpoint verification.

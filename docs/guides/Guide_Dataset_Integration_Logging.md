@@ -121,14 +121,14 @@ correlation_id = dataset_logger.set_correlation_id()
 
 # Use the same correlation ID across multiple operations
 with dataset_logger.operation_context(
-    "import", 
+    "import",
     correlation_id=correlation_id
 ):
     # Import operation
     pass
 
 with dataset_logger.operation_context(
-    "conversion", 
+    "conversion",
     correlation_id=correlation_id
 ):
     # Conversion operation

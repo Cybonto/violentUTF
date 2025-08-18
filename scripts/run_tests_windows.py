@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Cross-platform test runner for ViolentUTF.
+"""Cross-platform test runner for ViolentUTF.
+
 Specifically designed to work on Windows, macOS, and Linux.
 """
 
@@ -10,10 +10,12 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
+from typing import List
 
 
-def find_requirements_files():
+def find_requirements_files() -> List[str]:
     """Find all requirements*.txt files in the project."""
     req_files = []
     for root, dirs, files in os.walk("."):
@@ -28,7 +30,7 @@ def find_requirements_files():
     return req_files
 
 
-def install_dependencies(req_files):
+def install_dependencies(req_files: List[str]) -> None:
     """Install dependencies from requirements files."""
     print("Installing test dependencies...")
 
@@ -37,16 +39,47 @@ def install_dependencies(req_files):
     for dep in core_deps:
         subprocess.run([sys.executable, "-m", "pip", "install", dep], check=False)
 
-    # Install from each requirements file
+    # Install from each requirements file with timeout
     for req_file in req_files:
         print(f"Installing from {req_file}")
         try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_file], check=False)
+            # Skip heavy ML dependencies in CI to avoid timeout
+            # Filter out large packages that cause timeouts
+            with open(req_file, "r") as f:
+                lines = f.readlines()
+
+            # Create temporary requirements file without heavy packages
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as tmp:
+                for line in lines:
+                    # Skip heavy ML packages that cause timeouts in CI
+                    if not any(
+                        pkg in line.lower()
+                        for pkg in ["torch", "transformers", "docling", "weasyprint", "sentence-transformers", "peft"]
+                    ):
+                        tmp.write(line)
+                tmp_file = tmp.name
+
+            # Install with timeout
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-r", tmp_file],
+                check=False,
+                timeout=180,  # 3 minutes timeout
+                capture_output=True,
+                text=True,
+            )
+
+            # Clean up temp file
+            os.unlink(tmp_file)
+
+            if result.returncode != 0:
+                print(f"Warning: Some packages failed to install from {req_file}")
+        except subprocess.TimeoutExpired:
+            print(f"Warning: Installation timed out for {req_file}, continuing...")
         except Exception as e:
             print(f"Warning: Failed to install from {req_file}: {e}")
 
 
-def find_test_files(test_dir="tests/unit"):
+def find_test_files(test_dir: str = "tests/unit") -> List[str]:
     """Find Python test files in the specified directory."""
     test_files = []
 
@@ -65,7 +98,7 @@ def find_test_files(test_dir="tests/unit"):
     return test_files
 
 
-def run_tests(test_dir="tests/unit", coverage=True, parallel=True):
+def run_tests(test_dir: str = "tests/unit", coverage: bool = True, parallel: bool = True) -> int:
     """Run pytest with coverage reporting."""
     test_files = find_test_files(test_dir)
 
@@ -99,7 +132,7 @@ def run_tests(test_dir="tests/unit", coverage=True, parallel=True):
     return result.returncode
 
 
-def create_empty_results():
+def create_empty_results() -> None:
     """Create empty test result files for CI compatibility."""
     print("Creating empty test results...")
 
@@ -126,8 +159,8 @@ def create_empty_results():
         f.write(coverage_xml)
 
 
-def main():
-    """Main entry point."""
+def main() -> None:
+    """Run the test suite."""
     parser = argparse.ArgumentParser(description="Cross-platform test runner for ViolentUTF")
     parser.add_argument("--test-dir", default="tests/unit", help="Directory containing tests")
     parser.add_argument("--no-coverage", action="store_true", help="Disable coverage reporting")

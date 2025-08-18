@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Validates that regex patterns haven't been corrupted by automated tools.
+"""Validates that regex patterns haven't been corrupted by automated tools.
+
 This script is designed to be run in CI/CD pipelines and pre-commit hooks.
 """
 import os
@@ -45,20 +45,13 @@ EXCLUDE_PATTERNS = [
 ]
 
 
-def should_check_file(filepath):
+def should_check_file(filepath: str) -> bool:
     """Determine if a file should be checked."""
     path = Path(filepath)
-
-    # Check exclusions
-    for pattern in EXCLUDE_PATTERNS:
-        if pattern in str(path):
-            return False
-
-    # Only check Python files
-    return path.suffix == ".py"
+    return all(pattern not in str(path) for pattern in EXCLUDE_PATTERNS) and path.suffix == ".py"
 
 
-def check_file(filepath):
+def check_file(filepath: str) -> bool:
     """Check a file for corrupted regex patterns."""
     errors = []
 
@@ -93,8 +86,8 @@ def check_file(filepath):
     return errors
 
 
-def main(files):
-    """Main function to check files."""
+def main(files: list[str]) -> None:
+    """Check files for regex pattern corruption."""
     all_errors = []
     files_checked = 0
 
