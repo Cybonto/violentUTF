@@ -74,3 +74,4 @@ agent_orchestrator/
 /.implement_checkpoints
 *.jsonl
 *.jsonl
+/logs
