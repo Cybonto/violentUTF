@@ -7,7 +7,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-def main():
+def main() -> int:
+    """Generate performance report from benchmark data."""
     parser = argparse.ArgumentParser(description="Generate performance report")
     parser.add_argument("--benchmark-file", help="Benchmark JSON file")
     parser.add_argument("--memory-file", help="Memory profile file")

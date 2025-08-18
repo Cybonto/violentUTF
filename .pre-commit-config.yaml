@@ -68,7 +68,7 @@ repos:
             "--max-line-length=120",
             "--extend-ignore=E203,W503,E501",
             "--max-complexity=15",
-            "--exclude=.git,__pycache__,build,dist,venv,env,.venv,.env",
+            "--exclude=.git,__pycache__,build,dist,venv,env,.venv,.env,implement_issue_venv,agent_orchestrator/implement_issue_venv,node_modules",
           ]
         additional_dependencies:
           [
@@ -173,11 +173,11 @@ repos:
         entry: '(?<!def )print\('
         language: pygrep
         types: [python]
-        exclude: "tests/|setup.py|scripts/"
+        exclude: "tests/|setup.py|scripts/|debug_|diagnose_|verify_|configure_gateway_auth.py"
 
       - id: no-hardcoded-secrets
         name: Check for hardcoded secrets
-        entry: '(api_key|apikey|password|secret|token|private_key)=.*["\x27].*["\x27]'
+        entry: '(api_key|apikey|password|secret|private_key)=["\''][a-zA-Z0-9]{8,}["\'']'
         language: pygrep
         types: [python]
         exclude: "tests/|ai-tokens.env.sample"

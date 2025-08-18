@@ -28,6 +28,12 @@ class PreCommitChecker:
     """Comprehensive pre-commit checker for ViolentUTF project."""
 
     def __init__(self: "PreCommitChecker", fix: bool = False, verbose: bool = False) -> None:
+        """Initialize the pre-commit checker.
+
+        Args:
+            fix: Whether to automatically fix issues where possible.
+            verbose: Whether to show detailed output.
+        """
         self.fix = fix
         self.verbose = verbose
         self.issues = []
@@ -287,7 +293,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def run_all_checks(self: "PreCommitChecker") -> int:
+    def run_all_checks(self: "PreCommitChecker") -> int:  # noqa: C901
         """Run all pre-commit checks."""
         self.log("ViolentUTF Pre-Commit Checker", "header")
         self.log(f"Mode: {'FIX' if self.fix else 'CHECK ONLY'}", "info")

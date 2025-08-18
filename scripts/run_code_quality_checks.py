@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Run all code quality checks locally to match GitHub Actions.
+"""Run all code quality checks locally to match GitHub Actions.
+
 This helps identify and fix issues before pushing to PR.
 """
 
@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # ANSI color codes
 GREEN = "\033[92m"
@@ -19,8 +20,20 @@ RESET = "\033[0m"
 BOLD = "\033[1m"
 
 
-def run_command(cmd, description, continue_on_error=False, capture_output=False):
-    """Run a command and report results."""
+def run_command(
+    cmd: str, description: str, continue_on_error: bool = False, capture_output: bool = False
+) -> Tuple[bool, Optional[str]]:
+    """Run a command and report results.
+
+    Args:
+        cmd: Command to execute
+        description: Description of what the command does
+        continue_on_error: Whether to continue on error
+        capture_output: Whether to capture and return output
+
+    Returns:
+        Tuple of (success, output)
+    """
     print(f"\n{BLUE}{BOLD}{'='*60}{RESET}")
     print(f"{BLUE}{BOLD}{description}{RESET}")
     print(f"{BLUE}{'='*60}{RESET}")
@@ -56,7 +69,7 @@ def run_command(cmd, description, continue_on_error=False, capture_output=False)
         return False, str(e)
 
 
-def install_tools():
+def install_tools() -> bool:
     """Install required tools."""
     print(f"{BLUE}{BOLD}Installing required tools...{RESET}")
     tools = [
@@ -76,32 +89,32 @@ def install_tools():
     return success
 
 
-def run_black_check():
+def run_black_check() -> Tuple[bool, Optional[str]]:
     """Run Black formatter check."""
     return run_command("black --check --diff . --verbose", "Black formatter check")
 
 
-def run_black_fix():
+def run_black_fix() -> Tuple[bool, Optional[str]]:
     """Run Black formatter to fix issues."""
     return run_command("black . --verbose", "Black formatter (fix mode)")
 
 
-def run_isort_check():
+def run_isort_check() -> Tuple[bool, Optional[str]]:
     """Run isort import sorter check."""
     return run_command("isort --check-only --diff . --profile black", "isort import sorter check")
 
 
-def run_isort_fix():
+def run_isort_fix() -> Tuple[bool, Optional[str]]:
     """Run isort to fix import order."""
     return run_command("isort . --profile black", "isort import sorter (fix mode)")
 
 
-def run_flake8():
+def run_flake8() -> Tuple[bool, Optional[str]]:
     """Run flake8 linter."""
     return run_command("flake8 . --count --statistics --show-source", "Flake8 linter")
 
 
-def run_pylint():
+def run_pylint() -> Tuple[bool, Optional[str]]:
     """Run pylint on Python files."""
     # Note: This continues on error as per the workflow
     return run_command(
@@ -111,13 +124,13 @@ def run_pylint():
     )
 
 
-def run_mypy():
+def run_mypy() -> Tuple[bool, Optional[str]]:
     """Run mypy type checker."""
     # Note: This continues on error as per the workflow
     return run_command("mypy --install-types --non-interactive . || true", "MyPy type checker", continue_on_error=True)
 
 
-def run_bandit():
+def run_bandit() -> Tuple[bool, Optional[str]]:
     """Run Bandit security scanner."""
     success, _ = run_command(
         "bandit -r . -f json -o bandit-report.json", "Bandit security scanner", capture_output=True
@@ -152,7 +165,7 @@ def run_bandit():
     return success, None
 
 
-def run_safety_check():
+def run_safety_check() -> Tuple[bool, Optional[str]]:
     """Run safety dependency scanner."""
     success, _ = run_command(
         "safety check --json --output safety-report.json || true",
@@ -183,8 +196,8 @@ def run_safety_check():
     return success, None
 
 
-def main():
-    """Main function to run all checks."""
+def main() -> int:
+    """Run all code quality checks and report results."""
     print(f"{BLUE}{BOLD}ViolentUTF Code Quality Check Runner{RESET}")
     print(f"{BLUE}{'='*60}{RESET}")
     print("This script runs the same checks as GitHub Actions locally.")

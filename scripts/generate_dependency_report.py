@@ -8,7 +8,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-def main():
+def main() -> int:
+    """Generate dependency report from package information."""
     parser = argparse.ArgumentParser(description="Generate dependency report")
     parser.add_argument("--outdated-files", help="Pattern for outdated JSON files")
     parser.add_argument("--safety-file", help="Safety report JSON file")
