@@ -130,9 +130,7 @@ class GarakService:
     async def run_vulnerability_scan(
         self, target_config: Dict[str, Any], probe_config: Dict[str, Any], scan_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """
-        Run Garak vulnerability scan against a target.
-        """
+        """Run Garak vulnerability scan against a target."""
         if not self.is_available():
             raise RuntimeError("Garak is not available")
 

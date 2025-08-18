@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Application configuration using Pydantic Settings.
-"""
+"""Application configuration using Pydantic Settings."""
 
 import os
 from pathlib import Path

@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-API Key database model.
-"""
+"""API Key database model."""
 
 from datetime import datetime
 from typing import Optional

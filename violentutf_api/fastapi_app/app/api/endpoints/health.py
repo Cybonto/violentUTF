@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Health check endpoints.
-"""
+"""Health check endpoints."""
 
 from datetime import datetime
 
@@ -28,9 +26,7 @@ async def health_check():
 
 @router.get("/ready")
 async def readiness_check():
-    """
-    Readiness check - verifies all dependencies are available.
-    """
+    """Readiness check - verifies all dependencies are available."""
     checks = {
         "api": True,
         "config": bool(settings.SECRET_KEY),
@@ -44,9 +40,7 @@ async def readiness_check():
 
 @router.get("/security-headers")
 async def security_headers_check(request: Request, response: Response):
-    """
-    Test endpoint to verify security headers are properly applied.
-    """
+    """Test endpoint to verify security headers are properly applied."""
     # This endpoint will automatically get security headers applied by middleware
     # We can validate them here for testing purposes
 

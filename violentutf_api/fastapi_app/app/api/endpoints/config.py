@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Configuration management endpoints.
-"""
+"""Configuration management endpoints."""
 
 import json
 import os
@@ -67,9 +65,7 @@ def save_parameters(params: Dict[str, Any]) -> None:
 
 @router.get("/parameters", response_model=ConfigParametersResponse)
 async def get_config_parameters(current_user: User = Depends(get_current_user)):
-    """
-    Get current global configuration parameters.
-    """
+    """Get current global configuration parameters."""
     try:
         config_file = get_config_file_path()
 
@@ -99,9 +95,7 @@ async def get_config_parameters(current_user: User = Depends(get_current_user)):
 
 @router.put("/parameters", response_model=ConfigParametersResponse)
 async def update_config_parameters(request: UpdateConfigRequest, current_user: User = Depends(get_current_user)):
-    """
-    Update global configuration parameters.
-    """
+    """Update global configuration parameters."""
     try:
         config_file = get_config_file_path()
 
@@ -140,9 +134,7 @@ async def update_config_parameters(request: UpdateConfigRequest, current_user: U
 
 @router.post("/parameters/load", response_model=ConfigLoadResponse)
 async def load_config_from_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
-    """
-    Load configuration from uploaded YAML file.
-    """
+    """Load configuration from uploaded YAML file."""
     try:
         # Validate file type
         if not file.filename.endswith((".yaml", ".yml")):
@@ -188,9 +180,7 @@ async def load_config_from_file(file: UploadFile = File(...), current_user: User
 
 @router.get("/parameters/files", response_model=ParameterFilesListResponse)
 async def list_parameter_files(current_user: User = Depends(get_current_user)):
-    """
-    List available parameter files in the system.
-    """
+    """List available parameter files in the system."""
     try:
         parameter_files = []
 
@@ -300,9 +290,7 @@ async def get_environment_config(current_user: User = Depends(get_current_user))
 async def update_environment_config(
     request: UpdateEnvironmentConfigRequest, current_user: User = Depends(get_current_user)
 ):
-    """
-    Update environment configuration variables.
-    """
+    """Update environment configuration variables."""
     try:
         # In a real implementation, you would update environment variables
         # For now, we'll simulate the update
@@ -401,9 +389,7 @@ async def validate_environment_config(current_user: User = Depends(get_current_u
 
 @router.get("/environment/schema", response_model=EnvironmentSchemaResponse)
 async def get_environment_schema():
-    """
-    Get the schema of required environment variables and their purposes.
-    """
+    """Get the schema of required environment variables and their purposes."""
     schema = {
         "PYRIT_DB_SALT": {
             "type": "string",

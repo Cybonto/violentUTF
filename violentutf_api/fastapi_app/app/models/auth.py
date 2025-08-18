@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Authentication models.
-"""
+"""Authentication models."""
 
 from typing import List, Optional
 

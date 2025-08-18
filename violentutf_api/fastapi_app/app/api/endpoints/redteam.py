@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Red-teaming endpoints for PyRIT and Garak integration.
-"""
+"""Red-teaming endpoints for PyRIT and Garak integration."""
 
 import logging
 from typing import Any, Dict, List, Optional

@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Echo endpoint for testing API connectivity.
-"""
+"""Echo endpoint for testing API connectivity."""
 
 from typing import Any, Dict, Optional
 

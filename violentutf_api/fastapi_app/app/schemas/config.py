@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Configuration management schemas.
-"""
+"""Configuration management schemas."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional

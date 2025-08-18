@@ -30,9 +30,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         self.headers = self._get_security_headers()
 
     def _get_security_headers(self) -> Dict[str, str]:
-        """
-        Generate security headers based on environment.
-        """
+        """Generate security headers based on environment."""
         # Base security headers for all environments
         headers = {
             # Prevent MIME type sniffing
@@ -112,9 +110,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return headers
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        """
-        Add security headers to response.
-        """
+        """Add security headers to response."""
         response = await call_next(request)
 
         # Add all security headers

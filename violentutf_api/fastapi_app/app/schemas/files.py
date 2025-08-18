@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-File management schemas.
-"""
+"""File management schemas."""
 
 from datetime import datetime
 from typing import List, Optional

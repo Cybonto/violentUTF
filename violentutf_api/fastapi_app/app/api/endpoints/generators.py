@@ -436,9 +436,7 @@ def map_uri_to_model(provider: str, uri_key: str) -> str:
 
 
 def get_fallback_models(provider: str) -> List[str]:
-    """
-    Fallback model lists if APISIX discovery fails.
-    """
+    """Fallback model lists if APISIX discovery fails."""
     fallback_mappings = {
         "openai": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-4o", "gpt-4o-mini"],
         "anthropic": [
@@ -917,9 +915,7 @@ async def update_generator(generator_id: str, request: GeneratorUpdateRequest, c
 
 
 def get_openapi_providers() -> List[str]:
-    """
-    Discover available OpenAPI providers from APISIX routes.
-    """
+    """Discover available OpenAPI providers from APISIX routes."""
     try:
         apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
         apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")

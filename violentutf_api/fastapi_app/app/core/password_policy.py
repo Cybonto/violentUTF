@@ -65,9 +65,7 @@ class PasswordValidationResult:
 
 
 class PasswordValidator:
-    """
-    Comprehensive password validation and strength assessment.
-    """
+    """Comprehensive password validation and strength assessment."""
 
     def __init__(self, policy: Optional[PasswordPolicy] = None) -> None:
         """Initialize the instance."""

@@ -128,9 +128,7 @@ class SafeIdentifier(str):
 
 
 def sanitize_string(value: str) -> str:
-    """
-    Sanitize string input to prevent injection attacks.
-    """
+    """Sanitize string input to prevent injection attacks."""
     if not isinstance(value, str):
         return str(value)
 
@@ -146,9 +144,7 @@ def sanitize_string(value: str) -> str:
 
 
 def validate_email(email: str) -> str:
-    """
-    Validate email address format.
-    """
+    """Validate email address format."""
     if not email:
         raise ValueError("Email is required")
 
@@ -165,9 +161,7 @@ def validate_email(email: str) -> str:
 
 
 def validate_username(username: str) -> str:
-    """
-    Validate username format and length.
-    """
+    """Validate username format and length."""
     if not username:
         raise ValueError("Username is required")
 
@@ -186,9 +180,7 @@ def validate_username(username: str) -> str:
 
 
 def validate_role_list(roles: List[str]) -> List[str]:
-    """
-    Validate list of roles.
-    """
+    """Validate list of roles."""
     if not roles:
         return []
 
@@ -220,9 +212,7 @@ def validate_role_list(roles: List[str]) -> List[str]:
 
 
 def validate_jwt_token(token: str) -> Dict[str, Any]:
-    """
-    Validate JWT token structure and basic format.
-    """
+    """Validate JWT token structure and basic format."""
     if not token:
         raise ValueError("Token is required")
 
@@ -274,9 +264,7 @@ def validate_jwt_token(token: str) -> Dict[str, Any]:
 
 
 def validate_url(url: str) -> str:
-    """
-    Validate URL format and security.
-    """
+    """Validate URL format and security."""
     if not url:
         raise ValueError("URL is required")
 
@@ -343,9 +331,7 @@ def validate_url(url: str) -> str:
 
 
 def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLimits.MAX_NESTED_DEPTH) -> Any:
-    """
-    Validate JSON data structure and prevent deeply nested objects.
-    """
+    """Validate JSON data structure and prevent deeply nested objects."""
     if isinstance(data, str):
         if len(data.encode("utf-8")) > SecurityLimits.MAX_JSON_SIZE:
             raise ValueError(f"JSON data too large (max {SecurityLimits.MAX_JSON_SIZE} bytes)")
@@ -386,9 +372,7 @@ def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLi
 
 
 def validate_file_upload(filename: str, content_type: str, file_size: int) -> str:
-    """
-    Validate file upload parameters.
-    """
+    """Validate file upload parameters."""
     if not filename:
         raise ValueError("Filename is required")
 
@@ -445,9 +429,7 @@ def create_validation_error(detail: str) -> ValidationError:
 
 # Enhanced validators for common patterns
 def validate_generator_parameters(parameters: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Validate generator parameters dictionary.
-    """
+    """Validate generator parameters dictionary."""
     if not isinstance(parameters, dict):
         raise ValueError("Parameters must be a dictionary")
 

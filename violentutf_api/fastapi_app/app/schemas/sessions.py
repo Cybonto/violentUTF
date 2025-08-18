@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Session management schemas.
-"""
+"""Session management schemas."""
 
 from datetime import datetime
 from typing import Any, Dict, Optional

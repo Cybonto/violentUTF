@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Authentication and authorization middleware.
-"""
+"""Authentication and authorization middleware."""
 
 import logging
 from typing import Optional, Tuple
@@ -26,9 +24,7 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 class AuthMiddleware:
-    """
-    Authentication middleware that supports both JWT and API keys.
-    """
+    """Authentication middleware that supports both JWT and API keys."""
 
     async def __call__(
         self,
@@ -36,9 +32,7 @@ class AuthMiddleware:
         credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme),
         api_key: Optional[str] = Security(api_key_header),
     ) -> User:
-        """
-        Authenticate request using either JWT or API key.
-        """
+        """Authenticate request using either JWT or API key."""
         # Check if request is from APISIX (cryptographically verified)
         if not self._is_from_apisix(request):
             # Log security event for unauthorized direct access attempt
@@ -162,9 +156,7 @@ class AuthMiddleware:
             return False
 
     async def _authenticate_jwt(self, token: str) -> User:
-        """
-        Authenticate using JWT token.
-        """
+        """Authenticate using JWT token."""
         try:
             # Decode our internal JWT
             payload = decode_token(token)
@@ -192,9 +184,7 @@ class AuthMiddleware:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate token")
 
     async def _authenticate_api_key(self, api_key: str) -> User:
-        """
-        Authenticate using API key.
-        """
+        """Authenticate using API key."""
         # Decode API key (which is actually a JWT)
         try:
             payload = decode_token(api_key)
@@ -240,9 +230,7 @@ async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme),
     api_key: Optional[str] = Security(api_key_header),
 ) -> User:
-    """
-    Dependency to get current authenticated user.
-    """
+    """Dependency to get current authenticated user."""
     return await auth_middleware(request, credentials, api_key)
 
 
@@ -252,9 +240,7 @@ async def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme),
     api_key: Optional[str] = Security(api_key_header),
 ) -> Optional[User]:
-    """
-    Dependency to get current user if authenticated, None otherwise.
-    """
+    """Dependency to get current user if authenticated, None otherwise."""
     try:
         return await auth_middleware(request, credentials, api_key)
     except HTTPException:
@@ -263,9 +249,7 @@ async def get_current_user_optional(
 
 # Role-based access control
 def require_role(role: str):
-    """
-    Dependency factory for role-based access control.
-    """
+    """Dependency factory for role-based access control."""
 
     async def role_checker(current_user: User = Security(get_current_user)):
         if role not in current_user.roles:
@@ -277,9 +261,7 @@ def require_role(role: str):
 
 # Permission-based access control
 def require_permission(permission: str):
-    """
-    Dependency factory for permission-based access control.
-    """
+    """Dependency factory for permission-based access control."""
 
     async def permission_checker(current_user: User = Security(get_current_user)):
         if permission not in current_user.permissions:

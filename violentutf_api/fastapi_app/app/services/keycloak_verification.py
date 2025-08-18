@@ -25,9 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class KeycloakJWTVerifier:
-    """
-    Keycloak JWT token verification with proper signature validation.
-    """
+    """Keycloak JWT token verification with proper signature validation."""
 
     def __init__(self) -> None:
         """Initialize the instance."""

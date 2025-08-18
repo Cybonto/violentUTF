@@ -1,9 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Database management endpoints for PyRIT Memory (DuckDB) operations.
-"""
+"""Database management endpoints for PyRIT Memory (DuckDB) operations."""
 
 import hashlib
 import logging
@@ -173,9 +171,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
 
 @router.get("/status", response_model=DatabaseStatusResponse)
 async def get_database_status(current_user: User = Depends(get_current_user)):
-    """
-    Check database initialization status and health.
-    """
+    """Check database initialization status and health."""
     try:
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
         app_data_dir = os.getenv("APP_DATA_DIR", "./app_data/violentutf")
@@ -221,9 +217,7 @@ async def get_database_status(current_user: User = Depends(get_current_user)):
 
 @router.get("/stats", response_model=DatabaseStatsResponse)
 async def get_database_stats(current_user: User = Depends(get_current_user)):
-    """
-    Get comprehensive database statistics and table information.
-    """
+    """Get comprehensive database statistics and table information."""
     try:
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
         app_data_dir = os.getenv("APP_DATA_DIR", "./app_data/violentutf")
@@ -374,9 +368,7 @@ async def reset_database(
 
 @router.post("/backup")
 async def backup_database(background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
-    """
-    Create database backup.
-    """
+    """Create database backup."""
     try:
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
         app_data_dir = os.getenv("APP_DATA_DIR", "./app_data/violentutf")
