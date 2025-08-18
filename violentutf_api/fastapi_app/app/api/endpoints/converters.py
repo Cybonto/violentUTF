@@ -646,9 +646,7 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
                 (
                     chr((ord(c) - ord("a") + 13) % 26 + ord("a"))
                     if "a" <= c <= "z"
-                    else chr((ord(c) - ord("A") + 13) % 26 + ord("A"))
-                    if "A" <= c <= "Z"
-                    else c
+                    else chr((ord(c) - ord("A") + 13) % 26 + ord("A")) if "A" <= c <= "Z" else c
                 )
                 for c in prompt
             )
@@ -671,9 +669,7 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
                 (
                     chr((ord(c) - ord("a") + offset) % 26 + ord("a"))
                     if "a" <= c <= "z"
-                    else chr((ord(c) - ord("A") + offset) % 26 + ord("A"))
-                    if "A" <= c <= "Z"
-                    else c
+                    else chr((ord(c) - ord("A") + offset) % 26 + ord("A")) if "A" <= c <= "Z" else c
                 )
                 for c in prompt
             )

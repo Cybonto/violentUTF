@@ -373,9 +373,7 @@ async def create_orchestrator_execution(
         expected_ops = (
             len(request.input_data.get("prompt_list", []))
             if request.execution_type == "prompt_list"
-            else request.input_data.get("sample_size", 1)
-            if request.execution_type == "dataset"
-            else 1
+            else request.input_data.get("sample_size", 1) if request.execution_type == "dataset" else 1
         )
 
         # For completed executions, return the full results directly (EXACTLY like original)

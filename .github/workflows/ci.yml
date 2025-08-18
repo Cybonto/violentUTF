@@ -92,9 +92,9 @@ jobs:
             // Use appropriate ref based on event type
             let ref;
             if (context.eventName === 'pull_request') {
-              // For PRs, use the head SHA to avoid issues with merge refs
-              ref = context.payload.pull_request.head.sha;
-              console.log(`Using PR head SHA: ${ref}`);
+              // Use PR source branch name, not SHA
+              ref = context.payload.pull_request.head.ref;
+              console.log(`Using PR head branch: ${ref}`);
             } else {
               // For other events, use the normal ref
               ref = context.ref;
@@ -123,9 +123,9 @@ jobs:
             // Use appropriate ref based on event type
             let ref;
             if (context.eventName === 'pull_request') {
-              // For PRs, use the head SHA to avoid issues with merge refs
-              ref = context.payload.pull_request.head.sha;
-              console.log(`Using PR head SHA: ${ref}`);
+              // Use PR source branch name, not SHA
+              ref = context.payload.pull_request.head.ref;
+              console.log(`Using PR head branch: ${ref}`);
             } else {
               // For other events, use the normal ref
               ref = context.ref;
@@ -154,9 +154,9 @@ jobs:
             // Use appropriate ref based on event type
             let ref;
             if (context.eventName === 'pull_request') {
-              // For PRs, use the head SHA to avoid issues with merge refs
-              ref = context.payload.pull_request.head.sha;
-              console.log(`Using PR head SHA: ${ref}`);
+              // Use PR source branch name, not SHA
+              ref = context.payload.pull_request.head.ref;
+              console.log(`Using PR head branch: ${ref}`);
             } else {
               // For other events, use the normal ref
               ref = context.ref;
@@ -186,9 +186,9 @@ jobs:
             // Use appropriate ref based on event type
             let ref;
             if (context.eventName === 'pull_request') {
-              // For PRs, use the head SHA to avoid issues with merge refs
-              ref = context.payload.pull_request.head.sha;
-              console.log(`Using PR head SHA: ${ref}`);
+              // Use PR source branch name, not SHA
+              ref = context.payload.pull_request.head.ref;
+              console.log(`Using PR head branch: ${ref}`);
             } else {
               // For other events, use the normal ref
               ref = context.ref;

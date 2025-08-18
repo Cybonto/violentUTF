@@ -23,31 +23,26 @@ pandas
 # python-jose removed due to CVE-2024-33663/33664 vulnerabilities
 passlib[bcrypt]>=1.7.4
 pillow>=11.3.0  # Fixed CVE-2025-48379 heap buffer overflow vulnerability
-protobuf>=6.31.1  # Fixed CVE-2025-4565 recursion DoS vulnerability
-protobuf>=6.31.1  # Fixed GHSA-8qvm-5x2c-j2w7 recursion DoS vulnerability
-pydantic>=2.7.1
+protobuf>=6.31.1  # Fixed CVE-2025-4565 and GHSA-8qvm-5x2c-j2w7 recursion DoS vulnerabilities
+pydantic>=2.6.0,<2.10.0  # Constrained for safety compatibility
 pydantic-settings>=2.1.0
-PyJWT>=2.8.0
-PyJWT[crypto]>=2.8.0
+PyJWT[crypto]>=2.10.1
 
 # AI Red-teaming frameworks (following official docs)
 pyrit
 python-dotenv>=1.0.0
 python-multipart>=0.0.6
 PyYAML>=6.0.2
-requests>=2.32.4  # Fixed CVE-2025-47287 credential leakage vulnerability
+requests>=2.32.4  # Fixed CVE-2025-47287 and CVE-2024-47081 credential leakage vulnerabilities
 
 # Additional dependencies for PyRIT and Garak (constrained for compatibility)
-requests>=2.32.4  # Fixed CVE-2024-47081 credential leakage vulnerability
 scipy
 slowapi>=0.1.9
 sqlalchemy[asyncio]>=2.0.25
 sse-starlette>=1.6.5  # For SSE transport
-torch>=2.7.1rc1  # Fixed CVE-2025-3730 and CVE-2025-2953 DoS vulnerabilities (when available)
-torch>=2.7.1  # Fixed GHSA-887c-mr87-cxwp and GHSA-3749-ghw9-m3mg DoS vulnerabilities
+torch==2.7.0  # Constrained for torchvision compatibility
+torchvision==0.22.0  # Compatible with torch 2.7.0
 tornado>=6.5.0  # Fixed CVE-2025-47287 DoS vulnerability
 transformers>=4.52.1  # Fixed CVE-2025-3777 URL injection vulnerability
-transformers
-urllib3>=2.5.0  # Fixed CVE-2025-50182 and CVE-2025-50181 redirect vulnerabilities
-urllib3>=2.5.0  # Fixed GHSA-48p4-8xcf-vxj5 and GHSA-pq67-6m6q-mj2v vulnerabilities
+urllib3>=2.5.0  # Fixed CVE-2025-50182, CVE-2025-50181, GHSA-48p4-8xcf-vxj5, and GHSA-pq67-6m6q-mj2v vulnerabilities
 uvicorn[standard]>=0.25.0

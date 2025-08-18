@@ -16,7 +16,7 @@ import requests
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from tests.utils.keycloak_auth_helper import keycloak_auth
+from tests.utils.keycloak_auth import keycloak_auth
 
 
 # Load environment variables from project root
