@@ -1,9 +1,9 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Comprehensive security logging and monitoring
-SECURITY: Implements detailed security event logging for audit, compliance, and threat detection
+"""Comprehensive security logging and monitoring.
+
+SECURITY: Implements detailed security event logging for audit, compliance, and threat detection.
 """
 
 import json
@@ -20,7 +20,7 @@ from fastapi import Request
 
 # Security event types
 class SecurityEventType(Enum):
-    """Types of security events to log"""
+    """Types of security events to log."""
 
     # Authentication events
     AUTH_SUCCESS = "auth_success"
@@ -67,7 +67,7 @@ class SecurityEventType(Enum):
 
 
 class SecuritySeverity(Enum):
-    """Security event severity levels"""
+    """Security event severity levels."""
 
     LOW = "low"
     MEDIUM = "medium"
@@ -77,7 +77,7 @@ class SecuritySeverity(Enum):
 
 @dataclass
 class SecurityEvent:
-    """Security event data structure"""
+    """Security event data structure."""
 
     event_id: str
     timestamp: str
@@ -95,22 +95,20 @@ class SecurityEvent:
     session_id: Optional[str] = None
     request_id: Optional[str] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:  # type: ignore[misc]
         if self.details is None:
             self.details = {}
 
 
 class SecurityLogger:
-    """
-    Comprehensive security logging system
-    """
+    """Comprehensive security logging system."""
 
     def __init__(self, logger_name: str = "security"):
         self.logger = logging.getLogger(logger_name)
         self._setup_security_logger()
 
-    def _setup_security_logger(self):
-        """Setup dedicated security logger with appropriate formatting"""
+    def _setup_security_logger(self) -> None:
+        """Set up dedicated security logger with appropriate formatting."""
         # Create security-specific formatter
         security_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - SECURITY - %(message)s")
 
@@ -208,7 +206,7 @@ class SecurityLogger:
             app_logger.critical(f"CRITICAL SECURITY EVENT: {event.event_type.value} - {message}")
 
     def _extract_client_ip(self, request: Request) -> str:
-        """Extract client IP address from request"""
+        """Extract client IP address from request."""
         # Check for forwarded headers (be careful of spoofing)
         forwarded_for = request.headers.get("x-forwarded-for")
         if forwarded_for:
@@ -226,7 +224,7 @@ class SecurityLogger:
         return "unknown"
 
     def _get_log_method(self, severity: SecuritySeverity):
-        """Get appropriate logging method based on severity"""
+        """Get appropriate logging method based on severity."""
         if severity == SecuritySeverity.CRITICAL:
             return self.logger.critical
         elif severity == SecuritySeverity.HIGH:
@@ -237,7 +235,7 @@ class SecurityLogger:
             return self.logger.info
 
     def _format_security_event(self, event: SecurityEvent) -> str:
-        """Format security event for logging"""
+        """Format security event for logging."""
         # Create structured log entry
         log_data = {
             "event_id": event.event_id,
@@ -269,7 +267,7 @@ class SecurityLogger:
         return json.dumps(log_data, separators=(",", ":"))
 
     def _sanitize_details(self, details: Dict[str, Any]) -> Dict[str, Any]:
-        """Remove sensitive information from details before logging"""
+        """Remove sensitive information from details before logging."""
         if not details:
             return {}
 
@@ -314,8 +312,8 @@ security_logger = SecurityLogger()
 
 
 # Convenience functions for common security events
-def log_authentication_success(username: str, user_id: str = None, request: Request = None, **kwargs):
-    """Log successful authentication"""
+def log_authentication_success(username: str, user_id: str = None, request: Request = None, **kwargs) -> None:
+    """Log successful authentication."""
     security_logger.log_security_event(
         event_type=SecurityEventType.AUTH_SUCCESS,
         severity=SecuritySeverity.LOW,
@@ -330,8 +328,8 @@ def log_authentication_success(username: str, user_id: str = None, request: Requ
 
 def log_authentication_failure(
     username: str = None, request: Request = None, reason: str = "Invalid credentials", **kwargs
-):
-    """Log failed authentication attempt"""
+) -> None:
+    """Log failed authentication attempt."""
     security_logger.log_security_event(
         event_type=SecurityEventType.AUTH_FAILURE,
         severity=SecuritySeverity.MEDIUM,
@@ -350,8 +348,8 @@ def log_access_denied(
     request: Request = None,
     reason: str = "Insufficient permissions",
     **kwargs,
-):
-    """Log access denied event"""
+) -> None:
+    """Log access denied event."""
     security_logger.log_security_event(
         event_type=SecurityEventType.ACCESS_DENIED,
         severity=SecuritySeverity.MEDIUM,
@@ -365,8 +363,8 @@ def log_access_denied(
     )
 
 
-def log_rate_limit_exceeded(username: str = None, request: Request = None, limit_type: str = "general", **kwargs):
-    """Log rate limit exceeded event"""
+def log_rate_limit_exceeded(username: str = None, request: Request = None, limit_type: str = "general", **kwargs) -> None:
+    """Log rate limit exceeded event."""
     security_logger.log_security_event(
         event_type=SecurityEventType.RATE_LIMIT_EXCEEDED,
         severity=SecuritySeverity.HIGH,
@@ -379,8 +377,8 @@ def log_rate_limit_exceeded(username: str = None, request: Request = None, limit
     )
 
 
-def log_validation_failure(request: Request = None, field: str = None, error: str = "Invalid input", **kwargs):
-    """Log input validation failure"""
+def log_validation_failure(request: Request = None, field: str = None, error: str = "Invalid input", **kwargs) -> None:
+    """Log input validation failure."""
     security_logger.log_security_event(
         event_type=SecurityEventType.VALIDATION_FAILURE,
         severity=SecuritySeverity.MEDIUM,
@@ -393,8 +391,8 @@ def log_validation_failure(request: Request = None, field: str = None, error: st
     )
 
 
-def log_injection_attempt(request: Request = None, attack_type: str = "unknown", details: str = "", **kwargs):
-    """Log potential injection attack"""
+def log_injection_attempt(request: Request = None, attack_type: str = "unknown", details: str = "", **kwargs) -> None:
+    """Log potential injection attack."""
     security_logger.log_security_event(
         event_type=SecurityEventType.INJECTION_ATTEMPT,
         severity=SecuritySeverity.HIGH,
@@ -407,8 +405,8 @@ def log_injection_attempt(request: Request = None, attack_type: str = "unknown",
     )
 
 
-def log_weak_password_attempt(username: str = None, strength: str = "weak", request: Request = None, **kwargs):
-    """Log weak password attempt"""
+def log_weak_password_attempt(username: str = None, strength: str = "weak", request: Request = None, **kwargs) -> None:
+    """Log weak password attempt."""
     security_logger.log_security_event(
         event_type=SecurityEventType.WEAK_PASSWORD,
         severity=SecuritySeverity.MEDIUM,
@@ -421,8 +419,8 @@ def log_weak_password_attempt(username: str = None, strength: str = "weak", requ
     )
 
 
-def log_api_key_usage(user_id: str = None, key_name: str = None, request: Request = None, **kwargs):
-    """Log API key usage"""
+def log_api_key_usage(user_id: str = None, key_name: str = None, request: Request = None, **kwargs) -> None:
+    """Log API key usage."""
     security_logger.log_security_event(
         event_type=SecurityEventType.API_KEY_USED,
         severity=SecuritySeverity.LOW,
@@ -435,8 +433,8 @@ def log_api_key_usage(user_id: str = None, key_name: str = None, request: Reques
     )
 
 
-def log_suspicious_activity(activity_type: str, request: Request = None, details: str = "", **kwargs):
-    """Log suspicious activity"""
+def log_suspicious_activity(activity_type: str, request: Request = None, details: str = "", **kwargs) -> None:
+    """Log suspicious activity."""
     security_logger.log_security_event(
         event_type=SecurityEventType.SUSPICIOUS_ACTIVITY,
         severity=SecuritySeverity.HIGH,
@@ -449,8 +447,8 @@ def log_suspicious_activity(activity_type: str, request: Request = None, details
     )
 
 
-def log_security_error(error_type: str, error_message: str, request: Request = None, **kwargs):
-    """Log security-related error"""
+def log_security_error(error_type: str, error_message: str, request: Request = None, **kwargs) -> None:
+    """Log security-related error."""
     security_logger.log_security_event(
         event_type=SecurityEventType.SECURITY_ERROR,
         severity=SecuritySeverity.HIGH,
@@ -465,8 +463,8 @@ def log_security_error(error_type: str, error_message: str, request: Request = N
 
 def log_token_event(
     event_type: str, username: str = None, token_type: str = "access", request: Request = None, **kwargs
-):
-    """Log token-related events"""
+) -> None:
+    """Log token-related events."""
     event_map = {
         "created": SecurityEventType.TOKEN_CREATED,
         "validated": SecurityEventType.TOKEN_VALIDATED,
@@ -492,7 +490,7 @@ def log_token_event(
 
 # Security metrics and monitoring
 class SecurityMetrics:
-    """Track security metrics for monitoring"""
+    """Track security metrics for monitoring."""
 
     def __init__(self):
         self.metrics = {
@@ -504,17 +502,17 @@ class SecurityMetrics:
         }
         self.last_reset = time.time()
 
-    def increment(self, metric: str):
-        """Increment a security metric"""
+    def increment(self, metric: str) -> None:
+        """Increment a security metric."""
         if metric in self.metrics:
             self.metrics[metric] += 1
 
     def get_metrics(self) -> Dict[str, int]:
-        """Get current security metrics"""
+        """Get current security metrics."""
         return self.metrics.copy()
 
-    def reset_metrics(self):
-        """Reset all metrics"""
+    def reset_metrics(self) -> None:
+        """Reset all metrics."""
         self.metrics = {key: 0 for key in self.metrics}
         self.last_reset = time.time()
 

@@ -1,8 +1,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Custom exceptions for dataset import operations
+"""Custom exceptions for dataset import operations.
 
 This module provides specialized exception classes for different types
 of dataset import failures, enabling more precise error handling and reporting.
@@ -12,7 +11,7 @@ from typing import Any, Dict, Optional
 
 
 class DatasetImportBaseException(Exception):
-    """Base exception for all dataset import related errors"""
+    """Base exception for all dataset import related errors."""
 
     def __init__(
         self,
@@ -28,7 +27,7 @@ class DatasetImportBaseException(Exception):
         self.context = context or {}
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert exception to dictionary for API responses"""
+        """Convert exception to dictionary for API responses."""
         return {
             "error_type": self.__class__.__name__,
             "message": self.message,
@@ -39,19 +38,19 @@ class DatasetImportBaseException(Exception):
 
 
 class DatasetConfigurationError(DatasetImportBaseException):
-    """Raised when dataset configuration is invalid or missing"""
+    """Raised when dataset configuration is invalid or missing."""
 
     pass
 
 
 class DatasetNotFoundError(DatasetImportBaseException):
-    """Raised when requested dataset cannot be found"""
+    """Raised when requested dataset cannot be found."""
 
     pass
 
 
 class DatasetStreamingError(DatasetImportBaseException):
-    """Raised when streaming operations fail"""
+    """Raised when streaming operations fail."""
 
     def __init__(self, message: str, chunk_index: Optional[int] = None, total_chunks: Optional[int] = None, **kwargs):
         super().__init__(message, **kwargs)
@@ -65,7 +64,7 @@ class DatasetStreamingError(DatasetImportBaseException):
 
 
 class DatasetMemoryError(DatasetImportBaseException):
-    """Raised when PyRIT memory operations fail"""
+    """Raised when PyRIT memory operations fail."""
 
     def __init__(self, message: str, memory_path: Optional[str] = None, operation: Optional[str] = None, **kwargs):
         super().__init__(message, **kwargs)
@@ -79,7 +78,7 @@ class DatasetMemoryError(DatasetImportBaseException):
 
 
 class DatasetValidationError(DatasetImportBaseException):
-    """Raised when dataset content validation fails"""
+    """Raised when dataset content validation fails."""
 
     def __init__(
         self, message: str, validation_errors: Optional[list] = None, prompt_index: Optional[int] = None, **kwargs
@@ -95,7 +94,7 @@ class DatasetValidationError(DatasetImportBaseException):
 
 
 class DatasetRetryExhaustedException(DatasetImportBaseException):
-    """Raised when maximum retry attempts are exceeded"""
+    """Raised when maximum retry attempts are exceeded."""
 
     def __init__(self, message: str, max_retries: int, last_error: Optional[Exception] = None, **kwargs):
         super().__init__(message, **kwargs)
@@ -111,7 +110,7 @@ class DatasetRetryExhaustedException(DatasetImportBaseException):
 
 
 class DatasetConcurrencyError(DatasetImportBaseException):
-    """Raised when concurrent import limits are exceeded"""
+    """Raised when concurrent import limits are exceeded."""
 
     def __init__(self, message: str, active_imports: int, max_concurrent: int, **kwargs):
         super().__init__(message, **kwargs)
@@ -125,7 +124,7 @@ class DatasetConcurrencyError(DatasetImportBaseException):
 
 
 class DatasetStorageError(DatasetImportBaseException):
-    """Raised when storage operations fail"""
+    """Raised when storage operations fail."""
 
     def __init__(self, message: str, storage_type: Optional[str] = None, storage_path: Optional[str] = None, **kwargs):
         super().__init__(message, **kwargs)
@@ -139,7 +138,7 @@ class DatasetStorageError(DatasetImportBaseException):
 
 
 class DatasetTimeoutError(DatasetImportBaseException):
-    """Raised when operations exceed timeout limits"""
+    """Raised when operations exceed timeout limits."""
 
     def __init__(
         self, message: str, timeout_seconds: Optional[float] = None, operation: Optional[str] = None, **kwargs
@@ -170,7 +169,7 @@ EXCEPTION_STATUS_MAPPING = {
 
 
 def get_http_status_for_exception(exception: Exception) -> int:
-    """Get appropriate HTTP status code for a dataset exception"""
+    """Get appropriate HTTP status code for a dataset exception."""
     for exc_type, status_code in EXCEPTION_STATUS_MAPPING.items():
         if isinstance(exception, exc_type):
             return status_code

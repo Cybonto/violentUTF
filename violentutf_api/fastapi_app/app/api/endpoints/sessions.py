@@ -1,11 +1,10 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Session management endpoints for user state persistence
-"""
+"""Session management endpoints for user state persistence."""
 
 import json
+import logging
 import os
 import uuid
 from datetime import datetime
@@ -18,20 +17,21 @@ from app.schemas.sessions import SessionSchemaResponse, SessionStateResponse, Up
 from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 # DuckDB storage replaces in-memory storage
 # _session_storage: Dict[str, Dict[str, Any]] = {} - REMOVED
 
 
 def get_session_file_path(username: str) -> str:
-    """Get path to user's session file"""
+    """Get path to user's session file."""
     sessions_dir = os.getenv("SESSIONS_DIR", "./app_data/sessions")
     os.makedirs(sessions_dir, exist_ok=True)
     return os.path.join(sessions_dir, f"{username}_session.json")
 
 
 def load_session_data(username: str) -> Dict[str, Any]:
-    """Load session data from file"""
+    """Load session data from file."""
     session_file = get_session_file_path(username)
 
     if os.path.exists(session_file):
@@ -54,7 +54,7 @@ def load_session_data(username: str) -> Dict[str, Any]:
 
 
 def save_session_data(username: str, session_data: Dict[str, Any]) -> None:
-    """Save session data to file"""
+    """Save session data to file."""
     session_file = get_session_file_path(username)
     session_data["last_updated"] = datetime.now().isoformat()
 
@@ -66,10 +66,8 @@ def save_session_data(username: str, session_data: Dict[str, Any]) -> None:
 
 
 @router.get("", response_model=SessionStateResponse)
-async def get_session_state(current_user: User = Depends(get_current_user)):
-    """
-    Get user's complete session state including UI preferences, workflow state, and cached data
-    """
+async def get_session_state(current_user: User = Depends(get_current_user)) -> SessionStateResponse:
+    """Get user's complete session state including UI preferences, workflow state, and cached data."""
     try:
         # Get session data from DuckDB
         db_manager = get_duckdb_manager(current_user.username)
@@ -105,10 +103,8 @@ async def get_session_state(current_user: User = Depends(get_current_user)):
 
 
 @router.put("", response_model=SessionStateResponse)
-async def update_session_state(request: UpdateSessionRequest, current_user: User = Depends(get_current_user)):
-    """
-    Update session state (UI preferences, workflow state, temporary data)
-    """
+async def update_session_state(request: UpdateSessionRequest, current_user: User = Depends(get_current_user)) -> SessionStateResponse:
+    """Update session state (UI preferences, workflow state, temporary data)."""
     try:
         # Get DuckDB manager and load existing session data
         db_manager = get_duckdb_manager(current_user.username)
@@ -166,10 +162,8 @@ async def update_session_state(request: UpdateSessionRequest, current_user: User
 
 
 @router.post("/reset", response_model=SessionStateResponse)
-async def reset_session_state(current_user: User = Depends(get_current_user)):
-    """
-    Reset session state to defaults, clearing all temporary data
-    """
+async def reset_session_state(current_user: User = Depends(get_current_user)) -> SessionStateResponse:
+    """Reset session state to defaults, clearing all temporary data."""
     try:
         # Create fresh session data
         session_data = {
@@ -202,10 +196,8 @@ async def reset_session_state(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/schema", response_model=SessionSchemaResponse)
-async def get_session_schema():
-    """
-    Get the complete session state schema definition for client implementation
-    """
+async def get_session_schema() -> SessionSchemaResponse:
+    """Get the complete session state schema definition for client implementation."""
     schema = {
         "session_id": {"type": "string", "description": "Unique session identifier", "required": True},
         "user_id": {"type": "string", "description": "User identifier", "required": True},

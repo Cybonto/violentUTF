@@ -46,9 +46,9 @@ python-dateutil>=2.8.0
 python-dotenv>=1.0.0
 python-multipart
 PyYAML>=6.0
-requests>=2.32.4        # Consolidated duplicate “requests” entry
+requests>=2.32.4        # Consolidated duplicate "requests" entry
 scipy>=1.7.0
-semopy>=2.1.0           # (Adjust as needed based on semopy’s release history)
+semopy>=2.1.0           # (Adjust as needed based on semopy's release history)
 sentence-transformers>=2.2.0
 
 # Database and ORM support

@@ -1,9 +1,9 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Comprehensive input validation module
-SECURITY: Validates and sanitizes all user inputs to prevent injection attacks and data corruption
+"""Comprehensive input validation module.
+
+SECURITY: Validates and sanitizes all user inputs to prevent injection attacks and data corruption.
 """
 
 import json
@@ -86,11 +86,11 @@ class SafeString(str):
     """String type that ensures content is sanitized"""
 
     @classmethod
-    def __get_validators__(cls):
+    def __get_validators__(cls):  # type: ignore[misc]
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):
+    def validate(cls, v: Any) -> str:
         if not isinstance(v, str):
             raise ValueError("String expected")
 
@@ -107,11 +107,11 @@ class SafeIdentifier(str):
     """Safe identifier for API keys, usernames, etc."""
 
     @classmethod
-    def __get_validators__(cls):
+    def __get_validators__(cls):  # type: ignore[misc]
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):
+    def validate(cls, v: Any) -> str:
         if not isinstance(v, str):
             raise ValueError("String expected")
 
