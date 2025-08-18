@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔐 Security Vulnerability
+    url: https://github.com/GSA-TTS/violentutf/security/advisories/new
+    about: Please report security vulnerabilities through our Security Advisory system
+  - name: 💬 Discussions
+    url: https://github.com/GSA-TTS/violentutf/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 📖 Documentation
+    url: https://github.com/GSA-TTS/violentutf/wiki
+    about: Check our documentation for guides and tutorials
+  - name: 🚨 Critical Production Issue
+    url: https://github.com/GSA-TTS/violentutf/issues/new?labels=priority:critical,type:incident
+    about: Report critical production incidents requiring immediate attention

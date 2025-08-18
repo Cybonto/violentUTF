@@ -1,0 +1,208 @@
+name: 🐛 Bug Report
+description: Report a defect in the ViolentUTF system
+title: "[BUG] "
+labels: ["type:bug", "status:pending-acceptance", "project:violentutf"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+        Help us fix issues in the ViolentUTF by providing detailed information about the problem.
+
+        ⚠️ **For security vulnerabilities, please use the [Security Advisory](https://github.com/GSA-TTS/violentutf-api/security/advisories/new) instead of creating a public issue.**
+
+  - type: textarea
+    id: frontmatter
+    attributes:
+      label: UAT Specification
+      description: Structured specification for agent consumption (DO NOT MODIFY the YAML structure)
+      value: |
+        ```yaml
+        ---
+        schemaVersion: "uat-v1.0"
+        issueID: ""
+        type: "bug"
+        status: "pending-acceptance"
+        priority: 2
+        assignee: ""
+        severity: "medium"  # critical, high, medium, low
+
+        spec:
+          bugDescription: ""
+          stepsToReproduce:
+            - step: ""
+              action: ""
+              expected: ""
+              actual: ""
+          acceptanceCriteria:
+            - given: "The bug fix is deployed"
+              when: "[Original reproduction steps]"
+              then: "[Expected behavior occurs]"
+          affectedUsers:
+            count: ""
+            segments: ["security_engineers", "red_teams"]
+
+        quality:
+          performance:
+            regression_allowed: false
+          security:
+            security_implications: false
+            cve_id: ""
+          testing:
+            regression_test_required: true
+            test_coverage_increase: true
+
+        relations:
+          parent: ""
+          duplicateOf: ""
+          relatesTo: []
+          regression_from: ""
+
+        debugging:
+          errorMessage: ""
+          stackTrace: ""
+          logs: ""
+          environment:
+            os: ""
+            python_version: ""
+            violentutf_version: ""
+            pyrit_version: ""
+            garak_version: ""
+          reproducibility: ""  # always, sometimes, rarely
+        ---
+        ```
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Bug Severity
+      description: How severe is this bug?
+      options:
+        - Critical - System unusable, data loss, security breach
+        - High - Major feature broken, no workaround
+        - Medium - Feature impaired, workaround exists
+        - Low - Minor issue, cosmetic
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen?
+      placeholder: |
+        The attack execution should complete successfully and return results within 30 seconds.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+      placeholder: |
+        The attack execution times out after 30 seconds with no results returned.
+        Error message: "Attack execution timeout"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide detailed steps to reproduce the issue
+      placeholder: |
+        1. Configure ViolentUTF with PyRIT backend
+        2. Create a new attack campaign targeting GPT-4
+        3. Execute the campaign with 10 concurrent attacks
+        4. Observe the timeout error after 30 seconds
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Information
+      description: Provide details about your environment
+      placeholder: |
+        - OS: Ubuntu 22.04
+        - Python: 3.11.5
+        - ViolentUTF: v0.2.0
+        - PyRIT: v0.3.1
+        - Garak: v0.9.0
+        - Docker: 24.0.5
+        - Database: PostgreSQL 15
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: Include any relevant log output
+      placeholder: |
+        ```
+        2024-01-15 10:30:45 ERROR [violentutf.attack_engine] Attack execution failed
+        Traceback (most recent call last):
+          File "attack_engine.py", line 123, in execute
+            ...
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots/Recordings
+      description: Add visual evidence if applicable
+      placeholder: Drag and drop images or paste links here
+    validations:
+      required: false
+
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Is this a regression?
+      description: Did this work in a previous version?
+      options:
+        - "Yes - Used to work in version: "
+        - "No - Never worked"
+        - "Unknown"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which component is experiencing the bug?
+      options:
+        - APISIX Gateway
+        - PyRIT Integration
+        - Garak Integration
+        - Attack Orchestration
+        - Results Analytics
+        - Database
+        - Keycloak SSO
+        - Streamlit App
+        - MCP Server
+        - Docker Infrastructure
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frequency
+      description: How often does this bug occur?
+      options:
+        - Always (100%)
+        - Often (>50%)
+        - Sometimes (10-50%)
+        - Rarely (<10%)
+        - Only once
+    validations:
+      required: true

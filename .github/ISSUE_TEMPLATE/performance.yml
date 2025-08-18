@@ -1,0 +1,199 @@
+name: ⚡ Performance Issue
+description: Report or improve performance problems in ViolentUTF
+title: "[PERF] "
+labels: ["type:performance", "status:pending-acceptance", "project:violentutf"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Performance Issue
+        Help us optimize ViolentUTF performance by providing detailed metrics and observations.
+
+  - type: textarea
+    id: frontmatter
+    attributes:
+      label: UAT Specification
+      description: Structured specification for agent consumption (DO NOT MODIFY the YAML structure)
+      value: |
+        ```yaml
+        ---
+        schemaVersion: "uat-v1.0"
+        issueID: ""
+        type: "performance"
+        status: "pending-acceptance"
+        priority: 2
+        assignee: ""
+
+        spec:
+          performanceIssue: ""
+          affectedOperations:
+            - operation: ""
+              current_metric: ""
+              target_metric: ""
+              unit: ""  # ms, seconds, requests/sec, MB, etc.
+          acceptanceCriteria:
+            - given: "The optimization is deployed"
+              when: "The operation is performed"
+              then: "Performance meets target metric"
+
+        quality:
+          performance:
+            response_time_p50_ms: 0
+            response_time_p95_ms: 0
+            response_time_p99_ms: 0
+            throughput_rps: 0
+            memory_usage_mb: 0
+            cpu_usage_percent: 0
+          testing:
+            load_test_required: true
+            benchmark_required: true
+            profile_required: true
+
+        relations:
+          parent: ""
+          dependsOn: []
+          relatesTo: []
+
+        analysis:
+          bottleneck_identified: ""
+          profiling_data: ""
+          current_benchmarks:
+            - scenario: ""
+              metric: ""
+              value: 0
+          target_benchmarks:
+            - scenario: ""
+              metric: ""
+              value: 0
+          proposed_optimizations:
+            - ""
+        ---
+        ```
+    validations:
+      required: true
+
+  - type: dropdown
+    id: performance_area
+    attributes:
+      label: Performance Area
+      options:
+        - API Response Time
+        - Attack Execution Speed
+        - Database Queries
+        - Memory Usage
+        - CPU Usage
+        - Network Latency
+        - Startup Time
+        - Docker Container Performance
+        - PyRIT/Garak Integration
+        - Result Processing
+        - Concurrent Attack Handling
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_metrics
+    attributes:
+      label: Current Performance Metrics
+      description: Provide measured data
+      placeholder: |
+        Operation: Execute 100 concurrent attacks
+        Current metrics:
+        - Response time (p50): 2.5s
+        - Response time (p95): 8.2s
+        - Response time (p99): 15.3s
+        - Memory usage: 4.2GB
+        - CPU usage: 85%
+        - Throughput: 12 attacks/second
+        - Error rate: 2.3%
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_metrics
+    attributes:
+      label: Expected/Target Performance
+      description: What performance level is needed?
+      placeholder: |
+        Target metrics:
+        - Response time (p95): <2s
+        - Memory usage: <2GB
+        - CPU usage: <50%
+        - Throughput: >50 attacks/second
+        - Error rate: <0.1%
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact on Users
+      description: How does this affect ViolentUTF users?
+      placeholder: |
+        - Red team operations are delayed
+        - Cannot run large-scale attack simulations
+        - API timeouts during peak usage
+        - Resource exhaustion on worker nodes
+    validations:
+      required: true
+
+  - type: textarea
+    id: profiling
+    attributes:
+      label: Profiling Data
+      description: Attach or describe profiling results
+      placeholder: |
+        Profiling results:
+        - Hotspot: attack_executor.py:234 (45% of execution time)
+        - Database queries: 1,234 queries per attack (N+1 problem detected)
+        - Memory allocation: Large objects not being garbage collected
+
+        Flame graphs: [link to profiling data]
+        APM traces: [link to monitoring dashboard]
+    validations:
+      required: false
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to Reproduce Performance Issue
+      description: Steps to reproduce the performance problem
+      placeholder: |
+        1. Start ViolentUTF with default configuration
+        2. Configure 10 target LLMs
+        3. Launch 100 concurrent attacks using PyRIT
+        4. Monitor response times and resource usage
+        5. Observe degradation after 50 concurrent attacks
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Optimizations
+      description: Suggestions for improvement
+      placeholder: |
+        - Implement connection pooling for LLM providers
+        - Add caching layer for attack templates
+        - Optimize database queries with proper indexing
+        - Implement batch processing for results
+        - Use async processing for I/O operations
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where is the performance issue observed?
+      options:
+        - Development (Local)
+        - Docker Compose
+        - Kubernetes
+        - AWS ECS
+        - Azure Container Instances
+        - Production
+        - All Environments
+    validations:
+      required: true

@@ -1,0 +1,150 @@
+name: 🔧 Technical Task
+description: Create a specific technical work item for ViolentUTF
+title: "[TASK] "
+labels: ["type:task", "status:pending-acceptance", "project:violentutf"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Technical Task
+        A discrete piece of technical work that supports a story or epic for the ViolentUTF platform.
+
+  - type: textarea
+    id: frontmatter
+    attributes:
+      label: UAT Specification
+      description: Structured specification for agent consumption (DO NOT MODIFY the YAML structure)
+      value: |
+        ```yaml
+        ---
+        schemaVersion: "uat-v1.0"
+        issueID: ""
+        type: "task"
+        status: "pending-acceptance"
+        priority: 3
+        assignee: ""
+
+        spec:
+          taskDescription: ""
+          technicalRequirements:
+            - ""
+            - ""
+          completionCriteria:
+            - ""
+            - ""
+          commands:
+            setup: []
+            execute: []
+            verify: []
+
+        quality:
+          performance:
+            execution_time_max_seconds: null
+          security:
+            security_scan_required: true
+            vulnerability_check: true
+          maintainability:
+            follows_coding_standards: true
+            requires_code_review: true
+
+        relations:
+          parent: ""
+          dependsOn: []
+          relatesTo: []
+
+        technical:
+          affectedFiles:
+            - ""
+          affectedServices:
+            - "violentutf-api"
+          requiredPermissions:
+            - ""
+          rollbackPlan: ""
+        ---
+        ```
+    validations:
+      required: true
+
+  - type: dropdown
+    id: task_category
+    attributes:
+      label: Task Category
+      options:
+        - Infrastructure Setup
+        - Database Migration
+        - API Development
+        - PyRIT Integration
+        - Garak Integration
+        - Configuration Change
+        - Dependency Update
+        - CI/CD Pipeline
+        - Monitoring/Logging
+        - Security Hardening
+        - Performance Optimization
+        - Documentation
+        - Testing
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation_steps
+    attributes:
+      label: Implementation Steps
+      description: Detailed steps to complete this task
+      placeholder: |
+        1. [ ] Set up development environment
+        2. [ ] Implement the feature/fix
+        3. [ ] Write unit tests
+        4. [ ] Update documentation
+        5. [ ] Run security scan
+        6. [ ] Verify in test environment
+    validations:
+      required: true
+
+  - type: textarea
+    id: testing_approach
+    attributes:
+      label: Testing Approach
+      description: How will this task be tested?
+      placeholder: |
+        Unit tests:
+        - Test case 1: ...
+        - Test case 2: ...
+
+        Integration tests:
+        - Test scenario 1: ...
+
+        Manual verification:
+        - Step 1: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and Mitigations
+      description: What could go wrong and how to handle it?
+      placeholder: |
+        Risk: Database migration could fail
+        Mitigation: Create backup before migration, test in staging first
+
+        Risk: API breaking change
+        Mitigation: Version the API endpoint, maintain backward compatibility
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Target Environment
+      description: Where will this task be executed?
+      options:
+        - Development
+        - Staging
+        - Production
+        - All Environments
+        - CI/CD Pipeline
+        - Local Only
+    validations:
+      required: true

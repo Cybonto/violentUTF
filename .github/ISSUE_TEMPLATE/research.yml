@@ -1,0 +1,298 @@
+name: 🔬 Research/Spike
+description: Investigate technical approaches or evaluate solutions for ViolentUTF
+title: "[RESEARCH] "
+labels: ["type:research", "status:pending-acceptance", "project:violentutf"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Research Task
+        Time-boxed investigation to gather information and make technical recommendations.
+
+  - type: textarea
+    id: frontmatter
+    attributes:
+      label: UAT Specification
+      description: Structured specification for agent consumption (DO NOT MODIFY the YAML structure)
+      value: |
+        ```yaml
+        ---
+        schemaVersion: "uat-v1.0"
+        issueID: ""
+        type: "research"
+        status: "pending-acceptance"
+        priority: 3
+        assignee: ""
+        timeboxed: true
+        maxDuration: "2 days"
+
+        spec:
+          researchQuestion: ""
+          objectives:
+            - ""
+          successCriteria:
+            - "Clear recommendation provided"
+            - "Pros and cons documented"
+            - "Proof of concept created if applicable"
+            - "Decision criteria established"
+          deliverables:
+            - type: ""  # report, poc, benchmark, comparison, recommendation
+              description: ""
+
+        quality:
+          research:
+            requires_poc: false
+            requires_benchmarks: false
+            requires_cost_analysis: false
+            requires_security_review: false
+          documentation:
+            adr_required: false
+            presentation_required: false
+
+        relations:
+          parent: ""
+          informs: []  # Issues that depend on this research
+          relatesTo: []
+
+        investigation:
+          hypothesis: ""
+          methodology: ""
+          constraints:
+            - ""
+          options_to_evaluate:
+            - option: ""
+              description: ""
+              pros: []
+              cons: []
+          evaluation_criteria:
+            - criterion: ""
+              weight: 0  # 1-5 importance
+        ---
+        ```
+    validations:
+      required: true
+
+  - type: dropdown
+    id: research_type
+    attributes:
+      label: Research Type
+      description: What kind of investigation is this?
+      options:
+        - Technical Feasibility - Can we build this?
+        - Tool Evaluation - Which tool/library to use?
+        - Performance Analysis - How fast/efficient is it?
+        - Security Assessment - Is it secure?
+        - Architecture Design - How should we structure it?
+        - Integration Study - How to integrate with X?
+        - Cost Analysis - What will it cost?
+        - Scalability Study - Will it scale?
+        - AI/ML Model Evaluation - Which model performs best?
+        - Attack Method Research - New attack techniques
+        - Defense Strategy - Protection mechanisms
+        - Compliance Review - Meet requirements?
+        - User Research - What do users need?
+        - Market Analysis - What are others doing?
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem Statement
+      description: What problem are we trying to solve?
+      placeholder: |
+        Current situation:
+        - ViolentUTF processes attacks sequentially
+        - Response time increases linearly with attack count
+        - Users report timeouts with >50 concurrent attacks
+
+        Research needed:
+        - How can we parallelize attack execution?
+        - What queueing system would work best?
+        - Can we use async processing with PyRIT/Garak?
+
+        Impact if solved:
+        - 10x throughput improvement
+        - Support for 500+ concurrent attacks
+        - Better resource utilization
+    validations:
+      required: true
+
+  - type: textarea
+    id: research_questions
+    attributes:
+      label: Research Questions
+      description: Specific questions to answer
+      placeholder: |
+        Primary questions:
+        1. Which message queue system best fits our needs? (RabbitMQ, Redis, Kafka, AWS SQS)
+        2. Can PyRIT and Garak be run in parallel processes?
+        3. What's the optimal worker pool size for our workload?
+
+        Secondary questions:
+        4. How do we handle attack result aggregation?
+        5. What's the memory footprint of parallel execution?
+        6. How do we maintain attack session state?
+        7. What's the failure recovery strategy?
+    validations:
+      required: true
+
+  - type: textarea
+    id: methodology
+    attributes:
+      label: Research Methodology
+      description: How will you conduct this research?
+      placeholder: |
+        Week 1 - Literature Review:
+        - Review documentation for RabbitMQ, Redis, Celery
+        - Study PyRIT/Garak threading models
+        - Research similar systems (other red team tools)
+
+        Week 2 - Proof of Concept:
+        - Implement basic queue with Redis
+        - Test PyRIT in worker processes
+        - Measure performance metrics
+
+        Week 3 - Evaluation:
+        - Compare queue systems (throughput, latency, reliability)
+        - Load test with realistic attack patterns
+        - Document findings and recommendations
+    validations:
+      required: true
+
+  - type: textarea
+    id: options
+    attributes:
+      label: Options to Evaluate
+      description: What solutions will you investigate?
+      placeholder: |
+        Option 1: Celery + Redis
+        - Pros: Battle-tested, Python native, good monitoring
+        - Cons: Additional dependency, complex configuration
+        - Estimated effort: 2 weeks
+
+        Option 2: FastAPI Background Tasks
+        - Pros: No new dependencies, simple implementation
+        - Cons: Limited scalability, no persistence
+        - Estimated effort: 3 days
+
+        Option 3: Kubernetes Jobs
+        - Pros: Cloud native, auto-scaling, resilient
+        - Cons: Complex setup, requires k8s
+        - Estimated effort: 3 weeks
+
+        Option 4: Custom Thread Pool
+        - Pros: Full control, minimal dependencies
+        - Cons: Reinventing the wheel, maintenance burden
+        - Estimated effort: 1 week
+    validations:
+      required: true
+
+  - type: textarea
+    id: evaluation_criteria
+    attributes:
+      label: Evaluation Criteria
+      description: How will you judge the options?
+      placeholder: |
+        Performance (Weight: 5/5):
+        - Throughput: attacks/second
+        - Latency: p50, p95, p99 response times
+        - Resource usage: CPU, memory, I/O
+
+        Reliability (Weight: 5/5):
+        - Failure recovery
+        - Message durability
+        - Exactly-once processing
+
+        Scalability (Weight: 4/5):
+        - Horizontal scaling capability
+        - Auto-scaling support
+        - Multi-region deployment
+
+        Maintainability (Weight: 4/5):
+        - Code complexity
+        - Debugging/monitoring tools
+        - Documentation quality
+
+        Cost (Weight: 3/5):
+        - Infrastructure costs
+        - Development effort
+        - Operational overhead
+    validations:
+      required: true
+
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: Expected Deliverables
+      description: What will this research produce?
+      placeholder: |
+        1. Technical Report (Markdown document):
+           - Executive summary
+           - Detailed analysis of each option
+           - Benchmark results
+           - Recommendation with justification
+
+        2. Proof of Concept:
+           - Working prototype with recommended solution
+           - Performance test harness
+           - Sample configuration
+
+        3. Architecture Decision Record (ADR):
+           - Context and problem statement
+           - Decision and rationale
+           - Consequences and trade-offs
+
+        4. Presentation:
+           - 10-slide deck for team review
+           - Demo of PoC
+           - Q&A preparation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: timebox
+    attributes:
+      label: Time Box
+      description: Maximum time to spend on this research
+      options:
+        - 1 day
+        - 2-3 days
+        - 1 week
+        - 2 weeks
+        - 1 sprint
+        - 1 month
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and Constraints
+      description: What could affect this research?
+      placeholder: |
+        Risks:
+        - PyRIT/Garak may not support parallel execution
+        - Performance gains might not justify complexity
+        - Security implications of multi-process architecture
+
+        Constraints:
+        - Must maintain backward compatibility
+        - Cannot increase infrastructure costs >20%
+        - Must complete within 2 weeks
+        - Limited to open-source solutions
+    validations:
+      required: false
+
+  - type: checkbox
+    id: research_checklist
+    attributes:
+      label: Research Checklist
+      options:
+        - label: Clear research questions defined
+        - label: Success criteria established
+        - label: Time box agreed upon
+        - label: Stakeholders identified
+        - label: Deliverables specified
+        - label: Follow-up actions planned

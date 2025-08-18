@@ -1,0 +1,123 @@
+name: 🏔️ Epic
+description: Create a large-scale initiative or major feature for ViolentUTF
+title: "[EPIC] "
+labels: ["type:epic", "status:pending-acceptance", "project:violentutf"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Epic Definition
+        An epic represents a large-scale initiative that will be broken down into smaller stories and tasks for the ViolentUTF security testing platform.
+
+  - type: textarea
+    id: frontmatter
+    attributes:
+      label: UAT Specification
+      description: Structured specification for agent consumption (DO NOT MODIFY the YAML structure)
+      value: |
+        ```yaml
+        ---
+        schemaVersion: "uat-v1.0"
+        issueID: ""
+        type: "epic"
+        status: "pending-acceptance"
+        priority: 3
+        assignee: ""
+
+        spec:
+          businessGoal: ""
+          keyObjectives:
+            - ""
+            - ""
+          successMetrics:
+            - metric: ""
+              target: ""
+              measurement: ""
+          estimatedScope:
+            storiesCount: 0
+            estimatedWeeks: 0
+
+        quality:
+          performance:
+            response_time_p95_ms: null
+            concurrent_attacks: null
+          security:
+            threat_model_required: true
+            security_review_required: true
+          maintainability:
+            documentation_required: true
+            adr_required: false
+
+        relations:
+          parent: null
+          dependsOn: []
+          relatesTo: []
+          childStories: []
+        ---
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: business_context
+    attributes:
+      label: Business Context
+      description: Why is this epic important for ViolentUTF?
+      placeholder: |
+        Describe the business problem this epic solves...
+        Who are the stakeholders (security teams, red teams, compliance)?
+        What is the expected value for AI security testing?
+        How does this align with our security testing objectives?
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical_approach
+    attributes:
+      label: High-Level Technical Approach
+      description: Outline the technical strategy
+      placeholder: |
+        - Architecture considerations (PyRIT/Garak integration)
+        - Technology choices (FastAPI, Celery, etc.)
+        - Integration points (LLM providers, target systems)
+        - Security considerations
+        - Risk factors
+    validations:
+      required: true
+
+  - type: textarea
+    id: decomposition_plan
+    attributes:
+      label: Decomposition Plan
+      description: How will this epic be broken down?
+      placeholder: |
+        Proposed user stories:
+        1. As a security engineer, I want [capability] so that [benefit]
+        2. As a red team member, I want [capability] so that [benefit]
+
+        Technical tasks:
+        - [ ] Setup infrastructure
+        - [ ] Implement core functionality
+        - [ ] Integration with PyRIT/Garak
+        - [ ] Testing and validation
+    validations:
+      required: false
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Primary Component
+      description: Which ViolentUTF component is primarily affected?
+      options:
+        - APISIX Gateway
+        - PyRIT Integration
+        - Garak Integration
+        - Attack Orchestration
+        - Results Analytics
+        - Target Management
+        - Authentication/Authorization
+        - Infrastructure
+        - Documentation
+        - Other
+    validations:
+      required: true

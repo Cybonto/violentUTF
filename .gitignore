@@ -7,6 +7,7 @@ __pycache__/
 secrets.toml
 *.log
 *temp*
+!.github/ISSUE_TEMPLATE/
 CA.crt
 !zscaler.pem
 *bak*
