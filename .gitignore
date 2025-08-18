@@ -72,3 +72,4 @@ zscaler.crt
 .env.backup
 agent_orchestrator/
 /.implement_checkpoints
+*.jsonl
