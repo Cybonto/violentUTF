@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Configuration Resources for MCP
+Configuration Resources for MCP.
 
 ==============================
 
@@ -572,7 +572,7 @@ class StatusResourceProvider(BaseResourceProvider):
 
 
 # Register configuration providers
-def register_configuration_providers():
+def register_configuration_providers() -> None:
     """Register all configuration-related resource providers."""
     advanced_resource_registry.register(ConfigurationResourceProvider())
     advanced_resource_registry.register(StatusResourceProvider())

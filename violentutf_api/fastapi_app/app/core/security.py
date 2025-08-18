@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Security utilities for JWT token generation and validation
+Security utilities for JWT token generation and validation.
 
 SECURITY: Enhanced with comprehensive validation to prevent token injection attacks
 """
@@ -222,7 +222,7 @@ def create_api_key_token(user_id: str, key_name: str, permissions: list = None, 
     Raises:
         ValueError: If input validation fails
     """
-    # Validate inputs
+    # Validate inputs.
     if not user_id:
         raise ValueError("User ID is required")
 

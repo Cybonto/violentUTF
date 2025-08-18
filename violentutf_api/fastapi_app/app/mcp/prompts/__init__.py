@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-MCP Prompts Module
+MCP Prompts Module.
 
 =================
 
@@ -28,7 +28,7 @@ class PromptsManager:
         self.registry = prompt_registry
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize prompts manager."""
         if self._initialized:
             return

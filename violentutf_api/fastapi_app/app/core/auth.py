@@ -4,7 +4,7 @@
 """Authentication and authorization middleware."""
 
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 
 import httpx
 from app.core.config import settings
@@ -63,9 +63,7 @@ class AuthMiddleware:
         )
 
     def _is_from_apisix(self, request: Request) -> bool:
-        """
-        Verify request is coming from APISIX using practical security measures.
-        """
+        """Verify request is coming from APISIX using practical security measures."""
         # Check for basic APISIX gateway identification header
         apisix_gateway_header = request.headers.get("X-API-Gateway")
         if apisix_gateway_header != "APISIX":
@@ -248,10 +246,10 @@ async def get_current_user_optional(
 
 
 # Role-based access control
-def require_role(role: str):
+def require_role(role: str) -> Any:
     """Dependency factory for role-based access control."""
 
-    async def role_checker(current_user: User = Security(get_current_user)):
+    async def role_checker(current_user: User = Security(get_current_user)) -> Any:
         if role not in current_user.roles:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Role '{role}' required")
         return current_user
@@ -260,10 +258,10 @@ def require_role(role: str):
 
 
 # Permission-based access control
-def require_permission(permission: str):
+def require_permission(permission: str) -> Any:
     """Dependency factory for permission-based access control."""
 
-    async def permission_checker(current_user: User = Security(get_current_user)):
+    async def permission_checker(current_user: User = Security(get_current_user)) -> Any:
         if permission not in current_user.permissions:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Permission '{permission}' required")
         return current_user

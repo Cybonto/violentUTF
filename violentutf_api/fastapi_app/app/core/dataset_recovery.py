@@ -12,7 +12,7 @@ import asyncio
 import logging
 import time
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, Self
 
 from app.core.dataset_config import DatasetImportConfig
 from app.core.dataset_logging import dataset_logger
@@ -76,7 +76,7 @@ class RetryStrategy:
 
 def with_retry(
     retry_strategy: Optional[RetryStrategy] = None, exceptions: tuple = (Exception,), operation_name: str = "operation"
-):
+) -> Any:
     """Decorator for adding retry logic to functions."""
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
@@ -329,10 +329,10 @@ class AutoCleanupManager:
 
         dataset_logger.info("Cleanup completed", dataset_id=dataset_id, **cleanup_results)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type is not None and self.config.cleanup_on_failure:
             # Synchronous cleanup for context manager
             import asyncio

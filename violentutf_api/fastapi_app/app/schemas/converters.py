@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Pydantic schemas for converter management API
+Pydantic schemas for converter management API.
 
 Supports the 3_Configure_Converters.py page functionality
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks
@@ -136,7 +136,7 @@ class ConverterCreateRequest(BaseModel):
     generator_id: Optional[str] = Field(None, max_length=100, description="Generator ID if converter requires target")
 
     @validator("name")
-    def validate_name_field(cls, v):
+    def validate_name_field(cls, v) -> bool:
         """Validate converter name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
@@ -144,7 +144,7 @@ class ConverterCreateRequest(BaseModel):
         return v
 
     @validator("converter_type")
-    def validate_converter_type_field(cls, v):
+    def validate_converter_type_field(cls, v) -> bool:
         """Validate converter type."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
@@ -152,12 +152,12 @@ class ConverterCreateRequest(BaseModel):
         return v
 
     @validator("parameters")
-    def validate_parameters_field(cls, v):
+    def validate_parameters_field(cls, v) -> bool:
         """Validate converter parameters."""
         return validate_generator_parameters(v)
 
     @validator("generator_id")
-    def validate_generator_id_field(cls, v):
+    def validate_generator_id_field(cls, v) -> bool:
         """Validate generator ID."""
         if v is not None:
             v = sanitize_string(v)
@@ -183,7 +183,7 @@ class ConverterPreviewRequest(BaseModel):
     dataset_id: Optional[str] = Field(None, max_length=100, description="Dataset to sample from")
 
     @validator("sample_prompts")
-    def validate_sample_prompts_field(cls, v):
+    def validate_sample_prompts_field(cls, v) -> bool:
         """Validate sample prompts."""
         if v is not None:
             validated = []
@@ -198,7 +198,7 @@ class ConverterPreviewRequest(BaseModel):
         return v
 
     @validator("dataset_id")
-    def validate_dataset_id_field(cls, v):
+    def validate_dataset_id_field(cls, v) -> bool:
         """Validate dataset ID."""
         if v is not None:
             v = sanitize_string(v)
@@ -230,7 +230,7 @@ class ConverterApplyRequest(BaseModel):
     save_to_session: bool = Field(default=True, description="Save results to session")
 
     @validator("dataset_id")
-    def validate_dataset_id_field(cls, v):
+    def validate_dataset_id_field(cls, v) -> bool:
         """Validate dataset ID."""
         v = sanitize_string(v)
         if len(v) > 100:
@@ -238,7 +238,7 @@ class ConverterApplyRequest(BaseModel):
         return v
 
     @validator("new_dataset_name")
-    def validate_new_dataset_name_field(cls, v, values):
+    def validate_new_dataset_name_field(cls, v, values) -> bool:
         """Validate new dataset name."""
         if v is not None:
             v = sanitize_string(v)
@@ -287,7 +287,7 @@ class ConverterUpdateRequest(BaseModel):
     generator_id: Optional[str] = Field(None, max_length=100, description="Updated generator ID")
 
     @validator("name")
-    def validate_name_field(cls, v):
+    def validate_name_field(cls, v) -> bool:
         """Validate converter name."""
         if v is not None:
             v = sanitize_string(v)
@@ -296,14 +296,14 @@ class ConverterUpdateRequest(BaseModel):
         return v
 
     @validator("parameters")
-    def validate_parameters_field(cls, v):
+    def validate_parameters_field(cls, v) -> bool:
         """Validate converter parameters."""
         if v is not None:
             return validate_generator_parameters(v)
         return v
 
     @validator("generator_id")
-    def validate_generator_id_field(cls, v):
+    def validate_generator_id_field(cls, v) -> bool:
         """Validate generator ID."""
         if v is not None:
             v = sanitize_string(v)
@@ -345,7 +345,7 @@ class ConverterBatchRequest(BaseModel):
     parallel: bool = Field(default=False, description="Whether to apply converters in parallel")
 
     @validator("dataset_id")
-    def validate_dataset_id_field(cls, v):
+    def validate_dataset_id_field(cls, v) -> bool:
         """Validate dataset ID."""
         v = sanitize_string(v)
         if len(v) > 100:
@@ -353,7 +353,7 @@ class ConverterBatchRequest(BaseModel):
         return v
 
     @validator("converter_ids")
-    def validate_converter_ids_field(cls, v):
+    def validate_converter_ids_field(cls, v) -> bool:
         """Validate converter IDs list."""
         validated = []
         for converter_id in v:
@@ -392,7 +392,7 @@ class ConverterExportRequest(BaseModel):
     format: Literal["json", "yaml", "csv"] = Field(default="json", description="Export format")
 
     @validator("converter_ids")
-    def validate_converter_ids_field(cls, v):
+    def validate_converter_ids_field(cls, v) -> bool:
         """Validate converter IDs list."""
         validated = []
         for converter_id in v:
@@ -415,7 +415,7 @@ class ConverterImportRequest(BaseModel):
     overwrite_existing: bool = Field(default=False, description="Whether to overwrite existing converters")
 
     @validator("config_data")
-    def validate_config_data_field(cls, v):
+    def validate_config_data_field(cls, v) -> bool:
         """Validate configuration data."""
         v = sanitize_string(v)
         if len(v.encode("utf-8")) > SecurityLimits.MAX_JSON_SIZE:

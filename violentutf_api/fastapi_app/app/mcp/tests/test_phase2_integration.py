@@ -23,7 +23,7 @@ class TestPhase2Integration:
     """Integration tests for Phase 2 MCP implementation."""
 
     @pytest.fixture
-    def mock_fastapi_app(self):
+    def mock_fastapi_app(self) -> Any:
         """Create a mock FastAPI app for testing."""
         from fastapi import FastAPI
         from fastapi.routing import APIRoute

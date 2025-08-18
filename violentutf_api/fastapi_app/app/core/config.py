@@ -5,7 +5,7 @@
 
 import os
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any
 
 from pydantic import AnyHttpUrl, Field, validator
 from pydantic_settings import BaseSettings
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
 
     @validator("JWT_SECRET_KEY", always=True)
-    def set_jwt_secret_key(cls, v, values):
+    def set_jwt_secret_key(cls, v, values) -> Any:
         """Use SECRET_KEY if JWT_SECRET_KEY is not set."""
         return v or values.get("SECRET_KEY", "")
 

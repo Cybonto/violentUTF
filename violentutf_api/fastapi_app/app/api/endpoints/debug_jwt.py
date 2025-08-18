@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Debug endpoint for JWT validation testing
+Debug endpoint for JWT validation testing.
 
 Temporarily bypasses APISIX gateway check for troubleshooting
 """
@@ -45,7 +45,7 @@ async def debug_jwt_validation(
     2. Attempting to decode the JWT token
     3. Showing the JWT secret being used (preview only)
     """
-    # Collect headers
+    # Collect headers.
     headers_received = {
         "authorization": authorization[:50] + "..." if authorization and len(authorization) > 50 else authorization,
         "x-api-gateway": x_api_gateway,
@@ -114,7 +114,7 @@ async def debug_headers(
     x_real_ip: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     """
-    Debug endpoint to show all headers received by FastAPI
+    Debug endpoint to show all headers received by FastAPI.
 
     This helps verify what APISIX is forwarding
     """

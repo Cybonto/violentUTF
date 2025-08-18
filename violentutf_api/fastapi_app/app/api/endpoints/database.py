@@ -9,7 +9,7 @@ import os
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Any
 
 import duckdb
 from app.core.auth import get_current_user
@@ -72,10 +72,10 @@ def get_secure_table_count(conn, table_name: str) -> int:
 
 
 @router.post("/initialize", response_model=DatabaseInitResponse)
-async def initialize_database(request: InitializeDatabaseRequest, current_user: User = Depends(get_current_user)):
-    """
-    Initialize user-specific PyRIT DuckDB database using salted hash-based path generation.
-    """
+async def initialize_database(
+    request: InitializeDatabaseRequest, current_user: User = Depends(get_current_user)
+) -> Any:
+    """Initialize user-specific PyRIT DuckDB database using salted hash-based path generation."""
     try:
         # Get configuration
         salt = request.custom_salt or os.getenv("PYRIT_DB_SALT", "default_salt_2025")
@@ -170,7 +170,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
 
 
 @router.get("/status", response_model=DatabaseStatusResponse)
-async def get_database_status(current_user: User = Depends(get_current_user)):
+async def get_database_status(current_user: User = Depends(get_current_user)) -> Any:
     """Check database initialization status and health."""
     try:
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
@@ -216,7 +216,7 @@ async def get_database_status(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/stats", response_model=DatabaseStatsResponse)
-async def get_database_stats(current_user: User = Depends(get_current_user)):
+async def get_database_stats(current_user: User = Depends(get_current_user)) -> Any:
     """Get comprehensive database statistics and table information."""
     try:
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
@@ -268,7 +268,7 @@ async def get_database_stats(current_user: User = Depends(get_current_user)):
         )
 
 
-async def reset_database_task(db_path: str, preserve_user_data: bool = False):
+async def reset_database_task(db_path: str, preserve_user_data: bool = False) -> None:
     """Background task to reset database."""
     try:
         with duckdb.connect(db_path) as conn:
@@ -331,7 +331,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
 @router.post("/reset")
 async def reset_database(
     request: ResetDatabaseRequest, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)
-):
+) -> Any:
     """
     Reset database tables (drops and recreates schema). Requires confirmation.
     """
@@ -367,7 +367,7 @@ async def reset_database(
 
 
 @router.post("/backup")
-async def backup_database(background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
+async def backup_database(background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)) -> Any:
     """Create database backup."""
     try:
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
@@ -380,7 +380,7 @@ async def backup_database(background_tasks: BackgroundTasks, current_user: User 
         # Create backup
         backup_path = f"{db_path}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-        def backup_task():
+        def backup_task() -> None:
             import shutil
 
             shutil.copy2(db_path, backup_path)

@@ -2,14 +2,14 @@
 # # Licensed under MIT License
 
 """
-Authentication endpoints for obtaining JWT tokens
+Authentication endpoints for obtaining JWT tokens.
 
 SECURITY: Rate limiting and secure error handling implemented to prevent attacks
 """
 
 import logging
 from datetime import timedelta
-from typing import Optional
+from typing import Optional, Any
 
 import httpx
 from app.core.auth import get_current_user
@@ -37,13 +37,13 @@ router = APIRouter()
 
 @router.post("/token", response_model=Token)
 @auth_rate_limit("auth_login")
-async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     """
     OAuth2 compatible token endpoint.
 
     Authenticates against Keycloak and returns a JWT token.
     """
-    # Prepare request to Keycloak
+    # Prepare request to Keycloak.
     token_url = f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}/protocol/openid-connect/token"
 
     data = {
@@ -150,14 +150,14 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
 
 @router.get("/me", response_model=UserInfo)
 @auth_rate_limit("auth_token")
-async def read_users_me(request: Request, current_user: User = Depends(get_current_user)):
+async def read_users_me(request: Request, current_user: User = Depends(get_current_user)) -> Any:
     """Get current user information."""
     return UserInfo(username=current_user.username, email=current_user.email, roles=current_user.roles)
 
 
 @router.post("/refresh", response_model=Token)
 @auth_rate_limit("auth_refresh")
-async def refresh_token(request: Request, current_user: User = Depends(get_current_user)):
+async def refresh_token(request: Request, current_user: User = Depends(get_current_user)) -> Any:
     """Refresh access token."""
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token_data = {"sub": current_user.username, "email": current_user.email, "roles": current_user.roles}
@@ -169,7 +169,7 @@ async def refresh_token(request: Request, current_user: User = Depends(get_curre
 
 @router.get("/token/info", response_model=TokenInfoResponse)
 @auth_rate_limit("auth_validate")
-async def get_token_info(request: Request, current_user: User = Depends(get_current_user)):
+async def get_token_info(request: Request, current_user: User = Depends(get_current_user)) -> Any:
     """Get decoded JWT token information for current user."""
     from datetime import datetime
 
@@ -193,7 +193,7 @@ async def get_token_info(request: Request, current_user: User = Depends(get_curr
 @auth_rate_limit("auth_validate")
 async def validate_token(
     request_data: TokenValidationRequest, request: Request, current_user: User = Depends(get_current_user)
-):
+) -> Any:
     """Validate JWT token and check specific roles/permissions."""
     try:
         # Check if user has AI access
@@ -227,7 +227,7 @@ async def validate_token(
 
 @router.post("/logout")
 @auth_rate_limit("auth_token")
-async def logout(request: Request, current_user: User = Depends(get_current_user)):
+async def logout(request: Request, current_user: User = Depends(get_current_user)) -> Any:
     """Invalidate current session and tokens."""
     # In a real implementation, you would:
     # 1. Add token to blacklist
@@ -237,7 +237,7 @@ async def logout(request: Request, current_user: User = Depends(get_current_user
 
 
 @router.get("/password-requirements")
-async def get_password_requirements():
+async def get_password_requirements() -> Any:
     """Get password security requirements and policy."""
     return {
         "requirements": default_password_validator.generate_password_requirements(),
@@ -247,9 +247,9 @@ async def get_password_requirements():
 
 @router.post("/password-strength")
 @auth_rate_limit("auth_validate")
-async def check_password_strength(request: Request):
+async def check_password_strength(request: Request) -> Any:
     """
-    Check password strength without storing or logging the password
+    Check password strength without storing or logging the password.
 
     Expects JSON: {"password": "string", "username": "optional", "email": "optional"}
     """

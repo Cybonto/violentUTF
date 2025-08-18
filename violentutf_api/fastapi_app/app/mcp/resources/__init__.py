@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-MCP Resources Module - Enhanced
+MCP Resources Module - Enhanced.
 
 ==============================
 
@@ -30,7 +30,7 @@ class ResourceRegistry:
         self.manager = resource_manager
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize resource registry."""
         if self._initialized:
             return
@@ -79,7 +79,7 @@ class ResourceRegistry:
         """Get comprehensive resource cache statistics."""
         return self.manager.get_cache_stats()
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear resource cache."""
         self.manager.clear_cache()
 

@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Pydantic schemas for dataset management API endpoints
+Pydantic schemas for dataset management API endpoints.
 
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks
 """
@@ -66,12 +66,12 @@ class SeedPromptInfo(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
 
     @validator("value")
-    def validate_value_field(cls, v):
+    def validate_value_field(cls, v) -> bool:
         """Validate prompt value."""
         return sanitize_string(v)
 
     @validator("name")
-    def validate_name_field(cls, v):
+    def validate_name_field(cls, v) -> bool:
         """Validate prompt name."""
         if v is not None:
             v = sanitize_string(v)
@@ -80,7 +80,7 @@ class SeedPromptInfo(BaseModel):
         return v
 
     @validator("harm_categories")
-    def validate_harm_categories_field(cls, v):
+    def validate_harm_categories_field(cls, v) -> bool:
         """Validate harm categories."""
         if v is not None:
             validated = []
@@ -94,7 +94,7 @@ class SeedPromptInfo(BaseModel):
         return v
 
     @validator("metadata")
-    def validate_metadata_field(cls, v):
+    def validate_metadata_field(cls, v) -> bool:
         """Validate metadata."""
         if v is not None:
             return validate_json_data(v, max_depth=3)
@@ -144,7 +144,7 @@ class DatasetCreateRequest(BaseModel):
     )
 
     @validator("name")
-    def validate_name_field(cls, v):
+    def validate_name_field(cls, v) -> bool:
         """Validate dataset name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_NAME.match(v):
@@ -154,7 +154,7 @@ class DatasetCreateRequest(BaseModel):
         return v
 
     @validator("dataset_type")
-    def validate_dataset_type_field(cls, v):
+    def validate_dataset_type_field(cls, v) -> bool:
         """Validate dataset type."""
         if v is not None:
             v = sanitize_string(v)
@@ -163,14 +163,14 @@ class DatasetCreateRequest(BaseModel):
         return v
 
     @validator("url")
-    def validate_url_field(cls, v):
+    def validate_url_field(cls, v) -> bool:
         """Validate URL."""
         if v is not None:
             return validate_url(v)
         return v
 
     @validator("file_type")
-    def validate_file_type_field(cls, v):
+    def validate_file_type_field(cls, v) -> bool:
         """Validate file type."""
         if v is not None:
             v = sanitize_string(v).lower()
@@ -180,14 +180,14 @@ class DatasetCreateRequest(BaseModel):
         return v
 
     @validator("config")
-    def validate_config_field(cls, v):
+    def validate_config_field(cls, v) -> bool:
         """Validate configuration."""
         if v is not None:
             return validate_json_data(v, max_depth=3)
         return v
 
     @validator("field_mappings")
-    def validate_field_mappings_field(cls, v):
+    def validate_field_mappings_field(cls, v) -> bool:
         """Validate field mappings."""
         if v is not None:
             if len(v) > 50:
@@ -205,7 +205,7 @@ class DatasetCreateRequest(BaseModel):
         return v
 
     @validator("dataset_ids")
-    def validate_dataset_ids_field(cls, v):
+    def validate_dataset_ids_field(cls, v) -> bool:
         """Validate dataset IDs list."""
         if v is not None:
             validated = []
@@ -220,20 +220,20 @@ class DatasetCreateRequest(BaseModel):
         return v
 
     @validator("template")
-    def validate_template_field(cls, v):
+    def validate_template_field(cls, v) -> bool:
         """Validate transformation template."""
         if v is not None:
             return sanitize_string(v)
         return v
 
     @validator("dataset_type")
-    def validate_native_dataset(cls, v, values):
+    def validate_native_dataset(cls, v, values) -> bool:
         if values.get("source_type") == DatasetSourceType.NATIVE and not v:
             raise ValueError("dataset_type is required for native datasets")
         return v
 
     @validator("url")
-    def validate_online_dataset(cls, v, values):
+    def validate_online_dataset(cls, v, values) -> bool:
         if values.get("source_type") == DatasetSourceType.ONLINE and not v:
             raise ValueError("url is required for online datasets")
         return v
@@ -252,7 +252,7 @@ class DatasetUpdateRequest(BaseModel):
     overwrite: Optional[bool] = Field(default=False, description="Whether to overwrite if exists")
 
     @validator("name")
-    def validate_name_field(cls, v):
+    def validate_name_field(cls, v) -> bool:
         """Validate dataset name."""
         if v is not None:
             v = sanitize_string(v)
@@ -273,12 +273,12 @@ class DatasetTransformRequest(BaseModel):
     template_variables: Optional[Dict[str, Any]] = Field(default=None, description="Template variables")
 
     @validator("template")
-    def validate_template_field(cls, v):
+    def validate_template_field(cls, v) -> bool:
         """Validate transformation template."""
         return sanitize_string(v)
 
     @validator("template_type")
-    def validate_template_type_field(cls, v):
+    def validate_template_type_field(cls, v) -> bool:
         """Validate template type."""
         v = sanitize_string(v).lower()
         allowed_types = ["custom", "existing", "predefined"]
@@ -287,7 +287,7 @@ class DatasetTransformRequest(BaseModel):
         return v
 
     @validator("template_variables")
-    def validate_template_variables_field(cls, v):
+    def validate_template_variables_field(cls, v) -> bool:
         """Validate template variables."""
         if v is not None:
             return validate_json_data(v, max_depth=2)
@@ -313,7 +313,7 @@ class DatasetSaveRequest(BaseModel):
     overwrite: bool = Field(default=False, description="Whether to overwrite if exists")
 
     @validator("name")
-    def validate_name_field(cls, v):
+    def validate_name_field(cls, v) -> bool:
         """Validate dataset save name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):

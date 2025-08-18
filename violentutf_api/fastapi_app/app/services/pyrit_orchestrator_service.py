@@ -944,7 +944,7 @@ class PyRITOrchestratorService:
 
         return formatted_scores
 
-    def dispose_orchestrator(self, orchestrator_id: str):
+    def dispose_orchestrator(self, orchestrator_id: str) -> None:
         """Clean up orchestrator instance."""
         if orchestrator_id in self._orchestrator_instances:
             orchestrator = self._orchestrator_instances[orchestrator_id]

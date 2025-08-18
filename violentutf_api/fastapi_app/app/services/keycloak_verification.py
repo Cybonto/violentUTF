@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Keycloak JWT Token Verification Service
+Keycloak JWT Token Verification Service.
 
 SECURITY: Implements proper JWT signature verification using Keycloak public keys
 """
@@ -207,7 +207,7 @@ class KeycloakJWTVerifier:
         Raises:
             HTTPException: If validation fails
         """
-        # Validate token type
+        # Validate token type.
         token_type = decoded_token.get("typ")
         if token_type and token_type.lower() != "bearer":
             logger.warning(f"Invalid token type: {token_type}")
@@ -256,7 +256,7 @@ class KeycloakJWTVerifier:
         Returns:
             Dictionary containing user information
         """
-        # Extract realm roles
+        # Extract realm roles.
         realm_access = decoded_token.get("realm_access", {})
         realm_roles = realm_access.get("roles", [])
 

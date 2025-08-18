@@ -25,7 +25,7 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
     # Note: SSE transport implementation handled by FastAPI endpoints below
 
     @app.post("/")
-    async def handle_sse_request(request: Request, current_user=Depends(get_current_user)):
+    async def handle_sse_request(request: Request, current_user=Depends(get_current_user)) -> Any:
         """Handle SSE requests with authentication."""
         try:
             # Read request body
@@ -230,7 +230,7 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
             raise HTTPException(status_code=500, detail="Internal server error")
 
     @app.get("/stream")
-    async def handle_sse_stream(request: Request, current_user=Depends(get_current_user)):
+    async def handle_sse_stream(request: Request, current_user=Depends(get_current_user)) -> Any:
         """Handle SSE streaming connection."""
         logger.info(f"MCP SSE stream connection from {current_user.username}")
 

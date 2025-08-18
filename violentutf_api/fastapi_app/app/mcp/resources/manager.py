@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-MCP Resource Manager - Enhanced Provides access to ViolentUTF resources
+MCP Resource Manager - Enhanced Provides access to ViolentUTF resources.
 
 ======================================================================
 
@@ -343,7 +343,7 @@ class ViolentUTFResourceManager:
                 logger.error(f"Unexpected error on API call {url}: {e}")
                 return None
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear resource cache."""
         self.resource_cache.clear()
         # Also clear advanced registry caches

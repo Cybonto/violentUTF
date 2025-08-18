@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-JWT API Key management endpoints
+JWT API Key management endpoints.
 
 SECURITY: Rate limiting applied to prevent API key enumeration attacks
 """
@@ -10,7 +10,7 @@ SECURITY: Rate limiting applied to prevent API key enumeration attacks
 import hashlib
 import secrets
 from datetime import datetime
-from typing import List
+from typing import List, Any
 
 from app.core.auth import get_current_user
 from app.core.rate_limiting import auth_rate_limit
@@ -33,7 +33,7 @@ async def create_api_key(
     request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-):
+) -> Any:
     """Create a new API key for the authenticated user."""
     # Check if user has ai-api-access role
     if "ai-api-access" not in current_user.roles:
@@ -80,7 +80,7 @@ async def create_api_key(
 @auth_rate_limit("auth_token")
 async def list_api_keys(
     request: Request, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)
-):
+) -> Any:
     """List all API keys for the authenticated user."""
     # Query database for user's API keys
     result = await db.execute(
@@ -112,7 +112,7 @@ async def revoke_api_key(
     request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-):
+) -> Any:
     """Revoke an API key."""
     # Find the API key
     result = await db.execute(
@@ -132,13 +132,13 @@ async def revoke_api_key(
 
 @router.get("/current", response_model=APIKeyResponse)
 @auth_rate_limit("auth_token")
-async def get_current_token(request: Request, current_user: User = Depends(get_current_user)):
+async def get_current_token(request: Request, current_user: User = Depends(get_current_user)) -> Any:
     """
-    Get the current user's JWT token (from their session)
+    Get the current user's JWT token (from their session).
 
     This is useful for displaying the token in the UI
     """
-    # Create a session-based API key that expires with the current session
+    # Create a session-based API key that expires with the current session.
     from datetime import timedelta
 
     key_data = create_api_key_token(

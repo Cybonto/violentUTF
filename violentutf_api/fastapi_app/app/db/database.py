@@ -25,7 +25,7 @@ async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit
 Base = declarative_base()
 
 
-async def init_db():
+async def init_db() -> None:
     """Initialize database tables."""
     # Ensure the database directory exists
     if "sqlite" in DATABASE_URL:

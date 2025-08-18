@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-PyRIT Integration Service
+PyRIT Integration Service.
 
 Provides PyRIT-based AI red-teaming functionality for ViolentUTF platform
 """
@@ -51,9 +51,9 @@ class PyRITService:
         except ImportError:
             return False
 
-    async def create_prompt_target(self, target_config: Dict[str, Any]):
+    async def create_prompt_target(self, target_config: Dict[str, Any]) -> Any:
         """
-        Create a PyRIT PromptTarget from configuration
+        Create a PyRIT PromptTarget from configuration.
 
         This replaces the simulated target creation in generators
         """
@@ -176,7 +176,7 @@ class PyRITService:
         self, target, prompts: List[str], conversation_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
-        Run PyRIT orchestrator for red-teaming
+        Run PyRIT orchestrator for red-teaming.
 
         This replaces simulated orchestrator functionality
         """

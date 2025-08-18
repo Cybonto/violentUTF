@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Phase 3 Integration Tests for ViolentUTF MCP Server
+Phase 3 Integration Tests for ViolentUTF MCP Server.
 
 ==================================================
 

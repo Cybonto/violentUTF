@@ -23,7 +23,7 @@ class ToolRegistry:
         self.tools: Dict[str, Tool] = {}
         self.endpoints_discovered = False
 
-    async def discover_tools(self, app=None):
+    async def discover_tools(self, app=None) -> None:
         """Discover and register available tools from FastAPI endpoints and specialized tools."""
         logger.info("Discovering MCP tools from FastAPI endpoints and specialized tools...")
 
@@ -141,7 +141,7 @@ class ToolRegistry:
         """Get the number of registered tools."""
         return len(self.tools)
 
-    def clear_tools(self):
+    def clear_tools(self) -> None:
         """Clear all registered tools."""
         self.tools.clear()
         self.endpoints_discovered = False

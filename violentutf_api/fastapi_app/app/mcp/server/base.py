@@ -48,7 +48,7 @@ class ViolentUTFMCPServer:
         if mcp_settings.MCP_ENABLE_SAMPLING:
             self.server.create_message = self._create_message
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize the MCP server."""
         if self._initialized:
             return
@@ -110,7 +110,7 @@ class ViolentUTFMCPServer:
 
         # Add startup event to initialize server and discover tools
         @app.on_event("startup")
-        async def startup_mcp():
+        async def startup_mcp() -> None:
             await self.initialize()
 
             # Discover tools from FastAPI endpoints

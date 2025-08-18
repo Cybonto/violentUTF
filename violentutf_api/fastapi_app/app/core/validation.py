@@ -84,7 +84,7 @@ class ValidationPatterns:
 class SafeString(str):
     """String type that ensures content is sanitized."""
     @classmethod
-    def __get_validators__(cls):  # type: ignore[misc]
+    def __get_validators__(cls) -> None:
         yield cls.validate
 
     @classmethod
@@ -104,7 +104,7 @@ class SafeString(str):
 class SafeIdentifier(str):
     """Safe identifier for API keys, usernames, etc."""
     @classmethod
-    def __get_validators__(cls):  # type: ignore[misc]
+    def __get_validators__(cls) -> None:
         yield cls.validate
 
     @classmethod
@@ -341,7 +341,7 @@ def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLi
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON format: {str(e)}")
 
-    def check_depth(obj, current_depth=0):
+    def check_depth(obj, current_depth=0) -> None:
         if current_depth > max_depth:
             raise ValueError(f"JSON structure too deeply nested (max depth {max_depth})")
 

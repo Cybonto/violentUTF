@@ -145,7 +145,7 @@ class MCPToolGenerator:
         """List all generated tools."""
         return list(self.generated_tools.values())
 
-    def clear_tools(self):
+    def clear_tools(self) -> None:
         """Clear all generated tools."""
         self.generated_tools.clear()
         logger.info("Cleared all generated MCP tools")

@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Rate limiting implementation for authentication endpoints
+Rate limiting implementation for authentication endpoints.
 
 SECURITY: Implements rate limiting to prevent brute force attacks
 """
@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ def get_client_ip(request: Request) -> str:
 
     SECURITY: Uses proper forwarded headers from APISIX gateway
     """
-    # Check for forwarded IP from APISIX gateway
+    # Check for forwarded IP from APISIX gateway.
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
         # Take the first IP (original client) from X-Forwarded-For chain
@@ -85,13 +86,13 @@ def get_rate_limit(endpoint_type: str) -> str:
 
 
 # Rate limiting decorators for different endpoint types
-def auth_rate_limit(endpoint_type: str = "auth_login"):
+def auth_rate_limit(endpoint_type: str = "auth_login") -> Any:
     """Rate limiting decorator for authentication endpoints."""
     rate_limit = get_rate_limit(endpoint_type)
     return limiter.limit(rate_limit)
 
 
-def api_rate_limit(endpoint_type: str = "api_general"):
+def api_rate_limit(endpoint_type: str = "api_general") -> Any:
     """Rate limiting decorator for general API endpoints."""
     rate_limit = get_rate_limit(endpoint_type)
     return limiter.limit(rate_limit)

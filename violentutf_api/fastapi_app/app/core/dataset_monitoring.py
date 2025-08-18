@@ -144,7 +144,7 @@ class PerformanceMonitor:
     def _start_background_monitoring(self) -> None:
         """Start background system monitoring."""
 
-        async def monitor_loop():
+        async def monitor_loop() -> None:
             while True:
                 try:
                     system_metrics = SystemMetrics.collect_current()
@@ -408,7 +408,7 @@ class PerformanceMonitor:
 
         logger.info("All monitoring metrics have been reset")
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Cleanup monitoring task."""
         if hasattr(self, "_monitoring_task") and self._monitoring_task:
             try:

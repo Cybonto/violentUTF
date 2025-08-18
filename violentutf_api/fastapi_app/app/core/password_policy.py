@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Password strength validation and policy enforcement
+Password strength validation and policy enforcement.
 
 SECURITY: Implements comprehensive password security requirements to prevent weak passwords
 """

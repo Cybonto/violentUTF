@@ -26,7 +26,7 @@ class APIKey(Base):
     last_used_at = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=True)
 
-    async def update_last_used(self):
+    async def update_last_used(self) -> None:
         """Update last used timestamp."""
         self.last_used_at = datetime.utcnow()
 

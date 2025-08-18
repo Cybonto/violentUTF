@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Base Classes for MCP Prompts
+Base Classes for MCP Prompts.
 
 ============================
 
@@ -89,7 +89,7 @@ class BasePrompt(ABC):
         """Get additional context for the prompt."""
         pass
 
-    def add_argument(self, argument: PromptArgument):
+    def add_argument(self, argument: PromptArgument) -> None:
         """Add argument to prompt definition."""
         self.arguments.append(argument)
 
@@ -181,7 +181,7 @@ class PromptRegistry:
         self._prompts: Dict[str, BasePrompt] = {}
         self._categories: Dict[str, List[str]] = {}
 
-    def register(self, prompt: BasePrompt):
+    def register(self, prompt: BasePrompt) -> None:
         """Register a prompt."""
         logger.info(f"Registering prompt: {prompt.name} (category: {prompt.category})")
         self._prompts[prompt.name] = prompt

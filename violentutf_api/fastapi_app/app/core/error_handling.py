@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Secure error handling module to prevent information disclosure
+Secure error handling module to prevent information disclosure.
 
 SECURITY: Sanitizes error messages and prevents internal system information leakage
 """
@@ -128,7 +128,7 @@ def create_error_response(
     Returns:
         Sanitized error response dictionary
     """
-    # Generate error ID for tracking
+    # Generate error ID for tracking.
     import uuid
 
     error_id = str(uuid.uuid4())[:8] if include_error_id else None
@@ -182,7 +182,7 @@ def handle_validation_error(error: ValidationError) -> Dict[str, Any]:
     Returns:
         Sanitized validation error response
     """
-    # Extract validation errors but sanitize them
+    # Extract validation errors but sanitize them.
     errors = []
     for err in error.errors():
         field = err.get("loc", ["unknown"])[-1]  # Get last part of field path
@@ -316,7 +316,7 @@ async def development_exception_handler(request: Request, exc: Exception) -> JSO
     return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=response)
 
 
-def setup_error_handlers(app, development_mode: bool = False):
+def setup_error_handlers(app, development_mode: bool = False) -> None:
     """
     Setup error handlers for the FastAPI application.
 
@@ -324,7 +324,7 @@ def setup_error_handlers(app, development_mode: bool = False):
         app: FastAPI application instance
         development_mode: Whether to use development error handlers
     """
-    # Security errors
+    # Security errors.
     app.add_exception_handler(SecurityError, security_error_handler)
 
     # Rate limit errors

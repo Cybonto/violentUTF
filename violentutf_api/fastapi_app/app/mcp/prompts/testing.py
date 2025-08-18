@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-General Testing Prompts for MCP
+General Testing Prompts for MCP.
 
 ===============================
 
@@ -624,7 +624,7 @@ class BenchmarkTestPrompt(DynamicPrompt):
 
 
 # Register all testing prompts
-def register_testing_prompts():
+def register_testing_prompts() -> None:
     """Register all general testing prompts."""
     prompt_registry.register(CapabilityTestPrompt())
     prompt_registry.register(ReasoningTestPrompt())

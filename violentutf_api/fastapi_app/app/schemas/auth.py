@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Authentication and authorization schemas
+Authentication and authorization schemas.
 
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks
 """
@@ -31,7 +31,7 @@ class Token(BaseModel):
     expires_in: int = Field(..., gt=0, le=86400, description="Token expiration time in seconds")
 
     @validator("access_token")
-    def validate_access_token(cls, v):
+    def validate_access_token(cls, v) -> bool:
         """Validate JWT token format."""
         if not ValidationPatterns.JWT_TOKEN.match(v):
             raise ValueError("Invalid JWT token format")
@@ -46,14 +46,14 @@ class TokenData(BaseModel):
     roles: List[str] = Field(default_factory=list, max_items=20)
 
     @validator("username")
-    def validate_username_field(cls, v):
+    def validate_username_field(cls, v) -> bool:
         """Validate username format."""
         if v is not None:
             return validate_username(v)
         return v
 
     @validator("roles")
-    def validate_roles_field(cls, v):
+    def validate_roles_field(cls, v) -> bool:
         """Validate roles list."""
         return validate_role_list(v)
 
@@ -66,12 +66,12 @@ class UserInfo(BaseModel):
     roles: List[str] = Field(default_factory=list, max_items=20)
 
     @validator("username")
-    def validate_username_field(cls, v):
+    def validate_username_field(cls, v) -> bool:
         """Validate username format."""
         return validate_username(v)
 
     @validator("roles")
-    def validate_roles_field(cls, v):
+    def validate_roles_field(cls, v) -> bool:
         """Validate roles list."""
         return validate_role_list(v)
 
@@ -83,7 +83,7 @@ class APIKeyCreate(BaseModel):
     permissions: List[str] = Field(default=["api:access"], max_items=20, description="List of permissions for this key")
 
     @validator("name")
-    def validate_name_field(cls, v):
+    def validate_name_field(cls, v) -> bool:
         """Validate API key name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_NAME.match(v):
@@ -91,7 +91,7 @@ class APIKeyCreate(BaseModel):
         return v
 
     @validator("permissions")
-    def validate_permissions_field(cls, v):
+    def validate_permissions_field(cls, v) -> bool:
         """Validate permissions list."""
         validated = []
         for perm in v:
@@ -152,7 +152,7 @@ class TokenValidationRequest(BaseModel):
     check_ai_access: Optional[bool] = Field(default=True)
 
     @validator("required_roles")
-    def validate_required_roles_field(cls, v):
+    def validate_required_roles_field(cls, v) -> bool:
         """Validate required roles list."""
         if v:
             return validate_role_list(v)
@@ -178,12 +178,12 @@ class LoginRequest(BaseModel):
     remember_me: Optional[bool] = Field(default=False)
 
     @validator("username")
-    def validate_username_field(cls, v):
+    def validate_username_field(cls, v) -> bool:
         """Validate username format."""
         return validate_username(v)
 
     @validator("password")
-    def validate_password_field(cls, v, values):
+    def validate_password_field(cls, v, values) -> bool:
         """Validate password strength and security requirements."""
         username = values.get("username")
 

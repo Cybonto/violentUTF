@@ -31,7 +31,7 @@ router = APIRouter()
 
 
 @router.get("/types", response_model=List[OrchestratorTypeInfo], summary="List orchestrator types")
-async def list_orchestrator_types(current_user=Depends(get_current_user)):
+async def list_orchestrator_types(current_user=Depends(get_current_user)) -> Any:
     """Get all available PyRIT orchestrator types with metadata."""
     try:
         orchestrator_types = pyrit_orchestrator_service.get_orchestrator_types()
@@ -42,7 +42,7 @@ async def list_orchestrator_types(current_user=Depends(get_current_user)):
 
 
 @router.get("/types/{orchestrator_type}", summary="Get orchestrator type details")
-async def get_orchestrator_type_details(orchestrator_type: str, current_user=Depends(get_current_user)):
+async def get_orchestrator_type_details(orchestrator_type: str, current_user=Depends(get_current_user)) -> str:
     """Get detailed information about a specific orchestrator type."""
     try:
         orchestrator_types = pyrit_orchestrator_service.get_orchestrator_types()
@@ -62,7 +62,7 @@ async def get_orchestrator_type_details(orchestrator_type: str, current_user=Dep
 @router.post("", response_model=OrchestratorConfigResponse, summary="Create orchestrator configuration")
 async def create_orchestrator_configuration(
     request: OrchestratorConfigCreate, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
+) -> Any:
     """Create and save PyRIT orchestrator configuration."""
     return await _create_orchestrator_configuration_impl(request, db, current_user)
 
@@ -70,7 +70,7 @@ async def create_orchestrator_configuration(
 @router.post("/create", response_model=OrchestratorConfigResponse, summary="Create orchestrator configuration (alias)")
 async def create_orchestrator_configuration_alias(
     request: OrchestratorConfigCreate, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
+) -> Any:
     """Create and save PyRIT orchestrator configuration (alias endpoint)."""
     return await _create_orchestrator_configuration_impl(request, db, current_user)
 
@@ -136,7 +136,7 @@ async def list_orchestrator_configurations(
     status: Optional[str] = Query(None, description="Filter by status"),
     db: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
-):
+) -> Any:
     """List all configured orchestrators with optional filtering."""
     try:
         stmt = select(OrchestratorConfiguration)
@@ -172,7 +172,7 @@ async def list_orchestrator_configurations(
 @router.get("/{orchestrator_id}", summary="Get orchestrator configuration")
 async def get_orchestrator_configuration(
     orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
+) -> Any:
     """Get specific orchestrator configuration."""
     try:
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.id == orchestrator_id)
@@ -213,7 +213,7 @@ async def get_orchestrator_configuration(
 )
 async def get_execution_results(
     execution_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
+) -> Any:
     """Get results from orchestrator execution."""
     try:
         stmt = select(OrchestratorExecution).where(OrchestratorExecution.id == execution_id)
@@ -255,7 +255,7 @@ async def get_execution_results(
 @router.get("/{orchestrator_id}/memory", response_model=OrchestratorMemoryResponse, summary="Get orchestrator memory")
 async def get_orchestrator_memory(
     orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
+) -> Any:
     """Get PyRIT memory entries for orchestrator."""
     try:
         # Verify orchestrator exists
@@ -286,7 +286,7 @@ async def get_orchestrator_memory(
 @router.get("/{orchestrator_id}/scores", response_model=OrchestratorScoresResponse, summary="Get orchestrator scores")
 async def get_orchestrator_scores(
     orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
+) -> Any:
     """Get PyRIT scores for orchestrator."""
     try:
         # Verify orchestrator exists
@@ -316,7 +316,7 @@ async def create_orchestrator_execution(
     request: ExecutionCreate,
     db: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
-):
+) -> Any:
     """Create a new orchestrator execution (RESTful endpoint)."""
     try:
         # Get orchestrator configuration
@@ -431,7 +431,7 @@ async def create_orchestrator_execution(
 @router.get("/executions", summary="List all orchestrator executions")
 async def list_all_orchestrator_executions(
     db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
+) -> Any:
     """List all executions across all orchestrators."""
     try:
         # Get all executions with their orchestrator info
@@ -484,7 +484,7 @@ async def list_all_orchestrator_executions(
 )
 async def list_orchestrator_executions(
     orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
+) -> Any:
     """List all executions for an orchestrator (RESTful endpoint)."""
     try:
         # Verify orchestrator exists
@@ -559,7 +559,7 @@ async def get_orchestrator_execution(
     execution_id: UUID,
     db: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
-):
+) -> Any:
     """Get a specific orchestrator execution (RESTful endpoint)."""
     try:
         # Verify orchestrator exists
@@ -622,7 +622,7 @@ async def get_execution_results_restful(
     execution_id: UUID,
     db: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
-):
+) -> Any:
     """Get results from orchestrator execution (RESTful endpoint - mirrors original exactly)."""
     try:
         # Get execution (exactly like original - no orchestrator_id validation)
@@ -667,7 +667,7 @@ async def get_execution_results_restful(
 @router.delete("/{orchestrator_id}", summary="Delete orchestrator configuration")
 async def delete_orchestrator_configuration(
     orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
+) -> Any:
     """Delete orchestrator configuration and clean up instance."""
     try:
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.id == orchestrator_id)

@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Test Configuration for ViolentUTF MCP Tests
+Test Configuration for ViolentUTF MCP Tests.
 
 ============================================
 
@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
 
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> None:
     """Create an instance of the default event loop for the test session."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
@@ -33,7 +33,7 @@ def event_loop():
 
 
 @pytest.fixture(autouse=True)
-def mock_environment():
+def mock_environment() -> None:
     """Mock environment variables for testing."""
     test_env = {
         # Basic MCP configuration
@@ -77,7 +77,7 @@ def mock_environment():
 
 
 @pytest.fixture
-def mock_settings():
+def mock_settings() -> None:
     """Mock settings with test-appropriate values."""
     settings_mock = Mock()
     settings_mock.VIOLENTUTF_API_URL = "http://violentutf-api:8000"
@@ -90,10 +90,10 @@ def mock_settings():
 
 
 @pytest.fixture
-def disable_external_requests():
+def disable_external_requests() -> None:
     """Disable all external HTTP requests during tests."""
 
-    def mock_request(*args, **kwargs):
+    def mock_request(*args, **kwargs) -> None:
         raise Exception("External HTTP requests not allowed in tests. Use proper mocks.")
 
     with patch("httpx.request", side_effect=mock_request):
@@ -105,7 +105,7 @@ def disable_external_requests():
 
 
 @pytest.fixture
-def clean_registries():
+def clean_registries() -> None:
     """Clean tool and resource registries before each test."""
     # Import after environment is set up
     try:
@@ -127,7 +127,7 @@ def clean_registries():
 
 
 @pytest.fixture
-def mock_mcp_types():
+def mock_mcp_types() -> Any:
     """Ensure MCP types are available for testing."""
     try:
         from mcp.types import Resource, ServerCapabilities, Tool
@@ -146,7 +146,7 @@ def mock_mcp_types():
 
 
 @pytest.fixture
-def sample_fastapi_routes():
+def sample_fastapi_routes() -> Any:
     """Sample FastAPI routes for testing introspection."""
     from unittest.mock import Mock
 
@@ -182,7 +182,7 @@ def sample_fastapi_routes():
 
 
 @pytest.fixture
-def mock_api_responses():
+def mock_api_responses() -> Any:
     """Mock API responses for different endpoints."""
     return {
         "generators": {
@@ -259,13 +259,13 @@ pytest_markers = [
 ]
 
 
-def pytest_configure(config):
+def pytest_configure(config) -> None:
     """Configure pytest with custom markers."""
     for marker in pytest_markers:
         config.addinivalue_line("markers", marker)
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config, items) -> None:
     """Modify test collection to add markers automatically."""
     for item in items:
         # Mark async tests

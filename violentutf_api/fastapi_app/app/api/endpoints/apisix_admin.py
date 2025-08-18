@@ -59,7 +59,7 @@ class AIPromptDecoratorConfig(BaseModel):
     template: Optional[str] = Field(default="", description="Template with {prompt} placeholder")
 
 
-def get_apisix_admin_key():
+def get_apisix_admin_key() -> Any:
     """Get APISIX admin key from settings."""
     return APISIX_ADMIN_KEY if APISIX_ADMIN_KEY else None
 

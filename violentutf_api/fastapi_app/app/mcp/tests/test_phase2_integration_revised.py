@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Phase 2 Integration Tests for ViolentUTF MCP Server - Revised
+Phase 2 Integration Tests for ViolentUTF MCP Server - Revised.
 
 ============================================================
 
@@ -47,7 +47,7 @@ class TestPhase2Architecture:
     """Test Phase 2 architecture compliance and integration."""
 
     @pytest.fixture
-    def realistic_fastapi_app(self):
+    def realistic_fastapi_app(self) -> Any:
         """Create a realistic FastAPI app mimicking ViolentUTF API structure."""
         app = FastAPI(title="ViolentUTF API", version="1.0.0")
 
@@ -165,12 +165,12 @@ class TestPhase2Architecture:
                 # Create a mock endpoint function with proper signature
                 if "{" in route_def["path"]:
                     # Path parameter endpoint
-                    def mock_endpoint(path_param: str):
+                    def mock_endpoint(path_param: str) -> Any:
                         return {"result": "success", "id": path_param}
 
                 else:
                     # No path parameters
-                    def mock_endpoint():
+                    def mock_endpoint() -> Any:
                         return {"result": "success"}
 
                 route.endpoint = mock_endpoint
@@ -180,10 +180,10 @@ class TestPhase2Architecture:
         return app
 
     @pytest.fixture
-    def mock_apisix_responses(self):
+    def mock_apisix_responses(self) -> Any:
         """Mock APISIX gateway responses for API calls."""
 
-        def create_mock_response(status_code=200, json_data=None, text=""):
+        def create_mock_response(status_code=200, json_data=None, text="") -> Any:
             mock_response = Mock()
             mock_response.status_code = status_code
             mock_response.json.return_value = json_data or {"success": True}
@@ -535,7 +535,7 @@ class TestPhase2ResourceManagement(TestPhase2Architecture):
         """Test resource listing with mocked APISIX responses."""
         with patch("httpx.AsyncClient") as mock_client:
             # Mock responses for different resource types
-            def mock_request(*args, **kwargs):
+            def mock_request(*args, **kwargs) -> Any:
                 url = kwargs.get("url", "")
                 if "/generators" in url:
                     return mock_apisix_responses["generators_list"]

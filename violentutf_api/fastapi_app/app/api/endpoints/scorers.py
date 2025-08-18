@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-FastAPI endpoints for scorer management
+FastAPI endpoints for scorer management.
 
 Implements API backend for 4_Configure_Scorers.py page
 """
@@ -315,7 +315,7 @@ def get_user_id(current_user) -> str:
 
 
 @router.get("/types", response_model=ScorerTypesResponse, summary="Get available scorer types")
-async def get_scorer_types(current_user=Depends(get_current_user)):
+async def get_scorer_types(current_user=Depends(get_current_user)) -> Any:
     """Get list of available scorer categories and types."""
     try:
         logger.info("Loading scorer types and categories")
@@ -349,7 +349,7 @@ async def get_scorer_types(current_user=Depends(get_current_user)):
 
 
 @router.get("/params/{scorer_type}", response_model=ScorerParametersResponse, summary="Get scorer parameters")
-async def get_scorer_parameters(scorer_type: str, current_user=Depends(get_current_user)):
+async def get_scorer_parameters(scorer_type: str, current_user=Depends(get_current_user)) -> Any:
     """Get parameter definitions for a specific scorer type."""
     try:
         logger.info(f"Getting parameters for scorer type: {scorer_type}")
@@ -394,7 +394,7 @@ async def get_scorer_parameters(scorer_type: str, current_user=Depends(get_curre
 
 
 @router.get("", response_model=ScorersListResponse, summary="List configured scorers")
-async def list_scorers(current_user=Depends(get_current_user)):
+async def list_scorers(current_user=Depends(get_current_user)) -> Any:
     """Get list of all configured scorers."""
     try:
         user_id = current_user.username
@@ -456,7 +456,7 @@ async def list_scorers(current_user=Depends(get_current_user)):
 
 
 @router.post("", response_model=ScorerCreateResponse, summary="Create new scorer")
-async def create_scorer(request: ScorerCreateRequest, current_user=Depends(get_current_user)):
+async def create_scorer(request: ScorerCreateRequest, current_user=Depends(get_current_user)) -> Any:
     """Create a new scorer configuration."""
     try:
         user_id = current_user.username
@@ -528,7 +528,7 @@ async def create_scorer(request: ScorerCreateRequest, current_user=Depends(get_c
 
 
 @router.post("/{scorer_id}/clone", response_model=ScorerCreateResponse, summary="Clone scorer")
-async def clone_scorer(scorer_id: str, request: ScorerCloneRequest, current_user=Depends(get_current_user)):
+async def clone_scorer(scorer_id: str, request: ScorerCloneRequest, current_user=Depends(get_current_user)) -> Any:
     """Clone an existing scorer configuration."""
     try:
         user_id = current_user.username
@@ -591,7 +591,7 @@ async def clone_scorer(scorer_id: str, request: ScorerCloneRequest, current_user
 
 
 @router.put("/{scorer_id}", response_model=ScorerCreateResponse, summary="Update scorer")
-async def update_scorer(scorer_id: str, request: ScorerUpdateRequest, current_user=Depends(get_current_user)):
+async def update_scorer(scorer_id: str, request: ScorerUpdateRequest, current_user=Depends(get_current_user)) -> Any:
     """Update an existing scorer configuration."""
     try:
         user_id = current_user.username
@@ -634,7 +634,7 @@ async def update_scorer(scorer_id: str, request: ScorerUpdateRequest, current_us
 
 
 @router.delete("/{scorer_id}", response_model=ScorerDeleteResponse, summary="Delete scorer")
-async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)):
+async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)) -> Any:
     """Delete a scorer configuration."""
     try:
         user_id = current_user.username
@@ -719,7 +719,7 @@ async def _execute_real_pyrit_scorer(
         raise
 
 
-async def _create_pyrit_scorer_instance(scorer_type: str, parameters: Dict[str, Any]):
+async def _create_pyrit_scorer_instance(scorer_type: str, parameters: Dict[str, Any]) -> Any:
     """Create a real PyRIT scorer instance."""
     try:
         logger.info(f"Creating PyRIT scorer instance: {scorer_type}")
@@ -774,7 +774,7 @@ async def _create_pyrit_scorer_instance(scorer_type: str, parameters: Dict[str, 
 
 
 @router.post("/validate", response_model=ScorerValidationResponse, summary="Validate scorer configuration")
-async def validate_scorer_config(request: ScorerValidationRequest, current_user=Depends(get_current_user)):
+async def validate_scorer_config(request: ScorerValidationRequest, current_user=Depends(get_current_user)) -> bool:
     """Validate a scorer configuration before creation."""
     try:
         logger.info(f"Validating scorer configuration for type: {request.scorer_type}")
@@ -839,7 +839,7 @@ async def validate_scorer_config(request: ScorerValidationRequest, current_user=
 
 
 @router.get("/health", response_model=ScorerHealthResponse, summary="Get scorer system health")
-async def get_scorer_health(current_user=Depends(get_current_user)):
+async def get_scorer_health(current_user=Depends(get_current_user)) -> Any:
     """Get health status of scorer system."""
     try:
         user_id = current_user.username

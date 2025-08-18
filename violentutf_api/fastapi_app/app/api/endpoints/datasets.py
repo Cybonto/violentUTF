@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-FastAPI endpoints for dataset management
+FastAPI endpoints for dataset management.
 
 Implements API backend for 2_Configure_Datasets.py page
 """
@@ -140,7 +140,7 @@ NATIVE_DATASET_TYPES = {
 
 
 @router.get("/types", response_model=DatasetTypesResponse, summary="Get available dataset types")
-async def get_dataset_types(current_user=Depends(get_current_user)):
+async def get_dataset_types(current_user=Depends(get_current_user)) -> Any:
     """Get list of available dataset types."""
     try:
         logger.info(f"User {current_user.username} requested dataset types")
@@ -156,7 +156,7 @@ async def get_dataset_types(current_user=Depends(get_current_user)):
 
 
 @router.get("", response_model=DatasetsListResponse, summary="Get configured datasets")
-async def get_datasets(current_user=Depends(get_current_user)):
+async def get_datasets(current_user=Depends(get_current_user)) -> Any:
     """Get list of configured datasets from session and memory."""
     try:
         user_id = current_user.username
@@ -227,7 +227,7 @@ async def get_datasets(current_user=Depends(get_current_user)):
 
 
 @router.post("/preview", response_model=DatasetPreviewResponse, summary="Preview a dataset before creation")
-async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(get_current_user)):
+async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(get_current_user)) -> Any:
     """Preview a dataset before creating it."""
     try:
         user_id = current_user.username
@@ -311,7 +311,7 @@ async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(g
 
 
 @router.post("", response_model=DatasetCreateResponse, summary="Create a new dataset")
-async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get_current_user)):
+async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get_current_user)) -> Any:
     """Create a new dataset configuration."""
     try:
         user_id = current_user.username
@@ -421,7 +421,9 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
 
 
 @router.post("/{dataset_id}/transform", response_model=DatasetTransformResponse, summary="Transform a dataset")
-async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, current_user=Depends(get_current_user)):
+async def transform_dataset(
+    dataset_id: str, request: DatasetTransformRequest, current_user=Depends(get_current_user)
+) -> Any:
     """Transform a dataset using a template."""
     try:
         user_id = current_user.username
@@ -494,7 +496,7 @@ async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, c
 
 
 @router.get("/memory", response_model=MemoryDatasetsResponse, summary="Get datasets from PyRIT memory")
-async def get_memory_datasets(current_user=Depends(get_current_user)):
+async def get_memory_datasets(current_user=Depends(get_current_user)) -> Any:
     """Get datasets saved in PyRIT memory."""
     try:
         user_id = current_user.username
@@ -517,7 +519,7 @@ async def get_memory_datasets(current_user=Depends(get_current_user)):
     response_model=DatasetFieldMappingResponse,
     summary="Get field mapping options for uploaded file",
 )
-async def get_field_mapping(request: DatasetFieldMappingRequest, current_user=Depends(get_current_user)):
+async def get_field_mapping(request: DatasetFieldMappingRequest, current_user=Depends(get_current_user)) -> Any:
     """Analyze an uploaded file and return field mapping options."""
     try:
         user_id = current_user.username
@@ -564,7 +566,7 @@ async def delete_dataset(
     delete_from_session: bool = Query(default=True, description="Delete from session"),
     delete_from_memory: bool = Query(default=False, description="Delete from PyRIT memory"),
     current_user=Depends(get_current_user),
-):
+) -> Any:
     """Delete a dataset from session and / or PyRIT memory."""
     try:
         user_id = current_user.username
@@ -906,7 +908,7 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                     # Query for conversation groups, filtering out test / mock data
                     cursor.execute(
                         """
-                        SELECT conversation_id, COUNT(*) as prompt_count,
+                        SELECT conversation_id, COUNT(*) as prompt_count,.
 
                                MIN(original_value) as first_prompt
                         FROM PromptRequestPieces
@@ -958,7 +960,7 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
 
 
 @router.get("/{dataset_id}", response_model=DatasetInfo, summary="Get dataset details")
-async def get_dataset(dataset_id: str, current_user=Depends(get_current_user)):
+async def get_dataset(dataset_id: str, current_user=Depends(get_current_user)) -> Any:
     """Get detailed information about a specific dataset."""
     try:
         user_id = current_user.username
@@ -1003,7 +1005,7 @@ async def get_dataset(dataset_id: str, current_user=Depends(get_current_user)):
 
 
 @router.put("/{dataset_id}", response_model=DatasetUpdateResponse, summary="Update a dataset")
-async def update_dataset(dataset_id: str, request: DatasetUpdateRequest, current_user=Depends(get_current_user)):
+async def update_dataset(dataset_id: str, request: DatasetUpdateRequest, current_user=Depends(get_current_user)) -> Any:
     """Update an existing dataset, with optional save functionality."""
     try:
         user_id = current_user.username

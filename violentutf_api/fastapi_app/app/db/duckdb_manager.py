@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-DuckDB Manager for ViolentUTF Configuration Storage
+DuckDB Manager for ViolentUTF Configuration Storage.
 
 Extends existing PyRIT database functionality to support configuration persistence
 """
@@ -479,7 +479,6 @@ class DuckDBManager:
             results = conn.execute(
                 """
                 SELECT d.id, d.name, d.source_type, d.configuration, d.status,
-
                        d.created_at, d.updated_at, d.metadata,
                        COUNT(dp.id) as prompt_count
                 FROM datasets d

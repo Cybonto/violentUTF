@@ -9,12 +9,13 @@ from app.core.config import settings
 from app.core.security_headers import validate_security_headers
 from app.core.security_logging import security_metrics
 from fastapi import APIRouter, Request, Response
+from typing import Any
 
 router = APIRouter()
 
 
 @router.get("/health")
-async def health_check():
+async def health_check() -> Any:
     """Basic health check endpoint."""
     return {
         "status": "healthy",
@@ -25,7 +26,7 @@ async def health_check():
 
 
 @router.get("/ready")
-async def readiness_check():
+async def readiness_check() -> Any:
     """Readiness check - verifies all dependencies are available."""
     checks = {
         "api": True,
@@ -39,7 +40,7 @@ async def readiness_check():
 
 
 @router.get("/security-headers")
-async def security_headers_check(request: Request, response: Response):
+async def security_headers_check(request: Request, response: Response) -> Any:
     """Test endpoint to verify security headers are properly applied."""
     # This endpoint will automatically get security headers applied by middleware
     # We can validate them here for testing purposes
@@ -54,9 +55,9 @@ async def security_headers_check(request: Request, response: Response):
 
 
 @router.get("/security-metrics")
-async def security_metrics_check():
+async def security_metrics_check() -> Any:
     """
-    Get current security metrics for monitoring
+    Get current security metrics for monitoring.
 
     Note: In production, this should require admin authentication
     """

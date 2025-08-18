@@ -8,7 +8,7 @@ import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from app.core.auth import get_current_user
 from app.models.auth import User
@@ -44,7 +44,7 @@ def get_file_metadata(file_path: str, file_id: str, username: str) -> FileInfo:
 @router.post("/upload", response_model=FileUploadResponse)
 async def upload_file(
     file: UploadFile = File(...), description: Optional[str] = None, current_user: User = Depends(get_current_user)
-):
+) -> Any:
     """Upload parameter files, datasets, or other configuration files."""
     try:
         # Generate unique file ID
@@ -95,7 +95,7 @@ async def upload_file(
 
 
 @router.get("/{file_id}", response_model=FileMetadataResponse)
-async def get_file_metadata_endpoint(file_id: str, current_user: User = Depends(get_current_user)):
+async def get_file_metadata_endpoint(file_id: str, current_user: User = Depends(get_current_user)) -> Any:
     """Get file metadata and download URL."""
     try:
         user_files_dir = get_user_files_dir(current_user.username)
@@ -141,7 +141,7 @@ async def get_file_metadata_endpoint(file_id: str, current_user: User = Depends(
 
 
 @router.get("/{file_id}/download")
-async def download_file(file_id: str, current_user: User = Depends(get_current_user)):
+async def download_file(file_id: str, current_user: User = Depends(get_current_user)) -> Any:
     """Download file by ID."""
     try:
         user_files_dir = get_user_files_dir(current_user.username)
@@ -174,7 +174,7 @@ async def download_file(file_id: str, current_user: User = Depends(get_current_u
 
 
 @router.get("", response_model=FileListResponse)
-async def list_files(limit: int = 50, offset: int = 0, current_user: User = Depends(get_current_user)):
+async def list_files(limit: int = 50, offset: int = 0, current_user: User = Depends(get_current_user)) -> Any:
     """List user's uploaded files."""
     try:
         user_files_dir = get_user_files_dir(current_user.username)
@@ -218,7 +218,7 @@ async def list_files(limit: int = 50, offset: int = 0, current_user: User = Depe
 
 
 @router.delete("/{file_id}")
-async def delete_file(file_id: str, current_user: User = Depends(get_current_user)):
+async def delete_file(file_id: str, current_user: User = Depends(get_current_user)) -> Any:
     """Delete uploaded file."""
     try:
         user_files_dir = get_user_files_dir(current_user.username)

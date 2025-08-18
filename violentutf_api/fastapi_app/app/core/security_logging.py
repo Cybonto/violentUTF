@@ -134,7 +134,7 @@ class SecurityLogger:
         details: Optional[Dict[str, Any]] = None,
         request: Optional[Request] = None,
         **kwargs,
-    ):
+    ) -> Any:
         """
         Log a security event with comprehensive context.
 
@@ -152,7 +152,7 @@ class SecurityLogger:
             request: FastAPI request object for automatic context extraction
             **kwargs: Additional details to include
         """
-        # Generate unique event ID
+        # Generate unique event ID.
         event_id = str(uuid.uuid4())[:12]
 
         # Extract information from request if provided

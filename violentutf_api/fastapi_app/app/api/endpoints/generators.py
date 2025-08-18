@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-FastAPI endpoints for generator management
+FastAPI endpoints for generator management.
 
 Implements API backend for 1_Configure_Generators.py page
 SECURITY: Enhanced with secure error handling to prevent information disclosure
@@ -45,11 +45,11 @@ router = APIRouter()
 
 def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     """
-    Map AI provider and model to APISIX endpoint path
+    Map AI provider and model to APISIX endpoint path.
 
     Based on the setup_macos.sh AI proxy route configuration
     """
-    # OpenAI model mappings
+    # OpenAI model mappings.
     if provider == "openai":
         openai_mappings = {
             "gpt-4": "/ai/openai/gpt4",
@@ -294,7 +294,7 @@ GENERATOR_TYPE_DEFINITIONS = {
 # Dynamic model discovery from APISIX routes
 def discover_apisix_models(provider: str) -> List[str]:
     """
-    Dynamically discover available models for a provider by querying APISIX routes
+    Dynamically discover available models for a provider by querying APISIX routes.
 
     This replaces hardcoded model lists with real-time discovery
     """
@@ -394,7 +394,7 @@ def map_uri_to_model(provider: str, uri_key: str) -> str:
     """
     Map URI key back to actual model name based on setup_macos.sh configuration.
     """
-    # OpenAI URI mappings (reverse of setup_macos.sh)
+    # OpenAI URI mappings (reverse of setup_macos.sh).
     if provider == "openai":
         uri_to_model = {
             "gpt4": "gpt-4",
@@ -472,7 +472,7 @@ def get_fallback_models(provider: str) -> List[str]:
 
 async def discover_openapi_models_from_provider(provider_id: str, base_url: str, auth_token: str) -> List[str]:
     """
-    Discover available models directly from OpenAPI provider's /api/v1/models endpoint
+    Discover available models directly from OpenAPI provider's /api/v1/models endpoint.
 
     Phase 1 Enhancement: Query actual provider APIs for real-time model discovery
     """
@@ -530,11 +530,11 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
 
 def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
     """
-    Get configuration for an OpenAPI provider from settings
+    Get configuration for an OpenAPI provider from settings.
 
     Phase 1 Enhancement: Centralized provider configuration mapping
     """
-    # Try numbered format first (OPENAPI_1_*, OPENAPI_2_*, etc.)
+    # Try numbered format first (OPENAPI_1_*, OPENAPI_2_*, etc.).
     for i in range(1, 11):  # Support up to 10 providers
         # Use getattr to access settings dynamically
         id_value = getattr(settings, f"OPENAPI_{i}_ID", None)
@@ -566,7 +566,7 @@ def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
 
 async def discover_apisix_models_enhanced(provider: str) -> List[str]:
     """
-    Enhanced model discovery that queries actual OpenAPI providers
+    Enhanced model discovery that queries actual OpenAPI providers.
 
     Phase 1 Enhancement: Dynamic model discovery with fallback to route parsing
     """
@@ -616,7 +616,7 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
 
 
 @router.get("/types", response_model=GeneratorTypesResponse, summary="Get available generator types")
-async def get_generator_types(current_user=Depends(get_current_user)):
+async def get_generator_types(current_user=Depends(get_current_user)) -> Any:
     """Get list of available generator types."""
     try:
         logger.info(f"User {current_user.username} requested generator types")
@@ -634,7 +634,7 @@ async def get_generator_types(current_user=Depends(get_current_user)):
     response_model=GeneratorParametersResponse,
     summary="Get parameter definitions for a generator type",
 )
-async def get_generator_type_params(generator_type: str, current_user=Depends(get_current_user)):
+async def get_generator_type_params(generator_type: str, current_user=Depends(get_current_user)) -> Any:
     """Get parameter definitions for a specific generator type."""
     try:
         logger.info(f"User {current_user.username} requested params for type: {generator_type}")
@@ -701,7 +701,7 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
 
 
 @router.get("", response_model=GeneratorsListResponse, summary="Get configured generators")
-async def get_generators(current_user=Depends(get_current_user)):
+async def get_generators(current_user=Depends(get_current_user)) -> Any:
     """Get list of configured generators."""
     try:
         user_id = current_user.username
@@ -747,7 +747,7 @@ async def get_generators(current_user=Depends(get_current_user)):
 
 
 @router.post("", response_model=GeneratorInfo, summary="Create a new generator")
-async def create_generator(request: GeneratorCreateRequest, current_user=Depends(get_current_user)):
+async def create_generator(request: GeneratorCreateRequest, current_user=Depends(get_current_user)) -> Any:
     """Create a new generator configuration."""
     try:
         user_id = current_user.username
@@ -793,7 +793,7 @@ async def create_generator(request: GeneratorCreateRequest, current_user=Depends
 
 
 @router.delete("/{generator_id}", response_model=GeneratorDeleteResponse, summary="Delete a generator")
-async def delete_generator(generator_id: str, current_user=Depends(get_current_user)):
+async def delete_generator(generator_id: str, current_user=Depends(get_current_user)) -> Any:
     """Delete a generator configuration."""
     try:
         user_id = current_user.username
@@ -829,7 +829,7 @@ async def delete_generator(generator_id: str, current_user=Depends(get_current_u
 @router.get("/apisix/models", response_model=APIXModelsResponse, summary="Get available models from APISIX AI Gateway")
 async def get_apisix_models(
     provider: str = Query(..., description="AI provider name"), current_user=Depends(get_current_user)
-):
+) -> Any:
     """Get available models for a specific APISIX AI Gateway provider."""
     try:
         logger.info(f"User {current_user.username} requested models for provider: {provider}")
@@ -854,7 +854,9 @@ async def get_apisix_models(
 
 
 @router.put("/{generator_id}", response_model=GeneratorInfo, summary="Update a generator")
-async def update_generator(generator_id: str, request: GeneratorUpdateRequest, current_user=Depends(get_current_user)):
+async def update_generator(
+    generator_id: str, request: GeneratorUpdateRequest, current_user=Depends(get_current_user)
+) -> Any:
     """Update an existing generator configuration."""
     try:
         user_id = current_user.username
@@ -969,7 +971,7 @@ async def get_openapi_providers_endpoint(current_user=Depends(get_current_user))
 )
 async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict[str, List[str]]:
     """
-    Get available models for all configured OpenAPI providers
+    Get available models for all configured OpenAPI providers.
 
     Phase 1 Enhancement: Provides comprehensive model listing for debugging and validation
     """
@@ -1008,7 +1010,7 @@ async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict
 @router.get("/apisix/openapi-debug", summary="Debug OpenAPI provider configurations")
 async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dict[str, Any]:
     """
-    Debug endpoint for OpenAPI provider configurations
+    Debug endpoint for OpenAPI provider configurations.
 
     Phase 1 Enhancement: Provides detailed debugging information
     """

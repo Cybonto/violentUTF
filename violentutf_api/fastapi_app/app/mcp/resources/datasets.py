@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Dataset Resources for MCP
+Dataset Resources for MCP.
 
 ========================
 
@@ -454,7 +454,7 @@ class ResultsResourceProvider(BaseResourceProvider):
 
 
 # Register the new resource providers
-def register_dataset_providers():
+def register_dataset_providers() -> None:
     """Register all dataset-related resource providers."""
     advanced_resource_registry.register(DatasetResourceProvider())
     advanced_resource_registry.register(ResultsResourceProvider())

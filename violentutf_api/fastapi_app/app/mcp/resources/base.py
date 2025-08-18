@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Advanced Base Classes for MCP Resources
+Advanced Base Classes for MCP Resources.
 
 ======================================
 

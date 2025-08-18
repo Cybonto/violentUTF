@@ -27,7 +27,7 @@ class EchoResponse(BaseModel):
 
 
 @router.post("", response_model=EchoResponse)
-async def echo(request: EchoRequest):
+async def echo(request: EchoRequest) -> Any:
     """
     Echo endpoint for testing API connectivity.
 
@@ -45,7 +45,7 @@ async def echo(request: EchoRequest):
 
 
 @router.get("/{message}")
-async def echo_get(message: str):
+async def echo_get(message: str) -> Any:
     """
     Simple GET echo endpoint for testing.
 

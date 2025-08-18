@@ -8,12 +8,13 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 
 class JSONFormatter(logging.Formatter):
     """Custom JSON formatter for structured logging."""
 
-    def format(self, record):
+    def format(self, record) -> Any:
         log_obj = {
             "timestamp": datetime.utcnow().isoformat(),
             "level": record.levelname,
@@ -56,7 +57,7 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(log_obj)
 
 
-def setup_logging(log_level: str = "INFO", log_dir: Path = None):
+def setup_logging(log_level: str = "INFO", log_dir: Path = None) -> Any:
     """
     Setup logging configuration for the application.
 

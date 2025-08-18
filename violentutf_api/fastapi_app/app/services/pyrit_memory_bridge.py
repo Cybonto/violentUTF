@@ -285,7 +285,7 @@ class PyRITMemoryBridge:
         self.memory_cache.clear()
         logger.info("All PyRIT memory connections closed")
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Cleanup on object destruction."""
         try:
             self.close_memory_connections()

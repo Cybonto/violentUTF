@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Security Testing Prompts for MCP
+Security Testing Prompts for MCP.
 
 ================================
 
@@ -494,7 +494,7 @@ class AdversarialPrompt(DynamicPrompt):
 
 
 # Register all security prompts
-def register_security_prompts():
+def register_security_prompts() -> None:
     """Register all security testing prompts."""
     prompt_registry.register(JailbreakPrompt())
     prompt_registry.register(BiasDetectionPrompt())

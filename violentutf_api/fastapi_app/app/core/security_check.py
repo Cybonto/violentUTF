@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Security configuration validation
+Security configuration validation.
 
 SECURITY: Validates that security measures are properly configured
 """

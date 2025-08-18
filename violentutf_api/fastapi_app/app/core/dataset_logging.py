@@ -227,7 +227,7 @@ class LogConfig:
 class JSONFormatter(logging.Formatter):
     """JSON formatter for structured logging to files."""
 
-    def format(self, record):
+    def format(self, record) -> Any:
         """Format log record as JSON."""
         log_obj = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -294,7 +294,7 @@ class JSONFormatter(logging.Formatter):
 class StructuredFormatter(logging.Formatter):
     """Structured formatter for console output."""
 
-    def format(self, record):
+    def format(self, record) -> Any:
         """Format log record with structured data."""
         # Build structured suffix
         structured_parts = []
@@ -539,7 +539,7 @@ class DatasetLogger:
         dataset_type: Optional[str] = None,
         user_id: Optional[str] = None,
         correlation_id: Optional[str] = None,
-    ):
+    ) -> Any:
         """Context manager for tracking operations."""
         previous_operation = self.current_operation
         previous_correlation_id = self.correlation_id
@@ -779,7 +779,7 @@ def log_dataset_operation_success(operation: str, dataset_id: str, **kwargs) -> 
 class LogAnalyzer:
     """Utilities for analyzing dataset operation logs."""
 
-    def __init__(self, log_dir: Path = Path("logs/datasets")):
+    def __init__(self, log_dir: Path = Path("logs/datasets")) -> None:
         """Initialize the instance."""
         self.log_dir = log_dir
 

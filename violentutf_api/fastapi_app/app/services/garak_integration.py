@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Garak Integration Service
+Garak Integration Service.
 
 Provides NVIDIA Garak LLM vulnerability scanning functionality for ViolentUTF platform
 """

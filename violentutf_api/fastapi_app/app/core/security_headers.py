@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Security headers middleware and configuration
+Security headers middleware and configuration.
 
 SECURITY: Implements comprehensive security headers to protect against common web vulnerabilities
 """
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
-    Middleware to add security headers to all responses
+    Middleware to add security headers to all responses.
 
     Protects against XSS, clickjacking, MIME sniffing, and other attacks
     """
@@ -181,7 +181,7 @@ def configure_cors_settings(environment: str = "production") -> Dict:
 
 class APISecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
-    Additional API-specific security headers middleware
+    Additional API-specific security headers middleware.
 
     Adds headers specific to API security concerns
     """
@@ -211,7 +211,7 @@ class APISecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-def setup_security_headers(app, environment: str = "production", api_version: str = "1.0"):
+def setup_security_headers(app, environment: str = "production", api_version: str = "1.0") -> None:
     """
     Setup all security headers middleware for the FastAPI application.
 
@@ -220,7 +220,7 @@ def setup_security_headers(app, environment: str = "production", api_version: st
         environment: Environment name (production, development, testing)
         api_version: API version string
     """
-    # Add security headers middleware
+    # Add security headers middleware.
     app.add_middleware(SecurityHeadersMiddleware, environment=environment)
 
     # Add API-specific security headers
@@ -231,7 +231,7 @@ def setup_security_headers(app, environment: str = "production", api_version: st
 
 def get_csp_nonce() -> str:
     """
-    Generate a cryptographically secure nonce for CSP
+    Generate a cryptographically secure nonce for CSP.
 
     Useful for inline scripts/styles when needed
     """
@@ -247,7 +247,7 @@ def get_csp_nonce() -> str:
 
 def validate_security_headers(response_headers: Dict[str, str]) -> Dict[str, bool]:
     """
-    Validate that required security headers are present
+    Validate that required security headers are present.
 
     Useful for testing and monitoring
 
@@ -292,7 +292,7 @@ SECURITY_HEADER_TEMPLATES = {
 }
 
 
-def apply_response_headers(response: Response, template_name: str = "json_api"):
+def apply_response_headers(response: Response, template_name: str = "json_api") -> None:
     """
     Apply response-specific headers from templates.
 

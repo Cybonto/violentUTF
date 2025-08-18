@@ -17,7 +17,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     # Create orchestrator_configurations table
     op.create_table(
         "orchestrator_configurations",
@@ -60,7 +60,7 @@ def upgrade():
     op.create_index("idx_orchestrator_executions_status", "orchestrator_executions", ["status"])
 
 
-def downgrade():
+def downgrade() -> None:
     # Drop indexes
     op.drop_index("idx_orchestrator_executions_status")
     op.drop_index("idx_orchestrator_executions_orchestrator")

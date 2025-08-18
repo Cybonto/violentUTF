@@ -64,7 +64,7 @@ def save_parameters(params: Dict[str, Any]) -> None:
 
 
 @router.get("/parameters", response_model=ConfigParametersResponse)
-async def get_config_parameters(current_user: User = Depends(get_current_user)):
+async def get_config_parameters(current_user: User = Depends(get_current_user)) -> Any:
     """Get current global configuration parameters."""
     try:
         config_file = get_config_file_path()
@@ -94,7 +94,7 @@ async def get_config_parameters(current_user: User = Depends(get_current_user)):
 
 
 @router.put("/parameters", response_model=ConfigParametersResponse)
-async def update_config_parameters(request: UpdateConfigRequest, current_user: User = Depends(get_current_user)):
+async def update_config_parameters(request: UpdateConfigRequest, current_user: User = Depends(get_current_user)) -> Any:
     """Update global configuration parameters."""
     try:
         config_file = get_config_file_path()
@@ -133,7 +133,7 @@ async def update_config_parameters(request: UpdateConfigRequest, current_user: U
 
 
 @router.post("/parameters/load", response_model=ConfigLoadResponse)
-async def load_config_from_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+async def load_config_from_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)) -> Any:
     """Load configuration from uploaded YAML file."""
     try:
         # Validate file type
@@ -179,7 +179,7 @@ async def load_config_from_file(file: UploadFile = File(...), current_user: User
 
 
 @router.get("/parameters/files", response_model=ParameterFilesListResponse)
-async def list_parameter_files(current_user: User = Depends(get_current_user)):
+async def list_parameter_files(current_user: User = Depends(get_current_user)) -> Any:
     """List available parameter files in the system."""
     try:
         parameter_files = []
@@ -238,10 +238,8 @@ async def list_parameter_files(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/environment", response_model=EnvironmentConfigResponse)
-async def get_environment_config(current_user: User = Depends(get_current_user)):
-    """
-    Get current environment configuration including database salt, API keys, and system paths.
-    """
+async def get_environment_config(current_user: User = Depends(get_current_user)) -> Any:
+    """Get current environment configuration including database salt, API keys, and system paths."""
     try:
         # Get environment variables (mask sensitive ones)
         env_vars = {}
@@ -289,7 +287,7 @@ async def get_environment_config(current_user: User = Depends(get_current_user))
 @router.put("/environment", response_model=EnvironmentConfigResponse)
 async def update_environment_config(
     request: UpdateEnvironmentConfigRequest, current_user: User = Depends(get_current_user)
-):
+) -> Any:
     """Update environment configuration variables."""
     try:
         # In a real implementation, you would update environment variables
@@ -335,7 +333,7 @@ async def update_environment_config(
 
 
 @router.post("/environment/validate", response_model=EnvironmentValidationResponse)
-async def validate_environment_config(current_user: User = Depends(get_current_user)):
+async def validate_environment_config(current_user: User = Depends(get_current_user)) -> bool:
     """
     Validate current environment configuration for completeness and correctness.
     """
@@ -388,7 +386,7 @@ async def validate_environment_config(current_user: User = Depends(get_current_u
 
 
 @router.get("/environment/schema", response_model=EnvironmentSchemaResponse)
-async def get_environment_schema():
+async def get_environment_schema() -> Any:
     """Get the schema of required environment variables and their purposes."""
     schema = {
         "PYRIT_DB_SALT": {
@@ -444,7 +442,7 @@ async def get_environment_schema():
 
 
 @router.post("/environment/generate-salt", response_model=SaltGenerationResponse)
-async def generate_database_salt(current_user: User = Depends(get_current_user)):
+async def generate_database_salt(current_user: User = Depends(get_current_user)) -> Any:
     """
     Generate a new cryptographically secure database salt for PyRIT operations.
     """
