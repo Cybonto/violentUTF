@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Authentication and authorization schemas
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks

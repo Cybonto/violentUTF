@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test to verify converter actually transforms prompts correctly.
 

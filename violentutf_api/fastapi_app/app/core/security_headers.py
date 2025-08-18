@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Security headers middleware and configuration
 SECURITY: Implements comprehensive security headers to protect against common web vulnerabilities

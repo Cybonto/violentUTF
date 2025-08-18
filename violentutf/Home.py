@@ -1,5 +1,8 @@
 #!/Home.py
 
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 import logging  # Import base logging for potential direct use if needed
 import os
 

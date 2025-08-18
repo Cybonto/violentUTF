@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 FastAPI endpoints for generator management
 Implements API backend for 1_Configure_Generators.py page

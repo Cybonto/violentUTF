@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """MCP Tool Generator - Converts FastAPI endpoints to MCP tools"""
 
 import logging

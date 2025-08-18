@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Security utilities for JWT token generation and validation
 SECURITY: Enhanced with comprehensive validation to prevent token injection attacks

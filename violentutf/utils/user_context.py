@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 User Context Management for ViolentUTF
 Ensures consistent user identification across all pages

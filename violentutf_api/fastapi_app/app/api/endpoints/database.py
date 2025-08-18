@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Database management endpoints for PyRIT Memory (DuckDB) operations
 """
@@ -322,7 +325,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
             """
             )
     except Exception as e:
-        print(f"Error in reset_database_task: {e}")
+        logger.error(f"Error in reset_database_task: {e}")
 
 
 @router.post("/reset")

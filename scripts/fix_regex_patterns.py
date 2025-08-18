@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """Emergency fix script for corrupted regex patterns.
 
 This script can automatically fix common regex pattern corruptions.

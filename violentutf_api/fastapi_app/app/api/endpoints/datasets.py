@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 FastAPI endpoints for dataset management
 Implements API backend for 2_Configure_Datasets.py page

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """Cross-platform test runner for ViolentUTF.
 
 Specifically designed to work on Windows, macOS, and Linux.
@@ -18,7 +21,7 @@ from typing import List
 def find_requirements_files() -> List[str]:
     """Find all requirements*.txt files in the project."""
     req_files = []
-    for root, dirs, files in os.walk("."):
+    for root, _dirs, files in os.walk("."):
         # Skip virtual environment directories
         if "venv" in root or ".venv" in root or "env" in root:
             continue

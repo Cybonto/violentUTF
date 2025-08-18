@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Pytest configuration and fixtures for ViolentUTF tests
 Provides authentication, environment setup, and common test utilities

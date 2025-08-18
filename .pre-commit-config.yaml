@@ -173,7 +173,7 @@ repos:
         entry: '(?<!def )print\('
         language: pygrep
         types: [python]
-        exclude: "tests/|setup.py|scripts/|debug_|diagnose_|verify_|configure_gateway_auth.py"
+        exclude: "tests/|setup.py|scripts/|debug_|diagnose_|verify_|configure_gateway_auth.py|security_check.py"
 
       - id: no-hardcoded-secrets
         name: Check for hardcoded secrets

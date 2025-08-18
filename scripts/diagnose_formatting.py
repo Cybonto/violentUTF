@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """Diagnose formatting differences between local and CI environment."""
 
 import os

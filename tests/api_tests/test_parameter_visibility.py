@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test cases for parameter visibility logic in AI Gateway configuration
 Tests that API Key and Custom Endpoint are hidden/shown appropriately based on provider selection

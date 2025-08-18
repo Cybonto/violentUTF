@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Rate limiting implementation for authentication endpoints
 SECURITY: Implements rate limiting to prevent brute force attacks

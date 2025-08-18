@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Pre-commit check script to identify all potential CI failures before committing.
 
@@ -6,6 +9,7 @@ Run this before every commit to ensure your code will pass GitHub Actions checks
 """
 
 import argparse
+import contextlib
 import json
 import os
 import subprocess
@@ -178,7 +182,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                     size_mb = os.path.getsize(filepath) / (1024 * 1024)
                     if size_mb > MAX_SIZE_MB:
                         large_files.append(f"{filepath}: {size_mb:.1f}MB")
-                except (OSError, IOError):
+                except OSError:
                     pass  # Skip files that can't be accessed
 
         if large_files:
@@ -205,15 +209,13 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             for file in files:
                 if file.endswith((".py", ".yml", ".yaml", ".json")) and not file.endswith(".example"):
                     filepath = os.path.join(root, file)
-                    try:
+                    with contextlib.suppress(OSError, UnicodeDecodeError):
                         with open(filepath, "r", encoding="utf-8") as f:
                             content = f.read().lower()
                             for pattern, desc in secret_patterns:
                                 if pattern in content and '"""' not in content:
                                     # Basic check to avoid docstrings
                                     issues.append(f"{desc} in {filepath}")
-                    except (OSError, IOError, UnicodeDecodeError):
-                        pass  # Skip files that can't be read
 
         if issues:
             self.warnings.append(("Potential secrets", "\n".join(issues[:10])))
@@ -277,7 +279,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                     dockerfiles.append(os.path.join(root, file))
 
         for dockerfile in dockerfiles:
-            try:
+            with contextlib.suppress(OSError, UnicodeDecodeError):
                 with open(dockerfile, "r") as f:
                     content = f.read()
                     # Basic checks
@@ -288,8 +290,6 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
                                 "COPY . . without .dockerignore file",
                             )
                         )
-            except (OSError, IOError, UnicodeDecodeError):
-                pass  # Skip files that can't be read
 
         return True
 

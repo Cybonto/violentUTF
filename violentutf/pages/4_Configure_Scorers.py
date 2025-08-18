@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 import asyncio
 import json
 import os
@@ -175,7 +178,9 @@ def create_compatible_api_token():
             st.session_state["api_token"] = api_token
             return api_token
         else:
-            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
+            st.error(
+                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
+            )
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 

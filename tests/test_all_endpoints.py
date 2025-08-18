@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Comprehensive ViolentUTF API Endpoint Testing Script
 Tests all 69 API endpoints systematically to ensure they work properly

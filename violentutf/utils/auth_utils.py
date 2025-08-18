@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 # utils/auth_utils.py
 """
 Common authentication utilities for ViolentUTF pages.

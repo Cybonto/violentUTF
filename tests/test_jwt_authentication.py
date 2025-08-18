@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test cases for JWT authentication system and API key management
 Tests the recent changes in JWT token handling, refresh mechanisms, and APISIX integration

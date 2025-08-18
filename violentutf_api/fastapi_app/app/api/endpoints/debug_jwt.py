@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Debug endpoint for JWT validation testing
 Temporarily bypasses APISIX gateway check for troubleshooting

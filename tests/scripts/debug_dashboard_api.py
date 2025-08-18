@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Debug script to trace exactly what the dashboard API calls are doing
 and why they can't find scorer execution results.

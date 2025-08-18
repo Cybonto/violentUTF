@@ -69,7 +69,8 @@ if [ "$FASTAPI_RUNNING" = true ]; then
 
     if [ -d "venv_api" ]; then
         source venv_api/bin/activate
-        export PYTHONPATH=$(pwd)
+        PYTHONPATH=$(pwd)
+        export PYTHONPATH
 
         print_status $BLUE "Running unit tests..."
         if python -m pytest ../../../tests/test_unit_api_endpoints.py -v; then
@@ -84,7 +85,8 @@ if [ "$FASTAPI_RUNNING" = true ]; then
         pip install -r requirements.txt
         pip install pytest duckdb
 
-        export PYTHONPATH=$(pwd)
+        PYTHONPATH=$(pwd)
+        export PYTHONPATH
 
         print_status $BLUE "Running unit tests..."
         if python -m pytest ../../../tests/test_unit_api_endpoints.py -v; then

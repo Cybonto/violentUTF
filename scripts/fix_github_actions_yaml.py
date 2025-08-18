@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """Fix GitHub Actions YAML files with multi-line Python string issues."""
 import os
 import re

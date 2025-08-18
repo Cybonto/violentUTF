@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Session management endpoints for user state persistence
 """
@@ -59,7 +62,7 @@ def save_session_data(username: str, session_data: Dict[str, Any]) -> None:
         with open(session_file, "w") as f:
             json.dump(session_data, f, indent=2, default=str)
     except Exception as e:
-        print(f"Error saving session data: {e}")
+        logger.error(f"Error saving session data: {e}")
 
 
 @router.get("", response_model=SessionStateResponse)

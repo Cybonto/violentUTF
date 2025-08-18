@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 import glob
 import json
 import logging
@@ -776,7 +779,9 @@ with main_col_right:
             enhance_button = st.button("✨ Enhance", help="Improve prompt quality using MCP", use_container_width=True)
 
         with enhancement_col2:
-            analyze_button = st.button("🔍 Analyze", help="Analyze for security & bias issues", use_container_width=True)
+            analyze_button = st.button(
+                "🔍 Analyze", help="Analyze for security & bias issues", use_container_width=True
+            )
 
         with enhancement_col3:
             test_button = st.button("🧪 Test", help="Generate test variations", use_container_width=True)

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 MCP Resource Manager - Enhanced Provides access to ViolentUTF resources
 ======================================================================

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test suite for MCP Enhancement Strip UI in Simple_Chat.py
 Tests UI components, session state management, and user interactions

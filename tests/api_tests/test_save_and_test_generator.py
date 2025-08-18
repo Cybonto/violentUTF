@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test cases for Save and Test Generator functionality in 1_Configure_Generators.py
 Tests the complete flow from generator creation to testing via API with live authentication

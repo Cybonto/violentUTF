@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 ViolentUTF API - FastAPI application for programmatic access to LLM red-teaming tools
 """

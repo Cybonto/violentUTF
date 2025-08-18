@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest

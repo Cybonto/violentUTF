@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 FastAPI endpoints for scorer management
 Implements API backend for 4_Configure_Scorers.py page

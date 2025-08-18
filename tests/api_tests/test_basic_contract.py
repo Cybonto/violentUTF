@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Basic API contract tests that work without full application dependencies.
 These tests validate the contract testing setup itself.

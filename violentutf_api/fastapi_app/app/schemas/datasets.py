@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Pydantic schemas for dataset management API endpoints
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks

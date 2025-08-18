@@ -627,11 +627,11 @@ class PyRITOrchestratorService:
         import sys
 
         debug_msg = f"🚨 _format_execution_results called with {len(results)} results"
-        print(debug_msg, file=sys.stderr, flush=True)
+        logger.debug(debug_msg)
         logger.error(debug_msg)
 
         orchestrator_debug = f"🚨 Orchestrator type: {type(orchestrator).__name__}"
-        print(orchestrator_debug, file=sys.stderr, flush=True)
+        logger.debug(orchestrator_debug)
         logger.error(orchestrator_debug)
 
         # Calculate execution summary
@@ -763,7 +763,7 @@ class PyRITOrchestratorService:
         try:
             pyrit_scores = orchestrator.get_score_memory()
             score_count_msg = f"🚨 Retrieved {len(pyrit_scores)} scores from orchestrator memory"
-            print(score_count_msg, file=sys.stderr, flush=True)
+            logger.debug(score_count_msg)
             logger.error(score_count_msg)
 
             for score in pyrit_scores:
@@ -779,7 +779,7 @@ class PyRITOrchestratorService:
                 formatted_scores.append(formatted_score)
         except Exception as e:
             error_msg = f"🚨 Failed to get PyRIT scores: {e}"
-            print(error_msg, file=sys.stderr, flush=True)
+            logger.debug(error_msg)
             logger.error(error_msg)
 
         # Method 2: Try tracked scorers approach
@@ -791,29 +791,29 @@ class PyRITOrchestratorService:
                     break
 
             tracking_msg = f"🚨 Looking for tracked scorers for orchestrator: {orchestrator_id}"
-            print(tracking_msg, file=sys.stderr, flush=True)
+            logger.debug(tracking_msg)
             logger.error(tracking_msg)
 
             if orchestrator_id and orchestrator_id in self._orchestrator_scorers:
                 tracked_scorers = self._orchestrator_scorers[orchestrator_id]
                 found_msg = f"🚨 Found {len(tracked_scorers)} tracked scorers"
-                print(found_msg, file=sys.stderr, flush=True)
+                logger.debug(found_msg)
                 logger.error(found_msg)
 
                 for scorer in tracked_scorers:
                     if isinstance(scorer, ConfiguredScorerWrapper) and hasattr(scorer, "scores_collected"):
                         collected_count = len(scorer.scores_collected)
                         collect_msg = f"🚨 Collected {collected_count} scores from {scorer.scorer_name}"
-                        print(collect_msg, file=sys.stderr, flush=True)
+                        logger.debug(collect_msg)
                         logger.error(collect_msg)
                         formatted_scores.extend(scorer.scores_collected)
             else:
                 no_track_msg = f"🚨 No tracked scorers found for orchestrator {orchestrator_id}"
-                print(no_track_msg, file=sys.stderr, flush=True)
+                logger.debug(no_track_msg)
                 logger.error(no_track_msg)
         except Exception as e:
             track_error_msg = f"🚨 Error accessing tracked scorers: {e}"
-            print(track_error_msg, file=sys.stderr, flush=True)
+            logger.debug(track_error_msg)
             logger.error(track_error_msg)
 
         # Method 3: Direct scorer discovery from orchestrator attributes
@@ -830,22 +830,22 @@ class PyRITOrchestratorService:
                                 formatted_scores.extend(scorer.scores_collected)
 
             direct_msg = f"🚨 Direct discovery found {direct_count} scores"
-            print(direct_msg, file=sys.stderr, flush=True)
+            logger.debug(direct_msg)
             logger.error(direct_msg)
         except Exception as e:
             direct_error_msg = f"🚨 Error in direct discovery: {e}"
-            print(direct_error_msg, file=sys.stderr, flush=True)
+            logger.debug(direct_error_msg)
             logger.error(direct_error_msg)
 
         # Final tally
         final_msg = f"🚨 FINAL SCORE COUNT: {len(formatted_scores)} scores to return"
-        print(final_msg, file=sys.stderr, flush=True)
+        logger.debug(final_msg)
         logger.error(final_msg)
 
         # SAFETY NET: If no scores found but we know scoring should have happened, create mock scores
         if not formatted_scores and len(results) > 0:
             safety_msg = f"🚨 SAFETY NET: No scores found but {len(results)} results exist. Creating safety scores."
-            print(safety_msg, file=sys.stderr, flush=True)
+            logger.debug(safety_msg)
             logger.error(safety_msg)
 
             # Create one mock score per result to show the scoring system is working
@@ -863,7 +863,7 @@ class PyRITOrchestratorService:
                 formatted_scores.append(safety_score)
 
             safety_final_msg = f"🚨 SAFETY NET: Added {len(formatted_scores)} safety scores"
-            print(safety_final_msg, file=sys.stderr, flush=True)
+            logger.debug(safety_final_msg)
             logger.error(safety_final_msg)
 
         result = {
@@ -887,12 +887,12 @@ class PyRITOrchestratorService:
 
         # FINAL DEBUG: Log the actual result structure being returned
         result_debug_msg = f"🚨 RETURNING RESULT: {len(result['scores'])} scores in final response"
-        print(result_debug_msg, file=sys.stderr, flush=True)
+        logger.debug(result_debug_msg)
         logger.error(result_debug_msg)
 
         if result["scores"]:
             first_score_msg = f"🚨 First score sample: {result['scores'][0]}"
-            print(first_score_msg, file=sys.stderr, flush=True)
+            logger.debug(first_score_msg)
             logger.error(first_score_msg)
 
         logger.info(f"Final API response summary: {result['execution_summary']}")
@@ -1104,11 +1104,11 @@ class ConfiguredScorerWrapper(Scorer):
         import sys
 
         score_start_msg = f"🎯 ConfiguredScorerWrapper.score_async called for scorer '{self.scorer_name}'"
-        print(score_start_msg, file=sys.stderr, flush=True)
+        logger.debug(score_start_msg)
         logger.error(score_start_msg)
 
         content_msg = f"🎯 Request piece role: {request_response.role}, has_content: {bool(request_response.original_value or request_response.converted_value)}"
-        print(content_msg, file=sys.stderr, flush=True)
+        logger.debug(content_msg)
         logger.error(content_msg)
 
         # PyRIT passes a single PromptRequestPiece, typically the assistant response
@@ -1124,7 +1124,7 @@ class ConfiguredScorerWrapper(Scorer):
         # Execute scorer based on type from config
         scorer_type = self.scorer_config.get("type", "generic")
         config_msg = f"🎯 Using scorer config directly: type={scorer_type}, name={self.scorer_name}"
-        print(config_msg, file=sys.stderr, flush=True)
+        logger.debug(config_msg)
         logger.error(config_msg)
 
         # Map scorer types from UI to proper PyRIT types
@@ -1229,8 +1229,8 @@ class ConfiguredScorerWrapper(Scorer):
         collected_msg = f"🚨 SCORE COLLECTED: {self.scorer_name} now has {len(self.scores_collected)} scores"
         latest_msg = f"🚨 Latest score: {api_score}"
 
-        print(collected_msg, file=sys.stderr, flush=True)
-        print(latest_msg, file=sys.stderr, flush=True)
+        logger.debug(collected_msg)
+        logger.debug(latest_msg)
         logger.error(collected_msg)
         logger.error(latest_msg)
 

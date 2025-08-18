@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID

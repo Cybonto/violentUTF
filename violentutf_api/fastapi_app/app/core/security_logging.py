@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Comprehensive security logging and monitoring
 SECURITY: Implements detailed security event logging for audit, compliance, and threat detection

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Secure error handling module to prevent information disclosure
 SECURITY: Sanitizes error messages and prevents internal system information leakage

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Authentication mock layer for API contract testing.
 Provides simplified authentication bypass for testing purposes.

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Authentication endpoints for obtaining JWT tokens
 SECURITY: Rate limiting and secure error handling implemented to prevent attacks

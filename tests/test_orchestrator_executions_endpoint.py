@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test the new /orchestrators/executions endpoint for Dashboard_2 support
 """

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 MCP Resource Browser for Phase 4 Implementation
 ==============================================

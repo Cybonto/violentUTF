@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test script to verify rate limiting is working correctly
 SECURITY: Tests that authentication endpoints properly enforce rate limits

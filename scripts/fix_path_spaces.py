@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """Fix directory paths with spaces that cause Windows CI failures.
 
 This script renames directories with spaces to use underscores.

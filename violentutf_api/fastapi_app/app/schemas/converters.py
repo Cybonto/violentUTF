@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Pydantic schemas for converter management API
 Supports the 3_Configure_Converters.py page functionality

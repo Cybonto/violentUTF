@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 # utils/logging.py
 
 """
@@ -53,7 +56,10 @@ def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
         os.makedirs(log_dir, exist_ok=True)
     except OSError as e:
         # Handle potential permission errors gracefully
-        print(f"Error creating log directory '{log_dir}': {e}", file=sys.stderr)
+        # Use basic logging since our setup might not be ready yet
+        import logging
+
+        logging.error(f"Error creating log directory '{log_dir}': {e}")
         # Optionally, fall back to console-only logging or raise the error
         # For now, we'll proceed but file logging might fail
         pass
@@ -78,7 +84,8 @@ def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
             root_logger.addHandler(file_handler)
         except (OSError, IOError) as e:
             # Handle potential file opening errors
-            print(f"Error setting up file log handler for '{log_file}': {e}", file=sys.stderr)
+            # Use basic logging since our setup might not be complete
+            logging.error(f"Error setting up file log handler for '{log_file}': {e}")
 
     # --- Console Handler ---
     # Check if our specific console handler already exists

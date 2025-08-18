@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 MCP PyRIT Scorer Integration for Phase 4
 ========================================
@@ -210,7 +213,9 @@ class MCPScorerIntegration:
         output = "**Vulnerability Assessment Results:**\n\n"
 
         for result in sorted(results, key=lambda r: r.score, reverse=True):
-            emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢", "info": "🔵"}.get(result.severity, "⚪")
+            emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢", "info": "🔵"}.get(
+                result.severity, "⚪"
+            )
 
             output += f"{emoji} **{result.scorer_type.title()}**: {result.score:.2f}\n"
 

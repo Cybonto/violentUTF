@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test suite for converter apply functionality
 Tests the ability to apply converters to datasets and create new datasets with converted prompts

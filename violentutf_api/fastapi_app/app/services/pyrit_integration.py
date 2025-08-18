@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 PyRIT Integration Service
 Provides PyRIT-based AI red-teaming functionality for ViolentUTF platform

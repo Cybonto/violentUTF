@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test suite for MCP Integration Utilities
 Tests natural language parsing, context analysis, and integration features

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 MCP Command Handler for Phase 3 UI Implementation
 =================================================

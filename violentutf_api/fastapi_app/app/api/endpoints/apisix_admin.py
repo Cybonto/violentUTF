@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 APISIX Admin API proxy endpoints with proper authentication and authorization.
 This module provides secure access to APISIX admin functions for authorized users.

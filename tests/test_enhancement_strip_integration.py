@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Integration Tests for Enhancement Strip with Real MCP Server
 ==========================================================

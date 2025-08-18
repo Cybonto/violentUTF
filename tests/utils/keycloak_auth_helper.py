@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Keycloak authentication utility for tests
 Handles OAuth2 authentication with Keycloak to obtain JWT tokens for testing

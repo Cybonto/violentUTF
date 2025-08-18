@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Verify PyRIT and Garak installation
 This script checks that the AI red-teaming frameworks are properly installed

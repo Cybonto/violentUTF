@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """FastAPI Endpoint Introspection for MCP Tool Discovery"""
 
 import inspect

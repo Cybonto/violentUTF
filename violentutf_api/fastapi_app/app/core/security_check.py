@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Security configuration validation
 SECURITY: Validates that security measures are properly configured

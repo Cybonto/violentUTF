@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """Run all code quality checks locally to match GitHub Actions.
 
 This helps identify and fix issues before pushing to PR.
@@ -213,10 +216,9 @@ def main() -> int:
         print(f"{YELLOW}Run with --fix to automatically fix formatting issues{RESET}")
 
     # Install tools if requested
-    if "--install" in sys.argv:
-        if not install_tools():
-            print(f"{RED}Failed to install tools. Exiting.{RESET}")
-            sys.exit(1)
+    if "--install" in sys.argv and not install_tools():
+        print(f"{RED}Failed to install tools. Exiting.{RESET}")
+        sys.exit(1)
 
     # Track results
     results = {}

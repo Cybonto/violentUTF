@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 MCP (Model Context Protocol) Client for ViolentUTF
 Implements SSE client for real-time MCP server communication

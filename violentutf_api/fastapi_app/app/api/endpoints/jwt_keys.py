@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 JWT API Key management endpoints
 SECURITY: Rate limiting applied to prevent API key enumeration attacks

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test script to verify that all endpoints used in 0_Start.py are properly routed through APISIX
 Run this script to ensure the Start page will work correctly with the API

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Integration tests for ViolentUTF API through APISIX Gateway
 Tests the actual APISIX routing to ensure endpoints work as expected

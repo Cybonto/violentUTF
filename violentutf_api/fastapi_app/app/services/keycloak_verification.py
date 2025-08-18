@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Keycloak JWT Token Verification Service
 SECURITY: Implements proper JWT signature verification using Keycloak public keys

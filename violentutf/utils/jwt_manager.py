@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 JWT Token Management Utility for ViolentUTF Streamlit Application
 

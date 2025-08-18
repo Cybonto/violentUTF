@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """Phase 2 Component Tests for ViolentUTF MCP Server"""
 
 import asyncio

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 DuckDB Manager for ViolentUTF Configuration Storage
 Extends existing PyRIT database functionality to support configuration persistence

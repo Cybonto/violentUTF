@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 import hashlib
 import json
 import os
@@ -226,7 +229,9 @@ def create_compatible_api_token():
             logger.info("Successfully created API token using JWT manager")
             return api_token
         else:
-            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
+            st.error(
+                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
+            )
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 

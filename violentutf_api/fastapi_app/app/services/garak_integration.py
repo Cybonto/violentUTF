@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Garak Integration Service
 Provides NVIDIA Garak LLM vulnerability scanning functionality for ViolentUTF platform

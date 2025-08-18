@@ -1,11 +1,15 @@
-"""
-Pytest configuration for API tests
-Inherits from main conftest.py and adds API-specific fixtures
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
+"""Pytest configuration for API tests.
+
+Inherits from main conftest.py and adds API-specific fixtures.
 """
 
 import os
 import sys
 from pathlib import Path
+from typing import Dict, List
 
 # Add parent directory to sys.path to access main conftest and utils
 parent_dir = Path(__file__).parent.parent
@@ -22,16 +26,19 @@ from utils.keycloak_auth import keycloak_auth
 
 
 @pytest.fixture(scope="session")
-def api_base_url():
-    """API base URL for testing - overrides main conftest to ensure APISIX gateway usage"""
+def api_base_url() -> str:
+    """API base URL for testing.
+
+    Overrides main conftest to ensure APISIX gateway usage.
+    """
     return os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
 
 
 @pytest.fixture(scope="function")
-def cleanup_generators(headers, api_base_url):
-    """
-    Cleanup generators created during tests
-    Tracks created generators and removes them after test completion
+def cleanup_generators(headers: Dict[str, str], api_base_url: str) -> List[str]:
+    """Cleanup generators created during tests.
+
+    Tracks created generators and removes them after test completion.
     """
     created_generators = []
 

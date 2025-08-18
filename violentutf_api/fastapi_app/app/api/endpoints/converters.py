@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 FastAPI endpoints for converter management
 Implements API backend for 3_Configure_Converters.py page
@@ -646,9 +649,7 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
                 (
                     chr((ord(c) - ord("a") + 13) % 26 + ord("a"))
                     if "a" <= c <= "z"
-                    else chr((ord(c) - ord("A") + 13) % 26 + ord("A"))
-                    if "A" <= c <= "Z"
-                    else c
+                    else chr((ord(c) - ord("A") + 13) % 26 + ord("A")) if "A" <= c <= "Z" else c
                 )
                 for c in prompt
             )
@@ -671,9 +672,7 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
                 (
                     chr((ord(c) - ord("a") + offset) % 26 + ord("a"))
                     if "a" <= c <= "z"
-                    else chr((ord(c) - ord("A") + offset) % 26 + ord("A"))
-                    if "A" <= c <= "Z"
-                    else c
+                    else chr((ord(c) - ord("A") + offset) % 26 + ord("A")) if "A" <= c <= "Z" else c
                 )
                 for c in prompt
             )

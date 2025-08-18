@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Enhanced test cases for Save and Test Generator functionality
 Tests the complete flow with live Keycloak authentication and real API endpoints

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """OAuth Proxy for MCP Client Compatibility"""
 
 import base64

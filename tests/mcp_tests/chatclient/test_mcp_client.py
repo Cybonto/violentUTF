@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Test suite for MCP Client implementation
 Tests SSE connection, JSON-RPC handling, and all MCP operations

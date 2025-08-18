@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Compatibility module for keycloak authentication.
 This module re-exports from keycloak_auth_helper to maintain backward compatibility.

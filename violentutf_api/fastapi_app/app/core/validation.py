@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Comprehensive input validation module
 SECURITY: Validates and sanitizes all user inputs to prevent injection attacks and data corruption

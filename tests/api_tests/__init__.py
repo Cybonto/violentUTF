@@ -1,1 +1,4 @@
-# API Tests for ViolentUTF Generator functionality
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
+"""API Tests for ViolentUTF Generator functionality."""

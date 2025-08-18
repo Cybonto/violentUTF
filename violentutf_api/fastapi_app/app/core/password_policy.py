@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Password strength validation and policy enforcement
 SECURITY: Implements comprehensive password security requirements to prevent weak passwords
