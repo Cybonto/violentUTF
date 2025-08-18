@@ -1,0 +1,218 @@
+name: 🧹 Chore
+description: Maintenance tasks, dependency updates, and housekeeping for ViolentUTF
+title: "[CHORE] "
+labels: ["type:chore", "status:pending-acceptance", "project:violentutf"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Maintenance Task
+        Non-functional changes that maintain or improve the project infrastructure.
+
+  - type: textarea
+    id: frontmatter
+    attributes:
+      label: UAT Specification
+      description: Structured specification for agent consumption (DO NOT MODIFY the YAML structure)
+      value: |
+        ```yaml
+        ---
+        schemaVersion: "uat-v1.0"
+        issueID: ""
+        type: "chore"
+        status: "pending-acceptance"
+        priority: 4
+        assignee: ""
+
+        spec:
+          choreType: ""  # dependency-update, cleanup, tooling, infrastructure, documentation
+          description: ""
+          acceptanceCriteria:
+            - "Task is completed successfully"
+            - "No functionality is broken"
+            - "Documentation is updated if needed"
+
+        quality:
+          testing:
+            smoke_test_required: true
+            full_regression_required: false
+          security:
+            dependency_scan_required: false
+            vulnerability_check_required: false
+
+        relations:
+          parent: ""
+          dependsOn: []
+          blocks: []
+
+        maintenance:
+          automation_possible: false
+          recurring: false
+          frequency: ""  # weekly, monthly, quarterly, annually
+          last_performed: ""
+          next_due: ""
+        ---
+        ```
+    validations:
+      required: true
+
+  - type: dropdown
+    id: chore_type
+    attributes:
+      label: Chore Type
+      description: What kind of maintenance task is this?
+      options:
+        - Dependency Update - Update packages/libraries
+        - Security Patches - Apply security updates
+        - Docker/Container Updates - Update base images
+        - Code Cleanup - Remove dead code, fix warnings
+        - Tool Configuration - Update linters, formatters, etc.
+        - CI/CD Maintenance - Update pipelines, workflows
+        - Infrastructure - Update deployment configs
+        - Documentation Cleanup - Fix broken links, outdated info
+        - Test Maintenance - Fix flaky tests, update fixtures
+        - Database Maintenance - Migrations, cleanup, optimization
+        - Log Rotation - Archive or clean up logs
+        - Certificate Renewal - Update SSL/TLS certificates
+        - License Updates - Update license files, headers
+        - Repository Cleanup - Archive branches, clean artifacts
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: Urgency
+      description: How urgent is this maintenance task?
+      options:
+        - Immediate - Security or critical issue
+        - This Week - Important but not critical
+        - This Sprint - Regular maintenance
+        - This Quarter - Can be scheduled
+        - Anytime - No specific deadline
+    validations:
+      required: true
+
+  - type: textarea
+    id: task_description
+    attributes:
+      label: Task Description
+      description: What needs to be done?
+      placeholder: |
+        Update Python dependencies to latest compatible versions:
+        - PyRIT: 0.3.0 → 0.3.2 (bug fixes)
+        - Garak: 0.9.0 → 0.9.1 (security patch)
+        - FastAPI: 0.104.0 → 0.104.1 (performance improvements)
+        - SQLAlchemy: 2.0.23 → 2.0.25 (bug fixes)
+
+        Also update development dependencies:
+        - pytest: 7.4.3 → 7.4.4
+        - black: 23.12.0 → 24.1.0
+        - mypy: 1.7.0 → 1.8.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact Assessment
+      description: What systems or users might be affected?
+      placeholder: |
+        - No functional changes expected
+        - Possible minor behavior changes in error messages
+        - Development environment will need to reinstall dependencies
+        - CI/CD pipelines will automatically use new versions
+        - No downtime required for deployment
+    validations:
+      required: true
+
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Task Checklist
+      description: Steps to complete this chore
+      placeholder: |
+        - [ ] Review dependency changelogs for breaking changes
+        - [ ] Update requirements.txt / pyproject.toml
+        - [ ] Update requirements-dev.txt for dev dependencies
+        - [ ] Run dependency security scan
+        - [ ] Update lock files (poetry.lock, pip-tools, etc.)
+        - [ ] Run full test suite
+        - [ ] Update Docker base images if needed
+        - [ ] Test in staging environment
+        - [ ] Update documentation if needed
+        - [ ] Create rollback plan
+    validations:
+      required: true
+
+  - type: textarea
+    id: automation
+    attributes:
+      label: Automation Opportunities
+      description: Can this task be automated for the future?
+      placeholder: |
+        - Set up Dependabot for automatic dependency updates
+        - Create GitHub Action for weekly dependency checks
+        - Implement automated security scanning with Snyk
+        - Add pre-commit hooks for code cleanup
+        - Schedule regular database maintenance jobs
+    validations:
+      required: false
+
+  - type: dropdown
+    id: affected_environments
+    attributes:
+      label: Affected Environments
+      description: Which environments need this change?
+      multiple: true
+      options:
+        - Development
+        - Testing/QA
+        - Staging
+        - Production
+        - CI/CD Pipeline
+        - Documentation Site
+        - All Environments
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollback_plan
+    attributes:
+      label: Rollback Plan
+      description: How to revert if something goes wrong?
+      placeholder: |
+        If issues occur after deployment:
+        1. Revert to previous commit using git
+        2. Restore previous requirements.txt from backup
+        3. Rebuild and redeploy containers with old dependencies
+        4. Clear pip cache if needed
+        5. Notify team of rollback
+    validations:
+      required: false
+
+  - type: dropdown
+    id: requires_downtime
+    attributes:
+      label: Requires Downtime?
+      description: Will this task require system downtime?
+      options:
+        - No downtime required
+        - Brief restart required (<5 minutes)
+        - Maintenance window required (>5 minutes)
+        - Rolling update possible
+    validations:
+      required: true
+
+  - type: checkbox
+    id: verification
+    attributes:
+      label: Verification Steps
+      options:
+        - label: Dependencies/changes are from trusted sources
+        - label: Security scanning completed
+        - label: Test suite passes
+        - label: Documentation reviewed and updated
+        - label: Team notified of changes
+        - label: Rollback plan tested

@@ -1,0 +1,202 @@
+name: 📚 Documentation
+description: Create or update documentation for ViolentUTF
+title: "[DOCS] "
+labels: ["type:documentation", "status:pending-acceptance", "project:violentutf"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Documentation Task
+        Improve ViolentUTF documentation for better understanding and usage.
+
+  - type: textarea
+    id: frontmatter
+    attributes:
+      label: UAT Specification
+      description: Structured specification for agent consumption (DO NOT MODIFY the YAML structure)
+      value: |
+        ```yaml
+        ---
+        schemaVersion: "uat-v1.0"
+        issueID: ""
+        type: "documentation"
+        status: "pending-acceptance"
+        priority: 3
+        assignee: ""
+
+        spec:
+          documentationScope: ""
+          targetAudience: []  # developers, security-engineers, red-teams, operators, architects
+          deliverables:
+            - type: ""  # readme, api-docs, guide, tutorial, architecture, runbook
+              title: ""
+              location: ""
+          acceptanceCriteria:
+            - "Documentation is technically accurate"
+            - "Examples are tested and working"
+            - "Follows project style guide"
+            - "Includes security considerations"
+
+        quality:
+          documentation:
+            includes_examples: true
+            includes_diagrams: false
+            peer_review_required: true
+            technical_review_required: true
+
+        relations:
+          parent: ""
+          dependsOn: []
+          relatesTo: []
+          updates: []  # Existing docs being updated
+
+        content:
+          sections_to_add:
+            - ""
+          sections_to_update:
+            - ""
+          sections_to_remove:
+            - ""
+          examples_needed:
+            - ""
+        ---
+        ```
+    validations:
+      required: true
+
+  - type: dropdown
+    id: doc_type
+    attributes:
+      label: Documentation Type
+      options:
+        - API Documentation
+        - User Guide
+        - Developer Guide
+        - Architecture Documentation
+        - Security Documentation
+        - Deployment Guide
+        - Configuration Guide
+        - README Update
+        - Tutorial
+        - Troubleshooting Guide
+        - Migration Guide
+        - PyRIT Integration Guide
+        - Garak Integration Guide
+        - Attack Template Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target_audience
+    attributes:
+      label: Primary Target Audience
+      description: Who will primarily use this documentation?
+      options:
+        - Security Engineers
+        - Red Team Members
+        - Developers
+        - System Administrators
+        - Compliance Teams
+        - New Users
+        - Advanced Users
+        - Contributors
+        - All Users
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_state
+    attributes:
+      label: Current Documentation State
+      description: What documentation exists and what's missing?
+      placeholder: |
+        Existing documentation:
+        - Basic README with installation steps
+        - API endpoints listed but not fully documented
+
+        Missing/Inadequate:
+        - No examples for PyRIT integration
+        - Attack template format not documented
+        - Configuration options not explained
+        - No troubleshooting guide
+    validations:
+      required: true
+
+  - type: textarea
+    id: outline
+    attributes:
+      label: Documentation Outline
+      description: Structure of the documentation
+      placeholder: |
+        1. Introduction
+           - Purpose of ViolentUTF
+           - Key features
+
+        2. Getting Started
+           - Prerequisites
+           - Installation
+           - Basic configuration
+
+        3. PyRIT Integration
+           - Configuration
+           - Attack templates
+           - Example workflows
+
+        4. API Reference
+           - Authentication
+           - Endpoints
+           - Request/Response schemas
+
+        5. Security Considerations
+           - Best practices
+           - Compliance notes
+
+        6. Troubleshooting
+           - Common issues
+           - Debug logging
+           - Support channels
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples to Include
+      description: What examples should be provided?
+      placeholder: |
+        - Basic attack execution with PyRIT
+        - Batch attack processing
+        - Custom attack template creation
+        - Integration with CI/CD pipeline
+        - Multi-target attack campaign
+        - Result analysis and reporting
+        - API authentication flow
+        - Docker deployment example
+    validations:
+      required: false
+
+  - type: textarea
+    id: related_changes
+    attributes:
+      label: Related Code Changes
+      description: Are there code changes that need documenting?
+      placeholder: |
+        - New API endpoints added in PR #123
+        - Configuration schema changed in v0.2.0
+        - PyRIT integration updated to support v0.3.0
+        - New attack templates added
+    validations:
+      required: false
+
+  - type: checkbox
+    id: checklist
+    attributes:
+      label: Documentation Standards Checklist
+      options:
+        - label: Will follow existing documentation style guide
+        - label: Will include tested code examples
+        - label: Will add diagrams where helpful
+        - label: Will update table of contents/index
+        - label: Will include security considerations
+        - label: Will be reviewed by subject matter expert

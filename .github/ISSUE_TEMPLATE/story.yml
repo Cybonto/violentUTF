@@ -1,0 +1,160 @@
+name: 📖 User Story
+description: Create a feature from the user's perspective for ViolentUTF
+title: "[STORY] As a [user], I want [capability]"
+labels: ["type:story", "status:pending-acceptance", "project:violentutf"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## User Story
+        Describe a feature that delivers tangible value to ViolentUTF users (security engineers, red teams, compliance teams).
+
+  - type: textarea
+    id: frontmatter
+    attributes:
+      label: UAT Specification
+      description: Structured specification for agent consumption (DO NOT MODIFY the YAML structure)
+      value: |
+        ```yaml
+        ---
+        schemaVersion: "uat-v1.0"
+        issueID: ""
+        type: "story"
+        status: "pending-acceptance"
+        priority: 3
+        assignee: ""
+
+        spec:
+          userStory: "As a [role], I want [capability] so that [benefit]"
+          acceptanceCriteria:
+            - given: ""
+              when: ""
+              then: ""
+            - given: ""
+              when: ""
+              then: ""
+          outOfScope:
+            - ""
+          assumptions:
+            - "ViolentUTF is properly configured"
+            - "User has appropriate permissions"
+
+        quality:
+          performance:
+            response_time_p95_ms: 500
+            concurrent_attacks: 10
+            max_payload_size_mb: 10
+          security:
+            authentication_required: true
+            authorization_roles: ["security_engineer", "red_team"]
+            audit_logging_required: true
+          maintainability:
+            code_coverage_min_percent: 80
+            documentation_required: true
+          accessibility:
+            wcag_level: "AA"
+
+        relations:
+          parent: ""
+          dependsOn: []
+          relatesTo: []
+          blocks: []
+
+        implementation:
+          estimatedHours: 0
+          requiredSkills:
+            - "Python/FastAPI"
+            - "AI Security Testing"
+          testingStrategy:
+            unit: true
+            integration: true
+            e2e: false
+            security: true
+        ---
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_context
+    attributes:
+      label: User Context
+      description: Who is the user and what problem are we solving?
+      placeholder: |
+        User persona: (e.g., Security Engineer, Red Team Lead, Compliance Officer)
+        Current pain point: (e.g., Manual testing is time-consuming)
+        Expected outcome: (e.g., Automated security testing workflow)
+        Success criteria: (e.g., 80% reduction in testing time)
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: UI/UX Mockups or API Design
+      description: Link to designs or describe the interface/API endpoints
+      placeholder: |
+        For UI features:
+        - Figma link:
+        - Screenshots:
+
+        For API features:
+        - Endpoint: POST /api/v1/attacks/execute
+        - Request schema:
+        - Response schema:
+    validations:
+      required: false
+
+  - type: textarea
+    id: api_changes
+    attributes:
+      label: API Changes
+      description: Document any API modifications
+      placeholder: |
+        New endpoints:
+        - POST /api/v1/[resource]
+
+        Modified endpoints:
+        - PUT /api/v1/[resource]/{id}
+
+        Deprecated endpoints:
+        - None
+
+        Breaking changes:
+        - None
+    validations:
+      required: false
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Primary Component
+      description: Which ViolentUTF component is primarily affected?
+      options:
+        - FastAPI Service
+        - PyRIT Integration
+        - Garak Integration
+        - Attack Orchestration
+        - Results Analytics
+        - Target Management
+        - Keycloak SSO
+        - Streamlit App
+        - MCP Server
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: attack_framework
+    attributes:
+      label: Attack Framework
+      description: Which attack framework does this story involve?
+      options:
+        - PyRIT
+        - Garak
+        - Both
+        - Neither
+        - Custom
+    validations:
+      required: true
+

@@ -1,0 +1,250 @@
+name: 🔧 Refactor
+description: Improve code structure without changing functionality in ViolentUTF
+title: "[REFACTOR] "
+labels: ["type:refactor", "status:pending-acceptance", "project:violentutf"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Code Refactoring
+        Improve code quality, maintainability, and structure without changing external behavior.
+
+  - type: textarea
+    id: frontmatter
+    attributes:
+      label: UAT Specification
+      description: Structured specification for agent consumption (DO NOT MODIFY the YAML structure)
+      value: |
+        ```yaml
+        ---
+        schemaVersion: "uat-v1.0"
+        issueID: ""
+        type: "refactor"
+        status: "pending-acceptance"
+        priority: 3
+        assignee: ""
+
+        spec:
+          refactorScope: ""
+          targetModules:
+            - module: ""
+              reason: ""
+              improvements: []
+          acceptanceCriteria:
+            - "All existing tests pass without modification"
+            - "No external API changes"
+            - "Performance is maintained or improved"
+            - "Code coverage remains at or above current level"
+
+        quality:
+          codeQuality:
+            cyclomatic_complexity_reduction: 0
+            code_duplication_reduction: 0
+            test_coverage_change: 0
+            maintainability_index_improvement: 0
+          testing:
+            regression_test_required: true
+            performance_test_required: true
+            integration_test_required: true
+
+        relations:
+          parent: ""
+          dependsOn: []
+          relatesTo: []
+          blockedBy: []
+
+        analysis:
+          current_issues:
+            - issue: ""
+              impact: ""
+          proposed_changes:
+            - change: ""
+              benefit: ""
+          risk_assessment:
+            - risk: ""
+              mitigation: ""
+        ---
+        ```
+    validations:
+      required: true
+
+  - type: dropdown
+    id: refactor_type
+    attributes:
+      label: Refactoring Type
+      description: What kind of refactoring is needed?
+      options:
+        - Code Structure - Reorganize modules/packages
+        - Design Pattern - Apply or improve patterns
+        - Performance - Optimize without changing behavior
+        - Readability - Improve code clarity
+        - DRY - Remove code duplication
+        - SOLID Principles - Apply SOLID principles
+        - Dependency Management - Reduce coupling
+        - Error Handling - Improve error management
+        - Type Safety - Add/improve type hints
+        - Async/Await - Convert to async patterns
+        - Database Schema - Optimize queries/schema
+        - API Design - Improve internal APIs
+        - Testing Structure - Reorganize tests
+        - Configuration - Simplify configuration
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Refactoring Scope
+      description: How extensive is this refactoring?
+      options:
+        - Single Function/Method
+        - Single Class/Module
+        - Multiple Related Classes
+        - Entire Package/Component
+        - Cross-Component
+        - System-Wide
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_problems
+    attributes:
+      label: Current Code Issues
+      description: What problems exist in the current code?
+      placeholder: |
+        - High cyclomatic complexity in attack_executor.py (>15)
+        - Duplicate code between PyRIT and Garak handlers (30% duplication)
+        - Tight coupling between API layer and attack engine
+        - Mixed concerns in the results processor
+        - Inconsistent error handling patterns
+        - Hard-coded configuration values
+        - Missing type hints in core modules
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_improvements
+    attributes:
+      label: Proposed Improvements
+      description: How will you improve the code?
+      placeholder: |
+        1. Extract common attack handler interface
+           - Create AbstractAttackHandler base class
+           - Implement PyRITHandler and GarakHandler
+           - Reduce code duplication by 80%
+
+        2. Apply Strategy pattern for attack execution
+           - Separate attack strategies from executor
+           - Enable runtime strategy selection
+           - Improve testability
+
+        3. Introduce dependency injection
+           - Remove hard dependencies
+           - Use factory pattern for component creation
+           - Improve unit test isolation
+
+        4. Add comprehensive type hints
+           - Full typing for all public APIs
+           - Use Protocol for interfaces
+           - Enable strict mypy checking
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_files
+    attributes:
+      label: Files to Refactor
+      description: List the files that will be modified
+      placeholder: |
+        Core refactoring:
+        - src/violentutf/attack_engine.py
+        - src/violentutf/handlers/pyrit_handler.py
+        - src/violentutf/handlers/garak_handler.py
+
+        Supporting changes:
+        - src/violentutf/interfaces/attack_handler.py (new)
+        - src/violentutf/factories/handler_factory.py (new)
+        - tests/unit/test_attack_engine.py
+        - tests/integration/test_handlers.py
+    validations:
+      required: true
+
+  - type: textarea
+    id: backwards_compatibility
+    attributes:
+      label: Backwards Compatibility
+      description: How will you maintain compatibility?
+      placeholder: |
+        - All public APIs remain unchanged
+        - Existing configuration files continue to work
+        - Database schema unchanged
+        - REST API endpoints maintain same contracts
+        - CLI commands preserve same interface
+
+        Deprecations (if any):
+        - Old internal APIs marked with @deprecated
+        - Migration guide provided for internal consumers
+        - Deprecation warnings logged but not breaking
+    validations:
+      required: true
+
+  - type: textarea
+    id: testing_strategy
+    attributes:
+      label: Testing Strategy
+      description: How will you ensure the refactoring doesn't break anything?
+      placeholder: |
+        Before refactoring:
+        - Run full test suite and save baseline metrics
+        - Document current performance benchmarks
+        - Create characterization tests for complex logic
+
+        During refactoring:
+        - Run tests after each incremental change
+        - Maintain 100% test pass rate
+        - No modification to existing test assertions
+
+        After refactoring:
+        - Verify all tests still pass
+        - Compare performance metrics
+        - Run integration tests against live systems
+        - Execute load tests to verify no regression
+    validations:
+      required: true
+
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Success Metrics
+      description: How will you measure improvement?
+      placeholder: |
+        Code Quality Metrics:
+        - Cyclomatic complexity: 15 → 8
+        - Code duplication: 30% → 5%
+        - Test coverage: 75% → 85%
+        - Type hint coverage: 40% → 95%
+
+        Performance Metrics:
+        - Unit test execution: 45s → 30s
+        - Memory usage: No increase
+        - API response time: Maintained or improved
+
+        Maintainability:
+        - Reduced coupling between modules
+        - Clear separation of concerns
+        - Improved code documentation
+    validations:
+      required: false
+
+  - type: checkbox
+    id: checklist
+    attributes:
+      label: Refactoring Checklist
+      options:
+        - label: Current code behavior is fully understood
+        - label: Comprehensive tests exist or will be added
+        - label: Performance benchmarks established
+        - label: No external API changes
+        - label: Documentation will be updated
+        - label: Team has been notified of changes
