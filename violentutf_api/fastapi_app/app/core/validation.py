@@ -143,7 +143,8 @@ def validate_email(email: str) -> str:
     email = email.strip().lower()
 
     # Basic format check
-    if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email): raise ValueError("Invalid email format")
+    if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+        raise ValueError("Invalid email format")
 
     if len(email) > 254:  # RFC 5321 limit
         raise ValueError("Email address too long")
@@ -332,7 +333,7 @@ def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLi
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON format: {str(e)}")
 
-    def check_depth(obj, current_depth: Any=0) -> None:
+    def check_depth(obj, current_depth: Any = 0) -> None:
         if current_depth > max_depth:
             raise ValueError(f"JSON structure too deeply nested (max depth {max_depth})")
 
@@ -407,7 +408,7 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
 class ValidationError(HTTPException):
     """Custom validation error with proper HTTP status."""
     def __init__(self, detail: str = "Validation error") -> None:
-        """"Initialize the instance."""
+        """Initialize the instance."""
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Validation error: {detail}")
 
 

@@ -284,7 +284,6 @@ async def _get_prompts_from_database_files(dataset_id: str, limit: Optional[int]
 def _get_user_prompts_database_paths(user_id: str) -> List[str]:
     """Get paths to user-specific database files for prompt loading."""
     import hashlib
-    import os
 
     # Generate the user's specific database filename
     salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
@@ -348,7 +347,6 @@ async def _extract_prompts_from_db_file(db_path: str, user_id: str, limit: Optio
 def _get_prompts_user_db_filename(user_id: str) -> str:
     """Get user-specific database filename for prompts."""
     import hashlib
-    import os
 
     salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
     user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()

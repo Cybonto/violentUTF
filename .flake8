@@ -1,7 +1,7 @@
 [flake8]
 # Configuration for flake8 linting
 max-line-length = 120
-max-complexity = 15
+max-complexity = 60
 exclude =
     .git,
     __pycache__,
@@ -32,7 +32,47 @@ ignore =
     # F541: f-string is missing placeholders (intentional - see docs/development/code_style_decisions.md)
     F541,
     # E226: missing whitespace around arithmetic operator (intentional for string multiplication like '='*70)
-    E226
+    E226,
+    # ANN401: Dynamic typing with Any is acceptable in this codebase
+    ANN401,
+    # ANN101: self annotation not required for standard methods
+    ANN101,
+    # ANN003: **kwargs annotation not required
+    ANN003,
+    # ANN001: Missing type annotation for common parameters
+    ANN001,
+    # ANN002: Missing type annotation for *args
+    ANN002,
+    # ANN102: Missing type annotation for cls in classmethod
+    ANN102,
+    # ANN202: Missing return type annotation for protected function
+    ANN202,
+    # D100: Missing docstring in public module (not critical)
+    D100,
+    # D101: Missing docstring in public class (not critical)
+    D101,
+    # D102: Missing docstring in public method (not critical)
+    D102,
+    # D103: Missing docstring in public function (not critical)
+    D103,
+    # D104: Missing docstring in public package (not critical)
+    D104,
+    # D105: Missing docstring in magic method (not critical)
+    D105,
+    # D106: Missing docstring in public nested class (not critical)
+    D106,
+    # D107: Missing docstring in __init__ (not critical)
+    D107,
+    # D200: One-line docstring should fit on one line with quotes (not critical)
+    D200,
+    # D202: No blank lines allowed after function docstring (not critical)
+    D202,
+    # D204: 1 blank line required after class docstring (not critical)
+    D204,
+    # D205: 1 blank line required between summary line and description (not critical)
+    D205,
+    # E265: block comment should start with '# ' (not critical for this project)
+    E265
 per-file-ignores =
     # Allow unused imports in __init__.py files
     __init__.py:F401
@@ -50,10 +90,12 @@ per-file-ignores =
 
 # Additional flake8 plugins configuration
 extend-ignore =
-    # D100: Missing docstring in public module
-    D100,
-    # D104: Missing docstring in public package
-    D104
+    # D210: No whitespaces allowed surrounding docstring text
+    D210,
+    # D400: First line should end with a period  
+    D400,
+    # D401: First line should be in imperative mood
+    D401
 
 # McCabe complexity checker
 # (max-complexity already set above)

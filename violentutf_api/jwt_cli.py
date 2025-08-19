@@ -60,7 +60,7 @@ def get_auth_header() -> dict:
 
 @click.group()
 def cli() -> None:
-    """ViolentUTF JWT CLI - Manage JWT tokens for API access."""
+    """Manage JWT tokens for ViolentUTF API access."""
     pass
 
 
