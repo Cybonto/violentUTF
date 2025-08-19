@@ -32,7 +32,17 @@ ignore =
     # F541: f-string is missing placeholders (intentional - see docs/development/code_style_decisions.md)
     F541,
     # E226: missing whitespace around arithmetic operator (intentional for string multiplication like '='*70)
-    E226
+    E226,
+    # ANN101: Missing type annotation for self in method (legacy codebase)
+    ANN101,
+    # D400: First line should end with a period (legacy docstrings)
+    D400,
+    # D401: First line should be in imperative mood (legacy docstrings)  
+    D401,
+    # ANN001: Missing type annotation for function argument (legacy code)
+    ANN001,
+    # ANN201: Missing return type annotation for public function (legacy code)
+    ANN201
 per-file-ignores =
     # Allow unused imports in __init__.py files
     __init__.py:F401
