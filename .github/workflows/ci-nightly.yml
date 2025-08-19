@@ -24,7 +24,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04, macos-13, macos-12, windows-2022, windows-2019]
+        os:
+          - ubuntu-22.04
+          - ubuntu-20.04
+          - macos-13
+          - macos-12
+          - windows-2022
+          - windows-2019
         python-version: ["3.10", "3.11", "3.12", "3.13-dev"]
         exclude:
           # Exclude older OS with newer Python
@@ -42,7 +48,8 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        # v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -53,24 +60,31 @@ jobs:
           pip install -r requirements.txt
           pip install -r violentutf/requirements.txt
           pip install -r violentutf_api/fastapi_app/requirements.txt
-          pip install pytest pytest-cov pytest-xdist pytest-timeout pytest-benchmark
+          pip install \
+            pytest pytest-cov pytest-xdist \
+            pytest-timeout pytest-benchmark
 
       - name: Run comprehensive test suite
         run: |
           # Only run unit tests for now
-          if [ -d "tests/unit" ] && [ "$(find tests/unit -name 'test_*.py' -type f | wc -l)" -gt 0 ]; then
+          if [ -d "tests/unit" ] && \
+             [ "$(find tests/unit -name 'test_*.py' -type f | wc -l)" -gt 0 ]; then
             pytest tests/unit -v --tb=short \
               --cov=violentutf --cov=violentutf_api \
-              --cov-report=xml:coverage-${{ matrix.os }}-${{ matrix.python-version }}.xml \
-              --cov-report=html:htmlcov-${{ matrix.os }}-${{ matrix.python-version }} \
-              --junit-xml=junit-${{ matrix.os }}-${{ matrix.python-version }}.xml \
+              --cov-report=xml:coverage-${{ matrix.os }}-py${{ matrix.python-version }}.xml \
+              --cov-report=html:htmlcov-${{ matrix.os }}-py${{ matrix.python-version }} \
+              --junit-xml=junit-${{ matrix.os }}-py${{ matrix.python-version }}.xml \
               -n auto \
               --timeout=600
           else
             echo "No unit tests found, creating empty results"
-            mkdir -p htmlcov-${{ matrix.os }}-${{ matrix.python-version }}
-            echo '<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="empty" tests="0"></testsuite></testsuites>' > junit-${{ matrix.os }}-${{ matrix.python-version }}.xml
-            echo '<?xml version="1.0" encoding="utf-8"?><coverage></coverage>' > coverage-${{ matrix.os }}-${{ matrix.python-version }}.xml
+            mkdir -p htmlcov-${{ matrix.os }}-py${{ matrix.python-version }}
+            echo '<?xml version="1.0" encoding="utf-8"?>' > junit-${{ matrix.os }}-py${{ matrix.python-version }}.xml
+            echo '<testsuites>' >> junit-${{ matrix.os }}-py${{ matrix.python-version }}.xml
+            echo '  <testsuite name="empty" tests="0"></testsuite>' >> junit-${{ matrix.os }}-py${{ matrix.python-version }}.xml
+            echo '</testsuites>' >> junit-${{ matrix.os }}-py${{ matrix.python-version }}.xml
+            echo '<?xml version="1.0" encoding="utf-8"?>' > coverage-${{ matrix.os }}-py${{ matrix.python-version }}.xml
+            echo '<coverage></coverage>' >> coverage-${{ matrix.os }}-py${{ matrix.python-version }}.xml
           fi
 
       - name: Upload coverage reports
@@ -92,7 +106,8 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        # v5.6.0
         with:
           python-version: "3.11"
 
@@ -107,7 +122,7 @@ jobs:
           generateSarif: true
 
       - name: Upload Semgrep results
-        uses: github/codeql-action/upload-sarif@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
+        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
         with:
           sarif_file: semgrep.sarif
 
@@ -142,7 +157,8 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        # v5.6.0
         with:
           python-version: "3.11"
 
