@@ -10,7 +10,8 @@ import json
 import logging
 import os
 import time
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
+from types import TracebackType
 from unittest.mock import Mock, patch
 
 import jwt
@@ -123,7 +124,7 @@ def mock_jwt_decode(token: str, secret: str = None, algorithms: list = None) -> 
     }
 
 
-def mock_requests_post(*args: Any, **kwargs: Any) -> Mock:
+def mock_requests_post(*args: object, **kwargs: object) -> Mock:
     """Mock requests.post for authentication calls."""
     mock_response = Mock()
     mock_response.status_code = 200
@@ -136,7 +137,7 @@ def mock_requests_post(*args: Any, **kwargs: Any) -> Mock:
     return mock_response
 
 
-def mock_apisix_endpoints():
+def mock_apisix_endpoints() -> Dict[str, Dict[str, str]]:
     """Mock APISIX endpoints for testing."""
     return {
         "openai": {"gpt-4": "/ai/openai/gpt4", "gpt-3.5-turbo": "/ai/openai/gpt35"},
@@ -151,10 +152,11 @@ def mock_apisix_endpoints():
 class ContractTestingPatches:
     """Context manager for applying all contract testing patches."""
 
-    def __init__(self):
+    def __init__(self: "ContractTestingPatches") -> None:
+        """Initialize contract testing patches."""
         self.patches = []
 
-    def __enter__(self):
+    def __enter__(self: "ContractTestingPatches") -> "ContractTestingPatches":
         """Apply all contract testing patches."""
         setup_test_environment()
 
@@ -182,13 +184,13 @@ class ContractTestingPatches:
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self: "ContractTestingPatches", exc_type: Optional[type], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]) -> None:
         """Stop all patches."""
         for patch_obj in self.patches:
             patch_obj.stop()
 
 
-def create_test_client_with_auth():
+def create_test_client_with_auth() -> Optional[object]:
     """Create a test client with authentication mocking."""
     from fastapi.testclient import TestClient
 
@@ -206,13 +208,13 @@ def create_test_client_with_auth():
 
 
 # Pytest fixtures for contract testing
-def pytest_configure(config):
+def pytest_configure(config: object) -> None:
     """Configure pytest for contract testing."""
     setup_test_environment()
 
 
-def pytest_fixture_setup():
-    """Setup fixtures for contract testing."""
+def pytest_fixture_setup() -> ContractTestingPatches:
+    """Set up fixtures for contract testing."""
     return ContractTestingPatches()
 
 
@@ -245,7 +247,7 @@ def validate_response_schema(response_data: Dict[str, Any], expected_schema: Dic
         return False
 
 
-def create_mock_database_session():
+def create_mock_database_session() -> Mock:
     """Create a mock database session for testing."""
     from unittest.mock import Mock
 

@@ -20,7 +20,7 @@ import requests
 from _pytest.config import Config
 
 # Import specific fixtures from the main conftest
-from conftest import api_headers, auth_token, service_health_check, setup_database
+from conftest import api_headers
 
 # Import the keycloak_auth utility
 from utils.keycloak_auth import keycloak_auth
