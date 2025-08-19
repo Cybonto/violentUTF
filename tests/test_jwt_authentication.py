@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-Test cases for JWT authentication system and API key management
+Test cases for JWT authentication system and API key management.
+
 Tests the recent changes in JWT token handling, refresh mechanisms, and APISIX integration
 """
 
@@ -22,11 +23,11 @@ API_BASE_URL = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
 
 
 class TestJWTAuthentication:
-    """Test suite for JWT authentication and token management"""
+    """Test suite for JWT authentication and token management."""
 
-    def test_jwt_token_creation(self):
-        """Test JWT token creation with proper structure"""
-        # Simulate JWT manager token creation
+    def test_jwt_token_creation(self) -> None:
+        """ "Test JWT token creation with proper structure."""
+        # Simulate JWT manager token creation.
         secret_key = "test_secret_key_for_jwt"
         algorithm = "HS256"
 
@@ -49,8 +50,8 @@ class TestJWTAuthentication:
         assert decoded["email"] == "test@example.com"
         assert "ai-api-access" in decoded["roles"]
 
-    def test_jwt_token_expiry_detection(self):
-        """Test detection of expired JWT tokens"""
+    def test_jwt_token_expiry_detection(self: "TestJWTAuthentication") -> None:
+        """Test detection of expired JWT tokens."""
         secret_key = "test_secret_key_for_jwt"
         algorithm = "HS256"
 
@@ -73,8 +74,8 @@ class TestJWTAuthentication:
         except jwt.ExpiredSignatureError:
             assert True, "Correctly detected expired token"
 
-    def test_jwt_token_refresh_timing(self):
-        """Test proactive refresh timing (10 minutes before expiry)"""
+    def test_jwt_token_refresh_timing(self: "TestJWTAuthentication") -> None:
+        """Test proactive refresh timing (10 minutes before expiry)."""
         secret_key = "test_secret_key_for_jwt"
         algorithm = "HS256"
 
@@ -100,9 +101,9 @@ class TestJWTAuthentication:
         assert should_refresh, "Token with 5 minutes remaining should trigger refresh"
 
     @pytest.mark.skipif(not os.getenv("VIOLENTUTF_API_URL"), reason="API URL not configured")
-    def test_api_authentication_flow(self):
-        """Test the complete API authentication flow"""
-        # Test unauthenticated request
+    def test_api_authentication_flow(self: "TestJWTAuthentication") -> None:
+        """Test the complete API authentication flow."""
+        # Test unauthenticated request.
         response = requests.get(f"{API_BASE_URL}/api/v1/auth/token/info")
         assert response.status_code == 401, "Unauthenticated request should return 401"
 
@@ -111,9 +112,9 @@ class TestJWTAuthentication:
         response = requests.get(f"{API_BASE_URL}/api/v1/auth/token/info", headers=headers)
         assert response.status_code == 401, "Invalid token should return 401"
 
-    def test_apisix_api_key_header_format(self):
-        """Test APISIX API key header format for AI model access"""
-        # Test the header format used by the generator test endpoint
+    def test_apisix_api_key_header_format(self: "TestJWTAuthentication") -> None:
+        """Test APISIX API key header format for AI model access."""
+        # Test the header format used by the generator test endpoint.
         test_api_key = "test_apisix_api_key_123"
 
         headers = {
@@ -131,11 +132,11 @@ class TestJWTAuthentication:
 
 
 class TestJWTManager:
-    """Test the JWT manager class functionality"""
+    """Test the JWT manager class functionality."""
 
-    def test_jwt_manager_initialization(self):
-        """Test JWT manager initialization with correct settings"""
-        # Mock the JWT manager initialization
+    def test_jwt_manager_initialization(self) -> None:
+        """ "Test JWT manager initialization with correct settings."""
+        # Mock the JWT manager initialization.
         refresh_buffer = 600  # 10 minutes
         max_retry_attempts = 3
         retry_delay = 5
@@ -144,9 +145,9 @@ class TestJWTManager:
         assert max_retry_attempts == 3, "Should allow 3 retry attempts"
         assert retry_delay == 5, "Should wait 5 seconds between retries"
 
-    def test_token_refresh_status(self):
-        """Test token refresh status reporting"""
-        # Test different refresh statuses
+    def test_token_refresh_status(self: "TestJWTManager") -> None:
+        """Test token refresh status reporting."""
+        # Test different refresh statuses.
         statuses = ["active", "expiring_soon", "refreshing", "expired"]
 
         for status in statuses:
@@ -163,8 +164,8 @@ class TestJWTManager:
             if status == "refreshing":
                 assert mock_status["refresh_in_progress"] is True
 
-    def test_environment_variable_priority(self):
-        """Test environment variable priority for APISIX API key"""
+    def test_environment_variable_priority(self: "TestJWTManager") -> None:
+        """Test environment variable priority for APISIX API key."""
         # Test the priority order used in generators.py
         test_vars = {
             "VIOLENTUTF_API_KEY": "violentutf_key",
@@ -184,11 +185,11 @@ class TestJWTManager:
 
 
 class TestStreamlitIntegration:
-    """Test Streamlit frontend integration with JWT system"""
+    """Test Streamlit frontend integration with JWT system."""
 
-    def test_auth_headers_generation(self):
-        """Test authentication header generation for Streamlit requests"""
-        # Mock the get_auth_headers function behavior
+    def test_auth_headers_generation(self) -> None:
+        """ "Test authentication header generation for Streamlit requests."""
+        # Mock the get_auth_headers function behavior.
         mock_token = "mock_jwt_token_123"
 
         headers = {
@@ -204,9 +205,9 @@ class TestStreamlitIntegration:
         assert headers["X-API-Gateway"] == "APISIX"
         assert headers["X-Real-IP"] == "127.0.0.1"
 
-    def test_sidebar_status_messages(self):
-        """Test sidebar authentication status message format"""
-        # Test different status message formats
+    def test_sidebar_status_messages(self: "TestStreamlitIntegration") -> None:
+        """Test sidebar authentication status message format."""
+        # Test different status message formats.
         status_tests = [
             {"status": "refreshing", "expected": "🔄 AI Gateway: Refreshing Token..."},
             {"status": "expired", "expected": "⏰ AI Gateway: Token Expired"},
@@ -228,10 +229,10 @@ class TestStreamlitIntegration:
 
 
 class TestFastAPIIntegration:
-    """Test FastAPI backend integration with JWT and APISIX"""
+    """Test FastAPI backend integration with JWT and APISIX."""
 
-    def test_fastapi_environment_variables(self):
-        """Test that FastAPI has access to required environment variables"""
+    def test_fastapi_environment_variables(self) -> None:
+        """ "Test that FastAPI has access to required environment variables."""
         required_vars = ["SECRET_KEY", "JWT_SECRET_KEY", "VIOLENTUTF_API_KEY", "APISIX_BASE_URL"]
 
         # Mock environment setup
@@ -246,9 +247,9 @@ class TestFastAPIIntegration:
             for var in required_vars:
                 assert os.getenv(var) is not None, f"Required environment variable {var} not found"
 
-    def test_generator_test_authentication(self):
-        """Test generator test endpoint authentication requirements"""
-        # Mock the authentication flow for generator testing
+    def test_generator_test_authentication(self: "TestFastAPIIntegration") -> None:
+        """Test generator test endpoint authentication requirements."""
+        # Mock the authentication flow for generator testing.
 
         # 1. JWT authentication for FastAPI endpoint
         jwt_headers = {"Authorization": "Bearer jwt_token_here", "Content-Type": "application/json"}
@@ -264,9 +265,9 @@ class TestFastAPIIntegration:
         assert "apikey" in apisix_headers, "APISIX API key header required"
         assert apisix_headers["X-API-Gateway"] == "APISIX", "APISIX gateway header required"
 
-    def test_error_handling_for_missing_api_key(self):
-        """Test error handling when APISIX API key is missing"""
-        # Test the error scenario that was fixed
+    def test_error_handling_for_missing_api_key(self: "TestFastAPIIntegration") -> None:
+        """Test error handling when APISIX API key is missing."""
+        # Test the error scenario that was fixed.
         mock_request_without_key = {
             "headers": {
                 "Content-Type": "application/json",
@@ -289,10 +290,10 @@ class TestFastAPIIntegration:
 
 
 class TestEnvironmentConfiguration:
-    """Test environment configuration for the authentication system"""
+    """Test environment configuration for the authentication system."""
 
-    def test_setup_script_variables(self):
-        """Test that setup script generates required variables"""
+    def test_setup_script_variables(self) -> None:
+        """ "Test that setup script generates required variables."""
         # Variables that should be generated by setup_macos.sh
         required_generated_vars = ["VIOLENTUTF_API_KEY", "JWT_SECRET_KEY", "FASTAPI_SECRET_KEY", "APISIX_ADMIN_KEY"]
 
@@ -301,7 +302,7 @@ class TestEnvironmentConfiguration:
             assert len(var) > 0, f"Variable {var} name should not be empty"
             # In real setup, these would be cryptographically secure random strings
 
-    def test_streamlit_env_file_structure(self):
+    def test_streamlit_env_file_structure(self: "TestEnvironmentConfiguration") -> None:
         """Test Streamlit .env file structure"""
         # Variables that should be in violentutf/.env
         streamlit_vars = [
@@ -315,7 +316,7 @@ class TestEnvironmentConfiguration:
         for var in streamlit_vars:
             assert isinstance(var, str), f"Variable {var} should be a string"
 
-    def test_fastapi_env_file_structure(self):
+    def test_fastapi_env_file_structure(self: "TestEnvironmentConfiguration") -> None:
         """Test FastAPI .env file structure"""
         # Variables that should be in violentutf_api/fastapi_app/.env
         fastapi_vars = [

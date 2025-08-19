@@ -12,22 +12,22 @@ client = TestClient(app)
 
 
 @pytest.fixture
-def mock_auth():
-    """Mock authentication dependency"""
+def mock_auth() -> None:
+    """Mock authentication dependency."""
     with patch("violentutf_api.fastapi_app.app.core.auth.get_current_user") as mock_auth:
         mock_auth.return_value = Mock(username="test_user", email="test@example.com")
         yield mock_auth
 
 
 @pytest.fixture
-def mock_db():
-    """Mock database session"""
+def mock_db() -> None:
+    """Mock database session."""
     with patch("violentutf_api.fastapi_app.app.db.database.get_db") as mock_db:
         yield mock_db
 
 
-def test_list_orchestrator_types(mock_auth):
-    """Test listing orchestrator types"""
+def test_list_orchestrator_types(mock_auth) -> None:
+    """Test listing orchestrator types."""
     with patch(
         "violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service.pyrit_orchestrator_service.get_orchestrator_types"
     ) as mock_get_types:
@@ -50,8 +50,8 @@ def test_list_orchestrator_types(mock_auth):
         assert types[0]["name"] == "PromptSendingOrchestrator"
 
 
-def test_get_orchestrator_type_details(mock_auth):
-    """Test getting specific orchestrator type details"""
+def test_get_orchestrator_type_details(mock_auth) -> None:
+    """Test getting specific orchestrator type details."""
     with patch(
         "violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service.pyrit_orchestrator_service.get_orchestrator_types"
     ) as mock_get_types:
@@ -73,8 +73,8 @@ def test_get_orchestrator_type_details(mock_auth):
         assert type_info["name"] == "PromptSendingOrchestrator"
 
 
-def test_get_orchestrator_type_not_found(mock_auth):
-    """Test getting non-existent orchestrator type"""
+def test_get_orchestrator_type_not_found(mock_auth) -> None:
+    """Test getting non-existent orchestrator type."""
     with patch(
         "violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service.pyrit_orchestrator_service.get_orchestrator_types"
     ) as mock_get_types:
@@ -85,8 +85,8 @@ def test_get_orchestrator_type_not_found(mock_auth):
         assert response.status_code == 404
 
 
-def test_create_orchestrator_configuration(mock_auth, mock_db):
-    """Test creating orchestrator configuration"""
+def test_create_orchestrator_configuration(mock_auth, mock_db) -> None:
+    """Test creating orchestrator configuration."""
     config_data = {
         "name": "test_orchestrator",
         "orchestrator_type": "PromptSendingOrchestrator",
@@ -118,8 +118,8 @@ def test_create_orchestrator_configuration(mock_auth, mock_db):
         assert result["parameters_validated"] is True
 
 
-def test_create_orchestrator_duplicate_name(mock_auth, mock_db):
-    """Test creating orchestrator with duplicate name"""
+def test_create_orchestrator_duplicate_name(mock_auth, mock_db) -> None:
+    """Test creating orchestrator with duplicate name."""
     config_data = {
         "name": "existing_orchestrator",
         "orchestrator_type": "PromptSendingOrchestrator",
@@ -140,9 +140,9 @@ def test_create_orchestrator_duplicate_name(mock_auth, mock_db):
     assert "already exists" in response.json()["detail"]
 
 
-def test_list_orchestrator_configurations(mock_auth, mock_db):
-    """Test listing orchestrator configurations"""
-    # Mock database query
+def test_list_orchestrator_configurations(mock_auth, mock_db) -> None:
+    """Test listing orchestrator configurations."""
+    # Mock database query.
     mock_db_session = Mock()
     mock_db.return_value = mock_db_session
 
@@ -166,9 +166,9 @@ def test_list_orchestrator_configurations(mock_auth, mock_db):
     assert configs[0]["name"] == "test_orchestrator"
 
 
-def test_get_orchestrator_configuration(mock_auth, mock_db):
-    """Test getting specific orchestrator configuration"""
-    # Mock database query
+def test_get_orchestrator_configuration(mock_auth, mock_db) -> None:
+    """Test getting specific orchestrator configuration."""
+    # Mock database query.
     mock_db_session = Mock()
     mock_db.return_value = mock_db_session
 
@@ -195,9 +195,9 @@ def test_get_orchestrator_configuration(mock_auth, mock_db):
     assert config["parameters"]["test"] == "param"
 
 
-def test_get_orchestrator_configuration_not_found(mock_auth, mock_db):
-    """Test getting non-existent orchestrator configuration"""
-    # Mock database query
+def test_get_orchestrator_configuration_not_found(mock_auth, mock_db) -> None:
+    """Test getting non-existent orchestrator configuration."""
+    # Mock database query.
     mock_db_session = Mock()
     mock_db.return_value = mock_db_session
     mock_db_session.query.return_value.filter.return_value.first.return_value = None
@@ -207,8 +207,8 @@ def test_get_orchestrator_configuration_not_found(mock_auth, mock_db):
     assert response.status_code == 404
 
 
-def test_execute_orchestrator(mock_auth, mock_db):
-    """Test executing orchestrator"""
+def test_execute_orchestrator(mock_auth, mock_db) -> None:
+    """Test executing orchestrator."""
     execution_data = {
         "execution_type": "prompt_list",
         "execution_name": "test_execution",
@@ -254,8 +254,8 @@ def test_execute_orchestrator(mock_auth, mock_db):
         assert result["orchestrator_type"] == "PromptSendingOrchestrator"
 
 
-def test_execute_orchestrator_not_found(mock_auth, mock_db):
-    """Test executing non-existent orchestrator"""
+def test_execute_orchestrator_not_found(mock_auth, mock_db) -> None:
+    """Test executing non-existent orchestrator."""
     execution_data = {"execution_type": "prompt_list", "input_data": {"prompt_list": ["test"]}}
 
     # Mock database query
@@ -268,9 +268,9 @@ def test_execute_orchestrator_not_found(mock_auth, mock_db):
     assert response.status_code == 404
 
 
-def test_get_execution_results(mock_auth, mock_db):
-    """Test getting execution results"""
-    # Mock database operations
+def test_get_execution_results(mock_auth, mock_db) -> None:
+    """Test getting execution results."""
+    # Mock database operations.
     mock_db_session = Mock()
     mock_db.return_value = mock_db_session
 
@@ -297,9 +297,9 @@ def test_get_execution_results(mock_auth, mock_db):
     assert results["status"] == "completed"
 
 
-def test_get_orchestrator_memory(mock_auth, mock_db):
-    """Test getting orchestrator memory"""
-    # Mock database operations
+def test_get_orchestrator_memory(mock_auth, mock_db) -> None:
+    """Test getting orchestrator memory."""
+    # Mock database operations.
     mock_db_session = Mock()
     mock_db.return_value = mock_db_session
 
@@ -323,9 +323,9 @@ def test_get_orchestrator_memory(mock_auth, mock_db):
         assert memory["conversations"] == 1
 
 
-def test_get_orchestrator_scores(mock_auth, mock_db):
-    """Test getting orchestrator scores"""
-    # Mock database operations
+def test_get_orchestrator_scores(mock_auth, mock_db) -> None:
+    """Test getting orchestrator scores."""
+    # Mock database operations.
     mock_db_session = Mock()
     mock_db.return_value = mock_db_session
 
@@ -345,9 +345,9 @@ def test_get_orchestrator_scores(mock_auth, mock_db):
         assert scores["total_scores"] == 1
 
 
-def test_delete_orchestrator_configuration(mock_auth, mock_db):
-    """Test deleting orchestrator configuration"""
-    # Mock database operations
+def test_delete_orchestrator_configuration(mock_auth, mock_db) -> None:
+    """Test deleting orchestrator configuration."""
+    # Mock database operations.
     mock_db_session = Mock()
     mock_db.return_value = mock_db_session
 

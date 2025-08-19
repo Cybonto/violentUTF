@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-Keycloak authentication utility for tests
+Keycloak authentication utility for tests.
+
 Handles OAuth2 authentication with Keycloak to obtain JWT tokens for testing
 """
 
@@ -17,9 +18,9 @@ import requests
 
 
 class KeycloakAuthenticator:
-    """Handles Keycloak OAuth2 authentication for testing"""
+    """Handles Keycloak OAuth2 authentication for testing."""
 
-    def __init__(self):
+    def __init__(self: "KeycloakAuthenticator") -> None:
         # Load environment variables from project .env files
         self._load_environment()
 
@@ -41,7 +42,7 @@ class KeycloakAuthenticator:
         self._refresh_token = None
         self._token_expires_at = 0
 
-    def _load_environment(self):
+    def _load_environment(self: "KeycloakAuthenticator") -> None:
         """Load environment variables from project .env files"""
         from pathlib import Path
 
@@ -70,17 +71,17 @@ class KeycloakAuthenticator:
                 except Exception as e:
                     print(f"Warning: Could not load {env_file}: {e}")
 
-    def is_keycloak_available(self) -> bool:
-        """Check if Keycloak is running and accessible"""
+    def is_keycloak_available(self: "KeycloakAuthenticator") -> bool:
+        """Check if Keycloak is running and accessible."""
         try:
             response = requests.get(self.realm_url, timeout=5)
             return response.status_code == 200
         except Exception:
             return False
 
-    def authenticate(self) -> Optional[str]:
+    def authenticate(self: "KeycloakAuthenticator") -> Optional[str]:
         """
-        Authenticate with Keycloak using OAuth2 Resource Owner Password Credentials Grant
+        Authenticate with Keycloak using OAuth2 Resource Owner Password Credentials Grant.
         Returns the access token if successful, None otherwise
         """
         if not self.client_secret or not self.password:
@@ -127,8 +128,8 @@ class KeycloakAuthenticator:
             print(f"❌ Keycloak authentication error: {e}")
             return None
 
-    def refresh_access_token(self) -> Optional[str]:
-        """Refresh the access token using the refresh token"""
+    def refresh_access_token(self: "KeycloakAuthenticator") -> Optional[str]:
+        """Refresh the access token using the refresh token."""
         if not self._refresh_token:
             return self.authenticate()
 
@@ -160,8 +161,8 @@ class KeycloakAuthenticator:
             print(f"❌ Token refresh error: {e}")
             return self.authenticate()
 
-    def get_user_info(self, access_token: str) -> Optional[Dict]:
-        """Get user information using the access token"""
+    def get_user_info(self: "KeycloakAuthenticator", access_token: str) -> Optional[Dict]:
+        """Get user information using the access token."""
         try:
             headers = {"Authorization": f"Bearer {access_token}"}
             response = requests.get(self.userinfo_url, headers=headers, timeout=10)
@@ -176,9 +177,9 @@ class KeycloakAuthenticator:
             print(f"❌ Error getting user info: {e}")
             return None
 
-    def create_violentutf_jwt(self, keycloak_token: str) -> Optional[str]:
+    def create_violentutf_jwt(self: "KeycloakAuthenticator", keycloak_token: str) -> Optional[str]:
         """
-        Create a ViolentUTF-compatible JWT token using Keycloak user info
+        Create a ViolentUTF-compatible JWT token using Keycloak user info.
         This mimics the token creation process in the ViolentUTF application
         """
         try:
@@ -215,9 +216,9 @@ class KeycloakAuthenticator:
             print(f"❌ Error creating ViolentUTF JWT: {e}")
             return None
 
-    def get_auth_headers(self) -> Dict[str, str]:
-        """Get authentication headers for API requests"""
-        # First get Keycloak token
+    def get_auth_headers(self: "KeycloakAuthenticator") -> Dict[str, str]:
+        """Get authentication headers for API requests."""
+        # First get Keycloak token.
         keycloak_token = self.authenticate()
         if not keycloak_token:
             return {}
@@ -244,8 +245,8 @@ class KeycloakAuthenticator:
 
         return headers
 
-    def test_authentication_flow(self) -> bool:
-        """Test the complete authentication flow"""
+    def test_authentication_flow(self: "KeycloakAuthenticator") -> bool:
+        """Test the complete authentication flow."""
         print("\n🔐 Testing Keycloak Authentication Flow")
         print("=" * 50)
 

@@ -1,3 +1,5 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -5,7 +7,6 @@
 
 """
 Module: Logging
-
 Setup and configuration for application-wide logging.
 
 Key Functions:
@@ -29,7 +30,7 @@ _FILE_HANDLER_NAME = "app_file_handler"
 _CONSOLE_HANDLER_NAME = "app_console_handler"
 
 
-def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
+def setup_logging(log_level: Any = logging.DEBUG, console_level=logging.INFO) -> None:
     """
     Configures the logging settings for the application.
 

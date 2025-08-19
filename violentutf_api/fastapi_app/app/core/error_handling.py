@@ -50,7 +50,7 @@ SENSITIVE_PATTERNS = [
 class SecurityError(HTTPException):
     """Security-related error that requires special handling."""
 
-    def __init__(self, detail: str, status_code: int = status.HTTP_403_FORBIDDEN) -> None:
+    def __init__(self: "SecurityError", detail: str, status_code: int = status.HTTP_403_FORBIDDEN) -> None:
         """Initialize the instance."""
         super().__init__(status_code=status_code, detail=detail)
 
@@ -58,7 +58,7 @@ class SecurityError(HTTPException):
 class RateLimitError(HTTPException):
     """Rate limit exceeded error."""
 
-    def __init__(self, detail: str = "Rate limit exceeded") -> None:
+    def __init__(self: "RateLimitError", detail: str = "Rate limit exceeded") -> None:
         """Initialize the instance."""
         super().__init__(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=detail)
 
@@ -66,7 +66,7 @@ class RateLimitError(HTTPException):
 class ValidationSecurityError(HTTPException):
     """Validation error with security implications."""
 
-    def __init__(self, detail: str) -> None:
+    def __init__(self, detail: str = "Validation error") -> None:
         """Initialize the instance."""
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail)
 
@@ -249,7 +249,7 @@ async def validation_error_handler(request: Request, exc: ValidationError) -> JS
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle FastAPI HTTP exceptions."""
-    # Log but don't expose details for server errors
+    # Log but don't expose details for server errors.
     if exc.status_code >= 500:
         logger.error(f"Server error {exc.status_code}: {exc.detail}")
         detail = "Internal server error"
@@ -264,7 +264,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle unexpected exceptions."""
-    # Generate error ID for tracking
+    # Generate error ID for tracking.
     import uuid
 
     error_id = str(uuid.uuid4())[:8]

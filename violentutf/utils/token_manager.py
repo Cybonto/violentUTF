@@ -4,6 +4,7 @@
 # utils/token_manager.py
 """
 Token management utilities for ViolentUTF Keycloak integration.
+
 Handles JWT token extraction, validation, and APISIX endpoint access.
 """
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 class TokenManager:
     """Manages JWT tokens for APISIX AI Gateway access."""
 
-    def __init__(self):
+    def __init__(self: "TokenManager") -> None:
         self._load_environment_variables()
         self.keycloak_config = self._load_keycloak_config()
         # Comprehensive fallback endpoints - updated to match setup script
@@ -92,7 +93,7 @@ class TokenManager:
         self.apisix_admin_url = "http://localhost:9180"
         self.apisix_admin_key = None  # Will be loaded dynamically
 
-    def _load_environment_variables(self):
+    def _load_environment_variables(self: "TokenManager") -> None:
         """Load APISIX-specific environment variables from .env file if it exists."""
         import os
         from pathlib import Path
@@ -130,7 +131,7 @@ class TokenManager:
         else:
             logger.debug(f"Environment file {env_file} not found")
 
-    def _load_keycloak_config(self) -> Dict[str, Any]:
+    def _load_keycloak_config(self: "TokenManager") -> Dict[str, Any]:
         """Load Keycloak configuration from Streamlit secrets and environment."""
         try:
             # Load main Keycloak config (for user authentication)
@@ -172,12 +173,12 @@ class TokenManager:
             logger.error(f"Missing Keycloak configuration: {e}")
             return {}
 
-    def extract_user_token(self) -> Optional[str]:
+    def extract_user_token(self: "TokenManager") -> Optional[str]:
         """
         Extract JWT token from Streamlit user session.
         Since Streamlit doesn't directly expose JWT tokens, we need to get a new one.
         """
-        # Check if we have authentication in session state
+        # Check if we have authentication in session state.
         if not st.session_state.get("access_token"):
             return None
 
@@ -190,7 +191,7 @@ class TokenManager:
         # If no valid token in session, try to get a fresh one
         return self._get_fresh_token()
 
-    def _get_fresh_token(self) -> Optional[str]:
+    def _get_fresh_token(self: "TokenManager") -> Optional[str]:
         """Get a fresh token using direct Keycloak token endpoint."""
         try:
             # Get a real token from Keycloak using the APISIX client credentials
@@ -201,11 +202,11 @@ class TokenManager:
             logger.error(f"Error getting fresh token: {e}")
             return None
 
-    def _get_token_from_keycloak(self) -> Optional[str]:
+    def _get_token_from_keycloak(self: "TokenManager") -> Optional[str]:
         """
         Get a real JWT token from Keycloak using the user's session.
         """
-        # Check if we have a user session
+        # Check if we have a user session.
         if not st.session_state.get("access_token"):
             logger.debug("No access token in session state")
 
@@ -226,7 +227,7 @@ class TokenManager:
             logger.error(f"Error getting token from Keycloak: {e}")
             return None
 
-    def _request_token_for_user(self, username: str) -> Optional[str]:
+    def _request_token_for_user(self: "TokenManager", username: str) -> Optional[str]:
         """
         Request a token from Keycloak for the authenticated user.
         Since the user is already authenticated via Streamlit OAuth, we'll use
@@ -305,7 +306,7 @@ class TokenManager:
             logger.error(f"Unexpected error requesting token: {e}")
             return None
 
-    def _is_token_valid(self, token: str) -> bool:
+    def _is_token_valid(self: "TokenManager", token: str) -> bool:
         """Check if JWT token is valid and not expired."""
         try:
             # SECURITY FIX: Verify JWT signature properly
@@ -337,7 +338,7 @@ class TokenManager:
             logger.error(f"Error validating token: {e}")
             return False
 
-    def get_user_roles(self, token: str) -> list:
+    def get_user_roles(self: "TokenManager", token: str) -> list:
         """Extract user roles from JWT token."""
         try:
             # SECURITY FIX: Verify JWT signature properly
@@ -370,12 +371,12 @@ class TokenManager:
             logger.error(f"Error extracting roles from token: {e}")
             return []
 
-    def has_ai_access(self, token: str) -> bool:
+    def has_ai_access(self: "TokenManager", token: str) -> bool:
         """Check if user has ai-api-access role."""
         roles = self.get_user_roles(token)
         return "ai-api-access" in roles
 
-    def _load_apisix_admin_key(self) -> Optional[str]:
+    def _load_apisix_admin_key(self: "TokenManager") -> Optional[str]:
         """Load APISIX admin key from environment or config files."""
         import os
         from pathlib import Path
@@ -405,7 +406,7 @@ class TokenManager:
         logger.error("APISIX_ADMIN_KEY environment variable not set and no fallback allowed for security")
         raise ValueError("APISIX_ADMIN_KEY environment variable must be set. No hardcoded fallbacks for security.")
 
-    def _discover_apisix_routes(self) -> Dict[str, Dict[str, str]]:
+    def _discover_apisix_routes(self: "TokenManager") -> Dict[str, Dict[str, str]]:
         """Dynamically discover available AI routes from APISIX Admin API."""
         if not self.apisix_admin_key:
             self.apisix_admin_key = self._load_apisix_admin_key()
@@ -447,7 +448,7 @@ class TokenManager:
 
         return {}
 
-    def _parse_ai_routes(self, routes_data: Dict) -> Dict[str, Dict[str, str]]:
+    def _parse_ai_routes(self: "TokenManager", routes_data: Dict) -> Dict[str, Dict[str, str]]:
         """Parse APISIX routes response to extract AI model endpoints."""
         endpoints = {"openai": {}, "anthropic": {}, "ollama": {}, "webui": {}, "bedrock": {}, "gsai": {}}
 
@@ -487,7 +488,7 @@ class TokenManager:
         # Remove empty providers
         return {k: v for k, v in endpoints.items() if v}
 
-    def _extract_provider_model(self, route_id: str, uri: str) -> tuple:
+    def _extract_provider_model(self: "TokenManager", route_id: str, uri: str) -> tuple:
         """Extract provider and model information from route ID and URI."""
         try:
             # Parse URI pattern like /ai/openai/gpt4 or /ai/anthropic/sonnet
@@ -511,9 +512,9 @@ class TokenManager:
 
         return None, None
 
-    def _map_endpoint_to_model(self, provider: str, endpoint: str, route_id: str) -> Optional[str]:
+    def _map_endpoint_to_model(self: "TokenManager", provider: str, endpoint: str, route_id: str) -> Optional[str]:
         """Map endpoint path to actual model name."""
-        # Create reverse mapping from fallback endpoints
+        # Create reverse mapping from fallback endpoints.
         endpoint_to_model = {}
         for prov, models in self.fallback_apisix_endpoints.items():
             for model, path in models.items():
@@ -539,7 +540,7 @@ class TokenManager:
         # Fallback: use endpoint as model name
         return endpoint
 
-    def get_apisix_endpoints(self) -> Dict[str, Dict[str, str]]:
+    def get_apisix_endpoints(self: "TokenManager") -> Dict[str, Dict[str, str]]:
         """Get all available APISIX AI endpoints with dynamic discovery and fallback."""
         import time
 
@@ -563,7 +564,7 @@ class TokenManager:
             logger.info("Using fallback APISIX endpoints configuration")
             return self.fallback_apisix_endpoints
 
-    def get_endpoint_url(self, provider: str, model: str) -> Optional[str]:
+    def get_endpoint_url(self: "TokenManager", provider: str, model: str) -> Optional[str]:
         """Get full URL for a specific provider/model endpoint."""
         endpoints = self.get_apisix_endpoints()
         endpoint_path = endpoints.get(provider, {}).get(model)
@@ -571,7 +572,7 @@ class TokenManager:
             return f"{self.apisix_base_url}{endpoint_path}"
         return None
 
-    def get_model_display_name(self, provider: str, model: str) -> str:
+    def get_model_display_name(self: "TokenManager", provider: str, model: str) -> str:
         """Get user-friendly display name for a model."""
         display_names = {
             "openai": {
@@ -623,16 +624,16 @@ class TokenManager:
 
         return display_names.get(provider, {}).get(model, model)
 
-    def refresh_endpoints_cache(self) -> bool:
+    def refresh_endpoints_cache(self: "TokenManager") -> bool:
         """Force refresh of the endpoints cache."""
         self._dynamic_endpoints_cache = None
         self._cache_timestamp = 0
         endpoints = self.get_apisix_endpoints()
         return len(endpoints) > 0
 
-    def _remove_unsupported_providers(self):
+    def _remove_unsupported_providers(self: "TokenManager") -> None:
         """Remove providers not yet supported by APISIX ai-proxy plugin."""
-        # Remove Bedrock until APISIX adds AWS SigV4 authentication support
+        # Remove Bedrock until APISIX adds AWS SigV4 authentication support.
         if "bedrock" in self.fallback_apisix_endpoints:
             logger.info(
                 "Bedrock endpoints configured but not active - APISIX ai-proxy plugin does not support AWS SigV4 auth"
@@ -640,7 +641,7 @@ class TokenManager:
             # Don't remove, keep for future use when support is added
             # del self.fallback_apisix_endpoints['bedrock']
 
-    def get_discovery_debug_info(self) -> Dict[str, Any]:
+    def get_discovery_debug_info(self: "TokenManager") -> Dict[str, Any]:
         """Get debug information about dynamic discovery."""
         import os
 
@@ -656,7 +657,7 @@ class TokenManager:
         }
 
     def call_ai_endpoint(
-        self, token: str, provider: str, model: str, messages: list, **kwargs
+        self: "TokenManager", token: str, provider: str, model: str, messages: list, **kwargs: Any
     ) -> Optional[Dict[str, Any]]:
         """
         Make authenticated call to APISIX AI endpoint.
@@ -671,13 +672,21 @@ class TokenManager:
         Returns:
             API response or None if error
         """
-        # Note: Using API key authentication instead of JWT for APISIX
+        # Note: Using API key authentication instead of JWT for APISIX.
         endpoint_url = self.get_endpoint_url(provider, model)
         if not endpoint_url:
             logger.error(f"No endpoint found for provider '{provider}' and model '{model}'")
             return None
 
-        # Use API key authentication for APISIX - SECURITY: No hardcoded fallbacks
+        # Setup authentication and payload
+        headers = self._setup_apisix_headers()
+        payload = self._prepare_payload(provider, model, messages, **kwargs)
+
+        # Execute with retry logic
+        return self._execute_request_with_retry(endpoint_url, headers, payload)
+
+    def _setup_apisix_headers(self: "TokenManager") -> Dict[str, str]:
+        """Setup APISIX authentication headers."""
         import os
 
         api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
@@ -692,9 +701,10 @@ class TokenManager:
         else:
             logger.info(f"Using generated API key: {api_key[:8]}...{api_key[-4:] if len(api_key) > 12 else api_key}")
 
-        headers = {"apikey": api_key, "Content-Type": "application/json"}
+        return {"apikey": api_key, "Content-Type": "application/json"}
 
-        # Handle special requirements for OpenAI o1 models
+    def _prepare_payload(self: "TokenManager", provider: str, model: str, messages: list, **kwargs) -> Dict[str, Any]:
+        """Prepare request payload with model-specific filtering."""
         payload = {"model": model, "messages": messages}
 
         # Filter parameters based on model type
@@ -702,7 +712,7 @@ class TokenManager:
             # OpenAI reasoning models (o1, o3, o4) have restrictions
             logger.info(f"Using OpenAI reasoning model {model} - filtering incompatible parameters")
             # Only allow specific parameters for reasoning models
-            allowed_params = ["max_completion_tokens"]  # No temperature, top_p, etc.
+            allowed_params = ["max_completion_tokens"]  # No temperature, top_p, etc
             for key, value in kwargs.items():
                 if key in allowed_params:
                     payload[key] = value
@@ -714,6 +724,12 @@ class TokenManager:
             # Regular models - use all provided parameters
             payload.update(kwargs)
 
+        return payload
+
+    def _execute_request_with_retry(
+        self: "TokenManager", endpoint_url: str, headers: Dict[str, str], payload: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """Execute HTTP request with retry logic."""
         import time
 
         max_retries = 3
@@ -729,25 +745,10 @@ class TokenManager:
                 logger.info(f"Calling APISIX endpoint: {endpoint_url}")
                 response = requests.post(endpoint_url, headers=headers, json=payload, timeout=45)
 
-                if response.status_code == 200:
-                    logger.info("Successfully received response from APISIX")
-                    return response.json()
-                elif response.status_code == 401:
-                    logger.error("Authentication failed - API key may be invalid")
-                    return None
-                elif response.status_code == 403:
-                    logger.error("Access forbidden - check API key permissions")
-                    return None
-                elif response.status_code == 429:
-                    logger.warning(f"Rate limit hit (429). Attempt {attempt + 1}/{max_retries + 1}")
-                    if attempt < max_retries:
-                        continue  # Retry on 429
-                    else:
-                        logger.error("Max retries exceeded for rate limiting")
-                        return None
-                else:
-                    logger.error(f"API call failed with status {response.status_code}: {response.text}")
-                    return None
+                # Handle response based on status code
+                result = self._handle_response(response, attempt, max_retries)
+                if result != "retry":
+                    return result
 
             except requests.exceptions.RequestException as e:
                 logger.error(f"Network error calling APISIX endpoint: {e}")
@@ -755,6 +756,30 @@ class TokenManager:
                     logger.info(f"Retrying due to network error...")
                     continue
                 return None
+
+        return None
+
+    def _handle_response(self: "TokenManager", response, attempt: int, max_retries: int) -> Any:
+        """Handle HTTP response based on status code."""
+        if response.status_code == 200:
+            logger.info("Successfully received response from APISIX")
+            return response.json()
+        elif response.status_code == 401:
+            logger.error("Authentication failed - API key may be invalid")
+            return None
+        elif response.status_code == 403:
+            logger.error("Access forbidden - check API key permissions")
+            return None
+        elif response.status_code == 429:
+            logger.warning(f"Rate limit hit (429). Attempt {attempt + 1}/{max_retries + 1}")
+            if attempt < max_retries:
+                return "retry"  # Signal to retry
+            else:
+                logger.error("Max retries exceeded for rate limiting")
+                return None
+        else:
+            logger.error(f"API call failed with status {response.status_code}: {response.text}")
+            return None
 
 
 # Global instance

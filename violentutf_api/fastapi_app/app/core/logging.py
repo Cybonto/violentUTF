@@ -14,7 +14,7 @@ from typing import Any
 class JSONFormatter(logging.Formatter):
     """Custom JSON formatter for structured logging."""
 
-    def format(self, record) -> Any:
+    def format(self: "JSONFormatter", record: Any) -> Any:
         log_obj = {
             "timestamp": datetime.utcnow().isoformat(),
             "level": record.levelname,
@@ -65,7 +65,7 @@ def setup_logging(log_level: str = "INFO", log_dir: Path = None) -> Any:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         log_dir: Directory to store log files (optional)
     """
-    # Create logger
+    # Create logger.
     logger = logging.getLogger()
     logger.setLevel(getattr(logging, log_level.upper()))
 

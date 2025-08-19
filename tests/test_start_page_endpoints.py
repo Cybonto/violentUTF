@@ -4,12 +4,13 @@
 
 """
 Test script to verify that all endpoints used in 0_Start.py are properly routed through APISIX
+
 Run this script to ensure the Start page will work correctly with the API
 """
 
 import os
 import re
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import requests
 
@@ -19,7 +20,7 @@ START_PAGE_PATH = "../violentutf/pages/0_Start.py"
 
 
 def extract_endpoints_from_start_page() -> List[str]:
-    """Extract all API endpoints from the Start and Configure Generators pages"""
+    """Extract all API endpoints from the Start and Configure Generators pages."""
     endpoints = []
 
     # Check Start page, Configure Generators page, and Configure Datasets page
@@ -51,7 +52,7 @@ def extract_endpoints_from_start_page() -> List[str]:
 
 
 def test_apisix_connectivity() -> bool:
-    """Test basic APISIX connectivity"""
+    """Test basic APISIX connectivity."""
     try:
         response = requests.get(f"{APISIX_BASE_URL}/health", timeout=10)
         return response.status_code == 200
@@ -60,7 +61,7 @@ def test_apisix_connectivity() -> bool:
 
 
 def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
-    """Test if an endpoint is routed through APISIX"""
+    """Test if an endpoint is routed through APISIX."""
     headers = {
         "Authorization": "Bearer test_token",
         "X-Real-IP": "127.0.0.1",
@@ -87,8 +88,8 @@ def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
         return "❌ ERROR", 0, str(e)
 
 
-def main():
-    """Main test function"""
+def main() -> Any:
+    """Run main test function."""
     print("🚀 Testing 0_Start.py API Endpoints Through APISIX")
     print("=" * 60)
     print()

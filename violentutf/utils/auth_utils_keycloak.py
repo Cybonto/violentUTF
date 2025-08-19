@@ -1,8 +1,11 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-Authentication utilities for Keycloak SSO
+Authentication utilities for Keycloak SSO.
+
 This version is for local deployment with Keycloak, not Streamlit Community Cloud
 """
 
@@ -29,7 +32,7 @@ except Exception as e:
     logger.error(f"Failed to load environment: {e}")
 
 
-def _clear_invalid_jwt_tokens():
+def _clear_invalid_jwt_tokens() -> None:
     """
     HOTFIX: Clear invalid JWT tokens from session state.
     This fixes the issue where old tokens with wrong signatures are cached.
@@ -83,8 +86,8 @@ def _clear_invalid_jwt_tokens():
         logger.error(f"Error in JWT token validation: {e}")
 
 
-def _clear_jwt_session_data():
-    """Clear JWT-related session data"""
+def _clear_jwt_session_data() -> None:
+    """Clear JWT-related session data."""
     jwt_keys = ["api_token", "api_token_exp", "api_token_created"]
     for key in jwt_keys:
         if key in st.session_state:
@@ -92,7 +95,7 @@ def _clear_jwt_session_data():
             logger.info(f"Cleared {key} from session state")
 
 
-def handle_authentication_and_sidebar(page_name: str = None):
+def handle_authentication_and_sidebar(page_name: str = None) -> Any:
     """
     Simplified authentication handler for Keycloak SSO.
     For local deployment, we assume users authenticate through Keycloak directly.
@@ -103,7 +106,7 @@ def handle_authentication_and_sidebar(page_name: str = None):
     Returns:
         str: Username if authenticated (from environment/session)
     """
-    # HOTFIX: Clear invalid JWT tokens on every page load
+    # HOTFIX: Clear invalid JWT tokens on every page load.
     _clear_invalid_jwt_tokens()
 
     # Initialize session state
@@ -134,8 +137,8 @@ def handle_authentication_and_sidebar(page_name: str = None):
     return username
 
 
-def display_sidebar(page_name: str = None):
-    """Display the sidebar with navigation and user info"""
+def display_sidebar(page_name: str = None) -> None:
+    """Display the sidebar with navigation and user info."""
     with st.sidebar:
         st.title("🔐 ViolentUTF")
 
@@ -172,8 +175,8 @@ def display_sidebar(page_name: str = None):
                 st.warning("No JWT token available. Please ensure you're logged in.")
 
 
-def clear_user_session():
-    """Clear all user-related session state"""
+def clear_user_session() -> None:
+    """Clear all user-related session state."""
     keys_to_clear = [
         "access_token",
         "has_ai_access",

@@ -12,8 +12,8 @@ from violentutf_api.fastapi_app.app.services.scorer_integration_service import e
 
 
 @pytest.mark.asyncio
-async def test_generator_integration_apisix():
-    """Test generator integration through APISIX"""
+async def test_generator_integration_apisix() -> None:
+    """Test generator integration through APISIX."""
     generator_name = "test_apisix_generator"
     prompt = "Test prompt"
     conversation_id = "test_conv"
@@ -46,8 +46,8 @@ async def test_generator_integration_apisix():
 
 
 @pytest.mark.asyncio
-async def test_generator_integration_error():
-    """Test generator integration error handling"""
+async def test_generator_integration_error() -> None:
+    """Test generator integration error handling."""
     generator_name = "nonexistent_generator"
     prompt = "Test prompt"
 
@@ -63,8 +63,8 @@ async def test_generator_integration_error():
 
 
 @pytest.mark.asyncio
-async def test_dataset_integration_native():
-    """Test dataset integration for native datasets"""
+async def test_dataset_integration_native() -> None:
+    """Test dataset integration for native datasets."""
     dataset_id = "test_native_dataset"
     sample_size = 3
 
@@ -94,8 +94,8 @@ async def test_dataset_integration_native():
 
 
 @pytest.mark.asyncio
-async def test_dataset_integration_memory():
-    """Test dataset integration for memory datasets"""
+async def test_dataset_integration_memory() -> None:
+    """Test dataset integration for memory datasets."""
     dataset_id = "test_memory_dataset"
 
     # Mock dataset configuration
@@ -119,8 +119,8 @@ async def test_dataset_integration_memory():
 
 
 @pytest.mark.asyncio
-async def test_dataset_integration_not_found():
-    """Test dataset integration for non-existent dataset"""
+async def test_dataset_integration_not_found() -> None:
+    """Test dataset integration for non-existent dataset."""
     dataset_id = "nonexistent_dataset"
 
     with patch(
@@ -133,8 +133,8 @@ async def test_dataset_integration_not_found():
 
 
 @pytest.mark.asyncio
-async def test_scorer_integration_true_false():
-    """Test scorer integration for true/false scorer"""
+async def test_scorer_integration_true_false() -> None:
+    """Test scorer integration for true/false scorer."""
     scorer_name = "test_true_false_scorer"
     text = "This is a helpful response"
 
@@ -160,8 +160,8 @@ async def test_scorer_integration_true_false():
 
 
 @pytest.mark.asyncio
-async def test_scorer_integration_likert():
-    """Test scorer integration for Likert scale scorer"""
+async def test_scorer_integration_likert() -> None:
+    """Test scorer integration for Likert scale scorer."""
     scorer_name = "test_likert_scorer"
     text = "This is a medium length response that should score somewhere in the middle range."
 
@@ -182,8 +182,8 @@ async def test_scorer_integration_likert():
 
 
 @pytest.mark.asyncio
-async def test_scorer_integration_error():
-    """Test scorer integration error handling"""
+async def test_scorer_integration_error() -> None:
+    """Test scorer integration error handling."""
     scorer_name = "nonexistent_scorer"
     text = "Test text"
 
@@ -199,8 +199,8 @@ async def test_scorer_integration_error():
 
 
 @pytest.mark.asyncio
-async def test_end_to_end_orchestrator_workflow():
-    """Test complete orchestrator workflow from creation to execution"""
+async def test_end_to_end_orchestrator_workflow() -> None:
+    """Test complete orchestrator workflow from creation to execution."""
     from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import PyRITOrchestratorService
 
     orchestrator_service = PyRITOrchestratorService()
@@ -262,8 +262,8 @@ async def test_end_to_end_orchestrator_workflow():
 
 
 @pytest.mark.asyncio
-async def test_orchestrator_with_dataset_execution():
-    """Test orchestrator execution with dataset input"""
+async def test_orchestrator_with_dataset_execution() -> None:
+    """Test orchestrator execution with dataset input."""
     from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import PyRITOrchestratorService
 
     orchestrator_service = PyRITOrchestratorService()

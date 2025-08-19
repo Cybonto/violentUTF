@@ -21,11 +21,11 @@ class GarakService:
     """Service class for Garak integration."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.available = False
         self._initialize_garak()
 
-    def _initialize_garak(self):
+    def _initialize_garak(self: "GarakService") -> None:
         """Initialize Garak scanner and core components."""
         try:
             import garak
@@ -43,11 +43,11 @@ class GarakService:
             logger.error(f"❌ Failed to initialize Garak: {e}")
             self.available = False
 
-    def is_available(self) -> bool:
+    def is_available(self: "GarakService") -> bool:
         """Check if Garak is properly initialized."""
         return self.available
 
-    def list_available_probes(self) -> List[Dict[str, Any]]:
+    def list_available_probes(self: "GarakService") -> List[Dict[str, Any]]:
         """List all available Garak vulnerability probes."""
         if not self.is_available():
             return []
@@ -87,7 +87,7 @@ class GarakService:
             logger.error(f"Failed to list Garak probes: {e}")
             return []
 
-    def list_available_generators(self) -> List[Dict[str, Any]]:
+    def list_available_generators(self: "GarakService") -> List[Dict[str, Any]]:
         """List all available Garak generators."""
         if not self.is_available():
             return []
@@ -128,7 +128,7 @@ class GarakService:
             return []
 
     async def run_vulnerability_scan(
-        self, target_config: Dict[str, Any], probe_config: Dict[str, Any], scan_id: Optional[str] = None
+        self: "GarakService", target_config: Dict[str, Any], probe_config: Dict[str, Any], scan_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Run Garak vulnerability scan against a target."""
         if not self.is_available():
@@ -193,7 +193,7 @@ class GarakService:
                 "error": str(e),
             }
 
-    async def _create_garak_generator(self, target_config: Dict[str, Any]):
+    async def _create_garak_generator(self: "GarakService", target_config: Dict[str, Any]) -> Any:
         """Create Garak generator from target configuration."""
         try:
             import garak._plugins
@@ -231,15 +231,15 @@ class GarakService:
             logger.error(f"Failed to create Garak generator: {e}")
             raise
 
-    def get_scan_results(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def get_scan_results(self: "GarakService", scan_id: str) -> Optional[Dict[str, Any]]:
         """Get results for a specific scan."""
-        # In a real implementation, this would query a database or file system
+        # In a real implementation, this would query a database or file system.
         # For now, return None
         return None
 
-    def list_scan_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def list_scan_history(self: "GarakService", limit: int = 50) -> List[Dict[str, Any]]:
         """List recent scan history."""
-        # In a real implementation, this would query stored scan results
+        # In a real implementation, this would query stored scan results.
         # For now, return empty list
         return []
 

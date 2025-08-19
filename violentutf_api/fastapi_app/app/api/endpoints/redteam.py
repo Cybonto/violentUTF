@@ -56,7 +56,7 @@ class GarakScanResponse(BaseModel):
 
 
 @router.get("/status", response_model=RedTeamStatusResponse, summary="Get red-teaming tools status")
-async def get_redteam_status(current_user=Depends(get_current_user)) -> Any:
+async def get_redteam_status(current_user: Any = Depends(get_current_user)) -> Any:
     """Get status of PyRIT and Garak availability."""
     try:
         import sys
@@ -163,7 +163,7 @@ async def run_pyrit_orchestration(request: PyRITOrchestrationRequest, current_us
 
 
 @router.get("/garak/probes", response_model=GarakProbesResponse, summary="List Garak vulnerability probes")
-async def list_garak_probes(current_user=Depends(get_current_user)) -> Any:
+async def list_garak_probes(current_user: Any = Depends(get_current_user)) -> Any:
     """List all available Garak vulnerability probes."""
     try:
         if not garak_service.is_available():
@@ -181,7 +181,7 @@ async def list_garak_probes(current_user=Depends(get_current_user)) -> Any:
 
 
 @router.get("/garak/generators", summary="List Garak generators")
-async def list_garak_generators(current_user=Depends(get_current_user)) -> Any:
+async def list_garak_generators(current_user: Any = Depends(get_current_user)) -> Any:
     """List all available Garak generators."""
     try:
         if not garak_service.is_available():

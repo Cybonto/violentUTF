@@ -26,7 +26,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
     """
 
     def __init__(
-        self,
+        self: "APISIXAIGatewayTarget",
         provider: str,
         model: str,
         temperature: Optional[float] = 0.7,
@@ -37,7 +37,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         seed: Optional[int] = None,
         max_requests_per_minute: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Initialize APISIX AI Gateway target.
 
@@ -52,7 +52,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             seed: Random seed for reproducibility
             max_requests_per_minute: Rate limiting
         """
-        # Initialize base class
+        # Initialize base class.
         super().__init__(max_requests_per_minute=max_requests_per_minute)
 
         self.provider = provider
@@ -72,7 +72,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
 
         logger.info(f"Initialized APISIX AI Gateway target for {provider}/{model}")
 
-    def _verify_model_availability(self):
+    def _verify_model_availability(self: "APISIXAIGatewayTarget") -> None:
         """Verify that the specified provider and model are available through APISIX."""
         try:
             endpoints = self.token_manager.get_apisix_endpoints()
@@ -95,7 +95,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             logger.error(f"Failed to verify model availability: {e}")
             raise
 
-    def get_identifier(self) -> Dict[str, str]:
+    def get_identifier(self: "APISIXAIGatewayTarget") -> Dict[str, str]:
         """Return identifier for this target."""
         return {
             "type": "apisix_ai_gateway",
@@ -104,7 +104,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             "__typename__": "APISIXAIGatewayTarget",
         }
 
-    def is_json_response_supported(self) -> bool:
+    def is_json_response_supported(self: "APISIXAIGatewayTarget") -> bool:
         """
         Indicates whether this target supports JSON response format.
 
@@ -114,7 +114,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         Returns:
             bool: True if JSON response format is supported, False otherwise.
         """
-        # OpenAI and Anthropic generally support JSON response format
+        # OpenAI and Anthropic generally support JSON response format.
         json_supported_providers = ["openai", "anthropic"]
 
         if not self.provider:
@@ -122,9 +122,11 @@ class APISIXAIGatewayTarget(PromptChatTarget):
 
         return self.provider.lower() in json_supported_providers
 
-    async def send_prompt_async(self, *, prompt_request: PromptRequestResponse) -> PromptRequestResponse:
+    async def send_prompt_async(
+        self: "APISIXAIGatewayTarget", *, prompt_request: PromptRequestResponse
+    ) -> PromptRequestResponse:
         """
-        Send a prompt to the APISIX AI Gateway and return the response.
+        Send a prompt to the APISIX AI Gateway and return the response
 
         Args:
             prompt_request: The prompt request to send
@@ -132,7 +134,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         Returns:
             PromptRequestResponse with the AI response
         """
-        # Debug logging for role consistency issue
+        # Debug logging for role consistency issue.
         logger.debug(f"APISIX Gateway received prompt_request with {len(prompt_request.request_pieces)} pieces")
         for i, piece in enumerate(prompt_request.request_pieces):
             logger.debug(f"  Piece {i}: role='{piece.role}', conv_id='{piece.conversation_id}', seq={piece.sequence}")
@@ -197,7 +199,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             # Return error response in PyRIT format
             return self._create_error_response(prompt_request, str(e))
 
-    def _validate_request(self, prompt_request: PromptRequestResponse):
+    def _validate_request(self: "APISIXAIGatewayTarget", prompt_request: PromptRequestResponse) -> None:
         """Validate the incoming prompt request."""
         if not prompt_request or not prompt_request.request_pieces:
             raise ValueError("Invalid prompt request: missing request pieces")
@@ -207,7 +209,9 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         if not user_messages:
             raise ValueError("Invalid prompt request: no user messages found")
 
-    def _convert_request_to_messages(self, prompt_request: PromptRequestResponse) -> List[Dict[str, str]]:
+    def _convert_request_to_messages(
+        self: "APISIXAIGatewayTarget", prompt_request: PromptRequestResponse
+    ) -> List[Dict[str, str]]:
         """Convert PyRIT request to APISIX messages format."""
         messages = []
 
@@ -219,7 +223,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         return messages
 
     def _convert_response_to_pyrit(
-        self, original_request: PromptRequestResponse, response_data: Dict[str, Any]
+        self: "APISIXAIGatewayTarget", original_request: PromptRequestResponse, response_data: Dict[str, Any]
     ) -> PromptRequestResponse:
         """Convert APISIX response to PyRIT format using proper PyRIT pattern."""
         try:
@@ -286,7 +290,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
                 return self._create_simple_error_response(original_request, str(e))
 
     def _create_error_response(
-        self, original_request: PromptRequestResponse, error_message: str
+        self: "APISIXAIGatewayTarget", original_request: PromptRequestResponse, error_message: str
     ) -> PromptRequestResponse:
         """Create an error response in PyRIT format using proper pattern."""
         if original_request.request_pieces:
@@ -302,7 +306,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             return self._create_simple_error_response(original_request, error_message)
 
     def _create_simple_error_response(
-        self, original_request: PromptRequestResponse, error_message: str
+        self: "APISIXAIGatewayTarget", original_request: PromptRequestResponse, error_message: str
     ) -> PromptRequestResponse:
         """Create a simple error response that avoids role consistency issues."""
         conversation_id = str(uuid.uuid4())  # Use a fresh conversation ID

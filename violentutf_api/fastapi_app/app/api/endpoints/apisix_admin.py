@@ -66,7 +66,7 @@ def get_apisix_admin_key() -> Any:
 
 def check_admin_permission(user: User) -> bool:
     """Check if user has admin permissions for APISIX management."""
-    # Check for admin role or specific permission
+    # Check for admin role or specific permission.
     if hasattr(user, "roles"):
         return "admin" in user.roles or "apisix-admin" in user.roles
 

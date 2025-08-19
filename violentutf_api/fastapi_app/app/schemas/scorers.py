@@ -86,7 +86,7 @@ class ScorerCreateRequest(BaseModel):
     generator_id: Optional[str] = Field(None, max_length=100, description="Generator ID for chat_target parameter")
 
     @validator("name")
-    def validate_name_field(cls, v) -> bool:
+    def validate_name_field(cls: type["ScorerCreateRequest"], v: Any) -> bool:
         """Validate scorer name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
@@ -94,7 +94,7 @@ class ScorerCreateRequest(BaseModel):
         return v
 
     @validator("scorer_type")
-    def validate_scorer_type_field(cls, v) -> bool:
+    def validate_scorer_type_field(cls: type["ScorerCreateRequest"], v: Any) -> bool:
         """Validate scorer type."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
@@ -102,12 +102,12 @@ class ScorerCreateRequest(BaseModel):
         return v
 
     @validator("parameters")
-    def validate_parameters_field(cls, v) -> bool:
+    def validate_parameters_field(cls: type["ScorerCreateRequest"], v: Any) -> bool:
         """Validate scorer parameters."""
         return validate_generator_parameters(v)
 
     @validator("generator_id")
-    def validate_generator_id_field(cls, v) -> bool:
+    def validate_generator_id_field(cls: type["ScorerCreateRequest"], v: Any) -> bool:
         """Validate generator ID."""
         if v is not None:
             v = sanitize_string(v)
@@ -133,7 +133,7 @@ class ScorerCloneRequest(BaseModel):
     clone_parameters: bool = Field(default=True, description="Whether to clone parameters")
 
     @validator("new_name")
-    def validate_new_name_field(cls, v) -> bool:
+    def validate_new_name_field(cls: type["ScorerCloneRequest"], v: Any) -> bool:
         """Validate new scorer name."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
@@ -150,7 +150,7 @@ class ScorerUpdateRequest(BaseModel):
     parameters: Optional[Dict[str, Any]] = Field(None, description="Updated parameters")
 
     @validator("name")
-    def validate_name_field(cls, v) -> bool:
+    def validate_name_field(cls: type["ScorerUpdateRequest"], v: Any) -> bool:
         """Validate scorer name."""
         if v is not None:
             v = sanitize_string(v)
@@ -159,7 +159,7 @@ class ScorerUpdateRequest(BaseModel):
         return v
 
     @validator("parameters")
-    def validate_parameters_field(cls, v) -> bool:
+    def validate_parameters_field(cls: type["ScorerUpdateRequest"], v: Any) -> bool:
         """Validate scorer parameters."""
         if v is not None:
             return validate_generator_parameters(v)
@@ -236,7 +236,7 @@ class ScorerValidationRequest(BaseModel):
     generator_id: Optional[str] = Field(None, max_length=100, description="Generator ID if needed")
 
     @validator("scorer_type")
-    def validate_scorer_type_field(cls, v) -> bool:
+    def validate_scorer_type_field(cls: type["ScorerValidationRequest"], v: Any) -> bool:
         """Validate scorer type."""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
@@ -244,12 +244,12 @@ class ScorerValidationRequest(BaseModel):
         return v
 
     @validator("parameters")
-    def validate_parameters_field(cls, v) -> bool:
+    def validate_parameters_field(cls: type["ScorerValidationRequest"], v: Any) -> bool:
         """Validate scorer parameters."""
         return validate_generator_parameters(v)
 
     @validator("generator_id")
-    def validate_generator_id_field(cls, v) -> bool:
+    def validate_generator_id_field(cls: type["ScorerValidationRequest"], v: Any) -> bool:
         """Validate generator ID."""
         if v is not None:
             v = sanitize_string(v)
@@ -276,7 +276,7 @@ class ScorerAnalyticsRequest(BaseModel):
     end_date: Optional[datetime] = Field(None, description="End date for analytics")
 
     @validator("scorer_id")
-    def validate_scorer_id_field(cls, v) -> bool:
+    def validate_scorer_id_field(cls: type["ScorerAnalyticsRequest"], v: Any) -> bool:
         """Validate scorer ID."""
         v = sanitize_string(v)
         if len(v) > 100:
@@ -313,7 +313,7 @@ class ScorerConfigImport(BaseModel):
     validate_before_import: bool = Field(default=True, description="Validate before importing")
 
     @validator("scorers")
-    def validate_scorers_field(cls, v) -> bool:
+    def validate_scorers_field(cls: type["ScorerConfigImport"], v: Any) -> bool:
         """Validate scorer configurations."""
         validated = []
         for scorer_config in v:

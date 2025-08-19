@@ -4,7 +4,7 @@
 # datasets/dataset_transformations.py
 
 """
-Module: Dataset Transformations
+Module: Dataset Transformations.
 
 Contains functions for combining and transforming datasets.
 

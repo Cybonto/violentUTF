@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-Real integration test for Simple Chat with MCP features
+Real integration test for Simple Chat with MCP features.
+
 """
 
 import os
@@ -18,9 +19,9 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def test_simple_chat_starts_without_errors():
-    """Test that Simple Chat can start without import errors"""
-    # Start Streamlit in a subprocess
+def test_simple_chat_starts_without_errors() -> None:
+    """Test that Simple Chat can start without import errors."""
+    # Start Streamlit in a subprocess.
     env = os.environ.copy()
     env["STREAMLIT_SERVER_HEADLESS"] = "true"
     env["STREAMLIT_SERVER_PORT"] = "8507"  # Use different port to avoid conflicts
@@ -78,8 +79,8 @@ def test_simple_chat_starts_without_errors():
             process.wait(timeout=5)
 
 
-def test_mcp_imports_in_context():
-    """Test that MCP imports work in the Simple Chat context"""
+def test_mcp_imports_in_context() -> None:
+    """Test that MCP imports work in the Simple Chat context."""
     test_script = """
 import sys
 import os

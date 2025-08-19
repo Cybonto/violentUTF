@@ -79,7 +79,7 @@ def generate_openapi_schema(output_file: str = "generated_openapi.json") -> bool
 
 def enhance_schema_metadata(schema: Dict[str, Any]) -> Dict[str, Any]:
     """Enhance OpenAPI schema with ViolentUTF-specific metadata."""
-    # Update info section
+    # Update info section.
     schema["info"].update(
         {
             "title": "ViolentUTF API",

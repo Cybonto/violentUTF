@@ -4,7 +4,7 @@
 # scorers/scorer_config.py
 
 """
-Module: Scorer Configuration
+Module: Scorer Configuration.
 
 Contains functions for loading available Scorer classes, retrieving Scorer parameters,
 and managing Scorer configurations.
@@ -123,132 +123,227 @@ def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
     Raises:
         ScorerLoadingError: If the scorer type is not found or params can't be retrieved.
     """
-    try:
-        scorer_class = getattr(score, scorer_type)
-    except AttributeError:
-        logger.error(f"Scorer type '{scorer_type}' not found in pyrit.score module.")
-        raise ScorerLoadingError(f"Scorer type '{scorer_type}' not found.")
-
-    try:
-        init_method = scorer_class.__init__
-        if init_method is object.__init__:
-            logger.debug(f"Scorer '{scorer_type}' uses default object.__init__, no parameters.")
-            return []
-        init_signature = inspect.signature(init_method)
-    except ValueError as e:
-        logger.error(f"Could not get signature for {scorer_type}.__init__: {e}. Assuming no parameters.")
-        return []
-    except TypeError as e:
-        logger.error(f"TypeError getting signature for {scorer_type}.__init__: {e}. Assuming no parameters.")
+    # Get scorer class and method signature
+    scorer_class = _get_scorer_class(scorer_type)
+    init_signature = _get_init_signature(scorer_class, scorer_type)
+    if not init_signature:
         return []
 
-    try:
-        type_hints = get_type_hints(init_method)
-    except Exception as e:
-        logger.warning(f"Could not get type hints for {scorer_type}.__init__: {e}. Type info may be incomplete.")
-        type_hints = {}
+    # Get type hints for parameters
+    type_hints = _get_scorer_type_hints(scorer_class.__init__, scorer_type)
 
+    # Build parameter definitions
     param_definitions = []
     for param_name, param in init_signature.parameters.items():
-        if param.name == "self" or param.kind in [param.VAR_POSITIONAL, param.VAR_KEYWORD]:
+        if _should_skip_parameter(param):
             continue
 
-        raw_annotation = type_hints.get(param_name, Any)
-        origin_type = get_origin(raw_annotation)
-        type_args = get_args(raw_annotation)
-
-        primary_type = raw_annotation
-        literal_choices = None
-        type_str = (
-            str(raw_annotation)
-            .replace("typing.", "")
-            .replace("pyrit.score.", "")
-            .replace("pyrit.prompt_target.", "")
-            .replace("pathlib.", "")
-        )
-
-        # --- Determine Primary Type, Literal Choices, and String Representation ---
-        if origin_type is Literal:
-            literal_choices = list(get_args(raw_annotation))
-            if literal_choices:
-                primary_type = type(literal_choices[0])
-                type_str = f"Literal[{', '.join(repr(choice) for choice in literal_choices)}]"
-            else:
-                primary_type = Any
-                type_str = "Literal[]"
-        elif origin_type is Union:
-            non_none_types = [t for t in type_args if t is not type(None)]
-            if len(non_none_types) == 1:
-                primary_type = non_none_types[0]
-                inner_origin = get_origin(primary_type)
-                inner_args = get_args(primary_type)
-                if inner_origin is Literal:
-                    literal_choices = list(inner_args)
-                    if literal_choices:
-                        type_str = f"Optional[Literal[{', '.join(repr(choice) for choice in literal_choices)}]]"
-                        primary_type = type(literal_choices[0])
-                    else:
-                        type_str = "Optional[Literal[]]"
-                        primary_type = Any
-                else:
-                    inner_type_str = (
-                        str(primary_type).replace("typing.", "").replace("pyrit.", "").replace("pathlib.", "")
-                    )
-                    type_str = f"Optional[{inner_type_str}]"
-            else:
-                primary_type = Union
-                type_str = str(raw_annotation).replace("typing.", "").replace("pyrit.", "")
-        elif origin_type is list or origin_type is List:
-            primary_type = list
-            type_str = f"List[{str(type_args[0]).replace('typing.', '') if type_args else 'Any'}]"
-        elif origin_type is tuple or origin_type is Tuple:
-            primary_type = tuple
-            type_str = f"Tuple[{', '.join(str(t).replace('typing.', '') for t in type_args)}]" if type_args else "Tuple"
-        else:
-            if isinstance(raw_annotation, type):
-                primary_type = raw_annotation
-            else:
-                primary_type = Any
-                type_str = str(raw_annotation).replace("typing.", "").replace("pyrit.", "").replace("pathlib.", "")
-
-        # --- Identify Complex Types to Skip in Generic UI ---
-        complex_types_to_skip = (
-            PromptChatTarget,
-            PromptShieldTarget,
-            Scorer,
-            Path,
-            TrueFalseQuestion,
-            collections.abc.Callable,
-        )
-        skip_in_ui = isinstance(primary_type, type) and issubclass(primary_type, complex_types_to_skip)
-        if (
-            primary_type is list
-            and type_args
-            and isinstance(type_args[0], type)
-            and issubclass(type_args[0], complex_types_to_skip)
-        ):
-            skip_in_ui = True
-        if isinstance(raw_annotation, type) and issubclass(raw_annotation, complex_types_to_skip):
-            skip_in_ui = True
-
-        # --- Get Default Value ---
-        default_value = None if param.default == param.empty else param.default
-
-        param_info = {
-            "name": param_name,
-            "type_str": type_str,
-            "raw_type": raw_annotation,
-            "primary_type": primary_type,
-            "literal_choices": literal_choices,
-            "required": param.default == param.empty,
-            "default": default_value,
-            "skip_in_ui": skip_in_ui,
-            "description": param_name.replace("_", " ").capitalize(),
-        }
+        param_info = _build_parameter_info(param_name, param, type_hints)
         param_definitions.append(param_info)
 
     logger.debug(f"Parameters for scorer '{scorer_type}': {param_definitions}")
     return param_definitions
+
+
+def _get_scorer_class(scorer_type: str):
+    """Get scorer class from pyrit.score module."""
+    try:
+        return getattr(score, scorer_type)
+    except AttributeError:
+        logger.error(f"Scorer type '{scorer_type}' not found in pyrit.score module.")
+        raise ScorerLoadingError(f"Scorer type '{scorer_type}' not found.")
+
+
+def _get_init_signature(scorer_class, scorer_type: str):
+    """Get init method signature for scorer class."""
+    try:
+        init_method = scorer_class.__init__
+        if init_method is object.__init__:
+            logger.debug(f"Scorer '{scorer_type}' uses default object.__init__, no parameters.")
+            return None
+        return inspect.signature(init_method)
+    except ValueError as e:
+        logger.error(f"Could not get signature for {scorer_type}.__init__: {e}. Assuming no parameters.")
+        return None
+    except TypeError as e:
+        logger.error(f"TypeError getting signature for {scorer_type}.__init__: {e}. Assuming no parameters.")
+        return None
+
+
+def _get_scorer_type_hints(init_method, scorer_type: str) -> Dict:
+    """Get type hints for scorer init method."""
+    try:
+        return get_type_hints(init_method)
+    except Exception as e:
+        logger.warning(f"Could not get type hints for {scorer_type}.__init__: {e}. Type info may be incomplete.")
+        return {}
+
+
+def _should_skip_parameter(param) -> bool:
+    """Check if parameter should be skipped."""
+    return param.name == "self" or param.kind in [param.VAR_POSITIONAL, param.VAR_KEYWORD]
+
+
+def _build_parameter_info(param_name: str, param, type_hints: Dict) -> Dict[str, Any]:
+    """Build complete parameter information dictionary."""
+    raw_annotation = type_hints.get(param_name, Any)
+    origin_type = get_origin(raw_annotation)
+    type_args = get_args(raw_annotation)
+
+    # Determine type information
+    type_info = _determine_type_info(raw_annotation, origin_type, type_args)
+
+    # Check if should skip in UI
+    skip_in_ui = _should_skip_in_ui(type_info["primary_type"], raw_annotation, type_args)
+
+    # Get default value
+    default_value = None if param.default == param.empty else param.default
+
+    return {
+        "name": param_name,
+        "type_str": type_info["type_str"],
+        "raw_type": raw_annotation,
+        "primary_type": type_info["primary_type"],
+        "literal_choices": type_info["literal_choices"],
+        "required": param.default == param.empty,
+        "default": default_value,
+        "skip_in_ui": skip_in_ui,
+        "description": param_name.replace("_", " ").capitalize(),
+    }
+
+
+def _determine_type_info(raw_annotation, origin_type, type_args) -> Dict[str, Any]:
+    """Determine primary type, literal choices, and string representation."""
+    # Use dispatch pattern for different type origins
+    type_handlers = {
+        Literal: _handle_literal_type,
+        Union: _handle_union_type,
+        list: _handle_list_type,
+        List: _handle_list_type,
+        tuple: _handle_tuple_type,
+        Tuple: _handle_tuple_type,
+    }
+
+    handler = type_handlers.get(origin_type)
+    if handler:
+        return handler(raw_annotation, type_args)
+    else:
+        return _handle_default_type(raw_annotation)
+
+
+def _handle_literal_type(raw_annotation, type_args) -> Dict[str, Any]:
+    """Handle Literal type annotations."""
+    literal_choices = list(type_args)
+    if literal_choices:
+        primary_type = type(literal_choices[0])
+        type_str = f"Literal[{', '.join(repr(choice) for choice in literal_choices)}]"
+    else:
+        primary_type = Any
+        type_str = "Literal[]"
+
+    return {"primary_type": primary_type, "literal_choices": literal_choices, "type_str": type_str}
+
+
+def _handle_union_type(raw_annotation, type_args) -> Dict[str, Any]:
+    """Handle Union type annotations."""
+    non_none_types = [t for t in type_args if t is not type(None)]
+
+    if len(non_none_types) == 1:
+        # Optional type
+        return _handle_optional_type(non_none_types[0])
+    else:
+        # Complex Union
+        primary_type = Union
+        type_str = str(raw_annotation).replace("typing.", "").replace("pyrit.", "")
+        return {"primary_type": primary_type, "literal_choices": None, "type_str": type_str}
+
+
+def _handle_optional_type(inner_type) -> Dict[str, Any]:
+    """Handle Optional type annotations."""
+    inner_origin = get_origin(inner_type)
+    inner_args = get_args(inner_type)
+
+    if inner_origin is Literal:
+        literal_choices = list(inner_args)
+        if literal_choices:
+            type_str = f"Optional[Literal[{', '.join(repr(choice) for choice in literal_choices)}]]"
+            primary_type = type(literal_choices[0])
+        else:
+            type_str = "Optional[Literal[]]"
+            primary_type = Any
+            literal_choices = None
+    else:
+        inner_type_str = str(inner_type).replace("typing.", "").replace("pyrit.", "").replace("pathlib.", "")
+        type_str = f"Optional[{inner_type_str}]"
+        primary_type = inner_type
+        literal_choices = None
+
+    return {"primary_type": primary_type, "literal_choices": literal_choices, "type_str": type_str}
+
+
+def _handle_list_type(raw_annotation, type_args) -> Dict[str, Any]:
+    """Handle List type annotations."""
+    type_str = f"List[{str(type_args[0]).replace('typing.', '') if type_args else 'Any'}]"
+    return {"primary_type": list, "literal_choices": None, "type_str": type_str}
+
+
+def _handle_tuple_type(raw_annotation, type_args) -> Dict[str, Any]:
+    """Handle Tuple type annotations."""
+    if type_args:
+        type_str = f"Tuple[{', '.join(str(t).replace('typing.', '') for t in type_args)}]"
+    else:
+        type_str = "Tuple"
+
+    return {"primary_type": tuple, "literal_choices": None, "type_str": type_str}
+
+
+def _handle_default_type(raw_annotation) -> Dict[str, Any]:
+    """Handle default/other type annotations."""
+    if isinstance(raw_annotation, type):
+        primary_type = raw_annotation
+    else:
+        primary_type = Any
+
+    type_str = (
+        str(raw_annotation)
+        .replace("typing.", "")
+        .replace("pyrit.score.", "")
+        .replace("pyrit.prompt_target.", "")
+        .replace("pathlib.", "")
+    )
+
+    return {"primary_type": primary_type, "literal_choices": None, "type_str": type_str}
+
+
+def _should_skip_in_ui(primary_type, raw_annotation, type_args) -> bool:
+    """Check if parameter should be skipped in UI."""
+    complex_types_to_skip = (
+        PromptChatTarget,
+        PromptShieldTarget,
+        Scorer,
+        Path,
+        TrueFalseQuestion,
+        collections.abc.Callable,
+    )
+
+    # Check primary type
+    if isinstance(primary_type, type) and issubclass(primary_type, complex_types_to_skip):
+        return True
+
+    # Check list of complex types
+    if (
+        primary_type is list
+        and type_args
+        and isinstance(type_args[0], type)
+        and issubclass(type_args[0], complex_types_to_skip)
+    ):
+        return True
+
+    # Check raw annotation
+    if isinstance(raw_annotation, type) and issubclass(raw_annotation, complex_types_to_skip):
+        return True
+
+    return False
 
 
 def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
@@ -403,7 +498,7 @@ def load_scorers() -> Dict[str, Dict[str, Any]]:
 
     Returns:
         Dict[str, Dict[str, Any]]: Scorer configurations keyed by name.
-                                   Inner dict has 'type' and 'params'.
+                                   Inner dict has 'type' and 'params'
     """
     if not PARAMETER_FILE.exists():
         logger.debug(f"Parameter file '{PARAMETER_FILE}' not found. Returning empty configuration.")
@@ -538,7 +633,7 @@ async def test_scorer_async(scorer_name: str, sample_input: PromptRequestPiece) 
         ScorerInstantiationError: If scorer instantiation fails.
         ScorerTestingError: If scoring the sample input fails.
     """
-    # get_scorer handles loading and instantiation errors
+    # get_scorer handles loading and instantiation errors.
     scorer_instance = get_scorer(scorer_name)
     try:
         logger.debug(f"Testing scorer '{scorer_name}' with input: {sample_input}")

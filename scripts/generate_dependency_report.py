@@ -3,6 +3,7 @@
 # # Licensed under MIT License
 
 """Generate dependency report from outdated package info."""
+
 import argparse
 import glob
 import json

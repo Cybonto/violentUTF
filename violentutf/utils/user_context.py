@@ -1,8 +1,11 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-User Context Management for ViolentUTF
+User Context Management for ViolentUTF.
+
 Ensures consistent user identification across all pages
 """
 
@@ -32,7 +35,7 @@ def get_consistent_username() -> str:
     Returns:
         str: Consistent username for the current session (always the account name)
     """
-    # Check if we have a cached username in session state
+    # Check if we have a cached username in session state.
     if "consistent_username" in st.session_state:
         return st.session_state["consistent_username"]
 
@@ -86,7 +89,7 @@ def get_user_context_for_token() -> dict:
     }
 
 
-def verify_user_consistency():
+def verify_user_consistency() -> Any:
     """
     Verify that the current token matches the expected username.
 

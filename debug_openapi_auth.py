@@ -3,6 +3,7 @@
 # # Licensed under MIT License
 
 """Debug OpenAPI authentication configuration."""
+
 import os
 import sys
 

@@ -3,7 +3,8 @@
 # # Licensed under MIT License
 
 """
-Test script to verify the authentication bypass vulnerability has been fixed
+Test script to verify the authentication bypass vulnerability has been fixed.
+
 """
 
 import hashlib
@@ -11,11 +12,11 @@ import hmac
 import os
 import sys
 import time
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 
 def generate_hmac_signature(gateway_secret: str, method: str, path: str, timestamp: str = None) -> Tuple[str, str]:
-    """Generate HMAC signature for testing"""
+    """Generate HMAC signature for testing."""
     if timestamp is None:
         timestamp = str(int(time.time()))
 
@@ -25,8 +26,8 @@ def generate_hmac_signature(gateway_secret: str, method: str, path: str, timesta
     return signature, timestamp
 
 
-def test_authentication_bypass_blocked():
-    """Test that the old bypass method is now blocked"""
+def test_authentication_bypass_blocked() -> Any:
+    """Test that the old bypass method is now blocked."""
     print("🧪 Testing Authentication Bypass Vulnerability Fix")
     print("=" * 55)
 
@@ -70,8 +71,8 @@ def test_authentication_bypass_blocked():
     return True
 
 
-def test_hmac_implementation():
-    """Test the HMAC implementation matches the FastAPI code"""
+def test_hmac_implementation() -> Any:
+    """Test the HMAC implementation matches the FastAPI code."""
     print("\n🔐 Testing HMAC Implementation")
     print("=" * 35)
 
@@ -110,8 +111,8 @@ def test_hmac_implementation():
     return signature2 != signature
 
 
-def test_timing_attack_resistance():
-    """Test that signature comparison is constant-time"""
+def test_timing_attack_resistance() -> Any:
+    """Test that signature comparison is constant-time."""
     print("\n⏱️  Testing Timing Attack Resistance")
     print("=" * 40)
 
@@ -131,8 +132,8 @@ def test_timing_attack_resistance():
     return True
 
 
-def main():
-    """Run all tests"""
+def main() -> Any:
+    """Run all tests."""
     print("🛡️  ViolentUTF Authentication Bypass Fix Verification")
     print("=" * 60)
 

@@ -2,6 +2,7 @@
 # # Licensed under MIT License
 
 """MCP Generator Configuration Tools."""
+
 import logging
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -18,7 +19,7 @@ class GeneratorConfigurationTools:
     """MCP tools for generator configuration and management."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for direct API access from within container
         if self.base_url and "localhost:9080" in self.base_url:
@@ -26,7 +27,7 @@ class GeneratorConfigurationTools:
 
         self.auth_handler = MCPAuthHandler()
 
-    def get_tools(self) -> List[Tool]:
+    def get_tools(self: "GeneratorConfigurationTools") -> List[Tool]:
         """Get all generator configuration tools."""
         return [
             self._create_list_generators_tool(),
@@ -41,7 +42,7 @@ class GeneratorConfigurationTools:
             self._create_batch_test_generators_tool(),
         ]
 
-    def _create_list_generators_tool(self) -> Tool:
+    def _create_list_generators_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for listing generators."""
         return Tool(
             name="list_generators",
@@ -69,7 +70,7 @@ class GeneratorConfigurationTools:
             },
         )
 
-    def _create_get_generator_tool(self) -> Tool:
+    def _create_get_generator_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for getting generator details."""
         return Tool(
             name="get_generator",
@@ -88,7 +89,7 @@ class GeneratorConfigurationTools:
             },
         )
 
-    def _create_create_generator_tool(self) -> Tool:
+    def _create_create_generator_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for creating new generators."""
         return Tool(
             name="create_generator",
@@ -126,7 +127,7 @@ class GeneratorConfigurationTools:
             },
         )
 
-    def _create_update_generator_tool(self) -> Tool:
+    def _create_update_generator_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for updating generators."""
         return Tool(
             name="update_generator",
@@ -149,7 +150,7 @@ class GeneratorConfigurationTools:
             },
         )
 
-    def _create_delete_generator_tool(self) -> Tool:
+    def _create_delete_generator_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for deleting generators."""
         return Tool(
             name="delete_generator",
@@ -168,7 +169,7 @@ class GeneratorConfigurationTools:
             },
         )
 
-    def _create_test_generator_tool(self) -> Tool:
+    def _create_test_generator_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for testing generators."""
         return Tool(
             name="test_generator",
@@ -194,7 +195,7 @@ class GeneratorConfigurationTools:
             },
         )
 
-    def _create_list_provider_models_tool(self) -> Tool:
+    def _create_list_provider_models_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for listing available models."""
         return Tool(
             name="list_provider_models",
@@ -217,7 +218,7 @@ class GeneratorConfigurationTools:
             },
         )
 
-    def _create_validate_generator_config_tool(self) -> Tool:
+    def _create_validate_generator_config_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for validating generator configuration."""
         return Tool(
             name="validate_generator_config",
@@ -242,7 +243,7 @@ class GeneratorConfigurationTools:
             },
         )
 
-    def _create_clone_generator_tool(self) -> Tool:
+    def _create_clone_generator_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for cloning generators."""
         return Tool(
             name="clone_generator",
@@ -264,7 +265,7 @@ class GeneratorConfigurationTools:
             },
         )
 
-    def _create_batch_test_generators_tool(self) -> Tool:
+    def _create_batch_test_generators_tool(self: "GeneratorConfigurationTools") -> Tool:
         """Create tool for batch testing generators."""
         return Tool(
             name="batch_test_generators",
@@ -300,7 +301,10 @@ class GeneratorConfigurationTools:
         )
 
     async def execute_tool(
-        self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
+        self: "GeneratorConfigurationTools",
+        tool_name: str,
+        arguments: Dict[str, Any],
+        user_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Execute a generator configuration tool."""
         logger.info(f"Executing generator tool: {tool_name}")
@@ -333,7 +337,7 @@ class GeneratorConfigurationTools:
             logger.error(f"Error executing generator tool {tool_name}: {e}")
             return {"error": "execution_failed", "message": str(e), "tool_name": tool_name}
 
-    async def _execute_list_generators(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_list_generators(self: "GeneratorConfigurationTools", args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute list generators tool."""
         params = {}
         if "provider_type" in args:
@@ -345,7 +349,7 @@ class GeneratorConfigurationTools:
 
         return await self._api_request("GET", "/api/v1/generators", params=params)
 
-    async def _execute_get_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_get_generator(self: "GeneratorConfigurationTools", args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute get generator tool."""
         generator_id = args["generator_id"]
         params = {}
@@ -354,16 +358,16 @@ class GeneratorConfigurationTools:
 
         return await self._api_request("GET", f"/api/v1/generators/{generator_id}", params=params)
 
-    async def _execute_create_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_create_generator(self: "GeneratorConfigurationTools", args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute create generator tool."""
         return await self._api_request("POST", "/api/v1/generators", json=args)
 
-    async def _execute_update_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_update_generator(self: "GeneratorConfigurationTools", args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute update generator tool."""
         generator_id = args.pop("generator_id")
         return await self._api_request("PUT", f"/api/v1/generators/{generator_id}", json=args)
 
-    async def _execute_delete_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_delete_generator(self: "GeneratorConfigurationTools", args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute delete generator tool."""
         generator_id = args["generator_id"]
         params = {}
@@ -372,7 +376,7 @@ class GeneratorConfigurationTools:
 
         return await self._api_request("DELETE", f"/api/v1/generators/{generator_id}", params=params)
 
-    async def _execute_test_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_test_generator(self: "GeneratorConfigurationTools", args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute test generator tool."""
         generator_id = args["generator_id"]
         test_data = {
@@ -382,7 +386,9 @@ class GeneratorConfigurationTools:
 
         return await self._api_request("POST", f"/api/v1/generators/{generator_id}/test", json=test_data)
 
-    async def _execute_list_provider_models(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_list_provider_models(
+        self: "GeneratorConfigurationTools", args: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute list provider models tool."""
         provider_type = args["provider_type"]
         params = {}
@@ -391,11 +397,13 @@ class GeneratorConfigurationTools:
 
         return await self._api_request("GET", f"/api/v1/generators/providers/{provider_type}/models", params=params)
 
-    async def _execute_validate_generator_config(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_validate_generator_config(
+        self: "GeneratorConfigurationTools", args: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute validate generator config tool."""
         return await self._api_request("POST", "/api/v1/generators/validate", json=args)
 
-    async def _execute_clone_generator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_clone_generator(self: "GeneratorConfigurationTools", args: Dict[str, Any]) -> Dict[str, Any]:
         """Execute clone generator tool."""
         source_id = args["source_generator_id"]
         clone_data = {
@@ -407,11 +415,13 @@ class GeneratorConfigurationTools:
 
         return await self._api_request("POST", f"/api/v1/generators/{source_id}/clone", json=clone_data)
 
-    async def _execute_batch_test_generators(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_batch_test_generators(
+        self: "GeneratorConfigurationTools", args: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute batch test generators tool."""
         return await self._api_request("POST", "/api/v1/generators/batch-test", json=args)
 
-    async def _api_request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
+    async def _api_request(self: "GeneratorConfigurationTools", method: str, path: str, **kwargs) -> Dict[str, Any]:
         """Make authenticated API request."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Generator"}
 
@@ -425,7 +435,6 @@ class GeneratorConfigurationTools:
         async with httpx.AsyncClient(timeout=timeout) as client:
             try:
                 response = await client.request(method=method, url=url, headers=headers, **kwargs)
-
                 logger.debug(f"Generator API call: {method} {url} -> {response.status_code}")
 
                 if response.status_code >= 400:

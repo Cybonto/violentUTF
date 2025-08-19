@@ -31,7 +31,7 @@ router = APIRouter()
 
 
 @router.get("/types", response_model=List[OrchestratorTypeInfo], summary="List orchestrator types")
-async def list_orchestrator_types(current_user=Depends(get_current_user)) -> Any:
+async def list_orchestrator_types(current_user: Any = Depends(get_current_user)) -> Any:
     """Get all available PyRIT orchestrator types with metadata."""
     try:
         orchestrator_types = pyrit_orchestrator_service.get_orchestrator_types()
@@ -75,7 +75,9 @@ async def create_orchestrator_configuration_alias(
     return await _create_orchestrator_configuration_impl(request, db, current_user)
 
 
-async def _create_orchestrator_configuration_impl(request: OrchestratorConfigCreate, db: AsyncSession, current_user):
+async def _create_orchestrator_configuration_impl(
+    request: OrchestratorConfigCreate, db: AsyncSession, current_user
+) -> Any:
     """Create and save PyRIT orchestrator configuration."""
     try:
         # Check if name already exists

@@ -35,7 +35,7 @@ async def create_api_key(
     db: AsyncSession = Depends(get_session),
 ) -> Any:
     """Create a new API key for the authenticated user."""
-    # Check if user has ai-api-access role
+    # Check if user has ai-api-access role.
     if "ai-api-access" not in current_user.roles:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User does not have ai-api-access role")
 
@@ -82,7 +82,7 @@ async def list_api_keys(
     request: Request, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> Any:
     """List all API keys for the authenticated user."""
-    # Query database for user's API keys
+    # Query database for user's API keys.
     result = await db.execute(
         select(APIKeyModel).where(APIKeyModel.user_id == current_user.username, APIKeyModel.is_active is True)
     )
@@ -114,7 +114,7 @@ async def revoke_api_key(
     db: AsyncSession = Depends(get_session),
 ) -> Any:
     """Revoke an API key."""
-    # Find the API key
+    # Find the API key.
     result = await db.execute(
         select(APIKeyModel).where(APIKeyModel.id == key_id, APIKeyModel.user_id == current_user.username)
     )

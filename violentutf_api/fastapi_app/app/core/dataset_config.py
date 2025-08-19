@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class DatasetImportConfig:
     """Enhanced configuration with adaptive and context-aware settings."""
 
-    # Basic limits
+    # Basic limits.
     preview_limit: int = 10
     chunk_size: int = 1000
     max_import_size: int = 0  # 0 = unlimited
@@ -110,7 +110,7 @@ class DatasetImportConfig:
         logger.info(f"Dataset import configuration loaded: {config}")
         return config
 
-    def validate(self) -> None:
+    def validate(self: "DatasetImportConfig") -> None:
         """Validate configuration values."""
         errors = []
 
@@ -159,7 +159,7 @@ class DatasetImportConfig:
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-    def get_effective_chunk_size(self, dataset_size: int = 0, avg_prompt_size: int = 0) -> int:
+    def get_effective_chunk_size(self: "DatasetImportConfig", dataset_size: int = 0, avg_prompt_size: int = 0) -> int:
         """Calculate effective chunk size based on dataset characteristics."""
         if not self.adaptive_chunk_size:
             return self.chunk_size
@@ -187,9 +187,9 @@ class DatasetImportConfig:
 
         return self.chunk_size
 
-    def get_effective_retry_config(self, dataset_type: str = "") -> Dict[str, Any]:
+    def get_effective_retry_config(self: "DatasetImportConfig", dataset_type: str = "") -> Dict[str, Any]:
         """Get retry configuration based on dataset type."""
-        # Some datasets might need different retry strategies
+        # Some datasets might need different retry strategies.
         retry_config = {
             "max_retries": self.max_retries,
             "retry_delay": self.retry_delay,
@@ -205,15 +205,15 @@ class DatasetImportConfig:
 
         return retry_config
 
-    def should_use_pyrit_memory(self) -> bool:
+    def should_use_pyrit_memory(self: "DatasetImportConfig") -> bool:
         """Determine if PyRIT memory should be used based on configuration."""
         return self.use_pyrit_memory and self.storage_mode in ["dual", "pyrit_only"]
 
-    def should_use_violentutf_db(self) -> bool:
+    def should_use_violentutf_db(self: "DatasetImportConfig") -> bool:
         """Determine if ViolentUTF database should be used based on configuration."""
         return self.storage_mode in ["dual", "violentutf_only"]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self: "DatasetImportConfig") -> Dict[str, Any]:
         """Convert configuration to dictionary for serialization."""
         return {
             "preview_limit": self.preview_limit,
@@ -245,7 +245,7 @@ class DatasetImportConfig:
         """Create configuration from dictionary."""
         return cls(**data)
 
-    def __str__(self) -> str:
+    def __str__(self: "DatasetImportConfig") -> str:
         """String representation of configuration."""
         return f"DatasetImportConfig(chunk_size={self.chunk_size}, max_import_size={self.max_import_size}, storage_mode={self.storage_mode})"
 

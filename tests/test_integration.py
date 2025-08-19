@@ -1,9 +1,12 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-Test script to verify ViolentUTF API integration
+Test script to verify ViolentUTF API integration.
+
 """
 import json
 import sys
@@ -11,8 +14,8 @@ import sys
 import requests
 
 
-def test_api_health():
-    """Test the API health endpoint"""
+def test_api_health() -> Any:
+    """Test the API health endpoint."""
     print("Testing API Health Endpoint...")
 
     try:
@@ -34,8 +37,8 @@ def test_api_health():
         return False
 
 
-def test_api_docs():
-    """Test the API documentation endpoint"""
+def test_api_docs() -> Any:
+    """Test the API documentation endpoint."""
     print("\nTesting API Documentation...")
 
     try:
@@ -49,8 +52,8 @@ def test_api_docs():
         return False
 
 
-def test_authentication():
-    """Test authentication endpoint"""
+def test_authentication() -> None:
+    """Test authentication endpoint."""
     print("\nTesting Authentication...")
 
     # You'll need to provide valid credentials
@@ -72,8 +75,8 @@ def test_authentication():
         return None
 
 
-def main():
-    """Run all tests"""
+def main() -> None:
+    """Run all tests."""
     print("ViolentUTF API Integration Test")
     print("================================")
 

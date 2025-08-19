@@ -4,7 +4,7 @@
 # utils/error_handling.py
 
 """
-Module: Error Handling
+Module: Error Handling.
 
 Contains custom exception classes and error handling utilities.
 
@@ -43,7 +43,7 @@ class DatasetLoadingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "DatasetLoadingError", message: str) -> None:
         super().__init__(message)
 
 
@@ -55,7 +55,7 @@ class DatasetParsingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "DatasetParsingError", message: str) -> None:
         super().__init__(message)
 
 
@@ -67,7 +67,7 @@ class TemplateError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "TemplateError", message: str) -> None:
         super().__init__(message)
 
 
@@ -79,7 +79,7 @@ class ConverterLoadingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "ConverterLoadingError", message: str) -> None:
         super().__init__(message)
 
 
@@ -91,7 +91,7 @@ class ConverterApplicationError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "ConverterApplicationError", message: str) -> None:
         super().__init__(message)
 
 
@@ -103,7 +103,7 @@ class ScorerLoadingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "ScorerLoadingError", message: str) -> None:
         super().__init__(message)
 
 
@@ -115,7 +115,7 @@ class ScorerInstantiationError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "ScorerInstantiationError", message: str) -> None:
         super().__init__(message)
 
 
@@ -127,7 +127,7 @@ class ScorerConfigurationError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "ScorerConfigurationError", message: str) -> None:
         super().__init__(message)
 
 
@@ -139,7 +139,7 @@ class ScorerDeletionError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "ScorerDeletionError", message: str) -> None:
         super().__init__(message)
 
 
@@ -151,7 +151,7 @@ class ScorerTestingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "ScorerTestingError", message: str) -> None:
         super().__init__(message)
 
 
@@ -163,7 +163,7 @@ class ScorerApplicationError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: "ScorerApplicationError", message: str) -> None:
         super().__init__(message)
 
 

@@ -38,7 +38,7 @@ class OrchestratorExecution(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     orchestrator_id = Column(UUID(as_uuid=True), nullable=False)
     execution_name = Column(String(255))
-    execution_type = Column(String(50))  # 'prompt_list', 'dataset', etc.
+    execution_type = Column(String(50))  # 'prompt_list', 'dataset', etc
     input_data = Column(JSON)  # Store execution input configuration
     status = Column(String(50), default="running")  # 'running', 'completed', 'failed'
     results = Column(JSON)  # Store execution results

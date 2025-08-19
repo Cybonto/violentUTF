@@ -126,7 +126,7 @@ async def _get_dataset_by_id(dataset_id: str, user_context: Optional[str] = None
 
 async def _get_native_dataset_prompts(dataset_config: Dict) -> List[str]:
     """Get prompts from native dataset."""
-    # Extract prompts from native dataset
+    # Extract prompts from native dataset.
     dataset_type = dataset_config.get("dataset_type")
     logger.debug(f"Processing native dataset of type: {dataset_type}")
 
@@ -155,7 +155,7 @@ async def _get_native_dataset_prompts(dataset_config: Dict) -> List[str]:
 
 async def _get_local_dataset_prompts(dataset_config: Dict) -> List[str]:
     """Get prompts from local uploaded dataset."""
-    # Extract prompts from local dataset
+    # Extract prompts from local dataset.
     prompts = dataset_config.get("prompts", [])
 
     # Similar extraction logic as native datasets
@@ -207,122 +207,173 @@ async def _load_real_memory_dataset_prompts(
 ) -> List[str]:
     """Load actual prompts from PyRIT memory database files - WITH USER ISOLATION."""
     try:
-        #         import os # F811: removed duplicate import
-        import sqlite3
+        # Try active PyRIT memory instance first
+        prompts = await _get_prompts_from_active_memory(dataset_id, limit)
+        if prompts:
+            return prompts
 
+        # Fall back to direct database file access
+        return await _get_prompts_from_database_files(dataset_id, limit, user_id)
+
+    except Exception as e:
+        logger.error(f"Error loading real memory dataset prompts: {e}")
+        return []
+
+
+async def _get_prompts_from_active_memory(dataset_id: str, limit: Optional[int]) -> List[str]:
+    """Try to get prompts from active PyRIT memory instance."""
+    try:
         from pyrit.memory import CentralMemory
 
+        memory_instance = CentralMemory.get_memory_instance()
+        if not memory_instance:
+            return []
+
+        logger.info(f"Found active PyRIT memory instance for dataset {dataset_id}")
+
+        # Get conversation pieces from memory that could be prompts
+        conversation_pieces = memory_instance.get_conversation()
+
         prompts = []
+        for piece in conversation_pieces:
+            if piece.role == "user" and piece.original_value:
+                prompts.append(piece.original_value)
 
-        # First try to get prompts from active PyRIT memory instance
-        try:
-            memory_instance = CentralMemory.get_memory_instance()
-            if memory_instance:
-                logger.info(f"Found active PyRIT memory instance for dataset {dataset_id}")
+        if prompts:
+            logger.info(f"Extracted {len(prompts)} prompts from active PyRIT memory")
+            # Apply configurable limit if specified
+            if limit and limit > 0:
+                return prompts[:limit]
+            return prompts
 
-                # Get conversation pieces from memory that could be prompts
-                # Look for user - role pieces that contain the original prompts
-                conversation_pieces = memory_instance.get_conversation()
+        return []
 
-                for piece in conversation_pieces:
-                    if piece.role == "user" and piece.original_value:
-                        # Add user prompts from memory
-                        prompts.append(piece.original_value)
+    except ValueError:
+        logger.info("No active PyRIT memory instance found")
+        return []
+    except Exception as e:
+        logger.warning(f"Error accessing active memory instance: {e}")
+        return []
 
-                if prompts:
-                    logger.info(f"Extracted {len(prompts)} prompts from active PyRIT memory")
-                    # Apply configurable limit if specified
-                    if limit and limit > 0:
-                        return prompts[:limit]
-                    return prompts
 
-        except ValueError:
-            logger.info("No active PyRIT memory instance found, trying direct database access")
-
-        # If no active memory or no prompts found, try direct database file access
-        # SECURITY: Only access the current user's specific database
-        import hashlib
-
+async def _get_prompts_from_database_files(dataset_id: str, limit: Optional[int], user_id: Optional[str]) -> List[str]:
+    """Get prompts from direct database file access with user isolation."""
+    try:
+        # Security validation
         if not user_id:
             logger.error(f"Cannot load memory dataset {dataset_id} without user context - security violation prevented")
             return []
 
-        # Generate the user's specific database filename
-        salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
-        user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
-        user_db_filename = f"pyrit_memory_{user_hash}.db"
-
-        # Only check the user's specific database file in known locations
-        memory_db_paths = []
-        potential_paths = [
-            "/app/app_data/violentutf",  # Docker API memory
-            "./app_data/violentutf",  # Relative app data
-        ]
-
-        for base_path in potential_paths:
-            if os.path.exists(base_path):
-                user_db_path = os.path.join(base_path, user_db_filename)
-                if os.path.exists(user_db_path):
-                    memory_db_paths.append(user_db_path)
-                    logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
-                    break  # Only use the first found user database
+        # Get user-specific database paths
+        db_paths = _get_user_prompts_database_paths(user_id)
 
         # Try to extract prompts from found database files
-        for db_path in memory_db_paths:
-            try:
-                # SECURITY: Double-check that we're only accessing the user's database
-                if user_db_filename not in db_path:
-                    logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
-                    continue
-
-                logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
-
-                with sqlite3.connect(db_path) as conn:
-                    cursor = conn.cursor()
-
-                    # Query for prompt request pieces with user role
-                    # Build query with optional limit
-                    query = """
-                        SELECT original_value FROM PromptRequestPieces
-                        WHERE role = 'user' AND original_value IS NOT NULL
-                        AND LENGTH(original_value) > 0
-                        AND original_value NOT LIKE '%Native harmbench prompt%'
-                        AND original_value NOT LIKE '%Native % prompt %'
-                        AND original_value NOT LIKE '%Sample % prompt %'
-                        AND original_value NOT LIKE '%Test prompt%'
-                        AND original_value NOT LIKE '%mock%'
-                        AND original_value NOT LIKE '%test prompt%'
-                        ORDER BY timestamp DESC
-                    """
-
-                    if limit and limit > 0:
-
-                        query += f" LIMIT {limit}"
-
-                    cursor.execute(query)
-
-                    rows = cursor.fetchall()
-                    for row in rows:
-                        if row[0] and len(row[0].strip()) > 0:
-                            prompts.append(row[0].strip())
-
-                if prompts:
-                    logger.info(f"Extracted {len(prompts)} prompts from PyRIT database {db_path}")
-                    return prompts
-
-            except sqlite3.Error as db_error:
-                logger.debug(f"Could not read database {db_path}: {db_error}")
-                continue
-            except Exception as db_error:
-                logger.debug(f"Error accessing database {db_path}: {db_error}")
-                continue
+        for db_path in db_paths:
+            prompts = await _extract_prompts_from_db_file(db_path, user_id, limit)
+            if prompts:
+                return prompts
 
         logger.info(f"No PyRIT memory data found for dataset {dataset_id}")
         return []
 
     except Exception as e:
-        logger.error(f"Error loading real memory dataset prompts: {e}")
+        logger.error(f"Error accessing database files: {e}")
         return []
+
+
+def _get_user_prompts_database_paths(user_id: str) -> List[str]:
+    """Get paths to user-specific database files for prompt loading."""
+    import hashlib
+    import os
+
+    # Generate the user's specific database filename
+    salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
+    user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
+    user_db_filename = f"pyrit_memory_{user_hash}.db"
+
+    # Only check the user's specific database file in known locations
+    memory_db_paths = []
+    potential_paths = [
+        "/app/app_data/violentutf",  # Docker API memory
+        "./app_data/violentutf",  # Relative app data
+    ]
+
+    for base_path in potential_paths:
+        if os.path.exists(base_path):
+            user_db_path = os.path.join(base_path, user_db_filename)
+            if os.path.exists(user_db_path):
+                memory_db_paths.append(user_db_path)
+                logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
+                break  # Only use the first found user database
+
+    return memory_db_paths
+
+
+async def _extract_prompts_from_db_file(db_path: str, user_id: str, limit: Optional[int]) -> List[str]:
+    """Extract prompts from a specific database file."""
+    try:
+        import sqlite3
+
+        # Security check
+        user_db_filename = _get_prompts_user_db_filename(user_id)
+        if user_db_filename not in db_path:
+            logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
+            return []
+
+        logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
+        prompts = []
+
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+
+            # Build query with optional limit
+            query = _build_prompts_query(limit)
+            cursor.execute(query)
+
+            rows = cursor.fetchall()
+            for row in rows:
+                if row[0] and len(row[0].strip()) > 0:
+                    prompts.append(row[0].strip())
+
+        if prompts:
+            logger.info(f"Extracted {len(prompts)} prompts from PyRIT database {db_path}")
+
+        return prompts
+
+    except Exception as db_error:
+        logger.debug(f"Error accessing database {db_path}: {db_error}")
+        return []
+
+
+def _get_prompts_user_db_filename(user_id: str) -> str:
+    """Get user-specific database filename for prompts."""
+    import hashlib
+    import os
+
+    salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
+    user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
+    return f"pyrit_memory_{user_hash}.db"
+
+
+def _build_prompts_query(limit: Optional[int]) -> str:
+    """Build SQL query for prompt extraction with optional limit."""
+    query = """
+        SELECT original_value FROM PromptRequestPieces
+        WHERE role = 'user' AND original_value IS NOT NULL
+        AND LENGTH(original_value) > 0
+        AND original_value NOT LIKE '%Native harmbench prompt%'
+        AND original_value NOT LIKE '%Native % prompt %'
+        AND original_value NOT LIKE '%Sample % prompt %'
+        AND original_value NOT LIKE '%Test prompt%'
+        AND original_value NOT LIKE '%mock%'
+        AND original_value NOT LIKE '%test prompt%'
+        ORDER BY timestamp DESC
+    """
+
+    if limit and limit > 0:
+        query += f" LIMIT {limit}"
+
+    return query
 
 
 async def _get_converter_dataset_prompts(dataset_config: Dict) -> List[str]:

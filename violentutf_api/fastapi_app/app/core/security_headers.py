@@ -8,7 +8,7 @@ SECURITY: Implements comprehensive security headers to protect against common we
 """
 
 import logging
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -23,15 +23,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     Protects against XSS, clickjacking, MIME sniffing, and other attacks
     """
 
-    def __init__(self, app, environment: str = "production") -> None:
+    def __init__(self: "SecurityHeadersMiddleware", app: Any, environment: str = "production") -> None:
         """Initialize the instance."""
         super().__init__(app)
         self.environment = environment.lower()
         self.headers = self._get_security_headers()
 
-    def _get_security_headers(self) -> Dict[str, str]:
+    def _get_security_headers(self: "SecurityHeadersMiddleware") -> Dict[str, str]:
         """Generate security headers based on environment."""
-        # Base security headers for all environments
+        # Base security headers for all environments.
         headers = {
             # Prevent MIME type sniffing
             "X-Content-Type-Options": "nosniff",
@@ -109,7 +109,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         return headers
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self: "SecurityHeadersMiddleware", request: Request, call_next: Callable) -> Response:
         """Add security headers to response."""
         response = await call_next(request)
 
@@ -186,12 +186,12 @@ class APISecurityHeadersMiddleware(BaseHTTPMiddleware):
     Adds headers specific to API security concerns
     """
 
-    def __init__(self, app, api_version: str = "1.0") -> None:
+    def __init__(self: "APISecurityHeadersMiddleware", app: Any, api_version: str = "1.0") -> None:
         """Initialize the instance."""
         super().__init__(app)
         self.api_version = api_version
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self: "APISecurityHeadersMiddleware", request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
 
         # API-specific headers

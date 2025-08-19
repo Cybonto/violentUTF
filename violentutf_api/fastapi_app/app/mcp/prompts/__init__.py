@@ -24,11 +24,11 @@ class PromptsManager:
     """Manages MCP prompts for ViolentUTF."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.registry = prompt_registry
         self._initialized = False
 
-    async def initialize(self) -> None:
+    async def initialize(self: "PromptsManager") -> None:
         """Initialize prompts manager."""
         if self._initialized:
             return
@@ -37,7 +37,7 @@ class PromptsManager:
         self._initialized = True
         logger.info(f"Prompts manager initialized with {len(self.registry._prompts)} prompts")
 
-    async def list_prompts(self) -> List[Dict[str, Any]]:
+    async def list_prompts(self: "PromptsManager") -> List[Dict[str, Any]]:
         """List all available prompts."""
         if not self._initialized:
             await self.initialize()
@@ -45,7 +45,7 @@ class PromptsManager:
         prompts = self.registry.list_prompts()
         return [prompt.dict() for prompt in prompts]
 
-    async def get_prompt(self, name: str, args: Dict[str, Any] = None) -> str:
+    async def get_prompt(self: "PromptsManager", name: str, args: Dict[str, Any] = None) -> str:
         """Get and render a prompt by name."""
         if not self._initialized:
             await self.initialize()
@@ -56,7 +56,7 @@ class PromptsManager:
 
         return await prompt.render(args or {})
 
-    def get_prompt_info(self, name: str) -> Dict[str, Any]:
+    def get_prompt_info(self: "PromptsManager", name: str) -> Dict[str, Any]:
         """Get prompt definition and metadata."""
         prompt = self.registry.get(name)
         if not prompt:

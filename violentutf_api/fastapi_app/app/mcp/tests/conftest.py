@@ -107,7 +107,7 @@ def disable_external_requests() -> None:
 @pytest.fixture
 def clean_registries() -> None:
     """Clean tool and resource registries before each test."""
-    # Import after environment is set up
+    # Import after environment is set up.
     try:
         from app.mcp.resources import resource_registry
         from app.mcp.tools import tool_registry
@@ -259,7 +259,7 @@ pytest_markers = [
 ]
 
 
-def pytest_configure(config) -> None:
+def pytest_configure(config: Any) -> None:
     """Configure pytest with custom markers."""
     for marker in pytest_markers:
         config.addinivalue_line("markers", marker)

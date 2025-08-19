@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-JWT Token Management Utility for ViolentUTF Streamlit Application
+JWT Token Management Utility for ViolentUTF Streamlit Application.
 
 This module handles JWT token creation, validation, and refresh logic
 between Streamlit frontend and FastAPI backend.
@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 
 
 class JWTManager:
-    """Manages JWT tokens for Streamlit to FastAPI communication"""
+    """Manages JWT tokens for Streamlit to FastAPI communication."""
 
-    def __init__(self):
+    def __init__(self: "JWTManager") -> None:
         # Load environment variables from .env file
         self._load_environment()
         self.api_base_url = self._get_api_base_url()
@@ -45,7 +45,7 @@ class JWTManager:
         self._refresh_in_progress = False
         self._last_error = None
 
-    def _load_environment(self):
+    def _load_environment(self: "JWTManager") -> None:
         """Load environment variables from .env file if available"""
         try:
             import os
@@ -82,19 +82,19 @@ class JWTManager:
         except Exception as e:
             logger.error(f"Failed to load environment variables: {e}")
 
-    def _get_api_base_url(self) -> str:
-        """Get the API base URL from environment or default"""
+    def _get_api_base_url(self: "JWTManager") -> str:
+        """Get the API base URL from environment or default."""
         raw_url = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
         return raw_url.rstrip("/api").rstrip("/")
 
-    def _get_jwt_secret(self) -> Optional[str]:
+    def _get_jwt_secret(self: "JWTManager") -> Optional[str]:
         """
         Get JWT secret key using multiple fallback strategies:
         1. Environment variable JWT_SECRET_KEY
         2. Cached secret from previous API call
         3. API call to FastAPI /keys/jwt-public endpoint
         """
-        # Strategy 1: Try environment variable first (already loaded by _load_environment)
+        # Strategy 1: Try environment variable first (already loaded by _load_environment).
         secret = os.getenv("JWT_SECRET_KEY")
         if secret:
             logger.info(f"JWT secret obtained from environment variable (preview: {secret[:8]}...)")
@@ -138,9 +138,9 @@ class JWTManager:
         logger.error(f"Current working directory: {Path.cwd()}")
         return None
 
-    def create_token(self, keycloak_token_data: Dict[str, Any]) -> Optional[str]:
+    def create_token(self: "JWTManager", keycloak_token_data: Dict[str, Any]) -> Optional[str]:
         """
-        Create a FastAPI-compatible JWT token from Keycloak token data
+        Create a FastAPI-compatible JWT token from Keycloak token data.
 
         Args:
             keycloak_token_data: Decoded Keycloak token payload
@@ -188,9 +188,9 @@ class JWTManager:
             logger.error(f"Failed to create JWT token: {e}")
             return None
 
-    def get_valid_token(self) -> Optional[str]:
+    def get_valid_token(self: "JWTManager") -> Optional[str]:
         """
-        Get a valid JWT token, refreshing if necessary
+        Get a valid JWT token, refreshing if necessary.
 
         Returns:
             Valid JWT token or None if unavailable
@@ -229,8 +229,8 @@ class JWTManager:
             logger.error(f"Error checking token validity: {e}")
             return None
 
-    def is_token_expired(self) -> bool:
-        """Check if the current token is expired"""
+    def is_token_expired(self: "JWTManager") -> bool:
+        """Check if the current token is expired."""
         if "api_token_exp" not in st.session_state:
             return True
 
@@ -239,8 +239,8 @@ class JWTManager:
 
         return current_time >= token_exp
 
-    def get_token_info(self) -> Dict[str, Any]:
-        """Get information about the current token"""
+    def get_token_info(self: "JWTManager") -> Dict[str, Any]:
+        """Get information about the current token."""
         if "api_token" not in st.session_state:
             return {"status": "no_token"}
 
@@ -260,14 +260,14 @@ class JWTManager:
             "created_at": datetime.fromtimestamp(token_created).isoformat(),
         }
 
-    def clear_token(self):
-        """Clear the stored token from session state"""
+    def clear_token(self: "JWTManager") -> None:
+        """Clear the stored token from session state."""
         self._clear_token()
         logger.info("JWT token manually cleared from session state")
 
-    def _validate_token_signature(self, token: str) -> bool:
+    def _validate_token_signature(self: "JWTManager", token: str) -> bool:
         """
-        Validate JWT token signature using the current secret
+        Validate JWT token signature using the current secret.
 
         Args:
             token: JWT token to validate
@@ -295,9 +295,9 @@ class JWTManager:
             logger.error(f"JWT token validation error: {e}")
             return False
 
-    def _attempt_token_recreation(self) -> Optional[str]:
+    def _attempt_token_recreation(self: "JWTManager") -> Optional[str]:
         """
-        Attempt to recreate a JWT token using environment credentials
+        Attempt to recreate a JWT token using environment credentials.
 
         Returns:
             New JWT token or None if failed
@@ -332,15 +332,15 @@ class JWTManager:
             logger.error(f"Token recreation failed: {e}")
             return None
 
-    def _clear_token(self):
-        """Internal method to clear token state"""
+    def _clear_token(self: "JWTManager") -> None:
+        """Internal method to clear token state."""
         st.session_state.pop("api_token", None)
         st.session_state.pop("api_token_exp", None)
         st.session_state.pop("api_token_created", None)
         self._refresh_in_progress = False
 
-    def _attempt_proactive_refresh(self):
-        """Attempt to proactively refresh the token before it expires"""
+    def _attempt_proactive_refresh(self: "JWTManager") -> None:
+        """Attempt to proactively refresh the token before it expires."""
         current_time = time.time()
 
         # Avoid too frequent refresh attempts
@@ -375,8 +375,8 @@ class JWTManager:
         finally:
             self._refresh_in_progress = False
 
-    def _get_current_token_data(self) -> Optional[Dict[str, Any]]:
-        """Extract user data from current token for refresh"""
+    def _get_current_token_data(self: "JWTManager") -> Optional[Dict[str, Any]]:
+        """Extract user data from current token for refresh."""
         try:
             current_token = st.session_state.get("api_token")
             if not current_token:
@@ -411,8 +411,8 @@ class JWTManager:
             logger.error(f"Error extracting token data: {e}")
             return None
 
-    def _refresh_token_with_retry(self, token_data: Dict[str, Any]) -> Optional[str]:
-        """Refresh token with retry logic"""
+    def _refresh_token_with_retry(self: "JWTManager", token_data: Dict[str, Any]) -> Optional[str]:
+        """Refresh token with retry logic."""
         for attempt in range(self._max_retry_attempts):
             try:
                 logger.info(f"Token refresh attempt {attempt + 1}/{self._max_retry_attempts}")
@@ -427,8 +427,8 @@ class JWTManager:
 
         return None
 
-    def get_refresh_status(self) -> Dict[str, Any]:
-        """Get current refresh status for UI display"""
+    def get_refresh_status(self: "JWTManager") -> Dict[str, Any]:
+        """Get current refresh status for UI display."""
         current_time = int(time.time())
         token_exp = st.session_state.get("api_token_exp", 0)
         time_remaining = max(0, token_exp - current_time)

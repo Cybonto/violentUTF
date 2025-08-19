@@ -27,13 +27,13 @@ class AuthMiddleware:
     """Authentication middleware that supports both JWT and API keys."""
 
     async def __call__(
-        self,
+        self: "AuthMiddleware",
         request: Request,
         credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme),
         api_key: Optional[str] = Security(api_key_header),
     ) -> User:
         """Authenticate request using either JWT or API key."""
-        # Check if request is from APISIX (cryptographically verified)
+        # Check if request is from APISIX (cryptographically verified).
         if not self._is_from_apisix(request):
             # Log security event for unauthorized direct access attempt
             from app.core.security_logging import log_suspicious_activity
@@ -62,9 +62,9 @@ class AuthMiddleware:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    def _is_from_apisix(self, request: Request) -> bool:
+    def _is_from_apisix(self: "AuthMiddleware", request: Request) -> bool:
         """Verify request is coming from APISIX using practical security measures."""
-        # Check for basic APISIX gateway identification header
+        # Check for basic APISIX gateway identification header.
         apisix_gateway_header = request.headers.get("X-API-Gateway")
         if apisix_gateway_header != "APISIX":
             logger.warning("Missing or invalid X-API-Gateway header")
@@ -109,7 +109,7 @@ class AuthMiddleware:
         logger.debug("APISIX gateway verification successful")
         return True
 
-    def _verify_apisix_signature(self, request: Request, signature: str, timestamp: str) -> bool:
+    def _verify_apisix_signature(self: "AuthMiddleware", request: Request, signature: str, timestamp: str) -> bool:
         """
         Verify HMAC signature from APISIX gateway.
 
@@ -153,7 +153,7 @@ class AuthMiddleware:
             logger.error(f"Error verifying APISIX signature: {str(e)}")
             return False
 
-    async def _authenticate_jwt(self, token: str) -> User:
+    async def _authenticate_jwt(self: "AuthMiddleware", token: str) -> User:
         """Authenticate using JWT token."""
         try:
             # Decode our internal JWT
@@ -181,9 +181,9 @@ class AuthMiddleware:
         except JWTError:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate token")
 
-    async def _authenticate_api_key(self, api_key: str) -> User:
+    async def _authenticate_api_key(self: "AuthMiddleware", api_key: str) -> User:
         """Authenticate using API key."""
-        # Decode API key (which is actually a JWT)
+        # Decode API key (which is actually a JWT).
         try:
             payload = decode_token(api_key)
             if not payload:

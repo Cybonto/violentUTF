@@ -2,6 +2,7 @@
 # # Licensed under MIT License
 
 """MCP Authentication Bridge."""
+
 import logging
 from typing import Any, Dict, Optional
 
@@ -19,11 +20,11 @@ class MCPAuthHandler:
     """Handles authentication for MCP operations."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
-        # Use the existing keycloak_verifier instance
+        """ "Initialize the instance."""
+        # Use the existing keycloak_verifier instance.
         self.keycloak_verifier = keycloak_verifier
 
-    async def authenticate(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
+    async def authenticate(self: "MCPAuthHandler", credentials: Dict[str, Any]) -> Dict[str, Any]:
         """Authenticate MCP client."""
         auth_type = credentials.get("type", "bearer")
 
@@ -36,7 +37,7 @@ class MCPAuthHandler:
                 status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Unsupported authentication type: {auth_type}"
             )
 
-    async def _handle_bearer_auth(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_bearer_auth(self: "MCPAuthHandler", credentials: Dict[str, Any]) -> Dict[str, Any]:
         """Handle bearer token authentication."""
         token = credentials.get("token")
         if not token:
@@ -73,7 +74,7 @@ class MCPAuthHandler:
             logger.error(f"Authentication error: {e}")
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed")
 
-    async def _handle_oauth_auth(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_oauth_auth(self: "MCPAuthHandler", credentials: Dict[str, Any]) -> Dict[str, Any]:
         """Handle OAuth authentication flow."""
         code = credentials.get("code")
         if not code:
@@ -105,7 +106,7 @@ class MCPAuthHandler:
             logger.error(f"OAuth authentication error: {e}")
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="OAuth authentication failed")
 
-    async def authenticate_request(self, request: Request) -> Optional[Dict[str, Any]]:
+    async def authenticate_request(self: "MCPAuthHandler", request: Request) -> Optional[Dict[str, Any]]:
         """Authenticate MCP requests using existing Keycloak verification."""
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
@@ -121,7 +122,7 @@ class MCPAuthHandler:
         # Fallback to JWT verification for Streamlit compatibility
         return decode_token(token)
 
-    def create_api_token(self, user_info: Dict[str, Any]) -> str:
+    def create_api_token(self: "MCPAuthHandler", user_info: Dict[str, Any]) -> str:
         """Create API token for MCP access."""
         return create_access_token(
             {

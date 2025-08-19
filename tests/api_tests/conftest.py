@@ -64,7 +64,7 @@ def cleanup_generators(headers: Dict[str, str], api_base_url: str) -> List[str]:
 
 def pytest_configure(config: Config) -> None:
     """Configure pytest for API testing."""
-    # Add custom markers specific to API tests
+    # Add custom markers specific to API tests.
     config.addinivalue_line("markers", "api: marks tests as API tests (require API connectivity)")
     config.addinivalue_line("markers", "generator: marks tests as generator-related tests")
     config.addinivalue_line("markers", "requires_cleanup: marks tests that require cleanup of resources")

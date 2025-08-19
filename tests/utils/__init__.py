@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-Test utilities for ViolentUTF testing
+Test utilities for ViolentUTF testing.
+
 """
 
 from .keycloak_auth import KeycloakAuthenticator, keycloak_auth

@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-Local conftest for MCP client tests
+Local conftest for MCP client tests.
+
 """
 
 import os

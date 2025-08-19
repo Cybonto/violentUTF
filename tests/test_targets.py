@@ -1,8 +1,11 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
 Fixture to create a TestClient with authentication headers.
+
 """
 
 import json
@@ -69,17 +72,17 @@ headers = {
 
 
 @pytest.fixture(scope="function")
-def test_client():
+def test_client() -> None:
     with TestClient(app) as c:
         c.headers.update(headers)
         yield c
 
 
-def test_get_targets(test_client):
+def test_get_targets(test_client) -> None:
     """
     Test the GET /api/v1/targets endpoint.
     """
-    # Create a test target
+    # Create a test target.
     url = "/api/v1/targets"
     target_payload = {
         "name": "Test OpenAIChatTarget",
@@ -114,11 +117,11 @@ def test_get_targets(test_client):
         print(f"Deleted target {target_id}")
 
 
-def test_get_target_by_id(test_client):
+def test_get_target_by_id(test_client) -> None:
     """
     Test the GET /api/v1/targets/{target_id} endpoint.
     """
-    # Create a test target
+    # Create a test target.
     url = "/api/v1/targets"
     target_payload = {
         "name": "Test OpenAIChatTarget",
@@ -156,9 +159,9 @@ def test_get_target_by_id(test_client):
         print(f"Deleted target {target_id}")
 
 
-def create_openai_target(test_client):
+def create_openai_target(test_client) -> Any:
     """
-    Helper function to create an OpenAIChatTarget and return its ID.
+    Helper function to create an OpenAIChatTarget and return its ID
     """
     url = "/api/v1/targets"
     target_payload = {
@@ -179,11 +182,11 @@ def create_openai_target(test_client):
     return target_id
 
 
-def test_update_target(test_client):
+def test_update_target(test_client) -> None:
     """
     Test updating a target.
     """
-    # First, create the target
+    # First, create the target.
     target_id = create_openai_target(test_client)
 
     # Prepare the data to update the target
@@ -209,11 +212,11 @@ def test_update_target(test_client):
         print(f"Deleted target {target_id}")
 
 
-def test_test_target(test_client):
+def test_test_target(test_client) -> None:
     """
     Test the /api/v1/targets/{target_id}/test endpoint.
     """
-    # First, create the target
+    # First, create the target.
     target_id = create_openai_target(test_client)
 
     # Prepare the test prompt
@@ -236,11 +239,11 @@ def test_test_target(test_client):
         print(f"Deleted target {target_id}")
 
 
-def test_delete_target(test_client):
+def test_delete_target(test_client) -> None:
     """
     Test deleting a target.
     """
-    # Create a test target
+    # Create a test target.
     target_id = create_openai_target(test_client)
     print(f"Created target {target_id}")
 
@@ -259,11 +262,11 @@ def test_delete_target(test_client):
     )
 
 
-def test_test_target_invalid_api_key(test_client):
+def test_test_target_invalid_api_key(test_client) -> None:
     """
     Test testing a target with an invalid API key.
     """
-    # Prepare target data with an invalid API key
+    # Prepare target data with an invalid API key.
     target_payload = {
         "name": "OpenAI Invalid Key Target",
         "type": "PromptTarget",
@@ -301,11 +304,11 @@ def test_test_target_invalid_api_key(test_client):
         print(f"Deleted target {target_id}")
 
 
-def test_test_target_special_characters(test_client):
+def test_test_target_special_characters(test_client) -> None:
     """
     Test testing a target with special characters in the prompt.
     """
-    # Create the target
+    # Create the target.
     target_id = create_openai_target(test_client)
 
     # Prepare a prompt with special characters

@@ -2,6 +2,7 @@
 # # Licensed under MIT License
 
 """MCP Tool Executor - Executes MCP tools by calling FastAPI endpoints."""
+
 import asyncio
 import json
 import logging
@@ -19,14 +20,17 @@ class MCPToolExecutor:
     """Executes MCP tools by making authenticated API calls."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for direct API access from within container
         if self.base_url and "localhost:9080" in self.base_url:
             self.base_url = "http://violentutf-api:8000"
 
     async def execute_tool(
-        self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
+        self: "MCPToolExecutor",
+        tool_name: str,
+        arguments: Dict[str, Any],
+        user_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Execute a tool with given arguments."""
         try:
@@ -52,7 +56,7 @@ class MCPToolExecutor:
             logger.error(f"Error executing tool {tool_name}: {e}")
             return {"error": "execution_failed", "message": str(e), "tool_name": tool_name}
 
-    async def _get_endpoint_info(self, tool_name: str) -> Optional[Dict[str, Any]]:
+    async def _get_endpoint_info(self: "MCPToolExecutor", tool_name: str) -> Optional[Dict[str, Any]]:
         """Get endpoint information for a tool name."""
         introspector = get_introspector()
         if not introspector:
@@ -69,7 +73,9 @@ class MCPToolExecutor:
         logger.warning(f"No endpoint found for tool: {tool_name}")
         return None
 
-    def _build_api_request(self, endpoint_info: Dict[str, Any], arguments: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_api_request(
+        self: "MCPToolExecutor", endpoint_info: Dict[str, Any], arguments: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Build API request from endpoint info and arguments."""
         method = endpoint_info["method"]
         path = endpoint_info["path"]
@@ -123,7 +129,7 @@ class MCPToolExecutor:
         }
 
     async def _execute_api_call(
-        self, request_info: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
+        self: "MCPToolExecutor", request_info: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
     ) -> Any:
         """Execute the actual API call."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP"}  # Identify requests from MCP
@@ -178,7 +184,9 @@ class MCPToolExecutor:
                 logger.error(f"Unexpected error executing API call: {e}")
                 return {"error": "unexpected_error", "message": str(e)}
 
-    async def validate_tool_arguments(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+    async def validate_tool_arguments(
+        self: "MCPToolExecutor", tool_name: str, arguments: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Validate tool arguments against endpoint schema."""
         endpoint_info = await self._get_endpoint_info(tool_name)
         if not endpoint_info:

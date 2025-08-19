@@ -3,7 +3,8 @@
 # # Licensed under MIT License
 
 """
-Test script to verify the Keycloak JWT signature verification fix
+Test script to verify the Keycloak JWT signature verification fix.
+
 """
 
 import json
@@ -15,8 +16,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-def generate_test_rsa_keys():
-    """Generate test RSA key pair for testing"""
+def generate_test_rsa_keys() -> Any:
+    """Generate test RSA key pair for testing."""
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
     private_pem = private_key.private_bytes(
@@ -34,14 +35,14 @@ def generate_test_rsa_keys():
 
 
 def create_test_keycloak_token(private_key_pem: bytes, payload: Dict[str, Any]) -> str:
-    """Create a test Keycloak-style JWT token"""
+    """Create a test Keycloak-style JWT token."""
     headers = {"alg": "RS256", "typ": "JWT", "kid": "test-key-id"}
 
     return jwt.encode(payload, private_key_pem, algorithm="RS256", headers=headers)
 
 
-def test_keycloak_verification_implementation():
-    """Test the Keycloak verification implementation"""
+def test_keycloak_verification_implementation() -> Any:
+    """Test the Keycloak verification implementation."""
     print("🔐 Testing Keycloak JWT Signature Verification Fix")
     print("=" * 55)
 
@@ -190,8 +191,8 @@ def test_keycloak_verification_implementation():
     return True
 
 
-def test_security_improvements():
-    """Test security improvements implemented"""
+def test_security_improvements() -> Any:
+    """Test security improvements implemented."""
     print("\n🛡️  Testing Security Improvements")
     print("=" * 40)
 
@@ -225,8 +226,8 @@ def test_security_improvements():
     return True
 
 
-def test_vulnerability_fixes():
-    """Test that vulnerabilities have been fixed"""
+def test_vulnerability_fixes() -> Any:
+    """Test that vulnerabilities have been fixed."""
     print("\n🔒 Testing Vulnerability Fixes")
     print("=" * 35)
 
@@ -257,8 +258,8 @@ def test_vulnerability_fixes():
         return False
 
 
-def main():
-    """Run all tests"""
+def main() -> Any:
+    """Run all tests."""
     print("🛡️  ViolentUTF Keycloak Verification Fix Verification")
     print("=" * 60)
 

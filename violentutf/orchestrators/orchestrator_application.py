@@ -1,3 +1,5 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -5,7 +7,6 @@
 
 """
 Module: orchestrator_application
-
 Contains functions to run Orchestrators.
 
 Key Functions:
@@ -58,7 +59,7 @@ async def test_orchestrator(orchestrator: Orchestrator) -> bool:
         raise OrchestratorTestingError(f"Error testing Orchestrator '{orchestrator_name}': {e}")
 
 
-async def run_orchestrator(orchestrator: Orchestrator):
+async def run_orchestrator(orchestrator: Orchestrator) -> None:
     """
     Runs the configured Orchestrator.
 

@@ -23,7 +23,7 @@ HEADERS = {
 }
 
 
-def test_batch_processing():
+def test_batch_processing() -> None:
     """
     Test the batch processing implementation:
     1. Creates multiple orchestrators for batches
@@ -135,9 +135,9 @@ def test_batch_processing():
     print("✓ Results saved - each batch saves to database")
 
 
-def test_api_timeout_handling():
+def test_api_timeout_handling() -> None:
     """
-    Test how the implementation handles API timeouts
+    Test how the implementation handles API timeouts.
     """
     print("\n\nAPI Timeout Handling Test")
     print("=" * 60)

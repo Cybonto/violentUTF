@@ -2,6 +2,7 @@
 # # Licensed under MIT License
 
 """MCP Orchestrator Management Tools."""
+
 import logging
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -18,7 +19,7 @@ class OrchestratorManagementTools:
     """MCP tools for orchestrator management and execution."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for direct API access from within container
         if self.base_url and "localhost:9080" in self.base_url:
@@ -26,7 +27,7 @@ class OrchestratorManagementTools:
 
         self.auth_handler = MCPAuthHandler()
 
-    def get_tools(self) -> List[Tool]:
+    def get_tools(self: "OrchestratorManagementTools") -> List[Tool]:
         """Get all orchestrator management tools."""
         return [
             self._create_list_orchestrators_tool(),
@@ -45,7 +46,7 @@ class OrchestratorManagementTools:
             self._create_validate_orchestrator_config_tool(),
         ]
 
-    def _create_list_orchestrators_tool(self) -> Tool:
+    def _create_list_orchestrators_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for listing orchestrators."""
         return Tool(
             name="list_orchestrators",
@@ -85,7 +86,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_get_orchestrator_tool(self) -> Tool:
+    def _create_get_orchestrator_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for getting orchestrator details."""
         return Tool(
             name="get_orchestrator",
@@ -114,7 +115,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_create_orchestrator_tool(self) -> Tool:
+    def _create_create_orchestrator_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for creating new orchestrators."""
         return Tool(
             name="create_orchestrator",
@@ -171,7 +172,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_start_orchestrator_tool(self) -> Tool:
+    def _create_start_orchestrator_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for starting orchestrators."""
         return Tool(
             name="start_orchestrator",
@@ -199,7 +200,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_stop_orchestrator_tool(self) -> Tool:
+    def _create_stop_orchestrator_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for stopping orchestrators."""
         return Tool(
             name="stop_orchestrator",
@@ -226,7 +227,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_pause_orchestrator_tool(self) -> Tool:
+    def _create_pause_orchestrator_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for pausing orchestrators."""
         return Tool(
             name="pause_orchestrator",
@@ -244,7 +245,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_resume_orchestrator_tool(self) -> Tool:
+    def _create_resume_orchestrator_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for resuming orchestrators."""
         return Tool(
             name="resume_orchestrator",
@@ -267,7 +268,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_get_orchestrator_results_tool(self) -> Tool:
+    def _create_get_orchestrator_results_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for getting orchestrator results."""
         return Tool(
             name="get_orchestrator_results",
@@ -304,7 +305,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_get_orchestrator_logs_tool(self) -> Tool:
+    def _create_get_orchestrator_logs_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for getting orchestrator logs."""
         return Tool(
             name="get_orchestrator_logs",
@@ -336,7 +337,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_delete_orchestrator_tool(self) -> Tool:
+    def _create_delete_orchestrator_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for deleting orchestrators."""
         return Tool(
             name="delete_orchestrator",
@@ -359,7 +360,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_clone_orchestrator_tool(self) -> Tool:
+    def _create_clone_orchestrator_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for cloning orchestrators."""
         return Tool(
             name="clone_orchestrator",
@@ -383,7 +384,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_get_orchestrator_stats_tool(self) -> Tool:
+    def _create_get_orchestrator_stats_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for getting orchestrator statistics."""
         return Tool(
             name="get_orchestrator_stats",
@@ -412,7 +413,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_export_orchestrator_results_tool(self) -> Tool:
+    def _create_export_orchestrator_results_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for exporting orchestrator results."""
         return Tool(
             name="export_orchestrator_results",
@@ -443,7 +444,7 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_validate_orchestrator_config_tool(self) -> Tool:
+    def _create_validate_orchestrator_config_tool(self: "OrchestratorManagementTools") -> Tool:
         """Create tool for validating orchestrator configuration."""
         return Tool(
             name="validate_orchestrator_config",
@@ -488,7 +489,10 @@ class OrchestratorManagementTools:
         )
 
     async def execute_tool(
-        self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
+        self: "OrchestratorManagementTools",
+        tool_name: str,
+        arguments: Dict[str, Any],
+        user_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Execute an orchestrator management tool."""
         logger.info(f"Executing orchestrator tool: {tool_name}")
@@ -506,60 +510,70 @@ class OrchestratorManagementTools:
             return {"error": "execution_failed", "message": str(e), "tool_name": tool_name}
 
     # Individual execution methods for each tool
-    async def _execute_list_orchestrators(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_list_orchestrators(self: "OrchestratorManagementTools", args: Dict[str, Any]) -> Dict[str, Any]:
         return await self._api_request("GET", "/api/v1/orchestrators", params=args)
 
-    async def _execute_get_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_get_orchestrator(self: "OrchestratorManagementTools", args: Dict[str, Any]) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("GET", f"/api/v1/orchestrators/{orch_id}", params=args)
 
-    async def _execute_create_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_create_orchestrator(self: "OrchestratorManagementTools", args: Dict[str, Any]) -> Dict[str, Any]:
         return await self._api_request("POST", "/api/v1/orchestrators", json=args)
 
-    async def _execute_start_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_start_orchestrator(self: "OrchestratorManagementTools", args: Dict[str, Any]) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/start", json=args)
 
-    async def _execute_stop_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_stop_orchestrator(self: "OrchestratorManagementTools", args: Dict[str, Any]) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/stop", json=args)
 
-    async def _execute_pause_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_pause_orchestrator(self: "OrchestratorManagementTools", args: Dict[str, Any]) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/pause", json=args)
 
-    async def _execute_resume_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_resume_orchestrator(self: "OrchestratorManagementTools", args: Dict[str, Any]) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/resume", json=args)
 
-    async def _execute_get_orchestrator_results(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_get_orchestrator_results(
+        self: "OrchestratorManagementTools", args: Dict[str, Any]
+    ) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("GET", f"/api/v1/orchestrators/{orch_id}/results", params=args)
 
-    async def _execute_get_orchestrator_logs(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_get_orchestrator_logs(
+        self: "OrchestratorManagementTools", args: Dict[str, Any]
+    ) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("GET", f"/api/v1/orchestrators/{orch_id}/logs", params=args)
 
-    async def _execute_delete_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_delete_orchestrator(self: "OrchestratorManagementTools", args: Dict[str, Any]) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("DELETE", f"/api/v1/orchestrators/{orch_id}", params=args)
 
-    async def _execute_clone_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_clone_orchestrator(self: "OrchestratorManagementTools", args: Dict[str, Any]) -> Dict[str, Any]:
         source_id = args.pop("source_orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{source_id}/clone", json=args)
 
-    async def _execute_get_orchestrator_stats(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_get_orchestrator_stats(
+        self: "OrchestratorManagementTools", args: Dict[str, Any]
+    ) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("GET", f"/api/v1/orchestrators/{orch_id}/stats", params=args)
 
-    async def _execute_export_orchestrator_results(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_export_orchestrator_results(
+        self: "OrchestratorManagementTools", args: Dict[str, Any]
+    ) -> Dict[str, Any]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/export", json=args)
 
-    async def _execute_validate_orchestrator_config(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_validate_orchestrator_config(
+        self: "OrchestratorManagementTools", args: Dict[str, Any]
+    ) -> Dict[str, Any]:
         return await self._api_request("POST", "/api/v1/orchestrators/validate", json=args)
 
-    async def _api_request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
+    async def _api_request(self: "OrchestratorManagementTools", method: str, path: str, **kwargs) -> Dict[str, Any]:
         """Make authenticated API request."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Orchestrator"}
 
@@ -573,7 +587,6 @@ class OrchestratorManagementTools:
         async with httpx.AsyncClient(timeout=timeout) as client:
             try:
                 response = await client.request(method=method, url=url, headers=headers, **kwargs)
-
                 logger.debug(f"Orchestrator API call: {method} {url} -> {response.status_code}")
 
                 if response.status_code >= 400:

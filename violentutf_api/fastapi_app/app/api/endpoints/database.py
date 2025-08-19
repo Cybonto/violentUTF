@@ -115,7 +115,7 @@ async def initialize_database(
             # Create basic PyRIT schema
             conn.execute(
                 """
-                CREATE TABLE IF NOT EXISTS prompt_pieces (
+                CREATE TABLE IF NOT EXISTS prompt_pieces (.
 
                     id INTEGER PRIMARY KEY,
                     conversation_id TEXT,
@@ -129,7 +129,7 @@ async def initialize_database(
 
             conn.execute(
                 """
-                CREATE TABLE IF NOT EXISTS conversations (
+                CREATE TABLE IF NOT EXISTS conversations (.
 
                     id TEXT PRIMARY KEY,
                     user_id TEXT,
@@ -141,7 +141,7 @@ async def initialize_database(
 
             conn.execute(
                 """
-                CREATE TABLE IF NOT EXISTS scores (
+                CREATE TABLE IF NOT EXISTS scores (.
 
                     id INTEGER PRIMARY KEY,
                     prompt_piece_id INTEGER,
@@ -286,7 +286,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False) ->
             # Recreate schema
             conn.execute(
                 """
-                CREATE TABLE IF NOT EXISTS prompt_pieces (
+                CREATE TABLE IF NOT EXISTS prompt_pieces (.
 
                     id INTEGER PRIMARY KEY,
                     conversation_id TEXT,
@@ -300,7 +300,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False) ->
 
             conn.execute(
                 """
-                CREATE TABLE IF NOT EXISTS conversations (
+                CREATE TABLE IF NOT EXISTS conversations (.
 
                     id TEXT PRIMARY KEY,
                     user_id TEXT,
@@ -312,7 +312,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False) ->
 
             conn.execute(
                 """
-                CREATE TABLE IF NOT EXISTS scores (
+                CREATE TABLE IF NOT EXISTS scores (.
 
                     id INTEGER PRIMARY KEY,
                     prompt_piece_id INTEGER,

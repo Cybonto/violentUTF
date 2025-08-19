@@ -1,8 +1,11 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-Test suite for Issue #117: Dataset Integration Logging System
+Test suite for Issue #117: Dataset Integration Logging System.
+
 """
 
 import asyncio
@@ -40,10 +43,10 @@ from app.core.dataset_logging import (
 
 
 class TestLogConfig(unittest.TestCase):
-    """Test LogConfig class"""
+    """Test LogConfig class."""
 
-    def test_from_environment_development(self):
-        """Test loading configuration for development environment"""
+    def test_from_environment_development(self) -> None:
+        """ "Test loading configuration for development environment."""
         with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
             config = LogConfig.from_environment()
             self.assertEqual(config.environment, "development")
@@ -51,8 +54,8 @@ class TestLogConfig(unittest.TestCase):
             self.assertEqual(config.retention_days, 7)
             self.assertFalse(config.async_logging)
 
-    def test_from_environment_production(self):
-        """Test loading configuration for production environment"""
+    def test_from_environment_production(self: "TestLogConfig") -> None:
+        """Test loading configuration for production environment."""
         with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
             config = LogConfig.from_environment()
             self.assertEqual(config.environment, "production")
@@ -61,8 +64,8 @@ class TestLogConfig(unittest.TestCase):
             self.assertEqual(config.retention_days, 30)
             self.assertTrue(config.async_logging)
 
-    def test_custom_environment_variables(self):
-        """Test custom environment variable overrides"""
+    def test_custom_environment_variables(self: "TestLogConfig") -> None:
+        """Test custom environment variable overrides."""
         env_vars = {
             "ENVIRONMENT": "development",
             "DATASET_LOG_LEVEL": "WARNING",
@@ -79,10 +82,10 @@ class TestLogConfig(unittest.TestCase):
 
 
 class TestImportMetrics(unittest.TestCase):
-    """Test ImportMetrics class"""
+    """Test ImportMetrics class."""
 
-    def test_metrics_initialization(self):
-        """Test metrics are properly initialized"""
+    def test_metrics_initialization(self) -> None:
+        """ "Test metrics are properly initialized."""
         metrics = ImportMetrics()
         self.assertEqual(metrics.total_prompts, 0)
         self.assertEqual(metrics.successful_prompts, 0)
@@ -92,8 +95,8 @@ class TestImportMetrics(unittest.TestCase):
         self.assertIsNone(metrics.user_id)
         self.assertIsNone(metrics.correlation_id)
 
-    def test_calculate_rates(self):
-        """Test rate calculation"""
+    def test_calculate_rates(self: "TestImportMetrics") -> None:
+        """Test rate calculation."""
         metrics = ImportMetrics()
         metrics.total_prompts = 100
         metrics.successful_prompts = 90
@@ -118,8 +121,8 @@ class TestImportMetrics(unittest.TestCase):
         self.assertEqual(rates["max_memory_mb"], 200)
         self.assertEqual(rates["min_memory_mb"], 100)
 
-    def test_to_dict(self):
-        """Test conversion to dictionary"""
+    def test_to_dict(self: "TestImportMetrics") -> None:
+        """Test conversion to dictionary."""
         metrics = ImportMetrics()
         metrics.start_time = datetime.now(timezone.utc)
         metrics.end_time = datetime.now(timezone.utc) + timedelta(seconds=10)
@@ -139,10 +142,10 @@ class TestImportMetrics(unittest.TestCase):
 
 
 class TestDatasetLogger(unittest.TestCase):
-    """Test DatasetLogger class"""
+    """Test DatasetLogger class."""
 
-    def setUp(self):
-        """Set up test fixtures"""
+    def setUp(self) -> None:
+        """ "Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
         self.log_dir = Path(self.temp_dir) / "logs"
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -158,21 +161,21 @@ class TestDatasetLogger(unittest.TestCase):
 
         self.logger = DatasetLogger("test_logger", config=self.config)
 
-    def tearDown(self):
-        """Clean up test fixtures"""
+    def tearDown(self: "TestDatasetLogger") -> None:
+        """Clean up test fixtures."""
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def test_logger_initialization(self):
-        """Test logger is properly initialized"""
+    def test_logger_initialization(self: "TestDatasetLogger") -> None:
+        """Test logger is properly initialized."""
         self.assertIsNotNone(self.logger)
         self.assertEqual(self.logger.logger_name, "test_logger")
         self.assertEqual(self.logger.config.environment, "test")
         self.assertIsNone(self.logger.current_operation)
         self.assertIsNone(self.logger.correlation_id)
 
-    def test_set_correlation_id(self):
-        """Test setting correlation ID"""
-        # Test generating new ID
+    def test_set_correlation_id(self: "TestDatasetLogger") -> None:
+        """Test setting correlation ID."""
+        # Test generating new ID.
         corr_id = self.logger.set_correlation_id()
         self.assertIsNotNone(corr_id)
         self.assertEqual(self.logger.correlation_id, corr_id)
@@ -184,8 +187,8 @@ class TestDatasetLogger(unittest.TestCase):
         self.assertEqual(result, specific_id)
         self.assertEqual(self.logger.correlation_id, specific_id)
 
-    def test_set_user_context(self):
-        """Test setting user context"""
+    def test_set_user_context(self: "TestDatasetLogger") -> None:
+        """Test setting user context."""
         self.logger.set_user_context("user123", "session456")
         self.assertEqual(self.logger.metrics.user_id, "user123")
         self.assertEqual(self.logger.metrics.session_id, "session456")
@@ -195,8 +198,8 @@ class TestDatasetLogger(unittest.TestCase):
         self.assertEqual(self.logger.metrics.user_id, "user789")
         self.assertIsNotNone(self.logger.metrics.session_id)
 
-    def test_operation_context(self):
-        """Test operation context manager"""
+    def test_operation_context(self: "TestDatasetLogger") -> None:
+        """Test operation context manager."""
         with self.logger.operation_context(
             "test_operation",
             dataset_id="dataset123",
@@ -214,14 +217,14 @@ class TestDatasetLogger(unittest.TestCase):
         # After context exits
         self.assertIsNone(self.logger.current_operation)
 
-    def test_operation_context_with_error(self):
-        """Test operation context with error"""
+    def test_operation_context_with_error(self: "TestDatasetLogger") -> None:
+        """Test operation context with error."""
         with self.assertRaises(ValueError):
             with self.logger.operation_context("failing_operation"):
                 raise ValueError("Test error")
 
-    def test_log_chunk_progress(self):
-        """Test logging chunk progress"""
+    def test_log_chunk_progress(self: "TestDatasetLogger") -> None:
+        """Test logging chunk progress."""
         self.logger.reset_metrics()
 
         # Log multiple chunks
@@ -240,8 +243,8 @@ class TestDatasetLogger(unittest.TestCase):
         self.assertEqual(len(self.logger.metrics.chunk_processing_times), 5)
         self.assertAlmostEqual(self.logger.metrics.avg_chunk_size, 100.0)
 
-    def test_log_memory_usage(self):
-        """Test logging memory usage"""
+    def test_log_memory_usage(self: "TestDatasetLogger") -> None:
+        """Test logging memory usage."""
         self.logger.reset_metrics()
 
         # Log memory samples
@@ -253,8 +256,8 @@ class TestDatasetLogger(unittest.TestCase):
         self.assertAlmostEqual(self.logger.metrics.avg_memory_mb, 71.25)
         self.assertEqual(len(self.logger.metrics.memory_samples), 4)
 
-    def test_log_retry_attempt(self):
-        """Test logging retry attempts"""
+    def test_log_retry_attempt(self: "TestDatasetLogger") -> None:
+        """Test logging retry attempts."""
         self.logger.reset_metrics()
 
         # Log retry attempts
@@ -268,8 +271,8 @@ class TestDatasetLogger(unittest.TestCase):
         self.assertEqual(len(self.logger.metrics.retry_reasons), 2)
         self.assertIn("ConnectionError", self.logger.metrics.retry_reasons[0])
 
-    def test_log_conversion_details(self):
-        """Test logging conversion details"""
+    def test_log_conversion_details(self: "TestDatasetLogger") -> None:
+        """Test logging conversion details."""
         self.logger.log_conversion_details(
             dataset_type="test_dataset",
             conversion_strategy="strategy_a",
@@ -281,9 +284,9 @@ class TestDatasetLogger(unittest.TestCase):
         self.assertEqual(self.logger.metrics.dataset_type, "test_dataset")
         self.assertEqual(self.logger.metrics.conversion_strategy, "strategy_a")
 
-    def test_reset_metrics(self):
-        """Test resetting metrics while preserving user context"""
-        # Set user context
+    def test_reset_metrics(self: "TestDatasetLogger") -> None:
+        """Test resetting metrics while preserving user context."""
+        # Set user context.
         self.logger.set_user_context("user123", "session456")
 
         # Add some metrics
@@ -301,8 +304,8 @@ class TestDatasetLogger(unittest.TestCase):
         self.assertEqual(self.logger.metrics.user_id, "user123")
         self.assertEqual(self.logger.metrics.session_id, "session456")
 
-    def test_finalize_metrics(self):
-        """Test finalizing metrics"""
+    def test_finalize_metrics(self: "TestDatasetLogger") -> None:
+        """Test finalizing metrics."""
         self.logger.reset_metrics()
         time.sleep(0.1)  # Simulate some processing time
 
@@ -312,8 +315,8 @@ class TestDatasetLogger(unittest.TestCase):
         self.assertIsNotNone(metrics.end_time)
         self.assertGreater(metrics.processing_time_seconds, 0)
 
-    def test_file_logging(self):
-        """Test that logs are written to files"""
+    def test_file_logging(self: "TestDatasetLogger") -> None:
+        """Test that logs are written to files."""
         self.logger.info("Test message", test_field="test_value")
         self.logger.error("Error message", error="test_error")
 
@@ -329,10 +332,10 @@ class TestDatasetLogger(unittest.TestCase):
 
 
 class TestLogAnalyzer(unittest.TestCase):
-    """Test LogAnalyzer class"""
+    """Test LogAnalyzer class."""
 
-    def setUp(self):
-        """Set up test fixtures"""
+    def setUp(self) -> None:
+        """ "Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
         self.log_dir = Path(self.temp_dir) / "logs"
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -343,12 +346,12 @@ class TestLogAnalyzer(unittest.TestCase):
         self.sample_logs = self._create_sample_logs()
         self._write_sample_logs()
 
-    def tearDown(self):
-        """Clean up test fixtures"""
+    def tearDown(self: "TestLogAnalyzer") -> None:
+        """Clean up test fixtures."""
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def _create_sample_logs(self):
-        """Create sample log entries for testing"""
+    def _create_sample_logs(self: "TestLogAnalyzer") -> Any:
+        """Create sample log entries for testing."""
         base_time = datetime.now(timezone.utc)
         logs = []
 
@@ -414,21 +417,21 @@ class TestLogAnalyzer(unittest.TestCase):
 
         return logs
 
-    def _write_sample_logs(self):
-        """Write sample logs to file"""
+    def _write_sample_logs(self: "TestLogAnalyzer") -> None:
+        """Write sample logs to file."""
         log_file = self.log_dir / "test_logs.log"
         with open(log_file, "w") as f:
             for log in self.sample_logs:
                 f.write(json.dumps(log) + "\n")
 
-    def test_read_logs(self):
-        """Test reading logs from files"""
+    def test_read_logs(self: "TestLogAnalyzer") -> None:
+        """Test reading logs from files."""
         logs = self.analyzer.read_logs()
         self.assertEqual(len(logs), len(self.sample_logs))
 
-    def test_read_logs_with_filters(self):
-        """Test reading logs with filters"""
-        # Filter by operation
+    def test_read_logs_with_filters(self: "TestLogAnalyzer") -> None:
+        """Test reading logs with filters."""
+        # Filter by operation.
         logs = self.analyzer.read_logs(operation="import")
         import_logs = [log for log in logs if log.get("operation") == "import"]
         expected_import_logs = [log for log in self.sample_logs if log.get("operation") == "import"]
@@ -444,8 +447,8 @@ class TestLogAnalyzer(unittest.TestCase):
         user1_logs = [log for log in logs if log.get("user_id") == "user1"]
         self.assertEqual(len(user1_logs), 1)
 
-    def test_analyze_performance(self):
-        """Test performance analysis"""
+    def test_analyze_performance(self: "TestLogAnalyzer") -> None:
+        """Test performance analysis."""
         logs = self.analyzer.read_logs()
         performance = self.analyzer.analyze_performance(logs)
 
@@ -459,23 +462,23 @@ class TestLogAnalyzer(unittest.TestCase):
         self.assertEqual(performance["memory_usage"]["peak"], 150.0)
         self.assertEqual(performance["retry_statistics"]["total_retries"], 1)
 
-    def test_find_errors(self):
-        """Test finding error entries"""
+    def test_find_errors(self: "TestLogAnalyzer") -> None:
+        """Test finding error entries."""
         errors = self.analyzer.find_errors()
         self.assertEqual(len(errors), 1)
         self.assertEqual(errors[0]["level"], "ERROR")
         self.assertIn("Conversion error", errors[0]["error"])
 
-    def test_get_operation_trace(self):
-        """Test getting operation trace by correlation ID"""
+    def test_get_operation_trace(self: "TestLogAnalyzer") -> None:
+        """Test getting operation trace by correlation ID."""
         trace = self.analyzer.get_operation_trace("corr1")
         self.assertEqual(len(trace), 2)
         # Check that traces are sorted by timestamp
         timestamps = [log["timestamp"] for log in trace]
         self.assertEqual(timestamps, sorted(timestamps))
 
-    def test_generate_summary_report(self):
-        """Test generating summary report"""
+    def test_generate_summary_report(self: "TestLogAnalyzer") -> None:
+        """Test generating summary report."""
         report = self.analyzer.generate_summary_report()
 
         self.assertIn("summary", report)
@@ -489,9 +492,9 @@ class TestLogAnalyzer(unittest.TestCase):
         self.assertIn("import", report["operations"])
         self.assertIn("conversion", report["operations"])
 
-    def test_compressed_log_reading(self):
-        """Test reading compressed log files"""
-        # Create a compressed log file
+    def test_compressed_log_reading(self: "TestLogAnalyzer") -> None:
+        """Test reading compressed log files."""
+        # Create a compressed log file.
         compressed_file = self.log_dir / "compressed.log.gz"
         with gzip.open(compressed_file, "wt") as f:
             for log in self.sample_logs[:2]:
@@ -503,11 +506,11 @@ class TestLogAnalyzer(unittest.TestCase):
 
 
 class TestConvenienceFunctions(unittest.TestCase):
-    """Test convenience functions"""
+    """Test convenience functions."""
 
     @patch("app.core.dataset_logging.dataset_logger")
-    def test_log_dataset_operation_start(self, patched_logger):
-        """Test log_dataset_operation_start function"""
+    def test_log_dataset_operation_start(self: "TestConvenienceFunctions", patched_logger: Any) -> None:
+        """Test log_dataset_operation_start function."""
         log_dataset_operation_start("test_op", "dataset1", "type_a", "user1", extra_field="extra_value")
 
         patched_logger.info.assert_called_once()
@@ -518,8 +521,8 @@ class TestConvenienceFunctions(unittest.TestCase):
         self.assertEqual(call_args[1]["extra_field"], "extra_value")
 
     @patch("app.core.dataset_logging.dataset_logger")
-    def test_log_dataset_operation_error(self, patched_logger):
-        """Test log_dataset_operation_error function"""
+    def test_log_dataset_operation_error(self: "TestConvenienceFunctions", patched_logger: Any) -> None:
+        """Test log_dataset_operation_error function."""
         error = ValueError("Test error")
         log_dataset_operation_error("test_op", "dataset1", error)
 
@@ -530,8 +533,8 @@ class TestConvenienceFunctions(unittest.TestCase):
         self.assertEqual(call_args[1]["error_type"], "ValueError")
 
     @patch("app.core.dataset_logging.dataset_logger")
-    def test_log_dataset_operation_success(self, patched_logger):
-        """Test log_dataset_operation_success function"""
+    def test_log_dataset_operation_success(self: "TestConvenienceFunctions", patched_logger: Any) -> None:
+        """Test log_dataset_operation_success function."""
         log_dataset_operation_success("test_op", "dataset1", result="success")
 
         patched_logger.info.assert_called_once()
@@ -541,20 +544,20 @@ class TestConvenienceFunctions(unittest.TestCase):
 
 
 class TestLogCleanup(unittest.TestCase):
-    """Test log cleanup functionality"""
+    """Test log cleanup functionality."""
 
-    def setUp(self):
-        """Set up test fixtures"""
+    def setUp(self) -> None:
+        """ "Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
         self.log_dir = Path(self.temp_dir) / "logs"
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
-    def tearDown(self):
-        """Clean up test fixtures"""
+    def tearDown(self: "TestLogCleanup") -> None:
+        """Clean up test fixtures."""
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def test_cleanup_old_logs(self):
-        """Test that old logs are cleaned up"""
+    def test_cleanup_old_logs(self: "TestLogCleanup") -> None:
+        """Test that old logs are cleaned up."""
         config = LogConfig(
             log_dir=self.log_dir,
             retention_days=1,
@@ -580,11 +583,11 @@ class TestLogCleanup(unittest.TestCase):
 
 
 class TestPerformanceImpact(unittest.TestCase):
-    """Test performance impact of logging"""
+    """Test performance impact of logging."""
 
-    def test_logging_overhead(self):
-        """Test that logging overhead is less than 5%"""
-        # Create logger with minimal configuration and high log level to skip debug messages
+    def test_logging_overhead(self) -> None:
+        """ "Test that logging overhead is less than 5%."""
+        # Create logger with minimal configuration and high log level to skip debug messages.
         config = LogConfig(
             log_level="ERROR",  # Only log errors
             console_log_level="ERROR",
@@ -595,8 +598,8 @@ class TestPerformanceImpact(unittest.TestCase):
         logger = DatasetLogger("perf_test", config=config)
 
         # Simulate more realistic work (I/O bound operation)
-        def simulate_work():
-            """Simulate a more realistic workload"""
+        def simulate_work() -> Any:
+            """Simulate a more realistic workload."""
             data = []
             for i in range(100):
                 data.append({"id": i, "value": i * 2})

@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-Pytest configuration and fixtures for ViolentUTF tests
+Pytest configuration and fixtures for ViolentUTF tests.
+
 Provides authentication, environment setup, and common test utilities
 Enhanced for contract testing with authentication mocking
 """
@@ -10,7 +11,7 @@ Enhanced for contract testing with authentication mocking
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import pytest
 import requests
@@ -23,7 +24,7 @@ from tests.utils.keycloak_auth import keycloak_auth
 
 
 # Load environment variables from project root
-def load_environment():
+def load_environment() -> None:
     """Load environment variables from .env files"""
     project_root = Path(__file__).parent.parent
     env_files = [
@@ -46,7 +47,7 @@ def load_environment():
 
 
 # Setup contract testing environment if enabled
-def setup_contract_testing_environment():
+def setup_contract_testing_environment() -> None:
     """Setup environment for contract testing."""
     if os.getenv("CONTRACT_TESTING", "false").lower() == "true":
         test_env_vars = {
@@ -80,20 +81,20 @@ setup_contract_testing_environment()
 
 
 @pytest.fixture(scope="session")
-def api_base_url():
-    """API base URL for testing"""
+def api_base_url() -> Any:
+    """API base URL for testing."""
     return os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
 
 
 @pytest.fixture(scope="session")
-def keycloak_available():
-    """Check if Keycloak is available for authentication"""
+def keycloak_available() -> Any:
+    """Check if Keycloak is available for authentication."""
     return keycloak_auth.is_keycloak_available()
 
 
 @pytest.fixture(scope="session")
-def authenticated_headers(keycloak_available):
-    """Get authenticated headers for API requests"""
+def authenticated_headers(keycloak_available: Any) -> Any:
+    """Get authenticated headers for API requests."""
     if not keycloak_available:
         pytest.skip("Keycloak not available for authentication")
 
@@ -105,8 +106,8 @@ def authenticated_headers(keycloak_available):
 
 
 @pytest.fixture(scope="session")
-def mock_headers():
-    """Get mock headers for testing without authentication"""
+def mock_headers() -> Any:
+    """Get mock headers for testing without authentication."""
     jwt_secret = os.getenv("JWT_SECRET_KEY", "test_secret")
 
     # Create a simple mock JWT for testing
@@ -143,9 +144,9 @@ def mock_headers():
 
 
 @pytest.fixture(scope="function")
-def api_headers(keycloak_available, authenticated_headers, mock_headers):
+def api_headers(keycloak_available, authenticated_headers, mock_headers: Any) -> Any:
     """
-    Get API headers - try authenticated first, fall back to mock
+    Get API headers - try authenticated first, fall back to mock.
     This fixture allows tests to work both with and without Keycloak
     """
     if keycloak_available:
@@ -159,8 +160,8 @@ def api_headers(keycloak_available, authenticated_headers, mock_headers):
 
 
 @pytest.fixture(scope="session")
-def apisix_running():
-    """Check if APISIX is running"""
+def apisix_running() -> Any:
+    """Check if APISIX is running."""
     try:
         api_url = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
         response = requests.get(f"{api_url.replace('/api', '')}/health", timeout=5)
@@ -170,8 +171,8 @@ def apisix_running():
 
 
 @pytest.fixture(scope="session")
-def fastapi_running():
-    """Check if FastAPI is running"""
+def fastapi_running() -> Any:
+    """Check if FastAPI is running."""
     try:
         # Try direct FastAPI access (for unit tests)
         response = requests.get("http://localhost:8000/health", timeout=5)
@@ -181,8 +182,8 @@ def fastapi_running():
 
 
 @pytest.fixture(scope="session")
-def setup_test_environment(apisix_running, fastapi_running):
-    """Setup and validate test environment"""
+def setup_test_environment(apisix_running, fastapi_running: Any) -> Any:
+    """Setup and validate test environment."""
     environment_status = {
         "apisix_running": apisix_running,
         "fastapi_running": fastapi_running,
@@ -196,11 +197,11 @@ def setup_test_environment(apisix_running, fastapi_running):
 
 
 @pytest.fixture(scope="function")
-def cleanup_generators(api_headers, api_base_url):
-    """Cleanup generators created during tests"""
+def cleanup_generators(api_headers, api_base_url) -> None:
+    """Cleanup generators created during tests."""
     created_generators = []
 
-    def track_generator(generator_id: str):
+    def track_generator(generator_id: str) -> Any:
         created_generators.append(generator_id)
         return generator_id
 
@@ -215,8 +216,8 @@ def cleanup_generators(api_headers, api_base_url):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def print_test_environment(setup_test_environment):
-    """Print test environment status at start of session"""
+def print_test_environment(setup_test_environment) -> None:
+    """Print test environment status at start of session."""
     env = setup_test_environment
 
     print("\n" + "=" * 60)
@@ -239,8 +240,8 @@ def print_test_environment(setup_test_environment):
         print("=" * 60)
 
 
-def pytest_configure(config):
-    """Configure pytest markers"""
+def pytest_configure(config: Any) -> None:
+    """Configure pytest markers."""
     config.addinivalue_line("markers", "requires_auth: mark test as requiring authentication")
     config.addinivalue_line("markers", "requires_apisix: mark test as requiring APISIX gateway")
     config.addinivalue_line("markers", "requires_fastapi: mark test as requiring FastAPI service")
@@ -250,8 +251,8 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "allows_mock_auth: mark test as accepting mock authentication")
 
 
-def pytest_collection_modifyitems(config, items):
-    """Modify test collection to handle service requirements"""
+def pytest_collection_modifyitems(config, items) -> None:
+    """Modify test collection to handle service requirements."""
     apisix_running = True
     fastapi_running = True
     keycloak_available = True
@@ -289,13 +290,13 @@ def pytest_collection_modifyitems(config, items):
 
 # Contract testing fixtures
 @pytest.fixture(scope="session")
-def contract_testing_enabled():
+def contract_testing_enabled() -> Any:
     """Check if contract testing is enabled."""
     return os.getenv("CONTRACT_TESTING", "false").lower() == "true"
 
 
 @pytest.fixture(scope="session")
-def test_app(contract_testing_enabled):
+def test_app(contract_testing_enabled) -> None:
     """Create FastAPI test app with authentication mocking."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
@@ -313,7 +314,7 @@ def test_app(contract_testing_enabled):
 
 
 @pytest.fixture(scope="session")
-def test_client(test_app):
+def test_client(test_app: Any) -> None:
     """Create test client with authentication mocking."""
     from fastapi.testclient import TestClient
 
@@ -322,7 +323,7 @@ def test_client(test_app):
 
 
 @pytest.fixture(scope="session")
-def test_headers(contract_testing_enabled):
+def test_headers(contract_testing_enabled: Any) -> Any:
     """Create test headers for API calls."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
@@ -336,7 +337,7 @@ def test_headers(contract_testing_enabled):
 
 
 @pytest.fixture(scope="session")
-def auth_patches(contract_testing_enabled):
+def auth_patches(contract_testing_enabled) -> None:
     """Apply authentication patches for contract testing."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
@@ -351,19 +352,19 @@ def auth_patches(contract_testing_enabled):
 
 
 @pytest.fixture(scope="session")
-def openapi_schema(test_app):
+def openapi_schema(test_app: Any) -> Any:
     """Generate OpenAPI schema from FastAPI app."""
     return test_app.openapi()
 
 
 @pytest.fixture(scope="session")
-def contract_base_url():
+def contract_base_url() -> Any:
     """Base URL for contract testing."""
     return "http://testserver"
 
 
 @pytest.fixture(scope="function")
-def mock_database(contract_testing_enabled):
+def mock_database(contract_testing_enabled: Any) -> Any:
     """Create mock database session for testing."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
@@ -378,10 +379,9 @@ def mock_database(contract_testing_enabled):
 
 # Cleanup after contract tests
 @pytest.fixture(scope="session", autouse=True)
-def cleanup_contract_tests():
+def cleanup_contract_tests() -> None:
     """Cleanup after contract tests complete."""
     yield
-
     # Cleanup test artifacts if contract testing was enabled
     if os.getenv("CONTRACT_TESTING", "false").lower() == "true":
         test_files = ["generated_openapi.json", "contract-test-results.xml", "test_output.log"]

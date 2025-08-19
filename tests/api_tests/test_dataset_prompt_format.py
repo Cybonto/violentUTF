@@ -1,3 +1,5 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
@@ -38,8 +40,8 @@ API_ENDPOINTS = {
 }
 
 
-def create_test_jwt_token():
-    """Create a test JWT token for authentication"""
+def create_test_jwt_token() -> None:
+    """Create a test JWT token for authentication."""
     try:
         import jwt
 
@@ -59,8 +61,8 @@ def create_test_jwt_token():
         return None
 
 
-def get_auth_headers():
-    """Get authentication headers for API requests"""
+def get_auth_headers() -> Any:
+    """Get authentication headers for API requests."""
     token = create_test_jwt_token()
     if not token:
         raise ValueError("Failed to create JWT token")
@@ -69,16 +71,16 @@ def get_auth_headers():
 
 
 class TestDatasetPromptFormat:
-    """Test dataset prompt format consistency"""
+    """Test dataset prompt format consistency."""
 
-    def __init__(self):
-        """Initialize test environment"""
+    def __init__(self) -> None:
+        """ "Initialize test environment."""
         self.headers = get_auth_headers()
         self.created_resources = {"datasets": [], "converters": []}
 
-    def cleanup_resources(self):
-        """Clean up created resources"""
-        # Delete created datasets
+    def cleanup_resources(self: "TestDatasetPromptFormat") -> None:
+        """Clean up created resources."""
+        # Delete created datasets.
         for dataset_id in self.created_resources["datasets"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
@@ -92,9 +94,9 @@ class TestDatasetPromptFormat:
             except Exception:
                 pass
 
-    def test_dataset_creation_and_retrieval(self):
-        """Test that dataset prompts are properly stored and retrieved"""
-        # Create a dataset for testing
+    def test_dataset_creation_and_retrieval(self: "TestDatasetPromptFormat") -> None:
+        """Test that dataset prompts are properly stored and retrieved."""
+        # Create a dataset for testing.
         dataset_name = f"test_dataset_{uuid.uuid4().hex[:8]}"
 
         # Create dataset via API
@@ -150,9 +152,9 @@ class TestDatasetPromptFormat:
             else:
                 print(f"❌ Prompts don't have expected field. Keys: {list(first_prompt.keys())}")
 
-    def test_converter_apply_with_dataset(self):
-        """Test that converter can properly access dataset prompts"""
-        # Create a dataset
+    def test_converter_apply_with_dataset(self: "TestDatasetPromptFormat") -> None:
+        """Test that converter can properly access dataset prompts."""
+        # Create a dataset.
         dataset_name = f"converter_test_{uuid.uuid4().hex[:8]}"
 
         payload = {"name": dataset_name, "source_type": "native", "dataset_type": "harmbench", "config": {}}
@@ -210,8 +212,8 @@ class TestDatasetPromptFormat:
                     "   This confirms the prompt field naming inconsistency between dataset retrieval and converter usage"
                 )
 
-    def test_dataset_field_consistency(self):
-        """Test field naming consistency across the entire dataset lifecycle"""
+    def test_dataset_field_consistency(self: "TestDatasetPromptFormat") -> None:
+        """Test field naming consistency across the entire dataset lifecycle."""
         print("\n🔍 Testing Dataset Field Naming Consistency\n")
 
         # Test 1: Check dataset creation response
@@ -268,8 +270,8 @@ class TestDatasetPromptFormat:
         print("\n   ✅ The fix ensures DuckDB manager returns 'text' field to match converter expectations")
 
 
-def main():
-    """Run tests manually"""
+def main() -> None:
+    """Run tests manually."""
     test = TestDatasetPromptFormat()
 
     try:

@@ -1,8 +1,11 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-UI Tests for MCP Enhancement Strip in Simple Chat
+UI Tests for MCP Enhancement Strip in Simple Chat.
+
 ================================================
 
 Tests the enhancement strip UI components and interactions.
@@ -39,10 +42,10 @@ st.session_state = {}
 
 
 class TestEnhancementStripUI:
-    """Test enhancement strip UI components"""
+    """Test enhancement strip UI components."""
 
-    def setup_method(self):
-        """Reset session state before each test"""
+    def setup_method(self) -> None:
+        """ "Reset session state before each test."""
         st.session_state.clear()
         # Initialize required session state
         st.session_state["mcp_client"] = Mock()
@@ -52,9 +55,9 @@ class TestEnhancementStripUI:
         st.session_state["show_enhancement_results"] = False
         st.session_state["full_response"] = ""
 
-    def test_enhancement_strip_buttons_exist(self):
-        """Test that enhancement strip buttons are created"""
-        # Since we can't import Simple_Chat due to its Streamlit dependencies,
+    def test_enhancement_strip_buttons_exist(self: "TestEnhancementStripUI") -> None:
+        """Test that enhancement strip buttons are created."""
+        # Since we can't import Simple_Chat due to its Streamlit dependencies,.
         # we'll verify the button creation pattern is correct
 
         # Test the button creation pattern
@@ -71,9 +74,9 @@ class TestEnhancementStripUI:
         assert "🔍 Analyze" in button_calls
         assert "🧪 Test" in button_calls
 
-    def test_quick_actions_dropdown_exists(self):
-        """Test that quick actions dropdown is created"""
-        # Test the selectbox creation pattern
+    def test_quick_actions_dropdown_exists(self: "TestEnhancementStripUI") -> None:
+        """Test that quick actions dropdown is created."""
+        # Test the selectbox creation pattern.
         selectbox_calls = []
         mock_selectbox = Mock(
             side_effect=lambda label, **kwargs: (
@@ -95,9 +98,9 @@ class TestEnhancementStripUI:
         assert len(selectbox_calls) > 0
         assert selectbox_calls[0] == expected_actions
 
-    def test_enhancement_functions_exist(self):
-        """Test that enhancement handler functions are defined"""
-        # Import the functions directly from the module
+    def test_enhancement_functions_exist(self: "TestEnhancementStripUI") -> None:
+        """Test that enhancement handler functions are defined."""
+        # Import the functions directly from the module.
         try:
             # These functions should be defined in Simple_Chat.py
             from violentutf.pages.Simple_Chat import (
@@ -115,9 +118,9 @@ class TestEnhancementStripUI:
             # This is expected for Streamlit pages
             pass
 
-    def test_session_state_initialization(self):
-        """Test that MCP session state variables are initialized"""
-        # Session state should have MCP-related keys
+    def test_session_state_initialization(self: "TestEnhancementStripUI") -> None:
+        """Test that MCP session state variables are initialized."""
+        # Session state should have MCP-related keys.
         expected_keys = [
             "mcp_client",
             "mcp_enhancement_history",
@@ -132,9 +135,9 @@ class TestEnhancementStripUI:
             st.session_state[key] = [] if "history" in key or "variations" in key else {}
             assert key in st.session_state
 
-    def test_enhancement_results_display_structure(self):
-        """Test the structure of enhancement results display"""
-        # Set up session state with results
+    def test_enhancement_results_display_structure(self: "TestEnhancementStripUI") -> None:
+        """Test the structure of enhancement results display."""
+        # Set up session state with results.
         st.session_state["show_enhancement_results"] = True
         st.session_state["mcp_enhancement_history"] = [
             {"original": "Test prompt", "enhanced": "Enhanced test prompt", "timestamp": datetime.now().isoformat()}
@@ -153,9 +156,9 @@ class TestEnhancementStripUI:
         assert len(tabs) == 3
         assert tab_calls[0] == expected_tabs
 
-    def test_button_state_management(self):
-        """Test that button clicks update session state correctly"""
-        # Simulate enhance button click
+    def test_button_state_management(self: "TestEnhancementStripUI") -> None:
+        """Test that button clicks update session state correctly."""
+        # Simulate enhance button click.
         st.session_state["show_enhancement_results"] = False
 
         # After enhancement
@@ -169,8 +172,8 @@ class TestEnhancementStripUI:
         assert len(st.session_state["mcp_enhancement_history"]) == 1
         assert st.session_state["mcp_enhancement_history"][0]["original"] == "test"
 
-    def test_mcp_client_initialization(self):
-        """Test that MCP client is properly initialized in session state"""
+    def test_mcp_client_initialization(self: "TestEnhancementStripUI") -> None:
+        """Test that MCP client is properly initialized in session state."""
         from violentutf.utils.mcp_client import MCPClientSync
 
         # Create mock client
@@ -183,9 +186,9 @@ class TestEnhancementStripUI:
         assert hasattr(st.session_state["mcp_client"], "get_prompt")
         assert hasattr(st.session_state["mcp_client"], "execute_tool")
 
-    def test_enhancement_history_structure(self):
-        """Test the structure of enhancement history entries"""
-        # Add multiple enhancements
+    def test_enhancement_history_structure(self: "TestEnhancementStripUI") -> None:
+        """Test the structure of enhancement history entries."""
+        # Add multiple enhancements.
         for i in range(3):
             enhancement = {
                 "original": f"prompt {i}",
@@ -207,9 +210,9 @@ class TestEnhancementStripUI:
             assert "enhanced" in entry
             assert "timestamp" in entry
 
-    def test_analysis_results_structure(self):
-        """Test the structure of analysis results"""
-        # Set analysis results
+    def test_analysis_results_structure(self: "TestEnhancementStripUI") -> None:
+        """Test the structure of analysis results."""
+        # Set analysis results.
         st.session_state["mcp_analysis_results"] = {
             "security": {"risk_level": "low", "issues": []},
             "bias": {"detected": False, "categories": []},
@@ -226,9 +229,9 @@ class TestEnhancementStripUI:
         assert "risk_level" in results["security"]
         assert results["security"]["risk_level"] == "low"
 
-    def test_test_variations_structure(self):
-        """Test the structure of test variations"""
-        # Add test variations
+    def test_test_variations_structure(self: "TestEnhancementStripUI") -> None:
+        """Test the structure of test variations."""
+        # Add test variations.
         variations = [
             {"type": "jailbreak", "content": "Jailbreak test variation"},
             {"type": "bias", "content": "Bias test variation"},
@@ -246,19 +249,19 @@ class TestEnhancementStripUI:
             assert isinstance(variation["type"], str)
             assert isinstance(variation["content"], str)
 
-    def test_ui_responsiveness_states(self):
-        """Test UI shows appropriate states during operations"""
-        # Mock spinner context manager
+    def test_ui_responsiveness_states(self: "TestEnhancementStripUI") -> None:
+        """Test UI shows appropriate states during operations."""
+        # Mock spinner context manager.
         spinner_messages = []
 
         class MockSpinner:
-            def __init__(self, message):
+            def __init__(self: "MockSpinner", message: str) -> None:
                 spinner_messages.append(message)
 
-            def __enter__(self):
+            def __enter__(self: "MockSpinner") -> Any:
                 return self
 
-            def __exit__(self, *args):
+            def __exit__(self: "MockSpinner", *args) -> None:
                 pass
 
         st.spinner = MockSpinner
@@ -275,8 +278,8 @@ class TestEnhancementStripUI:
 
         assert "🔍 Analyzing prompt..." in spinner_messages
 
-    def test_error_handling_display(self):
-        """Test that errors are displayed appropriately"""
+    def test_error_handling_display(self) -> None:
+        """Test that errors are displayed appropriately."""
         error_messages = []
         st.error = Mock(side_effect=lambda msg: error_messages.append(msg))
 
@@ -287,8 +290,8 @@ class TestEnhancementStripUI:
         assert len(error_messages) == 1
         assert "Connection timeout" in error_messages[0]
 
-    def test_success_message_display(self):
-        """Test that success messages are shown"""
+    def test_success_message_display(self) -> None:
+        """Test that success messages are shown."""
         success_messages = []
         st.success = Mock(side_effect=lambda msg: success_messages.append(msg))
 
@@ -298,9 +301,9 @@ class TestEnhancementStripUI:
         assert len(success_messages) == 1
         assert "Enhanced prompt loaded!" in success_messages[0]
 
-    def test_tab_navigation_state(self):
-        """Test tab navigation state management"""
-        # Create tabs based on available results
+    def test_tab_navigation_state(self) -> None:
+        """Test tab navigation state management."""
+        # Create tabs based on available results.
         available_tabs = []
 
         if st.session_state.get("mcp_enhancement_history"):

@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-MCP Resource Browser for Phase 4 Implementation
+MCP Resource Browser for Phase 4 Implementation.
+
 ==============================================
 
 This module provides a sidebar resource browser for MCP resources
@@ -22,9 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 class ResourceBrowser:
-    """Sidebar resource browser for MCP resources"""
+    """Sidebar resource browser for MCP resources."""
 
-    def __init__(self, mcp_client: MCPClientSync):
+    def __init__(self: "ResourceBrowser", mcp_client: MCPClientSync) -> None:
         self.mcp_client = mcp_client
         self._resource_cache = {}
         self._last_refresh = None
@@ -36,8 +37,8 @@ class ResourceBrowser:
             "status": {"icon": "🔍", "description": "System status"},
         }
 
-    def render_browser(self):
-        """Render the resource browser in sidebar"""
+    def render_browser(self: "ResourceBrowser") -> None:
+        """Render the resource browser in sidebar."""
         st.sidebar.markdown("---")
         st.sidebar.header("🗂️ Resource Browser")
 
@@ -64,8 +65,8 @@ class ResourceBrowser:
         # Display resources
         self._display_resources(search_query, selected_categories)
 
-    def _refresh_resources(self):
-        """Refresh resource list from MCP server"""
+    def _refresh_resources(self: "ResourceBrowser") -> None:
+        """Refresh resource list from MCP server."""
         try:
             with st.spinner("Refreshing resources..."):
                 resources = self.mcp_client.list_resources()
@@ -91,8 +92,8 @@ class ResourceBrowser:
             logger.error(f"Failed to refresh resources: {e}")
             st.error("Failed to refresh resources")
 
-    def _categorize_resource(self, resource) -> str:
-        """Categorize a resource based on URI"""
+    def _categorize_resource(self: "ResourceBrowser", resource: Any) -> str:
+        """Categorize a resource based on URI."""
         uri = resource.uri.lower()
 
         if "dataset" in uri:
@@ -108,9 +109,9 @@ class ResourceBrowser:
         else:
             return "other"
 
-    def _display_resources(self, search_query: str, categories: List[str]):
-        """Display filtered resources"""
-        # Initialize if needed
+    def _display_resources(self: "ResourceBrowser", search_query: str, categories: List[str]) -> None:
+        """Display filtered resources."""
+        # Initialize if needed.
         if not self._resource_cache and not self._last_refresh:
             self._refresh_resources()
 
@@ -134,8 +135,8 @@ class ResourceBrowser:
 
             self._display_resource_item(resource, category)
 
-    def _matches_search(self, resource, query: str) -> bool:
-        """Check if resource matches search query"""
+    def _matches_search(self: "ResourceBrowser", resource, query: str) -> bool:
+        """Check if resource matches search query."""
         if not query:
             return True
 
@@ -151,8 +152,8 @@ class ResourceBrowser:
 
         return False
 
-    def _display_resource_item(self, resource, category: str):
-        """Display a single resource item"""
+    def _display_resource_item(self: "ResourceBrowser", resource, category: str) -> None:
+        """Display a single resource item."""
         with st.sidebar.expander(f"📄 {resource.name}", expanded=False):
             # Resource details
             st.caption(f"**URI:** `{resource.uri}`")
@@ -176,13 +177,13 @@ class ResourceBrowser:
 
 
 class ResourcePreview:
-    """Preview panel for MCP resources"""
+    """Preview panel for MCP resources."""
 
-    def __init__(self, mcp_client: MCPClientSync):
+    def __init__(self: "ResourcePreview", mcp_client: MCPClientSync) -> None:
         self.mcp_client = mcp_client
 
-    def render_preview(self, resource_uri: str):
-        """Render resource preview"""
+    def render_preview(self: "ResourcePreview", resource_uri: str) -> None:
+        """Render resource preview."""
         try:
             # Fetch resource content
             content = self.mcp_client.read_resource(resource_uri)
@@ -202,8 +203,8 @@ class ResourcePreview:
             logger.error(f"Failed to preview resource {resource_uri}: {e}")
             st.error("Failed to load resource preview")
 
-    def _preview_dict(self, content: Dict[str, Any], uri: str):
-        """Preview dictionary content"""
+    def _preview_dict(self: "ResourcePreview", content: Dict[str, Any], uri: str) -> None:
+        """Preview dictionary content."""
         st.subheader(f"📋 Resource: {uri.split('/')[-1]}")
 
         # Check for specific content types
@@ -228,8 +229,8 @@ class ResourcePreview:
         with st.expander("Raw Data", expanded=False):
             st.json(content)
 
-    def _preview_list(self, content: List[Any], uri: str):
-        """Preview list content"""
+    def _preview_list(self: "ResourcePreview", content: List[Any], uri: str) -> None:
+        """Preview list content."""
         st.subheader(f"📋 Resource: {uri.split('/')[-1]}")
         st.write(f"**Total items:** {len(content)}")
 
@@ -244,8 +245,8 @@ class ResourcePreview:
         if len(content) > 5:
             st.caption(f"...and {len(content) - 5} more items")
 
-    def _preview_text(self, content: str, uri: str):
-        """Preview text content"""
+    def _preview_text(self: "ResourcePreview", content: str, uri: str) -> None:
+        """Preview text content."""
         st.subheader(f"📋 Resource: {uri.split('/')[-1]}")
 
         # Check if it's JSON string
@@ -258,13 +259,13 @@ class ResourcePreview:
 
 
 class ResourceActions:
-    """Handle resource actions like loading datasets"""
+    """Handle resource actions like loading datasets."""
 
-    def __init__(self, mcp_client: MCPClientSync):
+    def __init__(self: "ResourceActions", mcp_client: MCPClientSync) -> None:
         self.mcp_client = mcp_client
 
-    def load_dataset(self, dataset_uri: str) -> Tuple[bool, str]:
-        """Load a dataset into session"""
+    def load_dataset(self: "ResourceActions", dataset_uri: str) -> Tuple[bool, str]:
+        """Load a dataset into session."""
         try:
             # Read dataset content
             dataset = self.mcp_client.read_resource(dataset_uri)
@@ -290,8 +291,8 @@ class ResourceActions:
             logger.error(f"Failed to load dataset {dataset_uri}: {e}")
             return False, f"Error loading dataset: {str(e)}"
 
-    def use_prompt(self, prompt_uri: str) -> Tuple[bool, str]:
-        """Use a prompt template"""
+    def use_prompt(self: "ResourceActions", prompt_uri: str) -> Tuple[bool, str]:
+        """Use a prompt template."""
         try:
             # Extract prompt name from URI
             prompt_name = prompt_uri.split("/")[-1]
@@ -314,20 +315,20 @@ class ResourceActions:
 
 
 class IntegratedResourceBrowser:
-    """Integrates all resource browser components"""
+    """Integrates all resource browser components."""
 
-    def __init__(self, mcp_client: MCPClientSync):
+    def __init__(self: "IntegratedResourceBrowser", mcp_client: MCPClientSync) -> None:
         self.browser = ResourceBrowser(mcp_client)
         self.preview = ResourcePreview(mcp_client)
         self.actions = ResourceActions(mcp_client)
 
-    def render_sidebar(self):
-        """Render complete resource browser in sidebar"""
+    def render_sidebar(self: "IntegratedResourceBrowser") -> None:
+        """Render complete resource browser in sidebar."""
         self.browser.render_browser()
 
-    def handle_actions(self):
-        """Handle any pending resource actions"""
-        # Handle preview
+    def handle_actions(self: "IntegratedResourceBrowser") -> None:
+        """Handle any pending resource actions."""
+        # Handle preview.
         if st.session_state.get("preview_resource"):
             resource_uri = st.session_state["preview_resource"]
             with st.container():

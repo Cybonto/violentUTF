@@ -1,8 +1,11 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-ViolentUTF API - FastAPI application for programmatic access to LLM red-teaming tools
+ViolentUTF API - FastAPI application for programmatic access to LLM red-teaming tools.
+
 """
 
 import logging
@@ -29,8 +32,8 @@ WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Application lifespan manager"""
+async def lifespan(app: FastAPI) -> None:
+    """Application lifespan manager."""
     logger.info("Starting ViolentUTF API...")
     logger.info(f"API Title: {settings.PROJECT_NAME}")
     logger.info(f"API Version: {settings.VERSION}")
@@ -108,7 +111,7 @@ except Exception as e:
 
 # Root endpoint
 @app.get("/")
-async def root():
+async def root() -> Any:
     return {
         "message": "Welcome to ViolentUTF API",
         "version": settings.VERSION,
@@ -120,12 +123,12 @@ async def root():
 
 # Health check endpoint
 @app.get("/health")
-async def health_check():
+async def health_check() -> Any:
     return {"status": "healthy", "version": settings.VERSION}
 
 
-def get_secure_binding_config():
-    """Get secure network binding configuration with enhanced security checks"""
+def get_secure_binding_config() -> Any:
+    """Get secure network binding configuration with enhanced security checks."""
     host = os.getenv("API_HOST", "127.0.0.1")
     port = int(os.getenv("API_PORT", "8000"))
 

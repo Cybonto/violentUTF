@@ -4,7 +4,7 @@
 # scorers/scorer_application.py
 
 """
-Module: Scorer Application
+Module: Scorer Application.
 
 Contains functions to apply Scorers to inputs or datasets.
 

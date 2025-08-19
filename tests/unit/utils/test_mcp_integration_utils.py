@@ -1,8 +1,11 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-Unit Tests for MCP Integration Utilities
+Unit Tests for MCP Integration Utilities.
+
 =======================================
 
 Tests for natural language parsing and command interpretation.
@@ -25,15 +28,15 @@ from violentutf.utils.mcp_integration import (
 
 
 class TestNaturalLanguageParser:
-    """Test natural language command parsing"""
+    """Test natural language command parsing."""
 
     @pytest.fixture
-    def parser(self):
-        """Create parser instance"""
+    def parser(self: "TestNaturalLanguageParser") -> Any:
+        """Create parser instance."""
         return NaturalLanguageParser()
 
-    def test_parse_mcp_help_command(self, parser):
-        """Test parsing help commands"""
+    def test_parse_mcp_help_command(self: "TestNaturalLanguageParser", parser: Any) -> None:
+        """Test parsing help commands."""
         test_cases = ["/mcp help", "show mcp commands", "what can mcp do", "mcp usage"]
 
         for text in test_cases:
@@ -41,8 +44,8 @@ class TestNaturalLanguageParser:
             assert command.type == MCPCommandType.HELP
             assert command.raw_text == text
 
-    def test_parse_test_commands(self, parser):
-        """Test parsing test commands"""
+    def test_parse_test_commands(self: "TestNaturalLanguageParser", parser: Any) -> None:
+        """Test parsing test commands."""
         command = parser.parse("/mcp test jailbreak")
         assert command.type == MCPCommandType.TEST
         assert command.arguments["test_type"] == "jailbreak"
@@ -55,8 +58,8 @@ class TestNaturalLanguageParser:
         assert command.type == MCPCommandType.TEST
         assert command.arguments["test_type"] == "bias"
 
-    def test_parse_dataset_commands(self, parser):
-        """Test parsing dataset commands"""
+    def test_parse_dataset_commands(self: "TestNaturalLanguageParser", parser: Any) -> None:
+        """Test parsing dataset commands."""
         command = parser.parse("/mcp dataset jailbreak-v1")
         assert command.type == MCPCommandType.DATASET
         assert command.arguments["dataset_name"] == "jailbreak-v1"
@@ -65,24 +68,24 @@ class TestNaturalLanguageParser:
         assert command.type == MCPCommandType.DATASET
         assert command.arguments["dataset_name"] == "harmful-behaviors"
 
-    def test_parse_enhance_commands(self, parser):
-        """Test parsing enhance commands"""
+    def test_parse_enhance_commands(self: "TestNaturalLanguageParser", parser: Any) -> None:
+        """Test parsing enhance commands."""
         test_cases = ["/mcp enhance", "enhance this prompt", "improve this prompt", "make this prompt better"]
 
         for text in test_cases:
             command = parser.parse(text)
             assert command.type == MCPCommandType.ENHANCE
 
-    def test_parse_unknown_command(self, parser):
-        """Test parsing unknown commands"""
+    def test_parse_unknown_command(self: "TestNaturalLanguageParser", parser: Any) -> None:
+        """Test parsing unknown commands."""
         command = parser.parse("random text")
         assert command.type == MCPCommandType.UNKNOWN
 
         command = parser.parse("/mcp invalid")
         assert command.type == MCPCommandType.UNKNOWN
 
-    def test_extract_parameters(self, parser):
-        """Test parameter extraction from natural language"""
+    def test_extract_parameters(self: "TestNaturalLanguageParser", parser: Any) -> None:
+        """Test parameter extraction from natural language."""
         params = parser.extract_parameters("create a generator with temperature 0.8 and max_tokens 1000")
         assert params.get("temperature") == 0.8
         assert params.get("max_tokens") == 1000
@@ -94,9 +97,9 @@ class TestNaturalLanguageParser:
         params = parser.extract_parameters("create a generator with temperature 0.7")
         assert params.get("temperature") == 0.7
 
-    def test_detect_mcp_intent(self, parser):
-        """Test MCP intent detection"""
-        # Test with phrases that match the actual patterns
+    def test_detect_mcp_intent(self: "TestNaturalLanguageParser", parser: Any) -> None:
+        """Test MCP intent detection."""
+        # Test with phrases that match the actual patterns.
         command = parser.parse("enhance this prompt")
         assert command.type == MCPCommandType.ENHANCE
 
@@ -109,8 +112,8 @@ class TestNaturalLanguageParser:
         command = parser.parse("hello world")
         assert command.type == MCPCommandType.UNKNOWN
 
-    def test_get_command_suggestions(self, parser):
-        """Test command suggestions"""
+    def test_get_command_suggestions(self: "TestNaturalLanguageParser", parser: Any) -> None:
+        """Test command suggestions."""
         suggestions = parser.suggest_command("enh")
         assert any("enhance" in s.lower() for s in suggestions)
 
@@ -122,15 +125,15 @@ class TestNaturalLanguageParser:
 
 
 class TestConfigurationIntentDetector:
-    """Test configuration intent detection"""
+    """Test configuration intent detection."""
 
     @pytest.fixture
-    def detector(self):
-        """Create detector instance"""
+    def detector(self: "TestConfigurationIntentDetector") -> Any:
+        """Create detector instance."""
         return ConfigurationIntentDetector()
 
-    def test_detect_generator_creation(self, detector):
-        """Test detecting generator creation intent"""
+    def test_detect_generator_creation(self: "TestConfigurationIntentDetector", detector: Any) -> None:
+        """Test detecting generator creation intent."""
         test_cases = [
             ("Create a GPT-4 generator", True),
             ("I want to create an OpenAI generator with GPT-4", True),
@@ -149,8 +152,8 @@ class TestConfigurationIntentDetector:
             else:
                 assert intent is None or intent["type"] != "generator"
 
-    def test_extract_generator_params(self, detector):
-        """Test extracting generator parameters"""
+    def test_extract_generator_params(self: "TestConfigurationIntentDetector", detector: Any) -> None:
+        """Test extracting generator parameters."""
         params = detector.extract_generator_params("Create a GPT-4 generator with temperature 0.8")
         assert params.get("model") == "gpt-4"
         assert params.get("temperature") == 0.8
@@ -160,8 +163,8 @@ class TestConfigurationIntentDetector:
         assert params.get("model") == "gpt-3.5-turbo"
         assert params.get("max_tokens") == 2000
 
-    def test_detect_dataset_operations(self, detector):
-        """Test detecting dataset operations"""
+    def test_detect_dataset_operations(self: "TestConfigurationIntentDetector", detector: Any) -> None:
+        """Test detecting dataset operations."""
         intent = detector.detect_configuration_intent("Load the jailbreak dataset")
         assert intent["type"] == "dataset"
         assert intent["action"] == "load"
@@ -171,8 +174,8 @@ class TestConfigurationIntentDetector:
         assert intent["type"] == "dataset"
         assert intent["action"] == "create"
 
-    def test_detect_orchestrator_setup(self, detector):
-        """Test detecting orchestrator setup"""
+    def test_detect_orchestrator_setup(self: "TestConfigurationIntentDetector", detector: Any) -> None:
+        """Test detecting orchestrator setup."""
         text = "Run a red team test on GPT-4 using jailbreak dataset"
         intent = detector.detect_configuration_intent(text)
         assert intent["type"] == "orchestrator"
@@ -180,8 +183,8 @@ class TestConfigurationIntentDetector:
         assert "gpt-4" in intent.get("details", "").lower()
         assert "jailbreak" in intent.get("details", "").lower()
 
-    def test_detect_scorer_configuration(self, detector):
-        """Test detecting scorer configuration"""
+    def test_detect_scorer_configuration(self: "TestConfigurationIntentDetector", detector: Any) -> None:
+        """Test detecting scorer configuration."""
         intent = detector.detect_configuration_intent("Configure bias scorer")
         assert intent["type"] == "scorer"
         assert intent["action"] == "configure"
@@ -193,22 +196,22 @@ class TestConfigurationIntentDetector:
 
 
 class TestContextAnalyzer:
-    """Test context analysis functionality"""
+    """Test context analysis functionality."""
 
     @pytest.fixture
-    def analyzer(self):
-        """Create analyzer instance"""
+    def analyzer(self: "TestContextAnalyzer") -> Any:
+        """Create analyzer instance."""
         return ConversationContextAnalyzer()
 
-    def test_analyze_empty_context(self, analyzer):
-        """Test analyzing empty context"""
+    def test_analyze_empty_context(self: "TestContextAnalyzer", analyzer: Any) -> None:
+        """Test analyzing empty context."""
         analysis = analyzer.analyze_context([])
         assert analysis["message_count"] == 0
         assert analysis["topics"] == []
         assert analysis["suggested_actions"] == []
 
-    def test_analyze_security_context(self, analyzer):
-        """Test analyzing security-focused context"""
+    def test_analyze_security_context(self: "TestContextAnalyzer", analyzer: Any) -> None:
+        """Test analyzing security-focused context."""
         messages = [
             {"role": "user", "content": "I need to test for jailbreak vulnerabilities"},
             {"role": "assistant", "content": "I can help you test for jailbreak vulnerabilities"},
@@ -225,8 +228,8 @@ class TestContextAnalyzer:
         # Should suggest dataset-related actions
         assert any("dataset" in action.lower() for action in analysis["suggested_actions"])
 
-    def test_detect_incomplete_workflow(self, analyzer):
-        """Test detecting incomplete configuration workflow"""
+    def test_detect_incomplete_workflow(self: "TestContextAnalyzer", analyzer: Any) -> None:
+        """Test detecting incomplete configuration workflow."""
         messages = [
             {"role": "user", "content": "I created a GPT-4 generator"},
             {"role": "assistant", "content": "Generator created successfully"},
@@ -238,8 +241,8 @@ class TestContextAnalyzer:
         suggestions = analysis["suggested_actions"]
         assert any("test" in s.lower() or "orchestrator" in s.lower() for s in suggestions)
 
-    def test_resource_tracking(self, analyzer):
-        """Test tracking mentioned resources"""
+    def test_resource_tracking(self: "TestContextAnalyzer", analyzer: Any) -> None:
+        """Test tracking mentioned resources."""
         messages = [
             {"role": "user", "content": "Load the jailbreak dataset"},
             {"role": "assistant", "content": "Loaded jailbreak dataset"},
@@ -255,10 +258,10 @@ class TestContextAnalyzer:
 
 
 class TestMCPCommand:
-    """Test MCPCommand dataclass"""
+    """Test MCPCommand dataclass."""
 
-    def test_command_creation(self):
-        """Test creating MCP command"""
+    def test_command_creation(self) -> None:
+        """ "Test creating MCP command."""
         command = MCPCommand(
             type=MCPCommandType.ENHANCE,
             subcommand="aggressive",
@@ -271,8 +274,8 @@ class TestMCPCommand:
         assert command.arguments["level"] == "high"
         assert command.raw_text == "/mcp enhance aggressive"
 
-    def test_command_defaults(self):
-        """Test command default values"""
+    def test_command_defaults(self: "TestMCPCommand") -> None:
+        """Test command default values."""
         command = MCPCommand(type=MCPCommandType.HELP)
 
         assert command.type == MCPCommandType.HELP

@@ -2,7 +2,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""Test script to verify scorer metadata functionality"""
+"""Test script to verify scorer metadata functionality."""
 
 import json
 from datetime import datetime

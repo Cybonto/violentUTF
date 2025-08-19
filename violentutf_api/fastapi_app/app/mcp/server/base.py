@@ -2,6 +2,7 @@
 # # Licensed under MIT License
 
 """ViolentUTF MCP Server Base Implementation."""
+
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional
@@ -21,15 +22,15 @@ class ViolentUTFMCPServer:
     """MCP Server that integrates with the existing ViolentUTF FastAPI instance."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.server = Server(mcp_settings.MCP_SERVER_NAME)
         self.auth_handler = MCPAuthHandler()
         self._setup_handlers()
         self._initialized = False
 
-    def _setup_handlers(self):
+    def _setup_handlers(self: "ViolentUTFMCPServer") -> None:
         """Set up MCP server handlers."""
-        # Tool handlers
+        # Tool handlers.
         if mcp_settings.MCP_ENABLE_TOOLS:
             self.server.list_tools = self._list_tools
             self.server.call_tool = self._call_tool
@@ -48,7 +49,7 @@ class ViolentUTFMCPServer:
         if mcp_settings.MCP_ENABLE_SAMPLING:
             self.server.create_message = self._create_message
 
-    async def initialize(self) -> None:
+    async def initialize(self: "ViolentUTFMCPServer") -> None:
         """Initialize the MCP server."""
         if self._initialized:
             return
@@ -76,7 +77,7 @@ class ViolentUTFMCPServer:
         self._initialized = True
         logger.info("MCP server initialized successfully")
 
-    def mount_to_app(self, app: FastAPI) -> None:
+    def mount_to_app(self: "ViolentUTFMCPServer", app: FastAPI) -> None:
         """Mount MCP server to existing ViolentUTF FastAPI app."""
         logger.info("Mounting MCP server to FastAPI app")
 
@@ -123,7 +124,7 @@ class ViolentUTFMCPServer:
                 except Exception as e:
                     logger.error(f"Failed to discover tools: {e}")
 
-    def get_capabilities(self) -> ServerCapabilities:
+    def get_capabilities(self: "ViolentUTFMCPServer") -> ServerCapabilities:
         """Get server capabilities."""
         capabilities = {}
 
@@ -143,33 +144,33 @@ class ViolentUTFMCPServer:
         return ServerCapabilities(**capabilities)
 
     # Tool handlers
-    async def _list_tools(self) -> List[Tool]:
+    async def _list_tools(self: "ViolentUTFMCPServer") -> List[Tool]:
         """List available tools."""
         from app.mcp.tools import tool_registry
 
         return await tool_registry.list_tools()
 
-    async def _call_tool(self, name: str, arguments: Dict[str, Any]) -> Any:
+    async def _call_tool(self: "ViolentUTFMCPServer", name: str, arguments: Dict[str, Any]) -> Any:
         """Execute a tool."""
         from app.mcp.tools import tool_registry
 
         return await tool_registry.call_tool(name, arguments)
 
     # Resource handlers
-    async def _list_resources(self) -> List[Resource]:
+    async def _list_resources(self: "ViolentUTFMCPServer") -> List[Resource]:
         """List available resources."""
         from app.mcp.resources import resource_registry
 
         return await resource_registry.list_resources()
 
-    async def _read_resource(self, uri: str) -> Any:
+    async def _read_resource(self: "ViolentUTFMCPServer", uri: str) -> Any:
         """Read a resource."""
         from app.mcp.resources import resource_registry
 
         return await resource_registry.read_resource(uri)
 
     # Prompt handlers
-    async def _list_prompts(self) -> List[Prompt]:
+    async def _list_prompts(self: "ViolentUTFMCPServer") -> List[Prompt]:
         """List available prompts."""
         try:
             from app.mcp.prompts import prompts_manager
@@ -193,7 +194,7 @@ class ViolentUTFMCPServer:
             logger.error(f"Error listing prompts: {e}")
             return []
 
-    async def _get_prompt(self, name: str, arguments: Dict[str, Any]) -> Any:
+    async def _get_prompt(self: "ViolentUTFMCPServer", name: str, arguments: Dict[str, Any]) -> Any:
         """Get and render a prompt."""
         try:
             from app.mcp.prompts import prompts_manager
@@ -220,9 +221,9 @@ class ViolentUTFMCPServer:
             raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
 
     # Sampling handlers
-    async def _create_message(self, request: CreateMessageRequest) -> Any:
+    async def _create_message(self: "ViolentUTFMCPServer", request: CreateMessageRequest) -> Any:
         """Create a message using sampling."""
-        # Implementation will be added in Phase 3
+        # Implementation will be added in Phase 3.
         raise HTTPException(status_code=501, detail="Sampling not yet implemented")
 
 

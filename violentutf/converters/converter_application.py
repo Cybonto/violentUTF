@@ -4,7 +4,7 @@
 # converters/converter_application.py
 
 """
-Module: Converter Application
+Module: Converter Application.
 
 Contains functions to apply converters to prompts and datasets.
 

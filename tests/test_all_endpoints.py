@@ -3,7 +3,8 @@
 # # Licensed under MIT License
 
 """
-Comprehensive ViolentUTF API Endpoint Testing Script
+Comprehensive ViolentUTF API Endpoint Testing Script.
+
 Tests all 69 API endpoints systematically to ensure they work properly
 """
 
@@ -24,7 +25,7 @@ test_results = {"passed": 0, "failed": 0, "skipped": 0, "total": 0, "details": [
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests"""
+    """Get authentication headers for API requests."""
     return {
         "Authorization": f"Bearer {JWT_TOKEN}",
         "Content-Type": "application/json",
@@ -44,7 +45,6 @@ def make_request(method: str, endpoint: str, **kwargs) -> Tuple[bool, int, str, 
 
     try:
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
-
         # Try to parse JSON response
         try:
             response_data = response.json()
@@ -80,9 +80,8 @@ def test_endpoint(
     expected_status: Optional[int] = None,
     skip_reason: Optional[str] = None,
 ) -> bool:
-    """Test a single endpoint and record results"""
+    """Test a single endpoint and record results."""
     test_results["total"] += 1
-
     if skip_reason:
         test_results["skipped"] += 1
         print(f"⏸️  SKIP {method} {endpoint} - {skip_reason}")
@@ -103,7 +102,6 @@ def test_endpoint(
         kwargs["json"] = payload
 
     success, status_code, message, response_data = make_request(method, endpoint, **kwargs)
-
     # Check if result matches expectations
     if expected_status and status_code != expected_status:
         success = False
@@ -136,8 +134,8 @@ def test_endpoint(
     return success
 
 
-def test_health_endpoints():
-    """Test health and testing endpoints"""
+def test_health_endpoints() -> None:
+    """Test health and testing endpoints."""
     print("\n🏥 Testing Health & Testing Endpoints")
     print("=" * 50)
 
@@ -147,8 +145,8 @@ def test_health_endpoints():
     test_endpoint("GET", "/api/v1/test/echo/hello", "GET echo endpoint")
 
 
-def test_auth_endpoints():
-    """Test authentication endpoints"""
+def test_auth_endpoints() -> None:
+    """Test authentication endpoints."""
     print("\n🔐 Testing Authentication Endpoints")
     print("=" * 50)
 
@@ -172,8 +170,8 @@ def test_auth_endpoints():
     test_endpoint("POST", "/api/v1/auth/logout", "Logout", skip_reason="Would invalidate test token")
 
 
-def test_jwt_key_endpoints():
-    """Test JWT key management endpoints"""
+def test_jwt_key_endpoints() -> None:
+    """Test JWT key management endpoints."""
     print("\n🔑 Testing JWT Key Management Endpoints")
     print("=" * 50)
 
@@ -193,8 +191,8 @@ def test_jwt_key_endpoints():
         )
 
 
-def test_database_endpoints():
-    """Test database management endpoints"""
+def test_database_endpoints() -> None:
+    """Test database management endpoints."""
     print("\n🗄️  Testing Database Management Endpoints")
     print("=" * 50)
 
@@ -212,8 +210,8 @@ def test_database_endpoints():
     test_endpoint("POST", "/api/v1/database/backup", "Backup database")
 
 
-def test_session_endpoints():
-    """Test session management endpoints"""
+def test_session_endpoints() -> None:
+    """Test session management endpoints."""
     print("\n📊 Testing Session Management Endpoints")
     print("=" * 50)
 
@@ -236,8 +234,8 @@ def test_session_endpoints():
     test_endpoint("POST", "/api/v1/sessions/reset", "Reset session", skip_reason="Would reset test session")
 
 
-def test_config_endpoints():
-    """Test configuration management endpoints"""
+def test_config_endpoints() -> None:
+    """Test configuration management endpoints."""
     print("\n⚙️  Testing Configuration Management Endpoints")
     print("=" * 50)
 
@@ -267,8 +265,8 @@ def test_config_endpoints():
     test_endpoint("PUT", "/api/v1/config/environment", "Update environment", skip_reason="Could affect system state")
 
 
-def test_file_endpoints():
-    """Test file management endpoints"""
+def test_file_endpoints() -> None:
+    """Test file management endpoints."""
     print("\n📁 Testing File Management Endpoints")
     print("=" * 50)
 
@@ -281,8 +279,8 @@ def test_file_endpoints():
     test_endpoint("DELETE", "/api/v1/files/test_id", "Delete file", skip_reason="Requires actual file ID")
 
 
-def test_generator_endpoints():
-    """Test generator management endpoints"""
+def test_generator_endpoints() -> None:
+    """Test generator management endpoints."""
     print("\n🎯 Testing Generator Management Endpoints")
     print("=" * 50)
 
@@ -327,8 +325,8 @@ def test_generator_endpoints():
         )
 
 
-def test_dataset_endpoints():
-    """Test dataset management endpoints"""
+def test_dataset_endpoints() -> None:
+    """Test dataset management endpoints."""
     print("\n📊 Testing Dataset Management Endpoints")
     print("=" * 50)
 
@@ -375,8 +373,8 @@ def test_dataset_endpoints():
     test_endpoint("DELETE", "/api/v1/datasets/test_id", "Delete dataset", skip_reason="Requires actual dataset ID")
 
 
-def test_converter_endpoints():
-    """Test converter management endpoints"""
+def test_converter_endpoints() -> None:
+    """Test converter management endpoints."""
     print("\n🔄 Testing Converter Management Endpoints")
     print("=" * 50)
 
@@ -416,8 +414,8 @@ def test_converter_endpoints():
     )
 
 
-def test_scorer_endpoints():
-    """Test scorer management endpoints"""
+def test_scorer_endpoints() -> None:
+    """Test scorer management endpoints."""
     print("\n🎯 Testing Scorer Management Endpoints")
     print("=" * 50)
 
@@ -448,8 +446,8 @@ def test_scorer_endpoints():
     test_endpoint("DELETE", "/api/v1/scorers/test_id", "Delete scorer", skip_reason="Requires actual scorer ID")
 
 
-def print_summary():
-    """Print test summary"""
+def print_summary() -> None:
+    """Print test summary."""
     print("\n" + "=" * 60)
     print("📊 TEST SUMMARY")
     print("=" * 60)
@@ -474,8 +472,8 @@ def print_summary():
     print(f"\n🎯 Overall Status: {'✅ PASS' if test_results['failed'] == 0 else '❌ FAIL'}")
 
 
-def main():
-    """Main test execution"""
+def main() -> None:
+    """Main test execution."""
     print("🚀 ViolentUTF API Comprehensive Endpoint Testing")
     print("=" * 60)
     print(f"Testing API at: {API_BASE_URL}")

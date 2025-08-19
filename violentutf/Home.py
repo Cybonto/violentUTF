@@ -45,7 +45,7 @@ if "logging_setup_done" not in st.session_state:
 # Hide the default Streamlit menu and footer, and remove the default sidebar navigation
 st.markdown(
     """
-    <style>
+    <style>.
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     [data-testid="collapsedControl"] {display: none;}
@@ -59,7 +59,7 @@ st.markdown(
 # CSS to position the logout button at the bottom of the sidebar
 st.markdown(
     """
-    <style>
+    <style>.
     [data-testid="stSidebar"] > div:first-child {
         display: flex;
         flex-direction: column;
@@ -75,7 +75,7 @@ st.markdown(
 # Global button styling to ensure proper contrast
 st.markdown(
     """
-    <style>
+    <style>.
     /* Ensure primary buttons have proper contrast */
     .stButton > button[kind="primary"] {
         background-color: #1f77b4 !important;

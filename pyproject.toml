@@ -20,6 +20,7 @@ extend-exclude = '''
   | app_data
   | violentutf_logs
   | migrations
+  | agent_orchestrator
 )/
 |
 # Files with protected regex patterns - DO NOT AUTO-FORMAT
@@ -52,7 +53,8 @@ skip = [
     "dist",
     "app_data",
     "violentutf_logs",
-    "migrations"
+    "migrations",
+    "agent_orchestrator"
 ]
 known_first_party = ["violentutf", "violentutf_api"]
 known_third_party = ["pyrit", "garak", "fastapi", "streamlit"]
@@ -68,6 +70,7 @@ check_untyped_defs = true
 disallow_untyped_decorators = false
 no_implicit_optional = true
 warn_redundant_casts = true
+exclude = ["agent_orchestrator"]
 warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
@@ -101,9 +104,11 @@ addopts = [
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html",
     "--cov-report=xml",
-    "--tb=short"
+    "--tb=short",
+    "--ignore=agent_orchestrator"
 ]
 testpaths = ["tests"]
+norecursedirs = ["agent_orchestrator", ".*", "build", "dist", "*.egg"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

@@ -74,7 +74,7 @@ if "converter_preview_results" not in st.session_state:
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway"""
+    """Get authentication headers for API requests through APISIX Gateway."""
     try:
         from utils.jwt_manager import jwt_manager
 
@@ -110,7 +110,7 @@ def get_auth_headers() -> Dict[str, str]:
 
 
 def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
-    """Make an authenticated API request through APISIX Gateway"""
+    """Make an authenticated API request through APISIX Gateway."""
     headers = get_auth_headers()
     if not headers.get("Authorization"):
         logger.warning("No authentication token available for API request")
@@ -119,7 +119,6 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         logger.debug(f"Making {method} request to {url} through APISIX Gateway")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
-
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 201:
@@ -164,8 +163,8 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def create_compatible_api_token():
-    """Create a FastAPI - compatible token using JWT manager"""
+def create_compatible_api_token() -> None:
+    """Create a FastAPI - compatible token using JWT manager."""
     try:
         from utils.jwt_manager import jwt_manager
         from utils.user_context import get_user_context_for_token
@@ -196,8 +195,8 @@ def create_compatible_api_token():
 # --- API Backend Functions ---
 
 
-def load_converter_types_from_api():
-    """Load available converter types from API"""
+def load_converter_types_from_api() -> Any:
+    """Load available converter types from API."""
     data = api_request("GET", API_ENDPOINTS["converter_types"])
     if data:
         st.session_state.api_converter_types = data.get("categories", {})
@@ -205,8 +204,8 @@ def load_converter_types_from_api():
     return {}
 
 
-def load_converters_from_api():
-    """Load existing converters from API"""
+def load_converters_from_api() -> Any:
+    """Load existing converters from API."""
     data = api_request("GET", API_ENDPOINTS["converters"])
     if data:
         converters_dict = {conv["name"]: conv for conv in data.get("converters", [])}
@@ -215,8 +214,8 @@ def load_converters_from_api():
     return {}
 
 
-def get_converter_params_from_api(converter_type: str):
-    """Get parameter definitions for a converter type from API"""
+def get_converter_params_from_api(converter_type: str) -> Any:
+    """Get parameter definitions for a converter type from API."""
     url = API_ENDPOINTS["converter_params"].format(converter_type=converter_type)
     data = api_request("GET", url)
     if data:
@@ -224,8 +223,10 @@ def get_converter_params_from_api(converter_type: str):
     return [], False
 
 
-def create_converter_via_api(name: str, converter_type: str, parameters: Dict[str, Any], generator_id: str = None):
-    """Create a new converter configuration via API"""
+def create_converter_via_api(
+    name: str, converter_type: str, parameters: Dict[str, Any], generator_id: str = None
+) -> Any:
+    """Create a new converter configuration via API."""
     payload = {"name": name, "converter_type": converter_type, "parameters": parameters}
     if generator_id:
         payload["generator_id"] = generator_id
@@ -259,8 +260,8 @@ def create_converter_via_api(name: str, converter_type: str, parameters: Dict[st
 
 def preview_converter_via_api(
     converter_id: str, sample_prompts: List[str] = None, dataset_id: str = None, num_samples: int = 1
-):
-    """Preview converter effect via API"""
+) -> Any:
+    """Preview converter effect via API."""
     url = API_ENDPOINTS["converter_preview"].format(converter_id=converter_id)
     payload = {"num_samples": num_samples}
     if sample_prompts:
@@ -274,8 +275,8 @@ def preview_converter_via_api(
     return False, []
 
 
-def apply_converter_via_api(converter_id: str, dataset_id: str, mode: str, new_dataset_name: str = None):
-    """Apply converter to dataset via API"""
+def apply_converter_via_api(converter_id: str, dataset_id: str, mode: str, new_dataset_name: str = None) -> Any:
+    """Apply converter to dataset via API."""
     url = API_ENDPOINTS["converter_apply"].format(converter_id=converter_id)
     payload = {"dataset_id": dataset_id, "mode": mode, "save_to_memory": True, "save_to_session": True}
     if new_dataset_name:
@@ -293,14 +294,14 @@ def apply_converter_via_api(converter_id: str, dataset_id: str, mode: str, new_d
         return False, {"error": "No response from API"}
 
 
-def auto_load_generators():
+def auto_load_generators() -> None:
     """
-    Automatically load existing generators on page load
+    Automatically load existing generators on page load.
 
     This ensures that generators are available for converter testing
     without requiring manual refresh.
     """
-    # Only load if not already loaded in session state
+    # Only load if not already loaded in session state.
     if "api_generators_cache" not in st.session_state or st.session_state.get("force_reload_generators", False):
         with st.spinner("Loading generators for testing..."):
             generators = get_generators_from_api()
@@ -316,29 +317,29 @@ def auto_load_generators():
             del st.session_state["force_reload_generators"]
 
 
-def get_generators_from_api():
-    """Get available generators for testing"""
+def get_generators_from_api() -> Any:
+    """Get available generators for testing."""
     data = api_request("GET", API_ENDPOINTS["generators"])
     if data:
         return data.get("generators", [])
     return []
 
 
-def get_cached_generators():
-    """Get generators from cache or load them if not cached"""
+def get_cached_generators() -> Any:
+    """Get generators from cache or load them if not cached."""
     if "api_generators_cache" not in st.session_state:
         auto_load_generators()
     return st.session_state.get("api_generators_cache", [])
 
 
-def auto_load_datasets():
+def auto_load_datasets() -> None:
     """
-    Automatically load existing datasets on page load
+    Automatically load existing datasets on page load.
 
     This ensures that previously configured datasets are immediately visible
     when the page loads, without requiring manual refresh.
     """
-    # Only load if not already loaded or if forced reload
+    # Only load if not already loaded or if forced reload.
     if not st.session_state.api_datasets or st.session_state.get("force_reload_datasets", False):
         with st.spinner("Loading existing datasets..."):
             datasets_data = load_datasets_from_api()
@@ -352,8 +353,8 @@ def auto_load_datasets():
             del st.session_state["force_reload_datasets"]
 
 
-def load_datasets_from_api():
-    """Load existing datasets from API"""
+def load_datasets_from_api() -> None:
+    """Load existing datasets from API."""
     data = api_request("GET", API_ENDPOINTS["datasets"])
     if data:
         datasets_dict = {ds["name"]: ds for ds in data.get("datasets", [])}
@@ -363,7 +364,7 @@ def load_datasets_from_api():
 
 
 # --- Main Page Function ---
-def main():
+def main() -> None:
     """Renders the Configure Converters page content with API backend."""
     logger.debug("Configure Converters page (API - backed) loading.")
     st.set_page_config(
@@ -405,14 +406,14 @@ def main():
     proceed_to_next_step()
 
 
-def display_header():
+def display_header() -> None:
     """Displays the main header for the page."""
     st.title("🔄 Configure Converters")
     st.markdown("*Configure prompt converters to transform and enhance red-teaming inputs*")
 
 
-def select_generator_and_dataset():
-    """Allow users to select a generator and dataset from the configured ones"""
+def select_generator_and_dataset() -> None:
+    """Allow users to select a generator and dataset from the configured ones."""
     st.subheader("Select Generator and Dataset")
 
     # Load generators from cache
@@ -465,8 +466,8 @@ def select_generator_and_dataset():
             return
 
 
-def display_converter_selection():
-    """Display converter category and class selection"""
+def display_converter_selection() -> None:
+    """Display converter category and class selection."""
     st.subheader("Select Converter Class")
 
     # Load converter types if not already loaded
@@ -512,8 +513,8 @@ def display_converter_selection():
                 logger.error(f"Error getting converter params: {e}")
 
 
-def configure_converter_parameters():
-    """Display parameter input fields for the selected converter"""
+def configure_converter_parameters() -> None:
+    """Display parameter input fields for the selected converter."""
     if "current_converter_class" not in st.session_state:
         st.subheader("Converter Parameters")
         st.info("Select a converter class first")
@@ -704,9 +705,9 @@ def configure_converter_parameters():
                 st.session_state["current_converter_params"] = {}
 
 
-def _save_converter_configuration(custom_name: str, converter_class: str, parameters: Dict[str, Any]):
-    """Helper function to save converter configuration with custom name"""
-    # Get generator ID if converter requires target
+def _save_converter_configuration(custom_name: str, converter_class: str, parameters: Dict[str, Any]) -> None:
+    """Helper function to save converter configuration with custom name."""
+    # Get generator ID if converter requires target.
     generator_id = None
     if st.session_state.get("converter_requires_target", False):
         selected_generator = st.session_state.get("selected_generator")
@@ -735,8 +736,8 @@ def _save_converter_configuration(custom_name: str, converter_class: str, parame
             st.error(f"❌ Failed to create converter '{custom_name}'")
 
 
-def preview_and_apply_converter():
-    """Preview converter effects and apply to datasets"""
+def preview_and_apply_converter() -> None:
+    """Preview converter effects and apply to datasets."""
     st.divider()
     st.subheader("🔄 Preview & Apply Converter")
 
@@ -1112,8 +1113,8 @@ def preview_and_apply_converter():
                     st.write("**Check logs:** `docker compose logs fastapi --tail=50`")
 
 
-def proceed_to_next_step():
-    """Provide button to proceed to next step"""
+def proceed_to_next_step() -> None:
+    """Provide button to proceed to next step."""
     if not st.session_state.get("converter_applied", False):
         return
 

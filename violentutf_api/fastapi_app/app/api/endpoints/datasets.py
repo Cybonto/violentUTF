@@ -140,7 +140,7 @@ NATIVE_DATASET_TYPES = {
 
 
 @router.get("/types", response_model=DatasetTypesResponse, summary="Get available dataset types")
-async def get_dataset_types(current_user=Depends(get_current_user)) -> Any:
+async def get_dataset_types(current_user: Any = Depends(get_current_user)) -> Any:
     """Get list of available dataset types."""
     try:
         logger.info(f"User {current_user.username} requested dataset types")
@@ -156,7 +156,7 @@ async def get_dataset_types(current_user=Depends(get_current_user)) -> Any:
 
 
 @router.get("", response_model=DatasetsListResponse, summary="Get configured datasets")
-async def get_datasets(current_user=Depends(get_current_user)) -> Any:
+async def get_datasets(current_user: Any = Depends(get_current_user)) -> Any:
     """Get list of configured datasets from session and memory."""
     try:
         user_id = current_user.username
@@ -496,7 +496,7 @@ async def transform_dataset(
 
 
 @router.get("/memory", response_model=MemoryDatasetsResponse, summary="Get datasets from PyRIT memory")
-async def get_memory_datasets(current_user=Depends(get_current_user)) -> Any:
+async def get_memory_datasets(current_user: Any = Depends(get_current_user)) -> Any:
     """Get datasets saved in PyRIT memory."""
     try:
         user_id = current_user.username
@@ -674,101 +674,20 @@ async def _load_real_pyrit_dataset_legacy(
     try:
         logger.info(f"Loading PyRIT dataset using legacy mode: {dataset_type}")
 
-        # Import PyRIT dataset functions
-        from pyrit.datasets import (
-            fetch_adv_bench_dataset,
-            fetch_aya_redteaming_dataset,
-            fetch_decoding_trust_stereotypes_dataset,
-            fetch_forbidden_questions_dataset,
-            fetch_harmbench_dataset,
-            fetch_many_shot_jailbreaking_dataset,
-            fetch_pku_safe_rlhf_dataset,
-            fetch_seclists_bias_testing_dataset,
-            fetch_wmdp_dataset,
-            fetch_xstest_dataset,
-        )
-
-        # Map dataset types to their fetch functions
-        dataset_fetchers = {
-            "aya_redteaming": fetch_aya_redteaming_dataset,
-            "harmbench": fetch_harmbench_dataset,
-            "adv_bench": fetch_adv_bench_dataset,
-            "xstest": fetch_xstest_dataset,
-            "pku_safe_rlhf": fetch_pku_safe_rlhf_dataset,
-            "decoding_trust_stereotypes": fetch_decoding_trust_stereotypes_dataset,
-            "many_shot_jailbreaking": fetch_many_shot_jailbreaking_dataset,
-            "forbidden_questions": fetch_forbidden_questions_dataset,
-            "seclists_bias_testing": fetch_seclists_bias_testing_dataset,
-            "wmdp": fetch_wmdp_dataset,
-        }
-
-        if dataset_type not in dataset_fetchers:
+        # Get dataset fetcher function
+        fetch_function = _get_dataset_fetcher(dataset_type)
+        if not fetch_function:
             logger.warning(f"Dataset type '{dataset_type}' not supported for real dataset loading")
             return []
 
-        # Get the fetch function
-        fetch_function = dataset_fetchers[dataset_type]
+        # Fetch the dataset
+        dataset = _fetch_dataset(fetch_function, config)
 
-        # Call the fetch function with config parameters
-        # Remove None values and exclude 'dataset_type' (which is not a PyRIT parameter)
-        clean_config = {k: v for k, v in config.items() if v is not None and k != "dataset_type"}
+        # Extract prompts based on dataset type
+        prompts = _extract_prompts_from_dataset(dataset, dataset_type)
 
-        logger.info(f"Calling {fetch_function.__name__} with config: {clean_config}")
-
-        # Call the PyRIT fetch function
-        dataset = fetch_function(**clean_config)
-
-        # Handle different return types
-        prompts = []
-
-        if dataset_type == "many_shot_jailbreaking":
-            # fetch_many_shot_jailbreaking_dataset returns List[Dict[str, str]]
-            if isinstance(dataset, list):
-                for item in dataset:
-                    if isinstance(item, dict) and "user" in item:
-                        prompts.append(item["user"])
-                    else:
-                        prompts.append(str(item))
-                logger.info(f"Successfully loaded {len(prompts)} prompts from many_shot_jailbreaking (list format)")
-                # Apply configurable limit if specified
-                if limit and limit > 0:
-                    return prompts[:limit]
-                return prompts
-
-        elif dataset_type == "wmdp":
-            # fetch_wmdp_dataset returns QuestionAnsweringDataset with questions
-            if hasattr(dataset, "questions"):
-                for question in dataset.questions:
-                    if hasattr(question, "question"):
-                        prompts.append(question.question)
-                    elif hasattr(question, "value"):
-                        prompts.append(question.value)
-                    else:
-                        prompts.append(str(question))
-                logger.info(f"Successfully loaded {len(prompts)} questions from wmdp dataset")
-                # Apply configurable limit if specified
-                if limit and limit > 0:
-                    return prompts[:limit]
-                return prompts
-
-        elif dataset and hasattr(dataset, "prompts"):
-            # Standard SeedPromptDataset format
-            for seed_prompt in dataset.prompts:
-                if hasattr(seed_prompt, "value"):
-                    prompts.append(seed_prompt.value)
-                elif hasattr(seed_prompt, "prompt"):
-                    prompts.append(seed_prompt.prompt)
-                else:
-                    prompts.append(str(seed_prompt))
-
-            logger.info(f"Successfully loaded {len(prompts)} real prompts from {dataset_type}")
-            # Apply configurable limit if specified
-            if limit and limit > 0:
-                return prompts[:limit]
-            return prompts
-
-        logger.warning(f"Dataset '{dataset_type}' returned no prompts or unsupported format: {type(dataset)}")
-        return []
+        # Apply limit and return
+        return _apply_limit_to_prompts(prompts, limit)
 
     except ImportError as e:
         logger.error(f"Failed to import PyRIT dataset functions: {e}")
@@ -778,185 +697,378 @@ async def _load_real_pyrit_dataset_legacy(
         return []
 
 
+def _get_dataset_fetcher(dataset_type: str):
+    """Get the appropriate dataset fetcher function for the given type."""
+    # Import PyRIT dataset functions
+    from pyrit.datasets import (
+        fetch_adv_bench_dataset,
+        fetch_aya_redteaming_dataset,
+        fetch_decoding_trust_stereotypes_dataset,
+        fetch_forbidden_questions_dataset,
+        fetch_harmbench_dataset,
+        fetch_many_shot_jailbreaking_dataset,
+        fetch_pku_safe_rlhf_dataset,
+        fetch_seclists_bias_testing_dataset,
+        fetch_wmdp_dataset,
+        fetch_xstest_dataset,
+    )
+
+    # Map dataset types to their fetch functions
+    dataset_fetchers = {
+        "aya_redteaming": fetch_aya_redteaming_dataset,
+        "harmbench": fetch_harmbench_dataset,
+        "adv_bench": fetch_adv_bench_dataset,
+        "xstest": fetch_xstest_dataset,
+        "pku_safe_rlhf": fetch_pku_safe_rlhf_dataset,
+        "decoding_trust_stereotypes": fetch_decoding_trust_stereotypes_dataset,
+        "many_shot_jailbreaking": fetch_many_shot_jailbreaking_dataset,
+        "forbidden_questions": fetch_forbidden_questions_dataset,
+        "seclists_bias_testing": fetch_seclists_bias_testing_dataset,
+        "wmdp": fetch_wmdp_dataset,
+    }
+
+    return dataset_fetchers.get(dataset_type)
+
+
+def _fetch_dataset(fetch_function, config: Dict[str, Any]):
+    """Fetch dataset using the provided function and config."""
+    # Remove None values and exclude 'dataset_type' (which is not a PyRIT parameter)
+    clean_config = {k: v for k, v in config.items() if v is not None and k != "dataset_type"}
+
+    logger.info(f"Calling {fetch_function.__name__} with config: {clean_config}")
+
+    # Call the PyRIT fetch function
+    return fetch_function(**clean_config)
+
+
+def _extract_prompts_from_dataset(dataset, dataset_type: str) -> List[str]:
+    """Extract prompts from dataset based on its type and structure."""
+    # Use dispatch pattern for different dataset types
+    extractors = {
+        "many_shot_jailbreaking": _extract_many_shot_prompts,
+        "wmdp": _extract_wmdp_prompts,
+    }
+
+    # Try specific extractor first
+    extractor = extractors.get(dataset_type)
+    if extractor:
+        prompts = extractor(dataset)
+        if prompts:
+            logger.info(f"Successfully loaded {len(prompts)} prompts from {dataset_type}")
+            return prompts
+
+    # Fall back to standard extraction
+    return _extract_standard_prompts(dataset, dataset_type)
+
+
+def _extract_many_shot_prompts(dataset) -> List[str]:
+    """Extract prompts from many_shot_jailbreaking dataset format."""
+    prompts = []
+
+    if isinstance(dataset, list):
+        for item in dataset:
+            if isinstance(item, dict) and "user" in item:
+                prompts.append(item["user"])
+            else:
+                prompts.append(str(item))
+        logger.info(f"Extracted {len(prompts)} prompts from many_shot_jailbreaking (list format)")
+
+    return prompts
+
+
+def _extract_wmdp_prompts(dataset) -> List[str]:
+    """Extract prompts from wmdp dataset format."""
+    prompts = []
+
+    if hasattr(dataset, "questions"):
+        for question in dataset.questions:
+            if hasattr(question, "question"):
+                prompts.append(question.question)
+            elif hasattr(question, "value"):
+                prompts.append(question.value)
+            else:
+                prompts.append(str(question))
+        logger.info(f"Extracted {len(prompts)} questions from wmdp dataset")
+
+    return prompts
+
+
+def _extract_standard_prompts(dataset, dataset_type: str) -> List[str]:
+    """Extract prompts from standard SeedPromptDataset format."""
+    prompts = []
+
+    if dataset and hasattr(dataset, "prompts"):
+        for seed_prompt in dataset.prompts:
+            if hasattr(seed_prompt, "value"):
+                prompts.append(seed_prompt.value)
+            elif hasattr(seed_prompt, "prompt"):
+                prompts.append(seed_prompt.prompt)
+            else:
+                prompts.append(str(seed_prompt))
+
+        logger.info(f"Successfully loaded {len(prompts)} real prompts from {dataset_type}")
+    else:
+        logger.warning(f"Dataset '{dataset_type}' returned no prompts or unsupported format: {type(dataset)}")
+
+    return prompts
+
+
+def _apply_limit_to_prompts(prompts: List[str], limit: Optional[int]) -> List[str]:
+    """Apply limit to prompts list if specified."""
+    if limit and limit > 0 and prompts:
+        return prompts[:limit]
+    return prompts
+
+
 async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
     """Get real PyRIT memory datasets instead of mock data."""
     try:
-        import os
-        import sqlite3
+        # Try active PyRIT memory instance first
+        memory_datasets = await _get_datasets_from_active_memory(user_id)
+        if memory_datasets:
+            return memory_datasets
 
+        # Fall back to direct database file access
+        return await _get_datasets_from_database_files(user_id)
+
+    except Exception as e:
+        logger.error(f"Error getting real memory datasets: {e}")
+        return []
+
+
+async def _get_datasets_from_active_memory(user_id: str) -> List[MemoryDatasetInfo]:
+    """Try to get datasets from active PyRIT memory instance."""
+    try:
         from pyrit.memory import CentralMemory
 
-        memory_datasets = []
+        memory_instance = CentralMemory.get_memory_instance()
+        if not memory_instance:
+            return []
 
-        # First try to get datasets from active PyRIT memory instance
-        try:
-            memory_instance = CentralMemory.get_memory_instance()
-            if memory_instance:
-                logger.info("Found active PyRIT memory instance for dataset listing")
+        logger.info("Found active PyRIT memory instance for dataset listing")
 
-                # Get all conversation IDs first, then get conversation pieces
+        # Get all conversation pieces using available methods
+        all_pieces = await _get_memory_pieces_from_instance(memory_instance)
+
+        # Group pieces by conversation and create datasets
+        conversations = _group_pieces_by_conversation(all_pieces)
+        memory_datasets = _create_memory_datasets_from_conversations(conversations, user_id)
+
+        if memory_datasets:
+            logger.info(f"Found {len(memory_datasets)} memory datasets from active PyRIT memory")
+
+        return memory_datasets
+
+    except ValueError:
+        logger.info("No active PyRIT memory instance found")
+        return []
+    except Exception as e:
+        logger.warning(f"Error accessing active memory instance: {e}")
+        return []
+
+
+async def _get_memory_pieces_from_instance(memory_instance) -> List:
+    """Get conversation pieces from memory instance using available methods."""
+    try:
+        # Try to get all prompt request pieces using the query interface
+        if hasattr(memory_instance, "query_entries") and PromptRequestPiece:
+            return memory_instance.query_entries(PromptRequestPiece)
+        elif hasattr(memory_instance, "get_all_prompt_pieces"):
+            return memory_instance.get_all_prompt_pieces()
+        else:
+            # Fallback to direct database access
+            return await _get_pieces_via_direct_db_access(memory_instance)
+
+    except Exception as query_error:
+        logger.warning(f"Failed to query memory entries: {query_error}")
+        return []
+
+
+async def _get_pieces_via_direct_db_access(memory_instance) -> List:
+    """Get pieces via direct database access as fallback."""
+    try:
+        logger.info("Using direct database access for conversation retrieval")
+        all_pieces = []
+
+        if not hasattr(memory_instance, "_get_connection"):
+            logger.warning("Cannot access memory database directly")
+            return []
+
+        with memory_instance._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT conversation_id FROM PromptRequestPieces WHERE role = 'user'")
+            conversation_ids = [row[0] for row in cursor.fetchall()]
+
+            # Get pieces for each conversation
+            for conv_id in conversation_ids:
                 try:
-                    # Try to get all prompt request pieces using the query interface
-                    if hasattr(memory_instance, "query_entries") and PromptRequestPiece:
-                        # Use query interface to get all entries
-                        all_pieces = memory_instance.query_entries(PromptRequestPiece)
-                    elif hasattr(memory_instance, "get_all_prompt_pieces"):
-                        # Alternative method if available
-                        all_pieces = memory_instance.get_all_prompt_pieces()
-                    else:
-                        # Fallback to direct database access
-                        logger.info("Using direct database access for conversation retrieval")
-                        all_pieces = []
-
-                        # Get the database connection from memory instance
-                        if hasattr(memory_instance, "_get_connection"):
-                            with memory_instance._get_connection() as conn:
-                                cursor = conn.cursor()
-                                cursor.execute(
-                                    "SELECT DISTINCT conversation_id FROM PromptRequestPieces WHERE role = 'user'"
-                                )
-                                conversation_ids = [row[0] for row in cursor.fetchall()]
-
-                                # Get pieces for each conversation
-                                for conv_id in conversation_ids:
-                                    try:
-                                        conv_pieces = memory_instance.get_conversation(conversation_id=conv_id)
-                                        all_pieces.extend(conv_pieces)
-                                    except Exception as conv_error:
-                                        logger.debug(f"Could not get conversation {conv_id}: {conv_error}")
-                                        continue
-                        else:
-                            # If we can't access the database, skip memory datasets
-                            logger.warning("Cannot access memory database directly")
-                            all_pieces = []
-
-                    # Group by conversation_id to create datasets
-                    conversations = {}
-                    for piece in all_pieces:
-                        conv_id = piece.conversation_id
-                        if conv_id not in conversations:
-                            conversations[conv_id] = []
-                        conversations[conv_id].append(piece)
-
-                except Exception as query_error:
-                    logger.warning(f"Failed to query memory entries: {query_error}")
-                    conversations = {}
-
-                # Create dataset entries for each conversation
-                for conv_id, pieces in conversations.items():
-                    user_pieces = [p for p in pieces if p.role == "user"]
-                    if user_pieces:
-                        first_prompt = (
-                            user_pieces[0].original_value[:100] + "..."
-                            if len(user_pieces[0].original_value) > 100
-                            else user_pieces[0].original_value
-                        )
-
-                        memory_datasets.append(
-                            MemoryDatasetInfo(
-                                dataset_name=f"Conversation {conv_id[:8]}",
-                                prompt_count=len(user_pieces),
-                                created_by=user_id,
-                                first_prompt_preview=first_prompt,
-                            )
-                        )
-
-                if memory_datasets:
-                    logger.info(f"Found {len(memory_datasets)} memory datasets from active PyRIT memory")
-                    return memory_datasets
-
-        except ValueError:
-            logger.info("No active PyRIT memory instance found, trying direct database access")
-
-        # If no active memory, try direct database file access
-        # SECURITY: Only access the current user's specific database
-        import hashlib
-
-        # Generate the user's specific database filename
-        salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
-        user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
-        user_db_filename = f"pyrit_memory_{user_hash}.db"
-
-        # Only check the user's specific database file in known locations
-        memory_db_paths = []
-        potential_paths = [
-            "/app/app_data/violentutf",  # Docker API memory
-            "./app_data/violentutf",  # Relative app data
-        ]
-
-        for base_path in potential_paths:
-            if os.path.exists(base_path):
-                user_db_path = os.path.join(base_path, user_db_filename)
-                if os.path.exists(user_db_path):
-                    memory_db_paths.append(user_db_path)
-                    logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
-                    break  # Only use the first found user database
-
-        # Try to extract datasets from found database files
-        for db_path in memory_db_paths:
-            try:
-                # SECURITY: Double-check that we're only accessing the user's database
-                if user_db_filename not in db_path:
-                    logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
+                    conv_pieces = memory_instance.get_conversation(conversation_id=conv_id)
+                    all_pieces.extend(conv_pieces)
+                except Exception as conv_error:
+                    logger.debug(f"Could not get conversation {conv_id}: {conv_error}")
                     continue
 
-                logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
+        return all_pieces
 
-                with sqlite3.connect(db_path) as conn:
-                    cursor = conn.cursor()
+    except Exception as e:
+        logger.warning(f"Direct database access failed: {e}")
+        return []
 
-                    # Query for conversation groups, filtering out test / mock data
-                    cursor.execute(
-                        """
-                        SELECT conversation_id, COUNT(*) as prompt_count,.
 
-                               MIN(original_value) as first_prompt
-                        FROM PromptRequestPieces
-                        WHERE role = 'user' AND original_value IS NOT NULL
-                        AND LENGTH(original_value) > 0
-                        AND original_value NOT LIKE '%Native harmbench prompt%'
-                        AND original_value NOT LIKE '%Native % prompt %'
-                        AND original_value NOT LIKE '%Sample % prompt %'
-                        AND original_value NOT LIKE '%Test prompt%'
-                        AND original_value NOT LIKE '%mock%'
-                        AND original_value NOT LIKE '%test prompt%'
-                        GROUP BY conversation_id
-                        ORDER BY timestamp DESC
-                        LIMIT 20
-                    """
-                    )
+def _group_pieces_by_conversation(all_pieces: List) -> Dict:
+    """Group conversation pieces by conversation ID."""
+    conversations = {}
+    for piece in all_pieces:
+        conv_id = piece.conversation_id
+        if conv_id not in conversations:
+            conversations[conv_id] = []
+        conversations[conv_id].append(piece)
+    return conversations
 
-                    rows = cursor.fetchall()
-                    for row in rows:
-                        conv_id, count, first_prompt = row
-                        preview = first_prompt[:100] + "..." if len(first_prompt) > 100 else first_prompt
 
-                        memory_datasets.append(
-                            MemoryDatasetInfo(
-                                dataset_name=f"Memory Dataset {conv_id[:8]}",
-                                prompt_count=count,
-                                created_by=user_id,
-                                first_prompt_preview=preview,
-                            )
-                        )
+def _create_memory_datasets_from_conversations(conversations: Dict, user_id: str) -> List[MemoryDatasetInfo]:
+    """Create memory dataset objects from grouped conversations."""
+    memory_datasets = []
 
-                if memory_datasets:
-                    logger.info(f"Extracted {len(memory_datasets)} memory datasets from PyRIT database {db_path}")
-                    return memory_datasets
+    for conv_id, pieces in conversations.items():
+        user_pieces = [p for p in pieces if p.role == "user"]
+        if user_pieces:
+            first_prompt = (
+                user_pieces[0].original_value[:100] + "..."
+                if len(user_pieces[0].original_value) > 100
+                else user_pieces[0].original_value
+            )
 
-            except sqlite3.Error as db_error:
-                logger.debug(f"Could not read database {db_path}: {db_error}")
-                continue
-            except Exception as db_error:
-                logger.debug(f"Error accessing database {db_path}: {db_error}")
-                continue
+            memory_datasets.append(
+                MemoryDatasetInfo(
+                    dataset_name=f"Conversation {conv_id[:8]}",
+                    prompt_count=len(user_pieces),
+                    created_by=user_id,
+                    first_prompt_preview=first_prompt,
+                )
+            )
+
+    return memory_datasets
+
+
+async def _get_datasets_from_database_files(user_id: str) -> List[MemoryDatasetInfo]:
+    """Get datasets from direct database file access."""
+    try:
+        # Generate user-specific database details
+        db_paths = _get_user_database_paths(user_id)
+
+        # Try to extract datasets from found database files
+        for db_path in db_paths:
+            memory_datasets = await _extract_datasets_from_db_file(db_path, user_id)
+            if memory_datasets:
+                return memory_datasets
 
         logger.info("No PyRIT memory datasets found")
         return []
 
     except Exception as e:
-        logger.error(f"Error getting real memory datasets: {e}")
+        logger.error(f"Error accessing database files: {e}")
         return []
+
+
+def _get_user_database_paths(user_id: str) -> List[str]:
+    """Get paths to user-specific database files."""
+    import hashlib
+    import os
+
+    # Generate the user's specific database filename
+    salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
+    user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
+    user_db_filename = f"pyrit_memory_{user_hash}.db"
+
+    # Only check the user's specific database file in known locations
+    memory_db_paths = []
+    potential_paths = [
+        "/app/app_data/violentutf",  # Docker API memory
+        "./app_data/violentutf",  # Relative app data
+    ]
+
+    for base_path in potential_paths:
+        if os.path.exists(base_path):
+            user_db_path = os.path.join(base_path, user_db_filename)
+            if os.path.exists(user_db_path):
+                memory_db_paths.append(user_db_path)
+                logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
+                break  # Only use the first found user database
+
+    return memory_db_paths
+
+
+async def _extract_datasets_from_db_file(db_path: str, user_id: str) -> List[MemoryDatasetInfo]:
+    """Extract datasets from a specific database file."""
+    try:
+        import sqlite3
+
+        # Security check
+        user_db_filename = _get_user_db_filename(user_id)
+        if user_db_filename not in db_path:
+            logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
+            return []
+
+        logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
+        memory_datasets = []
+
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(_get_dataset_query())
+
+            rows = cursor.fetchall()
+            for row in rows:
+                conv_id, count, first_prompt = row
+                preview = first_prompt[:100] + "..." if len(first_prompt) > 100 else first_prompt
+
+                memory_datasets.append(
+                    MemoryDatasetInfo(
+                        dataset_name=f"Memory Dataset {conv_id[:8]}",
+                        prompt_count=count,
+                        created_by=user_id,
+                        first_prompt_preview=preview,
+                    )
+                )
+
+        if memory_datasets:
+            logger.info(f"Extracted {len(memory_datasets)} memory datasets from PyRIT database {db_path}")
+
+        return memory_datasets
+
+    except Exception as db_error:
+        logger.debug(f"Error accessing database {db_path}: {db_error}")
+        return []
+
+
+def _get_user_db_filename(user_id: str) -> str:
+    """Get user-specific database filename."""
+    import hashlib
+    import os
+
+    salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
+    user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
+    return f"pyrit_memory_{user_hash}.db"
+
+
+def _get_dataset_query() -> str:
+    """Get SQL query for dataset extraction."""
+    return """
+        SELECT conversation_id, COUNT(*) as prompt_count,
+               MIN(original_value) as first_prompt
+        FROM PromptRequestPieces
+        WHERE role = 'user' AND original_value IS NOT NULL
+        AND LENGTH(original_value) > 0
+        AND original_value NOT LIKE '%Native harmbench prompt%'
+        AND original_value NOT LIKE '%Native % prompt %'
+        AND original_value NOT LIKE '%Sample % prompt %'
+        AND original_value NOT LIKE '%Test prompt%'
+        AND original_value NOT LIKE '%mock%'
+        AND original_value NOT LIKE '%test prompt%'
+        GROUP BY conversation_id
+        ORDER BY timestamp DESC
+        LIMIT 20
+    """
 
 
 @router.get("/{dataset_id}", response_model=DatasetInfo, summary="Get dataset details")

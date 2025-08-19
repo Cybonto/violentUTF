@@ -3,7 +3,7 @@
 # # Licensed under MIT License
 
 """
-Diagnostic script for ViolentUTF user context issues
+Diagnostic script for ViolentUTF user context issues.
 
 This script helps diagnose user context mismatches that prevent
 scorer testing from working properly.
@@ -19,8 +19,8 @@ sys.path.append(str(Path(__file__).parent / "app"))
 from app.db.duckdb_manager import DuckDBManager  # noqa: E402
 
 
-def diagnose_user_contexts():
-    """Diagnose what user contexts have data"""
+def diagnose_user_contexts() -> None:
+    """Diagnose what user contexts have data."""
     print("🔍 ViolentUTF User Context Diagnostic")
     print("=" * 50)
 

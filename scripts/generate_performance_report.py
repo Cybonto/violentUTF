@@ -3,6 +3,7 @@
 # # Licensed under MIT License
 
 """Generate performance report from benchmark results."""
+
 import argparse
 import json
 import sys

@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 class TestBasicContract:
     """Basic contract validation tests."""
 
-    def test_environment_setup(self: "TestBasicContract") -> None:
-        """Test that contract testing environment is properly configured."""
+    def test_environment_setup(self) -> None:
+        """ "Test that contract testing environment is properly configured."""
         assert os.getenv("CONTRACT_TESTING") == "true"
         assert os.getenv("TESTING") == "true"
         assert os.getenv("JWT_SECRET_KEY") is not None
@@ -48,7 +48,7 @@ class TestBasicContract:
 
     def test_minimal_api_structure(self: "TestBasicContract") -> None:
         """Test minimal API structure expectations."""
-        # This test passes if we can import basic modules
+        # This test passes if we can import basic modules.
         try:
             import fastapi
             import pydantic
@@ -77,7 +77,7 @@ class TestBasicContract:
 
     def test_contract_markers(self: "TestBasicContract") -> None:
         """Test that pytest contract markers are working."""
-        # This test verifies the test infrastructure itself
+        # This test verifies the test infrastructure itself.
         markers = [mark.name for mark in self.test_contract_markers.__pytest_wrapped__.pytestmark]
         assert "contract" in markers or hasattr(self.__class__, "pytestmark")
 
@@ -107,6 +107,6 @@ def test_api_contract_dependencies() -> None:
 # Minimal test to ensure at least one test runs
 def test_contract_testing_enabled() -> None:
     """Verify contract testing is enabled."""
-    # This test should always pass in contract testing environment
+    # This test should always pass in contract testing environment.
     contract_testing = os.getenv("CONTRACT_TESTING", "false")
     assert contract_testing.lower() in ["true", "false"]

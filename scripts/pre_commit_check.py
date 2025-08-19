@@ -117,7 +117,8 @@ class PreCommitChecker:
         if not os.path.exists(".flake8"):
             with open(".flake8", "w") as f:
                 f.write(
-                    """[flake8]
+                    """[flake8].
+
 max-line-length = 120
 extend-ignore = E203, W503, E501
 exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info

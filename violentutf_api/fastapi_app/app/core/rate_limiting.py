@@ -54,7 +54,7 @@ RATE_LIMITS = {
 
 
 def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
-    """Custom rate limit exceeded handler with security logging."""
+    """Handle rate limit exceeded handler with security logging."""
     client_ip = get_client_ip(request)
     endpoint = request.url.path
 

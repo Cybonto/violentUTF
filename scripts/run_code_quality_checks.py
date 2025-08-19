@@ -119,7 +119,7 @@ def run_flake8() -> Tuple[bool, Optional[str]]:
 
 def run_pylint() -> Tuple[bool, Optional[str]]:
     """Run pylint on Python files."""
-    # Note: This continues on error as per the workflow
+    # Note: This continues on error as per the workflow.
     return run_command(
         'find . -name "*.py" -not -path "./tests/*" | xargs pylint --rcfile=.pylintrc || true',
         "Pylint",
@@ -129,7 +129,7 @@ def run_pylint() -> Tuple[bool, Optional[str]]:
 
 def run_mypy() -> Tuple[bool, Optional[str]]:
     """Run mypy type checker."""
-    # Note: This continues on error as per the workflow
+    # Note: This continues on error as per the workflow.
     return run_command("mypy --install-types --non-interactive . || true", "MyPy type checker", continue_on_error=True)
 
 

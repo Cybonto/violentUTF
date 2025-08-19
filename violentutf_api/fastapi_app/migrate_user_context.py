@@ -3,7 +3,7 @@
 # # Licensed under MIT License
 
 """
-User Context Migration Script for ViolentUTF
+User Context Migration Script for ViolentUTF.
 
 This script migrates data from one user context to another to fix
 the user context mismatch between Keycloak display names and account names.
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 def migrate_generators(from_user: str, to_user: str) -> int:
     """
-    Migrate generators from one user context to another
+    Migrate generators from one user context to another.
 
     Args:
         from_user: Source user context (e.g., "Tam Nguyen")
@@ -79,7 +79,7 @@ def migrate_generators(from_user: str, to_user: str) -> int:
 
 def migrate_datasets(from_user: str, to_user: str) -> int:
     """
-    Migrate datasets from one user context to another
+    Migrate datasets from one user context to another.
 
     Args:
         from_user: Source user context
@@ -131,7 +131,7 @@ def migrate_datasets(from_user: str, to_user: str) -> int:
     return migrated_count
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Migrate ViolentUTF user context data")
     parser.add_argument("--from", dest="from_user", required=True, help="Source user context (e.g., 'Tam Nguyen')")
     parser.add_argument("--to", dest="to_user", required=True, help="Target user context (e.g., 'violentutf.web')")

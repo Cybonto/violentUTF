@@ -105,7 +105,7 @@ st.write(app_description)
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway"""
+    """Get authentication headers for API requests through APISIX Gateway."""
     try:
         from utils.jwt_manager import jwt_manager
 
@@ -135,7 +135,7 @@ def get_auth_headers() -> Dict[str, str]:
 
 
 def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
-    """Make an authenticated API request through APISIX Gateway"""
+    """Make an authenticated API request through APISIX Gateway."""
     headers = get_auth_headers()
     if not headers.get("Authorization"):
         logger.warning("No authentication token available for API request")
@@ -145,7 +145,6 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         logger.debug(f"Making {method} request to {url} through APISIX Gateway")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
-
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 201:
@@ -223,7 +222,7 @@ if default_file in prompt_variable_files:
 
 
 # Function to load prompt variables from a file
-def load_prompt_variables(file_name):
+def load_prompt_variables(file_name) -> Any:
     file_path = os.path.join(DATA_DIR, file_name)
     try:
         with open(file_path, "r") as f:
@@ -235,7 +234,7 @@ def load_prompt_variables(file_name):
 
 
 # Function to save prompt variables to a file
-def save_prompt_variables(file_name, data):
+def save_prompt_variables(file_name, data: Any) -> None:
     file_path = os.path.join(DATA_DIR, file_name)
     try:
         with open(file_path, "w") as f:
@@ -245,7 +244,7 @@ def save_prompt_variables(file_name, data):
 
 
 @st.dialog("Create New Prompt Variable File")
-def create_new_prompt_variable_file():
+def create_new_prompt_variable_file() -> Any:
     new_file_name = ""
     new_file_name_input = st.text_input("Enter new prompt variable file name (without extension)")
     create_file_submit = st.button("Create file")
@@ -265,7 +264,7 @@ def create_new_prompt_variable_file():
 
 
 @st.dialog("Prompt Variable Details")
-def view_prompt_variable(var_name, var_data):
+def view_prompt_variable(var_name, var_data) -> None:
     st.write(f"**Variable Name:** {var_name}")
     st.write(f"**Number of Tokens:** {var_data.get('num_tokens', 'N/A')}")
     st.write(f"**Timestamp:** {var_data.get('timestamp', 'N/A')}")
@@ -273,7 +272,7 @@ def view_prompt_variable(var_name, var_data):
 
 
 def get_provider_display_name(provider: str) -> str:
-    """Get user-friendly display name for AI provider"""
+    """Get user-friendly display name for AI provider."""
     provider_names = {
         "openai": "OpenAI",
         "anthropic": "Anthropic",
@@ -285,7 +284,7 @@ def get_provider_display_name(provider: str) -> str:
 
 
 def _looks_like_mcp_command(text: str) -> bool:
-    """Check if text looks like it might be an MCP command"""
+    """Check if text looks like it might be an MCP command."""
     text = text.strip().lower()
 
     # Check for explicit MCP command patterns based on actual MCP patterns
@@ -628,7 +627,7 @@ with st.sidebar:
 
 # Handle Create Prompt Variable Modal
 @st.dialog("Create Prompt Variable")
-def create_prompt_variable(content, origin):
+def create_prompt_variable(content, origin) -> None:
     variable_name = st.text_input("Enter variable name:")
     variable_value = st.text_area("Variable content:", value=content)
     submit = st.button("Save Variable")
@@ -660,7 +659,7 @@ def create_prompt_variable(content, origin):
 
 
 @st.dialog("Duplicate Prompt Variable File")
-def duplicate_prompt_variable_file():
+def duplicate_prompt_variable_file() -> None:
     file_to_duplicate = st.selectbox("Select a file to duplicate", options=prompt_variable_files)
     new_file_name_input = st.text_input("Enter new file name (without extension)")
     duplicate_submit = st.button("Duplicate")
@@ -804,7 +803,7 @@ with main_col_right:
         # Add styling for green create buttons first
         st.markdown(
             """
-        <style>
+        <style>.
         /* Style for create variable buttons with green theme */
         div[data-testid="column"]:has(button[key="create_from_prompt"]) .stButton > button,
         div[data-testid="column"]:has(button[key="create_from_response"]) .stButton > button {
@@ -972,8 +971,8 @@ with main_col_right:
 
 
 # MCP Enhancement Handlers
-def enhance_prompt_with_mcp(prompt_text):
-    """Enhance prompt using MCP prompts"""
+def enhance_prompt_with_mcp(prompt_text: str) -> Any:
+    """Enhance prompt using MCP prompts."""
     try:
         mcp_client = st.session_state["mcp_client"]
 
@@ -1001,8 +1000,8 @@ def enhance_prompt_with_mcp(prompt_text):
         return None, str(e)
 
 
-def analyze_prompt_with_mcp(prompt_text):
-    """Analyze prompt for security and bias issues"""
+def analyze_prompt_with_mcp(prompt_text: str) -> Any:
+    """Analyze prompt for security and bias issues."""
     try:
         mcp_client = st.session_state["mcp_client"]
 
@@ -1033,8 +1032,8 @@ def analyze_prompt_with_mcp(prompt_text):
         return {"suggestions": suggestions, "fallback": True}, None
 
 
-def generate_test_variations_with_mcp(prompt_text, test_type="general"):
-    """Generate test variations of the prompt"""
+def generate_test_variations_with_mcp(prompt_text, test_type: Any = "general") -> Any:
+    """Generate test variations of the prompt."""
     try:
         mcp_client = st.session_state["mcp_client"]
 
@@ -1132,8 +1131,8 @@ if quick_actions != "Select an action..." and user_input:
 
 
 # Handler functions for MCP commands
-def handle_mcp_command(parsed_command):
-    """Handle explicit MCP commands like /mcp help, /mcp list generators"""
+def handle_mcp_command(parsed_command) -> Any:
+    """Handle explicit MCP commands like /mcp help, /mcp list generators."""
     command_type = parsed_command.type
     params = parsed_command.arguments or {}
 
@@ -1146,7 +1145,7 @@ def handle_mcp_command(parsed_command):
         st.info("📚 **MCP Commands Available:**")
         st.write(
             """
-        - `/mcp help` - Show this help message
+        - `/mcp help` - Show this help message.
         - `/mcp list generators` - List configured generators
         - `/mcp list datasets` - List loaded datasets
         - `/mcp list converters` - List configured converters
@@ -1232,8 +1231,8 @@ def handle_mcp_command(parsed_command):
             logger.debug("UNKNOWN command type reached else clause - ignoring UI warning")
 
 
-def handle_configuration_command(intent, user_input):
-    """Handle natural language configuration commands"""
+def handle_configuration_command(intent, user_input) -> None:
+    """Handle natural language configuration commands."""
     intent_type = intent["type"]
 
     st.info(f"🔧 Detected configuration command: {intent_type}")
@@ -1290,8 +1289,8 @@ def handle_configuration_command(intent, user_input):
 
 
 # Command execution functions with real API calls
-def list_generators():
-    """List all configured generators"""
+def list_generators() -> None:
+    """List all configured generators."""
     st.info("📋 Listing configured generators...")
 
     # Make API request to get generators
@@ -1329,8 +1328,8 @@ def list_generators():
                     st.write(f"**Created:** {gen.get('created_at', 'Unknown')}")
 
 
-def list_datasets():
-    """List all available datasets"""
+def list_datasets() -> None:
+    """List all available datasets."""
     st.info("📋 Listing available datasets...")
 
     # Make API request to get datasets
@@ -1366,8 +1365,8 @@ def list_datasets():
                     st.write(f"**Created:** {ds.get('created_at', 'Unknown')}")
 
 
-def load_dataset(dataset_name):
-    """Load a specific dataset"""
+def load_dataset(dataset_name) -> None:
+    """Load a specific dataset."""
     st.info(f"📂 Loading dataset: {dataset_name}")
 
     # First, check if it's a built - in dataset that needs to be created
@@ -1445,8 +1444,8 @@ def load_dataset(dataset_name):
             st.info("Available built - in datasets: harmbench, jailbreak, promptinjection, bias, security")
 
 
-def list_converters():
-    """List all configured converters"""
+def list_converters() -> None:
+    """List all configured converters."""
     st.info("📋 Listing configured converters...")
 
     # Make API request to get converters
@@ -1483,8 +1482,8 @@ def list_converters():
                     st.write(f"**Created:** {conv.get('created_at', 'Unknown')}")
 
 
-def list_scorers():
-    """List all configured scorers"""
+def list_scorers() -> None:
+    """List all configured scorers."""
     st.info("📋 Listing configured scorers...")
 
     # Make API request to get scorers
@@ -1520,8 +1519,8 @@ def list_scorers():
                     st.write(f"**Created:** {scorer.get('created_at', 'Unknown')}")
 
 
-def list_orchestrators():
-    """List all configured orchestrators"""
+def list_orchestrators() -> None:
+    """List all configured orchestrators."""
     st.info("📋 Listing configured orchestrators...")
 
     # Make API request to get orchestrators
@@ -1561,8 +1560,8 @@ def list_orchestrators():
                     st.write(f"**Created:** {orch.get('created_at', 'Unknown')}")
 
 
-def list_dataset_types():
-    """List all available dataset types/options"""
+def list_dataset_types() -> None:
+    """List all available dataset types/options."""
     st.info("📋 Listing available dataset types...")
 
     # Make API request to get dataset types
@@ -1622,8 +1621,8 @@ def list_dataset_types():
     st.info("💡 Use commands like 'Load the harmbench dataset' to load a specific dataset")
 
 
-def list_converter_types():
-    """List all available converter types/options"""
+def list_converter_types() -> None:
+    """List all available converter types/options."""
     st.info("📋 Listing available converter types...")
 
     # Make API request to get converter types
@@ -1677,8 +1676,8 @@ def list_converter_types():
     st.info("💡 Visit the 'Configure Converters' page to set up and chain converters")
 
 
-def list_scorer_types():
-    """List all available scorer types/options"""
+def list_scorer_types() -> None:
+    """List all available scorer types/options."""
     st.info("📋 Listing available scorer types...")
 
     # Make API request to get scorer types
@@ -1720,8 +1719,8 @@ def list_scorer_types():
     st.info("💡 Use commands like 'Configure a bias scorer' to set up a specific scorer")
 
 
-def create_generator(params):
-    """Create a new generator with specified parameters"""
+def create_generator(params) -> None:
+    """Create a new generator with specified parameters."""
     st.info("🤖 Creating generator...")
 
     # Map provider to generator type (following Configure_Generators.py pattern)
@@ -1778,8 +1777,8 @@ def create_generator(params):
         st.error("Failed to create generator. Please check your configuration.")
 
 
-def create_dataset(dataset_info):
-    """Create a new dataset"""
+def create_dataset(dataset_info) -> None:
+    """Create a new dataset."""
     st.info("📊 Creating dataset...")
 
     # For custom datasets, we need more implementation
@@ -1796,8 +1795,8 @@ def create_dataset(dataset_info):
             st.error("No dataset name specified")
 
 
-def configure_scorer(params):
-    """Configure a scorer"""
+def configure_scorer(params) -> None:
+    """Configure a scorer."""
     st.info("📏 Configuring scorer...")
 
     # First get available scorer types
@@ -1911,8 +1910,8 @@ def configure_scorer(params):
         st.error("Failed to configure scorer")
 
 
-def setup_orchestrator(params):
-    """Set up an orchestrator"""
+def setup_orchestrator(params) -> None:
+    """Set up an orchestrator."""
     st.info("🎭 Setting up orchestrator...")
 
     # First get available orchestrator types
@@ -2049,8 +2048,8 @@ def setup_orchestrator(params):
 
 
 # Parameter extraction functions
-def extract_generator_params(text):
-    """Extract generator parameters from natural language"""
+def extract_generator_params(text: str) -> Any:
+    """Extract generator parameters from natural language."""
     params = {}
 
     # Extract provider and model
@@ -2090,8 +2089,8 @@ def extract_generator_params(text):
     return params
 
 
-def extract_dataset_info(text):
-    """Extract dataset information from natural language"""
+def extract_dataset_info(text: str) -> Any:
+    """Extract dataset information from natural language."""
     info = {}
 
     # Common dataset names
@@ -2114,8 +2113,8 @@ def extract_dataset_info(text):
     return info
 
 
-def extract_scorer_params(text):
-    """Extract scorer parameters from natural language"""
+def extract_scorer_params(text: str) -> Any:
+    """Extract scorer parameters from natural language."""
     params = {}
 
     # Scorer types
@@ -2144,8 +2143,8 @@ def extract_scorer_params(text):
     return params
 
 
-def extract_orchestrator_params(text):
-    """Extract orchestrator parameters from natural language"""
+def extract_orchestrator_params(text: str) -> Any:
+    """Extract orchestrator parameters from natural language."""
     params = {}
 
     # Orchestrator types
@@ -2166,7 +2165,7 @@ def extract_orchestrator_params(text):
 
 
 # Function to resolve nested variables
-def resolve_variable(value, prompt_variables, resolved_vars=None):
+def resolve_variable(value, prompt_variables, resolved_vars: Any = None) -> Any:
     if resolved_vars is None:
         resolved_vars = set()
     pattern = r"\{\{(\w+)\}\}"

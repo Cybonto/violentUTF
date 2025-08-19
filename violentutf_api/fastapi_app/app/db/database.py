@@ -27,7 +27,7 @@ Base = declarative_base()
 
 async def init_db() -> None:
     """Initialize database tables."""
-    # Ensure the database directory exists
+    # Ensure the database directory exists.
     if "sqlite" in DATABASE_URL:
         db_path = DATABASE_URL.split("///")[1]
         db_dir = os.path.dirname(db_path)

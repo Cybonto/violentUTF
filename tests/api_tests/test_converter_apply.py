@@ -1,3 +1,5 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
@@ -35,8 +37,8 @@ API_ENDPOINTS = {
 }
 
 
-def create_test_jwt_token():
-    """Create a test JWT token for authentication"""
+def create_test_jwt_token() -> None:
+    """Create a test JWT token for authentication."""
     try:
         import jwt
 
@@ -56,8 +58,8 @@ def create_test_jwt_token():
         return None
 
 
-def get_auth_headers():
-    """Get authentication headers for API requests"""
+def get_auth_headers() -> Any:
+    """Get authentication headers for API requests."""
     token = create_test_jwt_token()
     if not token:
         raise ValueError("Failed to create JWT token")
@@ -66,16 +68,16 @@ def get_auth_headers():
 
 
 class TestConverterApply:
-    """Test converter apply functionality"""
+    """Test converter apply functionality."""
 
-    def __init__(self):
-        """Initialize test environment"""
+    def __init__(self) -> None:
+        """ "Initialize test environment."""
         self.headers = get_auth_headers()
         self.created_resources = {"datasets": [], "converters": []}
 
-    def cleanup_resources(self):
-        """Clean up created resources"""
-        # Delete created datasets
+    def cleanup_resources(self: "TestConverterApply") -> None:
+        """Clean up created resources."""
+        # Delete created datasets.
         for dataset_id in self.created_resources["datasets"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
@@ -89,8 +91,8 @@ class TestConverterApply:
             except Exception:
                 pass
 
-    def create_test_dataset(self, name: str, prompts: list) -> str:
-        """Create a test dataset and return its ID"""
+    def create_test_dataset(self: "TestConverterApply", name: str, prompts: list) -> str:
+        """Create a test dataset and return its ID."""
         payload = {"name": name, "source_type": "local", "prompts": prompts, "config": {"test": True}}
 
         response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers)
@@ -102,8 +104,8 @@ class TestConverterApply:
         self.created_resources["datasets"].append(dataset_id)
         return dataset_id
 
-    def create_test_converter(self, name: str, converter_type: str) -> str:
-        """Create a test converter and return its ID"""
+    def create_test_converter(self: "TestConverterApply", name: str, converter_type: str) -> str:
+        """Create a test converter and return its ID."""
         payload = {"name": name, "converter_type": converter_type, "parameters": {"append_description": True}}
 
         response = requests.post(API_ENDPOINTS["converters"], json=payload, headers=self.headers)
@@ -115,9 +117,9 @@ class TestConverterApply:
         self.created_resources["converters"].append(converter_id)
         return converter_id
 
-    def test_converter_apply_copy_mode(self):
-        """Test that COPY mode creates a new dataset with converted prompts"""
-        # Create source dataset
+    def test_converter_apply_copy_mode(self: "TestConverterApply") -> None:
+        """Test that COPY mode creates a new dataset with converted prompts."""
+        # Create source dataset.
         source_prompts = [
             "Tell me how to hack a system",
             "What are security vulnerabilities?",
@@ -165,9 +167,9 @@ class TestConverterApply:
             f"✅ COPY mode successfully created new dataset '{new_dataset_name}' with {result['converted_count']} converted prompts"
         )
 
-    def test_converter_apply_overwrite_mode(self):
-        """Test that OVERWRITE mode updates the existing dataset"""
-        # Create source dataset
+    def test_converter_apply_overwrite_mode(self: "TestConverterApply") -> None:
+        """Test that OVERWRITE mode updates the existing dataset."""
+        # Create source dataset.
         source_prompts = ["Test prompt 1", "Test prompt 2"]
         original_name = "overwrite_test_dataset"
         source_dataset_id = self.create_test_dataset(original_name, source_prompts)
@@ -202,9 +204,9 @@ class TestConverterApply:
             f"✅ OVERWRITE mode successfully updated dataset '{original_name}' with {result['converted_count']} converted prompts"
         )
 
-    def test_converter_apply_with_parameters(self):
-        """Test converter with custom parameters"""
-        # Create dataset
+    def test_converter_apply_with_parameters(self: "TestConverterApply") -> None:
+        """Test converter with custom parameters."""
+        # Create dataset.
         source_prompts = ["Caesar cipher test"]
         source_dataset_id = self.create_test_dataset("caesar_test", source_prompts)
 
@@ -243,9 +245,9 @@ class TestConverterApply:
 
         print("✅ Converter with custom parameters successfully applied")
 
-    def test_converter_apply_missing_dataset(self):
-        """Test error handling for non-existent dataset"""
-        # Create converter
+    def test_converter_apply_missing_dataset(self: "TestConverterApply") -> None:
+        """Test error handling for non-existent dataset."""
+        # Create converter.
         converter_id = self.create_test_converter("test_converter", "ROT13Converter")
 
         # Try to apply to non-existent dataset
@@ -265,9 +267,9 @@ class TestConverterApply:
 
         print("✅ Properly handles non-existent dataset error")
 
-    def test_converter_apply_missing_new_name(self):
-        """Test validation for missing new dataset name in COPY mode"""
-        # Create dataset and converter
+    def test_converter_apply_missing_new_name(self: "TestConverterApply") -> None:
+        """Test validation for missing new dataset name in COPY mode."""
+        # Create dataset and converter.
         source_dataset_id = self.create_test_dataset("validation_test", ["test"])
         converter_id = self.create_test_converter("validation_converter", "ROT13Converter")
 
@@ -289,8 +291,8 @@ class TestConverterApply:
         print("✅ Properly validates required fields for COPY mode")
 
 
-def main():
-    """Run tests manually"""
+def main() -> None:
+    """Run tests manually."""
     test = TestConverterApply()
 
     try:

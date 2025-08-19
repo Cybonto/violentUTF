@@ -222,61 +222,90 @@ def create_api_key_token(user_id: str, key_name: str, permissions: list = None, 
     Raises:
         ValueError: If input validation fails
     """
-    # Validate inputs.
+    # Validate and sanitize all inputs
+    validated_user_id = _validate_api_key_user_id(user_id)
+    validated_key_name = _validate_api_key_name(key_name)
+    validated_permissions = _validate_api_key_permissions(permissions)
+    validated_key_id = _validate_api_key_id(key_id)
+
+    # Create token with validated data
+    return _create_api_key_token_response(
+        validated_user_id, validated_key_name, validated_permissions, validated_key_id
+    )
+
+
+def _validate_api_key_user_id(user_id: str) -> str:
+    """Validate and sanitize user ID for API key creation."""
     if not user_id:
         raise ValueError("User ID is required")
 
-    if not key_name:
-        raise ValueError("Key name is required")
-
-    # Sanitize and validate user_id
     user_id = sanitize_string(user_id)
     if len(user_id) > SecurityLimits.MAX_USERNAME_LENGTH:
         raise ValueError("User ID too long")
 
-    # Sanitize and validate key_name
+    return user_id
+
+
+def _validate_api_key_name(key_name: str) -> str:
+    """Validate and sanitize key name for API key creation."""
+    if not key_name:
+        raise ValueError("Key name is required")
+
     key_name = sanitize_string(key_name)
     if len(key_name) < 3 or len(key_name) > SecurityLimits.MAX_API_KEY_NAME_LENGTH:
         raise ValueError(f"Key name must be 3-{SecurityLimits.MAX_API_KEY_NAME_LENGTH} characters")
 
-    # Validate permissions
-    if permissions:
-        if not isinstance(permissions, list):
-            raise ValueError("Permissions must be a list")
+    return key_name
 
-        if len(permissions) > SecurityLimits.MAX_PERMISSIONS:
-            raise ValueError(f"Too many permissions (max {SecurityLimits.MAX_PERMISSIONS})")
 
-        safe_permissions = []
-        for perm in permissions:
-            if not isinstance(perm, str):
-                raise ValueError("Permission must be a string")
+def _validate_api_key_permissions(permissions: list) -> list:
+    """Validate and sanitize permissions for API key creation."""
+    if not permissions:
+        return ["api:access"]
 
-            perm = sanitize_string(perm).lower()
-            if not perm:
-                continue
+    if not isinstance(permissions, list):
+        raise ValueError("Permissions must be a list")
 
-            if len(perm) > 50:
-                raise ValueError("Permission name too long")
+    if len(permissions) > SecurityLimits.MAX_PERMISSIONS:
+        raise ValueError(f"Too many permissions (max {SecurityLimits.MAX_PERMISSIONS})")
 
-            # Validate permission format
-            import re
+    safe_permissions = []
+    for perm in permissions:
+        if not isinstance(perm, str):
+            raise ValueError("Permission must be a string")
 
-            if not re.match(r"^[a-z0-9:_-]+$", perm):
-                raise ValueError(f"Invalid permission format: {perm}")
+        perm = sanitize_string(perm).lower()
+        if not perm:
+            continue
 
-            safe_permissions.append(perm)
+        if len(perm) > 50:
+            raise ValueError("Permission name too long")
 
-        permissions = safe_permissions
-    else:
-        permissions = ["api:access"]
+        # Validate permission format
+        import re
 
-    # Validate key_id if provided
-    if key_id:
-        key_id = sanitize_string(key_id)
-        if len(key_id) > 64:
-            raise ValueError("Key ID too long")
+        if not re.match(r"^[a-z0-9:_-]+$", perm):
+            raise ValueError(f"Invalid permission format: {perm}")
 
+        safe_permissions.append(perm)
+
+    return safe_permissions
+
+
+def _validate_api_key_id(key_id: str) -> str:
+    """Validate and sanitize key ID for API key creation."""
+    if not key_id:
+        return key_id
+
+    key_id = sanitize_string(key_id)
+    if len(key_id) > 64:
+        raise ValueError("Key ID too long")
+
+    return key_id
+
+
+def _create_api_key_token_response(user_id: str, key_name: str, permissions: list, key_id: str) -> Dict[str, Any]:
+    """Create the API key token and return response dictionary."""
     # API keys have longer expiration (1 year by default)
     expires_delta = timedelta(days=365)
 

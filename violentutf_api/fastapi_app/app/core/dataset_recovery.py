@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Error recovery mechanisms for dataset import operations.
+Error recovery mechanisms for dataset import operations
 
 This module provides robust error recovery strategies including retry logic,
 partial import recovery, and automated cleanup procedures.
@@ -33,13 +33,13 @@ class RetryStrategy:
     """Configurable retry strategy for dataset operations."""
 
     def __init__(
-        self,
+        self: "RetryStrategy",
         max_retries: int = 3,
         base_delay: float = 1.0,
         backoff_factor: float = 2.0,
         max_delay: float = 60.0,
         jitter: bool = True,
-    ):
+    ) -> None:
         """Initialize the instance."""
         self.max_retries = max_retries
         self.base_delay = base_delay
@@ -47,7 +47,7 @@ class RetryStrategy:
         self.max_delay = max_delay
         self.jitter = jitter
 
-    def calculate_delay(self, attempt: int) -> float:
+    def calculate_delay(self: "RetryStrategy", attempt: int) -> float:
         """Calculate delay for given attempt number."""
         delay = self.base_delay * (self.backoff_factor**attempt)
         delay = min(delay, self.max_delay)
@@ -91,7 +91,6 @@ def with_retry(
                         return await func(*args, **kwargs)
                     else:
                         return func(*args, **kwargs)
-
                 except exceptions as e:
                     last_exception = e
 
@@ -136,7 +135,7 @@ def with_retry(
 class PartialImportRecovery:
     """Handles recovery of partial dataset imports."""
 
-    def __init__(self, config: DatasetImportConfig) -> None:
+    def __init__(self: "PartialImportRecovery", config: DatasetImportConfig) -> None:
         """Initialize the instance."""
         self.config = config
         self.successful_chunks: List[Dict[str, Any]] = []
@@ -144,7 +143,10 @@ class PartialImportRecovery:
         self.partial_data: Dict[str, Any] = {}
 
     def record_successful_chunk(
-        self, chunk_index: int, chunk_data: List[str], metadata: Optional[Dict[str, Any]] = None
+        self: "PartialImportRecovery",
+        chunk_index: int,
+        chunk_data: List[str],
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Record a successfully processed chunk."""
         self.successful_chunks.append(
@@ -156,7 +158,7 @@ class PartialImportRecovery:
         )
 
     def record_failed_chunk(
-        self,
+        self: "PartialImportRecovery",
         chunk_index: int,
         error: Exception,
         chunk_data: Optional[List[str]] = None,
@@ -181,7 +183,7 @@ class PartialImportRecovery:
             chunk_size=len(chunk_data) if chunk_data else 0,
         )
 
-    async def attempt_recovery(self) -> Dict[str, Any]:
+    async def attempt_recovery(self: "PartialImportRecovery") -> Dict[str, Any]:
         """Attempt to recover failed chunks."""
         if not self.config.enable_partial_import:
             raise DatasetStreamingError("Partial import recovery is disabled in configuration")
@@ -223,9 +225,11 @@ class PartialImportRecovery:
 
         return recovery_results
 
-    async def _recover_single_chunk(self, chunk_info: Dict[str, Any], retry_strategy: RetryStrategy) -> None:
+    async def _recover_single_chunk(
+        self: "PartialImportRecovery", chunk_info: Dict[str, Any], retry_strategy: RetryStrategy
+    ) -> None:
         """Attempt to recover a single failed chunk."""
-        # This is a placeholder - actual recovery logic would depend on
+        # This is a placeholder - actual recovery logic would depend on.
         # the specific failure type and data available
 
         chunk_index = chunk_info["chunk_index"]
@@ -241,7 +245,7 @@ class PartialImportRecovery:
 
         dataset_logger.debug(f"Successfully recovered chunk {chunk_index}", chunk_index=chunk_index)
 
-    def get_recovery_summary(self) -> Dict[str, Any]:
+    def get_recovery_summary(self: "PartialImportRecovery") -> Dict[str, Any]:
         """Get summary of recovery status."""
         total_chunks = len(self.successful_chunks) + len(self.failed_chunks)
         success_rate = len(self.successful_chunks) / total_chunks if total_chunks > 0 else 0
@@ -259,27 +263,30 @@ class PartialImportRecovery:
 class AutoCleanupManager:
     """Manages automatic cleanup of failed or partial imports."""
 
-    def __init__(self, config: DatasetImportConfig) -> None:
-        """Initialize the instance."""
-        self.config = config
+    def __init__(self, config: Optional[DatasetImportConfig] = None) -> None:
+        """ "Initialize the instance."""
+        self.config = config or DatasetImportConfig()
         self.cleanup_tasks: List[Callable] = []
         self.temp_files: List[str] = []
         self.temp_data: List[Any] = []
 
-    def register_cleanup_task(self, task: Callable) -> None:
+    def register_cleanup_task(self: "AutoCleanupManager", task: Callable) -> None:
         """Register a cleanup task to be executed on failure."""
         self.cleanup_tasks.append(task)
 
-    def register_temp_file(self, file_path: str) -> None:
+    def register_temp_file(self: "AutoCleanupManager", file_path: str) -> None:
         """Register a temporary file for cleanup."""
         self.temp_files.append(file_path)
 
-    def register_temp_data(self, data: Any) -> None:
+    def register_temp_data(self: "AutoCleanupManager", data: Any) -> None:
         """Register temporary data for cleanup."""
         self.temp_data.append(data)
 
     async def cleanup_on_failure(
-        self, error: Exception, dataset_id: str, partial_recovery: Optional[PartialImportRecovery] = None
+        self: "AutoCleanupManager",
+        error: Exception,
+        dataset_id: str,
+        partial_recovery: Optional[PartialImportRecovery] = None,
     ) -> None:
         """Perform cleanup operations after a failure."""
         if not self.config.cleanup_on_failure:
@@ -329,10 +336,10 @@ class AutoCleanupManager:
 
         dataset_logger.info("Cleanup completed", dataset_id=dataset_id, **cleanup_results)
 
-    def __enter__(self) -> Self:
+    def __enter__(self: "AutoCleanupManager") -> Self:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self: "AutoCleanupManager", exc_type, exc_val, exc_tb: Any) -> None:
         if exc_type is not None and self.config.cleanup_on_failure:
             # Synchronous cleanup for context manager
             import asyncio
@@ -352,7 +359,7 @@ class AutoCleanupManager:
 
 # Utility functions for common recovery patterns
 async def with_timeout(
-    operation: Callable[..., T], timeout_seconds: float, operation_name: str = "operation", *args, **kwargs
+    operation: Callable[..., T], timeout_seconds: float, operation_name: str = "operation", *args, **kwargs: Any
 ) -> T:
     """Execute operation with timeout."""
     try:

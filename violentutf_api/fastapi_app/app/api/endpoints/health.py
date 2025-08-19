@@ -42,7 +42,7 @@ async def readiness_check() -> Any:
 @router.get("/security-headers")
 async def security_headers_check(request: Request, response: Response) -> Any:
     """Test endpoint to verify security headers are properly applied."""
-    # This endpoint will automatically get security headers applied by middleware
+    # This endpoint will automatically get security headers applied by middleware.
     # We can validate them here for testing purposes
 
     return {

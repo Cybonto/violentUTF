@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-Integration Tests for MCP Client with Real Server
+Integration Tests for MCP Client with Real Server.
+
 ===============================================
 
 Tests MCP client with actual ViolentUTF API endpoints.
@@ -26,7 +27,7 @@ from violentutf.utils.mcp_client import MCPClient, MCPClientSync
 
 
 def create_test_jwt_token() -> str:
-    """Create a JWT token for testing without streamlit"""
+    """Create a JWT token for testing without streamlit."""
     secret_key = os.getenv("JWT_SECRET_KEY")
     if not secret_key:
         raise ValueError("JWT_SECRET_KEY not found in environment")
@@ -46,16 +47,16 @@ def create_test_jwt_token() -> str:
 
 
 class TestMCPIntegration:
-    """Integration tests using real MCP server"""
+    """Integration tests using real MCP server."""
 
     @pytest.fixture
-    def base_url(self):
-        """Get base URL from environment"""
+    def base_url(self: "TestMCPIntegration") -> Any:
+        """Get base URL from environment."""
         return os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
 
     @pytest.fixture
-    def async_client(self, base_url):
-        """Create async MCP client"""
+    def async_client(self: "TestMCPIntegration", base_url: Any) -> Any:
+        """Create async MCP client."""
         client = MCPClient(base_url=base_url)
         # Set test token for non-streamlit environment
         token = create_test_jwt_token()
@@ -63,25 +64,25 @@ class TestMCPIntegration:
         return client
 
     @pytest.fixture
-    def sync_client(self, base_url):
-        """Create sync MCP client"""
+    def sync_client(self: "TestMCPIntegration", base_url: Any) -> Any:
+        """Create sync MCP client."""
         client = MCPClientSync(base_url=base_url)
         # Set test token for non-streamlit environment
         token = create_test_jwt_token()
         client.set_test_token(token)
         return client
 
-    def test_jwt_token_available(self):
-        """Test that JWT token is available for authentication"""
-        # In test environment, we create tokens directly without streamlit
+    def test_jwt_token_available(self: "TestMCPIntegration") -> None:
+        """Test that JWT token is available for authentication."""
+        # In test environment, we create tokens directly without streamlit.
         token = create_test_jwt_token()
         assert token is not None, "JWT token must be available for integration tests"
         assert len(token) > 0, "JWT token must not be empty"
 
     @pytest.mark.asyncio
-    async def test_real_server_connection(self, async_client):
-        """Test connection to real MCP server"""
-        # Initialize connection
+    async def test_real_server_connection(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test connection to real MCP server."""
+        # Initialize connection.
         result = await async_client.initialize()
         assert result is True, "Failed to connect to real MCP server"
 
@@ -93,8 +94,8 @@ class TestMCPIntegration:
         # Check capabilities
         assert async_client._initialized is True
 
-    def test_sync_server_connection(self, sync_client):
-        """Test sync client connection to real server"""
+    def test_sync_server_connection(self: "TestMCPIntegration", sync_client: Any) -> None:
+        """Test sync client connection to real server."""
         result = sync_client.initialize()
         assert result is True, "Failed to connect to real MCP server via sync client"
 
@@ -102,9 +103,9 @@ class TestMCPIntegration:
         assert sync_client.client._initialized is True
 
     @pytest.mark.asyncio
-    async def test_list_real_tools(self, async_client):
-        """Test listing actual MCP tools from server"""
-        # Initialize first
+    async def test_list_real_tools(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test listing actual MCP tools from server."""
+        # Initialize first.
         await async_client.initialize()
 
         # List tools
@@ -130,8 +131,8 @@ class TestMCPIntegration:
 
         print(f"Found {len(tools)} tools: {tool_names[:10]}...")  # Print first 10
 
-    def test_sync_list_real_tools(self, sync_client):
-        """Test listing tools via sync client"""
+    def test_sync_list_real_tools(self: "TestMCPIntegration", sync_client: Any) -> None:
+        """Test listing tools via sync client."""
         sync_client.initialize()
 
         tools = sync_client.list_tools()
@@ -142,8 +143,8 @@ class TestMCPIntegration:
         assert len(tools) >= 5, f"Expected at least 5 tools, got {len(tools)}"
 
     @pytest.mark.asyncio
-    async def test_execute_list_generators_tool(self, async_client):
-        """Test executing a real tool - list generators"""
+    async def test_execute_list_generators_tool(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test executing a real tool - list generators."""
         await async_client.initialize()
 
         # Execute list generators tool
@@ -159,8 +160,8 @@ class TestMCPIntegration:
         print(f"Found {len(generators) if generators else 0} generators")
 
     @pytest.mark.asyncio
-    async def test_list_real_resources(self, async_client):
-        """Test listing actual MCP resources"""
+    async def test_list_real_resources(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test listing actual MCP resources."""
         await async_client.initialize()
 
         resources = await async_client.list_resources()
@@ -175,8 +176,8 @@ class TestMCPIntegration:
             print(f"Found {len(resources)} resources")
 
     @pytest.mark.asyncio
-    async def test_read_real_resource(self, async_client):
-        """Test reading a real resource if available"""
+    async def test_read_real_resource(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test reading a real resource if available."""
         await async_client.initialize()
 
         # First list resources
@@ -201,8 +202,8 @@ class TestMCPIntegration:
                 pytest.skip("No readable resources found - server serialization issue")
 
     @pytest.mark.asyncio
-    async def test_list_real_prompts(self, async_client):
-        """Test listing actual MCP prompts"""
+    async def test_list_real_prompts(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test listing actual MCP prompts."""
         await async_client.initialize()
 
         prompts = await async_client.list_prompts()
@@ -216,8 +217,8 @@ class TestMCPIntegration:
             print(f"Found {len(prompts)} prompts")
 
     @pytest.mark.asyncio
-    async def test_get_real_prompt(self, async_client):
-        """Test getting a real prompt if available"""
+    async def test_get_real_prompt(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test getting a real prompt if available."""
         await async_client.initialize()
 
         # First list prompts
@@ -243,19 +244,19 @@ class TestMCPIntegration:
             print(f"Successfully got prompt '{name}'")
 
     @pytest.mark.asyncio
-    async def test_health_check(self, async_client):
-        """Test health check on real server"""
+    async def test_health_check(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test health check on real server."""
         result = await async_client.health_check()
         assert result is True, "Health check failed on real server"
 
-    def test_sync_health_check(self, sync_client):
-        """Test sync health check"""
+    def test_sync_health_check(self: "TestMCPIntegration", sync_client: Any) -> None:
+        """Test sync health check."""
         result = sync_client.health_check()
         assert result is True, "Sync health check failed"
 
     @pytest.mark.asyncio
-    async def test_error_handling_invalid_tool(self, async_client):
-        """Test error handling with invalid tool name"""
+    async def test_error_handling_invalid_tool(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test error handling with invalid tool name."""
         await async_client.initialize()
 
         # Try to execute non-existent tool
@@ -266,8 +267,8 @@ class TestMCPIntegration:
             assert "error" in result or "message" in result
 
     @pytest.mark.asyncio
-    async def test_authentication_flow(self, async_client):
-        """Test that authentication headers are properly set"""
+    async def test_authentication_flow(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test that authentication headers are properly set."""
         headers = async_client._get_auth_headers()
 
         assert "Authorization" in headers, "Missing Authorization header"
@@ -276,8 +277,8 @@ class TestMCPIntegration:
         assert headers["X-API-Gateway"] == "APISIX", "Invalid API Gateway value"
 
     @pytest.mark.asyncio
-    async def test_tool_execution_with_arguments(self, async_client):
-        """Test executing a tool with arguments"""
+    async def test_tool_execution_with_arguments(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test executing a tool with arguments."""
         await async_client.initialize()
 
         # Try to get generator types (usually doesn't require arguments)
@@ -287,8 +288,8 @@ class TestMCPIntegration:
             print(f"Generator types result: {result}")
 
     @pytest.mark.asyncio
-    async def test_concurrent_requests(self, async_client):
-        """Test multiple concurrent requests to real server"""
+    async def test_concurrent_requests(self: "TestMCPIntegration", async_client: Any) -> None:
+        """Test multiple concurrent requests to real server."""
         await async_client.initialize()
 
         # Create multiple concurrent tasks
@@ -306,16 +307,16 @@ class TestMCPIntegration:
             assert not isinstance(result, Exception), f"Task {i} failed: {result}"
             assert isinstance(result, list), f"Task {i} returned non-list: {type(result)}"
 
-    def test_sync_tool_execution(self, sync_client):
-        """Test sync tool execution with real server"""
+    def test_sync_tool_execution(self: "TestMCPIntegration", sync_client: Any) -> None:
+        """Test sync tool execution with real server."""
         sync_client.initialize()
 
         # Execute a simple tool
         result = sync_client.execute_tool("get_generators", {})
         assert result is not None, "Sync tool execution returned None"
 
-    def test_performance_baseline(self, sync_client):
-        """Test response time performance with real server"""
+    def test_performance_baseline(self: "TestMCPIntegration", sync_client: Any) -> None:
+        """Test response time performance with real server."""
         sync_client.initialize()
 
         # Measure list tools performance

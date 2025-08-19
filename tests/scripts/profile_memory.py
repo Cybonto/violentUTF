@@ -1,15 +1,18 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """Memory profiling script for ViolentUTF components."""
+
 import time
 import tracemalloc
 
 
-def profile_sample_operation():
+def profile_sample_operation() -> Any:
     """Sample operation to profile memory usage."""
-    # Start tracing
+    # Start tracing.
     tracemalloc.start()
 
     # Sample operation - create some data

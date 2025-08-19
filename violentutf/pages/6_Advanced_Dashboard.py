@@ -57,7 +57,7 @@ API_ENDPOINTS = {
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway"""
+    """Get authentication headers for API requests through APISIX Gateway."""
     try:
         # Use jwt_manager for automatic token refresh
         token = jwt_manager.get_valid_token()
@@ -85,7 +85,7 @@ def get_auth_headers() -> Dict[str, str]:
 
 
 def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
-    """Make an authenticated API request through APISIX Gateway"""
+    """Make an authenticated API request through APISIX Gateway."""
     headers = get_auth_headers()
     if not headers.get("Authorization"):
         logger.warning("No authentication token available for API request")
@@ -94,7 +94,6 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         logger.debug(f"Making {method} request to {url} through APISIX Gateway")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
-
         if response.status_code in [200, 201]:
             return response.json()
         else:
@@ -105,8 +104,8 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def create_compatible_api_token():
-    """Create a FastAPI-compatible token using JWT manager"""
+def create_compatible_api_token() -> None:
+    """Create a FastAPI-compatible token using JWT manager."""
     try:
         from utils.user_context import get_user_context_for_token
 
@@ -137,7 +136,7 @@ def create_compatible_api_token():
 
 @st.cache_data(ttl=300)  # 5-minute cache
 def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
-    """Load comprehensive execution data for analysis"""
+    """Load comprehensive execution data for analysis."""
     try:
         # First get all orchestrators (same approach as Dashboard_2)
         orchestrators_response = api_request("GET", API_ENDPOINTS["orchestrators"])
@@ -216,15 +215,15 @@ def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
 
 
 def prepare_feature_matrix(results: List[Dict[str, Any]]) -> Tuple[pd.DataFrame, np.ndarray]:
-    """Prepare feature matrix for ML analysis"""
+    """Prepare feature matrix for ML analysis."""
     features = []
 
     for result in results:
         metadata = result.get("metadata", {})
 
         # Extract features with proper score value cleaning
-        def clean_score_for_features(x):
-            """Clean score value for feature extraction"""
+        def clean_score_for_features(x) -> Any:
+            """Clean score value for feature extraction."""
             if x is None or (isinstance(x, float) and np.isnan(x)):
                 return 0.0
             if isinstance(x, bool):
@@ -291,8 +290,8 @@ def prepare_feature_matrix(results: List[Dict[str, Any]]) -> Tuple[pd.DataFrame,
 
 
 def perform_clustering_analysis(feature_matrix: np.ndarray, n_clusters: int = 5) -> Dict[str, Any]:
-    """Perform clustering analysis on scorer results"""
-    # Standardize features
+    """Perform clustering analysis on scorer results."""
+    # Standardize features.
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(feature_matrix)
 
@@ -330,8 +329,8 @@ def perform_clustering_analysis(feature_matrix: np.ndarray, n_clusters: int = 5)
 
 
 def perform_anomaly_detection(feature_matrix: np.ndarray, contamination: float = 0.1) -> Dict[str, Any]:
-    """Perform anomaly detection using Isolation Forest"""
-    # Standardize features
+    """Perform anomaly detection using Isolation Forest."""
+    # Standardize features.
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(feature_matrix)
 
@@ -355,15 +354,15 @@ def perform_anomaly_detection(feature_matrix: np.ndarray, contamination: float =
 
 
 def analyze_patterns_and_trends(results: List[Dict[str, Any]], df_features: pd.DataFrame) -> Dict[str, Any]:
-    """Analyze patterns and trends in the data"""
-    # Time series analysis
+    """Analyze patterns and trends in the data."""
+    # Time series analysis.
     df_results = pd.DataFrame(results)
     df_results["timestamp"] = pd.to_datetime(df_results["execution_time"])
     df_results = df_results.sort_values("timestamp")
 
     # Clean and convert score_value to numeric where possible
-    def clean_score_value(x):
-        """Convert score values to numeric for analysis"""
+    def clean_score_value(x) -> Any:
+        """Convert score values to numeric for analysis."""
         if x is None or (isinstance(x, float) and np.isnan(x)):
             return 0.0
         if isinstance(x, bool):
@@ -432,8 +431,8 @@ def analyze_patterns_and_trends(results: List[Dict[str, Any]], df_features: pd.D
 # --- Visualization Functions ---
 
 
-def render_ml_overview(clustering_results: Dict[str, Any], anomaly_results: Dict[str, Any]):
-    """Render ML analysis overview"""
+def render_ml_overview(clustering_results: Dict[str, Any], anomaly_results: Dict[str, Any]) -> None:
+    """Render ML analysis overview."""
     st.header("🤖 Machine Learning Analysis Overview")
 
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -461,8 +460,8 @@ def render_ml_overview(clustering_results: Dict[str, Any], anomaly_results: Dict
 
 def render_clustering_visualization(
     results: List[Dict[str, Any]], clustering_results: Dict[str, Any], df_features: pd.DataFrame
-):
-    """Render clustering visualization"""
+) -> None:
+    """Render clustering visualization."""
     st.header("🎯 Result Clustering Analysis")
 
     pca_features = clustering_results.get("pca_features", [])
@@ -561,8 +560,10 @@ def render_clustering_visualization(
         st.dataframe(df_cluster_analysis, use_container_width=True, hide_index=True)
 
 
-def render_anomaly_detection(results: List[Dict[str, Any]], anomaly_results: Dict[str, Any], df_features: pd.DataFrame):
-    """Render anomaly detection results"""
+def render_anomaly_detection(
+    results: List[Dict[str, Any]], anomaly_results: Dict[str, Any], df_features: pd.DataFrame
+) -> None:
+    """Render anomaly detection results."""
     st.header("🔍 Anomaly Detection")
 
     anomaly_labels = anomaly_results.get("anomaly_labels", [])
@@ -637,8 +638,8 @@ def render_anomaly_detection(results: List[Dict[str, Any]], anomaly_results: Dic
         st.dataframe(df_anomalies, use_container_width=True, hide_index=True)
 
 
-def render_pattern_trends(pattern_analysis: Dict[str, Any]):
-    """Render pattern and trend analysis"""
+def render_pattern_trends(pattern_analysis: Dict[str, Any]) -> None:
+    """Render pattern and trend analysis."""
     st.header("📈 Pattern & Trend Analysis")
 
     # Trend overview
@@ -765,8 +766,8 @@ def render_pattern_trends(pattern_analysis: Dict[str, Any]):
                     st.text(f"• {feature}: {corr:.3f}")
 
 
-def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: Dict[str, Any]):
-    """Render predictive insights and recommendations"""
+def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: Dict[str, Any]) -> None:
+    """Render predictive insights and recommendations."""
     st.header("💡 Predictive Insights & Recommendations")
 
     # Risk prediction model (simplified)
@@ -927,8 +928,8 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
 # --- Main Dashboard Function ---
 
 
-def main():
-    """Main advanced analytics dashboard with ML insights"""
+def main() -> None:
+    """Main advanced analytics dashboard with ML insights."""
     logger.debug("Advanced Analytics Dashboard loading.")
     st.set_page_config(
         page_title="ViolentUTF Advanced Dashboard", page_icon="🧬", layout="wide", initial_sidebar_state="expanded"

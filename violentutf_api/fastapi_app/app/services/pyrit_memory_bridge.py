@@ -26,7 +26,7 @@ class UserContextManager:
     @staticmethod
     def get_user_hash(user_id: str) -> str:
         """Generate a consistent hash for user identification."""
-        # Use consistent salt for user hashing
+        # Use consistent salt for user hashing.
         salt = os.getenv("PYRIT_DB_SALT", "default_salt")
         combined = f"{user_id}:{salt}"
         return hashlib.sha256(combined.encode()).hexdigest()[:16]
@@ -44,11 +44,11 @@ class PyRITMemoryBridge:
     """Enhanced bridge between ViolentUTF and PyRIT memory systems."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.memory_cache: Dict[str, DuckDBMemory] = {}
         self.user_context_manager = UserContextManager()
 
-    async def get_or_create_user_memory(self, user_id: str) -> DuckDBMemory:
+    async def get_or_create_user_memory(self: "PyRITMemoryBridge", user_id: str) -> DuckDBMemory:
         """Get or create user-specific PyRIT memory instance."""
         if user_id not in self.memory_cache:
             try:
@@ -68,7 +68,12 @@ class PyRITMemoryBridge:
         return self.memory_cache[user_id]
 
     async def store_prompts_to_pyrit_memory(
-        self, prompts: List[str], metadata: List[Dict[str, Any]], dataset_id: str, user_id: str, batch_size: int = 100
+        self: "PyRITMemoryBridge",
+        prompts: List[str],
+        metadata: List[Dict[str, Any]],
+        dataset_id: str,
+        user_id: str,
+        batch_size: int = 100,
     ) -> int:
         """Store prompts using PyRIT's async memory functions with user context."""
         try:
@@ -114,7 +119,12 @@ class PyRITMemoryBridge:
             raise
 
     async def get_prompts_from_pyrit_memory(
-        self, dataset_id: str, user_id: str, offset: int = 0, limit: int = 1000, include_metadata: bool = False
+        self: "PyRITMemoryBridge",
+        dataset_id: str,
+        user_id: str,
+        offset: int = 0,
+        limit: int = 1000,
+        include_metadata: bool = False,
     ) -> Tuple[List[str], int]:
         """Retrieve prompts using PyRIT memory interface with pagination."""
         try:
@@ -151,7 +161,7 @@ class PyRITMemoryBridge:
             logger.error(f"Failed to retrieve prompts from PyRIT memory: {e}")
             return [], 0
 
-    async def get_dataset_statistics(self, dataset_id: str, user_id: str) -> Dict[str, Any]:
+    async def get_dataset_statistics(self: "PyRITMemoryBridge", dataset_id: str, user_id: str) -> Dict[str, Any]:
         """Get comprehensive statistics for a dataset in PyRIT memory."""
         try:
             memory = await self.get_or_create_user_memory(user_id)
@@ -205,7 +215,7 @@ class PyRITMemoryBridge:
                 "error": str(e),
             }
 
-    async def delete_dataset_from_memory(self, dataset_id: str, user_id: str) -> bool:
+    async def delete_dataset_from_memory(self: "PyRITMemoryBridge", dataset_id: str, user_id: str) -> bool:
         """Delete all prompts for a dataset from PyRIT memory."""
         try:
             memory = await self.get_or_create_user_memory(user_id)
@@ -235,7 +245,7 @@ class PyRITMemoryBridge:
             logger.error(f"Failed to delete dataset from PyRIT memory: {e}")
             return False
 
-    async def cleanup_user_memory(self, user_id: str, max_age_days: int = 30) -> Dict[str, Any]:
+    async def cleanup_user_memory(self: "PyRITMemoryBridge", user_id: str, max_age_days: int = 30) -> Dict[str, Any]:
         """Cleanup old data from user's PyRIT memory."""
         try:
             memory = await self.get_or_create_user_memory(user_id)
@@ -272,7 +282,7 @@ class PyRITMemoryBridge:
             logger.error(f"Failed to cleanup user memory: {e}")
             return {"cleaned_up": 0, "total_pieces": 0, "error": str(e)}
 
-    def close_memory_connections(self) -> None:
+    def close_memory_connections(self: "PyRITMemoryBridge") -> None:
         """Close all cached memory connections."""
         for user_id, memory in self.memory_cache.items():
             try:
@@ -285,7 +295,7 @@ class PyRITMemoryBridge:
         self.memory_cache.clear()
         logger.info("All PyRIT memory connections closed")
 
-    def __del__(self) -> None:
+    def __del__(self: "PyRITMemoryBridge") -> None:
         """Cleanup on object destruction."""
         try:
             self.close_memory_connections()

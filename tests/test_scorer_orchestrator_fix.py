@@ -1,8 +1,10 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""Test script to verify scorer orchestrator creation fix"""
+"""Test script to verify scorer orchestrator creation fix."""
 
 import json
 from datetime import datetime
@@ -18,8 +20,8 @@ JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbW
 headers = {"Authorization": f"Bearer {JWT_TOKEN}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
 
 
-def test_orchestrator_creation():
-    """Test creating an orchestrator for scorer testing"""
+def test_orchestrator_creation() -> Any:
+    """Test creating an orchestrator for scorer testing."""
     print("🧪 Testing Orchestrator Creation for Scorer Testing")
     print("=" * 60)
 

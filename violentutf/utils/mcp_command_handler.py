@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-MCP Command Handler for Phase 3 UI Implementation
+MCP Command Handler for Phase 3 UI Implementation.
+
 =================================================
 
 This module provides command execution and management for the
@@ -30,14 +31,14 @@ logger = logging.getLogger(__name__)
 
 
 class CommandHistory:
-    """Manages command history with persistence"""
+    """Manages command history with persistence."""
 
-    def __init__(self, max_history: int = 50):
+    def __init__(self: "CommandHistory", max_history: int = 50) -> None:
         self.max_history = max_history
         self._history: List[Dict[str, Any]] = []
 
-    def add(self, command: str, result: Any, success: bool = True):
-        """Add command to history"""
+    def add(self: "CommandHistory", command: str, result: Any, success: bool = True) -> None:
+        """Add command to history."""
         entry = {"command": command, "result": result, "success": success, "timestamp": datetime.now().isoformat()}
         self._history.append(entry)
 
@@ -45,12 +46,12 @@ class CommandHistory:
         if len(self._history) > self.max_history:
             self._history = self._history[-self.max_history :]
 
-    def get_recent(self, count: int = 10) -> List[Dict[str, Any]]:
-        """Get recent command history"""
+    def get_recent(self: "CommandHistory", count: int = 10) -> List[Dict[str, Any]]:
+        """Get recent command history."""
         return self._history[-count:]
 
-    def search(self, query: str) -> List[Dict[str, Any]]:
-        """Search command history"""
+    def search(self: "CommandHistory", query: str) -> List[Dict[str, Any]]:
+        """Search command history."""
         results = []
         query_lower = query.lower()
         for entry in self._history:
@@ -58,15 +59,15 @@ class CommandHistory:
                 results.append(entry)
         return results
 
-    def clear(self):
-        """Clear command history"""
+    def clear(self: "CommandHistory") -> None:
+        """Clear command history."""
         self._history = []
 
 
 class MCPCommandHandler:
-    """Handles MCP command execution and management"""
+    """Handles MCP command execution and management."""
 
-    def __init__(self, mcp_client: MCPClientSync):
+    def __init__(self: "MCPCommandHandler", mcp_client: MCPClientSync) -> None:
         self.mcp_client = mcp_client
         self.parser = NaturalLanguageParser()
         self.searcher = ResourceSearcher(mcp_client)
@@ -85,8 +86,8 @@ class MCPCommandHandler:
             MCPCommandType.PROMPT: self._execute_prompt,
         }
 
-    def execute_command(self, command_text: str) -> Tuple[bool, Any]:
-        """Execute an MCP command and return result"""
+    def execute_command(self: "MCPCommandHandler", command_text: str) -> Tuple[bool, Any]:
+        """Execute an MCP command and return result."""
         try:
             # Parse command
             command = self.parser.parse(command_text)
@@ -109,8 +110,8 @@ class MCPCommandHandler:
             logger.error(f"Command execution error: {e}")
             return False, f"Error executing command: {str(e)}"
 
-    def get_command_suggestions(self, partial_text: str) -> List[str]:
-        """Get command suggestions for autocomplete"""
+    def get_command_suggestions(self: "MCPCommandHandler", partial_text: str) -> List[str]:
+        """Get command suggestions for autocomplete."""
         suggestions = self.parser.suggest_command(partial_text)
 
         # Add history-based suggestions
@@ -124,9 +125,10 @@ class MCPCommandHandler:
 
     # Command Executors
 
-    def _execute_help(self, command: MCPCommand) -> Tuple[bool, str]:
-        """Execute help command"""
+    def _execute_help(self: "MCPCommandHandler", command: MCPCommand) -> Tuple[bool, str]:
+        """Execute help command."""
         help_text = """
+
 **Available MCP Commands:**
 
 • `/mcp help` - Show this help message
@@ -151,8 +153,8 @@ You can also use natural language like:
 """
         return True, help_text
 
-    def _execute_test(self, command: MCPCommand) -> Tuple[bool, Any]:
-        """Execute test command"""
+    def _execute_test(self: "MCPCommandHandler", command: MCPCommand) -> Tuple[bool, Any]:
+        """Execute test command."""
         test_type = command.arguments.get("test_type", "jailbreak")
 
         # Get current prompt from session state
@@ -182,8 +184,8 @@ You can also use natural language like:
             logger.error(f"Test execution error: {e}")
             return False, f"Failed to execute test: {str(e)}"
 
-    def _execute_dataset(self, command: MCPCommand) -> Tuple[bool, Any]:
-        """Execute dataset command"""
+    def _execute_dataset(self: "MCPCommandHandler", command: MCPCommand) -> Tuple[bool, Any]:
+        """Execute dataset command."""
         dataset_name = command.arguments.get("dataset_name", "")
 
         if not dataset_name:
@@ -209,9 +211,9 @@ You can also use natural language like:
         else:
             return False, f"Failed to load dataset: {dataset_name}"
 
-    def _execute_enhance(self, command: MCPCommand) -> Tuple[bool, Any]:
-        """Execute enhance command"""
-        # Get current prompt
+    def _execute_enhance(self: "MCPCommandHandler", command: MCPCommand) -> Tuple[bool, Any]:
+        """Execute enhance command."""
+        # Get current prompt.
         current_prompt = st.session_state.get("current_user_input", "")
         if not current_prompt:
             return False, "No prompt to enhance. Please enter a prompt first."
@@ -228,9 +230,9 @@ You can also use natural language like:
             logger.error(f"Enhancement error: {e}")
             return False, f"Enhancement failed: {str(e)}"
 
-    def _execute_analyze(self, command: MCPCommand) -> Tuple[bool, Any]:
-        """Execute analyze command"""
-        # Get current prompt
+    def _execute_analyze(self: "MCPCommandHandler", command: MCPCommand) -> Tuple[bool, Any]:
+        """Execute analyze command."""
+        # Get current prompt.
         current_prompt = st.session_state.get("current_user_input", "")
         if not current_prompt:
             return False, "No prompt to analyze. Please enter a prompt first."
@@ -257,8 +259,8 @@ You can also use natural language like:
             logger.error(f"Analysis error: {e}")
             return False, f"Analysis failed: {str(e)}"
 
-    def _execute_resources(self, command: MCPCommand) -> Tuple[bool, Any]:
-        """Execute resources command"""
+    def _execute_resources(self: "MCPCommandHandler", command: MCPCommand) -> Tuple[bool, Any]:
+        """Execute resources command."""
         try:
             # Get available resources
             resources = self.mcp_client.list_resources()
@@ -282,8 +284,8 @@ You can also use natural language like:
             logger.error(f"Resource listing error: {e}")
             return False, f"Failed to list resources: {str(e)}"
 
-    def _execute_prompt(self, command: MCPCommand) -> Tuple[bool, Any]:
-        """Execute prompt command"""
+    def _execute_prompt(self: "MCPCommandHandler", command: MCPCommand) -> Tuple[bool, Any]:
+        """Execute prompt command."""
         prompt_name = command.arguments.get("prompt_name", "")
 
         if not prompt_name:
@@ -306,9 +308,9 @@ You can also use natural language like:
             logger.error(f"Prompt retrieval error: {e}")
             return False, f"Failed to get prompt: {str(e)}"
 
-    def _get_default_prompt_args(self, prompt_name: str) -> Dict[str, Any]:
-        """Get default arguments for a prompt"""
-        # Define default arguments for known prompts
+    def _get_default_prompt_args(self: "MCPCommandHandler", prompt_name: str) -> Dict[str, Any]:
+        """Get default arguments for a prompt."""
+        # Define default arguments for known prompts.
         defaults = {
             "jailbreak_test": {"scenario": "Test scenario", "target_query": "Test query", "persona": "security tester"},
             "bias_detection": {"focus_area": "general", "category": "implicit", "test_prompt": "Test prompt"},
@@ -325,79 +327,131 @@ You can also use natural language like:
 
 
 def format_command_result(result: Any) -> str:
-    """Format command result for display"""
+    """Format command result for display."""
     if isinstance(result, str):
         return result
 
     if isinstance(result, dict):
         result_type = result.get("type", "unknown")
 
-        if result_type == "test_result":
-            return f"""**Test Generated: {result['test_type']}**
+        # Use dispatch pattern for different result types
+        formatters = {
+            "test_result": _format_test_result,
+            "dataset_loaded": _format_dataset_loaded,
+            "enhanced_prompt": _format_enhanced_prompt,
+            "analysis_results": _format_analysis_results,
+            "resource_list": _format_resource_list,
+            "prompt_list": _format_prompt_list,
+            "prompt_rendered": _format_prompt_rendered,
+            "dataset_list": _format_dataset_list,
+        }
 
-{result['prompt'][:500]}...
-"""
-
-        elif result_type == "dataset_loaded":
-            return f"""**Dataset Loaded: {result['name']}**
-
-Size: {result['size']}
-Preview: {result['preview']}
-"""
-
-        elif result_type == "enhanced_prompt":
-            return f"""**Enhanced Prompt:**
-
-{result['enhanced']}
-"""
-
-        elif result_type == "analysis_results":
-            output = "**Analysis Results:**\n\n"
-            for analysis_type, content in result.get("analyses", {}).items():
-                output += f"**{analysis_type.title()}:**\n{content[:300]}...\n\n"
-            return output
-
-        elif result_type == "resource_list":
-            output = f"**Available Resources ({result['total']} total):**\n\n"
-            for category, resources in result.get("categories", {}).items():
-                if resources:
-                    output += f"**{category.title()} ({len(resources)}):**\n"
-                    for resource in resources[:3]:
-                        output += f"• {resource.name}\n"
-                    if len(resources) > 3:
-                        output += f"  ...and {len(resources) - 3} more\n"
-                    output += "\n"
-            return output
-
-        elif result_type == "prompt_list":
-            output = "**Available Prompts:**\n\n"
-            for prompt in result.get("prompts", [])[:10]:
-                name = prompt.name if hasattr(prompt, "name") else prompt.get("name", "Unknown")
-                desc = (
-                    prompt.description
-                    if hasattr(prompt, "description")
-                    else prompt.get("description", "No description")
-                )
-                output += f"• `{name}` - {desc}\n"
-            return output
-
-        elif result_type == "prompt_rendered":
-            return f"""**Prompt: {result['name']}**
-
-{result['content']}
-"""
-
-        elif result_type == "dataset_list":
-            output = "**Available Datasets:**\n\n"
-            datasets = result.get("datasets", {})
-            for source, dataset_list in datasets.items():
-                if dataset_list:
-                    output += f"**{source.title()} Datasets:**\n"
-                    for dataset in dataset_list[:5]:
-                        name = dataset.get("name", "Unknown")
-                        output += f"• {name}\n"
-                    output += "\n"
-            return output
+        formatter = formatters.get(result_type)
+        if formatter:
+            return formatter(result)
 
     # Fallback to string representation
     return str(result)
+
+
+def _format_test_result(result: Dict[str, Any]) -> str:
+    """Format test result for display."""
+    test_type = result.get("test_type", "unknown")
+    prompt = result.get("prompt", "")
+    return f"\n**Test Generated ({test_type}):**\n\n{prompt}"
+
+
+def _format_dataset_loaded(result: Dict[str, Any]) -> str:
+    """Format dataset loaded message."""
+    name = result.get("name", "Unknown")
+    size = result.get("size", "N/A")
+    preview = result.get("preview", [])
+
+    message = f"\n**Dataset Loaded: {name}**\n"
+    message += f"- Size: {size} prompts\n"
+
+    if preview:
+        message += "\n**Preview (first 3):**\n"
+        for i, item in enumerate(preview[:3], 1):
+            preview_text = str(item)[:100]
+            if len(str(item)) > 100:
+                preview_text += "..."
+            message += f"{i}. {preview_text}\n"
+
+    return message
+
+
+def _format_enhanced_prompt(result: Dict[str, Any]) -> str:
+    """Format enhanced prompt result."""
+    original = result.get("original", "")
+    enhanced = result.get("enhanced", "")
+
+    return f"\n**Original Prompt:**\n{original}\n\n" f"**Enhanced Prompt:**\n{enhanced}"
+
+
+def _format_analysis_results(result: Dict[str, Any]) -> str:
+    """Format analysis results."""
+    prompt = result.get("prompt", "")
+    analyses = result.get("analyses", {})
+
+    message = f"\n**Analysis Results**\n\n"
+    message += f"**Prompt:** {prompt[:100]}...\n\n" if len(prompt) > 100 else f"**Prompt:** {prompt}\n\n"
+
+    for analysis_type, analysis_result in analyses.items():
+        message += f"**{analysis_type.title()} Analysis:**\n"
+        message += f"{analysis_result}\n\n"
+
+    return message
+
+
+def _format_resource_list(result: Dict[str, Any]) -> str:
+    """Format resource list."""
+    total = result.get("total", 0)
+    categories = result.get("categories", {})
+
+    message = f"\n**Available Resources ({total} total):**\n\n"
+
+    for category, resources in categories.items():
+        if resources:
+            message += f"**{category.title()} ({len(resources)}):**\n"
+            for resource in resources[:5]:  # Show first 5 of each category
+                message += f"  - {resource.name}\n"
+            if len(resources) > 5:
+                message += f"  ... and {len(resources) - 5} more\n"
+            message += "\n"
+
+    return message
+
+
+def _format_prompt_list(result: Dict[str, Any]) -> str:
+    """Format prompt list."""
+    prompts = result.get("prompts", [])
+
+    message = "\n**Available Prompts:**\n\n"
+    for prompt in prompts:
+        message += f"• **{prompt.name}**: {prompt.description}\n"
+        if hasattr(prompt, "arguments") and prompt.arguments:
+            message += "  Arguments: "
+            args = [f"{arg.name}{'*' if arg.required else ''}" for arg in prompt.arguments]
+            message += ", ".join(args) + "\n"
+
+    return message
+
+
+def _format_prompt_rendered(result: Dict[str, Any]) -> str:
+    """Format rendered prompt."""
+    name = result.get("name", "Unknown")
+    content = result.get("content", "")
+
+    return f"\n**Prompt Template: {name}**\n\n{content}"
+
+
+def _format_dataset_list(result: Dict[str, Any]) -> str:
+    """Format dataset list."""
+    datasets = result.get("datasets", [])
+
+    message = "\n**Available Datasets:**\n\n"
+    for dataset in datasets:
+        message += f"• {dataset}\n"
+
+    return message

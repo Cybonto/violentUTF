@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 import streamlit as st
@@ -40,7 +40,7 @@ if VIOLENTUTF_API_URL.endswith("/api"):
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway"""
+    """Get authentication headers for API requests through APISIX Gateway."""
     try:
         #         from utils.jwt_manager import jwt_manager # F811: removed duplicate import
 
@@ -73,8 +73,8 @@ def get_auth_headers() -> Dict[str, str]:
         return {}
 
 
-def create_compatible_api_token():
-    """Create a FastAPI - compatible token using JWT manager - NEVER implement manually"""
+def create_compatible_api_token() -> None:
+    """Create a FastAPI - compatible token using JWT manager - NEVER implement manually."""
     try:
         #         from utils.jwt_manager import jwt_manager # F811: removed duplicate import
 
@@ -119,14 +119,14 @@ def create_compatible_api_token():
 
 
 class APISIXAdmin:
-    """Class to interact with APISIX Admin through ViolentUTF API"""
+    """Class to interact with APISIX Admin through ViolentUTF API."""
 
-    def __init__(self):
+    def __init__(self: "APISIXAdmin") -> None:
         self.api_url = f"{VIOLENTUTF_API_URL}/api/v1/apisix-admin"
         self.headers = get_auth_headers()
 
-    def get_all_routes(self) -> Optional[Dict]:
-        """Get all AI routes from APISIX through API"""
+    def get_all_routes(self: "APISIXAdmin") -> Optional[Dict]:
+        """Get all AI routes from APISIX through API."""
         try:
             response = requests.get(f"{self.api_url}/routes", headers=self.headers, timeout=10)
             if response.status_code == 200:
@@ -138,8 +138,8 @@ class APISIXAdmin:
             logger.error(f"Error getting routes: {e}")
             return None
 
-    def get_route(self, route_id: str) -> Optional[Dict]:
-        """Get specific route configuration through API"""
+    def get_route(self: "APISIXAdmin", route_id: str) -> Optional[Dict]:
+        """Get specific route configuration through API."""
         try:
             response = requests.get(f"{self.api_url}/routes/{route_id}", headers=self.headers, timeout=10)
             if response.status_code == 200:
@@ -151,8 +151,8 @@ class APISIXAdmin:
             logger.error(f"Error getting route {route_id}: {e}")
             return None
 
-    def update_route_plugins(self, route_id: str, route_config: Dict) -> tuple[bool, str]:
-        """Update route configuration with new plugins through API"""
+    def update_route_plugins(self: "APISIXAdmin", route_id: str, route_config: Dict) -> tuple[bool, str]:
+        """Update route configuration with new plugins through API."""
         try:
             response = requests.put(
                 f"{self.api_url}/routes/{route_id}/plugins", headers=self.headers, json=route_config, timeout=10
@@ -175,7 +175,7 @@ class APISIXAdmin:
 
 
 def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai - prompt - guard plugin configuration"""
+    """Render UI for ai - prompt - guard plugin configuration."""
     # st.subheader("🛡️ AI Prompt Guard Configuration")
 
     with st.expander("ℹ️ About AI Prompt Guard", expanded=False):
@@ -281,8 +281,7 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
 
     try:
         # Get API key
-        api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
-
+        api_key = _get_api_key()
         if not api_key:
             return {
                 "success": False,
@@ -290,80 +289,115 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
                 "suggestion": "Please ensure VIOLENTUTF_API_KEY is set in your .env file",
             }
 
-        # Determine endpoint based on route
-        base_url = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
-        if base_url.endswith("/api"):
-            base_url = base_url[:-4]
-
-        # Extract endpoint from route_id or use URI directly for GSAi
-        if "gsai" in route_id:
-            # GSAi uses a single endpoint for all models
-            endpoint = f"{base_url}/ai/gsai-api-1/chat/completions"
-        elif "openai" in route_id:
-            endpoint = f"{base_url}/ai/openai/{model}"
-        elif "anthropic" in route_id:
-            endpoint = f"{base_url}/ai/anthropic/{model}"
-        elif "ollama" in route_id:
-            endpoint = f"{base_url}/ai/ollama/{model}"
-        elif "webui" in route_id:
-            endpoint = f"{base_url}/ai/webui/{model}"
-        else:
-            endpoint = f"{base_url}/ai/{provider}/{model}"
-
-        # Test prompt
-        test_prompt = "Hello, please respond with 'Test successful' if you receive this message."
-
-        # Prepare request
-        headers = {"apikey": api_key, "Content-Type": "application/json"}
-
-        payload = {
-            "model": model,
-            "messages": [{"role": "user", "content": test_prompt}],
-            "max_tokens": 50,
-            "temperature": 0,
-        }
+        # Build endpoint and request data
+        endpoint = _build_test_endpoint(route_id, provider, model)
+        headers, payload = _prepare_test_request(api_key, model)
 
         # Make test request
         response = requests.post(endpoint, headers=headers, json=payload, timeout=10)
 
-        if response.status_code == 200:
-            data = response.json()
-
-            # Extract response based on format
-            response_text = ""
-            if "choices" in data:
-                response_text = data["choices"][0]["message"]["content"]
-            elif "content" in data and isinstance(data["content"], list):
-                if data["content"] and "text" in data["content"][0]:
-                    response_text = data["content"][0]["text"]
-            elif "content" in data and isinstance(data["content"], str):
-                response_text = data["content"]
-
-            return {"success": True, "test_prompt": test_prompt, "response": response_text, "filtered": False}
-        elif response.status_code == 400:
-            # Check if it's a plugin - related error
-            error_text = response.text
-            if "system" in error_text and "anthropic" in route_id.lower():
-                return {
-                    "success": False,
-                    "error": "System role not supported by Anthropic",
-                    "suggestion": "Use 'user' or 'assistant' roles instead of 'system' for Anthropic routes",
-                }
-            elif "prohibited content" in error_text.lower():
-                return {
-                    "success": True,
-                    "test_prompt": test_prompt,
-                    "response": "Blocked by prompt guard",
-                    "filtered": True,
-                    "filter_reason": "Content matched deny patterns",
-                }
-            else:
-                return {"success": False, "error": f"Bad request: {error_text}"}
-        else:
-            return {"success": False, "error": f"HTTP {response.status_code}: {response.text}"}
+        # Process response
+        return _process_test_response(response, route_id)
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+def _get_api_key() -> Optional[str]:
+    """Get API key from environment."""
+    return os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
+
+
+def _build_test_endpoint(route_id: str, provider: str, model: str) -> str:
+    """Build test endpoint URL based on route configuration."""
+    base_url = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
+    if base_url.endswith("/api"):
+        base_url = base_url[:-4]
+
+    # Route-specific endpoint mapping
+    endpoint_map = {
+        "gsai": f"{base_url}/ai/gsai-api-1/chat/completions",
+        "openai": f"{base_url}/ai/openai/{model}",
+        "anthropic": f"{base_url}/ai/anthropic/{model}",
+        "ollama": f"{base_url}/ai/ollama/{model}",
+        "webui": f"{base_url}/ai/webui/{model}",
+    }
+
+    # Find matching endpoint or use default
+    for key, endpoint in endpoint_map.items():
+        if key in route_id:
+            return endpoint
+
+    return f"{base_url}/ai/{provider}/{model}"
+
+
+def _prepare_test_request(api_key: str, model: str) -> Tuple[Dict, Dict]:
+    """Prepare test request headers and payload."""
+    test_prompt = "Hello, please respond with 'Test successful' if you receive this message."
+
+    headers = {"apikey": api_key, "Content-Type": "application/json"}
+
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": test_prompt}],
+        "max_tokens": 50,
+        "temperature": 0,
+    }
+
+    return headers, payload
+
+
+def _process_test_response(response, route_id: str) -> Dict:
+    """Process test response and return result."""
+    test_prompt = "Hello, please respond with 'Test successful' if you receive this message."
+
+    if response.status_code == 200:
+        return _handle_success_response(response, test_prompt)
+    elif response.status_code == 400:
+        return _handle_bad_request(response, route_id, test_prompt)
+    else:
+        return {"success": False, "error": f"HTTP {response.status_code}: {response.text}"}
+
+
+def _handle_success_response(response, test_prompt: str) -> Dict:
+    """Handle successful test response."""
+    data = response.json()
+    response_text = _extract_response_text(data)
+    return {"success": True, "test_prompt": test_prompt, "response": response_text, "filtered": False}
+
+
+def _extract_response_text(data: Dict) -> str:
+    """Extract response text from different response formats."""
+    if "choices" in data:
+        return data["choices"][0]["message"]["content"]
+    elif "content" in data and isinstance(data["content"], list):
+        if data["content"] and "text" in data["content"][0]:
+            return data["content"][0]["text"]
+    elif "content" in data and isinstance(data["content"], str):
+        return data["content"]
+    return ""
+
+
+def _handle_bad_request(response, route_id: str, test_prompt: str) -> Dict:
+    """Handle 400 Bad Request errors."""
+    error_text = response.text
+
+    if "system" in error_text and "anthropic" in route_id.lower():
+        return {
+            "success": False,
+            "error": "System role not supported by Anthropic",
+            "suggestion": "Use 'user' or 'assistant' roles instead of 'system' for Anthropic routes",
+        }
+    elif "prohibited content" in error_text.lower():
+        return {
+            "success": True,
+            "test_prompt": test_prompt,
+            "response": "Blocked by prompt guard",
+            "filtered": True,
+            "filter_reason": "Content matched deny patterns",
+        }
+    else:
+        return {"success": False, "error": f"Bad request: {error_text}"}
 
 
 def detect_provider_type(route_config: Dict) -> str:
@@ -409,9 +443,9 @@ def detect_provider_type(route_config: Dict) -> str:
     return "unknown"
 
 
-def handle_prepend_role_change():
+def handle_prepend_role_change() -> None:
     """Handle prepend role changes - restore original content when switching back."""
-    # Find the route_id from session state keys
+    # Find the route_id from session state keys.
     for key in st.session_state:
         if key.startswith("prepend_role_") and "_last_" not in key and "_original_" not in key:
             route_id = key.replace("prepend_role_", "")
@@ -438,9 +472,9 @@ def handle_prepend_role_change():
             break
 
 
-def handle_append_role_change():
+def handle_append_role_change() -> None:
     """Handle append role changes - restore original content when switching back."""
-    # Find the route_id from session state keys
+    # Find the route_id from session state keys.
     for key in st.session_state:
         if key.startswith("append_role_") and "_last_" not in key and "_original_" not in key:
             route_id = key.replace("append_role_", "")
@@ -468,7 +502,7 @@ def handle_append_role_change():
 
 
 def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai - prompt - decorator plugin configuration"""
+    """Render UI for ai - prompt - decorator plugin configuration."""
     # st.subheader("🎨 AI Prompt Decorator Configuration")
 
     # Detect provider type
@@ -643,9 +677,9 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
     return new_config
 
 
-def main():
-    """Main function for IronUTF page"""
-    # Handle authentication
+def main() -> None:
+    """Main function for IronUTF page."""
+    # Handle authentication.
     handle_authentication_and_sidebar("IronUTF - Defense Module")
 
     # Check authentication

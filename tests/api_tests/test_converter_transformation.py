@@ -1,3 +1,5 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
@@ -26,8 +28,8 @@ API_BASE_URL = "http://localhost:9080"
 JWT_SECRET_KEY = "ZtZDeFsgTqUm3KHSKINa46TUV13JJw7T"
 
 
-def create_jwt_token():
-    """Create a test JWT token"""
+def create_jwt_token() -> None:
+    """Create a test JWT token."""
     try:
         import jwt
 
@@ -46,8 +48,8 @@ def create_jwt_token():
         return None
 
 
-def get_headers():
-    """Get API request headers"""
+def get_headers() -> Any:
+    """Get API request headers."""
     token = create_jwt_token()
     if not token:
         raise ValueError("Failed to create JWT token")
@@ -55,8 +57,8 @@ def get_headers():
     return {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
 
 
-def simple_rot13(text):
-    """Simple ROT13 implementation for verification"""
+def simple_rot13(text: str) -> Any:
+    """Simple ROT13 implementation for verification."""
     result = []
     for char in text:
         if "a" <= char <= "z":
@@ -68,8 +70,8 @@ def simple_rot13(text):
     return "".join(result)
 
 
-def test_converter_transformations():
-    """Test that converters actually transform prompts correctly"""
+def test_converter_transformations() -> Any:
+    """Test that converters actually transform prompts correctly."""
     headers = get_headers()
     resources_to_cleanup = {"datasets": [], "converters": []}
 

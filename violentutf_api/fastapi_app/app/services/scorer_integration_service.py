@@ -105,7 +105,6 @@ async def _execute_true_false_scorer(scorer_config: Dict, text: str) -> Dict[str
                 "score_rationale": rationale,
                 "score_metadata": f"{{\"question\": \"{question}\", \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\", \"scorer_type\": \"SelfAskTrueFalseScorer\"}}",
             }
-
         else:
             # Fallback to original criteria-based logic for other types
             criteria = parameters.get("criteria", scorer_config.get("criteria", "helpful"))
@@ -125,7 +124,6 @@ async def _execute_true_false_scorer(scorer_config: Dict, text: str) -> Dict[str
                 "score_rationale": rationale,
                 "score_metadata": f"{{\"criteria\": \"{criteria}\", \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
             }
-
     except Exception as e:
         logger.error(f"Error in _execute_true_false_scorer: {e}")
         return {
@@ -237,7 +235,6 @@ async def _execute_likert_scorer(scorer_config: Dict, text: str) -> Dict[str, An
                 "score_rationale": f"{rationale} (Original: {score_value}, Normalized: {normalized_score:.3f})",
                 "score_metadata": f"{{\"question\": \"{question}\", \"scale_min\": {scale_min}, \"scale_max\": {scale_max}, \"original_score\": {score_value}, \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\", \"scorer_type\": \"SelfAskLikertScorer\"}}",
             }
-
         else:
             # Fallback to original length-based logic for other types
             text_length = len(text)
@@ -262,7 +259,6 @@ async def _execute_likert_scorer(scorer_config: Dict, text: str) -> Dict[str, An
                 "score_rationale": f"Score based on text length: {text_length} characters (normalized to 0-1 scale)",
                 "score_metadata": f"{{\"text_length\": {text_length}, \"scale\": \"0-1\", \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
             }
-
     except Exception as e:
         logger.error(f"Error in _execute_likert_scorer: {e}")
         return {
@@ -273,6 +269,132 @@ async def _execute_likert_scorer(scorer_config: Dict, text: str) -> Dict[str, An
             "score_rationale": f"Scoring failed: {str(e)}",
             "score_metadata": f"{{\"error\": \"{str(e)}\", \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
         }
+
+
+def _execute_self_ask_likert_scorer(parameters: Dict, text: str, scorer_config: Dict) -> Dict[str, Any]:
+    """Execute SelfAskLikertScorer with question-based evaluation."""
+    question = parameters.get("likert_scale_question", "How helpful is this response?")
+    scale_min = parameters.get("scale_min", 1)
+    scale_max = parameters.get("scale_max", 5)
+    text_lower = text.lower()
+
+    # Use dispatch pattern for different question types
+    if "helpful" in question.lower():
+        score_value, rationale = _evaluate_helpfulness_question(text_lower, scale_min, scale_max, question)
+    elif "quality" in question.lower():
+        score_value, rationale = _evaluate_quality_question(text_lower, scale_min, scale_max, question)
+    else:
+        score_value, rationale = _evaluate_generic_question(text, scale_min, scale_max, question)
+
+    # Normalize score to 0-1 range for PyRIT compatibility
+    normalized_score = (score_value - scale_min) / (scale_max - scale_min)
+
+    return {
+        "score_value": round(normalized_score, 3),
+        "score_value_description": f"Likert scale evaluation ({scale_min}-{scale_max}) normalized to 0-1 for: {question}",
+        "score_type": "float_scale",
+        "score_category": "self_ask_evaluation",
+        "score_rationale": f"{rationale} (Original: {score_value}, Normalized: {normalized_score:.3f})",
+        "score_metadata": f'{{"question": "{question}", "scale_min": {scale_min}, "scale_max": {scale_max}, "original_score": {score_value}, "scorer_name": "{scorer_config.get("name", "Unknown")}", "scorer_type": "SelfAskLikertScorer"}}',
+    }
+
+
+def _execute_generic_likert_scorer(text: str, scorer_config: Dict) -> Dict[str, Any]:
+    """Execute generic Likert scorer based on text length."""
+    text_length = len(text)
+
+    # Return normalized 0-1 score for PyRIT compatibility
+    if text_length < 50:
+        score_value = 0.2
+    elif text_length < 100:
+        score_value = 0.4
+    elif text_length < 200:
+        score_value = 0.6
+    elif text_length < 300:
+        score_value = 0.8
+    else:
+        score_value = 1.0
+
+    return {
+        "score_value": score_value,
+        "score_value_description": "Likert scale score (0-1) based on response length",
+        "score_type": "float_scale",
+        "score_category": scorer_config.get("category", "general"),
+        "score_rationale": f"Score based on text length: {text_length} characters (normalized to 0-1 scale)",
+        "score_metadata": f'{{"text_length": {text_length}, "scale": "0-1", "scorer_name": "{scorer_config.get("name", "Unknown")}"}}',
+    }
+
+
+def _evaluate_helpfulness_question(text_lower: str, scale_min: int, scale_max: int, question: str) -> tuple:
+    """Evaluate helpfulness indicators in text."""
+    helpful_indicators = ["helpful", "useful", "informative", "clear", "explain", "answer", "solution", "understand"]
+    unhelpful_indicators = ["unclear", "confusing", "wrong", "incorrect", "unhelpful", "useless"]
+
+    helpful_count = sum(1 for indicator in helpful_indicators if indicator in text_lower)
+    unhelpful_count = sum(1 for indicator in unhelpful_indicators if indicator in text_lower)
+
+    if helpful_count > unhelpful_count:
+        score_value = min(scale_max, scale_min + helpful_count)
+    elif unhelpful_count > helpful_count:
+        score_value = max(scale_min, scale_max - unhelpful_count)
+    else:
+        score_value = (scale_min + scale_max) / 2
+
+    rationale = (
+        f"Helpfulness score: {helpful_count} positive vs {unhelpful_count} negative indicators for question: {question}"
+    )
+    return score_value, rationale
+
+
+def _evaluate_quality_question(text_lower: str, scale_min: int, scale_max: int, question: str) -> tuple:
+    """Evaluate quality indicators in text."""
+    quality_indicators = ["excellent", "good", "well", "thorough", "detailed", "accurate"]
+    poor_indicators = ["poor", "bad", "terrible", "incomplete", "wrong", "inaccurate"]
+
+    quality_count = sum(1 for indicator in quality_indicators if indicator in text_lower)
+    poor_count = sum(1 for indicator in poor_indicators if indicator in text_lower)
+
+    if quality_count > poor_count:
+        score_value = min(scale_max, scale_min + quality_count)
+    elif poor_count > quality_count:
+        score_value = max(scale_min, scale_max - poor_count)
+    else:
+        score_value = (scale_min + scale_max) / 2
+
+    rationale = f"Quality score: {quality_count} positive vs {poor_count} negative indicators for question: {question}"
+    return score_value, rationale
+
+
+def _evaluate_generic_question(text: str, scale_min: int, scale_max: int, question: str) -> tuple:
+    """Evaluate generic question based on text length."""
+    text_length = len(text)
+    word_count = len(text.split())
+
+    if text_length < 50:
+        score_value = scale_min
+    elif text_length < 100:
+        score_value = scale_min + (scale_max - scale_min) * 0.25
+    elif text_length < 200:
+        score_value = scale_min + (scale_max - scale_min) * 0.5
+    elif text_length < 300:
+        score_value = scale_min + (scale_max - scale_min) * 0.75
+    else:
+        score_value = scale_max
+
+    rationale = f"Length-based score: {text_length} characters, {word_count} words (scale: {scale_min}-{scale_max}) for question: {question}"
+    return score_value, rationale
+
+
+def _create_likert_error_response(e: Exception, scorer_config: Dict) -> Dict[str, Any]:
+    """Create error response for Likert scorer."""
+    return {
+        "score_value": 0.5,
+        "score_value_description": "Error occurred during scoring",
+        "score_type": "float_scale",
+        "score_category": "error",
+        "score_rationale": f"Scoring failed: {str(e)}",
+        "score_metadata": f'{{"error": "{str(e)}", "scorer_name": "{scorer_config.get("name", "Unknown")}"}}',
+    }
 
 
 async def _execute_substring_scorer(scorer_config: Dict, text: str) -> Dict[str, Any]:
@@ -294,7 +416,6 @@ async def _execute_substring_scorer(scorer_config: Dict, text: str) -> Dict[str,
                 "score_rationale": "No substring parameter provided for matching",
                 "score_metadata": f"{{\"error\": \"missing_substring\", \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
             }
-
         # Case-insensitive substring matching
         text_lower = text.lower()
         substring_lower = substring.lower()
@@ -308,7 +429,6 @@ async def _execute_substring_scorer(scorer_config: Dict, text: str) -> Dict[str,
             "score_rationale": f"Text {'contains' if is_match else 'does not contain'} substring '{substring}' (case-insensitive)",
             "score_metadata": f"{{\"substring\": \"{substring}\", \"match_found\": {is_match}, \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
         }
-
     except Exception as e:
         logger.error(f"Error in _execute_substring_scorer: {e}")
         return {
@@ -340,7 +460,6 @@ async def _execute_category_scorer(scorer_config: Dict, text: str) -> Dict[str, 
                 "score_rationale": "No categories provided for classification",
                 "score_metadata": f"{{\"error\": \"missing_categories\", \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
             }
-
         # Simple heuristic-based category classification
         # In a real implementation, this would use an LLM to evaluate the question against the text
         text_lower = text.lower()
@@ -396,7 +515,6 @@ async def _execute_category_scorer(scorer_config: Dict, text: str) -> Dict[str, 
             "score_rationale": f"Text classified as '{selected_category}' based on content analysis. Category scores: {category_scores}",
             "score_metadata": f"{{\"question\": \"{question}\", \"categories\": {categories}, \"selected_category\": \"{selected_category}\", \"category_index\": {category_index}, \"scores\": {category_scores}, \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
         }
-
     except Exception as e:
         logger.error(f"Error in _execute_category_scorer: {e}")
         return {
@@ -428,7 +546,6 @@ async def _execute_threshold_scorer(scorer_config: Dict, text: str) -> Dict[str,
                 "score_rationale": "No base scorer configuration provided",
                 "score_metadata": f"{{\"error\": \"missing_base_scorer\", \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
             }
-
         # Execute base scorer first
         # For this implementation, we'll use a simple heuristic since we don't have the actual base scorer
         # In a real implementation, this would recursively execute the base scorer
@@ -448,7 +565,6 @@ async def _execute_threshold_scorer(scorer_config: Dict, text: str) -> Dict[str,
             "score_rationale": f"Base score {base_score:.3f} {'passes' if passes_threshold else 'fails'} threshold {threshold}",
             "score_metadata": f"{{\"threshold\": {threshold}, \"base_score\": {base_score}, \"passes\": {passes_threshold}, \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
         }
-
     except Exception as e:
         logger.error(f"Error in _execute_threshold_scorer: {e}")
         return {
@@ -479,7 +595,6 @@ async def _execute_inverter_scorer(scorer_config: Dict, text: str) -> Dict[str, 
                 "score_rationale": "No base scorer configuration provided",
                 "score_metadata": f"{{\"error\": \"missing_base_scorer\", \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
             }
-
         # Execute base scorer first
         # For this implementation, we'll use a simple heuristic since we don't have the actual base scorer
         # In a real implementation, this would recursively execute the base scorer
@@ -503,7 +618,6 @@ async def _execute_inverter_scorer(scorer_config: Dict, text: str) -> Dict[str, 
             "score_rationale": f"Base result {base_result} inverted to {inverted_result} (positive: {positive_count}, negative: {negative_count})",
             "score_metadata": f"{{\"base_result\": {base_result}, \"inverted_result\": {inverted_result}, \"positive_count\": {positive_count}, \"negative_count\": {negative_count}, \"scorer_name\": \"{scorer_config.get('name', 'Unknown')}\"}}",
         }
-
     except Exception as e:
         logger.error(f"Error in _execute_inverter_scorer: {e}")
         return {
@@ -518,7 +632,7 @@ async def _execute_inverter_scorer(scorer_config: Dict, text: str) -> Dict[str, 
 
 async def _execute_generic_scorer(scorer_config: Dict, text: str) -> Dict[str, Any]:
     """Execute generic scorer."""
-    # Default mock scorer
+    # Default mock scorer.
     return {
         "score_value": 0.5,  # Return as float, not string
         "score_value_description": f"Generic score from {scorer_config.get('name', 'Unknown Scorer')}",

@@ -771,94 +771,17 @@ async def test_generator_async(generator_name: str) -> tuple[bool, str]:
     Handles PyRIT PromptTarget instances.
     Logs pass/fail status explicitly.
     """
-    if generator_name not in _generators_cache:
-        error_msg = f"Cannot test: Generator '{generator_name}' does not exist."
-        logger.error(error_msg)
-        raise KeyError(error_msg)  # Raise error to be caught upstream
-
-    generator_instance_wrapper = _generators_cache[generator_name]
-    if not isinstance(generator_instance_wrapper, Generator):
-        error_msg = f"Cannot test: Entry '{generator_name}' in cache is not a valid Generator instance."
-        logger.error(error_msg)
-        return False, error_msg  # Return failure
-
-    target_instance = generator_instance_wrapper.instance
-
-    if not target_instance:
-        error_msg = f"Cannot test '{generator_name}': Target instance is not available. Instantiation failed?"
-        logger.error(error_msg)
-        return False, error_msg  # Return failure
+    # Validate generator exists and get instance
+    target_instance = _validate_and_get_generator_instance(generator_name)
 
     logger.info(f"Initiating test for generator '{generator_name}' (Target Type: {type(target_instance).__name__})...")
     test_prompt = "This is a short test prompt from the configuration utility. Respond briefly."
-    success = False
-    message = "Test initialization failed."
 
-    try:
-        if isinstance(target_instance, PromptTarget):
-            logger.debug(f"Testing '{generator_name}' as PyRIT PromptTarget...")
-            # Create a minimal PromptRequestResponse for testing
-            request = PromptRequestResponse(
-                request_pieces=[
-                    PromptRequestPiece(
-                        role="user",
-                        original_value=test_prompt,
-                        converted_value=test_prompt,
-                        conversation_id=str(uuid.uuid4()),
-                        sequence=0,
-                        prompt_target_identifier=target_instance.get_identifier(),
-                        original_value_data_type="text",
-                        converted_value_data_type="text",
-                    )
-                ]
-            )
-            # Call the target's send_prompt_async method
-            response_request = await target_instance.send_prompt_async(prompt_request=request)
+    # Execute test and process result
+    success, message = await _execute_generator_test(generator_name, target_instance, test_prompt)
 
-            # Interpret PyRIT response
-            if response_request and response_request.request_pieces and len(response_request.request_pieces) > 1:
-                assistant_response_piece = response_request.request_pieces[-1]
-                if assistant_response_piece.role == "assistant":
-                    # Use string literal 'none' for comparison
-                    if assistant_response_piece.response_error == "none" and assistant_response_piece.converted_value:
-                        success = True
-                        message = f"Test successful. Received response snippet: {assistant_response_piece.converted_value[:100]}..."
-                        logger.debug(
-                            f"Full test response for '{generator_name}': {assistant_response_piece.converted_value}"
-                        )
-                    elif assistant_response_piece.response_error and assistant_response_piece.response_error != "none":
-                        message = f"Test failed. API returned error: {assistant_response_piece.response_error}. Details: {assistant_response_piece.original_value}"
-                    elif not assistant_response_piece.converted_value:
-                        message = (
-                            "Test failed. Received an empty or invalid response content from assistant (error='none')."
-                        )
-                    else:
-                        message = "Test failed. Unknown response state."
-                else:
-                    message = (
-                        f"Test failed. Expected assistant role in response, got '{assistant_response_piece.role}'."
-                    )
-            else:
-                message = "Test failed. Invalid or empty response structure received from target."
-        else:
-            message = f"Test failed. Target instance type '{type(target_instance).__name__}' is not a PromptTarget."
-
-    except NotImplementedError:
-        message = f"Test failed. Generator '{generator_name}' (Type: {generator_instance_wrapper.generator_type}) does not support async sending."
-        logger.error(message)
-    except Exception as e:
-        message = f"Test failed. Unexpected error during execution: {e}"
-        logger.exception(f"Unexpected error during test execution for '{generator_name}'.")
-        if isinstance(e, httpx.HTTPStatusError):
-            try:
-                message += f" Response body: {e.response.text[:500]}"
-            except Exception:
-                pass
-
-    if success:
-        logger.info(f"Test result for '{generator_name}': PASSED. Message: {message}")
-    else:
-        logger.error(f"Test result for '{generator_name}': FAILED. Message: {message}")
+    # Log result
+    _log_test_result(generator_name, success, message)
 
     return success, message
 
@@ -960,11 +883,11 @@ def get_generator_params(generator_type: str) -> List[Dict[str, Any]]:
 # --- Generator Wrapper Class ---
 class Generator:
     """
-    A wrapper class for target instances (PyRIT PromptTarget or standalone)
+    A wrapper class for target instances (PyRIT PromptTarget or standalone).
     managed by this application.
     """
 
-    def __init__(self, name: str, generator_type: str, parameters: Dict[str, Any]):
+    def __init__(self: "Generator", name: str, generator_type: str, parameters: Dict[str, Any]) -> None:
         """Initializes the Generator wrapper."""
         if not name:
             raise ValueError("Generator name cannot be empty.")
@@ -985,11 +908,11 @@ class Generator:
         self.instantiate_target()
 
     @property
-    def prompt_target(self):
+    def prompt_target(self: "Generator") -> Any:
         """Compatibility property to access the instance as prompt_target."""
         return self.instance
 
-    def validate_parameters(self):
+    def validate_parameters(self: "Generator") -> None:
         """Validates the stored parameters."""
         logger.debug(f"Validating parameters for '{self.name}'...")
         try:
@@ -1076,7 +999,7 @@ class Generator:
 
         logger.debug(f"Parameters validated for '{self.name}'.")
 
-    def instantiate_target(self):
+    def instantiate_target(self: "Generator") -> None:
         """Instantiates the underlying target class."""
         logger.info(f"Attempting to instantiate target for '{self.name}' (Type: {self.generator_type})")
         target_class = self._target_class
@@ -1134,12 +1057,12 @@ class Generator:
             self.instance = None
             raise
 
-    def save(self) -> bool:
+    def save(self: "Generator") -> bool:
         """Saves the current state of all generators."""
         logger.debug(f"Instance save method called for '{self.name}'. Triggering global save.")
         return save_generators()
 
-    def update_parameters(self, parameters: Dict[str, Any]):
+    def update_parameters(self: "Generator", parameters: Dict[str, Any]) -> None:
         """Updates parameters and re-instantiates the target."""
         logger.info(f"Updating parameters for generator '{self.name}'...")
         self.parameters.update(parameters)
@@ -1156,3 +1079,101 @@ class Generator:
 
 
 # --- End Generator Wrapper Class ---
+
+
+# --- Helper Functions for test_generator_async ---
+
+
+def _validate_and_get_generator_instance(generator_name: str):
+    """Validate generator exists and return its target instance."""
+    if generator_name not in _generators_cache:
+        error_msg = f"Cannot test: Generator '{generator_name}' does not exist."
+        logger.error(error_msg)
+        raise KeyError(error_msg)  # Raise error to be caught upstream
+
+    generator_instance_wrapper = _generators_cache[generator_name]
+    if not isinstance(generator_instance_wrapper, Generator):
+        error_msg = f"Cannot test: Entry '{generator_name}' in cache is not a valid Generator instance."
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    target_instance = generator_instance_wrapper.instance
+    if not target_instance:
+        error_msg = f"Cannot test '{generator_name}': Target instance is not available. Instantiation failed?"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    return target_instance
+
+
+async def _execute_generator_test(generator_name: str, target_instance, test_prompt: str) -> tuple[bool, str]:
+    """Execute the generator test and return success status and message."""
+    try:
+        if isinstance(target_instance, PromptTarget):
+            logger.debug(f"Testing '{generator_name}' as PyRIT PromptTarget...")
+            response_request = await _send_test_prompt(target_instance, test_prompt)
+            return _process_pyrit_response(generator_name, response_request)
+        else:
+            return False, f"Test failed. Target instance type '{type(target_instance).__name__}' is not a PromptTarget."
+    except NotImplementedError:
+        message = f"Test failed. Generator '{generator_name}' does not support async sending."
+        logger.error(message)
+        return False, message
+    except Exception as e:
+        message = f"Test failed. Unexpected error during execution: {e}"
+        logger.exception(f"Unexpected error during test execution for '{generator_name}'.")
+        if isinstance(e, httpx.HTTPStatusError):
+            try:
+                message += f" Response body: {e.response.text[:500]}"
+            except Exception:
+                pass
+        return False, message
+
+
+async def _send_test_prompt(target_instance, test_prompt: str):
+    """Send test prompt to target instance."""
+    request = PromptRequestResponse(
+        request_pieces=[
+            PromptRequestPiece(
+                role="user",
+                original_value=test_prompt,
+                converted_value=test_prompt,
+                conversation_id=str(uuid.uuid4()),
+                sequence=0,
+                prompt_target_identifier=target_instance.get_identifier(),
+                original_value_data_type="text",
+                converted_value_data_type="text",
+            )
+        ]
+    )
+    return await target_instance.send_prompt_async(prompt_request=request)
+
+
+def _process_pyrit_response(generator_name: str, response_request) -> tuple[bool, str]:
+    """Process PyRIT response and return success status and message."""
+    if not response_request or not response_request.request_pieces or len(response_request.request_pieces) <= 1:
+        return False, "Test failed. Invalid or empty response structure received from target."
+    assistant_response_piece = response_request.request_pieces[-1]
+    if assistant_response_piece.role != "assistant":
+        return False, f"Test failed. Expected assistant role in response, got '{assistant_response_piece.role}'."
+    if assistant_response_piece.response_error == "none" and assistant_response_piece.converted_value:
+        message = f"Test successful. Received response snippet: {assistant_response_piece.converted_value[:100]}..."
+        logger.debug(f"Full test response for '{generator_name}': {assistant_response_piece.converted_value}")
+        return True, message
+    elif assistant_response_piece.response_error and assistant_response_piece.response_error != "none":
+        return (
+            False,
+            f"Test failed. API returned error: {assistant_response_piece.response_error}. Details: {assistant_response_piece.original_value}",
+        )
+    elif not assistant_response_piece.converted_value:
+        return False, "Test failed. Received an empty or invalid response content from assistant (error='none')."
+    else:
+        return False, "Test failed. Unknown response state."
+
+
+def _log_test_result(generator_name: str, success: bool, message: str) -> None:
+    """Log the test result."""
+    if success:
+        logger.info(f"Test result for '{generator_name}': PASSED. Message: {message}")
+    else:
+        logger.error(f"Test result for '{generator_name}': FAILED. Message: {message}")

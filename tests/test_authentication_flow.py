@@ -1,9 +1,12 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-Test the complete authentication flow to verify the fix
+Test the complete authentication flow to verify the fix.
+
 """
 import os
 import sys
@@ -13,25 +16,25 @@ sys.path.append("violentutf")
 
 # Set up a mock Streamlit session state
 class MockSessionState:
-    def __init__(self):
+    def __init__(self: "MockSessionState") -> None:
         self._state = {}
 
-    def get(self, key, default=None):
+    def get(self: "MockSessionState", key, default=None) -> Any:
         return self._state.get(key, default)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self: "MockSessionState", key, value: Any) -> None:
         self._state[key] = value
 
-    def __getitem__(self, key):
+    def __getitem__(self: "MockSessionState", key: Any) -> Any:
         return self._state[key]
 
-    def __contains__(self, key):
+    def __contains__(self: "MockSessionState", key: Any) -> Any:
         return key in self._state
 
-    def pop(self, key, default=None):
+    def pop(self: "MockSessionState", key, default=None) -> Any:
         return self._state.pop(key, default)
 
-    def keys(self):
+    def keys(self: "MockSessionState") -> Any:
         return self._state.keys()
 
 
@@ -42,15 +45,15 @@ st.session_state = MockSessionState()
 
 
 # Mock streamlit functions to prevent errors
-def mock_error(*args, **kwargs):
+def mock_error(*args, **kwargs) -> None:
     print(f"STREAMLIT ERROR: {args}")
 
 
-def mock_warning(*args, **kwargs):
+def mock_warning(*args, **kwargs) -> None:
     print(f"STREAMLIT WARNING: {args}")
 
 
-def mock_info(*args, **kwargs):
+def mock_info(*args, **kwargs) -> None:
     print(f"STREAMLIT INFO: {args}")
 
 

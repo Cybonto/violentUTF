@@ -2,7 +2,7 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""Test script to verify orchestrator executions endpoint"""
+"""Test script to verify orchestrator executions endpoint."""
 
 import json
 import os
@@ -128,7 +128,8 @@ print("-" * 50)
 
 print(
     """
-The issue is that the APISIX route pattern '/api/v1/orchestrators*' is matching
+The issue is that the APISIX route pattern '/api/v1/orchestrators*' is matching.
+
 '/api/v1/orchestrators/executions' and treating 'executions' as a UUID parameter.
 
 SOLUTION:

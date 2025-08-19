@@ -20,11 +20,11 @@ class PyRITService:
     """Service class for PyRIT integration."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.memory = None
         self._initialize_pyrit()
 
-    def _initialize_pyrit(self):
+    def _initialize_pyrit(self: "PyRITService") -> None:
         """Initialize PyRIT memory and core components."""
         try:
             from pyrit.memory import DuckDBMemory
@@ -42,7 +42,7 @@ class PyRITService:
             logger.error(f"❌ Failed to initialize PyRIT: {e}")
             self.memory = None
 
-    def is_available(self) -> bool:
+    def is_available(self: "PyRITService") -> bool:
         """Check if PyRIT is properly initialized."""
         try:
             from pyrit.models import PromptRequestPiece
@@ -51,7 +51,7 @@ class PyRITService:
         except ImportError:
             return False
 
-    async def create_prompt_target(self, target_config: Dict[str, Any]) -> Any:
+    async def create_prompt_target(self: "PyRITService", target_config: Dict[str, Any]) -> Any:
         """
         Create a PyRIT PromptTarget from configuration.
 
@@ -74,7 +74,7 @@ class PyRITService:
             logger.error(f"Failed to create PyRIT target: {e}")
             raise
 
-    async def _create_apisix_target(self, config: Dict[str, Any]):
+    async def _create_apisix_target(self: "PyRITService", config: Dict[str, Any]) -> None:
         """Create APISIX-based PyRIT target."""
         from pyrit.models import PromptRequestPiece, PromptRequestResponse
         from pyrit.prompt_target import PromptChatTarget
@@ -82,7 +82,7 @@ class PyRITService:
         class APISIXPromptTarget(PromptChatTarget):
             """Custom PyRIT target for APISIX AI Gateway."""
 
-            def __init__(self, provider: str, model: str, base_url: str, **kwargs) -> None:
+            def __init__(self: "APISIXPromptTarget", provider: str, model: str, base_url: str, **kwargs) -> None:
                 """Initialize the instance."""
                 super().__init__()
                 self.provider = provider
@@ -90,7 +90,7 @@ class PyRITService:
                 self.base_url = base_url
                 self.endpoint_url = self._get_endpoint_url(provider, model)
 
-            def _get_endpoint_url(self, provider: str, model: str) -> str:
+            def _get_endpoint_url(self: "APISIXPromptTarget", provider: str, model: str) -> str:
                 """Map provider/model to APISIX endpoint."""
                 # Import the mapping function from generators.py
                 from app.api.endpoints.generators import get_apisix_endpoint_for_model
@@ -101,7 +101,9 @@ class PyRITService:
                 else:
                     raise ValueError(f"No APISIX route for {provider}/{model}")
 
-            async def send_prompt_async(self, prompt_request: PromptRequestPiece) -> PromptRequestResponse:
+            async def send_prompt_async(
+                self: "APISIXPromptTarget", prompt_request: PromptRequestPiece
+            ) -> PromptRequestResponse:
                 """Send prompt through APISIX gateway."""
                 import json
 
@@ -154,7 +156,7 @@ class PyRITService:
                     logger.error(f"APISIX target error: {e}")
                     raise
 
-            def is_json_response_supported(self) -> bool:
+            def is_json_response_supported(self: "APISIXPromptTarget") -> bool:
                 return True
 
         # Create and return the target
@@ -164,7 +166,7 @@ class PyRITService:
 
         return APISIXPromptTarget(provider, model, base_url)
 
-    async def _create_http_target(self, config: Dict[str, Any]):
+    async def _create_http_target(self: "PyRITService", config: Dict[str, Any]) -> Any:
         """Create HTTP-based PyRIT target."""
         from pyrit.prompt_target import PromptTarget
 
@@ -173,7 +175,7 @@ class PyRITService:
         raise NotImplementedError("HTTP target not yet implemented")
 
     async def run_red_team_orchestrator(
-        self, target, prompts: List[str], conversation_id: Optional[str] = None
+        self: "PyRITService", target: Any, prompts: List[str], conversation_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Run PyRIT orchestrator for red-teaming.
@@ -221,7 +223,7 @@ class PyRITService:
             logger.error(f"PyRIT orchestrator error: {e}")
             raise
 
-    def get_conversation_history(self, conversation_id: str) -> List[Dict[str, Any]]:
+    def get_conversation_history(self: "PyRITService", conversation_id: str) -> List[Dict[str, Any]]:
         """Get conversation history from PyRIT memory."""
         if not self.is_available():
             return []

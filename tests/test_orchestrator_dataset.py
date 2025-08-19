@@ -1,9 +1,12 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-Test script for orchestrator dataset testing functionality
+Test script for orchestrator dataset testing functionality.
+
 """
 
 import json
@@ -23,8 +26,8 @@ from dotenv import load_dotenv
 load_dotenv("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf/.env")
 
 
-def create_test_token():
-    """Create a test JWT token for authentication"""
+def create_test_token() -> None:
+    """Create a test JWT token for authentication."""
     import jwt
 
     secret = os.getenv("JWT_SECRET_KEY")
@@ -46,8 +49,8 @@ def create_test_token():
     return token
 
 
-def get_auth_headers():
-    """Get authentication headers"""
+def get_auth_headers() -> None:
+    """Get authentication headers."""
     token = create_test_token()
     if not token:
         return None
@@ -62,8 +65,8 @@ def get_auth_headers():
     return headers
 
 
-def test_orchestrator_types():
-    """Test orchestrator types endpoint"""
+def test_orchestrator_types() -> Any:
+    """Test orchestrator types endpoint."""
     print("🔍 Testing orchestrator types discovery...")
 
     headers = get_auth_headers()
@@ -90,8 +93,8 @@ def test_orchestrator_types():
         return False
 
 
-def test_dataset_endpoints():
-    """Test dataset endpoints"""
+def test_dataset_endpoints() -> Any:
+    """Test dataset endpoints."""
     print("📊 Testing dataset endpoints...")
 
     headers = get_auth_headers()
@@ -117,8 +120,8 @@ def test_dataset_endpoints():
         return False
 
 
-def test_generator_endpoints():
-    """Test generator endpoints"""
+def test_generator_endpoints() -> Any:
+    """Test generator endpoints."""
     print("⚙️ Testing generator endpoints...")
 
     headers = get_auth_headers()
@@ -144,8 +147,8 @@ def test_generator_endpoints():
         return False
 
 
-def main():
-    """Main test function"""
+def main() -> Any:
+    """Run main test function."""
     print("🧪 Testing Orchestrator Dataset Testing Implementation")
     print("=" * 60)
 

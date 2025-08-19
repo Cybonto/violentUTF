@@ -11,7 +11,7 @@ import logging
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -67,15 +67,15 @@ class PasswordValidationResult:
 class PasswordValidator:
     """Comprehensive password validation and strength assessment."""
 
-    def __init__(self, policy: Optional[PasswordPolicy] = None) -> None:
+    def __init__(self: "PasswordValidator", policy: Optional[PasswordPolicy] = None) -> None:
         """Initialize the instance."""
         self.policy = policy or PasswordPolicy()
         self._load_common_passwords()
         self._load_keyboard_patterns()
 
-    def _load_common_passwords(self):
+    def _load_common_passwords(self: "PasswordValidator") -> None:
         """Load common/weak passwords list."""
-        # Top 100 most common passwords - in production, load from file
+        # Top 100 most common passwords - in production, load from file.
         self.common_passwords = {
             "password",
             "123456",
@@ -186,7 +186,7 @@ class PasswordValidator:
             "terminal",
         }
 
-    def _load_keyboard_patterns(self):
+    def _load_keyboard_patterns(self: "PasswordValidator") -> None:
         """Load keyboard pattern sequences."""
         self.keyboard_patterns = [
             # QWERTY rows
@@ -231,7 +231,7 @@ class PasswordValidator:
         ]
 
     def validate_password(
-        self,
+        self: "PasswordValidator",
         password: str,
         username: Optional[str] = None,
         email: Optional[str] = None,
@@ -383,7 +383,7 @@ class PasswordValidator:
             suggestions=suggestions,
         )
 
-    def _check_repeated_characters(self, password: str) -> int:
+    def _check_repeated_characters(self: "PasswordValidator", password: str) -> int:
         """Check for repeated character sequences."""
         max_repeated = 0
         current_repeated = 1
@@ -397,7 +397,7 @@ class PasswordValidator:
 
         return max(max_repeated, current_repeated)
 
-    def _check_sequential_characters(self, password: str) -> int:
+    def _check_sequential_characters(self: "PasswordValidator", password: str) -> int:
         """Check for sequential character patterns."""
         max_sequential = 0
 
@@ -423,7 +423,7 @@ class PasswordValidator:
 
         return max_sequential
 
-    def _check_keyboard_patterns(self, password: str) -> Optional[str]:
+    def _check_keyboard_patterns(self: "PasswordValidator", password: str) -> Optional[str]:
         """Check for keyboard walking patterns."""
         password_lower = password.lower()
 
@@ -439,7 +439,7 @@ class PasswordValidator:
         return None
 
     def _check_personal_info(
-        self,
+        self: "PasswordValidator",
         password: str,
         username: Optional[str] = None,
         email: Optional[str] = None,
@@ -472,7 +472,7 @@ class PasswordValidator:
 
         return None
 
-    def _calculate_strength(self, score: int) -> PasswordStrength:
+    def _calculate_strength(self: "PasswordValidator", score: int) -> PasswordStrength:
         """Calculate password strength based on score."""
         if score < 30:
             return PasswordStrength.VERY_WEAK
@@ -485,7 +485,7 @@ class PasswordValidator:
         else:
             return PasswordStrength.VERY_STRONG
 
-    def generate_password_requirements(self) -> Dict:
+    def generate_password_requirements(self: "PasswordValidator") -> Dict:
         """Generate password requirements description for UI."""
         return {
             "min_length": self.policy.min_length,

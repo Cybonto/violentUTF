@@ -1,8 +1,11 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-Test suite for MCP Client implementation
+Test suite for MCP Client implementation.
+
 Tests SSE connection, JSON-RPC handling, and all MCP operations
 """
 
@@ -21,17 +24,17 @@ from utils.mcp_client import MCPClient, MCPClientSync, MCPMethod, MCPResponse
 
 
 class TestMCPResponse:
-    """Test MCPResponse dataclass"""
+    """Test MCPResponse dataclass."""
 
-    def test_response_success(self):
-        """Test successful response"""
+    def test_response_success(self) -> None:
+        """ "Test successful response."""
         response = MCPResponse(id=1, result={"data": "test"})
         assert not response.is_error
         assert response.error_message == ""
         assert response.result == {"data": "test"}
 
-    def test_response_error(self):
-        """Test error response"""
+    def test_response_error(self: "TestMCPResponse") -> None:
+        """Test error response."""
         response = MCPResponse(id=1, error={"code": -32600, "message": "Invalid request"})
         assert response.is_error
         assert response.error_message == "Invalid request"
@@ -39,16 +42,16 @@ class TestMCPResponse:
 
 
 class TestMCPClient:
-    """Test async MCP Client"""
+    """Test async MCP Client."""
 
     @pytest.fixture
-    def client(self):
-        """Create test client"""
+    def client(self: "TestMCPClient") -> Any:
+        """Create test client."""
         return MCPClient(base_url="http://localhost:9080")
 
     @pytest.fixture
-    def mock_auth_headers(self):
-        """Mock authentication headers"""
+    def mock_auth_headers(self: "TestMCPClient") -> Any:
+        """Mock authentication headers."""
         return {
             "Authorization": "Bearer test_token",
             "Content-Type": "application/json",
@@ -56,9 +59,9 @@ class TestMCPClient:
         }
 
     @pytest.mark.asyncio
-    async def test_initialization(self, client, mock_auth_headers):
-        """Test client initialization"""
-        # Mock successful initialization response
+    async def test_initialization(self: "TestMCPClient", client, mock_auth_headers: Any) -> None:
+        """Test client initialization."""
+        # Mock successful initialization response.
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/json"}
@@ -77,8 +80,8 @@ class TestMCPClient:
                 assert client._server_info["name"] == "ViolentUTF MCP Server"
 
     @pytest.mark.asyncio
-    async def test_initialization_failure(self, client, mock_auth_headers):
-        """Test initialization failure"""
+    async def test_initialization_failure(self: "TestMCPClient", client, mock_auth_headers: Any) -> None:
+        """Test initialization failure."""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 500
         mock_response.text = "Internal Server Error"
@@ -91,9 +94,9 @@ class TestMCPClient:
                 assert client._initialized is False
 
     @pytest.mark.asyncio
-    async def test_list_prompts(self, client, mock_auth_headers):
-        """Test listing prompts"""
-        # Mock response with prompts
+    async def test_list_prompts(self: "TestMCPClient", client, mock_auth_headers: Any) -> None:
+        """Test listing prompts."""
+        # Mock response with prompts.
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/json"}
@@ -120,8 +123,8 @@ class TestMCPClient:
                 assert prompts[1]["name"] == "bias_detection"
 
     @pytest.mark.asyncio
-    async def test_get_prompt(self, client, mock_auth_headers):
-        """Test getting a specific prompt"""
+    async def test_get_prompt(self: "TestMCPClient", client, mock_auth_headers: Any) -> None:
+        """Test getting a specific prompt."""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/json"}
@@ -140,8 +143,8 @@ class TestMCPClient:
                 assert prompt == "Test prompt content"
 
     @pytest.mark.asyncio
-    async def test_list_resources(self, client, mock_auth_headers):
-        """Test listing resources"""
+    async def test_list_resources(self: "TestMCPClient", client, mock_auth_headers: Any) -> None:
+        """Test listing resources."""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/json"}
@@ -169,8 +172,8 @@ class TestMCPClient:
                 assert resources[0]["uri"] == "violentutf://datasets/harmbench"
 
     @pytest.mark.asyncio
-    async def test_read_resource(self, client, mock_auth_headers):
-        """Test reading a resource"""
+    async def test_read_resource(self: "TestMCPClient", client, mock_auth_headers: Any) -> None:
+        """Test reading a resource."""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/json"}
@@ -189,8 +192,8 @@ class TestMCPClient:
                 assert content == "Resource content here"
 
     @pytest.mark.asyncio
-    async def test_sse_response_parsing(self, client, mock_auth_headers):
-        """Test parsing SSE formatted response"""
+    async def test_sse_response_parsing(self: "TestMCPClient", client, mock_auth_headers: Any) -> None:
+        """Test parsing SSE formatted response."""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "text/event-stream"}
@@ -209,8 +212,8 @@ data:
                 assert response.result == {"test": "sse_data"}
 
     @pytest.mark.asyncio
-    async def test_auth_header_generation(self, client):
-        """Test authentication header generation"""
+    async def test_auth_header_generation(self: "TestMCPClient", client: Any) -> None:
+        """Test authentication header generation."""
         with patch("utils.jwt_manager.jwt_manager.get_valid_token", return_value="test_token"):
             with patch.dict(os.environ, {"VIOLENTUTF_API_KEY": "test_api_key"}):
                 headers = client._get_auth_headers()
@@ -220,8 +223,8 @@ data:
                 assert headers["apikey"] == "test_api_key"
 
     @pytest.mark.asyncio
-    async def test_request_timeout(self, client, mock_auth_headers):
-        """Test request timeout handling"""
+    async def test_request_timeout(self: "TestMCPClient", client, mock_auth_headers: Any) -> None:
+        """Test request timeout handling."""
         with patch.object(client, "_get_auth_headers", return_value=mock_auth_headers):
             with patch("httpx.AsyncClient.post", new_callable=AsyncMock, side_effect=httpx.TimeoutException("Timeout")):
                 response = await client._send_request(MCPMethod.PROMPTS_LIST)
@@ -231,8 +234,8 @@ data:
                 assert "timeout" in response.error["message"].lower()
 
     @pytest.mark.asyncio
-    async def test_health_check(self, client, mock_auth_headers):
-        """Test health check functionality"""
+    async def test_health_check(self: "TestMCPClient", client, mock_auth_headers: Any) -> None:
+        """Test health check functionality."""
         mock_response = Mock(spec=Response)
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/json"}
@@ -250,21 +253,21 @@ data:
 
 
 class TestMCPClientSync:
-    """Test synchronous MCP Client wrapper"""
+    """Test synchronous MCP Client wrapper."""
 
     @pytest.fixture
-    def client(self):
-        """Create test sync client"""
+    def client(self: "TestMCPClientSync") -> Any:
+        """Create test sync client."""
         return MCPClientSync(base_url="http://localhost:9080")
 
-    def test_sync_initialization(self, client):
-        """Test synchronous initialization"""
+    def test_sync_initialization(self: "TestMCPClientSync", client: Any) -> None:
+        """Test synchronous initialization."""
         with patch.object(client.client, "initialize", new_callable=AsyncMock, return_value=True):
             result = client.initialize()
             assert result is True
 
-    def test_sync_list_prompts(self, client):
-        """Test synchronous prompt listing"""
+    def test_sync_list_prompts(self: "TestMCPClientSync", client: Any) -> None:
+        """Test synchronous prompt listing."""
         mock_prompts = [{"name": "test1", "description": "Test 1"}, {"name": "test2", "description": "Test 2"}]
 
         with patch.object(client.client, "list_prompts", new_callable=AsyncMock, return_value=mock_prompts):
@@ -272,16 +275,16 @@ class TestMCPClientSync:
             assert len(prompts) == 2
             assert prompts[0]["name"] == "test1"
 
-    def test_sync_get_prompt(self, client):
-        """Test synchronous prompt retrieval"""
+    def test_sync_get_prompt(self: "TestMCPClientSync", client: Any) -> None:
+        """Test synchronous prompt retrieval."""
         mock_prompt = "This is a test prompt"
 
         with patch.object(client.client, "get_prompt", new_callable=AsyncMock, return_value=mock_prompt):
             prompt = client.get_prompt("test", {"arg": "value"})
             assert prompt == "This is a test prompt"
 
-    def test_sync_error_handling(self, client):
-        """Test synchronous error handling"""
+    def test_sync_error_handling(self: "TestMCPClientSync", client: Any) -> None:
+        """Test synchronous error handling."""
         with patch.object(client.client, "list_prompts", new_callable=AsyncMock, side_effect=Exception("Test error")):
             with pytest.raises(Exception) as exc_info:
                 client.list_prompts()
@@ -289,11 +292,11 @@ class TestMCPClientSync:
 
 
 class TestIntegration:
-    """Integration tests with mock MCP server"""
+    """Integration tests with mock MCP server."""
 
     @pytest.mark.asyncio
-    async def test_full_workflow(self):
-        """Test complete workflow from initialization to prompt retrieval"""
+    async def test_full_workflow(self: "TestIntegration") -> None:
+        """Test complete workflow from initialization to prompt retrieval."""
         client = MCPClient(base_url="http://localhost:9080")
 
         # Mock all responses
@@ -324,7 +327,7 @@ class TestIntegration:
 
         response_iter = iter(responses)
 
-        def mock_response(*args, **kwargs):
+        def mock_response(*args, **kwargs) -> Any:
             resp_data = next(response_iter)
             mock_resp = Mock(spec=Response)
             mock_resp.status_code = 200

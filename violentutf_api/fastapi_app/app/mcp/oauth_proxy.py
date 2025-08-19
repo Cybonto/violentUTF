@@ -2,6 +2,7 @@
 # # Licensed under MIT License
 
 """OAuth Proxy for MCP Client Compatibility."""
+
 import base64
 import hashlib
 import logging
@@ -25,20 +26,20 @@ class MCPOAuthProxy:
     """Provides OAuth proxy endpoints for MCP client compatibility."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.keycloak_verifier = keycloak_verifier
         self.router = APIRouter(prefix="/mcp/oauth")
         self.pkce_verifiers: Dict[str, str] = {}  # Store PKCE verifiers
         self._setup_routes()
 
-    def _setup_routes(self):
+    def _setup_routes(self: "MCPOAuthProxy") -> Any:
         """Configure OAuth proxy routes."""
         self.router.get("/.well-known/oauth-authorization-server")(self.get_oauth_metadata)
         self.router.get("/authorize")(self.proxy_authorize)
         self.router.post("/token")(self.proxy_token_exchange)
         self.router.get("/callback")(self.handle_callback)
 
-    async def get_oauth_metadata(self) -> JSONResponse:
+    async def get_oauth_metadata(self: "MCPOAuthProxy") -> JSONResponse:
         """Provide OAuth metadata for MCP clients."""
         base_url = settings.EXTERNAL_URL or "http://localhost:9080"
 
@@ -59,7 +60,7 @@ class MCPOAuthProxy:
         return JSONResponse(content=metadata)
 
     async def proxy_authorize(
-        self,
+        self: "MCPOAuthProxy",
         client_id: str = Query(...),
         redirect_uri: str = Query(...),
         response_type: str = Query(...),
@@ -69,7 +70,7 @@ class MCPOAuthProxy:
         code_challenge_method: Optional[str] = Query(None),
     ) -> RedirectResponse:
         """Proxy authorization request to Keycloak."""
-        # Build Keycloak authorization URL
+        # Build Keycloak authorization URL.
         keycloak_auth_url = f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}/protocol/openid-connect/auth"
 
         # Store PKCE verifier if provided
@@ -105,7 +106,7 @@ class MCPOAuthProxy:
         return RedirectResponse(url=redirect_url)
 
     async def handle_callback(
-        self,
+        self: "MCPOAuthProxy",
         code: Optional[str] = Query(None),
         state: Optional[str] = Query(None),
         error: Optional[str] = Query(None),
@@ -133,9 +134,9 @@ class MCPOAuthProxy:
             }
         )
 
-    async def proxy_token_exchange(self, request: Request) -> JSONResponse:
+    async def proxy_token_exchange(self: "MCPOAuthProxy", request: Request) -> JSONResponse:
         """Exchange authorization code for tokens."""
-        # Parse form data
+        # Parse form data.
         form_data = await request.form()
         grant_type = form_data.get("grant_type")
 
@@ -152,7 +153,7 @@ class MCPOAuthProxy:
                 },
             )
 
-    async def _handle_authorization_code_exchange(self, form_data) -> JSONResponse:
+    async def _handle_authorization_code_exchange(self: "MCPOAuthProxy", form_data: Any) -> JSONResponse:
         """Handle authorization code exchange."""
         code = form_data.get("code")
         redirect_uri = form_data.get("redirect_uri")
@@ -224,7 +225,7 @@ class MCPOAuthProxy:
                 status_code=500, content={"error": "server_error", "error_description": "Token exchange failed"}
             )
 
-    async def _handle_refresh_token_exchange(self, form_data) -> JSONResponse:
+    async def _handle_refresh_token_exchange(self: "MCPOAuthProxy", form_data: Any) -> JSONResponse:
         """Handle refresh token exchange."""
         refresh_token = form_data.get("refresh_token")
 

@@ -216,7 +216,7 @@ CONVERTER_PARAMETERS = {
 
 
 @router.get("/types", response_model=ConverterTypesResponse, summary="Get available converter types")
-async def get_converter_types(current_user=Depends(get_current_user)) -> Any:
+async def get_converter_types(current_user: Any = Depends(get_current_user)) -> Any:
     """Get list of available converter categories and classes."""
     try:
         logger.info(f"User {current_user.username} requested converter types")
@@ -257,7 +257,7 @@ async def get_converter_parameters(converter_type: str, current_user=Depends(get
 
 
 @router.get("", response_model=ConvertersListResponse, summary="Get configured converters")
-async def get_converters(current_user=Depends(get_current_user)) -> Any:
+async def get_converters(current_user: Any = Depends(get_current_user)) -> Any:
     """Get list of configured converters from session."""
     try:
         user_id = current_user.username
@@ -645,88 +645,115 @@ async def get_converter(converter_id: str, current_user=Depends(get_current_user
 # --- Helper Functions ---
 
 
+def _apply_rot13_converter(prompt: str, parameters: Dict[str, Any]) -> str:
+    """Apply ROT13 conversion."""
+    converted = "".join(
+        (
+            chr((ord(c) - ord("a") + 13) % 26 + ord("a"))
+            if "a" <= c <= "z"
+            else chr((ord(c) - ord("A") + 13) % 26 + ord("A")) if "A" <= c <= "Z" else c
+        )
+        for c in prompt
+    )
+    if parameters.get("append_description", True):
+        converted += (
+            "\n\n[This message has been encoded using ROT13 cipher. Please decode and respond using the same cipher.]"
+        )
+    return converted
+
+
+def _apply_base64_converter(prompt: str, parameters: Dict[str, Any]) -> str:
+    """Apply Base64 conversion."""
+    import base64
+
+    encoded = base64.b64encode(prompt.encode()).decode()
+    if parameters.get("append_description", True):
+        encoded += (
+            "\n\n[This message has been encoded using Base64. Please decode and respond using the same encoding.]"
+        )
+    return encoded
+
+
+def _apply_caesar_converter(prompt: str, parameters: Dict[str, Any]) -> str:
+    """Apply Caesar cipher conversion."""
+    offset = parameters.get("caesar_offset", 3)
+    converted = "".join(
+        (
+            chr((ord(c) - ord("a") + offset) % 26 + ord("a"))
+            if "a" <= c <= "z"
+            else chr((ord(c) - ord("A") + offset) % 26 + ord("A")) if "A" <= c <= "Z" else c
+        )
+        for c in prompt
+    )
+    if parameters.get("append_description", True):
+        converted += f"\n\n[This message has been encoded using Caesar cipher with offset {offset}. Please decode and respond using the same cipher.]"
+    return converted
+
+
+def _apply_morse_converter(prompt: str, parameters: Dict[str, Any]) -> str:
+    """Apply Morse code conversion."""
+    morse_map = {
+        "A": ".-",
+        "B": "-...",
+        "C": "-.-.",
+        "D": "-..",
+        "E": ".",
+        "F": "..-.",
+        "G": "--.",
+        "H": "....",
+        " ": "/",
+    }
+    converted = " ".join(morse_map.get(c.upper(), c) for c in prompt)
+    if parameters.get("append_description", True):
+        converted += "\n\n[This message has been encoded in Morse code. Please decode and respond using the same code.]"
+    return converted
+
+
+def _apply_search_replace_converter(prompt: str, parameters: Dict[str, Any]) -> str:
+    """Apply search and replace conversion."""
+    old_value = parameters.get("old_value", "")
+    new_value = parameters.get("new_value", "")
+    return prompt.replace(old_value, new_value)
+
+
+def _apply_translation_converter(prompt: str, parameters: Dict[str, Any]) -> str:
+    """Apply translation conversion."""
+    language = parameters.get("language", "French")
+    return f"[Translated to {language}] {prompt} [Translation placeholder]"
+
+
+def _apply_code_chameleon_converter(prompt: str, parameters: Dict[str, Any]) -> str:
+    """Apply Code Chameleon conversion."""
+    encrypt_type = parameters.get("encrypt_type", "custom")
+    if encrypt_type == "reverse":
+        return prompt[::-1] + "\n\n[This message has been reversed. Please decode and respond.]"
+    elif encrypt_type == "odd_even":
+        odd = prompt[1::2]
+        even = prompt[::2]
+        return f"{odd}|{even}\n\n[This message has been split odd/even. Please decode and respond.]"
+    else:
+        return f"[{encrypt_type.upper()}] {prompt} [Code Chameleon encrypted]"
+
+
 def simulate_converter_application(converter_type: str, prompt: str, parameters: Dict[str, Any]) -> str:
     """Simulate applying a converter to a prompt."""
+    # Dispatch dictionary for converter functions
+    converter_functions = {
+        "ROT13Converter": _apply_rot13_converter,
+        "Base64Converter": _apply_base64_converter,
+        "CaesarCipherConverter": _apply_caesar_converter,
+        "MorseCodeConverter": _apply_morse_converter,
+        "SearchReplaceConverter": _apply_search_replace_converter,
+        "TranslationConverter": _apply_translation_converter,
+        "CodeChameleonConverter": _apply_code_chameleon_converter,
+    }
+
     try:
-        if converter_type == "ROT13Converter":
-            # Simple ROT13 simulation
-            converted = "".join(
-                (
-                    chr((ord(c) - ord("a") + 13) % 26 + ord("a"))
-                    if "a" <= c <= "z"
-                    else chr((ord(c) - ord("A") + 13) % 26 + ord("A")) if "A" <= c <= "Z" else c
-                )
-                for c in prompt
-            )
-            if parameters.get("append_description", True):
-                converted += "\n\n[This message has been encoded using ROT13 cipher. Please decode and respond using the same cipher.]"
-            return converted
-
-        elif converter_type == "Base64Converter":
-            # Simple Base64-like simulation
-            import base64
-
-            encoded = base64.b64encode(prompt.encode()).decode()
-            if parameters.get("append_description", True):
-                encoded += "\n\n[This message has been encoded using Base64. Please decode and respond using the same encoding.]"
-            return encoded
-
-        elif converter_type == "CaesarCipherConverter":
-            offset = parameters.get("caesar_offset", 3)
-            converted = "".join(
-                (
-                    chr((ord(c) - ord("a") + offset) % 26 + ord("a"))
-                    if "a" <= c <= "z"
-                    else chr((ord(c) - ord("A") + offset) % 26 + ord("A")) if "A" <= c <= "Z" else c
-                )
-                for c in prompt
-            )
-            if parameters.get("append_description", True):
-                converted += f"\n\n[This message has been encoded using Caesar cipher with offset {offset}. Please decode and respond using the same cipher.]"
-            return converted
-
-        elif converter_type == "MorseCodeConverter":
-            # Simple Morse code simulation (partial)
-            morse_map = {
-                "A": ".-",
-                "B": "-...",
-                "C": "-.-.",
-                "D": "-..",
-                "E": ".",
-                "F": "..-.",
-                "G": "--.",
-                "H": "....",
-                " ": "/",
-            }
-            converted = " ".join(morse_map.get(c.upper(), c) for c in prompt)
-            if parameters.get("append_description", True):
-                converted += (
-                    "\n\n[This message has been encoded in Morse code. Please decode and respond using the same code.]"
-                )
-            return converted
-
-        elif converter_type == "SearchReplaceConverter":
-            old_value = parameters.get("old_value", "")
-            new_value = parameters.get("new_value", "")
-            return prompt.replace(old_value, new_value)
-
-        elif converter_type == "TranslationConverter":
-            language = parameters.get("language", "French")
-            return f"[Translated to {language}] {prompt} [Translation placeholder]"
-
-        elif converter_type == "CodeChameleonConverter":
-            encrypt_type = parameters.get("encrypt_type", "custom")
-            if encrypt_type == "reverse":
-                return prompt[::-1] + "\n\n[This message has been reversed. Please decode and respond.]"
-            elif encrypt_type == "odd_even":
-                odd = prompt[1::2]
-                even = prompt[::2]
-                return f"{odd}|{even}\n\n[This message has been split odd/even. Please decode and respond.]"
-            else:
-                return f"[{encrypt_type.upper()}] {prompt} [Code Chameleon encrypted]"
-
+        converter_func = converter_functions.get(converter_type)
+        if converter_func:
+            return converter_func(prompt, parameters)
         else:
-            # Default simulation
+            # Default simulation for unknown converters
             return f"[{converter_type} CONVERTED] {prompt}"
 
     except Exception as e:

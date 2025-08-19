@@ -141,6 +141,7 @@ def create_empty_results() -> None:
 
     # Create minimal JUnit XML
     junit_xml = """<?xml version="1.0" encoding="utf-8"?>
+
 <testsuites>
     <testsuite name="empty" tests="0" errors="0" failures="0" skipped="0">
         <testcase name="no_tests_found" classname="empty">
@@ -154,6 +155,7 @@ def create_empty_results() -> None:
 
     # Create minimal coverage XML
     coverage_xml = """<?xml version="1.0" encoding="utf-8"?>
+
 <coverage version="1">
     <packages/>
 </coverage>"""

@@ -3,7 +3,8 @@
 # # Licensed under MIT License
 
 """
-Test script to verify rate limiting is working correctly
+Test script to verify rate limiting is working correctly.
+
 SECURITY: Tests that authentication endpoints properly enforce rate limits
 """
 import asyncio
@@ -26,8 +27,8 @@ TEST_ENDPOINTS = {
 }
 
 
-async def test_rate_limiting():
-    """Test rate limiting on authentication endpoints"""
+async def test_rate_limiting() -> Any:
+    """Test rate limiting on authentication endpoints."""
     print("🔒 Testing Rate Limiting Implementation")
     print("=" * 50)
 

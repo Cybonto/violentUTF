@@ -26,17 +26,17 @@ class APIKey(Base):
     last_used_at = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=True)
 
-    async def update_last_used(self) -> None:
+    async def update_last_used(self: "APIKey") -> None:
         """Update last used timestamp."""
         self.last_used_at = datetime.utcnow()
 
-    def is_expired(self) -> bool:
+    def is_expired(self: "APIKey") -> bool:
         """Check if key is expired."""
         if not self.expires_at:
             return False
         return datetime.utcnow() > self.expires_at
 
-    def to_dict(self) -> dict:
+    def to_dict(self: "APIKey") -> dict:
         """Convert to dictionary."""
         return {
             "id": self.id,

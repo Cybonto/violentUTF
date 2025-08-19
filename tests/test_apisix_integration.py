@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-Integration tests for ViolentUTF API through APISIX Gateway
+Integration tests for ViolentUTF API through APISIX Gateway.
+
 Tests the actual APISIX routing to ensure endpoints work as expected
 """
 
@@ -41,7 +42,7 @@ MOCK_JWT_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsI
 
 
 def get_apisix_headers(include_auth: bool = True) -> Dict[str, str]:
-    """Get headers for APISIX requests"""
+    """Get headers for APISIX requests."""
     headers = {
         "Content-Type": "application/json",
         "X-Real-IP": "127.0.0.1",
@@ -55,7 +56,7 @@ def get_apisix_headers(include_auth: bool = True) -> Dict[str, str]:
 
 
 def make_request(method: str, url: str, include_auth: bool = True, **kwargs) -> requests.Response:
-    """Make a request through APISIX with proper headers"""
+    """Make a request through APISIX with proper headers."""
     headers = get_apisix_headers(include_auth)
     if "headers" in kwargs:
         headers.update(kwargs["headers"])
@@ -65,18 +66,18 @@ def make_request(method: str, url: str, include_auth: bool = True, **kwargs) -> 
 
 
 class TestAPISIXConnectivity:
-    """Test basic APISIX connectivity and routing"""
+    """Test basic APISIX connectivity and routing."""
 
-    def test_apisix_gateway_running(self):
-        """Test that APISIX Gateway is accessible"""
+    def test_apisix_gateway_running(self) -> None:
+        """ "Test that APISIX Gateway is accessible."""
         try:
             response = requests.get(f"{APISIX_BASE_URL}/health", timeout=10)
             assert response.status_code in [200, 404], f"APISIX should be running, got {response.status_code}"
         except requests.ConnectionError:
             pytest.fail("APISIX Gateway is not running on port 9080. Run: cd apisix && docker compose up -d")
 
-    def test_health_endpoint_via_apisix(self):
-        """Test health endpoint through APISIX"""
+    def test_health_endpoint_via_apisix(self: "TestAPISIXConnectivity") -> None:
+        """Test health endpoint through APISIX."""
         response = make_request("GET", APISIX_ENDPOINTS["health"], include_auth=False)
         # Should either work (200) or be not found (404) if route not configured
         assert response.status_code in [200, 404], f"Unexpected status: {response.status_code}"
@@ -84,8 +85,8 @@ class TestAPISIXConnectivity:
         if response.status_code == 404:
             pytest.skip("Health endpoint route not configured in APISIX. Run: ./configure_routes.sh")
 
-    def test_api_docs_via_apisix(self):
-        """Test API documentation endpoint through APISIX"""
+    def test_api_docs_via_apisix(self: "TestAPISIXConnectivity") -> None:
+        """Test API documentation endpoint through APISIX."""
         response = make_request("GET", APISIX_ENDPOINTS["docs"], include_auth=False)
         assert response.status_code in [200, 404], f"Unexpected status: {response.status_code}"
 
@@ -94,10 +95,10 @@ class TestAPISIXConnectivity:
 
 
 class TestAuthenticationEndpointsViaAPISIX:
-    """Test authentication endpoints through APISIX"""
+    """Test authentication endpoints through APISIX."""
 
-    def test_token_info_endpoint_routing(self):
-        """Test that auth/token/info endpoint is routed correctly"""
+    def test_token_info_endpoint_routing(self: "TestAuthenticationEndpointsViaAPISIX") -> None:
+        """Test that auth/token/info endpoint is routed correctly."""
         response = make_request("GET", APISIX_ENDPOINTS["auth_token_info"])
 
         # Should get some response (not connection error)
@@ -110,8 +111,8 @@ class TestAuthenticationEndpointsViaAPISIX:
         # If route is configured, should require authentication
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_token_validate_endpoint_routing(self):
-        """Test that auth/token/validate endpoint is routed correctly"""
+    def test_token_validate_endpoint_routing(self: "TestAuthenticationEndpointsViaAPISIX") -> None:
+        """Test that auth/token/validate endpoint is routed correctly."""
         payload = {"required_roles": ["ai-api-access"], "check_ai_access": True}
 
         response = make_request("POST", APISIX_ENDPOINTS["auth_token_validate"], json=payload)
@@ -121,8 +122,8 @@ class TestAuthenticationEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_logout_endpoint_routing(self):
-        """Test that auth/logout endpoint is routed correctly"""
+    def test_logout_endpoint_routing(self: "TestAuthenticationEndpointsViaAPISIX") -> None:
+        """Test that auth/logout endpoint is routed correctly."""
         response = make_request("POST", APISIX_ENDPOINTS["auth_logout"])
 
         if response.status_code == 404:
@@ -132,10 +133,10 @@ class TestAuthenticationEndpointsViaAPISIX:
 
 
 class TestDatabaseEndpointsViaAPISIX:
-    """Test database management endpoints through APISIX"""
+    """Test database management endpoints through APISIX."""
 
-    def test_database_initialize_routing(self):
-        """Test database initialization endpoint routing"""
+    def test_database_initialize_routing(self: "TestDatabaseEndpointsViaAPISIX") -> None:
+        """Test database initialization endpoint routing."""
         payload = {"force_recreate": False, "custom_salt": "test_salt", "backup_existing": True}
 
         response = make_request("POST", APISIX_ENDPOINTS["database_initialize"], json=payload)
@@ -145,8 +146,8 @@ class TestDatabaseEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_database_status_routing(self):
-        """Test database status endpoint routing"""
+    def test_database_status_routing(self: "TestDatabaseEndpointsViaAPISIX") -> None:
+        """Test database status endpoint routing."""
         response = make_request("GET", APISIX_ENDPOINTS["database_status"])
 
         if response.status_code == 404:
@@ -154,8 +155,8 @@ class TestDatabaseEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_database_stats_routing(self):
-        """Test database stats endpoint routing"""
+    def test_database_stats_routing(self: "TestDatabaseEndpointsViaAPISIX") -> None:
+        """Test database stats endpoint routing."""
         response = make_request("GET", APISIX_ENDPOINTS["database_stats"])
 
         if response.status_code == 404:
@@ -163,8 +164,8 @@ class TestDatabaseEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_database_reset_routing(self):
-        """Test database reset endpoint routing"""
+    def test_database_reset_routing(self: "TestDatabaseEndpointsViaAPISIX") -> None:
+        """Test database reset endpoint routing."""
         payload = {"confirmation": True, "backup_before_reset": True, "preserve_user_data": False}
 
         response = make_request("POST", APISIX_ENDPOINTS["database_reset"], json=payload)
@@ -176,10 +177,10 @@ class TestDatabaseEndpointsViaAPISIX:
 
 
 class TestSessionEndpointsViaAPISIX:
-    """Test session management endpoints through APISIX"""
+    """Test session management endpoints through APISIX."""
 
-    def test_sessions_get_routing(self):
-        """Test sessions GET endpoint routing"""
+    def test_sessions_get_routing(self) -> None:
+        """ "Test sessions GET endpoint routing."""
         response = make_request("GET", APISIX_ENDPOINTS["sessions"])
 
         if response.status_code == 404:
@@ -187,8 +188,8 @@ class TestSessionEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_sessions_put_routing(self):
-        """Test sessions PUT endpoint routing"""
+    def test_sessions_put_routing(self: "TestSessionEndpointsViaAPISIX") -> None:
+        """Test sessions PUT endpoint routing."""
         payload = {"ui_preferences": {"theme": "dark"}, "workflow_state": {"step": "init"}}
 
         response = make_request("PUT", APISIX_ENDPOINTS["sessions"], json=payload)
@@ -198,8 +199,8 @@ class TestSessionEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_sessions_reset_routing(self):
-        """Test sessions reset endpoint routing"""
+    def test_sessions_reset_routing(self: "TestSessionEndpointsViaAPISIX") -> None:
+        """Test sessions reset endpoint routing."""
         response = make_request("POST", APISIX_ENDPOINTS["sessions_reset"])
 
         if response.status_code == 404:
@@ -207,8 +208,8 @@ class TestSessionEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_sessions_schema_routing(self):
-        """Test sessions schema endpoint routing"""
+    def test_sessions_schema_routing(self: "TestSessionEndpointsViaAPISIX") -> None:
+        """Test sessions schema endpoint routing."""
         response = make_request("GET", APISIX_ENDPOINTS["sessions_schema"], include_auth=False)
 
         if response.status_code == 404:
@@ -219,10 +220,10 @@ class TestSessionEndpointsViaAPISIX:
 
 
 class TestConfigEndpointsViaAPISIX:
-    """Test configuration management endpoints through APISIX"""
+    """Test configuration management endpoints through APISIX."""
 
-    def test_config_parameters_routing(self):
-        """Test config parameters endpoint routing"""
+    def test_config_parameters_routing(self: "TestConfigEndpointsViaAPISIX") -> None:
+        """Test config parameters endpoint routing."""
         response = make_request("GET", APISIX_ENDPOINTS["config_parameters"])
 
         if response.status_code == 404:
@@ -230,8 +231,8 @@ class TestConfigEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_config_environment_routing(self):
-        """Test config environment endpoint routing"""
+    def test_config_environment_routing(self: "TestConfigEndpointsViaAPISIX") -> None:
+        """Test config environment endpoint routing."""
         response = make_request("GET", APISIX_ENDPOINTS["config_environment"])
 
         if response.status_code == 404:
@@ -239,8 +240,8 @@ class TestConfigEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_config_generate_salt_routing(self):
-        """Test config generate salt endpoint routing"""
+    def test_config_generate_salt_routing(self: "TestConfigEndpointsViaAPISIX") -> None:
+        """Test config generate salt endpoint routing."""
         response = make_request("POST", APISIX_ENDPOINTS["config_generate_salt"])
 
         if response.status_code == 404:
@@ -250,10 +251,10 @@ class TestConfigEndpointsViaAPISIX:
 
 
 class TestFileEndpointsViaAPISIX:
-    """Test file management endpoints through APISIX"""
+    """Test file management endpoints through APISIX."""
 
-    def test_files_list_routing(self):
-        """Test files list endpoint routing"""
+    def test_files_list_routing(self) -> None:
+        """ "Test files list endpoint routing."""
         response = make_request("GET", APISIX_ENDPOINTS["files_list"])
 
         if response.status_code == 404:
@@ -261,9 +262,9 @@ class TestFileEndpointsViaAPISIX:
 
         assert response.status_code in [401, 403], f"Expected auth error, got {response.status_code}: {response.text}"
 
-    def test_files_upload_routing(self):
-        """Test files upload endpoint routing"""
-        # Test without actually uploading a file
+    def test_files_upload_routing(self: "TestFileEndpointsViaAPISIX") -> None:
+        """Test files upload endpoint routing."""
+        # Test without actually uploading a file.
         headers = get_apisix_headers(include_auth=True)
         headers.pop("Content-Type", None)  # Remove for multipart
 
@@ -284,9 +285,8 @@ class TestFileEndpointsViaAPISIX:
 class TestStartPageEndpoints:
     """Verify that all endpoints used in 0_Start.py are correctly routed"""
 
-    def test_all_start_page_endpoints_exist(self):
+    def test_all_start_page_endpoints_exist(self: "TestStartPageEndpoints") -> None:
         """Test that all endpoints used in Start page have corresponding APISIX routes"""
-
         # Read the Start page to extract endpoints
         start_page_path = "/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf/pages/0_Start.py"
 
@@ -327,10 +327,10 @@ class TestStartPageEndpoints:
 
 # Utility test to help debug configuration
 class TestDebugHelpers:
-    """Helper tests for debugging APISIX configuration"""
+    """Helper tests for debugging APISIX configuration."""
 
-    def test_print_apisix_status(self):
-        """Print current APISIX status for debugging"""
+    def test_print_apisix_status(self) -> None:
+        """ "Print current APISIX status for debugging."""
         print("\n🔍 APISIX Gateway Status:")
         print(f"   Base URL: {APISIX_BASE_URL}")
 
@@ -356,10 +356,10 @@ class TestDebugHelpers:
 
 
 class TestJWTAuthenticationIntegration:
-    """Test JWT authentication integration through APISIX"""
+    """Test JWT authentication integration through APISIX."""
 
-    def test_jwt_token_structure(self):
-        """Test that JWT tokens have the expected structure for APISIX routing"""
+    def test_jwt_token_structure(self) -> None:
+        """ "Test that JWT tokens have the expected structure for APISIX routing."""
         import jwt
 
         # Test the mock token structure
@@ -377,8 +377,8 @@ class TestJWTAuthenticationIntegration:
         except Exception as e:
             pytest.skip(f"JWT decode test failed: {e}")
 
-    def test_generator_endpoints_routing(self):
-        """Test that generator endpoints are properly routed through APISIX"""
+    def test_generator_endpoints_routing(self: "TestJWTAuthenticationIntegration") -> None:
+        """Test that generator endpoints are properly routed through APISIX."""
         generator_endpoints = [
             "/api/v1/generators",
             "/api/v1/generators/types",
@@ -395,9 +395,9 @@ class TestJWTAuthenticationIntegration:
             assert response.status_code in [200, 401, 403], f"Unexpected status for {endpoint}: {response.status_code}"
             print(f"   {endpoint}: ✅ Routed ({response.status_code})")
 
-    def test_apisix_api_key_endpoints(self):
-        """Test endpoints that require APISIX API key authentication"""
-        # This tests the routes that use key-auth plugin for AI access
+    def test_apisix_api_key_endpoints(self: "TestJWTAuthenticationIntegration") -> None:
+        """Test endpoints that require APISIX API key authentication."""
+        # This tests the routes that use key-auth plugin for AI access.
 
         # Mock the APISIX API key header format
         api_key_headers = {
@@ -410,8 +410,8 @@ class TestJWTAuthenticationIntegration:
         assert "apikey" in api_key_headers, "APISIX API key header should use 'apikey' field"
         assert api_key_headers["X-API-Gateway"] == "APISIX", "Should include APISIX gateway marker"
 
-    def test_environment_variable_integration(self):
-        """Test environment variable integration for APISIX authentication"""
+    def test_environment_variable_integration(self: "TestJWTAuthenticationIntegration") -> None:
+        """Test environment variable integration for APISIX authentication."""
         import os
 
         # Test the environment variable priority order used in generators.py
@@ -433,10 +433,10 @@ class TestJWTAuthenticationIntegration:
 
 
 class TestAuthenticationErrorHandling:
-    """Test authentication error handling through APISIX"""
+    """Test authentication error handling through APISIX."""
 
-    def test_missing_jwt_token(self):
-        """Test endpoints with missing JWT token"""
+    def test_missing_jwt_token(self) -> None:
+        """ "Test endpoints with missing JWT token."""
         headers_without_auth = {
             "Content-Type": "application/json",
             "X-Real-IP": "127.0.0.1",
@@ -451,8 +451,8 @@ class TestAuthenticationErrorHandling:
         # Should return 401 for missing authentication
         assert response.status_code == 401, f"Expected 401 for missing auth, got {response.status_code}"
 
-    def test_malformed_jwt_token(self):
-        """Test endpoints with malformed JWT token"""
+    def test_malformed_jwt_token(self: "TestAuthenticationErrorHandling") -> None:
+        """Test endpoints with malformed JWT token."""
         malformed_headers = {
             "Authorization": "Bearer invalid.jwt.token",
             "Content-Type": "application/json",
@@ -466,8 +466,8 @@ class TestAuthenticationErrorHandling:
         # Should return 401 for invalid token
         assert response.status_code == 401, f"Expected 401 for invalid token, got {response.status_code}"
 
-    def test_authentication_error_messages(self):
-        """Test that authentication errors don't expose sensitive information"""
+    def test_authentication_error_messages(self: "TestAuthenticationErrorHandling") -> None:
+        """Test that authentication errors don't expose sensitive information."""
         response = make_request("GET", f"{APISIX_BASE_URL}/api/v1/auth/token/info", include_auth=False)
 
         if response.status_code == 401:

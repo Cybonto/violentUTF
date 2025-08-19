@@ -3,6 +3,7 @@
 # # Licensed under MIT License
 
 """Fix GitHub Actions YAML files with multi-line Python string issues."""
+
 import os
 import re
 import sys
@@ -11,7 +12,7 @@ from typing import Match
 
 def fix_python_multiline_strings(content: str) -> str:
     """Fix multi-line Python strings in YAML files."""
-    # Pattern to find python -c with double quotes
+    # Pattern to find python -c with double quotes.
     pattern = r'(\s+)python -c "([^"]*(?:\n[^"]*)*)"'
 
     def replace_python_block(match: Match[str]) -> str:

@@ -10,8 +10,8 @@ import json
 import logging
 import os
 import time
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 from types import TracebackType
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 from unittest.mock import Mock, patch
 
 import jwt
@@ -28,8 +28,8 @@ TEST_API_KEY = "test_api_key_for_contract_testing"
 class MockTokenManager:
     """Mock token manager for contract testing."""
 
-    def __init__(self: "MockTokenManager") -> None:
-        """Initialize mock token manager."""
+    def __init__(self) -> None:
+        """ "Initialize mock token manager."""
         self.test_user_payload = {
             "sub": "test_user",
             "username": "violentutf.test",
@@ -61,7 +61,7 @@ class MockTokenManager:
 class MockAuthenticationMiddleware:
     """Mock authentication middleware for contract testing."""
 
-    def __init__(self: "MockAuthenticationMiddleware", app: object) -> None:
+    def __init__(self, app=None) -> None:
         """Initialize mock authentication middleware."""
         self.app = app
         self.token_manager = MockTokenManager()
@@ -73,7 +73,7 @@ class MockAuthenticationMiddleware:
         send: Callable[[Dict[str, Any]], Awaitable[None]],
     ) -> None:
         """Mock authentication middleware."""
-        # Add test authentication headers
+        # Add test authentication headers.
         if scope["type"] == "http":
             headers = dict(scope.get("headers", []))
 
@@ -117,7 +117,7 @@ def setup_test_environment() -> None:
 
 def mock_jwt_decode(token: str, secret: str = None, algorithms: list = None) -> Dict[str, Any]:
     """Mock JWT decode function."""
-    # Return mock payload for any token during testing
+    # Return mock payload for any token during testing.
     return {
         "sub": "test_user",
         "username": "violentutf.test",
@@ -157,8 +157,8 @@ def mock_apisix_endpoints() -> Dict[str, Dict[str, str]]:
 class ContractTestingPatches:
     """Context manager for applying all contract testing patches."""
 
-    def __init__(self: "ContractTestingPatches") -> None:
-        """Initialize contract testing patches."""
+    def __init__(self) -> None:
+        """ "Initialize contract testing patches."""
         self.patches = []
 
     def __enter__(self: "ContractTestingPatches") -> "ContractTestingPatches":

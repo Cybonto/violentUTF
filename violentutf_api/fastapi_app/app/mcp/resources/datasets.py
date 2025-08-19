@@ -27,12 +27,12 @@ class DatasetResourceProvider(BaseResourceProvider):
     """Provides comprehensive access to security datasets."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         super().__init__("violentutf://datasets/{dataset_id}", "DatasetProvider")
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()
 
-    def _get_api_url(self) -> str:
+    def _get_api_url(self: "DatasetResourceProvider") -> str:
         """Get internal API URL for container communication."""
         api_url = getattr(settings, "VIOLENTUTF_API_URL", "http://localhost:8000")
         # Convert external gateway URL to internal service URL
@@ -40,7 +40,9 @@ class DatasetResourceProvider(BaseResourceProvider):
             return "http://violentutf-api:8000"
         return api_url
 
-    async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
+    async def get_resource(
+        self: "DatasetResourceProvider", uri: str, params: Dict[str, Any]
+    ) -> Optional[AdvancedResource]:
         """Get specific dataset resource with full content."""
         uri_params = self.extract_params(uri)
         dataset_id = uri_params.get("dataset_id")
@@ -121,7 +123,11 @@ class DatasetResourceProvider(BaseResourceProvider):
             return None
 
     async def _get_dataset_content(
-        self, client: httpx.AsyncClient, dataset_id: str, headers: Dict[str, str], params: Dict[str, Any]
+        self: "DatasetResourceProvider",
+        client: httpx.AsyncClient,
+        dataset_id: str,
+        headers: Dict[str, str],
+        params: Dict[str, Any],
     ) -> Any:
         """Get dataset content with pagination support."""
         try:
@@ -142,7 +148,7 @@ class DatasetResourceProvider(BaseResourceProvider):
             logger.debug(f"Could not fetch content for dataset {dataset_id}: {e}")
             return []
 
-    async def _get_dataset_statistics(self, content: Any) -> Dict[str, Any]:
+    async def _get_dataset_statistics(self: "DatasetResourceProvider", content: Any) -> Dict[str, Any]:
         """Generate statistics for dataset content."""
         if not content:
             return {"total_entries": 0}
@@ -175,7 +181,7 @@ class DatasetResourceProvider(BaseResourceProvider):
 
         return stats
 
-    async def _infer_dataset_schema(self, content: Any) -> Dict[str, Any]:
+    async def _infer_dataset_schema(self: "DatasetResourceProvider", content: Any) -> Dict[str, Any]:
         """Infer schema from dataset content."""
         schema = {"type": "unknown"}
 
@@ -205,7 +211,7 @@ class DatasetResourceProvider(BaseResourceProvider):
 
         return schema
 
-    async def list_resources(self, params: Dict[str, Any]) -> List[AdvancedResource]:
+    async def list_resources(self: "DatasetResourceProvider", params: Dict[str, Any]) -> List[AdvancedResource]:
         """List all available datasets with metadata."""
         resources = []
 
@@ -284,7 +290,7 @@ class DatasetResourceProvider(BaseResourceProvider):
         logger.info(f"Listed {len(resources)} dataset resources")
         return resources
 
-    async def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
+    async def _get_headers(self: "DatasetResourceProvider", params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Dataset"}
 
@@ -303,19 +309,21 @@ class ResultsResourceProvider(BaseResourceProvider):
     """Provides access to orchestrator execution results."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         super().__init__("violentutf://results/{execution_id}", "ResultsProvider")
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()
 
-    def _get_api_url(self) -> str:
+    def _get_api_url(self: "ResultsResourceProvider") -> str:
         """Get internal API URL for container communication."""
         api_url = getattr(settings, "VIOLENTUTF_API_URL", "http://localhost:8000")
         if "localhost:9080" in api_url or "apisix" in api_url:
             return "http://violentutf-api:8000"
         return api_url
 
-    async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
+    async def get_resource(
+        self: "ResultsResourceProvider", uri: str, params: Dict[str, Any]
+    ) -> Optional[AdvancedResource]:
         """Get specific execution results."""
         uri_params = self.extract_params(uri)
         execution_id = uri_params.get("execution_id")
@@ -375,7 +383,7 @@ class ResultsResourceProvider(BaseResourceProvider):
 
         return None
 
-    async def _generate_results_summary(self, results: Any) -> Dict[str, Any]:
+    async def _generate_results_summary(self: "ResultsResourceProvider", results: Any) -> Dict[str, Any]:
         """Generate summary statistics for results."""
         summary = {"total_results": 0, "status": "unknown"}
 
@@ -391,7 +399,7 @@ class ResultsResourceProvider(BaseResourceProvider):
 
         return summary
 
-    async def list_resources(self, params: Dict[str, Any]) -> List[AdvancedResource]:
+    async def list_resources(self: "ResultsResourceProvider", params: Dict[str, Any]) -> List[AdvancedResource]:
         """List available execution results."""
         resources = []
 
@@ -440,7 +448,7 @@ class ResultsResourceProvider(BaseResourceProvider):
 
         return resources
 
-    async def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
+    async def _get_headers(self: "ResultsResourceProvider", params: Dict[str, Any]) -> Dict[str, str]:
         """Get API headers with authentication."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Results"}
 

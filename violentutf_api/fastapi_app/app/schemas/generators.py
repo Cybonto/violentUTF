@@ -49,7 +49,7 @@ class GeneratorCreateRequest(BaseModel):
     parameters: Dict[str, Any] = Field(..., description="Generator configuration parameters")
 
     @validator("name")
-    def validate_name_field(cls, v) -> bool:
+    def validate_name_field(cls: type["GeneratorCreateRequest"], v: Any) -> bool:
         """Validate generator name."""
         v = sanitize_string(v)
         if not ValidationPatterns.GENERATOR_NAME.match(v):
@@ -57,7 +57,7 @@ class GeneratorCreateRequest(BaseModel):
         return v
 
     @validator("type")
-    def validate_type_field(cls, v) -> bool:
+    def validate_type_field(cls: type["GeneratorCreateRequest"], v: Any) -> bool:
         """Validate generator type."""
         v = sanitize_string(v)
         if not ValidationPatterns.GENERATOR_TYPE.match(v):
@@ -65,7 +65,7 @@ class GeneratorCreateRequest(BaseModel):
         return v
 
     @validator("parameters")
-    def validate_parameters_field(cls, v) -> bool:
+    def validate_parameters_field(cls: type["GeneratorCreateRequest"], v: Any) -> bool:
         """Validate generator parameters."""
         return validate_generator_parameters(v)
 
@@ -77,7 +77,7 @@ class GeneratorUpdateRequest(BaseModel):
     parameters: Optional[Dict[str, Any]] = Field(default=None, description="Updated parameters")
 
     @validator("name")
-    def validate_name_field(cls, v) -> bool:
+    def validate_name_field(cls: type["GeneratorUpdateRequest"], v: Any) -> bool:
         """Validate generator name if provided."""
         if v is not None:
             v = sanitize_string(v)

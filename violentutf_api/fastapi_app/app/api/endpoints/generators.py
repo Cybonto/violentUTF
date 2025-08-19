@@ -43,137 +43,155 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _get_openai_endpoint(model: str) -> str:
+    """Get OpenAI model endpoint mapping."""
+    openai_mappings = {
+        "gpt-4": "/ai/openai/gpt4",
+        "gpt-3.5-turbo": "/ai/openai/gpt35",
+        "gpt-4-turbo": "/ai/openai/gpt4-turbo",
+        "gpt-4o": "/ai/openai/gpt4o",
+        "gpt-4o-mini": "/ai/openai/gpt4o-mini",
+        "gpt-4.1": "/ai/openai/gpt41",
+        "gpt-4.1-mini": "/ai/openai/gpt41-mini",
+        "gpt-4.1-nano": "/ai/openai/gpt41-nano",
+        "o1-preview": "/ai/openai/o1-preview",
+        "o1-mini": "/ai/openai/o1-mini",
+        "o3-mini": "/ai/openai/o3-mini",
+        "o4-mini": "/ai/openai/o4-mini",
+    }
+    return openai_mappings.get(model)
+
+
+def _get_anthropic_endpoint(model: str) -> str:
+    """Get Anthropic model endpoint mapping."""
+    anthropic_mappings = {
+        "claude-3-opus-20240229": "/ai/anthropic/claude3-opus",
+        "claude-3-sonnet-20240229": "/ai/anthropic/claude3-sonnet",
+        "claude-3-haiku-20240307": "/ai/anthropic/claude3-haiku",
+        "claude-3-5-sonnet-20241022": "/ai/anthropic/claude35-sonnet",
+        "claude-3-5-haiku-20241022": "/ai/anthropic/claude35-haiku",
+        "claude-3-7-sonnet-latest": "/ai/anthropic/sonnet37",
+        "claude-sonnet-4-20250514": "/ai/anthropic/sonnet4",
+        "claude-opus-4-20250514": "/ai/anthropic/opus4",
+    }
+    return anthropic_mappings.get(model)
+
+
+def _get_ollama_endpoint(model: str) -> str:
+    """Get Ollama model endpoint mapping."""
+    ollama_mappings = {
+        "llama2": "/ai/ollama/llama2",
+        "codellama": "/ai/ollama/codellama",
+        "mistral": "/ai/ollama/mistral",
+        "llama3": "/ai/ollama/llama3",
+    }
+    return ollama_mappings.get(model)
+
+
+def _get_webui_endpoint(model: str) -> str:
+    """Get WebUI model endpoint mapping."""
+    webui_mappings = {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"}
+    return webui_mappings.get(model)
+
+
+def _get_openapi_gsai_endpoint(model: str) -> str:
+    """Get GSAi static endpoint."""
+    return "/ai/gsai-api-1/chat/completions"
+
+
+def _get_openapi_dynamic_endpoint(provider: str, model: str) -> str:
+    """Get dynamic OpenAPI provider endpoint by querying APISIX."""
+    provider_id = provider.replace("openapi-", "")
+
+    try:
+        apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://apisix:9180")
+        apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
+
+        logger.info(f"Querying APISIX admin API at {apisix_admin_url} for OpenAPI routes")
+        response = requests.get(
+            f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=5
+        )
+
+        if response.status_code == 200:
+            routes_data = response.json()
+            if "list" in routes_data:
+                return _find_openapi_route(routes_data["list"], provider_id, provider)
+        else:
+            logger.error(f"Failed to query APISIX admin API: HTTP {response.status_code}")
+            logger.error(f"Response: {response.text}")
+
+        logger.warning(f"No chat completions endpoint found for OpenAPI provider {provider}")
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Network error querying APISIX admin API: {e}")
+    except Exception as e:
+        logger.error(f"Error finding OpenAPI endpoint for {provider}/{model}: {e}", exc_info=True)
+
+    return None
+
+
+def _find_openapi_route(routes_list: list, provider_id: str, provider: str) -> str:
+    """Find OpenAPI route from APISIX routes list."""
+    total_routes = len(routes_list)
+    openapi_routes = [r for r in routes_list if r.get("value", {}).get("id", "").startswith("openapi-")]
+    logger.info(f"Found {total_routes} total routes, {len(openapi_routes)} OpenAPI routes")
+
+    # First pass: look for chat completions endpoint
+    for route_item in routes_list:
+        route = route_item.get("value", {})
+        route_id = route.get("id", "")
+        uri = route.get("uri", "")
+
+        if route_id.startswith(f"openapi-{provider_id}-"):
+            logger.debug(f"Checking route: id={route_id}, uri={uri}")
+
+        if (
+            route_id.startswith(f"openapi-{provider_id}-")
+            and uri.endswith("/chat/completions")
+            and f"/openapi/{provider_id}/" in uri
+        ):
+            logger.info(f"Found OpenAPI chat endpoint for {provider}: {uri}")
+            return uri
+
+    # Second pass: look for converse operation
+    for route_item in routes_list:
+        route = route_item.get("value", {})
+        route_id = route.get("id", "")
+        uri = route.get("uri", "")
+
+        if (
+            route_id.startswith(f"openapi-{provider_id}-")
+            and "converse" in route_id.lower()
+            and f"/openapi/{provider_id}/" in uri
+        ):
+            logger.info(f"Found OpenAPI converse endpoint for {provider}: {uri}")
+            return uri
+
+    return None
+
+
 def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     """
     Map AI provider and model to APISIX endpoint path.
 
     Based on the setup_macos.sh AI proxy route configuration
     """
-    # OpenAI model mappings.
-    if provider == "openai":
-        openai_mappings = {
-            "gpt-4": "/ai/openai/gpt4",
-            "gpt-3.5-turbo": "/ai/openai/gpt35",
-            "gpt-4-turbo": "/ai/openai/gpt4-turbo",
-            "gpt-4o": "/ai/openai/gpt4o",
-            "gpt-4o-mini": "/ai/openai/gpt4o-mini",
-            "gpt-4.1": "/ai/openai/gpt41",
-            "gpt-4.1-mini": "/ai/openai/gpt41-mini",
-            "gpt-4.1-nano": "/ai/openai/gpt41-nano",
-            "o1-preview": "/ai/openai/o1-preview",
-            "o1-mini": "/ai/openai/o1-mini",
-            "o3-mini": "/ai/openai/o3-mini",
-            "o4-mini": "/ai/openai/o4-mini",
-        }
-        return openai_mappings.get(model)
+    # Dispatch dictionary for provider endpoint functions
+    provider_handlers = {
+        "openai": _get_openai_endpoint,
+        "anthropic": _get_anthropic_endpoint,
+        "ollama": _get_ollama_endpoint,
+        "webui": _get_webui_endpoint,
+        "openapi-gsai": _get_openapi_gsai_endpoint,
+    }
 
-    # Anthropic model mappings
-    elif provider == "anthropic":
-        anthropic_mappings = {
-            "claude-3-opus-20240229": "/ai/anthropic/claude3-opus",
-            "claude-3-sonnet-20240229": "/ai/anthropic/claude3-sonnet",
-            "claude-3-haiku-20240307": "/ai/anthropic/claude3-haiku",
-            "claude-3-5-sonnet-20241022": "/ai/anthropic/claude35-sonnet",
-            "claude-3-5-haiku-20241022": "/ai/anthropic/claude35-haiku",
-            "claude-3-7-sonnet-latest": "/ai/anthropic/sonnet37",
-            "claude-sonnet-4-20250514": "/ai/anthropic/sonnet4",
-            "claude-opus-4-20250514": "/ai/anthropic/opus4",
-        }
-        return anthropic_mappings.get(model)
+    # Handle standard providers
+    if provider in provider_handlers:
+        return provider_handlers[provider](model)
 
-    # Ollama model mappings
-    elif provider == "ollama":
-        ollama_mappings = {
-            "llama2": "/ai/ollama/llama2",
-            "codellama": "/ai/ollama/codellama",
-            "mistral": "/ai/ollama/mistral",
-            "llama3": "/ai/ollama/llama3",
-        }
-        return ollama_mappings.get(model)
-
-    # Open WebUI model mappings
-    elif provider == "webui":
-        webui_mappings = {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"}
-        return webui_mappings.get(model)
-
-    # AWS Bedrock - REMOVED (not supported)
-
-    # GSAi (Government Services AI) - Static route we created
-    elif provider == "openapi-gsai":
-        # Use the static GSAi route we configured in the setup
-        return "/ai/gsai-api-1/chat/completions"
-
-    # OpenAPI provider mappings
-    elif provider.startswith("openapi-"):
-        # For OpenAPI providers, we need to find the chat completions endpoint
-        # The model is passed as a parameter, not part of the URL
-        provider_id = provider.replace("openapi-", "")
-
-        # Query APISIX to find the chat completions route
-        try:
-            # When running in Docker, use container name; when local, use localhost
-            apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://apisix:9180")
-            apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
-
-            logger.info(f"Querying APISIX admin API at {apisix_admin_url} for OpenAPI routes")
-            response = requests.get(
-                f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=5
-            )
-
-            if response.status_code == 200:
-                routes_data = response.json()
-                if "list" in routes_data:
-                    # Log total routes found
-                    total_routes = len(routes_data["list"])
-                    openapi_routes = [
-                        r for r in routes_data["list"] if r.get("value", {}).get("id", "").startswith("openapi-")
-                    ]
-                    logger.info(f"Found {total_routes} total routes, {len(openapi_routes)} OpenAPI routes")
-
-                    for route_item in routes_data["list"]:
-                        route = route_item.get("value", {})
-                        route_id = route.get("id", "")
-                        uri = route.get("uri", "")
-
-                        # Log routes that match the provider
-                        if route_id.startswith(f"openapi-{provider_id}-"):
-                            logger.debug(f"Checking route: id={route_id}, uri={uri}")
-
-                        # Look for the chat completions endpoint for this provider
-                        # Pattern: /openapi/{provider-id}/api/v1/chat/completions
-                        if (
-                            route_id.startswith(f"openapi-{provider_id}-")
-                            and uri.endswith("/chat/completions")
-                            and f"/openapi/{provider_id}/" in uri
-                        ):
-                            logger.info(f"Found OpenAPI chat endpoint for {provider}: {uri}")
-                            return uri
-
-                    # If no chat/completions endpoint found, try looking for "converse" operation
-                    for route_item in routes_data["list"]:
-                        route = route_item.get("value", {})
-                        route_id = route.get("id", "")
-                        uri = route.get("uri", "")
-
-                        if (
-                            route_id.startswith(f"openapi-{provider_id}-")
-                            and "converse" in route_id.lower()
-                            and f"/openapi/{provider_id}/" in uri
-                        ):
-                            logger.info(f"Found OpenAPI converse endpoint for {provider}: {uri}")
-                            return uri
-
-            else:
-                logger.error(f"Failed to query APISIX admin API: HTTP {response.status_code}")
-                logger.error(f"Response: {response.text}")
-
-            logger.warning(f"No chat completions endpoint found for OpenAPI provider {provider}")
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Network error querying APISIX admin API: {e}")
-        except Exception as e:
-            logger.error(f"Error finding OpenAPI endpoint for {provider}/{model}: {e}", exc_info=True)
-
-        return None
+    # Handle dynamic OpenAPI providers
+    if provider.startswith("openapi-"):
+        return _get_openapi_dynamic_endpoint(provider, model)
 
     return None
 
@@ -320,59 +338,9 @@ def discover_apisix_models(provider: str) -> List[str]:
                 route = route_item.get("value", {})
                 uri = route.get("uri", "")
 
-                # Match provider-specific URI patterns
-                if provider == "openai" and uri.startswith("/ai/openai/"):
-                    # Extract model from URI like /ai/openai/gpt4 -> gpt-4
-                    model_key = uri.replace("/ai/openai/", "")
-                    actual_model = map_uri_to_model("openai", model_key)
-                    if actual_model:
-                        models.append(actual_model)
-
-                elif provider == "anthropic" and uri.startswith("/ai/anthropic/"):
-                    # Extract model from URI like /ai/anthropic/opus -> claude-3-opus-20240229
-                    model_key = uri.replace("/ai/anthropic/", "")
-                    actual_model = map_uri_to_model("anthropic", model_key)
-                    if actual_model:
-                        models.append(actual_model)
-
-                elif provider == "ollama" and uri.startswith("/ai/ollama/"):
-                    # Extract model from URI like /ai/ollama/llama2 -> llama2
-                    model_key = uri.replace("/ai/ollama/", "")
-                    models.append(model_key)
-
-                elif provider == "webui" and uri.startswith("/ai/webui/"):
-                    # Extract model from URI like /ai/webui/llama2 -> llama2
-                    model_key = uri.replace("/ai/webui/", "")
-                    models.append(model_key)
-
-                elif provider.startswith("openapi-") and uri.startswith("/ai/openapi/"):
-                    # Extract OpenAPI provider routes
-                    # URI format: /ai/openapi/{provider-id}/{path}
-                    parts = uri.split("/")
-                    if len(parts) >= 4:
-                        provider_id = parts[3]
-                        if provider == f"openapi-{provider_id}":
-                            # Get operation ID from route description or ID
-                            route_id = route.get("id", "")
-                            desc = route.get("desc", "")
-
-                            # Extract operation ID from route ID
-                            # New format: openapi-{provider-id}-{operation-id}-{hash}
-                            if route_id.startswith(f"openapi-{provider_id}-"):
-                                # Remove prefix
-                                temp = route_id.replace(f"openapi-{provider_id}-", "")
-                                # Remove the last -xxxxxxxx (8 char hash)
-                                if len(temp) > 9 and temp[-9] == "-":
-                                    operation_id = temp[:-9]
-                                else:
-                                    operation_id = temp
-                                # Convert back from safe format
-                                operation_id = operation_id.replace("-", "_")
-                                models.append(operation_id)
-                            elif desc and ":" in desc:
-                                # Fallback: extract from description
-                                operation_id = desc.split(":")[-1].strip()
-                                models.append(operation_id)
+                # Use dispatch pattern for provider handling
+                extracted_models = _extract_models_for_provider(provider, uri, route)
+                models.extend(extracted_models)
 
         # Remove duplicates and sort
         models = list(set(models))
@@ -388,6 +356,100 @@ def discover_apisix_models(provider: str) -> List[str]:
     except Exception as e:
         logger.error(f"Error discovering models for provider {provider}: {e}")
         return get_fallback_models(provider)
+
+
+def _extract_models_for_provider(provider: str, uri: str, route: Dict[str, Any]) -> List[str]:
+    """Extract models for a specific provider from URI and route data."""
+    # Dispatch dictionary for provider handlers
+    provider_handlers = {
+        "openai": _extract_openai_models,
+        "anthropic": _extract_anthropic_models,
+        "ollama": _extract_ollama_models,
+        "webui": _extract_webui_models,
+    }
+
+    # Handle standard providers
+    if provider in provider_handlers:
+        return provider_handlers[provider](uri, route)
+
+    # Handle OpenAPI providers
+    if provider.startswith("openapi-"):
+        return _extract_openapi_models(provider, uri, route)
+
+    return []
+
+
+def _extract_openai_models(uri: str, route: Dict[str, Any]) -> List[str]:
+    """Extract OpenAI models from route URI."""
+    if uri.startswith("/ai/openai/"):
+        model_key = uri.replace("/ai/openai/", "")
+        actual_model = map_uri_to_model("openai", model_key)
+        return [actual_model] if actual_model else []
+    return []
+
+
+def _extract_anthropic_models(uri: str, route: Dict[str, Any]) -> List[str]:
+    """Extract Anthropic models from route URI."""
+    if uri.startswith("/ai/anthropic/"):
+        model_key = uri.replace("/ai/anthropic/", "")
+        actual_model = map_uri_to_model("anthropic", model_key)
+        return [actual_model] if actual_model else []
+    return []
+
+
+def _extract_ollama_models(uri: str, route: Dict[str, Any]) -> List[str]:
+    """Extract Ollama models from route URI."""
+    if uri.startswith("/ai/ollama/"):
+        model_key = uri.replace("/ai/ollama/", "")
+        return [model_key]
+    return []
+
+
+def _extract_webui_models(uri: str, route: Dict[str, Any]) -> List[str]:
+    """Extract WebUI models from route URI."""
+    if uri.startswith("/ai/webui/"):
+        model_key = uri.replace("/ai/webui/", "")
+        return [model_key]
+    return []
+
+
+def _extract_openapi_models(provider: str, uri: str, route: Dict[str, Any]) -> List[str]:
+    """Extract OpenAPI provider models from route data."""
+    if not uri.startswith("/ai/openapi/"):
+        return []
+
+    # URI format: /ai/openapi/{provider-id}/{path}
+    parts = uri.split("/")
+    if len(parts) < 4:
+        return []
+
+    provider_id = parts[3]
+    if provider != f"openapi-{provider_id}":
+        return []
+
+    # Get operation ID from route description or ID
+    route_id = route.get("id", "")
+    desc = route.get("desc", "")
+
+    # Extract operation ID from route ID
+    # New format: openapi-{provider-id}-{operation-id}-{hash}
+    if route_id.startswith(f"openapi-{provider_id}-"):
+        # Remove prefix
+        temp = route_id.replace(f"openapi-{provider_id}-", "")
+        # Remove the last -xxxxxxxx (8 char hash)
+        if len(temp) > 9 and temp[-9] == "-":
+            operation_id = temp[:-9]
+        else:
+            operation_id = temp
+        # Convert back from safe format
+        operation_id = operation_id.replace("-", "_")
+        return [operation_id]
+    elif desc and ":" in desc:
+        # Fallback: extract from description
+        operation_id = desc.split(":")[-1].strip()
+        return [operation_id]
+
+    return []
 
 
 def map_uri_to_model(provider: str, uri_key: str) -> str:
@@ -616,7 +678,7 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
 
 
 @router.get("/types", response_model=GeneratorTypesResponse, summary="Get available generator types")
-async def get_generator_types(current_user=Depends(get_current_user)) -> Any:
+async def get_generator_types(current_user: Any = Depends(get_current_user)) -> Any:
     """Get list of available generator types."""
     try:
         logger.info(f"User {current_user.username} requested generator types")
@@ -701,7 +763,7 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
 
 
 @router.get("", response_model=GeneratorsListResponse, summary="Get configured generators")
-async def get_generators(current_user=Depends(get_current_user)) -> Any:
+async def get_generators(current_user: Any = Depends(get_current_user)) -> Any:
     """Get list of configured generators."""
     try:
         user_id = current_user.username
@@ -956,7 +1018,7 @@ def get_openapi_providers() -> List[str]:
 
 
 @router.get("/apisix/openapi-providers", response_model=List[str], summary="Get list of available OpenAPI providers")
-async def get_openapi_providers_endpoint(current_user=Depends(get_current_user)) -> List[str]:
+async def get_openapi_providers_endpoint(current_user: Any = Depends(get_current_user)) -> List[str]:
     """Get list of available OpenAPI providers."""
     try:
         providers = get_openapi_providers()
@@ -969,7 +1031,7 @@ async def get_openapi_providers_endpoint(current_user=Depends(get_current_user))
 @router.get(
     "/apisix/openapi-models", response_model=Dict[str, List[str]], summary="Get models for all OpenAPI providers"
 )
-async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict[str, List[str]]:
+async def get_all_openapi_models(current_user: Any = Depends(get_current_user)) -> Dict[str, List[str]]:
     """
     Get available models for all configured OpenAPI providers.
 
@@ -1008,7 +1070,7 @@ async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict
 
 
 @router.get("/apisix/openapi-debug", summary="Debug OpenAPI provider configurations")
-async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dict[str, Any]:
+async def debug_openapi_providers(current_user: Any = Depends(get_current_user)) -> Dict[str, Any]:
     """
     Debug endpoint for OpenAPI provider configurations.
 

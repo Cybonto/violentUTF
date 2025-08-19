@@ -3,7 +3,7 @@
 # # Licensed under MIT License
 
 """
-Sequential Execution Plan for Full Scorer Testing
+Sequential Execution Plan for Full Scorer Testing.
 
 This demonstrates how to implement sequential execution with progress tracking
 to avoid the 504 Gateway Timeout issue.
@@ -13,7 +13,7 @@ import asyncio
 import time
 
 
-def sequential_execution_flow():
+def sequential_execution_flow() -> None:
     """
     Proposed flow for Full Execution with progress tracking:
 
@@ -65,7 +65,7 @@ def sequential_execution_flow():
     print("- Works with any dataset size")
 
 
-def proposed_ui_changes():
+def proposed_ui_changes() -> None:
     """
     UI changes needed in 4_Configure_Scorers.py
     """
@@ -89,9 +89,9 @@ def proposed_ui_changes():
     print("   display_results(results)")
 
 
-def api_endpoints_needed():
+def api_endpoints_needed() -> None:
     """
-    API endpoints that need to be added/modified
+    API endpoints that need to be added/modified.
     """
     print("\n\nAPI Endpoints Needed:")
     print("=" * 60)

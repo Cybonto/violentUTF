@@ -1,9 +1,12 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-Test script for converter preview endpoint
+Test script for converter preview endpoint.
+
 This script tests the converter preview functionality to identify the issue
 """
 
@@ -18,8 +21,8 @@ API_BASE_URL = "http://localhost:9080"
 JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbWFpbCI6InRlc3RAdmlvbGVudHV0Zi5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicm9sZXMiOlsiYWktYXBpLWFjY2VzcyJdLCJpYXQiOjE3NDkzNDEzMzEsImV4cCI6MTc0OTM0NDkzMX0.IuvBNOICkgUzxhVOlxvFVoYFWDJ4wwBL6CxQXJkVdYs"
 
 
-def get_auth_headers():
-    """Get authentication headers for API requests"""
+def get_auth_headers() -> Any:
+    """Get authentication headers for API requests."""
     return {
         "Authorization": f"Bearer {JWT_TOKEN}",
         "Content-Type": "application/json",
@@ -27,15 +30,14 @@ def get_auth_headers():
     }
 
 
-def make_request(method, endpoint, **kwargs):
-    """Make API request and return response details"""
+def make_request(method, endpoint, **kwargs) -> Any:
+    """Make API request and return response details."""
     url = f"{API_BASE_URL}{endpoint}"
     headers = get_auth_headers()
 
     try:
         print(f"Making {method} request to: {url}")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
-
         print(f"Response status: {response.status_code}")
         print(f"Response headers: {dict(response.headers)}")
 
@@ -53,8 +55,8 @@ def make_request(method, endpoint, **kwargs):
         return None, None, str(e)
 
 
-def test_converter_endpoints():
-    """Test converter endpoints step by step"""
+def test_converter_endpoints() -> None:
+    """Test converter endpoints step by step."""
     print("🔄 Testing Converter Endpoints")
     print("=" * 50)
 
@@ -121,8 +123,8 @@ def test_converter_endpoints():
         print("❌ No converter ID available for testing")
 
 
-def test_basic_endpoints():
-    """Test basic endpoints first"""
+def test_basic_endpoints() -> None:
+    """Test basic endpoints first."""
     print("🏥 Testing Basic Endpoints")
     print("=" * 50)
 
@@ -137,8 +139,8 @@ def test_basic_endpoints():
     print(f"Auth status: {status}")
 
 
-def main():
-    """Main test function"""
+def main() -> None:
+    """Main test function."""
     print("🧪 Converter Preview Endpoint Test")
     print("=" * 50)
 

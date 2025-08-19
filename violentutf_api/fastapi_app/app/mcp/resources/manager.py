@@ -31,7 +31,7 @@ class ViolentUTFResourceManager:
     """Manages ViolentUTF resources for MCP access."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
         # Use internal URL for direct API access from within container
         if "localhost:9080" in self.base_url:
@@ -41,7 +41,7 @@ class ViolentUTFResourceManager:
         self.resource_cache: Dict[str, Any] = {}
         self.cache_ttl = 300  # 5 minutes
 
-    async def list_resources(self) -> List[Resource]:
+    async def list_resources(self: "ViolentUTFResourceManager") -> List[Resource]:
         """List all available resources using advanced resource registry."""
         try:
             # Initialize advanced resource registry
@@ -74,7 +74,7 @@ class ViolentUTFResourceManager:
             logger.error(f"Error listing resources: {e}")
             return []
 
-    async def read_resource(self, uri: str) -> Dict[str, Any]:
+    async def read_resource(self: "ViolentUTFResourceManager", uri: str) -> Dict[str, Any]:
         """Read a specific resource by URI using advanced resource registry."""
         logger.info(f"Reading resource: {uri}")
 
@@ -105,7 +105,7 @@ class ViolentUTFResourceManager:
             logger.error(f"Error reading resource {uri}: {e}")
             return {"error": "resource_read_failed", "message": str(e), "uri": uri}
 
-    async def _read_legacy_resource(self, uri: str) -> Dict[str, Any]:
+    async def _read_legacy_resource(self: "ViolentUTFResourceManager", uri: str) -> Dict[str, Any]:
         """Read resource using legacy method for backward compatibility."""
         try:
             # Check cache first
@@ -141,9 +141,9 @@ class ViolentUTFResourceManager:
             logger.error(f"Error reading legacy resource {uri}: {e}")
             return {"error": "legacy_resource_read_failed", "message": str(e), "uri": uri}
 
-    def _parse_resource_uri(self, uri: str) -> tuple[str, str]:
+    def _parse_resource_uri(self: "ViolentUTFResourceManager", uri: str) -> tuple[str, str]:
         """Parse resource URI to extract type and ID."""
-        # URI format: violentutf://resource_type/resource_id
+        # URI format: violentutf://resource_type/resource_id.
         if not uri.startswith("violentutf://"):
             raise ValueError(f"Invalid resource URI format: {uri}")
 
@@ -155,7 +155,7 @@ class ViolentUTFResourceManager:
 
         return parts[0], "/".join(parts[1:])
 
-    async def _list_legacy_resources(self) -> List[Resource]:
+    async def _list_legacy_resources(self: "ViolentUTFResourceManager") -> List[Resource]:
         """List legacy resources for backward compatibility."""
         legacy_resources = []
 
@@ -173,7 +173,7 @@ class ViolentUTFResourceManager:
 
         return legacy_resources
 
-    async def _list_generator_resources(self) -> List[Resource]:
+    async def _list_generator_resources(self: "ViolentUTFResourceManager") -> List[Resource]:
         """List generator configuration resources."""
         try:
             # Fetch generator configurations
@@ -196,7 +196,7 @@ class ViolentUTFResourceManager:
             logger.error(f"Error listing generator resources: {e}")
             return []
 
-    async def _list_dataset_resources(self) -> List[Resource]:
+    async def _list_dataset_resources(self: "ViolentUTFResourceManager") -> List[Resource]:
         """List dataset resources."""
         try:
             # Fetch available datasets
@@ -219,7 +219,7 @@ class ViolentUTFResourceManager:
             logger.error(f"Error listing dataset resources: {e}")
             return []
 
-    async def _list_orchestrator_resources(self) -> List[Resource]:
+    async def _list_orchestrator_resources(self: "ViolentUTFResourceManager") -> List[Resource]:
         """List orchestrator execution resources."""
         try:
             # Fetch orchestrator executions
@@ -242,7 +242,7 @@ class ViolentUTFResourceManager:
             logger.error(f"Error listing orchestrator resources: {e}")
             return []
 
-    async def _list_config_resources(self) -> List[Resource]:
+    async def _list_config_resources(self: "ViolentUTFResourceManager") -> List[Resource]:
         """List configuration resources."""
         try:
             # Fetch system configuration
@@ -264,7 +264,7 @@ class ViolentUTFResourceManager:
             logger.error(f"Error listing config resources: {e}")
             return []
 
-    async def _list_session_resources(self) -> List[Resource]:
+    async def _list_session_resources(self: "ViolentUTFResourceManager") -> List[Resource]:
         """List session resources."""
         try:
             # Fetch active sessions
@@ -287,30 +287,32 @@ class ViolentUTFResourceManager:
             logger.error(f"Error listing session resources: {e}")
             return []
 
-    async def _read_generator_resource(self, generator_id: str) -> Dict[str, Any]:
+    async def _read_generator_resource(self: "ViolentUTFResourceManager", generator_id: str) -> Dict[str, Any]:
         """Read generator configuration details."""
         return await self._api_request("GET", f"/api/v1/generators/{generator_id}")
 
-    async def _read_dataset_resource(self, dataset_name: str) -> Dict[str, Any]:
+    async def _read_dataset_resource(self: "ViolentUTFResourceManager", dataset_name: str) -> Dict[str, Any]:
         """Read dataset details."""
         return await self._api_request("GET", f"/api/v1/datasets/{dataset_name}")
 
-    async def _read_orchestrator_resource(self, orchestrator_id: str) -> Dict[str, Any]:
+    async def _read_orchestrator_resource(self: "ViolentUTFResourceManager", orchestrator_id: str) -> Dict[str, Any]:
         """Read orchestrator execution details."""
         return await self._api_request("GET", f"/api/v1/orchestrators/{orchestrator_id}")
 
-    async def _read_config_resource(self, config_type: str) -> Dict[str, Any]:
+    async def _read_config_resource(self: "ViolentUTFResourceManager", config_type: str) -> Dict[str, Any]:
         """Read configuration details."""
         if config_type == "system":
             return await self._api_request("GET", "/api/v1/config")
         else:
             return await self._api_request("GET", f"/api/v1/config/{config_type}")
 
-    async def _read_session_resource(self, session_id: str) -> Dict[str, Any]:
+    async def _read_session_resource(self: "ViolentUTFResourceManager", session_id: str) -> Dict[str, Any]:
         """Read session details."""
         return await self._api_request("GET", f"/api/v1/sessions/{session_id}")
 
-    async def _api_request(self, method: str, path: str, **kwargs) -> Optional[Dict[str, Any]]:
+    async def _api_request(
+        self: "ViolentUTFResourceManager", method: str, path: str, **kwargs
+    ) -> Optional[Dict[str, Any]]:
         """Make authenticated API request."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Resource"}
 
@@ -324,7 +326,6 @@ class ViolentUTFResourceManager:
         async with httpx.AsyncClient(timeout=timeout) as client:
             try:
                 response = await client.request(method=method, url=url, headers=headers, **kwargs)
-
                 logger.debug(f"MCP Resource API call: {method} {url} -> {response.status_code}")
 
                 if response.status_code >= 400:
@@ -343,14 +344,14 @@ class ViolentUTFResourceManager:
                 logger.error(f"Unexpected error on API call {url}: {e}")
                 return None
 
-    def clear_cache(self) -> None:
+    def clear_cache(self: "ViolentUTFResourceManager") -> None:
         """Clear resource cache."""
         self.resource_cache.clear()
         # Also clear advanced registry caches
         advanced_resource_registry.clear_all_caches()
         logger.info("Resource cache cleared (legacy and advanced)")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self: "ViolentUTFResourceManager") -> Dict[str, Any]:
         """Get comprehensive cache statistics."""
         current_time = datetime.now().timestamp()
         valid_entries = 0
@@ -379,7 +380,7 @@ class ViolentUTFResourceManager:
             "providers_list": advanced_resource_registry.get_providers(),
         }
 
-    def get_providers_info(self) -> Dict[str, Any]:
+    def get_providers_info(self: "ViolentUTFResourceManager") -> Dict[str, Any]:
         """Get information about registered resource providers."""
         try:
             providers = advanced_resource_registry.get_providers()
@@ -390,7 +391,7 @@ class ViolentUTFResourceManager:
             logger.error(f"Error getting providers info: {e}")
             return {"error": str(e)}
 
-    async def get_resource_summary(self) -> Dict[str, Any]:
+    async def get_resource_summary(self: "ViolentUTFResourceManager") -> Dict[str, Any]:
         """Get summary of all available resources."""
         try:
             await advanced_resource_registry.initialize()

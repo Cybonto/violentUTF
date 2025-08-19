@@ -3,6 +3,7 @@
 # # Licensed under MIT License
 
 """Debug authentication flow for OpenAPI providers."""
+
 import os
 import sys
 

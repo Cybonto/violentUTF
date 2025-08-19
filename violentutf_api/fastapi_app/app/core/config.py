@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
 
     @validator("JWT_SECRET_KEY", always=True)
-    def set_jwt_secret_key(cls, v, values) -> Any:
+    def set_jwt_secret_key(cls: type["Settings"], v, values) -> Any:
         """Use SECRET_KEY if JWT_SECRET_KEY is not set."""
         return v or values.get("SECRET_KEY", "")
 
@@ -171,7 +171,7 @@ class Settings(BaseSettings):
     OPENAPI_10_SPEC_PATH: Optional[str] = Field(default=None, env="OPENAPI_10_SPEC_PATH")
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+    def assemble_cors_origins(cls: type["Settings"], v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
@@ -179,7 +179,7 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     @validator("SECRET_KEY", pre=True)
-    def validate_secret_key(cls, v: str) -> str:
+    def validate_secret_key(cls: type["Settings"], v: str) -> str:
         if not v:
             # Generate a default secret key for development
             import secrets
@@ -188,7 +188,7 @@ class Settings(BaseSettings):
         return v
 
     @validator("APISIX_GATEWAY_SECRET", pre=True)
-    def validate_apisix_gateway_secret(cls, v: str) -> str:
+    def validate_apisix_gateway_secret(cls: type["Settings"], v: str) -> str:
         if not v:
             # Generate a default gateway secret for development
             import secrets
@@ -197,7 +197,7 @@ class Settings(BaseSettings):
         return v
 
     @validator("APP_DATA_DIR", "CONFIG_DIR", pre=True)
-    def validate_paths(cls, v: Union[str, Path]) -> Path:
+    def validate_paths(cls: type["Settings"], v: Union[str, Path]) -> Path:
         path = Path(v) if isinstance(v, str) else v
         path.mkdir(parents=True, exist_ok=True)
         return path

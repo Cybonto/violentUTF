@@ -75,7 +75,7 @@ if "api_session_data" not in st.session_state:
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway"""
+    """Get authentication headers for API requests through APISIX Gateway."""
     try:
         from utils.jwt_manager import jwt_manager
 
@@ -111,7 +111,7 @@ def get_auth_headers() -> Dict[str, str]:
 
 
 def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
-    """Make an authenticated API request through APISIX Gateway"""
+    """Make an authenticated API request through APISIX Gateway."""
     headers = get_auth_headers()
     if not headers.get("Authorization"):
         st.error("No authentication token available. Please log in.")
@@ -120,7 +120,6 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         logger.debug(f"Making {method} request to {url} through APISIX Gateway")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
-
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 401:
@@ -194,8 +193,8 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def load_user_session_from_api():
-    """Load user session data from API"""
+def load_user_session_from_api() -> Any:
+    """Load user session data from API."""
     data = api_request("GET", API_ENDPOINTS["sessions"])
     if data:
         st.session_state.api_session_data = data
@@ -203,8 +202,8 @@ def load_user_session_from_api():
     return False
 
 
-def save_user_session_to_api(session_update: Dict[str, Any]):
-    """Save user session data to API"""
+def save_user_session_to_api(session_update: Dict[str, Any]) -> Any:
+    """Save user session data to API."""
     data = api_request("PUT", API_ENDPOINTS["sessions"], json=session_update)
     if data:
         st.session_state.api_session_data = data
@@ -212,8 +211,8 @@ def save_user_session_to_api(session_update: Dict[str, Any]):
     return False
 
 
-def create_compatible_api_token():
-    """Create a FastAPI-compatible token using JWT manager"""
+def create_compatible_api_token() -> None:
+    """Create a FastAPI-compatible token using JWT manager."""
     try:
         from utils.jwt_manager import jwt_manager
         from utils.user_context import get_user_context_for_token
@@ -241,8 +240,8 @@ def create_compatible_api_token():
         return None
 
 
-def get_token_info_from_api():
-    """Get token information from API"""
+def get_token_info_from_api() -> None:
+    """Get token information from API."""
     data = api_request("GET", API_ENDPOINTS["auth_token_info"])
     if data:
         st.session_state.api_user_info = data
@@ -250,13 +249,13 @@ def get_token_info_from_api():
     return None
 
 
-def get_database_status_from_api():
-    """Get database status from API"""
+def get_database_status_from_api() -> Any:
+    """Get database status from API."""
     return api_request("GET", API_ENDPOINTS["database_status"])
 
 
-def initialize_database_via_api(custom_salt: Optional[str] = None):
-    """Initialize database via API"""
+def initialize_database_via_api(custom_salt: Optional[str] = None) -> Any:
+    """Initialize database via API."""
     payload = {"force_recreate": False, "backup_existing": True}
     if custom_salt:
         payload["custom_salt"] = custom_salt
@@ -264,34 +263,34 @@ def initialize_database_via_api(custom_salt: Optional[str] = None):
     return api_request("POST", API_ENDPOINTS["database_initialize"], json=payload)
 
 
-def reset_database_via_api():
-    """Reset database via API"""
+def reset_database_via_api() -> Any:
+    """Reset database via API."""
     payload = {"confirmation": True, "backup_before_reset": True, "preserve_user_data": False}
     return api_request("POST", API_ENDPOINTS["database_reset"], json=payload)
 
 
-def get_database_stats_from_api():
-    """Get database statistics from API"""
+def get_database_stats_from_api() -> Any:
+    """Get database statistics from API."""
     return api_request("GET", API_ENDPOINTS["database_stats"])
 
 
-def load_config_from_api():
-    """Load configuration parameters from API"""
+def load_config_from_api() -> Any:
+    """Load configuration parameters from API."""
     return api_request("GET", API_ENDPOINTS["config_parameters"])
 
 
-def get_environment_config_from_api():
-    """Get environment configuration from API"""
+def get_environment_config_from_api() -> Any:
+    """Get environment configuration from API."""
     return api_request("GET", API_ENDPOINTS["config_environment"])
 
 
-def generate_salt_via_api():
-    """Generate new salt via API"""
+def generate_salt_via_api() -> Any:
+    """Generate new salt via API."""
     return api_request("POST", API_ENDPOINTS["config_generate_salt"])
 
 
 # --- Main Page Function ---
-def main():
+def main() -> None:
     """Renders the Start page content with API backend."""
     logger.debug("Start page (API-backed) loading.")
     st.set_page_config(page_title=app_title, page_icon=app_icon, layout="wide", initial_sidebar_state="expanded")
@@ -474,7 +473,7 @@ def main():
 # --- Helper Functions ---
 
 
-def display_header():
+def display_header() -> None:
     """Displays the main header for the page."""
     st.title(f"{app_icon} {app_title}")
     st.markdown(app_description)

@@ -3,16 +3,18 @@
 # # Licensed under MIT License
 
 """
-Verify PyRIT and Garak installation
+Verify PyRIT and Garak installation.
+
 This script checks that the AI red-teaming frameworks are properly installed
 """
 
 import importlib
 import sys
+from typing import Any, Optional
 
 
-def verify_package(package_name, import_name=None):
-    """Verify a package can be imported"""
+def verify_package(package_name: str, import_name: Optional[str] = None) -> Any:
+    """Verify a package can be imported."""
     if import_name is None:
         import_name = package_name
 
@@ -30,8 +32,8 @@ def verify_package(package_name, import_name=None):
         return True  # Some packages may have import warnings but still work
 
 
-def main():
-    """Main verification function"""
+def main() -> None:
+    """Main verification function."""
     print("Verifying AI red-teaming frameworks installation...")
     print("-" * 50)
 

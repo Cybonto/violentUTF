@@ -2,7 +2,7 @@
 # # Licensed under MIT License
 
 """
-Monitoring and metrics integration for dataset import operations.
+Monitoring and metrics integration for dataset import operations
 
 This module provides comprehensive monitoring capabilities including
 performance metrics, health checks, and integration with monitoring systems.
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class SystemMetrics:
     """System-level metrics for monitoring."""
 
-    # CPU metrics
+    # CPU metrics.
     cpu_percent: float = 0.0
     cpu_count: int = 0
     load_average: List[float] = field(default_factory=list)
@@ -127,9 +127,9 @@ class SystemMetrics:
 class PerformanceMonitor:
     """Monitors performance of dataset operations."""
 
-    def __init__(self, config: DatasetImportConfig) -> None:
-        """Initialize the instance."""
-        self.config = config
+    def __init__(self, config: Optional[DatasetImportConfig] = None) -> None:
+        """ "Initialize the instance."""
+        self.config = config or DatasetImportConfig()
         self.metrics_history: deque = deque(maxlen=1000)  # Store last 1000 metrics
         self.operation_timings: Dict[str, List[float]] = defaultdict(list)
         self.error_counts: Dict[str, int] = defaultdict(int)
@@ -137,11 +137,11 @@ class PerformanceMonitor:
         self.system_metrics_history: deque = deque(maxlen=100)
 
         # Start background monitoring if enabled
-        if config.enable_statistics_tracking:
+        if self.config.enable_statistics_tracking:
             self._monitoring_task = None
             self._start_background_monitoring()
 
-    def _start_background_monitoring(self) -> None:
+    def _start_background_monitoring(self: "PerformanceMonitor") -> None:
         """Start background system monitoring."""
 
         async def monitor_loop() -> None:
@@ -169,7 +169,7 @@ class PerformanceMonitor:
             # No event loop running
             logger.debug("No event loop for background monitoring")
 
-    async def _check_resource_alerts(self, metrics: SystemMetrics) -> None:
+    async def _check_resource_alerts(self: "PerformanceMonitor", metrics: SystemMetrics) -> None:
         """Check for resource usage alerts."""
         alerts = []
 
@@ -196,9 +196,9 @@ class PerformanceMonitor:
         for alert in alerts:
             logger.warning(f"Resource alert: {alert}")
 
-    def _cleanup_old_data(self) -> None:
+    def _cleanup_old_data(self: "PerformanceMonitor") -> None:
         """Clean up old monitoring data."""
-        # Note: cutoff_time would be used if we stored timestamps with timings
+        # Note: cutoff_time would be used if we stored timestamps with timings.
         # cutoff_time = datetime.utcnow() - timedelta(hours=24)
 
         # Clean up operation timings older than 24 hours
@@ -207,7 +207,7 @@ class PerformanceMonitor:
             if len(timings) > 1000:  # Keep only last 1000 entries
                 self.operation_timings[operation] = timings[-1000:]
 
-    def start_operation(self, operation_id: str, operation_type: str) -> None:
+    def start_operation(self: "PerformanceMonitor", operation_id: str, operation_type: str) -> None:
         """Start tracking an operation."""
         self.active_operations[operation_id] = datetime.utcnow()
 
@@ -216,7 +216,11 @@ class PerformanceMonitor:
         )
 
     def end_operation(
-        self, operation_id: str, operation_type: str, success: bool = True, metrics: Optional[ImportMetrics] = None
+        self: "PerformanceMonitor",
+        operation_id: str,
+        operation_type: str,
+        success: bool = True,
+        metrics: Optional[ImportMetrics] = None,
     ) -> float:
         """End tracking an operation and return duration."""
         start_time = self.active_operations.pop(operation_id, None)
@@ -256,7 +260,7 @@ class PerformanceMonitor:
 
         return duration
 
-    def record_error(self, operation_type: str, error: Exception) -> None:
+    def record_error(self: "PerformanceMonitor", operation_type: str, error: Exception) -> None:
         """Record an error occurrence."""
         self.error_counts[f"{operation_type}_error"] += 1
         self.error_counts[f"{type(error).__name__}"] += 1
@@ -268,7 +272,7 @@ class PerformanceMonitor:
             error_message=str(error),
         )
 
-    def get_performance_summary(self, operation_type: Optional[str] = None) -> Dict[str, Any]:
+    def get_performance_summary(self: "PerformanceMonitor", operation_type: Optional[str] = None) -> Dict[str, Any]:
         """Get performance summary for operations."""
         if operation_type:
             timings = self.operation_timings.get(operation_type, [])
@@ -301,7 +305,7 @@ class PerformanceMonitor:
             ),
         }
 
-    def get_system_health(self) -> Dict[str, Any]:
+    def get_system_health(self: "PerformanceMonitor") -> Dict[str, Any]:
         """Get current system health status."""
         if not self.system_metrics_history:
             current_metrics = SystemMetrics.collect_current()
@@ -354,7 +358,7 @@ class PerformanceMonitor:
             "timestamp": current_metrics.timestamp.isoformat(),
         }
 
-    def get_detailed_metrics(self) -> Dict[str, Any]:
+    def get_detailed_metrics(self: "PerformanceMonitor") -> Dict[str, Any]:
         """Get detailed metrics for debugging and analysis."""
         return {
             "performance_summary": {
@@ -381,7 +385,7 @@ class PerformanceMonitor:
             ],
         }
 
-    def export_metrics(self, format: str = "json") -> Union[str, Dict[str, Any]]:
+    def export_metrics(self: "PerformanceMonitor", format: str = "json") -> Union[str, Dict[str, Any]]:
         """Export metrics in specified format."""
         metrics_data = {
             "export_timestamp": datetime.utcnow().isoformat(),
@@ -398,7 +402,7 @@ class PerformanceMonitor:
         else:
             return metrics_data
 
-    def reset_metrics(self) -> None:
+    def reset_metrics(self: "PerformanceMonitor") -> None:
         """Reset all metrics (useful for testing)."""
         self.metrics_history.clear()
         self.operation_timings.clear()
@@ -408,7 +412,7 @@ class PerformanceMonitor:
 
         logger.info("All monitoring metrics have been reset")
 
-    def __del__(self) -> None:
+    def __del__(self: "PerformanceMonitor") -> None:
         """Cleanup monitoring task."""
         if hasattr(self, "_monitoring_task") and self._monitoring_task:
             try:

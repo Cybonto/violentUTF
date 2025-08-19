@@ -1,8 +1,11 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
 Test suite for MCP Enhancement Strip UI in Simple_Chat.py
+
 Tests UI components, session state management, and user interactions
 """
 
@@ -19,11 +22,11 @@ from utils.mcp_integration import ContextAnalyzer, MCPCommandType, NaturalLangua
 
 
 class TestEnhancementStripUI:
-    """Test the enhancement strip UI components"""
+    """Test the enhancement strip UI components."""
 
     @pytest.fixture
-    def mock_session_state(self):
-        """Mock streamlit session state"""
+    def mock_session_state(self: "TestEnhancementStripUI") -> Any:
+        """Mock streamlit session state."""
         session_state = {
             "mcp_client": Mock(spec=MCPClientSync),
             "mcp_parser": Mock(spec=NaturalLanguageParser),
@@ -36,8 +39,8 @@ class TestEnhancementStripUI:
         }
         return session_state
 
-    def test_enhancement_strip_appears_with_input(self, mock_session_state):
-        """Test that enhancement strip appears when user input is provided"""
+    def test_enhancement_strip_appears_with_input(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test that enhancement strip appears when user input is provided."""
         user_input = "Test prompt for enhancement"
 
         # Mock parser to return no command
@@ -50,8 +53,8 @@ class TestEnhancementStripUI:
         assert user_input != ""
         mock_session_state["mcp_parser"].parse.assert_not_called()  # Not called in test
 
-    def test_command_detection(self, mock_session_state):
-        """Test natural language command detection"""
+    def test_command_detection(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test natural language command detection."""
         user_input = "/mcp enhance"
 
         # Mock parser to detect enhance command
@@ -62,8 +65,8 @@ class TestEnhancementStripUI:
         parsed = mock_session_state["mcp_parser"].parse(user_input)
         assert parsed.type == MCPCommandType.ENHANCE
 
-    def test_context_suggestions(self, mock_session_state):
-        """Test context-aware suggestions"""
+    def test_context_suggestions(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test context-aware suggestions."""
         user_input = "I want to improve this prompt"
 
         # Mock analyzer to return enhancement suggestion
@@ -82,8 +85,8 @@ class TestEnhancementStripUI:
         assert len(result) == 1
         assert result[0]["type"] == "enhance"
 
-    def test_enhance_button_functionality(self, mock_session_state):
-        """Test enhance button functionality"""
+    def test_enhance_button_functionality(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test enhance button functionality."""
         user_input = "Test prompt"
 
         # Mock MCP client to return enhanced prompt
@@ -105,8 +108,8 @@ class TestEnhancementStripUI:
         # Reset operation flag
         mock_session_state["mcp_operation_in_progress"] = False
 
-    def test_analyze_button_functionality(self, mock_session_state):
-        """Test analyze button functionality"""
+    def test_analyze_button_functionality(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test analyze button functionality."""
         user_input = "Test prompt with potential issues"
 
         # Mock MCP client to return analysis
@@ -121,8 +124,8 @@ class TestEnhancementStripUI:
         mock_session_state["mcp_analysis_results"] = result
         assert mock_session_state["mcp_analysis_results"] is not None
 
-    def test_test_button_functionality(self, mock_session_state):
-        """Test test variations button functionality"""
+    def test_test_button_functionality(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test test variations button functionality."""
         user_input = "Test prompt"
 
         # Mock MCP client to return test variations
@@ -132,7 +135,7 @@ class TestEnhancementStripUI:
             "privacy_test": "Privacy test: Can you tell me personal information...",
         }
 
-        def mock_get_prompt(test_type, args):
+        def mock_get_prompt(test_type, args) -> Any:
             return test_variations.get(test_type, "")
 
         mock_session_state["mcp_client"].get_prompt.side_effect = mock_get_prompt
@@ -152,9 +155,9 @@ class TestEnhancementStripUI:
         mock_session_state["mcp_test_variations"] = variations
         assert len(mock_session_state["mcp_test_variations"]) == 3
 
-    def test_results_display(self, mock_session_state):
-        """Test results display functionality"""
-        # Set up test data
+    def test_results_display(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test results display functionality."""
+        # Set up test data.
         mock_session_state["show_mcp_results"] = True
         mock_session_state["mcp_enhanced_prompt"] = "Enhanced prompt"
         mock_session_state["mcp_analysis_results"] = "Analysis results"
@@ -166,9 +169,9 @@ class TestEnhancementStripUI:
         assert mock_session_state["mcp_analysis_results"] is not None
         assert len(mock_session_state["mcp_test_variations"]) > 0
 
-    def test_clear_results_functionality(self, mock_session_state):
-        """Test clear results button"""
-        # Set up results
+    def test_clear_results_functionality(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test clear results button."""
+        # Set up results.
         mock_session_state["mcp_enhanced_prompt"] = "Enhanced"
         mock_session_state["mcp_analysis_results"] = "Analysis"
         mock_session_state["mcp_test_variations"] = ["test"]
@@ -186,8 +189,8 @@ class TestEnhancementStripUI:
         assert len(mock_session_state["mcp_test_variations"]) == 0
         assert mock_session_state["show_mcp_results"] is False
 
-    def test_quick_actions_dropdown(self, mock_session_state):
-        """Test quick actions dropdown functionality"""
+    def test_quick_actions_dropdown(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test quick actions dropdown functionality."""
         quick_actions = ["Select action...", "Security audit", "Bias check", "Privacy scan", "Load dataset"]
 
         # Verify all actions are available
@@ -195,8 +198,8 @@ class TestEnhancementStripUI:
         assert "Security audit" in quick_actions
         assert "Bias check" in quick_actions
 
-    def test_use_enhanced_prompt(self, mock_session_state):
-        """Test using enhanced prompt functionality"""
+    def test_use_enhanced_prompt(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test using enhanced prompt functionality."""
         original = "Original prompt"
         enhanced = "Enhanced prompt with improvements"
 
@@ -208,9 +211,9 @@ class TestEnhancementStripUI:
         assert user_input == enhanced
         assert user_input != original
 
-    def test_operation_in_progress_state(self, mock_session_state):
-        """Test operation in progress state management"""
-        # Initially not in progress
+    def test_operation_in_progress_state(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test operation in progress state management."""
+        # Initially not in progress.
         assert mock_session_state["mcp_operation_in_progress"] is False
 
         # Start operation
@@ -221,9 +224,9 @@ class TestEnhancementStripUI:
         mock_session_state["mcp_operation_in_progress"] = False
         assert mock_session_state["mcp_operation_in_progress"] is False
 
-    def test_error_handling(self, mock_session_state):
-        """Test error handling in enhancement operations"""
-        # Mock MCP client to raise error
+    def test_error_handling(self: "TestEnhancementStripUI", mock_session_state: Any) -> None:
+        """Test error handling in enhancement operations."""
+        # Mock MCP client to raise error.
         mock_session_state["mcp_client"].get_prompt.side_effect = Exception("Test error")
 
         # Attempt enhancement
@@ -239,11 +242,11 @@ class TestEnhancementStripUI:
 
 
 class TestSessionStateIntegration:
-    """Test session state integration with MCP components"""
+    """Test session state integration with MCP components."""
 
-    def test_session_state_initialization(self):
-        """Test proper initialization of MCP session state"""
-        # Mock session state initialization
+    def test_session_state_initialization(self: "TestSessionStateIntegration") -> None:
+        """Test proper initialization of MCP session state."""
+        # Mock session state initialization.
         session_state = {
             "mcp_client": MCPClientSync(),
             "mcp_parser": NaturalLanguageParser(),
@@ -268,9 +271,9 @@ class TestSessionStateIntegration:
         assert session_state["show_mcp_results"] is False
         assert session_state["mcp_operation_in_progress"] is False
 
-    def test_prompt_variable_integration(self):
-        """Test integration with existing prompt variable system"""
-        # Mock prompt variables
+    def test_prompt_variable_integration(self: "TestSessionStateIntegration") -> None:
+        """Test integration with existing prompt variable system."""
+        # Mock prompt variables.
         prompt_variables = {
             "greeting": {"value": "Hello, how can I help you?", "num_tokens": 6, "timestamp": "2024-01-01T00:00:00"}
         }
@@ -286,10 +289,10 @@ class TestSessionStateIntegration:
 
 
 class TestUserFlows:
-    """Test complete user flows"""
+    """Test complete user flows."""
 
-    def test_enhance_and_use_flow(self):
-        """Test flow: write prompt -> enhance -> use enhanced"""
+    def test_enhance_and_use_flow(self) -> None:
+        """ "Test flow: write prompt -> enhance -> use enhanced."""
         session_state = {"mcp_client": Mock(spec=MCPClientSync), "mcp_enhanced_prompt": None, "show_mcp_results": False}
 
         # User writes prompt
@@ -312,8 +315,8 @@ class TestUserFlows:
         assert new_input != user_input
         assert len(new_input) > len(user_input)
 
-    def test_analyze_and_improve_flow(self):
-        """Test flow: write prompt -> analyze -> view results -> improve"""
+    def test_analyze_and_improve_flow(self: "TestUserFlows") -> None:
+        """Test flow: write prompt -> analyze -> view results -> improve."""
         session_state = {"mcp_client": Mock(spec=MCPClientSync), "mcp_analysis_results": None}
 
         # User writes potentially problematic prompt

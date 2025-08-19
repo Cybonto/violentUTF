@@ -3,7 +3,8 @@
 # # Licensed under MIT License
 
 """
-Test script to verify scorer timeout fixes
+Test script to verify scorer timeout fixes.
+
 """
 
 import os
@@ -17,8 +18,8 @@ from datetime import datetime
 import requests
 
 
-def test_batch_execution_performance():
-    """Test that batch execution completes within timeout"""
+def test_batch_execution_performance() -> None:
+    """Test that batch execution completes within timeout."""
 
     print("Testing scorer batch execution performance...")
 

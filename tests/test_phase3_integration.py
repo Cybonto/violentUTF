@@ -1,9 +1,12 @@
+from typing import Any
+
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
-Phase 3: Integration Tests
+Phase 3: Integration Tests.
+
 Tests for command processing integration with MCP server
 """
 
@@ -28,25 +31,25 @@ from violentutf.utils.mcp_integration import (
 
 
 class TestCommandProcessingIntegration:
-    """Test command processing with MCP integration"""
+    """Test command processing with MCP integration."""
 
     @pytest.fixture
-    def mcp_client(self):
-        """Create MCP client instance"""
+    def mcp_client(self: "TestCommandProcessingIntegration") -> Any:
+        """Create MCP client instance."""
         client = MCPClientSync()
         # Set a test token
         client.set_test_token("test-jwt-token")
         return client
 
     @pytest.fixture
-    def temp_dir(self):
-        """Create temporary directory for test files"""
+    def temp_dir(self: "TestCommandProcessingIntegration") -> None:
+        """Create temporary directory for test files."""
         temp_dir = tempfile.mkdtemp()
         yield temp_dir
         shutil.rmtree(temp_dir)
 
-    def test_help_command_integration(self, mcp_client):
-        """Test /mcp help command through full pipeline"""
+    def test_help_command_integration(self: "TestCommandProcessingIntegration", mcp_client: Any) -> None:
+        """Test /mcp help command through full pipeline."""
         parser = NaturalLanguageParser()
 
         # Parse command
@@ -57,8 +60,8 @@ class TestCommandProcessingIntegration:
         # This tests that help is available offline
         assert command.arguments == {}
 
-    def test_natural_language_generator_creation(self):
-        """Test natural language generator creation intent"""
+    def test_natural_language_generator_creation(self: "TestCommandProcessingIntegration") -> None:
+        """Test natural language generator creation intent."""
         detector = ConfigurationIntentDetector()
 
         # Test various ways to express generator creation
@@ -84,8 +87,8 @@ class TestCommandProcessingIntegration:
             if "max tokens" in text:
                 assert "max_tokens" in params
 
-    def test_dataset_loading_workflow(self):
-        """Test dataset loading command workflow"""
+    def test_dataset_loading_workflow(self: "TestCommandProcessingIntegration") -> None:
+        """Test dataset loading command workflow."""
         parser = NaturalLanguageParser()
         detector = ConfigurationIntentDetector()
 
@@ -100,8 +103,8 @@ class TestCommandProcessingIntegration:
         assert intent["action"] == "load"
         assert intent["target"] == "jailbreak"
 
-    def test_command_suggestions_context(self):
-        """Test context-aware command suggestions"""
+    def test_command_suggestions_context(self: "TestCommandProcessingIntegration") -> None:
+        """Test context-aware command suggestions."""
         parser = NaturalLanguageParser()
         analyzer = ConversationContextAnalyzer()
 
@@ -121,9 +124,11 @@ class TestCommandProcessingIntegration:
         assert len(context["suggested_actions"]) > 0
 
     @patch("violentutf.utils.mcp_client.httpx.AsyncClient")
-    async def test_enhancement_command_with_mcp(self, mock_client_class):
-        """Test enhancement command with MCP server"""
-        # Mock the HTTP client
+    async def test_enhancement_command_with_mcp(
+        self: "TestCommandProcessingIntegration", mock_client_class: Any
+    ) -> None:
+        """Test enhancement command with MCP server."""
+        # Mock the HTTP client.
         mock_client = MagicMock()
         mock_client_class.return_value = mock_client
 
@@ -134,7 +139,7 @@ class TestCommandProcessingIntegration:
         mock_response.aiter_lines = MagicMock()
 
         # Simulate SSE messages
-        async def mock_sse_lines():
+        async def mock_sse_lines() -> None:
             yield 'data: {"jsonrpc":"2.0","result":{"prompts":[{"name":"enhance_prompt"}]},"id":"1"}'
             yield ""
             yield 'data: {"jsonrpc":"2.0","result":{"messages":[{"role":"assistant","content":"Enhanced: Write a secure Python function"}]},"id":"2"}'
@@ -155,8 +160,8 @@ class TestCommandProcessingIntegration:
         # Should get enhanced prompt
         assert result is not None
 
-    def test_configuration_workflow_end_to_end(self):
-        """Test complete configuration workflow"""
+    def test_configuration_workflow_end_to_end(self: "TestCommandProcessingIntegration") -> None:
+        """Test complete configuration workflow."""
         parser = NaturalLanguageParser()
         detector = ConfigurationIntentDetector()
 
@@ -178,8 +183,8 @@ class TestCommandProcessingIntegration:
             assert params["temperature"] == 0.8
             assert params["max_tokens"] == 1500
 
-    def test_multi_command_session(self):
-        """Test handling multiple commands in a session"""
+    def test_multi_command_session(self: "TestCommandProcessingIntegration") -> None:
+        """Test handling multiple commands in a session."""
         parser = NaturalLanguageParser()
         detector = ConfigurationIntentDetector()
         analyzer = ConversationContextAnalyzer()
@@ -211,8 +216,8 @@ class TestCommandProcessingIntegration:
         assert "generator" in context["mentioned_resources"]
         assert "dataset" in context["mentioned_resources"]
 
-    def test_error_handling_invalid_commands(self):
-        """Test handling of invalid commands"""
+    def test_error_handling_invalid_commands(self: "TestCommandProcessingIntegration") -> None:
+        """Test handling of invalid commands."""
         parser = NaturalLanguageParser()
 
         # Test invalid command format
@@ -235,8 +240,8 @@ class TestCommandProcessingIntegration:
         assert command.type.value == "test"
         assert command.arguments["test_type"] == "jailbreak"
 
-    def test_command_autocomplete(self):
-        """Test command autocomplete functionality"""
+    def test_command_autocomplete(self: "TestCommandProcessingIntegration") -> None:
+        """Test command autocomplete functionality."""
         parser = NaturalLanguageParser()
 
         # Test various partial inputs
@@ -257,11 +262,11 @@ class TestCommandProcessingIntegration:
 
 
 class TestCommandHandlerIntegration:
-    """Test integration with Streamlit command handlers"""
+    """Test integration with Streamlit command handlers."""
 
-    def test_command_result_formatting(self):
-        """Test formatting of command results for display"""
-        # Simulate command results
+    def test_command_result_formatting(self: "TestCommandHandlerIntegration") -> None:
+        """Test formatting of command results for display."""
+        # Simulate command results.
         results = [
             {"type": "success", "content": "Generator created successfully"},
             {"type": "error", "content": "Failed to load dataset"},
@@ -275,9 +280,9 @@ class TestCommandHandlerIntegration:
             assert "content" in result
             assert isinstance(result["content"], str)
 
-    def test_session_state_integration(self):
-        """Test integration with Streamlit session state"""
-        # Simulate session state
+    def test_session_state_integration(self: "TestCommandHandlerIntegration") -> None:
+        """Test integration with Streamlit session state."""
+        # Simulate session state.
         session_state = {
             "mcp_command_history": [],
             "user_input": "Create a GPT-4 generator",

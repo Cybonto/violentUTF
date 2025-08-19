@@ -315,7 +315,7 @@ def get_user_id(current_user) -> str:
 
 
 @router.get("/types", response_model=ScorerTypesResponse, summary="Get available scorer types")
-async def get_scorer_types(current_user=Depends(get_current_user)) -> Any:
+async def get_scorer_types(current_user: Any = Depends(get_current_user)) -> Any:
     """Get list of available scorer categories and types."""
     try:
         logger.info("Loading scorer types and categories")
@@ -394,7 +394,7 @@ async def get_scorer_parameters(scorer_type: str, current_user=Depends(get_curre
 
 
 @router.get("", response_model=ScorersListResponse, summary="List configured scorers")
-async def list_scorers(current_user=Depends(get_current_user)) -> Any:
+async def list_scorers(current_user: Any = Depends(get_current_user)) -> Any:
     """Get list of all configured scorers."""
     try:
         user_id = current_user.username
@@ -839,7 +839,7 @@ async def validate_scorer_config(request: ScorerValidationRequest, current_user=
 
 
 @router.get("/health", response_model=ScorerHealthResponse, summary="Get scorer system health")
-async def get_scorer_health(current_user=Depends(get_current_user)) -> Any:
+async def get_scorer_health(current_user: Any = Depends(get_current_user)) -> Any:
     """Get health status of scorer system."""
     try:
         user_id = current_user.username

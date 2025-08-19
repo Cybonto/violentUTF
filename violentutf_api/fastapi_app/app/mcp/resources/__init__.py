@@ -26,11 +26,11 @@ class ResourceRegistry:
     """Registry for MCP resources with ViolentUTF integration."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.manager = resource_manager
         self._initialized = False
 
-    async def initialize(self) -> None:
+    async def initialize(self: "ResourceRegistry") -> None:
         """Initialize resource registry."""
         if self._initialized:
             return
@@ -51,7 +51,7 @@ class ResourceRegistry:
         self._initialized = True
         logger.info("MCP resource registry initialized")
 
-    async def list_resources(self) -> List[Resource]:
+    async def list_resources(self: "ResourceRegistry") -> List[Resource]:
         """List all available resources."""
         if not self._initialized:
             await self.initialize()
@@ -64,7 +64,7 @@ class ResourceRegistry:
             logger.error(f"Error listing resources: {e}")
             return []
 
-    async def read_resource(self, uri: str) -> Any:
+    async def read_resource(self: "ResourceRegistry", uri: str) -> Any:
         """Read a resource by URI."""
         if not self._initialized:
             await self.initialize()
@@ -75,19 +75,19 @@ class ResourceRegistry:
             logger.error(f"Error reading resource {uri}: {e}")
             return {"error": "resource_read_failed", "message": str(e), "uri": uri}
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self: "ResourceRegistry") -> Dict[str, Any]:
         """Get comprehensive resource cache statistics."""
         return self.manager.get_cache_stats()
 
-    def clear_cache(self) -> None:
+    def clear_cache(self: "ResourceRegistry") -> None:
         """Clear resource cache."""
         self.manager.clear_cache()
 
-    def get_providers(self) -> List[str]:
+    def get_providers(self: "ResourceRegistry") -> List[str]:
         """Get list of registered resource providers."""
         return advanced_resource_registry.get_providers()
 
-    async def get_resource_summary(self) -> Dict[str, Any]:
+    async def get_resource_summary(self: "ResourceRegistry") -> Dict[str, Any]:
         """Get summary of all available resources."""
         return await self.manager.get_resource_summary()
 

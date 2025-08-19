@@ -2,6 +2,7 @@
 # # Licensed under MIT License
 
 """MCP Server Configuration."""
+
 from typing import List, Optional
 
 from pydantic import Field
@@ -11,7 +12,7 @@ from pydantic_settings import BaseSettings
 class MCPSettings(BaseSettings):
     """MCP-specific configuration settings."""
 
-    # Server settings
+    # Server settings.
     MCP_SERVER_NAME: str = Field(default="ViolentUTF MCP Server", env="MCP_SERVER_NAME")
     MCP_SERVER_VERSION: str = Field(default="0.1.0", env="MCP_SERVER_VERSION")
     MCP_SERVER_DESCRIPTION: str = Field(

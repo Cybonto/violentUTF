@@ -45,141 +45,180 @@ async def execute_generator_prompt(generator_name: str, prompt: str, conversatio
 async def _execute_apisix_generator(generator_config: Dict, prompt: str, conversation_id: str) -> Dict[str, Any]:
     """Execute prompt through APISIX AI Gateway."""
     try:
-        # Get APISIX endpoint for generator
+        # Extract provider and model information
         provider = generator_config["parameters"]["provider"]
         model = generator_config["parameters"]["model"]
-
         logger.info(f"Executing APISIX generator: provider={provider}, model={model}")
 
-        # Map to APISIX endpoint
-        endpoint = _get_apisix_endpoint_for_model(provider, model)
+        # Setup request URL and endpoint
+        url = _setup_apisix_request_url(provider, model)
 
-        if not endpoint:
-            raise ValueError(f"No APISIX endpoint for {provider}/{model}")
+        # Build request payload and headers
+        payload = _build_request_payload(provider, model, prompt, generator_config)
+        headers = _setup_request_headers(provider)
 
-        # Make request to APISIX
-        # When running in Docker, use container name; when running locally, use localhost
-        base_url = os.getenv("VIOLENTUTF_API_URL", "http://apisix-apisix-1:9080")
-        url = f"{base_url}{endpoint}"
-
-        logger.info(f"APISIX request URL: {url}")
-
-        # Build payload based on provider type
-        if provider == "anthropic":
-            # Anthropic format
-            payload = {
-                "messages": [{"role": "user", "content": prompt}],
-                "model": model,
-                "temperature": generator_config["parameters"].get("temperature", 0.7),
-                "max_tokens": generator_config["parameters"].get("max_tokens", 1000),
-            }
-        elif provider.startswith("openapi-"):
-            # OpenAPI format - always include model in payload
-            payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
-            # Add optional parameters if the OpenAPI spec supports them
-            if generator_config["parameters"].get("temperature") is not None:
-                payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
-            if generator_config["parameters"].get("max_tokens") is not None:
-                payload["max_tokens"] = generator_config["parameters"].get("max_tokens", 1000)
-            logger.info(f"OpenAPI request payload: {payload}")
-        else:
-            # OpenAI format - handle o1-series models differently
-            payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
-
-            # o1-series models don't support temperature or max_tokens
-            if model and not model.startswith("o1"):
-                payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
-                payload["max_tokens"] = generator_config["parameters"].get("max_tokens", 1000)
-            else:
-                logger.info(f"Using o1-series model '{model}' - skipping temperature and max_tokens parameters")
-
-        headers = {"Content-Type": "application/json", "X-API-Gateway": "APISIX"}
-
-        # All requests go through APISIX, so we always need the APISIX API key
-        # APISIX will handle upstream authentication via proxy-rewrite plugin
-        api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY")
-        if api_key:
-            headers["apikey"] = api_key
-            logger.info(f"Using APISIX API key for authentication (provider: {provider})")
-        else:
-            logger.warning("No APISIX API key found in environment - requests may fail")
-
-        # For OpenAPI providers, APISIX proxy-rewrite plugin handles upstream auth
-        if provider.startswith("openapi-"):
-            provider_id = provider.replace("openapi-", "")
-            logger.info(f"OpenAPI provider {provider_id} - authentication will be handled by APISIX proxy-rewrite")
-
-        # Log request details for debugging
-        logger.info(f"Making request to: {url}")
-        logger.info(f"Request headers keys: {list(headers.keys())}")
-        if "Authorization" in headers:
-            auth_header = headers["Authorization"]
-            if auth_header.startswith("Bearer "):
-                token = auth_header[7:]
-                masked = token[:4] + "..." + token[-4:] if len(token) > 8 else "***"
-                logger.info(f"Authorization header: Bearer {masked}")
-
-        response = requests.post(url, json=payload, headers=headers, timeout=30)
-
-        logger.info(f"APISIX response status: {response.status_code}")
-
-        if response.status_code == 200:
-            result = response.json()
-
-            # Extract response based on provider
-            if provider == "openai" or provider.startswith("openapi-"):
-                # OpenAI and OpenAPI providers use the same response format
-                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-            elif provider == "anthropic":
-                content = result.get("content", [{}])[0].get("text", "")
-            else:
-                content = str(result.get("response", result))
-
-            logger.info(f"Successfully got response from {provider}/{model}, content length: {len(content)}")
-
-            return {"success": True, "response": content, "provider": provider, "model": model}
-        else:
-            logger.error(f"APISIX request failed: {response.status_code} - {response.text[:200]}")
-
-            # Handle common APISIX errors with helpful messages
-            if response.status_code == 502:
-                # Bad Gateway - AI provider not accessible
-                return {
-                    "success": False,
-                    "response": f"AI provider not accessible. Please check your APISIX configuration and {provider.upper()} API credentials.",
-                    "error": f"502 Bad Gateway - {provider} service unavailable",
-                }
-            elif response.status_code == 401:
-                # Unauthorized - API key issue
-                return {
-                    "success": False,
-                    "response": f"Authentication failed. Please check your {provider.upper()} API key configuration.",
-                    "error": "401 Unauthorized",
-                }
-            else:
-                return {
-                    "success": False,
-                    "response": f"API Error: {response.status_code} - {response.text}",
-                    "error": f"HTTP {response.status_code}",
-                }
+        # Execute request and handle response
+        return await _execute_apisix_request(url, payload, headers, provider, model)
 
     except Exception as e:
         logger.error(f"APISIX generator exception: {e}")
+        return _handle_generator_exception(e)
 
-        # Return proper error for connection issues
-        if "Connection refused" in str(e) or "Failed to establish a new connection" in str(e):
-            return {
-                "success": False,
-                "response": f"Cannot connect to APISIX gateway at {base_url}. Please ensure APISIX is running.",
-                "error": "Connection refused",
-            }
 
-        return {"success": False, "response": f"Generator execution error: {str(e)}", "error": str(e)}
+def _setup_apisix_request_url(provider: str, model: str) -> str:
+    """Setup APISIX request URL with endpoint mapping."""
+    endpoint = _get_apisix_endpoint_for_model(provider, model)
+    if not endpoint:
+        raise ValueError(f"No APISIX endpoint for {provider}/{model}")
+    base_url = os.getenv("VIOLENTUTF_API_URL", "http://apisix-apisix-1:9080")
+    url = f"{base_url}{endpoint}"
+    logger.info(f"APISIX request URL: {url}")
+    return url
+
+
+def _build_request_payload(provider: str, model: str, prompt: str, generator_config: Dict) -> Dict[str, Any]:
+    """Build request payload based on provider type."""
+    if provider == "anthropic":
+        return _build_anthropic_payload(model, prompt, generator_config)
+    elif provider.startswith("openapi-"):
+        return _build_openapi_payload(model, prompt, generator_config)
+    else:
+        return _build_openai_payload(model, prompt, generator_config)
+
+
+def _build_anthropic_payload(model: str, prompt: str, generator_config: Dict) -> Dict[str, Any]:
+    """Build Anthropic-specific payload."""
+    return {
+        "messages": [{"role": "user", "content": prompt}],
+        "model": model,
+        "temperature": generator_config["parameters"].get("temperature", 0.7),
+        "max_tokens": generator_config["parameters"].get("max_tokens", 1000),
+    }
+
+
+def _build_openapi_payload(model: str, prompt: str, generator_config: Dict) -> Dict[str, Any]:
+    """Build OpenAPI-specific payload."""
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+    }  # Add optional parameters if the OpenAPI spec supports them
+    if generator_config["parameters"].get("temperature") is not None:
+        payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
+    if generator_config["parameters"].get("max_tokens") is not None:
+        payload["max_tokens"] = generator_config["parameters"].get("max_tokens", 1000)
+    logger.info(f"OpenAPI request payload: {payload}")
+    return payload
+
+
+def _build_openai_payload(model: str, prompt: str, generator_config: Dict) -> Dict[str, Any]:
+    """Build OpenAI-specific payload with o1-series handling."""
+    payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
+    # o1-series models don't support temperature or max_tokens
+    if model and not model.startswith("o1"):
+        payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
+        payload["max_tokens"] = generator_config["parameters"].get("max_tokens", 1000)
+    else:
+        logger.info(f"Using o1-series model '{model}' - skipping temperature and max_tokens parameters")
+    return payload
+
+
+def _setup_request_headers(provider: str) -> Dict[str, str]:
+    """Setup request headers with authentication."""
+    headers = {"Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+    # All requests go through APISIX, so we always need the APISIX API key
+    api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY")
+    if api_key:
+        headers["apikey"] = api_key
+        logger.info(f"Using APISIX API key for authentication (provider: {provider})")
+    else:
+        logger.warning("No APISIX API key found in environment - requests may fail")
+    # For OpenAPI providers, APISIX proxy-rewrite plugin handles upstream auth
+    if provider.startswith("openapi-"):
+        provider_id = provider.replace("openapi-", "")
+        logger.info(f"OpenAPI provider {provider_id} - authentication will be handled by APISIX proxy-rewrite")
+    return headers
+
+
+async def _execute_apisix_request(url: str, payload: Dict, headers: Dict, provider: str, model: str) -> Dict[str, Any]:
+    """Execute APISIX request and handle response."""
+    # Log request details for debugging
+    logger.info(f"Making request to: {url}")
+    logger.info(f"Request headers keys: {list(headers.keys())}")
+    _log_auth_header(headers)
+
+    response = requests.post(url, json=payload, headers=headers, timeout=30)
+    logger.info(f"APISIX response status: {response.status_code}")
+    if response.status_code == 200:
+        return _handle_successful_response(response, provider, model)
+    else:
+        return _handle_error_response(response, provider)
+
+
+def _log_auth_header(headers: Dict[str, str]) -> None:
+    """Log authorization header with masking."""
+    if "Authorization" in headers:
+        auth_header = headers["Authorization"]
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+            masked = token[:4] + "..." + token[-4:] if len(token) > 8 else "***"
+            logger.info(f"Authorization header: Bearer {masked}")
+
+
+def _handle_successful_response(response, provider: str, model: str) -> Dict[str, Any]:
+    """Handle successful API response."""
+    result = response.json()
+
+    # Extract response based on provider
+    if provider == "openai" or provider.startswith("openapi-"):
+        content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+    elif provider == "anthropic":
+        content = result.get("content", [{}])[0].get("text", "")
+    else:
+        content = str(result.get("response", result))
+    logger.info(f"Successfully got response from {provider}/{model}, content length: {len(content)}")
+    return {"success": True, "response": content, "provider": provider, "model": model}
+
+
+def _handle_error_response(response, provider: str) -> Dict[str, Any]:
+    """Handle API error response."""
+    logger.error(f"APISIX request failed: {response.status_code} - {response.text[:200]}")
+    if response.status_code == 502:
+        return {
+            "success": False,
+            "response": f"AI provider not accessible. Please check your APISIX configuration and {provider.upper()} API credentials.",
+            "error": f"502 Bad Gateway - {provider} service unavailable",
+        }
+    elif response.status_code == 401:
+        return {
+            "success": False,
+            "response": f"Authentication failed. Please check your {provider.upper()} API key configuration.",
+            "error": "401 Unauthorized",
+        }
+    else:
+        return {
+            "success": False,
+            "response": f"API Error: {response.status_code} - {response.text}",
+            "error": f"HTTP {response.status_code}",
+        }
+
+
+def _handle_generator_exception(e: Exception) -> Dict[str, Any]:
+    """Handle generator execution exceptions."""
+    base_url = os.getenv("VIOLENTUTF_API_URL", "http://apisix-apisix-1:9080")
+    # Return proper error for connection issues
+    if "Connection refused" in str(e) or "Failed to establish a new connection" in str(e):
+        return {
+            "success": False,
+            "response": f"Cannot connect to APISIX gateway at {base_url}. Please ensure APISIX is running.",
+            "error": "Connection refused",
+        }
+
+    return {"success": False, "response": f"Generator execution error: {str(e)}", "error": str(e)}
 
 
 async def _execute_generic_generator(generator_config: Dict, prompt: str, conversation_id: str) -> Dict[str, Any]:
     """Execute prompt through generic generator."""
-    # Generic generators are not yet implemented
+    # Generic generators are not yet implemented.
     generator_type = generator_config.get("type", "unknown")
     generator_name = generator_config.get("name", "unknown")
 
@@ -196,7 +235,7 @@ async def _execute_generic_generator(generator_config: Dict, prompt: str, conver
 
 def _get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     """Get APISIX endpoint for provider/model combination."""
-    # Handle OpenAPI providers
+    # Handle OpenAPI providers.
     if provider.startswith("openapi-"):
         # Use the function from generators.py to get the endpoint
         from app.api.endpoints.generators import get_apisix_endpoint_for_model

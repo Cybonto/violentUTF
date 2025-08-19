@@ -78,7 +78,7 @@ if "dataset_source_selection" not in st.session_state:
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway"""
+    """Get authentication headers for API requests through APISIX Gateway."""
     try:
         from utils.jwt_manager import jwt_manager
 
@@ -114,7 +114,7 @@ def get_auth_headers() -> Dict[str, str]:
 
 
 def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
-    """Make an authenticated API request through APISIX Gateway"""
+    """Make an authenticated API request through APISIX Gateway."""
     headers = get_auth_headers()
     if not headers.get("Authorization"):
         logger.warning("No authentication token available for API request")
@@ -123,7 +123,6 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         logger.debug(f"Making {method} request to {url} through APISIX Gateway")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
-
         # Debug: always log the response for troubleshooting
         logger.info(f"API Request: {method} {url} -> {response.status_code}")
         if response.status_code not in [200, 201]:
@@ -164,8 +163,8 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def create_compatible_api_token():
-    """Create a FastAPI-compatible token using JWT manager"""
+def create_compatible_api_token() -> None:
+    """Create a FastAPI-compatible token using JWT manager."""
     try:
         from utils.jwt_manager import jwt_manager
         from utils.user_context import get_user_context_for_token
@@ -198,8 +197,8 @@ def create_compatible_api_token():
 # --- API Backend Functions ---
 
 
-def load_dataset_types_from_api():
-    """Load available dataset types from API"""
+def load_dataset_types_from_api() -> Any:
+    """Load available dataset types from API."""
     data = api_request("GET", API_ENDPOINTS["dataset_types"])
     if data:
         st.session_state.api_dataset_types = data.get("dataset_types", [])
@@ -207,8 +206,8 @@ def load_dataset_types_from_api():
     return []
 
 
-def load_datasets_from_api():
-    """Load existing datasets from API"""
+def load_datasets_from_api() -> None:
+    """Load existing datasets from API."""
     data = api_request("GET", API_ENDPOINTS["datasets"])
     if data:
         datasets_dict = {ds["name"]: ds for ds in data.get("datasets", [])}
@@ -217,8 +216,8 @@ def load_datasets_from_api():
     return None
 
 
-def create_dataset_via_api(name: str, source_type: str, config: Dict[str, Any]):
-    """Create a new dataset via API"""
+def create_dataset_via_api(name: str, source_type: str, config: Dict[str, Any]) -> Any:
+    """Create a new dataset via API."""
     payload = {"name": name, "source_type": source_type, "config": config}
 
     # Add source-specific fields
@@ -241,22 +240,22 @@ def create_dataset_via_api(name: str, source_type: str, config: Dict[str, Any]):
     return False
 
 
-def load_memory_datasets_from_api():
-    """Load datasets from PyRIT memory via API"""
+def load_memory_datasets_from_api() -> Any:
+    """Load datasets from PyRIT memory via API."""
     data = api_request("GET", API_ENDPOINTS["dataset_memory"])
     if data:
         return data.get("datasets", [])
     return []
 
 
-def auto_load_datasets():
+def auto_load_datasets() -> None:
     """
-    Automatically load existing datasets on page load
+    Automatically load existing datasets on page load.
 
     This ensures that previously configured datasets are immediately visible
     when the page loads, without requiring manual refresh.
     """
-    # Only load if not already loaded or if forced reload
+    # Only load if not already loaded or if forced reload.
     if not st.session_state.api_datasets or st.session_state.get("force_reload_datasets", False):
         with st.spinner("Loading existing datasets..."):
             datasets_data = load_datasets_from_api()
@@ -270,14 +269,14 @@ def auto_load_datasets():
             del st.session_state["force_reload_datasets"]
 
 
-def auto_load_generators():
+def auto_load_generators() -> None:
     """
-    Automatically load existing generators on page load
+    Automatically load existing generators on page load.
 
     This ensures that generators are available for dataset testing
     without requiring manual refresh.
     """
-    # Only load if not already loaded in session state
+    # Only load if not already loaded in session state.
     if "api_generators_cache" not in st.session_state or st.session_state.get("force_reload_generators", False):
         with st.spinner("Loading generators for testing..."):
             generators = get_generators(use_cache=False)
@@ -294,7 +293,7 @@ def auto_load_generators():
 
 
 def get_generators(use_cache: bool = True) -> List[Dict[str, Any]]:
-    """Get generators from cache or API
+    """Get generators from cache or API.
 
     Args:
         use_cache: If True, returns cached generators if available.
@@ -319,7 +318,7 @@ def run_orchestrator_dataset_test(
     dataset: Dict[str, Any], generator: Dict[str, Any], num_prompts: int, test_mode: str
 ) -> bool:
     """
-    Run dataset test using orchestrator API
+    Run dataset test using orchestrator API.
 
     Args:
         dataset: Selected dataset configuration
@@ -692,7 +691,7 @@ def run_orchestrator_dataset_test(
 
 
 # --- Main Page Function ---
-def main():
+def main() -> None:
     """Renders the Configure Datasets page content with API backend."""
     logger.debug("Configure Datasets page (API-backed) loading.")
     st.set_page_config(page_title="Configure Datasets", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
@@ -744,8 +743,8 @@ def main():
     proceed_to_next_step()
 
 
-def display_dataset_source_selection():
-    """Display dataset source selection options"""
+def display_dataset_source_selection() -> None:
+    """Display dataset source selection options."""
     st.subheader("➕ Configure a New Dataset")
     st.write("Select the source of your dataset:")
 
@@ -775,9 +774,9 @@ def display_dataset_source_selection():
         logger.info(f"Dataset source selected: {st.session_state['dataset_source']}")
 
 
-def display_configured_datasets():
-    """Display configured datasets and generators"""
-    # Display configured datasets
+def display_configured_datasets() -> None:
+    """Display configured datasets and generators."""
+    # Display configured datasets.
     datasets = st.session_state.api_datasets
     if datasets:
         with st.expander(f"📁 Datasets ({len(datasets)} configured)", expanded=True):
@@ -797,8 +796,8 @@ def display_configured_datasets():
     st.markdown("---")
 
 
-def handle_dataset_source_flow():
-    """Handle the flow based on selected dataset source"""
+def handle_dataset_source_flow() -> None:
+    """Handle the flow based on selected dataset source."""
     source = st.session_state.get("dataset_source")
     logger.debug(f"Handling dataset source flow for: {source}")
 
@@ -818,8 +817,8 @@ def handle_dataset_source_flow():
         st.error("Invalid dataset source selected.")
 
 
-def flow_native_datasets():
-    """Handle native dataset selection and creation"""
+def flow_native_datasets() -> None:
+    """Handle native dataset selection and creation."""
     st.subheader("Select Native Dataset")
 
     # Load dataset types if not already loaded
@@ -881,8 +880,8 @@ def flow_native_datasets():
                     st.warning("Please enter a dataset name.")
 
 
-def flow_upload_local_dataset():
-    """Handle local file upload and dataset creation"""
+def flow_upload_local_dataset() -> None:
+    """Handle local file upload and dataset creation."""
     st.subheader("Upload Local Dataset File")
 
     uploaded_file = st.file_uploader(
@@ -933,8 +932,8 @@ def flow_upload_local_dataset():
                 st.warning("Please enter a dataset name.")
 
 
-def flow_fetch_online_dataset():
-    """Handle online dataset fetching"""
+def flow_fetch_online_dataset() -> None:
+    """Handle online dataset fetching."""
     st.subheader("Fetch Online Dataset")
 
     dataset_url = st.text_input("Dataset URL*", placeholder="https://example.com/dataset.csv", key="online_dataset_url")
@@ -955,8 +954,8 @@ def flow_fetch_online_dataset():
                 st.error("❌ Failed to fetch dataset")
 
 
-def flow_load_from_memory():
-    """Handle loading datasets from PyRIT memory"""
+def flow_load_from_memory() -> None:
+    """Handle loading datasets from PyRIT memory."""
     st.subheader("Load from PyRIT Memory")
 
     if st.button("🔄 Refresh Memory Datasets", key="refresh_memory_datasets"):
@@ -986,8 +985,8 @@ def flow_load_from_memory():
             st.info("No datasets found in PyRIT memory.")
 
 
-def flow_combine_datasets():
-    """Handle dataset combination"""
+def flow_combine_datasets() -> None:
+    """Handle dataset combination."""
     st.subheader("Combine Datasets")
 
     datasets = st.session_state.api_datasets
@@ -1022,8 +1021,8 @@ def flow_combine_datasets():
         st.info("Select at least 2 datasets to combine.")
 
 
-def flow_transform_datasets():
-    """Handle dataset transformation"""
+def flow_transform_datasets() -> None:
+    """Handle dataset transformation."""
     st.subheader("Transform Dataset")
 
     datasets = st.session_state.api_datasets
@@ -1069,8 +1068,8 @@ def flow_transform_datasets():
                     st.error("❌ Failed to apply transformation")
 
 
-def test_dataset_section():
-    """Section for testing datasets with generators"""
+def test_dataset_section() -> None:
+    """Section for testing datasets with generators."""
     st.divider()
     st.subheader("🧪 Test Dataset")
 
@@ -1217,8 +1216,8 @@ def test_dataset_section():
             st.write(f"• ... and {len(generators) - 3} more")
 
 
-def proceed_to_next_step():
-    """Provide navigation to next step"""
+def proceed_to_next_step() -> None:
+    """Provide navigation to next step."""
     st.divider()
     st.header("🚀 Proceed to Next Step")
     st.markdown("*Continue to converter configuration once datasets are ready*")

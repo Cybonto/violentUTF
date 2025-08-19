@@ -54,7 +54,7 @@ class DatasetFetchError(Exception):
 class PyRITStreamProcessor:
     """Enhanced streaming processor with memory-aware chunking."""
 
-    def __init__(self, memory_interface: Optional[MemoryInterface] = None) -> None:
+    def __init__(self: "PyRITStreamProcessor", memory_interface: Optional[MemoryInterface] = None) -> None:
         """Initialize the instance."""
         self.memory = memory_interface or CentralMemory.get_memory_instance()
         self.chunk_size = int(os.getenv("DATASET_CHUNK_SIZE", 1000))
@@ -63,7 +63,7 @@ class PyRITStreamProcessor:
         self.retry_delay = float(os.getenv("DATASET_RETRY_DELAY", 1.0))
 
     async def process_pyrit_dataset_stream(
-        self,
+        self: "PyRITStreamProcessor",
         dataset_type: str,
         config: Dict[str, Any],
         max_prompts: Optional[int] = None,
@@ -149,7 +149,7 @@ class PyRITStreamProcessor:
 
         logger.info(f"Completed stream processing: {stats.total_processed} prompts in {stats.chunks_processed} chunks")
 
-    def _calculate_optimal_chunk_size(self, dataset: Any) -> int:
+    def _calculate_optimal_chunk_size(self: "PyRITStreamProcessor", dataset: Any) -> int:
         """Calculate optimal chunk size based on dataset characteristics."""
         try:
             # Try to get dataset size information
@@ -180,7 +180,7 @@ class PyRITStreamProcessor:
 
         return self.chunk_size
 
-    async def _validate_dataset_access(self, dataset_type: str, config: Dict[str, Any]) -> None:
+    async def _validate_dataset_access(self: "PyRITStreamProcessor", dataset_type: str, config: Dict[str, Any]) -> None:
         """Validate that the dataset can be accessed with the given configuration."""
         try:
             # Check if dataset type is supported
@@ -209,7 +209,7 @@ class PyRITStreamProcessor:
         except Exception as e:
             raise DatasetFetchError(f"Dataset validation failed: {str(e)}")
 
-    async def _fetch_full_pyrit_dataset(self, dataset_type: str, config: Dict[str, Any]) -> Any:
+    async def _fetch_full_pyrit_dataset(self: "PyRITStreamProcessor", dataset_type: str, config: Dict[str, Any]) -> Any:
         """Fetch complete PyRIT dataset without 50-row limit."""
         try:
             # Import all PyRIT dataset functions
@@ -253,7 +253,9 @@ class PyRITStreamProcessor:
             logger.error(f"Failed to fetch PyRIT dataset {dataset_type}: {e}")
             raise DatasetFetchError(f"Could not fetch dataset {dataset_type}: {str(e)}")
 
-    async def _fetch_with_retry(self, fetcher: Callable, config: Dict, max_retries: int = None) -> Any:
+    async def _fetch_with_retry(
+        self: "PyRITStreamProcessor", fetcher: Callable, config: Dict, max_retries: int = None
+    ) -> Any:
         """Fetch dataset with retry logic and exponential backoff."""
         max_retries = max_retries or self.max_retries
 
@@ -279,7 +281,9 @@ class PyRITStreamProcessor:
                 logger.warning(f"Dataset fetch attempt {attempt + 1} failed, retrying in {wait_time}s: {e}")
                 await asyncio.sleep(wait_time)
 
-    def _clean_config_for_fetcher(self, fetcher: Callable, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _clean_config_for_fetcher(
+        self: "PyRITStreamProcessor", fetcher: Callable, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Clean configuration to only include parameters supported by the fetcher."""
         import inspect
 
@@ -298,7 +302,9 @@ class PyRITStreamProcessor:
             logger.warning(f"Could not clean config for fetcher: {e}")
             return config  # Return original config if cleaning fails
 
-    async def _extract_prompts_with_metadata(self, dataset: Any) -> AsyncIterator[Dict[str, Any]]:
+    async def _extract_prompts_with_metadata(
+        self: "PyRITStreamProcessor", dataset: Any
+    ) -> AsyncIterator[Dict[str, Any]]:
         """Extract prompts with metadata from PyRIT dataset."""
         try:
             # Handle different dataset return types

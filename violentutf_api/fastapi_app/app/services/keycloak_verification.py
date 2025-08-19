@@ -28,7 +28,7 @@ class KeycloakJWTVerifier:
     """Keycloak JWT token verification with proper signature validation."""
 
     def __init__(self) -> None:
-        """Initialize the instance."""
+        """ "Initialize the instance."""
         self.keycloak_url = settings.KEYCLOAK_URL
         self.realm = settings.KEYCLOAK_REALM
         self.client_id = settings.KEYCLOAK_CLIENT_ID
@@ -44,7 +44,7 @@ class KeycloakJWTVerifier:
         self._config_cache_time = 0
         self._cache_ttl = 3600  # 1 hour cache
 
-    async def _get_keycloak_config(self) -> Dict[str, Any]:
+    async def _get_keycloak_config(self: "KeycloakJWTVerifier") -> Dict[str, Any]:
         """
         Get Keycloak OpenID Connect configuration.
 
@@ -79,7 +79,7 @@ class KeycloakJWTVerifier:
                 detail="Authentication service configuration unavailable",
             )
 
-    async def _get_jwks_client(self) -> PyJWKClient:
+    async def _get_jwks_client(self: "KeycloakJWTVerifier") -> PyJWKClient:
         """
         Get or create JWKS client for key retrieval.
 
@@ -106,7 +106,7 @@ class KeycloakJWTVerifier:
 
         return self.jwks_client
 
-    async def verify_keycloak_token(self, token: str) -> Dict[str, Any]:
+    async def verify_keycloak_token(self: "KeycloakJWTVerifier", token: str) -> Dict[str, Any]:
         """
         Verify Keycloak JWT token with proper signature validation.
 
@@ -197,7 +197,7 @@ class KeycloakJWTVerifier:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Token verification service error"
             )
 
-    def _validate_token_claims(self, decoded_token: Dict[str, Any]) -> None:
+    def _validate_token_claims(self: "KeycloakJWTVerifier", decoded_token: Dict[str, Any]) -> None:
         """
         Perform additional validation on token claims.
 
@@ -246,7 +246,7 @@ class KeycloakJWTVerifier:
             logger.warning("Invalid realm_access claim structure")
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token realm access")
 
-    def extract_user_info(self, decoded_token: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_user_info(self: "KeycloakJWTVerifier", decoded_token: Dict[str, Any]) -> Dict[str, Any]:
         """
         Extract user information from verified Keycloak token.
 
@@ -288,7 +288,7 @@ class KeycloakJWTVerifier:
             "session_state": decoded_token.get("session_state"),
         }
 
-    def _map_keycloak_roles(self, keycloak_roles: List[str]) -> List[str]:
+    def _map_keycloak_roles(self: "KeycloakJWTVerifier", keycloak_roles: List[str]) -> List[str]:
         """
         Map Keycloak roles to ViolentUTF application roles.
 

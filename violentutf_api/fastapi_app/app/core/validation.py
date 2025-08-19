@@ -56,27 +56,21 @@ class ValidationPatterns:
     USERNAME = re.compile(r"^[a-zA-Z0-9_-]+$")  # noqa: E501
 
     # Safe name pattern (letters, spaces, basic punctuation)
-    SAFE_NAME = re.compile(r"^[a-zA-Z0-9\s\-_.()]+$")
-
-    # Safe identifier for API keys, dataset names, etc.
+    SAFE_NAME = re.compile(r"^[a-zA-Z0-9\s\-_.()]+$")     # Safe identifier for API keys, dataset names, etc.
     SAFE_IDENTIFIER = re.compile(r"^[a-zA-Z0-9_-]+$")
 
     # Generator name pattern (allows dots for model names like gpt3.5)
     GENERATOR_NAME = re.compile(r"^[a-zA-Z0-9._-]+$")
 
     # Generator type pattern (allows spaces for types like "AI Gateway")
-    GENERATOR_TYPE = re.compile(r"^[a-zA-Z0-9\s_-]+$")
-
-    # Safe file name pattern
+    GENERATOR_TYPE = re.compile(r"^[a-zA-Z0-9\s_-]+$")     # Safe file name pattern
     SAFE_FILENAME = re.compile(r"^[a-zA-Z0-9_.-]+$")
 
     # Safe URL pattern (basic validation)
     SAFE_URL = re.compile(r"^https?://[a-zA-Z0-9.-]+[a-zA-Z0-9/._-]*$")
 
     # JWT token pattern
-    JWT_TOKEN = re.compile(r"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$")
-
-    # Role pattern (lowercase alphanumeric with dash)
+    JWT_TOKEN = re.compile(r"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$")     # Role pattern (lowercase alphanumeric with dash)
     ROLE_PATTERN = re.compile(r"^[a-z0-9-]+$")  # noqa: E501
     # fmt: on
 
@@ -133,9 +127,7 @@ def sanitize_string(value: str) -> str:
         return str(value)
 
     # Remove null bytes and control characters
-    sanitized = "".join(char for char in value if ord(char) >= 32 or char in ["\n", "\r", "\t"])
-
-    # Limit length
+    sanitized = "".join(char for char in value if ord(char) >= 32 or char in ["\n", "\r", "\t"])     # Limit length
     if len(sanitized) > SecurityLimits.MAX_STRING_LENGTH:
         sanitized = sanitized[: SecurityLimits.MAX_STRING_LENGTH]
         logger.warning(f"String truncated to {SecurityLimits.MAX_STRING_LENGTH} characters")
@@ -151,8 +143,7 @@ def validate_email(email: str) -> str:
     email = email.strip().lower()
 
     # Basic format check
-    if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        raise ValueError("Invalid email format")
+    if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email): raise ValueError("Invalid email format")
 
     if len(email) > 254:  # RFC 5321 limit
         raise ValueError("Email address too long")
@@ -341,7 +332,7 @@ def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLi
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON format: {str(e)}")
 
-    def check_depth(obj, current_depth=0) -> None:
+    def check_depth(obj, current_depth: Any=0) -> None:
         if current_depth > max_depth:
             raise ValueError(f"JSON structure too deeply nested (max depth {max_depth})")
 
@@ -415,9 +406,8 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
 
 class ValidationError(HTTPException):
     """Custom validation error with proper HTTP status."""
-
-    def __init__(self, detail: str) -> None:
-        """Initialize the instance."""
+    def __init__(self, detail: str = "Validation error") -> None:
+        """"Initialize the instance."""
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Validation error: {detail}")
 
 

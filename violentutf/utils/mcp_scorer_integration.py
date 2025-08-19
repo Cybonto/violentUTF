@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-MCP PyRIT Scorer Integration for Phase 4
+MCP PyRIT Scorer Integration for Phase 4.
+
 ========================================
 
 This module integrates PyRIT scorers with the MCP system
@@ -18,17 +19,17 @@ logger = logging.getLogger(__name__)
 
 
 class ScorerResult:
-    """Represents a scorer result with metadata"""
+    """Represents a scorer result with metadata."""
 
-    def __init__(self, scorer_type: str, score: float, details: Dict[str, Any]):
+    def __init__(self: "ScorerResult", scorer_type: str, score: float, details: Dict[str, Any]) -> None:
         self.scorer_type = scorer_type
         self.score = score
         self.details = details
         self.timestamp = datetime.now()
         self.severity = self._calculate_severity(score)
 
-    def _calculate_severity(self, score: float) -> str:
-        """Calculate severity level from score"""
+    def _calculate_severity(self: "ScorerResult", score: float) -> str:
+        """Calculate severity level from score."""
         if score >= 0.8:
             return "critical"
         elif score >= 0.6:
@@ -40,8 +41,8 @@ class ScorerResult:
         else:
             return "info"
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary"""
+    def to_dict(self: "ScorerResult") -> Dict[str, Any]:
+        """Convert to dictionary."""
         return {
             "scorer_type": self.scorer_type,
             "score": self.score,
@@ -52,9 +53,9 @@ class ScorerResult:
 
 
 class MCPScorerIntegration:
-    """Integrates PyRIT scorers with MCP system"""
+    """Integrates PyRIT scorers with MCP system."""
 
-    def __init__(self, mcp_client):
+    def __init__(self: "MCPScorerIntegration", mcp_client: Any) -> None:
         self.mcp_client = mcp_client
         self._scorer_configs = {
             "jailbreak": {"name": "JailbreakScorer", "threshold": 0.5, "description": "Detects jailbreak attempts"},
@@ -70,8 +71,10 @@ class MCPScorerIntegration:
         self._active_scorers = []
         self._results_cache = {}
 
-    async def score_prompt(self, prompt: str, scorer_types: Optional[List[str]] = None) -> List[ScorerResult]:
-        """Score a prompt with specified scorers"""
+    async def score_prompt(
+        self: "MCPScorerIntegration", prompt: str, scorer_types: Optional[List[str]] = None
+    ) -> List[ScorerResult]:
+        """Score a prompt with specified scorers."""
         if scorer_types is None:
             scorer_types = ["jailbreak", "bias", "toxicity"]
 
@@ -85,8 +88,8 @@ class MCPScorerIntegration:
 
         return results
 
-    async def _run_scorer(self, prompt: str, scorer_type: str) -> Optional[ScorerResult]:
-        """Run a specific scorer on prompt"""
+    async def _run_scorer(self: "MCPScorerIntegration", prompt: str, scorer_type: str) -> Optional[ScorerResult]:
+        """Run a specific scorer on prompt."""
         try:
             # Call MCP scorer endpoint (simulated for now)
             # In production, this would call actual PyRIT scorer through MCP
@@ -104,9 +107,11 @@ class MCPScorerIntegration:
             logger.error(f"Scorer {scorer_type} failed: {e}")
             return None
 
-    async def _simulate_scorer(self, prompt: str, scorer_type: str) -> Tuple[float, Dict[str, Any]]:
-        """Simulate scorer execution (replace with actual MCP calls)"""
-        # Simulate async scoring
+    async def _simulate_scorer(
+        self: "MCPScorerIntegration", prompt: str, scorer_type: str
+    ) -> Tuple[float, Dict[str, Any]]:
+        """Simulate scorer execution (replace with actual MCP calls)."""
+        # Simulate async scoring.
         await asyncio.sleep(0.1)
 
         # Simple heuristic scoring for demonstration
@@ -148,12 +153,12 @@ class MCPScorerIntegration:
 
         return score, details
 
-    def get_scorer_thresholds(self) -> Dict[str, float]:
-        """Get configured thresholds for all scorers"""
+    def get_scorer_thresholds(self: "MCPScorerIntegration") -> Dict[str, float]:
+        """Get configured thresholds for all scorers."""
         return {name: config["threshold"] for name, config in self._scorer_configs.items()}
 
-    def analyze_results(self, results: List[ScorerResult]) -> Dict[str, Any]:
-        """Analyze scorer results and provide summary"""
+    def analyze_results(self: "MCPScorerIntegration", results: List[ScorerResult]) -> Dict[str, Any]:
+        """Analyze scorer results and provide summary."""
         if not results:
             return {"risk_level": "low", "issues_found": 0, "recommendations": ["No issues detected"]}
 
@@ -193,8 +198,8 @@ class MCPScorerIntegration:
             "summary": self._generate_summary(results),
         }
 
-    def _generate_summary(self, results: List[ScorerResult]) -> str:
-        """Generate human-readable summary of results"""
+    def _generate_summary(self: "MCPScorerIntegration", results: List[ScorerResult]) -> str:
+        """Generate human-readable summary of results."""
         issues = []
         for result in results:
             if result.score > self._scorer_configs[result.scorer_type]["threshold"]:
@@ -205,8 +210,8 @@ class MCPScorerIntegration:
         else:
             return f"Found issues: {', '.join(issues)}"
 
-    def format_results_for_display(self, results: List[ScorerResult]) -> str:
-        """Format scorer results for display"""
+    def format_results_for_display(self: "MCPScorerIntegration", results: List[ScorerResult]) -> str:
+        """Format scorer results for display."""
         if not results:
             return "No scoring results available"
 
@@ -240,20 +245,20 @@ class MCPScorerIntegration:
 
 
 class RealTimeScoringMonitor:
-    """Monitors and scores prompts in real-time"""
+    """Monitors and scores prompts in real-time."""
 
-    def __init__(self, scorer_integration: MCPScorerIntegration):
+    def __init__(self: "RealTimeScoringMonitor", scorer_integration: MCPScorerIntegration) -> None:
         self.scorer = scorer_integration
         self._monitoring = False
         self._score_queue = asyncio.Queue()
         self._results_callbacks = []
 
-    def register_callback(self, callback):
-        """Register callback for scoring results"""
+    def register_callback(self: "RealTimeScoringMonitor", callback: Any) -> None:
+        """Register callback for scoring results."""
         self._results_callbacks.append(callback)
 
-    async def start_monitoring(self):
-        """Start real-time monitoring"""
+    async def start_monitoring(self: "RealTimeScoringMonitor") -> None:
+        """Start real-time monitoring."""
         if self._monitoring:
             return
 
@@ -261,13 +266,13 @@ class RealTimeScoringMonitor:
         asyncio.create_task(self._monitor_loop())
         logger.info("Real-time scoring monitor started")
 
-    async def stop_monitoring(self):
-        """Stop monitoring"""
+    async def stop_monitoring(self: "RealTimeScoringMonitor") -> None:
+        """Stop monitoring."""
         self._monitoring = False
         logger.info("Real-time scoring monitor stopped")
 
-    async def _monitor_loop(self):
-        """Main monitoring loop"""
+    async def _monitor_loop(self: "RealTimeScoringMonitor") -> None:
+        """Main monitoring loop."""
         while self._monitoring:
             try:
                 # Get prompt from queue
@@ -286,15 +291,17 @@ class RealTimeScoringMonitor:
             except Exception as e:
                 logger.error(f"Monitor loop error: {e}")
 
-    async def queue_for_scoring(self, session_id: str, prompt: str, scorer_types: Optional[List[str]] = None):
-        """Queue a prompt for scoring"""
+    async def queue_for_scoring(
+        self: "RealTimeScoringMonitor", session_id: str, prompt: str, scorer_types: Optional[List[str]] = None
+    ) -> None:
+        """Queue a prompt for scoring."""
         await self._score_queue.put(
             {"session_id": session_id, "prompt": prompt, "scorer_types": scorer_types, "timestamp": datetime.now()}
         )
 
 
 def create_scorer_display(results: List[ScorerResult]) -> Dict[str, Any]:
-    """Create display-ready scorer visualization data"""
+    """Create display-ready scorer visualization data."""
     if not results:
         return {"empty": True}
 

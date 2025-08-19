@@ -1,9 +1,12 @@
+from typing import Any
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 # utils/auth_utils.py
 """
 Common authentication utilities for ViolentUTF pages.
+
 Provides consistent token management and authentication handling.
 """
 
@@ -103,7 +106,7 @@ def get_compact_database_status() -> tuple:
         return ("DB: Offline", "error", "🗃️")
 
 
-def handle_authentication_and_sidebar(page_name: str = ""):
+def handle_authentication_and_sidebar(page_name: str = "") -> Any:
     """
     Standard authentication handler for all ViolentUTF pages.
 
@@ -113,7 +116,7 @@ def handle_authentication_and_sidebar(page_name: str = ""):
     Returns:
         str: Username if authenticated, None otherwise
     """
-    # Initialize session state for login tracking if not present
+    # Initialize session state for login tracking if not present.
     if "previously_logged_in" not in st.session_state:
         st.session_state["previously_logged_in"] = False
 
@@ -210,128 +213,177 @@ def show_authenticated_sidebar(page_name: str = "") -> str:
         str: Username of authenticated user
     """
     with st.sidebar:
-        user_name = st.user.name or st.user.email or "User"
-
-        # Update user_name in session state if changed
-        if st.session_state.get("user_name") != user_name:
-            st.session_state["user_name"] = user_name
-            # If username changes, DB needs re-initialization
-            st.session_state["db_initialized"] = False
-            st.session_state["db_path"] = None
-            logger.info(f"User changed or logged in: {user_name}. Resetting DB state.")
-
+        # Get and display user name
+        user_name = _get_and_update_user_name()
         st.success(f"Hello, {user_name}!")
 
-        # Ensure API tokens are created for the logged-in user
-        if not st.session_state.get("api_token"):
-            try:
-                from utils.jwt_manager import jwt_manager
+        # Ensure API tokens are created
+        _ensure_api_token(user_name)
 
-                keycloak_data = {
-                    "preferred_username": st.user.name or st.user.email or "streamlit_user",
-                    "email": st.user.email or "user@example.com",
-                    "name": st.user.name or "Streamlit User",
-                    "sub": st.user.email or "streamlit-user",
-                    "roles": ["ai-api-access"],  # Grant AI access to Streamlit users
-                }
+        # Display AI Gateway status
+        _display_ai_gateway_status()
 
-                api_token = jwt_manager.create_token(keycloak_data)
-                if api_token:
-                    st.session_state["api_token"] = api_token
-                    st.session_state["has_ai_access"] = True
-                    logger.info(f"API token created for Streamlit user: {user_name}")
-            except Exception as e:
-                logger.error(f"Error creating API token for user {user_name}: {e}")
+        # Display API and Database status
+        _display_service_status()
 
-        # Display enhanced AI API access status with JWT info
-        has_api_token = bool(st.session_state.get("api_token"))
-        has_ai_access = st.session_state.get("has_ai_access", False)
-
-        if has_api_token and has_ai_access:
-            # Get JWT refresh status
-            try:
-                from utils.jwt_manager import jwt_manager
-
-                refresh_status = jwt_manager.get_refresh_status()
-
-                status = refresh_status["status"]
-                minutes_remaining = refresh_status["time_remaining_minutes"]
-
-                if status == "refreshing":
-                    st.info("🔄 AI Gateway: Refreshing Token...")
-                elif status == "expired":
-                    st.error("⏰ AI Gateway: Token Expired")
-                    if refresh_status.get("last_error"):
-                        st.caption(f"Error: {refresh_status['last_error'][:50]}...")
-                elif status == "expiring_soon":
-                    st.warning(f"⚠️ AI Gateway: Expires in {minutes_remaining}m")
-                    if refresh_status["refresh_in_progress"]:
-                        st.caption("Auto-refresh in progress...")
-                else:  # active
-                    st.success(f"🚀 AI Gateway: Active ({minutes_remaining}m left)")
-
-            except Exception:
-                # Fallback to simple display
-                st.success("🚀 AI Gateway Access: Enabled")
-        else:
-            st.warning("🔒 AI Gateway Access: Disabled")
-            if not has_api_token:
-                st.caption("No API token available")
-            else:
-                st.caption("Contact admin to enable ai-api-access role")
-
-        # Display compact API and Database status
-        try:
-            api_text, api_type, api_icon = get_compact_api_status()
-            db_text, db_type, db_icon = get_compact_database_status()
-
-            # Display API status
-            if api_type == "success":
-                st.success(f"{api_icon} {api_text}")
-            elif api_type == "warning":
-                st.warning(f"{api_icon} {api_text}")
-            else:
-                st.error(f"{api_icon} {api_text}")
-
-            # Display Database status
-            if db_type == "success":
-                st.success(f"{db_icon} {db_text}")
-            elif db_type == "warning":
-                st.warning(f"{db_icon} {db_text}")
-            else:
-                st.error(f"{db_icon} {db_text}")
-        except Exception as e:
-            # Fallback if status check fails
-            logger.warning(f"Status check failed: {e}")
-            st.warning("🔑 API: Check Failed")
-            st.warning("🗃️ DB: Check Failed")
-
-        # JWT Token Display (collapsed by default)
-        with st.expander("🔐 Developer Tools", expanded=False):
-            st.subheader("JWT Token")
-            if st.session_state.get("api_token"):
-                st.code(st.session_state["api_token"], language=None)
-                if st.button("📋 Copy Token", key=f"copy_jwt_{page_name}"):
-                    st.write("Token copied! Use it with:")
-                    st.code('curl -H "Authorization: Bearer <token>" ...', language="bash")
-            else:
-                st.warning("No JWT token available. Please ensure you're logged in.")
+        # Display developer tools
+        _display_developer_tools(page_name)
 
         st.divider()
 
-        # Create unique logout button key
-        logout_key = f"sidebar_logout_{page_name.lower().replace(' ', '_')}" if page_name else "sidebar_logout"
-
-        if st.button("Logout", key=logout_key):
-            logger.info(f"User '{user_name}' clicked logout from {page_name}.")
-            st.session_state["previously_logged_in"] = False
-            clear_user_session()
-            st.logout()
+        # Handle logout
+        _handle_logout_button(page_name, user_name)
 
     return user_name
 
 
-def clear_user_session():
+def _get_and_update_user_name() -> str:
+    """Get user name and update session state if changed."""
+    user_name = st.user.name or st.user.email or "User"
+
+    # Update user_name in session state if changed
+    if st.session_state.get("user_name") != user_name:
+        st.session_state["user_name"] = user_name
+        # If username changes, DB needs re-initialization
+        st.session_state["db_initialized"] = False
+        st.session_state["db_path"] = None
+        logger.info(f"User changed or logged in: {user_name}. Resetting DB state.")
+
+    return user_name
+
+
+def _ensure_api_token(user_name: str) -> None:
+    """Ensure API tokens are created for the logged-in user."""
+    if not st.session_state.get("api_token"):
+        try:
+            from utils.jwt_manager import jwt_manager
+
+            keycloak_data = {
+                "preferred_username": st.user.name or st.user.email or "streamlit_user",
+                "email": st.user.email or "user@example.com",
+                "name": st.user.name or "Streamlit User",
+                "sub": st.user.email or "streamlit-user",
+                "roles": ["ai-api-access"],  # Grant AI access to Streamlit users
+            }
+
+            api_token = jwt_manager.create_token(keycloak_data)
+            if api_token:
+                st.session_state["api_token"] = api_token
+                st.session_state["has_ai_access"] = True
+                logger.info(f"API token created for Streamlit user: {user_name}")
+        except Exception as e:
+            logger.error(f"Error creating API token for user {user_name}: {e}")
+
+
+def _display_ai_gateway_status() -> None:
+    """Display enhanced AI API access status with JWT info."""
+    has_api_token = bool(st.session_state.get("api_token"))
+    has_ai_access = st.session_state.get("has_ai_access", False)
+
+    if has_api_token and has_ai_access:
+        _display_jwt_refresh_status()
+    else:
+        st.warning("🔒 AI Gateway Access: Disabled")
+        if not has_api_token:
+            st.caption("No API token available")
+        else:
+            st.caption("Contact admin to enable ai-api-access role")
+
+
+def _display_jwt_refresh_status() -> None:
+    """Display JWT refresh status."""
+    try:
+        from utils.jwt_manager import jwt_manager
+
+        refresh_status = jwt_manager.get_refresh_status()
+
+        status = refresh_status["status"]
+        minutes_remaining = refresh_status["time_remaining_minutes"]
+
+        # Status display mapping
+        status_displays = {
+            "refreshing": lambda: st.info("🔄 AI Gateway: Refreshing Token..."),
+            "expired": lambda: _display_expired_status(refresh_status),
+            "expiring_soon": lambda: _display_expiring_status(minutes_remaining, refresh_status),
+            "active": lambda: st.success(f"🚀 AI Gateway: Active ({minutes_remaining}m left)"),
+        }
+
+        display_func = status_displays.get(status, lambda: st.success("🚀 AI Gateway Access: Enabled"))
+        display_func()
+
+    except Exception:
+        # Fallback to simple display
+        st.success("🚀 AI Gateway Access: Enabled")
+
+
+def _display_expired_status(refresh_status: dict) -> None:
+    """Display expired token status."""
+    st.error("⏰ AI Gateway: Token Expired")
+    if refresh_status.get("last_error"):
+        st.caption(f"Error: {refresh_status['last_error'][:50]}...")
+
+
+def _display_expiring_status(minutes_remaining: int, refresh_status: dict) -> None:
+    """Display expiring token status."""
+    st.warning(f"⚠️ AI Gateway: Expires in {minutes_remaining}m")
+    if refresh_status["refresh_in_progress"]:
+        st.caption("Auto-refresh in progress...")
+
+
+def _display_service_status() -> None:
+    """Display compact API and Database status."""
+    try:
+        api_text, api_type, api_icon = get_compact_api_status()
+        db_text, db_type, db_icon = get_compact_database_status()
+
+        # Display API status
+        _display_status_message(api_icon, api_text, api_type)
+
+        # Display Database status
+        _display_status_message(db_icon, db_text, db_type)
+
+    except Exception as e:
+        # Fallback if status check fails
+        logger.warning(f"Status check failed: {e}")
+        st.warning("🔑 API: Check Failed")
+        st.warning("🗃️ DB: Check Failed")
+
+
+def _display_status_message(icon: str, text: str, status_type: str) -> None:
+    """Display a status message with appropriate styling."""
+    if status_type == "success":
+        st.success(f"{icon} {text}")
+    elif status_type == "warning":
+        st.warning(f"{icon} {text}")
+    else:
+        st.error(f"{icon} {text}")
+
+
+def _display_developer_tools(page_name: str) -> None:
+    """Display JWT Token in developer tools expander."""
+    with st.expander("🔐 Developer Tools", expanded=False):
+        st.subheader("JWT Token")
+        if st.session_state.get("api_token"):
+            st.code(st.session_state["api_token"], language=None)
+            if st.button("📋 Copy Token", key=f"copy_jwt_{page_name}"):
+                st.write("Token copied! Use it with:")
+                st.code('curl -H "Authorization: Bearer <token>" ...', language="bash")
+        else:
+            st.warning("No JWT token available. Please ensure you're logged in.")
+
+
+def _handle_logout_button(page_name: str, user_name: str) -> None:
+    """Handle logout button click."""
+    logout_key = f"sidebar_logout_{page_name.lower().replace(' ', '_')}" if page_name else "sidebar_logout"
+
+    if st.button("Logout", key=logout_key):
+        logger.info(f"User '{user_name}' clicked logout from {page_name}.")
+        st.session_state["previously_logged_in"] = False
+        clear_user_session()
+        st.logout()
+
+
+def clear_user_session() -> None:
     """Clear all user-related session state."""
     st.session_state["user_name"] = None
     st.session_state["db_initialized"] = False
@@ -392,7 +444,7 @@ def check_ai_access() -> bool:
     return st.session_state.get("has_ai_access", False)
 
 
-def ensure_ai_access():
+def ensure_ai_access() -> None:
     """
     Ensure user has AI access or display error and stop.
     Use this in pages that require AI Gateway access.

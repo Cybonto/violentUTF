@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-Test suite for converter apply functionality
+Test suite for converter apply functionality.
+
 Tests the ability to apply converters to datasets and create new datasets with converted prompts
 """
 
@@ -31,8 +32,8 @@ else:
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests"""
-    # Use keycloak_auth to get proper headers
+    """Get authentication headers for API requests."""
+    # Use keycloak_auth to get proper headers.
     headers = keycloak_auth.get_auth_headers()
     if not headers:
         # Fallback to environment-based JWT if Keycloak not available
@@ -61,19 +62,19 @@ def get_auth_headers() -> Dict[str, str]:
 
 
 class TestConverterApplyFunctionality:
-    """Test converter apply functionality"""
+    """Test converter apply functionality."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
-        """Set up test environment"""
+    def setup(self: "TestConverterApplyFunctionality") -> None:
+        """Set up test environment."""
         self.headers = get_auth_headers()
         self.created_resources = {"datasets": [], "converters": []}
         yield
         # Cleanup
         self.cleanup_resources()
 
-    def cleanup_resources(self):
-        """Clean up created resources after tests"""
+    def cleanup_resources(self: "TestConverterApplyFunctionality") -> None:
+        """Clean up created resources after tests."""
         import requests
 
         # Delete datasets
@@ -90,8 +91,8 @@ class TestConverterApplyFunctionality:
             except Exception:
                 pass
 
-    def test_converter_apply_copy_mode(self):
-        """Test applying converter in COPY mode to create new dataset"""
+    def test_converter_apply_copy_mode(self: "TestConverterApplyFunctionality") -> None:
+        """Test applying converter in COPY mode to create new dataset."""
         import requests
 
         # Step 1: Create a test dataset
@@ -158,8 +159,8 @@ class TestConverterApplyFunctionality:
 
         logger.info(f"Successfully applied converter in COPY mode, created dataset: {result['dataset_id']}")
 
-    def test_converter_apply_overwrite_mode(self):
-        """Test applying converter in OVERWRITE mode to replace dataset prompts"""
+    def test_converter_apply_overwrite_mode(self: "TestConverterApplyFunctionality") -> None:
+        """Test applying converter in OVERWRITE mode to replace dataset prompts."""
         import requests
 
         # Step 1: Create a test dataset
@@ -207,8 +208,8 @@ class TestConverterApplyFunctionality:
 
         logger.info(f"Successfully applied converter in OVERWRITE mode, dataset ID: {new_dataset_id}")
 
-    def test_converter_apply_with_parameters(self):
-        """Test applying converter with specific parameters"""
+    def test_converter_apply_with_parameters(self: "TestConverterApplyFunctionality") -> None:
+        """Test applying converter with specific parameters."""
         import requests
 
         # Step 1: Create a test dataset
@@ -265,8 +266,8 @@ class TestConverterApplyFunctionality:
 
         logger.info("Successfully applied_Caesar_cipher converter with offset 7")
 
-    def test_converter_apply_invalid_dataset(self):
-        """Test applying converter to non-existent dataset"""
+    def test_converter_apply_invalid_dataset(self: "TestConverterApplyFunctionality") -> None:
+        """Test applying converter to non-existent dataset."""
         import requests
 
         # Create a converter
@@ -292,8 +293,8 @@ class TestConverterApplyFunctionality:
         # In a real implementation, this should return 404
         assert response.status_code in [200, 404, 500]  # Accept mock behavior for now
 
-    def test_converter_apply_missing_new_name_for_copy(self):
-        """Test applying converter in COPY mode without new dataset name"""
+    def test_converter_apply_missing_new_name_for_copy(self: "TestConverterApplyFunctionality") -> None:
+        """Test applying converter in COPY mode without new dataset name."""
         import requests
 
         # Create dataset and converter

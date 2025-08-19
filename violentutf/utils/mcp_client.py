@@ -2,7 +2,8 @@
 # # Licensed under MIT License
 
 """
-MCP (Model Context Protocol) Client for ViolentUTF
+MCP (Model Context Protocol) Client for ViolentUTF.
+
 Implements SSE client for real-time MCP server communication
 """
 
@@ -29,31 +30,31 @@ logger = get_logger(__name__)
 
 # Exception classes
 class MCPClientError(Exception):
-    """Base exception for MCP client errors"""
+    """Base exception for MCP client errors."""
 
     pass
 
 
 class MCPConnectionError(MCPClientError):
-    """Connection-related errors"""
+    """Connection-related errors."""
 
     pass
 
 
 class MCPAuthenticationError(MCPClientError):
-    """Authentication failures"""
+    """Authentication failures."""
 
     pass
 
 
 class MCPTimeoutError(MCPClientError):
-    """Request timeout errors"""
+    """Request timeout errors."""
 
     pass
 
 
 class MCPMethod(Enum):
-    """MCP JSON-RPC methods"""
+    """MCP JSON-RPC methods."""
 
     INITIALIZE = "initialize"
     PROMPTS_LIST = "prompts/list"
@@ -67,29 +68,29 @@ class MCPMethod(Enum):
 
 @dataclass
 class MCPResponse:
-    """Structured MCP response"""
+    """Structured MCP response."""
 
     id: int
     result: Optional[Dict[str, Any]] = None
     error: Optional[Dict[str, Any]] = None
 
     @property
-    def is_error(self) -> bool:
+    def is_error(self: "MCPResponse") -> bool:
         return self.error is not None
 
     @property
-    def error_message(self) -> str:
+    def error_message(self: "MCPResponse") -> str:
         if self.error:
             return self.error.get("message", "Unknown error")
         return ""
 
 
 class MCPClient:
-    """MCP Client for Server-Sent Events communication"""
+    """MCP Client for Server-Sent Events communication."""
 
-    def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0):
+    def __init__(self: "MCPClient", base_url: Optional[str] = None, timeout: float = 30.0) -> None:
         """
-        Initialize MCP Client
+        Initialize MCP Client.
 
         Args:
             base_url: Base URL for MCP server (defaults to APISIX gateway)
@@ -104,12 +105,12 @@ class MCPClient:
         self.logger = logger
         self._test_token = None  # For testing without streamlit
 
-    def set_test_token(self, token: str):
-        """Set a test token for non-streamlit environments"""
+    def set_test_token(self: "MCPClient", token: str) -> None:
+        """Set a test token for non-streamlit environments."""
         self._test_token = token
 
-    def _get_auth_headers(self) -> Dict[str, str]:
-        """Get authentication headers with automatic token refresh"""
+    def _get_auth_headers(self: "MCPClient") -> Dict[str, str]:
+        """Get authentication headers with automatic token refresh."""
         try:
             # Use test token if available (for testing without streamlit)
             if self._test_token:
@@ -140,14 +141,16 @@ class MCPClient:
             self.logger.error(f"Failed to get auth headers: {e}")
             return {}
 
-    def _get_next_id(self) -> int:
-        """Get next request ID for JSON-RPC"""
+    def _get_next_id(self: "MCPClient") -> int:
+        """Get next request ID for JSON-RPC."""
         self._request_id += 1
         return self._request_id
 
-    async def _send_request(self, method: MCPMethod, params: Optional[Dict[str, Any]] = None) -> MCPResponse:
+    async def _send_request(
+        self: "MCPClient", method: MCPMethod, params: Optional[Dict[str, Any]] = None
+    ) -> MCPResponse:
         """
-        Send JSON-RPC request to MCP server
+        Send JSON-RPC request to MCP server.
 
         Args:
             method: MCP method to call
@@ -224,9 +227,9 @@ class MCPClient:
             self.logger.error(f"MCP request failed: {e}")
             return MCPResponse(id=request_id, error={"code": -32603, "message": str(e)})
 
-    async def initialize(self, capabilities: Optional[Dict[str, Any]] = None) -> bool:
+    async def initialize(self: "MCPClient", capabilities: Optional[Dict[str, Any]] = None) -> bool:
         """
-        Initialize connection to MCP server
+        Initialize connection to MCP server.
 
         Args:
             capabilities: Client capabilities to send to server
@@ -248,9 +251,9 @@ class MCPClient:
             self.logger.error(f"MCP initialization failed: {response.error_message}")
             return False
 
-    async def list_prompts(self) -> List[Dict[str, Any]]:
+    async def list_prompts(self: "MCPClient") -> List[Dict[str, Any]]:
         """
-        List all available prompts from MCP server
+        List all available prompts from MCP server.
 
         Returns:
             List of prompt definitions
@@ -266,9 +269,9 @@ class MCPClient:
             self.logger.error(f"Failed to list prompts: {response.error_message}")
             return []
 
-    async def get_prompt(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Optional[str]:
+    async def get_prompt(self: "MCPClient", name: str, arguments: Optional[Dict[str, Any]] = None) -> Optional[str]:
         """
-        Get a specific prompt with arguments
+        Get a specific prompt with arguments.
 
         Args:
             name: Name of the prompt
@@ -297,9 +300,9 @@ class MCPClient:
             self.logger.error(f"Failed to get prompt '{name}': {response.error_message}")
             return None
 
-    async def list_resources(self) -> List[Dict[str, Any]]:
+    async def list_resources(self: "MCPClient") -> List[Dict[str, Any]]:
         """
-        List all available resources from MCP server
+        List all available resources from MCP server.
 
         Returns:
             List of resource definitions
@@ -315,9 +318,9 @@ class MCPClient:
             self.logger.error(f"Failed to list resources: {response.error_message}")
             return []
 
-    async def read_resource(self, uri: str) -> Optional[Union[str, Dict[str, Any]]]:
+    async def read_resource(self: "MCPClient", uri: str) -> Optional[Union[str, Dict[str, Any]]]:
         """
-        Read a specific resource by URI
+        Read a specific resource by URI.
 
         Args:
             uri: Resource URI to read
@@ -343,9 +346,9 @@ class MCPClient:
             self.logger.error(f"Failed to read resource '{uri}': {response.error_message}")
             return None
 
-    async def list_tools(self) -> List[Dict[str, Any]]:
+    async def list_tools(self: "MCPClient") -> List[Dict[str, Any]]:
         """
-        List all available tools from MCP server
+        List all available tools from MCP server.
 
         Returns:
             List of tool definitions
@@ -366,9 +369,9 @@ class MCPClient:
                 self.logger.error(f"Error details: {response.error}")
             return []
 
-    async def execute_tool(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Optional[Any]:
+    async def execute_tool(self: "MCPClient", name: str, arguments: Optional[Dict[str, Any]] = None) -> Optional[Any]:
         """
-        Execute a tool with arguments
+        Execute a tool with arguments.
 
         Args:
             name: Name of the tool
@@ -392,9 +395,9 @@ class MCPClient:
             self.logger.error(f"Failed to execute tool '{name}': {response.error_message}")
             return None
 
-    async def health_check(self) -> bool:
+    async def health_check(self: "MCPClient") -> bool:
         """
-        Check if MCP server is healthy and accessible
+        Check if MCP server is healthy and accessible.
 
         Returns:
             True if server is healthy
@@ -407,27 +410,27 @@ class MCPClient:
             self.logger.error(f"Health check failed: {e}")
             return False
 
-    def close(self):
-        """Close any open connections"""
-        # Currently using httpx with context managers, so no persistent connections
+    def close(self: "MCPClient") -> None:
+        """Close any open connections."""
+        # Currently using httpx with context managers, so no persistent connections.
         self._initialized = False
         self._server_info = {}
 
 
 # Synchronous wrapper for easier use in Streamlit
 class MCPClientSync:
-    """Synchronous wrapper for MCPClient for use in Streamlit"""
+    """Synchronous wrapper for MCPClient for use in Streamlit."""
 
-    def __init__(self, base_url: Optional[str] = None, timeout: float = 30.0):
+    def __init__(self: "MCPClientSync", base_url: Optional[str] = None, timeout: float = 30.0) -> None:
         self.client = MCPClient(base_url, timeout)
         self._loop = None
 
-    def set_test_token(self, token: str):
-        """Set a test token for non-streamlit environments"""
+    def set_test_token(self: "MCPClientSync", token: str) -> None:
+        """Set a test token for non-streamlit environments."""
         self.client.set_test_token(token)
 
-    def _get_loop(self):
-        """Get or create event loop"""
+    def _get_loop(self: "MCPClientSync") -> Any:
+        """Get or create event loop."""
         try:
             return asyncio.get_event_loop()
         except RuntimeError:
@@ -435,43 +438,43 @@ class MCPClientSync:
             asyncio.set_event_loop(loop)
             return loop
 
-    def _run_async(self, coro):
-        """Run async coroutine in sync context"""
+    def _run_async(self: "MCPClientSync", coro: Any) -> Any:
+        """Run async coroutine in sync context."""
         loop = self._get_loop()
         return loop.run_until_complete(coro)
 
-    def initialize(self, capabilities: Optional[Dict[str, Any]] = None) -> bool:
-        """Initialize connection to MCP server"""
+    def initialize(self: "MCPClientSync", capabilities: Optional[Dict[str, Any]] = None) -> bool:
+        """Initialize connection to MCP server."""
         return self._run_async(self.client.initialize(capabilities))
 
-    def list_prompts(self) -> List[Dict[str, Any]]:
-        """List all available prompts"""
+    def list_prompts(self: "MCPClientSync") -> List[Dict[str, Any]]:
+        """List all available prompts."""
         return self._run_async(self.client.list_prompts())
 
-    def get_prompt(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Optional[str]:
-        """Get a specific prompt with arguments"""
+    def get_prompt(self: "MCPClientSync", name: str, arguments: Optional[Dict[str, Any]] = None) -> Optional[str]:
+        """Get a specific prompt with arguments."""
         return self._run_async(self.client.get_prompt(name, arguments))
 
-    def list_resources(self) -> List[Dict[str, Any]]:
-        """List all available resources"""
+    def list_resources(self: "MCPClientSync") -> List[Dict[str, Any]]:
+        """List all available resources."""
         return self._run_async(self.client.list_resources())
 
-    def read_resource(self, uri: str) -> Optional[Union[str, Dict[str, Any]]]:
-        """Read a specific resource"""
+    def read_resource(self: "MCPClientSync", uri: str) -> Optional[Union[str, Dict[str, Any]]]:
+        """Read a specific resource."""
         return self._run_async(self.client.read_resource(uri))
 
-    def list_tools(self) -> List[Dict[str, Any]]:
-        """List all available tools"""
+    def list_tools(self: "MCPClientSync") -> List[Dict[str, Any]]:
+        """List all available tools."""
         return self._run_async(self.client.list_tools())
 
-    def execute_tool(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Optional[Any]:
-        """Execute a tool"""
+    def execute_tool(self: "MCPClientSync", name: str, arguments: Optional[Dict[str, Any]] = None) -> Optional[Any]:
+        """Execute a tool."""
         return self._run_async(self.client.execute_tool(name, arguments))
 
-    def health_check(self) -> bool:
-        """Check server health"""
+    def health_check(self: "MCPClientSync") -> bool:
+        """Check server health."""
         return self._run_async(self.client.health_check())
 
-    def close(self):
-        """Close client"""
+    def close(self: "MCPClientSync") -> None:
+        """Close client."""
         self.client.close()
