@@ -93,7 +93,7 @@ jobs:
           python -c "import json; f = open('licenses.json'); licenses = json.load(f); f.close(); problematic = [l for l in licenses if l.get('License', '').upper() in ['GPL', 'AGPL', 'UNKNOWN']]; print(f'Found {len(problematic)} potentially problematic licenses') if problematic else None; [print(f\"- {l.get('Name')}: {l.get('License')}\") for l in problematic[:10]]"
 
       - name: Upload security reports
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: nightly-security-reports
           path: |
@@ -282,7 +282,7 @@ jobs:
           python stress_test.py
 
       - name: Upload performance results
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: performance-results
           path: |
@@ -360,7 +360,7 @@ jobs:
           python tests/scenarios/test_bias_detection_scenario.py || true
 
       - name: Upload framework test results
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: framework-test-results
           path: |
@@ -417,7 +417,7 @@ jobs:
             console.log(`Created issue #${issue.data.number}`);
 
       - name: Upload nightly report
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: nightly-report
           path: nightly-report.md

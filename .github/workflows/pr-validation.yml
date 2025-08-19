@@ -193,6 +193,18 @@ jobs:
           EOF
           python validate_schemas.py
 
+          echo "API contract test step completed"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: contract-test-results
+          path: |
+            contract-test-results.xml
+            generated_openapi.json
+          retention-days: 30
+
   docker-validation:
     name: Docker Build Validation
     runs-on: ubuntu-latest
