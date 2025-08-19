@@ -43,6 +43,8 @@ class MCPCommandType(Enum):
     RESOURCES = "resources"
     PROMPT = "prompt"
     LIST = "list"
+    DOCUMENTATION = "documentation"
+    SEARCH = "search"
     UNKNOWN = "unknown"
 
 
@@ -108,6 +110,26 @@ class NaturalLanguageParser:
             r"show\s+(?:me\s+)?(?:all\s+)?(?:available\s+)?(?P<resource>[\w-]+)",
             r"what\s+(?P<resource>[\w-]+)\s+are\s+available",
         ],
+        MCPCommandType.DOCUMENTATION: [
+            r"/mcp\s+docs?\s+(?P<query>.+)",
+            r"/mcp\s+documentation\s+(?P<query>.+)",
+            r"show\s+(?:me\s+)?(?:the\s+)?docs?\s+(?:for\s+|about\s+)?(?P<query>.+)",
+            r"(?:find\s+|search\s+)?docs?\s+(?:for\s+|about\s+)?(?P<query>.+)",
+            r"how\s+(?:do\s+i|to)\s+(?P<query>.+)",
+            r"what\s+is\s+(?P<query>.+)",
+            r"guide\s+(?:for\s+|on\s+)?(?P<query>.+)",
+            r"help\s+(?:me\s+)?(?:with\s+)?(?P<query>.+)",
+            r"troubleshoot(?:ing)?\s+(?P<query>.+)",
+            r"setup\s+(?P<query>.+)",
+            r"configure?\s+(?P<query>.+)",
+            r"install(?:ing)?\s+(?P<query>.+)",
+        ],
+        MCPCommandType.SEARCH: [
+            r"/mcp\s+search\s+(?P<query>.+)",
+            r"search\s+(?:for\s+|about\s+)?(?P<query>.+)",
+            r"find\s+(?:information\s+)?(?:about\s+)?(?P<query>.+)",
+            r"look\s+(?:up\s+|for\s+)?(?P<query>.+)",
+        ],
     }
 
     def __init__(self: "NaturalLanguageParser") -> None:
@@ -168,6 +190,12 @@ class NaturalLanguageParser:
             "/mcp dataset jailbreak",
             "/mcp resources",
             "/mcp prompt security_test",
+            "/mcp docs setup",
+            "/mcp docs API",
+            "/mcp search authentication",
+            "how to setup ViolentUTF",
+            "troubleshooting Docker",
+            "guide for MCP",
         ]
 
         # Basic command suggestions
@@ -182,6 +210,14 @@ class NaturalLanguageParser:
             suggestions.extend(["/mcp test jailbreak", "/mcp test bias", "/mcp test privacy"])
         elif partial_lower.startswith("load") or partial_lower.startswith("data"):
             suggestions.extend(["/mcp dataset harmbench", "/mcp dataset jailbreak"])
+        elif partial_lower.startswith("how") or partial_lower.startswith("what") or partial_lower.startswith("guide"):
+            suggestions.extend(["how to setup ViolentUTF", "guide for MCP", "/mcp docs setup"])
+        elif partial_lower.startswith("troubl") or partial_lower.startswith("help"):
+            suggestions.extend(["troubleshooting Docker", "/mcp docs troubleshooting"])
+        elif partial_lower.startswith("setup") or partial_lower.startswith("install"):
+            suggestions.extend(["/mcp docs setup", "how to setup ViolentUTF"])
+        elif partial_lower.startswith("search") or partial_lower.startswith("find"):
+            suggestions.extend(["/mcp search authentication", "/mcp docs API"])
         else:
             # For any other text, suggest relevant commands based on keywords
             for cmd in all_commands:

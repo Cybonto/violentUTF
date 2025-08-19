@@ -1,0 +1,14 @@
+{
+    "name": "Python Test Workflow",
+    "description": "Standardized Python testing workflow for ViolentUTF components",
+    "iconName": "python",
+    "categories": [
+        "Python",
+        "Testing",
+        "CI"
+    ],
+    "filePatterns": [
+        "^.github/workflows/.*\\.yml$",
+        "^.github/workflows/.*\\.yaml$"
+    ]
+}

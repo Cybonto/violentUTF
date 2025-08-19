@@ -13,6 +13,9 @@ Comprehensive guides for using ViolentUTF's AI red-teaming and security testing 
 - **[Simple Chat Enhancement](Guide_SimpleChat_enhancementStrip.md)** - MCP-powered prompt enhancement tools
 - **[Simple Chat MCP Workflows](Guide_SimpleChat_mcp-workflows.md)** - Natural language workflow configuration
 
+### 🗄️ Maintenance & Operations
+- **[Database Cleanup Guide](Guide_Database_Cleanup.md)** - Managing Dashboard and PyRIT memory data
+
 ## 🚀 Quick Navigation
 
 ### For Security Testers
@@ -28,6 +31,7 @@ Comprehensive guides for using ViolentUTF's AI red-teaming and security testing 
 ### For System Administrators
 1. Deploy **[IronUTF Defense](Guide_IronUTF.md)** for endpoint protection
 2. Follow **[Red Teaming GenAI Systems](Guide_RedTeaming_GenAIsystems.md)** for assessment framework
+3. Use **[Database Cleanup Guide](Guide_Database_Cleanup.md)** for data maintenance
 
 ## 📖 Guide Categories
 
@@ -45,6 +49,10 @@ Comprehensive guides for using ViolentUTF's AI red-teaming and security testing 
 - **IronUTF Setup**: Gateway-level AI protection
 - **Scorer Configuration**: Custom evaluation criteria
 - **MCP Integration**: Protocol-based tool access
+
+### 🧹 **Maintenance Guides**
+- **Database Cleanup**: Dashboard and PyRIT data management
+- **Data Retention**: Storage optimization and cleanup schedules
 
 ## 🎯 Common Use Cases
 
