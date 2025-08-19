@@ -2,8 +2,8 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Dynamic OpenAPI schema generation from FastAPI app.
+"""Dynamic OpenAPI schema generation from FastAPI app.
+
 Generates OpenAPI schemas for contract testing and validation.
 """
 
@@ -22,8 +22,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def setup_test_environment():
-    """Setup environment for schema generation."""
+def setup_test_environment() -> None:
+    """Set up environment for schema generation."""
     os.environ.update(
         {
             "TESTING": "true",
@@ -238,8 +238,8 @@ def create_minimal_schema(output_file: str) -> bool:
         return False
 
 
-def main():
-    """Main function for CLI usage."""
+def main() -> None:
+    """Run main function for CLI usage."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Generate OpenAPI schema for ViolentUTF API")

@@ -1,8 +1,8 @@
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Authentication mock layer for API contract testing.
+"""Authentication mock layer for API contract testing.
+
 Provides simplified authentication bypass for testing purposes.
 """
 
@@ -10,7 +10,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 from unittest.mock import Mock, patch
 
 import jwt
@@ -27,7 +27,8 @@ TEST_API_KEY = "test_api_key_for_contract_testing"
 class MockTokenManager:
     """Mock token manager for contract testing."""
 
-    def __init__(self):
+    def __init__(self: "MockTokenManager") -> None:
+        """Initialize mock token manager."""
         self.test_user_payload = {
             "sub": "test_user",
             "username": "violentutf.test",
@@ -38,20 +39,20 @@ class MockTokenManager:
             "iss": "ViolentUTF-Test",
         }
 
-    def generate_test_token(self, user_payload: Optional[Dict[str, Any]] = None) -> str:
+    def generate_test_token(self: "MockTokenManager", user_payload: Optional[Dict[str, Any]] = None) -> str:
         """Generate a test JWT token."""
         payload = user_payload or self.test_user_payload
         return jwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
 
-    def extract_user_token(self) -> Optional[str]:
+    def extract_user_token(self: "MockTokenManager") -> Optional[str]:
         """Mock token extraction."""
         return self.generate_test_token()
 
-    def has_ai_access(self, token: str) -> bool:
+    def has_ai_access(self: "MockTokenManager", token: str) -> bool:
         """Mock AI access check."""
         return True
 
-    def get_user_roles(self, token: str) -> list:
+    def get_user_roles(self: "MockTokenManager", token: str) -> List[str]:
         """Mock user roles."""
         return ["ai-api-access", "admin"]
 
@@ -59,11 +60,12 @@ class MockTokenManager:
 class MockAuthenticationMiddleware:
     """Mock authentication middleware for contract testing."""
 
-    def __init__(self, app):
+    def __init__(self: "MockAuthenticationMiddleware", app: object) -> None:
+        """Initialize mock authentication middleware."""
         self.app = app
         self.token_manager = MockTokenManager()
 
-    async def __call__(self, scope, receive, send):
+    async def __call__(self: "MockAuthenticationMiddleware", scope: Dict[str, Any], receive: Callable[[], Awaitable[Dict[str, Any]]], send: Callable[[Dict[str, Any]], Awaitable[None]]) -> None:
         """Mock authentication middleware."""
         # Add test authentication headers
         if scope["type"] == "http":
@@ -83,8 +85,8 @@ class MockAuthenticationMiddleware:
         await self.app(scope, receive, send)
 
 
-def setup_test_environment():
-    """Setup test environment variables for contract testing."""
+def setup_test_environment() -> None:
+    """Set up test environment variables for contract testing."""
     test_env_vars = {
         "JWT_SECRET_KEY": TEST_JWT_SECRET,
         "SECRET_KEY": TEST_JWT_SECRET,
@@ -121,7 +123,7 @@ def mock_jwt_decode(token: str, secret: str = None, algorithms: list = None) -> 
     }
 
 
-def mock_requests_post(*args, **kwargs):
+def mock_requests_post(*args: Any, **kwargs: Any) -> Mock:
     """Mock requests.post for authentication calls."""
     mock_response = Mock()
     mock_response.status_code = 200

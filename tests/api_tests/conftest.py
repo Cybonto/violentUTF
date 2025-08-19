@@ -9,7 +9,7 @@ Inherits from main conftest.py and adds API-specific fixtures.
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 
 # Add parent directory to sys.path to access main conftest and utils
 parent_dir = Path(__file__).parent.parent
@@ -17,6 +17,7 @@ sys.path.insert(0, str(parent_dir))
 
 import pytest
 import requests
+from _pytest.config import Config
 
 # Import specific fixtures from the main conftest
 from conftest import api_headers, auth_token, service_health_check, setup_database
@@ -27,7 +28,7 @@ from utils.keycloak_auth import keycloak_auth
 
 @pytest.fixture(scope="session")
 def api_base_url() -> str:
-    """API base URL for testing.
+    """Return API base URL for testing.
 
     Overrides main conftest to ensure APISIX gateway usage.
     """
@@ -42,8 +43,8 @@ def cleanup_generators(headers: Dict[str, str], api_base_url: str) -> List[str]:
     """
     created_generators = []
 
-    def track_generator(generator_id: str):
-        """Track a generator for cleanup"""
+    def track_generator(generator_id: str) -> str:
+        """Track a generator for cleanup."""
         created_generators.append(generator_id)
         return generator_id
 
@@ -61,8 +62,8 @@ def cleanup_generators(headers: Dict[str, str], api_base_url: str) -> List[str]:
             print(f"⚠️ Exception during generator cleanup {gen_id}: {e}")
 
 
-def pytest_configure(config):
-    """Configure pytest for API testing"""
+def pytest_configure(config: Config) -> None:
+    """Configure pytest for API testing."""
     # Add custom markers specific to API tests
     config.addinivalue_line("markers", "api: marks tests as API tests (require API connectivity)")
     config.addinivalue_line("markers", "generator: marks tests as generator-related tests")
