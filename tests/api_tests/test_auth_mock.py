@@ -66,7 +66,12 @@ class MockAuthenticationMiddleware:
         self.app = app
         self.token_manager = MockTokenManager()
 
-    async def __call__(self: "MockAuthenticationMiddleware", scope: Dict[str, Any], receive: Callable[[], Awaitable[Dict[str, Any]]], send: Callable[[Dict[str, Any]], Awaitable[None]]) -> None:
+    async def __call__(
+        self: "MockAuthenticationMiddleware",
+        scope: Dict[str, Any],
+        receive: Callable[[], Awaitable[Dict[str, Any]]],
+        send: Callable[[Dict[str, Any]], Awaitable[None]],
+    ) -> None:
         """Mock authentication middleware."""
         # Add test authentication headers
         if scope["type"] == "http":
@@ -184,7 +189,12 @@ class ContractTestingPatches:
 
         return self
 
-    def __exit__(self: "ContractTestingPatches", exc_type: Optional[type], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]) -> None:
+    def __exit__(
+        self: "ContractTestingPatches",
+        exc_type: Optional[type],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         """Stop all patches."""
         for patch_obj in self.patches:
             patch_obj.stop()
