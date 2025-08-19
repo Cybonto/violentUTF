@@ -403,7 +403,7 @@ jobs:
 
       - name: Create issue if tests failed
         if: failure()
-        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const date = new Date().toISOString().split('T')[0];
