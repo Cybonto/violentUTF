@@ -60,7 +60,7 @@ class DatabaseConnectionManager:
     def __init__(self):
         self._connections: Dict[str, DuckDBMemory] = {}
         self._locks: Dict[str, asyncio.Lock] = {}
-        
+
     async def get_connection(self, db_path: str):
         # Ensure single connection per database file
         # Handle connection cleanup and error recovery
@@ -93,7 +93,7 @@ class OrchestratorPool:
     def __init__(self, max_instances: int = 10, ttl_minutes: int = 30):
         self._pool: Dict[str, Dict] = {}
         self._max_instances = max_instances
-        
+
     def get_or_create(self, config: Dict) -> Orchestrator:
         # Handle LRU eviction, expiration, cleanup
 ```

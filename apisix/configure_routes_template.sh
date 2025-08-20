@@ -72,7 +72,7 @@ create_route() {
     local route_path=$2
     local methods=$3
     local desc=$4
-    
+
     echo "🛣️  Creating route: $desc"
     curl -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "{
         \"uri\": \"$route_path\",

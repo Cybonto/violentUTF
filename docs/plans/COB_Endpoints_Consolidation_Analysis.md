@@ -24,7 +24,7 @@ Templates:
 - GET /api/v1/cob/templates/{id}/preview
 
 Schedules:
-- GET/POST /api/v1/cob/schedules  
+- GET/POST /api/v1/cob/schedules
 - GET/PUT/DELETE /api/v1/cob/schedules/{id}
 - GET /api/v1/cob/schedules/{id}/executions
 

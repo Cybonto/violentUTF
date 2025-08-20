@@ -1,5 +1,3 @@
-from typing import Any
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -21,6 +19,7 @@ Dependencies:
 import logging
 import os
 import sys
+from typing import Any
 
 # Simple flag to ensure setup runs only once per Python process execution
 _setup_done = False

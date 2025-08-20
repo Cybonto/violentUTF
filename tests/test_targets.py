@@ -1,5 +1,3 @@
-from typing import Any
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -11,6 +9,7 @@ Fixture to create a TestClient with authentication headers.
 import json
 import os
 import sys
+from typing import Any
 
 import pytest
 from api.v1.endpoints.targets import router as targets_router

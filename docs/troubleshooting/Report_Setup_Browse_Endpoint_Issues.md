@@ -58,7 +58,7 @@ stmt = stmt.where(
 ### 4. Misaligned Data Expectations
 **Problem**: The browse endpoint expected rich metadata in scorer results (generators, score categories, etc.) but actual data had minimal metadata.
 
-**Example**: 
+**Example**:
 - Expected: `generator_name` in score metadata
 - Actual: Empty metadata `{}`
 
@@ -80,13 +80,13 @@ if request.generators and scores:
 ## Debug Process
 
 1. **Compared endpoints**: Dashboard `/summary` vs Report Setup `/browse`
-2. **Added debug logging**: 
+2. **Added debug logging**:
    - Total executions in DB
    - Completed executions count
    - Date ranges being used
    - Query results at each stage
 3. **Identified JOIN failure**: 2 executions in DB, 0 after JOIN
-4. **Fixed incrementally**: 
+4. **Fixed incrementally**:
    - First: Date logic
    - Second: JOIN type
    - Third: Date boundaries

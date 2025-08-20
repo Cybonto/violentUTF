@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 User Context Manager for FastAPI
 Provides standardized user identification to match Streamlit's UserContextManager

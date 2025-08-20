@@ -67,13 +67,13 @@ def fetch_available_models(provider_id: str) -> List[str]:
             "gemini-2.5-pro-preview-05-06",
         ]
     }
-    
+
     try:
         headers = get_auth_headers()
         api_base = VIOLENTUTF_API_URL
         url = f"{api_base}/api/v1/generators/apisix/models?provider={provider_id}"
         response = requests.get(url, headers=headers, timeout=10)
-        
+
         if response.status_code == 200:
             data = response.json()
             models = data.get("models", [])

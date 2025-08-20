@@ -64,14 +64,14 @@ template:
   version: "2.0"
   author: "security_ops_team"
   created: "2024-01-15"
-  
+
   metadata:
     description: "Enhanced COB report with AI analysis"
     tags: ["daily", "security", "operations"]
     permissions:
       read: ["all_users"]
       write: ["admin", "security_lead"]
-  
+
   blocks:
     - id: "exec_summary"
       type: "data_block"
@@ -82,41 +82,41 @@ template:
         - "performance.uptime"
       template: |
         ## Executive Summary
-        
+
         **Report Date**: {{report_date}}
         **Shift**: {{shift_name}}
-        
+
         ### Key Metrics
         - Total Security Tests: {{executions.total_tests}} ({{change_vs_yesterday}})
         - Critical Findings: {{executions.critical_findings}}
         - System Uptime: {{performance.uptime}}%
-        
+
     - id: "ai_threat_analysis"
       type: "analysis_block"
       title: "AI-Powered Threat Analysis"
       model: "gpt-4"
       prompt_template: |
         Analyze the following security threat data and provide insights:
-        
+
         Attack Patterns: {{threat.patterns}}
         Cross-Model Threats: {{threat.cross_model}}
         Historical Context: {{threat.historical}}
-        
+
         Provide:
         1. Threat severity assessment
         2. Attack vector analysis
         3. Recommended mitigations
         4. Trend predictions
-      
+
       output_format: "structured"
       max_tokens: 1000
-    
+
     - id: "custom_metrics"
       type: "custom_block"
       title: "Custom Security Metrics"
       script: "custom_metrics_calculator.py"
       visualization: "chart"
-      
+
   export_settings:
     formats: ["markdown", "pdf", "json"]
     pdf_options:
@@ -145,17 +145,17 @@ class AIAnalysisBlock:
         self.model = config['model']
         self.prompt_template = config['prompt_template']
         self.context_sources = config.get('context_sources', [])
-        
+
     async def generate_analysis(self, data: Dict[str, Any]) -> str:
         # Prepare context from data sources
         context = self._prepare_context(data)
-        
+
         # Render prompt with context
         prompt = self._render_prompt(context)
-        
+
         # Call AI model
         analysis = await self._call_ai_model(prompt)
-        
+
         # Format output
         return self._format_output(analysis)
 ```
@@ -180,10 +180,10 @@ class ExportPipeline:
             'pdf': PDFExporter(),
             'json': JSONExporter()
         }
-    
+
     async def export_report(
-        self, 
-        report_data: Dict[str, Any], 
+        self,
+        report_data: Dict[str, Any],
         template: ReportTemplate,
         format: str,
         options: Dict[str, Any] = None
@@ -191,10 +191,10 @@ class ExportPipeline:
         exporter = self.exporters.get(format)
         if not exporter:
             raise ValueError(f"Unsupported format: {format}")
-        
+
         # Render report using template
         rendered_report = await template.render(report_data)
-        
+
         # Export to requested format
         return await exporter.export(rendered_report, options)
 ```

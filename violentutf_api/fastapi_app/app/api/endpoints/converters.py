@@ -651,7 +651,9 @@ def _apply_rot13_converter(prompt: str, parameters: Dict[str, Any]) -> str:
         (
             chr((ord(c) - ord("a") + 13) % 26 + ord("a"))
             if "a" <= c <= "z"
-            else chr((ord(c) - ord("A") + 13) % 26 + ord("A")) if "A" <= c <= "Z" else c
+            else chr((ord(c) - ord("A") + 13) % 26 + ord("A"))
+            if "A" <= c <= "Z"
+            else c
         )
         for c in prompt
     )
@@ -681,7 +683,9 @@ def _apply_caesar_converter(prompt: str, parameters: Dict[str, Any]) -> str:
         (
             chr((ord(c) - ord("a") + offset) % 26 + ord("a"))
             if "a" <= c <= "z"
-            else chr((ord(c) - ord("A") + offset) % 26 + ord("A")) if "A" <= c <= "Z" else c
+            else chr((ord(c) - ord("A") + offset) % 26 + ord("A"))
+            if "A" <= c <= "Z"
+            else c
         )
         for c in prompt
     )

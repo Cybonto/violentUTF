@@ -74,17 +74,17 @@ import bleach
 
 class SecurePDFGenerator:
     ALLOWED_TAGS = [
-        'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 
+        'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3',
         'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote',
         'table', 'thead', 'tbody', 'tr', 'th', 'td'
     ]
-    
+
     ALLOWED_ATTRIBUTES = {
         '*': ['class'],
         'td': ['colspan', 'rowspan'],
         'th': ['colspan', 'rowspan']
     }
-    
+
     def sanitize_html(self, html: str) -> str:
         """Sanitize HTML input to prevent injection"""
         return bleach.clean(
@@ -93,11 +93,11 @@ class SecurePDFGenerator:
             attributes=self.ALLOWED_ATTRIBUTES,
             strip=True
         )
-    
+
     def generate_pdf(self, html_content: str, css: str = None) -> bytes:
         # Sanitize content
         safe_html = self.sanitize_html(html_content)
-        
+
         # Generate PDF
         html = HTML(string=safe_html)
         if css:
@@ -134,13 +134,13 @@ Base = declarative_base()
 
 class ReportTemplate(Base):
     __tablename__ = 'cob_report_templates'
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
     version = Column(String(50), nullable=False)
     template_config = Column(JSON, nullable=False)
     # ... other fields
-    
+
     # Add validation
     @validates('template_config')
     def validate_config(self, key, value):
@@ -166,8 +166,8 @@ async_engine = create_async_engine(
 )
 
 AsyncSessionLocal = sessionmaker(
-    async_engine, 
-    class_=AsyncSession, 
+    async_engine,
+    class_=AsyncSession,
     expire_on_commit=False
 )
 ```
@@ -205,15 +205,15 @@ class SecureAIClient:
         self.encryption_key = os.environ['ENCRYPTION_KEY'].encode()
         self.fernet = Fernet(self.encryption_key)
         self.rate_limiter = AsyncRateLimiter(max_rate=10, time_period=60)
-    
+
     def get_api_key(self, provider: str) -> str:
         """Retrieve and decrypt API key"""
         encrypted_key = os.environ.get(f'{provider}_API_KEY_ENCRYPTED')
         if not encrypted_key:
             raise ValueError(f"No API key for {provider}")
-        
+
         return self.fernet.decrypt(encrypted_key.encode()).decode()
-    
+
     def sign_request(self, payload: dict, secret: str) -> str:
         """Sign request for integrity verification"""
         message = json.dumps(payload, sort_keys=True).encode()
@@ -223,7 +223,7 @@ class SecureAIClient:
             hashlib.sha256
         ).hexdigest()
         return signature
-    
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10)
@@ -231,16 +231,16 @@ class SecureAIClient:
     async def make_request(self, provider: str, endpoint: str, payload: dict):
         """Make secure API request with retry logic"""
         await self.rate_limiter.acquire()
-        
+
         api_key = self.get_api_key(provider)
-        
+
         # SSL context with certificate verification
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = True
         ssl_context.verify_mode = ssl.CERT_REQUIRED
-        
+
         timeout = aiohttp.ClientTimeout(total=30)
-        
+
         async with aiohttp.ClientSession(
             timeout=timeout,
             connector=aiohttp.TCPConnector(ssl=ssl_context)
@@ -251,7 +251,7 @@ class SecureAIClient:
                 'X-Timestamp': str(int(time.time())),
                 'X-Signature': self.sign_request(payload, api_key)
             }
-            
+
             async with session.post(
                 endpoint,
                 json=payload,
@@ -260,7 +260,7 @@ class SecureAIClient:
                 if response.status != 200:
                     text = await response.text()
                     raise AIProviderError(f"API error {response.status}: {text}")
-                
+
                 return await response.json()
 ```
 
@@ -316,7 +316,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -324,22 +324,22 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-      
+
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
-      
+
       - name: Run Bandit security linter
         run: |
           pip install bandit
           bandit -r . -f json -o bandit-report.json
-      
+
       - name: Run pip-audit
         run: |
           pip install pip-audit
           pip-audit --desc
-      
+
       - name: Run Safety check
         run: |
           pip install safety
@@ -405,11 +405,11 @@ class SecureSettings(BaseSettings):
     database_url: SecretStr
     jwt_secret_key: SecretStr
     encryption_key: SecretStr
-    
+
     # Vault configuration
     vault_url: str = "http://vault:8200"
     vault_token: SecretStr
-    
+
     @validator('*', pre=True)
     def decrypt_value(cls, v, field):
         if isinstance(v, str) and v.startswith('vault:'):
@@ -422,7 +422,7 @@ class SecureSettings(BaseSettings):
             response = client.secrets.kv.v2.read_secret_version(path)
             return response['data']['data']['value']
         return v
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = True

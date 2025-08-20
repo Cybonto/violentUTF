@@ -17,7 +17,7 @@ Added comprehensive filter state management functions:
 ### 2. Dynamic Filter UI Component
 Created `render_dynamic_filters()` function that provides:
 - **Quick Actions**: Apply All, Clear All, Enable Comparison Mode
-- **Time Range Filters**: 
+- **Time Range Filters**:
   - Presets: Last Hour, 4 Hours, 24 Hours, 7 Days, 30 Days
   - Custom date range picker
 - **Entity Filters**:

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Enhanced OpenAPI schema validation for API contract testing.
 Validates OpenAPI 3.0 specifications and ensures compatibility.

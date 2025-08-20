@@ -45,7 +45,7 @@ But NOT:
 - ❌ PyRIT conversation history
 - ❌ Execution results
 
-**Solution**: 
+**Solution**:
 - For data preservation, use `--cleanup` instead of `--deepcleanup`
 - `--cleanup` preserves Docker volumes with your data
 
@@ -58,7 +58,7 @@ But NOT:
    ```bash
    # macOS
    ./setup_macos_new.sh --backup
-   
+
    # Linux
    sudo ./setup_linux_new.sh --backup
    ```

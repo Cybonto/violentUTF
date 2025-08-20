@@ -62,37 +62,37 @@ async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)):
     try:
         user_id = current_user.username
         logger.info(f"Starting deletion of scorer {scorer_id} for user {user_id}")
-        
+
         # Get scorer details before deletion
         db_manager = get_duckdb_manager(user_id)
         scorer_data = db_manager.get_scorer(scorer_id)
         logger.info(f"Retrieved scorer data: {scorer_data is not None}")
-        
+
         if not scorer_data:
             logger.warning(f"Scorer {scorer_id} not found for deletion")
             raise HTTPException(status_code=404, detail=f"Scorer with ID '{scorer_id}' not found")
-        
+
         scorer_name = scorer_data["name"]
         logger.info(f"Deleting scorer '{scorer_name}' (ID: {scorer_id})")
-        
+
         # Perform deletion
         deleted = db_manager.delete_scorer(scorer_id)
         logger.info(f"Delete operation returned: {deleted}")
-        
+
         if not deleted:
             logger.error(f"Delete operation failed for scorer {scorer_id}")
             raise HTTPException(status_code=500, detail=f"Failed to delete scorer with ID '{scorer_id}'")
-        
+
         # Prepare response
         response = ScorerDeleteResponse(
-            success=True, 
-            message="Scorer deleted successfully", 
+            success=True,
+            message="Scorer deleted successfully",
             deleted_scorer=scorer_name
         )
         logger.info(f"Successfully prepared delete response for scorer {scorer_id}")
-        
+
         return response
-        
+
     except HTTPException:
         raise
     except Exception as e:

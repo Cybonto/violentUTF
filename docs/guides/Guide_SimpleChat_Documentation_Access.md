@@ -49,7 +49,7 @@ SimpleChat: Based on the ViolentUTF documentation, here's how to set up ViolentU
    - Set up Keycloak authentication
    - Initialize APISIX gateway
    - Deploy all services
-   
+
 [Additional relevant documentation content...]
 
 Sources: setup_macos_new.sh documentation, installation guides

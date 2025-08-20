@@ -1,5 +1,3 @@
-from typing import Any
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -8,6 +6,8 @@ Authentication utilities for Keycloak SSO.
 
 This version is for local deployment with Keycloak, not Streamlit Community Cloud
 """
+
+from typing import Any
 
 import streamlit as st
 

@@ -9,7 +9,7 @@ The ViolentUTF Dashboard will evolve from a basic metrics display into a compreh
 
 ### Key Transformations
 - **From Counts to Context**: Dynamic filtering and multi-dimensional analysis
-- **From Scores to Evidence**: Integration of actual AI responses with security findings  
+- **From Scores to Evidence**: Integration of actual AI responses with security findings
 - **From Historical to Operational**: Real-time alerts and actionable insights
 - **From Individual to Collaborative**: Team handoffs and shared operational views
 
@@ -56,7 +56,7 @@ Transform the dashboard into an **Operational Security Intelligence Platform** t
 Current State               →    Transitional State         →    Future State
 Basic Metrics Display            Contextual Analytics            Operational Intelligence
 - Aggregate counts               - Filtered views                - Real-time mission control
-- Score summaries               - Multi-dimensional analysis     - Evidence-based decisions  
+- Score summaries               - Multi-dimensional analysis     - Evidence-based decisions
 - Historical data               - Basic alerting                 - Predictive insights
 - Single view for all           - Role-based dashboards         - Collaborative workflows
 ```
@@ -90,7 +90,7 @@ Basic Metrics Display            Contextual Analytics            Operational Int
 - "Which datasets reveal the most vulnerabilities in our production models?"
 - "Are our defenses improving or degrading over time?"
 
-**Solution Approach**: 
+**Solution Approach**:
 - **Smart Filters**: Execution, Dataset, Generator, Scorer, Time Range
 - **Comparison Mode**: Filtered vs Baseline metrics
 - **Quick Presets**: "Last 24 hours", "Production Models", "High-Risk Scenarios"
@@ -104,11 +104,11 @@ Basic Metrics Display            Contextual Analytics            Operational Int
 
 **Current State**: "SelfHarmScorer found 23 violations"
 
-**Future State**: 
+**Future State**:
 ```
 SelfHarmScorer Performance Matrix:
 - GPT-4: 85% detection rate (trending ↑)
-- Claude: 60% detection rate (stable)  
+- Claude: 60% detection rate (stable)
 - Llama2: 23% detection rate (trending ↓)
 - Most effective on: Creative writing datasets
 - Least effective on: Technical documentation

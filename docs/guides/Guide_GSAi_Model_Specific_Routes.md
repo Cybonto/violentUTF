@@ -58,7 +58,7 @@ create_gsai_model_route() {
     local model=$1
     local model_index=$2
     local route_id=$((9100 + model_index))
-    
+
     curl -X PUT "http://localhost:9180/apisix/admin/routes/$route_id" \
         -H "X-API-KEY: $APISIX_ADMIN_KEY" \
         -d '{
@@ -119,7 +119,7 @@ Group models by capability or provider for balanced granularity:
 ```yaml
 claude_models:
   - claude_3_5_sonnet
-  - claude_3_7_sonnet  
+  - claude_3_7_sonnet
   - claude_3_haiku
 
 google_models:
@@ -159,7 +159,7 @@ gsai_model_routes:
         - "jailbreak"
         - "ignore previous"
     max_tokens: 4096
-    
+
   - model: llama3211b
     route_id: 9102
     rate_limit:
@@ -168,7 +168,7 @@ gsai_model_routes:
     prompt_guard:
       level: moderate
     max_tokens: 2048
-    
+
   - model: gemini-2.0-flash
     route_id: 9103
     rate_limit:
@@ -189,10 +189,10 @@ import os
 def generate_gsai_routes(config_file):
     with open(config_file) as f:
         config = yaml.safe_load(f)
-    
+
     apisix_admin_key = os.getenv('APISIX_ADMIN_KEY')
     apisix_admin_url = "http://localhost:9180/apisix/admin/routes"
-    
+
     for route in config['gsai_model_routes']:
         route_config = {
             "uri": f"/ai/gsai-api-1/chat/completions/{route['model']}",
@@ -207,7 +207,7 @@ def generate_gsai_routes(config_file):
                 }
             }
         }
-        
+
         response = requests.put(
             f"{apisix_admin_url}/{route['route_id']}",
             json=route_config,
@@ -230,7 +230,7 @@ def build_plugins_config(route):
             }
         }
     }
-    
+
     # Add rate limiting if specified
     if 'rate_limit' in route:
         plugins['limit-req'] = {
@@ -238,7 +238,7 @@ def build_plugins_config(route):
             "burst": route['rate_limit']['requests_per_minute'] // 2,
             "key": "remote_addr"
         }
-    
+
     # Add prompt guard with custom settings
     if 'prompt_guard' in route:
         guard_config = route['prompt_guard']
@@ -252,7 +252,7 @@ def build_plugins_config(route):
             plugins['ai-prompt-guard'] = {
                 "deny_patterns": guard_config.get('custom_deny_patterns', [])
             }
-    
+
     return plugins
 
 if __name__ == "__main__":

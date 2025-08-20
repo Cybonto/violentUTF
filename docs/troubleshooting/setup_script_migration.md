@@ -19,14 +19,14 @@ This guide helps users migrate from the old setup scripts to the new modular ver
 # Old script
 ./setup_linux.sh
 
-# New script  
+# New script
 sudo ./setup_linux_new.sh
 ```
 
 ## Key Differences
 
 ### 1. Credential Preservation
-**Old Scripts**: 
+**Old Scripts**:
 - `--cleanup` removes all .env files
 - Requires reconfiguration after cleanup
 - No credential reuse
@@ -37,7 +37,7 @@ sudo ./setup_linux_new.sh
 - Only `--deepcleanup` removes credentials
 
 ### 2. Verbosity Control
-**Old Scripts**: 
+**Old Scripts**:
 - Limited output control
 - No quiet mode for automation
 
@@ -47,7 +47,7 @@ sudo ./setup_linux_new.sh
 - Better for CI/CD and automation
 
 ### 3. Modular Architecture
-**Old Scripts**: 
+**Old Scripts**:
 - Monolithic single file (1000+ lines)
 - Hard to maintain and debug
 

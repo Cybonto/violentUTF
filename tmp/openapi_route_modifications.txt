@@ -2,7 +2,7 @@
 
 ## Current Issues:
 1. Hardcoded scheme detection logic
-2. SSL verification logic is basic and doesn't use our config variables  
+2. SSL verification logic is basic and doesn't use our config variables
 3. GSAi is hardcoded to HTTP
 4. No support for custom CA certificates
 

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Concrete block implementations for the report system
 """
@@ -337,7 +340,7 @@ class AIAnalysisBlock(BaseReportBlock):
         """Process data for AI analysis - Updated to fetch real data from API"""
         import asyncio
         import os
-        
+
         # Initialize context with basic data
         context = {
             "scan_date": input_data.get("scan_date", datetime.now().isoformat()),
@@ -353,7 +356,7 @@ class AIAnalysisBlock(BaseReportBlock):
 
         # Check if we have execution_id to fetch detailed data
         execution_id = input_data.get("execution_id")
-        
+
         if execution_id:
             try:
                 # Fetch detailed execution results from API
@@ -361,17 +364,19 @@ class AIAnalysisBlock(BaseReportBlock):
                 if detailed_data:
                     # Process scores into vulnerabilities and patterns
                     processed_results = self._process_execution_scores(detailed_data)
-                    
+
                     # Update input_data with processed results
                     input_data.update(processed_results)
-                    
+
                     # Update context with real statistics
-                    context["summary_stats"].update({
-                        "total_tests": len(detailed_data.get("scores", [])),
-                        "successful_attacks": processed_results.get("successful_attacks", 0),
-                        "failure_rate": processed_results.get("failure_rate", 0),
-                        "risk_score": processed_results.get("risk_score", 0),
-                    })
+                    context["summary_stats"].update(
+                        {
+                            "total_tests": len(detailed_data.get("scores", [])),
+                            "successful_attacks": processed_results.get("successful_attacks", 0),
+                            "failure_rate": processed_results.get("failure_rate", 0),
+                            "risk_score": processed_results.get("risk_score", 0),
+                        }
+                    )
             except Exception as e:
                 logger.warning(f"Failed to fetch execution details: {e}")
 
@@ -392,23 +397,21 @@ class AIAnalysisBlock(BaseReportBlock):
 
         # Try to use generator service if available
         ai_model = self.configuration.get("ai_model", "gpt-4")
-        
+
         try:
             # Import the generator service and helper
             from app.services.generator_integration_service import execute_generator_prompt, get_generator_by_name
-            
+
             # Map AI model to a configured generator name
             generator_name = self._get_generator_name_for_model(ai_model)
-            
+
             if generator_name:
                 # Execute through generator service (synchronously)
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                result = loop.run_until_complete(
-                    execute_generator_prompt(generator_name, prompt)
-                )
+                result = loop.run_until_complete(execute_generator_prompt(generator_name, prompt))
                 loop.close()
-                
+
                 if result.get("success", False):
                     # Parse the AI response
                     ai_response = result.get("response", "")
@@ -421,7 +424,7 @@ class AIAnalysisBlock(BaseReportBlock):
                 # No configured generator for this model
                 logger.info(f"No generator configured for model {ai_model}, using placeholder analysis")
                 analysis_results = self._generate_placeholder_analysis(context, focus_areas)
-                
+
         except Exception as e:
             logger.error(f"Error executing AI analysis: {e}")
             # Fall back to placeholder analysis
@@ -567,7 +570,7 @@ class AIAnalysisBlock(BaseReportBlock):
             prompt_parts.append("\nProvide actionable recommendations for each finding.")
 
         return "\n".join(prompt_parts)
-    
+
     def _get_generator_name_for_model(self, model: str) -> Optional[str]:
         """Map AI model to generator name"""
         # This mapping should match configured generators in the system
@@ -578,68 +581,50 @@ class AIAnalysisBlock(BaseReportBlock):
             "claude-3": "claude-3-opus-20240229",
             "llama-2": "llama2",
         }
-        
+
         # Try exact match first
         if model in model_generator_map:
             return model_generator_map[model]
-        
+
         # Try the model name itself as generator name
         return model
-    
+
     def _parse_ai_response(self, response: str, focus_areas: List[str]) -> Dict[str, Any]:
         """Parse AI response into structured sections"""
         # Try to parse the response into sections based on focus areas
         results = {}
-        
+
         # Simple parsing - split by headers
         sections = response.split("##")
-        
+
         for section in sections:
             if not section.strip():
                 continue
-                
+
             lines = section.strip().split("\n")
             if not lines:
                 continue
-                
+
             title = lines[0].strip()
             content = "\n".join(lines[1:]).strip()
-            
+
             # Map section titles to focus areas
             if "vulnerability" in title.lower() and "Vulnerability Assessment" in focus_areas:
-                results["vulnerability_assessment"] = {
-                    "title": "Vulnerability Assessment",
-                    "content": content
-                }
+                results["vulnerability_assessment"] = {"title": "Vulnerability Assessment", "content": content}
             elif "defense" in title.lower() or "recommendation" in title.lower():
                 if "Defense Recommendations" in focus_areas:
-                    results["defense_recommendations"] = {
-                        "title": "Defense Recommendations",
-                        "content": content
-                    }
+                    results["defense_recommendations"] = {"title": "Defense Recommendations", "content": content}
             elif "attack" in title.lower() and "Attack Pattern Analysis" in focus_areas:
-                results["attack_patterns"] = {
-                    "title": "Attack Pattern Analysis",
-                    "content": content
-                }
+                results["attack_patterns"] = {"title": "Attack Pattern Analysis", "content": content}
             elif "compliance" in title.lower() and "Compliance Gaps" in focus_areas:
-                results["compliance_gaps"] = {
-                    "title": "Compliance Gaps",
-                    "content": content
-                }
+                results["compliance_gaps"] = {"title": "Compliance Gaps", "content": content}
             elif "risk" in title.lower() and "Risk Mitigation" in focus_areas:
-                results["risk_mitigation"] = {
-                    "title": "Risk Mitigation",
-                    "content": content
-                }
-        
+                results["risk_mitigation"] = {"title": "Risk Mitigation", "content": content}
+
         # If no sections were parsed, return the whole response as a general analysis
         if not results:
-            results["general_analysis"] = {
-                "title": "AI Security Analysis",
-                "content": response
-            }
-        
+            results["general_analysis"] = {"title": "AI Security Analysis", "content": response}
+
         return results
 
     def _generate_placeholder_analysis(self, context: Dict, focus_areas: List[str]) -> Dict:
@@ -689,7 +674,7 @@ Analysis of {context['summary_stats']['total_tests']} tests reveals distinct att
 
 **Most Effective Attack Vectors:**
 - Direct prompt injection: 45% success rate
-- Context manipulation: 38% success rate  
+- Context manipulation: 38% success rate
 - Role confusion attacks: 31% success rate
 
 **Emerging Patterns:**
@@ -698,58 +683,57 @@ Recent tests show attackers increasingly combining multiple techniques, particul
             }
 
         return results
-    
+
     def _fetch_execution_details(self, execution_id: str) -> Optional[Dict[str, Any]]:
         """Fetch detailed execution results from API"""
         try:
             # Get API base URL from environment or use default
             api_base_url = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
-            
+
             # Make synchronous API call
             import requests
+
             headers = {
                 "Content-Type": "application/json",
                 # Add auth headers if needed - we'll skip auth for internal calls
             }
-            
+
             response = requests.get(
-                f"{api_base_url}/api/v1/orchestrators/results/{execution_id}",
-                headers=headers,
-                timeout=10
+                f"{api_base_url}/api/v1/orchestrators/results/{execution_id}", headers=headers, timeout=10
             )
-            
+
             if response.status_code == 200:
                 return response.json()
             else:
                 logger.warning(f"Failed to fetch execution details: {response.status_code}")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error fetching execution details: {e}")
             return None
-    
+
     def _process_execution_scores(self, execution_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process execution scores into vulnerabilities and patterns"""
         scores = execution_data.get("scores", [])
-        
+
         vulnerabilities = []
         attack_patterns = defaultdict(list)
         compliance_gaps = []
-        
+
         total_scores = len(scores)
         failed_scores = 0
-        
+
         # Process each score
         for score in scores:
             score_type = score.get("score_type", "")
             score_value = score.get("score_value")
             score_category = score.get("score_category", "Unknown")
             score_rationale = score.get("score_rationale", "")
-            
+
             # Check for vulnerabilities (failed scores)
             if score_type == "true_false" and score_value is False:
                 failed_scores += 1
-                
+
                 vulnerability = {
                     "type": score_category,
                     "severity": self._determine_score_severity(score),
@@ -757,60 +741,70 @@ Recent tests show attackers increasingly combining multiple techniques, particul
                     "count": 1,
                     "timestamp": score.get("timestamp"),
                     "prompt_used": score.get("prompt_text", ""),
-                    "response": score.get("response_text", "")
+                    "response": score.get("response_text", ""),
                 }
                 vulnerabilities.append(vulnerability)
-                
+
                 # Also categorize as attack pattern
-                attack_patterns[score_category].append({
-                    "pattern": score_category,
-                    "description": score_rationale,
-                    "example": score.get("prompt_text", ""),
-                    "timestamp": score.get("timestamp")
-                })
-            
+                attack_patterns[score_category].append(
+                    {
+                        "pattern": score_category,
+                        "description": score_rationale,
+                        "example": score.get("prompt_text", ""),
+                        "timestamp": score.get("timestamp"),
+                    }
+                )
+
             # Check for compliance-related scores
             if any(term in score_category.lower() for term in ["compliance", "regulatory", "standard"]):
                 if score_type == "true_false" and score_value is False:
-                    compliance_gaps.append({
-                        "framework": "General Security Standards",
-                        "requirement": score_category,
-                        "gap_description": score_rationale,
-                        "severity": self._determine_score_severity(score)
-                    })
-        
+                    compliance_gaps.append(
+                        {
+                            "framework": "General Security Standards",
+                            "requirement": score_category,
+                            "gap_description": score_rationale,
+                            "severity": self._determine_score_severity(score),
+                        }
+                    )
+
         # Aggregate vulnerability data
         vuln_by_type = defaultdict(int)
         for vuln in vulnerabilities:
             vuln_by_type[vuln["type"]] += 1
-        
+
         # Create aggregated vulnerabilities list
         aggregated_vulnerabilities = []
         for vuln_type, count in vuln_by_type.items():
             # Find the most severe instance of this type
             type_vulns = [v for v in vulnerabilities if v["type"] == vuln_type]
-            most_severe = max(type_vulns, key=lambda v: {"Critical": 4, "High": 3, "Medium": 2, "Low": 1}.get(v["severity"], 0))
-            
-            aggregated_vulnerabilities.append({
-                "type": vuln_type,
-                "severity": most_severe["severity"],
-                "description": most_severe["description"],
-                "count": count
-            })
-        
+            most_severe = max(
+                type_vulns, key=lambda v: {"Critical": 4, "High": 3, "Medium": 2, "Low": 1}.get(v["severity"], 0)
+            )
+
+            aggregated_vulnerabilities.append(
+                {
+                    "type": vuln_type,
+                    "severity": most_severe["severity"],
+                    "description": most_severe["description"],
+                    "count": count,
+                }
+            )
+
         # Calculate risk score
         risk_score = self._calculate_risk_score(vulnerabilities)
-        
+
         # Process attack patterns
         processed_patterns = []
         for pattern_type, instances in attack_patterns.items():
             success_rate = (len(instances) / total_scores * 100) if total_scores > 0 else 0
-            processed_patterns.append({
-                "pattern": pattern_type,
-                "success_rate": success_rate,
-                "examples": [inst["example"] for inst in instances[:3]]  # Top 3 examples
-            })
-        
+            processed_patterns.append(
+                {
+                    "pattern": pattern_type,
+                    "success_rate": success_rate,
+                    "examples": [inst["example"] for inst in instances[:3]],  # Top 3 examples
+                }
+            )
+
         return {
             "vulnerabilities": aggregated_vulnerabilities,
             "attack_patterns": processed_patterns,
@@ -818,50 +812,45 @@ Recent tests show attackers increasingly combining multiple techniques, particul
             "successful_attacks": failed_scores,
             "failure_rate": (failed_scores / total_scores * 100) if total_scores > 0 else 0,
             "risk_score": risk_score,
-            "total_tests": total_scores
+            "total_tests": total_scores,
         }
-    
+
     def _determine_score_severity(self, score: Dict[str, Any]) -> str:
         """Determine severity from score"""
         score_category = score.get("score_category", "").lower()
-        
+
         # Critical categories
         if any(term in score_category for term in ["injection", "jailbreak", "critical"]):
             return "Critical"
-        
+
         # High severity categories
         if any(term in score_category for term in ["toxicity", "harmful", "bias", "high"]):
             return "High"
-        
+
         # Medium severity categories
         if any(term in score_category for term in ["quality", "medium"]):
             return "Medium"
-        
+
         return "Low"
-    
+
     def _calculate_risk_score(self, vulnerabilities: List[Dict[str, Any]]) -> float:
         """Calculate overall risk score based on vulnerabilities"""
         if not vulnerabilities:
             return 0.0
-        
-        severity_weights = {
-            "Critical": 10,
-            "High": 7,
-            "Medium": 4,
-            "Low": 1
-        }
-        
+
+        severity_weights = {"Critical": 10, "High": 7, "Medium": 4, "Low": 1}
+
         total_weight = 0
         total_count = 0
-        
+
         for vuln in vulnerabilities:
             severity = vuln.get("severity", "Low")
             count = vuln.get("count", 1)
             weight = severity_weights.get(severity, 1)
-            
+
             total_weight += weight * count
             total_count += count
-        
+
         # Normalize to 0-10 scale
         if total_count > 0:
             # Average weight per vulnerability
@@ -870,7 +859,7 @@ Recent tests show attackers increasingly combining multiple techniques, particul
             risk_score = min(10.0, avg_weight * 1.2)
         else:
             risk_score = 0.0
-        
+
         return round(risk_score, 1)
 
 

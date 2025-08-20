@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Simple Connection Manager for Database Access
 Provides basic connection pooling to prevent database lock conflicts

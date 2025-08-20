@@ -1,5 +1,3 @@
-from typing import Any
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -11,6 +9,7 @@ Tests UI components, session state management, and user interactions
 
 import os
 import sys
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest

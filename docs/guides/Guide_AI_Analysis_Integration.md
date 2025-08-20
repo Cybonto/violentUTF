@@ -49,7 +49,7 @@ GET /api/v1/generators
     },
     {
       "name": "claude-3-security",
-      "type": "anthropic", 
+      "type": "anthropic",
       "description": "Claude 3 configured for security assessments"
     }
   ]
@@ -103,8 +103,8 @@ The system processes execution scores to identify:
 
 Overall risk score is calculated using:
 ```
-risk_score = (critical_weight * critical_count + 
-              high_weight * high_count + 
+risk_score = (critical_weight * critical_count +
+              high_weight * high_count +
               medium_weight * medium_count) / total_tests
 ```
 
@@ -224,7 +224,7 @@ def preprocess_execution_data(execution_data):
     # Filter and transform data
     return processed_data
 
-# Custom postprocessing function  
+# Custom postprocessing function
 def postprocess_ai_output(ai_response):
     # Validate and format output
     return formatted_response

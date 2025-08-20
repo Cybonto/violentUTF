@@ -89,7 +89,7 @@ Add dedicated filtering capabilities:
        "Execution Type",
        ["All", "Test Executions", "Full Executions"]
    )
-   
+
    # Filter logic
    if execution_type_filter == "Test Executions":
        filtered_data = data[data["test_mode"] == "test_execution"]
@@ -193,7 +193,7 @@ Intelligently adapt display based on execution type:
    if execution_type_filter != "All":
        filter_value = "test_execution" if execution_type_filter == "Test" else "full_execution"
        filtered_scores = [
-           s for s in filtered_scores 
+           s for s in filtered_scores
            if s.score_metadata_dict.get("test_mode") == filter_value
        ]
    ```

@@ -10,24 +10,24 @@ graph TB
         B --> C[PyRIT Memory Store]
         C --> D[(DuckDB: pyrit_memory_*.db)]
     end
-    
+
     subgraph "2. Data Collection (Orchestrator)"
         E[Orchestrator Runs] --> F[Retrieve PyRIT Results]
         F --> G[Transform to JSON]
         G --> H[Store in SQLite]
         H --> I[(SQLite: violentutf.db)]
     end
-    
+
     subgraph "3. Dashboard Display"
         J[Dashboard Page Load] --> K[Query SQLite]
         K --> L[Parse JSON Results]
         L --> M[Apply Filters/Aggregation]
         M --> N[Render UI Components]
     end
-    
+
     D --> F
     I --> K
-    
+
     style A fill:#f9f,stroke:#333,stroke-width:4px
     style N fill:#9f9,stroke:#333,stroke-width:4px
     style D fill:#bbf,stroke:#333,stroke-width:2px
@@ -159,17 +159,17 @@ graph TB
 
 ```sql
 -- Check for orphaned scores (scores without responses)
-SELECT COUNT(*) FROM orchestrator_executions 
-WHERE json_extract(results, '$.scores') IS NOT NULL 
+SELECT COUNT(*) FROM orchestrator_executions
+WHERE json_extract(results, '$.scores') IS NOT NULL
 AND json_extract(results, '$.prompt_request_responses') IS NULL;
 
 -- Check for malformed JSON
-SELECT id, execution_name FROM orchestrator_executions 
-WHERE results IS NOT NULL 
+SELECT id, execution_name FROM orchestrator_executions
+WHERE results IS NOT NULL
 AND json_valid(results) = 0;
 
 -- Compare score counts
-SELECT 
+SELECT
     execution_name,
     json_array_length(json_extract(results, '$.scores')) as score_count,
     json_array_length(json_extract(results, '$.prompt_request_responses')) as response_count

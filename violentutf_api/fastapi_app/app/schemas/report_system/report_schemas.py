@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Enhanced Pydantic schemas for Advanced Dashboard Report Setup
 """

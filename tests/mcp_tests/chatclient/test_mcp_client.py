@@ -1,5 +1,3 @@
-from typing import Any
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -13,6 +11,7 @@ import asyncio
 import json
 import os
 import sys
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import httpx

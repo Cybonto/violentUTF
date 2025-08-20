@@ -1,5 +1,3 @@
-from typing import Any, Dict
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -11,7 +9,7 @@ SECURITY: Enhanced with comprehensive input validation to prevent injection atta
 
 import re
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from app.core.password_policy import validate_password_strength
 from app.core.validation import (

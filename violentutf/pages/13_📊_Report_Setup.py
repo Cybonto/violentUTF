@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Advanced Dashboard Report Setup Page
 
@@ -954,7 +957,7 @@ with tabs[2]:
         st.markdown("Configure which blocks to include in your report and their settings.")
 
         # Load available blocks from API
-        blocks_response = api_request("GET", API_ENDPOINTS['report_blocks_registry'])
+        blocks_response = api_request("GET", API_ENDPOINTS["report_blocks_registry"])
 
         if blocks_response and "blocks" in blocks_response:
             # Convert blocks dictionary to list format
@@ -1096,12 +1099,20 @@ with tabs[2]:
                                                         min_val = prop_schema.get("minimum", 0)
                                                         max_val = prop_schema.get("maximum", 100)
                                                         default_val = prop_schema.get("default", min_val)
-                                                        
+
                                                         # Determine if we should use int or float based on schema and values
                                                         # If any value has a decimal part, use float for all
-                                                        values_to_check = [min_val, max_val, default_val, block_config.get(prop_name, default_val)]
-                                                        use_float = any(isinstance(v, float) and v != int(v) for v in values_to_check)
-                                                        
+                                                        values_to_check = [
+                                                            min_val,
+                                                            max_val,
+                                                            default_val,
+                                                            block_config.get(prop_name, default_val),
+                                                        ]
+                                                        use_float = any(
+                                                            isinstance(v, float) and v != int(v)
+                                                            for v in values_to_check
+                                                        )
+
                                                         # Convert all values to the same type
                                                         if use_float:
                                                             min_val = float(min_val)
@@ -1111,20 +1122,20 @@ with tabs[2]:
                                                             min_val = int(min_val)
                                                             max_val = int(max_val)
                                                             default_val = int(default_val)
-                                                        
+
                                                         # Ensure default value respects min/max constraints
                                                         default_val = max(min_val, min(max_val, default_val))
                                                         current_val = block_config.get(prop_name, default_val)
-                                                        
+
                                                         # Convert current value to the same type
                                                         if use_float:
                                                             current_val = float(current_val)
                                                         else:
                                                             current_val = int(current_val)
-                                                        
+
                                                         # Ensure current value respects min/max constraints
                                                         current_val = max(min_val, min(max_val, current_val))
-                                                        
+
                                                         block_config[prop_name] = st.number_input(
                                                             prop_name.replace("_", " ").title(),
                                                             value=current_val,
@@ -1143,13 +1154,22 @@ with tabs[2]:
                                                             help=prop_desc,
                                                             key=f"block_{idx}_{prop_name}",
                                                         )
-                                                    elif prop_type == "string" and prop_schema.get("x-dynamic-enum") == "generators":
+                                                    elif (
+                                                        prop_type == "string"
+                                                        and prop_schema.get("x-dynamic-enum") == "generators"
+                                                    ):
                                                         # Fetch generators list for AI model selection
-                                                        generators_response = api_request("GET", f"{API_BASE_URL}/api/v1/generators")
+                                                        generators_response = api_request(
+                                                            "GET", f"{API_BASE_URL}/api/v1/generators"
+                                                        )
                                                         if generators_response and "generators" in generators_response:
-                                                            generator_names = [g["name"] for g in generators_response["generators"]]
+                                                            generator_names = [
+                                                                g["name"] for g in generators_response["generators"]
+                                                            ]
                                                             if generator_names:
-                                                                current_value = block_config.get(prop_name, generator_names[0])
+                                                                current_value = block_config.get(
+                                                                    prop_name, generator_names[0]
+                                                                )
                                                                 # Ensure current value is in the list
                                                                 if current_value not in generator_names:
                                                                     current_value = generator_names[0]
@@ -1161,7 +1181,9 @@ with tabs[2]:
                                                                     key=f"block_{idx}_{prop_name}",
                                                                 )
                                                             else:
-                                                                st.warning("No generators configured. Please configure generators first.")
+                                                                st.warning(
+                                                                    "No generators configured. Please configure generators first."
+                                                                )
                                                                 block_config[prop_name] = st.text_input(
                                                                     prop_name.replace("_", " ").title(),
                                                                     value=block_config.get(prop_name, "gpt-4"),

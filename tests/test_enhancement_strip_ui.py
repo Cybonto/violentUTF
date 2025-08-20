@@ -1,5 +1,3 @@
-from typing import Any
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -14,6 +12,7 @@ Tests the enhancement strip UI components and interactions.
 import os
 import sys
 from datetime import datetime
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest

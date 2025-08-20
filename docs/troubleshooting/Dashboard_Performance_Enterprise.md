@@ -9,7 +9,7 @@ When running ViolentUTF in enterprise environments with large datasets (7000+ pr
 ## Root Cause
 The original Dashboard implementation made cascading API calls:
 1. Get ALL orchestrators
-2. For EACH orchestrator → Get ALL executions  
+2. For EACH orchestrator → Get ALL executions
 3. For EACH execution → Get ALL results/scores
 
 With thousands of prompts, this creates hundreds of API calls causing timeouts and server errors.
@@ -86,10 +86,10 @@ The fixes are already included. No action needed.
 3. **Database indexing (if not already present):**
    ```sql
    -- For SQLite
-   CREATE INDEX idx_orchestrator_execution_created_at 
+   CREATE INDEX idx_orchestrator_execution_created_at
    ON orchestrator_executions(created_at);
-   
-   CREATE INDEX idx_orchestrator_execution_status 
+
+   CREATE INDEX idx_orchestrator_execution_status
    ON orchestrator_executions(status);
    ```
 
@@ -118,10 +118,10 @@ docker logs violentutf_api --tail 100 | grep "dashboard" | grep "ms"
 ```bash
 # Check slow queries
 docker exec violentutf_api sqlite3 /app/app_data/violentutf.db \
-  "SELECT sql, COUNT(*) as count, AVG(elapsed) as avg_ms 
-   FROM query_log 
-   WHERE elapsed > 1000 
-   GROUP BY sql 
+  "SELECT sql, COUNT(*) as count, AVG(elapsed) as avg_ms
+   FROM query_log
+   WHERE elapsed > 1000
+   GROUP BY sql
    ORDER BY avg_ms DESC;"
 ```
 
@@ -144,7 +144,7 @@ docker exec violentutf_api sqlite3 /app/app_data/violentutf.db \
 ### Issue: Dashboard shows old data
 1. Clear Streamlit cache:
    - Click menu (⋮) → Clear cache
-   
+
 2. Clear browser cache:
    - Hard refresh: Ctrl+Shift+R (or Cmd+Shift+R on Mac)
 

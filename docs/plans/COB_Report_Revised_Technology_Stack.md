@@ -7,14 +7,14 @@ After thorough analysis of the existing ViolentUTF technology stack, this docume
 ## Key Finding: Existing Stack is Already Secure and Modern
 
 ### Current Technology Assessment
-✅ **FastAPI 0.109.0** - Latest, secure, async-ready  
-✅ **SQLAlchemy 2.0.25** - Modern async ORM with Alembic migrations  
-✅ **PyJWT with crypto** - Secure JWT (no python-jose vulnerabilities)  
-✅ **httpx 0.27.2** - Secure async HTTP client  
-✅ **Pydantic 2.7.1** - Modern data validation  
-✅ **bcrypt + passlib** - Secure password hashing  
-✅ **APISIX Gateway** - Enterprise-grade API gateway with security  
-✅ **Existing Auth Pipeline** - JWT + Keycloak SSO integration  
+✅ **FastAPI 0.109.0** - Latest, secure, async-ready
+✅ **SQLAlchemy 2.0.25** - Modern async ORM with Alembic migrations
+✅ **PyJWT with crypto** - Secure JWT (no python-jose vulnerabilities)
+✅ **httpx 0.27.2** - Secure async HTTP client
+✅ **Pydantic 2.7.1** - Modern data validation
+✅ **bcrypt + passlib** - Secure password hashing
+✅ **APISIX Gateway** - Enterprise-grade API gateway with security
+✅ **Existing Auth Pipeline** - JWT + Keycloak SSO integration
 
 **Conclusion**: The existing stack is already enterprise-grade and secure. We should **extend**, not replace.
 
@@ -50,10 +50,10 @@ async def check_scheduled_reports(
     db: AsyncSession = Depends(get_db_session)
 ):
     """Called by system cron every minute"""
-    
+
     # Get due schedules using existing database patterns
     due_schedules = await get_due_schedules(db)
-    
+
     # Execute using existing background task patterns
     for schedule in due_schedules:
         background_tasks.add_task(
@@ -61,7 +61,7 @@ async def check_scheduled_reports(
             schedule.id,
             schedule.template_id
         )
-    
+
     return {"processed": len(due_schedules)}
 
 @router.post("/schedules")
@@ -99,7 +99,7 @@ from sqlalchemy.dialects.sqlite import JSON as SQLiteJSON
 class COBTemplate(Base):
     """Follows existing model patterns"""
     __tablename__ = 'cob_templates'
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(255), nullable=False, unique=True)
     template_config = Column(SQLiteJSON, nullable=False)
@@ -110,7 +110,7 @@ class COBTemplate(Base):
 class COBSchedule(Base):
     """Schedule storage using existing database"""
     __tablename__ = 'cob_schedules'
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     template_id = Column(String, nullable=False)
     frequency = Column(String(20), nullable=False)
@@ -145,11 +145,11 @@ async def create_template(
     current_user: User = Depends(get_current_user)  # Existing auth
 ):
     """Uses existing JWT + APISIX authentication"""
-    
+
     # Existing permission checking patterns
     if not current_user.can_create_templates:
         raise HTTPException(status_code=403, detail="Not authorized")
-    
+
     # Existing audit logging patterns
     logger.info(f"Template created by {current_user.username}")
 ```
@@ -172,22 +172,22 @@ import httpx  # Already used in codebase
 
 class COBAIAnalyzer:
     """Extends existing AI integration patterns"""
-    
+
     def __init__(self):
         self.http_client = httpx.AsyncClient()  # Existing pattern
-    
+
     async def analyze_security_data(self, data: dict, model: str = "gpt-4"):
         """Uses existing token management and HTTP patterns"""
-        
+
         # Get token using existing token manager
         api_key = get_ai_token(model.split('/')[0])  # e.g., "openai", "gsai-api-1"
-        
+
         # Use existing httpx patterns with security
         headers = {
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json'
         }
-        
+
         # Follows existing API call patterns
         response = await self.http_client.post(
             endpoint,
@@ -195,7 +195,7 @@ class COBAIAnalyzer:
             headers=headers,
             timeout=30.0  # Existing timeout pattern
         )
-        
+
         return response.json()
 ```
 
@@ -220,33 +220,33 @@ import bleach
 
 class SecurePDFGenerator:
     """PDF generation with existing security patterns"""
-    
+
     def __init__(self):
         # Use existing logging
         self.logger = logging.getLogger(__name__)
-    
+
     async def generate_pdf(self, report_data: dict) -> bytes:
         """Generate PDF using existing validation patterns"""
-        
+
         try:
             # Use existing markdown generation patterns
             markdown_content = self._generate_markdown(report_data)
-            
+
             # Sanitize using existing security patterns
             safe_html = bleach.clean(
                 markdown.markdown(markdown_content),
                 tags=ALLOWED_TAGS,
                 attributes=ALLOWED_ATTRIBUTES
             )
-            
+
             # Generate PDF
             pdf_bytes = HTML(string=safe_html).write_pdf()
-            
+
             # Use existing logging patterns
             self.logger.info(f"PDF generated: {len(pdf_bytes)} bytes")
-            
+
             return pdf_bytes
-            
+
         except Exception as e:
             # Use existing error handling patterns
             self.logger.error(f"PDF generation failed: {e}")
@@ -264,14 +264,14 @@ from pathlib import Path
 
 class COBAnalytics:
     """Uses existing DuckDB patterns from PyRIT integration"""
-    
+
     def __init__(self):
         # Follow existing DuckDB path patterns
         self.db_path = Path("app_data/violentutf/cob_analytics.duckdb")
-    
+
     async def store_report_metrics(self, report_data: dict):
         """Store analytics following existing DuckDB patterns"""
-        
+
         with duckdb.connect(str(self.db_path)) as conn:
             # Create table if not exists (existing pattern)
             conn.execute("""
@@ -281,7 +281,7 @@ class COBAnalytics:
                     metrics JSON
                 )
             """)
-            
+
             # Insert data (existing pattern)
             conn.execute("""
                 INSERT INTO cob_report_metrics VALUES (?, ?, ?)
@@ -327,14 +327,14 @@ class COBAnalytics:
 ```txt
 # Add to existing violentutf_api/fastapi_app/requirements.txt
 weasyprint>=60.0           # PDF generation
-bleach>=6.1.0              # HTML sanitization  
+bleach>=6.1.0              # HTML sanitization
 schedule>=1.2.0            # Python scheduling (if not using cron)
 markdown>=3.5.0            # Markdown processing
 ```
 
 ### Existing Dependencies Leveraged:
 - ✅ FastAPI >=0.109.0 (API framework)
-- ✅ SQLAlchemy >=2.0.25 (Database ORM)  
+- ✅ SQLAlchemy >=2.0.25 (Database ORM)
 - ✅ Alembic >=1.13.1 (Database migrations)
 - ✅ Pydantic >=2.7.1 (Data validation)
 - ✅ httpx >=0.27.2 (HTTP client)

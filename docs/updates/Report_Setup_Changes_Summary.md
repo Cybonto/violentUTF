@@ -169,7 +169,7 @@ This document summarizes all changes made during the Report Setup feature implem
    ```python
    # Old
    response = requests.get("/api/v1/cob/templates")
-   
+
    # New
    response = requests.get("/api/v1/reports/templates")
    ```
@@ -178,7 +178,7 @@ This document summarizes all changes made during the Report Setup feature implem
    ```python
    # Old - Hardcoded models
    models = ["gpt-4", "claude-2", "llama-2"]
-   
+
    # New - Dynamic from generators
    response = requests.get("/api/v1/generators")
    models = [g["name"] for g in response.json()["generators"]]

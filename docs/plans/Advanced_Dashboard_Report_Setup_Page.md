@@ -12,7 +12,7 @@ The Report Setup page is a comprehensive interface for managing COB (Close of Bu
 
 **Core Metadata Structure:**
 - **Core Identifiers**: ID, name, description, version (e.g., 1.0.0)
-- **Red Teaming Classification**: 
+- **Red Teaming Classification**:
   - Testing category (Security/Safety/Reliability/Robustness/Compliance)
   - Target model types (LLM/Vision/Multimodal/Embedding/Custom)
   - Attack categories (Prompt Injection/Jailbreak/Data Leakage/Hallucination/Bias/Toxicity)
@@ -109,7 +109,7 @@ The Report Setup page is a comprehensive interface for managing COB (Close of Bu
 
 **Basic Version Control:**
 - **Version Format**: Simple MAJOR.MINOR.PATCH (e.g., 1.2.0)
-- **Version Types**: 
+- **Version Types**:
   - Patch: Bug fixes, minor updates
   - Minor: New features, backwards compatible
   - Major: Breaking changes
@@ -117,12 +117,12 @@ The Report Setup page is a comprehensive interface for managing COB (Close of Bu
 
 **Version Management UI:**
 - **Current Version Display**: Shows active version with creation info
-- **Create New Version**: 
+- **Create New Version**:
   - Select change type (patch/minor/major)
   - Add change notes (required)
   - Preview new version number
   - One-click creation
-- **Version History**: 
+- **Version History**:
   - Simple list of last 10 versions
   - Shows version number, change notes, author, date
   - Restore button to revert to any previous version
@@ -278,7 +278,7 @@ BaseReportBlock (Abstract)
 ### 4. Report Export & Distribution
 
 #### 4.1 Export Options
-- **Multi-format Export**: 
+- **Multi-format Export**:
   - PDF with professional styling
   - JSON for programmatic processing
   - Markdown for documentation
@@ -512,22 +512,22 @@ component:
   name: "Template Service"
   type: "Backend Service"
   description: "Manages report templates with versioning"
-  
+
   interfaces:
     - name: "createTemplate"
       input: "TemplateDefinition"
       output: "TemplateID"
       errors: ["InvalidTemplate", "PermissionDenied"]
-    
+
     - name: "getTemplateRecommendations"
       input: "ScanDataSummary"
       output: "List[TemplateRecommendation]"
-  
+
   dependencies:
     - "PostgreSQL Database"
     - "Block Registry"
     - "Version Control System"
-  
+
   performance_targets:
     - "Template operations < 500ms"
     - "Support 1000+ templates"
@@ -539,23 +539,23 @@ component:
   name: "Report Generation Engine"
   type: "Backend Service"
   description: "Generates reports from templates and scan data"
-  
+
   interfaces:
     - name: "generateReport"
       input: "ReportRequest"
       output: "ReportID"
       async: true
-    
+
     - name: "processAIBlock"
       input: "AIBlockConfig, ScanData"
       output: "ProcessedContent"
-  
+
   dependencies:
     - "Template Service"
     - "PyRIT/Garak APIs"
     - "AI Providers (OpenAI, Anthropic)"
     - "PDF Generation (ReportLab)"
-  
+
   performance_targets:
     - "Standard report < 30 seconds"
     - "Handle 10 concurrent generations"
@@ -865,7 +865,7 @@ testing_strategy:
       - Variable substitution
       - Report generation pipeline
     tools: ["pytest", "pytest-cov", "pytest-asyncio"]
-  
+
   integration_tests:
     coverage_target: 75%
     focus_areas:
@@ -874,7 +874,7 @@ testing_strategy:
       - AI provider integration
       - Schedule execution
     tools: ["pytest", "httpx", "testcontainers"]
-  
+
   e2e_tests:
     coverage_target: 60%
     scenarios:
@@ -882,7 +882,7 @@ testing_strategy:
       - Template creation and editing
       - Schedule configuration and execution
     tools: ["selenium", "pytest-selenium"]
-  
+
   performance_tests:
     targets:
       - Report generation < 30s (95th percentile)
@@ -931,15 +931,15 @@ class ReportCache:
     def __init__(self):
         self.redis_client = redis.Redis()
         self.cache_ttl = 3600  # 1 hour
-    
+
     def get_or_generate(self, report_config_hash):
         cached = self.redis_client.get(f"report:{report_config_hash}")
         if cached:
             return json.loads(cached)
-        
+
         # Generate report
         report = self._generate_report(report_config)
-        
+
         # Cache result
         self.redis_client.setex(
             f"report:{report_config_hash}",
@@ -959,7 +959,7 @@ class AIProviderManager:
             AnthropicProvider(),
             LocalModelProvider()
         ]
-    
+
     async def process_with_fallback(self, prompt, data):
         for provider in self.providers:
             try:
@@ -969,7 +969,7 @@ class AIProviderManager:
             except Exception as e:
                 logger.error(f"Provider {provider} failed: {e}")
                 continue
-        
+
         raise AllProvidersFailedError()
 ```
 
@@ -986,7 +986,7 @@ deployment:
         - Streamlit instances: 1
         - Database: PostgreSQL (shared dev)
         - Redis: Shared cache
-      
+
     - name: staging
       infrastructure:
         - FastAPI instances: 2 (load balanced)
@@ -994,7 +994,7 @@ deployment:
         - Database: PostgreSQL (dedicated)
         - Redis: Dedicated cache
         - APScheduler workers: 2
-      
+
     - name: production
       infrastructure:
         - FastAPI instances: 4 (auto-scaling)
@@ -1037,17 +1037,17 @@ success_metrics:
     - on_time_completion: "90% of sprints delivered on schedule"
     - feature_completeness: "100% of critical features, 90% of high priority"
     - budget_adherence: "Within 10% of allocated budget"
-  
+
   quality:
     - defect_density: "< 2 defects per 1000 LOC"
     - test_coverage: "> 80% overall coverage"
     - security_vulnerabilities: "0 critical, < 3 high"
-  
+
   performance:
     - report_generation_time: "< 30s for 95% of reports"
     - system_availability: "> 99.5% uptime"
     - api_response_time: "< 500ms for 95% of requests"
-  
+
   adoption:
     - user_activation: "80% of users generate first report within 7 days"
     - feature_utilization: "60% use scheduling within 30 days"

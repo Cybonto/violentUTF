@@ -235,19 +235,19 @@ Inconsistencies may arise at any stage of this pipeline due to:
      - Likert scale values interpreted differently (1-5 vs 0-4 vs percentages)
      - Category scorer results mapped to wrong display categories
      - Threshold scorer boolean results misinterpreted as pass/fail
-   
+
    - **Aggregation Logic Issues**
      - Incorrect calculation of pass/fail rates (e.g., counting null as fail)
      - Wrong grouping of results by batch or scorer type
      - Duplicate counting in composite scorer results
      - Missing results in percentage calculations (denominator errors)
-   
+
    - **Statistical Calculation Errors**
      - Average severity calculations including/excluding zeros differently
      - Median calculations on mixed data types
      - Percentile calculations with inconsistent sorting
      - Success rate calculations with different definitions of "success"
-   
+
    - **Batch and Grouping Problems**
      - Batch identification logic extracting wrong patterns from execution names
      - Results from multiple batches incorrectly merged
@@ -259,7 +259,7 @@ Inconsistencies may arise at any stage of this pipeline due to:
      - Same score value meaning different things for different scorer types
      - Context-dependent interpretation not preserved
      - Scorer rationale not considered in aggregation
-   
+
    - **Result Categorization Issues**
      - Auto-categorization overriding scorer-specified categories
      - Display categories not matching scorer output categories
@@ -415,10 +415,10 @@ for row in cursor.fetchall():
     batch_id = exec_name.split('_')[1] if '_' in exec_name else 'unknown'
     data = json.loads(row[1])
     scores = data.get('scores', [])
-    
+
     if batch_id not in batch_stats:
         batch_stats[batch_id] = {'total': 0, 'pass': 0, 'fail': 0}
-    
+
     for score in scores:
         batch_stats[batch_id]['total'] += 1
         if score.get('score_value') in [True, 'true', 'True', 1, '1']:
@@ -446,7 +446,7 @@ for row in cursor.fetchall():
             value = score.get('score_value')
             if isinstance(value, (int, float)):
                 likert_scores.append(value)
-                
+
 if likert_scores:
     print(f\"Likert Scores - Count: {len(likert_scores)}, Min: {min(likert_scores)}, Max: {max(likert_scores)}, Avg: {statistics.mean(likert_scores):.2f}\")"
 
@@ -465,7 +465,7 @@ for row in cursor.fetchall():
         if 'Category' in score.get('scorer_class_name', ''):
             cat = score.get('score_category', 'unknown')
             categories[cat] += 1
-            
+
 print('Category Distribution:')
 for cat, count in categories.most_common():
     print(f\"  {cat}: {count}\")"

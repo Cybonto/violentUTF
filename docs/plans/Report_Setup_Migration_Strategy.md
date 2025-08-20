@@ -144,10 +144,10 @@ from app.db.database import get_session
 
 async def verify_migration():
     """Verify report setup tables were created correctly"""
-    
+
     async with get_session() as db:
         inspector = inspect(db.bind)
-        
+
         required_tables = [
             'report_templates',
             'report_generation_jobs',
@@ -155,30 +155,30 @@ async def verify_migration():
             'report_schedules',
             'report_block_registry'
         ]
-        
+
         existing_tables = inspector.get_table_names()
-        
+
         print("Migration Verification:")
         print("-" * 50)
-        
+
         all_present = True
         for table in required_tables:
             if table in existing_tables:
                 print(f"✅ {table} - Created successfully")
-                
+
                 # Check indexes
                 indexes = inspector.get_indexes(table)
                 print(f"   Indexes: {len(indexes)}")
-                
+
                 # Check constraints
                 constraints = inspector.get_check_constraints(table)
                 print(f"   Constraints: {len(constraints)}")
             else:
                 print(f"❌ {table} - Missing!")
                 all_present = False
-                
+
         print("-" * 50)
-        
+
         if all_present:
             print("✅ All tables created successfully!")
             return True
@@ -219,13 +219,13 @@ fi
 # Function to check if PostgreSQL is ready
 check_postgres() {
     echo -n "Checking PostgreSQL connection..."
-    
+
     if [ "$IN_DOCKER" = true ]; then
         pg_isready -h postgres -U $POSTGRES_USER
     else
         docker exec -i violentutf-postgres pg_isready -U $POSTGRES_USER
     fi
-    
+
     if [ $? -eq 0 ]; then
         echo -e " ${GREEN}✓${NC}"
         return 0
@@ -238,26 +238,26 @@ check_postgres() {
 # Function to check if tables exist
 check_tables_exist() {
     local query="SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('report_templates', 'report_generation_jobs', 'generated_reports', 'report_schedules');"
-    
+
     if [ "$IN_DOCKER" = true ]; then
         count=$(psql -h postgres -U $POSTGRES_USER -d $POSTGRES_DB -tAc "$query")
     else
         count=$(docker exec -i violentutf-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -tAc "$query")
     fi
-    
+
     echo $count
 }
 
 # Function to run migration
 run_migration() {
     echo "Running database migration..."
-    
+
     if [ "$IN_DOCKER" = true ]; then
         cd /app && alembic upgrade head
     else
         docker exec -i violentutf-api sh -c "cd /app && alembic upgrade head"
     fi
-    
+
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✓ Migration completed successfully${NC}"
         return 0
@@ -270,13 +270,13 @@ run_migration() {
 # Function to load initial templates
 load_initial_templates() {
     echo "Loading initial report templates..."
-    
+
     if [ "$IN_DOCKER" = true ]; then
         python /app/scripts/load_initial_templates.py
     else
         docker exec -i violentutf-api python /app/scripts/load_initial_templates.py
     fi
-    
+
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✓ Templates loaded successfully${NC}"
         return 0
@@ -289,14 +289,14 @@ load_initial_templates() {
 # Function to enable feature flag
 enable_feature_flag() {
     echo "Enabling Report Setup feature..."
-    
+
     # Add to environment file
     if grep -q "REPORT_SETUP_ENABLED" violentutf/.env 2>/dev/null; then
         sed -i.bak 's/REPORT_SETUP_ENABLED=.*/REPORT_SETUP_ENABLED=true/' violentutf/.env
     else
         echo "REPORT_SETUP_ENABLED=true" >> violentutf/.env
     fi
-    
+
     echo -e "${GREEN}✓ Feature flag enabled${NC}"
 }
 
@@ -304,41 +304,41 @@ enable_feature_flag() {
 main() {
     echo "Starting Report Setup feature installation..."
     echo
-    
+
     # Step 1: Check PostgreSQL
     if ! check_postgres; then
         echo -e "${RED}Error: PostgreSQL is not ready${NC}"
         exit 1
     fi
-    
+
     # Step 2: Check if already installed
     existing_tables=$(check_tables_exist)
-    
+
     if [ "$existing_tables" -eq "4" ]; then
         echo -e "${YELLOW}Report Setup tables already exist. Skipping migration.${NC}"
     else
         echo "Report Setup tables not found. Installing..."
-        
+
         # Step 3: Run migration
         if ! run_migration; then
             echo -e "${RED}Migration failed! Aborting installation.${NC}"
             exit 1
         fi
-        
+
         # Step 4: Verify migration
         new_count=$(check_tables_exist)
         if [ "$new_count" -ne "4" ]; then
             echo -e "${RED}Migration verification failed! Expected 4 tables, found $new_count${NC}"
             exit 1
         fi
-        
+
         # Step 5: Load initial templates
         load_initial_templates
     fi
-    
+
     # Step 6: Enable feature flag
     enable_feature_flag
-    
+
     echo
     echo -e "${GREEN}Report Setup feature installation completed!${NC}"
     echo
@@ -381,7 +381,7 @@ fi
    - Run migration on dev database
    - Enable feature flag for dev team
    - Test all functionality
-   
+
 2. **Validation Checklist**:
    - [ ] All tables created successfully
    - [ ] No impact on existing Dashboard
@@ -404,11 +404,11 @@ fi
    def should_show_report_setup(user):
        if not settings.REPORT_SETUP_ENABLED:
            return False
-           
+
        if settings.REPORT_SETUP_BETA_USERS:
            beta_users = settings.REPORT_SETUP_BETA_USERS.split(',')
            return user.username in beta_users
-           
+
        return True
    ```
 
@@ -423,7 +423,7 @@ fi
    ```python
    # Gradual rollout logic
    import hashlib
-   
+
    def should_enable_for_user(username, rollout_percentage):
        """Deterministic rollout based on username"""
        hash_value = int(hashlib.md5(username.encode()).hexdigest(), 16)
@@ -504,7 +504,7 @@ pg_dump -h localhost -U $POSTGRES_USER -d $POSTGRES_DB \
            self.generation_times = []
            self.template_usage = Counter()
            self.error_rates = defaultdict(int)
-           
+
        async def track_generation(self, template_id, duration, success):
            self.generation_times.append(duration)
            self.template_usage[template_id] += 1
@@ -533,17 +533,17 @@ from sqlalchemy import select, func
 
 async def generate_metrics_report():
     """Generate daily metrics report"""
-    
+
     async with get_session() as db:
         # Report generation metrics
         yesterday = datetime.utcnow() - timedelta(days=1)
-        
+
         # Total reports generated
         total_reports = await db.scalar(
             select(func.count(GeneratedReport.id))
             .where(GeneratedReport.created_at >= yesterday)
         )
-        
+
         # Success rate
         successful_jobs = await db.scalar(
             select(func.count(ReportGenerationJob.id))
@@ -552,18 +552,18 @@ async def generate_metrics_report():
                 ReportGenerationJob.status == 'completed'
             )
         )
-        
+
         total_jobs = await db.scalar(
             select(func.count(ReportGenerationJob.id))
             .where(ReportGenerationJob.created_at >= yesterday)
         )
-        
+
         success_rate = (successful_jobs / total_jobs * 100) if total_jobs > 0 else 0
-        
+
         # Average generation time
         avg_time = await db.scalar(
             select(func.avg(
-                func.extract('epoch', 
+                func.extract('epoch',
                     ReportGenerationJob.completed_at - ReportGenerationJob.started_at
                 )
             ))
@@ -572,7 +572,7 @@ async def generate_metrics_report():
                 ReportGenerationJob.created_at >= yesterday
             )
         )
-        
+
         print(f"Daily Report Setup Metrics - {datetime.utcnow().date()}")
         print("=" * 50)
         print(f"Total Reports Generated: {total_reports}")
@@ -599,21 +599,21 @@ async def generate_metrics_report():
 1. **Feature Announcement**:
    ```markdown
    # 🎉 Introducing Report Setup
-   
-   We're excited to announce the launch of Report Setup, 
-   a powerful new feature for generating professional 
+
+   We're excited to announce the launch of Report Setup,
+   a powerful new feature for generating professional
    security assessment reports from your scan data.
-   
+
    **Key Features:**
    - 📊 Browse and select scan data
    - 📝 Choose from pre-built templates
    - ⚙️ Configure report parameters
    - 👁️ Preview before generation
    - 📤 Export to multiple formats
-   
+
    **Getting Started:**
    Access Report Setup from the Advanced Dashboard menu.
-   
+
    [View Documentation] [Watch Tutorial]
    ```
 

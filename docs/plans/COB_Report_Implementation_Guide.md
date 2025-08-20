@@ -90,12 +90,12 @@ scheduler = AsyncIOScheduler(
 
 class ReportScheduler:
     """Manages scheduled report generation"""
-    
+
     def __init__(self):
         self.db = get_db()
         self.generator = ReportGenerator()
         self._update_celery_schedule()
-    
+
     async def create_schedule(
         self,
         template_id: str,
@@ -113,10 +113,10 @@ class ReportScheduler:
             tz = pytz.timezone(timezone)
         except pytz.UnknownTimeZoneError:
             raise ValueError(f"Unknown timezone: {timezone}")
-        
+
         # Parse time
         hour, minute = map(int, time.split(':'))
-        
+
         # Create schedule record
         schedule_data = {
             'template_id': template_id,
@@ -130,12 +130,12 @@ class ReportScheduler:
             'created_by': user_id,
             'next_run_at': self._calculate_next_run(frequency, hour, minute, tz)
         }
-        
+
         # Insert into database
         async with self.db.pool.acquire() as conn:
             result = await conn.fetchrow(
                 """
-                INSERT INTO cob_report_schedules 
+                INSERT INTO cob_report_schedules
                 (template_id, frequency, schedule_time, timezone, parameters,
                  export_formats, distribution_config, is_active, created_by, next_run_at)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -152,26 +152,26 @@ class ReportScheduler:
                 schedule_data['created_by'],
                 schedule_data['next_run_at']
             )
-            
+
             schedule_id = str(result['id'])
-        
+
         # Update Celery beat schedule
         self._update_celery_schedule()
-        
+
         logger.info(f"Created schedule {schedule_id} for template {template_id}")
         return schedule_id
-    
-    def _calculate_next_run(self, frequency: str, hour: int, minute: int, 
+
+    def _calculate_next_run(self, frequency: str, hour: int, minute: int,
                            tz: timezone) -> datetime:
         """Calculate next run time based on frequency"""
         now = datetime.now(tz)
-        
+
         if frequency == 'daily':
             # Next occurrence of the specified time
             next_run = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
             if next_run <= now:
                 next_run += timedelta(days=1)
-        
+
         elif frequency == 'weekly':
             # Next Monday at specified time
             days_ahead = 0 - now.weekday()  # Monday is 0
@@ -179,7 +179,7 @@ class ReportScheduler:
                 days_ahead += 7
             next_run = now + timedelta(days=days_ahead)
             next_run = next_run.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        
+
         elif frequency == 'monthly':
             # First day of next month at specified time
             if now.month == 12:
@@ -188,15 +188,15 @@ class ReportScheduler:
             else:
                 next_run = now.replace(month=now.month + 1, day=1,
                                      hour=hour, minute=minute, second=0, microsecond=0)
-        
+
         return next_run.astimezone(pytz.UTC)
-    
+
     def _update_celery_schedule(self):
         """Update Celery beat schedule with active schedules"""
         # This would be called to refresh the Celery beat schedule
         # Implementation depends on your Celery setup
         pass
-    
+
     async def execute_schedule(self, schedule_id: str) -> Dict[str, Any]:
         """Execute a scheduled report generation"""
         try:
@@ -211,13 +211,13 @@ class ReportScheduler:
                     """,
                     schedule_id
                 )
-                
+
                 if not schedule:
                     raise ValueError(f"Schedule {schedule_id} not found or inactive")
-            
+
             # Generate report
             report_date = datetime.now(pytz.timezone(schedule['timezone'])).date()
-            
+
             report_id = await self.generator.generate_report(
                 template_id=schedule['template_id'],
                 report_date=report_date,
@@ -228,7 +228,7 @@ class ReportScheduler:
                 },
                 user_id=schedule['created_by']
             )
-            
+
             # Export in requested formats
             export_results = {}
             for format in schedule['export_formats']:
@@ -241,7 +241,7 @@ class ReportScheduler:
                 except Exception as e:
                     logger.error(f"Failed to export {format}: {e}")
                     export_results[format] = None
-            
+
             # Distribute report
             if schedule['distribution_config']:
                 await self._distribute_report(
@@ -250,12 +250,12 @@ class ReportScheduler:
                     distribution_config=schedule['distribution_config'],
                     template_name=schedule['template_name']
                 )
-            
+
             # Update schedule execution history
             async with self.db.pool.acquire() as conn:
                 await conn.execute(
                     """
-                    INSERT INTO cob_schedule_executions 
+                    INSERT INTO cob_schedule_executions
                     (schedule_id, report_id, executed_at, success, execution_time_ms)
                     VALUES ($1, $2, $3, $4, $5)
                     """,
@@ -265,7 +265,7 @@ class ReportScheduler:
                     True,
                     0  # Would calculate actual execution time
                 )
-                
+
                 # Update next run time
                 next_run = self._calculate_next_run(
                     schedule['frequency'],
@@ -273,10 +273,10 @@ class ReportScheduler:
                     schedule['schedule_time'].minute,
                     pytz.timezone(schedule['timezone'])
                 )
-                
+
                 await conn.execute(
                     """
-                    UPDATE cob_report_schedules 
+                    UPDATE cob_report_schedules
                     SET last_run_at = $1, next_run_at = $2
                     WHERE id = $3
                     """,
@@ -284,22 +284,22 @@ class ReportScheduler:
                     next_run,
                     schedule_id
                 )
-            
+
             logger.info(f"Successfully executed schedule {schedule_id}, report {report_id}")
             return {
                 'success': True,
                 'report_id': report_id,
                 'exports': export_results
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to execute schedule {schedule_id}: {e}")
-            
+
             # Log failure
             async with self.db.pool.acquire() as conn:
                 await conn.execute(
                     """
-                    INSERT INTO cob_schedule_executions 
+                    INSERT INTO cob_schedule_executions
                     (schedule_id, executed_at, success, error_message)
                     VALUES ($1, $2, $3, $4)
                     """,
@@ -308,12 +308,12 @@ class ReportScheduler:
                     False,
                     str(e)
                 )
-            
+
             return {
                 'success': False,
                 'error': str(e)
             }
-    
+
     async def _distribute_report(
         self,
         report_id: str,
@@ -323,9 +323,9 @@ class ReportScheduler:
     ):
         """Distribute report to configured channels"""
         from .distribution import ReportDistributor
-        
+
         distributor = ReportDistributor()
-        
+
         # Email distribution
         if 'email' in distribution_config:
             pdf_url = export_results.get('pdf')
@@ -336,7 +336,7 @@ class ReportScheduler:
                     body="Please find attached the daily COB report.",
                     attachment_url=pdf_url
                 )
-        
+
         # Slack distribution
         if 'slack' in distribution_config:
             for channel in distribution_config['slack']:
@@ -356,18 +356,18 @@ async def _check_schedules():
     """Async function to check and execute due schedules"""
     scheduler = ReportScheduler()
     db = get_db()
-    
+
     async with db.pool.acquire() as conn:
         # Find schedules that are due
         due_schedules = await conn.fetch(
             """
             SELECT id FROM cob_report_schedules
-            WHERE is_active = true 
+            WHERE is_active = true
             AND next_run_at <= $1
             """,
             datetime.now(pytz.UTC)
         )
-    
+
     # Execute each due schedule
     for schedule in due_schedules:
         try:
@@ -420,10 +420,10 @@ class BlockConfig(BaseModel):
     data_sources: Optional[List[str]]
     template: Optional[str]
     config: Dict[str, Any] = {}
-    
+
     @validator('type')
     def validate_block_type(cls, v):
-        valid_types = ['data_block', 'analysis_block', 'visualization_block', 
+        valid_types = ['data_block', 'analysis_block', 'visualization_block',
                       'custom_block', 'composite_block']
         if v not in valid_types:
             raise ValueError(f"Invalid block type: {v}")
@@ -431,28 +431,28 @@ class BlockConfig(BaseModel):
 
 class ReportTemplate:
     """Base class for report templates"""
-    
+
     def __init__(self, config: Dict[str, Any]):
         self.metadata = TemplateMetadata(**config.get('metadata', {}))
         self.parameters = config.get('parameters', {})
         self.blocks = [BlockConfig(**block) for block in config.get('blocks', [])]
         self.export_config = config.get('export_config', {})
         self.jinja_env = self._setup_jinja_env()
-    
+
     def _setup_jinja_env(self) -> jinja2.Environment:
         """Setup Jinja2 environment with custom filters"""
         env = jinja2.Environment(
             loader=jinja2.BaseLoader(),
             undefined=jinja2.StrictUndefined
         )
-        
+
         # Add custom filters
         env.filters['calculate_change'] = self._calculate_change
         env.filters['format_number'] = self._format_number
         env.filters['trend_indicator'] = self._trend_indicator
-        
+
         return env
-    
+
     @staticmethod
     def _calculate_change(current: float, previous: float) -> str:
         """Calculate percentage change"""
@@ -461,12 +461,12 @@ class ReportTemplate:
         change = ((current - previous) / previous) * 100
         sign = "+" if change > 0 else ""
         return f"{sign}{change:.1f}%"
-    
+
     @staticmethod
     def _format_number(value: float, decimals: int = 0) -> str:
         """Format number with commas"""
         return f"{value:,.{decimals}f}"
-    
+
     @staticmethod
     def _trend_indicator(current: float, previous: float, inverse: bool = False) -> str:
         """Return trend indicator emoji"""
@@ -476,26 +476,26 @@ class ReportTemplate:
             return "📉" if not inverse else "📈"
         else:
             return "➡️"
-    
+
     async def render(self, data: Dict[str, Any], parameters: Dict[str, Any] = None) -> Dict[str, Any]:
         """Render the template with data"""
         # Merge parameters
         params = {**self.parameters, **(parameters or {})}
-        
+
         # Render each block
         rendered_blocks = []
         for block in sorted(self.blocks, key=lambda x: x.order):
             renderer = self._get_block_renderer(block.type)
             rendered_block = await renderer.render(block, data, params)
             rendered_blocks.append(rendered_block)
-        
+
         return {
             "metadata": self.metadata.dict(),
             "parameters": params,
             "blocks": rendered_blocks,
             "rendered_at": datetime.now().isoformat()
         }
-    
+
     def _get_block_renderer(self, block_type: str):
         """Get appropriate renderer for block type"""
         from .blocks import (
@@ -505,7 +505,7 @@ class ReportTemplate:
             CustomBlockRenderer,
             CompositeBlockRenderer
         )
-        
+
         renderers = {
             'data_block': DataBlockRenderer(self.jinja_env),
             'analysis_block': AnalysisBlockRenderer(self.jinja_env),
@@ -513,7 +513,7 @@ class ReportTemplate:
             'custom_block': CustomBlockRenderer(self.jinja_env),
             'composite_block': CompositeBlockRenderer(self.jinja_env)
         }
-        
+
         return renderers.get(block_type)
 ```
 
@@ -531,18 +531,18 @@ from ...utils.data_extractor import DataExtractor
 
 class BlockRenderer(ABC):
     """Base class for block renderers"""
-    
+
     def __init__(self, jinja_env: jinja2.Environment):
         self.jinja_env = jinja_env
         self.data_extractor = DataExtractor()
-    
+
     @abstractmethod
-    async def render(self, block_config: 'BlockConfig', 
-                    data: Dict[str, Any], 
+    async def render(self, block_config: 'BlockConfig',
+                    data: Dict[str, Any],
                     parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Render the block"""
         pass
-    
+
     def extract_data(self, data: Dict[str, Any], paths: List[str]) -> Dict[str, Any]:
         """Extract data from paths"""
         extracted = {}
@@ -554,9 +554,9 @@ class BlockRenderer(ABC):
 
 class DataBlockRenderer(BlockRenderer):
     """Renderer for data blocks"""
-    
-    async def render(self, block_config: 'BlockConfig', 
-                    data: Dict[str, Any], 
+
+    async def render(self, block_config: 'BlockConfig',
+                    data: Dict[str, Any],
                     parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Render data block"""
         # Extract required data
@@ -564,17 +564,17 @@ class DataBlockRenderer(BlockRenderer):
             block_data = self.extract_data(data, block_config.data_sources)
         else:
             block_data = data
-        
+
         # Merge with parameters
         context = {**parameters, **block_data}
-        
+
         # Render template
         if block_config.template:
             template = self.jinja_env.from_string(block_config.template)
             rendered_content = template.render(**context)
         else:
             rendered_content = str(block_data)
-        
+
         return {
             "id": block_config.id,
             "type": "data",
@@ -585,25 +585,25 @@ class DataBlockRenderer(BlockRenderer):
 
 class AnalysisBlockRenderer(BlockRenderer):
     """Renderer for AI analysis blocks"""
-    
+
     def __init__(self, jinja_env: jinja2.Environment):
         super().__init__(jinja_env)
         self.ai_analyzer = AIAnalyzer()
-    
-    async def render(self, block_config: 'BlockConfig', 
-                    data: Dict[str, Any], 
+
+    async def render(self, block_config: 'BlockConfig',
+                    data: Dict[str, Any],
                     parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Render analysis block with AI"""
         # Extract context data
         context_data = {}
         if block_config.data_dependencies:
             context_data = self.extract_data(data, block_config.data_dependencies)
-        
+
         # Prepare prompt
         prompt_template = block_config.config.get('prompt_template', '')
         template = self.jinja_env.from_string(prompt_template)
         prompt = template.render(**{**parameters, **context_data})
-        
+
         # Call AI model
         analysis_config = {
             'model': block_config.config.get('model', 'gpt-3.5-turbo'),
@@ -611,16 +611,16 @@ class AnalysisBlockRenderer(BlockRenderer):
             'max_tokens': block_config.config.get('max_tokens', 1000),
             'context_window': block_config.config.get('context_window', 4000)
         }
-        
+
         analysis_result = await self.ai_analyzer.analyze(
             prompt=prompt,
             config=analysis_config
         )
-        
+
         # Process output
         output_processor = block_config.config.get('output_processor', 'raw')
         processed_output = self._process_output(analysis_result, output_processor)
-        
+
         return {
             "id": block_config.id,
             "type": "analysis",
@@ -631,7 +631,7 @@ class AnalysisBlockRenderer(BlockRenderer):
                 "tokens_used": analysis_result.get('usage', {}).get('total_tokens', 0)
             }
         }
-    
+
     def _process_output(self, output: str, processor: str) -> str:
         """Process AI output based on processor type"""
         processors = {
@@ -640,20 +640,20 @@ class AnalysisBlockRenderer(BlockRenderer):
             'bullet_points': self._extract_bullet_points,
             'json': self._parse_json_output
         }
-        
+
         processor_func = processors.get(processor, lambda x: x)
         return processor_func(output)
-    
+
     def _structure_markdown(self, output: str) -> str:
         """Structure output as clean markdown"""
         # Add logic to clean and structure markdown
         return output
-    
+
     def _extract_bullet_points(self, output: str) -> str:
         """Extract and format bullet points"""
         # Add logic to extract bullet points
         return output
-    
+
     def _parse_json_output(self, output: str) -> str:
         """Parse JSON output from AI"""
         import json
@@ -665,14 +665,14 @@ class AnalysisBlockRenderer(BlockRenderer):
 
 class VisualizationBlockRenderer(BlockRenderer):
     """Renderer for visualization blocks"""
-    
-    async def render(self, block_config: 'BlockConfig', 
-                    data: Dict[str, Any], 
+
+    async def render(self, block_config: 'BlockConfig',
+                    data: Dict[str, Any],
                     parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Render visualization block"""
         chart_type = block_config.config.get('chart_type', 'line')
         chart_data = self._prepare_chart_data(data, block_config.config)
-        
+
         # Generate chart configuration
         chart_config = {
             'type': chart_type,
@@ -680,7 +680,7 @@ class VisualizationBlockRenderer(BlockRenderer):
             'options': block_config.config.get('options', {}),
             'responsive': True
         }
-        
+
         return {
             "id": block_config.id,
             "type": "visualization",
@@ -688,14 +688,14 @@ class VisualizationBlockRenderer(BlockRenderer):
             "chart_config": chart_config,
             "render_type": "chart"
         }
-    
-    def _prepare_chart_data(self, data: Dict[str, Any], 
+
+    def _prepare_chart_data(self, data: Dict[str, Any],
                            config: Dict[str, Any]) -> Dict[str, Any]:
         """Prepare data for chart rendering"""
         # Extract and format data based on chart type
         data_source = config.get('data_source', '')
         chart_data = self.data_extractor.get_value(data, data_source)
-        
+
         # Transform data for specific chart types
         chart_type = config.get('chart_type')
         if chart_type == 'line':
@@ -703,9 +703,9 @@ class VisualizationBlockRenderer(BlockRenderer):
         elif chart_type == 'heatmap':
             return self._prepare_heatmap_data(chart_data, config)
         # Add more chart type handlers
-        
+
         return chart_data
-    
+
     def _prepare_line_data(self, data: Any, config: Dict[str, Any]) -> Dict[str, Any]:
         """Prepare data for line chart"""
         # Implementation for line chart data preparation
@@ -713,7 +713,7 @@ class VisualizationBlockRenderer(BlockRenderer):
             'labels': [],
             'datasets': []
         }
-    
+
     def _prepare_heatmap_data(self, data: Any, config: Dict[str, Any]) -> Dict[str, Any]:
         """Prepare data for heatmap"""
         # Implementation for heatmap data preparation
@@ -725,13 +725,13 @@ class VisualizationBlockRenderer(BlockRenderer):
 
 class CustomBlockRenderer(BlockRenderer):
     """Renderer for custom script blocks"""
-    
-    async def render(self, block_config: 'BlockConfig', 
-                    data: Dict[str, Any], 
+
+    async def render(self, block_config: 'BlockConfig',
+                    data: Dict[str, Any],
                     parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Render custom block by executing script"""
         script = block_config.config.get('script', '')
-        
+
         # Create safe execution environment
         safe_globals = {
             '__builtins__': {
@@ -753,14 +753,14 @@ class CustomBlockRenderer(BlockRenderer):
                 'bool': bool
             }
         }
-        
+
         # Define the execution namespace
         namespace = {**safe_globals}
-        
+
         try:
             # Execute the script
             exec(script, namespace)
-            
+
             # Call the main function if it exists
             if 'calculate' in namespace:
                 result = namespace['calculate'](data)
@@ -774,7 +774,7 @@ class CustomBlockRenderer(BlockRenderer):
                         break
                 else:
                     result = {"error": "No callable function found in script"}
-            
+
             # Render output template if provided
             output_template = block_config.config.get('output_template', '')
             if output_template and isinstance(result, dict):
@@ -782,7 +782,7 @@ class CustomBlockRenderer(BlockRenderer):
                 rendered_content = template.render(**result)
             else:
                 rendered_content = str(result)
-            
+
             return {
                 "id": block_config.id,
                 "type": "custom",
@@ -790,7 +790,7 @@ class CustomBlockRenderer(BlockRenderer):
                 "content": rendered_content,
                 "data": result if isinstance(result, dict) else {"result": result}
             }
-            
+
         except Exception as e:
             return {
                 "id": block_config.id,
@@ -802,14 +802,14 @@ class CustomBlockRenderer(BlockRenderer):
 
 class CompositeBlockRenderer(BlockRenderer):
     """Renderer for composite blocks containing multiple sub-blocks"""
-    
-    async def render(self, block_config: 'BlockConfig', 
-                    data: Dict[str, Any], 
+
+    async def render(self, block_config: 'BlockConfig',
+                    data: Dict[str, Any],
                     parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Render composite block"""
         sub_blocks = block_config.config.get('sub_blocks', [])
         rendered_sub_blocks = []
-        
+
         for sub_block in sub_blocks:
             # Create a temporary block config for sub-block
             sub_config = BlockConfig(
@@ -819,19 +819,19 @@ class CompositeBlockRenderer(BlockRenderer):
                 title=sub_block.get('title', ''),
                 **sub_block
             )
-            
+
             # Get appropriate renderer
             renderer = self._get_renderer(sub_config.type)
             rendered = await renderer.render(sub_config, data, parameters)
             rendered_sub_blocks.append(rendered)
-        
+
         return {
             "id": block_config.id,
             "type": "composite",
             "title": block_config.title,
             "sub_blocks": rendered_sub_blocks
         }
-    
+
     def _get_renderer(self, block_type: str):
         """Get renderer instance for block type"""
         renderers = {
@@ -862,27 +862,27 @@ logger = get_logger(__name__)
 
 class AIAnalyzer:
     """AI-powered analysis engine for reports"""
-    
+
     def __init__(self):
         self.cache = AsyncCache(ttl=3600)  # 1-hour cache
         self.models = self._initialize_models()
-        
+
     def _initialize_models(self) -> Dict[str, Any]:
         """Initialize AI model clients"""
         models = {}
-        
+
         # OpenAI models
         try:
             models['openai'] = AsyncOpenAI()
         except Exception as e:
             logger.warning(f"Failed to initialize OpenAI: {e}")
-        
+
         # Anthropic models
         try:
             models['anthropic'] = anthropic.AsyncAnthropic()
         except Exception as e:
             logger.warning(f"Failed to initialize Anthropic: {e}")
-        
+
         # GSAi models
         try:
             from ...utils.token_manager import TokenManager
@@ -896,26 +896,26 @@ class AIAnalyzer:
                 }
         except Exception as e:
             logger.warning(f"Failed to initialize GSAi: {e}")
-        
+
         # Custom REST API support
         models['rest_api'] = {}  # Will be configured per request
-        
+
         return models
-    
+
     async def analyze(self, prompt: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """Perform AI analysis based on prompt and configuration"""
         # Generate cache key
         cache_key = self._generate_cache_key(prompt, config)
-        
+
         # Check cache
         cached_result = await self.cache.get(cache_key)
         if cached_result:
             logger.info(f"Using cached analysis for key: {cache_key}")
             return cached_result
-        
+
         # Perform analysis
         model = config.get('model', 'gpt-3.5-turbo')
-        
+
         try:
             if model.startswith('gpt'):
                 result = await self._analyze_openai(prompt, config)
@@ -927,12 +927,12 @@ class AIAnalyzer:
                 result = await self._analyze_rest_api(prompt, config)
             else:
                 raise ValueError(f"Unsupported model: {model}")
-            
+
             # Cache result
             await self.cache.set(cache_key, result)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"AI analysis failed: {e}")
             return {
@@ -940,13 +940,13 @@ class AIAnalyzer:
                 "error": True,
                 "model": model
             }
-    
+
     async def _analyze_openai(self, prompt: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze using OpenAI models"""
         client = self.models.get('openai')
         if not client:
             raise ValueError("OpenAI client not initialized")
-        
+
         response = await client.chat.completions.create(
             model=config.get('model', 'gpt-3.5-turbo'),
             messages=[
@@ -959,7 +959,7 @@ class AIAnalyzer:
             frequency_penalty=config.get('frequency_penalty', 0),
             presence_penalty=config.get('presence_penalty', 0)
         )
-        
+
         return {
             "content": response.choices[0].message.content,
             "model": response.model,
@@ -970,13 +970,13 @@ class AIAnalyzer:
             },
             "finish_reason": response.choices[0].finish_reason
         }
-    
+
     async def _analyze_anthropic(self, prompt: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze using Anthropic models"""
         client = self.models.get('anthropic')
         if not client:
             raise ValueError("Anthropic client not initialized")
-        
+
         response = await client.messages.create(
             model=config.get('model', 'claude-3-haiku-20240307'),
             messages=[
@@ -985,7 +985,7 @@ class AIAnalyzer:
             max_tokens=config.get('max_tokens', 1000),
             temperature=config.get('temperature', 0.7)
         )
-        
+
         return {
             "content": response.content[0].text,
             "model": response.model,
@@ -996,29 +996,29 @@ class AIAnalyzer:
             },
             "stop_reason": response.stop_reason
         }
-    
+
     async def _analyze_gsai(self, prompt: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze using GSAi API models"""
         import aiohttp
-        
+
         gsai_config = self.models.get('gsai', {})
         if not gsai_config:
             raise ValueError("GSAi not configured")
-        
+
         # Extract model name (e.g., "gsai-api-1/llama3211b" -> "llama3211b")
         model_parts = config.get('model', '').split('/')
         model_name = model_parts[1] if len(model_parts) > 1 else model_parts[0]
-        
+
         # Prepare request
         url = f"{gsai_config['base_url']}/chat/completions"
         headers = {
             "Content-Type": "application/json"
         }
-        
+
         # Add authentication
         if gsai_config['auth_type'] == 'bearer':
             headers["Authorization"] = f"Bearer {gsai_config['auth_token']}"
-        
+
         payload = {
             "model": model_name,
             "messages": [
@@ -1028,7 +1028,7 @@ class AIAnalyzer:
             "temperature": config.get('temperature', 0.7),
             "max_tokens": config.get('max_tokens', 1000)
         }
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload, headers=headers, ssl=False) as response:
                 if response.status == 200:
@@ -1042,22 +1042,22 @@ class AIAnalyzer:
                 else:
                     error_text = await response.text()
                     raise ValueError(f"GSAi API error: {response.status} - {error_text}")
-    
+
     async def _analyze_rest_api(self, prompt: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze using custom REST API endpoint"""
         import aiohttp
         from jinja2 import Template
-        
+
         # Get endpoint configuration
         endpoint = config.get('endpoint')
         method = config.get('method', 'POST')
         headers = config.get('headers', {})
         request_template = config.get('request_template', {})
         response_path = config.get('response_path', 'content')
-        
+
         if not endpoint:
             raise ValueError("REST API endpoint not configured")
-        
+
         # Render headers with any template variables
         rendered_headers = {}
         for key, value in headers.items():
@@ -1066,7 +1066,7 @@ class AIAnalyzer:
                 rendered_headers[key] = template.render(api_token=config.get('api_token', ''))
             else:
                 rendered_headers[key] = value
-        
+
         # Prepare request body
         if request_template:
             body = {}
@@ -1080,7 +1080,7 @@ class AIAnalyzer:
                     body[key] = value
         else:
             body = {"prompt": prompt}
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.request(
                 method=method,
@@ -1090,12 +1090,12 @@ class AIAnalyzer:
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    
+
                     # Extract content from response using path
                     content = data
                     for key in response_path.split('.'):
                         content = content.get(key, content)
-                    
+
                     return {
                         "content": str(content),
                         "model": "custom_rest_api",
@@ -1105,7 +1105,7 @@ class AIAnalyzer:
                 else:
                     error_text = await response.text()
                     raise ValueError(f"REST API error: {response.status} - {error_text}")
-    
+
     def _generate_cache_key(self, prompt: str, config: Dict[str, Any]) -> str:
         """Generate cache key for prompt and config"""
         # Create a deterministic string from prompt and config
@@ -1115,18 +1115,18 @@ class AIAnalyzer:
             "temperature": config.get('temperature'),
             "max_tokens": config.get('max_tokens')
         }
-        
+
         cache_string = json.dumps(cache_data, sort_keys=True)
         return hashlib.sha256(cache_string.encode()).hexdigest()
 
 class PromptLibrary:
     """Library of reusable prompt templates"""
-    
+
     THREAT_ANALYSIS = """
     Analyze the following security threat data and provide a comprehensive assessment:
-    
+
     {threat_data}
-    
+
     Please provide:
     1. Threat Severity Assessment (Critical/High/Medium/Low) with justification
     2. Top 3 Security Concerns with specific details
@@ -1134,15 +1134,15 @@ class PromptLibrary:
     4. Immediate Mitigation Steps (prioritized list)
     5. Long-term Security Recommendations
     6. Trend Analysis comparing to historical baseline
-    
+
     Format your response in clear sections with markdown headers.
     """
-    
+
     PERFORMANCE_ANALYSIS = """
     Analyze the following system performance metrics:
-    
+
     {performance_data}
-    
+
     Provide insights on:
     1. Overall system health assessment
     2. Performance bottlenecks identified
@@ -1150,31 +1150,31 @@ class PromptLibrary:
     4. Scalability concerns
     5. Optimization recommendations
     6. Predicted performance trends
-    
+
     Include specific metrics and thresholds in your analysis.
     """
-    
+
     EXECUTIVE_SUMMARY = """
     Create an executive summary based on the following operational data:
-    
+
     {operational_data}
-    
+
     The summary should:
     1. Highlight key achievements and positive trends
     2. Identify critical risks requiring leadership attention
     3. Provide 3-5 strategic recommendations
     4. Include business impact assessment
     5. Suggest resource allocation priorities
-    
+
     Keep language non-technical and focus on business outcomes.
     Maximum 3 paragraphs.
     """
-    
+
     INCIDENT_ANALYSIS = """
     Perform root cause analysis on the following incident:
-    
+
     {incident_data}
-    
+
     Your analysis should include:
     1. Root cause identification (ranked by probability)
     2. Contributing factors analysis
@@ -1183,7 +1183,7 @@ class PromptLibrary:
     5. Remediation steps (immediate and long-term)
     6. Prevention recommendations
     7. Similar incident correlation
-    
+
     Be specific and actionable in your recommendations.
     """
 ```
@@ -1208,27 +1208,27 @@ from ...utils.security import sanitize_user_input
 
 class SecurePDFExporter(BaseExporter):
     """Secure PDF export implementation with sanitization"""
-    
+
     ALLOWED_TAGS = [
-        'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 
+        'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3',
         'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote',
         'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img'
     ]
-    
+
     ALLOWED_ATTRIBUTES = {
         '*': ['class', 'id'],
         'td': ['colspan', 'rowspan'],
         'th': ['colspan', 'rowspan'],
         'img': ['src', 'alt', 'width', 'height']
     }
-    
+
     def __init__(self):
         super().__init__()
         self.template_env = Environment(
             loader=FileSystemLoader('templates/pdf'),
             autoescape=select_autoescape(['html', 'xml'])
         )
-    
+
     def _setup_custom_styles(self):
         """Setup custom PDF styles"""
         # Title style
@@ -1240,7 +1240,7 @@ class SecurePDFExporter(BaseExporter):
             spaceAfter=30,
             alignment=TA_CENTER
         ))
-        
+
         # Section header style
         self.styles.add(ParagraphStyle(
             name='SectionHeader',
@@ -1250,7 +1250,7 @@ class SecurePDFExporter(BaseExporter):
             spaceBefore=20,
             spaceAfter=12
         ))
-        
+
         # Alert style
         self.styles.add(ParagraphStyle(
             name='Alert',
@@ -1262,18 +1262,18 @@ class SecurePDFExporter(BaseExporter):
             borderColor=colors.HexColor('#e74c3c'),
             borderPadding=10
         ))
-    
-    async def export(self, report_data: Dict[str, Any], 
+
+    async def export(self, report_data: Dict[str, Any],
                     options: Dict[str, Any] = None) -> bytes:
         """Export report to PDF"""
         options = options or {}
-        
+
         # Create PDF buffer
         buffer = io.BytesIO()
-        
+
         # Determine page size
         page_size = A4 if options.get('page_size') == 'A4' else letter
-        
+
         # Create PDF document
         doc = SimpleDocTemplate(
             buffer,
@@ -1283,54 +1283,54 @@ class SecurePDFExporter(BaseExporter):
             topMargin=72,
             bottomMargin=18
         )
-        
+
         # Build content
         story = []
-        
+
         # Add title page
         story.extend(self._create_title_page(report_data))
-        
+
         # Add table of contents if requested
         if options.get('include_toc', True):
             story.append(PageBreak())
             story.extend(self._create_toc(report_data))
-        
+
         # Add report blocks
         for block in report_data.get('blocks', []):
             story.append(PageBreak())
             story.extend(await self._render_block(block, options))
-        
+
         # Add metadata page
         if options.get('include_metadata', True):
             story.append(PageBreak())
             story.extend(self._create_metadata_page(report_data))
-        
+
         # Build PDF
         doc.build(story, onFirstPage=self._add_header_footer,
                  onLaterPages=self._add_header_footer)
-        
+
         # Get PDF bytes
         buffer.seek(0)
         pdf_bytes = buffer.read()
         buffer.close()
-        
+
         # Add watermark if requested
         if options.get('watermark'):
             pdf_bytes = self._add_watermark(pdf_bytes, options['watermark'])
-        
+
         return pdf_bytes
-    
+
     def _create_title_page(self, report_data: Dict[str, Any]) -> list:
         """Create title page elements"""
         elements = []
-        
+
         # Title
         title = Paragraph(
             "ViolentUTF Security Operations Report",
             self.styles['CustomTitle']
         )
         elements.append(title)
-        
+
         # Subtitle with date
         metadata = report_data.get('metadata', {})
         date = report_data.get('parameters', {}).get('report_date', datetime.now().strftime('%Y-%m-%d'))
@@ -1339,9 +1339,9 @@ class SecurePDFExporter(BaseExporter):
             self.styles['Title']
         )
         elements.append(subtitle)
-        
+
         elements.append(Spacer(1, 2*inch))
-        
+
         # Report info table
         info_data = [
             ['Report Type:', metadata.get('name', 'COB Report')],
@@ -1349,7 +1349,7 @@ class SecurePDFExporter(BaseExporter):
             ['Template Version:', metadata.get('version', '1.0')],
             ['Classification:', options.get('classification', 'CONFIDENTIAL')]
         ]
-        
+
         info_table = Table(info_data, colWidths=[2*inch, 3*inch])
         info_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -1357,30 +1357,30 @@ class SecurePDFExporter(BaseExporter):
             ('FONTSIZE', (0, 0), (-1, -1), 12),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
         ]))
-        
+
         elements.append(info_table)
-        
+
         return elements
-    
+
     def _create_toc(self, report_data: Dict[str, Any]) -> list:
         """Create table of contents"""
         elements = []
-        
+
         toc_title = Paragraph("Table of Contents", self.styles['Heading1'])
         elements.append(toc_title)
         elements.append(Spacer(1, 0.5*inch))
-        
+
         # Build TOC entries
         toc_data = []
         page_num = 3  # Starting page after title and TOC
-        
+
         for i, block in enumerate(report_data.get('blocks', [])):
             toc_data.append([
                 f"{i+1}. {block.get('title', 'Untitled')}",
                 str(page_num)
             ])
             page_num += 1
-        
+
         toc_table = Table(toc_data, colWidths=[5*inch, 1*inch])
         toc_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
@@ -1388,23 +1388,23 @@ class SecurePDFExporter(BaseExporter):
             ('FONTSIZE', (0, 0), (-1, -1), 11),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ]))
-        
+
         elements.append(toc_table)
-        
+
         return elements
-    
-    async def _render_block(self, block: Dict[str, Any], 
+
+    async def _render_block(self, block: Dict[str, Any],
                            options: Dict[str, Any]) -> list:
         """Render a report block to PDF elements"""
         elements = []
-        
+
         # Block title
         title = Paragraph(block.get('title', ''), self.styles['SectionHeader'])
         elements.append(title)
-        
+
         # Render based on block type
         block_type = block.get('type')
-        
+
         if block_type == 'data':
             elements.extend(self._render_data_block(block))
         elif block_type == 'analysis':
@@ -1414,16 +1414,16 @@ class SecurePDFExporter(BaseExporter):
                 elements.extend(await self._render_visualization_block(block))
         elif block_type == 'custom':
             elements.extend(self._render_custom_block(block))
-        
+
         return elements
-    
+
     def _render_data_block(self, block: Dict[str, Any]) -> list:
         """Render data block content"""
         elements = []
-        
+
         # Parse content as markdown and convert to PDF elements
         content = block.get('content', '')
-        
+
         # Simple markdown to PDF conversion
         # In production, use a proper markdown parser
         lines = content.split('\n')
@@ -1439,16 +1439,16 @@ class SecurePDFExporter(BaseExporter):
                 continue  # Skip for now, would parse table
             else:
                 para = Paragraph(line, self.styles['Normal'])
-            
+
             elements.append(para)
             elements.append(Spacer(1, 6))
-        
+
         return elements
-    
+
     def _render_analysis_block(self, block: Dict[str, Any]) -> list:
         """Render analysis block content"""
         elements = []
-        
+
         # Add model info
         metadata = block.get('metadata', {})
         model_info = Paragraph(
@@ -1457,64 +1457,64 @@ class SecurePDFExporter(BaseExporter):
         )
         elements.append(model_info)
         elements.append(Spacer(1, 12))
-        
+
         # Add analysis content
         content = block.get('content', '')
         para = Paragraph(content.replace('\n', '<br/>'), self.styles['Normal'])
         elements.append(para)
-        
+
         return elements
-    
+
     async def _render_visualization_block(self, block: Dict[str, Any]) -> list:
         """Render visualization block with charts"""
         elements = []
-        
+
         chart_config = block.get('chart_config', {})
         chart_type = chart_config.get('type', 'line')
-        
+
         # Generate chart
         fig, ax = plt.subplots(figsize=(6, 4))
-        
+
         if chart_type == 'line':
             # Sample line chart rendering
             data = chart_config.get('data', {})
             if 'labels' in data and 'datasets' in data:
                 for dataset in data['datasets']:
-                    ax.plot(data['labels'], dataset['data'], 
+                    ax.plot(data['labels'], dataset['data'],
                            label=dataset.get('label', ''))
                 ax.legend()
-        
+
         # Save chart to buffer
         chart_buffer = io.BytesIO()
         plt.savefig(chart_buffer, format='png', dpi=150, bbox_inches='tight')
         chart_buffer.seek(0)
         plt.close()
-        
+
         # Add chart to PDF
         from reportlab.platypus import Image
         chart_image = Image(chart_buffer, width=6*inch, height=4*inch)
         elements.append(chart_image)
-        
+
         return elements
-    
+
     def _render_custom_block(self, block: Dict[str, Any]) -> list:
         """Render custom block content"""
         elements = []
-        
+
         content = block.get('content', '')
         para = Paragraph(content.replace('\n', '<br/>'), self.styles['Normal'])
         elements.append(para)
-        
+
         return elements
-    
+
     def _create_metadata_page(self, report_data: Dict[str, Any]) -> list:
         """Create metadata page"""
         elements = []
-        
+
         title = Paragraph("Report Metadata", self.styles['Heading1'])
         elements.append(title)
         elements.append(Spacer(1, 0.5*inch))
-        
+
         # Metadata table
         metadata = report_data.get('metadata', {})
         meta_data = [
@@ -1525,7 +1525,7 @@ class SecurePDFExporter(BaseExporter):
             ['Created:', metadata.get('created_at', 'N/A')],
             ['Generated:', report_data.get('rendered_at', 'N/A')],
         ]
-        
+
         meta_table = Table(meta_data, colWidths=[2*inch, 4*inch])
         meta_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -1534,34 +1534,34 @@ class SecurePDFExporter(BaseExporter):
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
             ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
         ]))
-        
+
         elements.append(meta_table)
-        
+
         return elements
-    
+
     def _add_header_footer(self, canvas_obj, doc):
         """Add header and footer to pages"""
         canvas_obj.saveState()
-        
+
         # Header
         canvas_obj.setFont("Helvetica", 9)
-        canvas_obj.drawString(inch, letter[1] - 0.5*inch, 
+        canvas_obj.drawString(inch, letter[1] - 0.5*inch,
                             "ViolentUTF Security Operations")
         canvas_obj.drawRightString(letter[0] - inch, letter[1] - 0.5*inch,
                                  datetime.now().strftime('%Y-%m-%d'))
-        
+
         # Footer
         canvas_obj.drawString(inch, 0.5*inch, "CONFIDENTIAL")
         canvas_obj.drawRightString(letter[0] - inch, 0.5*inch,
                                  f"Page {doc.page}")
-        
+
         # Line separators
-        canvas_obj.line(inch, letter[1] - 0.6*inch, 
+        canvas_obj.line(inch, letter[1] - 0.6*inch,
                        letter[0] - inch, letter[1] - 0.6*inch)
         canvas_obj.line(inch, 0.7*inch, letter[0] - inch, 0.7*inch)
-        
+
         canvas_obj.restoreState()
-    
+
     def _add_watermark(self, pdf_bytes: bytes, watermark_text: str) -> bytes:
         """Add watermark to PDF pages"""
         # Implementation would use PyPDF2 or similar to add watermark
@@ -1591,7 +1591,7 @@ class TemplateCreate(BaseModel):
     version: str
     description: Optional[str]
     template_config: Dict[str, Any]
-    
+
 class TemplateUpdate(BaseModel):
     """Template update request"""
     name: Optional[str]
@@ -1606,7 +1606,7 @@ class ReportGenerateRequest(BaseModel):
     report_date: date = Field(default_factory=date.today)
     parameters: Dict[str, Any] = {}
     export_formats: List[str] = ["markdown"]
-    
+
 class ReportExportRequest(BaseModel):
     """Report export request"""
     format: str
@@ -1718,17 +1718,17 @@ async def preview_template(
     """Preview template with sample data"""
     template_manager = TemplateManager()
     generator = ReportGenerator()
-    
+
     template = await template_manager.get_template(template_id)
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
-    
+
     # Generate sample data if requested
     if sample_data:
         data = await generator.generate_sample_data()
     else:
         data = {}
-    
+
     # Render preview
     preview = await template.render(data)
     return preview
@@ -1743,7 +1743,7 @@ async def generate_report(
     """Generate a new COB report"""
     try:
         generator = ReportGenerator()
-        
+
         # Generate report
         report_id = await generator.generate_report(
             template_id=request.template_id,
@@ -1751,7 +1751,7 @@ async def generate_report(
             parameters=request.parameters,
             user_id=current_user["user_id"]
         )
-        
+
         # Queue export tasks
         for format in request.export_formats:
             background_tasks.add_task(
@@ -1759,7 +1759,7 @@ async def generate_report(
                 report_id=report_id,
                 format=format
             )
-        
+
         return {
             "report_id": report_id,
             "message": "Report generation started",
@@ -1807,14 +1807,14 @@ async def export_report(
 ):
     """Export report in specific format"""
     generator = ReportGenerator()
-    
+
     try:
         export_url = await generator.export_report(
             report_id=report_id,
             format=request.format,
             options=request.options
         )
-        
+
         return {
             "export_url": export_url,
             "format": request.format,
@@ -1834,7 +1834,7 @@ async def distribute_report(
 ):
     """Distribute report to specified channels"""
     generator = ReportGenerator()
-    
+
     # Queue distribution task
     background_tasks.add_task(
         generator.distribute_report,
@@ -1842,7 +1842,7 @@ async def distribute_report(
         channels=channels,
         user_id=current_user["user_id"]
     )
-    
+
     return {
         "message": "Report distribution started",
         "channels": list(channels.keys())
@@ -1856,7 +1856,7 @@ async def create_schedule(
 ):
     """Create report generation schedule"""
     from ....core.reports.scheduler import ReportScheduler
-    
+
     scheduler = ReportScheduler()
     schedule_id = await scheduler.create_schedule(
         template_id=schedule.template_id,
@@ -1868,7 +1868,7 @@ async def create_schedule(
         distribution=schedule.distribution,
         user_id=current_user["user_id"]
     )
-    
+
     return {
         "schedule_id": schedule_id,
         "message": "Schedule created successfully"
@@ -1881,7 +1881,7 @@ async def list_schedules(
 ):
     """List report schedules"""
     from ....core.reports.scheduler import ReportScheduler
-    
+
     scheduler = ReportScheduler()
     schedules = await scheduler.list_schedules(
         user_id=current_user["user_id"],
@@ -1897,16 +1897,16 @@ async def update_schedule(
 ):
     """Update report schedule"""
     from ....core.reports.scheduler import ReportScheduler
-    
+
     scheduler = ReportScheduler()
     success = await scheduler.update_schedule(
         schedule_id=schedule_id,
         updates=updates
     )
-    
+
     if not success:
         raise HTTPException(status_code=404, detail="Schedule not found")
-    
+
     return {"message": "Schedule updated successfully"}
 
 @router.delete("/schedules/{schedule_id}")
@@ -1916,13 +1916,13 @@ async def delete_schedule(
 ):
     """Delete report schedule"""
     from ....core.reports.scheduler import ReportScheduler
-    
+
     scheduler = ReportScheduler()
     success = await scheduler.delete_schedule(schedule_id)
-    
+
     if not success:
         raise HTTPException(status_code=404, detail="Schedule not found")
-    
+
     return {"message": "Schedule deleted successfully"}
 ```
 
@@ -1949,7 +1949,7 @@ CREATE TABLE IF NOT EXISTS cob_report_templates (
     is_active BOOLEAN DEFAULT true,
     is_default BOOLEAN DEFAULT false,
     permissions JSONB DEFAULT '{"read": ["all_users"], "write": ["admin"]}'::jsonb,
-    
+
     -- Indexes
     CONSTRAINT unique_template_name_version UNIQUE (name, version)
 );
@@ -1966,7 +1966,7 @@ CREATE TABLE IF NOT EXISTS cob_template_versions (
     change_description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
-    
+
     -- Ensure unique version numbers per template
     CONSTRAINT unique_template_version UNIQUE (template_id, version_number)
 );
@@ -1986,7 +1986,7 @@ CREATE TABLE IF NOT EXISTS cob_generated_reports (
     processing_time_ms INTEGER,
     status VARCHAR(50) DEFAULT 'pending',
     error_message TEXT,
-    
+
     -- Indexes
     INDEX idx_reports_date (report_date DESC),
     INDEX idx_reports_template (template_id),
@@ -2005,7 +2005,7 @@ CREATE TABLE IF NOT EXISTS cob_report_exports (
     expires_at TIMESTAMP WITH TIME ZONE,
     download_count INTEGER DEFAULT 0,
     last_downloaded_at TIMESTAMP WITH TIME ZONE,
-    
+
     -- Indexes
     INDEX idx_exports_report (report_id),
     INDEX idx_exports_expires (expires_at)
@@ -2028,7 +2028,7 @@ CREATE TABLE IF NOT EXISTS cob_report_schedules (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_run_at TIMESTAMP WITH TIME ZONE,
     next_run_at TIMESTAMP WITH TIME ZONE,
-    
+
     -- Indexes
     INDEX idx_schedules_active (is_active),
     INDEX idx_schedules_next_run (next_run_at)
@@ -2043,7 +2043,7 @@ CREATE TABLE IF NOT EXISTS cob_schedule_executions (
     success BOOLEAN NOT NULL,
     error_message TEXT,
     execution_time_ms INTEGER,
-    
+
     -- Indexes
     INDEX idx_executions_schedule (schedule_id, executed_at DESC)
 );
@@ -2069,7 +2069,7 @@ $$ language 'plpgsql';
 
 CREATE TRIGGER update_cob_report_templates_updated_at BEFORE UPDATE
     ON cob_report_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-    
+
 CREATE TRIGGER update_cob_report_schedules_updated_at BEFORE UPDATE
     ON cob_report_schedules FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
@@ -2087,7 +2087,7 @@ from violentutf.core.reports.templates.base import ReportTemplate, TemplateMetad
 
 class TestReportTemplate:
     """Test report template functionality"""
-    
+
     @pytest.fixture
     def sample_template_config(self):
         return {
@@ -2110,41 +2110,41 @@ class TestReportTemplate:
                 }
             ]
         }
-    
+
     def test_template_initialization(self, sample_template_config):
         """Test template initialization"""
         template = ReportTemplate(sample_template_config)
-        
+
         assert template.metadata.name == "Test Template"
         assert len(template.blocks) == 1
         assert template.blocks[0].type == "data_block"
-    
+
     @pytest.mark.asyncio
     async def test_template_rendering(self, sample_template_config):
         """Test template rendering"""
         template = ReportTemplate(sample_template_config)
-        
+
         data = {"value": "Hello World"}
         params = {"report_date": "2024-01-15"}
-        
+
         result = await template.render(data, params)
-        
+
         assert result["metadata"]["name"] == "Test Template"
         assert len(result["blocks"]) == 1
         assert "Hello World" in result["blocks"][0]["content"]
 
 class TestBlockRenderers:
     """Test block renderer implementations"""
-    
+
     @pytest.mark.asyncio
     async def test_data_block_renderer(self):
         """Test data block rendering"""
         from violentutf.core.reports.templates.blocks import DataBlockRenderer
         import jinja2
-        
+
         env = jinja2.Environment()
         renderer = DataBlockRenderer(env)
-        
+
         block_config = BlockConfig(
             id="test",
             type="data_block",
@@ -2152,34 +2152,34 @@ class TestBlockRenderers:
             title="Test Data",
             template="Value: {{test_value}}"
         )
-        
+
         data = {"test_value": 42}
         result = await renderer.render(block_config, data, {})
-        
+
         assert result["type"] == "data"
         assert "Value: 42" in result["content"]
-    
+
     @pytest.mark.asyncio
     async def test_analysis_block_renderer(self, mocker):
         """Test AI analysis block rendering"""
         from violentutf.core.reports.templates.blocks import AnalysisBlockRenderer
         import jinja2
-        
+
         # Mock AI analyzer
         mock_ai_response = {
             "content": "AI analysis result",
             "model": "gpt-3.5-turbo",
             "usage": {"total_tokens": 100}
         }
-        
+
         mocker.patch(
             'violentutf.core.reports.analysis.ai_analyzer.AIAnalyzer.analyze',
             return_value=mock_ai_response
         )
-        
+
         env = jinja2.Environment()
         renderer = AnalysisBlockRenderer(env)
-        
+
         block_config = BlockConfig(
             id="ai_test",
             type="analysis_block",
@@ -2190,10 +2190,10 @@ class TestBlockRenderers:
                 "model": "gpt-3.5-turbo"
             }
         )
-        
+
         data = {"data": "test data"}
         result = await renderer.render(block_config, data, {})
-        
+
         assert result["type"] == "analysis"
         assert result["content"] == "AI analysis result"
         assert result["metadata"]["tokens_used"] == 100
@@ -2210,12 +2210,12 @@ from datetime import date
 
 class TestCOBReportIntegration:
     """Integration tests for COB report system"""
-    
+
     @pytest.fixture
     def client(self):
         from violentutf_api.main import app
         return TestClient(app)
-    
+
     @pytest.fixture
     def auth_headers(self, client):
         # Get auth token
@@ -2225,7 +2225,7 @@ class TestCOBReportIntegration:
         })
         token = response.json()["access_token"]
         return {"Authorization": f"Bearer {token}"}
-    
+
     def test_template_lifecycle(self, client, auth_headers):
         """Test complete template lifecycle"""
         # Create template
@@ -2245,7 +2245,7 @@ class TestCOBReportIntegration:
                 ]
             }
         }
-        
+
         response = client.post(
             "/api/v1/cob/templates",
             json=template_data,
@@ -2253,13 +2253,13 @@ class TestCOBReportIntegration:
         )
         assert response.status_code == 200
         template_id = response.json()["id"]
-        
+
         # List templates
         response = client.get("/api/v1/cob/templates", headers=auth_headers)
         assert response.status_code == 200
         templates = response.json()
         assert any(t["id"] == template_id for t in templates)
-        
+
         # Get specific template
         response = client.get(
             f"/api/v1/cob/templates/{template_id}",
@@ -2267,7 +2267,7 @@ class TestCOBReportIntegration:
         )
         assert response.status_code == 200
         assert response.json()["name"] == "Integration Test Template"
-        
+
         # Update template
         update_data = {"description": "Updated description"}
         response = client.put(
@@ -2276,14 +2276,14 @@ class TestCOBReportIntegration:
             headers=auth_headers
         )
         assert response.status_code == 200
-        
+
         # Delete template
         response = client.delete(
             f"/api/v1/cob/templates/{template_id}",
             headers=auth_headers
         )
         assert response.status_code == 200
-    
+
     def test_report_generation(self, client, auth_headers):
         """Test report generation and export"""
         # First create a template
@@ -2297,7 +2297,7 @@ class TestCOBReportIntegration:
             headers=auth_headers
         )
         template_id = template_response.json()["id"]
-        
+
         # Generate report
         report_data = {
             "template_id": template_id,
@@ -2305,7 +2305,7 @@ class TestCOBReportIntegration:
             "parameters": {"shift": "Day"},
             "export_formats": ["markdown", "pdf"]
         }
-        
+
         response = client.post(
             "/api/v1/cob/reports/generate",
             json=report_data,
@@ -2313,20 +2313,20 @@ class TestCOBReportIntegration:
         )
         assert response.status_code == 200
         report_id = response.json()["report_id"]
-        
+
         # Get report
         response = client.get(
             f"/api/v1/cob/reports/{report_id}",
             headers=auth_headers
         )
         assert response.status_code == 200
-        
+
         # Export report
         export_data = {
             "format": "pdf",
             "options": {"watermark": "TEST"}
         }
-        
+
         response = client.post(
             f"/api/v1/cob/reports/{report_id}/export",
             json=export_data,
@@ -2346,21 +2346,21 @@ The scheduling interface is the most critical UI component:
    ```python
    # Streamlit UI for schedule management
    st.header("📅 Report Scheduling")
-   
+
    col1, col2 = st.columns([2, 1])
-   
+
    with col1:
        # Active schedules list
        st.subheader("Active Schedules")
        schedules_df = load_active_schedules()
-       
+
        # Display with actions
        for idx, schedule in schedules_df.iterrows():
            with st.expander(f"{schedule['template_name']} - {schedule['frequency']}"):
                st.write(f"**Next Run**: {schedule['next_run_at']}")
                st.write(f"**Time**: {schedule['schedule_time']} {schedule['timezone']}")
                st.write(f"**Formats**: {', '.join(schedule['export_formats'])}")
-               
+
                col_a, col_b, col_c = st.columns(3)
                with col_a:
                    if st.button("⏸️ Pause", key=f"pause_{idx}"):
@@ -2371,37 +2371,37 @@ The scheduling interface is the most critical UI component:
                with col_c:
                    if st.button("🗑️ Delete", key=f"del_{idx}"):
                        delete_schedule(schedule['id'])
-   
+
    with col2:
        # Quick schedule creation
        st.subheader("Quick Schedule")
-       
+
        template = st.selectbox("Template", available_templates)
        frequency = st.radio("Frequency", ["Daily", "Weekly", "Monthly"])
-       
+
        if frequency == "Daily":
            time = st.time_input("Time", datetime.time(18, 0))
        elif frequency == "Weekly":
-           day = st.selectbox("Day", ["Monday", "Tuesday", "Wednesday", 
+           day = st.selectbox("Day", ["Monday", "Tuesday", "Wednesday",
                                      "Thursday", "Friday"])
            time = st.time_input("Time", datetime.time(9, 0))
        else:  # Monthly
            day = st.number_input("Day of Month", 1, 28, 1)
            time = st.time_input("Time", datetime.time(9, 0))
-       
-       timezone = st.selectbox("Timezone", pytz.all_timezones, 
+
+       timezone = st.selectbox("Timezone", pytz.all_timezones,
                               index=pytz.all_timezones.index("America/New_York"))
-       
+
        # Distribution
        st.write("**Distribution**")
        send_email = st.checkbox("Email")
        if send_email:
            emails = st.text_area("Recipients (one per line)")
-       
+
        send_slack = st.checkbox("Slack")
        if send_slack:
            channels = st.text_input("Channels (comma-separated)")
-       
+
        if st.button("Create Schedule", type="primary"):
            create_new_schedule(...)
    ```

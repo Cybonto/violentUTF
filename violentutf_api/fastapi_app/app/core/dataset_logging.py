@@ -15,6 +15,8 @@ import logging
 import logging.handlers
 import os
 import shutil
+import sys
+import threading
 import time
 import uuid
 from contextlib import contextmanager
@@ -22,7 +24,18 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
+from queue import Queue
 from typing import Any, Dict, List, Optional, Tuple, Union
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
+try:
+    import requests
+except ImportError:
+    requests = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +61,15 @@ class OperationType(Enum):
     ANALYSIS = "dataset_analysis"
     BACKUP = "dataset_backup"
     RECOVERY = "dataset_recovery"
+    TRANSFORMATION = "dataset_transformation"
+    FIELD_MAPPING = "dataset_field_mapping"
+    PREVIEW = "dataset_preview"
+    SAVE = "dataset_save"
+    DELETE = "dataset_delete"
+    LIST = "dataset_list"
+    UPDATE = "dataset_update"
+    SECURITY_SCAN = "dataset_security_scan"
+    COMPLIANCE_CHECK = "dataset_compliance_check"
 
 
 @dataclass
@@ -170,6 +192,23 @@ class LogConfig:
     enable_structured_logging: bool = True
     enable_performance_tracking: bool = True
 
+    # Centralized logging
+    enable_centralized_logging: bool = False
+    centralized_endpoint: Optional[str] = None
+    centralized_api_key: Optional[str] = None
+
+    # Performance monitoring
+    enable_performance_monitoring: bool = True
+    performance_sampling_rate: float = 0.1  # 10% sampling
+
+    # Log filtering
+    log_sensitive_data: bool = False
+    max_log_message_size: int = 10000
+
+    # Audit trails
+    enable_audit_trails: bool = True
+    audit_log_retention_days: int = 90
+
     @classmethod
     def from_environment(cls) -> "LogConfig":
         """Load configuration from environment variables."""
@@ -221,6 +260,15 @@ class LogConfig:
             enable_correlation_id=os.getenv("DATASET_ENABLE_CORRELATION_ID", "true").lower() == "true",
             enable_structured_logging=os.getenv("DATASET_ENABLE_STRUCTURED_LOGGING", "true").lower() == "true",
             enable_performance_tracking=os.getenv("DATASET_ENABLE_PERFORMANCE_TRACKING", "true").lower() == "true",
+            enable_centralized_logging=os.getenv("DATASET_ENABLE_CENTRALIZED_LOGGING", "false").lower() == "true",
+            centralized_endpoint=os.getenv("DATASET_CENTRALIZED_ENDPOINT"),
+            centralized_api_key=os.getenv("DATASET_CENTRALIZED_API_KEY"),
+            enable_performance_monitoring=os.getenv("DATASET_ENABLE_PERFORMANCE_MONITORING", "true").lower() == "true",
+            performance_sampling_rate=float(os.getenv("DATASET_PERFORMANCE_SAMPLING_RATE", "0.1")),
+            log_sensitive_data=os.getenv("DATASET_LOG_SENSITIVE_DATA", "false").lower() == "true",
+            max_log_message_size=int(os.getenv("DATASET_MAX_LOG_MESSAGE_SIZE", "10000")),
+            enable_audit_trails=os.getenv("DATASET_ENABLE_AUDIT_TRAILS", "true").lower() == "true",
+            audit_log_retention_days=int(os.getenv("DATASET_AUDIT_LOG_RETENTION_DAYS", "90")),
         )
 
 
@@ -321,7 +369,11 @@ class StructuredFormatter(logging.Formatter):
 class DatasetLogger:
     """Enhanced logger for dataset operations with structured logging."""
 
-    def __init__(self: "DatasetLogger", logger_name: str = __name__, config: Optional[LogConfig] = None) -> None:
+    def __init__(
+        self: "DatasetLogger",
+        logger_name: str = __name__,
+        config: Optional[LogConfig] = None,
+    ) -> None:
         """Initialize the instance."""
         self.logger_name = logger_name
         self.logger = logging.getLogger(logger_name)
@@ -330,7 +382,17 @@ class DatasetLogger:
         self.operation_start_time: Optional[float] = None
         self.metrics = ImportMetrics()
         self.correlation_id: Optional[str] = None
+
+        # Performance optimization caches
+        self._protected_keys_cache: Optional[set] = None
+        self._async_queue: Optional[Queue] = None
+        self._async_worker_thread: Optional[threading.Thread] = None
+
         self._setup_logging()
+
+        # Setup async logging if enabled
+        if self.config.async_logging:
+            self._setup_async_logging()
 
     def _setup_logging(self: "DatasetLogger") -> None:
         """Setup logging handlers based on configuration."""
@@ -352,6 +414,10 @@ class DatasetLogger:
         if self.config.enable_file_logging:
             self._setup_file_handler()
 
+        # Centralized logging handler
+        if self.config.enable_centralized_logging:
+            self._setup_centralized_handler()
+
     def _setup_file_handler(self: "DatasetLogger") -> None:
         """Setup file handler with rotation and compression."""
         # Create log directory.
@@ -362,7 +428,10 @@ class DatasetLogger:
         log_file = self.config.log_dir / f"{self.config.log_file_prefix}_{timestamp}.log"
 
         # Rotating file handler
-        file_handler: Union[logging.handlers.TimedRotatingFileHandler, logging.handlers.RotatingFileHandler]
+        file_handler: Union[
+            logging.handlers.TimedRotatingFileHandler,
+            logging.handlers.RotatingFileHandler,
+        ]
         if self.config.rotation_interval == "midnight":
             file_handler = logging.handlers.TimedRotatingFileHandler(
                 log_file,
@@ -397,6 +466,61 @@ class DatasetLogger:
 
         # Clean up old logs
         self._cleanup_old_logs()
+
+    def _setup_async_logging(self: "DatasetLogger") -> None:
+        """Setup asynchronous logging for better performance."""
+        try:
+            self._async_queue = Queue(maxsize=self.config.buffer_size)
+            self._async_worker_thread = threading.Thread(
+                target=self._async_worker,
+                daemon=True,
+                name=f"DatasetLogger-{self.logger_name}",
+            )
+            self._async_worker_thread.start()
+            logger.debug("Async logging worker started")
+        except Exception as e:
+            logger.warning(f"Failed to setup async logging: {e}")
+            self._async_queue = None
+            self._async_worker_thread = None
+
+    def _async_worker(self: "DatasetLogger") -> None:
+        """Background worker for async logging."""
+        while True:
+            try:
+                # Get log entry from queue with timeout
+                if self._async_queue is not None:
+                    level, message, extra = self._async_queue.get(timeout=1.0)
+
+                    # Process the log entry
+                    self.logger.log(level, message, extra=extra)
+
+                    # Mark task as done
+                    self._async_queue.task_done()
+                else:
+                    break
+
+            except Exception:
+                # Exit on any error or timeout
+                break
+
+    def _setup_centralized_handler(self: "DatasetLogger") -> None:
+        """Setup centralized logging handler for external log aggregation."""
+        if not self.config.centralized_endpoint or not requests:
+            logger.warning("Centralized logging disabled: missing endpoint or requests library")
+            return
+
+        try:
+            centralized_handler = CentralizedHandler(
+                endpoint=self.config.centralized_endpoint,
+                api_key=self.config.centralized_api_key,
+                buffer_size=self.config.buffer_size,
+            )
+            centralized_handler.setLevel(getattr(logging, self.config.file_log_level))
+            centralized_handler.setFormatter(JSONFormatter())
+            self.logger.addHandler(centralized_handler)
+            logger.info("Centralized logging handler configured")
+        except Exception as e:
+            logger.warning(f"Failed to setup centralized logging: {e}")
 
     def _compress_log(self: "DatasetLogger", source: str, dest: str) -> None:
         """Compress rotated log files."""
@@ -439,10 +563,31 @@ class DatasetLogger:
         user_id: Optional[str] = None,
         **kwargs,
     ) -> None:
-        """Log with structured data."""
+        """Log with structured data - optimized for performance."""
+        # Early exit for disabled log levels to avoid overhead
+        if not self.logger.isEnabledFor(level):
+            return
+
+        # Truncate message if too long to prevent memory issues
+        if len(message) > self.config.max_log_message_size:
+            message = message[: self.config.max_log_message_size] + "... [TRUNCATED]"
+
+        # Filter sensitive data if disabled
+        if not self.config.log_sensitive_data:
+            # Remove potentially sensitive fields
+            filtered_kwargs = {}
+            sensitive_keys = {"password", "token", "key", "secret", "credential"}
+            for k, v in kwargs.items():
+                if any(sensitive in k.lower() for sensitive in sensitive_keys):
+                    filtered_kwargs[k] = "[REDACTED]"
+                else:
+                    filtered_kwargs[k] = v
+            kwargs = filtered_kwargs
+
+        # Build structured data efficiently
         structured_data = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "log_message": message,  # Changed from "message" to avoid conflict
+            "log_message": message,
             "operation": operation or self.current_operation,
             "dataset_id": dataset_id,
             "dataset_type": dataset_type,
@@ -450,43 +595,59 @@ class DatasetLogger:
             "session_id": self.metrics.session_id,
             "correlation_id": self.correlation_id or self.metrics.correlation_id,
             "environment": self.config.environment,
-            **kwargs,
         }
 
-        # Add performance metrics if enabled
-        if self.config.enable_performance_tracking and self.operation_start_time:
-            structured_data["operation_elapsed_seconds"] = time.time() - self.operation_start_time
+        # Add kwargs efficiently
+        structured_data.update(kwargs)
 
-        # Filter out None values
+        # Add performance metrics if enabled (with minimal overhead)
+        if self.config.enable_performance_tracking and self.operation_start_time:
+            structured_data["operation_elapsed_seconds"] = str(time.time() - self.operation_start_time)
+
+        # Filter out None values efficiently
         structured_data = {k: v for k, v in structured_data.items() if v is not None}
 
-        # Log based on configuration
+        # Log based on configuration with optimized path
         if self.config.enable_structured_logging:
-            # Add structured data as extra fields (excluding protected keys)
-            # Remove any fields that conflict with LogRecord attributes
-            protected_keys = {
-                "message",
-                "asctime",
-                "msg",
-                "args",
-                "created",
-                "filename",
-                "funcName",
-                "levelname",
-                "levelno",
-                "lineno",
-                "module",
-                "pathname",
-                "process",
-                "processName",
-                "thread",
-                "threadName",
-            }
-            safe_data = {k: v for k, v in structured_data.items() if k not in protected_keys}
-            self.logger.log(level, message, extra=safe_data)
+            # Use pre-computed set for better performance
+            if not hasattr(self, "_protected_keys_cache") or self._protected_keys_cache is None:
+                self._protected_keys_cache = {
+                    "message",
+                    "asctime",
+                    "msg",
+                    "args",
+                    "created",
+                    "filename",
+                    "funcName",
+                    "levelname",
+                    "levelno",
+                    "lineno",
+                    "module",
+                    "pathname",
+                    "process",
+                    "processName",
+                    "thread",
+                    "threadName",
+                }
+
+            safe_data = {k: v for k, v in structured_data.items() if k not in self._protected_keys_cache}
+
+            # Use async logging if enabled and queue isn't full
+            if self.config.async_logging and hasattr(self, "_async_queue") and self._async_queue is not None:
+                try:
+                    self._async_queue.put_nowait((level, message, safe_data))
+                except Exception:
+                    # Fall back to synchronous logging
+                    self.logger.log(level, message, extra=safe_data)
+            else:
+                self.logger.log(level, message, extra=safe_data)
         else:
-            # Create log message with structured data inline
-            log_message = f"{message} | {json.dumps(structured_data, default=str)}"
+            # Optimize JSON serialization for non-structured logging
+            try:
+                log_message = f"{message} | {json.dumps(structured_data, default=str, separators=(',', ':'))}"
+            except (TypeError, ValueError):
+                # Fallback for serialization issues
+                log_message = f"{message} | {str(structured_data)}"
             self.logger.log(level, log_message)
 
     def info(self: "DatasetLogger", message: str, **kwargs) -> None:
@@ -629,7 +790,11 @@ class DatasetLogger:
 
     def log_memory_usage(self: "DatasetLogger", memory_mb: float, operation: str = "unknown") -> None:
         """Log current memory usage."""
-        self.debug(f"Memory usage: {memory_mb:.2f} MB", memory_mb=memory_mb, operation=operation)
+        self.debug(
+            f"Memory usage: {memory_mb:.2f} MB",
+            memory_mb=memory_mb,
+            operation=operation,
+        )
 
         # Update metrics
         self.metrics.memory_samples.append(memory_mb)
@@ -641,7 +806,11 @@ class DatasetLogger:
             self.metrics.avg_memory_mb = sum(self.metrics.memory_samples) / len(self.metrics.memory_samples)
 
     def log_retry_attempt(
-        self: "DatasetLogger", attempt: int, max_attempts: int, error: Optional[Exception] = None, **kwargs
+        self: "DatasetLogger",
+        attempt: int,
+        max_attempts: int,
+        error: Optional[Exception] = None,
+        **kwargs,
     ) -> None:
         """Log retry attempts."""
         error_msg = str(error) if error else "Unknown error"
@@ -662,7 +831,11 @@ class DatasetLogger:
             self.metrics.retry_reasons.append(f"{type(error).__name__}: {str(error)[:100]}")
 
     def log_pyrit_storage(
-        self: "DatasetLogger", prompts_stored: int, storage_time_seconds: float, storage_size_mb: float, **kwargs: Any
+        self: "DatasetLogger",
+        prompts_stored: int,
+        storage_time_seconds: float,
+        storage_size_mb: float,
+        **kwargs: Any,
     ) -> None:
         """Log PyRIT memory storage operations."""
         self.info(
@@ -677,8 +850,98 @@ class DatasetLogger:
         self.metrics.pyrit_storage_time_seconds += storage_time_seconds
         self.metrics.pyrit_storage_size_mb += storage_size_mb
 
+    def log_security_event(
+        self: "DatasetLogger",
+        event_type: str,
+        severity: str = "medium",
+        details: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Log security-related events during dataset operations."""
+        security_data = {
+            "event_type": event_type,
+            "severity": severity,
+            "security_category": "dataset_operation",
+            "details": details or {},
+            **kwargs,
+        }
+
+        if severity in ["high", "critical"]:
+            self.error(f"Security event: {event_type}", **security_data)
+        elif severity == "medium":
+            self.warning(f"Security event: {event_type}", **security_data)
+        else:
+            self.info(f"Security event: {event_type}", **security_data)
+
+    def log_compliance_check(
+        self: "DatasetLogger",
+        check_type: str,
+        result: str,
+        details: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Log compliance checking activities."""
+        compliance_data = {
+            "check_type": check_type,
+            "result": result,
+            "compliance_category": "dataset_governance",
+            "details": details or {},
+            **kwargs,
+        }
+
+        if result in ["failed", "violation"]:
+            self.error(f"Compliance check failed: {check_type}", **compliance_data)
+        elif result == "warning":
+            self.warning(f"Compliance check warning: {check_type}", **compliance_data)
+        else:
+            self.info(f"Compliance check passed: {check_type}", **compliance_data)
+
+    def log_performance_metric(
+        self: "DatasetLogger",
+        metric_name: str,
+        metric_value: float,
+        metric_unit: str = "seconds",
+        threshold: Optional[float] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Log performance metrics with threshold checking."""
+        # Early exit if performance monitoring is disabled
+        if not self.config.enable_performance_monitoring:
+            return
+
+        # Use efficient sampling with minimal overhead
+        import random
+
+        if random.random() > self.config.performance_sampling_rate:
+            return
+
+        performance_data = {
+            "metric_name": metric_name,
+            "metric_value": metric_value,
+            "metric_unit": metric_unit,
+            "threshold": threshold,
+            "performance_category": "dataset_metrics",
+            **kwargs,
+        }
+
+        # Check threshold violations
+        if threshold is not None and metric_value > threshold:
+            self.warning(
+                f"Performance threshold exceeded: {metric_name}={metric_value}{metric_unit} > {threshold}{metric_unit}",
+                **performance_data,
+            )
+        else:
+            self.debug(
+                f"Performance metric: {metric_name}={metric_value}{metric_unit}",
+                **performance_data,
+            )
+
     def log_import_summary(
-        self: "DatasetLogger", dataset_id: str, dataset_type: str, success: bool = True, **kwargs
+        self: "DatasetLogger",
+        dataset_id: str,
+        dataset_type: str,
+        success: bool = True,
+        **kwargs,
     ) -> None:
         """Log comprehensive import summary."""
         # Calculate final metrics.
@@ -742,14 +1005,84 @@ class DatasetLogger:
 
         return self.metrics
 
+    def close(self: "DatasetLogger") -> None:
+        """Close the logger and cleanup resources."""
+        # Stop async worker if running
+        if self._async_worker_thread and self._async_worker_thread.is_alive():
+            if self._async_queue:
+                # Wait for pending log entries to be processed
+                self._async_queue.join()
+
+        # Close all handlers
+        for handler in self.logger.handlers:
+            if hasattr(handler, "close"):
+                handler.close()
+
+    def get_current_system_metrics(self: "DatasetLogger") -> Dict[str, Any]:
+        """Get current system performance metrics."""
+        metrics = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "process_id": os.getpid(),
+            "thread_count": threading.active_count(),
+        }
+
+        if psutil:
+            try:
+                process = psutil.Process()
+                metrics.update(
+                    {
+                        "cpu_percent": process.cpu_percent(),
+                        "memory_percent": process.memory_percent(),
+                        "memory_rss_mb": process.memory_info().rss / 1024 / 1024,
+                        "memory_vms_mb": process.memory_info().vms / 1024 / 1024,
+                        "open_files": len(process.open_files()),
+                        "connections": len(process.connections()),
+                    }
+                )
+
+                # System-wide metrics
+                metrics.update(
+                    {
+                        "system_cpu_percent": psutil.cpu_percent(),
+                        "system_memory_percent": psutil.virtual_memory().percent,
+                        "system_disk_usage_percent": (
+                            psutil.disk_usage("/").percent
+                            if sys.platform != "win32"
+                            else psutil.disk_usage("C:\\").percent
+                        ),
+                    }
+                )
+            except Exception as e:
+                logger.debug(f"Failed to collect system metrics: {e}")
+
+        return metrics
+
 
 # Global logger instance
 dataset_logger = DatasetLogger("violentutf.datasets")
 
+# Global audit logger instance (initialized after class definition)
+_dataset_audit_logger_instance = None
+
+
+def get_dataset_audit_logger() -> "DatasetAuditLogger":
+    """Get audit logger instance with lazy initialization."""
+    global _dataset_audit_logger_instance
+    if _dataset_audit_logger_instance is None:
+        _dataset_audit_logger_instance = DatasetAuditLogger(dataset_logger)
+    return _dataset_audit_logger_instance
+
+
+# Initialized at end of file after all classes are defined
+
 
 # Convenience functions for common logging patterns
 def log_dataset_operation_start(
-    operation: str, dataset_id: str, dataset_type: str, user_id: Optional[str] = None, **kwargs: Any
+    operation: str,
+    dataset_id: str,
+    dataset_type: str,
+    user_id: Optional[str] = None,
+    **kwargs: Any,
 ) -> None:
     """Log the start of a dataset operation."""
     dataset_logger.info(
@@ -776,7 +1109,12 @@ def log_dataset_operation_error(operation: str, dataset_id: str, error: Exceptio
 
 def log_dataset_operation_success(operation: str, dataset_id: str, **kwargs) -> None:
     """Log successful completion of a dataset operation."""
-    dataset_logger.info(f"Successfully completed {operation}", operation=operation, dataset_id=dataset_id, **kwargs)
+    dataset_logger.info(
+        f"Successfully completed {operation}",
+        operation=operation,
+        dataset_id=dataset_id,
+        **kwargs,
+    )
 
 
 # Log analysis utilities
@@ -796,43 +1134,67 @@ class LogAnalyzer:
         user_id: Optional[str] = None,
         correlation_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        """Read and filter log entries."""
+        """Read and filter log entries with optimized performance."""
         logs = []
 
-        # Find log files in the directory
-        log_files = list(self.log_dir.glob("*.log")) + list(self.log_dir.glob("*.log.gz"))
+        # Find log files in the directory (cache for repeated calls)
+        if not hasattr(self, "_log_files_cache") or time.time() - getattr(self, "_cache_time", 0) > 60:
+            self._log_files_cache = list(self.log_dir.glob("*.log")) + list(self.log_dir.glob("*.log.gz"))
+            self._cache_time = time.time()
+
+        log_files = self._log_files_cache
 
         for log_file in log_files:
-            if log_file.suffix == ".gz":
-                with gzip.open(log_file, "rt") as f:
-                    lines = f.readlines()
-            else:
-                with open(log_file, "r") as f:
-                    lines = f.readlines()
+            try:
+                if log_file.suffix == ".gz":
+                    with gzip.open(log_file, "rt", encoding="utf-8") as f:
+                        lines = f.readlines()
+                else:
+                    with open(log_file, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
 
-            for line in lines:
-                try:
-                    # Try to parse as JSON
-                    log_entry = json.loads(line)
-
-                    # Apply filters
-                    if start_time and datetime.fromisoformat(log_entry["timestamp"]) < start_time:
-                        continue
-                    if end_time and datetime.fromisoformat(log_entry["timestamp"]) > end_time:
-                        continue
-                    if operation and log_entry.get("operation") != operation:
-                        continue
-                    if dataset_id and log_entry.get("dataset_id") != dataset_id:
-                        continue
-                    if user_id and log_entry.get("user_id") != user_id:
-                        continue
-                    if correlation_id and log_entry.get("correlation_id") != correlation_id:
+                for line in lines:
+                    line = line.strip()
+                    if not line:
                         continue
 
-                    logs.append(log_entry)
-                except json.JSONDecodeError:
-                    # Skip non-JSON lines
-                    continue
+                    try:
+                        # Try to parse as JSON
+                        log_entry = json.loads(line)
+
+                        # Apply filters efficiently
+                        if start_time:
+                            try:
+                                log_time = datetime.fromisoformat(log_entry["timestamp"])
+                                if log_time < start_time:
+                                    continue
+                            except (KeyError, ValueError):
+                                continue
+
+                        if end_time:
+                            try:
+                                log_time = datetime.fromisoformat(log_entry["timestamp"])
+                                if log_time > end_time:
+                                    continue
+                            except (KeyError, ValueError):
+                                continue
+
+                        if operation and log_entry.get("operation") != operation:
+                            continue
+                        if dataset_id and log_entry.get("dataset_id") != dataset_id:
+                            continue
+                        if user_id and log_entry.get("user_id") != user_id:
+                            continue
+                        if correlation_id and log_entry.get("correlation_id") != correlation_id:
+                            continue
+
+                        logs.append(log_entry)
+                    except json.JSONDecodeError:
+                        # Skip non-JSON lines
+                        continue
+            except Exception as e:
+                logger.warning(f"Error reading log file {log_file}: {e}")
+                continue
 
         return logs
 
@@ -841,18 +1203,18 @@ class LogAnalyzer:
         if not logs:
             return {}
 
-        performance_metrics = {
+        performance_metrics: Dict[str, Any] = {
             "total_operations": 0,
             "successful_operations": 0,
             "failed_operations": 0,
-            "avg_processing_time": 0,
-            "max_processing_time": 0,
+            "avg_processing_time": 0.0,
+            "max_processing_time": 0.0,
             "min_processing_time": float("inf"),
             "total_prompts_processed": 0,
-            "avg_prompts_per_second": 0,
+            "avg_prompts_per_second": 0.0,
             "memory_usage": {
-                "peak": 0,
-                "average": 0,
+                "peak": 0.0,
+                "average": 0.0,
             },
             "retry_statistics": {
                 "total_retries": 0,
@@ -890,13 +1252,15 @@ class LogAnalyzer:
             if "retry_attempt" in log:
                 performance_metrics["retry_statistics"]["total_retries"] += 1
 
-        # Calculate averages
+        # Calculate averages efficiently
         if processing_times:
             performance_metrics["avg_processing_time"] = sum(processing_times) / len(processing_times)
+            performance_metrics["total_processing_time"] = sum(processing_times)
 
         if memory_samples:
             performance_metrics["memory_usage"]["average"] = sum(memory_samples) / len(memory_samples)
             performance_metrics["memory_usage"]["peak"] = max(memory_samples)
+            performance_metrics["memory_usage"]["samples"] = len(memory_samples)
 
         if prompts_processed:
             performance_metrics["total_prompts_processed"] = sum(prompts_processed)
@@ -904,6 +1268,9 @@ class LogAnalyzer:
                 total_time = sum(processing_times)
                 performance_metrics["avg_prompts_per_second"] = (
                     sum(prompts_processed) / total_time if total_time > 0 else 0
+                )
+                performance_metrics["processing_efficiency"] = (
+                    sum(prompts_processed) / len(processing_times) if processing_times else 0
                 )
 
         performance_metrics["successful_operations"] = (
@@ -966,5 +1333,424 @@ class LogAnalyzer:
         }
 
 
-# Initialize global log analyzer
-log_analyzer = LogAnalyzer()
+class CentralizedHandler(logging.Handler):
+    """Custom handler for sending logs to centralized logging systems."""
+
+    def __init__(
+        self: "CentralizedHandler",
+        endpoint: str,
+        api_key: Optional[str] = None,
+        buffer_size: int = 100,
+    ) -> None:
+        """Initialize the centralized handler."""
+        super().__init__()
+        self.endpoint = endpoint
+        self.api_key = api_key
+        self.buffer_size = buffer_size
+        self.log_buffer: Queue = Queue(maxsize=buffer_size * 2)
+        self.shutdown_event = threading.Event()
+        self.worker_thread = threading.Thread(target=self._worker, daemon=True)
+        self.worker_thread.start()
+
+    def emit(self: "CentralizedHandler", record: logging.LogRecord) -> None:
+        """Emit a log record to the centralized system."""
+        try:
+            log_entry = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "level": record.levelname,
+                "logger": record.name,
+                "message": record.getMessage(),
+                "module": record.module,
+                "function": record.funcName,
+                "line": record.lineno,
+            }
+
+            # Add exception info if present
+            if record.exc_info:
+                log_entry["exception"] = self.format(record)
+
+            # Add extra fields
+            for key, value in record.__dict__.items():
+                if key not in [
+                    "name",
+                    "msg",
+                    "args",
+                    "created",
+                    "filename",
+                    "funcName",
+                    "levelname",
+                    "levelno",
+                    "lineno",
+                    "module",
+                    "exc_info",
+                    "exc_text",
+                    "stack_info",
+                    "pathname",
+                    "processName",
+                    "relativeCreated",
+                    "thread",
+                    "threadName",
+                    "getMessage",
+                ]:
+                    log_entry[key] = value
+
+            # Add to buffer (non-blocking)
+            if not self.log_buffer.full():
+                self.log_buffer.put_nowait(log_entry)
+            else:
+                # Drop oldest entry if buffer is full
+                try:
+                    self.log_buffer.get_nowait()
+                    self.log_buffer.put_nowait(log_entry)
+                except Exception:
+                    pass  # Skip if unable to manage buffer
+
+        except Exception as e:
+            # Silently ignore logging errors to prevent infinite loops
+            # In debug mode, could log to stderr but risk recursion
+            try:
+                import sys
+
+                if hasattr(sys, "_getframe") and sys.stderr:
+                    print(f"CentralizedHandler emit error: {e}", file=sys.stderr)
+            except Exception:
+                # Even stderr logging failed, truly silent
+                pass
+
+    def _worker(self: "CentralizedHandler") -> None:
+        """Background worker to send logs to centralized system."""
+        batch = []
+
+        while not self.shutdown_event.is_set():
+            try:
+                # Collect logs in batches
+                try:
+                    log_entry = self.log_buffer.get(timeout=1.0)
+                    batch.append(log_entry)
+
+                    # Send batch when it reaches buffer_size or timeout
+                    if len(batch) >= self.buffer_size:
+                        self._send_batch(batch)
+                        batch = []
+
+                except Exception:
+                    # Timeout or queue empty, send whatever we have
+                    if batch:
+                        self._send_batch(batch)
+                        batch = []
+
+            except Exception:
+                # Continue on any error
+                continue
+
+        # Send remaining logs on shutdown
+        if batch:
+            self._send_batch(batch)
+
+    def _send_batch(self: "CentralizedHandler", batch: List[Dict[str, Any]]) -> None:
+        """Send a batch of logs to the centralized system."""
+        if not requests or not batch:
+            return
+
+        try:
+            headers = {"Content-Type": "application/json"}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+
+            payload = {
+                "logs": batch,
+                "source": "violentutf-dataset-logging",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+            response = requests.post(
+                self.endpoint,
+                json=payload,
+                headers=headers,
+                timeout=10,  # 10 second timeout
+            )
+
+            if response.status_code != 200:
+                logger.debug(f"Centralized logging failed: {response.status_code}")
+
+        except Exception as e:
+            logger.debug(f"Failed to send logs to centralized system: {e}")
+
+    def close(self: "CentralizedHandler") -> None:
+        """Close the handler and cleanup."""
+        self.shutdown_event.set()
+        if self.worker_thread.is_alive():
+            self.worker_thread.join(timeout=5.0)
+        super().close()
+
+
+class DatasetAuditLogger:
+    """Specialized logger for audit trail requirements."""
+
+    def __init__(self: "DatasetAuditLogger", base_logger: DatasetLogger) -> None:
+        """Initialize with a base dataset logger."""
+        self.base_logger = base_logger
+        self.audit_events: List[Dict[str, Any]] = []
+
+    def log_user_action(
+        self: "DatasetAuditLogger",
+        action: str,
+        resource: str,
+        user_id: str,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+        result: str = "success",
+        **kwargs: Any,
+    ) -> None:
+        """Log user actions for audit trail."""
+        audit_event = {
+            "event_type": "user_action",
+            "action": action,
+            "resource": resource,
+            "user_id": user_id,
+            "ip_address": ip_address,
+            "user_agent": user_agent,
+            "result": result,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "correlation_id": self.base_logger.correlation_id,
+            **kwargs,
+        }
+
+        self.audit_events.append(audit_event)
+
+        # Log to base logger
+        self.base_logger.info(
+            f"User action: {action} on {resource} by {user_id} - {result}",
+            **audit_event,
+        )
+
+    def log_data_access(
+        self: "DatasetAuditLogger",
+        dataset_id: str,
+        access_type: str,
+        user_id: str,
+        data_classification: str = "unknown",
+        record_count: Optional[int] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Log data access events for compliance."""
+        access_event = {
+            "event_type": "data_access",
+            "dataset_id": dataset_id,
+            "access_type": access_type,
+            "user_id": user_id,
+            "data_classification": data_classification,
+            "record_count": record_count,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "correlation_id": self.base_logger.correlation_id,
+            **kwargs,
+        }
+
+        self.audit_events.append(access_event)
+
+        # Log to base logger
+        self.base_logger.info(f"Data access: {access_type} on {dataset_id} by {user_id}", **access_event)
+
+    def get_audit_trail(self: "DatasetAuditLogger") -> List[Dict[str, Any]]:
+        """Get the complete audit trail for this session."""
+        return self.audit_events.copy()
+
+
+class EnhancedLogAnalyzer(LogAnalyzer):
+    """Enhanced log analyzer with additional query capabilities."""
+
+    def __init__(self: "EnhancedLogAnalyzer", log_dir: Path = Path("logs/datasets")) -> None:
+        """Initialize the enhanced analyzer."""
+        super().__init__(log_dir)
+
+    def find_security_events(
+        self: "EnhancedLogAnalyzer",
+        severity: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> List[Dict[str, Any]]:
+        """Find security events in logs."""
+        logs = self.read_logs(start_time=start_time, end_time=end_time)
+
+        security_events = []
+        for log in logs:
+            if log.get("security_category") == "dataset_operation":
+                if severity is None or log.get("severity") == severity:
+                    security_events.append(log)
+
+        return security_events
+
+    def find_compliance_violations(
+        self: "EnhancedLogAnalyzer",
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> List[Dict[str, Any]]:
+        """Find compliance violations in logs."""
+        logs = self.read_logs(start_time=start_time, end_time=end_time)
+
+        violations = []
+        for log in logs:
+            if log.get("compliance_category") == "dataset_governance" and log.get("result") in ["failed", "violation"]:
+                violations.append(log)
+
+        return violations
+
+    def analyze_performance_trends(self: "EnhancedLogAnalyzer", metric_name: str, hours: int = 24) -> Dict[str, Any]:
+        """Analyze performance trends for a specific metric."""
+        end_time = datetime.now(timezone.utc)
+        start_time = end_time - timedelta(hours=hours)
+
+        logs = self.read_logs(start_time=start_time, end_time=end_time)
+
+        metric_values = []
+        timestamps = []
+
+        for log in logs:
+            if log.get("performance_category") == "dataset_metrics" and log.get("metric_name") == metric_name:
+                metric_values.append(log.get("metric_value", 0))
+                timestamps.append(log.get("timestamp"))
+
+        if not metric_values:
+            return {"error": f"No data found for metric {metric_name}"}
+
+        return {
+            "metric_name": metric_name,
+            "sample_count": len(metric_values),
+            "min_value": min(metric_values),
+            "max_value": max(metric_values),
+            "avg_value": sum(metric_values) / len(metric_values),
+            "trend_data": list(zip(timestamps, metric_values)),
+            "threshold_violations": len([v for v in logs if "threshold exceeded" in v.get("message", "")]),
+        }
+
+    def generate_compliance_report(
+        self: "EnhancedLogAnalyzer",
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> Dict[str, Any]:
+        """Generate a comprehensive compliance report."""
+        logs = self.read_logs(start_time=start_time, end_time=end_time)
+
+        # Count different types of events efficiently
+        event_counts = {
+            "user_actions": 0,
+            "data_access_events": 0,
+            "security_events": 0,
+            "compliance_checks": 0,
+            "violations": 0,
+        }
+
+        users_active = set()
+        datasets_accessed = set()
+        security_events_by_severity = {"low": 0, "medium": 0, "high": 0, "critical": 0}
+
+        # Process logs in a single pass for efficiency
+        for log in logs:
+            # Cache frequently accessed fields
+            event_type = log.get("event_type")
+            user_id = log.get("user_id")
+            dataset_id = log.get("dataset_id")
+
+            if event_type == "user_action":
+                event_counts["user_actions"] += 1
+                if user_id:
+                    users_active.add(user_id)
+
+            elif event_type == "data_access":
+                event_counts["data_access_events"] += 1
+                if dataset_id:
+                    datasets_accessed.add(dataset_id)
+
+            elif log.get("security_category") == "dataset_operation":
+                event_counts["security_events"] += 1
+                severity = log.get("severity", "low")
+                if severity in security_events_by_severity:
+                    security_events_by_severity[severity] += 1
+
+            elif log.get("compliance_category") == "dataset_governance":
+                event_counts["compliance_checks"] += 1
+                if log.get("result") in ["failed", "violation"]:
+                    event_counts["violations"] += 1
+
+        return {
+            "report_period": {
+                "start": start_time.isoformat() if start_time else None,
+                "end": end_time.isoformat() if end_time else None,
+            },
+            "summary": {
+                "total_log_entries": len(logs),
+                "unique_users": len(users_active),
+                "datasets_accessed": len(datasets_accessed),
+                **event_counts,
+            },
+            "security_summary": security_events_by_severity,
+            "compliance_rate": (
+                (event_counts["compliance_checks"] - event_counts["violations"])
+                / event_counts["compliance_checks"]
+                * 100
+                if event_counts["compliance_checks"] > 0
+                else 0
+            ),
+            "active_users": list(users_active),
+            "accessed_datasets": list(datasets_accessed),
+        }
+
+
+# Performance monitoring decorator
+def monitor_performance(threshold_seconds: float = 5.0):
+    """Decorator to monitor function performance with minimal overhead."""
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if not dataset_logger.config.enable_performance_monitoring:
+                return func(*args, **kwargs)
+
+            start_time = time.time()
+            try:
+                result = func(*args, **kwargs)
+                execution_time = time.time() - start_time
+
+                # Only log if threshold is exceeded
+                if execution_time > threshold_seconds:
+                    dataset_logger.log_performance_metric(
+                        metric_name=f"function_{func.__name__}_execution_time",
+                        metric_value=execution_time,
+                        metric_unit="seconds",
+                        threshold=threshold_seconds,
+                        function_name=func.__name__,
+                    )
+
+                return result
+            except Exception as e:
+                execution_time = time.time() - start_time
+                dataset_logger.log_performance_metric(
+                    metric_name=f"function_{func.__name__}_error_time",
+                    metric_value=execution_time,
+                    metric_unit="seconds",
+                    function_name=func.__name__,
+                    error=str(e),
+                )
+                raise
+
+        return wrapper
+
+    return decorator
+
+
+# Lazy initialization for better startup performance
+_log_analyzer_instance = None
+
+
+def get_log_analyzer() -> "EnhancedLogAnalyzer":
+    """Get log analyzer instance with lazy initialization."""
+    global _log_analyzer_instance
+    if _log_analyzer_instance is None:
+        _log_analyzer_instance = EnhancedLogAnalyzer()
+    return _log_analyzer_instance
+
+
+# Initialize global instances
+log_analyzer = get_log_analyzer()
+
+# Initialize dataset audit logger after all classes are defined
+dataset_audit_logger = get_dataset_audit_logger()

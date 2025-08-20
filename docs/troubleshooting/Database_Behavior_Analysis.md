@@ -1,7 +1,7 @@
 # ViolentUTF Database Behavior Analysis Report
 
-**Date**: July 17, 2025  
-**Author**: System Analysis  
+**Date**: July 17, 2025
+**Author**: System Analysis
 **Purpose**: Investigation of potential database switching or time-based database behaviors
 
 ## Executive Summary
@@ -13,7 +13,7 @@ This analysis investigates reports of potential database switching behavior in V
 ViolentUTF uses a dual database architecture:
 
 ### 1. ViolentUTF SQLite Database (`violentutf.db`)
-- **Purpose**: Application configuration and persistent results  
+- **Purpose**: Application configuration and persistent results
 - **Location**: `/app/app_data/violentutf.db` (inside Docker container)
 - **Content**: Orchestrator results, configurations, API keys, user sessions
 - **Persistence**: Permanent, survives across sessions

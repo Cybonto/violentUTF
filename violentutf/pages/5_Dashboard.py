@@ -62,7 +62,13 @@ SEVERITY_MAP = {
     "float_scale": lambda val: (
         "critical"
         if val >= 0.8
-        else "high" if val >= 0.6 else "medium" if val >= 0.4 else "low" if val >= 0.2 else "minimal"
+        else "high"
+        if val >= 0.6
+        else "medium"
+        if val >= 0.4
+        else "low"
+        if val >= 0.2
+        else "minimal"
     ),
     # Category scorers - map categories to severity
     "str": lambda val: {

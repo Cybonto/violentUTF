@@ -10,7 +10,7 @@ ViolentUTF uses a dual database architecture to separate concerns between applic
 
 1. **ViolentUTF SQLite Database** (`/app/app_data/violentutf.db`)
    - **Purpose**: Application configuration and persistent results
-   - **Content**: 
+   - **Content**:
      - Orchestrator execution results (what you see in the Dashboard)
      - Generator, scorer, dataset, and converter configurations
      - API keys and user sessions

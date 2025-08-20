@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Scorer Results Cleanup Utility
 
@@ -80,8 +83,8 @@ class ScorerResultCleaner:
         # Scores by type
         result = self.conn.execute(
             """
-            SELECT score_type, COUNT(*) 
-            FROM ScoreEntries 
+            SELECT score_type, COUNT(*)
+            FROM ScoreEntries
             GROUP BY score_type
         """
         ).fetchall()
@@ -93,8 +96,8 @@ class ScorerResultCleaner:
             cutoff = datetime.now(timezone.utc) - timedelta(days=days)
             result = self.conn.execute(
                 """
-                SELECT COUNT(*) 
-                FROM ScoreEntries 
+                SELECT COUNT(*)
+                FROM ScoreEntries
                 WHERE timestamp < ?
             """,
                 [cutoff],
@@ -104,9 +107,9 @@ class ScorerResultCleaner:
         # Orphaned ScoreEntries (no associated prompt)
         result = self.conn.execute(
             """
-            SELECT COUNT(*) 
+            SELECT COUNT(*)
             FROM ScoreEntries s
-            LEFT JOIN PromptRequestResponses p 
+            LEFT JOIN PromptRequestResponses p
             ON s.prompt_request_response_id = p.id
             WHERE p.id IS NULL
         """
@@ -164,7 +167,7 @@ class ScorerResultCleaner:
                    MIN(s.timestamp) as oldest,
                    MAX(s.timestamp) as newest
             FROM ScoreEntries s
-            LEFT JOIN PromptRequestResponses p 
+            LEFT JOIN PromptRequestResponses p
             ON s.prompt_request_response_id = p.id
             WHERE {where_clause}
         """
@@ -181,7 +184,7 @@ class ScorerResultCleaner:
                    s.timestamp,
                    s.score_type
             FROM ScoreEntries s
-            LEFT JOIN PromptRequestResponses p 
+            LEFT JOIN PromptRequestResponses p
             ON s.prompt_request_response_id = p.id
             WHERE {where_clause}
             LIMIT 10
@@ -491,19 +494,19 @@ def main():
 Examples:
   # Delete ScoreEntries older than 30 days
   python cleanup_scorer_results.py --older-than 30
-  
+
   # Delete all true/false scorer results
   python cleanup_scorer_results.py --scorer-type true_false
-  
+
   # Delete orphaned ScoreEntries (dry run)
   python cleanup_scorer_results.py --orphaned-only --dry-run
-  
+
   # Archive ScoreEntries older than 90 days
   python cleanup_scorer_results.py --archive --older-than 90 --archive-path ./archives/ScoreEntries_backup.parquet
-  
+
   # Show statistics
   python cleanup_scorer_results.py --stats
-  
+
   # Vacuum database only
   python cleanup_scorer_results.py --vacuum-only
         """,

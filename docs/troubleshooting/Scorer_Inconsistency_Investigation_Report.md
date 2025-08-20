@@ -10,7 +10,7 @@ A comprehensive investigation was conducted to identify inconsistencies between 
 
 ### 1. ✅ **Data Integrity is Maintained**
 - Boolean scores are correctly stored as Python bool types (not strings)
-- JSON serialization preserves data types appropriately  
+- JSON serialization preserves data types appropriately
 - SQLite storage maintains type fidelity
 - 677 boolean scores analyzed: 642 True, 35 False (all proper bool type)
 
@@ -100,7 +100,7 @@ else:
 def validate_score_value(score):
     score_type = score.get('score_type')
     value = score.get('score_value')
-    
+
     if score_type == 'true_false' and not isinstance(value, bool):
         logger.warning(f"Unexpected type for boolean score: {type(value)}")
         # Convert if needed
@@ -143,7 +143,7 @@ The Executive Summary shows "Incomplete Executions (57)" even though all 78 exec
 
 The issue stems from a **fundamental misunderstanding** in the Dashboard's batch completion logic:
 
-1. **Data Structure**: 
+1. **Data Structure**:
    - The system executed 78 separate batch executions (batch_0 through batch_77)
    - Each execution handles ONLY ONE batch of the total dataset
    - Example: `batch_0_forbidden_questions_dataset` contains only batch index 0
@@ -347,7 +347,7 @@ def parse_datetime_safely(date_str):
     """Parse datetime string handling both timezone-aware and naive formats"""
     if not date_str:
         return None
-    
+
     try:
         # Handle timezone-aware formats
         if '+' in date_str or 'Z' in date_str:
@@ -366,7 +366,7 @@ def parse_datetime_safely(date_str):
 **Fix**: Added explicit type checking and string boolean handling
 ```python
 "true_false": lambda val: (
-    "high" if val is True 
+    "high" if val is True
     else "low" if val is False
     # Handle string representations of boolean values
     else "high" if isinstance(val, str) and val.lower() in ["true", "1", "yes"]
@@ -494,7 +494,7 @@ exec_metadata = details.get("execution_summary", {}).get("metadata", {})
 - Executive Summary shows 1 execution instead of 3
 - Violation rate shows 0.0%
 
-**Explanation**: 
+**Explanation**:
 The Dashboard has an "Execution Type" filter that **defaults to "Full Only"** to focus on production results rather than test runs. This filter is located in the Filters section (lines 1285-1295 in `5_Dashboard.py`).
 
 **Filter Options**:
@@ -548,7 +548,7 @@ To:
 - Method 3: Direct discovery from orchestrator attributes (same as Method 2)
 - All three methods were finding the same scores but with different field names
 
-**Initial Fix Issue**: 
+**Initial Fix Issue**:
 The first deduplication attempt failed because it used fields that weren't present in all score types (timestamp, text_scored), causing false mismatches.
 
 **Improved Fix Implementation**:
@@ -562,14 +562,14 @@ deduplicated_scores = []
 for score in formatted_scores:
     # Use prompt_id or prompt_request_response_id as the unique identifier
     unique_id = score.get("prompt_id") or score.get("prompt_request_response_id", "")
-    
+
     # Create a unique key based on essential fields only
     score_key = (
         score.get("score_value"),  # The actual score value
         score.get("score_category", ""),  # Category of score
         unique_id,  # Unique ID for the prompt/conversation
     )
-    
+
     if score_key not in seen_scores:
         seen_scores.add(score_key)
         deduplicated_scores.append(score)
@@ -610,7 +610,7 @@ formatted_scores = deduplicated_scores
 ### Known Issue: Generator Ownership Mismatch in Configure Scorer
 **Status**: Identified, Workaround Implemented
 **Symptoms**: "Failed to create orchestrator for scorer testing" error
-**Root Cause**: 
+**Root Cause**:
 - Generators are stored per-user in the backend
 - Configure Scorer page shows ALL generators regardless of owner
 - When creating an orchestrator, the backend can't find generators owned by other users
@@ -623,8 +623,8 @@ formatted_scores = deduplicated_scores
 **Workaround Implemented**:
 Enhanced error message to guide users:
 ```
-Failed to create orchestrator for scorer testing. This often happens when the generator 
-'test_gpt3.5turbo' was created by a different user. Please ensure you're using a generator 
+Failed to create orchestrator for scorer testing. This often happens when the generator
+'test_gpt3.5turbo' was created by a different user. Please ensure you're using a generator
 created with your account (current user: violentutf.web).
 ```
 

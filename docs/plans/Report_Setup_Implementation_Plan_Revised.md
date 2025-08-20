@@ -23,7 +23,7 @@ Enable users to browse and select real scan data from PyRIT and Garak executions
 # Data Browsing Service
 class ScanDataBrowserService:
     """Browse and aggregate scan data from multiple sources"""
-    
+
     async def browse_pyrit_data(
         self,
         user_context: str,
@@ -31,7 +31,7 @@ class ScanDataBrowserService:
         pagination: PaginationParams
     ) -> List[PyRITScanSummary]:
         """Query orchestrator_executions and aggregate results"""
-        
+
     async def browse_garak_data(
         self,
         user_context: str,
@@ -39,7 +39,7 @@ class ScanDataBrowserService:
         pagination: PaginationParams
     ) -> List[GarakScanSummary]:
         """Query garak scan results"""
-        
+
     async def get_scan_details(
         self,
         scan_id: str,
@@ -91,13 +91,13 @@ Provide intelligent template recommendations based on selected scan data and all
 ```python
 class TemplateRecommendationEngine:
     """Recommend templates based on scan data characteristics"""
-    
+
     def analyze_scan_data(
         self,
         selected_scans: List[ScanSummary]
     ) -> DataCharacteristics:
         """Analyze selected data to determine characteristics"""
-        
+
     def recommend_templates(
         self,
         characteristics: DataCharacteristics,
@@ -111,24 +111,24 @@ class TemplateRecommendationEngine:
 # New template model extending existing COBTemplate
 class ReportTemplate(Base):
     __tablename__ = "report_templates"
-    
+
     id = Column(UUID, primary_key=True)
     name = Column(String(255), nullable=False)
     description = Column(Text)
     category = Column(String(100))
-    
+
     # Template structure
     blocks = Column(JSON)  # Block configuration
     variables = Column(JSON)  # Required variables
-    
+
     # Metadata for recommendations
     data_requirements = Column(JSON)  # What data the template needs
     scoring_categories = Column(JSON)  # Which score types it handles
-    
+
     # Versioning
     version = Column(String(20), default="1.0.0")
     parent_version_id = Column(UUID, nullable=True)
-    
+
     # Audit
     created_by = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
@@ -155,19 +155,19 @@ class ReportConfiguration(BaseModel):
     title: str
     description: Optional[str]
     report_period: DateRange
-    
+
     # AI settings
     ai_provider: str = "openai"
     ai_model: str = "gpt-4"
     analysis_depth: str = "standard"  # quick, standard, detailed
-    
+
     # Output settings
     formats: List[str] = ["pdf", "json"]
     pdf_style: str = "professional"
-    
+
     # Block configurations
     block_configs: Dict[str, Dict[str, Any]]
-    
+
     # Advanced options
     include_raw_data: bool = False
     anonymize_data: bool = False
@@ -190,7 +190,7 @@ Generate and display a preview of the report before final generation.
 ```python
 class ReportPreviewEngine:
     """Generate report previews with partial data"""
-    
+
     async def generate_preview(
         self,
         template: ReportTemplate,
@@ -219,7 +219,7 @@ Execute report generation with progress tracking and multi-format output.
 ```python
 class ReportGenerationService:
     """Orchestrate report generation process"""
-    
+
     async def generate_report(
         self,
         template_id: str,
@@ -228,7 +228,7 @@ class ReportGenerationService:
         user_context: str
     ) -> ReportGenerationResult:
         """Generate report with progress tracking"""
-        
+
     async def track_progress(
         self,
         job_id: str
@@ -253,14 +253,14 @@ Create, edit, version, and organize report templates.
 ```python
 class TemplateEditorService:
     """Manage template creation and editing"""
-    
+
     async def create_template(
         self,
         template_data: TemplateCreate,
         user_id: str
     ) -> ReportTemplate:
         """Create new template with validation"""
-        
+
     async def create_version(
         self,
         template_id: str,
@@ -338,7 +338,7 @@ from sqlalchemy.dialects import postgresql
 
 def upgrade():
     """Add report setup tables"""
-    
+
     # Create new tables
     op.create_table(
         'report_templates',
@@ -347,7 +347,7 @@ def upgrade():
         # ... other columns
         sa.PrimaryKeyConstraint('id')
     )
-    
+
     # Add indexes
     op.create_index('idx_report_templates_category', 'report_templates', ['category'])
     op.create_index('idx_report_templates_created_by', 'report_templates', ['created_by'])
@@ -367,7 +367,7 @@ def downgrade():
 check_report_tables() {
     # Check if report_templates table exists
     table_exists=$(docker exec -i violentutf-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -tAc "SELECT 1 FROM information_schema.tables WHERE table_name='report_templates'")
-    
+
     if [ -z "$table_exists" ]; then
         echo "Running report setup migration..."
         docker exec -i violentutf-api python -m alembic upgrade head

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Dynamic OpenAPI schema generation from FastAPI app.
 Generates OpenAPI schemas for contract testing and validation.

@@ -52,6 +52,14 @@ except ImportError:
 import logging
 
 from app.core.auth import get_current_user
+from app.core.dataset_logging import (
+    OperationType,
+    dataset_audit_logger,
+    dataset_logger,
+    log_dataset_operation_error,
+    log_dataset_operation_start,
+    log_dataset_operation_success,
+)
 from app.db.duckdb_manager import get_duckdb_manager
 
 logger = logging.getLogger(__name__)
@@ -313,9 +321,39 @@ async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(g
 @router.post("", response_model=DatasetCreateResponse, summary="Create a new dataset")
 async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get_current_user)) -> Any:
     """Create a new dataset configuration."""
+    operation_start_time = time.time()
+    user_id = current_user.username
+    correlation_id = dataset_logger.set_correlation_id()
+    dataset_logger.set_user_context(user_id)
+
+    # Log user action for audit trail
+    dataset_audit_logger.log_user_action(
+        action="create_dataset",
+        resource=f"dataset:{request.name}",
+        user_id=user_id,
+        ip_address=getattr(current_user, "ip_address", None),
+    )
+
     try:
-        user_id = current_user.username
-        logger.info(f"User {user_id} creating dataset: {request.name}")
+        with dataset_logger.operation_context(
+            operation=OperationType.IMPORT.value,
+            dataset_id=request.name,
+            dataset_type=request.dataset_type or "unknown",
+            user_id=user_id,
+            correlation_id=correlation_id,
+        ):
+            logger.info(f"User {user_id} creating dataset: {request.name}")
+
+            # Log security event for dataset creation
+            dataset_logger.log_security_event(
+                event_type="dataset_creation_attempt",
+                severity="low",
+                details={
+                    "dataset_name": request.name,
+                    "source_type": request.source_type.value,
+                    "dataset_type": request.dataset_type,
+                },
+            )
 
         now = datetime.utcnow()
 
@@ -335,6 +373,16 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
                                 id=str(uuid.uuid4()), value=prompt_text, dataset_name=request.name, data_type="text"
                             )
                         )
+                    # Log dataset conversion details
+                    dataset_logger.log_conversion_details(
+                        dataset_type=request.dataset_type,
+                        conversion_strategy="native_pyrit_load",
+                        input_format="pyrit_dataset",
+                        output_format="prompt_list",
+                        input_size=len(real_prompts),
+                        output_size=len(prompts),
+                    )
+
                     logger.info(f"Loaded {len(prompts)} real prompts from PyRIT dataset '{request.dataset_type}'")
                 else:
                     # Return error instead of creating mock dataset
@@ -385,6 +433,9 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
         db_manager = get_duckdb_manager(user_id)
         prompts_text = [p.value for p in prompts]
 
+        # Log PyRIT storage operation
+        pyrit_start_time = time.time()
+
         # Create dataset and get the actual ID from DuckDB
         actual_dataset_id = db_manager.create_dataset(
             name=request.name,
@@ -398,8 +449,47 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
             prompts=prompts_text,
         )
 
+        # Log PyRIT storage metrics
+        pyrit_storage_time = time.time() - pyrit_start_time
+        dataset_logger.log_pyrit_storage(
+            prompts_stored=len(prompts_text),
+            storage_time_seconds=pyrit_storage_time,
+            storage_size_mb=sum(len(p.encode("utf-8")) for p in prompts_text) / 1024 / 1024,
+            dataset_id=actual_dataset_id,
+        )
+
         # Update dataset_data with the actual ID from DuckDB
         dataset_data["id"] = actual_dataset_id
+
+        # Log successful dataset creation with metrics
+        operation_time = time.time() - operation_start_time
+        dataset_logger.log_performance_metric(
+            metric_name="dataset_creation_time",
+            metric_value=operation_time,
+            metric_unit="seconds",
+            threshold=30.0,  # 30 second threshold
+            dataset_id=actual_dataset_id,
+            prompt_count=len(prompts),
+        )
+
+        # Log data access event
+        dataset_audit_logger.log_data_access(
+            dataset_id=actual_dataset_id,
+            access_type="create",
+            user_id=user_id,
+            data_classification="internal",
+            record_count=len(prompts),
+        )
+
+        # Log successful operation
+        log_dataset_operation_success(
+            operation="create_dataset",
+            dataset_id=actual_dataset_id,
+            dataset_type=request.dataset_type or "unknown",
+            user_id=user_id,
+            prompt_count=len(prompts),
+            processing_time_seconds=operation_time,
+        )
 
         logger.info(f"Dataset '{request.name}' created successfully with ID: {actual_dataset_id}")
 
@@ -408,9 +498,42 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
             message=f"Dataset '{request.name}' created successfully with {len(prompts)} prompts",
         )
 
-    except HTTPException:
+    except HTTPException as e:
+        # Log HTTP errors
+        operation_time = time.time() - operation_start_time
+        log_dataset_operation_error(
+            operation="create_dataset",
+            dataset_id=request.name,
+            error=e,
+            user_id=user_id,
+            processing_time_seconds=operation_time,
+        )
+
+        # Log security event for failed creation
+        dataset_logger.log_security_event(
+            event_type="dataset_creation_failed",
+            severity="medium",
+            details={"error_code": e.status_code, "error_message": str(e.detail), "dataset_name": request.name},
+        )
         raise
     except Exception as e:
+        # Log unexpected errors
+        operation_time = time.time() - operation_start_time
+        log_dataset_operation_error(
+            operation="create_dataset",
+            dataset_id=request.name,
+            error=e,
+            user_id=user_id,
+            processing_time_seconds=operation_time,
+        )
+
+        # Log security event for system errors
+        dataset_logger.log_security_event(
+            event_type="dataset_creation_system_error",
+            severity="high",
+            details={"error_type": type(e).__name__, "error_message": str(e), "dataset_name": request.name},
+        )
+
         logger.error(f"Error creating dataset {request.name}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create dataset: {str(e)}")
 

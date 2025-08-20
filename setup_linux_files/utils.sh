@@ -55,7 +55,7 @@ detect_package_manager() {
 install_packages() {
     local packages=("$@")
     local pkg_manager=$(detect_package_manager)
-    
+
     case "$pkg_manager" in
         apt)
             apt-get update
@@ -91,15 +91,15 @@ replace_in_file() {
     local placeholder="$2"
     local value="$3"
     local description="$4"
-    
+
     # For Linux compatibility, use sed with -i flag
     sed -i "s|${placeholder}|${value}|g" "$file"
-    
+
     # Store for final report if description is provided
     if [ -n "$description" ]; then
         SENSITIVE_VALUES+=("$description: $value")
     fi
-    
+
     log_debug "Replaced $placeholder in $file"
 }
 
@@ -108,23 +108,23 @@ backup_and_prepare_config() {
     local template_file="$1"
     local target_file="${template_file%.template}"
     local backup_suffix=$(date +"%Y%m%d%H%M%S")
-    
+
     # Check if template exists
     if [ ! -f "$template_file" ]; then
         echo "Error: Template file $template_file not found!"
         return 1
     fi
-    
+
     # Backup existing file if it exists
     if [ -f "$target_file" ]; then
         cp "$target_file" "${target_file}.bak${backup_suffix}"
         echo "Backed up $target_file to ${target_file}.bak${backup_suffix}"
     fi
-    
+
     # Copy template to target
     cp "$template_file" "$target_file"
     log_debug "Created $target_file from template"
-    
+
     return 0
 }
 
@@ -134,32 +134,32 @@ prepare_config_from_template() {
 }# Function to gracefully shutdown ViolentUTF Streamlit server
 graceful_streamlit_shutdown() {
     echo "Gracefully shutting down ViolentUTF Streamlit server..."
-    
+
     # Find ViolentUTF Streamlit processes
     STREAMLIT_PIDS=()
-    
+
     # Check for Home.py process (ViolentUTF main entry point)
     HOME_PY_PIDS=$(pgrep -f "streamlit.*Home.py" 2>/dev/null || true)
     if [ -n "$HOME_PY_PIDS" ]; then
         STREAMLIT_PIDS+=($HOME_PY_PIDS)
     fi
-    
+
     # Check for violentutf directory processes
     VIOLENTUTF_PIDS=$(pgrep -f "streamlit.*violentutf" 2>/dev/null || true)
     if [ -n "$VIOLENTUTF_PIDS" ]; then
         STREAMLIT_PIDS+=($VIOLENTUTF_PIDS)
     fi
-    
+
     # Remove duplicates and process shutdown
     UNIQUE_PIDS=($(printf "%s\n" "${STREAMLIT_PIDS[@]}" | sort -u))
-    
+
     if [ ${#UNIQUE_PIDS[@]} -eq 0 ]; then
         echo "No ViolentUTF Streamlit processes found to shutdown"
         return 0
     fi
-    
+
     echo "Found ${#UNIQUE_PIDS[@]} ViolentUTF Streamlit process(es) to shutdown gracefully"
-    
+
     # Send SIGTERM for graceful shutdown
     for pid in "${UNIQUE_PIDS[@]}"; do
         if kill -0 "$pid" 2>/dev/null; then
@@ -167,12 +167,12 @@ graceful_streamlit_shutdown() {
             kill -TERM "$pid" 2>/dev/null || true
         fi
     done
-    
+
     # Wait for graceful shutdown (up to 15 seconds)
     echo "Waiting for graceful shutdown (up to 15 seconds)..."
     WAIT_COUNT=0
     MAX_WAIT=15
-    
+
     while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
         REMAINING_PIDS=()
         for pid in "${UNIQUE_PIDS[@]}"; do
@@ -180,16 +180,16 @@ graceful_streamlit_shutdown() {
                 REMAINING_PIDS+=($pid)
             fi
         done
-        
+
         if [ ${#REMAINING_PIDS[@]} -eq 0 ]; then
             echo "✅ All ViolentUTF Streamlit processes shutdown gracefully"
             break
         fi
-        
+
         sleep 1
         WAIT_COUNT=$((WAIT_COUNT + 1))
     done
-    
+
     # If processes still running, use SIGINT (Ctrl+C equivalent)
     REMAINING_PIDS=()
     for pid in "${UNIQUE_PIDS[@]}"; do
@@ -197,7 +197,7 @@ graceful_streamlit_shutdown() {
             REMAINING_PIDS+=($pid)
         fi
     done
-    
+
     if [ ${#REMAINING_PIDS[@]} -gt 0 ]; then
         echo "Some processes still running, sending interrupt signal (SIGINT)..."
         for pid in "${REMAINING_PIDS[@]}"; do
@@ -205,10 +205,10 @@ graceful_streamlit_shutdown() {
                 kill -INT "$pid" 2>/dev/null || true
             fi
         done
-        
+
         # Wait another 5 seconds
         sleep 5
-        
+
         # Check again
         FINAL_REMAINING=()
         for pid in "${REMAINING_PIDS[@]}"; do
@@ -216,7 +216,7 @@ graceful_streamlit_shutdown() {
                 FINAL_REMAINING+=($pid)
             fi
         done
-        
+
         if [ ${#FINAL_REMAINING[@]} -gt 0 ]; then
             echo "⚠️  Some processes still running after graceful attempts, using force kill as last resort..."
             for pid in "${FINAL_REMAINING[@]}"; do
@@ -226,7 +226,7 @@ graceful_streamlit_shutdown() {
             done
         fi
     fi
-    
+
     # Final cleanup: check port 8501 and handle any remaining processes
     if lsof -i :8501 > /dev/null 2>&1; then
         echo "Checking port 8501 for any remaining processes..."
@@ -238,7 +238,7 @@ graceful_streamlit_shutdown() {
             done
         fi
     fi
-    
+
     echo "✅ ViolentUTF Streamlit server shutdown completed"
 }
 
@@ -247,15 +247,15 @@ test_network_connectivity() {
     local from_container="$1"
     local to_service="$2"
     local port="$3"
-    
+
     # Find the container ID/name for the from_container
     local container_id=$(docker ps --filter "name=$from_container" --format "{{.ID}}" | head -n 1)
-    
+
     if [ -z "$container_id" ]; then
         echo "Container $from_container not found"
         return 1
     fi
-    
+
     # Test connectivity
     if docker exec "$container_id" nc -z "$to_service" "$port" 2>/dev/null; then
         echo "✅ Connection from $from_container to $to_service:$port successful"
@@ -276,7 +276,7 @@ generate_all_secrets() {
         KEYCLOAK_ADMIN_USERNAME="${KEYCLOAK_ADMIN_USERNAME:-admin}"
         KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-}"
         KEYCLOAK_POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}"
-        
+
         # Generate new passwords only if not found
         if [ -z "$KEYCLOAK_ADMIN_PASSWORD" ]; then
             KEYCLOAK_ADMIN_PASSWORD=$(generate_secure_string)
@@ -284,7 +284,7 @@ generate_all_secrets() {
         else
             log_detail "Reusing existing Keycloak admin password"
         fi
-        
+
         if [ -z "$KEYCLOAK_POSTGRES_PASSWORD" ]; then
             KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
             log_detail "Generated new Keycloak PostgreSQL password"
@@ -298,7 +298,7 @@ generate_all_secrets() {
         KEYCLOAK_ADMIN_PASSWORD=$(generate_secure_string)
         KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
     fi
-    
+
     SENSITIVE_VALUES+=("Keycloak Admin Username: $KEYCLOAK_ADMIN_USERNAME")
     SENSITIVE_VALUES+=("Keycloak Admin Password: $KEYCLOAK_ADMIN_PASSWORD")
     SENSITIVE_VALUES+=("Keycloak PostgreSQL Password: $KEYCLOAK_POSTGRES_PASSWORD")
@@ -311,20 +311,20 @@ generate_all_secrets() {
         VIOLENTUTF_USER_PASSWORD=$(grep "^KEYCLOAK_PASSWORD=" violentutf/.env | cut -d'=' -f2- || echo "")
         VIOLENTUTF_PYRIT_SALT=$(grep "^PYRIT_DB_SALT=" violentutf/.env | cut -d'=' -f2- || echo "")
         VIOLENTUTF_API_KEY=$(grep "^VIOLENTUTF_API_KEY=" violentutf/.env | cut -d'=' -f2- || echo "")
-        
+
         # Check for cookie secret in secrets.toml
         if [ -f "violentutf/.streamlit/secrets.toml" ]; then
             VIOLENTUTF_COOKIE_SECRET=$(grep "^cookie_secret" violentutf/.streamlit/secrets.toml | cut -d'"' -f2 || echo "")
         fi
     fi
-    
+
     # Generate any missing ViolentUTF secrets
     VIOLENTUTF_CLIENT_SECRET="${VIOLENTUTF_CLIENT_SECRET:-$(generate_secure_string)}"
     VIOLENTUTF_COOKIE_SECRET="${VIOLENTUTF_COOKIE_SECRET:-$(generate_secure_string)}"
     VIOLENTUTF_PYRIT_SALT="${VIOLENTUTF_PYRIT_SALT:-$(generate_secure_string)}"
     VIOLENTUTF_API_KEY="${VIOLENTUTF_API_KEY:-$(generate_secure_string)}"
     VIOLENTUTF_USER_PASSWORD="${VIOLENTUTF_USER_PASSWORD:-$(generate_secure_string)}"
-    
+
     SENSITIVE_VALUES+=("ViolentUTF Keycloak Client Secret: $VIOLENTUTF_CLIENT_SECRET")
     SENSITIVE_VALUES+=("ViolentUTF Cookie Secret: $VIOLENTUTF_COOKIE_SECRET")
     SENSITIVE_VALUES+=("ViolentUTF PyRIT DB Salt: $VIOLENTUTF_PYRIT_SALT")
@@ -337,13 +337,13 @@ generate_all_secrets() {
         source apisix/.env
         APISIX_ADMIN_KEY="${APISIX_ADMIN_KEY:-}"
     fi
-    
+
     # Check for existing APISIX client secret in ViolentUTF secrets
     if [ -f "violentutf/.streamlit/secrets.toml" ]; then
         EXISTING_APISIX_SECRET=$(grep -A2 "\[apisix\]" violentutf/.streamlit/secrets.toml | grep "client_secret" | cut -d'"' -f2 || echo "")
         APISIX_CLIENT_SECRET="${EXISTING_APISIX_SECRET:-}"
     fi
-    
+
     # Generate any missing APISIX secrets
     APISIX_ADMIN_KEY="${APISIX_ADMIN_KEY:-$(generate_secure_string)}"
     APISIX_DASHBOARD_SECRET=$(generate_secure_string)  # Always regenerate for security
@@ -351,7 +351,7 @@ generate_all_secrets() {
     APISIX_KEYRING_VALUE_1=$(generate_secure_string | cut -c1-16)
     APISIX_KEYRING_VALUE_2=$(generate_secure_string | cut -c1-16)
     APISIX_CLIENT_SECRET="${APISIX_CLIENT_SECRET:-$(generate_secure_string)}"
-    
+
     SENSITIVE_VALUES+=("APISIX Admin API Key: $APISIX_ADMIN_KEY")
     SENSITIVE_VALUES+=("APISIX Dashboard Username: admin")
     SENSITIVE_VALUES+=("APISIX Dashboard JWT Secret: $APISIX_DASHBOARD_SECRET")
@@ -365,13 +365,13 @@ generate_all_secrets() {
         log_detail "Found existing FastAPI credentials, reusing..."
         FASTAPI_SECRET_KEY=$(grep "^JWT_SECRET_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
         FASTAPI_API_KEY=$(grep "^VIOLENTUTF_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
-        
+
         # If we found an API key in FastAPI but not in ViolentUTF, use the FastAPI one
         if [ -n "$FASTAPI_API_KEY" ] && [ -z "$VIOLENTUTF_API_KEY" ]; then
             log_detail "Using API key from FastAPI .env file"
             VIOLENTUTF_API_KEY="$FASTAPI_API_KEY"
         fi
-        
+
         # Also check for AI provider keys in FastAPI .env
         if [ -z "$OPENAI_API_KEY" ]; then
             OPENAI_API_KEY=$(grep "^OPENAI_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
@@ -379,19 +379,19 @@ generate_all_secrets() {
         if [ -z "$ANTHROPIC_API_KEY" ]; then
             ANTHROPIC_API_KEY=$(grep "^ANTHROPIC_API_KEY=" violentutf_api/fastapi_app/.env | cut -d'=' -f2- || echo "")
         fi
-        
+
         # Ensure API keys match between services
         if [ -n "$FASTAPI_API_KEY" ] && [ -n "$VIOLENTUTF_API_KEY" ] && [ "$FASTAPI_API_KEY" != "$VIOLENTUTF_API_KEY" ]; then
             log_warn "API key mismatch detected, using ViolentUTF API key"
             FASTAPI_API_KEY="$VIOLENTUTF_API_KEY"
         fi
     fi
-    
+
     # Generate any missing FastAPI secrets
     FASTAPI_SECRET_KEY="${FASTAPI_SECRET_KEY:-$(generate_secure_string)}"
     FASTAPI_CLIENT_SECRET=$(generate_secure_string)  # Always generate new for Keycloak client
     FASTAPI_CLIENT_ID="violentutf-fastapi"
-    
+
     SENSITIVE_VALUES+=("FastAPI JWT Secret Key: $FASTAPI_SECRET_KEY")
     SENSITIVE_VALUES+=("FastAPI Keycloak Client Secret: $FASTAPI_CLIENT_SECRET")
 
@@ -417,26 +417,26 @@ display_generated_secrets() {
     echo "⚠️  IMPORTANT: Store these secrets securely!"
     echo "   These secrets are required for system operation and recovery."
     echo ""
-    
+
     # Display secrets organized by service
     echo "🛡️  Authentication & API Keys:"
     echo "   FastAPI Secret Key: $FASTAPI_SECRET_KEY"
     echo "   ViolentUTF API Key: $VIOLENTUTF_API_KEY"
     echo "   PyRIT Database Salt: $VIOLENTUTF_PYRIT_SALT"
     echo ""
-    
+
     echo "👤 User Account Credentials:"
     echo "   ViolentUTF User: violentutf.web / $VIOLENTUTF_USER_PASSWORD"
     echo "   ViolentUTF Cookie Secret: $VIOLENTUTF_COOKIE_SECRET"
     echo "   Keycloak Admin: $KEYCLOAK_ADMIN_USERNAME / $KEYCLOAK_ADMIN_PASSWORD"
     echo ""
-    
+
     echo "🔑 Service Client Secrets:"
     echo "   ViolentUTF Client Secret: $VIOLENTUTF_CLIENT_SECRET"
     echo "   FastAPI Client Secret: $FASTAPI_CLIENT_SECRET"
     echo "   APISIX Client Secret: $APISIX_CLIENT_SECRET"
     echo ""
-    
+
     echo "🌐 APISIX Gateway Secrets:"
     echo "   APISIX Admin Key: $APISIX_ADMIN_KEY"
     echo "   APISIX Dashboard Secret: $APISIX_DASHBOARD_SECRET"
@@ -444,11 +444,11 @@ display_generated_secrets() {
     echo "   APISIX Keyring Value 1: $APISIX_KEYRING_VALUE_1"
     echo "   APISIX Keyring Value 2: $APISIX_KEYRING_VALUE_2"
     echo ""
-    
+
     echo "🗄️  Database Credentials:"
     echo "   Keycloak Postgres Password: $KEYCLOAK_POSTGRES_PASSWORD"
     echo ""
-    
+
     # Show storage locations only in normal+ mode
     if should_log 1; then
         echo "=================================================="
@@ -474,17 +474,17 @@ display_generated_secrets() {
 launch_streamlit_in_new_terminal() {
     echo ""
     echo "🚀 Launching ViolentUTF Streamlit Web Interface..."
-    
+
     # Get the current working directory
     local current_dir=$(pwd)
     local streamlit_dir="$current_dir/violentutf"
-    
+
     # Check if violentutf directory exists
     if [ ! -d "$streamlit_dir" ]; then
         echo "❌ ViolentUTF directory not found at $streamlit_dir"
         return 1
     fi
-    
+
     # Create a launch script that will be executed in the new terminal
     local launch_script="/tmp/launch_violentutf_streamlit.sh"
     cat > "$launch_script" <<EOF
@@ -510,10 +510,10 @@ fi
 echo "🚀 Starting Streamlit server..."
 streamlit run Home.py --server.port=8501 --server.address=localhost --browser.gatherUsageStats=false
 EOF
-    
+
     # Make the script executable
     chmod +x "$launch_script"
-    
+
     # Try different terminal emulators in order of preference
     if command_exists gnome-terminal; then
         gnome-terminal --title="ViolentUTF Streamlit Server" -- bash "$launch_script"
@@ -532,10 +532,10 @@ EOF
         echo "   streamlit run Home.py --server.port=8501"
         return 1
     fi
-    
+
     # Clean up the temporary script after a short delay
     (sleep 5 && rm -f "$launch_script") &
-    
+
     echo "✅ ViolentUTF Streamlit launched in new terminal window"
     echo "🌐 Access the web interface at: http://localhost:8501"
     echo ""

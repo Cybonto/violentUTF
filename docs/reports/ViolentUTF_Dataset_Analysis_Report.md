@@ -1,8 +1,8 @@
 # ViolentUTF Dataset Analysis Report: PyRIT Conversion Strategy
 
-**Document Type:** Technical Analysis Report  
-**Date:** August 15, 2025  
-**Author:** System Analysis Team  
+**Document Type:** Technical Analysis Report
+**Date:** August 15, 2025
+**Author:** System Analysis Team
 **Purpose:** Comprehensive analysis of ViolentUTF datasets for PyRIT compatibility and universal converter design
 
 ## Executive Summary
@@ -43,7 +43,7 @@ This report provides a detailed analysis of the diverse dataset collection in Vi
 - **Purpose**: Automated planning and logical reasoning evaluation
 
 **3b. LegalBench-Stanford**
-- **Scale**: 162 legal reasoning tasks across 166 directories  
+- **Scale**: 162 legal reasoning tasks across 166 directories
 - **Format**: TSV files (train.tsv, test.tsv)
 - **Categories**: Contract analysis, regulatory compliance, judicial reasoning
 - **Contributors**: 40+ legal professionals
@@ -91,7 +91,7 @@ This report provides a detailed analysis of the diverse dataset collection in Vi
 
 #### **Question/Answer Columns (8)**
 **WCP (Which Cognitive Path)**: WCP_Question, WCP_Answer
-**WHO (Compliance Comparison)**: WHO_Question, WHO_Answer  
+**WHO (Compliance Comparison)**: WHO_Question, WHO_Answer
 **TeamRisk (Team Dynamics)**: TeamRisk_Question, TeamRisk_Answer
 **TargetFactor (Intervention)**: TargetFactor_Question, TargetFactor_Answer
 
@@ -155,9 +155,9 @@ Each row represents a complete security scenario with:
 2. Calculate risk scores and identify shared/targeted factors
 3. Generate contextual security scenario
 
-#### **Step 2: Multi-Type Q&A Evaluation** 
+#### **Step 2: Multi-Type Q&A Evaluation**
 1. **WCP Assessment**: Test cognitive pattern recognition
-2. **WHO Assessment**: Test comparative risk evaluation  
+2. **WHO Assessment**: Test comparative risk evaluation
 3. **TeamRisk Assessment**: Test team dynamics understanding
 4. **TargetFactor Assessment**: Test intervention planning
 
@@ -334,10 +334,10 @@ base_metadata = {
 def detect_optimal_pyrit_mapping(file_path: str) -> Tuple[str, str]:
     # Layer 1: Filename and path patterns
     dataset_type = detect_by_filename(file_path)
-    
+
     # Layer 2: Content structure analysis
     structure_type = analyze_content_structure(file_path)
-    
+
     # Layer 3: Optimal PyRIT format mapping
     if "garak" in file_path.lower():
         return (dataset_type, "SeedPromptDataset")
@@ -360,7 +360,7 @@ class EnhancedConversionValidator:
             self.check_metadata_completeness(),
             self.check_dependency_preservation()
         ]
-        
+
         # Format-specific validation
         if pyrit_format == "QuestionAnsweringDataset":
             qa_checks = [
@@ -382,7 +382,7 @@ class EnhancedConversionValidator:
                 self.check_conversation_flow_validity()
             ]
             base_checks.extend(chat_checks)
-            
+
         return ValidationResult(base_checks)
 ```
 
@@ -400,7 +400,7 @@ class EnhancedConversionValidator:
 - **Structure**: Context + Question + Answer/Choices
 - **Evaluation**: Correctness assessment with domain understanding
 - **PyRIT Optimal Mapping**: QuestionAnsweringDataset OR SeedPromptDataset
-- **Decision Factors**: 
+- **Decision Factors**:
   - Use QuestionAnsweringDataset if structured choices exist
   - Use SeedPromptDataset for open-ended reasoning evaluation
 - **Characteristics**: Domain-specific context, structured evaluation
@@ -591,10 +591,10 @@ async def interactive_conversion_session(
 ):
     # Create or resume interactive session
     session = ConversionSession(session_id, user_preferences)
-    
+
     # Initial analysis and recommendations
     analysis = await session.analyze_dataset(file)
-    
+
     # Return GUI configuration and wait for user input
     return InteractiveConversionResponse(
         analysis=analysis,
@@ -611,7 +611,7 @@ async def execute_interactive_conversion(
     # Apply user decisions and execute conversion
     session = ConversionSession.get(session_id)
     result = await session.execute_conversion(user_decisions)
-    
+
     return ConversionResult(result)
 ```
 
@@ -635,7 +635,7 @@ class EnhancedConversionOptimizer:
     def convert_large_dataset(self, file_path: str, pyrit_format: str) -> Generator:
         # Adaptive batch processing based on dataset type and PyRIT format
         optimal_batch_size = self.calculate_optimal_batch_size(file_path, pyrit_format)
-        
+
         for batch in self.read_in_batches(file_path, batch_size=optimal_batch_size):
             # Format-specific batch processing
             if pyrit_format == "QuestionAnsweringDataset":
@@ -644,7 +644,7 @@ class EnhancedConversionOptimizer:
                 yield from self.convert_seed_batch(batch)
             elif pyrit_format == "ChatMessagesDataset":
                 yield from self.convert_chat_batch(batch)
-    
+
     def parallel_conversion(self, conversion_jobs: List[ConversionJob]) -> List:
         # Format-aware parallel processing with resource optimization
         with ThreadPoolExecutor(max_workers=self.calculate_optimal_workers()) as executor:
@@ -653,11 +653,11 @@ class EnhancedConversionOptimizer:
                 future = executor.submit(self.convert_with_format, job)
                 futures.append(future)
             return [f.result() for f in futures]
-    
+
     def calculate_optimal_batch_size(self, file_path: str, pyrit_format: str) -> int:
         # Adaptive batch sizing based on format complexity
         file_size = os.path.getsize(file_path)
-        
+
         if pyrit_format == "QuestionAnsweringDataset":
             # Q&A conversion is more memory-intensive due to choice parsing
             return max(100, min(1000, file_size // 1000000))
@@ -677,21 +677,21 @@ class BaseConverter(ABC):
     @abstractmethod
     def can_convert(self, file_path: str) -> bool:
         """Check if this converter can handle the given file"""
-        
-    @abstractmethod  
+
+    @abstractmethod
     def convert(self, file_path: str) -> Union[QuestionAnsweringDataset, SeedPromptDataset]:
         """Convert the file to PyRIT format"""
-        
+
     @abstractmethod
     def get_metadata_schema(self) -> Dict:
         """Return the metadata schema for this converter"""
-        
+
     def preprocess(self, data: Any) -> Any:
         """Optional preprocessing step"""
         return data
-        
+
     def postprocess(self, converted_data) -> Any:
-        """Optional postprocessing step"""  
+        """Optional postprocessing step"""
         return converted_data
 ```
 
@@ -699,20 +699,20 @@ class BaseConverter(ABC):
 ```python
 class OllaGenConverter(BaseConverter):
     def can_convert(self, file_path: str) -> bool:
-        return ("ollegen" in Path(file_path).name.lower() and 
+        return ("ollegen" in Path(file_path).name.lower() and
                 file_path.endswith('.csv'))
-    
+
     def convert(self, file_path: str) -> QuestionAnsweringDataset:
         df = pd.read_csv(file_path)
         questions = []
-        
+
         for _, row in df.iterrows():
             # Convert each row to 4 Q&A entries
             questions.extend(self.convert_row_to_qa_entries(row))
-        
+
         return QuestionAnsweringDataset(
             name="OllaGen Cognitive Behavioral Security Assessment",
-            version="1.0", 
+            version="1.0",
             description="Cognitive behavioral evaluation for information security compliance",
             author="Dataset Analysis System",
             group="security_psychology",
@@ -758,16 +758,16 @@ async def load_dataset_with_conversion(dataset_path: str, dataset_type: str = No
     # Auto-detect dataset type if not specified
     if not dataset_type:
         dataset_type = DatasetConverter.detect_type(dataset_path)
-    
+
     # Convert to PyRIT format
     converter = DatasetConverter()
     pyrit_dataset = converter.convert(dataset_path, dataset_type)
-    
+
     # Validate conversion
     validation_result = ConversionValidator().validate(pyrit_dataset)
     if not validation_result.is_valid:
         raise ConversionError(f"Validation failed: {validation_result.issues}")
-    
+
     return pyrit_dataset
 ```
 
@@ -776,20 +776,20 @@ async def load_dataset_with_conversion(dataset_path: str, dataset_type: str = No
 # Enhanced dataset creation endpoint
 @router.post("/datasets/convert", response_model=DatasetCreateResponse)
 async def convert_and_create_dataset(
-    file: UploadFile, 
+    file: UploadFile,
     dataset_type: Optional[str] = None,
     preserve_structure: bool = True,
     current_user=Depends(get_current_user)
 ):
     # Save uploaded file
     file_path = await save_upload(file)
-    
+
     # Convert to PyRIT format
     pyrit_dataset = await load_dataset_with_conversion(file_path, dataset_type)
-    
+
     # Store in database with conversion metadata
     dataset_record = await store_converted_dataset(pyrit_dataset, current_user.id)
-    
+
     return DatasetCreateResponse(dataset=dataset_record)
 ```
 
@@ -853,7 +853,7 @@ async def convert_and_create_dataset(
 - **Mitigation**: Comprehensive validation framework with rollback capability
 - **Monitoring**: Automated integrity checks and human validation sampling
 
-#### **Performance Risk** 
+#### **Performance Risk**
 - **Risk**: Large datasets may cause memory/performance issues
 - **Mitigation**: Streaming processing and batch optimization
 - **Monitoring**: Performance metrics and resource utilization tracking

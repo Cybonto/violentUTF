@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Comprehensive test script to trace why scorers aren't being displayed in the UI.
 Tests the complete API response chain from database to UI.
@@ -126,9 +129,9 @@ def check_database_file():
                         # Show scorer details
                         scorers = conn.execute(
                             """
-                            SELECT id, name, type, created_at 
-                            FROM scorers 
-                            WHERE user_id = ? 
+                            SELECT id, name, type, created_at
+                            FROM scorers
+                            WHERE user_id = ?
                             ORDER BY created_at DESC
                             LIMIT 5
                         """,

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 COB Report PDF Generation Service
 Secure PDF generation with HTML sanitization and existing security patterns

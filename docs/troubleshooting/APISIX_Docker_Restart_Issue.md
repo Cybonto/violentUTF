@@ -53,7 +53,7 @@ services:
     command: |
       "rm -f /usr/local/apisix/logs/worker_events.sock /usr/local/apisix/logs/nginx.pid 2>/dev/null || true
       apisix start"
-    
+
     # Add health check for better monitoring
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9180/apisix/admin/routes", "-H", "X-API-KEY: ${APISIX_ADMIN_KEY:-edd1c9f034335f136f87ad84b625c8f1}"]
@@ -61,10 +61,10 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-    
+
     # Handle PID 1 signal issues
     init: true
-    
+
     # Ensure clean shutdown
     stop_grace_period: 30s
 ```

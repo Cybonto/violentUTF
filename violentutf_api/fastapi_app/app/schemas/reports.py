@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """Schemas for report generation and templates"""
 
 from datetime import datetime

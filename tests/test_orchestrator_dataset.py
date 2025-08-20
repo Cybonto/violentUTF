@@ -1,5 +1,3 @@
-from typing import Any
-
 #!/usr/bin/env python3
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
@@ -14,6 +12,7 @@ import os
 import sys
 import time
 from datetime import datetime, timedelta
+from typing import Any
 
 import requests
 

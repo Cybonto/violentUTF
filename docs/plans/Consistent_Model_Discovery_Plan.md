@@ -93,7 +93,7 @@ class ProviderConfig:
 async def discover_models_unified(provider_id: str) -> ModelDiscoveryResult:
     """
     Unified model discovery with intelligent fallbacks
-    
+
     Returns:
         ModelDiscoveryResult with:
         - models: List of available models
@@ -103,23 +103,23 @@ async def discover_models_unified(provider_id: str) -> ModelDiscoveryResult:
     """
     # 1. Resolve provider ID to canonical form
     provider = registry.get_provider(provider_id)
-    
+
     # 2. Try live discovery
     if provider.supports_model_discovery:
         models = await try_live_discovery(provider)
         if models:
             cache.set(provider.id, models)
             return ModelDiscoveryResult(models, "live")
-    
+
     # 3. Try cache
     cached = cache.get(provider.id)
     if cached and not expired(cached):
         return ModelDiscoveryResult(cached.models, "cache")
-    
+
     # 4. Use fallback
     if provider.fallback_models:
         return ModelDiscoveryResult(provider.fallback_models, "fallback")
-    
+
     # 5. Return empty with error
     return ModelDiscoveryResult([], "error", error="No models available")
 ```
@@ -141,14 +141,14 @@ async def discover_models_unified(provider_id: str) -> ModelDiscoveryResult:
 # utils/model_discovery.py
 def use_model_discovery(provider_id: str) -> ModelDiscoveryState:
     """React-style hook for model discovery in Streamlit"""
-    
+
     @st.cache_data(ttl=300)  # 5 minute cache
     def fetch_models(provider_id):
         response = api_request("GET", f"/api/v1/generators/apisix/models?provider={provider_id}")
         return response
-    
+
     result = fetch_models(provider_id)
-    
+
     return ModelDiscoveryState(
         models=result.get("models", []),
         loading=False,
@@ -173,16 +173,16 @@ def use_model_discovery(provider_id: str) -> ModelDiscoveryState:
 def render_model_selector(provider_id: str, key: str):
     """Reusable model selector component"""
     discovery = use_model_discovery(provider_id)
-    
+
     if discovery.loading:
         st.spinner("Discovering models...")
-    
+
     if discovery.error and not discovery.models:
         st.error(f"Failed to discover models: {discovery.error}")
-    
+
     if discovery.show_fallback_notice:
         st.info("ℹ️ Using cached model list. Live discovery temporarily unavailable.")
-    
+
     selected = st.selectbox(
         "Select Model",
         options=discovery.models or ["No models available"],
@@ -190,7 +190,7 @@ def render_model_selector(provider_id: str, key: str):
         key=key,
         help=f"Models from {discovery.source} source"
     )
-    
+
     return selected
 ```
 

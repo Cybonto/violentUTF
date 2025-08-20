@@ -46,7 +46,7 @@ if [ -f "keycloak/.env" ]; then
     source keycloak/.env
     # Use existing values if available
     KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-}"
-    
+
     # Generate new passwords only if not found
     if [ -z "$KEYCLOAK_ADMIN_PASSWORD" ]; then
         KEYCLOAK_ADMIN_PASSWORD=$(generate_secure_string)

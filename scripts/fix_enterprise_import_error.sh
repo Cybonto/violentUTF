@@ -66,7 +66,7 @@ if [ $? -eq 0 ]; then
     print_status "success" "Files copied successfully"
 else
     print_status "error" "Failed to copy files. Trying alternative method..."
-    
+
     # Alternative: Copy files one by one
     for file in violentutf_api/fastapi_app/app/services/report_system/*.py; do
         if [ -f "$file" ]; then
@@ -141,12 +141,12 @@ if [ -f "/.dockerenv" ]; then
     print_status "info" "Running in Docker environment - skipping Enterprise-specific fixes"
 else
     print_status "info" "Applying Enterprise-specific fixes..."
-    
+
     # Check Docker Desktop file sharing
     if command -v docker >/dev/null 2>&1; then
         DOCKER_VERSION=$(docker version --format '{{.Server.Version}}')
         print_status "info" "Docker version: $DOCKER_VERSION"
-        
+
         # Add current directory to Docker file sharing if on macOS
         if [[ "$OSTYPE" == "darwin"* ]]; then
             print_status "info" "macOS detected - ensure $(pwd) is in Docker Desktop file sharing"

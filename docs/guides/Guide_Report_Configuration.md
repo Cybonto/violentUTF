@@ -12,7 +12,7 @@ This section manages fundamental report settings:
 
 - **Report Title**: A descriptive title for your report
 - **Report Description**: Additional context about the report's purpose
-- **Report Period**: 
+- **Report Period**:
   - Start Date: Beginning of the reporting period
   - End Date: End of the reporting period
 - **Timezone**: Select the timezone for timestamps in the report

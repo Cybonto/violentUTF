@@ -66,7 +66,7 @@ def secure_pdf_generation(html_content: str) -> bytes:
         attributes=ALLOWED_ATTRIBUTES,
         strip=True
     )
-    
+
     return HTML(string=safe_html).write_pdf()
 ```
 
@@ -93,9 +93,9 @@ import jsonschema
 
 class ReportTemplate(Base):
     __tablename__ = 'cob_report_templates'
-    
+
     template_config = Column(JSON, nullable=False)
-    
+
     @validates('template_config')
     def validate_config(self, key, value):
         jsonschema.validate(value, TEMPLATE_SCHEMA)
@@ -124,26 +124,26 @@ class SecureAIClient:
     def __init__(self):
         self.encryption_key = load_encryption_key()
         self.rate_limiter = AsyncRateLimiter(10, 60)
-    
+
     async def make_request(self, provider: str, payload: dict):
         await self.rate_limiter.acquire()
-        
+
         # Get encrypted API key
         api_key = self.decrypt_api_key(provider)
-        
+
         # SSL verification enabled
         ssl_context = ssl.create_default_context()
         ssl_context.verify_mode = ssl.CERT_REQUIRED
-        
+
         # Sign request for integrity
         signature = self.sign_request(payload, api_key)
-        
+
         headers = {
             'Authorization': f'Bearer {api_key}',
             'X-Signature': signature,
             'X-Request-ID': str(uuid.uuid4())
         }
-        
+
         async with aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(ssl=ssl_context)
         ) as session:
@@ -232,26 +232,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           pip install poetry
           poetry install --with security
-      
+
       - name: Run Bandit security scan
         run: poetry run bandit -r . -f json -o bandit-report.json
-      
+
       - name: Run pip-audit
         run: poetry run pip-audit --desc --format=json
-      
+
       - name: Run Safety check
         run: poetry run safety check --json
-      
+
       - name: Container vulnerability scan
         uses: aquasecurity/trivy-action@master
         with:
@@ -273,11 +273,11 @@ class SecureSettings(BaseSettings):
     database_url: SecretStr
     jwt_secret_key: SecretStr
     openai_api_key: SecretStr
-    
+
     # Vault integration for production
     vault_url: str = "https://vault.company.com"
     vault_token: SecretStr
-    
+
     def get_secret(self, key: str) -> str:
         """Retrieve secret from Vault or encrypted env var"""
         if self.vault_url and self.vault_token:
@@ -289,7 +289,7 @@ class SecureSettings(BaseSettings):
                 path=f"cob-reports/{key}"
             )
             return response['data']['data']['value']
-        
+
         # Fallback to encrypted environment variable
         encrypted_value = getattr(self, f"{key}_encrypted")
         fernet = Fernet(self.encryption_key)
@@ -312,7 +312,7 @@ app = FastAPI()
 
 # Security middleware
 app.add_middleware(
-    TrustedHostMiddleware, 
+    TrustedHostMiddleware,
     allowed_hosts=["violentutf.company.com", "localhost"]
 )
 

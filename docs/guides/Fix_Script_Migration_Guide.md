@@ -141,7 +141,7 @@ Please update your workflows to use the consolidated `fix_violentutf_issues.sh` 
    ```bash
    # macOS
    brew install jq
-   
+
    # Linux
    apt-get install jq
    ```

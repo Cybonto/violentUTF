@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """Dashboard-specific endpoints for efficient data loading"""
 
 import json
@@ -352,7 +355,6 @@ async def browse_scan_data(
 ):
     """Browse scan data with enhanced filtering for report generation"""
     try:
-
         # Build base query with LEFT JOIN to handle missing orchestrator configs
         stmt = (
             select(

@@ -33,7 +33,7 @@ log_error() {
 }
 
 log_warn() {
-    # Always show warnings regardless of verbosity  
+    # Always show warnings regardless of verbosity
     echo -e "${COLOR_YELLOW}⚠️  WARNING: $*${COLOR_RESET}" >&2
 }
 
@@ -81,11 +81,11 @@ run_command() {
     local description="$1"
     shift
     local command="$*"
-    
+
     if should_log 2; then
         log_detail "Running: $command"
     fi
-    
+
     if should_log 3; then
         # Debug mode - show all output
         eval "$command"

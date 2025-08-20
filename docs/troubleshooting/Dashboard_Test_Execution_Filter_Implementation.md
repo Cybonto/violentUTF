@@ -11,9 +11,9 @@ Successfully implemented Options 1 and 2 from the Dashboard Test vs Full Executi
 1. **Execution Name Badges**
    - Added `get_execution_type_badge()` helper function that returns:
      - 🧪 TEST - for test executions
-     - 🚀 FULL - for full executions  
+     - 🚀 FULL - for full executions
      - ❓ UNKNOWN - for executions without type metadata
-   
+
 2. **Badge Display Locations**
    - Execution dropdown filter shows badges: `"full_exec_safety_2025 [🚀 FULL]"`
    - Detailed results table shows execution names with badges

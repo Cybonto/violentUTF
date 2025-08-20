@@ -1,5 +1,3 @@
-from typing import Any
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -11,6 +9,7 @@ ViolentUTF API - FastAPI application for programmatic access to LLM red-teaming 
 import logging
 import os
 from contextlib import asynccontextmanager
+from typing import Any
 
 from app.api.routes import api_router
 from app.core.config import settings

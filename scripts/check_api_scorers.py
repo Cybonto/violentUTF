@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Check what the API actually returns for scorers
 """
@@ -94,8 +97,8 @@ def check_api_scorers():
                     # List first few
                     scorers = conn.execute(
                         """
-                        SELECT id, name, created_at 
-                        FROM scorers 
+                        SELECT id, name, created_at
+                        FROM scorers
                         WHERE user_id = 'violentutf.web'
                         ORDER BY created_at DESC
                         LIMIT 5

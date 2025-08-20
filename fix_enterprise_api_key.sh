@@ -42,7 +42,7 @@ for consumer in "violentutf-api" "violentutf-user" "violentutf_api_user"; do
                 }
             }
         }" -o /dev/null)
-    
+
     if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "201" ]; then
         echo "✅ Updated"
     else

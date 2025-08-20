@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Script to verify how the Streamlit Configure Scorers page is making API calls
 and to check for any issues in the request/response chain.

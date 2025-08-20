@@ -40,7 +40,7 @@ When orchestrator instances are garbage collected or the service restarts, they 
 
 Over time, the system creates multiple database files:
 - `orchestrator_memory_12345678.db` (from first orchestrator)
-- `orchestrator_memory_87654321.db` (from second orchestrator)  
+- `orchestrator_memory_87654321.db` (from second orchestrator)
 - `orchestrator_memory_abcdef12.db` (from third orchestrator)
 - etc.
 
@@ -102,7 +102,7 @@ After processing ~1500 prompts, memory pressure likely triggers cleanup of orche
 
 ### Data Affected
 - Generator configurations
-- Scorer configurations  
+- Scorer configurations
 - Dataset configurations
 - Previous test results
 - User session data
@@ -130,7 +130,7 @@ class DatabaseConnectionManager:
     def __init__(self):
         self._connections = {}
         self._lock = asyncio.Lock()
-    
+
     async def get_connection(self, db_path: str):
         async with self._lock:
             if db_path not in self._connections:
@@ -144,7 +144,7 @@ class OrchestratorPool:
     def __init__(self, max_instances: int = 10):
         self._pool = {}
         self._max_instances = max_instances
-    
+
     def get_or_create(self, config: Dict) -> Orchestrator:
         key = self._get_config_key(config)
         if key in self._pool:

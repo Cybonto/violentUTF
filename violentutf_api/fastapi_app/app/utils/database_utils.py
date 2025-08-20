@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Database utility functions for consistent database path management
 Fixes the database switching issue by ensuring all services use the same user-specific paths

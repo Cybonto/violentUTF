@@ -1,14 +1,14 @@
 # Phase 1 macOS Setup Support Summary
 
-**Date**: July 17, 2025  
-**Author**: Implementation Team  
+**Date**: July 17, 2025
+**Author**: Implementation Team
 **Purpose**: Ensure macOS setup script properly supports Phase 1 database improvements
 
 ## Setup Script Updates
 
 ### 1. Updated ViolentUTF API Setup Module
 
-**File**: `setup_macos_files/violentutf_api_setup.sh`  
+**File**: `setup_macos_files/violentutf_api_setup.sh`
 **Changes Made**:
 - Added `APP_DATA_DIR` environment variable configuration
 - Ensures consistent database directory path across all services
@@ -24,7 +24,7 @@ fi
 
 ### 2. Updated FastAPI Environment Configuration
 
-**File**: `violentutf_api/fastapi_app/.env`  
+**File**: `violentutf_api/fastapi_app/.env`
 **Changes Made**:
 - Added `APP_DATA_DIR=/app/app_data/violentutf` to environment configuration
 - Ensures Phase 1 database utilities use the correct directory

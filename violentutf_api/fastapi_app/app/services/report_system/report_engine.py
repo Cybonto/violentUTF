@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Report generation engine for creating reports from templates
 """
@@ -715,46 +718,46 @@ class ReportGenerationEngine:
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .report-header {
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
-        
+
         .report-header h1 {
             margin: 0;
             color: #1976d2;
         }
-        
+
         .report-meta {
             margin-top: 10px;
             color: #666;
             font-size: 0.9em;
         }
-        
+
         .report-meta span {
             margin-right: 20px;
         }
-        
+
         .report-block {
             margin-bottom: 40px;
             page-break-inside: avoid;
         }
-        
+
         .executive-summary {
             background: #f5f5f5;
             padding: 20px;
             border-radius: 8px;
         }
-        
+
         .summary-components {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
-        
+
         .metric-card {
             background: white;
             padding: 20px;
@@ -762,46 +765,46 @@ class ReportGenerationEngine:
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             text-align: center;
         }
-        
+
         .metric-card h3 {
             margin: 0 0 10px 0;
             font-size: 1.1em;
             color: #666;
         }
-        
+
         .metric-value {
             font-size: 2em;
             font-weight: bold;
             margin: 10px 0;
         }
-        
+
         .metric-label {
             font-size: 0.9em;
             color: #666;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
         }
-        
+
         th, td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-        
+
         th {
             background-color: #f5f5f5;
             font-weight: 600;
         }
-        
+
         .risk-heatmap td {
             text-align: center;
             font-weight: bold;
         }
-        
+
         .severity-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -810,46 +813,46 @@ class ReportGenerationEngine:
             font-size: 0.85em;
             margin-right: 10px;
         }
-        
+
         .top-findings {
             margin-top: 30px;
         }
-        
+
         .top-findings ul {
             list-style: none;
             padding: 0;
         }
-        
+
         .top-findings li {
             margin-bottom: 10px;
             padding: 10px;
             background: #f9f9f9;
             border-left: 4px solid #1976d2;
         }
-        
+
         .ai-analysis-block {
             background: #fafafa;
             padding: 20px;
             border-radius: 8px;
         }
-        
+
         .analysis-section {
             margin-top: 20px;
         }
-        
+
         .analysis-section h3 {
             color: #1976d2;
             margin-bottom: 10px;
         }
-        
+
         .analysis-content {
             line-height: 1.8;
         }
-        
+
         .compliance-matrix {
             margin-top: 20px;
         }
-        
+
         .compliance-framework {
             margin-bottom: 20px;
             padding: 15px;
@@ -857,38 +860,38 @@ class ReportGenerationEngine:
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        
+
         .compliance-framework h4 {
             margin: 0 0 10px 0;
             color: #333;
         }
-        
+
         .compliance-framework ul {
             margin: 0;
             padding-left: 20px;
         }
-        
+
         .requirement-pass {
             color: #4caf50;
         }
-        
+
         .requirement-partial {
             color: #ff9800;
         }
-        
+
         .requirement-fail {
             color: #f44336;
         }
-        
+
         .toxicity-heatmap {
             margin: 20px 0;
         }
-        
+
         .heatmap-legend {
             margin-top: 10px;
             font-size: 0.9em;
         }
-        
+
         .legend-item {
             display: inline-block;
             padding: 4px 8px;
@@ -896,22 +899,22 @@ class ReportGenerationEngine:
             color: white;
             border-radius: 4px;
         }
-        
+
         .custom-content-block {
             padding: 20px;
             background: white;
         }
-        
+
         .custom-content-block.methodology {
             background: #f0f7ff;
             border-left: 4px solid #1976d2;
         }
-        
+
         .custom-content-block.disclaimer {
             background: #fff3e0;
             border-left: 4px solid #ff9800;
         }
-        
+
         .report-footer {
             margin-top: 50px;
             padding-top: 20px;
@@ -920,12 +923,12 @@ class ReportGenerationEngine:
             color: #666;
             font-size: 0.9em;
         }
-        
+
         @media print {
             .report-block {
                 page-break-inside: avoid;
             }
-            
+
             .report-header {
                 page-break-after: avoid;
             }

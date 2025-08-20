@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Unified User Context Manager for ViolentUTF
 Standardizes user identification across all operations to prevent data fragmentation

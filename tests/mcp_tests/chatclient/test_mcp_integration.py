@@ -1,5 +1,3 @@
-from typing import Any
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -12,6 +10,7 @@ Tests natural language parsing, context analysis, and integration features
 import json
 import os
 import sys
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest

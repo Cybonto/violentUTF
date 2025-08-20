@@ -1,5 +1,3 @@
-from typing import Any
-
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -15,6 +13,7 @@ import os
 import sys
 import tempfile
 from datetime import datetime
+from typing import Any
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest

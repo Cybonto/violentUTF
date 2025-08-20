@@ -158,7 +158,7 @@ def safe_parse_timestamp(timestamp):
     """Safely parse timestamp with error handling."""
     if not timestamp:
         return None
-    
+
     try:
         if isinstance(timestamp, str):
             return datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
@@ -166,7 +166,7 @@ def safe_parse_timestamp(timestamp):
             return timestamp
     except (ValueError, AttributeError):
         return None
-    
+
     return None
 ```
 

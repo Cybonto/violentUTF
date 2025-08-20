@@ -38,7 +38,7 @@ potential_paths = [
 ]
 ```
 
-**Problem**: 
+**Problem**:
 - Streamlit and API service may use different paths
 - Database files created in one location might not be found by another service
 
@@ -145,7 +145,7 @@ class OrchestratorPool:
     def __init__(self, max_instances: int = 10):
         self._pool = {}
         self._max_instances = max_instances
-    
+
     def get_or_create(self, config: Dict) -> Orchestrator:
         # Reuse existing instance or create new one
         key = self._get_config_key(config)
@@ -173,7 +173,7 @@ class DatabaseConnectionManager:
     def __init__(self):
         self._lock = asyncio.Lock()
         self._connections = {}
-    
+
     async def get_connection(self, db_path: str):
         async with self._lock:
             # Ensure only one connection per database file

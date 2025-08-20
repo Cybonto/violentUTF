@@ -22,7 +22,7 @@ def get_consistent_username() -> str:
     # 1. Keycloak preferred_username from SSO token
     # 2. Environment variable KEYCLOAK_USERNAME
     # 3. Default fallback
-    
+
     if "access_token" in st.session_state:
         payload = jwt.decode(st.session_state["access_token"], options={"verify_signature": False})
         preferred_username = payload.get("preferred_username")  # e.g., "violentutf.web"
@@ -37,7 +37,7 @@ def get_consistent_username() -> str:
 def create_token(self, keycloak_token_data: Dict[str, Any]) -> Optional[str]:
     # ALWAYS use preferred_username as the unique identifier
     username = keycloak_token_data.get("preferred_username") or keycloak_token_data.get("sub", "user")
-    
+
     payload = {
         "sub": username,  # This is what FastAPI will use
         "username": username,
@@ -52,7 +52,7 @@ def create_token(self, keycloak_token_data: Dict[str, Any]) -> Optional[str]:
 async def _authenticate_jwt(self, token: str) -> User:
     payload = decode_token(token)
     username = payload.get("sub")  # Always uses 'sub' claim
-    
+
     # IMPORTANT: Always use 'sub' claim as username, never 'name' or 'display_name'
     user = User(username=username, ...)
     return user
@@ -64,7 +64,7 @@ async def _authenticate_jwt(self, token: str) -> User:
 class DuckDBManager:
     def __init__(self, username: str, ...):
         self.username = username  # This determines data isolation
-        
+
     def create_scorer(self, name: str, scorer_type: str, parameters: Dict[str, Any]) -> str:
         # Inserts with user_id = self.username
         conn.execute("""

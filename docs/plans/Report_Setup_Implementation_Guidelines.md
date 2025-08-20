@@ -11,18 +11,18 @@ from utils.jwt_manager import jwt_manager
 
 def get_auth_headers() -> Dict[str, str]:
     token = jwt_manager.get_valid_token()  # Handles refresh automatically
-    
+
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
         "X-API-Gateway": "APISIX"  # Required header
     }
-    
+
     # Add APISIX API key if available
     apisix_api_key = os.getenv("VIOLENTUTF_API_KEY")
     if apisix_api_key:
         headers["apikey"] = apisix_api_key
-        
+
     return headers
 ```
 
@@ -145,12 +145,12 @@ def load_data_with_cache(params: Dict) -> List[Dict]:
 def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
-        
+
         if response.status_code in [200, 201]:
             return response.json()
         else:
             logger.error(f"API Error {response.status_code}: {url}")
-            
+
             # User-friendly error in Streamlit
             if response.status_code == 401:
                 st.error("🔐 Authentication expired. Please refresh the page.")
@@ -158,7 +158,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
                 st.error("🚫 Access denied.")
             else:
                 st.error(f"❌ API Error: {response.status_code}")
-                
+
             return None
     except Exception as e:
         logger.error(f"Request failed: {e}")
@@ -197,7 +197,7 @@ from app.api.endpoints.dashboard import get_dashboard_scores
 async def get_report_data(params):
     # Reuse dashboard logic
     base_data = await get_dashboard_scores(...)
-    
+
     # Add report-specific enhancements
     return enhance_for_reports(base_data)
 ```

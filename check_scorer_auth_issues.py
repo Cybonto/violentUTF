@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Script to check for authentication and token issues that might affect scorer retrieval.
 Focuses on the token lifecycle and user context consistency.
@@ -213,7 +216,7 @@ def check_database_access_pattern(tokens_created):
                     # Check scorers
                     result = conn.execute(
                         """
-                        SELECT COUNT(*) as count, 
+                        SELECT COUNT(*) as count,
                                GROUP_CONCAT(DISTINCT user_id) as users
                         FROM scorers
                     """

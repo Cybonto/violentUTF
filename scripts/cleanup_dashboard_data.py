@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Dashboard Data Cleanup Utility for ViolentUTF
 
@@ -146,8 +149,8 @@ print(affected)
         # By status
         result = self._execute_query(
             """
-            SELECT status, COUNT(*) 
-            FROM orchestrator_executions 
+            SELECT status, COUNT(*)
+            FROM orchestrator_executions
             GROUP BY status
         """
         )
@@ -158,8 +161,8 @@ print(affected)
             cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
             result = self._execute_query(
                 """
-                SELECT COUNT(*) 
-                FROM orchestrator_executions 
+                SELECT COUNT(*)
+                FROM orchestrator_executions
                 WHERE started_at < ?
             """,
                 [cutoff],
@@ -169,8 +172,8 @@ print(affected)
         # With results
         result = self._execute_query(
             """
-            SELECT COUNT(*) 
-            FROM orchestrator_executions 
+            SELECT COUNT(*)
+            FROM orchestrator_executions
             WHERE results IS NOT NULL AND results != '{}'
         """
         )
@@ -180,8 +183,8 @@ print(affected)
         try:
             result = self._execute_query(
                 """
-                SELECT results 
-                FROM orchestrator_executions 
+                SELECT results
+                FROM orchestrator_executions
                 WHERE status = 'completed' AND results IS NOT NULL
             """
             )
@@ -232,7 +235,7 @@ print(affected)
             conditions.append(
                 """
                 orchestrator_id IN (
-                    SELECT id FROM orchestrator_configurations 
+                    SELECT id FROM orchestrator_configurations
                     WHERE name LIKE ?
                 )
             """
@@ -257,7 +260,7 @@ print(affected)
         if orchestrator_name:
             # Use subquery to avoid ambiguous column names
             sample_query = f"""
-                SELECT 
+                SELECT
                     id,
                     execution_name,
                     status,
@@ -282,7 +285,7 @@ print(affected)
             prefixed_where = " AND ".join(prefixed_conditions) if prefixed_conditions else "1=1"
 
             sample_query = f"""
-                SELECT 
+                SELECT
                     oe.id,
                     oe.execution_name,
                     oe.status,
@@ -400,13 +403,13 @@ def main():
 Examples:
   # Show statistics (Docker)
   python cleanup_dashboard_data.py --docker --stats
-  
+
   # Delete executions older than 30 days
   python cleanup_dashboard_data.py --docker --older-than 30
-  
+
   # Delete failed executions
   python cleanup_dashboard_data.py --docker --status failed
-  
+
   # Dry run to preview deletions
   python cleanup_dashboard_data.py --docker --older-than 90 --dry-run
         """,

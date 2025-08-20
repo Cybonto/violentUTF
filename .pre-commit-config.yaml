@@ -199,7 +199,7 @@ repos:
 
       - id: check-docker-compose
         name: Validate docker-compose files
-        entry: docker compose config --quiet
+        entry: bash -c 'for f in "$@"; do docker compose --file "$f" config --quiet; done' --
         language: system
         files: 'docker-compose.*\.ya?ml$'
         pass_filenames: true

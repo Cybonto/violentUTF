@@ -16,7 +16,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   }
 }
 EOF
-    
+
     # Only update if Docker Desktop settings exist
     if [ -f ~/Library/Group\ Containers/group.com.docker/settings.json ]; then
         echo "   ⚠️  Docker Desktop settings found - please manually increase timeout in Docker Desktop preferences"
@@ -59,45 +59,45 @@ docker-compose build --no-cache --progress=plain fastapi 2>&1 | tee ../build.log
 # Check if build succeeded
 if [ $? -eq 0 ]; then
     echo "✅ Build succeeded!"
-    
+
     # Restore original requirements
     cd ../violentutf_api/fastapi_app
     mv requirements.txt.backup requirements.txt
-    
+
     # Start the container
     cd ../../apisix
     docker-compose up -d fastapi
-    
+
     echo "🎉 FastAPI container rebuilt successfully!"
 else
     echo "❌ Build failed. Checking alternative solutions..."
-    
+
     # Alternative: Use pre-built image approach
     echo "🔄 Trying alternative solution with pre-downloaded packages..."
-    
+
     # Create a directory for pre-downloaded wheels
     mkdir -p /tmp/vutf-wheels
     cd /tmp/vutf-wheels
-    
+
     # Download the problematic packages separately
     echo "   Downloading packages with pip download..."
     pip download --timeout 600 --retries 10 botocore==1.38.13 boto3==1.38.13
-    
+
     if [ $? -eq 0 ]; then
         echo "   ✅ Packages downloaded successfully"
-        
+
         # Copy to build context
         cp *.whl /Users/tamnguyen/Documents/GitHub/ViolentUTF/violentutf_api/fastapi_app/
-        
+
         echo "   📝 Creating Dockerfile.fix for offline installation..."
         cd /Users/tamnguyen/Documents/GitHub/ViolentUTF/violentutf_api/fastapi_app
-        
+
         # Create a modified Dockerfile that uses local wheels
         sed 's|RUN pip install --no-cache-dir --timeout 600 --retries 10 -r requirements-prebuild.txt|COPY *.whl /tmp/wheels/\nRUN pip install --no-cache-dir /tmp/wheels/*.whl|' Dockerfile > Dockerfile.fix
-        
+
         echo "   🏗️ Building with local wheels..."
         docker build -f Dockerfile.fix -t violentutf-api-fixed .
-        
+
         # Clean up
         rm -f *.whl
         rm -f Dockerfile.fix

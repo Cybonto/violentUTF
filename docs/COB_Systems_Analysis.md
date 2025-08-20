@@ -50,7 +50,7 @@ Dedicated endpoints under `/api/v1/cob/`:
 ## Confusion Points
 
 1. **Same abbreviation**: Both systems use "COB" but mean different things
-2. **Different purposes**: 
+2. **Different purposes**:
    - Close of Business = shift handover reports
    - Configurable Output Block = flexible report templates
 3. **Different architectures**:

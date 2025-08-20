@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Scorer Result Inconsistency Inspector for ViolentUTF
 
@@ -81,8 +84,8 @@ class ScorerInconsistencyInspector:
                 # Get score types distribution
                 score_types = conn.execute(
                     """
-                    SELECT scorer_class_name, COUNT(*) as count 
-                    FROM score 
+                    SELECT scorer_class_name, COUNT(*) as count
+                    FROM score
                     GROUP BY scorer_class_name
                 """
                 ).fetchall()
@@ -91,15 +94,15 @@ class ScorerInconsistencyInspector:
                 # Get recent scores with details
                 recent = conn.execute(
                     """
-                    SELECT 
+                    SELECT
                         id,
                         scorer_class_name,
                         score_value,
                         score_category,
                         created_datetime,
                         prompt_request_response_id
-                    FROM score 
-                    ORDER BY created_datetime DESC 
+                    FROM score
+                    ORDER BY created_datetime DESC
                     LIMIT 10
                 """
                 ).fetchall()

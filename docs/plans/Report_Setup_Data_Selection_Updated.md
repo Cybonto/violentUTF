@@ -12,18 +12,18 @@ This updated implementation plan aligns with existing ViolentUTF patterns, reuse
 def get_auth_headers() -> Dict[str, str]:
     """Get authentication headers for API requests through APISIX Gateway"""
     token = jwt_manager.get_valid_token()
-    
+
     headers = {
-        "Authorization": f"Bearer {token}", 
-        "Content-Type": "application/json", 
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
         "X-API-Gateway": "APISIX"
     }
-    
+
     # Add APISIX API key for AI model access
     apisix_api_key = os.getenv("VIOLENTUTF_API_KEY")
     if apisix_api_key:
         headers["apikey"] = apisix_api_key
-        
+
     return headers
 ```
 
@@ -109,7 +109,7 @@ async def browse_report_data(
     """Browse scan data with report-specific enhancements"""
     # Internally call dashboard service but add report-specific logic
     from app.api.endpoints.dashboard import get_dashboard_scores
-    
+
     # Reuse existing logic
     base_data = await get_dashboard_scores(
         days_back=30,
@@ -119,7 +119,7 @@ async def browse_report_data(
         db=db,
         current_user=current_user
     )
-    
+
     # Add report-specific enhancements
     enhanced_data = enhance_for_reports(base_data, request)
     return enhanced_data
@@ -157,7 +157,7 @@ API_ENDPOINTS = {
     # Reuse existing endpoints
     "dashboard_summary": f"{API_BASE_URL}/api/v1/dashboard/summary",
     "dashboard_scores": f"{API_BASE_URL}/api/v1/dashboard/scores",
-    
+
     # Add report-specific endpoints (if Option B)
     "report_data_browse": f"{API_BASE_URL}/api/v1/reports/data/browse",
     "report_templates": f"{API_BASE_URL}/api/v1/reports/templates",
@@ -182,7 +182,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
 @st.cache_data(ttl=60)  # Same caching strategy as Dashboard
 def load_scan_data_for_reports(filters: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Load scan data using existing dashboard endpoints"""
-    
+
     # Option A: Use dashboard endpoint with filters
     params = {
         "days_back": 30,  # Calculate from date range
@@ -190,14 +190,14 @@ def load_scan_data_for_reports(filters: Dict[str, Any]) -> List[Dict[str, Any]]:
         "page": 1,
         "page_size": 100
     }
-    
+
     response = api_request("GET", API_ENDPOINTS["dashboard_scores"], params=params)
-    
+
     # Process and filter client-side if needed
     if response:
         scores = response.get("scores", [])
         return filter_scores_for_reports(scores, filters)
-    
+
     return []
 ```
 
@@ -223,7 +223,7 @@ class DataBrowseRequest(BaseModel):
     page: int = Field(1, ge=1, description="Page number")
     page_size: int = Field(50, ge=1, le=200, description="Items per page")
     include_test: bool = Field(False, description="Include test executions")
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -259,13 +259,13 @@ async def get_execution_details_for_report(
     user_context: str
 ) -> Dict[str, Any]:
     """Get execution details using existing service"""
-    
+
     # Use existing service method
     execution = await pyrit_orchestrator_service.get_execution(
         execution_id,
         user_context
     )
-    
+
     # Enhance for report needs
     if execution:
         # Add report-specific calculations
@@ -275,7 +275,7 @@ async def get_execution_details_for_report(
         execution["key_findings"] = extract_key_findings(
             execution.get("scores", [])
         )
-    
+
     return execution
 ```
 

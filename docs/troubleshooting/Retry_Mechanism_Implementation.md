@@ -1,7 +1,7 @@
 # Retry Mechanism Implementation for 429 Rate Limiting
 
-**Date**: July 17, 2025  
-**Author**: Implementation Team  
+**Date**: July 17, 2025
+**Author**: Implementation Team
 **Purpose**: Implement comprehensive retry mechanisms for handling 429 throttling errors in both TEST and FULL executions
 
 ## Problem Analysis
@@ -52,7 +52,7 @@ def with_retry_logic(max_retries: int = 3, base_delay: float = 1.0, exponential_
 - Applies execution-specific retry configuration
 - Includes inter-prompt delay option
 
-#### Direct Prompt List Execution  
+#### Direct Prompt List Execution
 **Method**: `_send_prompt_list_with_retry()` (lines 1036-1061)
 - Handles direct prompt list scenarios
 - Same retry logic as dataset execution
@@ -112,7 +112,7 @@ def with_retry_logic(max_retries: int = 3, base_delay: float = 1.0, exponential_
 # OLD: Direct call
 results = await orchestrator.send_prompts_async(...)
 
-# NEW: With retry wrapper  
+# NEW: With retry wrapper
 results = await self._send_prompts_with_retry(
     orchestrator, dataset_prompts, memory_labels, execution_config
 )

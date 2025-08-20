@@ -46,7 +46,7 @@ url = f"{api_base}/api/v1/generators/apisix/models?provider={provider_id}"
 async def discover_apisix_models_enhanced(provider: str) -> List[str]:
     if provider.startswith("openapi-"):
         provider_id = provider.replace("openapi-", "")
-        
+
         # Special handling for GSAi - only matches if provider_id == "gsai"
         if provider_id == "gsai":  # This check fails for "gsai-api-1"
             logger.info("Using hardcoded models for GSAi (models endpoint not working)")
@@ -59,7 +59,7 @@ The API only recognizes:
 
 ### 3. Configuration Flow
 
-1. **Setup Phase**: 
+1. **Setup Phase**:
    - User configures `OPENAPI_1_ID=gsai-api-1` in ai-tokens.env
    - Setup scripts create routes using this ID
 
@@ -110,7 +110,7 @@ Users can still test GSAi models by:
 **Short-term**: Update the API to handle both naming conventions:
 ```python
 # Handle multiple GSAi ID formats
-if provider == "gsai-api-1" or provider == "openapi-gsai" or 
+if provider == "gsai-api-1" or provider == "openapi-gsai" or
    (provider.startswith("openapi-") and "gsai" in provider):
     return gsai_models
 ```
@@ -143,7 +143,7 @@ However, Configure Generator may have fallback behavior or cached models that al
 
 ### Key Differences
 
-1. **Configure Generator**: 
+1. **Configure Generator**:
    - Has display name mapping: `"openapi-gsai": "GSAi (Government Services AI)"`
    - But actually uses `gsai-api-1` in API calls
    - May have fallback mechanisms or cached data

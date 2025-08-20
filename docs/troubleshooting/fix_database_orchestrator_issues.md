@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class UserContextManager:
     """Ensures consistent user identification across all services"""
-    
+
     @staticmethod
     def get_canonical_username(session_state: Dict[str, Any]) -> str:
         """Get consistent username from session state"""
@@ -39,25 +39,25 @@ class UserContextManager:
             username = session_state["username"]
         else:
             username = "unknown_user"
-        
+
         # Normalize username (lowercase, no spaces)
         username = username.lower().strip().replace(" ", "_")
         logger.debug(f"Canonical username resolved: {username}")
         return username
-    
+
     @staticmethod
     def get_user_db_path(username: str) -> str:
         """Get consistent database path for user"""
         # Use consistent salt from environment
         salt = os.getenv("PYRIT_DB_SALT", "violentutf_salt_2025")
-        
+
         # Create consistent hash
         user_hash = hashlib.sha256(f"{salt}:{username}".encode()).hexdigest()[:16]
-        
+
         # Use shared memory directory
         memory_dir = os.getenv("VIOLENTUTF_MEMORY_DIR", "/app/app_data/violentutf/memory")
         os.makedirs(memory_dir, exist_ok=True)
-        
+
         db_path = os.path.join(memory_dir, f"pyrit_memory_{user_hash}.db")
         logger.info(f"User DB path for {username}: {db_path}")
         return db_path
@@ -78,10 +78,10 @@ def create_compatible_api_token():
     """Create a FastAPI-compatible token using JWT manager with consistent user context"""
     try:
         from utils.jwt_manager import jwt_manager
-        
+
         # Use centralized user context manager
         canonical_username = UserContextManager.get_canonical_username(st.session_state)
-        
+
         # Create consistent user context
         user_context = {
             "sub": canonical_username,
@@ -89,12 +89,12 @@ def create_compatible_api_token():
             "preferred_username": canonical_username,
             "email": f"{canonical_username}@violentutf.local"
         }
-        
+
         logger.info(f"Creating API token for canonical user: {canonical_username}")
-        
+
         # Create token with canonical user context
         api_token = jwt_manager.create_token(user_context)
-        
+
         if api_token:
             st.session_state["api_token"] = api_token
             st.session_state["canonical_username"] = canonical_username
@@ -102,7 +102,7 @@ def create_compatible_api_token():
         else:
             st.error("🚨 Security Error: JWT secret key not configured.")
             return None
-            
+
     except Exception as e:
         st.error("❌ Failed to generate API token.")
         logger.error(f"Token creation failed: {e}")
@@ -121,15 +121,15 @@ with st.sidebar:
             st.cache_data.clear()
             st.session_state.clear()
             st.rerun()
-        
+
         st.caption("Current User Context:")
         canonical_user = UserContextManager.get_canonical_username(st.session_state)
         st.code(canonical_user)
-        
+
         st.caption("Database Path:")
         db_path = UserContextManager.get_user_db_path(canonical_user)
         st.code(db_path)
-        
+
         if os.path.exists(db_path):
             st.success("✅ Database file exists")
             file_size = os.path.getsize(db_path) / 1024 / 1024  # MB
@@ -156,23 +156,23 @@ logger = logging.getLogger(__name__)
 
 class OrchestratorPool:
     """Manages a pool of orchestrator instances for reuse"""
-    
+
     def __init__(self, max_instances: int = 20, ttl_minutes: int = 30):
         self._pool: OrderedDict[str, Dict[str, Any]] = OrderedDict()
         self._max_instances = max_instances
         self._ttl = timedelta(minutes=ttl_minutes)
         self._lock = asyncio.Lock()
-    
+
     def _get_pool_key(self, config: Dict[str, Any]) -> str:
         """Generate unique key for orchestrator configuration"""
         import json
         import hashlib
-        
+
         # Create deterministic key from config
         config_str = json.dumps(config, sort_keys=True)
         return hashlib.md5(config_str.encode()).hexdigest()
-    
-    async def get_or_create(self, orchestrator_id: str, config: Dict[str, Any], 
+
+    async def get_or_create(self, orchestrator_id: str, config: Dict[str, Any],
                            create_func) -> Any:
         """Get existing orchestrator or create new one"""
         async with self._lock:
@@ -189,26 +189,26 @@ class OrchestratorPool:
                     logger.info(f"Orchestrator {orchestrator_id} expired, removing from pool")
                     self._cleanup_instance(entry["instance"])
                     del self._pool[orchestrator_id]
-            
+
             # Create new instance
             logger.info(f"Creating new orchestrator {orchestrator_id}")
             instance = await create_func(config)
-            
+
             # Add to pool
             self._pool[orchestrator_id] = {
                 "instance": instance,
                 "config": config,
                 "created_at": datetime.now()
             }
-            
+
             # Evict oldest if pool is full
             while len(self._pool) > self._max_instances:
                 oldest_id, oldest_entry = self._pool.popitem(last=False)
                 logger.info(f"Evicting oldest orchestrator {oldest_id} from pool")
                 self._cleanup_instance(oldest_entry["instance"])
-            
+
             return instance
-    
+
     def _cleanup_instance(self, instance: Any):
         """Clean up orchestrator instance"""
         try:
@@ -216,7 +216,7 @@ class OrchestratorPool:
                 instance.dispose_db_engine()
         except Exception as e:
             logger.error(f"Error cleaning up orchestrator: {e}")
-    
+
     async def clear_expired(self):
         """Remove expired orchestrators from pool"""
         async with self._lock:
@@ -224,12 +224,12 @@ class OrchestratorPool:
             for orch_id, entry in self._pool.items():
                 if datetime.now() - entry["created_at"] >= self._ttl:
                     expired_ids.append(orch_id)
-            
+
             for orch_id in expired_ids:
                 entry = self._pool.pop(orch_id)
                 self._cleanup_instance(entry["instance"])
                 logger.info(f"Cleared expired orchestrator {orch_id}")
-    
+
     def get_pool_stats(self) -> Dict[str, Any]:
         """Get pool statistics"""
         return {
@@ -269,26 +269,26 @@ Update `create_orchestrator_instance` to use the pool:
 async def create_orchestrator_instance(self, config: Dict[str, Any]) -> str:
     """Create and configure orchestrator instance using pool"""
     orchestrator_id = str(uuid.uuid4())
-    
+
     # Use pool to get or create instance
     async def _create_new_instance(config):
         # Existing creation logic here
         orchestrator_type = config["orchestrator_type"]
         parameters = config["parameters"]
         user_context = config.get("user_context")
-        
+
         # ... rest of the existing creation code ...
-        
+
         return orchestrator_instance
-    
+
     # Get from pool or create new
     orchestrator_instance = await self._orchestrator_pool.get_or_create(
         orchestrator_id, config, _create_new_instance
     )
-    
+
     # Store in local registry too
     self._orchestrator_instances[orchestrator_id] = orchestrator_instance
-    
+
     return orchestrator_id
 ```
 
@@ -310,24 +310,24 @@ logger = logging.getLogger(__name__)
 
 class DatabaseConnectionManager:
     """Manages database connections to prevent concurrent access issues"""
-    
+
     def __init__(self):
         self._connections: Dict[str, Any] = {}
         self._locks: Dict[str, asyncio.Lock] = {}
         self._global_lock = asyncio.Lock()
-    
+
     async def get_lock(self, db_path: str) -> asyncio.Lock:
         """Get or create lock for database path"""
         async with self._global_lock:
             if db_path not in self._locks:
                 self._locks[db_path] = asyncio.Lock()
             return self._locks[db_path]
-    
+
     @asynccontextmanager
     async def get_connection(self, db_path: str):
         """Get database connection with proper locking"""
         lock = await self.get_lock(db_path)
-        
+
         async with lock:
             try:
                 # For DuckDB, we need to ensure single writer
@@ -335,16 +335,16 @@ class DatabaseConnectionManager:
                     from pyrit.memory import DuckDBMemory
                     self._connections[db_path] = DuckDBMemory(db_path=db_path)
                     logger.info(f"Created new connection for {db_path}")
-                
+
                 yield self._connections[db_path]
-                
+
             except Exception as e:
                 logger.error(f"Database connection error for {db_path}: {e}")
                 # Remove failed connection
                 if db_path in self._connections:
                     del self._connections[db_path]
                 raise
-    
+
     def close_all(self):
         """Close all connections"""
         for db_path, conn in self._connections.items():
@@ -354,7 +354,7 @@ class DatabaseConnectionManager:
                 logger.info(f"Closed connection for {db_path}")
             except Exception as e:
                 logger.error(f"Error closing connection for {db_path}: {e}")
-        
+
         self._connections.clear()
         self._locks.clear()
 
@@ -376,7 +376,7 @@ Update `get_or_create_user_memory` method:
 async def get_or_create_user_memory(self, user_id: str) -> DuckDBMemory:
     """Get or create user-specific PyRIT memory instance with connection management"""
     memory_path = self.user_context_manager.get_user_memory_path(user_id)
-    
+
     # Use connection manager to avoid conflicts
     async with db_connection_manager.get_connection(memory_path) as memory:
         return memory
@@ -402,7 +402,7 @@ router = APIRouter()
 async def check_orchestrator_health(current_user=Depends(get_current_user)):
     """Check orchestrator pool health"""
     pool_stats = pyrit_orchestrator_service._orchestrator_pool.get_pool_stats()
-    
+
     return {
         "status": "healthy" if pool_stats["total_instances"] < pool_stats["max_instances"] else "warning",
         "pool_stats": pool_stats,
@@ -413,11 +413,11 @@ async def check_orchestrator_health(current_user=Depends(get_current_user)):
 async def check_database_health(current_user=Depends(get_current_user)):
     """Check database connection health"""
     from utils.user_context_manager import UserContextManager
-    
+
     # Get user's database path
     username = current_user.username
     db_path = UserContextManager.get_user_db_path(username)
-    
+
     return {
         "status": "healthy" if os.path.exists(db_path) else "warning",
         "user_db_path": db_path,
@@ -456,7 +456,7 @@ services:
   api:
     volumes:
       - violentutf_memory:/app/app_data/violentutf/memory
-  
+
   streamlit:
     volumes:
       - violentutf_memory:/app/app_data/violentutf/memory
@@ -486,10 +486,10 @@ def test_consistent_user_context():
             "preferred_username": "admin@violentutf.local"
         }
     }
-    
+
     username = UserContextManager.get_canonical_username(session_state)
     assert username == "admin@violentutf.local"
-    
+
     # Test path consistency
     path1 = UserContextManager.get_user_db_path(username)
     path2 = UserContextManager.get_user_db_path(username)
@@ -499,38 +499,38 @@ def test_consistent_user_context():
 async def test_orchestrator_pool():
     """Test orchestrator pooling"""
     from app.services.orchestrator_pool import OrchestratorPool
-    
+
     pool = OrchestratorPool(max_instances=2)
-    
+
     # Mock create function
     async def create_mock(config):
         return {"id": config["id"], "created": True}
-    
+
     # Test reuse
     inst1 = await pool.get_or_create("orch1", {"id": "1"}, create_mock)
     inst2 = await pool.get_or_create("orch1", {"id": "1"}, create_mock)
-    
+
     assert inst1 is inst2  # Should be same instance
 
-@pytest.mark.asyncio  
+@pytest.mark.asyncio
 async def test_connection_manager():
     """Test database connection management"""
     from app.services.db_connection_manager import DatabaseConnectionManager
-    
+
     manager = DatabaseConnectionManager()
-    
+
     # Test concurrent access prevention
     async with manager.get_connection("/tmp/test.db") as conn1:
         # This should wait until conn1 is released
         async def concurrent_access():
             async with manager.get_connection("/tmp/test.db") as conn2:
                 return conn2
-        
+
         # Should not raise an error
         task = asyncio.create_task(concurrent_access())
         # Give it time to try accessing
         await asyncio.sleep(0.1)
-        
+
     # Now it should complete
     conn2 = await task
     assert conn2 is not None

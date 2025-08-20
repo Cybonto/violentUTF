@@ -1,8 +1,8 @@
 # Dataset Configuration Enhancement Plan for Q&A Evaluation Support
 
-**Document Type:** Planning Document - CORRECTED VERSION  
-**Date:** August 15, 2025  
-**Author:** System Analysis (Updated after PyRIT API Review)  
+**Document Type:** Planning Document - CORRECTED VERSION
+**Date:** August 15, 2025
+**Author:** System Analysis (Updated after PyRIT API Review)
 **Purpose:** Comprehensive analysis and CORRECTED recommendations for enhancing dataset configuration to support Question/Answer evaluation workflows
 
 ## Executive Summary - CORRECTED
@@ -13,7 +13,7 @@ This report provides a **corrected analysis** after discovering that PyRIT alrea
 
 **Primary Discoveries:**
 - ✅ PyRIT has native `QuestionAnsweringDataset` with full multi-choice support
-- ✅ PyRIT provides `QuestionAnswerScorer` and `SelfAskQuestionAnswerScorer` 
+- ✅ PyRIT provides `QuestionAnswerScorer` and `SelfAskQuestionAnswerScorer`
 - ✅ ViolentUTF already has comprehensive PyRIT integration (orchestrators, scorers, memory)
 - ❌ ViolentUTF is NOT using PyRIT's Q&A features (converts to text prompts, loses structure)
 - ❌ WMDP dataset is disabled despite PyRIT support
@@ -26,15 +26,15 @@ This report provides a **corrected analysis** after discovering that PyRIT alrea
 ```python
 # PyRIT has complete Q&A infrastructure:
 class QuestionAnsweringDataset(
-    *, name: str, version: str, description: str, 
-    author: str, group: str, source: str, 
+    *, name: str, version: str, description: str,
+    author: str, group: str, source: str,
     questions: list[QuestionAnsweringEntry]
 )
 
 class QuestionAnsweringEntry(
-    *, question: str, 
-    answer_type: Literal['int', 'float', 'str', 'bool'], 
-    correct_answer: int | str | float, 
+    *, question: str,
+    answer_type: Literal['int', 'float', 'str', 'bool'],
+    correct_answer: int | str | float,
     choices: list[QuestionChoice]
 )
 
@@ -47,7 +47,7 @@ class QuestionChoice(*, index: int, text: str)
 - Support for different answer types (int, float, str, bool)
 
 **Native Q&A Scoring:**
-- `QuestionAnswerScorer` - Direct Q&A evaluation  
+- `QuestionAnswerScorer` - Direct Q&A evaluation
 - `SelfAskQuestionAnswerScorer` - LLM-based Q&A evaluation
 - Integration with `Score` class and memory system
 
@@ -82,7 +82,7 @@ elif dataset_type == "wmdp":
 
 **❌ ASSUMED Gaps (Not Actually Missing):**
 - ~~Need to build Q&A evaluation infrastructure~~ → **EXISTS in PyRIT**
-- ~~Need to create scoring mechanisms~~ → **EXISTS in PyRIT** 
+- ~~Need to create scoring mechanisms~~ → **EXISTS in PyRIT**
 - ~~Need to build orchestrator integration~~ → **EXISTS in ViolentUTF**
 - ~~Need to create memory storage~~ → **EXISTS in ViolentUTF**
 
@@ -117,7 +117,7 @@ elif dataset_type == "wmdp":
 ### 3.1 Leverage Existing Infrastructure
 
 **Instead of Building New:**
-- ✅ Use existing PyRIT `QuestionAnsweringDataset` 
+- ✅ Use existing PyRIT `QuestionAnsweringDataset`
 - ✅ Use existing PyRIT Q&A scorers
 - ✅ Use existing ViolentUTF orchestrator system
 - ✅ Use existing ViolentUTF scorer configuration UI
@@ -157,7 +157,7 @@ PYRIT_DATASETS = {
 "wmdp": {
     "name": "wmdp",
     "description": "WMDP Dataset - Weapons of Mass Destruction Proxy",
-    "category": "qa_evaluation", 
+    "category": "qa_evaluation",
     "config_required": True,
     "available_configs": {
         "category": ["bio", "chem", "cyber", None]
@@ -174,7 +174,7 @@ PYRIT_DATASETS = {
     "description": "Specialized scorers for Q&A dataset evaluation",
     "scorers": [
         "QuestionAnswerScorer",          # MISSING - ADD THIS
-        "SelfAskQuestionAnswerScorer"    # MISSING - ADD THIS  
+        "SelfAskQuestionAnswerScorer"    # MISSING - ADD THIS
     ]
 }
 ```
@@ -195,11 +195,11 @@ async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any]):
             "questions": dataset.questions,
             "total_questions": len(dataset.questions)
         }
-    
+
     # Handle other Q&A datasets
     if hasattr(dataset, 'questions'):
         return preserve_qa_structure(dataset)
-        
+
     # Standard SeedPromptDataset handling
     return standard_dataset_handling(dataset)
 ```
@@ -212,26 +212,26 @@ class QADatasetConverter:
     def csv_to_question_answering_dataset(self, csv_path: str) -> QuestionAnsweringDataset:
         df = pd.read_csv(csv_path)
         questions = []
-        
+
         # Detect Q&A column patterns (_Question/_Answer)
         qa_pairs = self.detect_qa_columns(df)
-        
+
         for _, row in df.iterrows():
             for qa_pair in qa_pairs:
                 question_text = row[qa_pair.question_col]
                 answer_text = row[qa_pair.answer_col]
-                
+
                 # Parse multiple choice format
                 choices = self.parse_choices(question_text)
                 correct_answer = self.extract_correct_answer(answer_text)
-                
+
                 questions.append(QuestionAnsweringEntry(
                     question=question_text,
                     answer_type="int",
                     correct_answer=correct_answer,
                     choices=choices
                 ))
-        
+
         return QuestionAnsweringDataset(
             name="Imported Q&A Dataset",
             questions=questions
@@ -258,14 +258,14 @@ class QAEvaluationTemplate:
             ]
         )
         return orchestrator
-    
+
     def execute_qa_evaluation(self, orchestrator, qa_dataset):
         # Convert Q&A dataset to prompts for orchestrator
         prompts = [q.question for q in qa_dataset.questions]
-        
-        # Execute using existing infrastructure  
+
+        # Execute using existing infrastructure
         results = await orchestrator.send_prompts_async(prompts)
-        
+
         # Post-process with Q&A-specific analysis
         return self.analyze_qa_results(results, qa_dataset)
 ```
@@ -279,19 +279,19 @@ class QAEvaluationTemplate:
 def handle_qa_dataset_selection():
     if st.session_state.get('selected_dataset_type') in ['wmdp']:
         st.info("🎯 This is a Question & Answer dataset with evaluation capabilities")
-        
+
         # Show Q&A-specific configuration options
         with st.expander("📊 Q&A Dataset Configuration"):
             eval_mode = st.selectbox(
                 "Evaluation Mode",
                 ["accuracy", "detailed_analysis", "comparative"]
             )
-            
+
             include_explanations = st.checkbox(
-                "Include Answer Explanations", 
+                "Include Answer Explanations",
                 value=True
             )
-            
+
         # Show Q&A preview instead of text preview
         if st.button("Preview Q&A Structure"):
             show_qa_preview(dataset)
@@ -304,13 +304,13 @@ def handle_qa_dataset_selection():
 def qa_dataset_testing():
     if is_qa_dataset(st.session_state.dataset):
         st.subheader("🎯 Q&A Evaluation Testing")
-        
+
         # Use existing generator selection UI
         selected_generator = st.selectbox("Select Generator", get_generators())
-        
+
         # Q&A-specific testing options
         eval_sample_size = st.slider("Questions to Test", 1, 20, 5)
-        
+
         if st.button("Run Q&A Evaluation Test"):
             # Use existing orchestrator infrastructure
             results = run_qa_test_evaluation(
@@ -318,7 +318,7 @@ def qa_dataset_testing():
                 generator=selected_generator,
                 sample_size=eval_sample_size
             )
-            
+
             # Display Q&A-specific results
             display_qa_test_results(results)
 ```
@@ -345,12 +345,12 @@ ALTER TABLE datasets ADD COLUMN qa_metadata JSON DEFAULT '{}';
 @router.get("/datasets/types", response_model=DatasetTypesResponse)
 async def get_dataset_types():
     # Add qa_evaluation category to existing types
-    
-@router.post("/datasets", response_model=DatasetCreateResponse) 
+
+@router.post("/datasets", response_model=DatasetCreateResponse)
 async def create_dataset():
     # Add QuestionAnsweringDataset support to existing creation logic
 
-# Extend existing /scorers endpoints  
+# Extend existing /scorers endpoints
 @router.get("/scorers/types", response_model=ScorerTypesResponse)
 async def get_scorer_types():
     # Add QuestionAnswerScorer and SelfAskQuestionAnswerScorer
@@ -363,7 +363,7 @@ async def get_scorer_types():
 ```bash
 # Q&A Feature Toggles
 ENABLE_QA_DATASETS=true
-ENABLE_QA_SCORERS=true 
+ENABLE_QA_SCORERS=true
 WMDP_DATASET_ENABLED=true
 
 # Use existing PyRIT configurations
@@ -454,14 +454,14 @@ ORCHESTRATOR_SCORING_ENABLED=true  # Already exists
 - Add missing PyRIT Q&A scorers to configuration
 - Test basic Q&A dataset loading
 
-**Sprint 2 (Weeks 3-4): Q&A Pipeline Integration**  
+**Sprint 2 (Weeks 3-4): Q&A Pipeline Integration**
 - Preserve Q&A structure in dataset processing
 - Create Q&A dataset conversion utilities (OllaGen1 support)
 - Integrate Q&A datasets with existing memory system
 
 **Sprint 3 (Weeks 5-6): Q&A Evaluation Workflows**
 - Create Q&A evaluation templates using existing orchestrators
-- Integrate Q&A scorers with evaluation pipeline  
+- Integrate Q&A scorers with evaluation pipeline
 - Add Q&A-specific result analytics
 
 **Sprint 4 (Weeks 7-8): UI Integration & Testing**

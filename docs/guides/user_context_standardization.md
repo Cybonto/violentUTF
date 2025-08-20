@@ -19,12 +19,12 @@ Implemented a comprehensive user context standardization system to resolve score
 - Centralizes user normalization logic
 - Maps various username formats to canonical forms:
   - `"ViolentUTF Web User"` → `"violentutf.web"`
-  - `"Tam Nguyen"` → `"tam.nguyen"`  
+  - `"Tam Nguyen"` → `"tam.nguyen"`
   - `"tam.nguyen@protonmail.com"` → `"tam.nguyen"`
 - Provides token consistency verification
 - Handles automatic token refresh
 
-### 2. FastAPI User Context Manager  
+### 2. FastAPI User Context Manager
 
 **File**: `violentutf_api/fastapi_app/app/core/user_context_manager.py`
 
@@ -49,7 +49,7 @@ Implemented a comprehensive user context standardization system to resolve score
 ## Key Benefits
 
 1. **Consistent Data Access**: All operations use the same canonical username
-2. **No More Fragmentation**: Scorers accessible regardless of authentication method  
+2. **No More Fragmentation**: Scorers accessible regardless of authentication method
 3. **Automatic Normalization**: System handles different username formats transparently
 4. **Backward Compatibility**: Existing code continues to work
 
@@ -67,7 +67,7 @@ The system works automatically - no manual intervention needed. When users acces
 ```python
 NORMALIZATION_RULES = {
     "ViolentUTF Web User": "violentutf.web",
-    "Tam Nguyen": "tam.nguyen", 
+    "Tam Nguyen": "tam.nguyen",
     "tam.nguyen@protonmail.com": "tam.nguyen",
     "violentutf.web": "violentutf.web",
 }
@@ -75,7 +75,7 @@ NORMALIZATION_RULES = {
 
 Additional rules:
 - Email format → extract local part
-- Names with spaces → convert to dot notation  
+- Names with spaces → convert to dot notation
 - Already clean format → lowercase
 
 ## Testing

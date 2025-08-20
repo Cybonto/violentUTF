@@ -97,23 +97,23 @@ component:
   name: "Report Generation Service"
   type: "Backend Service"
   description: "Handles report generation workflow"
-  
+
   interfaces:
     - name: "generateReport"
       input: "ReportConfiguration"
       output: "ReportID"
       errors: ["InvalidTemplate", "DataNotFound"]
-  
+
   dependencies:
     - "Template Service"
     - "Data Aggregation Service"
     - "PDF Generation Library"
-  
+
   technical_requirements:
     - language: "Python 3.10+"
     - framework: "FastAPI"
     - database: "PostgreSQL"
-  
+
   performance_targets:
     - "Generate report < 30 seconds"
     - "Handle 100 concurrent requests"
@@ -205,7 +205,7 @@ sprint_configuration:
     - daily_standup: "15 minutes"
     - review: "Last day - 1 hour"
     - retrospective: "Last day - 1 hour"
-  
+
   team_structure:
     - product_owner: 1
     - scrum_master: 1
@@ -277,15 +277,15 @@ testing_pyramid:
   unit_tests:
     coverage_target: 80%
     tools: ["pytest", "jest"]
-    
+
   integration_tests:
     coverage_target: 70%
     tools: ["pytest", "postman"]
-    
+
   e2e_tests:
     coverage_target: 60%
     tools: ["selenium", "cypress"]
-    
+
   performance_tests:
     tools: ["locust", "k6"]
     targets:
@@ -325,7 +325,7 @@ scenario_planning:
   - scenario: "AI provider unavailable"
     impact: "Cannot generate AI analysis"
     plan: "Implement fallback to local model"
-    
+
   - scenario: "Performance issues at scale"
     impact: "Slow report generation"
     plan: "Implement caching, async processing"
@@ -374,11 +374,11 @@ project_kpis:
   delivery:
     - on_time_delivery: "90% of sprints"
     - scope_completion: "95% of planned features"
-    
+
   quality:
     - defect_rate: "< 5 per sprint"
     - test_coverage: "> 75%"
-    
+
   performance:
     - report_generation_time: "< 30 seconds"
     - system_availability: "> 99.5%"
@@ -429,7 +429,7 @@ support_plan:
   immediate: "24/7 for first week"
   short_term: "Business hours for first month"
   long_term: "Standard SLA"
-  
+
   escalation_path:
     - L1: "General support"
     - L2: "Technical support"

@@ -36,13 +36,13 @@ def auto_load_scorers():
 ```python
 def main():
     # ... authentication code ...
-    
+
     # Auto-load generators (like Configure Datasets page)
     auto_load_generators()
-    
+
     # Auto-load scorers to ensure they're displayed on page refresh
     auto_load_scorers()  # <-- NEW LINE ADDED
-    
+
     # Main content
     render_main_content()
 ```

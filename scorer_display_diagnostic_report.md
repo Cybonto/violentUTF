@@ -118,10 +118,10 @@ After applying fixes:
    ```bash
    # Stop all services
    docker-compose down
-   
+
    # Clear problematic data (optional)
    rm ./app_data/violentutf/pyrit_memory_*.db
-   
+
    # Restart
    ./launch_violentutf.sh
    ```

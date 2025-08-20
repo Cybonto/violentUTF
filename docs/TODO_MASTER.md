@@ -5,8 +5,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 ## High Priority Tasks
 
 ### 1. User Space Isolation Audit
-**Priority**: HIGH  
-**Status**: Pending  
+**Priority**: HIGH
+**Status**: Pending
 **Description**: Check the consistency of user space isolation across all sections of the application. Ensure user A cannot see results/data from user B.
 
 **Areas to audit**:
@@ -26,8 +26,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 - [ ] Add integration tests for user isolation
 
 ### 2. API Browse Endpoint Enhancement
-**Priority**: HIGH  
-**Status**: Pending  
+**Priority**: HIGH
+**Status**: Pending
 **Description**: Check the API `/browse` endpoint and how scorer data fields may need to be expanded to accommodate filters by the `/browse` endpoint.
 
 **Technical details**:
@@ -45,8 +45,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 ## Medium Priority Tasks
 
 ### 3. Report Setup Implementation
-**Priority**: MEDIUM  
-**Status**: In Progress  
+**Priority**: MEDIUM
+**Status**: In Progress
 **Description**: Complete the Report Setup page functionality
 
 **Completed**:
@@ -65,8 +65,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 - [ ] Create report generation backend service
 
 ### 4. Database Schema Consistency
-**Priority**: MEDIUM  
-**Status**: Pending  
+**Priority**: MEDIUM
+**Status**: Pending
 **Description**: Ensure database models are complete and consistent
 
 **Issues identified**:
@@ -78,8 +78,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 ## Low Priority Tasks
 
 ### 5. UI/UX Improvements
-**Priority**: LOW  
-**Status**: Pending  
+**Priority**: LOW
+**Status**: Pending
 **Description**: Enhance user interface consistency
 
 **Tasks**:
@@ -89,8 +89,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 - [ ] Implement proper pagination UI components
 
 ### 6. Documentation Updates
-**Priority**: LOW  
-**Status**: Ongoing  
+**Priority**: LOW
+**Status**: Ongoing
 **Description**: Keep documentation up to date
 
 **Areas**:
@@ -102,8 +102,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 ## Technical Debt
 
 ### 7. Code Refactoring
-**Priority**: MEDIUM  
-**Status**: Pending  
+**Priority**: MEDIUM
+**Status**: Pending
 **Description**: Address technical debt and code quality
 
 **Items**:
@@ -113,8 +113,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 - [ ] Improve type hints and validation
 
 ### 8. Testing Coverage
-**Priority**: MEDIUM  
-**Status**: Pending  
+**Priority**: MEDIUM
+**Status**: Pending
 **Description**: Improve test coverage
 
 **Areas**:
@@ -126,8 +126,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 ## Bug Fixes
 
 ### 9. Known Issues
-**Priority**: HIGH  
-**Status**: Pending  
+**Priority**: HIGH
+**Status**: Pending
 **Description**: Fix identified bugs
 
 **Resolved bugs**:
@@ -148,8 +148,8 @@ This document tracks all pending tasks, improvements, and issues that need to be
 ## Future Features
 
 ### 10. Advanced Features Wishlist
-**Priority**: LOW  
-**Status**: Planning  
+**Priority**: LOW
+**Status**: Planning
 **Description**: Features for future consideration
 
 **Ideas**:

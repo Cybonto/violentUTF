@@ -158,7 +158,7 @@ if [ -n "$CONSUMER_CHECK" ]; then
 else
     echo "❌ No consumer found with the API key"
     echo "Creating consumer..."
-    
+
     curl -s -X PUT "http://localhost:9180/apisix/admin/consumers/violentutf-api" \
       -H "X-API-KEY: $ADMIN_KEY" \
       -H "Content-Type: application/json" \
@@ -170,7 +170,7 @@ else
           }
         }
       }" > /dev/null
-      
+
     echo "✅ Created consumer violentutf-api"
 fi
 

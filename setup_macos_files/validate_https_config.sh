@@ -11,33 +11,33 @@ fi
 validate_provider_https_config() {
     local provider_num="$1"
     local provider_id="${2:-}"
-    
+
     # Get environment variables
     local base_url_var="OPENAPI_${provider_num}_BASE_URL"
     local use_https_var="OPENAPI_${provider_num}_USE_HTTPS"
     local ssl_verify_var="OPENAPI_${provider_num}_SSL_VERIFY"
     local ca_cert_var="OPENAPI_${provider_num}_CA_CERT_PATH"
     local enabled_var="OPENAPI_${provider_num}_ENABLED"
-    
+
     local base_url="${!base_url_var:-}"
     local use_https="${!use_https_var:-auto}"
     local ssl_verify="${!ssl_verify_var:-true}"
     local ca_cert_path="${!ca_cert_var:-}"
     local enabled="${!enabled_var:-false}"
-    
+
     # Skip if provider is not enabled
     if [ "$enabled" != "true" ]; then
         return 0
     fi
-    
+
     echo "🔍 Validating HTTPS configuration for OpenAPI provider $provider_num${provider_id:+ ($provider_id)}..."
-    
+
     local has_error=false
     local has_warning=false
-    
+
     # Extract scheme from URL
     local url_scheme=$(parse_url "$base_url" scheme)
-    
+
     # Check 1: Conflicting scheme settings
     if [ "$use_https" != "auto" ]; then
         if [[ "$use_https" = "true" && "$url_scheme" = "http" ]]; then
@@ -50,7 +50,7 @@ validate_provider_https_config() {
             has_warning=true
         fi
     fi
-    
+
     # Determine effective scheme
     local effective_scheme
     if [ "$use_https" = "auto" ]; then
@@ -60,12 +60,12 @@ validate_provider_https_config() {
     else
         effective_scheme="http"
     fi
-    
+
     # Check 2: SSL verification with HTTP
     if [[ "$effective_scheme" = "http" && "$ssl_verify" = "true" ]]; then
         echo "   ℹ️  INFO: SSL_VERIFY=true but using HTTP. SSL verification will be ignored."
     fi
-    
+
     # Check 3: CA certificate path validation
     if [ -n "$ca_cert_path" ]; then
         if [ ! -f "$ca_cert_path" ]; then
@@ -73,7 +73,7 @@ validate_provider_https_config() {
             has_error=true
         else
             echo "   ✅ Custom CA certificate found: $ca_cert_path"
-            
+
             # Verify it's a valid certificate
             if ! openssl x509 -in "$ca_cert_path" -noout 2>/dev/null; then
                 echo "   ❌ ERROR: Invalid certificate format in: $ca_cert_path"
@@ -81,17 +81,17 @@ validate_provider_https_config() {
             fi
         fi
     fi
-    
+
     # Check 4: GSAi-specific validation
     if [[ "$provider_id" == *"gsai"* ]] || [[ "$base_url" == *"gsai"* ]] || [[ "$base_url" == *"ai-gov"* ]]; then
         echo "   🔍 Detected GSAi provider - applying enterprise checks..."
-        
+
         if [[ "$effective_scheme" = "https" && "$ssl_verify" = "false" ]]; then
             echo "   ⚠️  WARNING: GSAi with HTTPS but SSL_VERIFY=false"
             echo "      For production, enable SSL verification and provide CA certificate"
             has_warning=true
         fi
-        
+
         # Check for common enterprise CA paths if no custom CA provided
         if [[ "$effective_scheme" = "https" && -z "$ca_cert_path" ]]; then
             local common_ca_paths=(
@@ -100,7 +100,7 @@ validate_provider_https_config() {
                 "/usr/local/share/ca-certificates"
                 "/etc/ssl/certs"
             )
-            
+
             local ca_found=false
             for ca_path in "${common_ca_paths[@]}"; do
                 if [ -e "$ca_path" ]; then
@@ -108,7 +108,7 @@ validate_provider_https_config() {
                     break
                 fi
             done
-            
+
             if ! $ca_found; then
                 echo "   ⚠️  WARNING: No CA certificate path specified for HTTPS GSAi"
                 echo "      System CA certificates may not include enterprise CA"
@@ -116,14 +116,14 @@ validate_provider_https_config() {
             fi
         fi
     fi
-    
+
     # Check 5: Security recommendations
     if [[ "$effective_scheme" = "https" && "$ssl_verify" = "false" ]]; then
         echo "   ⚠️  SECURITY WARNING: HTTPS with SSL_VERIFY=false is insecure!"
         echo "      Only use this for development/testing with self-signed certificates"
         has_warning=true
     fi
-    
+
     # Summary
     if $has_error; then
         echo "   ❌ Validation FAILED - Please fix errors before proceeding"
@@ -141,14 +141,14 @@ validate_provider_https_config() {
 # Function to validate all OpenAPI providers
 validate_all_providers() {
     echo "=== Validating HTTPS Configuration for OpenAPI Providers ==="
-    
+
     local has_errors=false
-    
+
     # Check up to 10 providers
     for i in {1..10}; do
         local enabled_var="OPENAPI_${i}_ENABLED"
         local id_var="OPENAPI_${i}_ID"
-        
+
         if [ "${!enabled_var}" = "true" ]; then
             local provider_id="${!id_var:-}"
             if ! validate_provider_https_config "$i" "$provider_id"; then
@@ -157,7 +157,7 @@ validate_all_providers() {
             echo ""  # Blank line between providers
         fi
     done
-    
+
     if $has_errors; then
         echo "❌ Some providers have configuration errors. Please fix them before proceeding."
         return 1
@@ -178,6 +178,6 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         echo "❌ ai-tokens.env not found"
         exit 1
     fi
-    
+
     validate_all_providers
 fi

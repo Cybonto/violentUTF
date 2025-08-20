@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 ViolentUTF Project
+# # Licensed under MIT License
+
 """
 Simplified Scorer Results Cleanup Utility for ViolentUTF
 
@@ -58,8 +61,8 @@ class ScorerResultCleaner:
         # Scores by scorer
         result = self.conn.execute(
             """
-            SELECT scorer_name, COUNT(*) 
-            FROM scores 
+            SELECT scorer_name, COUNT(*)
+            FROM scores
             WHERE scorer_name IS NOT NULL
             GROUP BY scorer_name
         """
@@ -71,8 +74,8 @@ class ScorerResultCleaner:
             cutoff = datetime.now(timezone.utc) - timedelta(days=days)
             result = self.conn.execute(
                 """
-                SELECT COUNT(*) 
-                FROM scores 
+                SELECT COUNT(*)
+                FROM scores
                 WHERE timestamp < ?
             """,
                 [cutoff],
@@ -82,9 +85,9 @@ class ScorerResultCleaner:
         # Orphaned scores (no associated prompt)
         result = self.conn.execute(
             """
-            SELECT COUNT(*) 
+            SELECT COUNT(*)
             FROM scores s
-            LEFT JOIN prompt_pieces p 
+            LEFT JOIN prompt_pieces p
             ON s.prompt_piece_id = p.id
             WHERE p.id IS NULL
         """

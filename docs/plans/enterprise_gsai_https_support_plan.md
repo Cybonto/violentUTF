@@ -100,7 +100,7 @@ For enterprise environments with custom CA certificates:
 if [ -f "/etc/ssl/certs/enterprise-ca.crt" ]; then
     # Copy CA cert to APISIX container
     docker cp /etc/ssl/certs/enterprise-ca.crt apisix-apisix-1:/usr/local/openresty/nginx/conf/ssl/
-    
+
     # Update APISIX config to trust the CA
     docker exec apisix-apisix-1 sh -c 'echo "lua_ssl_trusted_certificate /usr/local/openresty/nginx/conf/ssl/enterprise-ca.crt;" >> /usr/local/apisix/conf/config-default.yaml'
 fi

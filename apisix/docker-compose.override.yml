@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   apisix:
@@ -6,21 +6,29 @@ services:
     volumes:
       - ./startup-wrapper.sh:/startup-wrapper.sh:ro
     entrypoint: ["/bin/sh", "/startup-wrapper.sh"]
-    
+
     # Add health check
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9180/apisix/admin/routes", "-H", "X-API-KEY: ${APISIX_ADMIN_KEY:-dwsDE1OMFwrnrncoChUb3DAEMdpilLCB}"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:9180/apisix/admin/routes",
+          "-H",
+          "X-API-KEY: ${APISIX_ADMIN_KEY:-dwsDE1OMFwrnrncoChUb3DAEMdpilLCB}",
+        ]
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 30s
-    
+
     # Add init flag to handle PID 1 issues
     init: true
-    
+
     # Ensure clean shutdown
     stop_grace_period: 30s
-    
+
     # Additional environment variables for better behavior
     environment:
       - APISIX_STAND_ALONE=false

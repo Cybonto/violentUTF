@@ -42,35 +42,35 @@ class BlockDefinition(BaseModel):
     category: BlockCategory
     description: str
     version: str = "1.0.0"
-    
+
     # Parameters that can be configured
     parameters: List[BlockParameter] = []
-    
+
     # Variables this block requires/uses
     required_variables: Set[str] = set()
     optional_variables: Set[str] = set()
-    
+
     # Output variables this block produces
     output_variables: Set[str] = set()
-    
+
     # Supported output formats
     supported_formats: List[str] = ["html", "markdown", "json"]
-    
+
     # Resource requirements
     requires_ai: bool = False
     estimated_processing_time: int = 5  # seconds
 
 class BaseReportBlock(ABC):
     """Abstract base class for all report blocks"""
-    
+
     def __init__(self):
         self.definition = self.get_definition()
-        
+
     @abstractmethod
     def get_definition(self) -> BlockDefinition:
         """Return block metadata definition"""
         pass
-        
+
     @abstractmethod
     async def validate_data(
         self,
@@ -79,7 +79,7 @@ class BaseReportBlock(ABC):
     ) -> List[str]:
         """Validate that required data is available"""
         pass
-        
+
     @abstractmethod
     async def process(
         self,
@@ -89,7 +89,7 @@ class BaseReportBlock(ABC):
     ) -> Dict[str, Any]:
         """Process data and return block content"""
         pass
-        
+
     @abstractmethod
     async def render(
         self,
@@ -98,18 +98,18 @@ class BaseReportBlock(ABC):
     ) -> str:
         """Render processed data to specified format"""
         pass
-        
+
     def extract_variables(self, template: str, data: Dict[str, Any]) -> str:
         """Extract and replace variables in template"""
         import re
-        
+
         # Find all variables in template
         pattern = r'\{\{(\w+(?:\.\w+)*)\}\}'
-        
+
         def replace_var(match):
             var_path = match.group(1)
             parts = var_path.split('.')
-            
+
             # Navigate through nested data
             value = data
             for part in parts:
@@ -117,9 +117,9 @@ class BaseReportBlock(ABC):
                     value = value[part]
                 else:
                     return f"{{{{ {var_path} }}}}"  # Keep original if not found
-                    
+
             return str(value)
-            
+
         return re.sub(pattern, replace_var, template)
 ```
 
@@ -134,7 +134,7 @@ from .base_block import BaseReportBlock, BlockDefinition, BlockCategory, BlockPa
 
 class ExecutiveSummaryBlock(BaseReportBlock):
     """Generate executive summary from scan data"""
-    
+
     def get_definition(self) -> BlockDefinition:
         return BlockDefinition(
             id="executive_summary",
@@ -180,7 +180,7 @@ class ExecutiveSummaryBlock(BaseReportBlock):
                 "key_findings_count"
             }
         )
-        
+
     async def validate_data(
         self,
         data: Dict[str, Any],
@@ -188,21 +188,21 @@ class ExecutiveSummaryBlock(BaseReportBlock):
     ) -> List[str]:
         """Validate required data"""
         errors = []
-        
+
         # Check required top-level keys
         if "scan_summary" not in data:
             errors.append("Missing scan_summary data")
         elif "total_tests" not in data["scan_summary"]:
             errors.append("Missing total_tests in scan_summary")
-            
+
         if "severity_distribution" not in data:
             errors.append("Missing severity_distribution data")
-            
+
         if "vulnerabilities" not in data:
             errors.append("Missing vulnerabilities data")
-            
+
         return errors
-        
+
     async def process(
         self,
         data: Dict[str, Any],
@@ -210,17 +210,17 @@ class ExecutiveSummaryBlock(BaseReportBlock):
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Process scan data into executive summary"""
-        
+
         # Extract key metrics
         total_tests = data["scan_summary"]["total_tests"]
         scanner_type = data["scan_summary"]["scanner_type"]
         target_model = data["scan_summary"].get("target_model", "Unknown")
-        
+
         # Calculate risk level
         severity_dist = data["severity_distribution"]
         critical_count = severity_dist.get("critical", 0)
         high_count = severity_dist.get("high", 0)
-        
+
         if critical_count > 0:
             risk_level = "Critical"
             risk_color = "#FF0000"
@@ -233,17 +233,17 @@ class ExecutiveSummaryBlock(BaseReportBlock):
         else:
             risk_level = "Low"
             risk_color = "#00AA00"
-            
+
         # Get top vulnerabilities based on threshold
         threshold = parameters.get("severity_threshold", "high")
         severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
         threshold_value = severity_order[threshold]
-        
+
         top_vulnerabilities = [
             v for v in data["vulnerabilities"]
             if severity_order.get(v.get("severity", "low"), 3) <= threshold_value
         ][:parameters.get("max_items", 5)]
-        
+
         # Generate summary text
         summary_text = self._generate_summary_text(
             scanner_type,
@@ -252,7 +252,7 @@ class ExecutiveSummaryBlock(BaseReportBlock):
             severity_dist,
             top_vulnerabilities
         )
-        
+
         # Prepare recommendations if requested
         recommendations = []
         if parameters.get("include_recommendations", True):
@@ -261,7 +261,7 @@ class ExecutiveSummaryBlock(BaseReportBlock):
                 top_vulnerabilities,
                 data
             )
-            
+
         return {
             "executive_summary": summary_text,
             "risk_level": risk_level,
@@ -277,14 +277,14 @@ class ExecutiveSummaryBlock(BaseReportBlock):
                 "high_issues": high_count
             }
         }
-        
+
     async def render(
         self,
         processed_data: Dict[str, Any],
         format: str = "html"
     ) -> str:
         """Render executive summary"""
-        
+
         if format == "html":
             return self._render_html(processed_data)
         elif format == "markdown":
@@ -293,23 +293,23 @@ class ExecutiveSummaryBlock(BaseReportBlock):
             return json.dumps(processed_data, indent=2)
         else:
             raise ValueError(f"Unsupported format: {format}")
-            
+
     def _render_html(self, data: Dict[str, Any]) -> str:
         """Render as HTML"""
         html = f"""
         <div class="executive-summary">
             <h2>Executive Summary</h2>
-            
+
             <div class="risk-assessment">
                 <div class="risk-level" style="color: {data['risk_color']}">
                     <strong>Overall Risk Level:</strong> {data['risk_level']}
                 </div>
             </div>
-            
+
             <div class="summary-text">
                 <p>{data['executive_summary']}</p>
             </div>
-            
+
             <div class="key-metrics">
                 <h3>Key Metrics</h3>
                 <ul>
@@ -321,7 +321,7 @@ class ExecutiveSummaryBlock(BaseReportBlock):
                 </ul>
             </div>
         """
-        
+
         if data['key_findings']:
             html += """
             <div class="key-findings">
@@ -331,13 +331,13 @@ class ExecutiveSummaryBlock(BaseReportBlock):
             for finding in data['key_findings']:
                 html += f"""
                     <li>
-                        <strong>{finding['name']}</strong> 
+                        <strong>{finding['name']}</strong>
                         <span class="severity-{finding['severity']}">[{finding['severity'].upper()}]</span>
                         <p>{finding['description']}</p>
                     </li>
                 """
             html += "</ul></div>"
-            
+
         if data['recommendations']:
             html += """
             <div class="recommendations">
@@ -347,7 +347,7 @@ class ExecutiveSummaryBlock(BaseReportBlock):
             for rec in data['recommendations']:
                 html += f"<li>{rec}</li>"
             html += "</ol></div>"
-            
+
         html += "</div>"
         return html
 ```
@@ -362,7 +362,7 @@ from .base_block import BaseReportBlock, BlockDefinition, BlockCategory, BlockPa
 
 class AIAnalysisBlock(BaseReportBlock):
     """AI-powered analysis of scan results"""
-    
+
     def get_definition(self) -> BlockDefinition:
         return BlockDefinition(
             id="ai_analysis",
@@ -422,7 +422,7 @@ class AIAnalysisBlock(BaseReportBlock):
                 "strategic_recommendations"
             }
         )
-        
+
     async def process(
         self,
         data: Dict[str, Any],
@@ -430,16 +430,16 @@ class AIAnalysisBlock(BaseReportBlock):
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Process data with AI analysis"""
-        
+
         # Get AI service from context
         ai_service = context.get("ai_service") if context else None
         if not ai_service:
             raise ValueError("AI service not provided in context")
-            
+
         # Prepare analysis prompts based on focus areas
         focus_areas = parameters.get("analysis_focus", ["vulnerability_patterns"])
         analysis_depth = parameters.get("analysis_depth", "standard")
-        
+
         # Build comprehensive prompt
         prompt = self._build_analysis_prompt(
             data,
@@ -447,13 +447,13 @@ class AIAnalysisBlock(BaseReportBlock):
             analysis_depth,
             parameters.get("custom_prompt")
         )
-        
+
         # Prepare data for AI
         analysis_data = self._prepare_analysis_data(
             data,
             parameters.get("include_raw_results", False)
         )
-        
+
         # Run AI analysis
         try:
             ai_response = await ai_service.analyze(
@@ -462,10 +462,10 @@ class AIAnalysisBlock(BaseReportBlock):
                 temperature=0.7,
                 max_tokens=self._get_max_tokens(analysis_depth)
             )
-            
+
             # Parse AI response
             parsed_insights = self._parse_ai_response(ai_response, focus_areas)
-            
+
             return {
                 "ai_insights": parsed_insights,
                 "pattern_analysis": parsed_insights.get("patterns", {}),
@@ -477,11 +477,11 @@ class AIAnalysisBlock(BaseReportBlock):
                     "focus_areas": focus_areas
                 }
             }
-            
+
         except Exception as e:
             # Fallback to basic analysis if AI fails
             return self._generate_fallback_analysis(data, focus_areas)
-            
+
     def _build_analysis_prompt(
         self,
         data: Dict[str, Any],
@@ -490,7 +490,7 @@ class AIAnalysisBlock(BaseReportBlock):
         custom_prompt: Optional[str]
     ) -> str:
         """Build comprehensive analysis prompt"""
-        
+
         prompt_parts = [
             "You are an AI security analyst reviewing scan results from a red team assessment.",
             f"Analysis depth: {depth}",
@@ -503,43 +503,43 @@ class AIAnalysisBlock(BaseReportBlock):
             "",
             "Severity Distribution:",
         ]
-        
+
         # Add severity breakdown
         for severity, count in data['severity_distribution'].items():
             if count > 0:
                 prompt_parts.append(f"- {severity.capitalize()}: {count}")
-                
+
         prompt_parts.extend([
             "",
             "Please provide analysis covering the following:"
         ])
-        
+
         # Add focus-specific instructions
         if "vulnerability_patterns" in focus_areas:
             prompt_parts.append("1. Identify patterns in the vulnerabilities found")
-            
+
         if "attack_chains" in focus_areas:
             prompt_parts.append("2. Describe potential attack chains using these vulnerabilities")
-            
+
         if "defense_recommendations" in focus_areas:
             prompt_parts.append("3. Provide specific defense recommendations")
-            
+
         if "compliance_gaps" in focus_areas:
             prompt_parts.append("4. Identify compliance framework gaps")
-            
+
         if "risk_prioritization" in focus_areas:
             prompt_parts.append("5. Prioritize risks based on exploitability and impact")
-            
+
         # Add custom prompt if provided
         if custom_prompt:
             prompt_parts.extend(["", "Additional instructions:", custom_prompt])
-            
+
         # Add output format instructions
         prompt_parts.extend([
             "",
             "Format your response as structured JSON with clear sections for each focus area."
         ])
-        
+
         return "\n".join(prompt_parts)
 ```
 
@@ -554,7 +554,7 @@ from .base_block import BaseReportBlock, BlockDefinition, BlockCategory, BlockPa
 
 class SecurityMetricsBlock(BaseReportBlock):
     """Display security metrics and visualizations"""
-    
+
     def get_definition(self) -> BlockDefinition:
         return BlockDefinition(
             id="security_metrics",
@@ -607,7 +607,7 @@ class SecurityMetricsBlock(BaseReportBlock):
                 "compliance_scores"
             }
         )
-        
+
     async def process(
         self,
         data: Dict[str, Any],
@@ -615,13 +615,13 @@ class SecurityMetricsBlock(BaseReportBlock):
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Process metrics data"""
-        
+
         # Parse thresholds
         try:
             thresholds = json.loads(parameters.get("thresholds", "{}"))
         except:
             thresholds = {"critical": 9.0, "high": 7.0, "medium": 4.0}
-            
+
         # Calculate core metrics
         metrics = {
             "overview": self._calculate_overview_metrics(data),
@@ -629,18 +629,18 @@ class SecurityMetricsBlock(BaseReportBlock):
             "categories": self._calculate_category_metrics(data),
             "trends": self._calculate_trends(data, parameters.get("comparison_enabled", False))
         }
-        
+
         # Add source-specific metrics
         source = parameters.get("metric_source", "scan_data")
         if source in ["compatibility_matrix", "combined"] and "compatibility_matrix" in data:
             metrics["compatibility"] = self._calculate_compatibility_metrics(
                 data["compatibility_matrix"]
             )
-            
+
         # Generate visualizations data
         visualizations = {}
         requested_viz = parameters.get("visualizations", ["metric_cards"])
-        
+
         for viz_type in requested_viz:
             if viz_type == "metric_cards":
                 visualizations["metric_cards"] = self._generate_metric_cards(metrics)
@@ -654,24 +654,24 @@ class SecurityMetricsBlock(BaseReportBlock):
                 visualizations["compliance_radar"] = self._generate_compliance_radar(data)
             elif viz_type == "severity_distribution":
                 visualizations["severity_distribution"] = self._generate_severity_chart(data)
-                
+
         return {
             "metrics": metrics,
             "visualizations": visualizations,
             "summary_statistics": self._generate_summary_stats(metrics)
         }
-        
+
     def _calculate_overview_metrics(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate high-level overview metrics"""
-        
+
         total_tests = data["scan_summary"]["total_tests"]
         vulnerabilities = data.get("vulnerabilities", [])
         severity_dist = data.get("severity_distribution", {})
-        
+
         # Calculate success/failure rates
         total_vulns = sum(severity_dist.values())
         success_rate = ((total_tests - total_vulns) / total_tests * 100) if total_tests > 0 else 0
-        
+
         return {
             "total_tests": total_tests,
             "total_vulnerabilities": total_vulns,
@@ -681,12 +681,12 @@ class SecurityMetricsBlock(BaseReportBlock):
             "average_severity": self._calculate_average_severity(severity_dist),
             "risk_score": self._calculate_risk_score(data)
         }
-        
+
     def _generate_metric_cards(self, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate metric card data"""
-        
+
         overview = metrics["overview"]
-        
+
         cards = [
             {
                 "title": "Total Tests",
@@ -715,26 +715,26 @@ class SecurityMetricsBlock(BaseReportBlock):
                 "subtitle": self._get_risk_level(overview["risk_score"])
             }
         ]
-        
+
         return cards
-        
+
     def _generate_risk_heatmap(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate risk heatmap data"""
-        
+
         vulnerabilities = data.get("vulnerabilities", [])
-        
+
         # Group by category and severity
         heatmap_data = defaultdict(lambda: defaultdict(int))
-        
+
         for vuln in vulnerabilities:
             category = vuln.get("category", "other")
             severity = vuln.get("severity", "low")
             heatmap_data[category][severity] += 1
-            
+
         # Convert to heatmap format
         categories = sorted(heatmap_data.keys())
         severities = ["critical", "high", "medium", "low"]
-        
+
         matrix = []
         for category in categories:
             row = []
@@ -745,7 +745,7 @@ class SecurityMetricsBlock(BaseReportBlock):
                     "color": self._get_heatmap_color(count, severity)
                 })
             matrix.append(row)
-            
+
         return {
             "categories": categories,
             "severities": severities,
@@ -767,7 +767,7 @@ from .base_block import BaseReportBlock, BlockDefinition, BlockCategory, BlockPa
 
 class AttackResultsTableBlock(BaseReportBlock):
     """Display attack results in tabular format"""
-    
+
     def get_definition(self) -> BlockDefinition:
         return BlockDefinition(
             id="attack_results_table",
@@ -829,7 +829,7 @@ class AttackResultsTableBlock(BaseReportBlock):
                 "garak_results"
             }
         )
-        
+
     async def process(
         self,
         data: Dict[str, Any],
@@ -837,21 +837,21 @@ class AttackResultsTableBlock(BaseReportBlock):
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Process attack results into table format"""
-        
+
         # Get data based on source
         source = parameters.get("data_source", "combined")
         attack_data = self._extract_attack_data(data, source)
-        
+
         # Apply filtering
         filtered_data = self._apply_filters(attack_data, parameters)
-        
+
         # Sort by timestamp (newest first)
         filtered_data.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
-        
+
         # Limit rows
         max_rows = parameters.get("max_rows", 100)
         filtered_data = filtered_data[:max_rows]
-        
+
         # Prepare table data
         columns = parameters.get("columns", ["timestamp", "attack_type", "success"])
         table_data = {
@@ -862,38 +862,38 @@ class AttackResultsTableBlock(BaseReportBlock):
             "filters_applied": parameters.get("filters", []),
             "summary": self._generate_table_summary(filtered_data)
         }
-        
+
         return table_data
-        
+
     def _extract_attack_data(
         self,
         data: Dict[str, Any],
         source: str
     ) -> List[Dict[str, Any]]:
         """Extract attack data from various sources"""
-        
+
         attacks = []
-        
+
         # Extract from scan results
         if "scan_results" in data and source in ["combined", "scan"]:
             for result in data["scan_results"]:
                 attacks.append(self._normalize_scan_result(result))
-                
+
         # Extract from PyRIT results
         if "pyrit_results" in data and source in ["combined", "pyrit"]:
             for result in data["pyrit_results"]:
                 attacks.append(self._normalize_pyrit_result(result))
-                
+
         # Extract from Garak results
         if "garak_results" in data and source in ["combined", "garak"]:
             for result in data["garak_results"]:
                 attacks.append(self._normalize_garak_result(result))
-                
+
         return attacks
-        
+
     def _normalize_scan_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Normalize scan result to common format"""
-        
+
         return {
             "timestamp": result.get("timestamp", ""),
             "attack_type": result.get("attack_category", "unknown"),
@@ -906,10 +906,10 @@ class AttackResultsTableBlock(BaseReportBlock):
             "score": result.get("score_value", 0),
             "details": result
         }
-        
+
     def _get_column_definitions(self, columns: List[str]) -> List[Dict[str, Any]]:
         """Get column definitions with metadata"""
-        
+
         column_defs = {
             "timestamp": {
                 "id": "timestamp",
@@ -975,7 +975,7 @@ class AttackResultsTableBlock(BaseReportBlock):
                 "format": ".2f"
             }
         }
-        
+
         return [column_defs[col] for col in columns if col in column_defs]
 ```
 
@@ -989,7 +989,7 @@ from .base_block import BaseReportBlock, BlockDefinition, BlockCategory, BlockPa
 
 class CustomContentBlock(BaseReportBlock):
     """User-defined content with variable substitution"""
-    
+
     def get_definition(self) -> BlockDefinition:
         return BlockDefinition(
             id="custom_content",
@@ -1028,39 +1028,39 @@ class CustomContentBlock(BaseReportBlock):
                 "ai_insights"
             }
         )
-        
+
     async def validate_data(
         self,
         data: Dict[str, Any],
         parameters: Dict[str, Any]
     ) -> List[str]:
         """Validate that referenced variables exist"""
-        
+
         errors = []
         content = parameters.get("content", "")
-        
+
         # Extract variable references
         import re
         pattern = r'\{\{(\w+(?:\.\w+)*)\}\}'
         variables = re.findall(pattern, content)
-        
+
         # Check if variables exist in data
         not_found_behavior = parameters.get("variable_not_found_behavior", "keep")
-        
+
         if not_found_behavior == "error":
             for var_path in variables:
                 parts = var_path.split('.')
                 value = data
-                
+
                 for part in parts:
                     if isinstance(value, dict) and part in value:
                         value = value[part]
                     else:
                         errors.append(f"Variable not found: {{{{{var_path}}}}}")
                         break
-                        
+
         return errors
-        
+
     async def process(
         self,
         data: Dict[str, Any],
@@ -1068,42 +1068,42 @@ class CustomContentBlock(BaseReportBlock):
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Process custom content with variable substitution"""
-        
+
         content = parameters.get("content", "")
         not_found_behavior = parameters.get("variable_not_found_behavior", "keep")
-        
+
         # Perform variable substitution
         processed_content = self._substitute_variables(
             content,
             data,
             not_found_behavior
         )
-        
+
         # Extract metadata
         variables_used = self._extract_used_variables(content, data)
-        
+
         return {
             "content": processed_content,
             "variables_used": variables_used,
             "original_content": content
         }
-        
+
     async def render(
         self,
         processed_data: Dict[str, Any],
         format: str = "html"
     ) -> str:
         """Render custom content"""
-        
+
         content = processed_data["content"]
-        
+
         if format == "html":
             # Convert markdown to HTML
             md = markdown.Markdown(
                 extensions=['extra', 'codehilite', 'tables', 'toc'],
                 output_format='html5'
             )
-            
+
             if not self.parameters.get("enable_html", False):
                 # Safe mode - escape HTML
                 md = markdown.Markdown(
@@ -1111,21 +1111,21 @@ class CustomContentBlock(BaseReportBlock):
                     output_format='html5',
                     safe_mode='escape'
                 )
-                
+
             return md.convert(content)
-            
+
         elif format == "markdown":
             return content
-            
+
         elif format == "json":
             return json.dumps({
                 "content": content,
                 "variables_used": processed_data["variables_used"]
             }, indent=2)
-            
+
         else:
             raise ValueError(f"Unsupported format: {format}")
-            
+
     def _substitute_variables(
         self,
         content: str,
@@ -1133,14 +1133,14 @@ class CustomContentBlock(BaseReportBlock):
         not_found_behavior: str
     ) -> str:
         """Substitute variables in content"""
-        
+
         import re
         pattern = r'\{\{(\w+(?:\.\w+)*)\}\}'
-        
+
         def replace_var(match):
             var_path = match.group(1)
             parts = var_path.split('.')
-            
+
             # Navigate through nested data
             value = data
             for part in parts:
@@ -1156,7 +1156,7 @@ class CustomContentBlock(BaseReportBlock):
                 else:
                     value = None
                     break
-                    
+
             # Handle not found
             if value is None:
                 if not_found_behavior == "keep":
@@ -1165,13 +1165,13 @@ class CustomContentBlock(BaseReportBlock):
                     return ""  # Remove
                 else:  # error - handled in validation
                     return match.group(0)
-                    
+
             # Format value
             if isinstance(value, (dict, list)):
                 return json.dumps(value, indent=2)
             else:
                 return str(value)
-                
+
         return re.sub(pattern, replace_var, content)
 ```
 
@@ -1187,36 +1187,36 @@ import inspect
 
 class BlockRegistry:
     """Registry for all available report blocks"""
-    
+
     def __init__(self):
         self._blocks: Dict[str, Type[BaseReportBlock]] = {}
         self._categories: Dict[BlockCategory, List[str]] = {}
         self._loaded = False
-        
+
     def register(self, block_class: Type[BaseReportBlock]):
         """Register a block class"""
-        
+
         # Create instance to get definition
         instance = block_class()
         definition = instance.get_definition()
-        
+
         # Register block
         self._blocks[definition.id] = block_class
-        
+
         # Register in category
         if definition.category not in self._categories:
             self._categories[definition.category] = []
         self._categories[definition.category].append(definition.id)
-        
+
     def auto_discover(self, package_name: str = "app.services.report_setup.blocks"):
         """Auto-discover and register all blocks in package"""
-        
+
         if self._loaded:
             return
-            
+
         # Import package
         package = importlib.import_module(package_name)
-        
+
         # Iterate through modules
         for importer, modname, ispkg in pkgutil.iter_modules(
             package.__path__,
@@ -1224,10 +1224,10 @@ class BlockRegistry:
         ):
             if ispkg:
                 continue
-                
+
             # Import module
             module = importlib.import_module(modname)
-            
+
             # Find block classes
             for name, obj in inspect.getmembers(module, inspect.isclass):
                 if (
@@ -1236,26 +1236,26 @@ class BlockRegistry:
                     not inspect.isabstract(obj)
                 ):
                     self.register(obj)
-                    
+
         self._loaded = True
-        
+
     def get_block(self, block_id: str) -> Optional[Type[BaseReportBlock]]:
         """Get block class by ID"""
         return self._blocks.get(block_id)
-        
+
     def create_block(self, block_id: str) -> Optional[BaseReportBlock]:
         """Create block instance by ID"""
         block_class = self.get_block(block_id)
         return block_class() if block_class else None
-        
+
     def list_blocks(self) -> List[Dict[str, Any]]:
         """List all registered blocks"""
         blocks = []
-        
+
         for block_id, block_class in self._blocks.items():
             instance = block_class()
             definition = instance.get_definition()
-            
+
             blocks.append({
                 "id": definition.id,
                 "name": definition.name,
@@ -1265,56 +1265,56 @@ class BlockRegistry:
                 "required_variables": list(definition.required_variables),
                 "optional_variables": list(definition.optional_variables)
             })
-            
+
         return blocks
-        
+
     def get_blocks_by_category(self, category: BlockCategory) -> List[Dict[str, Any]]:
         """Get all blocks in a category"""
         block_ids = self._categories.get(category, [])
-        
+
         blocks = []
         for block_id in block_ids:
             block_class = self._blocks[block_id]
             instance = block_class()
             definition = instance.get_definition()
-            
+
             blocks.append({
                 "id": definition.id,
                 "name": definition.name,
                 "description": definition.description,
                 "required_variables": list(definition.required_variables)
             })
-            
+
         return blocks
-        
+
     def validate_block(self, block_id: str) -> bool:
         """Check if block ID is valid"""
         return block_id in self._blocks
-        
+
     def get_all_variables(self) -> Dict[str, List[str]]:
         """Get all variables used by all blocks"""
-        
+
         required_vars = set()
         optional_vars = set()
         output_vars = set()
-        
+
         for block_class in self._blocks.values():
             instance = block_class()
             definition = instance.get_definition()
-            
+
             required_vars.update(definition.required_variables)
             optional_vars.update(definition.optional_variables)
             output_vars.update(definition.output_variables)
-            
+
         return {
             "required": sorted(list(required_vars)),
             "optional": sorted(list(optional_vars)),
             "output": sorted(list(output_vars))
         }
-        
+
     def export_registry(self) -> Dict[str, Any]:
         """Export registry configuration"""
-        
+
         return {
             "blocks": self.list_blocks(),
             "categories": {
@@ -1344,12 +1344,12 @@ logger = logging.getLogger(__name__)
 
 class BlockProcessor:
     """Process blocks for report generation"""
-    
+
     def __init__(self, block_registry, ai_service=None):
         self.block_registry = block_registry
         self.ai_service = ai_service
         self.executor = ThreadPoolExecutor(max_workers=4)
-        
+
     async def process_blocks(
         self,
         template: Dict[str, Any],
@@ -1358,23 +1358,23 @@ class BlockProcessor:
         progress_callback: Optional[callable] = None
     ) -> Dict[str, Any]:
         """Process all blocks in template"""
-        
+
         results = {}
         total_blocks = len(template["blocks"])
         processed = 0
-        
+
         # Group blocks by dependency
         block_groups = self._group_blocks_by_dependency(template["blocks"])
-        
+
         # Process each group in order
         for group_index, block_group in enumerate(block_groups):
             # Process blocks in group concurrently
             tasks = []
-            
+
             for block_config in block_group:
                 if not block_config.get("enabled", True):
                     continue
-                    
+
                 task = self._process_single_block(
                     block_config,
                     configuration,
@@ -1382,17 +1382,17 @@ class BlockProcessor:
                     results  # Previous results for dependencies
                 )
                 tasks.append(task)
-                
+
             # Wait for group to complete
             group_results = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             # Handle results
             for i, block_config in enumerate(block_group):
                 if not block_config.get("enabled", True):
                     continue
-                    
+
                 block_id = block_config["id"]
-                
+
                 if isinstance(group_results[i], Exception):
                     logger.error(f"Block {block_id} failed: {group_results[i]}")
                     results[block_id] = {
@@ -1401,19 +1401,19 @@ class BlockProcessor:
                     }
                 else:
                     results[block_id] = group_results[i]
-                    
+
                     # Add output variables to data for dependent blocks
                     if "output_variables" in group_results[i]:
                         data.update(group_results[i]["output_variables"])
-                        
+
                 processed += 1
-                
+
                 # Progress callback
                 if progress_callback:
                     await progress_callback(processed, total_blocks)
-                    
+
         return results
-        
+
     async def _process_single_block(
         self,
         block_config: Dict[str, Any],
@@ -1422,39 +1422,39 @@ class BlockProcessor:
         previous_results: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Process a single block"""
-        
+
         block_id = block_config["id"]
         block_type = block_config["type"]
-        
+
         # Get block instance
         block = self.block_registry.create_block(block_type)
         if not block:
             raise ValueError(f"Unknown block type: {block_type}")
-            
+
         # Prepare context
         context = {
             "ai_service": self.ai_service,
             "configuration": configuration,
             "previous_results": previous_results
         }
-        
+
         # Get block parameters
         parameters = block_config.get("parameters", {})
-        
+
         # Validate data
         errors = await block.validate_data(data, parameters)
         if errors:
             raise ValueError(f"Validation errors: {', '.join(errors)}")
-            
+
         # Process block
         try:
             processed_data = await block.process(data, parameters, context)
-            
+
             # Render to requested formats
             rendered = {}
             for format in configuration.get("output_formats", ["html"]):
                 rendered[format] = await block.render(processed_data, format)
-                
+
             return {
                 "block_id": block_id,
                 "block_type": block_type,
@@ -1462,20 +1462,20 @@ class BlockProcessor:
                 "rendered": rendered,
                 "output_variables": processed_data
             }
-            
+
         except Exception as e:
             logger.error(f"Error processing block {block_id}: {e}")
             raise
-            
+
     def _group_blocks_by_dependency(
         self,
         blocks: List[Dict[str, Any]]
     ) -> List[List[Dict[str, Any]]]:
         """Group blocks by dependency order"""
-        
+
         # For now, simple implementation - process in order
         # TODO: Implement proper dependency resolution
-        
+
         groups = []
         for block in blocks:
             # Blocks with no dependencies or only data dependencies
@@ -1486,7 +1486,7 @@ class BlockProcessor:
             else:
                 # Add to appropriate group based on dependencies
                 groups.append([block])
-                
+
         return groups if groups else [[]]
 ```
 
@@ -1501,7 +1501,7 @@ from .base_block import BaseReportBlock, BlockDefinition, BlockCategory, BlockPa
 
 class MyCustomBlock(BaseReportBlock):
     """Description of what this block does"""
-    
+
     def get_definition(self) -> BlockDefinition:
         return BlockDefinition(
             id="my_custom_block",

@@ -35,7 +35,7 @@ attempt=1
 while [ $attempt -le $max_attempts ]; do
     if curl -s --max-time 5 http://localhost:9180 >/dev/null 2>&1; then
         echo "✅ APISIX is ready!"
-        
+
         # Show container status
         echo ""
         echo "📊 Container Status:"

@@ -38,7 +38,7 @@ else
     echo "❌ API key NOT found in any consumer!"
     echo ""
     echo "Creating missing consumers..."
-    
+
     # Create the three standard consumers
     for consumer in "violentutf-api" "violentutf-user" "violentutf_api_user"; do
         echo -n "Creating consumer $consumer... "
@@ -53,7 +53,7 @@ else
                     }
                 }
             }" -o /dev/null)
-        
+
         if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "201" ]; then
             echo "✅ Success"
         else
@@ -133,7 +133,7 @@ ROUTE_9001=$(curl -s -H "X-API-KEY: $ADMIN_KEY" http://localhost:9180/apisix/adm
 if echo "$ROUTE_9001" | jq -e '.value' > /dev/null 2>&1; then
     echo "Route 9001 plugins:"
     echo "$ROUTE_9001" | jq -r '.value.plugins | keys[] | "  - \(.)"'
-    
+
     # Check if key-auth is configured
     if echo "$ROUTE_9001" | jq -e '.value.plugins."key-auth"' > /dev/null 2>&1; then
         echo "  ✅ key-auth plugin is configured"
