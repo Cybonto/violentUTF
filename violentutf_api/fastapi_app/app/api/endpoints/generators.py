@@ -13,8 +13,10 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+import httpx
 import requests
 from app.core.auth import get_current_user
+from app.core.config import settings
 from app.core.error_handling import safe_error_response, validation_error
 from app.db.duckdb_manager import get_duckdb_manager
 from app.schemas.generators import (

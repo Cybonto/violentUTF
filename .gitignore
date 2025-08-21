@@ -54,3 +54,5 @@ pip-delete-this-directory.txt
 .vscode/
 *.swp
 *.swo
+/.implement_checkpoints
+/agent_orchestrator
