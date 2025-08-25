@@ -56,3 +56,6 @@ pip-delete-this-directory.txt
 *.swo
 /.implement_checkpoints
 /agent_orchestrator
+
+# APISIX auto-generated configuration
+apisix/conf/nginx.conf
