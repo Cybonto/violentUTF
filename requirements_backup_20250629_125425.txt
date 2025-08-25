@@ -37,7 +37,7 @@ cachetools==5.5.2
 catalogue==2.0.10
 certifi==2025.1.31
 cffi==1.17.1
-charset-normalizer==3.4.1
+charset-normalizer==3.4.3
 ci-info==0.3.0
 click==8.1.8
 cloudpathlib==0.21.0
