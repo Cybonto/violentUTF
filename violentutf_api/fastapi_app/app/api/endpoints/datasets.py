@@ -467,8 +467,8 @@ async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, c
             "metadata": {"transformation_type": request.template_type, "source_dataset_id": dataset_id},
         }
 
-        # Store transformed dataset
-        _session_datasets[user_session_key][transformed_id] = transformed_dataset_data
+        # Store transformed dataset in DuckDB
+        db_manager.store_dataset(transformed_id, transformed_dataset_data)
 
         transform_summary = (
             f"Applied template to {len(original_prompts)} prompts using {request.template_type} template"
@@ -567,13 +567,13 @@ async def delete_dataset(
         deleted_from_session = False
         deleted_from_memory = False
 
-        # Delete from session
+        # Delete from DuckDB storage
         if delete_from_session:
-            user_session_key = f"session_{user_id}"
-            if user_session_key in _session_datasets and dataset_id in _session_datasets[user_session_key]:
-                del _session_datasets[user_session_key][dataset_id]
+            db_manager = get_duckdb_manager(user_id)
+            if db_manager.get_dataset(dataset_id):
+                db_manager.delete_dataset(dataset_id)
                 deleted_from_session = True
-                logger.info(f"Dataset {dataset_id} deleted from session")
+                logger.info(f"Dataset {dataset_id} deleted from DuckDB storage")
 
         # Delete from memory (simulated)
         if delete_from_memory:

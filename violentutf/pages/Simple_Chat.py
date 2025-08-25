@@ -22,6 +22,7 @@ import streamlit as st
 from dotenv import load_dotenv
 
 # Import Google Vertex AI libraries
+import vertexai
 from google.cloud import aiplatform
 from google.oauth2 import service_account
 from ollama import Client
