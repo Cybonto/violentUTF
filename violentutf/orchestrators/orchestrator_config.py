@@ -109,7 +109,7 @@ def get_orchestrator_params(orchestrator_class: str) -> List[Dict[str, Any]]:
 
             # Handle Optional types
             if hasattr(param_info["annotation"], "__origin__") and param_info["annotation"].__origin__ == Union:
-                types = [t for t in param_info["annotation"].__args__ if t != type(None)]
+                types = [t for t in param_info["annotation"].__args__ if t is not type(None)]
                 if types:
                     param_info["annotation"] = types[0]
 

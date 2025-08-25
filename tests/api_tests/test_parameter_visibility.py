@@ -32,58 +32,58 @@ class TestParameterVisibility:
         provider = "openai"
 
         # API key should be hidden for OpenAI (gateway handles it)
-        assert should_show_parameter("api_key", provider) == False
+        assert should_show_parameter("api_key", provider) is False
 
         # Custom endpoint should be hidden for OpenAI (uses standard endpoint)
-        assert should_show_parameter("endpoint", provider) == False
+        assert should_show_parameter("endpoint", provider) is False
 
         # Model parameters should be shown
-        assert should_show_parameter("temperature", provider) == True
-        assert should_show_parameter("max_tokens", provider) == True
-        assert should_show_parameter("top_p", provider) == True
+        assert should_show_parameter("temperature", provider) is True
+        assert should_show_parameter("max_tokens", provider) is True
+        assert should_show_parameter("top_p", provider) is True
 
     def test_should_show_parameter_anthropic_provider(self):
         """Test parameter visibility for Anthropic provider"""
         provider = "anthropic"
 
         # API key should be hidden for Anthropic (gateway handles it)
-        assert should_show_parameter("api_key", provider) == False
+        assert should_show_parameter("api_key", provider) is False
 
         # Custom endpoint should be hidden for Anthropic (uses standard endpoint)
-        assert should_show_parameter("endpoint", provider) == False
+        assert should_show_parameter("endpoint", provider) is False
 
         # Model parameters should be shown
-        assert should_show_parameter("temperature", provider) == True
-        assert should_show_parameter("max_tokens", provider) == True
-        assert should_show_parameter("top_p", provider) == True
+        assert should_show_parameter("temperature", provider) is True
+        assert should_show_parameter("max_tokens", provider) is True
+        assert should_show_parameter("top_p", provider) is True
 
     def test_should_show_parameter_ollama_provider(self):
         """Test parameter visibility for Ollama (local) provider"""
         provider = "ollama"
 
         # API key should be hidden for local providers
-        assert should_show_parameter("api_key", provider) == False
+        assert should_show_parameter("api_key", provider) is False
 
         # Endpoint should be shown for local providers (custom URLs)
-        assert should_show_parameter("endpoint", provider) == True
+        assert should_show_parameter("endpoint", provider) is True
 
         # Model parameters should be shown
-        assert should_show_parameter("temperature", provider) == True
-        assert should_show_parameter("max_tokens", provider) == True
+        assert should_show_parameter("temperature", provider) is True
+        assert should_show_parameter("max_tokens", provider) is True
 
     def test_should_show_parameter_webui_provider(self):
         """Test parameter visibility for WebUI (local) provider"""
         provider = "webui"
 
         # API key should be hidden for local providers
-        assert should_show_parameter("api_key", provider) == False
+        assert should_show_parameter("api_key", provider) is False
 
         # Endpoint should be shown for local providers (custom URLs)
-        assert should_show_parameter("endpoint", provider) == True
+        assert should_show_parameter("endpoint", provider) is True
 
         # Model parameters should be shown
-        assert should_show_parameter("temperature", provider) == True
-        assert should_show_parameter("max_tokens", provider) == True
+        assert should_show_parameter("temperature", provider) is True
+        assert should_show_parameter("max_tokens", provider) is True
 
 
 class TestParameterVisibilityIntegration:
@@ -161,9 +161,9 @@ class TestParameterVisibilityIntegration:
             should_show = should_show_parameter(param_name, provider)
 
             if param_name in ["api_key", "endpoint"]:
-                assert should_show == False, f"{param_name} should be hidden for {provider}"
+                assert should_show is False, f"{param_name} should be hidden for {provider}"
             elif param_name in ["provider", "model", "temperature", "max_tokens"]:
-                assert should_show == True, f"{param_name} should be shown for {provider}"
+                assert should_show is True, f"{param_name} should be shown for {provider}"
 
     def test_parameter_visibility_documentation(self):
         """Document the expected parameter visibility behavior"""

@@ -40,7 +40,7 @@ docling
 # LLMs
 nltk>=3.7
 sentence-transformers>=2.2.0
-transformers>=4.25.0
+transformers>=4.52.1  # Fixed CVE-2025-3777 URL injection vulnerability
 ollama>=0.1.0
 openai>=0.27.0
 anthropic>=0.3.0
@@ -62,3 +62,6 @@ python-multipart
 tornado>=6.5.0  # Fixed CVE-2025-47287 DoS vulnerability
 protobuf>=6.31.1  # Fixed GHSA-8qvm-5x2c-j2w7 recursion DoS vulnerability
 urllib3>=2.5.0  # Fixed GHSA-48p4-8xcf-vxj5 and GHSA-pq67-6m6q-mj2v vulnerabilities
+pillow>=11.3.0  # Fixed CVE-2025-48379 heap buffer overflow vulnerability
+mcp>=1.10.0  # Fixed CVE-2025-53365 server crash vulnerability
+torch>=2.7.1rc1  # Fixed CVE-2025-3730 and CVE-2025-2953 DoS vulnerabilities (when available)

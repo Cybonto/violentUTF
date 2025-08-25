@@ -786,6 +786,9 @@ class TestPhase2AuthenticationIntegration(TestPhase2Architecture):
                 # Test tool execution with auth context
                 result = await generator_tools.execute_tool("list_generators", {}, {"token": "test_token"})
 
+                # Verify tool execution returned a result
+                assert result is not None, "Tool execution should return a result"
+
                 # Verify API call included auth headers
                 call_args = mock_client.return_value.__aenter__.return_value.request.call_args
                 headers = call_args[1]["headers"]

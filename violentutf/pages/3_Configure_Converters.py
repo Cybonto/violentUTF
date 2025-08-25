@@ -51,7 +51,7 @@ API_ENDPOINTS = {
     "sessions_update": f"{API_BASE_URL}/api/v1/sessions",
 }
 
-# Initialize session state for API-backed converters
+# Initialize session state for API - backed converters
 if "api_converters" not in st.session_state:
     st.session_state.api_converters = {}
 if "api_converter_types" not in st.session_state:
@@ -162,7 +162,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
 
 
 def create_compatible_api_token():
-    """Create a FastAPI-compatible token using JWT manager"""
+    """Create a FastAPI - compatible token using JWT manager"""
     try:
         from utils.jwt_manager import jwt_manager
         from utils.user_context import get_user_context_for_token
@@ -286,7 +286,7 @@ def apply_converter_via_api(converter_id: str, dataset_id: str, mode: str, new_d
     if data:
         return True, data
     else:
-        logger.error(f"Failed to apply converter - no data returned from API")
+        logger.error("Failed to apply converter - no data returned from API")
         return False, {"error": "No response from API"}
 
 
@@ -303,10 +303,10 @@ def auto_load_generators():
             generators = get_generators_from_api()
             if generators:
                 st.session_state.api_generators_cache = generators
-                logger.info(f"Auto-loaded {len(generators)} generators for converter testing")
+                logger.info(f"Auto - loaded {len(generators)} generators for converter testing")
             else:
                 st.session_state.api_generators_cache = []
-                logger.info("No generators found during auto-load for converter testing")
+                logger.info("No generators found during auto - load for converter testing")
 
         # Clear force reload flag
         if "force_reload_generators" in st.session_state:
@@ -340,9 +340,9 @@ def auto_load_datasets():
         with st.spinner("Loading existing datasets..."):
             datasets_data = load_datasets_from_api()
             if datasets_data:
-                logger.info(f"Auto-loaded datasets for display")
+                logger.info("Auto - loaded datasets for display")
             else:
-                logger.info("No existing datasets found during auto-load")
+                logger.info("No existing datasets found during auto - load")
 
         # Clear force reload flag
         if "force_reload_datasets" in st.session_state:
@@ -362,7 +362,7 @@ def load_datasets_from_api():
 # --- Main Page Function ---
 def main():
     """Renders the Configure Converters page content with API backend."""
-    logger.debug("Configure Converters page (API-backed) loading.")
+    logger.debug("Configure Converters page (API - backed) loading.")
     st.set_page_config(
         page_title="Configure Converters", page_icon="🔄", layout="wide", initial_sidebar_state="expanded"
     )
@@ -644,7 +644,7 @@ def configure_converter_parameters():
                     param_type = param_info["primary_type"]
                     required = param_info["required"]
 
-                    # Handle empty/None values
+                    # Handle empty / None values
                     if raw_value is None or (isinstance(raw_value, str) and not raw_value.strip()):
                         if required:
                             st.error(f"Parameter '{param_name}' is required.")
@@ -665,7 +665,7 @@ def configure_converter_parameters():
                                 final_value = [line.strip() for line in raw_value.strip().split("\n") if line.strip()]
                             else:
                                 final_value = str(raw_value)
-                        except ValueError as ve:
+                        except ValueError:
                             st.error(f"Invalid value for '{param_name}': {raw_value}")
                             form_valid = False
                             continue
@@ -829,7 +829,7 @@ def preview_and_apply_converter():
 
     converter_id = current_converter["id"]
 
-    # Two-column layout for preview and application
+    # Two - column layout for preview and application
     col1, col2 = st.columns([1, 1])
 
     with col1:
@@ -910,7 +910,7 @@ def preview_and_apply_converter():
                 st.success("✅ Preview generated successfully!")
 
                 for i, result in enumerate(preview_results):
-                    with st.expander(f"Sample {i+1}", expanded=True):
+                    with st.expander(f"Sample {i + 1}", expanded=True):
                         st.caption("Original:")
                         st.text(result["original_value"])
                         st.caption("Converted:")
@@ -1013,7 +1013,7 @@ def preview_and_apply_converter():
                 )
 
             if success:
-                st.success(f"✅ Converter applied successfully!")
+                st.success("✅ Converter applied successfully!")
                 st.info(f"**Result:** {result.get('message', 'Conversion completed')}")
 
                 # Debug: Show what the API returned
@@ -1027,7 +1027,7 @@ def preview_and_apply_converter():
                     # Check the API response for new dataset info
                     if "dataset_id" in result and "dataset_name" in result:
                         st.success(f"📊 Converter created new dataset: '{result['dataset_name']}'")
-                        st.info(f"**New Dataset Details from API:**")
+                        st.info("**New Dataset Details from API:**")
                         st.write(f"• Name: {result['dataset_name']}")
                         st.write(f"• ID: {result['dataset_id']}")
                         st.write(f"• Converted Prompts: {result.get('converted_count', 0)}")

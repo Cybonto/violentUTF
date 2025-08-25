@@ -109,9 +109,9 @@ def debug_orchestrator_flow():
     )
     print(f"📊 Found {len(orchestrators)} total orchestrators")
 
-    # Filter for scorer-related orchestrators
+    # Filter for scorer - related orchestrators
     scorer_orchestrators = [o for o in orchestrators if "scorer" in o.get("name", "").lower()]
-    print(f"🎯 Found {len(scorer_orchestrators)} scorer-related orchestrators:")
+    print(f"🎯 Found {len(scorer_orchestrators)} scorer - related orchestrators:")
 
     for orch in scorer_orchestrators:
         print(f"   - {orch.get('name', 'Unknown')}")
@@ -157,7 +157,7 @@ def debug_orchestrator_flow():
     print(f"\n📊 Total executions found: {len(all_executions)}")
 
     # Skip Steps 3 and go directly to testing completed executions
-    print(f"\n🚀 BYPASSING FILTERING - Testing completed executions directly...")
+    print("\n🚀 BYPASSING FILTERING - Testing completed executions directly...")
 
     # Find completed executions (regardless of has_scorer_results flag)
     completed_executions = [e for e in all_executions if e.get("status") == "completed"]
@@ -170,7 +170,7 @@ def debug_orchestrator_flow():
     # Test the first few completed executions
     for i, execution in enumerate(completed_executions[:3]):
         execution_id = execution.get("id")
-        print(f"\n🔍 Testing execution {i+1}: {execution_id}")
+        print(f"\n🔍 Testing execution {i + 1}: {execution_id}")
 
         results_url = f"{API_BASE_URL}/api/v1/orchestrators/executions/{execution_id}/results"
         results_response = api_request("GET", results_url)
@@ -182,31 +182,31 @@ def debug_orchestrator_flow():
             if scores:
                 print("✅ SUCCESS! Found scorer results that should be visible in dashboard")
                 sample_score = scores[0]
-                print(f"📝 Sample score:")
+                print("📝 Sample score:")
                 print(f"   - Score value: {sample_score.get('score_value')}")
                 print(f"   - Score type: {sample_score.get('score_type')}")
                 print(f"   - Score category: {sample_score.get('score_category')}")
                 print(f"   - Scorer metadata: {sample_score.get('score_metadata', 'None')[:100]}...")
 
                 # Test if this should fix Dashboard_2 filtering
-                print(f"\n🎯 DASHBOARD FILTERING TEST:")
+                print("\n🎯 DASHBOARD FILTERING TEST:")
                 print(f"   - Execution has scorer results flag: {execution.get('has_scorer_results', False)}")
                 print(f"   - But actually HAS {len(scores)} scores!")
-                print(f"   - Dashboard_2 should now show this data since we commented out the filtering")
+                print("   - Dashboard_2 should now show this data since we commented out the filtering")
                 break
             else:
                 print("❌ No scores found in this execution")
         else:
             print(f"❌ Failed to get results for execution {execution_id}")
 
-    print(f"\n📊 SUMMARY:")
+    print("\n📊 SUMMARY:")
     print(f"   - Total executions: {len(all_executions)}")
     print(f"   - Completed executions: {len(completed_executions)}")
     print(
         f"   - Executions with has_scorer_results=True: {len([e for e in all_executions if e.get('has_scorer_results', False)])}"
     )
     print(
-        f"   - Since we commented out the filtering in Dashboard_2, it should now show data from completed executions!"
+        "   - Since we commented out the filtering in Dashboard_2, it should now show data from completed executions!"
     )
 
 

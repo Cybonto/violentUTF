@@ -244,6 +244,55 @@ APISIX_ADMIN_KEY=<generated_admin_key>
 APISIX_GATEWAY_SECRET=<shared_hmac_secret>
 ```
 
+### OpenAPI Provider Authentication
+
+APISIX automatically handles authentication for OpenAPI providers through the `proxy-rewrite` plugin:
+
+**Bearer Token Authentication**:
+```json
+{
+  "proxy-rewrite": {
+    "headers": {
+      "set": {
+        "Authorization": "Bearer <provider_token>"
+      }
+    }
+  }
+}
+```
+
+**API Key Authentication**:
+```json
+{
+  "proxy-rewrite": {
+    "headers": {
+      "set": {
+        "X-API-Key": "<provider_api_key>"
+      }
+    }
+  }
+}
+```
+
+This dual-layer authentication ensures:
+1. **Gateway Level**: Clients authenticate to APISIX using `apikey` header
+2. **Provider Level**: APISIX authenticates to upstream APIs using configured credentials
+
+#### Configuration in ai-tokens.env
+
+```bash
+# OpenAPI Provider 1
+OPENAPI_1_ENABLED=true
+OPENAPI_1_AUTH_TYPE=bearer
+OPENAPI_1_AUTH_TOKEN=sk-your-provider-token
+
+# OpenAPI Provider 2  
+OPENAPI_2_ENABLED=true
+OPENAPI_2_AUTH_TYPE=api_key
+OPENAPI_2_API_KEY=your-api-key
+OPENAPI_2_API_KEY_HEADER=X-Custom-Key
+```
+
 ### Cryptographic Verification
 
 FastAPI verifies requests come from APISIX using HMAC signatures:
@@ -461,6 +510,50 @@ curl -H "Authorization: Bearer $TOKEN" \
      -H "X-API-Gateway: APISIX" \
      -H "apikey: $APISIX_API_KEY" \
      http://localhost:9080/api/v1/orchestrators
+```
+
+### OpenAPI Authentication Troubleshooting
+
+#### "401 Unauthorized" from OpenAPI Provider
+
+**Cause**: APISIX not forwarding authentication headers to upstream
+
+**Solution 1**: Update routes using the provided script
+```bash
+cd apisix && ./update_openapi_auth.sh
+```
+
+**Solution 2**: Manually verify route configuration
+```bash
+# Check if authentication headers are configured
+curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" \
+     http://localhost:9180/apisix/admin/routes | \
+     jq '.list[] | select(.value.uri | contains("/ai/openapi/")) | 
+         {id: .key, auth: .value.plugins."proxy-rewrite".headers.set}'
+```
+
+**Solution 3**: Test authentication directly
+```bash
+# Verify your token works with the provider
+curl -H "Authorization: Bearer $OPENAPI_1_AUTH_TOKEN" \
+     https://api.provider.com/v1/models
+```
+
+#### "Authentication failed. Please check your OPENAPI-{ID} API key configuration"
+
+**Cause**: Missing or incorrect authentication configuration in generator_integration_service
+
+**Solution**: Ensure ai-tokens.env has correct provider configuration
+```bash
+# Check provider configuration
+grep "OPENAPI_1_" ai-tokens.env
+
+# Required fields:
+# OPENAPI_1_ENABLED=true
+# OPENAPI_1_ID=provider-id
+# OPENAPI_1_AUTH_TYPE=bearer|api_key|basic
+# OPENAPI_1_AUTH_TOKEN=<token> (for bearer)
+# OPENAPI_1_API_KEY=<key> (for api_key)
 ```
 
 ### Debugging Commands

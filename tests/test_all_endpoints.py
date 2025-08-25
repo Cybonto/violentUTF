@@ -45,7 +45,7 @@ def make_request(method: str, endpoint: str, **kwargs) -> Tuple[bool, int, str, 
         # Try to parse JSON response
         try:
             response_data = response.json()
-        except:
+        except Exception:
             response_data = None
 
         # Determine success based on status code
@@ -78,7 +78,6 @@ def test_endpoint(
     skip_reason: Optional[str] = None,
 ) -> bool:
     """Test a single endpoint and record results"""
-    global test_results
     test_results["total"] += 1
 
     if skip_reason:
@@ -299,7 +298,7 @@ def test_generator_endpoints():
     )
 
     # Test generator creation with unique name to avoid conflicts
-    import time
+    # import time # F811: removed duplicate import
 
     generator_payload = {
         "name": f"test_generator_{int(time.time())}",  # Unique name
@@ -350,7 +349,7 @@ def test_dataset_endpoints():
         "config": {"dataset_type": "harmful_prompts"},
     }
 
-    dataset_created = test_endpoint("POST", "/api/v1/datasets", "Create dataset", dataset_payload)
+    test_endpoint("POST", "/api/v1/datasets", "Create dataset", dataset_payload)
 
     # Test field mapping
     test_endpoint(
@@ -387,7 +386,7 @@ def test_converter_endpoints():
     # Test converter creation
     converter_payload = {"name": "test_converter", "converter_type": "ROT13Converter", "parameters": {}}
 
-    converter_created = test_endpoint("POST", "/api/v1/converters", "Create converter", converter_payload)
+    test_endpoint("POST", "/api/v1/converters", "Create converter", converter_payload)
 
     # Skip operations requiring actual converter IDs
     test_endpoint(
@@ -437,7 +436,7 @@ def test_scorer_endpoints():
         "parameters": {"substring": "test", "category": "match"},
     }
 
-    scorer_created = test_endpoint("POST", "/api/v1/scorers", "Create scorer", scorer_payload)
+    test_endpoint("POST", "/api/v1/scorers", "Create scorer", scorer_payload)
 
     # Skip operations requiring actual scorer IDs
     test_endpoint("POST", "/api/v1/scorers/test_id/test", "Test scorer", skip_reason="Requires actual scorer ID")
@@ -464,7 +463,7 @@ def print_summary():
     print(f"📈 Success Rate: {success_rate:.1f}%")
 
     if test_results["failed"] > 0:
-        print(f"\n❌ FAILED TESTS:")
+        print("\n❌ FAILED TESTS:")
         for detail in test_results["details"]:
             if detail["status"] == "FAIL":
                 print(f"   {detail['method']} {detail['endpoint']} - {detail['message']}")

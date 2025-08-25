@@ -7,6 +7,7 @@ MUST use real MCP server, no mocks or simulated data.
 """
 
 import asyncio
+import logging
 import os
 import sys
 import time
@@ -109,7 +110,6 @@ class TestMCPIntegration:
 
         # Skip assertion on tool count if JSON serialization issue
         if len(tools) == 0:
-            import logging
 
             logger = logging.getLogger(__name__)
             logger.warning("No tools returned - possible JSON serialization issue in MCP server")
@@ -323,6 +323,7 @@ class TestMCPIntegration:
 
         response_time = end_time - start_time
         assert response_time < 5.0, f"List tools took too long: {response_time}s"
+        assert tools is not None, "Tools list should not be None"
         print(f"List tools response time: {response_time:.2f}s")
 
         # Measure health check performance

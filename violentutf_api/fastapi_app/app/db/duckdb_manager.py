@@ -460,13 +460,13 @@ class DuckDBManager:
         with duckdb.connect(self.db_path) as conn:
             results = conn.execute(
                 """
-                SELECT d.id, d.name, d.source_type, d.configuration, d.status, 
+                SELECT d.id, d.name, d.source_type, d.configuration, d.status,
                        d.created_at, d.updated_at, d.metadata,
                        COUNT(dp.id) as prompt_count
                 FROM datasets d
                 LEFT JOIN dataset_prompts dp ON d.id = dp.dataset_id
                 WHERE d.user_id = ?
-                GROUP BY d.id, d.name, d.source_type, d.configuration, d.status, 
+                GROUP BY d.id, d.name, d.source_type, d.configuration, d.status,
                          d.created_at, d.updated_at, d.metadata
                 ORDER BY d.created_at DESC
             """,
@@ -515,7 +515,7 @@ class DuckDBManager:
                 # Update existing session
                 conn.execute(
                     """
-                    UPDATE user_sessions 
+                    UPDATE user_sessions
                     SET session_data = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE user_id = ? AND session_key = ?
                 """,

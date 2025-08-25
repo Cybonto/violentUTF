@@ -47,10 +47,7 @@ class MCPSettings(BaseSettings):
     MCP_SAMPLING_MAX_TOKENS: int = Field(default=2000, env="MCP_SAMPLING_MAX_TOKENS")
     MCP_SAMPLING_DEFAULT_TEMPERATURE: float = Field(default=0.7, env="MCP_SAMPLING_DEFAULT_TEMPERATURE")
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"  # Ignore extra fields from .env file
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}  # Ignore extra fields from .env file
 
 
 # Create global MCP settings instance

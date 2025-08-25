@@ -267,7 +267,7 @@ class TestEnhancementStripIntegration:
                         workflow_results["analysis"] = result
                         print(f"✓ Analysis completed with {tool}")
                         break
-                except:
+                except Exception:
                     continue
         except Exception as e:
             print(f"Analysis step failed: {e}")
@@ -281,7 +281,7 @@ class TestEnhancementStripIntegration:
                     var = mcp_client.get_prompt(prompt_name, {"target_query": test_prompt, "context": test_prompt})
                     if var:
                         variations.append(var)
-                except:
+                except Exception:
                     continue
 
             if variations:
@@ -310,7 +310,7 @@ class TestEnhancementStripIntegration:
             enhancement_time = time.time() - start
             performance_results.append(("enhancement", enhancement_time, enhanced is not None))
             print(f"Enhancement: {enhancement_time:.2f}s")
-        except:
+        except Exception:
             enhancement_time = time.time() - start
             performance_results.append(("enhancement", enhancement_time, False))
 
@@ -321,7 +321,7 @@ class TestEnhancementStripIntegration:
             analysis_time = time.time() - start
             performance_results.append(("list_tools", analysis_time, len(tools) > 0))
             print(f"List tools: {analysis_time:.2f}s ({len(tools)} tools)")
-        except:
+        except Exception:
             analysis_time = time.time() - start
             performance_results.append(("list_tools", analysis_time, False))
 
@@ -332,7 +332,7 @@ class TestEnhancementStripIntegration:
             prompt_time = time.time() - start
             performance_results.append(("list_prompts", prompt_time, len(prompts) >= 0))
             print(f"List prompts: {prompt_time:.2f}s ({len(prompts)} prompts)")
-        except:
+        except Exception:
             prompt_time = time.time() - start
             performance_results.append(("list_prompts", prompt_time, False))
 
@@ -340,7 +340,7 @@ class TestEnhancementStripIntegration:
         for operation, duration, success in performance_results:
             assert duration < 5.0, f"{operation} took too long: {duration}s"
 
-        print(f"\nPerformance summary:")
+        print("\nPerformance summary:")
         for op, dur, success in performance_results:
             status = "✓" if success else "✗"
             print(f"{status} {op}: {dur:.2f}s")

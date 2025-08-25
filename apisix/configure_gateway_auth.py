@@ -71,13 +71,17 @@ class APISIXGatewayAuth:
             signature, timestamp = self.generate_hmac_signature(gateway_secret, method, path)
 
             # Test headers
-            test_headers = {"X-API-Gateway": "APISIX", "X-APISIX-Signature": signature, "X-APISIX-Timestamp": timestamp}
+            test_headers = {
+                "X-API-Gateway": "APISIX",
+                "X-APISIX-Signature": signature,
+                "X-APISIX-Timestamp": timestamp,
+            }
 
             # Make test request
             response = requests.get(f"{fastapi_url}{path}", headers=test_headers, timeout=10)
 
             if response.status_code == 200:
-                print(f"✅ Gateway authentication test successful")
+                print("✅ Gateway authentication test successful")
                 return True
             else:
                 print(f"❌ Gateway authentication test failed: {response.status_code}")
@@ -106,33 +110,33 @@ class APISIXGatewayAuth:
                     "serverless-pre-function": {
                         "phase": "rewrite",
                         "functions": [
-                            f"""
+                            """
                             return function(conf, ctx)
                                 local ngx = ngx
                                 local ngx_time = ngx.time
                                 local resty_hmac = require("resty.hmac")
-                                
+
                                 -- Get current timestamp
                                 local timestamp = tostring(ngx_time())
-                                
+
                                 -- Get request details
                                 local method = ngx.var.request_method
                                 local path = ngx.var.uri
-                                
+
                                 -- Create signature payload
                                 local signature_payload = method .. ":" .. path .. ":" .. timestamp
-                                
+
                                 -- Generate HMAC signature
                                 local hmac_sha256 = resty_hmac:new("{gateway_secret}", resty_hmac.ALGOS.SHA256)
                                 hmac_sha256:update(signature_payload)
                                 local signature = hmac_sha256:final()
-                                
+
                                 -- Convert to hex
                                 local signature_hex = ""
                                 for i = 1, #signature do
                                     signature_hex = signature_hex .. string.format("%02x", signature:byte(i))
                                 end
-                                
+
                                 -- Add headers
                                 ngx.req.set_header("X-API-Gateway", "APISIX")
                                 ngx.req.set_header("X-APISIX-Signature", signature_hex)

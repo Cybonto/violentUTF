@@ -30,7 +30,7 @@ async def get_dataset_prompts(
         elif dataset_config["source_type"] == "local":
             prompts = await _get_local_dataset_prompts(dataset_config)
         elif dataset_config["source_type"] == "memory":
-            prompts = await _get_memory_dataset_prompts(dataset_config)
+            prompts = await _get_memory_dataset_prompts(dataset_config, sample_size, user_context)
         elif dataset_config["source_type"] == "converter":
             prompts = await _get_converter_dataset_prompts(dataset_config)
         elif dataset_config["source_type"] == "transform":
@@ -58,7 +58,7 @@ async def _get_dataset_by_id(dataset_id: str, user_context: Optional[str] = None
     """Get dataset configuration by ID from backend service"""
     try:
         # Get datasets directly from DuckDB without authentication context
-        # This is safe for internal service-to-service calls
+        # This is safe for internal service - to - service calls
         from app.db.duckdb_manager import get_duckdb_manager
 
         # Use the provided user context or fall back to web interface user
@@ -125,6 +125,7 @@ async def _get_native_dataset_prompts(dataset_config: Dict) -> List[str]:
     """Get prompts from native dataset"""
     # Extract prompts from native dataset
     dataset_type = dataset_config.get("dataset_type")
+    logger.debug(f"Processing native dataset of type: {dataset_type}")
 
     # Get prompts from the dataset configuration
     prompts = dataset_config.get("prompts", [])
@@ -171,7 +172,9 @@ async def _get_local_dataset_prompts(dataset_config: Dict) -> List[str]:
     return text_prompts
 
 
-async def _get_memory_dataset_prompts(dataset_config: Dict) -> List[str]:
+async def _get_memory_dataset_prompts(
+    dataset_config: Dict, limit: Optional[int] = None, user_context: Optional[str] = None
+) -> List[str]:
     """Get prompts from PyRIT memory dataset using real memory database access"""
     try:
         dataset_id = dataset_config.get("id", "memory_0")
@@ -180,7 +183,7 @@ async def _get_memory_dataset_prompts(dataset_config: Dict) -> List[str]:
         logger.info(f"Loading memory dataset prompts for {dataset_name} (ID: {dataset_id})")
 
         # Try to access real PyRIT memory database
-        prompts = await _load_real_memory_dataset_prompts(dataset_id)
+        prompts = await _load_real_memory_dataset_prompts(dataset_id, limit, user_context)
 
         if prompts:
             logger.info(f"Loaded {len(prompts)} real prompts from PyRIT memory dataset {dataset_name}")
@@ -196,10 +199,12 @@ async def _get_memory_dataset_prompts(dataset_config: Dict) -> List[str]:
         return []
 
 
-async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
-    """Load actual prompts from PyRIT memory database files"""
+async def _load_real_memory_dataset_prompts(
+    dataset_id: str, limit: Optional[int] = None, user_id: Optional[str] = None
+) -> List[str]:
+    """Load actual prompts from PyRIT memory database files - WITH USER ISOLATION"""
     try:
-        import os
+        #         import os # F811: removed duplicate import
         import sqlite3
 
         from pyrit.memory import CentralMemory
@@ -213,7 +218,7 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
                 logger.info(f"Found active PyRIT memory instance for dataset {dataset_id}")
 
                 # Get conversation pieces from memory that could be prompts
-                # Look for user-role pieces that contain the original prompts
+                # Look for user - role pieces that contain the original prompts
                 conversation_pieces = memory_instance.get_conversation()
 
                 for piece in conversation_pieces:
@@ -223,43 +228,60 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
 
                 if prompts:
                     logger.info(f"Extracted {len(prompts)} prompts from active PyRIT memory")
-                    return prompts[:50]  # Limit for performance
+                    # Apply configurable limit if specified
+                    if limit and limit > 0:
+                        return prompts[:limit]
+                    return prompts
 
         except ValueError:
             logger.info("No active PyRIT memory instance found, trying direct database access")
 
         # If no active memory or no prompts found, try direct database file access
-        memory_db_paths = []
+        # SECURITY: Only access the current user's specific database
+        import hashlib
 
-        # Check common PyRIT memory database locations
+        if not user_id:
+            logger.error(f"Cannot load memory dataset {dataset_id} without user context - security violation prevented")
+            return []
+
+        # Generate the user's specific database filename
+        salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
+        user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
+        user_db_filename = f"pyrit_memory_{user_hash}.db"
+
+        # Only check the user's specific database file in known locations
+        memory_db_paths = []
         potential_paths = [
-            "/app/app_data/violentutf/api_memory",  # Docker API memory
-            "./violentutf/app_data/violentutf",  # Local Streamlit memory
-            os.path.expanduser("~/.pyrit"),  # User PyRIT directory
+            "/app/app_data/violentutf",  # Docker API memory
             "./app_data/violentutf",  # Relative app data
         ]
 
         for base_path in potential_paths:
             if os.path.exists(base_path):
-                # Look for any .db files that might contain memory data
-                for file in os.listdir(base_path):
-                    if file.endswith(".db") and "memory" in file.lower():
-                        db_path = os.path.join(base_path, file)
-                        memory_db_paths.append(db_path)
+                user_db_path = os.path.join(base_path, user_db_filename)
+                if os.path.exists(user_db_path):
+                    memory_db_paths.append(user_db_path)
+                    logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
+                    break  # Only use the first found user database
 
         # Try to extract prompts from found database files
         for db_path in memory_db_paths:
             try:
-                logger.info(f"Attempting to read PyRIT memory database: {db_path}")
+                # SECURITY: Double-check that we're only accessing the user's database
+                if user_db_filename not in db_path:
+                    logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
+                    continue
+
+                logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
 
                 with sqlite3.connect(db_path) as conn:
                     cursor = conn.cursor()
 
                     # Query for prompt request pieces with user role
-                    cursor.execute(
-                        """
-                        SELECT original_value FROM PromptRequestPieces 
-                        WHERE role = 'user' AND original_value IS NOT NULL 
+                    # Build query with optional limit
+                    query = """
+                        SELECT original_value FROM PromptRequestPieces
+                        WHERE role = 'user' AND original_value IS NOT NULL
                         AND LENGTH(original_value) > 0
                         AND original_value NOT LIKE '%Native harmbench prompt%'
                         AND original_value NOT LIKE '%Native % prompt %'
@@ -268,9 +290,12 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
                         AND original_value NOT LIKE '%mock%'
                         AND original_value NOT LIKE '%test prompt%'
                         ORDER BY timestamp DESC
-                        LIMIT 50
                     """
-                    )
+
+                    if limit and limit > 0:
+                        query += f" LIMIT {limit}"
+
+                    cursor.execute(query)
 
                     rows = cursor.fetchall()
                     for row in rows:
@@ -297,7 +322,7 @@ async def _load_real_memory_dataset_prompts(dataset_id: str) -> List[str]:
 
 
 async def _get_converter_dataset_prompts(dataset_config: Dict) -> List[str]:
-    """Get prompts from converter-generated dataset"""
+    """Get prompts from converter - generated dataset"""
     try:
         logger.info(f"Loading converter dataset: {dataset_config.get('name')}")
 
@@ -336,7 +361,7 @@ async def _get_converter_dataset_prompts(dataset_config: Dict) -> List[str]:
 
 
 async def _get_transform_dataset_prompts(dataset_config: Dict) -> List[str]:
-    """Get prompts from transform-generated dataset"""
+    """Get prompts from transform - generated dataset"""
     try:
         logger.info(f"Loading transform dataset: {dataset_config.get('name')}")
 

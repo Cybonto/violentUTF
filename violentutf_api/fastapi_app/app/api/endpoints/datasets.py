@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# DuckDB storage replaces in-memory storage
+# DuckDB storage replaces in - memory storage
 # _datasets_store: Dict[str, Dict[str, Any]] = {} - REMOVED
 # _session_datasets: Dict[str, Dict[str, Any]] = {} - REMOVED
 
@@ -85,7 +85,7 @@ NATIVE_DATASET_TYPES = {
     },
     "many_shot_jailbreaking": {
         "name": "many_shot_jailbreaking",
-        "description": "Many-shot Jailbreaking Dataset - Context length exploitation prompts",
+        "description": "Many - shot Jailbreaking Dataset - Context length exploitation prompts",
         "category": "jailbreaking",
         "config_required": False,
         "available_configs": None,
@@ -99,14 +99,14 @@ NATIVE_DATASET_TYPES = {
     },
     "xstest": {
         "name": "xstest",
-        "description": "XSTest Dataset - Cross-domain safety testing",
+        "description": "XSTest Dataset - Cross - domain safety testing",
         "category": "safety",
         "config_required": False,
         "available_configs": None,
     },
     "pku_safe_rlhf": {
         "name": "pku_safe_rlhf",
-        "description": "PKU-SafeRLHF Dataset - Safe reinforcement learning from human feedback",
+        "description": "PKU - SafeRLHF Dataset - Safe reinforcement learning from human feedback",
         "category": "safety",
         "config_required": False,
         "available_configs": None,
@@ -127,7 +127,7 @@ NATIVE_DATASET_TYPES = {
     },
     "seclists_bias_testing": {
         "name": "seclists_bias_testing",
-        "description": "SecLists Bias Testing Dataset - Security-focused bias evaluation",
+        "description": "SecLists Bias Testing Dataset - Security - focused bias evaluation",
         "category": "bias",
         "config_required": False,
         "available_configs": None,
@@ -509,7 +509,9 @@ async def get_memory_datasets(current_user=Depends(get_current_user)):
 
 
 @router.post(
-    "/field-mapping", response_model=DatasetFieldMappingResponse, summary="Get field mapping options for uploaded file"
+    "/field - mapping",
+    response_model=DatasetFieldMappingResponse,
+    summary="Get field mapping options for uploaded file",
 )
 async def get_field_mapping(request: DatasetFieldMappingRequest, current_user=Depends(get_current_user)):
     """Analyze an uploaded file and return field mapping options"""
@@ -559,7 +561,7 @@ async def delete_dataset(
     delete_from_memory: bool = Query(default=False, description="Delete from PyRIT memory"),
     current_user=Depends(get_current_user),
 ):
-    """Delete a dataset from session and/or PyRIT memory"""
+    """Delete a dataset from session and / or PyRIT memory"""
     try:
         user_id = current_user.username
         logger.info(f"User {user_id} deleting dataset: {dataset_id}")
@@ -608,10 +610,62 @@ async def delete_dataset(
 
 
 # Helper function for loading real PyRIT datasets
-async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any]) -> List[str]:
-    """Load real prompts from PyRIT datasets"""
+async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any], limit: Optional[int] = None) -> List[str]:
+    """Enhanced PyRIT dataset loading with streaming support and configurable limits"""
     try:
-        logger.info(f"Loading real PyRIT dataset: {dataset_type} with config: {config}")
+        logger.info(f"Loading real PyRIT dataset: {dataset_type} with config: {config}, limit: {limit}")
+
+        # Import configuration system
+        from app.core.dataset_config import DatasetImportConfig, validate_dataset_config
+        from app.services.dataset_stream_processor import PyRITStreamProcessor
+
+        # Validate configuration
+        validate_dataset_config(dataset_type, config)
+
+        # Check if streaming is enabled and limit is high enough
+        import_config = DatasetImportConfig.from_env()
+
+        # For small requests or preview, use legacy mode to avoid streaming overhead
+        if limit and limit <= 100:  # Use legacy for small requests (increased from preview_limit)
+            logger.info(f"Using legacy mode for small dataset request (limit: {limit})")
+            return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
+
+        # For larger requests, use streaming (temporarily disabled for testing)
+        if import_config.enable_streaming and False:  # Temporarily disabled
+            try:
+                processor = PyRITStreamProcessor()
+                all_prompts = []
+
+                # Stream process but collect all results (for backward compatibility)
+                async for chunk in processor.process_pyrit_dataset_stream(dataset_type, config, limit):
+                    all_prompts.extend(chunk.prompts)
+
+                    # Apply limit if specified
+                    if limit and len(all_prompts) >= limit:
+                        all_prompts = all_prompts[:limit]
+                        break
+
+                logger.info(f"Successfully loaded {len(all_prompts)} prompts using streaming")
+                return all_prompts
+
+            except Exception as e:
+                logger.warning(f"Streaming failed, falling back to legacy mode: {e}")
+                return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
+
+        # Fallback to legacy mode
+        return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
+
+    except Exception as e:
+        logger.error(f"Error loading PyRIT dataset '{dataset_type}': {e}")
+        return []
+
+
+async def _load_real_pyrit_dataset_legacy(
+    dataset_type: str, config: Dict[str, Any], limit: Optional[int] = None
+) -> List[str]:
+    """Legacy PyRIT dataset loading (kept for backward compatibility)"""
+    try:
+        logger.info(f"Loading PyRIT dataset using legacy mode: {dataset_type}")
 
         # Import PyRIT dataset functions
         from pyrit.datasets import (
@@ -669,7 +723,10 @@ async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any]) ->
                     else:
                         prompts.append(str(item))
                 logger.info(f"Successfully loaded {len(prompts)} prompts from many_shot_jailbreaking (list format)")
-                return prompts[:50]  # Limit to 50 prompts for performance
+                # Apply configurable limit if specified
+                if limit and limit > 0:
+                    return prompts[:limit]
+                return prompts
 
         elif dataset_type == "wmdp":
             # fetch_wmdp_dataset returns QuestionAnsweringDataset with questions
@@ -682,7 +739,10 @@ async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any]) ->
                     else:
                         prompts.append(str(question))
                 logger.info(f"Successfully loaded {len(prompts)} questions from wmdp dataset")
-                return prompts[:50]  # Limit to 50 prompts for performance
+                # Apply configurable limit if specified
+                if limit and limit > 0:
+                    return prompts[:limit]
+                return prompts
 
         elif dataset and hasattr(dataset, "prompts"):
             # Standard SeedPromptDataset format
@@ -695,7 +755,10 @@ async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any]) ->
                     prompts.append(str(seed_prompt))
 
             logger.info(f"Successfully loaded {len(prompts)} real prompts from {dataset_type}")
-            return prompts[:50]  # Limit to 50 prompts for performance
+            # Apply configurable limit if specified
+            if limit and limit > 0:
+                return prompts[:limit]
+            return prompts
 
         logger.warning(f"Dataset '{dataset_type}' returned no prompts or unsupported format: {type(dataset)}")
         return []
@@ -799,38 +862,49 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
             logger.info("No active PyRIT memory instance found, trying direct database access")
 
         # If no active memory, try direct database file access
-        memory_db_paths = []
+        # SECURITY: Only access the current user's specific database
+        import hashlib
 
-        # Check common PyRIT memory database locations
+        # Generate the user's specific database filename
+        salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
+        user_hash = hashlib.sha256((salt + user_id).encode("utf-8")).hexdigest()
+        user_db_filename = f"pyrit_memory_{user_hash}.db"
+
+        # Only check the user's specific database file in known locations
+        memory_db_paths = []
         potential_paths = [
-            "/app/app_data/violentutf/api_memory",  # Docker API memory
-            "./violentutf/app_data/violentutf",  # Local Streamlit memory
-            os.path.expanduser("~/.pyrit"),  # User PyRIT directory
+            "/app/app_data/violentutf",  # Docker API memory
             "./app_data/violentutf",  # Relative app data
         ]
 
         for base_path in potential_paths:
             if os.path.exists(base_path):
-                for file in os.listdir(base_path):
-                    if file.endswith(".db") and "memory" in file.lower():
-                        db_path = os.path.join(base_path, file)
-                        memory_db_paths.append(db_path)
+                user_db_path = os.path.join(base_path, user_db_filename)
+                if os.path.exists(user_db_path):
+                    memory_db_paths.append(user_db_path)
+                    logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
+                    break  # Only use the first found user database
 
         # Try to extract datasets from found database files
         for db_path in memory_db_paths:
             try:
-                logger.info(f"Attempting to read PyRIT memory database: {db_path}")
+                # SECURITY: Double-check that we're only accessing the user's database
+                if user_db_filename not in db_path:
+                    logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
+                    continue
+
+                logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
 
                 with sqlite3.connect(db_path) as conn:
                     cursor = conn.cursor()
 
-                    # Query for conversation groups, filtering out test/mock data
+                    # Query for conversation groups, filtering out test / mock data
                     cursor.execute(
                         """
                         SELECT conversation_id, COUNT(*) as prompt_count,
                                MIN(original_value) as first_prompt
-                        FROM PromptRequestPieces 
-                        WHERE role = 'user' AND original_value IS NOT NULL 
+                        FROM PromptRequestPieces
+                        WHERE role = 'user' AND original_value IS NOT NULL
                         AND LENGTH(original_value) > 0
                         AND original_value NOT LIKE '%Native harmbench prompt%'
                         AND original_value NOT LIKE '%Native % prompt %'

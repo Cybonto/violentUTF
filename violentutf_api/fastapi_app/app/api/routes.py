@@ -9,6 +9,7 @@ from app.api.endpoints import (
     converters,
     database,
     datasets,
+    debug_jwt,
     echo,
     files,
     generators,
@@ -25,6 +26,7 @@ api_router = APIRouter()
 
 # Include all endpoint routers
 api_router.include_router(health.router, tags=["health"])
+api_router.include_router(debug_jwt.router, tags=["debug"])
 api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
 api_router.include_router(jwt_keys.router, prefix="/keys", tags=["jwt-keys"])
 api_router.include_router(echo.router, prefix="/echo", tags=["echo"])

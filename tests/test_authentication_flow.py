@@ -93,7 +93,7 @@ try:
     # Store the token in session state
     st.session_state["api_token"] = token
 
-    print(f"✅ Token stored in session state")
+    print("✅ Token stored in session state")
     print(f"   Token before validation: {bool(st.session_state.get('api_token'))}")
 
     # This should NOT clear the token anymore with our fix
@@ -134,7 +134,7 @@ try:
 except Exception as e:
     print(f"❌ API request test failed: {e}")
 
-print(f"\n=== TEST COMPLETE ===")
+print("\n=== TEST COMPLETE ===")
 
 # Summary
 token_created = bool(jwt_manager.create_token(keycloak_data))
@@ -146,17 +146,17 @@ try:
         headers = {"Authorization": f'Bearer {st.session_state["api_token"]}', "X-API-Gateway": "APISIX"}
         response = requests.get("http://localhost:9080/api/v1/auth/token/info", headers=headers, timeout=5)
         api_accessible = response.status_code == 200
-except:
+except Exception:
     pass
 
-print(f"\nSUMMARY:")
+print("\nSUMMARY:")
 print(f"✅ Token Creation:    {token_created}")
 print(f"✅ Token Persistence: {token_persisted}")
 print(f"✅ API Access:       {api_accessible}")
 
 if token_created and token_persisted and api_accessible:
-    print(f"\n🎉 AUTHENTICATION FLOW WORKING CORRECTLY!")
-    print(f"   The JWT signature validation fix resolved the issue.")
+    print("\n🎉 AUTHENTICATION FLOW WORKING CORRECTLY!")
+    print("   The JWT signature validation fix resolved the issue.")
 else:
-    print(f"\n❌ AUTHENTICATION FLOW STILL HAS ISSUES")
-    print(f"   Further investigation needed.")
+    print("\n❌ AUTHENTICATION FLOW STILL HAS ISSUES")
+    print("   Further investigation needed.")

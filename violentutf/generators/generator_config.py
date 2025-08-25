@@ -94,7 +94,7 @@ GENERATOR_PARAMS = {
         {
             "name": "provider",
             "type": "selectbox",
-            "options": ["openai", "anthropic", "ollama", "webui"],
+            "options": ["openai", "anthropic", "ollama", "webui", "gsai"],
             "required": True,
             "default": "openai",
             "description": "AI Provider (openai, anthropic, ollama, webui)",
@@ -596,7 +596,7 @@ GENERATOR_PARAMS = {
 
 def load_generators() -> Dict[str, "Generator"]:
     """Loads Generator configurations from the YAML file."""
-    global _generators_cache
+    global _generators_cache  # noqa: F824
     if not os.path.isfile(GENERATORS_CONFIG_FILE_PATH):
         logger.info(f"Generator config file not found at {GENERATORS_CONFIG_FILE_PATH}. Starting empty.")
         _generators_cache = {}
@@ -632,7 +632,7 @@ def load_generators() -> Dict[str, "Generator"]:
                 loaded_generators[name] = gen
             except (ValueError, TypeError, KeyError) as e:
                 logger.error(f"Error initializing generator '{name}' from config: {e}")
-            except Exception as e:
+            except Exception:
                 logger.exception(f"Unexpected error initializing generator '{name}'.")
 
         _generators_cache = loaded_generators
@@ -644,7 +644,7 @@ def load_generators() -> Dict[str, "Generator"]:
         logger.error(f"Error reading or parsing {GENERATORS_CONFIG_FILE_PATH}: {e}", exc_info=True)
         _generators_cache = {}
         return _generators_cache
-    except Exception as e:
+    except Exception:
         logger.exception(f"Unexpected error loading generators from {GENERATORS_CONFIG_FILE_PATH}.")
         _generators_cache = {}
         return _generators_cache
@@ -652,7 +652,6 @@ def load_generators() -> Dict[str, "Generator"]:
 
 def save_generators() -> bool:
     """Saves the current state of the generator cache to the YAML file."""
-    global _generators_cache
     data_to_save = {}
     for name, gen_instance in _generators_cache.items():
         if isinstance(gen_instance, Generator):
@@ -684,14 +683,13 @@ def save_generators() -> bool:
     except (IOError, yaml.YAMLError) as e:
         logger.error(f"Error writing generators to {GENERATORS_CONFIG_FILE_PATH}: {e}", exc_info=True)
         return False
-    except Exception as e:
+    except Exception:
         logger.exception(f"Unexpected error saving generators to {GENERATORS_CONFIG_FILE_PATH}.")
         return False
 
 
 def get_generators() -> Dict[str, "Generator"]:
     """Retrieves the current dictionary of loaded Generator instances."""
-    global _generators_cache
     if not _generators_cache:
         logger.debug("Generator cache empty, loading from file.")
         load_generators()
@@ -700,7 +698,7 @@ def get_generators() -> Dict[str, "Generator"]:
 
 def add_generator(generator_name: str, generator_type: str, parameters: Dict[str, Any]) -> "Generator":
     """Adds a new Generator configuration."""
-    global _generators_cache
+    global _generators_cache  # noqa: F824
     if generator_name in _generators_cache:
         raise ValueError(f"Generator name '{generator_name}' already exists.")
     if generator_type not in GENERATOR_TYPE_CLASSES or GENERATOR_TYPE_CLASSES[generator_type] is None:
@@ -719,14 +717,14 @@ def add_generator(generator_name: str, generator_type: str, parameters: Dict[str
     except (ValueError, TypeError, KeyError) as e:
         logger.error(f"Failed to add generator '{generator_name}': {e}")
         raise
-    except Exception as e:
+    except Exception:
         logger.exception(f"Unexpected error adding generator '{generator_name}'.")
         raise
 
 
 def delete_generator(generator_name: str) -> bool:
     """Deletes a Generator configuration."""
-    global _generators_cache
+    global _generators_cache  # noqa: F824
     if generator_name not in _generators_cache:
         raise KeyError(f"Cannot delete: Generator '{generator_name}' does not exist.")
     try:
@@ -737,14 +735,13 @@ def delete_generator(generator_name: str) -> bool:
         else:
             logger.error(f"Generator '{generator_name}' deleted from cache, but failed to save changes to file.")
         return success
-    except Exception as e:
+    except Exception:
         logger.exception(f"Unexpected error deleting generator '{generator_name}'.")
         return False
 
 
 def configure_generator(generator_name: str, parameters: Dict[str, Any]) -> "Generator":
     """Updates the parameters of an existing Generator."""
-    global _generators_cache
     if generator_name not in _generators_cache:
         raise KeyError(f"Cannot configure: Generator '{generator_name}' does not exist.")
     try:
@@ -760,7 +757,7 @@ def configure_generator(generator_name: str, parameters: Dict[str, Any]) -> "Gen
     except (ValueError, TypeError, KeyError) as e:
         logger.error(f"Failed to configure generator '{generator_name}': {e}")
         raise
-    except Exception as e:
+    except Exception:
         logger.exception(f"Unexpected error configuring generator '{generator_name}'.")
         raise
 
@@ -771,7 +768,6 @@ async def test_generator_async(generator_name: str) -> tuple[bool, str]:
     Handles PyRIT PromptTarget instances.
     Logs pass/fail status explicitly.
     """
-    global _generators_cache
     if generator_name not in _generators_cache:
         error_msg = f"Cannot test: Generator '{generator_name}' does not exist."
         logger.error(error_msg)
@@ -866,7 +862,6 @@ async def test_generator_async(generator_name: str) -> tuple[bool, str]:
 
 def get_generator_by_name(generator_name: str) -> Optional["Generator"]:
     """Retrieves a specific Generator instance by name."""
-    global _generators_cache
     gen = _generators_cache.get(generator_name)
     if not gen:
         logger.debug(f"Generator '{generator_name}' not in cache, attempting reload.")
@@ -1085,7 +1080,8 @@ class Generator:
         init_params = self.parameters.copy()
 
         # Parameter Cleaning specific to PyRIT OpenAI targets
-        is_azure_target_flag = init_params.pop("is_azure_target", None)
+        # Remove unused azure flag
+        init_params.pop("is_azure_target", None)
         if self.generator_type in ["OpenAIChatTarget", "OpenAIDALLETarget", "OpenAITTSTarget"]:
             endpoint_val = init_params.get("endpoint", "").lower()
             is_azure = "openai.azure.com" in endpoint_val
@@ -1130,7 +1126,7 @@ class Generator:
             logger.error(f"Parameter error instantiating {self.generator_type} for '{self.name}': {e}", exc_info=True)
             self.instance = None
             raise ValueError(f"Parameter error instantiating {self.generator_type}: {e}") from e
-        except Exception as e:
+        except Exception:
             logger.exception(f"Unexpected error instantiating {self.generator_type} for '{self.name}'.")
             self.instance = None
             raise
@@ -1151,8 +1147,8 @@ class Generator:
         except (ValueError, TypeError, KeyError) as e:
             logger.error(f"Failed to update parameters for '{self.name}': {e}")
             raise
-        except Exception as e:
-            logger.exception(f"Unexpected error updating parameters for '{self.name}'.")
+        except Exception:
+            logger.exception(f"Unexpected error updating parameters for '{self.name}.'")
             raise
 
 

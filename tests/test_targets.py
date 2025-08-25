@@ -1,14 +1,10 @@
-# /tests/test_targets.py
-
-import os
-import sys
-
-# Add project root to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-# Add violentutf_api/fastapi_app to path for imports
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "violentutf_api", "fastapi_app"))
+"""
+Fixture to create a TestClient with authentication headers.
+"""
 
 import json
+import os
+import sys
 
 import pytest
 from api.v1.endpoints.targets import router as targets_router
@@ -17,7 +13,15 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "violentutf_api", "fastapi_app"))
+
 from keycloak import KeycloakOpenID
+
+# Add project root to sys.path
+# Add violentutf_api/fastapi_app to path for imports
+
+
 
 # Create a new FastAPI app for testing
 app = FastAPI()
@@ -64,9 +68,6 @@ headers = {
 
 @pytest.fixture(scope="function")
 def test_client():
-    """
-    Fixture to create a TestClient with authentication headers.
-    """
     with TestClient(app) as c:
         c.headers.update(headers)
         yield c

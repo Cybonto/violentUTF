@@ -79,25 +79,19 @@ class TestDatasetPromptFormat:
         for dataset_id in self.created_resources["datasets"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
         # Delete created converters
         for converter_id in self.created_resources["converters"]:
             try:
                 requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers)
-            except:
+            except Exception:
                 pass
 
     def test_dataset_creation_and_retrieval(self):
         """Test that dataset prompts are properly stored and retrieved"""
-        # Create a dataset with specific prompts
-        test_prompts = [
-            "Test prompt 1",
-            "Test prompt 2 with special chars: @#$%",
-            "Test prompt 3 with unicode: 你好世界",
-        ]
-
+        # Create a dataset for testing
         dataset_name = f"test_dataset_{uuid.uuid4().hex[:8]}"
 
         # Create dataset via API
@@ -132,7 +126,7 @@ class TestDatasetPromptFormat:
         assert response.status_code == 200, f"Failed to retrieve dataset: {response.text}"
 
         retrieved_dataset = response.json()
-        print(f"✅ Retrieved dataset successfully")
+        print("✅ Retrieved dataset successfully")
 
         # Check if prompts are returned
         assert "prompts" in retrieved_dataset, "Dataset should have prompts field"
@@ -145,11 +139,11 @@ class TestDatasetPromptFormat:
 
             # Check which field name is used
             if "text" in first_prompt:
-                print(f"✅ Prompts use 'text' field as expected by converters")
+                print("✅ Prompts use 'text' field as expected by converters")
             elif "value" in first_prompt:
-                print(f"⚠️  Prompts use 'value' field, but converters expect 'text'")
+                print("⚠️  Prompts use 'value' field, but converters expect 'text'")
             elif "prompt_text" in first_prompt:
-                print(f"⚠️  Prompts use 'prompt_text' field, but converters expect 'text'")
+                print("⚠️  Prompts use 'prompt_text' field, but converters expect 'text'")
             else:
                 print(f"❌ Prompts don't have expected field. Keys: {list(first_prompt.keys())}")
 
@@ -183,7 +177,7 @@ class TestDatasetPromptFormat:
         converter_id = response.json()["converter"]["id"]
         self.created_resources["converters"].append(converter_id)
 
-        print(f"✅ Created converter for test")
+        print("✅ Created converter for test")
 
         # Apply converter to dataset
         apply_payload = {
@@ -200,7 +194,7 @@ class TestDatasetPromptFormat:
         if response.status_code == 200:
             result = response.json()
             self.created_resources["datasets"].append(result["dataset_id"])
-            print(f"✅ Converter successfully applied to dataset")
+            print("✅ Converter successfully applied to dataset")
             print(f"   - Converted {result['converted_count']} prompts")
         else:
             print(f"❌ Converter failed to apply: {response.status_code}")
@@ -208,9 +202,9 @@ class TestDatasetPromptFormat:
 
             # This is the expected failure if prompt field naming is inconsistent
             if "has no attribute 'text'" in response.text or "'text'" in response.text:
-                print(f"\n⚠️  ISSUE CONFIRMED: Converter expects 'text' field but dataset provides different field name")
+                print("\n⚠️  ISSUE CONFIRMED: Converter expects 'text' field but dataset provides different field name")
                 print(
-                    f"   This confirms the prompt field naming inconsistency between dataset retrieval and converter usage"
+                    "   This confirms the prompt field naming inconsistency between dataset retrieval and converter usage"
                 )
 
     def test_dataset_field_consistency(self):

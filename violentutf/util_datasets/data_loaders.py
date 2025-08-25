@@ -57,13 +57,13 @@ logger = get_logger(__name__)
 PYRIT_DATASETS = {
     "decoding_trust_stereotypes": fetch_decoding_trust_stereotypes_dataset,
     "harmbench": fetch_harmbench_dataset,
-    #'many_shot_jailbreaking': fetch_many_shot_jailbreaking_dataset,
+    # 'many_shot_jailbreaking': fetch_many_shot_jailbreaking_dataset,
     "adv_bench": fetch_adv_bench_dataset,
     "aya_redteaming": fetch_aya_redteaming_dataset,
     "seclists_bias_testing": fetch_seclists_bias_testing_dataset,
     "xstest": fetch_xstest_dataset,
-    #'pku_safe_rlhf': fetch_pku_safe_rlhf_dataset,
-    #'wmdp': fetch_wmdp_dataset,
+    # 'pku_safe_rlhf': fetch_pku_safe_rlhf_dataset,
+    # 'wmdp': fetch_wmdp_dataset,
     "forbidden_questions": fetch_forbidden_questions_dataset,
     # Add other datasets as needed
 }
@@ -255,7 +255,7 @@ def fetch_online_dataset(url: str) -> pd.DataFrame:
         file_extension = Path(parsed_url.path).suffix.lower()
         content = response.content
         if file_extension not in [".csv", ".tsv", ".json", ".jsonl", ".yaml", ".yml", ".txt"]:
-            logger.warning(f"Could not determine file type from URL. Assuming CSV format.")
+            logger.warning("Could not determine file type from URL. Assuming CSV format.")
             file_extension = ".csv"  # Default to CSV
         uploaded_file = type(
             "UploadedFile", (object,), {"name": f"downloaded{file_extension}", "read": lambda: content}

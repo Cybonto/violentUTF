@@ -124,7 +124,7 @@ def create_compatible_api_token():
             return None
 
     except Exception as e:
-        st.error(f"❌ Failed to generate API token.")
+        st.error("❌ Failed to generate API token.")
         logger.error(f"Token creation failed: {e}")
         return None
 
@@ -136,10 +136,6 @@ def create_compatible_api_token():
 def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
     """Load comprehensive execution data for analysis"""
     try:
-        # Calculate time range
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days_back)
-
         # First get all orchestrators (same approach as Dashboard_2)
         orchestrators_response = api_request("GET", API_ENDPOINTS["orchestrators"])
         if not orchestrators_response:
@@ -853,7 +849,7 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
                 {
                     "Priority": "🟡 Medium",
                     "Action": "Monitor high-risk time periods",
-                    "Details": f"Increased violations during specific hours",
+                    "Details": "Increased violations during specific hours",
                 }
             )
 

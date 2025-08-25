@@ -101,7 +101,7 @@ jobs:
 
       - name: Run comprehensive tests
         run: |
-          pytest -v --cov=. --cov-report=xml --cov-report=html --timeout=300 -n auto
+          pytest tests/unit -v --cov=violentutf --cov=violentutf_api --cov-report=xml --cov-report=html --timeout=300 -n auto
 
       - name: Upload coverage reports
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'

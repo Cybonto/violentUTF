@@ -154,8 +154,6 @@ class GarakService:
             logger.info(f"Starting Garak scan {scan_id} with probe {probe_module}.{probe_name}")
 
             # This is a simplified version - in production, you'd use Garak's full CLI
-            results = []
-
             # Generate test prompts
             test_prompts = probe_instance.probe(generator, attempts=5)
 

@@ -376,8 +376,8 @@ class TestGeneratorParameterLogicLive:
         standard_openai_models = ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o"]
 
         for model in standard_openai_models:
-            expected_hidden_params = ["api_key", "endpoint"]
-            expected_visible_params = ["provider", "model", "temperature", "max_tokens", "top_p"]
+            # Expected hidden params: ["api_key", "endpoint"]
+            # Expected visible params: ["provider", "model", "temperature", "max_tokens", "top_p"]
 
             # This test documents the expected behavior
             assert True  # Placeholder - actual implementation would test UI state
@@ -391,8 +391,8 @@ class TestGeneratorParameterLogicLive:
         anthropic_models = ["claude-3-sonnet-20240229", "claude-3-5-sonnet-20241022"]
 
         for model in anthropic_models:
-            expected_hidden_params = ["api_key", "endpoint"]
-            expected_visible_params = ["provider", "model", "temperature", "max_tokens", "top_p"]
+            # Expected hidden params: ["api_key", "endpoint"]
+            # Expected visible params: ["provider", "model", "temperature", "max_tokens", "top_p"]
 
             assert True  # Placeholder for actual UI logic test
 

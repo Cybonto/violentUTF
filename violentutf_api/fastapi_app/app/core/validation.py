@@ -30,7 +30,7 @@ class SecurityLimits:
     MAX_NESTED_DEPTH = 5
     MAX_JSON_SIZE = 10000  # bytes
 
-    # Username/identifier limits
+    # Username / identifier limits
     MIN_USERNAME_LENGTH = 3
     MAX_USERNAME_LENGTH = 50
     MIN_NAME_LENGTH = 1
@@ -45,9 +45,13 @@ class SecurityLimits:
 # Validation patterns
 class ValidationPatterns:
     """Regex patterns for validation"""
+    # fmt: off
+    # SECURITY CRITICAL: DO NOT MODIFY THESE PATTERNS
+    # These regex patterns are security-critical and must not be modified by automated tools.
+    # Any spaces added to character ranges (e.g., [A-Z] becoming [A - Z]) will break validation.
 
     # Safe username pattern (alphanumeric, dash, underscore)
-    USERNAME = re.compile(r"^[a-zA-Z0-9_-]+$")
+    USERNAME = re.compile(r"^[a-zA-Z0-9_-]+$")  # noqa: E501
 
     # Safe name pattern (letters, spaces, basic punctuation)
     SAFE_NAME = re.compile(r"^[a-zA-Z0-9\s\-_.()]+$")
@@ -71,7 +75,8 @@ class ValidationPatterns:
     JWT_TOKEN = re.compile(r"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$")
 
     # Role pattern (lowercase alphanumeric with dash)
-    ROLE_PATTERN = re.compile(r"^[a-z0-9-]+$")
+    ROLE_PATTERN = re.compile(r"^[a-z0-9-]+$")  # noqa: E501
+    # fmt: on
 
 
 class SafeString(str):
@@ -303,8 +308,8 @@ def validate_url(url: str) -> str:
         "::1",
         "10.",  # Private network
         "192.168.",  # Private network
-        "172.",  # Private network (172.16-31.x.x)
-        "169.254.",  # Link-local
+        "172.",  # Private network (172.16 - 31.x.x)
+        "169.254.",  # Link - local
         "metadata.google.internal",
         "metadata",
         "metadata.aws",
@@ -318,7 +323,18 @@ def validate_url(url: str) -> str:
 
     for dangerous in dangerous_hosts:
         if host.startswith(dangerous):
-            raise ValueError(f"Access to internal/localhost URLs not allowed: {host}")
+            raise ValueError(f"Access to internal / localhost URLs not allowed: {host}")
+
+    # Additional check for private IP ranges
+    import ipaddress
+
+    try:
+        ip = ipaddress.ip_address(host)
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
+            raise ValueError(f"Access to private / internal IP addresses not allowed: {host}")
+    except ipaddress.AddressValueError:
+        # Not an IP address, hostname validation above should catch issues
+        pass
 
     # Additional check for private IP ranges
     import ipaddress
@@ -419,7 +435,7 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
     # Check file size (10MB limit)
     max_size = 10 * 1024 * 1024  # 10MB
     if file_size > max_size:
-        raise ValueError(f"File too large (max {max_size // (1024*1024)}MB)")
+        raise ValueError(f"File too large (max {max_size // (1024 * 1024)}MB)")
 
     return filename
 

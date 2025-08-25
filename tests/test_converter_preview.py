@@ -17,7 +17,11 @@ JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbW
 
 def get_auth_headers():
     """Get authentication headers for API requests"""
-    return {"Authorization": f"Bearer {JWT_TOKEN}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+    return {
+        "Authorization": f"Bearer {JWT_TOKEN}",
+        "Content-Type": "application/json",
+        "X-API-Gateway": "APISIX",
+    }
 
 
 def make_request(method, endpoint, **kwargs):
@@ -35,7 +39,7 @@ def make_request(method, endpoint, **kwargs):
         try:
             response_data = response.json()
             print(f"Response data: {json.dumps(response_data, indent=2)}")
-        except:
+        except Exception:
             print(f"Response text: {response.text}")
             response_data = None
 
@@ -102,7 +106,7 @@ def test_converter_endpoints():
             print("✅ Converter preview successful!")
             if data and "preview_results" in data:
                 for i, result in enumerate(data["preview_results"]):
-                    print(f"  Result {i+1}:")
+                    print(f"  Result {i + 1}:")
                     print(f"    Original: {result.get('original_value', 'N/A')}")
                     print(f"    Converted: {result.get('converted_value', 'N/A')}")
             else:

@@ -43,6 +43,12 @@ repos:
       - id: black
         language_version: python3.11
         args: ['--line-length=120']
+        # Exclude files with protected regex patterns
+        exclude: |
+          (?x)^(
+            violentutf_api/fastapi_app/app/core/validation\.py|
+            violentutf_api/fastapi_app/app/core/regex_patterns\.py
+          )$
 
   # Import sorting
   - repo: https://github.com/pycqa/isort
@@ -152,6 +158,15 @@ repos:
   # Custom local hooks
   - repo: local
     hooks:
+      # CRITICAL: Regex pattern protection
+      - id: check-regex-patterns
+        name: Check Regex Patterns (prevent corruption)
+        entry: python scripts/check_regex_patterns.py
+        language: python
+        files: '\.py$'
+        pass_filenames: true
+        description: "Prevent corruption of regex patterns by auto-formatting"
+
       - id: no-print-statements
         name: Check for print statements
         entry: '(?<!def )print\('

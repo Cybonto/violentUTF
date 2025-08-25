@@ -267,7 +267,7 @@ def show_authenticated_sidebar(page_name: str = "") -> str:
                 else:  # active
                     st.success(f"🚀 AI Gateway: Active ({minutes_remaining}m left)")
 
-            except Exception as e:
+            except Exception:
                 # Fallback to simple display
                 st.success("🚀 AI Gateway Access: Enabled")
         else:

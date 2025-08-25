@@ -1,54 +1,56 @@
-# ViolentUTF Test Suite
+# ViolentUTF Test Structure
 
-Comprehensive testing framework for ViolentUTF platform components including API endpoints, authentication, integrations, and security features.
+## Directory Organization
 
-## Quick Start
+- `tests/unit/` - Unit tests that run quickly without external dependencies
+  - Should complete in < 5 seconds per test
+  - No network calls, database connections, or Docker containers
+  - Mock external dependencies
+
+- `tests/integration/` - Integration tests that require services
+  - May require Docker containers (Keycloak, APISIX, etc.)
+  - May make network calls to local services
+  - Should complete in < 30 seconds per test
+
+- `tests/e2e/` - End-to-end tests
+  - Full system tests with all services running
+  - May take several minutes to complete
+
+- `tests/api_tests/` - API-specific integration tests
+  - Test REST API endpoints
+  - Require running API server
+
+- `tests/mcp_tests/` - MCP protocol tests
+  - Test Model Context Protocol functionality
+
+## CI/CD Configuration
+
+The CI/CD workflows are configured to run ONLY unit tests by default:
+- PR validation: `pytest tests/unit`
+- Core unit tests: `pytest tests/unit`
+
+This ensures fast feedback and prevents long-running tests from blocking PRs.
+
+## Running Tests Locally
 
 ```bash
+# Run only unit tests (fast, no dependencies)
+pytest tests/unit -v
+
+# Run integration tests (requires services)
+pytest tests/integration -v
+
 # Run all tests
-./run_tests.sh
+pytest tests/ -v
 
-# Run enhanced test suite
-./run_enhanced_tests.sh
-
-# Run API-specific tests
-cd api_tests && ./run_api_tests.sh
-
-# Run specific test files
-pytest test_authentication_flow.py -v
-pytest test_orchestrator_integration.py -v
+# Run tests with coverage
+pytest tests/unit -v --cov=violentutf --cov=violentutf_api
 ```
 
-## Test Categories
+## Test Performance Guidelines
 
-- **API Tests** (`api_tests/`): FastAPI endpoint testing with authentication
-- **Integration Tests**: End-to-end workflows and service interactions  
-- **Authentication Tests**: JWT, Keycloak SSO, and security validation
-- **Orchestrator Tests**: PyRIT orchestrator functionality and execution
-- **Rate Limiting Tests**: API protection and throttling validation
+- Unit tests: < 5 seconds per test
+- Integration tests: < 30 seconds per test
+- E2E tests: < 5 minutes per test
 
-## Key Test Files
-
-- `test_authentication_flow.py` - JWT and Keycloak authentication
-- `test_orchestrator_integration.py` - PyRIT orchestrator testing
-- `test_rate_limiting.py` - API rate limit validation
-- `test_keycloak_verification_fix.py` - SSO integration tests
-- `conftest.py` - Shared fixtures and setup
-
-## Test Utilities
-
-- `utils/keycloak_auth.py` - Authentication helpers
-- `run_tests.sh` - Main test execution script
-- `pytest.ini` - Test configuration and markers
-
-## Documentation
-
-For detailed testing guidelines, setup instructions, authentication configuration, and troubleshooting, see:
-
-**📚 [Complete Testing Documentation](../docs/api/)**
-
-## Requirements
-
-- All ViolentUTF services running (API, APISIX, Keycloak)
-- Valid test environment configuration
-- Authentication tokens and API keys configured
+Tests exceeding these limits should be marked with `@pytest.mark.slow` and excluded from PR validation.

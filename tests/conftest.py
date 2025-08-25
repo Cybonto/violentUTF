@@ -1,14 +1,21 @@
 """
 Pytest configuration and fixtures for ViolentUTF tests
 Provides authentication, environment setup, and common test utilities
+Enhanced for contract testing with authentication mocking
 """
 
 import os
+import sys
 from pathlib import Path
 from typing import Dict, Optional
 
 import pytest
 import requests
+
+# Add project root to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 
 from tests.utils.keycloak_auth import keycloak_auth
 
@@ -36,8 +43,38 @@ def load_environment():
                 print(f"Warning: Could not load {env_file}: {e}")
 
 
-# Load environment on import
+# Setup contract testing environment if enabled
+def setup_contract_testing_environment():
+    """Setup environment for contract testing."""
+    if os.getenv("CONTRACT_TESTING", "false").lower() == "true":
+        test_env_vars = {
+            "TESTING": "true",
+            "CONTRACT_TESTING": "true",
+            "JWT_SECRET_KEY": "test_jwt_secret_for_contract_testing_only",
+            "SECRET_KEY": "test_jwt_secret_for_contract_testing_only",
+            "VIOLENTUTF_API_KEY": "test_api_key_for_contract_testing",
+            "APISIX_API_KEY": "test_api_key_for_contract_testing",
+            "AI_GATEWAY_API_KEY": "test_api_key_for_contract_testing",
+            "KEYCLOAK_URL": "http://localhost:8080",
+            "KEYCLOAK_REALM": "ViolentUTF-Test",
+            "KEYCLOAK_USERNAME": "violentutf.test",
+            "KEYCLOAK_PASSWORD": "test_password",
+            "KEYCLOAK_APISIX_CLIENT_ID": "apisix-test",
+            "KEYCLOAK_APISIX_CLIENT_SECRET": "test_secret",
+            "VIOLENTUTF_API_URL": "http://localhost:8000",
+            "DUCKDB_PATH": ":memory:",
+            "PYRIT_DB_PATH": ":memory:",
+        }
+
+        for key, value in test_env_vars.items():
+            os.environ.setdefault(key, value)
+
+        print("🧪 Contract testing environment configured")
+
+
+# Load environment and setup contract testing
 load_environment()
+setup_contract_testing_environment()
 
 
 @pytest.fixture(scope="session")
@@ -206,6 +243,9 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "requires_apisix: mark test as requiring APISIX gateway")
     config.addinivalue_line("markers", "requires_fastapi: mark test as requiring FastAPI service")
     config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "contract: mark test as contract testing")
+    config.addinivalue_line("markers", "unit: mark test as unit testing")
+    config.addinivalue_line("markers", "allows_mock_auth: mark test as accepting mock authentication")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -216,17 +256,17 @@ def pytest_collection_modifyitems(config, items):
 
     try:
         apisix_running = requests.get("http://localhost:9080/health", timeout=2).status_code in [200, 404]
-    except:
+    except Exception:
         apisix_running = False
 
     try:
         fastapi_running = requests.get("http://localhost:8000/health", timeout=2).status_code == 200
-    except:
+    except Exception:
         fastapi_running = False
 
     try:
         keycloak_available = keycloak_auth.is_keycloak_available()
-    except:
+    except Exception:
         keycloak_available = False
 
     for item in items:
@@ -243,3 +283,110 @@ def pytest_collection_modifyitems(config, items):
             # Check if test accepts mock auth
             if not item.get_closest_marker("allows_mock_auth"):
                 item.add_marker(pytest.mark.skip(reason="Authentication not available"))
+
+
+# Contract testing fixtures
+@pytest.fixture(scope="session")
+def contract_testing_enabled():
+    """Check if contract testing is enabled."""
+    return os.getenv("CONTRACT_TESTING", "false").lower() == "true"
+
+
+@pytest.fixture(scope="session")
+def test_app(contract_testing_enabled):
+    """Create FastAPI test app with authentication mocking."""
+    if not contract_testing_enabled:
+        pytest.skip("Contract testing not enabled")
+
+    try:
+        # Import after environment setup
+        from tests.api_tests.test_auth_mock import ContractTestingPatches
+
+        with ContractTestingPatches():
+            from violentutf_api.fastapi_app.app.main import app
+
+            yield app
+    except ImportError as e:
+        pytest.skip(f"Could not import FastAPI app: {e}")
+
+
+@pytest.fixture(scope="session")
+def test_client(test_app):
+    """Create test client with authentication mocking."""
+    from fastapi.testclient import TestClient
+
+    with TestClient(test_app) as client:
+        yield client
+
+
+@pytest.fixture(scope="session")
+def test_headers(contract_testing_enabled):
+    """Create test headers for API calls."""
+    if not contract_testing_enabled:
+        pytest.skip("Contract testing not enabled")
+
+    try:
+        from tests.api_tests.test_auth_mock import create_test_headers
+
+        return create_test_headers()
+    except ImportError:
+        pytest.skip("Could not import test auth utilities")
+
+
+@pytest.fixture(scope="session")
+def auth_patches(contract_testing_enabled):
+    """Apply authentication patches for contract testing."""
+    if not contract_testing_enabled:
+        pytest.skip("Contract testing not enabled")
+
+    try:
+        from tests.api_tests.test_auth_mock import ContractTestingPatches
+
+        with ContractTestingPatches() as patches:
+            yield patches
+    except ImportError:
+        pytest.skip("Could not import authentication patches")
+
+
+@pytest.fixture(scope="session")
+def openapi_schema(test_app):
+    """Generate OpenAPI schema from FastAPI app."""
+    return test_app.openapi()
+
+
+@pytest.fixture(scope="session")
+def contract_base_url():
+    """Base URL for contract testing."""
+    return "http://testserver"
+
+
+@pytest.fixture(scope="function")
+def mock_database(contract_testing_enabled):
+    """Create mock database session for testing."""
+    if not contract_testing_enabled:
+        pytest.skip("Contract testing not enabled")
+
+    try:
+        from tests.api_tests.test_auth_mock import create_mock_database_session
+
+        return create_mock_database_session()
+    except ImportError:
+        pytest.skip("Could not import mock database utilities")
+
+
+# Cleanup after contract tests
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_contract_tests():
+    """Cleanup after contract tests complete."""
+    yield
+
+    # Cleanup test artifacts if contract testing was enabled
+    if os.getenv("CONTRACT_TESTING", "false").lower() == "true":
+        test_files = ["generated_openapi.json", "contract-test-results.xml", "test_output.log"]
+
+        for file in test_files:
+            if os.path.exists(file):
+                try:
+                    os.remove(file)
+                except Exception:
+                    pass  # Ignore cleanup failures

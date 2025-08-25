@@ -65,11 +65,11 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     # Anthropic model mappings
     elif provider == "anthropic":
         anthropic_mappings = {
-            "claude-3-opus-20240229": "/ai/anthropic/opus",
-            "claude-3-sonnet-20240229": "/ai/anthropic/sonnet",
-            "claude-3-haiku-20240307": "/ai/anthropic/haiku",
-            "claude-3-5-sonnet-20241022": "/ai/anthropic/sonnet35",
-            "claude-3-5-haiku-20241022": "/ai/anthropic/haiku35",
+            "claude-3-opus-20240229": "/ai/anthropic/claude3-opus",
+            "claude-3-sonnet-20240229": "/ai/anthropic/claude3-sonnet",
+            "claude-3-haiku-20240307": "/ai/anthropic/claude3-haiku",
+            "claude-3-5-sonnet-20241022": "/ai/anthropic/claude35-sonnet",
+            "claude-3-5-haiku-20241022": "/ai/anthropic/claude35-haiku",
             "claude-3-7-sonnet-latest": "/ai/anthropic/sonnet37",
             "claude-sonnet-4-20250514": "/ai/anthropic/sonnet4",
             "claude-opus-4-20250514": "/ai/anthropic/opus4",
@@ -91,31 +91,26 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
         webui_mappings = {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"}
         return webui_mappings.get(model)
 
-    # AWS Bedrock model mappings (when supported)
-    elif provider == "bedrock":
-        bedrock_mappings = {
-            "anthropic.claude-opus-4-20250514-v1:0": "/ai/bedrock/claude-opus-4",
-            "anthropic.claude-sonnet-4-20250514-v1:0": "/ai/bedrock/claude-sonnet-4",
-            "anthropic.claude-3-5-sonnet-20241022-v2:0": "/ai/bedrock/claude-35-sonnet",
-            "anthropic.claude-3-5-haiku-20241022-v1:0": "/ai/bedrock/claude-35-haiku",
-            "meta.llama3-3-70b-instruct-v1:0": "/ai/bedrock/llama3-3-70b",
-            "amazon.nova-pro-v1:0": "/ai/bedrock/nova-pro",
-            "amazon.nova-lite-v1:0": "/ai/bedrock/nova-lite",
-        }
-        return bedrock_mappings.get(model)
+    # AWS Bedrock - REMOVED (not supported)
+
+    # GSAi (Government Services AI) - Static route we created
+    elif provider == "openapi-gsai":
+        # Use the static GSAi route we configured in the setup
+        return "/ai/gsai-api-1/chat/completions"
 
     # OpenAPI provider mappings
     elif provider.startswith("openapi-"):
-        # For OpenAPI providers, the model is the operation ID
-        # Format: /ai/openapi/{provider-id}/{path}
+        # For OpenAPI providers, we need to find the chat completions endpoint
+        # The model is passed as a parameter, not part of the URL
         provider_id = provider.replace("openapi-", "")
 
-        # Need to find the actual path for this operation
-        # Query APISIX to find the route
+        # Query APISIX to find the chat completions route
         try:
-            apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
+            # When running in Docker, use container name; when local, use localhost
+            apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://apisix:9180")
             apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
 
+            logger.info(f"Querying APISIX admin API at {apisix_admin_url} for OpenAPI routes")
             response = requests.get(
                 f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=5
             )
@@ -123,18 +118,55 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> str:
             if response.status_code == 200:
                 routes_data = response.json()
                 if "list" in routes_data:
+                    # Log total routes found
+                    total_routes = len(routes_data["list"])
+                    openapi_routes = [
+                        r for r in routes_data["list"] if r.get("value", {}).get("id", "").startswith("openapi-")
+                    ]
+                    logger.info(f"Found {total_routes} total routes, {len(openapi_routes)} OpenAPI routes")
+
                     for route_item in routes_data["list"]:
                         route = route_item.get("value", {})
                         route_id = route.get("id", "")
+                        uri = route.get("uri", "")
 
-                        # Match route ID pattern
-                        safe_operation_id = model.replace("_", "-").lower()
-                        expected_route_id = f"openapi-{provider_id}-{safe_operation_id}"
+                        # Log routes that match the provider
+                        if route_id.startswith(f"openapi-{provider_id}-"):
+                            logger.debug(f"Checking route: id={route_id}, uri={uri}")
 
-                        if route_id == expected_route_id:
-                            return route.get("uri", "")
+                        # Look for the chat completions endpoint for this provider
+                        # Pattern: /openapi/{provider-id}/api/v1/chat/completions
+                        if (
+                            route_id.startswith(f"openapi-{provider_id}-")
+                            and uri.endswith("/chat/completions")
+                            and f"/openapi/{provider_id}/" in uri
+                        ):
+                            logger.info(f"Found OpenAPI chat endpoint for {provider}: {uri}")
+                            return uri
+
+                    # If no chat/completions endpoint found, try looking for "converse" operation
+                    for route_item in routes_data["list"]:
+                        route = route_item.get("value", {})
+                        route_id = route.get("id", "")
+                        uri = route.get("uri", "")
+
+                        if (
+                            route_id.startswith(f"openapi-{provider_id}-")
+                            and "converse" in route_id.lower()
+                            and f"/openapi/{provider_id}/" in uri
+                        ):
+                            logger.info(f"Found OpenAPI converse endpoint for {provider}: {uri}")
+                            return uri
+
+            else:
+                logger.error(f"Failed to query APISIX admin API: HTTP {response.status_code}")
+                logger.error(f"Response: {response.text}")
+
+            logger.warning(f"No chat completions endpoint found for OpenAPI provider {provider}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error querying APISIX admin API: {e}")
         except Exception as e:
-            logger.error(f"Error finding OpenAPI endpoint for {provider}/{model}: {e}")
+            logger.error(f"Error finding OpenAPI endpoint for {provider}/{model}: {e}", exc_info=True)
 
         return None
 
@@ -156,7 +188,7 @@ GENERATOR_TYPE_DEFINITIONS = {
                 "description": "AI Provider",
                 "required": True,
                 "default": "openai",
-                "options": ["openai", "anthropic", "ollama", "webui"],
+                "options": ["openai", "anthropic", "ollama", "webui", "openapi-gsai"],
                 "category": "configuration",
             },
             {
@@ -378,11 +410,11 @@ def map_uri_to_model(provider: str, uri_key: str) -> str:
     # Anthropic URI mappings
     elif provider == "anthropic":
         uri_to_model = {
-            "opus": "claude-3-opus-20240229",
-            "sonnet": "claude-3-sonnet-20240229",
-            "haiku": "claude-3-haiku-20240307",
-            "sonnet35": "claude-3-5-sonnet-20241022",
-            "haiku35": "claude-3-5-haiku-20241022",
+            "claude3-opus": "claude-3-opus-20240229",
+            "claude3-sonnet": "claude-3-sonnet-20240229",
+            "claude3-haiku": "claude-3-haiku-20240307",
+            "claude35-sonnet": "claude-3-5-sonnet-20241022",
+            "claude35-haiku": "claude-3-5-haiku-20241022",
             "sonnet37": "claude-3-7-sonnet-latest",
             "sonnet4": "claude-sonnet-4-20250514",
             "opus4": "claude-opus-4-20250514",
@@ -404,16 +436,177 @@ def get_fallback_models(provider: str) -> List[str]:
     """
     fallback_mappings = {
         "openai": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-4o", "gpt-4o-mini"],
-        "anthropic": ["claude-3-sonnet-20240229", "claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"],
+        "anthropic": [
+            "claude-3-sonnet-20240229",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-haiku-20240307",
+        ],
         "ollama": ["llama2", "codellama", "mistral", "llama3"],
         "webui": ["llama2", "codellama"],
     }
 
     # For OpenAPI providers, return empty list as models are discovered dynamically
     if provider.startswith("openapi-"):
+        # Exception: GSAi has hardcoded models since models endpoint has issues
+        if provider == "openapi-gsai":
+            return [
+                "claude_3_5_sonnet",
+                "claude_3_7_sonnet",
+                "claude_3_haiku",
+                "llama3211b",
+                "cohere_english_v3",
+                "gemini-2.0-flash",
+                "gemini-2.0-flash-lite",
+                "gemini-2.5-pro-preview-05-06",
+            ]
         return []
 
     return fallback_mappings.get(provider, [])
+
+
+# === Phase 1: Dynamic Model Discovery ===
+
+
+async def discover_openapi_models_from_provider(provider_id: str, base_url: str, auth_token: str) -> List[str]:
+    """
+    Discover available models directly from OpenAPI provider's /api/v1/models endpoint
+    Phase 1 Enhancement: Query actual provider APIs for real-time model discovery
+    """
+    try:
+        # Construct models endpoint URL
+        models_url = f"{base_url.rstrip('/')}/api/v1/models"
+        headers = {"Authorization": f"Bearer {auth_token}", "Accept": "application/json"}
+
+        logger.info(f"Discovering models from {provider_id} at {models_url}")
+
+        # Configure SSL verification - disable for corporate environments with proxy/self-signed certs
+        # TODO: Make this configurable via environment variable for security
+        ssl_verify = False  # Disabled for corporate proxy compatibility
+        if not ssl_verify:
+            logger.warning(f"SSL verification disabled for {provider_id} - ensure network security")
+
+        async with httpx.AsyncClient(timeout=10.0, verify=ssl_verify) as client:
+            response = await client.get(models_url, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+
+            # Parse OpenAI-compatible models response
+            if "data" in data and isinstance(data["data"], list):
+                models = [model["id"] for model in data["data"] if "id" in model]
+                logger.info(f"Successfully discovered {len(models)} models from {provider_id}: {models}")
+                return models
+            else:
+                logger.warning(f"Unexpected response format from {provider_id}: missing 'data' array")
+                return []
+
+        elif response.status_code == 403:
+            logger.error(f"Authentication failed for {provider_id}: Invalid or expired token")
+            return []
+        elif response.status_code == 404:
+            logger.warning(f"Models endpoint not found for {provider_id}: {models_url}")
+            return []
+        elif response.status_code == 429:
+            logger.warning(f"Rate limited by {provider_id}, falling back to cached models")
+            return []
+        else:
+            logger.warning(f"Failed to discover models from {provider_id}: HTTP {response.status_code}")
+            return []
+
+    except httpx.TimeoutException:
+        logger.warning(f"Timeout while discovering models from {provider_id}")
+        return []
+    except httpx.RequestError as e:
+        logger.error(f"Network error discovering models from {provider_id}: {e}")
+        return []
+    except Exception as e:
+        logger.error(f"Unexpected error discovering models from {provider_id}: {e}")
+        return []
+
+
+def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
+    """
+    Get configuration for an OpenAPI provider from settings
+    Phase 1 Enhancement: Centralized provider configuration mapping
+    """
+    # Try numbered format first (OPENAPI_1_*, OPENAPI_2_*, etc.)
+    for i in range(1, 11):  # Support up to 10 providers
+        # Use getattr to access settings dynamically
+        id_value = getattr(settings, f"OPENAPI_{i}_ID", None)
+        if id_value == provider_id:
+            return {
+                "id": provider_id,
+                "name": getattr(settings, f"OPENAPI_{i}_NAME", None),
+                "base_url": getattr(settings, f"OPENAPI_{i}_BASE_URL", None),
+                "auth_token": getattr(settings, f"OPENAPI_{i}_AUTH_TOKEN", None),
+                "auth_type": getattr(settings, f"OPENAPI_{i}_AUTH_TYPE", "bearer"),
+            }
+
+    # Try direct format (OPENAPI_{PROVIDER_ID}_*, e.g., OPENAPI_GSAI_API_1_*)
+    provider_key = provider_id.upper().replace("-", "_")
+    base_url = getattr(settings, f"OPENAPI_{provider_key}_BASE_URL", None)
+    auth_token = getattr(settings, f"OPENAPI_{provider_key}_AUTH_TOKEN", None)
+
+    if base_url and auth_token:
+        return {
+            "id": provider_id,
+            "name": getattr(settings, f"OPENAPI_{provider_key}_NAME", f"OpenAPI {provider_id}"),
+            "base_url": base_url,
+            "auth_token": auth_token,
+            "auth_type": getattr(settings, f"OPENAPI_{provider_key}_AUTH_TYPE", "bearer"),
+        }
+
+    return {"id": provider_id, "name": None, "base_url": None, "auth_token": None, "auth_type": None}
+
+
+async def discover_apisix_models_enhanced(provider: str) -> List[str]:
+    """
+    Enhanced model discovery that queries actual OpenAPI providers
+    Phase 1 Enhancement: Dynamic model discovery with fallback to route parsing
+    """
+    if provider.startswith("openapi-"):
+        provider_id = provider.replace("openapi-", "")
+
+        # Special handling for GSAi - use hardcoded models since models endpoint has issues
+        if provider_id == "gsai":
+            logger.info("Using hardcoded models for GSAi (models endpoint not working)")
+            return [
+                "claude_3_5_sonnet",
+                "claude_3_7_sonnet",
+                "claude_3_haiku",
+                "llama3211b",
+                "cohere_english_v3",
+                "gemini-2.0-flash",
+                "gemini-2.0-flash-lite",
+                "gemini-2.5-pro-preview-05-06",
+            ]
+
+        # Get provider configuration
+        config = get_openapi_provider_config(provider_id)
+
+        logger.info(
+            f"Configuration for {provider_id}: base_url={'***' if config['base_url'] else None}, auth_token={'***' if config['auth_token'] else None}"
+        )
+
+        if config["base_url"] and config["auth_token"]:
+            logger.info(f"Attempting dynamic model discovery for {provider_id} at {config['base_url']}")
+
+            # Try to discover models from actual provider API
+            models = await discover_openapi_models_from_provider(provider_id, config["base_url"], config["auth_token"])
+
+            if models:
+                logger.info(f"✅ Dynamic discovery successful for {provider_id}: found {len(models)} models: {models}")
+                return models
+            else:
+                logger.warning(f"❌ Dynamic discovery failed for {provider_id}, falling back to route parsing")
+        else:
+            logger.warning(
+                f"❌ Missing configuration for {provider_id}: base_url={bool(config['base_url'])}, auth_token={bool(config['auth_token'])}"
+            )
+            logger.info(f"Config details: {config}")
+
+    # Fallback to existing route-based discovery
+    return discover_apisix_models(provider)
 
 
 @router.get("/types", response_model=GeneratorTypesResponse, summary="Get available generator types")
@@ -451,20 +644,44 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
             type_def = type_def.copy()
             type_def["parameters"] = [param.copy() for param in type_def["parameters"]]
 
-            # Find the provider parameter and add OpenAPI providers
+            # Find the provider parameter and add enabled providers
             for param in type_def["parameters"]:
                 if param["name"] == "provider":
-                    # Get base providers
-                    base_providers = ["openai", "anthropic", "ollama", "webui"]
+                    # Get enabled base providers by checking settings flags
+                    base_providers = []
 
-                    # Discover OpenAPI providers
-                    openapi_providers = get_openapi_providers()
+                    # Check each provider's ENABLED flag from settings
+                    if settings.OPENAI_ENABLED:
+                        base_providers.append("openai")
+                    if settings.ANTHROPIC_ENABLED:
+                        base_providers.append("anthropic")
+                    if settings.OLLAMA_ENABLED:
+                        base_providers.append("ollama")
+                    if settings.OPEN_WEBUI_ENABLED:
+                        base_providers.append("webui")
 
-                    # Combine all providers
+                    # Discover OpenAPI providers (only if OPENAPI_ENABLED=true)
+                    openapi_providers = []
+                    logger.info(f"OPENAPI_ENABLED setting: {settings.OPENAPI_ENABLED}")
+                    if settings.OPENAPI_ENABLED:
+                        try:
+                            openapi_providers = get_openapi_providers()
+                            logger.info(f"Successfully discovered OpenAPI providers: {openapi_providers}")
+                        except Exception as e:
+                            logger.error(f"Error discovering OpenAPI providers: {e}")
+                            openapi_providers = []
+                    else:
+                        logger.warning("OpenAPI providers disabled by OPENAPI_ENABLED setting")
+
+                    # Combine all enabled providers
                     all_providers = base_providers + openapi_providers
                     param["options"] = all_providers
 
-                    logger.info(f"Available providers: {all_providers}")
+                    logger.info(f"Final enabled providers list: {all_providers}")
+                    logger.info(f"Base providers: {base_providers}, OpenAPI providers: {openapi_providers}")
+                    logger.info(
+                        f"Settings - OPENAI: {settings.OPENAI_ENABLED}, ANTHROPIC: {settings.ANTHROPIC_ENABLED}, OLLAMA: {settings.OLLAMA_ENABLED}, OPEN_WEBUI: {settings.OPEN_WEBUI_ENABLED}, OPENAPI: {settings.OPENAPI_ENABLED}"
+                    )
                     break
 
         parameters = [GeneratorParameter(**param) for param in type_def["parameters"]]
@@ -490,6 +707,17 @@ async def get_generators(current_user=Depends(get_current_user)):
 
         generators = []
         for gen_data in generators_data:
+            # Parse last_test_time safely
+            last_test_time = None
+            if gen_data.get("test_results") and gen_data.get("test_results", {}).get("last_time"):
+                try:
+                    last_time_str = gen_data.get("test_results", {}).get("last_time")
+                    if isinstance(last_time_str, str):
+                        last_test_time = datetime.fromisoformat(last_time_str)
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Failed to parse last_test_time for generator {gen_data['id']}: {e}")
+                    last_test_time = None
+
             generators.append(
                 GeneratorInfo(
                     id=gen_data["id"],
@@ -502,11 +730,7 @@ async def get_generators(current_user=Depends(get_current_user)):
                     last_test_result=(
                         gen_data.get("test_results", {}).get("last_result") if gen_data.get("test_results") else None
                     ),
-                    last_test_time=(
-                        datetime.fromisoformat(gen_data.get("test_results", {}).get("last_time"))
-                        if gen_data.get("test_results") and gen_data.get("test_results", {}).get("last_time")
-                        else None
-                    ),
+                    last_test_time=last_test_time,
                 )
             )
 
@@ -604,9 +828,9 @@ async def get_apisix_models(
     try:
         logger.info(f"User {current_user.username} requested models for provider: {provider}")
 
-        # Dynamically discover models from APISIX routes
+        # Phase 1 Enhancement: Use enhanced discovery with OpenAPI provider support
         logger.info(f"Discovering models for provider: {provider}")
-        models = discover_apisix_models(provider)
+        models = await discover_apisix_models_enhanced(provider)
 
         if not models:
             logger.warning(f"No models discovered for provider: {provider}")
@@ -714,6 +938,10 @@ def get_openapi_providers() -> List[str]:
                         provider_id = parts[3]
                         providers.add(f"openapi-{provider_id}")
 
+                # Special case: Match GSAi pattern: /ai/gsai-api-1/...
+                elif uri.startswith("/ai/gsai-api-1/"):
+                    providers.add("openapi-gsai")
+
         return sorted(list(providers))
 
     except Exception as e:
@@ -730,3 +958,146 @@ async def get_openapi_providers_endpoint(current_user=Depends(get_current_user))
     except Exception as e:
         logger.error(f"Error getting OpenAPI providers: {e}")
         raise HTTPException(status_code=500, detail=safe_error_response("Failed to get OpenAPI providers"))
+
+
+@router.get(
+    "/apisix/openapi-models", response_model=Dict[str, List[str]], summary="Get models for all OpenAPI providers"
+)
+async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict[str, List[str]]:
+    """
+    Get available models for all configured OpenAPI providers
+    Phase 1 Enhancement: Provides comprehensive model listing for debugging and validation
+    """
+    try:
+        logger.info(f"User {current_user.username} requested models for all OpenAPI providers")
+
+        providers = get_openapi_providers()
+        all_models = {}
+
+        if not providers:
+            logger.info("No OpenAPI providers found")
+            return {}
+
+        # Discover models for each provider
+        for provider in providers:
+            # provider_id = provider.replace("openapi-", "")  # F841: unused variable
+
+            try:
+                models = await discover_apisix_models_enhanced(provider)
+                all_models[provider] = models
+                logger.info(f"Provider {provider}: found {len(models)} models")
+            except Exception as e:
+                logger.error(f"Error discovering models for {provider}: {e}")
+                all_models[provider] = []
+
+        total_models = sum(len(models) for models in all_models.values())
+        logger.info(f"Total models discovered across {len(providers)} providers: {total_models}")
+
+        return all_models
+
+    except Exception as e:
+        logger.error(f"Error getting OpenAPI models: {e}")
+        raise HTTPException(status_code=500, detail=safe_error_response("Failed to get OpenAPI models"))
+
+
+@router.get("/apisix/openapi-debug", summary="Debug OpenAPI provider configurations")
+async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dict[str, Any]:
+    """
+    Debug endpoint for OpenAPI provider configurations
+    Phase 1 Enhancement: Provides detailed debugging information
+    """
+    try:
+        logger.info(f"User {current_user.username} requested OpenAPI debug information")
+
+        debug_info = {
+            "openapi_enabled": settings.OPENAPI_ENABLED,
+            "discovered_providers": [],
+            "provider_configs": {},
+            "environment_check": {},
+            "routes_check": {},
+        }
+
+        # Get discovered providers
+        providers = get_openapi_providers()
+        debug_info["discovered_providers"] = providers
+
+        # Check configuration for each provider
+        for provider in providers:
+            provider_id = provider.replace("openapi-", "")
+            config = get_openapi_provider_config(provider_id)
+
+            # Mask sensitive information
+            safe_config = config.copy()
+            if safe_config.get("auth_token"):
+                safe_config["auth_token"] = f"***{safe_config['auth_token'][-4:]}"
+
+            debug_info["provider_configs"][provider] = safe_config
+
+        # Also check settings directly for debugging
+        debug_info["settings_check"] = {}
+        for i in range(1, 11):
+            enabled = getattr(settings, f"OPENAPI_{i}_ENABLED", None)
+            if enabled:
+                debug_info["settings_check"][f"provider_{i}"] = {
+                    "enabled": enabled,
+                    "id": getattr(settings, f"OPENAPI_{i}_ID", None),
+                    "name": getattr(settings, f"OPENAPI_{i}_NAME", None),
+                    "base_url": getattr(settings, f"OPENAPI_{i}_BASE_URL", None),
+                    "auth_token": "***" if getattr(settings, f"OPENAPI_{i}_AUTH_TOKEN", None) else None,
+                    "auth_type": getattr(settings, f"OPENAPI_{i}_AUTH_TYPE", None),
+                }
+
+        # Check environment variables
+        env_vars = [
+            "OPENAPI_ENABLED",
+            "OPENAPI_1_ENABLED",
+            "OPENAPI_1_ID",
+            "OPENAPI_1_NAME",
+            "OPENAPI_1_BASE_URL",
+            "OPENAPI_1_AUTH_TYPE",
+        ]
+
+        for var in env_vars:
+            value = os.getenv(var)
+            if "TOKEN" in var and value:
+                debug_info["environment_check"][var] = f"***{value[-4:]}"
+            else:
+                debug_info["environment_check"][var] = bool(value)
+
+        # Check APISIX routes
+        try:
+            apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
+            apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
+
+            response = requests.get(
+                f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=5
+            )
+
+            if response.status_code == 200:
+                routes_data = response.json()
+                openapi_routes = []
+
+                if "list" in routes_data:
+                    for route_item in routes_data["list"]:
+                        route = route_item.get("value", {})
+                        uri = route.get("uri", "")
+                        if uri.startswith("/ai/openapi/"):
+                            openapi_routes.append(
+                                {"id": route.get("id", ""), "uri": uri, "desc": route.get("desc", "")}
+                            )
+
+                debug_info["routes_check"] = {
+                    "status": "success",
+                    "total_openapi_routes": len(openapi_routes),
+                    "routes": openapi_routes[:10],  # Limit to first 10 for readability
+                }
+            else:
+                debug_info["routes_check"] = {"status": "error", "http_code": response.status_code}
+        except Exception as e:
+            debug_info["routes_check"] = {"status": "error", "error": str(e)}
+
+        return debug_info
+
+    except Exception as e:
+        logger.error(f"Error in OpenAPI debug endpoint: {e}")
+        raise HTTPException(status_code=500, detail=safe_error_response("Failed to get debug information"))

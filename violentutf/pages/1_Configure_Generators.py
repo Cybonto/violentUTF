@@ -42,6 +42,8 @@ API_ENDPOINTS = {
     "generator_types": f"{API_BASE_URL}/api/v1/generators/types",
     "generator_params": f"{API_BASE_URL}/api/v1/generators/types/{{generator_type}}/params",
     "apisix_models": f"{API_BASE_URL}/api/v1/generators/apisix/models",
+    "openapi_providers": f"{API_BASE_URL}/api/v1/generators/apisix/openapi-providers",
+    "openapi_models": f"{API_BASE_URL}/api/v1/generators/apisix/openapi-models",
     # Orchestrator endpoints for generator testing
     "orchestrators": f"{API_BASE_URL}/api/v1/orchestrators",
     "orchestrator_create": f"{API_BASE_URL}/api/v1/orchestrators",
@@ -472,6 +474,18 @@ def get_apisix_models_from_api(provider: str):
     return []
 
 
+def get_provider_display_name(provider: str):
+    """Get user-friendly display name for provider"""
+    provider_names = {
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "ollama": "Ollama (Local)",
+        "webui": "Open WebUI",
+        "openapi-gsai": "GSAi (Government Services AI)",
+    }
+    return provider_names.get(provider, provider)
+
+
 def save_session_to_api(session_update: Dict[str, Any]):
     """Save session state to API"""
     data = api_request("PUT", API_ENDPOINTS["sessions_update"], json=session_update)
@@ -762,8 +776,46 @@ def add_new_generator_form():
 def handle_ai_gateway_provider_selection():
     """Handle AI Gateway provider selection outside the form to enable dynamic model loading"""
     try:
+        # Add refresh button for debugging
+        col_refresh, col_debug = st.columns([3, 1])
+        with col_debug:
+            if st.button("🔄 Refresh Providers", help="Refresh provider list from API"):
+                st.session_state.pop("ai_gateway_param_cache", None)
+                st.rerun()
+
         param_defs = get_generator_params_from_api("AI Gateway")
         provider_param = next((p for p in param_defs if p["name"] == "provider"), None)
+
+        # Debug information
+        with st.expander("🔍 Debug Info", expanded=False):
+            st.write("**API Response Debug:**")
+            st.write(f"Total parameters found: {len(param_defs)}")
+            if provider_param:
+                st.write(f"Provider options: {provider_param['options']}")
+                st.write(f"Total providers: {len(provider_param['options'])}")
+                # Highlight OpenAPI providers
+                openapi_providers = [p for p in provider_param["options"] if p.startswith("openapi-")]
+                if openapi_providers:
+                    st.success(f"✅ OpenAPI providers found: {openapi_providers}")
+                else:
+                    st.warning("⚠️ No OpenAPI providers found in options")
+            else:
+                st.error("❌ No provider parameter found")
+
+            # Direct API test for OpenAPI providers
+            st.write("**Direct OpenAPI Providers Test:**")
+            try:
+                openapi_data = api_request("GET", API_ENDPOINTS["openapi_providers"])
+                if openapi_data:
+                    st.write(f"Direct API call result: {openapi_data}")
+                    if isinstance(openapi_data, list) and len(openapi_data) > 0:
+                        st.success(f"✅ Direct API call found {len(openapi_data)} OpenAPI providers")
+                    else:
+                        st.warning("⚠️ Direct API call returned empty list")
+                else:
+                    st.error("❌ Direct API call failed")
+            except Exception as e:
+                st.error(f"❌ Direct API call error: {e}")
 
         if provider_param:
             st.markdown("**🔧 AI Gateway Configuration**")
@@ -795,11 +847,15 @@ def handle_ai_gateway_provider_selection():
                 # Show model preview outside form
                 try:
                     models = get_apisix_models_from_api(selected_provider)
+                    provider_display = get_provider_display_name(selected_provider)
                     if models:
-                        st.info(f"📡 **Live Discovery**: Found {len(models)} models for {selected_provider} provider")
+                        if selected_provider == "openapi-gsai":
+                            st.info(f"🏛️ **GSAi Models**: Found {len(models)} models for {provider_display}")
+                        else:
+                            st.info(f"📡 **Live Discovery**: Found {len(models)} models for {provider_display}")
                         st.session_state["ai_gateway_available_models"] = models
                     else:
-                        st.warning(f"⚠️ No models found for {selected_provider} provider")
+                        st.warning(f"⚠️ No models found for {provider_display}")
                         st.session_state["ai_gateway_available_models"] = []
                 except Exception as e:
                     st.error(f"Error loading models: {e}")
@@ -872,17 +928,22 @@ def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
                 current_model = st.session_state.get(model_key)
                 if current_model and current_model in available_models:
                     default_index = available_models.index(current_model)
+                provider_display = get_provider_display_name(selected_provider)
+                help_text = f"Available models for {provider_display} (Required)"
+                if selected_provider == "openapi-gsai":
+                    help_text += " - Uses static authentication like OpenAI/Anthropic"
 
-                selected_model = st.selectbox(
+                st.selectbox(
                     f"{model_param['description']}*",
                     options=available_models,
                     index=default_index,
                     key=model_key,
-                    help=f"Available models for {selected_provider} provider (Required)",
+                    help=help_text,
                 )
             else:
-                st.warning(f"⚠️ No models available for {selected_provider} provider")
-                st.session_state[f"AI Gateway_model"] = None
+                provider_display = get_provider_display_name(selected_provider)
+                st.warning(f"⚠️ No models available for {provider_display}")
+                st.session_state["AI Gateway_model"] = None
 
         # Render other configuration parameters based on provider selection
         selected_provider = st.session_state.get("AI Gateway_provider", "openai")
@@ -1248,9 +1309,6 @@ def display_generator_test_chat(generator_name: str = None):
         st.error(f"Generator '{generator_name}' not found")
         return
 
-    generator_type = generator.get("type", "Unknown")
-    parameters = generator.get("parameters", {})
-
     chat_history = st.session_state[chat_key]
 
     # Chat history display
@@ -1331,6 +1389,26 @@ def extract_clean_response(ai_msg: str) -> str:
     if ai_msg.startswith("❌"):
         return ai_msg
 
+    # For API errors from GSAi, show the full error message
+    if ai_msg.startswith("API Error:"):
+        return ai_msg
+
+    # For direct AI responses (like from GSAi), the message is usually the complete response
+    # Check if this looks like a complete AI response (not technical details)
+    if not any(
+        indicator in ai_msg.lower()
+        for indicator in [
+            "🤖 real ai response",
+            "🔧 generator configuration",
+            "apisix endpoint:",
+            "📥 test prompt:",
+            "✅ test status:",
+            "⏱️ successfully called",
+        ]
+    ):
+        # This looks like a direct AI response, return it as-is
+        return ai_msg.strip()
+
     # Look for common patterns in the response that indicate the actual AI response
     lines = ai_msg.split("\n")
     clean_lines = []
@@ -1378,14 +1456,10 @@ def extract_clean_response(ai_msg: str) -> str:
     if clean_lines:
         return "\n".join(clean_lines)
 
-    # Fallback: try to extract quoted content
+    # Last resort: return the original message but try to clean obvious technical parts
+
     import re
 
-    quote_match = re.search(r'"([^"]*)"', ai_msg)
-    if quote_match:
-        return quote_match.group(1)
-
-    # Last resort: return the original message but try to clean obvious technical parts
     cleaned = ai_msg
     for pattern in [
         r"🤖 REAL AI Response from [^:]+:",

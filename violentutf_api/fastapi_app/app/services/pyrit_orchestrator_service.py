@@ -39,10 +39,10 @@ class PyRITOrchestratorService:
             # No memory instance exists - create a separate instance for the API service
             # Use a separate database path to avoid conflicts with Streamlit
             logger.info("No existing PyRIT memory instance found - creating separate API memory instance")
-            self.memory = None  # Will create per-orchestrator to avoid concurrency issues
+            self.memory = None  # Will create per - orchestrator to avoid concurrency issues
 
     def _get_memory(self):
-        """Get PyRIT memory instance (may be None if using per-orchestrator memory)"""
+        """Get PyRIT memory instance (may be None if using per - orchestrator memory)"""
         return self.memory
 
     def validate_memory_access(self) -> bool:
@@ -57,7 +57,7 @@ class PyRITOrchestratorService:
                 return True
             else:
                 # No global memory - this is fine, orchestrators can use their own memory
-                logger.info("PyRIT memory validation: No global memory, using per-orchestrator memory (this is fine)")
+                logger.info("PyRIT memory validation: No global memory, using per - orchestrator memory (this is fine)")
                 return True
         except Exception as e:
             logger.error(f"PyRIT memory validation failed: {e}")
@@ -101,7 +101,7 @@ class PyRITOrchestratorService:
             type_info = {
                 "name": name,
                 "module": orchestrator_class.__module__,
-                "category": "single_turn",  # PromptSendingOrchestrator is single-turn
+                "category": "single_turn",  # PromptSendingOrchestrator is single - turn
                 "description": orchestrator_class.__doc__ or f"{name} orchestrator",
                 "use_cases": self._get_use_cases(name),
                 "parameters": parameters,
@@ -116,7 +116,7 @@ class PyRITOrchestratorService:
             "objective_target": "The target for sending prompts (configured generator)",
             "request_converter_configurations": "List of prompt converter configurations for requests",
             "response_converter_configurations": "List of prompt converter configurations for responses",
-            "objective_scorer": "True/false scorer for objective evaluation",
+            "objective_scorer": "True / false scorer for objective evaluation",
             "auxiliary_scorers": "Additional scorers for response analysis",
             "batch_size": "Maximum batch size for sending prompts",
             "verbose": "Enable verbose logging",
@@ -150,7 +150,7 @@ class PyRITOrchestratorService:
 
             from pyrit.memory import CentralMemory, DuckDBMemory
 
-            # Use API-specific database path to avoid conflicts with Streamlit
+            # Use API - specific database path to avoid conflicts with Streamlit
             # Check if running in Docker or local environment
             if os.path.exists("/app/app_data/violentutf"):
                 api_memory_dir = os.path.join("/app/app_data/violentutf", "api_memory")
@@ -162,12 +162,12 @@ class PyRITOrchestratorService:
 
             os.makedirs(api_memory_dir, exist_ok=True)
 
-            # Create API-specific memory instance with proper file path
+            # Create API - specific memory instance with proper file path
             api_memory_file = os.path.join(api_memory_dir, f"orchestrator_memory_{orchestrator_id[:8]}.db")
             api_memory = DuckDBMemory(db_path=api_memory_file)
             CentralMemory.set_memory_instance(api_memory)
             self.memory = api_memory  # Update service memory reference
-            logger.info(f"Created API-specific memory instance at: {api_memory_file}")
+            logger.info(f"Created API - specific memory instance at: {api_memory_file}")
 
         # Validate memory access (now should always return True)
         if not self.validate_memory_access():
@@ -190,7 +190,7 @@ class PyRITOrchestratorService:
                     )
                     for i, scorer in enumerate(param_value if isinstance(param_value, list) else []):
                         logger.info(
-                            f"  Scorer {i+1}: {type(scorer).__name__} - {getattr(scorer, 'scorer_name', 'Unknown')}"
+                            f"  Scorer {i + 1}: {type(scorer).__name__} - {getattr(scorer, 'scorer_name', 'Unknown')}"
                         )
                 elif hasattr(param_value, "__class__"):
                     logger.info(f"Parameter {param_name}: {type(param_value).__name__}")
@@ -209,7 +209,7 @@ class PyRITOrchestratorService:
                             logger.info(f"Orchestrator has {attr_name}: {len(attr_value)} scorer(s)")
                             for i, scorer in enumerate(attr_value):
                                 logger.info(
-                                    f"  Scorer {i+1}: {type(scorer).__name__} - {getattr(scorer, 'scorer_name', 'Unknown')}"
+                                    f"  Scorer {i + 1}: {type(scorer).__name__} - {getattr(scorer, 'scorer_name', 'Unknown')}"
                                 )
                         else:
                             logger.info(f"Orchestrator has {attr_name}: {type(attr_value).__name__}")
@@ -264,7 +264,7 @@ class PyRITOrchestratorService:
                 # Ensure memory is available
                 memory = self._get_memory()
                 if memory is None:
-                    # Create API-specific memory if needed
+                    # Create API - specific memory if needed
                     import os
 
                     from pyrit.memory import CentralMemory, DuckDBMemory
@@ -276,7 +276,7 @@ class PyRITOrchestratorService:
                     api_memory = DuckDBMemory(db_path=api_memory_file)
                     CentralMemory.set_memory_instance(api_memory)
                     self.memory = api_memory
-                    logger.info(f"Created API-specific memory for reloaded orchestrator at: {api_memory_file}")
+                    logger.info(f"Created API - specific memory for reloaded orchestrator at: {api_memory_file}")
 
                 # Resolve parameters and create instance
                 resolved_params = await self._resolve_orchestrator_parameters(
@@ -456,7 +456,7 @@ class PyRITOrchestratorService:
             )
 
         elif execution_type == "dataset":
-            # Dataset-based execution
+            # Dataset - based execution
             dataset_id = input_data["dataset_id"]
             sample_size = input_data.get("sample_size")
             memory_labels = input_data.get("memory_labels", {})
@@ -492,12 +492,12 @@ class PyRITOrchestratorService:
                         attr_value = getattr(orchestrator, attr_name)
                         if attr_value:
                             logger.info(
-                                f"🎯 Pre-execution: orchestrator.{attr_name} = {len(attr_value) if isinstance(attr_value, list) else 1} scorer(s)"
+                                f"🎯 Pre - execution: orchestrator.{attr_name} = {len(attr_value) if isinstance(attr_value, list) else 1} scorer(s)"
                             )
                             if isinstance(attr_value, list):
                                 for i, scorer in enumerate(attr_value):
                                     logger.info(
-                                        f"🎯   Scorer {i+1}: {type(scorer).__name__} - {getattr(scorer, 'scorer_name', 'Unknown')}"
+                                        f"🎯   Scorer {i + 1}: {type(scorer).__name__} - {getattr(scorer, 'scorer_name', 'Unknown')}"
                                     )
 
                 results = await orchestrator.send_prompts_async(
@@ -514,7 +514,7 @@ class PyRITOrchestratorService:
                             for i, scorer in enumerate(attr_value):
                                 if isinstance(scorer, ConfiguredScorerWrapper):
                                     logger.info(
-                                        f"🎯 Post-execution: {scorer.scorer_name} collected {len(scorer.scores_collected)} scores"
+                                        f"🎯 Post - execution: {scorer.scorer_name} collected {len(scorer.scores_collected)} scores"
                                     )
 
                 # Store original prompts for response formatting since PyRIT may not preserve them
@@ -524,7 +524,7 @@ class PyRITOrchestratorService:
                     setattr(orchestrator, "_last_sent_prompts", dataset_prompts)
             except Exception as e:
                 logger.error(f"Failed to send prompts to orchestrator: {e}", exc_info=True)
-                # Re-raise with more context
+                # Re - raise with more context
                 raise RuntimeError(f"Orchestrator execution failed during prompt sending: {str(e)}") from e
 
         else:
@@ -552,10 +552,10 @@ class PyRITOrchestratorService:
         # Format results for API response
         logger.info(f"Orchestrator execution completed: {len(results)} results returned")
         for i, result in enumerate(results):
-            logger.info(f"Result {i+1}: {len(result.request_pieces)} pieces")
+            logger.info(f"Result {i + 1}: {len(result.request_pieces)} pieces")
             for j, piece in enumerate(result.request_pieces):
                 logger.info(
-                    f"  Piece {j+1}: role={piece.role}, has_value={bool(piece.converted_value)}, length={len(piece.converted_value) if piece.converted_value else 0}"
+                    f"  Piece {j + 1}: role={piece.role}, has_value={bool(piece.converted_value)}, length={len(piece.converted_value) if piece.converted_value else 0}"
                 )
 
         formatted_results = self._format_execution_results(orchestrator, results, execution_type, input_data)
@@ -576,7 +576,7 @@ class PyRITOrchestratorService:
             if dataset_id.startswith("memory_dataset_") or dataset_id.startswith("memory_"):
                 return await self._load_memory_dataset_prompts(dataset_id, sample_size)
             else:
-                # Import dataset service functions for non-memory datasets
+                # Import dataset service functions for non - memory datasets
                 from app.services.dataset_integration_service import get_dataset_prompts
 
                 dataset_prompts = await get_dataset_prompts(dataset_id, sample_size, user_context)
@@ -853,7 +853,7 @@ class PyRITOrchestratorService:
                 safety_score = {
                     "score_value": "0.5",
                     "score_category": "safety_test",
-                    "score_rationale": f"Safety score {i+1}/{len(results)}: This is a fallback score created because the main scoring collection failed. If you see this, the orchestrator executed but score collection needs debugging.",
+                    "score_rationale": f"Safety score {i + 1}/{len(results)}: This is a fallback score created because the main scoring collection failed. If you see this, the orchestrator executed but score collection needs debugging.",
                     "score_type": "float_scale",
                     "score_value_description": "Fallback safety score",
                     "scorer_name": "Safety_Fallback_Scorer",
@@ -1003,8 +1003,8 @@ class ConfiguredGeneratorTarget(PromptTarget):
                 "error": "No user prompt found",
             }
         else:
-            # Execute prompt through generator using the already-loaded configuration
-            # This avoids the need to re-lookup the generator and potential user context issues
+            # Execute prompt through generator using the already - loaded configuration
+            # This avoids the need to re - lookup the generator and potential user context issues
             try:
                 logger.info(
                     f"ConfiguredGeneratorTarget: Executing prompt for generator '{self.generator_name}' (type: {self.generator_type})"
@@ -1021,7 +1021,7 @@ class ConfiguredGeneratorTarget(PromptTarget):
                     f"Lower in list: {self.generator_type.lower() in ['apisix_ai_gateway', 'ai gateway'] if self.generator_type else False}"
                 )
 
-                # Use the resolved generator type (handle both naming conventions, case-insensitive)
+                # Use the resolved generator type (handle both naming conventions, case - insensitive)
                 if self.generator_type and self.generator_type.lower() in ["apisix_ai_gateway", "ai gateway"]:
                     logger.info(f"Executing APISIX generator for '{self.generator_name}'")
                     response_data = await _execute_apisix_generator(

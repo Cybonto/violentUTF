@@ -103,7 +103,7 @@ class TestScorerBatchExecution(unittest.TestCase):
         # Verify batch can complete within timeout
         self.assertLess(max_batch_time, timeout, f"Batch of {batch_size} should complete within {timeout}s timeout")
 
-        print(f"\nPerformance expectations:")
+        print("\nPerformance expectations:")
         print(f"  Batch size: {batch_size} prompts")
         print(f"  Timeout: {timeout} seconds")
         print(f"  Expected batch processing time: {min_batch_time}-{max_batch_time} seconds")

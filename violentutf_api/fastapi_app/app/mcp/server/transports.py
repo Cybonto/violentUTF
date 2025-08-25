@@ -20,8 +20,7 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
     """Create SSE transport for MCP server"""
     app = FastAPI()
 
-    # Create transport with endpoint path
-    transport = SseServerTransport("/mcp/sse")
+    # Note: SSE transport implementation handled by FastAPI endpoints below
 
     @app.post("/")
     async def handle_sse_request(request: Request, current_user=Depends(get_current_user)):
