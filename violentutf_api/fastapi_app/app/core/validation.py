@@ -336,6 +336,17 @@ def validate_url(url: str) -> str:
         # Not an IP address, hostname validation above should catch issues
         pass
 
+    # Additional check for private IP ranges
+    import ipaddress
+
+    try:
+        ip = ipaddress.ip_address(host)
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
+            raise ValueError(f"Access to private/internal IP addresses not allowed: {host}")
+    except ipaddress.AddressValueError:
+        # Not an IP address, hostname validation above should catch issues
+        pass
+
     if len(url) > 2048:
         raise ValueError("URL too long")
 

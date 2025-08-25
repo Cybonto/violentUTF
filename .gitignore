@@ -55,6 +55,8 @@ pip-delete-this-directory.txt
 .vscode/
 *.swp
 *.swo
-zscaler.crt
 /.implement_checkpoints
 /agent_orchestrator
+
+# APISIX auto-generated configuration
+apisix/conf/nginx.conf

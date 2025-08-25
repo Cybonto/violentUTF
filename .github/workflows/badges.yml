@@ -37,11 +37,13 @@ jobs:
       - name: Generate test coverage badge
         run: |
           # This would normally parse actual coverage data
-          echo '{"schemaVersion":1,"label":"coverage","message":"80%","color":"green"}' > .github/badges/coverage.json
+          echo '{"schemaVersion":1,"label":"coverage","message":"80%","color":"green"}' \
+            > .github/badges/coverage.json
 
       - name: Generate security badge
         run: |
-          echo '{"schemaVersion":1,"label":"security","message":"passing","color":"green"}' > .github/badges/security.json
+          echo '{"schemaVersion":1,"label":"security","message":"passing","color":"green"}' \
+            > .github/badges/security.json
 
       - name: Update README badges
         run: |

@@ -9,6 +9,15 @@ import streamlit as st
 from dotenv import load_dotenv
 from utils.logging import get_logger, setup_logging
 
+import logging  # Import base logging for potential direct use if needed
+import os
+
+import streamlit as st
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+from utils.logging import get_logger, setup_logging
+
 app_version = "0.1"
 app_title = "ViolentUTF - Home"
 app_description = "Welcome Red-teamers to Vi-Tuff! Please use the tools wisely."
