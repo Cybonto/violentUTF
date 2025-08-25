@@ -160,7 +160,7 @@ narwhals==1.38.2
 neo4j==5.28.1
 networkx==3.4.2
 nibabel==5.3.2
-ninja==1.11.1.4
+ninja==1.13.0
 nipype==1.10.0
 nltk==3.9.1
 numdifftools==0.9.41
