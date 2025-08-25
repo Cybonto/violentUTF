@@ -1,0 +1,30 @@
+{
+  "status": "not_fixed", 
+  "tool_name": "pytest",
+  "exit_code": 1,
+  "test_file_name": "test_phase2_integration.py", 
+  "failure_type": "ATTRIBUTE_ERROR",
+  "failure_subtype": "Read-only Property",
+  "file_path": "violentutf_api/fastapi_app/app/mcp/tests/test_phase2_integration.py",
+  "file_path_log": [],
+  "issue": "FastAPI routes property is read-only, preventing mock route assignment in tests",
+  "issue_log": [],
+  "line_range": "53",
+  "severity": "MEDIUM", 
+  "message": "AttributeError: property 'routes' of 'FastAPI' object has no setter",
+  "offending_code_snippet": "app.routes = api_routes",
+  "structured_details": {
+    "property": "routes",
+    "object_type": "FastAPI",
+    "error_type": "no_setter", 
+    "affected_tests": 6,
+    "test_setup": "broken",
+    "fastapi_version_issue": true
+  },
+  "solution": [
+    "Use app.router.routes.extend() instead of direct assignment",
+    "Create FastAPI app with routes in constructor",
+    "Use dependency injection for route mocking",
+    "Update test fixtures to work with FastAPI v0.116+"
+  ]
+}

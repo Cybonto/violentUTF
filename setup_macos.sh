@@ -775,20 +775,53 @@ load_ai_tokens() {
 check_ai_proxy_plugin() {
     echo "Checking if ai-proxy plugin is available in APISIX..."
     
+    # Debug environment variables
+    echo "   APISIX_ADMIN_URL: ${APISIX_ADMIN_URL}"
+    echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:0:8}..." # Show first 8 chars only
+    
+    # Check if required variables are set
+    if [ -z "$APISIX_ADMIN_URL" ] || [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ Required environment variables not set"
+        echo "   APISIX_ADMIN_URL: ${APISIX_ADMIN_URL:-'NOT SET'}"
+        echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:+'SET'}${APISIX_ADMIN_KEY:-'NOT SET'}"
+        return 1
+    fi
+    
     local response
     local http_code
     
-    response=$(curl -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/plugins/ai-proxy" \
+    # Test APISIX connectivity first
+    echo "   Testing APISIX admin API connectivity..."
+    local connectivity_test
+    connectivity_test=$(curl -s -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
+      -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
+    local connectivity_code="${connectivity_test: -3}"
+    
+    if [ "$connectivity_code" != "200" ]; then
+        echo "❌ Cannot connect to APISIX admin API"
+        echo "   URL: ${APISIX_ADMIN_URL}/apisix/admin/routes"
+        echo "   HTTP Code: $connectivity_code"
+        echo "   Response: ${connectivity_test}"
+        return 1
+    else
+        echo "✅ APISIX admin API is accessible"
+    fi
+    
+    # Now check for ai-proxy plugin
+    echo "   Checking for ai-proxy plugin..."
+    response=$(curl -s -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/plugins/ai-proxy" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
     
     http_code="${response: -3}"
     
     if [ "$http_code" = "200" ]; then
         echo "✅ ai-proxy plugin is available"
+        echo "   Plugin supports providers: openai, deepseek, openai-compatible"
         return 0
     else
         echo "❌ ai-proxy plugin is not available"
         echo "   HTTP Code: $http_code"
+        echo "   Response: ${response%???}"  # Remove last 3 chars (http code)
         echo "   Make sure you're using APISIX version 3.10.0 or later with ai-proxy plugin enabled"
         return 1
     fi
@@ -2017,10 +2050,10 @@ if [ "$DEEPCLEANUP_MODE" = true ]; then
     perform_deep_cleanup
 fi
 
-# --- Global Keycloak API Variables ---
+# --- Global Keycloak API Variables (credentials will be generated later) ---
 KEYCLOAK_SERVER_URL="http://localhost:8080"
-ADMIN_USER="admin"
-ADMIN_PASS="admin" # From your docker-compose.yml
+ADMIN_USER="" # Will be set after credential generation
+ADMIN_PASS="" # Will be set after credential generation
 MASTER_REALM="master"
 ADMIN_CLIENT_ID="admin-cli"
 ACCESS_TOKEN="" # Will be populated by get_keycloak_admin_token
@@ -2034,6 +2067,14 @@ APISIX_DASHBOARD_URL="http://localhost:9001"
 generate_secure_string() {
     openssl rand -base64 32 | tr -d '\n' | tr -d '\r' | tr -d '/' | tr -d '+' | tr -d '=' | cut -c1-32
 }
+
+# --- Generate Keycloak admin credentials for compliance (after function is defined) ---
+KEYCLOAK_ADMIN_USERNAME="admin"
+KEYCLOAK_ADMIN_PASSWORD=$(generate_secure_string)
+
+# Update global variables now that credentials are generated
+ADMIN_USER="$KEYCLOAK_ADMIN_USERNAME"
+ADMIN_PASS="$KEYCLOAK_ADMIN_PASSWORD"
 
 # Function to backup and prepare config file from template
 prepare_config_from_template() {
@@ -2447,13 +2488,15 @@ echo "GENERATING ALL SECURE SECRETS"
 echo "=========================================="
 echo "Generating secure secrets for all services..."
 
-# Keycloak admin credentials (hardcoded in docker-compose)
-SENSITIVE_VALUES+=("Keycloak Admin Username: admin")
-SENSITIVE_VALUES+=("Keycloak Admin Password: admin")
+# Note: Keycloak admin credentials are now generated for compliance (see below)
 
 # Keycloak PostgreSQL password (for new setups)
 KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
 SENSITIVE_VALUES+=("Keycloak PostgreSQL Password: $KEYCLOAK_POSTGRES_PASSWORD")
+
+# Keycloak admin credentials (already generated above for compliance)
+SENSITIVE_VALUES+=("Keycloak Admin Username: $KEYCLOAK_ADMIN_USERNAME")
+SENSITIVE_VALUES+=("Keycloak Admin Password: $KEYCLOAK_ADMIN_PASSWORD")
 
 # ViolentUTF application secrets
 VIOLENTUTF_CLIENT_SECRET=$(generate_secure_string)
@@ -2508,6 +2551,8 @@ echo "Creating Keycloak configuration..."
 mkdir -p keycloak
 cat > keycloak/.env <<EOF
 POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD
+KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_ADMIN_USERNAME
+KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
 EOF
 echo "✅ Created keycloak/.env"
 
@@ -2778,8 +2823,12 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
     
     # Check if .env file exists - it might have been removed or this is a fresh setup
     if [ ! -f ".env" ]; then
-        echo "⚠️  Keycloak .env file missing. Creating it with PostgreSQL password..."
-        echo "POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD" > .env
+        echo "⚠️  Keycloak .env file missing. Creating it with all required credentials..."
+        cat > .env <<EOF
+POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD
+KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_ADMIN_USERNAME
+KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
+EOF
         echo "✅ Created keycloak/.env"
     fi
     
@@ -3416,18 +3465,24 @@ fi
 # C2. Setup AI Provider Routes
 # ---------------------------------------------------------------
 # Replace this section in the main script:
-if [ "$SKIP_AI_SETUP" != true ]; then
-    echo "Step C2: Setting up AI provider routes in APISIX..."
-    
-    # Check if ai-proxy plugin is available
-    if ! check_ai_proxy_plugin; then
-        echo "Cannot proceed with AI proxy setup - plugin not available"
-        SKIP_AI_SETUP=true
-    else
-        setup_ai_providers_enhanced
-    fi
+echo "Step C2: Setting up AI provider routes in APISIX..."
+
+# Check if ai-proxy plugin is available (after APISIX_ADMIN_KEY is set)
+if ! check_ai_proxy_plugin; then
+    echo "❌ Cannot proceed with AI proxy setup - plugin not available"
+    echo "   This may be due to:"
+    echo "   - APISIX version doesn't include ai-proxy plugin"
+    echo "   - Plugin not enabled in APISIX configuration" 
+    echo "   - Admin key not properly configured"
+    SKIP_AI_SETUP=true
 else
-    echo "Skipping AI provider routes setup due to configuration issues."
+    echo "✅ AI-proxy plugin is available, proceeding with setup"
+    setup_ai_providers_enhanced
+fi
+
+if [ "$SKIP_AI_SETUP" = true ]; then
+    echo "⚠️  AI provider setup was skipped due to configuration issues"
+    echo "   You can still use OpenAI/Anthropic directly but they won't be proxied through APISIX"
 fi
 
 # ---------------------------------------------------------------

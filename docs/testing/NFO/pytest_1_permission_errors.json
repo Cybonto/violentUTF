@@ -1,0 +1,29 @@
+{
+  "status": "not_fixed",
+  "tool_name": "pytest",
+  "exit_code": 1, 
+  "test_file_name": "integration_tests",
+  "failure_type": "PERMISSION_ERROR", 
+  "failure_subtype": "File Access Denied",
+  "file_path": "/Users/tamnguyen/Documents/.env", 
+  "file_path_log": ["test_orchestrator_executions.py"],
+  "issue": "Permission denied accessing environment files and read-only file system for test databases",
+  "issue_log": [],
+  "line_range": "13",
+  "severity": "HIGH",
+  "message": "PermissionError: [Errno 1] Operation not permitted: '/Users/tamnguyen/Documents/.env'",
+  "offending_code_snippet": "load_dotenv()",
+  "structured_details": {
+    "permission_denied_files": ["/Users/tamnguyen/Documents/.env"],
+    "readonly_filesystem_errors": ["OSError: [Errno 30] Read-only file system"],
+    "affected_tests": 11,
+    "collection_phase": "failed", 
+    "environment_setup": "broken"
+  },
+  "solution": [
+    "Use test-specific environment files instead of system-wide .env",
+    "Configure proper test environment with writable paths",
+    "Mock environment loading in tests",
+    "Use temporary directories for test database files"
+  ]
+}

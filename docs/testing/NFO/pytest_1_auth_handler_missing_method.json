@@ -1,0 +1,29 @@
+{
+  "status": "not_fixed",
+  "tool_name": "pytest",
+  "exit_code": 1,
+  "test_file_name": "FastAPI_MCP_tests",
+  "failure_type": "ATTRIBUTE_ERROR",
+  "failure_subtype": "Missing Method",
+  "file_path": "violentutf_api/fastapi_app/app/mcp/",
+  "file_path_log": ["test_phase2_components.py", "test_phase2_integration.py"],
+  "issue": "MCPAuthHandler object has no attribute 'get_auth_headers' causing authentication failures",
+  "issue_log": [],
+  "line_range": "221, 252, 265",
+  "severity": "HIGH",
+  "message": "'MCPAuthHandler' object has no attribute 'get_auth_headers'",
+  "offending_code_snippet": "headers = await auth_handler.get_auth_headers()",
+  "structured_details": {
+    "missing_method": "get_auth_headers",
+    "class": "MCPAuthHandler",
+    "affected_tests": 4,
+    "authentication_system": "broken",
+    "impact": "All MCP tool authentication failing"
+  },
+  "solution": [
+    "Implement get_auth_headers method in MCPAuthHandler class",
+    "Review authentication interface design for consistency",
+    "Update all MCP tools to use correct authentication API",
+    "Add comprehensive authentication tests"
+  ]
+}

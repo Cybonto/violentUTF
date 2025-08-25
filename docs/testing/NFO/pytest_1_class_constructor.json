@@ -1,0 +1,28 @@
+{
+  "status": "not_fixed",
+  "tool_name": "pytest",
+  "exit_code": 1,
+  "test_file_name": "multiple_test_files",
+  "failure_type": "COLLECTION_ERROR",
+  "failure_subtype": "Class Constructor Issue",
+  "file_path": "tests/api_tests/",
+  "file_path_log": ["test_converter_apply.py", "test_dataset_prompt_format.py"],
+  "issue": "Test classes have __init__ constructors preventing pytest collection",
+  "issue_log": [],
+  "line_range": "65, 68",
+  "severity": "MEDIUM",
+  "message": "cannot collect test class 'TestConverterApply' because it has a __init__ constructor",
+  "offending_code_snippet": "class TestConverterApply:",
+  "structured_details": {
+    "affected_classes": ["TestConverterApply", "TestDatasetPromptFormat"],
+    "affected_files": 2,
+    "collection_warnings": true,
+    "pattern": "__init__ constructor in test classes"
+  },
+  "solution": [
+    "Remove __init__ methods from test classes",
+    "Use pytest fixtures for test setup instead of constructors",
+    "Convert initialization logic to setUp methods or fixtures",
+    "Follow pytest best practices for test class design"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "status": "not_fixed",
+  "tool_name": "pytest", 
+  "exit_code": 0,
+  "test_file_name": "violentutf_api_config",
+  "failure_type": "DEPRECATION_WARNING",
+  "failure_subtype": "Pydantic V1 Style Validators",
+  "file_path": "violentutf_api/fastapi_app/app/core/config.py",
+  "file_path_log": [],
+  "issue": "Pydantic V1 style @validator decorators deprecated, causing 208+ warnings",
+  "issue_log": [],
+  "line_range": "33, 172, 180, 189, 198",
+  "severity": "MEDIUM",
+  "message": "Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators",
+  "offending_code_snippet": "@validator(\"JWT_SECRET_KEY\", always=True)\n@validator(\"BACKEND_CORS_ORIGINS\", pre=True)",
+  "structured_details": {
+    "deprecated_decorator": "@validator",
+    "replacement": "@field_validator",
+    "pydantic_version": "V2.11.7",
+    "warning_count": 208,
+    "migration_required": true,
+    "files_affected": ["config.py"]
+  },
+  "solution": [
+    "Replace @validator with @field_validator decorators",
+    "Update validator function signatures for Pydantic V2",
+    "Review Pydantic V2 migration guide",
+    "Test configuration validation after migration"
+  ]
+}

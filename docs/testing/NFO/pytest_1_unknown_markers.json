@@ -1,0 +1,28 @@
+{
+  "status": "not_fixed",
+  "tool_name": "pytest",
+  "exit_code": 1,
+  "test_file_name": "multiple_test_files",
+  "failure_type": "CONFIGURATION_ERROR",
+  "failure_subtype": "Unknown Pytest Markers",
+  "file_path": "tests/api_tests/",
+  "file_path_log": ["test_auth_mock.py", "test_converter_apply.py", "test_enhanced_generator_functionality.py", "test_save_and_test_generator.py"],
+  "issue": "Unknown pytest markers causing warnings throughout test suite",
+  "issue_log": [],
+  "line_range": "multiple",
+  "severity": "LOW",
+  "message": "Unknown pytest.mark.requires_auth - is this a typo?",
+  "offending_code_snippet": "@pytest.mark.requires_auth\n@pytest.mark.requires_apisix\n@pytest.mark.allows_mock_auth",
+  "structured_details": {
+    "unknown_markers": ["requires_auth", "requires_apisix", "allows_mock_auth"],
+    "warnings_count": 24,
+    "affects_test_execution": false,
+    "registered_in_main_conftest": true
+  },
+  "solution": [
+    "Register custom markers in api_tests/conftest.py pytest_configure",
+    "Import marker registration from main conftest.py", 
+    "Add missing markers to pytest.ini configuration",
+    "Ensure marker definitions are available in test discovery phase"
+  ]
+}
