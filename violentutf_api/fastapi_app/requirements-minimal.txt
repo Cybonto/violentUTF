@@ -3,7 +3,7 @@ fastapi==0.116.1
 uvicorn[standard]==0.25.0
 pydantic==2.11.7
 pydantic-settings==2.1.0
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.20
 httpx==0.28.1
