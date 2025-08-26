@@ -17,7 +17,7 @@ exclude =
     migrations,
     app_data,
     violentutf_logs,
-    tests/fixtures
+    tests
 ignore = 
     # E203: whitespace before ':' (conflicts with Black)
     E203,

@@ -48,7 +48,7 @@ class MCPCommand:
 
     type: MCPCommandType
     subcommand: Optional[str] = None
-    arguments: Dict[str, Any] = None
+    arguments: Optional[Dict[str, Any]] = None
     raw_text: str = ""
 
     def __post_init__(self):
@@ -326,7 +326,7 @@ class ContextAnalyzer:
             )
 
         # Sort by priority
-        suggestions.sort(key=lambda x: x.get("priority", 999))
+        suggestions.sort(key=lambda x: int(x.get("priority", 999)))
 
         return suggestions[:3]  # Return top 3 suggestions
 
@@ -368,8 +368,8 @@ class ResourceSearcher:
     def __init__(self, mcp_client: Optional[MCPClientSync] = None):
         """Initialize searcher with MCP client"""
         self.mcp_client = mcp_client or MCPClientSync()
-        self._resources_cache = None
-        self._prompts_cache = None
+        self._resources_cache: Optional[List[Dict[str, Any]]] = None
+        self._prompts_cache: Optional[List[Dict[str, Any]]] = None
         self.logger = logger
 
     def search_resources(self, query: str, resource_type: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -388,6 +388,9 @@ class ResourceSearcher:
             self._resources_cache = self.mcp_client.list_resources()
 
         resources = self._resources_cache
+        if resources is None:
+            return []
+
         query_lower = query.lower()
 
         # Filter by query
@@ -425,6 +428,9 @@ class ResourceSearcher:
             self._prompts_cache = self.mcp_client.list_prompts()
 
         prompts = self._prompts_cache
+        if prompts is None:
+            return []
+
         query_lower = query.lower()
 
         # Filter by query
@@ -456,6 +462,9 @@ class ResourceSearcher:
     def get_prompt_by_name(self, name: str) -> Optional[Dict[str, Any]]:
         """Get specific prompt by name"""
         prompts = self._prompts_cache or self.mcp_client.list_prompts()
+
+        if prompts is None:
+            return None
 
         for prompt in prompts:
             if prompt.get("name") == name:
@@ -549,7 +558,10 @@ class TestScenarioInterpreter:
             },
         }
 
-        return defaults.get(prompt_name, {})
+        result = defaults.get(prompt_name, {})
+        if not isinstance(result, dict):
+            return {}
+        return result
 
     def execute_test(self, test_config: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -635,8 +647,8 @@ class DatasetIntegration:
                 except json.JSONDecodeError:
                     # Return as raw text if not JSON
                     return content
-
-            return content
+            else:
+                return content
 
         except Exception as e:
             self.logger.error(f"Failed to load MCP dataset: {e}")

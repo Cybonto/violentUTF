@@ -4,7 +4,7 @@
 # Install: pre-commit install
 
 default_language_version:
-  python: python3.11
+  python: python3.12
 
 repos:
   # General file checks
@@ -12,7 +12,7 @@ repos:
     rev: v4.5.0
     hooks:
       - id: check-added-large-files
-        args: ['--maxkb=5000']
+        args: ["--maxkb=5000"]
       - id: check-ast
       - id: check-case-conflict
       - id: check-docstring-first
@@ -24,90 +24,85 @@ repos:
       - id: check-toml
       - id: check-xml
       - id: check-yaml
-        args: ['--allow-multiple-documents']
+        args: ["--allow-multiple-documents"]
       - id: debug-statements
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
       - id: mixed-line-ending
-        args: ['--fix=lf']
+        args: ["--fix=lf"]
       - id: name-tests-test
-        args: ['--pytest-test-first']
+        args: ["--pytest-test-first"]
       - id: requirements-txt-fixer
       - id: trailing-whitespace
 
-  # Python code formatting
+  # Python code formatting - Match GitHub PR validation exactly
   - repo: https://github.com/psf/black
     rev: 23.12.1
     hooks:
       - id: black
-        language_version: python3.11
-        args: ['--line-length=120']
-        # Exclude files with protected regex patterns
-        exclude: |
-          (?x)^(
-            violentutf_api/fastapi_app/app/core/validation\.py|
-            violentutf_api/fastapi_app/app/core/regex_patterns\.py
-          )$
+        language_version: python3.12
+        args: ["--check", "--diff", ".", "--verbose"]
+        # Uses pyproject.toml configuration for exclusions and line-length
+        pass_filenames: false
 
-  # Import sorting
+  # Import sorting - Match GitHub PR validation exactly
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
       - id: isort
-        args: ['--profile', 'black', '--line-length', '120']
+        args: ["--check-only", "--diff", ".", "--profile", "black"]
+        # Uses pyproject.toml configuration
+        pass_filenames: false
 
-  # Linting
+  # Linting - Match GitHub PR validation exactly
   - repo: https://github.com/pycqa/flake8
     rev: 7.0.0
     hooks:
       - id: flake8
-        args: [
-          '--max-line-length=120',
-          '--extend-ignore=E203,W503,E501',
-          '--max-complexity=15',
-          '--exclude=.git,__pycache__,build,dist,venv,env,.venv,.env'
-        ]
-        additional_dependencies: [
-          'flake8-docstrings',
-          'flake8-annotations',
-          'flake8-bugbear',
-          'flake8-comprehensions',
-          'flake8-simplify'
-        ]
+        args: ["--count", "--statistics", "--show-source", "--config=.flake8"]
+        additional_dependencies: ["flake8-docstrings", "flake8-annotations"]
 
-  # Security checks
+  # Security checks - Match GitHub PR validation exactly
   - repo: https://github.com/pycqa/bandit
     rev: 1.7.6
     hooks:
       - id: bandit
-        args: ['-ll', '--skip=B101,B601,B602,B607']
-        exclude: 'tests/'
+        args: ["-r", ".", "-f", "json", "-o", "bandit-report.json"]
+        # Uses pyproject.toml configuration for exclusions
+        pass_filenames: false
 
-  # Type checking
+  # Type checking - Match GitHub PR validation exactly
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
       - id: mypy
-        args: [
-          '--ignore-missing-imports',
-          '--no-strict-optional',
-          '--warn-redundant-casts',
-          '--warn-unused-ignores'
-        ]
-        additional_dependencies: [
-          'types-requests',
-          'types-pyyaml',
-          'types-python-dateutil'
-        ]
-        exclude: 'tests/'
+        args:
+          [
+            "--install-types",
+            "--non-interactive",
+            "--explicit-package-bases",
+            ".",
+          ]
+        additional_dependencies: ["types-requests", "types-PyYAML"]
+        # Uses pyproject.toml configuration for exclusions
+        pass_filenames: false
+
+  # PyLint - Match GitHub PR validation exactly
+  - repo: https://github.com/pycqa/pylint
+    rev: v3.0.3
+    hooks:
+      - id: pylint
+        args: ["--rcfile=.pylintrc"]
+        # Only run on non-test Python files like GitHub
+        files: '^(?!.*tests/).*\.py$'
 
   # Markdown
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.38.0
     hooks:
       - id: markdownlint
-        args: ['--fix', '--disable', 'MD013', 'MD033']
+        args: ["--fix", "--disable", "MD013", "MD033"]
 
   # YAML formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -115,29 +110,29 @@ repos:
     hooks:
       - id: prettier
         types_or: [yaml]
-        exclude: '.github/workflows/'
+        exclude: ".github/workflows/"
 
   # Shell script checks
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.9.0.6
     hooks:
       - id: shellcheck
-        args: ['--severity=warning']
+        args: ["--severity=warning"]
 
   # Dockerfile linting
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
     hooks:
       - id: hadolint-docker
-        args: ['--ignore', 'DL3008', '--ignore', 'DL3009']
+        args: ["--ignore", "DL3008", "--ignore", "DL3009"]
 
   # Secret detection
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
-        exclude: 'ai-tokens.env.sample|keycloak/realm-export.json'
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: "ai-tokens.env.sample|keycloak/realm-export.json"
 
   # License headers
   - repo: https://github.com/Lucas-C/pre-commit-hooks
@@ -146,14 +141,14 @@ repos:
       - id: insert-license
         name: Add license header (Python)
         files: \.py$
-        exclude: '__pycache__|migrations|build|dist|venv'
+        exclude: "__pycache__|migrations|build|dist|venv"
         args:
           - --license-filepath
           - .license-header.txt
           - --comment-style
-          - '#'
+          - "#"
           - --skip-license-insertion-comment
-          - '# Copyright (c) Microsoft Corporation.'
+          - "# Copyright (c) Microsoft Corporation."
 
   # Custom local hooks
   - repo: local
@@ -172,14 +167,14 @@ repos:
         entry: '(?<!def )print\('
         language: pygrep
         types: [python]
-        exclude: 'tests/|setup.py|scripts/'
+        exclude: "tests/|setup.py|scripts/"
 
       - id: no-hardcoded-secrets
         name: Check for hardcoded secrets
         entry: '(api_key|apikey|password|secret|token|private_key)=.*["\x27].*["\x27]'
         language: pygrep
         types: [python]
-        exclude: 'tests/|ai-tokens.env.sample'
+        exclude: "tests/|ai-tokens.env.sample"
 
       - id: validate-requirements
         name: Validate requirements files

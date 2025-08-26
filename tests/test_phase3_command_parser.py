@@ -106,9 +106,12 @@ class TestNaturalLanguageParser(unittest.TestCase):
         for text, expected_params in test_cases:
             with self.subTest(text=text):
                 params = self.parser.extract_parameters(text)
-                for key, value in expected_params.items():
-                    self.assertIn(key, params)
-                    self.assertEqual(params[key], value)
+                if isinstance(expected_params, dict):
+                    for key, value in expected_params.items():
+                        self.assertIn(key, params)
+                        self.assertEqual(params[key], value)
+                else:
+                    self.fail("expected_params should be a dict")
 
 
 class TestConfigurationIntentDetector(unittest.TestCase):
@@ -198,9 +201,12 @@ class TestConfigurationIntentDetector(unittest.TestCase):
         for text, expected_params in test_cases:
             with self.subTest(text=text):
                 params = self.detector.extract_generator_params(text)
-                for key, value in expected_params.items():
-                    self.assertIn(key, params)
-                    self.assertEqual(params[key], value)
+                if isinstance(expected_params, dict):
+                    for key, value in expected_params.items():
+                        self.assertIn(key, params)
+                        self.assertEqual(params[key], value)
+                else:
+                    self.fail("expected_params should be a dict")
 
 
 class TestMCPCommandStructure(unittest.TestCase):
