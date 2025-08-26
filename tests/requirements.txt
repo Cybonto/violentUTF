@@ -13,3 +13,7 @@ requests>=2.28.0
 sqlalchemy>=1.4.0
 alembic>=1.10.0
 python-multipart>=0.0.6
+
+# Type stubs for mypy type checking
+types-requests>=2.28.0
+types-PyYAML>=6.0.0

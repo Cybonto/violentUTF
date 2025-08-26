@@ -18,6 +18,10 @@ bandit[toml]>=1.7.0
 safety>=2.3.0
 pip-audit>=2.0.0
 
+# Type stubs for mypy
+types-requests>=2.28.0
+types-PyYAML>=6.0.0
+
 # Common utilities
 python-dotenv>=0.19.0
 pyyaml>=6.0
