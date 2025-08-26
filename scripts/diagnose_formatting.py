@@ -12,7 +12,12 @@ from pathlib import Path
 def run_command(cmd):
     """Run a command and return output."""
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        # Convert string command to list for safer execution without shell=True
+        if isinstance(cmd, str):
+            import shlex
+
+            cmd = shlex.split(cmd)
+        result = subprocess.run(cmd, capture_output=True, text=True)  # nosec B603 - controlled input
         return result.stdout + result.stderr
     except Exception as e:
         return f"Error: {e}"

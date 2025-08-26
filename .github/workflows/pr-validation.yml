@@ -74,7 +74,7 @@ jobs:
       - name: Run mypy type checking
         continue-on-error: true
         run: |
-          mypy --install-types --non-interactive . || true
+          mypy --install-types --non-interactive --explicit-package-bases . || true
 
       - name: Security scan with bandit
         run: |

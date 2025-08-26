@@ -28,7 +28,12 @@ def run_command(cmd, description, continue_on_error=False, capture_output=False)
 
     try:
         if capture_output:
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            # Convert string command to list for safer execution without shell=True
+            if isinstance(cmd, str):
+                import shlex
+
+                cmd = shlex.split(cmd)
+            result = subprocess.run(cmd, capture_output=True, text=True)  # nosec B603 - controlled input
             if result.returncode == 0:
                 print(f"{GREEN}✓ {description} passed{RESET}")
                 return True, result.stdout
@@ -40,7 +45,12 @@ def run_command(cmd, description, continue_on_error=False, capture_output=False)
                     print(result.stderr)
                 return False, result.stdout + result.stderr
         else:
-            result = subprocess.run(cmd, shell=True)
+            # Convert string command to list for safer execution without shell=True
+            if isinstance(cmd, str):
+                import shlex
+
+                cmd = shlex.split(cmd)
+            result = subprocess.run(cmd)  # nosec B603 - controlled input
             if result.returncode == 0:
                 print(f"{GREEN}✓ {description} passed{RESET}")
                 return True, None

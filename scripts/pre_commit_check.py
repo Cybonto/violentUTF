@@ -54,7 +54,12 @@ class PreCommitChecker:
             self.log(f"Running: {cmd}", "info")
 
         try:
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
+            # Convert string command to list for safer execution without shell=True
+            if isinstance(cmd, str):
+                import shlex
+
+                cmd = shlex.split(cmd)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)  # nosec B603 - controlled input
 
             if result.returncode == 0:
                 return True, result.stdout
