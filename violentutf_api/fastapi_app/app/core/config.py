@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     @classmethod
     def set_jwt_secret_key(cls, v, info):
         """Use SECRET_KEY if JWT_SECRET_KEY is not set"""
-        if hasattr(info, 'data') and v is None:
+        if hasattr(info, "data") and v is None:
             return info.data.get("SECRET_KEY", "")
         return v or ""
 

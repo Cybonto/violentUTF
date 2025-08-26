@@ -167,7 +167,7 @@ class ContractTestingPatches:
         streamlit_patch = patch("streamlit.secrets", {"auth": {"keycloak": {"client_id": "test"}}})
         self.patches.append(streamlit_patch)
         streamlit_patch.start()
-        
+
         # Patch token manager with additional error handling
         try:
             token_manager_patch = patch("violentutf.utils.token_manager.token_manager", MockTokenManager())
@@ -177,7 +177,7 @@ class ContractTestingPatches:
             # Skip token manager patching if module can't be imported
             pass
 
-        # Patch APISIX endpoints with error handling  
+        # Patch APISIX endpoints with error handling
         try:
             endpoints_patch = patch(
                 "violentutf.utils.token_manager.TokenManager.get_apisix_endpoints", return_value=mock_apisix_endpoints()

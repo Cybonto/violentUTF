@@ -14,14 +14,14 @@ sys.path.insert(0, str(parent_dir))
 import pytest
 import requests
 
-# Import available fixtures from the main conftest  
-from conftest import api_headers, mock_headers, authenticated_headers
+# Import available fixtures from the main conftest
+from conftest import api_headers, authenticated_headers, mock_headers
 
 # Import the keycloak_auth utility
 from utils.keycloak_auth import keycloak_auth
 
 # Contract testing imports
-from tests.api_tests.test_auth_mock import ContractTestingPatches, create_test_headers, create_mock_database_session
+from tests.api_tests.test_auth_mock import ContractTestingPatches, create_mock_database_session, create_test_headers
 
 
 @pytest.fixture(scope="session")
@@ -66,7 +66,7 @@ def contract_testing_enabled():
 
 @pytest.fixture(scope="session")
 def test_app(contract_testing_enabled):
-    """Create FastAPI test app with authentication mocking.""" 
+    """Create FastAPI test app with authentication mocking."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
 
@@ -75,9 +75,10 @@ def test_app(contract_testing_enabled):
         os.environ.setdefault("JWT_SECRET_KEY", "test_jwt_secret_for_contract_testing_only")
         os.environ.setdefault("TESTING", "true")
         os.environ.setdefault("CONTRACT_TESTING", "true")
-        
+
         # Try to import the app directly
         from violentutf_api.fastapi_app.app.main import app
+
         yield app
     except ImportError as e:
         pytest.skip(f"Could not import FastAPI app: {e}")
@@ -87,7 +88,7 @@ def test_app(contract_testing_enabled):
 def test_client(test_app):
     """Create test client with authentication mocking."""
     from fastapi.testclient import TestClient
-    
+
     with TestClient(test_app) as client:
         yield client
 
@@ -97,11 +98,11 @@ def test_headers(contract_testing_enabled):
     """Create test headers for API calls."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
-    
+
     return create_test_headers()
 
 
-@pytest.fixture(scope="session")  
+@pytest.fixture(scope="session")
 def openapi_schema(test_app):
     """Generate OpenAPI schema from FastAPI app."""
     return test_app.openapi()
@@ -112,7 +113,7 @@ def mock_database(contract_testing_enabled):
     """Create mock database session for testing."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
-    
+
     return create_mock_database_session()
 
 
@@ -122,10 +123,10 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "api: marks tests as API tests (require API connectivity)")
     config.addinivalue_line("markers", "generator: marks tests as generator-related tests")
     config.addinivalue_line("markers", "requires_cleanup: marks tests that require cleanup of resources")
-    
+
     # Add markers from main conftest
     config.addinivalue_line("markers", "requires_auth: mark test as requiring authentication")
-    config.addinivalue_line("markers", "requires_apisix: mark test as requiring APISIX gateway")  
+    config.addinivalue_line("markers", "requires_apisix: mark test as requiring APISIX gateway")
     config.addinivalue_line("markers", "requires_fastapi: mark test as requiring FastAPI service")
     config.addinivalue_line("markers", "integration: mark test as integration test")
     config.addinivalue_line("markers", "contract: mark test as contract testing")

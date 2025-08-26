@@ -36,40 +36,45 @@ jobs:
     steps:
       - name: Analyze context and decide workflow
         id: decide
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_TYPE: ${{ inputs.workflow_type }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          GITHUB_REF: ${{ github.ref }}
         run: |
           # Check if manual dispatch with specific workflow
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ "${{ inputs.workflow_type }}" != "auto" ]]; then
-            echo "workflow=${{ inputs.workflow_type }}" >> $GITHUB_OUTPUT
-            echo "Manual dispatch: ${{ inputs.workflow_type }}"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]] && [[ "$WORKFLOW_TYPE" != "auto" ]]; then
+            echo "workflow=$WORKFLOW_TYPE" >> $GITHUB_OUTPUT
+            echo "Manual dispatch: $WORKFLOW_TYPE"
             exit 0
           fi
 
           # Check if commit message contains special flags
-          if [[ "${{ github.event.head_commit.message }}" == *"[full-ci]"* ]]; then
+          if [[ "$COMMIT_MESSAGE" == *"[full-ci]"* ]]; then
             echo "workflow=full" >> $GITHUB_OUTPUT
             echo "Full CI requested via commit message"
             exit 0
           fi
 
-          if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]] || \
-             [[ "${{ github.event.head_commit.message }}" == *"[ci skip]"* ]]; then
+          if [[ "$COMMIT_MESSAGE" == *"[skip ci]"* ]] || \
+             [[ "$COMMIT_MESSAGE" == *"[ci skip]"* ]]; then
             echo "workflow=skip" >> $GITHUB_OUTPUT
             echo "CI skipped via commit message"
             exit 0
           fi
 
           # Pull request logic
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
             echo "workflow=pr-validation" >> $GITHUB_OUTPUT
             echo "Pull request validation workflow"
             exit 0
           fi
 
           # Branch-based logic
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
             echo "workflow=full" >> $GITHUB_OUTPUT
             echo "Main branch: full CI"
-          elif [[ "${{ github.ref }}" =~ ^refs/heads/dev_ ]]; then
+          elif [[ "$GITHUB_REF" =~ ^refs/heads/dev_ ]]; then
             echo "workflow=quick" >> $GITHUB_OUTPUT
             echo "Dev branch: quick checks"
           else

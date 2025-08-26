@@ -51,8 +51,10 @@ def test_keycloak_verification_implementation():
     try:
         # Get project root dynamically
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        keycloak_file = os.path.join(project_root, "violentutf_api", "fastapi_app", "app", "services", "keycloak_verification.py")
-        
+        keycloak_file = os.path.join(
+            project_root, "violentutf_api", "fastapi_app", "app", "services", "keycloak_verification.py"
+        )
+
         with open(keycloak_file, "r") as f:
             content = f.read()
 
@@ -206,8 +208,10 @@ def test_security_improvements():
     try:
         # Get project root dynamically
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        keycloak_file = os.path.join(project_root, "violentutf_api", "fastapi_app", "app", "services", "keycloak_verification.py")
-        
+        keycloak_file = os.path.join(
+            project_root, "violentutf_api", "fastapi_app", "app", "services", "keycloak_verification.py"
+        )
+
         with open(keycloak_file, "r") as f:
             content = f.read()
 
@@ -231,7 +235,7 @@ def test_vulnerability_fixes():
     try:
         # Get project root dynamically
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        
+
         # Check that environment fallback is removed
         auth_file = os.path.join(project_root, "violentutf_api", "fastapi_app", "app", "api", "endpoints", "auth.py")
         with open(auth_file, "r") as f:

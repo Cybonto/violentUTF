@@ -6,14 +6,6 @@ import os
 import streamlit as st
 
 # Load environment variables from .env file
-from dotenv import load_dotenv
-from utils.logging import get_logger, setup_logging
-
-import logging  # Import base logging for potential direct use if needed
-import os
-
-import streamlit as st
-
 # Load environment variables from .env file
 from dotenv import load_dotenv
 from utils.logging import get_logger, setup_logging
