@@ -135,7 +135,10 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id),
+            json=payload,
+            headers=self.headers,
+            timeout=30,
         )
 
         assert response.status_code == 200, f"Failed to apply converter: {response.text}"
@@ -180,7 +183,10 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id),
+            json=payload,
+            headers=self.headers,
+            timeout=30,
         )
 
         assert response.status_code == 200, f"Failed to apply converter: {response.text}"
@@ -228,7 +234,10 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id),
+            json=payload,
+            headers=self.headers,
+            timeout=30,
         )
 
         assert response.status_code == 200
@@ -254,7 +263,10 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id),
+            json=payload,
+            headers=self.headers,
+            timeout=30,
         )
 
         assert response.status_code == 404
@@ -277,7 +289,10 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id),
+            json=payload,
+            headers=self.headers,
+            timeout=30,
         )
 
         assert response.status_code == 400

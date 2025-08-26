@@ -108,8 +108,8 @@ def test_converter_copy_mode():
     }
 
     response = requests.post(
-        f"{API_BASE_URL}/api/v1/converters/{converter_id}/apply", json=apply_payload, headers=headers
-    , timeout=30)
+        f"{API_BASE_URL}/api/v1/converters/{converter_id}/apply", json=apply_payload, headers=headers, timeout=30
+    )
 
     if response.status_code != 200:
         print(f"❌ Failed to apply converter: {response.text}")

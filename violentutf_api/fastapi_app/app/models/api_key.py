@@ -28,6 +28,7 @@ class APIKey(Base):
     async def update_last_used(self) -> None:
         """Update last used timestamp"""
         from sqlalchemy import update
+
         # This would be handled by the database session
         # self.last_used_at = datetime.utcnow()
         pass

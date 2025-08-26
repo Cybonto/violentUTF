@@ -54,7 +54,9 @@ def test_orchestrator_creation():
     print(json.dumps(orchestrator_payload, indent=2))
 
     # Make request
-    response = requests.post(f"{API_BASE_URL}/api/v1/orchestrators", headers=headers, json=orchestrator_payload, timeout=30)
+    response = requests.post(
+        f"{API_BASE_URL}/api/v1/orchestrators", headers=headers, json=orchestrator_payload, timeout=30
+    )
 
     print(f"\n📡 Response status: {response.status_code}")
 

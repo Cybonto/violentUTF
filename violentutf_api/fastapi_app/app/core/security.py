@@ -202,7 +202,9 @@ def get_password_hash(password: str, username: Optional[str] = None, email: Opti
         raise ValueError("Failed to hash password")
 
 
-def create_api_key_token(user_id: str, key_name: str, permissions: Optional[list] = None, key_id: Optional[str] = None) -> Dict[str, Any]:
+def create_api_key_token(
+    user_id: str, key_name: str, permissions: Optional[list] = None, key_id: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Create an API key token with extended expiration and input validation
 

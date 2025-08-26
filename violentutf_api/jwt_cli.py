@@ -10,7 +10,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional, cast
 
 import click
 import requests
@@ -38,11 +38,11 @@ def save_token(token_data: dict):
     os.chmod(TOKEN_FILE, 0o600)  # Restrict permissions
 
 
-def load_token() -> Optional[dict]:
+def load_token() -> Optional[Dict[str, Any]]:
     """Load token from local file"""
     if TOKEN_FILE.exists():
         with open(TOKEN_FILE, "r") as f:
-            return json.load(f)
+            return cast(Dict[str, Any], json.load(f))
     return None
 
 
@@ -157,7 +157,7 @@ def refresh():
         if response.status_code == 200:
             token_data = response.json()
             old_data = load_token()
-            token_data["username"] = old_data.get("username", "Unknown")
+            token_data["username"] = old_data.get("username", "Unknown") if old_data else "Unknown"
             token_data["obtained_at"] = datetime.utcnow().isoformat()
             save_token(token_data)
             click.echo("Token refreshed successfully")

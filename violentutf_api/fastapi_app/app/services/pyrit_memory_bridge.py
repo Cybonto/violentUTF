@@ -9,7 +9,7 @@ import hashlib
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pyrit.memory import CentralMemory, DuckDBMemory, MemoryInterface
 from pyrit.models import SeedPrompt
@@ -111,7 +111,7 @@ class PyRITMemoryBridge:
 
     async def get_prompts_from_pyrit_memory(
         self, dataset_id: str, user_id: str, offset: int = 0, limit: int = 1000, include_metadata: bool = False
-    ) -> Tuple[List[str], int]:
+    ) -> Tuple[Union[List[str], List[Dict[str, Any]]], int]:
         """Retrieve prompts using PyRIT memory interface with pagination"""
         try:
             memory = await self.get_or_create_user_memory(user_id)

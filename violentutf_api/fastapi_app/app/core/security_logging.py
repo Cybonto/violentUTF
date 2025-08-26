@@ -88,7 +88,7 @@ class SecurityEvent:
     method: Optional[str] = None
     success: bool = True
     message: str = ""
-    details: Dict[str, Any] = None
+    details: Optional[Dict[str, Any]] = None
     session_id: Optional[str] = None
     request_id: Optional[str] = None
 
@@ -236,7 +236,7 @@ class SecurityLogger:
     def _format_security_event(self, event: SecurityEvent) -> str:
         """Format security event for logging"""
         # Create structured log entry
-        log_data = {
+        log_data: Dict[str, Any] = {
             "event_id": event.event_id,
             "type": event.event_type.value,
             "severity": event.severity.value,

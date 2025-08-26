@@ -98,7 +98,9 @@ def test_converter_transformations():
                 "dataset_type": "adv_bench",
                 "config": {},
             }
-            response = requests.post(f"{API_BASE_URL}/api/v1/datasets", json=dataset_payload, headers=headers, timeout=30)
+            response = requests.post(
+                f"{API_BASE_URL}/api/v1/datasets", json=dataset_payload, headers=headers, timeout=30
+            )
 
         assert response.status_code in [200, 201], f"Failed to create dataset: {response.text}"
 
@@ -112,7 +114,9 @@ def test_converter_transformations():
             "parameters": {"append_description": False},  # Don't append description for easier verification
         }
 
-        response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30)
+        response = requests.post(
+            f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30
+        )
 
         assert response.status_code in [200, 201]
         converter_id = response.json()["converter"]["id"]
@@ -128,8 +132,8 @@ def test_converter_transformations():
         }
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/converters/{converter_id}/apply", json=apply_payload, headers=headers
-        , timeout=30)
+            f"{API_BASE_URL}/api/v1/converters/{converter_id}/apply", json=apply_payload, headers=headers, timeout=30
+        )
 
         assert response.status_code == 200
         new_dataset_id = response.json()["dataset_id"]
@@ -159,7 +163,9 @@ def test_converter_transformations():
             "parameters": {"append_description": False},
         }
 
-        response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30)
+        response = requests.post(
+            f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30
+        )
 
         assert response.status_code in [200, 201]
         b64_converter_id = response.json()["converter"]["id"]
@@ -175,8 +181,11 @@ def test_converter_transformations():
         }
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/converters/{b64_converter_id}/apply", json=apply_payload, headers=headers
-        , timeout=30)
+            f"{API_BASE_URL}/api/v1/converters/{b64_converter_id}/apply",
+            json=apply_payload,
+            headers=headers,
+            timeout=30,
+        )
 
         assert response.status_code == 200
         b64_dataset_id = response.json()["dataset_id"]
@@ -193,7 +202,9 @@ def test_converter_transformations():
             "parameters": {"caesar_offset": 7, "append_description": False},
         }
 
-        response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30)
+        response = requests.post(
+            f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30
+        )
 
         assert response.status_code in [200, 201]
         caesar_converter_id = response.json()["converter"]["id"]
@@ -209,8 +220,11 @@ def test_converter_transformations():
         }
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/converters/{caesar_converter_id}/apply", json=apply_payload, headers=headers
-        , timeout=30)
+            f"{API_BASE_URL}/api/v1/converters/{caesar_converter_id}/apply",
+            json=apply_payload,
+            headers=headers,
+            timeout=30,
+        )
 
         assert response.status_code == 200
         caesar_dataset_id = response.json()["dataset_id"]

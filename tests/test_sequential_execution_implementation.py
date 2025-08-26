@@ -8,6 +8,7 @@ This script demonstrates the batch processing approach implemented in 4_Configur
 import json
 import time
 from datetime import datetime
+from typing import Any, Dict, List
 
 import requests
 
@@ -20,7 +21,7 @@ HEADERS = {
 }
 
 
-def test_batch_processing():
+def test_batch_processing() -> None:
     """
     Test the batch processing implementation:
     1. Creates multiple orchestrators for batches
@@ -43,7 +44,7 @@ def test_batch_processing():
 
     total_successful = 0
     total_failed = 0
-    batch_results = []
+    batch_results: List[Dict[str, Any]] = []
 
     # Process each batch
     for batch_idx in range(num_batches):

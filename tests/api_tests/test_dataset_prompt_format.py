@@ -188,8 +188,11 @@ class TestDatasetPromptFormat:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=apply_payload, headers=self.headers
-        , timeout=30)
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id),
+            json=apply_payload,
+            headers=self.headers,
+            timeout=30,
+        )
 
         if response.status_code == 200:
             result = response.json()

@@ -129,7 +129,9 @@ class TestConverterApplyFunctionality:
             "save_to_memory": False,
         }
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         print(f"\nConverter apply response status: {response.status_code}")
         if response.status_code != 200:
             print(f"Response text: {response.text}")
@@ -188,7 +190,9 @@ class TestConverterApplyFunctionality:
         # Step 3: Apply converter in OVERWRITE mode
         apply_data = {"dataset_id": dataset_id, "mode": "overwrite", "save_to_memory": False}
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         assert response.status_code == 200, f"Failed to apply converter: {response.text}"
 
         result = response.json()
@@ -237,8 +241,8 @@ class TestConverterApplyFunctionality:
         preview_data = {"dataset_id": dataset_id, "num_samples": 3}
 
         response = requests.post(
-            f"{API_BASE}/converters/{converter_id}/preview", json=preview_data, headers=self.headers
-        , timeout=30)
+            f"{API_BASE}/converters/{converter_id}/preview", json=preview_data, headers=self.headers, timeout=30
+        )
         assert response.status_code == 200, f"Failed to preview converter: {response.text}"
         preview_result = response.json()
         assert len(preview_result["preview_results"]) > 0
@@ -251,7 +255,9 @@ class TestConverterApplyFunctionality:
             "save_to_memory": False,
         }
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         assert response.status_code == 200, f"Failed to apply converter: {response.text}"
 
         result = response.json()
@@ -281,7 +287,9 @@ class TestConverterApplyFunctionality:
         # Try to apply to non-existent dataset
         apply_data = {"dataset_id": "non-existent-dataset-id", "mode": "copy", "new_dataset_name": "Should_Fail"}
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         print(f"\nInvalid dataset response: {response.status_code}")
         print(f"Response body: {response.text}")
         # Note: Current implementation creates mock data for non-existent datasets
@@ -324,7 +332,9 @@ class TestConverterApplyFunctionality:
             # Missing new_dataset_name
         }
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         print(f"\nMissing name response: {response.status_code}")
         print(f"Response body: {response.text}")
         # Check if validation error or success (implementation might have different behavior)

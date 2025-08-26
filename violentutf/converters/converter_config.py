@@ -30,8 +30,6 @@ from typing import (  # Added Callable for type hints below
     Literal,
     Type,
     Union,
-    _LiteralGenericAlias,
-    _UnionGenericAlias,
     get_args,
     get_origin,
     get_type_hints,
@@ -178,7 +176,7 @@ def get_converter_params(converter_name: str) -> List[Dict[str, Any]]:
             literal_choices = None
             type_str = str(raw_annotation).replace("typing.", "")  # Default string representation
 
-            if origin_type is Literal or isinstance(raw_annotation, _LiteralGenericAlias):  # Handle Literal
+            if origin_type is Literal:  # Handle Literal
                 literal_choices = list(type_args)
                 # Infer primary type from the first literal choice if possible
                 if literal_choices:
@@ -188,17 +186,14 @@ def get_converter_params(converter_name: str) -> List[Dict[str, Any]]:
                     primary_type = Any  # Empty Literal?
                     type_str = "Literal[]"
 
-            elif origin_type in (
-                Union,
-                _UnionGenericAlias,
-            ):  # Handle Union and Optional (Optional[X] is Union[X, NoneType])
+            elif origin_type is Union:  # Handle Union and Optional (Optional[X] is Union[X, NoneType])
                 non_none_types = [t for t in type_args if t is not type(None)]
                 if len(non_none_types) == 1:
                     primary_type = non_none_types[0]
                     # Check if the inner type is Literal
                     inner_origin = get_origin(primary_type)
                     inner_args = get_args(primary_type)
-                    if inner_origin is Literal or isinstance(primary_type, _LiteralGenericAlias):
+                    if inner_origin is Literal:
                         literal_choices = list(inner_args)
                         if literal_choices:
                             # Type string for Optional[Literal[...]]
@@ -340,7 +335,7 @@ def instantiate_converter(converter_name: str, parameters: Dict[str, Any]) -> Pr
         except TypeError as e:
             # Handle potential issues with C-implemented __init__ or other edge cases
             logger.error(f"TypeError getting signature for {converter_name}.__init__: {e}. Assuming no named params.")
-            converter_init_params = {}  # Fallback: assume no named parameters inspectable
+            converter_init_params = {}  # type: ignore # Fallback: assume no named parameters inspectable
 
         # --- Updated Filtering ---
         # Determine the names of *NAMED* parameters, explicitly excluding self, *args, **kwargs
@@ -398,7 +393,7 @@ def instantiate_converter(converter_name: str, parameters: Dict[str, Any]) -> Pr
                 origin = get_origin(param_type_hint)
                 args = get_args(param_type_hint)
                 # Check if the type hint is Optional[T] or Union[T, None]
-                allows_none = origin in (Union, _UnionGenericAlias) and type(None) in args
+                allows_none = origin is Union and type(None) in args
                 if not allows_none:
                     truly_missing.add(missing_name)
 

@@ -344,7 +344,7 @@ class TestDebugHelpers:
         print("\n📋 Route Status:")
         for endpoint in test_endpoints:
             try:
-                response = requests.get(f"{APISIX_BASE_URL}{endpoint}", headers=get_apisix_headers(, timeout=30), timeout=5)
+                response = requests.get(f"{APISIX_BASE_URL}{endpoint}", headers=get_apisix_headers(), timeout=30)
                 status = "✅ Routed" if response.status_code != 404 else "❌ Not Found"
                 print(f"   {endpoint}: {status} ({response.status_code})")
             except Exception as e:

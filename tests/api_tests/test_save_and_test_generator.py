@@ -220,8 +220,8 @@ class TestSaveAndTestGenerator:
         test_request = {"test_prompt": "Hello, this is a test prompt for AI red-teaming configuration."}
 
         test_response = requests.post(
-            f"{api_base_url}/api/v1/generators/{generator_id}/test", headers=api_headers, json=test_request
-        , timeout=30)
+            f"{api_base_url}/api/v1/generators/{generator_id}/test", headers=api_headers, json=test_request, timeout=30
+        )
 
         assert (
             test_response.status_code == 200
@@ -237,7 +237,9 @@ class TestSaveAndTestGenerator:
         # Test missing name
         invalid_config = {"type": "AI Gateway", "parameters": {"provider": "openai", "model": "gpt-4"}}
 
-        response = requests.post(f"{api_base_url}/api/v1/generators", headers=api_headers, json=invalid_config, timeout=30)
+        response = requests.post(
+            f"{api_base_url}/api/v1/generators", headers=api_headers, json=invalid_config, timeout=30
+        )
 
         if response.status_code == 401:
             pytest.fail(f"Authentication failed: {response.text}")
@@ -279,7 +281,9 @@ class TestSaveAndTestGenerator:
         """Test creating generator with invalid type"""
         invalid_config = {"name": "invalid_type_test", "type": "NonExistentType", "parameters": {}}
 
-        response = requests.post(f"{api_base_url}/api/v1/generators", headers=api_headers, json=invalid_config, timeout=30)
+        response = requests.post(
+            f"{api_base_url}/api/v1/generators", headers=api_headers, json=invalid_config, timeout=30
+        )
 
         if response.status_code == 401:
             pytest.fail(f"Authentication failed: {response.text}")

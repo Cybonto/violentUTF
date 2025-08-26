@@ -1,13 +1,15 @@
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import requests
 
 logger = logging.getLogger(__name__)
 
 
-async def execute_generator_prompt(generator_name: str, prompt: str, conversation_id: str = None) -> Dict[str, Any]:
+async def execute_generator_prompt(
+    generator_name: str, prompt: str, conversation_id: Optional[str] = None
+) -> Dict[str, Any]:
     """Execute prompt through configured generator"""
     try:
         # Get generator configuration by calling the backend function directly
@@ -39,7 +41,9 @@ async def execute_generator_prompt(generator_name: str, prompt: str, conversatio
         return {"success": False, "response": f"Error: {str(e)}", "error": str(e)}
 
 
-async def _execute_apisix_generator(generator_config: Dict, prompt: str, conversation_id: str) -> Dict[str, Any]:
+async def _execute_apisix_generator(
+    generator_config: Dict, prompt: str, conversation_id: Optional[str]
+) -> Dict[str, Any]:
     """Execute prompt through APISIX AI Gateway"""
     try:
         # Get APISIX endpoint for generator
@@ -174,7 +178,9 @@ async def _execute_apisix_generator(generator_config: Dict, prompt: str, convers
         return {"success": False, "response": f"Generator execution error: {str(e)}", "error": str(e)}
 
 
-async def _execute_generic_generator(generator_config: Dict, prompt: str, conversation_id: str) -> Dict[str, Any]:
+async def _execute_generic_generator(
+    generator_config: Dict, prompt: str, conversation_id: Optional[str]
+) -> Dict[str, Any]:
     """Execute prompt through generic generator"""
     # Generic generators are not yet implemented
     generator_type = generator_config.get("type", "unknown")
@@ -191,7 +197,7 @@ async def _execute_generic_generator(generator_config: Dict, prompt: str, conver
     }
 
 
-def _get_apisix_endpoint_for_model(provider: str, model: str) -> str:
+def _get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
     """Get APISIX endpoint for provider/model combination"""
 
     # Handle OpenAPI providers
@@ -249,7 +255,7 @@ def _get_apisix_endpoint_for_model(provider: str, model: str) -> str:
     return provider_endpoint_mapping.get(provider)
 
 
-async def get_generator_by_name(generator_name: str, user_context: str = None) -> Dict[str, Any]:
+async def get_generator_by_name(generator_name: str, user_context: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Get generator configuration by name from backend service"""
     try:
         # Get generators from DuckDB using proper user context

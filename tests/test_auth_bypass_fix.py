@@ -8,10 +8,12 @@ import hmac
 import os
 import sys
 import time
-from typing import Dict, Tuple, Optional
+from typing import Dict, Optional, Tuple
 
 
-def generate_hmac_signature(gateway_secret: str, method: str, path: str, timestamp: Optional[str] = None) -> Tuple[str, str]:
+def generate_hmac_signature(
+    gateway_secret: str, method: str, path: str, timestamp: Optional[str] = None
+) -> Tuple[str, str]:
     """Generate HMAC signature for testing"""
     if timestamp is None:
         timestamp = str(int(time.time()))

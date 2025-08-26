@@ -7,6 +7,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 
 class JSONFormatter(logging.Formatter):
@@ -55,7 +56,7 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(log_obj)
 
 
-def setup_logging(log_level: str = "INFO", log_dir: Path = None):
+def setup_logging(log_level: str = "INFO", log_dir: Optional[Path] = None):
     """
     Setup logging configuration for the application
 

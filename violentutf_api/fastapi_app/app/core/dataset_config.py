@@ -254,7 +254,7 @@ def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
         raise ValueError("Configuration must be a dictionary")
 
     # Define required/optional parameters for each dataset type
-    dataset_requirements = {
+    dataset_requirements: Dict[str, Dict[str, List[str]]] = {
         "harmbench": {"optional": ["source", "source_type", "cache", "data_home"]},
         "many_shot_jailbreaking": {"optional": []},
         "decoding_trust_stereotypes": {

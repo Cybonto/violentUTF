@@ -10,11 +10,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import time
 from datetime import datetime
+from typing import Any, Dict, List
 
 import requests
 
 
-def test_batch_execution_performance():
+def test_batch_execution_performance() -> None:
     """Test that batch execution completes within timeout"""
 
     print("Testing scorer batch execution performance...")

@@ -54,7 +54,7 @@ async def get_dataset_prompts(
         raise
 
 
-async def _get_dataset_by_id(dataset_id: str, user_context: Optional[str] = None) -> Dict[str, Any]:
+async def _get_dataset_by_id(dataset_id: str, user_context: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Get dataset configuration by ID from backend service"""
     try:
         # Get datasets directly from DuckDB without authentication context

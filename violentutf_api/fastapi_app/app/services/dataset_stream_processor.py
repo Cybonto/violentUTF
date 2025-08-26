@@ -250,7 +250,7 @@ class PyRITStreamProcessor:
             logger.error(f"Failed to fetch PyRIT dataset {dataset_type}: {e}")
             raise DatasetFetchError(f"Could not fetch dataset {dataset_type}: {str(e)}")
 
-    async def _fetch_with_retry(self, fetcher: Callable, config: Dict, max_retries: int = None) -> Any:
+    async def _fetch_with_retry(self, fetcher: Callable, config: Dict, max_retries: Optional[int] = None) -> Any:
         """Fetch dataset with retry logic and exponential backoff"""
         max_retries = max_retries or self.max_retries
 

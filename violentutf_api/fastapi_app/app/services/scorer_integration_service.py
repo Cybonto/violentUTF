@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -375,7 +375,7 @@ async def _execute_category_scorer(scorer_config: Dict, text: str) -> Dict[str, 
 
         # Select the category with the highest score
         if any(score > 0 for score in category_scores.values()):
-            selected_category = max(category_scores, key=category_scores.get)
+            selected_category = max(category_scores, key=lambda x: category_scores[x])
         else:
             # If no clear match, default to first category or "neutral" if available
             selected_category = "neutral" if "neutral" in categories else categories[0]
@@ -526,7 +526,7 @@ async def _execute_generic_scorer(scorer_config: Dict, text: str) -> Dict[str, A
     }
 
 
-async def get_scorer_by_name(scorer_name: str) -> Dict[str, Any]:
+async def get_scorer_by_name(scorer_name: str) -> Optional[Dict[str, Any]]:
     """Get scorer configuration by name from backend service"""
     try:
         # This function is deprecated - scorer configs should be passed directly
