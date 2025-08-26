@@ -470,18 +470,6 @@ jobs:
             generated_openapi.json
           retention-days: 30
 
-          echo "API contract test step completed"
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: contract-test-results
-          path: |
-            contract-test-results.xml
-            generated_openapi.json
-          retention-days: 30
-
   docker-validation:
     name: Docker Build Validation
     runs-on: ubuntu-latest
@@ -653,7 +641,7 @@ jobs:
           done
 
           # If no images were built, still mark as successful
-          image_count=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "violentutf|api|fastapi" | wc -l)
+          image_count=$(docker images --format "table {{.Repository}}:{{.Tag}}" | grep -E "violentutf|api|fastapi" | wc -l)
           if [ "$image_count" -eq "0" ]; then
             echo "No ViolentUTF images found to scan, but validation passed"
           else

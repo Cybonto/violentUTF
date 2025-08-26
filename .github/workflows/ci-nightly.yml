@@ -68,7 +68,7 @@ jobs:
         run: |
           # Only run unit tests for now
           if [ -d "tests/unit" ] && \
-             [ "$(find tests/unit -name 'test_*.py' -type f | wc -l)" -gt 0 ]; then
+             [ $(find tests/unit -name 'test_*.py' -type f | wc -l) -gt 0 ]; then
             pytest tests/unit -v --tb=short \
               --cov=violentutf --cov=violentutf_api \
               --cov-report=xml:coverage-${{ matrix.os }}-py${{ matrix.python-version }}.xml \
