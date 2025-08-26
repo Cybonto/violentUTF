@@ -285,7 +285,8 @@ class TestStartPageEndpoints:
         """Test that all endpoints used in Start page have corresponding APISIX routes"""
 
         # Read the Start page to extract endpoints
-        start_page_path = "/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf/pages/0_Start.py"
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        start_page_path = os.path.join(project_root, "violentutf", "pages", "0_Start.py")
 
         with open(start_page_path, "r") as f:
             content = f.read()

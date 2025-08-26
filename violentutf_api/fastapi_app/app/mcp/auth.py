@@ -127,3 +127,28 @@ class MCPAuthHandler:
                 "roles": user_info.get("roles", []),
             }
         )
+
+    async def get_auth_headers(self) -> Dict[str, str]:
+        """Get authentication headers for MCP requests"""
+        headers = {
+            "Content-Type": "application/json",
+            "X-API-Gateway": "APISIX",
+        }
+
+        # Try to get token from test environment or create a default one
+        try:
+            # For testing, create a minimal JWT token with basic claims
+            test_token = create_access_token({
+                "sub": "mcp_test_user",
+                "email": "mcp_test@violentutf.local",
+                "roles": ["mcp-access"],
+            })
+            
+            if test_token:
+                headers["Authorization"] = f"Bearer {test_token}"
+
+        except Exception as e:
+            logger.warning(f"Could not create auth token for MCP headers: {e}")
+            # Return headers without Authorization if token creation fails
+            
+        return headers

@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import List, Optional, Union
 
-from pydantic import AnyHttpUrl, Field, validator
+from pydantic import AnyHttpUrl, Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -30,10 +30,13 @@ class Settings(BaseSettings):
     API_KEY_EXPIRE_DAYS: int = Field(default=365, env="API_KEY_EXPIRE_DAYS")
     ALGORITHM: str = "HS256"
 
-    @validator("JWT_SECRET_KEY", always=True)
-    def set_jwt_secret_key(cls, v, values):
+    @field_validator("JWT_SECRET_KEY", mode="before")
+    @classmethod
+    def set_jwt_secret_key(cls, v, info):
         """Use SECRET_KEY if JWT_SECRET_KEY is not set"""
-        return v or values.get("SECRET_KEY", "")
+        if hasattr(info, 'data') and v is None:
+            return info.data.get("SECRET_KEY", "")
+        return v or ""
 
     # CORS
     BACKEND_CORS_ORIGINS: List[Union[str, AnyHttpUrl]] = Field(
@@ -169,7 +172,8 @@ class Settings(BaseSettings):
     OPENAPI_10_AUTH_TYPE: Optional[str] = Field(default=None, env="OPENAPI_10_AUTH_TYPE")
     OPENAPI_10_SPEC_PATH: Optional[str] = Field(default=None, env="OPENAPI_10_SPEC_PATH")
 
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
@@ -177,7 +181,8 @@ class Settings(BaseSettings):
             return v
         raise ValueError(v)
 
-    @validator("SECRET_KEY", pre=True)
+    @field_validator("SECRET_KEY", mode="before")
+    @classmethod
     def validate_secret_key(cls, v: str) -> str:
         if not v:
             # Generate a default secret key for development
@@ -186,7 +191,8 @@ class Settings(BaseSettings):
             return secrets.token_urlsafe(32)
         return v
 
-    @validator("APISIX_GATEWAY_SECRET", pre=True)
+    @field_validator("APISIX_GATEWAY_SECRET", mode="before")
+    @classmethod
     def validate_apisix_gateway_secret(cls, v: str) -> str:
         if not v:
             # Generate a default gateway secret for development
@@ -195,8 +201,16 @@ class Settings(BaseSettings):
             return secrets.token_urlsafe(32)
         return v
 
-    @validator("APP_DATA_DIR", "CONFIG_DIR", pre=True)
-    def validate_paths(cls, v: Union[str, Path]) -> Path:
+    @field_validator("APP_DATA_DIR", mode="before")
+    @classmethod
+    def validate_app_data_dir_path(cls, v: Union[str, Path]) -> Path:
+        path = Path(v) if isinstance(v, str) else v
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    @field_validator("CONFIG_DIR", mode="before")
+    @classmethod
+    def validate_config_dir_path(cls, v: Union[str, Path]) -> Path:
         path = Path(v) if isinstance(v, str) else v
         path.mkdir(parents=True, exist_ok=True)
         return path

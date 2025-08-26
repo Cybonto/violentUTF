@@ -12,11 +12,19 @@ from datetime import datetime, timedelta
 import requests
 from dotenv import load_dotenv
 
-# Add the violentutf directory to Python path
-sys.path.append("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf")
+# Add the project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(project_root, "violentutf"))
 
-# Load environment variables
-load_dotenv("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf/.env")
+# Load environment variables from project
+env_files = [
+    os.path.join(project_root, "violentutf", ".env"),
+    os.path.join(project_root, "violentutf_api", "fastapi_app", ".env"),
+]
+
+for env_file in env_files:
+    if os.path.exists(env_file):
+        load_dotenv(env_file)
 
 from utils.jwt_manager import jwt_manager
 from utils.logging import get_logger

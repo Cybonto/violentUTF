@@ -50,7 +50,8 @@ class TestPhase2Integration:
             route.tags = mock_route.tags
             api_routes.append(route)
 
-        app.routes = api_routes
+        # Use router.routes.extend() for FastAPI v0.116+ compatibility
+        app.router.routes.extend(api_routes)
         return app
 
     @pytest.mark.asyncio

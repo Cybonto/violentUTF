@@ -65,13 +65,13 @@ def get_auth_headers():
 class TestConverterApply:
     """Test converter apply functionality"""
 
-    def __init__(self):
-        """Initialize test environment"""
+    def setup_method(self):
+        """Initialize test environment for each test method"""
         self.headers = get_auth_headers()
         self.created_resources = {"datasets": [], "converters": []}
 
-    def cleanup_resources(self):
-        """Clean up created resources"""
+    def teardown_method(self):
+        """Clean up created resources after each test method"""
         # Delete created datasets
         for dataset_id in self.created_resources["datasets"]:
             try:

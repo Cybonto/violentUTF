@@ -11,13 +11,21 @@ from datetime import datetime, timedelta
 
 import requests
 
-# Add project paths
-sys.path.append("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf")
+# Add project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(project_root, "violentutf"))
 
-# Load environment
+# Load environment from project
 from dotenv import load_dotenv
 
-load_dotenv("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf/.env")
+env_files = [
+    os.path.join(project_root, "violentutf", ".env"),
+    os.path.join(project_root, "violentutf_api", "fastapi_app", ".env"),
+]
+
+for env_file in env_files:
+    if os.path.exists(env_file):
+        load_dotenv(env_file)
 
 
 def create_test_token():

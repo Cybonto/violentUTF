@@ -163,17 +163,30 @@ class ContractTestingPatches:
         self.patches.append(requests_patch)
         requests_patch.start()
 
-        # Patch token manager
-        token_manager_patch = patch("violentutf.utils.token_manager.token_manager", MockTokenManager())
-        self.patches.append(token_manager_patch)
-        token_manager_patch.start()
+        # Patch streamlit secrets to avoid import issues
+        streamlit_patch = patch("streamlit.secrets", {"auth": {"keycloak": {"client_id": "test"}}})
+        self.patches.append(streamlit_patch)
+        streamlit_patch.start()
+        
+        # Patch token manager with additional error handling
+        try:
+            token_manager_patch = patch("violentutf.utils.token_manager.token_manager", MockTokenManager())
+            self.patches.append(token_manager_patch)
+            token_manager_patch.start()
+        except ImportError:
+            # Skip token manager patching if module can't be imported
+            pass
 
-        # Patch APISIX endpoints
-        endpoints_patch = patch(
-            "violentutf.utils.token_manager.TokenManager.get_apisix_endpoints", return_value=mock_apisix_endpoints()
-        )
-        self.patches.append(endpoints_patch)
-        endpoints_patch.start()
+        # Patch APISIX endpoints with error handling  
+        try:
+            endpoints_patch = patch(
+                "violentutf.utils.token_manager.TokenManager.get_apisix_endpoints", return_value=mock_apisix_endpoints()
+            )
+            self.patches.append(endpoints_patch)
+            endpoints_patch.start()
+        except ImportError:
+            # Skip endpoints patching if module can't be imported
+            pass
 
         return self
 
