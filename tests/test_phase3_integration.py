@@ -93,6 +93,7 @@ class TestCommandProcessingIntegration:
 
         # Test natural language
         intent = detector.detect_configuration_intent("Load the jailbreak dataset")
+        assert intent is not None and isinstance(intent, dict)
         assert intent["type"] == "dataset"
         assert intent["action"] == "load"
         assert intent["target"] == "jailbreak"
@@ -288,11 +289,16 @@ class TestCommandHandlerIntegration:
             "timestamp": "2024-01-01T00:00:00",
         }
 
-        session_state["mcp_command_history"].append(command_result)
+        # Ensure mcp_command_history is a list before appending
+        if isinstance(session_state.get("mcp_command_history"), list):
+            session_state["mcp_command_history"].append(command_result)
+        else:
+            session_state["mcp_command_history"] = [command_result]
 
         # Verify history tracking
-        assert len(session_state["mcp_command_history"]) == 1
-        assert session_state["mcp_command_history"][0]["command"] == "Create a GPT-4 generator"
+        history = session_state.get("mcp_command_history")
+        assert isinstance(history, list) and len(history) == 1
+        assert isinstance(history[0], dict) and history[0]["command"] == "Create a GPT-4 generator"
 
 
 if __name__ == "__main__":

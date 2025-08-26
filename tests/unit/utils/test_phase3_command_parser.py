@@ -106,9 +106,12 @@ class TestNaturalLanguageParser(unittest.TestCase):
         for text, expected_params in test_cases:
             with self.subTest(text=text):
                 params = self.parser.extract_parameters(text)
-                for key, value in expected_params.items():
-                    self.assertIn(key, params)
-                    self.assertEqual(params[key], value)
+                if isinstance(expected_params, dict):
+                    for key, value in expected_params.items():
+                        self.assertIn(key, params)
+                        self.assertEqual(params[key], value)
+                else:
+                    self.fail("expected_params should be a dict")
 
 
 class TestConfigurationIntentDetector(unittest.TestCase):
@@ -129,8 +132,11 @@ class TestConfigurationIntentDetector(unittest.TestCase):
             with self.subTest(text=text):
                 intent = self.detector.detect_configuration_intent(text)
                 self.assertIsNotNone(intent)
-                self.assertEqual(intent["type"], "generator")
-                self.assertEqual(intent["action"], expected_action)
+                if isinstance(intent, dict):
+                    self.assertEqual(intent.get("type"), "generator")
+                    self.assertEqual(intent.get("action"), expected_action)
+                else:
+                    self.fail("intent should be a dict, got None")
 
     def test_dataset_intent_detection(self):
         """Test detecting dataset configuration intents"""
@@ -144,9 +150,12 @@ class TestConfigurationIntentDetector(unittest.TestCase):
             with self.subTest(text=text):
                 intent = self.detector.detect_configuration_intent(text)
                 self.assertIsNotNone(intent)
-                self.assertEqual(intent["type"], "dataset")
-                self.assertEqual(intent["action"], expected_action)
-                self.assertEqual(intent["target"], expected_target)
+                if isinstance(intent, dict):
+                    self.assertEqual(intent.get("type"), "dataset")
+                    self.assertEqual(intent.get("action"), expected_action)
+                    self.assertEqual(intent.get("target"), expected_target)
+                else:
+                    self.fail("intent should be a dict, got None")
 
     def test_orchestrator_intent_detection(self):
         """Test detecting orchestrator configuration intents"""
@@ -156,8 +165,11 @@ class TestConfigurationIntentDetector(unittest.TestCase):
             with self.subTest(text=text):
                 intent = self.detector.detect_configuration_intent(text)
                 self.assertIsNotNone(intent)
-                self.assertEqual(intent["type"], "orchestrator")
-                self.assertEqual(intent["action"], "create")
+                if isinstance(intent, dict):
+                    self.assertEqual(intent.get("type"), "orchestrator")
+                    self.assertEqual(intent.get("action"), "create")
+                else:
+                    self.fail("intent should be a dict, got None")
 
     def test_scorer_intent_detection(self):
         """Test detecting scorer configuration intents"""
@@ -171,9 +183,12 @@ class TestConfigurationIntentDetector(unittest.TestCase):
             with self.subTest(text=text):
                 intent = self.detector.detect_configuration_intent(text)
                 self.assertIsNotNone(intent)
-                self.assertEqual(intent["type"], "scorer")
-                self.assertEqual(intent["action"], "configure")
-                self.assertEqual(intent["target"], expected_target)
+                if isinstance(intent, dict):
+                    self.assertEqual(intent.get("type"), "scorer")
+                    self.assertEqual(intent.get("action"), "configure")
+                    self.assertEqual(intent.get("target"), expected_target)
+                else:
+                    self.fail("intent should be a dict, got None")
 
     def test_no_intent_detection(self):
         """Test that regular text doesn't trigger intent detection"""
@@ -198,9 +213,12 @@ class TestConfigurationIntentDetector(unittest.TestCase):
         for text, expected_params in test_cases:
             with self.subTest(text=text):
                 params = self.detector.extract_generator_params(text)
-                for key, value in expected_params.items():
-                    self.assertIn(key, params)
-                    self.assertEqual(params[key], value)
+                if isinstance(expected_params, dict):
+                    for key, value in expected_params.items():
+                        self.assertIn(key, params)
+                        self.assertEqual(params[key], value)
+                else:
+                    self.fail("expected_params should be a dict")
 
 
 class TestMCPCommandStructure(unittest.TestCase):

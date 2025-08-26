@@ -38,7 +38,11 @@ def create_test_jwt_token() -> str:
         "token_type": "access",
     }
 
-    return jwt.encode(payload, secret_key, algorithm="HS256")
+    token = jwt.encode(payload, secret_key, algorithm="HS256")
+    # PyJWT returns string in newer versions, bytes in older versions
+    if isinstance(token, bytes):
+        return token.decode("utf-8")
+    return str(token)
 
 
 class TestEnhancementStripIntegration:
@@ -285,7 +289,12 @@ class TestEnhancementStripIntegration:
                     continue
 
             if variations:
-                workflow_results["variations"] = variations
+                # Ensure workflow_results["variations"] is initialized as a list or None
+                if workflow_results.get("variations") is None or isinstance(workflow_results.get("variations"), list):
+                    workflow_results["variations"] = variations
+                else:
+                    # Handle or assert for invalid type
+                    assert False, "workflow_results['variations'] should be a list or None"
                 print(f"✓ Generated {len(variations)} variations")
         except Exception as e:
             print(f"Variation generation failed: {e}")
