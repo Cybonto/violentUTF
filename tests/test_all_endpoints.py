@@ -14,7 +14,7 @@ import requests
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"
-JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbWFpbCI6InRlc3RAdmlvbGVudHV0Zi5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicm9sZXMiOlsiYWktYXBpLWFjY2VzcyJdLCJpYXQiOjE3NDkzNDEzMzEsImV4cCI6MTc0OTM0NDkzMX0.IuvBNOICkgUzxhVOlxvFVoYFWDJ4wwBL6CxQXJkVdYs"
+JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbWFpbCI6InRlc3RAdmlvbGVudHV0Zi5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicm9sZXMiOlsiYWktYXBpLWFjY2VzcyJdLCJpYXQiOjE3NDkzNDEzMzEsImV4cCI6MTc0OTM0NDkzMX0.IuvBNOICkgUzxhVOlxvFVoYFWDJ4wwBL6CxQXJkVdYs"  # nosec B105 - test JWT token
 
 # Test results tracking
 test_results = {"passed": 0, "failed": 0, "skipped": 0, "total": 0, "details": []}

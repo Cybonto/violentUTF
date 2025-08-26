@@ -149,8 +149,8 @@ def api_headers(keycloak_available, authenticated_headers, mock_headers):
     if keycloak_available:
         try:
             return authenticated_headers
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Warning: Error in cleanup: {e}")
 
     # Fall back to mock headers
     return mock_headers
@@ -208,8 +208,8 @@ def cleanup_generators(api_headers, api_base_url):
     for gen_id in created_generators:
         try:
             requests.delete(f"{api_base_url}/api/v1/generators/{gen_id}", headers=api_headers, timeout=10)
-        except Exception:
-            pass  # Ignore cleanup failures
+        except Exception as e:
+            print(f"Warning: Error in cleanup: {e}")  # Ignore cleanup failures
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -388,5 +388,5 @@ def cleanup_contract_tests():
             if os.path.exists(file):
                 try:
                     os.remove(file)
-                except Exception:
-                    pass  # Ignore cleanup failures
+                except Exception as e:
+                    print(f"Warning: Error in cleanup: {e}")  # Ignore cleanup failures

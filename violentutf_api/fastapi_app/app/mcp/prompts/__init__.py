@@ -7,7 +7,7 @@ security testing templates and dynamic prompt generation.
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 # Import prompt providers to auto-register them
 from app.mcp.prompts import security, testing
@@ -40,7 +40,7 @@ class PromptsManager:
         prompts = self.registry.list_prompts()
         return [prompt.dict() for prompt in prompts]
 
-    async def get_prompt(self, name: str, args: Dict[str, Any] = None) -> str:
+    async def get_prompt(self, name: str, args: Optional[Dict[str, Any]] = None) -> str:
         """Get and render a prompt by name"""
         if not self._initialized:
             await self.initialize()
@@ -49,7 +49,8 @@ class PromptsManager:
         if not prompt:
             raise ValueError(f"Prompt not found: {name}")
 
-        return await prompt.render(args or {})
+        result = await prompt.render(args or {})
+        return str(result)
 
     def get_prompt_info(self, name: str) -> Dict[str, Any]:
         """Get prompt definition and metadata"""
@@ -58,7 +59,8 @@ class PromptsManager:
             return {"error": f"Prompt not found: {name}"}
 
         definition = prompt.get_definition()
-        return definition.dict()
+        result = definition.dict()
+        return dict(result)
 
 
 # Global prompts manager

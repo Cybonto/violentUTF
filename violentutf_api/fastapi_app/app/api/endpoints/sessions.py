@@ -34,7 +34,10 @@ def load_session_data(username: str) -> Dict[str, Any]:
     if os.path.exists(session_file):
         try:
             with open(session_file, "r") as f:
-                return json.load(f)
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+                return {}
         except Exception:
             pass
 
@@ -169,13 +172,14 @@ async def reset_session_state(current_user: User = Depends(get_current_user)):
     """
     try:
         # Create fresh session data
-        session_data = {
+        session_data: Dict[str, Any] = {
             "session_id": f"session_{current_user.username}_{datetime.utcnow().isoformat()}",
             "user_id": current_user.username,
             "ui_preferences": {},
             "workflow_state": {},
             "temporary_data": {},
             "cache_data": {},
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
         # Save reset session data to DuckDB

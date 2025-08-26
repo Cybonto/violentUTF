@@ -75,22 +75,22 @@ class TestConverterApply:
         # Delete created datasets
         for dataset_id in self.created_resources["datasets"]:
             try:
-                requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
-            except Exception:
-                pass
+                requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers, timeout=30)
+            except Exception as e:
+                print(f"Warning: Failed to clean up dataset {dataset_id}: {e}")
 
         # Delete created converters
         for converter_id in self.created_resources["converters"]:
             try:
-                requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers)
-            except Exception:
-                pass
+                requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers, timeout=30)
+            except Exception as e:
+                print(f"Warning: Failed to clean up dataset {dataset_id}: {e}")
 
     def create_test_dataset(self, name: str, prompts: list) -> str:
         """Create a test dataset and return its ID"""
         payload = {"name": name, "source_type": "local", "prompts": prompts, "config": {"test": True}}
 
-        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers, timeout=30)
 
         assert response.status_code == 201, f"Failed to create dataset: {response.text}"
 
@@ -103,7 +103,7 @@ class TestConverterApply:
         """Create a test converter and return its ID"""
         payload = {"name": name, "converter_type": converter_type, "parameters": {"append_description": True}}
 
-        response = requests.post(API_ENDPOINTS["converters"], json=payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["converters"], json=payload, headers=self.headers, timeout=30)
 
         assert response.status_code == 201, f"Failed to create converter: {response.text}"
 
@@ -135,7 +135,7 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
         )
 
         assert response.status_code == 200, f"Failed to apply converter: {response.text}"
@@ -150,7 +150,7 @@ class TestConverterApply:
         self.created_resources["datasets"].append(new_dataset_id)
 
         # Get the new dataset to verify it exists
-        response = requests.get(f"{API_ENDPOINTS['datasets']}/{new_dataset_id}", headers=self.headers)
+        response = requests.get(f"{API_ENDPOINTS['datasets']}/{new_dataset_id}", headers=self.headers, timeout=30)
 
         assert response.status_code == 200, f"New dataset not found: {response.text}"
 
@@ -180,7 +180,7 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
         )
 
         assert response.status_code == 200, f"Failed to apply converter: {response.text}"
@@ -212,7 +212,7 @@ class TestConverterApply:
             "parameters": {"caesar_offset": 5, "append_description": False},
         }
 
-        response = requests.post(API_ENDPOINTS["converters"], json=payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["converters"], json=payload, headers=self.headers, timeout=30)
 
         assert response.status_code == 201
         converter_id = response.json()["converter"]["id"]
@@ -228,7 +228,7 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
         )
 
         assert response.status_code == 200
@@ -254,7 +254,7 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
         )
 
         assert response.status_code == 404
@@ -277,7 +277,7 @@ class TestConverterApply:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=payload, headers=self.headers, timeout=30
         )
 
         assert response.status_code == 400

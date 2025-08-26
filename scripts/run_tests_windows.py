@@ -8,7 +8,7 @@ import argparse
 import glob
 import json
 import os
-import subprocess
+import subprocess  # nosec B404 - needed for test execution
 import sys
 from pathlib import Path
 
@@ -35,13 +35,13 @@ def install_dependencies(req_files):
     # Install core test dependencies first
     core_deps = ["pytest", "pytest-cov", "pytest-timeout", "pytest-xdist"]
     for dep in core_deps:
-        subprocess.run([sys.executable, "-m", "pip", "install", dep], check=False)
+        subprocess.run([sys.executable, "-m", "pip", "install", dep], check=False)  # nosec B603 - controlled pip install
 
     # Install from each requirements file
     for req_file in req_files:
         print(f"Installing from {req_file}")
         try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_file], check=False)
+            subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_file], check=False)  # nosec B603 - controlled pip install
         except Exception as e:
             print(f"Warning: Failed to install from {req_file}: {e}")
 
@@ -94,7 +94,7 @@ def run_tests(test_dir="tests/unit", coverage=True, parallel=True):
     print(f"Running command: {' '.join(cmd)}")
 
     # Run tests
-    result = subprocess.run(cmd)
+    result = subprocess.run(cmd)  # nosec B603 - controlled pytest command
 
     return result.returncode
 

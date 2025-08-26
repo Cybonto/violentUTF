@@ -49,7 +49,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-def decode_token(token: str) -> Optional[Dict[str, Any]]:
+def decode_token(token: str) -> Dict[str, Any] | None:
     """
     Decode and validate a JWT token with comprehensive security checks
 
@@ -111,7 +111,7 @@ def decode_token(token: str) -> Optional[Dict[str, Any]]:
                 payload["email"] = None
 
         logger.debug(f"Successfully validated JWT token for user: {payload.get('sub')}")
-        return payload
+        return dict(payload)
 
     except jwt.ExpiredSignatureError:
         logger.warning("JWT token has expired")
@@ -151,13 +151,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return False
 
     try:
-        return pwd_context.verify(plain_password, hashed_password)
+        return bool(pwd_context.verify(plain_password, hashed_password))
     except Exception as e:
         logger.error(f"Password verification error: {str(e)}")
         return False
 
 
-def get_password_hash(password: str, username: str = None, email: str = None) -> str:
+def get_password_hash(password: str, username: Optional[str] = None, email: Optional[str] = None) -> str:
     """
     Hash a password using bcrypt with comprehensive security validation
 
@@ -196,13 +196,13 @@ def get_password_hash(password: str, username: str = None, email: str = None) ->
         logger.info(
             f"Password hashed successfully (strength: {validation_result.strength.value}, score: {validation_result.score})"
         )
-        return hashed
+        return str(hashed)
     except Exception as e:
         logger.error(f"Password hashing error: {str(e)}")
         raise ValueError("Failed to hash password")
 
 
-def create_api_key_token(user_id: str, key_name: str, permissions: list = None, key_id: str = None) -> Dict[str, Any]:
+def create_api_key_token(user_id: str, key_name: str, permissions: Optional[list] = None, key_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Create an API key token with extended expiration and input validation
 

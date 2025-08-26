@@ -7,6 +7,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 # ANSI color codes for output
 RED = "\033[91m"
@@ -45,7 +46,7 @@ EXCLUDE_PATTERNS = [
 ]
 
 
-def should_check_file(filepath):
+def should_check_file(filepath) -> bool:
     """Determine if a file should be checked."""
     path = Path(filepath)
 
@@ -58,9 +59,9 @@ def should_check_file(filepath):
     return path.suffix == ".py"
 
 
-def check_file(filepath):
+def check_file(filepath) -> list[dict[str, Any] | str]:
     """Check a file for corrupted regex patterns."""
-    errors = []
+    errors: list[dict[str, Any] | str] = []
 
     try:
         with open(filepath, "r", encoding="utf-8") as f:
@@ -93,7 +94,7 @@ def check_file(filepath):
     return errors
 
 
-def main(files):
+def main(files) -> int:
     """Main function to check files."""
     all_errors = []
     files_checked = 0
@@ -110,7 +111,7 @@ def main(files):
         print(f"\nFound {len(all_errors)} issue(s) in {files_checked} file(s):\n")
 
         # Group errors by file
-        errors_by_file = {}
+        errors_by_file: dict[str, list] = {}
         for error in all_errors:
             if isinstance(error, dict):
                 file = error["file"]
@@ -121,12 +122,13 @@ def main(files):
                 print(f"  {error}")
 
         # Print grouped errors
-        for file, errors in errors_by_file.items():
+        for file, file_errors in errors_by_file.items():
             print(f"{YELLOW}📄 {file}:{RESET}")
-            for error in errors:
-                print(f"  Line {error['line']}: {error['description']}")
-                print(f"    Found: {error['pattern']}")
-                print(f"    Code: {error['content'][:80]}...")
+            for error in file_errors:
+                if isinstance(error, dict):
+                    print(f"  Line {error['line']}: {error['description']}")
+                    print(f"    Found: {error['pattern']}")
+                    print(f"    Code: {error['content'][:80]}...")
                 print()
 
         print(f"{RED}Please fix these issues before committing.{RESET}")

@@ -7,7 +7,7 @@ Run this before every commit to ensure your code will pass GitHub Actions checks
 import argparse
 import json
 import os
-import subprocess
+import subprocess  # nosec B404 - needed for code quality checks
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -122,7 +122,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
         if not success:
             # Parse flake8 output for common issues
             lines = output.split("\n")
-            error_counts = {}
+            error_counts: dict[str, int] = {}
             for line in lines:
                 if ":" in line and len(line.split(":")) >= 4:
                     parts = line.split(":")

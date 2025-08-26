@@ -52,7 +52,7 @@ url = f"{API_BASE_URL}/api/v1/orchestrators/executions"
 print(f"URL: {url}")
 
 try:
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, timeout=30)
     print(f"Status Code: {response.status_code}")
     print(f"Response Headers: {dict(response.headers)}")
 
@@ -81,7 +81,7 @@ try:
     direct_headers = headers.copy()
     direct_headers.pop("X-API-Gateway", None)
 
-    response = requests.get(direct_url, headers=direct_headers)
+    response = requests.get(direct_url, headers=direct_headers, timeout=30)
     print(f"Status Code: {response.status_code}")
 
     if response.status_code == 200:
@@ -105,7 +105,7 @@ if admin_key:
     admin_headers = {"X-API-KEY": admin_key}
 
     try:
-        response = requests.get(admin_url, headers=admin_headers)
+        response = requests.get(admin_url, headers=admin_headers, timeout=30)
         if response.status_code == 200:
             routes = response.json()
             print("APISIX Routes related to orchestrators:")

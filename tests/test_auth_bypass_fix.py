@@ -8,10 +8,10 @@ import hmac
 import os
 import sys
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 
-def generate_hmac_signature(gateway_secret: str, method: str, path: str, timestamp: str = None) -> Tuple[str, str]:
+def generate_hmac_signature(gateway_secret: str, method: str, path: str, timestamp: Optional[str] = None) -> Tuple[str, str]:
     """Generate HMAC signature for testing"""
     if timestamp is None:
         timestamp = str(int(time.time()))
@@ -42,7 +42,7 @@ def test_authentication_bypass_blocked():
     print("   Status: ✅ BLOCKED - Signature verification fails")
 
     # Test 3: Verify old timestamp is blocked (replay attack)
-    gateway_secret = "test_secret_123"
+    gateway_secret = "test_secret_123"  # nosec B105 - test secret for security validation
     old_timestamp = str(int(time.time()) - 3600)  # 1 hour ago
     signature, _ = generate_hmac_signature(gateway_secret, "GET", "/health", old_timestamp)
 
@@ -73,7 +73,7 @@ def test_hmac_implementation():
     print("=" * 35)
 
     # Test vector 1
-    secret = "test_secret_key_123"
+    secret = "test_secret_key_123"  # nosec B105 - test secret for HMAC validation
     method = "GET"
     path = "/api/v1/health"
     timestamp = "1609459200"  # Fixed timestamp for reproducible test
@@ -112,7 +112,7 @@ def test_timing_attack_resistance():
     print("\n⏱️  Testing Timing Attack Resistance")
     print("=" * 40)
 
-    secret = "test_secret"
+    secret = "test_secret"  # nosec B105 - test secret for timing attack test
     correct_sig, timestamp = generate_hmac_signature(secret, "GET", "/test", "1609459200")
 
     # Test signatures that differ early vs late

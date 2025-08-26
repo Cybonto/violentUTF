@@ -20,7 +20,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"
-JWT_SECRET_KEY = "ZtZDeFsgTqUm3KHSKINa46TUV13JJw7T"
+JWT_SECRET_KEY = "ZtZDeFsgTqUm3KHSKINa46TUV13JJw7T"  # nosec B105 - test JWT secret
 
 
 def create_jwt_token():
@@ -88,7 +88,7 @@ def test_converter_transformations():
             "config": {},
         }
 
-        response = requests.post(f"{API_BASE_URL}/api/v1/datasets", json=dataset_payload, headers=headers)
+        response = requests.post(f"{API_BASE_URL}/api/v1/datasets", json=dataset_payload, headers=headers, timeout=30)
 
         if response.status_code not in [200, 201]:
             # If local source doesn't work as expected, use native type
@@ -98,7 +98,7 @@ def test_converter_transformations():
                 "dataset_type": "adv_bench",
                 "config": {},
             }
-            response = requests.post(f"{API_BASE_URL}/api/v1/datasets", json=dataset_payload, headers=headers)
+            response = requests.post(f"{API_BASE_URL}/api/v1/datasets", json=dataset_payload, headers=headers, timeout=30)
 
         assert response.status_code in [200, 201], f"Failed to create dataset: {response.text}"
 
@@ -112,7 +112,7 @@ def test_converter_transformations():
             "parameters": {"append_description": False},  # Don't append description for easier verification
         }
 
-        response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers)
+        response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30)
 
         assert response.status_code in [200, 201]
         converter_id = response.json()["converter"]["id"]
@@ -129,14 +129,14 @@ def test_converter_transformations():
 
         response = requests.post(
             f"{API_BASE_URL}/api/v1/converters/{converter_id}/apply", json=apply_payload, headers=headers
-        )
+        , timeout=30)
 
         assert response.status_code == 200
         new_dataset_id = response.json()["dataset_id"]
         resources_to_cleanup["datasets"].append(new_dataset_id)
 
         # Get the converted dataset to check prompts
-        response = requests.get(f"{API_BASE_URL}/api/v1/datasets/{new_dataset_id}", headers=headers)
+        response = requests.get(f"{API_BASE_URL}/api/v1/datasets/{new_dataset_id}", headers=headers, timeout=30)
 
         assert response.status_code == 200
         converted_dataset = response.json()
@@ -159,7 +159,7 @@ def test_converter_transformations():
             "parameters": {"append_description": False},
         }
 
-        response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers)
+        response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30)
 
         assert response.status_code in [200, 201]
         b64_converter_id = response.json()["converter"]["id"]
@@ -176,7 +176,7 @@ def test_converter_transformations():
 
         response = requests.post(
             f"{API_BASE_URL}/api/v1/converters/{b64_converter_id}/apply", json=apply_payload, headers=headers
-        )
+        , timeout=30)
 
         assert response.status_code == 200
         b64_dataset_id = response.json()["dataset_id"]
@@ -193,7 +193,7 @@ def test_converter_transformations():
             "parameters": {"caesar_offset": 7, "append_description": False},
         }
 
-        response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers)
+        response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30)
 
         assert response.status_code in [200, 201]
         caesar_converter_id = response.json()["converter"]["id"]
@@ -210,7 +210,7 @@ def test_converter_transformations():
 
         response = requests.post(
             f"{API_BASE_URL}/api/v1/converters/{caesar_converter_id}/apply", json=apply_payload, headers=headers
-        )
+        , timeout=30)
 
         assert response.status_code == 200
         caesar_dataset_id = response.json()["dataset_id"]
@@ -240,14 +240,14 @@ def test_converter_transformations():
         print("\n🧹 Cleaning up test resources...")
         for converter_id in resources_to_cleanup["converters"]:
             try:
-                requests.delete(f"{API_BASE_URL}/api/v1/converters/{converter_id}", headers=headers)
-            except Exception:
-                pass
+                requests.delete(f"{API_BASE_URL}/api/v1/converters/{converter_id}", headers=headers, timeout=30)
+            except Exception as e:
+                print(f"Warning: Error in cleanup: {e}")
         for dataset_id in resources_to_cleanup["datasets"]:
             try:
-                requests.delete(f"{API_BASE_URL}/api/v1/datasets/{dataset_id}", headers=headers)
-            except Exception:
-                pass
+                requests.delete(f"{API_BASE_URL}/api/v1/datasets/{dataset_id}", headers=headers, timeout=30)
+            except Exception as e:
+                print(f"Warning: Error in cleanup: {e}")
 
 
 if __name__ == "__main__":

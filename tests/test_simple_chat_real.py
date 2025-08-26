@@ -25,7 +25,7 @@ def test_simple_chat_starts_without_errors():
     process = None
     try:
         # Start Simple Chat
-        process = subprocess.Popen(
+        process = subprocess.Popen(  # nosec B603 - controlled streamlit command
             ["python3", "-m", "streamlit", "run", "pages/Simple_Chat.py"],
             cwd=os.path.join(os.path.dirname(__file__), "..", "violentutf"),
             env=env,
@@ -94,7 +94,7 @@ analyzer = ContextAnalyzer()
 print("All imports successful")
 """
 
-    result = subprocess.run(
+    result = subprocess.run(  # nosec B603 - controlled python test script
         ["python3", "-c", test_script], cwd=os.path.dirname(os.path.dirname(__file__)), capture_output=True, text=True
     )
 

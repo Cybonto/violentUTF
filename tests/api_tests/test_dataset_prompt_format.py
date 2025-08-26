@@ -78,16 +78,16 @@ class TestDatasetPromptFormat:
         # Delete created datasets
         for dataset_id in self.created_resources["datasets"]:
             try:
-                requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
-            except Exception:
-                pass
+                requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers, timeout=30)
+            except Exception as e:
+                print(f"Warning: Error in cleanup: {e}")
 
         # Delete created converters
         for converter_id in self.created_resources["converters"]:
             try:
-                requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers)
-            except Exception:
-                pass
+                requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers, timeout=30)
+            except Exception as e:
+                print(f"Warning: Error in cleanup: {e}")
 
     def test_dataset_creation_and_retrieval(self):
         """Test that dataset prompts are properly stored and retrieved"""
@@ -97,7 +97,7 @@ class TestDatasetPromptFormat:
         # Create dataset via API
         payload = {"name": dataset_name, "source_type": "local", "config": {"test": True}}
 
-        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers, timeout=30)
 
         assert response.status_code in [200, 201], f"Failed to create dataset: {response.text}"
 
@@ -108,7 +108,7 @@ class TestDatasetPromptFormat:
         print(f"✅ Created dataset: {dataset_name} with ID: {dataset_id}")
 
         # First list all datasets to verify it exists
-        list_response = requests.get(API_ENDPOINTS["datasets"], headers=self.headers)
+        list_response = requests.get(API_ENDPOINTS["datasets"], headers=self.headers, timeout=30)
 
         if list_response.status_code == 200:
             datasets = list_response.json().get("datasets", [])
@@ -121,7 +121,7 @@ class TestDatasetPromptFormat:
                 print(f"   Available IDs: {dataset_ids[:3]}...")  # Show first 3
 
         # Retrieve the dataset
-        response = requests.get(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
+        response = requests.get(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers, timeout=30)
 
         assert response.status_code == 200, f"Failed to retrieve dataset: {response.text}"
 
@@ -154,7 +154,7 @@ class TestDatasetPromptFormat:
 
         payload = {"name": dataset_name, "source_type": "native", "dataset_type": "harmbench", "config": {}}
 
-        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers, timeout=30)
 
         assert response.status_code in [200, 201], f"Failed to create dataset: {response.text}"
 
@@ -170,7 +170,7 @@ class TestDatasetPromptFormat:
             "parameters": {"append_description": True},
         }
 
-        response = requests.post(API_ENDPOINTS["converters"], json=converter_payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["converters"], json=converter_payload, headers=self.headers, timeout=30)
 
         assert response.status_code in [200, 201], f"Failed to create converter: {response.text}"
 
@@ -189,7 +189,7 @@ class TestDatasetPromptFormat:
 
         response = requests.post(
             API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=apply_payload, headers=self.headers
-        )
+        , timeout=30)
 
         if response.status_code == 200:
             result = response.json()
@@ -216,7 +216,7 @@ class TestDatasetPromptFormat:
 
         payload = {"name": f"consistency_test_{uuid.uuid4().hex[:8]}", "source_type": "local", "config": {}}
 
-        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers, timeout=30)
 
         if response.status_code in [200, 201]:
             dataset_data = response.json()["dataset"]
@@ -239,7 +239,7 @@ class TestDatasetPromptFormat:
         # Test 2: Check dataset retrieval format
         print("\n2️⃣ Testing dataset retrieval format...")
 
-        response = requests.get(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
+        response = requests.get(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers, timeout=30)
 
         if response.status_code == 200:
             retrieved_data = response.json()

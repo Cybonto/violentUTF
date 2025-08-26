@@ -17,8 +17,8 @@ from fastapi.security import HTTPBearer
 logger = logging.getLogger(__name__)
 
 # Test JWT secret - only for testing
-TEST_JWT_SECRET = "test_jwt_secret_for_contract_testing_only"
-TEST_API_KEY = "test_api_key_for_contract_testing"
+TEST_JWT_SECRET = "test_jwt_secret_for_contract_testing_only"  # nosec B105 - test secret
+TEST_API_KEY = "test_api_key_for_contract_testing"  # nosec B105 - test secret
 
 
 class MockTokenManager:

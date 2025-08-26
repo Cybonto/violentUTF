@@ -60,3 +60,4 @@ pip-delete-this-directory.txt
 
 # APISIX auto-generated configuration
 apisix/conf/nginx.conf
+violentutf/app_data/violentutf/api_memory/orchestrator_memory_e386ca4d.db.wal

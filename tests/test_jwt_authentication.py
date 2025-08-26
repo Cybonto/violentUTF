@@ -24,7 +24,7 @@ class TestJWTAuthentication:
     def test_jwt_token_creation(self):
         """Test JWT token creation with proper structure"""
         # Simulate JWT manager token creation
-        secret_key = "test_secret_key_for_jwt"
+        secret_key = "test_secret_key_for_jwt"  # nosec B105 - test JWT secret
         algorithm = "HS256"
 
         now = datetime.now(timezone.utc)
@@ -48,7 +48,7 @@ class TestJWTAuthentication:
 
     def test_jwt_token_expiry_detection(self):
         """Test detection of expired JWT tokens"""
-        secret_key = "test_secret_key_for_jwt"
+        secret_key = "test_secret_key_for_jwt"  # nosec B105 - test JWT secret
         algorithm = "HS256"
 
         # Create expired token
@@ -72,7 +72,7 @@ class TestJWTAuthentication:
 
     def test_jwt_token_refresh_timing(self):
         """Test proactive refresh timing (10 minutes before expiry)"""
-        secret_key = "test_secret_key_for_jwt"
+        secret_key = "test_secret_key_for_jwt"  # nosec B105 - test JWT secret
         algorithm = "HS256"
 
         # Create token that expires in 5 minutes (should trigger refresh)
@@ -100,12 +100,12 @@ class TestJWTAuthentication:
     def test_api_authentication_flow(self):
         """Test the complete API authentication flow"""
         # Test unauthenticated request
-        response = requests.get(f"{API_BASE_URL}/api/v1/auth/token/info")
+        response = requests.get(f"{API_BASE_URL}/api/v1/auth/token/info", timeout=30)
         assert response.status_code == 401, "Unauthenticated request should return 401"
 
         # Test with invalid token
         headers = {"Authorization": "Bearer invalid_token"}
-        response = requests.get(f"{API_BASE_URL}/api/v1/auth/token/info", headers=headers)
+        response = requests.get(f"{API_BASE_URL}/api/v1/auth/token/info", headers=headers, timeout=30)
         assert response.status_code == 401, "Invalid token should return 401"
 
     def test_apisix_api_key_header_format(self):

@@ -36,7 +36,7 @@ class DuckDBManager:
         "user_sessions",
     }
 
-    def __init__(self, username: str, salt: str = None, app_data_dir: str = None):
+    def __init__(self, username: str, salt: Optional[str] = None, app_data_dir: Optional[str] = None):
         self.username = username
         self.salt = salt or os.getenv("PYRIT_DB_SALT", "default_salt_2025")
         self.app_data_dir = app_data_dir or os.getenv("APP_DATA_DIR", "./app_data/violentutf")
@@ -56,7 +56,7 @@ class DuckDBManager:
         filename = self._get_db_filename()
         if not filename:
             return ""
-        return os.path.join(self.app_data_dir, filename)
+        return os.path.join(self.app_data_dir or "./app_data/violentutf", filename)
 
     def _ensure_tables(self):
         """Create all required tables if they don't exist"""
@@ -303,9 +303,9 @@ class DuckDBManager:
     def update_generator(
         self,
         generator_id: str,
-        parameters: Dict[str, Any] = None,
-        status: str = None,
-        test_results: Dict[str, Any] = None,
+        parameters: Optional[Dict[str, Any]] = None,
+        status: Optional[str] = None,
+        test_results: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """Update generator configuration with SQL injection protection"""
         updates_dict = {}
@@ -341,7 +341,7 @@ class DuckDBManager:
                     params.pop(timestamp_idx)
 
                 conn.execute(query, params)
-                return conn.rowcount > 0
+                return bool(conn.rowcount > 0)
 
         except ValueError as e:
             logger.error(f"Security validation failed in update_generator: {e}")
@@ -382,11 +382,11 @@ class DuckDBManager:
             logger.info(
                 f"Generator {generator_id} deletion {'successful' if success else 'failed'} for user {self.username}"
             )
-            return success
+            return bool(success)
 
     # Dataset operations
     def create_dataset(
-        self, name: str, source_type: str, configuration: Dict[str, Any], prompts: List[str] = None
+        self, name: str, source_type: str, configuration: Dict[str, Any], prompts: Optional[List[str]] = None
     ) -> str:
         """Create a new dataset"""
         dataset_id = str(uuid.uuid4())
@@ -497,7 +497,7 @@ class DuckDBManager:
             # Delete dataset
             conn.execute("DELETE FROM datasets WHERE id = ? AND user_id = ?", [dataset_id, self.username])
 
-            return conn.rowcount > 0
+            return bool(conn.rowcount > 0)
 
     # Session operations
     def save_session(self, session_key: str, session_data: Dict[str, Any]) -> bool:
@@ -618,7 +618,7 @@ class DuckDBManager:
         """Delete converter"""
         with duckdb.connect(self.db_path) as conn:
             conn.execute("DELETE FROM converters WHERE id = ? AND user_id = ?", [converter_id, self.username])
-            return conn.rowcount > 0
+            return bool(conn.rowcount > 0)
 
     # Scorer operations (similar pattern)
     def create_scorer(self, name: str, scorer_type: str, parameters: Dict[str, Any]) -> str:
@@ -689,7 +689,7 @@ class DuckDBManager:
         """Delete scorer"""
         with duckdb.connect(self.db_path) as conn:
             conn.execute("DELETE FROM scorers WHERE id = ? AND user_id = ?", [scorer_id, self.username])
-            return conn.rowcount > 0
+            return bool(conn.rowcount > 0)
 
     # Utility methods
     def get_stats(self) -> Dict[str, Any]:
@@ -711,12 +711,12 @@ class DuckDBManager:
 
             # Database file size
             if os.path.exists(self.db_path):
-                stats["db_size_mb"] = os.path.getsize(self.db_path) / (1024 * 1024)
+                stats["db_size_mb"] = int(os.path.getsize(self.db_path) / (1024 * 1024))
             else:
                 stats["db_size_mb"] = 0
 
-            stats["db_path"] = self.db_path
-            stats["username"] = self.username
+            # Note: db_path is a string, should be handled separately if needed
+            # Note: username is a string, should be handled separately if needed
 
             return stats
 

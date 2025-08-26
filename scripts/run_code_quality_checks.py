@@ -6,9 +6,10 @@ This helps identify and fix issues before pushing to PR.
 
 import json
 import os
-import subprocess
+import subprocess  # nosec B404 - needed for code quality checks
 import sys
 from pathlib import Path
+from typing import Optional
 
 # ANSI color codes
 GREEN = "\033[92m"
@@ -19,7 +20,7 @@ RESET = "\033[0m"
 BOLD = "\033[1m"
 
 
-def run_command(cmd, description, continue_on_error=False, capture_output=False):
+def run_command(cmd, description, continue_on_error=False, capture_output=False) -> tuple[bool, Optional[str]]:
     """Run a command and report results."""
     print(f"\n{BLUE}{BOLD}{'='*60}{RESET}")
     print(f"{BLUE}{BOLD}{description}{RESET}")
@@ -50,7 +51,7 @@ def run_command(cmd, description, continue_on_error=False, capture_output=False)
                 import shlex
 
                 cmd = shlex.split(cmd)
-            result = subprocess.run(cmd)  # nosec B603 - controlled input
+            result = subprocess.run(cmd, text=True)  # nosec B603 - controlled input
             if result.returncode == 0:
                 print(f"{GREEN}✓ {description} passed{RESET}")
                 return True, None
@@ -66,7 +67,7 @@ def run_command(cmd, description, continue_on_error=False, capture_output=False)
         return False, str(e)
 
 
-def install_tools():
+def install_tools() -> bool:
     """Install required tools."""
     print(f"{BLUE}{BOLD}Installing required tools...{RESET}")
     tools = [
@@ -86,32 +87,32 @@ def install_tools():
     return success
 
 
-def run_black_check():
+def run_black_check() -> tuple[bool, Optional[str]]:
     """Run Black formatter check."""
     return run_command("black --check --diff . --verbose", "Black formatter check")
 
 
-def run_black_fix():
+def run_black_fix() -> tuple[bool, Optional[str]]:
     """Run Black formatter to fix issues."""
     return run_command("black . --verbose", "Black formatter (fix mode)")
 
 
-def run_isort_check():
+def run_isort_check() -> tuple[bool, Optional[str]]:
     """Run isort import sorter check."""
     return run_command("isort --check-only --diff . --profile black", "isort import sorter check")
 
 
-def run_isort_fix():
+def run_isort_fix() -> tuple[bool, Optional[str]]:
     """Run isort to fix import order."""
     return run_command("isort . --profile black", "isort import sorter (fix mode)")
 
 
-def run_flake8():
+def run_flake8() -> tuple[bool, Optional[str]]:
     """Run flake8 linter."""
     return run_command("flake8 . --count --statistics --show-source", "Flake8 linter")
 
 
-def run_pylint():
+def run_pylint() -> tuple[bool, Optional[str]]:
     """Run pylint on Python files."""
     # Note: This continues on error as per the workflow
     return run_command(
@@ -121,13 +122,13 @@ def run_pylint():
     )
 
 
-def run_mypy():
+def run_mypy() -> tuple[bool, Optional[str]]:
     """Run mypy type checker."""
     # Note: This continues on error as per the workflow
     return run_command("mypy --install-types --non-interactive . || true", "MyPy type checker", continue_on_error=True)
 
 
-def run_bandit():
+def run_bandit() -> tuple[bool, Optional[str]]:
     """Run Bandit security scanner."""
     success, _ = run_command(
         "bandit -r . -f json -o bandit-report.json", "Bandit security scanner", capture_output=True
@@ -149,7 +150,7 @@ def run_bandit():
                     print(f"     Severity: {issue['issue_severity']} | Confidence: {issue['issue_confidence']}")
 
                 # Count by severity
-                severity_counts = {}
+                severity_counts: dict[str, int] = {}
                 for issue in issues:
                     sev = issue["issue_severity"]
                     severity_counts[sev] = severity_counts.get(sev, 0) + 1
@@ -162,7 +163,7 @@ def run_bandit():
     return success, None
 
 
-def run_safety_check():
+def run_safety_check() -> tuple[bool, Optional[str]]:
     """Run safety dependency scanner."""
     success, _ = run_command(
         "safety check --json --output safety-report.json || true",
@@ -193,7 +194,7 @@ def run_safety_check():
     return success, None
 
 
-def main():
+def main() -> int:
     """Main function to run all checks."""
     print(f"{BLUE}{BOLD}ViolentUTF Code Quality Check Runner{RESET}")
     print(f"{BLUE}{'='*60}{RESET}")

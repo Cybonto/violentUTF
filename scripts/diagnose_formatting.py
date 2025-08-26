@@ -4,7 +4,7 @@ Diagnose formatting differences between local and CI environment.
 """
 
 import os
-import subprocess
+import subprocess  # nosec B404 - needed for code quality checks
 import sys
 from pathlib import Path
 
