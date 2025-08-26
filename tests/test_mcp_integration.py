@@ -39,7 +39,9 @@ def create_test_jwt_token() -> str:
         "token_type": "access",
     }
 
-    return jwt.encode(payload, secret_key, algorithm="HS256")
+    token = jwt.encode(payload, secret_key, algorithm="HS256")
+    # Ensure we return a string (PyJWT may return str or bytes depending on version)
+    return str(token) if not isinstance(token, str) else token
 
 
 class TestMCPIntegration:

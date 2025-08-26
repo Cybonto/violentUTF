@@ -261,14 +261,14 @@ You can also use natural language like:
             resources = self.mcp_client.list_resources()
 
             # Categorize resources
-            categorized = {"datasets": [], "prompts": [], "config": [], "other": []}
+            categorized: dict[str, list] = {"datasets": [], "prompts": [], "config": [], "other": []}
 
             for resource in resources:
-                if "datasets" in resource.uri:
+                if "datasets" in resource["uri"]:
                     categorized["datasets"].append(resource)
-                elif "prompts" in resource.uri:
+                elif "prompts" in resource["uri"]:
                     categorized["prompts"].append(resource)
-                elif "config" in resource.uri:
+                elif "config" in resource["uri"]:
                     categorized["config"].append(resource)
                 else:
                     categorized["other"].append(resource)
@@ -318,7 +318,10 @@ You can also use natural language like:
             },
         }
 
-        return defaults.get(prompt_name, {})
+        result = defaults.get(prompt_name, {})
+        if not isinstance(result, dict):
+            return {}
+        return result
 
 
 def format_command_result(result: Any) -> str:

@@ -39,10 +39,8 @@ def create_test_jwt_token() -> str:
     }
 
     token = jwt.encode(payload, secret_key, algorithm="HS256")
-    # PyJWT returns string in newer versions, bytes in older versions
-    if isinstance(token, bytes):
-        return token.decode("utf-8")
-    return str(token)
+    # Ensure we return a string (PyJWT may return str or bytes depending on version)
+    return str(token) if not isinstance(token, str) else token
 
 
 class TestEnhancementStripIntegration:

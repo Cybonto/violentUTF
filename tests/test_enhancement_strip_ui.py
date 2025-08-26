@@ -56,7 +56,12 @@ class TestEnhancementStripUI:
 
         # Test the button creation pattern
         button_calls = []
-        mock_button = Mock(side_effect=lambda label, **kwargs: button_calls.append(label) or False)
+
+        def button_side_effect(label, **kwargs):
+            button_calls.append(label)
+            return False
+
+        mock_button = Mock(side_effect=button_side_effect)
 
         # Simulate the enhancement strip button creation
         mock_button("✨ Enhance", help="Improve prompt quality using MCP", use_container_width=True)
@@ -72,11 +77,12 @@ class TestEnhancementStripUI:
         """Test that quick actions dropdown is created"""
         # Test the selectbox creation pattern
         selectbox_calls = []
-        mock_selectbox = Mock(
-            side_effect=lambda label, **kwargs: (
-                selectbox_calls.append(kwargs.get("options", [])) or "Select an action..."
-            )
-        )
+
+        def selectbox_side_effect(label, **kwargs):
+            selectbox_calls.append(kwargs.get("options", []))
+            return "Select an action..."
+
+        mock_selectbox = Mock(side_effect=selectbox_side_effect)
 
         # Simulate the quick actions dropdown creation
         expected_actions = [
@@ -139,7 +145,12 @@ class TestEnhancementStripUI:
 
         # Mock tab creation
         tab_calls = []
-        st.tabs = Mock(side_effect=lambda tabs: tab_calls.append(tabs) or [Mock() for _ in tabs])
+
+        def tabs_side_effect(tabs):
+            tab_calls.append(tabs)
+            return [Mock() for _ in tabs]
+
+        st.tabs = Mock(side_effect=tabs_side_effect)
 
         # Results should create tabs
         # In actual implementation, tabs are created based on available results

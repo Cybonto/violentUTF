@@ -697,7 +697,7 @@ class DatasetIntegration:
         Returns:
             Dictionary with 'mcp' and 'local' dataset lists
         """
-        datasets = {"mcp": [], "local": []}
+        datasets: dict[str, list] = {"mcp": [], "local": []}
 
         # Get MCP datasets
         try:

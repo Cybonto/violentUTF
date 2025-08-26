@@ -285,14 +285,14 @@ class TestMCPClientSync:
 
     def test_initialize(self, client):
         """Test sync initialize"""
-        with patch.object(client.client, "initialize", return_value=asyncio.coroutine(lambda: True)()):
+        with patch.object(client.client, "initialize", return_value=AsyncMock(return_value=True)):
             result = client.initialize()
             assert result is True
 
     def test_list_tools(self, client):
         """Test sync list tools"""
         mock_tools = [{"name": "tool1"}, {"name": "tool2"}]
-        with patch.object(client.client, "list_tools", return_value=asyncio.coroutine(lambda: mock_tools)()):
+        with patch.object(client.client, "list_tools", return_value=AsyncMock(return_value=mock_tools)):
             tools = client.list_tools()
             assert len(tools) == 2
             assert tools[0]["name"] == "tool1"
@@ -300,7 +300,7 @@ class TestMCPClientSync:
     def test_execute_tool(self, client):
         """Test sync tool execution"""
         mock_result = {"success": True, "data": "test"}
-        with patch.object(client.client, "execute_tool", return_value=asyncio.coroutine(lambda: mock_result)()):
+        with patch.object(client.client, "execute_tool", return_value=AsyncMock(return_value=mock_result)):
             result = client.execute_tool("test_tool", {"arg": "value"})
             assert result["success"] is True
             assert result["data"] == "test"
