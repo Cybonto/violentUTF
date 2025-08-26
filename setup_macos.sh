@@ -651,11 +651,11 @@ create_ai_tokens_template() {
 # Add your actual API keys replacing the placeholder values
 
 # OpenAI Configuration
-OPENAI_ENABLED=false
+OPENAI_ENABLED=true
 OPENAI_API_KEY=your_openai_api_key_here
 
 # Anthropic Configuration  
-ANTHROPIC_ENABLED=false
+ANTHROPIC_ENABLED=true
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 # Ollama Configuration (local, no API key needed)
@@ -663,7 +663,7 @@ OLLAMA_ENABLED=true
 OLLAMA_ENDPOINT=http://localhost:11434/v1/chat/completions
 
 # Open WebUI Configuration
-OPEN_WEBUI_ENABLED=false
+OPEN_WEBUI_ENABLED=true
 OPEN_WEBUI_ENDPOINT=http://localhost:3000/ollama/v1/chat/completions
 OPEN_WEBUI_API_KEY=your_open_webui_api_key_here
 
@@ -676,7 +676,7 @@ AWS_SESSION_TOKEN=your_aws_session_token_here_if_using_temp_credentials
 
 # OpenAPI Provider Configuration
 # Support for generic OpenAPI-compliant endpoints
-OPENAPI_ENABLED=false
+OPENAPI_ENABLED=true
 
 # OpenAPI Provider 1
 OPENAPI_1_ENABLED=false
@@ -2724,6 +2724,13 @@ APP_DATA_DIR=/app/app_data/violentutf
 # Generator Type Configuration (prevent type mapping issues)
 # Maps UI generator types to PyRIT implementation types
 GENERATOR_TYPE_MAPPING=AI Gateway:apisix_ai_gateway
+
+# AI Provider Configuration
+OPENAI_ENABLED=$OPENAI_ENABLED
+ANTHROPIC_ENABLED=$ANTHROPIC_ENABLED
+OLLAMA_ENABLED=$OLLAMA_ENABLED
+OPEN_WEBUI_ENABLED=$OPEN_WEBUI_ENABLED
+OPENAPI_ENABLED=$OPENAPI_ENABLED
 
 # Service Configuration
 SERVICE_NAME=ViolentUTF API
