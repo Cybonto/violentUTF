@@ -80,7 +80,7 @@ class MockAuthenticationMiddleware:
         await self.app(scope, receive, send)
 
 
-def setup_test_environment():
+def setup_test_environment() -> None:
     """Setup test environment variables for contract testing."""
     test_env_vars = {
         "JWT_SECRET_KEY": TEST_JWT_SECRET,
@@ -118,7 +118,7 @@ def mock_jwt_decode(token: str, secret: str = None, algorithms: list = None) -> 
     }
 
 
-def mock_requests_post(*args, **kwargs):
+def mock_requests_post(*args, **kwargs) -> Any:
     """Mock requests.post for authentication calls."""
     mock_response = Mock()
     mock_response.status_code = 200
@@ -131,7 +131,7 @@ def mock_requests_post(*args, **kwargs):
     return mock_response
 
 
-def mock_apisix_endpoints():
+def mock_apisix_endpoints() -> Dict[str, Dict[str, str]]:
     """Mock APISIX endpoints for testing."""
     return {
         "openai": {"gpt-4": "/ai/openai/gpt4", "gpt-3.5-turbo": "/ai/openai/gpt35"},
@@ -196,7 +196,7 @@ class ContractTestingPatches:
             patch_obj.stop()
 
 
-def create_test_client_with_auth():
+def create_test_client_with_auth() -> Any:
     """Create a test client with authentication mocking."""
     from fastapi.testclient import TestClient
 
@@ -214,12 +214,12 @@ def create_test_client_with_auth():
 
 
 # Pytest fixtures for contract testing
-def pytest_configure(config):
+def pytest_configure(config) -> None:
     """Configure pytest for contract testing."""
     setup_test_environment()
 
 
-def pytest_fixture_setup():
+def pytest_fixture_setup() -> Any:
     """Setup fixtures for contract testing."""
     return ContractTestingPatches()
 
@@ -253,7 +253,7 @@ def validate_response_schema(response_data: Dict[str, Any], expected_schema: Dic
         return False
 
 
-def create_mock_database_session():
+def create_mock_database_session() -> Any:
     """Create a mock database session for testing."""
     from unittest.mock import Mock
 

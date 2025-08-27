@@ -743,7 +743,6 @@ async def _create_pyrit_scorer_instance(scorer_type: str, parameters: Dict[str, 
             return SubStringScorer(substring=substring, category=category)
 
         elif scorer_type == "SelfAskLikertScorer":
-
             # This requires a PromptTarget for the LLM evaluation
             # For testing purposes, we'll need to configure with user's generator
             logger.warning("SelfAskLikertScorer requires PromptTarget configuration - using simplified version")
@@ -751,7 +750,6 @@ async def _create_pyrit_scorer_instance(scorer_type: str, parameters: Dict[str, 
             return None
 
         elif scorer_type == "AzureContentFilterScorer":
-
             # This requires Azure API configuration
             logger.warning("AzureContentFilterScorer requires Azure API configuration")
             return None

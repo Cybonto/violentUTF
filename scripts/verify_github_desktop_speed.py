@@ -12,36 +12,37 @@ import time
 from pathlib import Path
 
 
-def check_git_hook_config():
+def check_git_hook_config() -> bool:
     """Check what configuration the Git hook is using"""
-    hook_path = Path('.git/hooks/pre-commit')
+    hook_path = Path(".git/hooks/pre-commit")
     if not hook_path.exists():
         return False, "No pre-commit hook found"
 
-    with open(hook_path, 'r') as f:
+    with open(hook_path, "r") as f:
         content = f.read()
 
-    if '.pre-commit-config-ultrafast.yaml' in content:
+    if ".pre-commit-config-ultrafast.yaml" in content:
         return True, "Ultra-fast configuration (0.3s)"
-    elif '.pre-commit-config-fast.yaml' in content:
+    elif ".pre-commit-config-fast.yaml" in content:
         return True, "Fast configuration (0.7s)"
-    elif '.pre-commit-config.yaml' in content:
+    elif ".pre-commit-config.yaml" in content:
         return False, "Full configuration (3.3s) - SLOW!"
     else:
         return False, "Unknown configuration"
 
 
-def test_ultrafast_performance():
+def test_ultrafast_performance() -> bool:
     """Test ultra-fast configuration performance"""
     print("🏃 Testing ultra-fast configuration performance...")
 
     start_time = time.time()
     try:
-        result = subprocess.run([
-            'pre-commit', 'run',
-            '--config', '.pre-commit-config-ultrafast.yaml',
-            '--all-files'
-        ], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            ["pre-commit", "run", "--config", ".pre-commit-config-ultrafast.yaml", "--all-files"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
 
         duration = time.time() - start_time
 
@@ -56,7 +57,7 @@ def test_ultrafast_performance():
         return False, f"❌ Error: {e}"
 
 
-def main():
+def main() -> None:
     """Main verification function"""
     print("🔍 GitHub Desktop Pre-commit Speed Verification")
     print("=" * 55)

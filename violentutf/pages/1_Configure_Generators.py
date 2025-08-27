@@ -178,7 +178,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def create_compatible_api_token():
+def create_compatible_api_token() -> None:
     """Create a FastAPI-compatible token using JWT manager"""
     try:
         from utils.jwt_manager import jwt_manager
@@ -195,9 +195,7 @@ def create_compatible_api_token():
             logger.info("Successfully created API token using JWT manager")
             return api_token
         else:
-            st.error(
-                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
-            )
+            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 
@@ -210,7 +208,7 @@ def create_compatible_api_token():
 # --- API Backend Functions ---
 
 
-def load_generator_types_from_api():
+def load_generator_types_from_api() -> List[str]:
     """Load available generator types from API"""
     logger.debug(f"Loading generator types from: {API_ENDPOINTS['generator_types']}")
     data = api_request("GET", API_ENDPOINTS["generator_types"])
@@ -224,7 +222,7 @@ def load_generator_types_from_api():
         return []
 
 
-def load_generators_from_api():
+def load_generators_from_api() -> List[Dict[str, Any]]:
     """Load existing generators from API"""
     data = api_request("GET", API_ENDPOINTS["generators"])
     if data:
@@ -242,7 +240,7 @@ def get_generator_params_from_api(generator_type: str):
     return []
 
 
-def save_generator_to_api(name: str, generator_type: str, parameters: Dict[str, Any]):
+def save_generator_to_api(name: str, generator_type: str, parameters: Dict[str, Any]) -> bool:
     """Save a new generator configuration to API"""
     logger.info(f"Saving generator: name='{name}', type='{generator_type}', params={parameters}")
 
@@ -262,7 +260,7 @@ def save_generator_to_api(name: str, generator_type: str, parameters: Dict[str, 
         return False
 
 
-def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = None):
+def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = None) -> None:
     """Test a generator via orchestrator API (replacing removed test endpoint)"""
     # Find generator from name
     generator = st.session_state.api_generators.get(generator_name)
@@ -428,7 +426,7 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
         return {"success": False, "error": error_details, "duration_ms": 0}
 
 
-def delete_generator_via_api(generator_name: str):
+def delete_generator_via_api(generator_name: str) -> bool:
     """Delete a generator via API"""
     generator = st.session_state.api_generators.get(generator_name)
     if not generator:
@@ -465,7 +463,7 @@ def delete_generator_via_api(generator_name: str):
         return False
 
 
-def get_apisix_models_from_api(provider: str):
+def get_apisix_models_from_api(provider: str) -> List[str]:
     """Get available models for a provider from APISIX Gateway"""
     url = f"{API_ENDPOINTS['apisix_models']}?provider={provider}"
     data = api_request("GET", url)

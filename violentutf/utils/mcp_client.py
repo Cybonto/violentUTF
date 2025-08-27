@@ -77,7 +77,7 @@ class MCPResponse:
     @property
     def error_message(self) -> str:
         if self.error:
-            return self.error.get("message", "Unknown error")
+            return self.error.get("message", "Unknown error")  # type: ignore[no-any-return]
         return ""
 
 
@@ -93,15 +93,15 @@ class MCPClient:
             timeout: Request timeout in seconds
         """
         self.base_url = base_url or os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
-        self.mcp_endpoint = urljoin(self.base_url, "/mcp/sse/")
+        self.mcp_endpoint = urljoin(self.base_url or "", "/mcp/sse/")
         self.timeout = timeout
         self._request_id = 0
         self._initialized = False
-        self._server_info = {}
+        self._server_info: Dict[str, Any] = {}
         self.logger = logger
-        self._test_token = None  # For testing without streamlit
+        self._test_token: Optional[str] = None  # For testing without streamlit
 
-    def set_test_token(self, token: str):
+    def set_test_token(self, token: str) -> None:
         """Set a test token for non-streamlit environments"""
         self._test_token = token
 
@@ -404,7 +404,7 @@ class MCPClient:
             self.logger.error(f"Health check failed: {e}")
             return False
 
-    def close(self):
+    def close(self) -> None:
         """Close any open connections"""
         # Currently using httpx with context managers, so no persistent connections
         self._initialized = False
@@ -419,11 +419,11 @@ class MCPClientSync:
         self.client = MCPClient(base_url, timeout)
         self._loop = None
 
-    def set_test_token(self, token: str):
+    def set_test_token(self, token: str) -> None:
         """Set a test token for non-streamlit environments"""
         self.client.set_test_token(token)
 
-    def _get_loop(self):
+    def _get_loop(self) -> asyncio.AbstractEventLoop:
         """Get or create event loop"""
         try:
             return asyncio.get_event_loop()
@@ -432,7 +432,7 @@ class MCPClientSync:
             asyncio.set_event_loop(loop)
             return loop
 
-    def _run_async(self, coro):
+    def _run_async(self, coro) -> Any:
         """Run async coroutine in sync context"""
         loop = self._get_loop()
         return loop.run_until_complete(coro)
@@ -469,6 +469,6 @@ class MCPClientSync:
         """Check server health"""
         return self._run_async(self.client.health_check())
 
-    def close(self):
+    def close(self) -> None:
         """Close client"""
         self.client.close()

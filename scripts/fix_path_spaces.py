@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 
-def find_paths_with_spaces(root_dir="."):
+def find_paths_with_spaces(root_dir=".") -> list:
     """Find all paths containing spaces."""
     paths_with_spaces = []
 
@@ -34,7 +34,7 @@ def find_paths_with_spaces(root_dir="."):
     return paths_with_spaces
 
 
-def fix_path_spaces(dry_run=False):
+def fix_path_spaces(dry_run=False) -> None:
     """Fix paths with spaces by replacing them with underscores."""
     paths = find_paths_with_spaces()
 
@@ -71,7 +71,7 @@ def fix_path_spaces(dry_run=False):
             print("  (dry run - no changes made)")
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     print("Path Space Fixer for ViolentUTF")
     print("=" * 50)

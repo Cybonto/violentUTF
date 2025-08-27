@@ -10,11 +10,11 @@ Validation script to demonstrate the pre-commit process improvements
 """
 
 import subprocess
-from pathlib import Path
 import sys
+from pathlib import Path
 
 
-def run_command(cmd, description=""):
+def run_command(cmd, description="") -> tuple[bool, str, float]:
     """Run command and return success status"""
     print(f"🔍 {description}")
     try:
@@ -35,7 +35,7 @@ def run_command(cmd, description=""):
         return False
 
 
-def main():
+def main() -> None:
     """Main validation function"""
     print("🎯 Pre-commit Process Improvements Validation")
     print("=" * 60)
@@ -44,12 +44,7 @@ def main():
 
     # Test 1: Core hook validation
     print("\\n📋 Testing Core Pre-commit Hooks:")
-    core_hooks = [
-        "check-json",
-        "check-yaml",
-        "check-shebang-scripts-are-executable",
-        "name-tests-test"
-    ]
+    core_hooks = ["check-json", "check-yaml", "check-shebang-scripts-are-executable", "name-tests-test"]
 
     for hook in core_hooks:
         success = run_command(f"pre-commit run {hook} --all-files", f"Core hook: {hook}")
@@ -61,7 +56,7 @@ def main():
         ".pre-commit-config-version.md",
         "scripts/precommit_env_check.py",
         "scripts/fix_shebang_permissions.py",
-        "scripts/precommit_process_improvement.md"
+        "scripts/precommit_process_improvement.md",
     ]
 
     for file_path in config_files:

@@ -6,10 +6,9 @@ Diagnose formatting differences between local and CI environment.
 import os
 import subprocess  # nosec B404 - needed for code quality checks
 import sys
-from pathlib import Path
 
 
-def run_command(cmd):
+def run_command(cmd) -> str:
     """Run a command and return output."""
     try:
         # Convert string command to list for safer execution without shell=True
@@ -23,7 +22,7 @@ def run_command(cmd):
         return f"Error: {e}"
 
 
-def main():
+def main() -> None:
     print("=== Formatting Diagnostics ===\n")
 
     # Check versions

@@ -7,13 +7,13 @@ import re
 import sys
 
 
-def fix_python_multiline_strings(content):
+def fix_python_multiline_strings(content) -> str:
     """Fix multi-line Python strings in YAML files."""
 
     # Pattern to find python -c with double quotes
     pattern = r'(\s+)python -c "([^"]*(?:\n[^"]*)*)"'
 
-    def replace_python_block(match):
+    def replace_python_block(match) -> str:
         indent = match.group(1)
         code = match.group(2)
 
@@ -34,21 +34,21 @@ def fix_python_multiline_strings(content):
     return fixed_content
 
 
-def fix_trailing_spaces(content):
+def fix_trailing_spaces(content) -> str:
     """Remove trailing spaces from each line."""
     lines = content.split("\n")
     fixed_lines = [line.rstrip() for line in lines]
     return "\n".join(fixed_lines)
 
 
-def ensure_final_newline(content):
+def ensure_final_newline(content) -> str:
     """Ensure file ends with a newline."""
     if not content.endswith("\n"):
         content += "\n"
     return content
 
 
-def fix_workflow_file(filepath):
+def fix_workflow_file(filepath) -> bool:
     """Fix a single workflow file."""
     print(f"Processing {filepath}...")
 
@@ -77,7 +77,7 @@ def fix_workflow_file(filepath):
         return False
 
 
-def main():
+def main() -> None:
     """Main function to fix all workflow files."""
     workflow_dir = ".github/workflows"
 

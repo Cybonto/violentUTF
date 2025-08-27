@@ -85,7 +85,7 @@ class ResourcePattern:
     def extract_params(self, uri: str) -> Dict[str, str]:
         """Extract parameters from URI"""
         match = self._regex.match(uri)
-        if match:
+        if match is not None:
             return match.groupdict()
         return {}
 

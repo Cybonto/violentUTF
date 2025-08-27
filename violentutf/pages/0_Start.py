@@ -191,7 +191,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def load_user_session_from_api():
+def load_user_session_from_api() -> None:
     """Load user session data from API"""
     data = api_request("GET", API_ENDPOINTS["sessions"])
     if data:
@@ -200,7 +200,7 @@ def load_user_session_from_api():
     return False
 
 
-def save_user_session_to_api(session_update: Dict[str, Any]):
+def save_user_session_to_api(session_update: Dict[str, Any]) -> None:
     """Save user session data to API"""
     data = api_request("PUT", API_ENDPOINTS["sessions"], json=session_update)
     if data:
@@ -209,7 +209,7 @@ def save_user_session_to_api(session_update: Dict[str, Any]):
     return False
 
 
-def create_compatible_api_token():
+def create_compatible_api_token() -> None:
     """Create a FastAPI-compatible token using JWT manager"""
     try:
         from utils.jwt_manager import jwt_manager
@@ -226,9 +226,7 @@ def create_compatible_api_token():
             logger.info("Successfully created API token using JWT manager")
             return api_token
         else:
-            st.error(
-                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
-            )
+            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 
@@ -238,7 +236,7 @@ def create_compatible_api_token():
         return None
 
 
-def get_token_info_from_api():
+def get_token_info_from_api() -> Optional[Dict[str, Any]]:
     """Get token information from API"""
     data = api_request("GET", API_ENDPOINTS["auth_token_info"])
     if data:
@@ -247,12 +245,12 @@ def get_token_info_from_api():
     return None
 
 
-def get_database_status_from_api():
+def get_database_status_from_api() -> Optional[Dict[str, Any]]:
     """Get database status from API"""
     return api_request("GET", API_ENDPOINTS["database_status"])
 
 
-def initialize_database_via_api(custom_salt: Optional[str] = None):
+def initialize_database_via_api(custom_salt: Optional[str] = None) -> bool:
     """Initialize database via API"""
     payload = {"force_recreate": False, "backup_existing": True}
     if custom_salt:
@@ -261,34 +259,34 @@ def initialize_database_via_api(custom_salt: Optional[str] = None):
     return api_request("POST", API_ENDPOINTS["database_initialize"], json=payload)
 
 
-def reset_database_via_api():
+def reset_database_via_api() -> bool:
     """Reset database via API"""
     payload = {"confirmation": True, "backup_before_reset": True, "preserve_user_data": False}
     return api_request("POST", API_ENDPOINTS["database_reset"], json=payload)
 
 
-def get_database_stats_from_api():
+def get_database_stats_from_api() -> Optional[Dict[str, Any]]:
     """Get database statistics from API"""
     return api_request("GET", API_ENDPOINTS["database_stats"])
 
 
-def load_config_from_api():
+def load_config_from_api() -> Optional[Dict[str, Any]]:
     """Load configuration parameters from API"""
     return api_request("GET", API_ENDPOINTS["config_parameters"])
 
 
-def get_environment_config_from_api():
+def get_environment_config_from_api() -> Optional[Dict[str, Any]]:
     """Get environment configuration from API"""
     return api_request("GET", API_ENDPOINTS["config_environment"])
 
 
-def generate_salt_via_api():
+def generate_salt_via_api() -> Optional[str]:
     """Generate new salt via API"""
     return api_request("POST", API_ENDPOINTS["config_generate_salt"])
 
 
 # --- Main Page Function ---
-def main():
+def main() -> None:
     """Renders the Start page content with API backend."""
     logger.debug("Start page (API-backed) loading.")
     st.set_page_config(page_title=app_title, page_icon=app_icon, layout="wide", initial_sidebar_state="expanded")
@@ -471,7 +469,7 @@ def main():
 # --- Helper Functions ---
 
 
-def display_header():
+def display_header() -> None:
     """Displays the main header for the page."""
     st.title(f"{app_icon} {app_title}")
     st.markdown(app_description)

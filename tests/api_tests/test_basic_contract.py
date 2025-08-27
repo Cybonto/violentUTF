@@ -13,14 +13,14 @@ import pytest
 class TestBasicContract:
     """Basic contract validation tests."""
 
-    def test_environment_setup(self):
+    def test_environment_setup(self) -> None:
         """Test that contract testing environment is properly configured."""
         assert os.getenv("CONTRACT_TESTING") == "true"
         assert os.getenv("TESTING") == "true"
         assert os.getenv("JWT_SECRET_KEY") is not None
         assert os.getenv("SECRET_KEY") is not None
 
-    def test_openapi_schema_exists(self):
+    def test_openapi_schema_exists(self) -> None:
         """Test that OpenAPI schema file was generated."""
         schema_file = "generated_openapi.json"
 
@@ -39,7 +39,7 @@ class TestBasicContract:
             # In CI, minimal schema should always be created
             pytest.skip("OpenAPI schema file not found")
 
-    def test_minimal_api_structure(self):
+    def test_minimal_api_structure(self) -> None:
         """Test minimal API structure expectations."""
         # This test passes if we can import basic modules
         try:
@@ -54,7 +54,7 @@ class TestBasicContract:
     @pytest.mark.skipif(
         not os.path.exists("tests/api_tests/test_auth_mock.py"), reason="Auth mock module not available"
     )
-    def test_auth_mock_available(self):
+    def test_auth_mock_available(self) -> None:
         """Test that auth mocking utilities are available."""
         try:
             from tests.api_tests.test_auth_mock import MockTokenManager
@@ -68,7 +68,7 @@ class TestBasicContract:
         except ImportError:
             pytest.skip("Auth mock utilities not available")
 
-    def test_contract_markers(self):
+    def test_contract_markers(self) -> None:
         """Test that pytest contract markers are working."""
         # This test verifies the test infrastructure itself
         markers = [mark.name for mark in self.test_contract_markers.__pytest_wrapped__.pytestmark]
@@ -76,13 +76,13 @@ class TestBasicContract:
 
 
 @pytest.mark.contract
-def test_basic_contract_execution():
+def test_basic_contract_execution() -> None:
     """Simple test to ensure contract tests can execute."""
     assert True
 
 
 @pytest.mark.contract
-def test_api_contract_dependencies():
+def test_api_contract_dependencies() -> None:
     """Test that basic API contract dependencies are available."""
     required_modules = [
         "pytest",
@@ -98,7 +98,7 @@ def test_api_contract_dependencies():
 
 
 # Minimal test to ensure at least one test runs
-def test_contract_testing_enabled():
+def test_contract_testing_enabled() -> None:
     """Verify contract testing is enabled."""
     # This test should always pass in contract testing environment
     contract_testing = os.getenv("CONTRACT_TESTING", "false")

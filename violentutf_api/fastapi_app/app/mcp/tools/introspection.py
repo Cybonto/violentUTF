@@ -233,7 +233,6 @@ class EndpointIntrospector:
                 if hasattr(param.annotation, "__bases__") and any(
                     "BaseModel" in str(base) for base in param.annotation.__bases__
                 ):
-
                     try:
                         # Get Pydantic model schema
                         schema = param.annotation.model_json_schema()

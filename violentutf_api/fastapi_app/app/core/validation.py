@@ -50,6 +50,7 @@ class SecurityLimits:
 # Validation patterns
 class ValidationPatterns:
     """Regex patterns for validation"""
+
     # fmt: off
     # SECURITY CRITICAL: DO NOT MODIFY THESE PATTERNS
     # These regex patterns are security-critical and must not be modified by automated tools.

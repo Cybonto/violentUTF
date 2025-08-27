@@ -26,8 +26,7 @@ Dependencies:
 """
 
 import asyncio
-import logging
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from pyrit.models import SeedPrompt, SeedPromptDataset
 from pyrit.prompt_converter import PromptConverter

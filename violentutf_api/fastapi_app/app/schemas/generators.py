@@ -12,11 +12,7 @@ SECURITY: Enhanced with comprehensive input validation to prevent injection atta
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from app.core.validation import (
-    ValidationPatterns,
-    sanitize_string,
-    validate_generator_parameters,
-)
+from app.core.validation import ValidationPatterns, sanitize_string, validate_generator_parameters
 from pydantic import BaseModel, Field, validator
 
 

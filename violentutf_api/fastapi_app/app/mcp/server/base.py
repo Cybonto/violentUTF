@@ -8,6 +8,7 @@
 
 import logging
 from typing import Any, Dict, List
+
 from app.mcp.auth import MCPAuthHandler
 from app.mcp.config import mcp_settings
 from fastapi import FastAPI, HTTPException

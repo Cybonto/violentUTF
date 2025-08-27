@@ -11,6 +11,7 @@ import os
 import sys
 import time
 import uuid
+from typing import Dict
 
 import requests
 
@@ -22,7 +23,7 @@ API_BASE_URL = "http://localhost:9080"
 JWT_SECRET_KEY = "ZtZDeFsgTqUm3KHSKINa46TUV13JJw7T"  # nosec B105 - test JWT secret
 
 
-def create_jwt_token():
+def create_jwt_token() -> str:
     """Create a test JWT token"""
     try:
         import jwt
@@ -42,7 +43,7 @@ def create_jwt_token():
         return None
 
 
-def get_headers():
+def get_headers() -> Dict[str, str]:
     """Get API request headers"""
     token = create_jwt_token()
     if not token:
@@ -51,7 +52,7 @@ def get_headers():
     return {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
 
 
-def test_converter_copy_mode():
+def test_converter_copy_mode() -> None:
     """Test that converter COPY mode creates a new dataset"""
     headers = get_headers()
 

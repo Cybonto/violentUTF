@@ -6,26 +6,26 @@
 Interactive script to choose pre-commit speed configuration
 """
 
+import shutil
 import subprocess
 import sys
-import shutil
 from pathlib import Path
 
 
-def backup_current_hook():
+def backup_current_hook() -> None:
     """Backup current pre-commit hook"""
-    hook_path = Path('.git/hooks/pre-commit')
+    hook_path = Path(".git/hooks/pre-commit")
     if hook_path.exists():
-        backup_path = Path('.git/hooks/pre-commit.backup')
+        backup_path = Path(".git/hooks/pre-commit.backup")
         shutil.copy(hook_path, backup_path)
         print("💾 Backed up current pre-commit hook")
 
 
-def install_config(config_name, config_file, estimated_time):
+def install_config(config_name, config_file, estimated_time) -> bool:
     """Install specific pre-commit configuration"""
     try:
         # Install the configuration
-        subprocess.run(['pre-commit', 'install', '--config', config_file], check=True)
+        subprocess.run(["pre-commit", "install", "--config", config_file], check=True)
         print(f"✅ Installed {config_name}")
         print(f"   Config file: {config_file}")
         print(f"   Estimated time: {estimated_time}")
@@ -35,7 +35,7 @@ def install_config(config_name, config_file, estimated_time):
         return False
 
 
-def show_menu():
+def show_menu() -> None:
     """Show speed configuration menu"""
     print("🚀 Pre-commit Speed Configuration")
     print("=" * 40)
@@ -60,12 +60,12 @@ def show_menu():
     print()
 
 
-def benchmark_all():
+def benchmark_all() -> None:
     """Benchmark all available configurations"""
     configs = [
         ("Full", ".pre-commit-config.yaml", "Complete validation"),
         ("Fast", ".pre-commit-config-fast.yaml", "Balanced speed/quality"),
-        ("Ultra-Fast", ".pre-commit-config-ultrafast.yaml", "Critical checks only")
+        ("Ultra-Fast", ".pre-commit-config-ultrafast.yaml", "Critical checks only"),
     ]
 
     print("🏁 Benchmarking all configurations...")
@@ -79,11 +79,13 @@ def benchmark_all():
         print(f"\n📊 Testing {name} ({description})")
         try:
             import time
+
             start = time.time()
-            result = subprocess.run([
-                'pre-commit', 'run', 'check-ast',
-                '--config', config_file, '--all-files'
-            ], capture_output=True, timeout=30)
+            result = subprocess.run(
+                ["pre-commit", "run", "check-ast", "--config", config_file, "--all-files"],
+                capture_output=True,
+                timeout=30,
+            )
             duration = time.time() - start
 
             status = "✅" if result.returncode == 0 else "⚠️"
@@ -95,7 +97,7 @@ def benchmark_all():
             print(f"   ❌ {name}: Error - {e}")
 
 
-def main():
+def main() -> int:
     """Main interactive function"""
     while True:
         show_menu()
@@ -106,13 +108,13 @@ def main():
             print("\n👋 Goodbye!")
             return 0
 
-        if choice == '1':
+        if choice == "1":
             backup_current_hook()
             if install_config("Full Configuration", ".pre-commit-config.yaml", "3-5 seconds"):
                 print("\n💡 Use this for final validation before pushing to main branch")
             break
 
-        elif choice == '2':
+        elif choice == "2":
             if not Path(".pre-commit-config-fast.yaml").exists():
                 print("❌ Fast config not found. Creating...")
                 # The file should already exist from earlier in this conversation
@@ -121,7 +123,7 @@ def main():
                 print("\n💡 Perfect for regular GitHub Desktop commits")
             break
 
-        elif choice == '3':
+        elif choice == "3":
             if not Path(".pre-commit-config-ultrafast.yaml").exists():
                 print("❌ Ultra-fast config not found. Creating...")
             backup_current_hook()
@@ -129,18 +131,18 @@ def main():
                 print("\n💡 Great for frequent small commits and rapid iteration")
             break
 
-        elif choice == '4':
+        elif choice == "4":
             benchmark_all()
             input("\nPress Enter to continue...")
             continue
 
-        elif choice == '5':
-            backup_path = Path('.git/hooks/pre-commit.backup')
+        elif choice == "5":
+            backup_path = Path(".git/hooks/pre-commit.backup")
             if backup_path.exists():
-                shutil.copy(backup_path, Path('.git/hooks/pre-commit'))
+                shutil.copy(backup_path, Path(".git/hooks/pre-commit"))
                 print("✅ Restored original pre-commit configuration")
             else:
-                subprocess.run(['pre-commit', 'install'], check=True)
+                subprocess.run(["pre-commit", "install"], check=True)
                 print("✅ Reinstalled default pre-commit configuration")
             break
 

@@ -161,7 +161,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def create_compatible_api_token():
+def create_compatible_api_token() -> None:
     """Create a FastAPI-compatible token using JWT manager"""
     try:
         from utils.jwt_manager import jwt_manager
@@ -180,9 +180,7 @@ def create_compatible_api_token():
             st.session_state["api_token"] = api_token
             return api_token
         else:
-            st.error(
-                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
-            )
+            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 
@@ -195,7 +193,7 @@ def create_compatible_api_token():
 # --- API Backend Functions ---
 
 
-def load_dataset_types_from_api():
+def load_dataset_types_from_api() -> List[str]:
     """Load available dataset types from API"""
     data = api_request("GET", API_ENDPOINTS["dataset_types"])
     if data:
@@ -204,7 +202,7 @@ def load_dataset_types_from_api():
     return []
 
 
-def load_datasets_from_api():
+def load_datasets_from_api() -> List[Dict[str, Any]]:
     """Load existing datasets from API"""
     data = api_request("GET", API_ENDPOINTS["datasets"])
     if data:
@@ -214,7 +212,7 @@ def load_datasets_from_api():
     return None
 
 
-def create_dataset_via_api(name: str, source_type: str, config: Dict[str, Any]):
+def create_dataset_via_api(name: str, source_type: str, config: Dict[str, Any]) -> bool:
     """Create a new dataset via API"""
     payload = {"name": name, "source_type": source_type, "config": config}
 
@@ -238,7 +236,7 @@ def create_dataset_via_api(name: str, source_type: str, config: Dict[str, Any]):
     return False
 
 
-def load_memory_datasets_from_api():
+def load_memory_datasets_from_api() -> List[Dict[str, Any]]:
     """Load datasets from PyRIT memory via API"""
     data = api_request("GET", API_ENDPOINTS["dataset_memory"])
     if data:
@@ -246,7 +244,7 @@ def load_memory_datasets_from_api():
     return []
 
 
-def auto_load_datasets():
+def auto_load_datasets() -> None:
     """
     Automatically load existing datasets on page load
 
@@ -267,7 +265,7 @@ def auto_load_datasets():
             del st.session_state["force_reload_datasets"]
 
 
-def auto_load_generators():
+def auto_load_generators() -> None:
     """
     Automatically load existing generators on page load
 

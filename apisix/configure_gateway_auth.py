@@ -6,8 +6,9 @@
 # See LICENSE file in the project root for license information.
 
 """
-APISIX Gateway Authentication Configuration Script
-Configures HMAC-based authentication between APISIX and FastAPI
+APISIX Gateway Authentication Configuration Script.
+
+Configures HMAC-based authentication between APISIX and FastAPI.
 """
 
 import hashlib
@@ -21,9 +22,10 @@ import requests
 
 
 class APISIXGatewayAuth:
-    """Manage APISIX Gateway Authentication configuration"""
+    """Manage APISIX Gateway Authentication configuration."""
 
     def __init__(self, admin_url: str = "http://localhost:9180", admin_key: str = ""):
+        """Initialize APISIX Gateway Authentication manager."""
         self.admin_url = admin_url.rstrip("/")
         self.admin_key = admin_key
         self.headers = {"X-API-KEY": admin_key, "Content-Type": "application/json"}
@@ -180,7 +182,7 @@ class APISIXGatewayAuth:
             return False
 
 
-def main():
+def main() -> None:
     """Main configuration function"""
     print("🔐 APISIX Gateway Authentication Configuration")
     print("=" * 50)

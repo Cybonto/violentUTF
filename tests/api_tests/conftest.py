@@ -6,6 +6,7 @@ Inherits from main conftest.py and adds API-specific fixtures
 import os
 import sys
 from pathlib import Path
+from typing import Any, Dict, Generator
 
 # Add parent directory to sys.path to access main conftest and utils
 parent_dir = Path(__file__).parent.parent
@@ -25,20 +26,20 @@ from tests.api_tests.test_auth_mock import ContractTestingPatches, create_mock_d
 
 
 @pytest.fixture(scope="session")
-def api_base_url():
+def api_base_url() -> str:
     """API base URL for testing - overrides main conftest to ensure APISIX gateway usage"""
     return os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
 
 
 @pytest.fixture(scope="function")
-def cleanup_generators(api_headers, api_base_url):
+def cleanup_generators(api_headers, api_base_url) -> Generator[Any, None, None]:
     """
     Cleanup generators created during tests
     Tracks created generators and removes them after test completion
     """
     created_generators = []
 
-    def track_generator(generator_id: str):
+    def track_generator(generator_id: str) -> str:
         """Track a generator for cleanup"""
         created_generators.append(generator_id)
         return generator_id
@@ -59,13 +60,13 @@ def cleanup_generators(api_headers, api_base_url):
 
 # Contract testing fixtures
 @pytest.fixture(scope="session")
-def contract_testing_enabled():
+def contract_testing_enabled() -> bool:
     """Check if contract testing is enabled."""
     return os.getenv("CONTRACT_TESTING", "false").lower() == "true"
 
 
 @pytest.fixture(scope="session")
-def test_app(contract_testing_enabled):
+def test_app(contract_testing_enabled) -> Generator[Any, None, None]:
     """Create FastAPI test app with authentication mocking."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
@@ -85,7 +86,7 @@ def test_app(contract_testing_enabled):
 
 
 @pytest.fixture(scope="session")
-def test_client(test_app):
+def test_client(test_app) -> Generator[Any, None, None]:
     """Create test client with authentication mocking."""
     from fastapi.testclient import TestClient
 
@@ -94,7 +95,7 @@ def test_client(test_app):
 
 
 @pytest.fixture(scope="session")
-def test_headers(contract_testing_enabled):
+def test_headers(contract_testing_enabled) -> Dict[str, str]:
     """Create test headers for API calls."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
@@ -103,13 +104,13 @@ def test_headers(contract_testing_enabled):
 
 
 @pytest.fixture(scope="session")
-def openapi_schema(test_app):
+def openapi_schema(test_app) -> Dict[str, Any]:
     """Generate OpenAPI schema from FastAPI app."""
     return test_app.openapi()
 
 
 @pytest.fixture(scope="function")
-def mock_database(contract_testing_enabled):
+def mock_database(contract_testing_enabled) -> Any:
     """Create mock database session for testing."""
     if not contract_testing_enabled:
         pytest.skip("Contract testing not enabled")
@@ -117,7 +118,7 @@ def mock_database(contract_testing_enabled):
     return create_mock_database_session()
 
 
-def pytest_configure(config):
+def pytest_configure(config) -> None:
     """Configure pytest for API testing"""
     # Add custom markers specific to API tests
     config.addinivalue_line("markers", "api: marks tests as API tests (require API connectivity)")

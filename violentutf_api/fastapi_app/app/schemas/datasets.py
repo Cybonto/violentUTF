@@ -13,13 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from app.core.validation import (
-    SecurityLimits,
-    ValidationPatterns,
-    sanitize_string,
-    validate_json_data,
-    validate_url,
-)
+from app.core.validation import SecurityLimits, ValidationPatterns, sanitize_string, validate_json_data, validate_url
 from pydantic import BaseModel, Field, validator
 
 

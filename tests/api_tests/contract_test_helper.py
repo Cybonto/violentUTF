@@ -264,7 +264,7 @@ class ContractTestReporter:
     def __init__(self):
         self.test_results = []
 
-    def add_test_result(self, test_name: str, passed: bool, details: Optional[Dict[str, Any]] = None):
+    def add_test_result(self, test_name: str, passed: bool, details: Optional[Dict[str, Any]] = None) -> None:
         """Add a test result."""
         self.test_results.append(
             {"test_name": test_name, "passed": passed, "details": details or {}, "timestamp": time.time()}

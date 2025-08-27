@@ -6,7 +6,7 @@ Run this script to ensure the Start page will work correctly with the API
 
 import os
 import re
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import requests
 

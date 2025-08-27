@@ -10,30 +10,30 @@ Automated script to fix shebang permissions for all files
 """
 
 import subprocess
-from pathlib import Path
 import sys
+from pathlib import Path
 
 
-def find_shebang_files():
+def find_shebang_files() -> tuple[list, list]:
     """Find all files with shebangs that aren't executable"""
     shebang_files = []
     non_executable = []
 
     # Search common file extensions
-    patterns = ['**/*.py', '**/*.sh', '**/*.pl', '**/*.rb']
+    patterns = ["**/*.py", "**/*.sh", "**/*.pl", "**/*.rb"]
 
     for pattern in patterns:
-        for file_path in Path('.').glob(pattern):
+        for file_path in Path(".").glob(pattern):
             path_str = str(file_path)
             # Skip common directories that shouldn't be tracked
-            skip_dirs = ['node_modules', '.git', '.vitutf', 'venv', '.venv', '__pycache__', '.mypy_cache']
+            skip_dirs = ["node_modules", ".git", ".vitutf", "venv", ".venv", "__pycache__", ".mypy_cache"]
             if any(skip_dir in path_str for skip_dir in skip_dirs):
                 continue
 
             try:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                     first_line = f.readline().strip()
-                    if first_line.startswith('#!'):
+                    if first_line.startswith("#!"):
                         shebang_files.append(file_path)
                         # Check if executable
                         if not file_path.stat().st_mode & 0o111:
@@ -44,7 +44,7 @@ def find_shebang_files():
     return shebang_files, non_executable
 
 
-def fix_permissions(files):
+def fix_permissions(files) -> tuple[int, int]:
     """Fix permissions using git add --chmod=+x"""
     fixed = []
     failed = []
@@ -52,11 +52,11 @@ def fix_permissions(files):
     # Process in batches to avoid command line length limits
     batch_size = 50
     for i in range(0, len(files), batch_size):
-        batch = files[i:i + batch_size]
+        batch = files[i : i + batch_size]
         file_paths = [str(f) for f in batch]
 
         try:
-            subprocess.run(['git', 'add', '--chmod=+x'] + file_paths, check=True)
+            subprocess.run(["git", "add", "--chmod=+x"] + file_paths, check=True)
             fixed.extend(batch)
             print(f"✅ Fixed {len(batch)} files in batch {i//batch_size + 1}")
         except subprocess.CalledProcessError as e:
@@ -66,7 +66,7 @@ def fix_permissions(files):
     return fixed, failed
 
 
-def main():
+def main() -> None:
     print("🔧 Finding files with shebangs that need executable permissions...")
 
     all_shebang, non_executable = find_shebang_files()

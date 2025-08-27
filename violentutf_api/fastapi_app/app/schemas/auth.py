@@ -14,12 +14,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from app.core.password_policy import validate_password_strength
-from app.core.validation import (
-    ValidationPatterns,
-    sanitize_string,
-    validate_role_list,
-    validate_username,
-)
+from app.core.validation import ValidationPatterns, sanitize_string, validate_role_list, validate_username
 from pydantic import BaseModel, EmailStr, Field, validator
 
 
@@ -46,14 +41,14 @@ class TokenData(BaseModel):
     roles: List[str] = Field(default_factory=list, description="User roles", max_length=20)
 
     @validator("username")
-    def validate_username_field(cls, v):
+    def validate_username_field(cls, v) -> Optional[str]:
         """Validate username format"""
         if v is not None:
             return validate_username(v)
         return v
 
     @validator("roles")
-    def validate_roles_field(cls, v):
+    def validate_roles_field(cls, v) -> List[str]:
         """Validate roles list"""
         return validate_role_list(v)
 
@@ -66,12 +61,12 @@ class UserInfo(BaseModel):
     roles: List[str] = Field(default_factory=list, description="User roles", max_length=20)
 
     @validator("username")
-    def validate_username_field(cls, v):
+    def validate_username_field(cls, v) -> str:
         """Validate username format"""
         return validate_username(v)
 
     @validator("roles")
-    def validate_roles_field(cls, v):
+    def validate_roles_field(cls, v) -> List[str]:
         """Validate roles list"""
         return validate_role_list(v)
 
@@ -85,7 +80,7 @@ class APIKeyCreate(BaseModel):
     )
 
     @validator("name")
-    def validate_name_field(cls, v):
+    def validate_name_field(cls, v) -> str:
         """Validate API key name"""
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_NAME.match(v):
@@ -93,7 +88,7 @@ class APIKeyCreate(BaseModel):
         return v
 
     @validator("permissions")
-    def validate_permissions_field(cls, v):
+    def validate_permissions_field(cls, v) -> List[str]:
         """Validate permissions list"""
         validated = []
         for perm in v:
@@ -156,7 +151,7 @@ class TokenValidationRequest(BaseModel):
     check_ai_access: Optional[bool] = Field(default=True)
 
     @validator("required_roles")
-    def validate_required_roles_field(cls, v):
+    def validate_required_roles_field(cls, v) -> List[str]:
         """Validate required roles list"""
         if v:
             return validate_role_list(v)
@@ -182,12 +177,12 @@ class LoginRequest(BaseModel):
     remember_me: Optional[bool] = Field(default=False)
 
     @validator("username")
-    def validate_username_field(cls, v):
+    def validate_username_field(cls, v) -> str:
         """Validate username format"""
         return validate_username(v)
 
     @validator("password")
-    def validate_password_field(cls, v, values):
+    def validate_password_field(cls, v, values) -> str:
         """Validate password strength and security requirements"""
         username = values.get("username")
 

@@ -27,7 +27,7 @@ repos:
       - id: black
         language_version: python3.12
         args: ["--line-length", "120"]
-        files: '^(app|violentutf_api|scripts)/'
+        files: "^(app|violentutf_api|scripts)/"
         exclude: '__pycache__|\.mypy_cache|tests/'
 
   # Critical security only - exclude large directories
@@ -36,8 +36,8 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
-        exclude: "ai-tokens.env.sample|keycloak/realm-export.json|node_modules|\.git|\.mypy_cache|__pycache__|\.vitutf"
-        files: '^(app|violentutf_api|scripts)/'
+        exclude: "ai-tokens.env.sample|keycloak/realm-export.json|node_modules|\\.git|\\.mypy_cache|__pycache__|\\.vitutf"
+        files: "^(app|violentutf_api|scripts)/"
 
   # Custom fast checks
   - repo: local
@@ -47,4 +47,4 @@ repos:
         entry: 'print\('
         language: pygrep
         types: [python]
-        files: '^(app|violentutf_api)/'  # Only check main code, not tests
+        files: "^(app|violentutf_api)/" # Only check main code, not tests

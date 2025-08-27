@@ -69,3 +69,5 @@ bandit-report.json
 .secrets.baseline
 bandit-report.json
 bandit-report-fixed.json
+/node_modules/.cache
+/violentutf/app_data/violentutf/api_memory

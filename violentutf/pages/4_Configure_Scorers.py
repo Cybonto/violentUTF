@@ -4,7 +4,7 @@ import os
 import sys
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 import streamlit as st
@@ -124,9 +124,9 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         response = requests.request(method, url, headers=headers, timeout=timeout, **kwargs)
 
         if response.status_code == 200:
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
         elif response.status_code == 201:
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
         elif response.status_code == 401:
             logger.error(f"401 Unauthorized: {response.text}")
             return None
@@ -156,7 +156,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def create_compatible_api_token():
+def create_compatible_api_token() -> Optional[str]:
     """Create a FastAPI-compatible token using JWT manager"""
     try:
         from utils.jwt_manager import jwt_manager
@@ -173,11 +173,9 @@ def create_compatible_api_token():
             logger.info("Successfully created API token using JWT manager")
             # Store the token in session state for API calls
             st.session_state["api_token"] = api_token
-            return api_token
+            return api_token  # type: ignore[no-any-return]
         else:
-            st.error(
-                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
-            )
+            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 
@@ -190,7 +188,7 @@ def create_compatible_api_token():
 # --- API Backend Functions ---
 
 
-def load_scorer_types_from_api():
+def load_scorer_types_from_api() -> Optional[Dict[str, Any]]:
     """Load available scorer types from API"""
     data = api_request("GET", API_ENDPOINTS["scorer_types"])
     if data:
@@ -199,7 +197,7 @@ def load_scorer_types_from_api():
     return None
 
 
-def load_scorers_from_api():
+def load_scorers_from_api() -> Optional[Dict[str, Any]]:
     """Load existing scorers from API"""
     data = api_request("GET", API_ENDPOINTS["scorers"])
     if data:
@@ -209,7 +207,7 @@ def load_scorers_from_api():
     return None
 
 
-def get_scorer_params_from_api(scorer_type: str):
+def get_scorer_params_from_api(scorer_type: str) -> Tuple[List[Dict[str, Any]], bool, str]:
     """Get parameter definitions for a scorer type from API"""
     url = API_ENDPOINTS["scorer_params"].format(scorer_type=scorer_type)
     data = api_request("GET", url)
@@ -218,7 +216,9 @@ def get_scorer_params_from_api(scorer_type: str):
     return [], False, "Other"
 
 
-def create_scorer_via_api(name: str, scorer_type: str, parameters: Dict[str, Any], generator_id: str = None):
+def create_scorer_via_api(
+    name: str, scorer_type: str, parameters: Dict[str, Any], generator_id: Optional[str] = None
+) -> bool:
     """Create a new scorer configuration via API"""
     payload = {"name": name, "scorer_type": scorer_type, "parameters": parameters}
     if generator_id:
@@ -236,9 +236,9 @@ def create_scorer_via_api(name: str, scorer_type: str, parameters: Dict[str, Any
 
 def test_scorer_via_api(
     scorer_id: str,
-    test_input: str = None,
-    generator_id: str = None,
-    dataset_id: str = None,
+    test_input: Optional[str] = None,
+    generator_id: Optional[str] = None,
+    dataset_id: Optional[str] = None,
     num_samples: int = 1,
     test_mode: str = "manual",
     save_to_db: bool = False,
@@ -264,7 +264,7 @@ def test_scorer_via_api(
         return False, {"error": "Invalid test_mode. Use 'manual' or 'orchestrator'"}
 
 
-def _test_scorer_manual_via_orchestrator(scorer_id: str, test_input: str):
+def _test_scorer_manual_via_orchestrator(scorer_id: str, test_input: str) -> Tuple[bool, Dict[str, Any]]:
     """Test scorer with manual input using orchestrator pattern"""
     try:
         # Get scorer info
@@ -325,9 +325,19 @@ def _test_scorer_orchestrator_mode(
             return False, {"error": "Failed to get required configuration data"}
 
         # Find the specific scorer, generator, and dataset
-        scorer_info = next((s for s in scorers_data.get("scorers", []) if s["id"] == scorer_id), None)
-        generator_info = next((g for g in generators_data.get("generators", []) if g["id"] == generator_id), None)
-        dataset_info = next((d for d in datasets_data.get("datasets", []) if d["id"] == dataset_id), None)
+        scorer_info = (
+            next((s for s in scorers_data.get("scorers", []) if s["id"] == scorer_id), None) if scorers_data else None
+        )
+        generator_info = (
+            next((g for g in generators_data.get("generators", []) if g["id"] == generator_id), None)
+            if generators_data
+            else None
+        )
+        dataset_info = (
+            next((d for d in datasets_data.get("datasets", []) if d["id"] == dataset_id), None)
+            if datasets_data
+            else None
+        )
 
         if not scorer_info:
             return False, {"error": f"Scorer with ID '{scorer_id}' not found"}
@@ -555,7 +565,7 @@ def _test_scorer_orchestrator_mode(
         return False, {"error": f"Orchestrator test failed: {str(e)}"}
 
 
-def clone_scorer_via_api(scorer_id: str, new_name: str):
+def clone_scorer_via_api(scorer_id: str, new_name: str) -> Tuple[bool, str]:
     """Clone a scorer via API"""
     url = API_ENDPOINTS["scorer_clone"].format(scorer_id=scorer_id)
     payload = {"new_name": new_name, "clone_parameters": True}
@@ -566,7 +576,7 @@ def clone_scorer_via_api(scorer_id: str, new_name: str):
     return False, "Failed to clone scorer"
 
 
-def delete_scorer_via_api(scorer_id: str):
+def delete_scorer_via_api(scorer_id: str) -> bool:
     """Delete a scorer via API"""
     url = API_ENDPOINTS["scorer_delete"].format(scorer_id=scorer_id)
     data = api_request("DELETE", url)
@@ -575,7 +585,7 @@ def delete_scorer_via_api(scorer_id: str):
     return False, "Failed to delete scorer"
 
 
-def get_generators_from_api():
+def get_generators_from_api() -> Optional[Dict[str, Any]]:
     """Get available generators for testing (matches Configure Datasets pattern)"""
     data = api_request("GET", API_ENDPOINTS["generators"])
     if data:
@@ -605,7 +615,7 @@ def get_generators(use_cache: bool = True) -> List[Dict[str, Any]]:
     return generators
 
 
-def get_datasets_from_api():
+def get_datasets_from_api() -> Optional[Dict[str, Any]]:
     """Get available datasets for testing"""
     data = api_request("GET", API_ENDPOINTS["datasets"])
     if data:
@@ -613,7 +623,7 @@ def get_datasets_from_api():
     return []
 
 
-def auto_load_generators():
+def auto_load_generators() -> None:
     """
     Automatically load existing generators on page load (matches Configure Datasets pattern)
 
@@ -637,7 +647,7 @@ def auto_load_generators():
 
 
 # --- Main Page Function ---
-def main():
+def main() -> None:
     """Renders the Configure Scorers page content with API backend."""
     logger.debug("Configure Scorers page (API - backed) loading.")
     st.set_page_config(page_title="Configure Scorers", page_icon="🎯", layout="wide", initial_sidebar_state="expanded")
@@ -665,13 +675,13 @@ def main():
     render_main_content()
 
 
-def display_header():
+def display_header() -> None:
     """Displays the main header for the page."""
     st.title("🎯 Configure Scorers")
     st.markdown("*Configure AI response scorers for security evaluation and content analysis*")
 
 
-def render_main_content():
+def render_main_content() -> None:
     """Render the main content area with scorer management."""
 
     # Load scorer types
@@ -723,7 +733,7 @@ def render_main_content():
         render_scorer_management(existing_scorers, categories)
 
 
-def render_scorer_configuration(categories: Dict[str, Any], test_cases: Dict[str, List[str]]):
+def render_scorer_configuration(categories: Dict[str, Any], test_cases: Dict[str, List[str]]) -> None:
     """Render the scorer configuration section."""
 
     # Step 1: Category Selection
@@ -769,7 +779,7 @@ def render_scorer_configuration(categories: Dict[str, Any], test_cases: Dict[str
             render_scorer_parameters(selected_scorer, selected_category, test_cases)
 
 
-def render_scorer_parameters(scorer_type: str, category: str, test_cases: Dict[str, List[str]]):
+def render_scorer_parameters(scorer_type: str, category: str, test_cases: Dict[str, List[str]]) -> None:
     """Render scorer parameter configuration form."""
 
     # Scorer name input
@@ -829,7 +839,7 @@ def render_scorer_parameters(scorer_type: str, category: str, test_cases: Dict[s
             st.warning("⚠️ Please fill in all required parameters")
 
 
-def render_parameter_input(param: Dict[str, Any], scorer_type: str, is_required: bool):
+def render_parameter_input(param: Dict[str, Any], scorer_type: str, is_required: bool) -> Any:
     """Render input widget for a single parameter."""
     param_name = param["name"]
     param_description = param.get("description", param_name.replace("_", " ").title())
@@ -939,7 +949,7 @@ def render_parameter_input(param: Dict[str, Any], scorer_type: str, is_required:
     return value, valid, generator_id
 
 
-def render_scorer_management(existing_scorers: Dict[str, Any], categories: Dict[str, Any]):
+def render_scorer_management(existing_scorers: Dict[str, Any], categories: Dict[str, Any]) -> None:
     """Render the scorer management dashboard."""
 
     if not existing_scorers:
@@ -1006,7 +1016,7 @@ def render_scorer_management(existing_scorers: Dict[str, Any], categories: Dict[
     handle_scorer_test_interactions(categorized_scorers, categories)
 
 
-def handle_scorer_test_interactions(categorized_scorers: Dict[str, List], categories: Dict[str, Any]):
+def handle_scorer_test_interactions(categorized_scorers: Dict[str, List], categories: Dict[str, Any]) -> None:
     """Handle scorer testing interactions."""
 
     # Check for any active test sessions
@@ -1029,7 +1039,7 @@ def handle_scorer_test_interactions(categorized_scorers: Dict[str, List], catego
                 delete_scorer_interactive(scorer_id, scorer_name)
 
 
-def test_scorer_interactive(scorer_id: str, scorer_name: str, category: str, categories: Dict[str, Any]):
+def test_scorer_interactive(scorer_id: str, scorer_name: str, category: str, categories: Dict[str, Any]) -> None:
     """Interactive scorer testing with orchestrator - based testing only."""
     st.markdown(f"### 🧪 Testing: {scorer_name}")
 
@@ -1037,7 +1047,7 @@ def test_scorer_interactive(scorer_id: str, scorer_name: str, category: str, cat
     _render_orchestrator_testing(scorer_id, scorer_name, category)
 
 
-def _render_manual_testing(scorer_id: str, scorer_name: str, category: str, categories: Dict[str, Any]):
+def _render_manual_testing(scorer_id: str, scorer_name: str, category: str, categories: Dict[str, Any]) -> None:
     """Render manual testing interface"""
     # Get test cases for this category
     scorer_types_data = st.session_state.get("api_scorer_types", {})
@@ -1299,7 +1309,7 @@ def _execute_full_dataset_with_progress(
                 st.switch_page("pages/5_Dashboard.py")
 
 
-def _render_orchestrator_testing(scorer_id: str, scorer_name: str, category: str):
+def _render_orchestrator_testing(scorer_id: str, scorer_name: str, category: str) -> None:
     """Render orchestrator - based testing interface"""
     st.markdown("**Orchestrator Testing Configuration:**")
     st.info(
@@ -1414,8 +1424,12 @@ def _render_orchestrator_testing(scorer_id: str, scorer_name: str, category: str
 
 
 def _display_test_results(
-    success: bool, result: Dict[str, Any], test_input: str = None, test_mode: str = "manual", num_samples: int = None
-):
+    success: bool,
+    result: Dict[str, Any],
+    test_input: Optional[str] = None,
+    test_mode: str = "manual",
+    num_samples: Optional[int] = None,
+) -> None:
     """Display test results for both manual and orchestrator modes"""
     if success:
         st.success("✅ Test completed successfully!")
@@ -1499,7 +1513,7 @@ def _display_test_results(
         st.error(f"❌ Test failed: {result.get('error', 'Unknown error')}")
 
 
-def clone_scorer_interactive(scorer_id: str, scorer_name: str):
+def clone_scorer_interactive(scorer_id: str, scorer_name: str) -> None:
     """Clone a scorer configuration."""
     new_name = f"{scorer_name}_copy"
     counter = 1
@@ -1522,7 +1536,7 @@ def clone_scorer_interactive(scorer_id: str, scorer_name: str):
         st.error(f"❌ {message}")
 
 
-def delete_scorer_interactive(scorer_id: str, scorer_name: str):
+def delete_scorer_interactive(scorer_id: str, scorer_name: str) -> None:
     """Interactive scorer deletion with confirmation."""
     st.markdown(f"### ⚠️ Delete Scorer: {scorer_name}")
     st.warning(f"Are you sure you want to delete the scorer '{scorer_name}'? This action cannot be undone.")
@@ -1557,8 +1571,8 @@ def save_and_test_scorer(
     parameters: Dict[str, Any],
     category: str,
     test_cases: Dict[str, List[str]],
-    generator_id: str = None,
-):
+    generator_id: Optional[str] = None,
+) -> None:
     """Save and test a new scorer configuration."""
 
     # Check for duplicate names

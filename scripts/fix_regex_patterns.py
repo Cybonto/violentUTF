@@ -57,14 +57,14 @@ KNOWN_GOOD_PATTERNS = {
 }
 
 
-def create_backup(filepath):
+def create_backup(filepath) -> str:
     """Create a backup of the file before fixing."""
     backup_path = f"{filepath}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     shutil.copy2(filepath, backup_path)
     return backup_path
 
 
-def fix_file(filepath, dry_run=False):
+def fix_file(filepath, dry_run=False) -> tuple[bool, list]:
     """Fix regex patterns in a file."""
     try:
         with open(filepath, "r", encoding="utf-8") as f:
@@ -103,7 +103,7 @@ def fix_file(filepath, dry_run=False):
     return True, fixes_applied
 
 
-def validate_common_patterns(filepath):
+def validate_common_patterns(filepath) -> list[str]:
     """Validate that common patterns match known good patterns."""
     warnings = []
 
@@ -126,7 +126,7 @@ def validate_common_patterns(filepath):
     return warnings
 
 
-def main(files, dry_run=False):
+def main(files, dry_run=False) -> None:
     """Main function to fix files."""
     print(f"{YELLOW}{'DRY RUN - ' if dry_run else ''}Regex Pattern Fix Tool{RESET}")
     print("=" * 60)

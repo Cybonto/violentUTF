@@ -3,7 +3,6 @@
 Validates that regex patterns haven't been corrupted by automated tools.
 This script is designed to be run in CI/CD pipelines and pre-commit hooks.
 """
-import os
 import re
 import sys
 from pathlib import Path

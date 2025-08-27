@@ -1,7 +1,8 @@
 name: 📚 Documentation
 description: Create or update documentation for ViolentUTF
 title: "[DOCS] "
-labels: ["type:documentation", "status:pending-acceptance", "project:violentutf"]
+labels:
+  ["type:documentation", "status:pending-acceptance", "project:violentutf"]
 body:
   - type: markdown
     attributes:

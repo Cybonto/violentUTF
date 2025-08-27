@@ -146,7 +146,7 @@ st.text("")
 
 
 # Function to extract variables from page files
-def extract_variables(file_path):
+def extract_variables(file_path) -> dict:
     variables = {}
     with open(file_path, "r", encoding="utf-8") as f:
         for line in f:

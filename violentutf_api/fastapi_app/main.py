@@ -33,7 +33,7 @@ WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(fastapi_app: FastAPI):
     """Application lifespan manager"""
     logger.info("Starting ViolentUTF API...")
     logger.info("API Title: %s", settings.PROJECT_NAME)
@@ -48,8 +48,10 @@ async def lifespan(app: FastAPI):
     # Initialize PyRIT orchestrator service
     logger.info("Initializing PyRIT orchestrator service...")
     try:
-        from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service  # noqa: F401
+        from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
 
+        # Initialize the service by accessing it
+        _ = pyrit_orchestrator_service
         logger.info("PyRIT orchestrator service initialized successfully")
     except Exception as e:
         logger.error("Failed to initialize PyRIT orchestrator service: %s", e)
@@ -58,9 +60,9 @@ async def lifespan(app: FastAPI):
     # Initialize MCP server
     logger.info("Initializing MCP server...")
     try:
-        from app.mcp import mcp_server
+        from app.mcp import mcp_server as mcp_service
 
-        await mcp_server.initialize()
+        await mcp_service.initialize()
         logger.info("MCP server initialized successfully")
     except Exception as e:
         logger.error("Failed to initialize MCP server: %s", e)
@@ -130,24 +132,24 @@ async def health_check():
 
 def get_secure_binding_config():
     """Get secure network binding configuration with enhanced security checks"""
-    host = os.getenv("API_HOST", "127.0.0.1")
-    port = int(os.getenv("API_PORT", "8000"))
+    api_host = os.getenv("API_HOST", "127.0.0.1")
+    api_port = int(os.getenv("API_PORT", "8000"))
 
-    logger = logging.getLogger(__name__)
+    config_logger = logging.getLogger(__name__)
 
     # Security check for public binding
     # nosec B104 - This is security validation, not binding to all interfaces
-    if host == WILDCARD_ADDRESS:
+    if api_host == WILDCARD_ADDRESS:
         if os.getenv("ALLOW_PUBLIC_BINDING", "false").lower() != "true":
-            logger.warning(
+            config_logger.warning(
                 "Attempted to bind to all interfaces (0.0.0.0) without explicit permission. "
                 "Set ALLOW_PUBLIC_BINDING=true to enable. Falling back to localhost."
             )
-            host = "127.0.0.1"
+            api_host = "127.0.0.1"
         else:
-            logger.warning("Binding to all interfaces (0.0.0.0) - ensure firewall rules are properly configured")
+            config_logger.warning("Binding to all interfaces (0.0.0.0) - ensure firewall rules are properly configured")
 
-    return host, port
+    return api_host, api_port
 
 
 if __name__ == "__main__":

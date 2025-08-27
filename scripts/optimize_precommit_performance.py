@@ -7,23 +7,24 @@ Pre-commit Performance Optimizer
 Analyzes and optimizes pre-commit hook performance
 """
 
-import time
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
-def time_hook(hook_name, config_file=".pre-commit-config.yaml"):
+def time_hook(hook_name, config_file=".pre-commit-config.yaml") -> tuple[float, bool]:
     """Time how long a specific hook takes to run"""
     print(f"⏱️  Timing {hook_name}...")
 
     start_time = time.time()
     try:
-        result = subprocess.run([
-            'pre-commit', 'run', hook_name,
-            '--config', config_file,
-            '--all-files'
-        ], capture_output=True, text=True, timeout=60)
+        result = subprocess.run(
+            ["pre-commit", "run", hook_name, "--config", config_file, "--all-files"],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
 
         end_time = time.time()
         duration = end_time - start_time
@@ -41,25 +42,27 @@ def time_hook(hook_name, config_file=".pre-commit-config.yaml"):
         return 0.0, False
 
 
-def benchmark_configs():
+def benchmark_configs() -> dict:
     """Benchmark full vs fast pre-commit configs"""
     print("🏁 Benchmarking Pre-commit Configurations")
     print("=" * 50)
 
     # Test hooks that are common to both configs
     common_hooks = [
-        'check-json',
-        'check-yaml',
-        'check-ast',
-        'black',
-        'trailing-whitespace'
+        "check-json",
+        "check-yaml",
+        "check-ast",
+        "black",
+        "trailing-whitespace",
     ]
 
-    results = {}
+    from typing import Dict, Any
+
+    results: Dict[str, Dict[str, Any]] = {}
 
     for config_name, config_file in [
         ("Full Config", ".pre-commit-config.yaml"),
-        ("Fast Config", ".pre-commit-config-fast.yaml")
+        ("Fast Config", ".pre-commit-config-fast.yaml"),
     ]:
         if not Path(config_file).exists():
             print(f"⚠️  {config_file} not found, skipping...")
@@ -76,17 +79,16 @@ def benchmark_configs():
             total_time += duration
             hook_times[hook] = duration
 
-        results[config_name] = {
-            'total_time': total_time,
-            'hook_times': hook_times
-        }
+        results[config_name] = {"total_time": total_time, "hook_times": hook_times}
 
         print(f"🎯 Total time for {config_name}: {total_time:.2f}s")
 
     # Compare results
     if len(results) == 2:
-        full_time = results["Full Config"]["total_time"]
-        fast_time = results["Fast Config"]["total_time"]
+        from typing import cast
+
+        full_time = cast(float, results["Full Config"]["total_time"])
+        fast_time = cast(float, results["Fast Config"]["total_time"])
         speedup = full_time / fast_time if fast_time > 0 else 0
 
         print(f"\n🚀 Performance Improvement:")
@@ -97,32 +99,32 @@ def benchmark_configs():
     return results
 
 
-def create_staged_only_hooks():
+def create_staged_only_hooks() -> None:
     """Create hooks that only run on staged files for maximum speed"""
 
-    staged_config = {
-        'repos': [
+    staged_config = {  # noqa: F841
+        "repos": [
             {
-                'repo': 'https://github.com/pre-commit/pre-commit-hooks',
-                'rev': 'v4.5.0',
-                'hooks': [
-                    {'id': 'check-ast'},
-                    {'id': 'check-json'},
-                    {'id': 'trailing-whitespace'},
-                    {'id': 'end-of-file-fixer'}
-                ]
+                "repo": "https://github.com/pre-commit/pre-commit-hooks",
+                "rev": "v4.5.0",
+                "hooks": [
+                    {"id": "check-ast"},
+                    {"id": "check-json"},
+                    {"id": "trailing-whitespace"},
+                    {"id": "end-of-file-fixer"},
+                ],
             },
             {
-                'repo': 'https://github.com/psf/black',
-                'rev': '23.12.1',
-                'hooks': [
+                "repo": "https://github.com/psf/black",
+                "rev": "23.12.1",
+                "hooks": [
                     {
-                        'id': 'black',
-                        'args': ['--line-length', '120'],
-                        'types_or': ['python']
+                        "id": "black",
+                        "args": ["--line-length", "120"],
+                        "types_or": ["python"],
                     }
-                ]
-            }
+                ],
+            },
         ]
     }
 
@@ -133,7 +135,7 @@ def create_staged_only_hooks():
     print("4. Consider 'pass_filenames: false' for whole-repo checks")
 
 
-def main():
+def main() -> int:
     """Main optimization function"""
     print("🎯 Pre-commit Performance Optimization")
     print("=" * 50)
@@ -145,7 +147,7 @@ def main():
         return 1
 
     # Benchmark both configurations
-    results = benchmark_configs()
+    results = benchmark_configs()  # noqa: F841
 
     # Show optimization recommendations
     print(f"\n💡 Speed Optimization Recommendations:")

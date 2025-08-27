@@ -32,7 +32,7 @@ class PreCommitChecker:
         self.fixed = []
         self.warnings = []
 
-    def log(self, message, level="info"):
+    def log(self, message, level="info") -> None:
         """Log messages with color coding."""
         timestamp = datetime.now().strftime("%H:%M:%S")
         if level == "error":
@@ -48,7 +48,7 @@ class PreCommitChecker:
             print(f"{CYAN}{BOLD}{message}{RESET}")
             print(f"{CYAN}{BOLD}{'='*70}{RESET}")
 
-    def run_command(self, cmd, description, check_only=True):
+    def run_command(self, cmd, description, check_only=True) -> tuple[bool, str]:
         """Run a command and capture output."""
         if self.verbose:
             self.log(f"Running: {cmd}", "info")
@@ -74,7 +74,7 @@ class PreCommitChecker:
             self.issues.append((description, str(e)))
             return False, str(e)
 
-    def check_black(self):
+    def check_black(self) -> bool:
         """Check Python code formatting with Black."""
         self.log("Checking Python formatting with Black...", "header")
 
@@ -88,7 +88,7 @@ class PreCommitChecker:
                 return True
         return success
 
-    def check_isort(self):
+    def check_isort(self) -> bool:
         """Check import sorting with isort."""
         self.log("Checking import sorting with isort...", "header")
 
@@ -102,7 +102,7 @@ class PreCommitChecker:
                 return True
         return success
 
-    def check_flake8(self):
+    def check_flake8(self) -> bool:
         """Check code quality with flake8."""
         self.log("Checking code quality with flake8...", "header")
 
@@ -139,7 +139,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return success
 
-    def check_file_paths(self):
+    def check_file_paths(self) -> bool:
         """Check for problematic file paths (spaces, special characters)."""
         self.log("Checking for problematic file paths...", "header")
 
@@ -159,7 +159,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             return False
         return True
 
-    def check_large_files(self):
+    def check_large_files(self) -> bool:
         """Check for large files that shouldn't be committed."""
         self.log("Checking for large files...", "header")
 
@@ -183,7 +183,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def check_secrets(self):
+    def check_secrets(self) -> bool:
         """Basic check for potential secrets in code."""
         self.log("Checking for potential secrets...", "header")
 
@@ -217,7 +217,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def check_yaml_files(self):
+    def check_yaml_files(self) -> bool:
         """Check YAML files for syntax errors."""
         self.log("Checking YAML files...", "header")
 
@@ -243,7 +243,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def check_json_files(self):
+    def check_json_files(self) -> bool:
         """Check JSON files for syntax errors."""
         self.log("Checking JSON files...", "header")
 
@@ -263,7 +263,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def check_dockerfile(self):
+    def check_dockerfile(self) -> bool:
         """Check Dockerfile best practices."""
         self.log("Checking Dockerfiles...", "header")
 
@@ -290,7 +290,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def run_all_checks(self):
+    def run_all_checks(self) -> int:
         """Run all pre-commit checks."""
         self.log("ViolentUTF Pre-Commit Checker", "header")
         self.log(f"Mode: {'FIX' if self.fix else 'CHECK ONLY'}", "info")
@@ -360,7 +360,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             return 1
 
 
-def main():
+def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Pre-commit checker for ViolentUTF project")
     parser.add_argument(

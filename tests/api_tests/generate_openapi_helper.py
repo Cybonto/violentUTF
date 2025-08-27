@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def setup_test_environment():
+def setup_test_environment() -> None:
     """Setup environment for schema generation."""
     os.environ.update(
         {
@@ -241,7 +241,7 @@ def create_minimal_schema(output_file: str) -> bool:
         return False
 
 
-def main():
+def main() -> None:
     """Main function for CLI usage."""
     import argparse
 

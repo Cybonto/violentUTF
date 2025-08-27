@@ -12,13 +12,13 @@ repos:
     hooks:
       - id: check-added-large-files
         args: ["--maxkb=5000"]
-      - id: check-ast                      # Python syntax - CRITICAL
-        files: '^(app|violentutf_api)/'
-      - id: check-json                     # JSON syntax - CRITICAL
+      - id: check-ast # Python syntax - CRITICAL
+        files: "^(app|violentutf_api)/"
+      - id: check-json # JSON syntax - CRITICAL
         files: '\.json$'
         exclude: 'node_modules|\.mypy_cache'
-      - id: trailing-whitespace            # Auto-fix trailing spaces
-        files: '^(app|violentutf_api|scripts)/'
+      - id: trailing-whitespace # Auto-fix trailing spaces
+        files: "^(app|violentutf_api|scripts)/"
         exclude: '\.md$|\.txt$'
 
   # Fast security check on main code only
@@ -29,5 +29,5 @@ repos:
         entry: '(password|secret|api_key).*=.*["\x27](sk-[a-zA-Z0-9]{20,}|[a-zA-Z0-9]{32,})["\x27]'
         language: pygrep
         types: [python]
-        files: '^(app|violentutf_api)/'
-        exclude: 'test_'
+        files: "^(app|violentutf_api)/"
+        exclude: "test_"

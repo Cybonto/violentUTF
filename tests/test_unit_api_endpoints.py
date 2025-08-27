@@ -51,7 +51,7 @@ def setup_auth_override(mock_user):
 class TestAuthenticationEndpoints:
     """Test authentication endpoints"""
 
-    def test_get_token_info(self, auth_headers):
+    def test_get_token_info(self, auth_headers) -> None:
         """Test GET /auth/token/info endpoint"""
         response = client.get("/api/v1/auth/token/info", headers=auth_headers)
         assert response.status_code == 200
@@ -63,7 +63,7 @@ class TestAuthenticationEndpoints:
         assert data["has_ai_access"] is True
         assert data["token_valid"] is True
 
-    def test_validate_token(self, auth_headers):
+    def test_validate_token(self, auth_headers) -> None:
         """Test POST /auth/token/validate endpoint"""
         # Test valid token with AI access
         payload = {"required_roles": ["ai-api-access"], "check_ai_access": True}
@@ -76,7 +76,7 @@ class TestAuthenticationEndpoints:
         assert data["has_ai_access"] is True
         assert data["missing_roles"] == []
 
-    def test_validate_token_missing_role(self, auth_headers):
+    def test_validate_token_missing_role(self, auth_headers) -> None:
         """Test token validation with missing role"""
         payload = {"required_roles": ["admin"], "check_ai_access": True}
 
@@ -87,7 +87,7 @@ class TestAuthenticationEndpoints:
         assert data["valid"] is False
         assert "admin" in data["missing_roles"]
 
-    def test_logout(self, auth_headers):
+    def test_logout(self, auth_headers) -> None:
         """Test POST /auth/logout endpoint"""
         response = client.post("/api/v1/auth/logout", headers=auth_headers)
         assert response.status_code == 200
@@ -100,7 +100,7 @@ class TestDatabaseEndpoints:
     @patch("os.makedirs")
     @patch("duckdb.connect")
     @patch("os.path.exists")
-    def test_initialize_database(self, mock_exists, mock_duckdb, mock_makedirs, auth_headers):
+    def test_initialize_database(self, mock_exists, mock_duckdb, mock_makedirs, auth_headers) -> None:
         """Test POST /database/initialize endpoint"""
         mock_exists.return_value = False
 
@@ -122,7 +122,7 @@ class TestDatabaseEndpoints:
     @patch("os.path.exists")
     @patch("os.stat")
     @patch("duckdb.connect")
-    def test_get_database_status(self, mock_duckdb, mock_stat, mock_exists, auth_headers):
+    def test_get_database_status(self, mock_duckdb, mock_stat, mock_exists, auth_headers) -> None:
         """Test GET /database/status endpoint"""
         mock_exists.return_value = True
 
@@ -145,7 +145,7 @@ class TestDatabaseEndpoints:
     @patch("os.path.exists")
     @patch("os.stat")
     @patch("duckdb.connect")
-    def test_get_database_stats(self, mock_duckdb, mock_stat, mock_exists, auth_headers):
+    def test_get_database_stats(self, mock_duckdb, mock_stat, mock_exists, auth_headers) -> None:
         """Test GET /database/stats endpoint"""
         mock_exists.return_value = True
 
@@ -167,7 +167,7 @@ class TestDatabaseEndpoints:
     @patch("os.path.exists")
     @patch("shutil.copy2")
     @patch("os.getenv")
-    def test_reset_database(self, mock_getenv, mock_shutil, mock_exists, auth_headers):
+    def test_reset_database(self, mock_getenv, mock_shutil, mock_exists, auth_headers) -> None:
         """Test POST /database/reset endpoint"""
         mock_exists.return_value = True
         mock_getenv.side_effect = lambda key, default: {
@@ -184,7 +184,7 @@ class TestDatabaseEndpoints:
         assert "message" in data
         assert data["task_status"] == "running"
 
-    def test_reset_database_no_confirmation(self, auth_headers):
+    def test_reset_database_no_confirmation(self, auth_headers) -> None:
         """Test database reset without confirmation"""
         payload = {"confirmation": False}
 
@@ -201,7 +201,7 @@ class TestSessionEndpoints:
         read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024-01-01T00:00:00"}',
     )
     @patch("os.path.exists")
-    def test_get_session_state(self, mock_exists, mock_file, auth_headers):
+    def test_get_session_state(self, mock_exists, mock_file, auth_headers) -> None:
         """Test GET /sessions endpoint"""
         mock_exists.return_value = True
 
@@ -217,7 +217,7 @@ class TestSessionEndpoints:
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.path.exists")
     @patch("os.makedirs")
-    def test_update_session_state(self, mock_makedirs, mock_exists, mock_file, auth_headers):
+    def test_update_session_state(self, mock_makedirs, mock_exists, mock_file, auth_headers) -> None:
         """Test PUT /sessions endpoint"""
         mock_exists.return_value = True
 
@@ -248,7 +248,7 @@ class TestSessionEndpoints:
 
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.makedirs")
-    def test_reset_session_state(self, mock_makedirs, mock_file, auth_headers):
+    def test_reset_session_state(self, mock_makedirs, mock_file, auth_headers) -> None:
         """Test POST /sessions/reset endpoint"""
         response = client.post("/api/v1/sessions/reset", headers=auth_headers)
         assert response.status_code == 200
@@ -259,7 +259,7 @@ class TestSessionEndpoints:
         assert data["workflow_state"] == {}
         assert data["temporary_data"] == {}
 
-    def test_get_session_schema(self):
+    def test_get_session_schema(self) -> None:
         """Test GET /sessions/schema endpoint"""
         response = client.get("/api/v1/sessions/schema")
         assert response.status_code == 200
@@ -276,7 +276,7 @@ class TestConfigEndpoints:
     @patch("builtins.open", new_callable=mock_open, read_data='APP_DATA_DIR: ./app_data/violentutf\nversion: "1.0"')
     @patch("os.path.exists")
     @patch("os.path.getmtime")
-    def test_get_config_parameters(self, mock_getmtime, mock_exists, mock_file, auth_headers):
+    def test_get_config_parameters(self, mock_getmtime, mock_exists, mock_file, auth_headers) -> None:
         """Test GET /config/parameters endpoint"""
         mock_exists.return_value = True
         mock_getmtime.return_value = 1700654921
@@ -301,7 +301,7 @@ class TestEnvironmentConfigEndpoints:
             "APP_DATA_DIR": "./app_data",
         },
     )
-    def test_get_environment_config(self, auth_headers):
+    def test_get_environment_config(self, auth_headers) -> None:
         """Test GET /config/environment endpoint"""
         response = client.get("/api/v1/config/environment", headers=auth_headers)
         assert response.status_code == 200
@@ -312,7 +312,7 @@ class TestEnvironmentConfigEndpoints:
         # Check that sensitive values are masked
         assert data["environment_variables"]["PYRIT_DB_SALT"] == "test_sal..."
 
-    def test_generate_salt(self, auth_headers):
+    def test_generate_salt(self, auth_headers) -> None:
         """Test POST /config/environment/generate-salt endpoint"""
         response = client.post("/api/v1/config/environment/generate-salt", headers=auth_headers)
         assert response.status_code == 200
@@ -328,7 +328,7 @@ class TestFileEndpoints:
 
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.makedirs")
-    def test_upload_file(self, mock_makedirs, mock_file, auth_headers):
+    def test_upload_file(self, mock_makedirs, mock_file, auth_headers) -> None:
         """Test POST /files/upload endpoint"""
         file_content = "test file content"
         files = {"file": ("test.txt", file_content, "text/plain")}

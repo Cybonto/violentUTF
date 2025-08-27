@@ -6,14 +6,13 @@ Specifically designed to work on Windows, macOS, and Linux.
 
 import argparse
 import glob
-import json
 import os
 import subprocess  # nosec B404 - needed for test execution
 import sys
 from pathlib import Path
 
 
-def find_requirements_files():
+def find_requirements_files() -> list[str]:
     """Find all requirements*.txt files in the project."""
     req_files = []
     for root, dirs, files in os.walk("."):
@@ -28,7 +27,7 @@ def find_requirements_files():
     return req_files
 
 
-def install_dependencies(req_files):
+def install_dependencies(req_files) -> None:
     """Install dependencies from requirements files."""
     print("Installing test dependencies...")
 
@@ -50,7 +49,7 @@ def install_dependencies(req_files):
             print(f"Warning: Failed to install from {req_file}: {e}")
 
 
-def find_test_files(test_dir="tests/unit"):
+def find_test_files(test_dir="tests/unit") -> list[str]:
     """Find Python test files in the specified directory."""
     test_files = []
 
@@ -69,7 +68,7 @@ def find_test_files(test_dir="tests/unit"):
     return test_files
 
 
-def run_tests(test_dir="tests/unit", coverage=True, parallel=True):
+def run_tests(test_dir="tests/unit", coverage=True, parallel=True) -> int:
     """Run pytest with coverage reporting."""
     test_files = find_test_files(test_dir)
 
@@ -103,7 +102,7 @@ def run_tests(test_dir="tests/unit", coverage=True, parallel=True):
     return result.returncode
 
 
-def create_empty_results():
+def create_empty_results() -> None:
     """Create empty test result files for CI compatibility."""
     print("Creating empty test results...")
 
@@ -130,7 +129,7 @@ def create_empty_results():
         f.write(coverage_xml)
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Cross-platform test runner for ViolentUTF")
     parser.add_argument("--test-dir", default="tests/unit", help="Directory containing tests")

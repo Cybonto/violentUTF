@@ -3,7 +3,6 @@
 Debug OpenAPI authentication configuration
 """
 import os
-import sys
 
 # Check environment variables
 print("=== OpenAPI Environment Variables ===")

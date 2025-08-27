@@ -66,7 +66,6 @@ class GarakService:
                     for attr_name in dir(module):
                         attr = getattr(module, attr_name)
                         if isinstance(attr, type) and hasattr(attr, "probe") and attr_name != "Probe":
-
                             probe_info = {
                                 "module": module_name,
                                 "name": attr_name,
@@ -107,7 +106,6 @@ class GarakService:
                     for attr_name in dir(module):
                         attr = getattr(module, attr_name)
                         if isinstance(attr, type) and hasattr(attr, "generate") and attr_name != "Generator":
-
                             generator_info = {
                                 "module": module_name,
                                 "name": attr_name,

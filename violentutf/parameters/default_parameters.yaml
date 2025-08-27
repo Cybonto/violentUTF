@@ -1,6 +1,7 @@
 memory_initialized: true
 memory_type: In-Memory (DuckDB)
-APP_DATA_DIR: app_data/violentutf  # make sure you give the write permission
+APP_DATA_DIR:
+  app_data/violentutf # make sure you give the write permission
   # chmod u+w /app_data/violentutf
 
 generators:

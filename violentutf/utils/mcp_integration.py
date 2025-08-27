@@ -51,7 +51,7 @@ class MCPCommand:
     arguments: Optional[Dict[str, Any]] = None
     raw_text: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.arguments is None:
             self.arguments = {}
 
@@ -106,7 +106,7 @@ class NaturalLanguageParser:
         ],
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize parser with compiled patterns"""
         self.compiled_patterns = {}
         for cmd_type, patterns in self.COMMAND_PATTERNS.items():
@@ -266,7 +266,7 @@ class ContextAnalyzer:
 
     BIAS_TRIGGERS = ["bias", "fair", "discriminat", "stereotyp", "prejudic", "neutral", "balanced", "inclusive"]
 
-    def __init__(self, mcp_client: Optional[MCPClientSync] = None):
+    def __init__(self, mcp_client: Optional[MCPClientSync] = None) -> None:
         """Initialize analyzer with optional MCP client"""
         self.mcp_client = mcp_client or MCPClientSync()
         self.logger = logger
@@ -365,7 +365,7 @@ class ContextAnalyzer:
 class ResourceSearcher:
     """Search and filter MCP resources"""
 
-    def __init__(self, mcp_client: Optional[MCPClientSync] = None):
+    def __init__(self, mcp_client: Optional[MCPClientSync] = None) -> None:
         """Initialize searcher with MCP client"""
         self.mcp_client = mcp_client or MCPClientSync()
         self._resources_cache: Optional[List[Dict[str, Any]]] = None
@@ -402,7 +402,6 @@ class ResourceSearcher:
                 or query_lower in resource.get("description", "").lower()
                 or query_lower in resource.get("uri", "").lower()
             ):
-
                 # Filter by type if specified
                 if resource_type:
                     if resource_type in resource.get("uri", ""):
@@ -438,7 +437,6 @@ class ResourceSearcher:
         for prompt in prompts:
             # Check name and description
             if query_lower in prompt.get("name", "").lower() or query_lower in prompt.get("description", "").lower():
-
                 # Filter by category if specified
                 if category:
                     # Category might be in name or tags
@@ -476,7 +474,7 @@ class ResourceSearcher:
 class TestScenarioInterpreter:
     """Interpret and execute test scenarios using MCP"""
 
-    def __init__(self, mcp_client: Optional[MCPClientSync] = None):
+    def __init__(self, mcp_client: Optional[MCPClientSync] = None) -> None:
         """Initialize interpreter with MCP client"""
         self.mcp_client = mcp_client or MCPClientSync()
         self.logger = logger
@@ -613,7 +611,7 @@ class TestScenarioInterpreter:
 class DatasetIntegration:
     """Integrate MCP with existing dataset system"""
 
-    def __init__(self, mcp_client: Optional[MCPClientSync] = None):
+    def __init__(self, mcp_client: Optional[MCPClientSync] = None) -> None:
         """Initialize with MCP client"""
         self.mcp_client = mcp_client or MCPClientSync()
         self.logger = logger
@@ -747,7 +745,7 @@ class DatasetIntegration:
 class ConfigurationIntentDetector:
     """Detects configuration-related intents in natural language"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.generator_keywords = ["generator", "create", "model", "gpt", "claude", "llm"]
         self.dataset_keywords = ["dataset", "data", "load", "prompts"]
         self.orchestrator_keywords = ["orchestrator", "test", "run", "execute", "red team"]
@@ -850,7 +848,7 @@ class ConfigurationIntentDetector:
 class ConversationContextAnalyzer:
     """Analyzes conversation context to provide intelligent suggestions"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.topic_keywords = {
             "security": ["jailbreak", "injection", "attack", "vulnerability", "exploit"],
             "bias": ["bias", "fairness", "discrimination", "stereotype"],

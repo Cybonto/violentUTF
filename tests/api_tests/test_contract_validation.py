@@ -16,7 +16,7 @@ from tests.api_tests.test_auth_mock import ContractTestingPatches
 class TestAPIContractValidation:
     """Test API contract validation."""
 
-    def test_openapi_schema_generation(self, test_app, openapi_schema):
+    def test_openapi_schema_generation(self, test_app, openapi_schema) -> None:
         """Test that OpenAPI schema can be generated from FastAPI app."""
         assert openapi_schema is not None
         assert "openapi" in openapi_schema
@@ -31,7 +31,7 @@ class TestAPIContractValidation:
         assert "title" in info
         assert "version" in info
 
-    def test_openapi_security_schemes(self, openapi_schema):
+    def test_openapi_security_schemes(self, openapi_schema) -> None:
         """Test that security schemes are properly defined."""
         components = openapi_schema.get("components", {})
         security_schemes = components.get("securitySchemes", {})
@@ -45,7 +45,7 @@ class TestAPIContractValidation:
             assert bearer_auth["type"] == "http"
             assert bearer_auth["scheme"] == "bearer"
 
-    def test_api_endpoints_defined(self, openapi_schema):
+    def test_api_endpoints_defined(self, openapi_schema) -> None:
         """Test that required API endpoints are defined."""
         paths = openapi_schema.get("paths", {})
 
@@ -66,7 +66,7 @@ class TestAPIContractValidation:
         # At least some endpoints should be present
         assert len(found_endpoints) > 0, f"No expected endpoints found in {list(paths.keys())}"
 
-    def test_error_response_schemas(self, openapi_schema):
+    def test_error_response_schemas(self, openapi_schema) -> None:
         """Test that error response schemas are consistent."""
         paths = openapi_schema.get("paths", {})
 
@@ -89,7 +89,7 @@ class TestAPIContractValidation:
 class TestAPIEndpointContracts:
     """Test individual API endpoint contracts."""
 
-    def test_health_endpoint_contract(self, test_client, test_headers):
+    def test_health_endpoint_contract(self, test_client, test_headers) -> None:
         """Test health endpoint contract."""
         response = test_client.get("/health", headers=test_headers)
 
@@ -172,7 +172,7 @@ class TestAuthenticationContracts:
         # Should return 401 or 403 for invalid token
         assert response.status_code in [200, 401, 403, 404, 422]
 
-    def test_api_key_authentication(self, test_client):
+    def test_api_key_authentication(self, test_client) -> None:
         """Test API key authentication."""
         api_key_headers = {"apikey": "test_api_key", "Content-Type": "application/json"}
 
@@ -187,7 +187,7 @@ class TestAuthenticationContracts:
 class TestResponseFormatContracts:
     """Test response format contract compliance."""
 
-    def test_json_response_format(self, test_client, test_headers):
+    def test_json_response_format(self, test_client, test_headers) -> None:
         """Test that API responses are in JSON format."""
         endpoints = ["/api/v1/generators", "/api/v1/scorers", "/api/v1/orchestrators", "/api/v1/datasets"]
 
@@ -204,7 +204,7 @@ class TestResponseFormatContracts:
                 except json.JSONDecodeError:
                     pytest.fail(f"Invalid JSON response from {endpoint}")
 
-    def test_error_response_format(self, test_client):
+    def test_error_response_format(self, test_client) -> None:
         """Test that error responses follow expected format."""
         # Test with invalid endpoint
         response = test_client.get("/api/v1/invalid_endpoint")
@@ -217,7 +217,7 @@ class TestResponseFormatContracts:
                 # Should have error details
                 assert "detail" in data or "message" in data or "error" in data
 
-    def test_cors_headers(self, test_client, test_headers):
+    def test_cors_headers(self, test_client, test_headers) -> None:
         """Test that CORS headers are properly set."""
         response = test_client.options("/api/v1/generators", headers=test_headers)
 
@@ -230,7 +230,7 @@ class TestResponseFormatContracts:
 class TestDataValidationContracts:
     """Test data validation contract compliance."""
 
-    def test_post_request_validation(self, test_client, test_headers):
+    def test_post_request_validation(self, test_client, test_headers) -> None:
         """Test POST request validation."""
         # Test with invalid JSON
         response = test_client.post("/api/v1/generators", headers=test_headers, json={"invalid": "data"})
@@ -238,7 +238,7 @@ class TestDataValidationContracts:
         # Should handle validation errors appropriately
         assert response.status_code in [200, 400, 404, 422]
 
-    def test_query_parameter_validation(self, test_client, test_headers):
+    def test_query_parameter_validation(self, test_client, test_headers) -> None:
         """Test query parameter validation."""
         # Test with invalid query parameters
         response = test_client.get("/api/v1/generators?invalid_param=value", headers=test_headers)
@@ -246,7 +246,7 @@ class TestDataValidationContracts:
         # Should handle invalid parameters gracefully
         assert response.status_code in [200, 400, 404, 422]
 
-    def test_path_parameter_validation(self, test_client, test_headers):
+    def test_path_parameter_validation(self, test_client, test_headers) -> None:
         """Test path parameter validation."""
         # Test with invalid path parameter
         response = test_client.get("/api/v1/generators/invalid_id", headers=test_headers)
@@ -260,7 +260,7 @@ class TestDataValidationContracts:
 class TestPerformanceContracts:
     """Test performance-related contract compliance."""
 
-    def test_response_time_reasonable(self, test_client, test_headers):
+    def test_response_time_reasonable(self, test_client, test_headers) -> None:
         """Test that response times are reasonable."""
         import time
 
@@ -276,14 +276,14 @@ class TestPerformanceContracts:
             # Response should be under 5 seconds for contract testing
             assert response_time < 5.0, f"Response time too slow for {endpoint}: {response_time}s"
 
-    def test_concurrent_request_handling(self, test_client, test_headers):
+    def test_concurrent_request_handling(self, test_client, test_headers) -> None:
         """Test that API can handle concurrent requests."""
         import threading
         import time
 
         results = []
 
-        def make_request():
+        def make_request() -> None:
             response = test_client.get("/api/v1/generators", headers=test_headers)
             results.append(response.status_code)
 

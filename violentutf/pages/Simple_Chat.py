@@ -226,7 +226,7 @@ if default_file in prompt_variable_files:
 
 
 # Function to load prompt variables from a file
-def load_prompt_variables(file_name):
+def load_prompt_variables(file_name) -> Dict[str, Any]:
     file_path = os.path.join(DATA_DIR, file_name)
     try:
         with open(file_path, "r") as f:
@@ -238,7 +238,7 @@ def load_prompt_variables(file_name):
 
 
 # Function to save prompt variables to a file
-def save_prompt_variables(file_name, data):
+def save_prompt_variables(file_name, data) -> None:
     file_path = os.path.join(DATA_DIR, file_name)
     try:
         with open(file_path, "w") as f:
@@ -248,7 +248,7 @@ def save_prompt_variables(file_name, data):
 
 
 @st.dialog("Create New Prompt Variable File")
-def create_new_prompt_variable_file():
+def create_new_prompt_variable_file() -> None:
     new_file_name = ""
     new_file_name_input = st.text_input("Enter new prompt variable file name (without extension)")
     create_file_submit = st.button("Create file")
@@ -268,7 +268,7 @@ def create_new_prompt_variable_file():
 
 
 @st.dialog("Prompt Variable Details")
-def view_prompt_variable(var_name, var_data):
+def view_prompt_variable(var_name, var_data) -> None:
     st.write(f"**Variable Name:** {var_name}")
     st.write(f"**Number of Tokens:** {var_data.get('num_tokens', 'N/A')}")
     st.write(f"**Timestamp:** {var_data.get('timestamp', 'N/A')}")
@@ -631,7 +631,7 @@ with st.sidebar:
 
 # Handle Create Prompt Variable Modal
 @st.dialog("Create Prompt Variable")
-def create_prompt_variable(content, origin):
+def create_prompt_variable(content, origin) -> None:
     variable_name = st.text_input("Enter variable name:")
     variable_value = st.text_area("Variable content:", value=content)
     submit = st.button("Save Variable")
@@ -663,7 +663,7 @@ def create_prompt_variable(content, origin):
 
 
 @st.dialog("Duplicate Prompt Variable File")
-def duplicate_prompt_variable_file():
+def duplicate_prompt_variable_file() -> None:
     file_to_duplicate = st.selectbox("Select a file to duplicate", options=prompt_variable_files)
     new_file_name_input = st.text_input("Enter new file name (without extension)")
     duplicate_submit = st.button("Duplicate")
@@ -772,7 +772,6 @@ with main_col_left:
 with main_col_right:
     # Wrap all controls in a collapsed expander
     with st.expander("🎛️ Prompt Controls", expanded=False):
-
         # Prompt Enhancement section (moved up)
         st.markdown("**Prompt Enhancement:**")
 
@@ -783,9 +782,7 @@ with main_col_right:
             enhance_button = st.button("✨ Enhance", help="Improve prompt quality using MCP", use_container_width=True)
 
         with enhancement_col2:
-            analyze_button = st.button(
-                "🔍 Analyze", help="Analyze for security & bias issues", use_container_width=True
-            )
+            analyze_button = st.button("🔍 Analyze", help="Analyze for security & bias issues", use_container_width=True)
 
         with enhancement_col3:
             test_button = st.button("🧪 Test", help="Generate test variations", use_container_width=True)
@@ -976,7 +973,7 @@ with main_col_right:
 
 
 # MCP Enhancement Handlers
-def enhance_prompt_with_mcp(prompt_text):
+def enhance_prompt_with_mcp(prompt_text) -> str:
     """Enhance prompt using MCP prompts"""
     try:
         mcp_client = st.session_state["mcp_client"]
@@ -1005,7 +1002,7 @@ def enhance_prompt_with_mcp(prompt_text):
         return None, str(e)
 
 
-def analyze_prompt_with_mcp(prompt_text):
+def analyze_prompt_with_mcp(prompt_text) -> str:
     """Analyze prompt for security and bias issues"""
     try:
         mcp_client = st.session_state["mcp_client"]
@@ -1037,7 +1034,7 @@ def analyze_prompt_with_mcp(prompt_text):
         return {"suggestions": suggestions, "fallback": True}, None
 
 
-def generate_test_variations_with_mcp(prompt_text, test_type="general"):
+def generate_test_variations_with_mcp(prompt_text, test_type="general") -> List[str]:
     """Generate test variations of the prompt"""
     try:
         mcp_client = st.session_state["mcp_client"]
@@ -1136,7 +1133,7 @@ if quick_actions != "Select an action..." and user_input:
 
 
 # Handler functions for MCP commands
-def handle_mcp_command(parsed_command):
+def handle_mcp_command(parsed_command) -> None:
     """Handle explicit MCP commands like /mcp help, /mcp list generators"""
     command_type = parsed_command.type
     params = parsed_command.arguments or {}
@@ -1236,7 +1233,7 @@ def handle_mcp_command(parsed_command):
             logger.debug("UNKNOWN command type reached else clause - ignoring UI warning")
 
 
-def handle_configuration_command(intent, user_input):
+def handle_configuration_command(intent, user_input) -> None:
     """Handle natural language configuration commands"""
     intent_type = intent["type"]
 
@@ -1294,7 +1291,7 @@ def handle_configuration_command(intent, user_input):
 
 
 # Command execution functions with real API calls
-def list_generators():
+def list_generators() -> List[str]:
     """List all configured generators"""
     st.info("📋 Listing configured generators...")
 
@@ -1333,7 +1330,7 @@ def list_generators():
                     st.write(f"**Created:** {gen.get('created_at', 'Unknown')}")
 
 
-def list_datasets():
+def list_datasets() -> List[str]:
     """List all available datasets"""
     st.info("📋 Listing available datasets...")
 
@@ -1370,7 +1367,7 @@ def list_datasets():
                     st.write(f"**Created:** {ds.get('created_at', 'Unknown')}")
 
 
-def load_dataset(dataset_name):
+def load_dataset(dataset_name) -> Optional[Dict[str, Any]]:
     """Load a specific dataset"""
     st.info(f"📂 Loading dataset: {dataset_name}")
 
@@ -1449,7 +1446,7 @@ def load_dataset(dataset_name):
             st.info("Available built - in datasets: harmbench, jailbreak, promptinjection, bias, security")
 
 
-def list_converters():
+def list_converters() -> List[str]:
     """List all configured converters"""
     st.info("📋 Listing configured converters...")
 
@@ -1487,7 +1484,7 @@ def list_converters():
                     st.write(f"**Created:** {conv.get('created_at', 'Unknown')}")
 
 
-def list_scorers():
+def list_scorers() -> List[str]:
     """List all configured scorers"""
     st.info("📋 Listing configured scorers...")
 

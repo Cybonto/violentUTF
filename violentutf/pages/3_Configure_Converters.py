@@ -118,9 +118,9 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
 
         if response.status_code == 200:
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
         elif response.status_code == 201:
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
         elif response.status_code == 401:
             logger.error(f"401 Unauthorized: {response.text}")
             return None
@@ -161,7 +161,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def create_compatible_api_token():
+def create_compatible_api_token() -> Optional[str]:
     """Create a FastAPI - compatible token using JWT manager"""
     try:
         from utils.jwt_manager import jwt_manager
@@ -178,9 +178,7 @@ def create_compatible_api_token():
             logger.info("Successfully created API token using JWT manager")
             return api_token
         else:
-            st.error(
-                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
-            )
+            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 
@@ -193,7 +191,7 @@ def create_compatible_api_token():
 # --- API Backend Functions ---
 
 
-def load_converter_types_from_api():
+def load_converter_types_from_api() -> Optional[Dict[str, Any]]:
     """Load available converter types from API"""
     data = api_request("GET", API_ENDPOINTS["converter_types"])
     if data:
@@ -202,7 +200,7 @@ def load_converter_types_from_api():
     return {}
 
 
-def load_converters_from_api():
+def load_converters_from_api() -> Optional[Dict[str, Any]]:
     """Load existing converters from API"""
     data = api_request("GET", API_ENDPOINTS["converters"])
     if data:
@@ -212,7 +210,7 @@ def load_converters_from_api():
     return {}
 
 
-def get_converter_params_from_api(converter_type: str):
+def get_converter_params_from_api(converter_type: str) -> Optional[List[Dict[str, Any]]]:
     """Get parameter definitions for a converter type from API"""
     url = API_ENDPOINTS["converter_params"].format(converter_type=converter_type)
     data = api_request("GET", url)
@@ -221,7 +219,9 @@ def get_converter_params_from_api(converter_type: str):
     return [], False
 
 
-def create_converter_via_api(name: str, converter_type: str, parameters: Dict[str, Any], generator_id: str = None):
+def create_converter_via_api(
+    name: str, converter_type: str, parameters: Dict[str, Any], generator_id: Optional[str] = None
+) -> bool:
     """Create a new converter configuration via API"""
     payload = {"name": name, "converter_type": converter_type, "parameters": parameters}
     if generator_id:
@@ -271,7 +271,9 @@ def preview_converter_via_api(
     return False, []
 
 
-def apply_converter_via_api(converter_id: str, dataset_id: str, mode: str, new_dataset_name: str = None):
+def apply_converter_via_api(
+    converter_id: str, dataset_id: str, mode: str, new_dataset_name: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
     """Apply converter to dataset via API"""
     url = API_ENDPOINTS["converter_apply"].format(converter_id=converter_id)
     payload = {"dataset_id": dataset_id, "mode": mode, "save_to_memory": True, "save_to_session": True}
@@ -290,7 +292,7 @@ def apply_converter_via_api(converter_id: str, dataset_id: str, mode: str, new_d
         return False, {"error": "No response from API"}
 
 
-def auto_load_generators():
+def auto_load_generators() -> None:
     """
     Automatically load existing generators on page load
 
@@ -313,7 +315,7 @@ def auto_load_generators():
             del st.session_state["force_reload_generators"]
 
 
-def get_generators_from_api():
+def get_generators_from_api() -> Optional[Dict[str, Any]]:
     """Get available generators for testing"""
     data = api_request("GET", API_ENDPOINTS["generators"])
     if data:
@@ -321,14 +323,14 @@ def get_generators_from_api():
     return []
 
 
-def get_cached_generators():
+def get_cached_generators() -> Optional[Dict[str, Any]]:
     """Get generators from cache or load them if not cached"""
     if "api_generators_cache" not in st.session_state:
         auto_load_generators()
     return st.session_state.get("api_generators_cache", [])
 
 
-def auto_load_datasets():
+def auto_load_datasets() -> None:
     """
     Automatically load existing datasets on page load
 
@@ -349,7 +351,7 @@ def auto_load_datasets():
             del st.session_state["force_reload_datasets"]
 
 
-def load_datasets_from_api():
+def load_datasets_from_api() -> Optional[Dict[str, Any]]:
     """Load existing datasets from API"""
     data = api_request("GET", API_ENDPOINTS["datasets"])
     if data:
@@ -360,7 +362,7 @@ def load_datasets_from_api():
 
 
 # --- Main Page Function ---
-def main():
+def main() -> None:
     """Renders the Configure Converters page content with API backend."""
     logger.debug("Configure Converters page (API - backed) loading.")
     st.set_page_config(
@@ -402,13 +404,13 @@ def main():
     proceed_to_next_step()
 
 
-def display_header():
+def display_header() -> None:
     """Displays the main header for the page."""
     st.title("🔄 Configure Converters")
     st.markdown("*Configure prompt converters to transform and enhance red-teaming inputs*")
 
 
-def select_generator_and_dataset():
+def select_generator_and_dataset() -> None:
     """Allow users to select a generator and dataset from the configured ones"""
     st.subheader("Select Generator and Dataset")
 
@@ -462,7 +464,7 @@ def select_generator_and_dataset():
             return
 
 
-def display_converter_selection():
+def display_converter_selection() -> None:
     """Display converter category and class selection"""
     st.subheader("Select Converter Class")
 

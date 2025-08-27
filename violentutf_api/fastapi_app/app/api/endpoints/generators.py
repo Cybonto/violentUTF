@@ -294,7 +294,6 @@ def discover_apisix_models(provider: str) -> List[str]:
     This replaces hardcoded model lists with real-time discovery
     """
     try:
-
         apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
         apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
 
