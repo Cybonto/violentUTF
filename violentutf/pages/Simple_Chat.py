@@ -13,7 +13,7 @@ import re
 import shutil
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import anthropic
 
@@ -973,7 +973,7 @@ with main_col_right:
 
 
 # MCP Enhancement Handlers
-def enhance_prompt_with_mcp(prompt_text) -> str:
+def enhance_prompt_with_mcp(prompt_text) -> Tuple[Optional[str], Optional[str]]:
     """Enhance prompt using MCP prompts"""
     try:
         mcp_client = st.session_state["mcp_client"]
@@ -1002,7 +1002,7 @@ def enhance_prompt_with_mcp(prompt_text) -> str:
         return None, str(e)
 
 
-def analyze_prompt_with_mcp(prompt_text) -> str:
+def analyze_prompt_with_mcp(prompt_text) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     """Analyze prompt for security and bias issues"""
     try:
         mcp_client = st.session_state["mcp_client"]
@@ -1034,7 +1034,9 @@ def analyze_prompt_with_mcp(prompt_text) -> str:
         return {"suggestions": suggestions, "fallback": True}, None
 
 
-def generate_test_variations_with_mcp(prompt_text, test_type="general") -> List[str]:
+def generate_test_variations_with_mcp(
+    prompt_text, test_type="general"
+) -> Tuple[Optional[List[Dict[str, Any]]], Optional[str]]:
     """Generate test variations of the prompt"""
     try:
         mcp_client = st.session_state["mcp_client"]
@@ -1300,7 +1302,7 @@ def list_generators() -> List[str]:
 
     if response is None:
         st.error("Failed to fetch generators from API")
-        return
+        return []
 
     generators = response.get("generators", [])
 
@@ -1329,6 +1331,9 @@ def list_generators() -> List[str]:
 
                     st.write(f"**Created:** {gen.get('created_at', 'Unknown')}")
 
+    # Return list of generator names
+    return [gen.get("display_name", "Unnamed") for gen in generators]
+
 
 def list_datasets() -> List[str]:
     """List all available datasets"""
@@ -1339,7 +1344,7 @@ def list_datasets() -> List[str]:
 
     if response is None:
         st.error("Failed to fetch datasets from API")
-        return
+        return []
 
     datasets = response.get("datasets", [])
 
@@ -1365,6 +1370,9 @@ def list_datasets() -> List[str]:
                     st.write(f"**Items:** {ds.get('item_count', 0)}")
                     st.write(f"**Size:** {ds.get('size_mb', 0):.2f} MB")
                     st.write(f"**Created:** {ds.get('created_at', 'Unknown')}")
+
+    # Return list of dataset names
+    return [ds.get("display_name", "Unnamed") for ds in datasets]
 
 
 def load_dataset(dataset_name) -> Optional[Dict[str, Any]]:
@@ -1395,7 +1403,7 @@ def load_dataset(dataset_name) -> Optional[Dict[str, Any]]:
                 st.success(f"✅ Dataset '{dataset_name}' is already loaded!")
                 st.write(f"**ID:** `{ds.get('id')}`")
                 st.write(f"**Items:** {ds.get('item_count', 0)}")
-                return
+                return []
 
         # If it's a built - in dataset, we need to create it
         if dataset_name.lower() in builtin_datasets:
@@ -1455,7 +1463,7 @@ def list_converters() -> List[str]:
 
     if response is None:
         st.error("Failed to fetch converters from API")
-        return
+        return []
 
     converters = response.get("converters", [])
 
@@ -1493,7 +1501,7 @@ def list_scorers() -> List[str]:
 
     if response is None:
         st.error("Failed to fetch scorers from API")
-        return
+        return []
 
     scorers = response.get("scorers", [])
 
@@ -1530,7 +1538,7 @@ def list_orchestrators():
 
     if response is None:
         st.error("Failed to fetch orchestrators from API")
-        return
+        return []
 
     orchestrators = response.get("orchestrators", [])
 
@@ -1575,7 +1583,7 @@ def list_dataset_types():
     # Check if we got dataset types from API
     if response is None:
         st.error("❌ Failed to retrieve dataset types from API. Please check your connection and authentication.")
-        return
+        return []
 
     if response and response.get("dataset_types"):
         dataset_types = response.get("dataset_types", [])
@@ -1636,7 +1644,7 @@ def list_converter_types():
     # Check if we got response from API
     if response is None:
         st.error("❌ Failed to retrieve converter types from API. Please check your connection and authentication.")
-        return
+        return []
 
     if response and response.get("categories"):
         categories = response.get("categories", {})
@@ -1691,7 +1699,7 @@ def list_scorer_types():
     # Check if we got response from API
     if response is None:
         st.error("❌ Failed to retrieve scorer types from API. Please check your connection and authentication.")
-        return
+        return []
 
     if response and response.get("scorer_types"):
         scorer_types = response.get("scorer_types", {})
@@ -1805,7 +1813,7 @@ def configure_scorer(params):
     types_response = api_request("GET", API_ENDPOINTS["scorer_types"])
     if not types_response:
         st.error("Failed to get scorer types")
-        return
+        return []
 
     scorer_types = types_response.get("scorer_types", {})
     logger.info(f"Available scorer types from API: {scorer_types}")
@@ -1927,14 +1935,14 @@ def setup_orchestrator(params):
 
     if not gen_response or not ds_response:
         st.error("Failed to get required resources")
-        return
+        return []
 
     generators = gen_response.get("generators", [])
     datasets = ds_response.get("datasets", [])
 
     if not generators:
         st.error("No generators available. Please create a generator first.")
-        return
+        return []
 
     # Prepare orchestrator data with required name field
     orchestrator_type = params.get("type", "red_team")

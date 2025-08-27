@@ -56,7 +56,7 @@ def benchmark_configs() -> dict:
         "trailing-whitespace",
     ]
 
-    from typing import Dict, Any
+    from typing import Any, Dict
 
     results: Dict[str, Dict[str, Any]] = {}
 

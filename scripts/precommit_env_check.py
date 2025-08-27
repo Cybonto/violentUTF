@@ -51,9 +51,7 @@ class PrecommitEnvChecker:
 
     def check_python_version(self) -> None:
         """Check if Python version matches pre-commit config"""
-        expected_version = self.precommit_config.get(
-            "default_language_version", {}
-        ).get("python", "python3.12")
+        expected_version = self.precommit_config.get("default_language_version", {}).get("python", "python3.12")
 
         # Extract version number
         if "python" in expected_version:
@@ -67,9 +65,7 @@ class PrecommitEnvChecker:
             if major_minor == expected_version:
                 self.successes.append(f"✅ Python version {major_minor} matches config")
             else:
-                self.issues.append(
-                    f"❌ Python version mismatch: config={expected_version}, actual={major_minor}"
-                )
+                self.issues.append(f"❌ Python version mismatch: config={expected_version}, actual={major_minor}")
         else:
             self.issues.append("❌ Could not check Python version")
 
@@ -112,9 +108,7 @@ class PrecommitEnvChecker:
                 self.successes.append("✅ MyPy individual run works")
             else:
                 # Don't treat mypy errors as config issues - they're code issues
-                self.successes.append(
-                    "✅ MyPy individual run executable (has type errors to fix)"
-                )
+                self.successes.append("✅ MyPy individual run executable (has type errors to fix)")
 
     def check_flake8_consistency(self) -> None:
         """Check if flake8 individual run matches pre-commit hook"""
@@ -124,17 +118,13 @@ class PrecommitEnvChecker:
             code, stdout, stderr = self._run_command(cmd)
 
             if code == 0:
-                self.successes.append(
-                    "✅ Flake8 individual run matches pre-commit expectations"
-                )
+                self.successes.append("✅ Flake8 individual run matches pre-commit expectations")
             else:
                 # Check if it's configuration issue vs code issues
                 if "not found" in stderr or "command not found" in stderr:
                     self.issues.append(f"❌ Flake8 not available: {stderr}")
                 else:
-                    self.successes.append(
-                        "✅ Flake8 individual run executable (has lint errors to fix)"
-                    )
+                    self.successes.append("✅ Flake8 individual run executable (has lint errors to fix)")
 
     def check_bandit_consistency(self) -> None:
         """Check if bandit individual run works"""
@@ -172,9 +162,7 @@ class PrecommitEnvChecker:
                 if not Path(".secrets.baseline").exists():
                     self.issues.append("❌ .secrets.baseline file missing")
                 else:
-                    self.issues.append(
-                        f"❌ detect-secrets configuration issue: {stderr}"
-                    )
+                    self.issues.append(f"❌ detect-secrets configuration issue: {stderr}")
 
     def _find_hook_config(self, hook_id: str) -> Optional[Dict[str, Any]]:
         """Find configuration for specific hook"""
@@ -207,13 +195,9 @@ class PrecommitEnvChecker:
                 non_executable.append(str(file_path))
 
         if non_executable:
-            self.issues.append(
-                f"❌ Files with shebangs not executable: {len(non_executable)} files"
-            )
+            self.issues.append(f"❌ Files with shebangs not executable: {len(non_executable)} files")
         else:
-            self.successes.append(
-                f"✅ All {len(shebang_files)} shebang files are executable"
-            )
+            self.successes.append(f"✅ All {len(shebang_files)} shebang files are executable")
 
     def check_json_files(self) -> None:
         """Check that JSON files are valid"""

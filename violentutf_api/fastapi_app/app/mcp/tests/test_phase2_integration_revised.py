@@ -23,7 +23,6 @@ from typing import Any, Dict
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from fastapi import FastAPI
 from app.mcp.auth import MCPAuthHandler
 from app.mcp.config import mcp_settings
 from app.mcp.resources import resource_registry

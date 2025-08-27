@@ -11,7 +11,7 @@ SECURITY: Enhanced with comprehensive input validation to prevent injection atta
 
 import re
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from app.core.password_policy import validate_password_strength
 from app.core.validation import ValidationPatterns, sanitize_string, validate_role_list, validate_username
@@ -26,11 +26,11 @@ class Token(BaseModel):
     expires_in: int = Field(..., gt=0, le=86400, description="Token expiration time in seconds")
 
     @validator("access_token")
-    def validate_access_token(cls, v):
+    def validate_access_token(cls, v: Any) -> str:
         """Validate JWT token format"""
         if not ValidationPatterns.JWT_TOKEN.match(v):
             raise ValueError("Invalid JWT token format")
-        return v
+        return str(v)
 
 
 class TokenData(BaseModel):
@@ -80,12 +80,12 @@ class APIKeyCreate(BaseModel):
     )
 
     @validator("name")
-    def validate_name_field(cls, v) -> str:
+    def validate_name_field(cls, v: Any) -> str:
         """Validate API key name"""
-        v = sanitize_string(v)
-        if not ValidationPatterns.SAFE_NAME.match(v):
+        v_str = sanitize_string(v)
+        if not ValidationPatterns.SAFE_NAME.match(v_str):
             raise ValueError("Name contains invalid characters")
-        return v
+        return v_str
 
     @validator("permissions")
     def validate_permissions_field(cls, v) -> List[str]:
@@ -182,7 +182,7 @@ class LoginRequest(BaseModel):
         return validate_username(v)
 
     @validator("password")
-    def validate_password_field(cls, v, values) -> str:
+    def validate_password_field(cls, v: Any, values: Any) -> str:
         """Validate password strength and security requirements"""
         username = values.get("username")
 
@@ -194,7 +194,7 @@ class LoginRequest(BaseModel):
             error_msg = "; ".join(validation_result.errors)
             raise ValueError(error_msg)
 
-        return v
+        return str(v)
 
 
 class AuthResponse(BaseModel):

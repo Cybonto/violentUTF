@@ -4,10 +4,8 @@ Comprehensive tests for 0_Welcome.py backend API endpoints
 
 import json
 import os
-from typing import Any, Dict
-
-# Import the FastAPI app
 import sys
+from typing import Any, Dict
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -111,7 +109,9 @@ class TestDatabaseEndpoints:
     @patch("os.makedirs")
     @patch("duckdb.connect")
     @patch("os.path.exists")
-    def test_initialize_database(self, mock_exists, mock_duckdb, mock_makedirs, mock_get_user, auth_headers, mock_user) -> None:
+    def test_initialize_database(
+        self, mock_exists, mock_duckdb, mock_makedirs, mock_get_user, auth_headers, mock_user
+    ) -> None:
         """Test POST /database/initialize endpoint"""
         mock_get_user.return_value = mock_user
         mock_exists.return_value = False
@@ -135,7 +135,9 @@ class TestDatabaseEndpoints:
     @patch("os.path.exists")
     @patch("os.stat")
     @patch("duckdb.connect")
-    def test_get_database_status(self, mock_duckdb, mock_stat, mock_exists, mock_get_user, auth_headers, mock_user) -> None:
+    def test_get_database_status(
+        self, mock_duckdb, mock_stat, mock_exists, mock_get_user, auth_headers, mock_user
+    ) -> None:
         """Test GET /database/status endpoint"""
         mock_get_user.return_value = mock_user
         mock_exists.return_value = True
@@ -160,7 +162,9 @@ class TestDatabaseEndpoints:
     @patch("os.path.exists")
     @patch("os.stat")
     @patch("duckdb.connect")
-    def test_get_database_stats(self, mock_duckdb, mock_stat, mock_exists, mock_get_user, auth_headers, mock_user) -> None:
+    def test_get_database_stats(
+        self, mock_duckdb, mock_stat, mock_exists, mock_get_user, auth_headers, mock_user
+    ) -> None:
         """Test GET /database/stats endpoint"""
         mock_get_user.return_value = mock_user
         mock_exists.return_value = True
@@ -232,7 +236,9 @@ class TestSessionEndpoints:
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.path.exists")
     @patch("os.makedirs")
-    def test_update_session_state(self, mock_makedirs, mock_exists, mock_file, mock_get_user, auth_headers, mock_user) -> None:
+    def test_update_session_state(
+        self, mock_makedirs, mock_exists, mock_file, mock_get_user, auth_headers, mock_user
+    ) -> None:
         """Test PUT /sessions endpoint"""
         mock_get_user.return_value = mock_user
         mock_exists.return_value = True
@@ -296,7 +302,9 @@ class TestConfigEndpoints:
     @patch("builtins.open", new_callable=mock_open, read_data='APP_DATA_DIR: ./app_data/violentutf\nversion: "1.0"')
     @patch("os.path.exists")
     @patch("os.path.getmtime")
-    def test_get_config_parameters(self, mock_getmtime, mock_exists, mock_file, mock_get_user, auth_headers, mock_user) -> None:
+    def test_get_config_parameters(
+        self, mock_getmtime, mock_exists, mock_file, mock_get_user, auth_headers, mock_user
+    ) -> None:
         """Test GET /config/parameters endpoint"""
         mock_get_user.return_value = mock_user
         mock_exists.return_value = True
