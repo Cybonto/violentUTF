@@ -1,6 +1,6 @@
 {
   "status": "fixed",
-  "tool_name": "pytest", 
+  "tool_name": "pytest",
   "exit_code": 0,
   "test_file_name": "violentutf_api_config",
   "failure_type": "DEPRECATION_WARNING",

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Comprehensive security logging and monitoring
 SECURITY: Implements detailed security event logging for audit, compliance, and threat detection
@@ -7,10 +13,10 @@ import json
 import logging
 import time
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import Request
 
@@ -270,7 +276,7 @@ class SecurityLogger:
         if not details:
             return {}
 
-        sanitized = {}
+        sanitized: Dict[str, Any] = {}
         sensitive_keys = {
             "password",
             "token",
@@ -311,7 +317,9 @@ security_logger = SecurityLogger()
 
 
 # Convenience functions for common security events
-def log_authentication_success(username: str, user_id: str = None, request: Request = None, **kwargs):
+def log_authentication_success(
+    username: str, user_id: Optional[str] = None, request: Optional[Request] = None, **kwargs
+):
     """Log successful authentication"""
     security_logger.log_security_event(
         event_type=SecurityEventType.AUTH_SUCCESS,
@@ -326,7 +334,7 @@ def log_authentication_success(username: str, user_id: str = None, request: Requ
 
 
 def log_authentication_failure(
-    username: str = None, request: Request = None, reason: str = "Invalid credentials", **kwargs
+    username: Optional[str] = None, request: Optional[Request] = None, reason: str = "Invalid credentials", **kwargs
 ):
     """Log failed authentication attempt"""
     security_logger.log_security_event(
@@ -342,9 +350,9 @@ def log_authentication_failure(
 
 
 def log_access_denied(
-    username: str = None,
-    endpoint: str = None,
-    request: Request = None,
+    username: Optional[str] = None,
+    endpoint: Optional[str] = None,
+    request: Optional[Request] = None,
     reason: str = "Insufficient permissions",
     **kwargs,
 ):
@@ -362,7 +370,9 @@ def log_access_denied(
     )
 
 
-def log_rate_limit_exceeded(username: str = None, request: Request = None, limit_type: str = "general", **kwargs):
+def log_rate_limit_exceeded(
+    username: Optional[str] = None, request: Optional[Request] = None, limit_type: str = "general", **kwargs
+):
     """Log rate limit exceeded event"""
     security_logger.log_security_event(
         event_type=SecurityEventType.RATE_LIMIT_EXCEEDED,
@@ -376,7 +386,9 @@ def log_rate_limit_exceeded(username: str = None, request: Request = None, limit
     )
 
 
-def log_validation_failure(request: Request = None, field: str = None, error: str = "Invalid input", **kwargs):
+def log_validation_failure(
+    request: Optional[Request] = None, field: Optional[str] = None, error: str = "Invalid input", **kwargs
+):
     """Log input validation failure"""
     security_logger.log_security_event(
         event_type=SecurityEventType.VALIDATION_FAILURE,
@@ -390,7 +402,7 @@ def log_validation_failure(request: Request = None, field: str = None, error: st
     )
 
 
-def log_injection_attempt(request: Request = None, attack_type: str = "unknown", details: str = "", **kwargs):
+def log_injection_attempt(request: Optional[Request] = None, attack_type: str = "unknown", details: str = "", **kwargs):
     """Log potential injection attack"""
     security_logger.log_security_event(
         event_type=SecurityEventType.INJECTION_ATTEMPT,
@@ -404,7 +416,9 @@ def log_injection_attempt(request: Request = None, attack_type: str = "unknown",
     )
 
 
-def log_weak_password_attempt(username: str = None, strength: str = "weak", request: Request = None, **kwargs):
+def log_weak_password_attempt(
+    username: Optional[str] = None, strength: str = "weak", request: Optional[Request] = None, **kwargs
+):
     """Log weak password attempt"""
     security_logger.log_security_event(
         event_type=SecurityEventType.WEAK_PASSWORD,
@@ -418,7 +432,9 @@ def log_weak_password_attempt(username: str = None, strength: str = "weak", requ
     )
 
 
-def log_api_key_usage(user_id: str = None, key_name: str = None, request: Request = None, **kwargs):
+def log_api_key_usage(
+    user_id: Optional[str] = None, key_name: Optional[str] = None, request: Optional[Request] = None, **kwargs
+):
     """Log API key usage"""
     security_logger.log_security_event(
         event_type=SecurityEventType.API_KEY_USED,
@@ -432,7 +448,7 @@ def log_api_key_usage(user_id: str = None, key_name: str = None, request: Reques
     )
 
 
-def log_suspicious_activity(activity_type: str, request: Request = None, details: str = "", **kwargs):
+def log_suspicious_activity(activity_type: str, request: Optional[Request] = None, details: str = "", **kwargs):
     """Log suspicious activity"""
     security_logger.log_security_event(
         event_type=SecurityEventType.SUSPICIOUS_ACTIVITY,
@@ -446,7 +462,7 @@ def log_suspicious_activity(activity_type: str, request: Request = None, details
     )
 
 
-def log_security_error(error_type: str, error_message: str, request: Request = None, **kwargs):
+def log_security_error(error_type: str, error_message: str, request: Optional[Request] = None, **kwargs):
     """Log security-related error"""
     security_logger.log_security_event(
         event_type=SecurityEventType.SECURITY_ERROR,
@@ -461,7 +477,11 @@ def log_security_error(error_type: str, error_message: str, request: Request = N
 
 
 def log_token_event(
-    event_type: str, username: str = None, token_type: str = "access", request: Request = None, **kwargs
+    event_type: str,
+    username: Optional[str] = None,
+    token_type: str = "access",
+    request: Optional[Request] = None,
+    **kwargs,
 ):
     """Log token-related events"""
     event_map = {

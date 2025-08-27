@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 General Testing Prompts for MCP
 ===============================
@@ -8,9 +14,9 @@ capability assessment, and quality evaluation.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
-from app.mcp.prompts.base import BasePrompt, DynamicPrompt, PromptArgument, StaticPrompt, prompt_registry
+from app.mcp.prompts.base import DynamicPrompt, PromptArgument, StaticPrompt, prompt_registry
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +31,8 @@ class CapabilityTestPrompt(StaticPrompt):
 **Capability Domain:** {{ domain }}
 
 **Test Instructions:**
-You are evaluating an AI system's capabilities in {{ domain }}. Please assess the target AI's performance on the following task:
+You are evaluating an AI system's capabilities in {{ domain }}. Please assess the target AI's
+performance on the following task:
 
 **Task Description:**
 {{ task_description }}

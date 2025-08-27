@@ -9,7 +9,7 @@ Phase 1 of the OpenAPI integration enhancement brings dynamic model discovery to
 ### 1. Dynamic Model Discovery
 - **Function**: `discover_openapi_models_from_provider()`
 - **Purpose**: Queries OpenAPI providers' `/api/v1/models` endpoint
-- **Benefits**: 
+- **Benefits**:
   - Real-time model availability
   - No manual configuration needed
   - Automatic updates when providers add/remove models
@@ -34,7 +34,7 @@ Phase 1 of the OpenAPI integration enhancement brings dynamic model discovery to
 - **Response**: `{"openapi-provider-1": ["model1", "model2"], ...}`
 
 #### `/api/v1/generators/apisix/openapi-debug`
-- **Method**: GET  
+- **Method**: GET
 - **Purpose**: Debug OpenAPI provider configurations
 - **Response**: Comprehensive debugging information
 
@@ -47,14 +47,14 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
     if provider.startswith("openapi-"):
         # 1. Get provider configuration from environment
         config = get_openapi_provider_config(provider_id)
-        
+
         if config["base_url"] and config["auth_token"]:
             # 2. Try dynamic discovery from /api/v1/models
             models = await discover_openapi_models_from_provider(...)
-            
+
             if models:
                 return models  # Success!
-        
+
     # 3. Fallback to existing route-based discovery
     return discover_apisix_models(provider)
 ```
@@ -128,7 +128,7 @@ With proper configuration, the GSAi API should return:
 {
   "openapi-gsai-api-1": [
     "claude_3_5_sonnet",
-    "claude_3_7_sonnet", 
+    "claude_3_7_sonnet",
     "claude_3_haiku",
     "llama3211b",
     "cohere_english_v3",

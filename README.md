@@ -279,10 +279,10 @@ sequenceDiagram
     APISIX->>APISIX: Apply rate limiting
     APISIX->>APISIX: Add gateway headers
     APISIX->>FastAPI: Forward request with headers<br/>(X-API-Gateway: APISIX)
-    
+
     FastAPI->>FastAPI: Verify JWT signature
     FastAPI->>FastAPI: Check user context
-    
+
     alt Valid request
         FastAPI->>PyRIT: Execute orchestrator/scorer
         PyRIT->>PyRIT: Load prompts/datasets

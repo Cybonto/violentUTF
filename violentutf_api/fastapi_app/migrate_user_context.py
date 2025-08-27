@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 User Context Migration Script for ViolentUTF
 
@@ -11,7 +17,6 @@ Usage:
 
 import argparse
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -35,7 +40,7 @@ def migrate_generators(from_user: str, to_user: str) -> int:
     Returns:
         Number of generators migrated
     """
-    logger.info(f"Migrating generators from '{from_user}' to '{to_user}'")
+    logger.info("Migrating generators from '%s' to '%s'", from_user, to_user)
 
     # Get database managers for both users
     from_db = DuckDBManager(from_user)
@@ -45,10 +50,10 @@ def migrate_generators(from_user: str, to_user: str) -> int:
     source_generators = from_db.list_generators()
 
     if not source_generators:
-        logger.info(f"No generators found for user '{from_user}'")
+        logger.info("No generators found for user '%s'", from_user)
         return 0
 
-    logger.info(f"Found {len(source_generators)} generators to migrate")
+    logger.info("Found %d generators to migrate", len(source_generators))
 
     migrated_count = 0
 
@@ -57,7 +62,7 @@ def migrate_generators(from_user: str, to_user: str) -> int:
             # Check if generator already exists for target user
             existing = to_db.get_generator(generator["id"])
             if existing:
-                logger.warning(f"Generator '{generator['name']}' already exists for user '{to_user}', skipping")
+                logger.warning("Generator '%s' already exists for user '%s', skipping", generator["name"], to_user)
                 continue
 
             # Create generator for target user
@@ -65,11 +70,13 @@ def migrate_generators(from_user: str, to_user: str) -> int:
                 name=generator["name"], generator_type=generator["type"], parameters=generator["parameters"]
             )
 
-            logger.info(f"Migrated generator '{generator['name']}' (ID: {generator['id']} -> {new_id})")
+            logger.info("Migrated generator '%s' (ID: %s -> %s)", generator["name"], generator["id"], new_id)
             migrated_count += 1
 
-        except Exception as e:
-            logger.error(f"Failed to migrate generator '{generator['name']}': {e}")
+        except (ValueError, KeyError, AttributeError) as e:
+            logger.error("Failed to migrate generator '%s': %s", generator["name"], e)
+        except (OSError, IOError, TypeError) as e:
+            logger.error("Unexpected error migrating generator '%s': %s", generator["name"], e)
 
     return migrated_count
 
@@ -85,7 +92,7 @@ def migrate_datasets(from_user: str, to_user: str) -> int:
     Returns:
         Number of datasets migrated
     """
-    logger.info(f"Migrating datasets from '{from_user}' to '{to_user}'")
+    logger.info("Migrating datasets from '%s' to '%s'", from_user, to_user)
 
     from_db = DuckDBManager(from_user)
     to_db = DuckDBManager(to_user)
@@ -93,10 +100,10 @@ def migrate_datasets(from_user: str, to_user: str) -> int:
     source_datasets = from_db.list_datasets()
 
     if not source_datasets:
-        logger.info(f"No datasets found for user '{from_user}'")
+        logger.info("No datasets found for user '%s'", from_user)
         return 0
 
-    logger.info(f"Found {len(source_datasets)} datasets to migrate")
+    logger.info("Found %d datasets to migrate", len(source_datasets))
 
     migrated_count = 0
 
@@ -105,7 +112,7 @@ def migrate_datasets(from_user: str, to_user: str) -> int:
             # Get full dataset with prompts
             full_dataset = from_db.get_dataset(dataset["id"])
             if not full_dataset:
-                logger.warning(f"Could not load full dataset '{dataset['name']}', skipping")
+                logger.warning("Could not load full dataset '%s', skipping", dataset["name"])
                 continue
 
             # Extract prompts
@@ -119,11 +126,13 @@ def migrate_datasets(from_user: str, to_user: str) -> int:
                 prompts=prompts,
             )
 
-            logger.info(f"Migrated dataset '{dataset['name']}' (ID: {dataset['id']} -> {new_id})")
+            logger.info("Migrated dataset '%s' (ID: %s -> %s)", dataset["name"], dataset["id"], new_id)
             migrated_count += 1
 
-        except Exception as e:
-            logger.error(f"Failed to migrate dataset '{dataset['name']}': {e}")
+        except (ValueError, KeyError, AttributeError) as e:
+            logger.error("Failed to migrate dataset '%s': %s", dataset["name"], e)
+        except (OSError, IOError, TypeError) as e:
+            logger.error("Unexpected error migrating dataset '%s': %s", dataset["name"], e)
 
     return migrated_count
 
@@ -141,7 +150,7 @@ def main():
     if args.dry_run:
         logger.info("DRY RUN MODE - No changes will be made")
 
-    logger.info(f"Migration: '{args.from_user}' -> '{args.to_user}'")
+    logger.info("Migration: '%s' -> '%s'", args.from_user, args.to_user)
 
     total_migrated = 0
 
@@ -150,29 +159,29 @@ def main():
         if args.dry_run:
             from_db = DuckDBManager(args.from_user)
             generators = from_db.list_generators()
-            logger.info(f"Would migrate {len(generators)} generators")
+            logger.info("Would migrate %d generators", len(generators))
             for gen in generators:
-                logger.info(f"  - {gen['name']} ({gen['type']})")
+                logger.info("  - %s (%s)", gen["name"], gen["type"])
         else:
             migrated_generators = migrate_generators(args.from_user, args.to_user)
             total_migrated += migrated_generators
-            logger.info(f"Migrated {migrated_generators} generators")
+            logger.info("Migrated %d generators", migrated_generators)
 
     # Migrate datasets
     if not args.generators_only:
         if args.dry_run:
             from_db = DuckDBManager(args.from_user)
             datasets = from_db.list_datasets()
-            logger.info(f"Would migrate {len(datasets)} datasets")
+            logger.info("Would migrate %d datasets", len(datasets))
             for ds in datasets:
-                logger.info(f"  - {ds['name']} ({ds['prompt_count']} prompts)")
+                logger.info("  - %s (%s prompts)", ds["name"], ds["prompt_count"])
         else:
             migrated_datasets = migrate_datasets(args.from_user, args.to_user)
             total_migrated += migrated_datasets
-            logger.info(f"Migrated {migrated_datasets} datasets")
+            logger.info("Migrated %d datasets", migrated_datasets)
 
     if not args.dry_run:
-        logger.info(f"Migration completed successfully. Total items migrated: {total_migrated}")
+        logger.info("Migration completed successfully. Total items migrated: %d", total_migrated)
     else:
         logger.info("Dry run completed. Use --dry-run=false to perform actual migration.")
 

@@ -50,14 +50,14 @@ echo -e "${BLUE}Step 1: Test direct access to upstream API${NC}"
 if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
     echo "Testing: https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models"
     echo "Token: ${OPENAPI_1_AUTH_TOKEN:0:10}..."
-    
+
     response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
         -H "Authorization: Bearer $OPENAPI_1_AUTH_TOKEN" \
         https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models)
-    
+
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
     body=$(echo "$response" | sed '/HTTP_CODE:/d')
-    
+
     if [ "$http_code" = "200" ]; then
         echo -e "${GREEN}✓ Direct access works (HTTP 200)${NC}"
         echo "Models found: $(echo "$body" | jq -r '.data[].id' 2>/dev/null | wc -l | xargs)"
@@ -116,7 +116,7 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
     curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
         -H "apikey: $VIOLENTUTF_API_KEY" \
         http://localhost:9080/ai/openapi/gsai-api-1/api/v1/models
-    
+
     # Test 2: With explicit Accept header
     echo
     echo "Test 2: With Accept header"
@@ -124,7 +124,7 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
         -H "apikey: $VIOLENTUTF_API_KEY" \
         -H "Accept: application/json" \
         http://localhost:9080/ai/openapi/gsai-api-1/api/v1/models
-    
+
     # Test 3: With User-Agent
     echo
     echo "Test 3: With User-Agent"

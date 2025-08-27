@@ -171,7 +171,7 @@ Register callback for scoring results.
 ```python
 async def on_scoring_complete(session_id, results):
     print(f"Session {session_id}: {len(results)} scores")
-    
+
 monitor.register_callback(on_scoring_complete)
 ```
 

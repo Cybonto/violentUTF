@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # scorers/scorer_application.py
 
 """
@@ -17,7 +23,7 @@ Dependencies:
 
 import asyncio
 import logging
-from typing import List
+from typing import Any, List
 
 from pyrit.models import PromptRequestPiece, Score, SeedPrompt, SeedPromptDataset
 from pyrit.score import Scorer
@@ -49,7 +55,7 @@ async def apply_scorer_to_input(scorer_instance: Scorer, input_data: PromptReque
     try:
         scores = await scorer_instance.score_async(input_data)
         logger.debug(f"Applied scorer to input_data. Scores: {scores}")
-        return scores
+        return list(scores) if scores else []
     except Exception as e:
         logger.error(f"Error applying scorer to input: {e}")
         raise ScorerApplicationError(f"Error applying scorer to input: {e}") from e
@@ -98,7 +104,7 @@ async def apply_scorer_to_dataset(scorer_instance: Scorer, dataset: SeedPromptDa
         - The Scorer instance must be properly instantiated.
         - The dataset must contain valid prompts.
     """
-    all_scores = []
+    all_scores: list[Any] = []
     try:
         # Collect all PromptRequestPieces from the dataset
         # Assuming dataset.prompts is a list of SeedPrompts
@@ -125,7 +131,10 @@ async def apply_scorer_to_dataset(scorer_instance: Scorer, dataset: SeedPromptDa
                     f"Error scoring request_piece '{request_pieces[i].id}': {scores}"
                 ) from scores
             else:
-                all_scores.extend(scores)
+                if isinstance(scores, list):
+                    all_scores.extend(scores)
+                else:
+                    all_scores.append(scores)
                 logger.debug(f"Scored request_piece '{request_pieces[i].id}': {scores}")
 
         dataset_name = dataset.name if hasattr(dataset, "name") else "Unnamed Dataset"

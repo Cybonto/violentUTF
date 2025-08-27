@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Diagnostic script for ViolentUTF user context issues
 
@@ -6,7 +12,6 @@ This script helps diagnose user context mismatches that prevent
 scorer testing from working properly.
 """
 
-import os
 import sys
 from pathlib import Path
 

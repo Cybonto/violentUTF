@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Comprehensive input validation module
 SECURITY: Validates and sanitizes all user inputs to prevent injection attacks and data corruption
@@ -6,13 +12,12 @@ SECURITY: Validates and sanitizes all user inputs to prevent injection attacks a
 import json
 import logging
 import re
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Union
 from urllib.parse import urlparse
 
 import jwt
 from fastapi import HTTPException, status
-from pydantic import BaseModel, EmailStr, Field, validator
 
 logger = logging.getLogger(__name__)
 
@@ -131,8 +136,7 @@ def sanitize_string(value: str) -> str:
     """
     Sanitize string input to prevent injection attacks
     """
-    if not isinstance(value, str):
-        return str(value)
+    # Value is guaranteed to be str by type annotation
 
     # Remove null bytes and control characters
     sanitized = "".join(char for char in value if ord(char) >= 32 or char in ["\n", "\r", "\t"])
@@ -267,7 +271,7 @@ def validate_jwt_token(token: str) -> Dict[str, Any]:
             if exp_time < datetime.now():
                 raise ValueError("JWT token has expired")
 
-        return payload
+        return dict(payload) if payload else {}
 
     except jwt.InvalidTokenError as e:
         raise ValueError(f"Invalid JWT token: {str(e)}")

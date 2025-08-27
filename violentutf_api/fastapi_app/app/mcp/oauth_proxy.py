@@ -1,19 +1,22 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """OAuth Proxy for MCP Client Compatibility"""
 
-import base64
-import hashlib
 import logging
 import secrets
 import time
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 from urllib.parse import urlencode
 
 import httpx
 from app.core.config import settings
-from app.core.error_handling import safe_error_response
 from app.core.security import create_access_token
 from app.services.keycloak_verification import keycloak_verifier
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 logger = logging.getLogger(__name__)
@@ -187,14 +190,14 @@ class MCPOAuthProxy:
                 response = await client.post(keycloak_token_url, data=token_data)
 
                 if response.status_code != 200:
-                    logger.error(f"Keycloak token exchange failed: {response.text}")
+                    logger.error("Keycloak token exchange failed: %s", response.text)
                     return JSONResponse(status_code=response.status_code, content=response.json())
 
                 token_response = response.json()
 
             # Verify the received token
             access_token = token_response.get("access_token")
-            keycloak_payload = await self.keycloak_verifier.verify_token(access_token)
+            keycloak_payload = await self.keycloak_verifier.verify_keycloak_token(access_token)
 
             if not keycloak_payload:
                 return JSONResponse(
@@ -220,7 +223,7 @@ class MCPOAuthProxy:
             )
 
         except Exception as e:
-            logger.error(f"Token exchange error: {e}")
+            logger.error("Token exchange error: %s", e)
             return JSONResponse(
                 status_code=500, content={"error": "server_error", "error_description": "Token exchange failed"}
             )
@@ -252,14 +255,14 @@ class MCPOAuthProxy:
                 response = await client.post(keycloak_token_url, data=token_data)
 
                 if response.status_code != 200:
-                    logger.error(f"Keycloak refresh failed: {response.text}")
+                    logger.error("Keycloak refresh failed: %s", response.text)
                     return JSONResponse(status_code=response.status_code, content=response.json())
 
                 token_response = response.json()
 
             # Verify the new token
             access_token = token_response.get("access_token")
-            keycloak_payload = await self.keycloak_verifier.verify_token(access_token)
+            keycloak_payload = await self.keycloak_verifier.verify_keycloak_token(access_token)
 
             if not keycloak_payload:
                 return JSONResponse(
@@ -285,7 +288,7 @@ class MCPOAuthProxy:
             )
 
         except Exception as e:
-            logger.error(f"Refresh token error: {e}")
+            logger.error("Refresh token error: %s", e)
             return JSONResponse(
                 status_code=500, content={"error": "server_error", "error_description": "Token refresh failed"}
             )

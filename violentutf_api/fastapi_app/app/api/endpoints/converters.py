@@ -1,14 +1,17 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 FastAPI endpoints for converter management
 Implements API backend for 3_Configure_Converters.py page
 """
 
-import asyncio
 import logging
-import time
 import uuid
 from datetime import datetime
-from io import StringIO
 from typing import Any, Dict, List, Optional
 
 from app.core.auth import get_current_user
@@ -21,7 +24,6 @@ from app.schemas.converters import (
     ConverterCreateRequest,
     ConverterCreateResponse,
     ConverterDeleteResponse,
-    ConverterError,
     ConverterParameter,
     ConverterParametersResponse,
     ConverterPreviewRequest,
@@ -29,12 +31,20 @@ from app.schemas.converters import (
     ConvertersListResponse,
     ConverterTypesResponse,
     ConverterUpdateRequest,
-    ParameterType,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_convert_choices(choices) -> Optional[List[Any]]:
+    """Safely convert choices to list of Any"""
+    if not choices:
+        return None
+    if isinstance(choices, (list, tuple)):
+        return list(choices)
+    return None
+
 
 router = APIRouter()
 
@@ -215,13 +225,13 @@ CONVERTER_PARAMETERS = {
 async def get_converter_types(current_user=Depends(get_current_user)):
     """Get list of available converter categories and classes"""
     try:
-        logger.info(f"User {current_user.username} requested converter types")
+        logger.info("User %s requested converter types", current_user.username)
 
         total_converters = sum(len(converters) for converters in CONVERTER_CATEGORIES.values())
 
         return ConverterTypesResponse(categories=CONVERTER_CATEGORIES, total=total_converters)
     except Exception as e:
-        logger.error(f"Error getting converter types: {e}")
+        logger.error("Error getting converter types: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get converter types: {str(e)}")
 
 
@@ -229,17 +239,30 @@ async def get_converter_types(current_user=Depends(get_current_user)):
 async def get_converter_parameters(converter_type: str, current_user=Depends(get_current_user)):
     """Get parameter definitions for a specific converter type"""
     try:
-        logger.info(f"User {current_user.username} requested parameters for converter: {converter_type}")
+        logger.info("User %s requested parameters for converter: %s", current_user.username, converter_type)
 
         if converter_type not in CONVERTER_PARAMETERS:
             raise HTTPException(status_code=404, detail=f"Converter type '{converter_type}' not found")
 
         param_definitions = CONVERTER_PARAMETERS[converter_type]
-        parameters = [ConverterParameter(**param) for param in param_definitions]
+        parameters = []
+        for param in param_definitions:
+            # Safely construct ConverterParameter with all required fields
+            param_type = str(param.get("type", "str"))
+            converter_param = ConverterParameter(
+                name=str(param.get("name", "")),
+                description=str(param.get("description", "")),
+                type_str=param_type,
+                primary_type=param_type,  # Use same value for both type fields
+                required=bool(param.get("required", False)),
+                default=param.get("default_value"),
+                literal_choices=_safe_convert_choices(param.get("literal_choices")),  # Add missing field
+            )
+            parameters.append(converter_param)
 
         # Check if converter requires a target
         requires_target = any(
-            param.get("skip_in_ui", False) and "target" in param.get("type_str", "") for param in param_definitions
+            param.get("skip_in_ui", False) and "target" in str(param.get("type_str", "")) for param in param_definitions
         )
 
         return ConverterParametersResponse(
@@ -248,7 +271,7 @@ async def get_converter_parameters(converter_type: str, current_user=Depends(get
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting parameters for {converter_type}: {e}")
+        logger.error("Error getting parameters for %s: %s", converter_type, e)
         raise HTTPException(status_code=500, detail=f"Failed to get converter parameters: {str(e)}")
 
 
@@ -257,7 +280,7 @@ async def get_converters(current_user=Depends(get_current_user)):
     """Get list of configured converters from session"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} requested converters list")
+        logger.info("User %s requested converters list", user_id)
 
         converters = []
 
@@ -280,7 +303,7 @@ async def get_converters(current_user=Depends(get_current_user)):
 
         return ConvertersListResponse(converters=converters, total=len(converters))
     except Exception as e:
-        logger.error(f"Error getting converters: {e}")
+        logger.error("Error getting converters: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get converters: {str(e)}")
 
 
@@ -289,7 +312,7 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
     """Create a new converter configuration"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} creating converter: {request.name}")
+        logger.info("User %s creating converter: %s", user_id, request.name)
 
         # Generate converter ID
         converter_id = str(uuid.uuid4())
@@ -317,10 +340,12 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
             name=request.name, converter_type=request.converter_type, parameters=request.parameters
         )
 
-        logger.info(f"Converter '{request.name}' created successfully with ID: {converter_id}")
+        logger.info("Converter '%s' created successfully with ID: %s", request.name, converter_id)
 
         # Get the created converter data
         created_converter = db_manager.get_converter(converter_id)
+        if not created_converter:
+            raise HTTPException(status_code=500, detail="Failed to retrieve created converter")
 
         return ConverterCreateResponse(
             converter={
@@ -338,7 +363,7 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error creating converter {request.name}: {e}")
+        logger.error("Error creating converter %s: %s", request.name, e)
         raise HTTPException(status_code=500, detail=f"Failed to create converter: {str(e)}")
 
 
@@ -349,7 +374,7 @@ async def preview_converter(
     """Preview the effect of a converter on sample prompts"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} previewing converter: {converter_id}")
+        logger.info("User %s previewing converter: %s", user_id, converter_id)
 
         # Find converter in DuckDB
         db_manager = get_duckdb_manager(user_id)
@@ -380,7 +405,7 @@ async def preview_converter(
                         detail=f"No prompts found in dataset {request.dataset_id}. Please check if the dataset exists and contains prompts.",
                     )
             except Exception as e:
-                logger.error(f"Failed to load prompts from dataset {request.dataset_id}: {e}")
+                logger.error("Failed to load prompts from dataset %s: %s", request.dataset_id, e)
                 raise HTTPException(status_code=500, detail=f"Failed to load prompts from dataset: {str(e)}")
         else:
             # No dataset specified - return error instead of using dangerous mock prompts
@@ -413,7 +438,7 @@ async def preview_converter(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error previewing converter {converter_id}: {e}")
+        logger.error("Error previewing converter %s: %s", converter_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to preview converter: {str(e)}")
 
 
@@ -422,7 +447,7 @@ async def apply_converter(converter_id: str, request: ConverterApplyRequest, cur
     """Apply a converter to an entire dataset"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} applying converter {converter_id} to dataset {request.dataset_id}")
+        logger.info("User %s applying converter %s to dataset %s", user_id, converter_id, request.dataset_id)
 
         # Get DuckDB manager
         db_manager = get_duckdb_manager(user_id)
@@ -460,6 +485,10 @@ async def apply_converter(converter_id: str, request: ConverterApplyRequest, cur
 
         # Handle based on mode
         if request.mode == ApplicationMode.COPY:
+            # Validate new dataset name is provided for COPY mode
+            if not request.new_dataset_name:
+                raise HTTPException(status_code=400, detail="New dataset name is required for COPY mode")
+
             # Create a new dataset with converted prompts
             new_dataset_id = db_manager.create_dataset(
                 name=request.new_dataset_name,
@@ -474,7 +503,8 @@ async def apply_converter(converter_id: str, request: ConverterApplyRequest, cur
                 prompts=converted_prompts,
             )
 
-            result_dataset_name = request.new_dataset_name
+            result_dataset_name = request.new_dataset_name  # Already validated to be non-None above
+            assert result_dataset_name is not None  # For mypy
             result_dataset_id = new_dataset_id
 
             logger.info(
@@ -530,7 +560,7 @@ async def apply_converter(converter_id: str, request: ConverterApplyRequest, cur
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error applying converter {converter_id}: {e}")
+        logger.error("Error applying converter %s: %s", converter_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to apply converter: {str(e)}")
 
 
@@ -539,14 +569,14 @@ async def delete_converter(converter_id: str, current_user=Depends(get_current_u
     """Delete a converter configuration"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} deleting converter: {converter_id}")
+        logger.info("User %s deleting converter: %s", user_id, converter_id)
 
         # Find and delete converter from DuckDB
         db_manager = get_duckdb_manager(user_id)
         deleted = db_manager.delete_converter(converter_id)
 
         if deleted:
-            logger.info(f"Converter {converter_id} deleted successfully")
+            logger.info("Converter %s deleted successfully", converter_id)
             return ConverterDeleteResponse(
                 success=True, message="Converter deleted successfully", deleted_at=datetime.utcnow()
             )
@@ -556,7 +586,7 @@ async def delete_converter(converter_id: str, current_user=Depends(get_current_u
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting converter {converter_id}: {e}")
+        logger.error("Error deleting converter %s: %s", converter_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to delete converter: {str(e)}")
 
 
@@ -565,7 +595,7 @@ async def update_converter(converter_id: str, request: ConverterUpdateRequest, c
     """Update an existing converter configuration"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} updating converter: {converter_id}")
+        logger.info("User %s updating converter: %s", user_id, converter_id)
 
         # Find converter in DuckDB
         db_manager = get_duckdb_manager(user_id)
@@ -584,7 +614,7 @@ async def update_converter(converter_id: str, request: ConverterUpdateRequest, c
 
         converter_data["updated_at"] = datetime.utcnow()
 
-        logger.info(f"Converter {converter_id} updated successfully")
+        logger.info("Converter %s updated successfully", converter_id)
 
         # Return current converter data (updates not implemented yet)
         return {
@@ -600,7 +630,7 @@ async def update_converter(converter_id: str, request: ConverterUpdateRequest, c
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating converter {converter_id}: {e}")
+        logger.error("Error updating converter %s: %s", converter_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to update converter: {str(e)}")
 
 
@@ -609,7 +639,7 @@ async def get_converter(converter_id: str, current_user=Depends(get_current_user
     """Get detailed information about a specific converter"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} requested converter details: {converter_id}")
+        logger.info("User %s requested converter details: %s", user_id, converter_id)
 
         # Find converter in DuckDB
         db_manager = get_duckdb_manager(user_id)
@@ -630,7 +660,7 @@ async def get_converter(converter_id: str, current_user=Depends(get_current_user
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting converter {converter_id}: {e}")
+        logger.error("Error getting converter %s: %s", converter_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to get converter: {str(e)}")
 
 
@@ -722,5 +752,5 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
             return f"[{converter_type} CONVERTED] {prompt}"
 
     except Exception as e:
-        logger.warning(f"Error in converter simulation: {e}")
+        logger.warning("Error in converter simulation: %s", e)
         return f"[{converter_type} CONVERSION ERROR] {prompt}"

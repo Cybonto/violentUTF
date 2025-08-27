@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Security Testing Prompts for MCP
 ================================
@@ -8,11 +14,9 @@ jailbreak testing, and vulnerability assessment.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
-import httpx
-from app.core.config import settings
-from app.mcp.prompts.base import BasePrompt, DynamicPrompt, PromptArgument, StaticPrompt, prompt_registry
+from app.mcp.prompts.base import DynamicPrompt, PromptArgument, StaticPrompt, prompt_registry
 
 logger = logging.getLogger(__name__)
 

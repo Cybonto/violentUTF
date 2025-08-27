@@ -1,11 +1,16 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 APISIX Admin API proxy endpoints with proper authentication and authorization.
 This module provides secure access to APISIX admin functions for authorized users.
 """
 
 import logging
-import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import httpx
 from app.core.auth import get_current_user
@@ -95,7 +100,7 @@ async def get_ai_routes(current_user: User = Depends(get_current_user)) -> Dict[
             )
 
             if response.status_code != 200:
-                logger.error(f"Failed to get routes: {response.status_code}")
+                logger.error("Failed to get routes: %s", response.status_code)
                 raise HTTPException(
                     status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to retrieve routes from APISIX"
                 )
@@ -120,7 +125,7 @@ async def get_ai_routes(current_user: User = Depends(get_current_user)) -> Dict[
             status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Timeout connecting to APISIX admin API"
         )
     except Exception as e:
-        logger.error(f"Error getting routes: {e}")
+        logger.error("Error getting routes: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving routes: {str(e)}"
         )
@@ -147,10 +152,10 @@ async def get_route(route_id: str, current_user: User = Depends(get_current_user
             if response.status_code != 200:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Route {route_id} not found")
 
-            return response.json()
+            return cast(Dict[str, Any], response.json())
 
     except Exception as e:
-        logger.error(f"Error getting route {route_id}: {e}")
+        logger.error("Error getting route %s: %s", route_id, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving route: {str(e)}"
         )
@@ -196,17 +201,17 @@ async def update_route_plugins(
             )
 
             if response.status_code not in [200, 201]:
-                logger.error(f"Failed to update route: {response.status_code} - {response.text}")
+                logger.error("Failed to update route: %s - %s", response.status_code, response.text)
                 raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to update route in APISIX")
 
-            logger.info(f"Successfully updated route {route_id} by user {current_user.username}")
-            return response.json()
+            logger.info("Successfully updated route %s by user %s", route_id, current_user.username)
+            return cast(Dict[str, Any], response.json())
 
     except httpx.TimeoutException:
         logger.error("Timeout updating route in APISIX")
         raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Timeout updating route in APISIX")
     except Exception as e:
-        logger.error(f"Error updating route {route_id}: {e}")
+        logger.error("Error updating route %s: %s", route_id, e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error updating route: {str(e)}")
 
 

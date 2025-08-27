@@ -47,29 +47,29 @@ if [ -n "$models_route" ]; then
     echo "Full route configuration:"
     echo "$models_route" | jq '.'
     echo
-    
+
     # Extract key details
     echo -e "${BLUE}Key configuration details:${NC}"
     echo
-    
+
     # Route ID
     route_id=$(echo "$models_route" | jq -r '.key | split("/") | last')
     echo "Route ID: $route_id"
     echo
-    
+
     # Proxy-rewrite plugin config
     echo "Proxy-rewrite plugin configuration:"
     proxy_rewrite=$(echo "$models_route" | jq -r '.value.plugins."proxy-rewrite"')
     echo "$proxy_rewrite" | jq '.'
     echo
-    
+
     # Check regex_uri
     regex_uri=$(echo "$proxy_rewrite" | jq -r '.regex_uri[]?' 2>/dev/null)
     if [ -n "$regex_uri" ]; then
         echo "Regex URI pattern: $regex_uri"
         echo
     fi
-    
+
     # Check headers
     echo "Headers configuration:"
     headers=$(echo "$proxy_rewrite" | jq -r '.headers')
@@ -79,19 +79,19 @@ if [ -n "$models_route" ]; then
         echo "No headers configured"
     fi
     echo
-    
+
     # Test the regex pattern
     echo -e "${BLUE}Testing URI rewrite:${NC}"
     test_uri="/ai/openapi/gsai-api-1/api/v1/models"
     echo "Original URI: $test_uri"
-    
+
     # Apply regex if exists
     if [ -n "$regex_uri" ]; then
         pattern=$(echo "$proxy_rewrite" | jq -r '.regex_uri[0]')
         replacement=$(echo "$proxy_rewrite" | jq -r '.regex_uri[1]')
         echo "Pattern: $pattern"
         echo "Replacement: $replacement"
-        
+
         # Test with sed (approximation)
         rewritten=$(echo "$test_uri" | sed -E "s|$pattern|$replacement|")
         echo "Rewritten URI: $rewritten"

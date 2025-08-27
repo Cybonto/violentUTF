@@ -5,7 +5,7 @@ If you're behind a corporate proxy using Zscaler, you'll need to add your certif
 ## Steps to Add Zscaler Certificates
 
 1. **Export your Zscaler certificates** from your system:
-   
+
    **On macOS:**
    ```bash
    # Export from Keychain

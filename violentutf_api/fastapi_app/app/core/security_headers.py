@@ -1,10 +1,16 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Security headers middleware and configuration
 SECURITY: Implements comprehensive security headers to protect against common web vulnerabilities
 """
 
 import logging
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, cast
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -119,7 +125,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f"Security headers added to {request.method} {request.url.path}")
 
-        return response
+        return cast(Response, response)
 
 
 def configure_cors_settings(environment: str = "production") -> Dict:
@@ -204,7 +210,7 @@ class APISecurityHeadersMiddleware(BaseHTTPMiddleware):
         if request.method == "OPTIONS":
             response.headers["Access-Control-Max-Age"] = "86400"
 
-        return response
+        return cast(Response, response)
 
 
 def setup_security_headers(app, environment: str = "production", api_version: str = "1.0"):
@@ -222,7 +228,7 @@ def setup_security_headers(app, environment: str = "production", api_version: st
     # Add API-specific security headers
     app.add_middleware(APISecurityHeadersMiddleware, api_version=api_version)
 
-    logger.info(f"Security headers configured for {environment} environment")
+    logger.info("Security headers configured for %s environment", environment)
 
 
 def get_csp_nonce() -> str:

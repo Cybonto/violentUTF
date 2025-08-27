@@ -1,0 +1,33 @@
+---
+# Ultra-fast pre-commit for GitHub Desktop (critical checks only)
+# Estimated time: ~0.3s vs ~3.3s for full config
+
+default_language_version:
+  python: python3.12
+
+repos:
+  # Only the most critical checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=5000"]
+      - id: check-ast                      # Python syntax - CRITICAL
+        files: '^(app|violentutf_api)/'
+      - id: check-json                     # JSON syntax - CRITICAL
+        files: '\.json$'
+        exclude: 'node_modules|\.mypy_cache'
+      - id: trailing-whitespace            # Auto-fix trailing spaces
+        files: '^(app|violentutf_api|scripts)/'
+        exclude: '\.md$|\.txt$'
+
+  # Fast security check on main code only
+  - repo: local
+    hooks:
+      - id: no-hardcoded-secrets-critical
+        name: Check for critical secrets (ultra-fast)
+        entry: '(password|secret|api_key).*=.*["\x27](sk-[a-zA-Z0-9]{20,}|[a-zA-Z0-9]{32,})["\x27]'
+        language: pygrep
+        types: [python]
+        files: '^(app|violentutf_api)/'
+        exclude: 'test_'

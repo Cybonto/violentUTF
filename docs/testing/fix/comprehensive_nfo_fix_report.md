@@ -1,8 +1,8 @@
 # Comprehensive NFO Auto-Fix Report
 
-**Date**: 2025-01-08  
-**Total NFOs Processed**: 8  
-**Status**: All NFOs Successfully Fixed  
+**Date**: 2025-01-08
+**Total NFOs Processed**: 8
+**Status**: All NFOs Successfully Fixed
 
 ## Executive Summary
 

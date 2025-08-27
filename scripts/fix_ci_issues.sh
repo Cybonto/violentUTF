@@ -195,11 +195,11 @@ def main():
     parser.add_argument("--memory-file", help="Memory profile file")
     parser.add_argument("--output", help="Output report file", default="performance_report.md")
     args = parser.parse_args()
-    
+
     report_content = ["# Performance Report", ""]
     report_content.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     report_content.append("")
-    
+
     # Process benchmark results if available
     if args.benchmark_file and Path(args.benchmark_file).exists():
         try:
@@ -212,7 +212,7 @@ def main():
         except Exception as e:
             report_content.append(f"Error loading benchmark data: {e}")
             report_content.append("")
-    
+
     # Process memory profile if available
     if args.memory_file and Path(args.memory_file).exists():
         report_content.append("## Memory Profile")
@@ -225,17 +225,17 @@ def main():
         except Exception as e:
             report_content.append(f"Error loading memory data: {e}")
             report_content.append("")
-    
+
     # If no data available, add placeholder
     if not (args.benchmark_file or args.memory_file):
         report_content.append("No performance data available yet.")
         report_content.append("")
         report_content.append("This report will be populated when benchmark and memory profiling data is available.")
-    
+
     # Write report
     with open(args.output, "w") as f:
         f.write("\n".join(report_content))
-    
+
     print(f"Performance report written to {args.output}")
     return 0
 
@@ -266,17 +266,17 @@ def main():
     parser.add_argument("--safety-file", help="Safety report JSON file")
     parser.add_argument("--output", help="Output report file", default="dependency-report.md")
     args = parser.parse_args()
-    
+
     report_content = ["# Dependency Report", ""]
     report_content.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     report_content.append("")
-    
+
     # Process outdated dependencies
     if args.outdated_files:
         outdated_count = 0
         report_content.append("## Outdated Dependencies")
         report_content.append("")
-        
+
         for pattern in args.outdated_files.split():
             for file_path in glob.glob(pattern):
                 try:
@@ -286,11 +286,11 @@ def main():
                     report_content.append(f"- Found {len(outdated_data)} outdated packages in {file_path}")
                 except Exception as e:
                     report_content.append(f"- Error processing {file_path}: {e}")
-        
+
         if outdated_count == 0:
             report_content.append("All dependencies are up to date!")
         report_content.append("")
-    
+
     # Process safety vulnerabilities
     if args.safety_file and Path(args.safety_file).exists():
         report_content.append("## Security Vulnerabilities")
@@ -298,7 +298,7 @@ def main():
         try:
             with open(args.safety_file, 'r') as f:
                 safety_data = json.load(f)
-            
+
             if isinstance(safety_data, list) and len(safety_data) > 0:
                 report_content.append(f"Found {len(safety_data)} security vulnerabilities:")
                 for vuln in safety_data[:5]:  # Show first 5
@@ -310,7 +310,7 @@ def main():
         except Exception as e:
             report_content.append(f"Error processing safety report: {e}")
         report_content.append("")
-    
+
     # Add recommendations
     report_content.append("## Recommendations")
     report_content.append("")
@@ -318,11 +318,11 @@ def main():
     report_content.append("2. Address security vulnerabilities immediately")
     report_content.append("3. Consider using pip-compile for reproducible builds")
     report_content.append("4. Enable Dependabot for automated updates")
-    
+
     # Write report
     with open(args.output, "w") as f:
         f.write("\n".join(report_content))
-    
+
     print(f"Dependency report written to {args.output}")
     return 0
 
@@ -359,17 +359,17 @@ def profile_sample_operation():
     """Sample operation to profile memory usage."""
     # Start tracing
     tracemalloc.start()
-    
+
     # Sample operation - create some data
     data = []
     for i in range(1000):
         data.append({"id": i, "value": f"item_{i}" * 10})
-    
+
     # Get memory usage
     current, peak = tracemalloc.get_traced_memory()
     print(f"Current memory usage: {current / 1024 / 1024:.2f} MB")
     print(f"Peak memory usage: {peak / 1024 / 1024:.2f} MB")
-    
+
     tracemalloc.stop()
     return data
 

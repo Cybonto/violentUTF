@@ -1,7 +1,13 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """MCP Generator Configuration Tools"""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 from urllib.parse import urljoin
 
 import httpx
@@ -300,7 +306,7 @@ class GeneratorConfigurationTools:
         self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Execute a generator configuration tool"""
-        logger.info(f"Executing generator tool: {tool_name}")
+        logger.info("Executing generator tool: %s", tool_name)
 
         try:
             if tool_name == "list_generators":
@@ -327,7 +333,7 @@ class GeneratorConfigurationTools:
                 return {"error": "unknown_tool", "message": f"Unknown generator tool: {tool_name}"}
 
         except Exception as e:
-            logger.error(f"Error executing generator tool {tool_name}: {e}")
+            logger.error("Error executing generator tool %s: %s", tool_name, e)
             return {"error": "execution_failed", "message": str(e), "tool_name": tool_name}
 
     async def _execute_list_generators(self, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -423,7 +429,7 @@ class GeneratorConfigurationTools:
             try:
                 response = await client.request(method=method, url=url, headers=headers, **kwargs)
 
-                logger.debug(f"Generator API call: {method} {url} -> {response.status_code}")
+                logger.debug("Generator API call: %s %s -> %s", method, url, response.status_code)
 
                 if response.status_code >= 400:
                     error_detail = "Unknown error"
@@ -439,16 +445,16 @@ class GeneratorConfigurationTools:
                         "status_code": response.status_code,
                     }
 
-                return response.json()
+                return cast(Dict[str, Any], response.json())
 
             except httpx.TimeoutException:
-                logger.error(f"Timeout on generator API call: {url}")
+                logger.error("Timeout on generator API call: %s", url)
                 return {"error": "timeout", "message": "Generator API call timed out"}
             except httpx.ConnectError:
-                logger.error(f"Connection error on generator API call: {url}")
+                logger.error("Connection error on generator API call: %s", url)
                 return {"error": "connection_error", "message": "Could not connect to ViolentUTF API"}
             except Exception as e:
-                logger.error(f"Unexpected error on generator API call {url}: {e}")
+                logger.error("Unexpected error on generator API call %s: %s", url, e)
                 return {"error": "unexpected_error", "message": str(e)}
 
 

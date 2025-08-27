@@ -49,12 +49,12 @@ if [ "$API_CALL_STATUS" -eq 200 ]; then
     if [ -n "$KC_CLIENT_UUID" ] && [ "$KC_CLIENT_UUID" != "null" ]; then
         echo "Client exists with UUID: $KC_CLIENT_UUID"
         echo "Updating client configuration..."
-        
+
         # Update the client
         echo "$CLIENT_CONFIG" > /tmp/client-update.json
         make_api_call "PUT" "/realms/${TARGET_REALM_NAME}/clients/${KC_CLIENT_UUID}" "/tmp/client-update.json"
         rm -f /tmp/client-update.json
-        
+
         if [ "$API_CALL_STATUS" -eq 204 ]; then
             echo "✅ Client updated successfully"
         else
@@ -66,7 +66,7 @@ if [ "$API_CALL_STATUS" -eq 200 ]; then
         echo "$CLIENT_CONFIG" > /tmp/client-create.json
         make_api_call "POST" "/realms/${TARGET_REALM_NAME}/clients" "/tmp/client-create.json"
         rm -f /tmp/client-create.json
-        
+
         if [ "$API_CALL_STATUS" -eq 201 ]; then
             echo "✅ Client created successfully"
         else

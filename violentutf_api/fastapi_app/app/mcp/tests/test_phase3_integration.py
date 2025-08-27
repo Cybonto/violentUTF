@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Phase 3 Integration Tests for ViolentUTF MCP Server
 ==================================================
@@ -8,22 +14,18 @@ These tests validate the advanced features implemented in Phase 3:
 - End-to-end integration of all components
 """
 
-import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from app.mcp.prompts import prompts_manager
-from app.mcp.prompts.base import PromptArgument, prompt_registry
-from app.mcp.prompts.security import BiasDetectionPrompt, JailbreakPrompt
-from app.mcp.prompts.testing import CapabilityTestPrompt, ReasoningTestPrompt
+from app.mcp.prompts.base import prompt_registry
 
 # Test the actual implemented components
 from app.mcp.resources.base import AdvancedResource, ResourceMetadata, advanced_resource_registry
-from app.mcp.resources.configuration import ConfigurationResourceProvider, StatusResourceProvider
-from app.mcp.resources.datasets import DatasetResourceProvider, ResultsResourceProvider
+from app.mcp.resources.configuration import ConfigurationResourceProvider
+from app.mcp.resources.datasets import DatasetResourceProvider
 from app.mcp.resources.manager import resource_manager
 from app.mcp.server.base import ViolentUTFMCPServer
 from mcp.types import Prompt, Resource

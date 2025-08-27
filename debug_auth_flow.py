@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Debug authentication flow for OpenAPI providers
 """
@@ -9,9 +15,14 @@ import sys
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(project_root, "violentutf_api", "fastapi_app"))
 
-import requests  # noqa: E402
-from app.api.endpoints.generators import get_openapi_provider_config  # noqa: E402
-from app.core.config import settings  # noqa: E402
+try:
+    import requests
+    from app.api.endpoints.generators import get_openapi_provider_config
+    from app.core.config import settings
+except ImportError as e:
+    print(f"Import error: {e}")
+    print("Make sure you are running this from the correct directory and dependencies are installed.")
+    sys.exit(1)
 
 print("=== Debug OpenAPI Authentication Flow ===\n")
 
@@ -25,7 +36,7 @@ print(f"   OPENAPI_1_ID: {getattr(settings, 'OPENAPI_1_ID', 'NOT SET')}")
 print("\n2. Testing get_openapi_provider_config('gsai-api-1')...")
 config = get_openapi_provider_config("gsai-api-1")
 if config:
-    print(f"   Config found!")
+    print("   Config found!")
     print(f"   - ID: {config.get('id')}")
     print(f"   - Name: {config.get('name')}")
     print(f"   - Base URL: {config.get('base_url')}")
@@ -35,7 +46,7 @@ if config:
         masked = token[:4] + "..." + token[-4:] if len(token) > 8 else "***"
         print(f"   - Auth Token: {masked}")
     else:
-        print(f"   - Auth Token: NOT FOUND!")
+        print("   - Auth Token: NOT FOUND!")
 else:
     print("   No config found!")
 
@@ -54,8 +65,10 @@ if config and config.get("auth_token") and config.get("base_url"):
             print("   ✓ Models endpoint works with token")
         else:
             print(f"   ✗ Models endpoint failed: {response.text[:200]}")
+    except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
+        print(f"   ✗ Request Error: {e}")
     except Exception as e:
-        print(f"   ✗ Error: {e}")
+        print(f"   ✗ Unexpected Error: {e}")
 
     # Test chat completions endpoint
     chat_url = f"{config['base_url']}/api/v1/chat/completions"
@@ -71,8 +84,10 @@ if config and config.get("auth_token") and config.get("base_url"):
             print(f"   Response: {response.text[:200]}")
         else:
             print(f"   ✗ Chat endpoint failed: {response.text[:200]}")
+    except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
+        print(f"   ✗ Request Error: {e}")
     except Exception as e:
-        print(f"   ✗ Error: {e}")
+        print(f"   ✗ Unexpected Error: {e}")
 
 print("\n4. Checking environment variables directly...")
 for key in ["OPENAPI_1_AUTH_TOKEN", "OPENAPI_GSAI_API_1_AUTH_TOKEN"]:

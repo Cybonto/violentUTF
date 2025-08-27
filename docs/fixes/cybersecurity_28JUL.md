@@ -1,8 +1,8 @@
 # Security Vulnerability Assessment Report - June 29, 2025
 
-**Date**: June 29, 2025  
-**Branch**: dev_nightly  
-**Analysis Tools**: Safety, pip-audit, Bandit, container security analysis  
+**Date**: June 29, 2025
+**Branch**: dev_nightly
+**Analysis Tools**: Safety, pip-audit, Bandit, container security analysis
 **Update**: Complete security reassessment with dependency and code analysis
 
 ## Executive Summary
@@ -33,7 +33,7 @@ Comprehensive security analysis of the ViolentUTF platform revealed multiple sec
 - **Fix**: Critical - no safe version available, consider migration to python-jose[cryptography] or PyJWT
 
 **ecdsa 0.19.1** - 2 vulnerabilities:
-- **CVE-2024-23342** (ID: 64459): Minerva timing attack vulnerability  
+- **CVE-2024-23342** (ID: 64459): Minerva timing attack vulnerability
 - **PVE-2024-64396** (ID: 64396): Side-channel attack vulnerability
 - **Severity**: Medium-High
 - **Risk**: Cryptographic key recovery
@@ -150,7 +150,7 @@ apache/apisix-dashboard     latest    549MB
 
 1. **Upgrade python-jose** (CRITICAL):
 ```bash
-pip install "python-jose[cryptography]>=3.4.1" 
+pip install "python-jose[cryptography]>=3.4.1"
 # Or migrate to PyJWT for better security
 pip uninstall python-jose
 pip install PyJWT

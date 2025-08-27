@@ -1,6 +1,12 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 from uuid import UUID
 
 from app.core.auth import get_current_user
@@ -34,7 +40,7 @@ async def list_orchestrator_types(current_user=Depends(get_current_user)):
         orchestrator_types = pyrit_orchestrator_service.get_orchestrator_types()
         return orchestrator_types
     except Exception as e:
-        logger.error(f"Error listing orchestrator types: {e}")
+        logger.error("Error listing orchestrator types: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to list orchestrator types: {str(e)}")
 
 
@@ -52,7 +58,7 @@ async def get_orchestrator_type_details(orchestrator_type: str, current_user=Dep
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting orchestrator type details: {e}")
+        logger.error("Error getting orchestrator type details: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get orchestrator type details: {str(e)}")
 
 
@@ -111,19 +117,19 @@ async def _create_orchestrator_configuration_impl(request: OrchestratorConfigCre
         logger.info(f"User {current_user.username} created orchestrator: {request.name}")
 
         return OrchestratorConfigResponse(
-            orchestrator_id=config.id,
-            name=config.name,
-            orchestrator_type=config.orchestrator_type,
-            status=config.status,
-            created_at=config.created_at,
+            orchestrator_id=UUID(str(config.id)),
+            name=str(config.name),
+            orchestrator_type=str(config.orchestrator_type),
+            status=str(config.status),
+            created_at=datetime.fromisoformat(str(config.created_at)) if config.created_at else datetime.now(),
             parameters_validated=True,
-            pyrit_identifier=config.pyrit_identifier,
+            pyrit_identifier=dict(config.pyrit_identifier) if config.pyrit_identifier else None,
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error creating orchestrator configuration: {e}")
+        logger.error("Error creating orchestrator configuration: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to create orchestrator: {str(e)}")
 
 
@@ -162,7 +168,7 @@ async def list_orchestrator_configurations(
         ]
 
     except Exception as e:
-        logger.error(f"Error listing orchestrator configurations: {e}")
+        logger.error("Error listing orchestrator configurations: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to list orchestrators: {str(e)}")
 
 
@@ -196,7 +202,7 @@ async def get_orchestrator_configuration(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting orchestrator configuration: {e}")
+        logger.error("Error getting orchestrator configuration: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get orchestrator: {str(e)}")
 
 
@@ -232,11 +238,11 @@ async def get_execution_results(
             raise HTTPException(status_code=400, detail=f"Execution not completed. Status: {execution.status}")
 
         return OrchestratorResultsResponse(
-            execution_id=execution.id,
-            status=execution.status,
+            execution_id=UUID(str(execution.id)),
+            status=str(execution.status),
             orchestrator_name=config.name,
             orchestrator_type=config.orchestrator_type,
-            execution_summary=execution.execution_summary or {},
+            execution_summary=dict(execution.execution_summary) if execution.execution_summary else {},
             prompt_request_responses=execution.results.get("prompt_request_responses", []),
             scores=execution.results.get("scores", []),
             memory_export=execution.results.get("memory_export", {}),
@@ -245,7 +251,7 @@ async def get_execution_results(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting execution results: {e}")
+        logger.error("Error getting execution results: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get execution results: {str(e)}")
 
 
@@ -276,7 +282,7 @@ async def get_orchestrator_memory(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting orchestrator memory: {e}")
+        logger.error("Error getting orchestrator memory: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get orchestrator memory: {str(e)}")
 
 
@@ -302,7 +308,7 @@ async def get_orchestrator_scores(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting orchestrator scores: {e}")
+        logger.error("Error getting orchestrator scores: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get orchestrator scores: {str(e)}")
 
 
@@ -349,23 +355,23 @@ async def create_orchestrator_execution(
             results = await pyrit_orchestrator_service.execute_orchestrator(str(orchestrator_id), execution_config)
 
             # Update execution with results
-            execution.status = "completed"
-            execution.results = results
-            execution.execution_summary = results.get("execution_summary", {})
-            execution.completed_at = datetime.utcnow()
+            setattr(execution, "status", "completed")
+            setattr(execution, "results", results)
+            setattr(execution, "execution_summary", results.get("execution_summary", {}))
+            setattr(execution, "completed_at", datetime.utcnow())
 
             await db.commit()
 
             logger.info(f"User {current_user.username} executed orchestrator {config.name}")
-            logger.info(f"Execution results keys: {list(results.keys()) if results else 'None'}")
-            logger.info(f"Has execution_summary: {'execution_summary' in results if results else False}")
-            logger.info(f"Has prompt_request_responses: {'prompt_request_responses' in results if results else False}")
+            logger.info("Execution results keys: %s", list(results.keys()) if results else "None")
+            logger.info("Has execution_summary: %s", "execution_summary" in results if results else False)
+            logger.info("Has prompt_request_responses: %s", "prompt_request_responses" in results if results else False)
 
         except Exception as exec_error:
             # Update execution with error
-            execution.status = "failed"
-            execution.results = {"error": str(exec_error)}
-            execution.completed_at = datetime.utcnow()
+            setattr(execution, "status", "failed")
+            setattr(execution, "results", {"error": str(exec_error)})
+            setattr(execution, "completed_at", datetime.utcnow())
             await db.commit()
             raise
 
@@ -380,7 +386,7 @@ async def create_orchestrator_execution(
         # This provides better UX for synchronous operations like dataset testing
         if execution.status == "completed" and execution.results:
             # Log what we're about to return
-            logger.info(f"Returning completed execution with results. Keys: {list(execution.results.keys())}")
+            logger.info("Returning completed execution with results. Keys: %s", list(execution.results.keys()))
 
             # Return the actual execution results for immediate use
             response_data = {
@@ -399,17 +405,19 @@ async def create_orchestrator_execution(
             if execution.results:
                 response_data.update(execution.results)
 
-            logger.info(f"Final response keys: {list(response_data.keys())}")
+            logger.info("Final response keys: %s", list(response_data.keys()))
             return response_data
         else:
             # For async/long-running executions, return tracking info
             return OrchestratorExecuteResponse(
-                execution_id=execution.id,
-                status=execution.status,
+                execution_id=UUID(str(execution.id)),
+                status=str(execution.status),
                 orchestrator_id=orchestrator_id,
-                orchestrator_type=config.orchestrator_type,
-                execution_name=execution.execution_name,
-                started_at=execution.started_at,
+                orchestrator_type=str(config.orchestrator_type),
+                execution_name=str(execution.execution_name) if execution.execution_name else None,
+                started_at=(
+                    datetime.fromisoformat(str(execution.started_at)) if execution.started_at else datetime.now()
+                ),
                 expected_operations=expected_ops,
                 progress={
                     "completed": expected_ops if execution.status == "completed" else 0,
@@ -421,7 +429,7 @@ async def create_orchestrator_execution(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error creating orchestrator execution: {e}")
+        logger.error("Error creating orchestrator execution: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to create execution: {str(e)}")
 
 
@@ -447,9 +455,13 @@ async def list_all_orchestrator_executions(
 
             # Check if execution has scorer results
             has_scorer_results = False
-            if execution.results and isinstance(execution.results, dict):
-                scores = execution.results.get("scores", [])
-                has_scorer_results = len(scores) > 0
+            if execution.results:
+                try:
+                    results_dict: Dict[str, Any] = cast(Dict[str, Any], execution.results) if execution.results else {}
+                    scores = results_dict.get("scores", [])
+                    has_scorer_results = len(scores) > 0
+                except Exception:
+                    has_scorer_results = False
 
             execution_data = {
                 "id": str(execution.id),
@@ -470,7 +482,7 @@ async def list_all_orchestrator_executions(
         return {"executions": execution_list, "total": len(execution_list)}
 
     except Exception as e:
-        logger.error(f"Error listing all orchestrator executions: {e}")
+        logger.error("Error listing all orchestrator executions: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to list executions: {str(e)}")
 
 
@@ -515,18 +527,20 @@ async def list_orchestrator_executions(
 
             execution_responses.append(
                 ExecutionResponse(
-                    id=execution.id,
+                    id=UUID(str(execution.id)),
                     orchestrator_id=orchestrator_id,
-                    execution_type=execution.execution_type,
-                    execution_name=execution.execution_name,
-                    status=execution.status,
-                    created_at=execution.started_at,
-                    started_at=execution.started_at,
-                    completed_at=execution.completed_at,
-                    input_data=execution.input_data,
-                    results=execution.results,
-                    execution_summary=execution.execution_summary,
-                    created_by=execution.created_by,
+                    execution_type=str(execution.execution_type) if execution.execution_type else "unknown",
+                    execution_name=str(execution.execution_name) if execution.execution_name else None,
+                    status=str(execution.status),
+                    created_at=execution.started_at if isinstance(execution.started_at, datetime) else datetime.now(),
+                    started_at=(
+                        datetime.fromisoformat(str(execution.started_at)) if execution.started_at else datetime.now()
+                    ),
+                    completed_at=execution.completed_at if isinstance(execution.completed_at, datetime) else None,
+                    input_data=dict(execution.input_data) if execution.input_data else {},
+                    results=dict(execution.results) if execution.results else {},
+                    execution_summary=dict(execution.execution_summary) if execution.execution_summary else {},
+                    created_by=str(execution.created_by) if execution.created_by else "system",
                     links=links,
                 )
             )
@@ -537,12 +551,12 @@ async def list_orchestrator_executions(
             "create": f"{base_url}/executions",
         }
 
-        return ExecutionListResponse(executions=execution_responses, total=len(execution_responses), _links=list_links)
+        return ExecutionListResponse(executions=execution_responses, total=len(execution_responses), links=list_links)
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error listing orchestrator executions: {e}")
+        logger.error("Error listing orchestrator executions: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to list executions: {str(e)}")
 
 
@@ -587,25 +601,25 @@ async def get_orchestrator_execution(
         }
 
         return ExecutionResponse(
-            id=execution.id,
+            id=UUID(str(execution.id)),
             orchestrator_id=orchestrator_id,
-            execution_type=execution.execution_type,
-            execution_name=execution.execution_name,
-            status=execution.status,
-            created_at=execution.started_at,
-            started_at=execution.started_at,
-            completed_at=execution.completed_at,
-            input_data=execution.input_data,
-            results=execution.results,
-            execution_summary=execution.execution_summary,
-            created_by=execution.created_by,
+            execution_type=str(execution.execution_type) if execution.execution_type else "unknown",
+            execution_name=str(execution.execution_name) if execution.execution_name else None,
+            status=str(execution.status),
+            created_at=execution.started_at if isinstance(execution.started_at, datetime) else datetime.now(),
+            started_at=datetime.fromisoformat(str(execution.started_at)) if execution.started_at else datetime.now(),
+            completed_at=execution.completed_at if isinstance(execution.completed_at, datetime) else None,
+            input_data=dict(execution.input_data) if execution.input_data else {},
+            results=dict(execution.results) if execution.results else {},
+            execution_summary=dict(execution.execution_summary) if execution.execution_summary else {},
+            created_by=str(execution.created_by) if execution.created_by else "system",
             links=links,
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting orchestrator execution: {e}")
+        logger.error("Error getting orchestrator execution: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get execution: {str(e)}")
 
 
@@ -644,11 +658,11 @@ async def get_execution_results_restful(
 
         # Return exactly the same format as original
         return OrchestratorResultsResponse(
-            execution_id=execution.id,
-            status=execution.status,
+            execution_id=UUID(str(execution.id)),
+            status=str(execution.status),
             orchestrator_name=config.name,
             orchestrator_type=config.orchestrator_type,
-            execution_summary=execution.execution_summary or {},
+            execution_summary=dict(execution.execution_summary) if execution.execution_summary else {},
             prompt_request_responses=execution.results.get("prompt_request_responses", []),
             scores=execution.results.get("scores", []),
             memory_export=execution.results.get("memory_export", {}),
@@ -657,7 +671,7 @@ async def get_execution_results_restful(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting execution results: {e}")
+        logger.error("Error getting execution results: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get execution results: {str(e)}")
 
 
@@ -688,5 +702,5 @@ async def delete_orchestrator_configuration(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting orchestrator: {e}")
+        logger.error("Error deleting orchestrator: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to delete orchestrator: {str(e)}")

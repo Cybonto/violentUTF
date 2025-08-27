@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 MCP Resources Module - Enhanced
 ==============================
@@ -10,7 +16,7 @@ import logging
 from typing import Any, Dict, List
 
 # Import resource providers to auto-register them
-from app.mcp.resources import configuration, datasets
+from app.mcp.resources import configuration, datasets  # noqa: F401
 from app.mcp.resources.base import advanced_resource_registry
 from app.mcp.resources.manager import resource_manager
 from mcp.types import Resource
@@ -40,7 +46,7 @@ class ResourceRegistry:
             resources = await self.manager.list_resources()
             logger.info(f"Successfully initialized resource registry with {len(resources)} resources")
         except Exception as e:
-            logger.warning(f"Resource manager initialization test failed: {e}")
+            logger.warning("Resource manager initialization test failed: %s", e)
             logger.info("Resource registry initialized (resources may be unavailable)")
 
         self._initialized = True
@@ -56,7 +62,7 @@ class ResourceRegistry:
             logger.debug(f"Listed {len(resources)} resources")
             return resources
         except Exception as e:
-            logger.error(f"Error listing resources: {e}")
+            logger.error("Error listing resources: %s", e)
             return []
 
     async def read_resource(self, uri: str) -> Any:
@@ -67,7 +73,7 @@ class ResourceRegistry:
         try:
             return await self.manager.read_resource(uri)
         except Exception as e:
-            logger.error(f"Error reading resource {uri}: {e}")
+            logger.error("Error reading resource %s: %s", uri, e)
             return {"error": "resource_read_failed", "message": str(e), "uri": uri}
 
     def get_cache_stats(self) -> Dict[str, Any]:

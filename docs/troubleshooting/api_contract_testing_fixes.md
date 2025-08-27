@@ -105,7 +105,7 @@ class TestBasicContract:
         """Test that contract testing environment is properly configured."""
         assert os.getenv("CONTRACT_TESTING") == "true"
         assert os.getenv("TESTING") == "true"
-    
+
     def test_openapi_schema_exists(self):
         """Test that OpenAPI schema file was generated."""
         if os.path.exists("generated_openapi.json"):

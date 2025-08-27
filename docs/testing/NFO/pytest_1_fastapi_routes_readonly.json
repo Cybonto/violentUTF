@@ -1,8 +1,8 @@
 {
-  "status": "fixed", 
+  "status": "fixed",
   "tool_name": "pytest",
   "exit_code": 1,
-  "test_file_name": "test_phase2_integration.py", 
+  "test_file_name": "test_phase2_integration.py",
   "failure_type": "ATTRIBUTE_ERROR",
   "failure_subtype": "Read-only Property",
   "file_path": "",
@@ -10,13 +10,13 @@
   "issue": "",
   "issue_log": ["FastAPI routes property is read-only, preventing mock route assignment in tests"],
   "line_range": "53",
-  "severity": "MEDIUM", 
+  "severity": "MEDIUM",
   "message": "AttributeError: property 'routes' of 'FastAPI' object has no setter",
   "offending_code_snippet": "app.routes = api_routes",
   "structured_details": {
     "property": "routes",
     "object_type": "FastAPI",
-    "error_type": "no_setter", 
+    "error_type": "no_setter",
     "affected_tests": 6,
     "test_setup": "broken",
     "fastapi_version_issue": true

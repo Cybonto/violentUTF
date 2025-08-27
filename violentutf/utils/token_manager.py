@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # utils/token_manager.py
 """
 Token management utilities for ViolentUTF Keycloak integration.
@@ -78,7 +84,7 @@ class TokenManager:
 
         # Dynamic endpoints cache
         self._dynamic_endpoints_cache = None
-        self._cache_timestamp = 0
+        self._cache_timestamp: float = 0.0
         self._cache_ttl = 300  # 5 minutes cache TTL
 
         # Note: Bedrock endpoints are configured but not yet supported by APISIX ai-proxy plugin
@@ -180,7 +186,7 @@ class TokenManager:
 
         # Try to get token from session state first
         if "access_token" in st.session_state:
-            token = st.session_state["access_token"]
+            token = str(st.session_state["access_token"])
             if self._is_token_valid(token):
                 return token
 
@@ -284,10 +290,10 @@ class TokenManager:
                     # Verify the token has the required role
                     if self.has_ai_access(access_token):
                         logger.info("Token has ai-api-access role")
-                        return access_token
+                        return str(access_token)
                     else:
                         logger.warning("Token does not have ai-api-access role")
-                        return access_token  # Still return it, role check will handle this
+                        return str(access_token)  # Still return it, role check will handle this
                 else:
                     logger.error("No access token in Keycloak response")
                     return None
@@ -313,7 +319,7 @@ class TokenManager:
 
             # Properly verify the JWT signature and expiration
             payload = jwt.decode(token, secret_key, algorithms=["HS256"])
-            exp = payload.get("exp", 0)
+            exp = int(payload.get("exp", 0))
             current_time = int(time.time())
 
             # Check if token expires in next 60 seconds (buffer for network calls)
@@ -446,7 +452,14 @@ class TokenManager:
 
     def _parse_ai_routes(self, routes_data: Dict) -> Dict[str, Dict[str, str]]:
         """Parse APISIX routes response to extract AI model endpoints."""
-        endpoints = {"openai": {}, "anthropic": {}, "ollama": {}, "webui": {}, "bedrock": {}, "gsai": {}}
+        endpoints: Dict[str, Dict[str, Any]] = {
+            "openai": {},
+            "anthropic": {},
+            "ollama": {},
+            "webui": {},
+            "bedrock": {},
+            "gsai": {},
+        }
 
         try:
             routes_list = routes_data.get("list", [])
@@ -623,7 +636,7 @@ class TokenManager:
     def refresh_endpoints_cache(self) -> bool:
         """Force refresh of the endpoints cache."""
         self._dynamic_endpoints_cache = None
-        self._cache_timestamp = 0
+        self._cache_timestamp: float = 0.0
         endpoints = self.get_apisix_endpoints()
         return len(endpoints) > 0
 

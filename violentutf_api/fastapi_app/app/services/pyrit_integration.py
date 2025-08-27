@@ -1,9 +1,14 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 PyRIT Integration Service
 Provides PyRIT-based AI red-teaming functionality for ViolentUTF platform
 """
 
-import asyncio
 import logging
 import uuid
 from datetime import datetime
@@ -22,8 +27,8 @@ class PyRITService:
     def _initialize_pyrit(self):
         """Initialize PyRIT memory and core components"""
         try:
-            from pyrit.memory import DuckDBMemory
-            from pyrit.models import PromptRequestPiece, PromptRequestResponse
+            from pyrit.memory import DuckDBMemory  # noqa: F401
+            from pyrit.models import PromptRequestPiece, PromptRequestResponse  # noqa: F401
 
             # Don't initialize DuckDB memory here to avoid conflicts with orchestrator service
             # The orchestrator service handles its own memory management
@@ -31,16 +36,16 @@ class PyRITService:
             self.memory = None  # Prevent conflicts
 
         except ImportError as e:
-            logger.error(f"❌ PyRIT not available: {e}")
+            logger.error("❌ PyRIT not available: %s", e)
             self.memory = None
         except Exception as e:
-            logger.error(f"❌ Failed to initialize PyRIT: {e}")
+            logger.error("❌ Failed to initialize PyRIT: %s", e)
             self.memory = None
 
     def is_available(self) -> bool:
         """Check if PyRIT is properly initialized"""
         try:
-            from pyrit.models import PromptRequestPiece
+            from pyrit.models import PromptRequestPiece  # noqa: F401
 
             return True  # PyRIT is available if we can import its models
         except ImportError:
@@ -65,7 +70,7 @@ class PyRITService:
                 raise ValueError(f"Unsupported target type: {target_type}")
 
         except Exception as e:
-            logger.error(f"Failed to create PyRIT target: {e}")
+            logger.error("Failed to create PyRIT target: %s", e)
             raise
 
     async def _create_apisix_target(self, config: Dict[str, Any]):
@@ -96,7 +101,7 @@ class PyRITService:
 
             async def send_prompt_async(self, prompt_request: PromptRequestPiece) -> PromptRequestResponse:
                 """Send prompt through APISIX gateway"""
-                import json
+                import json  # noqa: F401
 
                 import requests
 
@@ -144,7 +149,7 @@ class PyRITService:
                         raise RuntimeError(error_msg)
 
                 except Exception as e:
-                    logger.error(f"APISIX target error: {e}")
+                    logger.error("APISIX target error: %s", e)
                     raise
 
             def is_json_response_supported(self) -> bool:
@@ -159,7 +164,7 @@ class PyRITService:
 
     async def _create_http_target(self, config: Dict[str, Any]):
         """Create HTTP-based PyRIT target"""
-        from pyrit.prompt_target import PromptTarget
+        from pyrit.prompt_target import PromptTarget  # noqa: F401
 
         # This would implement a generic HTTP target
         # For now, return a placeholder
@@ -205,12 +210,12 @@ class PyRITService:
                 }
                 results.append(result)
 
-                logger.info(f"PyRIT orchestrator processed prompt: {prompt[:50]}...")
+                logger.info("PyRIT orchestrator processed prompt: %s...", prompt[:50])
 
             return results
 
         except Exception as e:
-            logger.error(f"PyRIT orchestrator error: {e}")
+            logger.error("PyRIT orchestrator error: %s", e)
             raise
 
     def get_conversation_history(self, conversation_id: str) -> List[Dict[str, Any]]:
@@ -225,7 +230,7 @@ class PyRITService:
             return []
 
         except Exception as e:
-            logger.error(f"Failed to get conversation history: {e}")
+            logger.error("Failed to get conversation history: %s", e)
             return []
 
 

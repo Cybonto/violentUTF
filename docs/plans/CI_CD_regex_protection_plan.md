@@ -88,20 +88,20 @@ def check_file(filepath):
     """Check a file for corrupted regex patterns."""
     with open(filepath, 'r') as f:
         content = f.read()
-    
+
     errors = []
     for pattern in INVALID_PATTERNS:
         matches = re.findall(pattern, content)
         if matches:
             errors.append(f"Found corrupted pattern in {filepath}: {matches}")
-    
+
     return errors
 
 if __name__ == "__main__":
     errors = []
     for filepath in sys.argv[1:]:
         errors.extend(check_file(filepath))
-    
+
     if errors:
         print("❌ Regex Pattern Validation Failed:")
         for error in errors:
@@ -146,7 +146,7 @@ from app.core.validation import ValidationPatterns
 
 class TestRegexPatterns:
     """Test that regex patterns work correctly."""
-    
+
     def test_jwt_token_pattern(self):
         """Test JWT token pattern matches valid tokens."""
         valid_tokens = [
@@ -159,18 +159,18 @@ class TestRegexPatterns:
             "too.many.parts.here",
             "has spaces.in.token",
         ]
-        
+
         pattern = ValidationPatterns.JWT_TOKEN
         for token in valid_tokens:
             assert pattern.match(token), f"Should match: {token}"
         for token in invalid_tokens:
             assert not pattern.match(token), f"Should not match: {token}"
-    
+
     def test_pattern_integrity(self):
         """Test that patterns don't contain spaces in character ranges."""
         import inspect
         import re
-        
+
         # Get all regex patterns
         for name, value in inspect.getmembers(ValidationPatterns):
             if isinstance(value, re.Pattern):
@@ -187,14 +187,14 @@ def test_jwt_validation_works():
     """Test that JWT validation works end-to-end."""
     import jwt
     from app.core.validation import validate_jwt_token
-    
+
     # Create a valid token
     token = jwt.encode(
         {"sub": "user", "iat": time.time(), "exp": time.time() + 3600},
         "secret",
         algorithm="HS256"
     )
-    
+
     # Should not raise
     result = validate_jwt_token(token)
     assert result["sub"] == "user"
@@ -220,16 +220,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      
+
       - name: Check Regex Patterns
         run: |
           python scripts/check_regex_patterns.py $(find . -name "*.py" -type f)
-      
+
       - name: Run Regex Tests
         run: |
           pip install pytest
@@ -269,13 +269,13 @@ Add startup validation in FastAPI:
 async def validate_regex_patterns():
     """Validate critical regex patterns on startup."""
     from app.core.validation import ValidationPatterns
-    
+
     # Test critical patterns
     test_jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.test.signature"
     if not ValidationPatterns.JWT_TOKEN.match(test_jwt):
         logger.error("CRITICAL: JWT regex pattern is corrupted!")
         # Could raise exception to prevent startup
-    
+
     logger.info("Regex pattern validation passed")
 ```
 
@@ -283,7 +283,7 @@ async def validate_regex_patterns():
 
 If patterns are corrupted:
 
-1. **Immediate Rollback**: 
+1. **Immediate Rollback**:
    ```bash
    git checkout <last-known-good-commit> -- app/core/validation.py
    ```
@@ -302,7 +302,7 @@ If patterns are corrupted:
    ```python
    # scripts/fix_regex_patterns.py
    """Emergency fix for corrupted regex patterns."""
-   
+
    FIXES = [
        (r'\[([A-Za-z])\s+-\s+([A-Za-z])\]', r'[\1-\2]'),  # [A - Z] -> [A-Z]
        (r'\[([0-9])\s+-\s+([0-9])\]', r'[\1-\2]'),        # [0 - 9] -> [0-9]

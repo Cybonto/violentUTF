@@ -15,7 +15,7 @@ conf:
       file_path: "logs/error.log"
     access_log:
       file_path: "logs/access.log"
-      
+
 authentication:
   secret: APISIX_DASHBOARD_SECRET_PLACEHOLDER
   expire_time: 3600

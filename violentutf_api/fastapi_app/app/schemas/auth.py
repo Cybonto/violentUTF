@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Authentication and authorization schemas
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks
@@ -9,9 +15,7 @@ from typing import List, Optional
 
 from app.core.password_policy import validate_password_strength
 from app.core.validation import (
-    SecurityLimits,
     ValidationPatterns,
-    create_validation_error,
     sanitize_string,
     validate_role_list,
     validate_username,
@@ -39,7 +43,7 @@ class TokenData(BaseModel):
 
     username: Optional[str] = Field(None, min_length=3, max_length=50)
     email: Optional[EmailStr] = None
-    roles: List[str] = Field(default_factory=list, max_items=20)
+    roles: List[str] = Field(default_factory=list, description="User roles", max_length=20)
 
     @validator("username")
     def validate_username_field(cls, v):
@@ -59,7 +63,7 @@ class UserInfo(BaseModel):
 
     username: str = Field(..., min_length=3, max_length=50)
     email: Optional[EmailStr] = None
-    roles: List[str] = Field(default_factory=list, max_items=20)
+    roles: List[str] = Field(default_factory=list, description="User roles", max_length=20)
 
     @validator("username")
     def validate_username_field(cls, v):
@@ -76,7 +80,9 @@ class APIKeyCreate(BaseModel):
     """Request to create a new API key"""
 
     name: str = Field(..., min_length=3, max_length=100, description="Name/description for the API key")
-    permissions: List[str] = Field(default=["api:access"], max_items=20, description="List of permissions for this key")
+    permissions: List[str] = Field(
+        default=["api:access"], description="List of permissions for this key", max_length=20
+    )
 
     @validator("name")
     def validate_name_field(cls, v):
@@ -144,7 +150,9 @@ class TokenInfoResponse(BaseModel):
 class TokenValidationRequest(BaseModel):
     """Token validation request"""
 
-    required_roles: Optional[List[str]] = Field(default_factory=list, max_items=20)
+    required_roles: Optional[List[str]] = Field(
+        default_factory=list, description="Required roles for validation", max_length=20
+    )
     check_ai_access: Optional[bool] = Field(default=True)
 
     @validator("required_roles")

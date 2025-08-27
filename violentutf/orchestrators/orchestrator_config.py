@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # orchestrators/orchestrator_config.py
 
 """
@@ -143,7 +149,7 @@ def load_orchestrators() -> Dict[str, Dict[str, Any]]:
             with open(CONFIG_FILE_PATH, "r") as f:
                 orchestrators = json.load(f)
             logger.debug(f"Loaded orchestrators: {orchestrators}")
-            return orchestrators
+            return orchestrators if isinstance(orchestrators, dict) else {}
         else:
             # Return empty dict if config file doesn't exist
             logger.debug("No existing orchestrator configurations found.")

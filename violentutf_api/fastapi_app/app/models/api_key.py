@@ -1,9 +1,14 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 API Key database model
 """
 
 from datetime import datetime
-from typing import Optional
 
 from app.db.database import Base
 from sqlalchemy import JSON, Boolean, Column, DateTime, String
@@ -27,7 +32,7 @@ class APIKey(Base):
 
     async def update_last_used(self) -> None:
         """Update last used timestamp"""
-        from sqlalchemy import update
+        from sqlalchemy import update  # noqa: F401
 
         # This would be handled by the database session
         # self.last_used_at = datetime.utcnow()

@@ -58,7 +58,7 @@ fi
 echo ""
 echo -e "${GREEN}📊 Test Summary:${NC}"
 echo "- Generator creation and validation: ✅"
-echo "- Provider-specific parameter handling: ✅" 
+echo "- Provider-specific parameter handling: ✅"
 echo "- Model selection and testing: ✅"
 echo "- Error handling and edge cases: ✅"
 echo ""

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Dataset Import Configuration System
 
@@ -66,14 +72,14 @@ class DatasetImportConfig:
             try:
                 return int(os.getenv(key, str(default)))
             except ValueError:
-                logger.warning(f"Invalid integer value for {key}, using default: {default}")
+                logger.warning("Invalid integer value for %s, using default: %s", key, default)
                 return default
 
         def get_float_env(key: str, default: float) -> float:
             try:
                 return float(os.getenv(key, str(default)))
             except ValueError:
-                logger.warning(f"Invalid float value for {key}, using default: {default}")
+                logger.warning("Invalid float value for %s, using default: %s", key, default)
                 return default
 
         config = cls(
@@ -104,7 +110,7 @@ class DatasetImportConfig:
         # Validate configuration
         config.validate()
 
-        logger.info(f"Dataset import configuration loaded: {config}")
+        logger.info("Dataset import configuration loaded: %s", config)
         return config
 
     def validate(self) -> None:
@@ -180,7 +186,7 @@ class DatasetImportConfig:
                     return min(500, self.chunk_size)
 
         except Exception as e:
-            logger.warning(f"Error calculating effective chunk size: {e}")
+            logger.warning("Error calculating effective chunk size: %s", e)
 
         return self.chunk_size
 
@@ -300,7 +306,7 @@ def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
     unknown_params = set(config.keys()) - allowed_params
 
     if unknown_params:
-        logger.warning(f"Unknown parameters for {dataset_type}: {unknown_params}")
+        logger.warning("Unknown parameters for %s: %s", dataset_type, unknown_params)
 
     # Validate parameter types and values
     for param, value in config.items():
@@ -327,7 +333,7 @@ def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
             if not isinstance(value, list):
                 raise ValueError(f"Parameter '{param}' must be a list")
 
-    logger.debug(f"Configuration validation passed for {dataset_type}")
+    logger.debug("Configuration validation passed for %s", dataset_type)
 
 
 # Environment configuration helper

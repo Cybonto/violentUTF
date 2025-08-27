@@ -1,0 +1,50 @@
+---
+# Fast pre-commit configuration for local GitHub Desktop commits
+# Run manually: pre-commit run --config .pre-commit-config-fast.yaml --all-files
+
+default_language_version:
+  python: python3.12
+
+repos:
+  # Essential file checks only
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=5000"]
+      - id: check-ast
+      - id: check-json
+      - id: check-yaml
+        args: ["--allow-multiple-documents"]
+      - id: check-shebang-scripts-are-executable
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+
+  # Fast formatting only - limit to main code directories
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3.12
+        args: ["--line-length", "120"]
+        files: '^(app|violentutf_api|scripts)/'
+        exclude: '__pycache__|\.mypy_cache|tests/'
+
+  # Critical security only - exclude large directories
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: "ai-tokens.env.sample|keycloak/realm-export.json|node_modules|\.git|\.mypy_cache|__pycache__|\.vitutf"
+        files: '^(app|violentutf_api|scripts)/'
+
+  # Custom fast checks
+  - repo: local
+    hooks:
+      - id: no-print-statements-fast
+        name: Check for print statements (fast)
+        entry: 'print\('
+        language: pygrep
+        types: [python]
+        files: '^(app|violentutf_api)/'  # Only check main code, not tests

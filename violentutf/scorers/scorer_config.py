@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # scorers/scorer_config.py
 
 """
@@ -226,17 +232,22 @@ def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
             Scorer,
             Path,
             TrueFalseQuestion,
-            collections.abc.Callable,
         )
-        skip_in_ui = isinstance(primary_type, type) and issubclass(primary_type, complex_types_to_skip)
-        if (
-            primary_type is list
-            and type_args
-            and isinstance(type_args[0], type)
-            and issubclass(type_args[0], complex_types_to_skip)
-        ):
+        callable_types = (collections.abc.Callable,)
+
+        # Safe issubclass check
+        def safe_issubclass(cls, class_tuple):
+            try:
+                return isinstance(cls, type) and issubclass(cls, class_tuple)
+            except TypeError:
+                return False
+
+        skip_in_ui = safe_issubclass(primary_type, complex_types_to_skip) or safe_issubclass(
+            primary_type, callable_types
+        )
+        if primary_type is list and type_args and safe_issubclass(type_args[0], complex_types_to_skip):
             skip_in_ui = True
-        if isinstance(raw_annotation, type) and issubclass(raw_annotation, complex_types_to_skip):
+        if safe_issubclass(raw_annotation, complex_types_to_skip) or safe_issubclass(raw_annotation, callable_types):
             skip_in_ui = True
 
         # --- Get Default Value ---
@@ -284,9 +295,9 @@ def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
     try:
         init_method = scorer_class.__init__
         if init_method is object.__init__:
-            scorer_init_params = {}
+            scorer_init_params: dict[str, inspect.Parameter] = {}
         else:
-            scorer_init_params = inspect.signature(init_method).parameters
+            scorer_init_params = dict(inspect.signature(init_method).parameters)
     except (ValueError, TypeError) as e:
         logger.error(f"Could not get/parse signature for {scorer_type}.__init__: {e}. Assuming no named params needed.")
         scorer_init_params = {}
@@ -424,7 +435,7 @@ def load_scorers() -> Dict[str, Dict[str, Any]]:
             if data is None:
                 data = {}
             logger.debug(f"Loaded scorer configurations ({len(data)} items).")
-            return data
+            return data if isinstance(data, dict) else {}
     except yaml.YAMLError as ye:
         logger.error(f"Error parsing YAML file '{PARAMETER_FILE}': {ye}", exc_info=True)
         raise ScorerConfigurationError(f"Error parsing scorer configurations file: {ye}") from ye
@@ -553,7 +564,7 @@ async def test_scorer_async(scorer_name: str, sample_input: PromptRequestPiece) 
         # Scorer methods are async, so await directly
         scores = await scorer_instance.score_async(sample_input)
         logger.info(f"Scorer '{scorer_name}' tested successfully. Scores: {scores}")
-        return scores
+        return list(scores) if scores else []
     except Exception as e:
         logger.error(f"Error testing scorer '{scorer_name}': {e}", exc_info=True)
         raise ScorerTestingError(f"Error testing scorer '{scorer_name}': {e}") from e

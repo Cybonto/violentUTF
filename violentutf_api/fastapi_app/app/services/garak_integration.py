@@ -1,10 +1,14 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Garak Integration Service
 Provides NVIDIA Garak LLM vulnerability scanning functionality for ViolentUTF platform
 """
 
-import asyncio
-import json
 import logging
 import uuid
 from datetime import datetime
@@ -23,19 +27,19 @@ class GarakService:
     def _initialize_garak(self):
         """Initialize Garak scanner and core components"""
         try:
-            import garak
-            from garak import _plugins
-            from garak.evaluators import Evaluator
-            from garak.generators import Generator
+            import garak  # noqa: F401
+            from garak import _plugins  # noqa: F401
+            from garak.evaluators import Evaluator  # noqa: F401
+            from garak.generators import Generator  # noqa: F401
 
             self.available = True
             logger.info("✅ Garak initialized successfully")
 
         except ImportError as e:
-            logger.error(f"❌ Garak not available: {e}")
+            logger.error("❌ Garak not available: %s", e)
             self.available = False
         except Exception as e:
-            logger.error(f"❌ Failed to initialize Garak: {e}")
+            logger.error("❌ Failed to initialize Garak: %s", e)
             self.available = False
 
     def is_available(self) -> bool:
@@ -73,14 +77,14 @@ class GarakService:
                             probes.append(probe_info)
 
                 except Exception as e:
-                    logger.warning(f"Failed to load probe module {module_name}: {e}")
+                    logger.warning("Failed to load probe module %s: %s", module_name, e)
                     continue
 
             logger.info(f"Found {len(probes)} Garak probes")
             return probes
 
         except Exception as e:
-            logger.error(f"Failed to list Garak probes: {e}")
+            logger.error("Failed to list Garak probes: %s", e)
             return []
 
     def list_available_generators(self) -> List[Dict[str, Any]]:
@@ -114,14 +118,14 @@ class GarakService:
                             generators.append(generator_info)
 
                 except Exception as e:
-                    logger.warning(f"Failed to load generator module {module_name}: {e}")
+                    logger.warning("Failed to load generator module %s: %s", module_name, e)
                     continue
 
             logger.info(f"Found {len(generators)} Garak generators")
             return generators
 
         except Exception as e:
-            logger.error(f"Failed to list Garak generators: {e}")
+            logger.error("Failed to list Garak generators: %s", e)
             return []
 
     async def run_vulnerability_scan(
@@ -136,9 +140,9 @@ class GarakService:
         scan_id = scan_id or str(uuid.uuid4())
 
         try:
-            import garak.cli
+            import garak.cli  # noqa: F401
             from garak._plugins import load_plugin
-            from garak.generators import Generator
+            from garak.generators import Generator  # noqa: F401
 
             # Create generator based on target configuration
             generator = await self._create_garak_generator(target_config)
@@ -151,7 +155,7 @@ class GarakService:
             probe_instance = getattr(probe_class, probe_name)()
 
             # Run the scan
-            logger.info(f"Starting Garak scan {scan_id} with probe {probe_module}.{probe_name}")
+            logger.info("Starting Garak scan %s with probe %s.%s", scan_id, probe_module, probe_name)
 
             # This is a simplified version - in production, you'd use Garak's full CLI
             # Generate test prompts
@@ -176,13 +180,15 @@ class GarakService:
             }
 
             logger.info(
-                f"Garak scan {scan_id} completed with {scan_result['summary']['vulnerabilities_found']} vulnerabilities found"
+                "Garak scan %s completed with %s vulnerabilities found",
+                scan_id,
+                scan_result["summary"]["vulnerabilities_found"],
             )
 
             return scan_result
 
         except Exception as e:
-            logger.error(f"Garak scan failed: {e}")
+            logger.error("Garak scan failed: %s", e)
             return {
                 "scan_id": scan_id,
                 "timestamp": datetime.utcnow().isoformat(),
@@ -227,7 +233,7 @@ class GarakService:
                 return generator_class.OpenAIGenerator()
 
         except Exception as e:
-            logger.error(f"Failed to create Garak generator: {e}")
+            logger.error("Failed to create Garak generator: %s", e)
             raise
 
     def get_scan_results(self, scan_id: str) -> Optional[Dict[str, Any]]:

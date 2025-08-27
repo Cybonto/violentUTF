@@ -87,37 +87,37 @@ echo
 echo "$openapi_routes" | jq -c '.[]' | while IFS= read -r route; do
     route_id=$(echo "$route" | jq -r '.key | split("/") | last')
     route_uri=$(echo "$route" | jq -r '.value.uri')
-    
+
     # Extract provider ID from URI
     provider_id=$(echo "$route_uri" | sed -n 's|.*/openapi/\([^/]*\)/.*|\1|p')
-    
+
     echo -e "${BLUE}Route: $route_id${NC}"
     echo "  URI: $route_uri"
     echo "  Provider: $provider_id"
-    
+
     # Check upstream configuration
     upstream=$(echo "$route" | jq -r '.value.upstream')
     echo "  Upstream: $(echo "$upstream" | jq -r '.nodes | keys[0]')"
-    
+
     # Check plugins
     plugins=$(echo "$route" | jq -r '.value.plugins')
     echo "  Plugins: $(echo "$plugins" | jq -r 'keys | join(", ")')"
-    
+
     # Check proxy-rewrite configuration
     proxy_rewrite=$(echo "$plugins" | jq -r '."proxy-rewrite" // empty')
     if [ -n "$proxy_rewrite" ]; then
         echo "  Proxy-rewrite configured: ✓"
-        
+
         # Check for authentication headers
         auth_headers=$(echo "$proxy_rewrite" | jq -r '.headers.set // empty')
         if [ -n "$auth_headers" ]; then
             echo "  Authentication headers:"
             echo "$auth_headers" | jq -r 'to_entries[] | "    - " + .key + ": " + (.value | tostring | if length > 20 then .[0:10] + "..." + .[-10:] else . end)'
-            
+
             # Check specific auth headers
             has_auth_header=$(echo "$auth_headers" | jq -r 'has("Authorization")')
             has_api_key=$(echo "$auth_headers" | jq -r 'to_entries[] | select(.key | test("[Kk]ey"; "i")) | .key' | head -1)
-            
+
             if [ "$has_auth_header" = "true" ] || [ -n "$has_api_key" ]; then
                 echo -e "  ${GREEN}✓ Authentication configured${NC}"
             else
@@ -129,7 +129,7 @@ echo "$openapi_routes" | jq -c '.[]' | while IFS= read -r route; do
     else
         echo -e "  ${RED}✗ No proxy-rewrite plugin configured${NC}"
     fi
-    
+
     # Check provider configuration
     echo "  Provider configuration:"
     for i in {1..10}; do
@@ -138,7 +138,7 @@ echo "$openapi_routes" | jq -c '.[]' | while IFS= read -r route; do
             auth_type=$(eval echo "\${OPENAPI_${i}_AUTH_TYPE:-}")
             echo "    - Config: OPENAPI_${i}_*"
             echo "    - Auth type: ${auth_type:-not set}"
-            
+
             # Check if auth credentials exist
             case "$auth_type" in
                 "bearer")
@@ -170,7 +170,7 @@ echo "$openapi_routes" | jq -c '.[]' | while IFS= read -r route; do
             break
         fi
     done
-    
+
     echo
 done
 

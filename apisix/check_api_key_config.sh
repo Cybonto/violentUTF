@@ -54,22 +54,22 @@ echo -e "${BLUE}Checking APISIX consumers:${NC}"
 if [ -n "${APISIX_ADMIN_KEY:-}" ]; then
     consumers=$(curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" \
         http://localhost:9180/apisix/admin/consumers)
-    
+
     if echo "$consumers" | jq -e '.list' > /dev/null 2>&1; then
         echo "Consumers found:"
         echo "$consumers" | jq -r '.list[] | {username: .value.username, plugins: .value.plugins | keys}'
-        
+
         # Check for violentutf consumer
         violentutf_consumer=$(echo "$consumers" | jq -r '.list[] | select(.value.username == "violentutf")')
         if [ -n "$violentutf_consumer" ]; then
             echo
             echo -e "${GREEN}✓ Found 'violentutf' consumer${NC}"
-            
+
             # Get the configured key
             configured_key=$(echo "$violentutf_consumer" | jq -r '.value.plugins."key-auth".key' 2>/dev/null || echo "")
             if [ -n "$configured_key" ]; then
                 echo "Configured key in APISIX: ${configured_key:0:10}..."
-                
+
                 # Compare with environment key
                 if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
                     if [ "$configured_key" = "$VIOLENTUTF_API_KEY" ]; then
@@ -102,7 +102,7 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
     response=$(curl -s -o /dev/null -w "%{http_code}" \
         -H "apikey: $VIOLENTUTF_API_KEY" \
         http://localhost:9080/ai/openapi/gsai-api-1/api/v1/models)
-    
+
     if [ "$response" = "404" ]; then
         echo -e "${YELLOW}Got 404 - key-auth passed but route not found${NC}"
     elif [ "$response" = "401" ]; then
@@ -110,7 +110,7 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
     else
         echo "Response: HTTP $response"
     fi
-    
+
     # Test without API key
     echo
     echo "Testing without API key..."

@@ -15,6 +15,7 @@ down_revision = 'previous_migration'  # Replace with actual previous revision
 branch_labels = None
 depends_on = None
 
+
 def upgrade():
     # Create orchestrator_configurations table
     op.create_table(
@@ -32,7 +33,7 @@ def upgrade():
         sa.Column('pyrit_identifier', postgresql.JSON),
         sa.Column('instance_active', sa.Boolean, default=False)
     )
-    
+
     # Create orchestrator_executions table
     op.create_table(
         'orchestrator_executions',
@@ -50,12 +51,13 @@ def upgrade():
         sa.Column('pyrit_memory_session', sa.String(255)),
         sa.Column('conversation_ids', postgresql.JSON)
     )
-    
+
     # Create indexes
     op.create_index('idx_orchestrator_configs_type', 'orchestrator_configurations', ['orchestrator_type'])
     op.create_index('idx_orchestrator_configs_status', 'orchestrator_configurations', ['status'])
     op.create_index('idx_orchestrator_executions_orchestrator', 'orchestrator_executions', ['orchestrator_id'])
     op.create_index('idx_orchestrator_executions_status', 'orchestrator_executions', ['status'])
+
 
 def downgrade():
     # Drop indexes
@@ -63,7 +65,7 @@ def downgrade():
     op.drop_index('idx_orchestrator_executions_orchestrator')
     op.drop_index('idx_orchestrator_configs_status')
     op.drop_index('idx_orchestrator_configs_type')
-    
+
     # Drop tables
     op.drop_table('orchestrator_executions')
     op.drop_table('orchestrator_configurations')

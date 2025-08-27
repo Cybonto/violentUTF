@@ -50,7 +50,7 @@ if [ -n "${APISIX_ADMIN_KEY:-}" ]; then
     routes=$(curl -s -H "X-API-KEY: $APISIX_ADMIN_KEY" \
         http://localhost:9180/apisix/admin/routes | \
         jq -r '.list[] | select(.value.uri | contains("/ai/openapi/gsai-api-1"))')
-    
+
     if [ -n "$routes" ]; then
         echo -e "${GREEN}✓ Found OpenAPI routes${NC}"
         echo "$routes" | jq -r '.value | {uri, methods, upstream, plugins: .plugins | keys}'
@@ -75,7 +75,7 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
         -H "apikey: $VIOLENTUTF_API_KEY" \
         -H "Content-Type: application/json" \
         -d '{"model": "claude_3_5_sonnet", "messages": [{"role": "user", "content": "test"}]}')
-    
+
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
     body=$(echo "$response" | sed '/HTTP_CODE:/d')
     echo "   Response: HTTP $http_code"
@@ -83,14 +83,14 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
         echo "   Body: $body" | head -100
     fi
     echo
-    
+
     # Test 2: Models endpoint through APISIX
     echo "2. Testing models endpoint through APISIX:"
     echo "   GET /ai/openapi/gsai-api-1/api/v1/models"
     response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
         http://localhost:9080/ai/openapi/gsai-api-1/api/v1/models \
         -H "apikey: $VIOLENTUTF_API_KEY")
-    
+
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
     if [ "$http_code" = "200" ]; then
         echo -e "   Response: ${GREEN}HTTP $http_code - Models endpoint works${NC}"
@@ -98,7 +98,7 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
         echo -e "   Response: ${RED}HTTP $http_code${NC}"
     fi
     echo
-    
+
     # Test 3: Check if it's a method issue
     echo "3. Testing with GET method:"
     echo "   GET /ai/openapi/gsai-api-1/api/v1/chat/completions"
@@ -107,7 +107,7 @@ if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
         -H "apikey: $VIOLENTUTF_API_KEY")
     echo "   Response: HTTP $response"
     echo
-    
+
 else
     echo -e "${RED}VIOLENTUTF_API_KEY not found${NC}"
 fi

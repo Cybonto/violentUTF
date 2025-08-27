@@ -1,14 +1,17 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """FastAPI Endpoint Introspection for MCP Tool Discovery"""
 
 import inspect
 import logging
-from typing import Any, Dict, List, Optional, Union, get_type_hints
+from typing import Any, Dict, List, Optional, Union
 
-from app.core.config import settings
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
-from mcp.types import Tool
-from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +137,7 @@ class EndpointIntrospector:
             }
 
         except Exception as e:
-            logger.error(f"Error extracting endpoint info for {route.path} {method}: {e}")
+            logger.error("Error extracting endpoint info for %s %s: %s", route.path, method, e)
             return None
 
     def _generate_tool_name(self, path: str, method: str) -> str:
@@ -236,14 +239,14 @@ class EndpointIntrospector:
                         schema = param.annotation.model_json_schema()
                         return {"type": "object", "schema": schema, "model_name": param.annotation.__name__}
                     except Exception as e:
-                        logger.warning(f"Could not extract schema for {param.annotation}: {e}")
+                        logger.warning("Could not extract schema for %s: %s", param.annotation, e)
 
         return None
 
     def _extract_response_model(self, route: APIRoute) -> Optional[str]:
         """Extract response model information"""
         if hasattr(route, "response_model") and route.response_model:
-            return route.response_model.__name__
+            return str(route.response_model.__name__)
         return None
 
     def _python_type_to_json_type(self, python_type) -> str:

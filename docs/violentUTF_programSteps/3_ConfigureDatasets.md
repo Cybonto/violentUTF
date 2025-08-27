@@ -414,7 +414,7 @@ await memory.add_seed_prompts_to_memory_async(
 
 ### Data Flow:
 ```
-Configure Dataset → Finalize → Save Options → 
+Configure Dataset → Finalize → Save Options →
 ├── Session Storage (Temporary)
 └── PyRIT Memory (Persistent) → Named Collections → Cross-session Access
 ```

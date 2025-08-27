@@ -1,7 +1,13 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """MCP Orchestrator Management Tools"""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 from urllib.parse import urljoin
 
 import httpx
@@ -488,18 +494,19 @@ class OrchestratorManagementTools:
         self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Execute an orchestrator management tool"""
-        logger.info(f"Executing orchestrator tool: {tool_name}")
+        logger.info("Executing orchestrator tool: %s", tool_name)
 
         try:
             # Route to appropriate execution method
             execution_method = getattr(self, f"_execute_{tool_name}", None)
             if execution_method:
-                return await execution_method(arguments)
+                result = await execution_method(arguments)
+                return cast(Dict[str, Any], result)
             else:
                 return {"error": "unknown_tool", "message": f"Unknown orchestrator tool: {tool_name}"}
 
         except Exception as e:
-            logger.error(f"Error executing orchestrator tool {tool_name}: {e}")
+            logger.error("Error executing orchestrator tool %s: %s", tool_name, e)
             return {"error": "execution_failed", "message": str(e), "tool_name": tool_name}
 
     # Individual execution methods for each tool
@@ -571,7 +578,7 @@ class OrchestratorManagementTools:
             try:
                 response = await client.request(method=method, url=url, headers=headers, **kwargs)
 
-                logger.debug(f"Orchestrator API call: {method} {url} -> {response.status_code}")
+                logger.debug("Orchestrator API call: %s %s -> %s", method, url, response.status_code)
 
                 if response.status_code >= 400:
                     error_detail = "Unknown error"
@@ -587,16 +594,16 @@ class OrchestratorManagementTools:
                         "status_code": response.status_code,
                     }
 
-                return response.json()
+                return cast(Dict[str, Any], response.json())
 
             except httpx.TimeoutException:
-                logger.error(f"Timeout on orchestrator API call: {url}")
+                logger.error("Timeout on orchestrator API call: %s", url)
                 return {"error": "timeout", "message": "Orchestrator API call timed out"}
             except httpx.ConnectError:
-                logger.error(f"Connection error on orchestrator API call: {url}")
+                logger.error("Connection error on orchestrator API call: %s", url)
                 return {"error": "connection_error", "message": "Could not connect to ViolentUTF API"}
             except Exception as e:
-                logger.error(f"Unexpected error on orchestrator API call {url}: {e}")
+                logger.error("Unexpected error on orchestrator API call %s: %s", url, e)
                 return {"error": "unexpected_error", "message": str(e)}
 
 

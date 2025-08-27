@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 DuckDB Manager for ViolentUTF Configuration Storage
 Extends existing PyRIT database functionality to support configuration persistence
@@ -8,8 +14,6 @@ import json
 import logging
 import os
 import uuid
-from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import duckdb
@@ -68,7 +72,7 @@ class DuckDBManager:
         except Exception as e:
             # If there's a schema conflict, log it and recreate the database
             if "FOREIGN KEY" in str(e) or "CASCADE" in str(e):
-                logger.warning(f"Schema conflict detected in {self.db_path}, recreating database: {e}")
+                logger.warning("Schema conflict detected in %s, recreating database: %s", self.db_path, e)
                 # Remove the problematic database file
                 if os.path.exists(self.db_path):
                     os.remove(self.db_path)
@@ -78,7 +82,7 @@ class DuckDBManager:
             else:
                 raise
 
-        logger.info(f"DuckDB tables initialized for user {self.username} at {self.db_path}")
+        logger.info("DuckDB tables initialized for user %s at %s", self.username, self.db_path)
 
     def _create_tables(self, conn):
         """Create database tables"""
@@ -344,7 +348,7 @@ class DuckDBManager:
                 return bool(conn.rowcount > 0)
 
         except ValueError as e:
-            logger.error(f"Security validation failed in update_generator: {e}")
+            logger.error("Security validation failed in update_generator: %s", e)
             raise
 
     def delete_generator(self, generator_id: str) -> bool:
@@ -359,7 +363,7 @@ class DuckDBManager:
             ).fetchone()
 
             if result[0] == 0:
-                logger.warning(f"Generator {generator_id} not found for user {self.username}")
+                logger.warning("Generator %s not found for user %s", generator_id, self.username)
                 return False
 
             # Delete the generator
@@ -704,7 +708,7 @@ class DuckDBManager:
                     count = self._get_table_count(conn, table)
                     stats[table] = count
                 except ValueError as e:
-                    logger.warning(f"Invalid table name in stats: {e}")
+                    logger.warning("Invalid table name in stats: %s", e)
                     stats[table] = 0
                 except Exception:
                     stats[table] = 0

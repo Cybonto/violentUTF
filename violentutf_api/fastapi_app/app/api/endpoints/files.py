@@ -1,18 +1,23 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 File management endpoints
 """
 
 import os
-import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from app.core.auth import get_current_user
 from app.models.auth import User
 from app.schemas.files import FileInfo, FileListResponse, FileMetadataResponse, FileUploadResponse
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
 router = APIRouter()
@@ -83,7 +88,7 @@ async def upload_file(
 
         return FileUploadResponse(
             file_id=file_id,
-            filename=file.filename,
+            filename=file.filename or "unknown_file",
             size_bytes=len(content),
             content_type=file.content_type or "application/octet-stream",
             uploaded_at=datetime.now(),

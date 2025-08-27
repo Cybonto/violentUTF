@@ -1,12 +1,19 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Session management endpoints for user state persistence
 """
 
 import json
+import logging
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
@@ -15,6 +22,7 @@ from app.schemas.sessions import SessionSchemaResponse, SessionStateResponse, Up
 from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 # DuckDB storage replaces in-memory storage
 # _session_storage: Dict[str, Dict[str, Any]] = {} - REMOVED
@@ -62,7 +70,7 @@ def save_session_data(username: str, session_data: Dict[str, Any]) -> None:
         with open(session_file, "w") as f:
             json.dump(session_data, f, indent=2, default=str)
     except Exception as e:
-        print(f"Error saving session data: {e}")
+        logger.error(f"Error saving session data: {e}")
 
 
 @router.get("", response_model=SessionStateResponse)

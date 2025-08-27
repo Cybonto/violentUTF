@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import asyncio
 import json
 import os
@@ -410,7 +416,7 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
     severity_breakdown = dict(severity_counts)
 
     # Scorer performance
-    scorer_performance = defaultdict(lambda: {"total": 0, "violations": 0, "avg_score": 0})
+    scorer_performance: Dict[str, Dict[str, int]] = defaultdict(lambda: {"total": 0, "violations": 0, "avg_score": 0})
     for result in results:
         scorer = result["scorer_name"]
         scorer_performance[scorer]["total"] += 1
@@ -428,7 +434,7 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
                 stats["avg_score"] /= stats["total"]
 
     # Generator risk profile
-    generator_risk = defaultdict(lambda: {"total": 0, "critical": 0, "high": 0})
+    generator_risk: Dict[str, Dict[str, int]] = defaultdict(lambda: {"total": 0, "critical": 0, "high": 0})
     for result in results:
         generator = result["generator_name"]
         generator_risk[generator]["total"] += 1

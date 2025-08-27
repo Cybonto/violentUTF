@@ -1,18 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import asyncio
 import inspect
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type
 
-from pyrit.memory import CentralMemory, MemoryInterface
-from pyrit.models import PromptRequestPiece, PromptRequestResponse, SeedPrompt
+from pyrit.memory import CentralMemory, MemoryInterface  # noqa: F401
+from pyrit.models import PromptRequestPiece, PromptRequestResponse, SeedPrompt  # noqa: F401
 from pyrit.orchestrator import Orchestrator, PromptSendingOrchestrator
 from pyrit.prompt_converter import PromptConverter
-from pyrit.prompt_target import PromptChatTarget, PromptTarget
+from pyrit.prompt_target import PromptChatTarget, PromptTarget  # noqa: F401
 from pyrit.score.scorer import Scorer
 
 logger = logging.getLogger(__name__)
@@ -52,15 +51,16 @@ class PyRITOrchestratorService:
 
             if memory is not None:
                 # Debug: log memory object details
-                logger.info(f"Memory object type: {type(memory)}")
+                logger.info("Memory object type: %s", type(memory))
                 logger.info("Memory available: Global PyRIT memory instance exists")
                 return True
             else:
                 # No global memory - this is fine, orchestrators can use their own memory
                 logger.info("PyRIT memory validation: No global memory, using per - orchestrator memory (this is fine)")
                 return True
-        except Exception as e:
-            logger.error(f"PyRIT memory validation failed: {e}")
+        except (AttributeError, RuntimeError, OSError) as e:
+            # Handle memory access errors, runtime issues, and database connection errors
+            logger.error("PyRIT memory validation failed: %s", e)
             return False
 
     def _discover_orchestrator_types(self) -> Dict[str, Type[Orchestrator]]:
@@ -167,7 +167,7 @@ class PyRITOrchestratorService:
             api_memory = DuckDBMemory(db_path=api_memory_file)
             CentralMemory.set_memory_instance(api_memory)
             self.memory = api_memory  # Update service memory reference
-            logger.info(f"Created API - specific memory instance at: {api_memory_file}")
+            logger.info("Created API - specific memory instance at: %s", api_memory_file)
 
         # Validate memory access (now should always return True)
         if not self.validate_memory_access():
@@ -180,25 +180,29 @@ class PyRITOrchestratorService:
         orchestrator_class = self._orchestrator_registry[orchestrator_type]
 
         try:
-            logger.info(f"Creating {orchestrator_type} with resolved params: {list(resolved_params.keys())}")
+            logger.info("Creating %s with resolved params: %s", orchestrator_type, list(resolved_params.keys()))
 
             # Debug: Show the actual resolved parameters for troubleshooting
             for param_name, param_value in resolved_params.items():
                 if param_name == "scorers":
                     logger.info(
-                        f"Scorers parameter: {len(param_value) if isinstance(param_value, list) else 'not a list'} scorer(s)"
+                        "Scorers parameter: %s scorer(s)",
+                        len(param_value) if isinstance(param_value, list) else "not a list",
                     )
                     for i, scorer in enumerate(param_value if isinstance(param_value, list) else []):
                         logger.info(
-                            f"  Scorer {i + 1}: {type(scorer).__name__} - {getattr(scorer, 'scorer_name', 'Unknown')}"
+                            "  Scorer %s: %s - %s",
+                            i + 1,
+                            type(scorer).__name__,
+                            getattr(scorer, "scorer_name", "Unknown"),
                         )
                 elif hasattr(param_value, "__class__"):
-                    logger.info(f"Parameter {param_name}: {type(param_value).__name__}")
+                    logger.info("Parameter %s: %s", param_name, type(param_value).__name__)
                 else:
-                    logger.info(f"Parameter {param_name}: {type(param_value)} = {param_value}")
+                    logger.info("Parameter %s: %s = %s", param_name, type(param_value), param_value)
 
             orchestrator_instance = orchestrator_class(**resolved_params)
-            logger.info(f"Successfully created {orchestrator_type} instance")
+            logger.info("Successfully created %s instance", orchestrator_type)
 
             # Debug: Check what scorers are actually attached to the orchestrator
             for attr_name in ["scorers", "_scorers"]:
@@ -206,18 +210,21 @@ class PyRITOrchestratorService:
                     attr_value = getattr(orchestrator_instance, attr_name)
                     if attr_value:
                         if isinstance(attr_value, list):
-                            logger.info(f"Orchestrator has {attr_name}: {len(attr_value)} scorer(s)")
+                            logger.info("Orchestrator has %s: %s scorer(s)", attr_name, len(attr_value))
                             for i, scorer in enumerate(attr_value):
                                 logger.info(
-                                    f"  Scorer {i + 1}: {type(scorer).__name__} - {getattr(scorer, 'scorer_name', 'Unknown')}"
+                                    "  Scorer %s: %s - %s",
+                                    i + 1,
+                                    type(scorer).__name__,
+                                    getattr(scorer, "scorer_name", "Unknown"),
                                 )
                         else:
-                            logger.info(f"Orchestrator has {attr_name}: {type(attr_value).__name__}")
+                            logger.info("Orchestrator has %s: %s", attr_name, type(attr_value).__name__)
                     else:
-                        logger.info(f"Orchestrator has {attr_name}: None/Empty")
+                        logger.info("Orchestrator has %s: None/Empty", attr_name)
 
         except Exception as e:
-            logger.error(f"Failed to create orchestrator instance: {e}", exc_info=True)
+            logger.error("Failed to create orchestrator instance: %s", e, exc_info=True)
             raise RuntimeError(f"Failed to create {orchestrator_type}: {str(e)}") from e
 
         # Store instance
@@ -230,15 +237,15 @@ class PyRITOrchestratorService:
                 for scorer in param_value:
                     if isinstance(scorer, ConfiguredScorerWrapper):
                         tracked_scorers.append(scorer)
-                        logger.info(f"🎯 Tracking ConfiguredScorerWrapper: {scorer.scorer_name}")
+                        logger.info("🎯 Tracking ConfiguredScorerWrapper: %s", scorer.scorer_name)
 
         self._orchestrator_scorers[orchestrator_id] = tracked_scorers
-        logger.info(f"🎯 Stored {len(tracked_scorers)} scorers for orchestrator {orchestrator_id}")
+        logger.info("🎯 Stored %s scorers for orchestrator %s", len(tracked_scorers), orchestrator_id)
 
-        logger.info(f"Created {orchestrator_type} instance with ID: {orchestrator_id}")
+        logger.info("Created %s instance with ID: %s", orchestrator_type, orchestrator_id)
         return orchestrator_id
 
-    async def _reload_orchestrator_from_db(self, orchestrator_id: str, user_context: str = None) -> bool:
+    async def _reload_orchestrator_from_db(self, orchestrator_id: str, user_context: Optional[str] = None) -> bool:
         """Reload orchestrator instance from database configuration"""
         try:
             from uuid import UUID
@@ -255,11 +262,17 @@ class PyRITOrchestratorService:
                 config = result.scalar_one_or_none()
 
                 if not config:
-                    logger.error(f"Orchestrator configuration not found in database: {orchestrator_id}")
+                    logger.error("Orchestrator configuration not found in database: %s", orchestrator_id)
                     return False
 
                 # Recreate orchestrator instance from database config
-                orchestrator_config = {"orchestrator_type": config.orchestrator_type, "parameters": config.parameters}
+                # Cast SQLAlchemy columns to actual values for mypy
+                from typing import cast
+
+                # Force cast the JSON column to dict - SQLAlchemy JSON columns should be dict
+                parameters = cast(Dict[str, Any], config.parameters if config.parameters is not None else {})
+
+                orchestrator_config = {"orchestrator_type": str(config.orchestrator_type), "parameters": parameters}
 
                 # Ensure memory is available
                 memory = self._get_memory()
@@ -276,27 +289,30 @@ class PyRITOrchestratorService:
                     api_memory = DuckDBMemory(db_path=api_memory_file)
                     CentralMemory.set_memory_instance(api_memory)
                     self.memory = api_memory
-                    logger.info(f"Created API - specific memory for reloaded orchestrator at: {api_memory_file}")
+                    logger.info("Created API - specific memory for reloaded orchestrator at: %s", api_memory_file)
 
-                # Resolve parameters and create instance
-                resolved_params = await self._resolve_orchestrator_parameters(
-                    orchestrator_config["parameters"], user_context
-                )
-                orchestrator_class = self._orchestrator_registry[orchestrator_config["orchestrator_type"]]
+                # Resolve parameters and create instance - pass parameters directly to avoid typing issues
+                resolved_params = await self._resolve_orchestrator_parameters(parameters, user_context)
+                orchestrator_type = str(orchestrator_config["orchestrator_type"])
+                orchestrator_class = self._orchestrator_registry[orchestrator_type]
                 orchestrator_instance = orchestrator_class(**resolved_params)
 
                 # Store instance
                 self._orchestrator_instances[orchestrator_id] = orchestrator_instance
-                logger.info(f"Successfully reloaded orchestrator {orchestrator_id} from database")
+                logger.info("Successfully reloaded orchestrator %s from database", orchestrator_id)
 
                 return True
 
-        except Exception as e:
-            logger.error(f"Failed to reload orchestrator from database: {e}")
+        except (ValueError, KeyError, AttributeError, TypeError) as e:
+            # Handle database lookup errors, missing config fields, and orchestrator creation errors
+            logger.error("Failed to reload orchestrator from database: %s", e)
             return False
 
+        # Fallback return (should never reach here due to async for loop structure)
+        return False
+
     async def _resolve_orchestrator_parameters(
-        self, parameters: Dict[str, Any], user_context: str = None
+        self, parameters: Dict[str, Any], user_context: Optional[str] = None
     ) -> Dict[str, Any]:
         """Resolve parameter references to actual objects"""
         resolved = {}
@@ -324,7 +340,7 @@ class PyRITOrchestratorService:
                             scorer_instance = ConfiguredScorerWrapper(scorer_info["scorer_config"])
                             resolved_scorers.append(scorer_instance)
                             logger.info(
-                                f"🎯 Created ConfiguredScorerWrapper for '{scorer_instance.scorer_name}' via config"
+                                "🎯 Created ConfiguredScorerWrapper for '%s' via config", scorer_instance.scorer_name
                             )
                         else:
                             # Fallback to lookup by name
@@ -332,11 +348,11 @@ class PyRITOrchestratorService:
                             if scorer_name:
                                 scorer_instance = await self._create_scorer_instance(scorer_name, user_context)
                                 resolved_scorers.append(scorer_instance)
-                                logger.info(f"🎯 Created ConfiguredScorerWrapper for '{scorer_name}' via lookup")
+                                logger.info("🎯 Created ConfiguredScorerWrapper for '%s' via lookup", scorer_name)
 
                 # PromptSendingOrchestrator expects 'scorers' parameter
                 resolved["scorers"] = resolved_scorers
-                logger.info(f"🎯 Set 'scorers' parameter with {len(resolved_scorers)} scorer(s)")
+                logger.info("🎯 Set 'scorers' parameter with %s scorer(s)", len(resolved_scorers))
             elif isinstance(param_value, list) and param_name.endswith("_configurations"):
                 # Handle converter configurations
                 resolved[param_name] = await self._resolve_converter_configurations(param_value)
@@ -346,30 +362,30 @@ class PyRITOrchestratorService:
 
         return resolved
 
-    async def _create_generator_target(self, generator_name: str, user_context: str = None) -> PromptTarget:
+    async def _create_generator_target(self, generator_name: str, user_context: Optional[str] = None) -> PromptTarget:
         """Create PromptTarget from configured generator"""
         # Import generator service functions directly
         from app.services.generator_integration_service import get_generator_by_name
 
         # Use the provided user context to access the user's generators
-        logger.info(f"Looking up generator '{generator_name}' for user context: {user_context}")
+        logger.info("Looking up generator '%s' for user context: %s", generator_name, user_context)
         generator_config = await get_generator_by_name(generator_name, user_context)
 
         if not generator_config:
             # Log more details about the failure
-            logger.error(f"Generator '{generator_name}' not found for user '{user_context}'")
+            logger.error("Generator '%s' not found for user '%s'", generator_name, user_context)
             raise ValueError(
                 f"Generator '{generator_name}' not found for user '{user_context}'. Please ensure this generator was created by the same user account and is available in the 'Configure Generators' page."
             )
 
         # Log the generator config before creating target
-        logger.info(f"Creating ConfiguredGeneratorTarget with config: {generator_config}")
-        logger.info(f"Generator type from config: {generator_config.get('type')}")
+        logger.info("Creating ConfiguredGeneratorTarget with config: %s", generator_config)
+        logger.info("Generator type from config: %s", generator_config.get("type"))
 
         # Create ConfiguredGeneratorTarget
         return ConfiguredGeneratorTarget(generator_config)
 
-    async def _create_scorer_instance(self, scorer_name: str, user_context: str = None) -> Scorer:
+    async def _create_scorer_instance(self, scorer_name: str, user_context: Optional[str] = None) -> Scorer:
         """Create Scorer from configured scorer"""
         # Import scorer service functions directly
         from app.services.scorer_integration_service import get_scorer_by_name
@@ -392,12 +408,12 @@ class PyRITOrchestratorService:
         try:
             # Get user context from execution config
             user_context = execution_config.get("user_context")
-            logger.info(f"Executing orchestrator {orchestrator_id} for user {user_context}")
+            logger.info("Executing orchestrator %s for user %s", orchestrator_id, user_context)
 
             # Check if orchestrator instance exists in memory
             if orchestrator_id not in self._orchestrator_instances:
                 # Try to reload orchestrator from database
-                logger.info(f"Orchestrator {orchestrator_id} not in memory, attempting to reload from database")
+                logger.info("Orchestrator %s not in memory, attempting to reload from database", orchestrator_id)
                 success = await self._reload_orchestrator_from_db(orchestrator_id, user_context)
                 if not success:
                     raise ValueError(f"Orchestrator not found: {orchestrator_id}")
@@ -411,7 +427,9 @@ class PyRITOrchestratorService:
             if execution_metadata:
                 self._orchestrator_metadata[orchestrator_id] = execution_metadata
                 logger.info(
-                    f"Stored execution metadata for orchestrator {orchestrator_id}: {list(execution_metadata.keys())}"
+                    "Stored execution metadata for orchestrator %s: %s",
+                    orchestrator_id,
+                    list(execution_metadata.keys()),
                 )
 
                 # Update scorers with metadata if they exist
@@ -419,9 +437,9 @@ class PyRITOrchestratorService:
                     for scorer in self._orchestrator_scorers[orchestrator_id]:
                         if isinstance(scorer, ConfiguredScorerWrapper):
                             scorer.execution_metadata = execution_metadata
-                            logger.info(f"Updated scorer '{scorer.scorer_name}' with execution metadata")
+                            logger.info("Updated scorer '%s' with execution metadata", scorer.scorer_name)
 
-            logger.info(f"Executing {execution_type} with input: {input_data}")
+            logger.info("Executing %s with input: %s", execution_type, input_data)
 
             # Execute based on orchestrator type and input
             if isinstance(orchestrator, PromptSendingOrchestrator):
@@ -432,7 +450,7 @@ class PyRITOrchestratorService:
                 raise ValueError(f"Unsupported orchestrator type for execution: {type(orchestrator)}")
 
         except Exception as e:
-            logger.error(f"Orchestrator execution failed: {e}", exc_info=True)
+            logger.error("Orchestrator execution failed: %s", e, exc_info=True)
             raise
 
     async def _execute_prompt_sending_orchestrator(
@@ -461,30 +479,30 @@ class PyRITOrchestratorService:
             sample_size = input_data.get("sample_size")
             memory_labels = input_data.get("memory_labels", {})
 
-            logger.info(f"Loading dataset prompts for dataset_id: {dataset_id}, sample_size: {sample_size}")
+            logger.info("Loading dataset prompts for dataset_id: %s, sample_size: %s", dataset_id, sample_size)
 
             # Load dataset prompts
             user_context = execution_config.get("user_context")
             dataset_prompts = await self._load_dataset_prompts(dataset_id, sample_size, user_context)
 
-            logger.info(f"Loaded {len(dataset_prompts)} prompts from dataset {dataset_id}")
+            logger.info("Loaded %s prompts from dataset %s", len(dataset_prompts), dataset_id)
 
             if not dataset_prompts:
-                logger.error(f"No prompts loaded from dataset {dataset_id}")
+                logger.error("No prompts loaded from dataset %s", dataset_id)
                 raise ValueError(
                     f"Dataset {dataset_id} returned no prompts. Please check if the dataset exists and contains prompts."
                 )
 
             # Log sample prompts for debugging
-            logger.info(f"Sample prompts: {dataset_prompts[:2]}")
+            logger.info("Sample prompts: %s", dataset_prompts[:2])
 
             # Add dataset info to memory labels
             memory_labels.update({"dataset_id": dataset_id, "execution_type": "dataset_testing"})
 
-            logger.info(f"Sending {len(dataset_prompts)} prompts to orchestrator")
+            logger.info("Sending %s prompts to orchestrator", len(dataset_prompts))
 
             try:
-                logger.info(f"🎯 About to execute orchestrator.send_prompts_async with {len(dataset_prompts)} prompts")
+                logger.info("🎯 About to execute orchestrator.send_prompts_async with %s prompts", len(dataset_prompts))
 
                 # Check scorers one more time before execution
                 for attr_name in ["scorers", "_scorers"]:
@@ -504,7 +522,7 @@ class PyRITOrchestratorService:
                     prompt_list=dataset_prompts, prompt_type="text", memory_labels=memory_labels
                 )
 
-                logger.info(f"🎯 Orchestrator execution completed, got {len(results)} results")
+                logger.info("🎯 Orchestrator execution completed, got %s results", len(results))
 
                 # Check scorer state after execution
                 for attr_name in ["scorers", "_scorers"]:
@@ -523,7 +541,7 @@ class PyRITOrchestratorService:
                 else:
                     setattr(orchestrator, "_last_sent_prompts", dataset_prompts)
             except Exception as e:
-                logger.error(f"Failed to send prompts to orchestrator: {e}", exc_info=True)
+                logger.error("Failed to send prompts to orchestrator: %s", e, exc_info=True)
                 # Re - raise with more context
                 raise RuntimeError(f"Orchestrator execution failed during prompt sending: {str(e)}") from e
 
@@ -550,20 +568,20 @@ class PyRITOrchestratorService:
             }
 
         # Format results for API response
-        logger.info(f"Orchestrator execution completed: {len(results)} results returned")
+        logger.info("Orchestrator execution completed: %s results returned", len(results))
         for i, result in enumerate(results):
-            logger.info(f"Result {i + 1}: {len(result.request_pieces)} pieces")
+            logger.info("Result %s: %s pieces", i + 1, len(result.request_pieces))
             for j, piece in enumerate(result.request_pieces):
                 logger.info(
                     f"  Piece {j + 1}: role={piece.role}, has_value={bool(piece.converted_value)}, length={len(piece.converted_value) if piece.converted_value else 0}"
                 )
 
         formatted_results = self._format_execution_results(orchestrator, results, execution_type, input_data)
-        logger.info(f"Formatted results keys: {list(formatted_results.keys())}")
-        logger.info(f"Has execution_summary: {'execution_summary' in formatted_results}")
-        logger.info(f"Has prompt_request_responses: {'prompt_request_responses' in formatted_results}")
+        logger.info("Formatted results keys: %s", list(formatted_results.keys()))
+        logger.info("Has execution_summary: %s", "execution_summary" in formatted_results)
+        logger.info("Has prompt_request_responses: %s", "prompt_request_responses" in formatted_results)
         if "prompt_request_responses" in formatted_results:
-            logger.info(f"Number of prompt_request_responses: {len(formatted_results['prompt_request_responses'])}")
+            logger.info("Number of prompt_request_responses: %s", len(formatted_results["prompt_request_responses"]))
 
         return formatted_results
 
@@ -581,8 +599,9 @@ class PyRITOrchestratorService:
 
                 dataset_prompts = await get_dataset_prompts(dataset_id, sample_size, user_context)
                 return dataset_prompts
-        except Exception as e:
-            logger.error(f"Failed to load dataset prompts for {dataset_id}: {e}")
+        except (ValueError, KeyError, OSError, ImportError) as e:
+            # Handle dataset loading errors, file access errors, and import issues
+            logger.error("Failed to load dataset prompts for %s: %s", dataset_id, e)
             # Fallback to service method
             from app.services.dataset_integration_service import get_dataset_prompts
 
@@ -591,7 +610,7 @@ class PyRITOrchestratorService:
     async def _load_memory_dataset_prompts(self, dataset_id: str, sample_size: Optional[int] = None) -> List[str]:
         """Load prompts from PyRIT memory dataset using real database access"""
         try:
-            logger.info(f"Loading real memory dataset prompts for {dataset_id}")
+            logger.info("Loading real memory dataset prompts for %s", dataset_id)
 
             # Use the shared memory dataset loading function from dataset integration service
             from app.services.dataset_integration_service import _load_real_memory_dataset_prompts
@@ -603,14 +622,15 @@ class PyRITOrchestratorService:
                 if sample_size and len(prompts) > sample_size:
                     prompts = prompts[:sample_size]
 
-                logger.info(f"Loaded {len(prompts)} real prompts from PyRIT memory for dataset {dataset_id}")
+                logger.info("Loaded %s real prompts from PyRIT memory for dataset %s", len(prompts), dataset_id)
                 return prompts
             else:
-                logger.warning(f"No real prompts found in PyRIT memory for dataset {dataset_id}")
+                logger.warning("No real prompts found in PyRIT memory for dataset %s", dataset_id)
                 return []
 
-        except Exception as e:
-            logger.error(f"Failed to load PyRIT memory dataset {dataset_id}: {e}")
+        except (OSError, ValueError, AttributeError) as e:
+            # Handle database errors, data parsing errors, and memory access issues
+            logger.error("Failed to load PyRIT memory dataset %s: %s", dataset_id, e)
             # Return empty list instead of fallback mock data
             return []
 
@@ -636,7 +656,7 @@ class PyRITOrchestratorService:
 
         # Calculate execution summary
         total_prompts = len(results)
-        logger.info(f"Formatting results: {total_prompts} total results")
+        logger.info("Formatting results: %s total results", total_prompts)
 
         successful_responses = sum(
             1
@@ -645,7 +665,7 @@ class PyRITOrchestratorService:
         )
         failed_responses = total_prompts - successful_responses
 
-        logger.info(f"Result summary: {successful_responses} successful, {failed_responses} failed")
+        logger.info("Result summary: %s successful, %s failed", successful_responses, failed_responses)
 
         # Calculate timing (approximate)
         start_time = (
@@ -679,31 +699,34 @@ class PyRITOrchestratorService:
 
             if user_piece:
                 prompt_text = user_piece.original_value
-                logger.info(f"Extracting prompt from user piece: '{prompt_text[:100]}...' (length: {len(prompt_text)})")
+                logger.info(
+                    "Extracting prompt from user piece: '%s...' (length: %s)", prompt_text[:100], len(prompt_text)
+                )
             else:
-                logger.warning(f"No user piece found in response {i}")
+                logger.warning("No user piece found in response %s", i)
                 # Fallback to stored prompts if available
                 if i < len(stored_prompts):
                     prompt_text = stored_prompts[i]
-                    logger.info(f"Using stored prompt {i}: '{prompt_text[:100]}...' (length: {len(prompt_text)})")
+                    logger.info("Using stored prompt %s: '%s...' (length: %s)", i, prompt_text[:100], len(prompt_text))
                 else:
-                    logger.warning(f"No stored prompt available for response {i}")
+                    logger.warning("No stored prompt available for response %s", i)
 
             if assistant_piece:
                 response_text = assistant_piece.converted_value
                 logger.info(
-                    f"Extracting response from assistant piece: '{response_text[:100]}...' (length: {len(response_text)})"
+                    f"Extracting response from assistant piece: '{response_text[:100]}...' "
+                    f"(length: {len(response_text)})"
                 )
             else:
-                logger.warning(f"No assistant piece found in response {i}")
+                logger.warning("No assistant piece found in response %s", i)
 
                 # Calculate response time if both timestamps available
-                if user_piece and user_piece.timestamp and assistant_piece.timestamp:
+                if user_piece and user_piece.timestamp and assistant_piece and assistant_piece.timestamp:
                     time_diff = assistant_piece.timestamp - user_piece.timestamp
                     response_time_ms = int(time_diff.total_seconds() * 1000)
 
             # Build formatted response with better structure for UI
-            formatted_response = {
+            formatted_response: Dict[str, Any] = {
                 "request": {
                     "prompt": prompt_text,
                     "conversation_id": response.request_pieces[0].conversation_id if response.request_pieces else None,
@@ -777,7 +800,8 @@ class PyRITOrchestratorService:
                     "score_metadata": score.score_metadata if hasattr(score, "score_metadata") else "{}",
                 }
                 formatted_scores.append(formatted_score)
-        except Exception as e:
+        except (AttributeError, OSError, ValueError) as e:
+            # Handle memory access errors, database errors, and score data parsing errors
             error_msg = f"🚨 Failed to get PyRIT scores: {e}"
             print(error_msg, file=sys.stderr, flush=True)
             logger.error(error_msg)
@@ -811,7 +835,8 @@ class PyRITOrchestratorService:
                 no_track_msg = f"🚨 No tracked scorers found for orchestrator {orchestrator_id}"
                 print(no_track_msg, file=sys.stderr, flush=True)
                 logger.error(no_track_msg)
-        except Exception as e:
+        except (KeyError, AttributeError, TypeError) as e:
+            # Handle scorer tracking errors, missing attributes, and type issues
             track_error_msg = f"🚨 Error accessing tracked scorers: {e}"
             print(track_error_msg, file=sys.stderr, flush=True)
             logger.error(track_error_msg)
@@ -832,7 +857,8 @@ class PyRITOrchestratorService:
             direct_msg = f"🚨 Direct discovery found {direct_count} scores"
             print(direct_msg, file=sys.stderr, flush=True)
             logger.error(direct_msg)
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError) as e:
+            # Handle orchestrator attribute errors, type issues, and data processing errors
             direct_error_msg = f"🚨 Error in direct discovery: {e}"
             print(direct_error_msg, file=sys.stderr, flush=True)
             logger.error(direct_error_msg)
@@ -895,8 +921,8 @@ class PyRITOrchestratorService:
             print(first_score_msg, file=sys.stderr, flush=True)
             logger.error(first_score_msg)
 
-        logger.info(f"Final API response summary: {result['execution_summary']}")
-        logger.error(f"🚨 FINAL RETURN: Returning result with {len(result['scores'])} scores")
+        logger.info("Final API response summary: %s", result["execution_summary"])
+        logger.error("🚨 FINAL RETURN: Returning result with %s scores", len(result["scores"]))
         return result
 
     def get_orchestrator_memory(self, orchestrator_id: str) -> List[Dict[str, Any]]:
@@ -951,7 +977,7 @@ class PyRITOrchestratorService:
             orchestrator = self._orchestrator_instances[orchestrator_id]
             orchestrator.dispose_db_engine()
             del self._orchestrator_instances[orchestrator_id]
-            logger.info(f"Disposed orchestrator: {orchestrator_id}")
+            logger.info("Disposed orchestrator: %s", orchestrator_id)
 
 
 class ConfiguredGeneratorTarget(PromptTarget):
@@ -965,22 +991,22 @@ class ConfiguredGeneratorTarget(PromptTarget):
         self.generator_type = generator_config.get("type") or generator_config.get("generator_type")
 
         # Log the generator configuration for debugging
-        logger.info(f"ConfiguredGeneratorTarget initialized with generator: {self.generator_name}")
-        logger.info(f"Generator type: {self.generator_type}")
-        logger.info(f"Generator config keys: {list(generator_config.keys())}")
+        logger.info("ConfiguredGeneratorTarget initialized with generator: %s", self.generator_name)
+        logger.info("Generator type: %s", self.generator_type)
+        logger.info("Generator config keys: %s", list(generator_config.keys()))
         logger.info(
             f"Generator config values: type={generator_config.get('type')}, generator_type={generator_config.get('generator_type')}"
         )
 
         if not self.generator_type:
-            logger.error(f"Generator '{self.generator_name}' has no type specified! Config: {generator_config}")
+            logger.error("Generator '%s' has no type specified! Config: %s", self.generator_name, generator_config)
             # Default to AI Gateway if type is missing but it has the expected parameters
             if generator_config.get("parameters", {}).get("provider") and generator_config.get("parameters", {}).get(
                 "model"
             ):
                 self.generator_type = "AI Gateway"
                 logger.warning(
-                    f"Defaulting to 'AI Gateway' type based on parameters for generator '{self.generator_name}'"
+                    "Defaulting to 'AI Gateway' type based on parameters for generator '%s'", self.generator_name
                 )
 
     async def send_prompt_async(self, *, prompt_request: PromptRequestResponse) -> PromptRequestResponse:
@@ -1007,31 +1033,38 @@ class ConfiguredGeneratorTarget(PromptTarget):
             # This avoids the need to re - lookup the generator and potential user context issues
             try:
                 logger.info(
-                    f"ConfiguredGeneratorTarget: Executing prompt for generator '{self.generator_name}' (type: {self.generator_type})"
+                    "ConfiguredGeneratorTarget: Executing prompt for generator '%s' (type: %s)",
+                    self.generator_name,
+                    self.generator_type,
                 )
-                logger.debug(f"Generator config: {self.generator_config}")
+                logger.debug("Generator config: %s", self.generator_config)
 
                 # Debug the generator type
                 logger.info(
                     f"Generator type check: type='{self.generator_type}', lower='{self.generator_type.lower() if self.generator_type else 'None'}'"
                 )
-                logger.info(f"Type is None: {self.generator_type is None}")
-                logger.info(f"Type == 'AI Gateway': {self.generator_type == 'AI Gateway'}")
+                logger.info("Type is None: %s", self.generator_type is None)
+                logger.info("Type == 'AI Gateway': %s", self.generator_type == "AI Gateway")
                 logger.info(
-                    f"Lower in list: {self.generator_type.lower() in ['apisix_ai_gateway', 'ai gateway'] if self.generator_type else False}"
+                    "Lower in list: %s",
+                    (
+                        self.generator_type.lower() in ["apisix_ai_gateway", "ai gateway"]
+                        if self.generator_type
+                        else False
+                    ),
                 )
 
                 # Use the resolved generator type (handle both naming conventions, case - insensitive)
                 if self.generator_type and self.generator_type.lower() in ["apisix_ai_gateway", "ai gateway"]:
-                    logger.info(f"Executing APISIX generator for '{self.generator_name}'")
+                    logger.info("Executing APISIX generator for '%s'", self.generator_name)
                     response_data = await _execute_apisix_generator(
                         self.generator_config, user_piece.original_value, user_piece.conversation_id
                     )
                 else:
                     logger.warning(
-                        f"Generator '{self.generator_name}' has type '{self.generator_type}' which is not supported"
+                        "Generator '%s' has type '%s' which is not supported", self.generator_name, self.generator_type
                     )
-                    logger.warning(f"Full generator config: {self.generator_config}")
+                    logger.warning("Full generator config: %s", self.generator_config)
                     logger.warning(
                         f"Type check failed: type={repr(self.generator_type)}, is_none={self.generator_type is None}"
                     )
@@ -1043,16 +1076,19 @@ class ConfiguredGeneratorTarget(PromptTarget):
                     f"Generator execution result: success={response_data.get('success')}, has_response={bool(response_data.get('response'))}"
                 )
                 if not response_data.get("success"):
-                    logger.error(f"Generator failed: {response_data.get('error', 'Unknown error')}")
+                    logger.error("Generator failed: %s", response_data.get("error", "Unknown error"))
 
-            except Exception as e:
-                logger.error(f"ConfiguredGeneratorTarget execution error for {self.generator_name}: {e}", exc_info=True)
+            except (ValueError, KeyError, OSError, ImportError) as e:
+                # Handle generator execution errors, config errors, network issues, and import problems
+                logger.error(
+                    "ConfiguredGeneratorTarget execution error for %s: %s", self.generator_name, e, exc_info=True
+                )
                 # Return error response in the expected format
                 response_data = {"success": False, "response": f"Generator execution error: {str(e)}", "error": str(e)}
 
         # Create PyRIT response pieces
         logger.info(
-            f"Generator {self.generator_name} response: success={response_data.get('success')}, response_length={len(response_data.get('response', ''))}"
+            f"Generator {self.generator_name} response: success={response_data.get('success')}, response_length={len(str(response_data.get('response', '')))}"
         )
 
         # Create assistant response piece
@@ -1077,7 +1113,7 @@ class ConfiguredGeneratorTarget(PromptTarget):
         return {
             "__type__": "ConfiguredGeneratorTarget",
             "generator_name": self.generator_name,
-            "generator_type": self.generator_type,
+            "generator_type": str(self.generator_type) if self.generator_type is not None else "unknown",
         }
 
     def _validate_request(self, prompt_request: PromptRequestPiece) -> None:
@@ -1092,14 +1128,14 @@ class ConfiguredGeneratorTarget(PromptTarget):
 class ConfiguredScorerWrapper(Scorer):
     """Bridge between ViolentUTF configured scorers and PyRIT Scorer"""
 
-    def __init__(self, scorer_config: Dict[str, Any], execution_metadata: Dict[str, Any] = None):
+    def __init__(self, scorer_config: Dict[str, Any], execution_metadata: Optional[Dict[str, Any]] = None):
         super().__init__()
         self.scorer_config = scorer_config
         self.scorer_name = scorer_config["name"]
-        self.scores_collected = []  # Collect scores for API return
+        self.scores_collected: List[Any] = []  # Collect scores for API return
         self.execution_metadata = execution_metadata or {}  # Store execution context
 
-    async def score_async(self, request_response: PromptRequestPiece, *, task: str = None) -> List:
+    async def score_async(self, request_response: PromptRequestPiece, *, task: Optional[str] = None) -> List:
         """Score response using configured scorer"""
         import sys
 
@@ -1114,12 +1150,12 @@ class ConfiguredScorerWrapper(Scorer):
         # PyRIT passes a single PromptRequestPiece, typically the assistant response
         if request_response.role != "assistant":
             # If it's not an assistant response, we can't score it
-            logger.warning(f"🎯 Skipping scoring for role '{request_response.role}' (not assistant)")
+            logger.warning("🎯 Skipping scoring for role '%s' (not assistant)", request_response.role)
             return []
 
         # Execute scorer directly using the config instead of name lookup
         text_to_score = request_response.original_value or request_response.converted_value
-        logger.info(f"🎯 Scoring text: '{text_to_score[:100]}...' (length: {len(text_to_score)})")
+        logger.info("🎯 Scoring text: '%s...' (length: %s)", text_to_score[:100], len(text_to_score))
 
         # Execute scorer based on type from config
         scorer_type = self.scorer_config.get("type", "generic")
@@ -1176,7 +1212,8 @@ class ConfiguredScorerWrapper(Scorer):
         if score_result.get("score_metadata"):
             try:
                 metadata_dict = json.loads(score_result.get("score_metadata", "{}"))
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Handle JSON parsing errors and data access issues
                 metadata_dict = {}
 
         # Add execution metadata if available
@@ -1223,7 +1260,7 @@ class ConfiguredScorerWrapper(Scorer):
         logger.info(
             f"🎯 Collected score {len(self.scores_collected)} for API: {api_score['score_value']} ({api_score['score_category']})"
         )
-        logger.info(f"🎯 Total scores collected by {self.scorer_name}: {len(self.scores_collected)}")
+        logger.info("🎯 Total scores collected by %s: %s", self.scorer_name, len(self.scores_collected))
 
         # EMERGENCY: Use ERROR level AND stderr to ensure it shows up
         collected_msg = f"🚨 SCORE COLLECTED: {self.scorer_name} now has {len(self.scores_collected)} scores"
@@ -1236,7 +1273,7 @@ class ConfiguredScorerWrapper(Scorer):
 
         return [score]
 
-    def validate(self, request_response: PromptRequestPiece, *, task: str = None) -> None:
+    def validate(self, request_response: PromptRequestPiece, *, task: Optional[str] = None) -> None:
         """Validate the prompt request piece for scoring (required by PyRIT Scorer)"""
         if not request_response:
             raise ValueError("PromptRequestPiece cannot be None")

@@ -18,9 +18,9 @@ echo ""
 check_service() {
     local name=$1
     local check_command=$2
-    
+
     echo -n "Checking $name... "
-    
+
     if eval "$check_command" > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Running${NC}"
         return 0
@@ -34,11 +34,11 @@ check_service() {
 check_container() {
     local name=$1
     local container=$2
-    
+
     echo -n "Checking $name... "
-    
+
     status=$(docker ps --filter "name=$container" --format "{{.Status}}" 2>/dev/null | head -1)
-    
+
     if [ -n "$status" ]; then
         if [[ "$status" == *"healthy"* ]]; then
             echo -e "${GREEN}✓ Healthy${NC}"

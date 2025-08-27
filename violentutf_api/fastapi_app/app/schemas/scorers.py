@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Pydantic schemas for scorer management API
 Implements API backend for 4_Configure_Scorers.py page
@@ -6,16 +12,15 @@ SECURITY: Enhanced with comprehensive input validation to prevent injection atta
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from app.core.validation import (
     SecurityLimits,
     ValidationPatterns,
-    create_validation_error,
     sanitize_string,
     validate_generator_parameters,
 )
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, Field, validator
 
 
 # Enums for better type safety
@@ -304,7 +309,9 @@ class ScorerConfigExport(BaseModel):
 class ScorerConfigImport(BaseModel):
     """Model for importing scorer configurations"""
 
-    scorers: List[Dict[str, Any]] = Field(..., max_items=50, description="Scorer configurations to import")
+    scorers: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Scorer configurations to import", max_length=50
+    )
     overwrite_existing: bool = Field(default=False, description="Overwrite existing scorers")
     validate_before_import: bool = Field(default=True, description="Validate before importing")
 

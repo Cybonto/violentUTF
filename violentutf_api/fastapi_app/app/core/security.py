@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Security utilities for JWT token generation and validation
 SECURITY: Enhanced with comprehensive validation to prevent token injection attacks
@@ -11,7 +17,6 @@ import jwt
 from app.core.config import settings
 from app.core.password_policy import PasswordStrength, validate_password_strength
 from app.core.validation import SecurityLimits, sanitize_string, validate_jwt_token
-from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
 logger = logging.getLogger(__name__)
@@ -78,7 +83,7 @@ def decode_token(token: str) -> Dict[str, Any] | None:
         # Validate subject (username/user_id)
         subject = sanitize_string(payload["sub"])
         if len(subject) > SecurityLimits.MAX_USERNAME_LENGTH:
-            logger.warning(f"JWT subject too long: {len(subject)} characters")
+            logger.warning("JWT subject too long: %s characters", len(subject))
             return None
 
         payload["sub"] = subject
@@ -110,7 +115,7 @@ def decode_token(token: str) -> Dict[str, Any] | None:
             except Exception:
                 payload["email"] = None
 
-        logger.debug(f"Successfully validated JWT token for user: {payload.get('sub')}")
+        logger.debug("Successfully validated JWT token for user: %s", payload.get("sub"))
         return dict(payload)
 
     except jwt.ExpiredSignatureError:
@@ -120,13 +125,13 @@ def decode_token(token: str) -> Dict[str, Any] | None:
         logger.warning("JWT token has invalid signature")
         return None
     except jwt.InvalidTokenError as e:
-        logger.warning(f"Invalid JWT token: {str(e)}")
+        logger.warning("Invalid JWT token: %s", str(e))
         return None
     except ValueError as e:
-        logger.warning(f"JWT validation failed: {str(e)}")
+        logger.warning("JWT validation failed: %s", str(e))
         return None
     except Exception as e:
-        logger.error(f"Unexpected error during JWT validation: {str(e)}")
+        logger.error("Unexpected error during JWT validation: %s", str(e))
         return None
 
 
@@ -153,7 +158,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
         return bool(pwd_context.verify(plain_password, hashed_password))
     except Exception as e:
-        logger.error(f"Password verification error: {str(e)}")
+        logger.error("Password verification error: %s", str(e))
         return False
 
 
@@ -180,7 +185,7 @@ def get_password_hash(password: str, username: Optional[str] = None, email: Opti
 
     if not validation_result.is_valid:
         error_msg = "Password does not meet security requirements: " + "; ".join(validation_result.errors)
-        logger.warning(f"Password validation failed: {len(validation_result.errors)} errors")
+        logger.warning("Password validation failed: %s errors", len(validation_result.errors))
         raise ValueError(error_msg)
 
     # Warn about weak passwords but allow them if they pass basic validation
@@ -189,16 +194,17 @@ def get_password_hash(password: str, username: Optional[str] = None, email: Opti
             f"Weak password detected (strength: {validation_result.strength.value}, score: {validation_result.score})"
         )
         if validation_result.warnings:
-            logger.info(f"Password warnings: {'; '.join(validation_result.warnings)}")
+            logger.info("Password warnings: %s", "; ".join(validation_result.warnings))
 
     try:
         hashed = pwd_context.hash(password)
         logger.info(
-            f"Password hashed successfully (strength: {validation_result.strength.value}, score: {validation_result.score})"
+            f"Password hashed successfully (strength: {validation_result.strength.value}, "
+            f"score: {validation_result.score})"
         )
         return str(hashed)
     except Exception as e:
-        logger.error(f"Password hashing error: {str(e)}")
+        logger.error("Password hashing error: %s", str(e))
         raise ValueError("Failed to hash password")
 
 
@@ -291,5 +297,5 @@ def create_api_key_token(
             "permissions": permissions,
         }
     except Exception as e:
-        logger.error(f"Failed to create API key token: {str(e)}")
+        logger.error("Failed to create API key token: %s", str(e))
         raise ValueError("Failed to create API key token")

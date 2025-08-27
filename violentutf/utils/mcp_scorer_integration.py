@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 MCP PyRIT Scorer Integration for Phase 4
 ========================================
@@ -147,7 +153,10 @@ class MCPScorerIntegration:
 
     def get_scorer_thresholds(self) -> Dict[str, float]:
         """Get configured thresholds for all scorers"""
-        return {name: config["threshold"] for name, config in self._scorer_configs.items()}
+        return {
+            name: float(config["threshold"]) if config["threshold"] is not None else 0.0
+            for name, config in self._scorer_configs.items()
+        }
 
     def analyze_results(self, results: List[ScorerResult]) -> Dict[str, Any]:
         """Analyze scorer results and provide summary"""
@@ -183,7 +192,14 @@ class MCPScorerIntegration:
 
         return {
             "risk_level": risk_level,
-            "issues_found": len([r for r in results if r.score > self._scorer_configs[r.scorer_type]["threshold"]]),
+            "issues_found": len(
+                [
+                    r
+                    for r in results
+                    if r.score > float(self._scorer_configs[r.scorer_type]["threshold"])
+                    if self._scorer_configs[r.scorer_type]["threshold"] is not None
+                ]
+            ),
             "critical_issues": critical_count,
             "high_issues": high_count,
             "recommendations": recommendations,
@@ -194,7 +210,8 @@ class MCPScorerIntegration:
         """Generate human-readable summary of results"""
         issues = []
         for result in results:
-            if result.score > self._scorer_configs[result.scorer_type]["threshold"]:
+            threshold = self._scorer_configs[result.scorer_type]["threshold"]
+            if threshold is not None and result.score > float(threshold):
                 issues.append(f"{result.scorer_type} ({result.severity})")
 
         if not issues:
@@ -242,8 +259,8 @@ class RealTimeScoringMonitor:
     def __init__(self, scorer_integration: MCPScorerIntegration):
         self.scorer = scorer_integration
         self._monitoring = False
-        self._score_queue = asyncio.Queue()
-        self._results_callbacks = []
+        self._score_queue: asyncio.Queue[Any] = asyncio.Queue()
+        self._results_callbacks: list[Any] = []
 
     def register_callback(self, callback):
         """Register callback for scoring results"""

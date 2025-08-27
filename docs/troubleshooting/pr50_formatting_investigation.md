@@ -99,7 +99,7 @@ Add debug step to workflow:
 1. **Immediate**: Try Solution 3 - explicitly format all files
 2. **Short-term**: Implement Solution 1 - pin versions in CI
 3. **Long-term**: Add Solution 4 - debug CI environment
-4. **If all fails**: 
+4. **If all fails**:
    - Check GitHub Actions logs for exact error
    - Compare merge commit locally vs CI
    - Consider closing and reopening PR with clean history

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import glob
 import json
 import logging
@@ -1582,7 +1588,7 @@ def list_dataset_types():
             st.write("**📚 Available PyRIT Datasets:**")
 
             # Group by category if available
-            categories = {}
+            categories: Dict[str, List[Any]] = {}
             for dataset_type in dataset_types:
                 if isinstance(dataset_type, dict):
                     category = dataset_type.get("category", "uncategorized")
@@ -2049,7 +2055,7 @@ def setup_orchestrator(params):
 # Parameter extraction functions
 def extract_generator_params(text):
     """Extract generator parameters from natural language"""
-    params = {}
+    params: Dict[str, Any] = {}
 
     # Extract provider and model
     if "gpt-4" in text.lower() or "gpt4" in text.lower():

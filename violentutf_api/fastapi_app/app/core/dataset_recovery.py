@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Error recovery mechanisms for dataset import operations
 
@@ -9,14 +15,12 @@ import asyncio
 import logging
 import time
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar, cast
 
 from app.core.dataset_config import DatasetImportConfig
 from app.core.dataset_logging import dataset_logger
 from app.exceptions.dataset_exceptions import (
-    DatasetMemoryError,
     DatasetRetryExhaustedException,
-    DatasetStorageError,
     DatasetStreamingError,
     DatasetTimeoutError,
 )
@@ -75,7 +79,7 @@ def with_retry(
 ):
     """Decorator for adding retry logic to functions"""
 
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:  # Proper typing for decorator
         @wraps(func)
         async def wrapper(*args, **kwargs) -> T:
             strategy = retry_strategy or RetryStrategy()
@@ -84,9 +88,11 @@ def with_retry(
             for attempt in range(strategy.max_retries + 1):
                 try:
                     if asyncio.iscoroutinefunction(func):
-                        return await func(*args, **kwargs)
+                        result = cast(T, await func(*args, **kwargs))
+                        return result
                     else:
-                        return func(*args, **kwargs)
+                        result = func(*args, **kwargs)
+                        return result
 
                 except exceptions as e:
                     last_exception = e
@@ -124,7 +130,7 @@ def with_retry(
                 last_error=last_exception,
             )
 
-        return wrapper
+        return cast(Callable[..., T], wrapper)
 
     return decorator
 

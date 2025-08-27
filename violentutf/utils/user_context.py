@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 User Context Management for ViolentUTF
 Ensures consistent user identification across all pages
@@ -31,7 +37,7 @@ def get_consistent_username() -> str:
     """
     # Check if we have a cached username in session state
     if "consistent_username" in st.session_state:
-        return st.session_state["consistent_username"]
+        return str(st.session_state["consistent_username"])
 
     # Try to get username from Keycloak token if available
     if "access_token" in st.session_state:
@@ -47,7 +53,7 @@ def get_consistent_username() -> str:
                 # Cache it in session state
                 st.session_state["consistent_username"] = preferred_username
                 logger.info(f"Using Keycloak preferred_username: {preferred_username}")
-                return preferred_username
+                return str(preferred_username)
 
         except Exception as e:
             logger.warning(f"Failed to decode Keycloak token: {e}")

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Dataset Resources for MCP
 ========================
@@ -41,7 +47,7 @@ class DatasetResourceProvider(BaseResourceProvider):
         dataset_id = uri_params.get("dataset_id")
 
         if not dataset_id:
-            logger.warning(f"No dataset_id found in URI: {uri}")
+            logger.warning("No dataset_id found in URI: %s", uri)
             return None
 
         try:
@@ -52,7 +58,7 @@ class DatasetResourceProvider(BaseResourceProvider):
                 dataset_response = await client.get(f"{self.base_url}/api/v1/datasets/{dataset_id}", headers=headers)
 
                 if dataset_response.status_code != 200:
-                    logger.warning(f"Failed to get dataset {dataset_id}: {dataset_response.status_code}")
+                    logger.warning("Failed to get dataset %s: %s", dataset_id, dataset_response.status_code)
                     return None
 
                 dataset = dataset_response.json()
@@ -106,13 +112,13 @@ class DatasetResourceProvider(BaseResourceProvider):
                 )
 
         except httpx.TimeoutException:
-            logger.error(f"Timeout getting dataset resource: {dataset_id}")
+            logger.error("Timeout getting dataset resource: %s", dataset_id)
             return None
         except httpx.ConnectError:
-            logger.error(f"Connection error getting dataset resource: {dataset_id}")
+            logger.error("Connection error getting dataset resource: %s", dataset_id)
             return None
         except Exception as e:
-            logger.error(f"Error getting dataset resource {dataset_id}: {e}")
+            logger.error("Error getting dataset resource %s: %s", dataset_id, e)
             return None
 
     async def _get_dataset_content(
@@ -130,11 +136,11 @@ class DatasetResourceProvider(BaseResourceProvider):
             if content_response.status_code == 200:
                 return content_response.json()
             else:
-                logger.debug(f"Content endpoint not available for dataset {dataset_id}, returning empty list")
+                logger.debug("Content endpoint not available for dataset %s, returning empty list", dataset_id)
                 return []
 
         except Exception as e:
-            logger.debug(f"Could not fetch content for dataset {dataset_id}: {e}")
+            logger.debug("Could not fetch content for dataset %s: %s", dataset_id, e)
             return []
 
     async def _get_dataset_statistics(self, content: Any) -> Dict[str, Any]:
@@ -142,7 +148,7 @@ class DatasetResourceProvider(BaseResourceProvider):
         if not content:
             return {"total_entries": 0}
 
-        stats = {"total_entries": 0}
+        stats: Dict[str, Any] = {"total_entries": 0}
 
         if isinstance(content, list):
             stats["total_entries"] = len(content)
@@ -150,7 +156,7 @@ class DatasetResourceProvider(BaseResourceProvider):
             # Analyze content structure
             if content and isinstance(content[0], dict):
                 # Get field statistics
-                all_fields = set()
+                all_fields: set[str] = set()
                 for item in content[:100]:  # Sample first 100 items
                     if isinstance(item, dict):
                         all_fields.update(item.keys())
@@ -172,7 +178,7 @@ class DatasetResourceProvider(BaseResourceProvider):
 
     async def _infer_dataset_schema(self, content: Any) -> Dict[str, Any]:
         """Infer schema from dataset content"""
-        schema = {"type": "unknown"}
+        schema: Dict[str, Any] = {"type": "unknown"}
 
         if isinstance(content, list) and content:
             schema["type"] = "array"
@@ -259,8 +265,10 @@ class DatasetResourceProvider(BaseResourceProvider):
                                             else datetime.now()
                                         ),
                                         updated_at=datetime.fromisoformat(
-                                            dataset.get(
-                                                "updated_at", dataset.get("created_at", datetime.now().isoformat())
+                                            str(
+                                                dataset.get(
+                                                    "updated_at", dataset.get("created_at", datetime.now().isoformat())
+                                                )
                                             )
                                         ),
                                         tags=dataset.get(
@@ -271,10 +279,10 @@ class DatasetResourceProvider(BaseResourceProvider):
                                 )
                             )
                 else:
-                    logger.warning(f"Failed to list datasets: {response.status_code}")
+                    logger.warning("Failed to list datasets: %s", response.status_code)
 
         except Exception as e:
-            logger.error(f"Error listing dataset resources: {e}")
+            logger.error("Error listing dataset resources: %s", e)
 
         logger.info(f"Listed {len(resources)} dataset resources")
         return resources
@@ -365,7 +373,7 @@ class ResultsResourceProvider(BaseResourceProvider):
                     )
 
         except Exception as e:
-            logger.error(f"Error getting results resource {execution_id}: {e}")
+            logger.error("Error getting results resource %s: %s", execution_id, e)
 
         return None
 
@@ -430,7 +438,7 @@ class ResultsResourceProvider(BaseResourceProvider):
                             )
 
         except Exception as e:
-            logger.error(f"Error listing results resources: {e}")
+            logger.error("Error listing results resources: %s", e)
 
         return resources
 

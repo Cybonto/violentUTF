@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Monitoring and metrics integration for dataset import operations
 
@@ -7,10 +13,9 @@ performance metrics, health checks, and integration with monitoring systems.
 
 import asyncio
 import logging
-import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import psutil
@@ -117,7 +122,7 @@ class SystemMetrics:
             )
 
         except Exception as e:
-            logger.warning(f"Failed to collect system metrics: {e}")
+            logger.warning("Failed to collect system metrics: %s", e)
             return cls()  # Return empty metrics on failure
 
 
@@ -134,7 +139,7 @@ class PerformanceMonitor:
 
         # Start background monitoring if enabled
         if config.enable_statistics_tracking:
-            self._monitoring_task = None
+            self._monitoring_task: Optional[asyncio.Task[Any]] = None
             self._start_background_monitoring()
 
     def _start_background_monitoring(self) -> None:
@@ -153,7 +158,7 @@ class PerformanceMonitor:
                     self._cleanup_old_data()
 
                 except Exception as e:
-                    logger.warning(f"Background monitoring error: {e}")
+                    logger.warning("Background monitoring error: %s", e)
 
                 await asyncio.sleep(30)  # Monitor every 30 seconds
 
@@ -190,7 +195,7 @@ class PerformanceMonitor:
 
         # Log alerts
         for alert in alerts:
-            logger.warning(f"Resource alert: {alert}")
+            logger.warning("Resource alert: %s", alert)
 
     def _cleanup_old_data(self) -> None:
         """Clean up old monitoring data"""
@@ -207,9 +212,7 @@ class PerformanceMonitor:
         """Start tracking an operation"""
         self.active_operations[operation_id] = datetime.utcnow()
 
-        logger.debug(
-            f"Started tracking operation: {operation_id}", operation_id=operation_id, operation_type=operation_type
-        )
+        logger.debug("Started tracking operation: %s (type: %s)", operation_id, operation_type)
 
     def end_operation(
         self, operation_id: str, operation_type: str, success: bool = True, metrics: Optional[ImportMetrics] = None
@@ -218,7 +221,7 @@ class PerformanceMonitor:
 
         start_time = self.active_operations.pop(operation_id, None)
         if not start_time:
-            logger.warning(f"No start time found for operation: {operation_id}")
+            logger.warning("No start time found for operation: %s", operation_id)
             return 0.0
 
         duration = (datetime.utcnow() - start_time).total_seconds()
@@ -244,11 +247,11 @@ class PerformanceMonitor:
             self.error_counts[operation_type] += 1
 
         logger.debug(
-            f"Completed operation: {operation_id}",
-            operation_id=operation_id,
-            operation_type=operation_type,
-            duration_seconds=duration,
-            success=success,
+            "Completed operation: %s (type: %s, duration: %.2fs, success: %s)",
+            operation_id,
+            operation_type,
+            duration,
+            success,
         )
 
         return duration
@@ -258,12 +261,7 @@ class PerformanceMonitor:
         self.error_counts[f"{operation_type}_error"] += 1
         self.error_counts[f"{type(error).__name__}"] += 1
 
-        logger.debug(
-            f"Recorded error for {operation_type}",
-            operation_type=operation_type,
-            error_type=type(error).__name__,
-            error_message=str(error),
-        )
+        logger.debug(f"Recorded error for {operation_type}: {type(error).__name__} - {str(error)}")
 
     def get_performance_summary(self, operation_type: Optional[str] = None) -> Dict[str, Any]:
         """Get performance summary for operations"""
@@ -412,10 +410,7 @@ class PerformanceMonitor:
     def __del__(self):
         """Cleanup monitoring task"""
         if hasattr(self, "_monitoring_task") and self._monitoring_task:
-            try:
-                self._monitoring_task.cancel()
-            except Exception:
-                pass
+            self._monitoring_task.cancel()
 
 
 # Global monitoring instance

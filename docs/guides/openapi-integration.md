@@ -179,7 +179,7 @@ If routes are created but API calls fail with 401 Unauthorized:
    # View route configuration
    curl -H "X-API-KEY: $APISIX_ADMIN_KEY" \
         http://localhost:9180/apisix/admin/routes | jq '.list[] | select(.value.uri | contains("/ai/openapi/"))'
-   
+
    # Look for proxy-rewrite.headers.set.Authorization
    ```
 

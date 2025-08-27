@@ -1,17 +1,20 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """MCP Transport Implementations"""
 
 import json
 import logging
-from typing import Any, AsyncIterator, Dict, Optional
+from typing import Any, AsyncIterator, Dict, cast
 
 from app.core.auth import get_current_user
 from app.mcp.auth import MCPAuthHandler
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse
 from mcp.server import Server
-from mcp.server.sse import SseServerTransport
 from sse_starlette.sse import EventSourceResponse
-from starlette.types import Receive, Scope, Send
 
 logger = logging.getLogger(__name__)
 
@@ -117,12 +120,12 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                                         json.dumps(tool_dict)  # Test serialization
                                         tool_dicts.append(tool_dict)
                                     except Exception as e:
-                                        logger.warning(f"Skipping tool due to serialization error: {e}")
+                                        logger.warning("Skipping tool due to serialization error: %s", e)
                                         continue
 
                                 response = {"jsonrpc": "2.0", "result": {"tools": tool_dicts}, "id": request_id}
                             except Exception as e:
-                                logger.error(f"Error listing tools: {e}")
+                                logger.error("Error listing tools: %s", e)
                                 response = {
                                     "jsonrpc": "2.0",
                                     "error": {"code": -32603, "message": f"Error listing tools: {str(e)}"},
@@ -131,7 +134,6 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                         elif method == "tools/execute":
                             # Execute a tool
                             tool_name = params.get("name")
-                            tool_args = params.get("arguments", {})
 
                             if not tool_name:
                                 response = {
@@ -141,7 +143,13 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                                 }
                             else:
                                 try:
-                                    result = await server.call_tool(tool_name, tool_args)
+                                    # Use handler registry for dynamic dispatch - cast to access custom attributes
+                                    vutf_server = cast(Any, server)
+                                    handler = getattr(vutf_server, "_handlers", {}).get("call_tool")
+                                    if handler:
+                                        result = await handler(tool_name, {})
+                                    else:
+                                        raise Exception("Tool handler not available")
                                     response = {"jsonrpc": "2.0", "result": result, "id": request_id}
                                 except Exception as e:
                                     response = {
@@ -161,7 +169,13 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                                 }
                             else:
                                 try:
-                                    content = await server.read_resource(resource_uri)
+                                    # Use handler registry for dynamic dispatch - cast to access custom attributes
+                                    vutf_server = cast(Any, server)
+                                    handler = getattr(vutf_server, "_handlers", {}).get("read_resource")
+                                    if handler:
+                                        content = await handler(resource_uri)
+                                    else:
+                                        raise Exception("Resource handler not available")
                                     response = {"jsonrpc": "2.0", "result": content, "id": request_id}
                                 except Exception as e:
                                     response = {
@@ -172,7 +186,6 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                         elif method == "prompts/get":
                             # Get a prompt
                             prompt_name = params.get("name")
-                            prompt_args = params.get("arguments", {})
 
                             if not prompt_name:
                                 response = {
@@ -182,7 +195,13 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                                 }
                             else:
                                 try:
-                                    prompt_result = await server.get_prompt(prompt_name, prompt_args)
+                                    # Use handler registry for dynamic dispatch - cast to access custom attributes
+                                    vutf_server = cast(Any, server)
+                                    handler = getattr(vutf_server, "_handlers", {}).get("get_prompt")
+                                    if handler:
+                                        prompt_result = await handler(prompt_name, {})
+                                    else:
+                                        raise Exception("Prompt handler not available")
                                     response = {"jsonrpc": "2.0", "result": prompt_result, "id": request_id}
                                 except Exception as e:
                                     response = {
@@ -210,7 +229,7 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                     yield {"event": "done", "data": ""}
 
                 except Exception as e:
-                    logger.error(f"Error processing MCP request: {e}")
+                    logger.error("Error processing MCP request: %s", e)
                     error_response = {
                         "jsonrpc": "2.0",
                         "error": {"code": -32603, "message": str(e)},
@@ -224,13 +243,13 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Unexpected error in SSE handler: {e}")
+            logger.error("Unexpected error in SSE handler: %s", e)
             raise HTTPException(status_code=500, detail="Internal server error")
 
     @app.get("/stream")
     async def handle_sse_stream(request: Request, current_user=Depends(get_current_user)):
         """Handle SSE streaming connection"""
-        logger.info(f"MCP SSE stream connection from {current_user.username}")
+        logger.info("MCP SSE stream connection from %s", current_user.username)
 
         async def event_stream() -> AsyncIterator[Dict[str, Any]]:
             """Generate SSE event stream"""
@@ -238,7 +257,9 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                 # Send initial connection event
                 yield {
                     "event": "connected",
-                    "data": json.dumps({"server": server.name, "capabilities": server.get_capabilities()}),
+                    "data": json.dumps(
+                        {"server": server.name, "capabilities": {"tools": True, "resources": True, "prompts": True}}
+                    ),
                 }
 
                 # Keep connection alive with periodic pings
@@ -249,10 +270,10 @@ def create_sse_transport(server: Server, auth_handler: MCPAuthHandler) -> FastAP
                     yield {"event": "ping", "data": ""}
 
             except asyncio.CancelledError:
-                logger.info(f"SSE stream closed for {current_user.username}")
+                logger.info("SSE stream closed for %s", current_user.username)
                 raise
             except Exception as e:
-                logger.error(f"Error in SSE stream: {e}")
+                logger.error("Error in SSE stream: %s", e)
                 yield {"event": "error", "data": json.dumps({"error": str(e)})}
 
         return EventSourceResponse(event_stream())

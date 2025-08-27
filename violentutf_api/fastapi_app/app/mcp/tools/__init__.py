@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """MCP Tools Module"""
 
 import logging
@@ -32,13 +38,13 @@ class ToolRegistry:
             generator_tools_list = generator_tools.get_tools()
             for tool in generator_tools_list:
                 self.tools[tool.name] = tool
-            logger.info(f"Registered {len(generator_tools_list)} specialized generator tools")
+            logger.info("Registered %s specialized generator tools", len(generator_tools_list))
 
             # Add specialized orchestrator tools
             orchestrator_tools_list = orchestrator_tools.get_tools()
             for tool in orchestrator_tools_list:
                 self.tools[tool.name] = tool
-            logger.info(f"Registered {len(orchestrator_tools_list)} specialized orchestrator tools")
+            logger.info("Registered %s specialized orchestrator tools", len(orchestrator_tools_list))
 
             # Initialize introspector if app provided for generic endpoint discovery
             if app and get_introspector() is None:
@@ -48,7 +54,7 @@ class ToolRegistry:
             if introspector:
                 # Discover endpoints
                 endpoints = introspector.discover_endpoints()
-                logger.info(f"Found {len(endpoints)} discoverable endpoints")
+                logger.info("Found %s discoverable endpoints", len(endpoints))
 
                 # Generate MCP tools from endpoints (excluding those already covered by specialized tools)
                 endpoint_tools = tool_generator.generate_tools_from_endpoints(endpoints)
@@ -58,20 +64,20 @@ class ToolRegistry:
                     if tool.name not in self.tools:
                         self.tools[tool.name] = tool
 
-                logger.info(f"Added {len(endpoint_tools)} endpoint-based tools")
+                logger.info("Added %s endpoint-based tools", len(endpoint_tools))
             else:
                 logger.warning("No introspector available, skipping endpoint discovery")
 
             self.endpoints_discovered = True
-            logger.info(f"Successfully registered {len(self.tools)} total MCP tools")
+            logger.info("Successfully registered %s total MCP tools", len(self.tools))
 
             # Log tool categories
             specialized_tools = len(generator_tools_list) + len(orchestrator_tools_list)
             endpoint_tools_count = len(self.tools) - specialized_tools
-            logger.info(f"Tool breakdown: {specialized_tools} specialized, {endpoint_tools_count} endpoint-based")
+            logger.info("Tool breakdown: %s specialized, %s endpoint-based", specialized_tools, endpoint_tools_count)
 
         except Exception as e:
-            logger.error(f"Error discovering tools: {e}")
+            logger.error("Error discovering tools: %s", e)
             # Don't raise, allow MCP server to continue with available tools
 
     async def list_tools(self) -> List[Tool]:
@@ -81,21 +87,21 @@ class ToolRegistry:
             await self.discover_tools()
 
         tools_list = list(self.tools.values())
-        logger.debug(f"Listing {len(tools_list)} available tools")
+        logger.debug("Listing %s available tools", len(tools_list))
         return tools_list
 
     async def call_tool(
         self, name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
     ) -> Any:
         """Execute a tool by name"""
-        logger.info(f"Executing tool: {name} with arguments: {list(arguments.keys())}")
+        logger.info("Executing tool: %s with arguments: %s", name, list(arguments.keys()))
 
         if name not in self.tools:
             # Try to rediscover tools in case of new endpoints
             await self.discover_tools()
 
             if name not in self.tools:
-                logger.error(f"Tool '{name}' not found in registry")
+                logger.error("Tool '%s' not found in registry", name)
                 return {
                     "error": "tool_not_found",
                     "message": f"Tool '{name}' is not available",
@@ -105,7 +111,7 @@ class ToolRegistry:
         # Validate arguments
         validation_result = await tool_executor.validate_tool_arguments(name, arguments)
         if not validation_result["valid"]:
-            logger.warning(f"Invalid arguments for tool {name}: {validation_result['errors']}")
+            logger.warning("Invalid arguments for tool %s: %s", name, validation_result["errors"])
             return {
                 "error": "invalid_arguments",
                 "message": "Tool arguments validation failed",
@@ -124,10 +130,10 @@ class ToolRegistry:
                 # Use generic executor for endpoint-based tools
                 result = await tool_executor.execute_tool(name, arguments, user_context)
 
-            logger.info(f"Tool {name} executed successfully")
+            logger.info("Tool %s executed successfully", name)
             return result
         except Exception as e:
-            logger.error(f"Error executing tool {name}: {e}")
+            logger.error("Error executing tool %s: %s", name, e)
             return {"error": "execution_failed", "message": str(e), "tool_name": name}
 
     def get_tool(self, name: str) -> Optional[Tool]:

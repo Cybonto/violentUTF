@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Rate limiting implementation for authentication endpoints
 SECURITY: Implements rate limiting to prevent brute force attacks
@@ -5,9 +11,9 @@ SECURITY: Implements rate limiting to prevent brute force attacks
 
 import logging
 
-from fastapi import HTTPException, Request, status
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
@@ -61,8 +67,11 @@ def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONR
 
     # Log the rate limit violation for security monitoring
     logger.warning(
-        f"Rate limit exceeded for IP {client_ip} on endpoint {endpoint}. "
-        f"Limit: {exc.detail}, User-Agent: {request.headers.get('User-Agent', 'Unknown')}"
+        "Rate limit exceeded for IP %s on endpoint %s. Limit: %s, User-Agent: %s",
+        client_ip,
+        endpoint,
+        exc.detail,
+        request.headers.get("User-Agent", "Unknown"),
     )
 
     return JSONResponse(

@@ -87,45 +87,45 @@ class MCPSettings(BaseSettings):
     MCP_SERVER_NAME: str = "ViolentUTF-MCP"
     MCP_SERVER_VERSION: str = "1.0.0"
     MCP_SERVER_DESCRIPTION: str = "ViolentUTF AI Red-teaming MCP Server"
-    
+
     # Feature Flags
     MCP_ENABLE_TOOLS: bool = True
     MCP_ENABLE_RESOURCES: bool = True
     MCP_ENABLE_PROMPTS: bool = True
     MCP_ENABLE_SAMPLING: bool = False
-    
+
     # Transport Layer
     MCP_TRANSPORT_TYPE: str = "sse"  # Options: sse, websocket
     MCP_SSE_ENDPOINT: str = "/mcp/sse"
     MCP_WEBSOCKET_ENDPOINT: str = "/mcp/ws"
-    
+
     # Security
     MCP_REQUIRE_AUTH: bool = True
     MCP_TOKEN_VALIDATION: bool = True
     MCP_CORS_ENABLED: bool = True
     MCP_CORS_ORIGINS: list = ["http://localhost:3000", "https://claude.ai"]
-    
+
     # Performance
     MCP_TOOL_TIMEOUT_SECONDS: int = 60
     MCP_CONCURRENT_TOOL_LIMIT: int = 10
     MCP_RETRY_ATTEMPTS: int = 3
     MCP_RETRY_BACKOFF_FACTOR: float = 2.0
-    
+
     # Resource Management
     MCP_RESOURCE_CACHE_TTL: int = 300  # 5 minutes
     MCP_RESOURCE_CACHE_SIZE: int = 1000
     MCP_RESOURCE_PREFETCH: bool = True
     MCP_RESOURCE_COMPRESSION: bool = True
-    
+
     # Logging
     MCP_LOG_LEVEL: str = "INFO"
     MCP_LOG_FORMAT: str = "json"
     MCP_ACCESS_LOG_ENABLED: bool = True
-    
+
     # Development
     MCP_DEBUG_MODE: bool = False
     MCP_DEVELOPMENT_MODE: bool = False
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = True
@@ -139,7 +139,7 @@ Add MCP configuration to your `docker-compose.yml`:
 version: '3.8'
 services:
   violentutf-api:
-    build: 
+    build:
       context: ./violentutf_api
       dockerfile: Dockerfile
     environment:
@@ -148,12 +148,12 @@ services:
       - MCP_ENABLE_RESOURCES=true
       - MCP_TRANSPORT_TYPE=sse
       - MCP_REQUIRE_AUTH=true
-      
+
       # Performance Settings
       - MCP_TOOL_TIMEOUT_SECONDS=60
       - MCP_CONCURRENT_TOOL_LIMIT=10
       - MCP_RESOURCE_CACHE_TTL=300
-      
+
       # Security
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - KEYCLOAK_URL=http://keycloak:8080
@@ -658,33 +658,33 @@ from typing import List
 def validate_mcp_config() -> List[str]:
     """Validate MCP configuration and return list of issues"""
     issues = []
-    
+
     # Required settings
     required_vars = [
         'JWT_SECRET_KEY',
         'KEYCLOAK_URL',
         'APISIX_BASE_URL'
     ]
-    
+
     for var in required_vars:
         if not os.getenv(var):
             issues.append(f"Missing required environment variable: {var}")
-    
+
     # JWT secret strength
     jwt_secret = os.getenv('JWT_SECRET_KEY', '')
     if len(jwt_secret) < 32:
         issues.append("JWT_SECRET_KEY should be at least 32 characters long")
-    
+
     # URL format validation
     urls = {
         'KEYCLOAK_URL': os.getenv('KEYCLOAK_URL'),
         'APISIX_BASE_URL': os.getenv('APISIX_BASE_URL')
     }
-    
+
     for name, url in urls.items():
         if url and not url.startswith(('http://', 'https://')):
             issues.append(f"{name} should start with http:// or https://")
-    
+
     return issues
 
 if __name__ == "__main__":
@@ -713,7 +713,7 @@ scrape_configs:
       - targets: ['violentutf-api:9090']
     metrics_path: '/metrics'
     scrape_interval: 30s
-    
+
 rule_files:
   - "mcp-alerts.yml"
 
@@ -726,5 +726,5 @@ alerting:
 
 ---
 
-*For API usage details, see [API Reference](./api-reference.md).*  
+*For API usage details, see [API Reference](./api-reference.md).*
 *For troubleshooting help, see [Troubleshooting Guide](./troubleshooting.md).*

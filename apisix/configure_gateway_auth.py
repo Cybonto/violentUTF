@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 APISIX Gateway Authentication Configuration Script
 Configures HMAC-based authentication between APISIX and FastAPI
@@ -6,7 +12,6 @@ Configures HMAC-based authentication between APISIX and FastAPI
 
 import hashlib
 import hmac
-import json
 import os
 import sys
 import time
@@ -88,8 +93,11 @@ class APISIXGatewayAuth:
                 print(f"Response: {response.text}")
                 return False
 
-        except Exception as e:
+        except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
             print(f"❌ Gateway authentication test error: {str(e)}")
+            return False
+        except Exception as e:
+            print(f"❌ Unexpected error during authentication test: {str(e)}")
             return False
 
     def configure_plugin_config(self, gateway_secret: str) -> bool:
@@ -164,8 +172,11 @@ class APISIXGatewayAuth:
                 print(f"Response: {response.text}")
                 return False
 
-        except Exception as e:
+        except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
             print(f"❌ Error configuring APISIX plugin: {str(e)}")
+            return False
+        except Exception as e:
+            print(f"❌ Unexpected error configuring APISIX plugin: {str(e)}")
             return False
 
 

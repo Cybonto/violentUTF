@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Phase 2 Integration Tests for ViolentUTF MCP Server - Revised
 ============================================================
@@ -13,28 +19,25 @@ import asyncio
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from app.mcp.auth import MCPAuthHandler
 from app.mcp.config import mcp_settings
 from app.mcp.resources import resource_registry
-from app.mcp.resources.manager import ViolentUTFResourceManager, resource_manager
+from app.mcp.resources.manager import ViolentUTFResourceManager
 from app.mcp.server.base import ViolentUTFMCPServer
 
 # Test the actual implemented components
 from app.mcp.tools import tool_registry
-from app.mcp.tools.executor import tool_executor
-from app.mcp.tools.generator import tool_generator
-from app.mcp.tools.generators import GeneratorConfigurationTools, generator_tools
+from app.mcp.tools.generators import generator_tools
 from app.mcp.tools.introspection import EndpointIntrospector, ViolentUTFToolFilter, initialize_introspector
-from app.mcp.tools.orchestrators import OrchestratorManagementTools, orchestrator_tools
+from app.mcp.tools.orchestrators import orchestrator_tools
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
 # MCP and core imports
-from mcp.types import Resource, ServerCapabilities, Tool
+from mcp.types import ServerCapabilities, Tool
 
 logger = logging.getLogger(__name__)
 

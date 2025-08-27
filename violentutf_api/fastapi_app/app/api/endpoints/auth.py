@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Authentication endpoints for obtaining JWT tokens
 SECURITY: Rate limiting and secure error handling implemented to prevent attacks
@@ -5,7 +11,6 @@ SECURITY: Rate limiting and secure error handling implemented to prevent attacks
 
 import logging
 from datetime import timedelta
-from typing import Optional
 
 import httpx
 from app.core.auth import get_current_user
@@ -17,7 +22,6 @@ from app.core.security import create_access_token
 from app.core.security_logging import (
     log_authentication_failure,
     log_authentication_success,
-    log_suspicious_activity,
     log_token_event,
     log_weak_password_attempt,
 )
@@ -75,7 +79,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
                     logger.info(
                         f"Keycloak token verification - username: {username}, display_name: {user_info.get('name')}"
                     )
-                    logger.info(f"Successfully verified Keycloak token for user: {username}")
+                    logger.info("Successfully verified Keycloak token for user: %s", username)
 
                 except HTTPException:
                     # Keycloak verification failed, re-raise the exception
@@ -173,8 +177,6 @@ async def get_token_info(request: Request, current_user: User = Depends(get_curr
     Get decoded JWT token information for current user
     """
     from datetime import datetime
-
-    import jwt
 
     # Check if user has AI access (ai-api-access role)
     has_ai_access = "ai-api-access" in current_user.roles

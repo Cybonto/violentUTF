@@ -1,11 +1,11 @@
 {
   "status": "fixed",
   "tool_name": "pytest",
-  "exit_code": 1, 
+  "exit_code": 1,
   "test_file_name": "integration_tests",
-  "failure_type": "PERMISSION_ERROR", 
+  "failure_type": "PERMISSION_ERROR",
   "failure_subtype": "File Access Denied",
-  "file_path": "", 
+  "file_path": "",
   "file_path_log": ["test_orchestrator_executions.py", "/Users/tamnguyen/Documents/.env"],
   "issue": "",
   "issue_log": ["Permission denied accessing environment files and read-only file system for test databases"],
@@ -17,7 +17,7 @@
     "permission_denied_files": ["/Users/tamnguyen/Documents/.env"],
     "readonly_filesystem_errors": ["OSError: [Errno 30] Read-only file system"],
     "affected_tests": 11,
-    "collection_phase": "failed", 
+    "collection_phase": "failed",
     "environment_setup": "broken"
   },
   "solution": [

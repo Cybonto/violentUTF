@@ -4244,5 +4244,3 @@ class RolePlayOrchestrator(PromptSendingOrchestrator):
                 role="assistant",
             ),
         ]
-
-

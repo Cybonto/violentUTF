@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 ViolentUTF JWT CLI Tool - Command line interface for JWT key management
 
@@ -33,7 +39,7 @@ def ensure_config_dir():
 def save_token(token_data: dict):
     """Save token to local file"""
     ensure_config_dir()
-    with open(TOKEN_FILE, "w") as f:
+    with open(TOKEN_FILE, "w", encoding="utf-8") as f:
         json.dump(token_data, f, indent=2)
     os.chmod(TOKEN_FILE, 0o600)  # Restrict permissions
 
@@ -41,7 +47,7 @@ def save_token(token_data: dict):
 def load_token() -> Optional[Dict[str, Any]]:
     """Load token from local file"""
     if TOKEN_FILE.exists():
-        with open(TOKEN_FILE, "r") as f:
+        with open(TOKEN_FILE, "r", encoding="utf-8") as f:
             return cast(Dict[str, Any], json.load(f))
     return None
 
@@ -58,7 +64,6 @@ def get_auth_header() -> dict:
 @click.group()
 def cli():
     """ViolentUTF JWT CLI - Manage JWT tokens for API access"""
-    pass
 
 
 @cli.command()
@@ -87,8 +92,11 @@ def login(username: str, password: str):
     except requests.exceptions.ConnectionError:
         click.echo(f"Cannot connect to API at {API_BASE_URL}", err=True)
         sys.exit(1)
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
@@ -116,8 +124,11 @@ def whoami():
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
@@ -133,7 +144,7 @@ def get_token():
 
         # Check expiration
         if "expires_in" in token_data and "obtained_at" in token_data:
-            from datetime import datetime, timedelta
+            from datetime import timedelta
 
             obtained = datetime.fromisoformat(token_data["obtained_at"])
             expires = obtained + timedelta(seconds=token_data["expires_in"])
@@ -164,18 +175,20 @@ def refresh():
         else:
             click.echo(f"Refresh failed: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
 @cli.group()
-def keys():
+def api_keys():
     """Manage API keys"""
-    pass
 
 
-@keys.command("create")
+@api_keys.command("create")
 @click.option("--name", "-n", prompt=True, help="Name for the API key")
 @click.option("--permissions", "-p", multiple=True, default=["api:access"], help="Permissions for the key")
 def create_key(name: str, permissions: tuple):
@@ -199,12 +212,15 @@ def create_key(name: str, permissions: tuple):
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
-@keys.command("list")
+@api_keys.command("list")
 def list_keys():
     """List all API keys"""
     try:
@@ -212,30 +228,33 @@ def list_keys():
 
         if response.status_code == 200:
             keys_data = response.json()
-            keys = keys_data.get("keys", [])
+            api_keys_list = keys_data.get("keys", [])
 
-            if not keys:
+            if not api_keys_list:
                 click.echo("No API keys found")
                 return
 
-            click.echo(f"Found {len(keys)} API key(s):\n")
-            for key in keys:
-                click.echo(f"ID: {key['id']}")
-                click.echo(f"Name: {key['name']}")
-                click.echo(f"Created: {key['created_at']}")
-                click.echo(f"Expires: {key['expires_at']}")
-                click.echo(f"Active: {'Yes' if key['active'] else 'No'}")
-                click.echo(f"Permissions: {', '.join(key['permissions'])}")
+            click.echo(f"Found {len(api_keys_list)} API key(s):\n")
+            for key_item in api_keys_list:
+                click.echo(f"ID: {key_item['id']}")
+                click.echo(f"Name: {key_item['name']}")
+                click.echo(f"Created: {key_item['created_at']}")
+                click.echo(f"Expires: {key_item['expires_at']}")
+                click.echo(f"Active: {'Yes' if key_item['active'] else 'No'}")
+                click.echo(f"Permissions: {', '.join(key_item['permissions'])}")
                 click.echo("")
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
-@keys.command("revoke")
+@api_keys.command("revoke")
 @click.argument("key_id")
 def revoke_key(key_id: str):
     """Revoke an API key"""
@@ -249,12 +268,15 @@ def revoke_key(key_id: str):
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
-@keys.command("current")
+@api_keys.command("current")
 def get_current_key():
     """Get current session as API key format"""
     try:
@@ -271,8 +293,11 @@ def get_current_key():
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 

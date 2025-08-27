@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Run all code quality checks locally to match GitHub Actions.
 This helps identify and fix issues before pushing to PR.
@@ -8,7 +14,6 @@ import json
 import os
 import subprocess  # nosec B404 - needed for code quality checks
 import sys
-from pathlib import Path
 from typing import Optional
 
 # ANSI color codes
@@ -34,7 +39,7 @@ def run_command(cmd, description, continue_on_error=False, capture_output=False)
                 import shlex
 
                 cmd = shlex.split(cmd)
-            result = subprocess.run(cmd, capture_output=True, text=True)  # nosec B603 - controlled input
+            result = subprocess.run(cmd, capture_output=True, text=True, check=False)  # nosec B603 - controlled input
             if result.returncode == 0:
                 print(f"{GREEN}✓ {description} passed{RESET}")
                 return True, result.stdout
@@ -51,7 +56,7 @@ def run_command(cmd, description, continue_on_error=False, capture_output=False)
                 import shlex
 
                 cmd = shlex.split(cmd)
-            result = subprocess.run(cmd, text=True)  # nosec B603 - controlled input
+            result = subprocess.run(cmd, text=True, check=False)  # nosec B603 - controlled input
             if result.returncode == 0:
                 print(f"{GREEN}✓ {description} passed{RESET}")
                 return True, None
@@ -62,8 +67,11 @@ def run_command(cmd, description, continue_on_error=False, capture_output=False)
                 else:
                     print(f"{YELLOW}  (continuing despite error){RESET}")
                     return False, None
+    except (subprocess.SubprocessError, OSError) as e:
+        print(f"{RED}✗ Process error running {description}: {e}{RESET}")
+        return False, str(e)
     except Exception as e:
-        print(f"{RED}✗ Error running {description}: {e}{RESET}")
+        print(f"{RED}✗ Unexpected error running {description}: {e}{RESET}")
         return False, str(e)
 
 
@@ -136,7 +144,7 @@ def run_bandit() -> tuple[bool, Optional[str]]:
 
     # Parse and display results
     if os.path.exists("bandit-report.json"):
-        with open("bandit-report.json", "r") as f:
+        with open("bandit-report.json", "r", encoding="utf-8") as f:
             data = json.load(f)
             issues = data.get("results", [])
 
@@ -174,7 +182,7 @@ def run_safety_check() -> tuple[bool, Optional[str]]:
 
     # Parse and display results
     if os.path.exists("safety-report.json"):
-        with open("safety-report.json", "r") as f:
+        with open("safety-report.json", "r", encoding="utf-8") as f:
             data = json.load(f)
             vulns = data.get("vulnerabilities", [])
 

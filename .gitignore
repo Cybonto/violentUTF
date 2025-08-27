@@ -61,3 +61,11 @@ pip-delete-this-directory.txt
 # APISIX auto-generated configuration
 apisix/conf/nginx.conf
 violentutf/app_data/violentutf/api_memory/orchestrator_memory_e386ca4d.db.wal
+bandit-report.json
+bandit-report.json
+mypy_errors_full.txt
+mypy_sample.txt
+bandit-report.json
+.secrets.baseline
+bandit-report.json
+bandit-report-fixed.json

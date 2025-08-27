@@ -1,8 +1,8 @@
 # GitHub Actions CI Pipeline Failure Analysis
 
-**Workflow Run**: https://github.com/Cybonto/violentUTF/actions/runs/15955461027  
-**Date**: June 29, 2025  
-**Branch**: dev_nightly  
+**Workflow Run**: https://github.com/Cybonto/violentUTF/actions/runs/15955461027
+**Date**: June 29, 2025
+**Branch**: dev_nightly
 **Commit**: 33056e4 - "Fix E402 issues #24 #52"
 
 ## Summary

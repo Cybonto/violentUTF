@@ -1,7 +1,13 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """APISIX Route Configuration for MCP"""
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 import httpx
 from app.core.config import settings
@@ -61,11 +67,11 @@ class APISIXRouteManager:
             )
 
             if response.status_code not in [200, 201]:
-                logger.error(f"Failed to create route {route_id}: {response.text}")
+                logger.error("Failed to create route %s: %s", route_id, response.text)
                 raise Exception(f"Route creation failed: {response.status_code}")
 
-            logger.info(f"Created APISIX route: {route_id}")
-            return response.json()
+            logger.info("Created APISIX route: %s", route_id)
+            return cast(Dict[str, Any], response.json())
 
     async def delete_mcp_routes(self) -> Dict[str, Any]:
         """Delete MCP routes from APISIX"""
@@ -80,12 +86,12 @@ class APISIXRouteManager:
 
                     if response.status_code in [200, 204, 404]:
                         deleted.append(route_id)
-                        logger.info(f"Deleted APISIX route: {route_id}")
+                        logger.info("Deleted APISIX route: %s", route_id)
                     else:
-                        logger.error(f"Failed to delete route {route_id}: {response.status_code}")
+                        logger.error("Failed to delete route %s: %s", route_id, response.status_code)
 
             except Exception as e:
-                logger.error(f"Error deleting route {route_id}: {e}")
+                logger.error("Error deleting route %s: %s", route_id, e)
 
         return {"deleted": deleted, "status": "complete"}
 

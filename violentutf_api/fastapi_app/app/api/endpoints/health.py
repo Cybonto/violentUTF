@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Health check endpoints
 """
@@ -5,7 +11,6 @@ Health check endpoints
 from datetime import datetime
 
 from app.core.config import settings
-from app.core.security_headers import validate_security_headers
 from app.core.security_logging import security_metrics
 from fastapi import APIRouter, Request, Response
 

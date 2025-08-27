@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Configuration Resources for MCP
 ==============================
@@ -8,6 +14,7 @@ information through the MCP protocol.
 
 import logging
 import os
+import sys
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -41,7 +48,7 @@ class ConfigurationResourceProvider(BaseResourceProvider):
         config_id = uri_params.get("config_id")
 
         if not component or not config_id:
-            logger.warning(f"Invalid configuration URI: {uri}")
+            logger.warning("Invalid configuration URI: %s", uri)
             return None
 
         # Route to appropriate configuration handler
@@ -56,7 +63,7 @@ class ConfigurationResourceProvider(BaseResourceProvider):
         elif component == "api" and config_id == "health":
             return await self._get_api_health(uri, params)
         else:
-            logger.warning(f"Unknown configuration: {component}/{config_id}")
+            logger.warning("Unknown configuration: %s/%s", component, config_id)
             return None
 
     async def _get_database_status(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
@@ -76,8 +83,8 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                         "timestamp": datetime.now().isoformat(),
                         "connection_status": "healthy" if response.status_code == 200 else "unhealthy",
                         "response_time_ms": (
-                            getattr(response, "elapsed", {}).total_seconds() * 1000
-                            if hasattr(response, "elapsed")
+                            response.elapsed.total_seconds() * 1000
+                            if hasattr(response, "elapsed") and response.elapsed is not None
                             else None
                         ),
                     }
@@ -115,8 +122,9 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                         ),
                     )
 
-        except Exception as e:
-            logger.error(f"Error getting database status: {e}")
+        except (OSError, ImportError, AttributeError, ValueError) as e:
+            # Handle database connection errors, import issues, attribute access, and data errors
+            logger.error("Error getting database status: %s", e)
             error_status = {"status": "error", "message": str(e), "timestamp": datetime.now().isoformat()}
 
             return AdvancedResource(
@@ -157,8 +165,9 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                     ),
                 )
 
-        except Exception as e:
-            logger.error(f"Error getting environment config: {e}")
+        except (httpx.RequestError, httpx.HTTPStatusError, ValueError, KeyError) as e:
+            # Handle HTTP request errors, status errors, and data processing issues
+            logger.error("Error getting environment config: %s", e)
             config_data = await self._get_basic_env_info()
             config_data["error"] = str(e)
 
@@ -196,7 +205,7 @@ class ConfigurationResourceProvider(BaseResourceProvider):
             },
             "mcp": {"enabled": True, "version": "1.0.0", "features": ["tools", "resources", "prompts"]},
             "environment": {
-                "python_version": f"{os.sys.version_info.major}.{os.sys.version_info.minor}.{os.sys.version_info.micro}",
+                "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
                 "platform": os.name,
                 "timestamp": datetime.now().isoformat(),
             },
@@ -227,8 +236,8 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                 "enable_prompts": getattr(mcp_settings, "MCP_ENABLE_PROMPTS", True),
                 "transport_type": mcp_settings.MCP_TRANSPORT_TYPE,
                 "sse_endpoint": mcp_settings.MCP_SSE_ENDPOINT,
-                "development_mode": mcp_settings.MCP_DEVELOPMENT_MODE,
-                "debug_mode": mcp_settings.MCP_DEBUG_MODE,
+                "development_mode": getattr(mcp_settings, "MCP_DEVELOPMENT_MODE", False),
+                "debug_mode": getattr(mcp_settings, "MCP_DEBUG_MODE", False),
                 "timestamp": datetime.now().isoformat(),
             }
 
@@ -243,8 +252,9 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                 ),
             )
 
-        except Exception as e:
-            logger.error(f"Error getting MCP settings: {e}")
+        except (httpx.RequestError, httpx.HTTPStatusError, ValueError, KeyError) as e:
+            # Handle HTTP request errors, status errors, and data processing issues
+            logger.error("Error getting MCP settings: %s", e)
             return None
 
     async def _get_api_health(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
@@ -280,8 +290,9 @@ class ConfigurationResourceProvider(BaseResourceProvider):
                     ),
                 )
 
-        except Exception as e:
-            logger.error(f"Error getting API health: {e}")
+        except (httpx.RequestError, httpx.HTTPStatusError, ValueError) as e:
+            # Handle HTTP request errors, status errors, and data processing issues
+            logger.error("Error getting API health: %s", e)
             health_data = {"status": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
 
             return AdvancedResource(
@@ -387,12 +398,12 @@ class StatusResourceProvider(BaseResourceProvider):
         elif component == "mcp":
             return await self._get_mcp_status(uri, params)
         else:
-            logger.warning(f"Unknown status component: {component}")
+            logger.warning("Unknown status component: %s", component)
             return None
 
     async def _get_overall_status(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
         """Get overall system status"""
-        status = {
+        status: Dict[str, Any] = {
             "system": "ViolentUTF",
             "timestamp": datetime.now().isoformat(),
             "overall_status": "healthy",
@@ -410,7 +421,8 @@ class StatusResourceProvider(BaseResourceProvider):
                         "status": "healthy" if api_response.status_code == 200 else "unhealthy",
                         "status_code": api_response.status_code,
                     }
-                except Exception:
+                except (httpx.RequestError, httpx.HTTPStatusError):
+                    # Handle HTTP connection and status errors for API health check
                     status["components"]["api"] = {"status": "unhealthy", "error": "Connection failed"}
 
                 # Check database
@@ -420,7 +432,8 @@ class StatusResourceProvider(BaseResourceProvider):
                         "status": "healthy" if db_response.status_code == 200 else "unhealthy",
                         "status_code": db_response.status_code,
                     }
-                except Exception:
+                except (httpx.RequestError, httpx.HTTPStatusError):
+                    # Handle HTTP connection and status errors for database health check
                     status["components"]["database"] = {"status": "unhealthy", "error": "Connection failed"}
 
             # MCP status
@@ -435,8 +448,9 @@ class StatusResourceProvider(BaseResourceProvider):
             else:
                 status["overall_status"] = "unknown"
 
-        except Exception as e:
-            logger.error(f"Error getting overall status: {e}")
+        except (httpx.RequestError, AttributeError, ValueError) as e:
+            # Handle HTTP errors, attribute access issues, and data processing errors
+            logger.error("Error getting overall status: %s", e)
             status["overall_status"] = "error"
             status["error"] = str(e)
 
@@ -453,7 +467,7 @@ class StatusResourceProvider(BaseResourceProvider):
 
     async def _get_services_status(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
         """Get status of all services"""
-        services_status = {
+        services_status: Dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
             "services": {
                 "violentutf_api": {"status": "unknown"},
@@ -511,8 +525,9 @@ class StatusResourceProvider(BaseResourceProvider):
                 ),
             )
 
-        except Exception as e:
-            logger.error(f"Error getting MCP status: {e}")
+        except (httpx.RequestError, httpx.HTTPStatusError, ValueError, KeyError) as e:
+            # Handle HTTP request errors, status errors, and data processing issues
+            logger.error("Error getting MCP status: %s", e)
             return None
 
     async def list_resources(self, params: Dict[str, Any]) -> List[AdvancedResource]:

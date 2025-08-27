@@ -86,7 +86,7 @@ mcp.mount()
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
@@ -120,7 +120,7 @@ include_operations_mcp = FastApiMCP(
 
 # Filter by excluding specific operation IDs
 exclude_operations_mcp = FastApiMCP(
-    app,    
+    app,
     name="Item API MCP - Excluded Operations",
     exclude_operations=["create_item", "update_item", "delete_item"],
 )
@@ -234,7 +234,7 @@ mcp.setup_server()
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
@@ -253,7 +253,7 @@ from fastapi_mcp import FastApiMCP
 
 setup_logging()
 
-other_router = APIRouter(prefix="/other/route")    
+other_router = APIRouter(prefix="/other/route")
 app.include_router(other_router)
 
 mcp = FastApiMCP(app)
@@ -265,7 +265,7 @@ mcp.mount(other_router)
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
@@ -296,7 +296,7 @@ mcp.mount()
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
@@ -360,7 +360,7 @@ mcp.mount()
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
@@ -753,5 +753,3 @@ sample_items = [
 ]
 for item in sample_items:
     items_db[item.id] = item
-
-

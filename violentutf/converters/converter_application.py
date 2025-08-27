@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # converters/converter_application.py
 
 """
@@ -151,7 +157,7 @@ async def preview_converter_effect(converter: PromptConverter, prompt: SeedPromp
     """
     try:
         transformed_prompt = await apply_converter_to_prompt(converter, prompt)
-        return transformed_prompt.value
+        return str(transformed_prompt.value) if transformed_prompt.value is not None else ""
     except Exception as e:
         logger.error(f"Error previewing converter effect: {e}")
         raise ConverterApplicationError(f"Error previewing converter effect: {e}") from e

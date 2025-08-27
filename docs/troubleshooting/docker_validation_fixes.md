@@ -25,7 +25,7 @@ Added a comprehensive step to create minimal `.env` files for all services:
 - name: Create minimal .env files and configs for Docker build
   run: |
     # Create minimal .env files and configuration files that Docker expects
-    
+
     # Main violentutf .env
     cat > violentutf/.env << 'EOF'
     TESTING=true
@@ -33,7 +33,7 @@ Added a comprehensive step to create minimal `.env` files for all services:
     JWT_SECRET_KEY=docker_build_test_secret
     SECRET_KEY=docker_build_test_secret
     EOF
-    
+
     # FastAPI .env
     mkdir -p violentutf_api/fastapi_app
     cat > violentutf_api/fastapi_app/.env << 'EOF'
@@ -45,7 +45,7 @@ Added a comprehensive step to create minimal `.env` files for all services:
     APISIX_BASE_URL=http://localhost:9080
     APISIX_ADMIN_URL=http://localhost:9180
     EOF
-    
+
     # Additional service configurations...
 ```
 
@@ -125,7 +125,7 @@ Updated the Docker build step to handle external networks and multiple build con
   run: |
     # Create external network required by docker-compose files
     docker network create vutf-network || echo "Network may already exist"
-    
+
     # Build FastAPI service from APISIX stack
     if [ -f "apisix/docker-compose.yml" ]; then
       echo "Building FastAPI service from APISIX stack..."
@@ -133,7 +133,7 @@ Updated the Docker build step to handle external networks and multiple build con
       docker compose build fastapi || echo "Warning: FastAPI build failed but continuing"
       cd ..
     fi
-    
+
     # Try to build other Docker images if Dockerfiles exist
     if [ -f "violentutf_api/fastapi_app/Dockerfile" ]; then
       echo "Building violentutf_api image directly..."
@@ -155,7 +155,7 @@ Enhanced the security scanning step to handle missing images gracefully:
         trivy image --severity HIGH,CRITICAL "$image" || echo "Warning: Security scan failed for $image but continuing"
       fi
     done
-    
+
     # Check results
     image_count=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "violentutf|api|fastapi" | wc -l)
     if [ "$image_count" -eq "0" ]; then

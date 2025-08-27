@@ -263,7 +263,7 @@ MCP_SERVER_NAME="ViolentUTF MCP Server"
 MCP_TRANSPORT_TYPE="sse"
 MCP_SSE_ENDPOINT="/mcp/sse"
 
-# Feature Flags  
+# Feature Flags
 MCP_ENABLE_TOOLS=true
 MCP_ENABLE_RESOURCES=true
 MCP_ENABLE_PROMPTS=true

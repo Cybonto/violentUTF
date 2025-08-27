@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 MCP Prompts Module
 =================
@@ -10,7 +16,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 # Import prompt providers to auto-register them
-from app.mcp.prompts import security, testing
+from app.mcp.prompts import security, testing  # noqa: F401
 from app.mcp.prompts.base import prompt_registry
 
 logger = logging.getLogger(__name__)

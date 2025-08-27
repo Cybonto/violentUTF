@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """MCP Tool Generator - Converts FastAPI endpoints to MCP tools"""
 
 import logging
@@ -83,7 +89,7 @@ class MCPToolGenerator:
 
     def _build_input_schema(self, endpoint_info: Dict[str, Any]) -> Dict[str, Any]:
         """Build JSON schema for tool input parameters"""
-        schema = {"type": "object", "properties": {}, "required": []}
+        schema: Dict[str, Any] = {"type": "object", "properties": {}, "required": []}
 
         # Add path parameters
         path_params = endpoint_info.get("path_parameters", [])

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import logging
 import os
 from typing import Any, Dict, Optional
@@ -22,22 +28,24 @@ async def execute_generator_prompt(
 
         # Execute prompt based on generator type
         generator_type = generator_config.get("type", "unknown")
-        logger.info(f"Executing generator '{generator_name}' with type '{generator_type}'")
-        logger.info(f"Full generator config: {generator_config}")
+        logger.info("Executing generator '%s' with type '%s'", generator_name, generator_type)
+        logger.info("Full generator config: %s", generator_config)
 
         # Handle both naming conventions for AI Gateway (case-insensitive)
         if generator_type.lower() in ["apisix_ai_gateway", "ai gateway"]:
-            logger.info(f"Executing APISIX AI Gateway generator for '{generator_name}'")
+            logger.info("Executing APISIX AI Gateway generator for '%s'", generator_name)
             return await _execute_apisix_generator(generator_config, prompt, conversation_id)
         else:
             logger.warning(
-                f"Generator '{generator_name}' has unsupported type '{generator_type}'. Only 'AI Gateway' (apisix_ai_gateway) is supported."
+                "Generator '%s' has unsupported type '%s'. Only 'AI Gateway' (apisix_ai_gateway) is supported.",
+                generator_name,
+                generator_type,
             )
-            logger.warning(f"Generator config keys: {list(generator_config.keys())}")
+            logger.warning("Generator config keys: %s", list(generator_config.keys()))
             return await _execute_generic_generator(generator_config, prompt, conversation_id)
 
     except Exception as e:
-        logger.error(f"Error executing generator prompt: {e}")
+        logger.error("Error executing generator prompt: %s", e)
         return {"success": False, "response": f"Error: {str(e)}", "error": str(e)}
 
 
@@ -50,7 +58,7 @@ async def _execute_apisix_generator(
         provider = generator_config["parameters"]["provider"]
         model = generator_config["parameters"]["model"]
 
-        logger.info(f"Executing APISIX generator: provider={provider}, model={model}")
+        logger.info("Executing APISIX generator: provider=%s, model=%s", provider, model)
 
         # Map to APISIX endpoint
         endpoint = _get_apisix_endpoint_for_model(provider, model)
@@ -63,7 +71,7 @@ async def _execute_apisix_generator(
         base_url = os.getenv("VIOLENTUTF_API_URL", "http://apisix-apisix-1:9080")
         url = f"{base_url}{endpoint}"
 
-        logger.info(f"APISIX request URL: {url}")
+        logger.info("APISIX request URL: %s", url)
 
         # Build payload based on provider type
         if provider == "anthropic":
@@ -82,7 +90,7 @@ async def _execute_apisix_generator(
                 payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
             if generator_config["parameters"].get("max_tokens") is not None:
                 payload["max_tokens"] = generator_config["parameters"].get("max_tokens", 1000)
-            logger.info(f"OpenAPI request payload: {payload}")
+            logger.info("OpenAPI request payload: %s", payload)
         else:
             # OpenAI format - handle o1-series models differently
             payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
@@ -92,7 +100,7 @@ async def _execute_apisix_generator(
                 payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
                 payload["max_tokens"] = generator_config["parameters"].get("max_tokens", 1000)
             else:
-                logger.info(f"Using o1-series model '{model}' - skipping temperature and max_tokens parameters")
+                logger.info("Using o1-series model '%s' - skipping temperature and max_tokens parameters", model)
 
         headers = {"Content-Type": "application/json", "X-API-Gateway": "APISIX"}
 
@@ -101,28 +109,28 @@ async def _execute_apisix_generator(
         api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY")
         if api_key:
             headers["apikey"] = api_key
-            logger.info(f"Using APISIX API key for authentication (provider: {provider})")
+            logger.info("Using APISIX API key for authentication (provider: %s)", provider)
         else:
             logger.warning("No APISIX API key found in environment - requests may fail")
 
         # For OpenAPI providers, APISIX proxy-rewrite plugin handles upstream auth
         if provider.startswith("openapi-"):
             provider_id = provider.replace("openapi-", "")
-            logger.info(f"OpenAPI provider {provider_id} - authentication will be handled by APISIX proxy-rewrite")
+            logger.info("OpenAPI provider %s - authentication will be handled by APISIX proxy-rewrite", provider_id)
 
         # Log request details for debugging
-        logger.info(f"Making request to: {url}")
-        logger.info(f"Request headers keys: {list(headers.keys())}")
+        logger.info("Making request to: %s", url)
+        logger.info("Request headers keys: %s", list(headers.keys()))
         if "Authorization" in headers:
             auth_header = headers["Authorization"]
             if auth_header.startswith("Bearer "):
                 token = auth_header[7:]
                 masked = token[:4] + "..." + token[-4:] if len(token) > 8 else "***"
-                logger.info(f"Authorization header: Bearer {masked}")
+                logger.info("Authorization header: Bearer %s", masked)
 
         response = requests.post(url, json=payload, headers=headers, timeout=30)
 
-        logger.info(f"APISIX response status: {response.status_code}")
+        logger.info("APISIX response status: %s", response.status_code)
 
         if response.status_code == 200:
             result = response.json()
@@ -165,7 +173,7 @@ async def _execute_apisix_generator(
                 }
 
     except Exception as e:
-        logger.error(f"APISIX generator exception: {e}")
+        logger.error("APISIX generator exception: %s", e)
 
         # Return proper error for connection issues
         if "Connection refused" in str(e) or "Failed to establish a new connection" in str(e):
@@ -186,7 +194,7 @@ async def _execute_generic_generator(
     generator_type = generator_config.get("type", "unknown")
     generator_name = generator_config.get("name", "unknown")
 
-    logger.error(f"Attempted to execute unsupported generator type: {generator_type} (name: {generator_name})")
+    logger.error("Attempted to execute unsupported generator type: %s (name: %s)", generator_type, generator_name)
 
     return {
         "success": False,
@@ -209,7 +217,7 @@ def _get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
         if endpoint:
             return endpoint
         # If no endpoint found, log detailed error
-        logger.error(f"No APISIX endpoint found for OpenAPI provider {provider} with model {model}")
+        logger.error("No APISIX endpoint found for OpenAPI provider %s with model %s", provider, model)
         return None
 
     # Map model names to APISIX route endpoints
@@ -240,9 +248,9 @@ def _get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
     }
 
     # First try exact model match
-    endpoint = model_endpoint_mapping.get(model)
-    if endpoint:
-        return endpoint
+    model_endpoint: Optional[str] = model_endpoint_mapping.get(model)
+    if model_endpoint:
+        return model_endpoint
 
     # Fallback to provider-based generic endpoints
     provider_endpoint_mapping = {
@@ -264,7 +272,7 @@ async def get_generator_by_name(generator_name: str, user_context: Optional[str]
         # Use provided user context or fallback to default
         # For orchestrator calls, the user context should be passed from the authenticated request
         user_id = user_context or "violentutf.api"  # Fallback for backward compatibility
-        logger.info(f"Getting generator '{generator_name}' for user '{user_id}'")
+        logger.info("Getting generator '%s' for user '%s'", generator_name, user_id)
 
         db_manager = get_duckdb_manager(user_id)
         generators_data = db_manager.list_generators()
@@ -290,11 +298,11 @@ async def get_generator_by_name(generator_name: str, user_context: Optional[str]
 
         # If not found, log available generators and return None
         available_names = [gen.get("name") for gen in generators_data]
-        logger.error(f"Generator '{generator_name}' not found in database for user '{user_id}'")
-        logger.error(f"Available generators for user '{user_id}': {available_names}")
+        logger.error("Generator '%s' not found in database for user '%s'", generator_name, user_id)
+        logger.error("Available generators for user '%s': %s", user_id, available_names)
         return None
 
     except Exception as e:
-        logger.error(f"Error getting generator by name: {e}")
+        logger.error("Error getting generator by name: %s", e)
         # Return None to indicate database error
         return None

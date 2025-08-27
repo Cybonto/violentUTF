@@ -21,7 +21,7 @@
   },
   "solution": [
     "Register custom markers in api_tests/conftest.py pytest_configure",
-    "Import marker registration from main conftest.py", 
+    "Import marker registration from main conftest.py",
     "Add missing markers to pytest.ini configuration",
     "Ensure marker definitions are available in test discovery phase"
   ]

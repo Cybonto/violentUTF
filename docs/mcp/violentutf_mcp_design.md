@@ -1,7 +1,7 @@
 # ViolentUTF Model Context Protocol Server Design Document
 
-> **Document Type**: Design Specification & Implementation Guide  
-> **Status**: PLANNED - Not Yet Implemented  
+> **Document Type**: Design Specification & Implementation Guide
+> **Status**: PLANNED - Not Yet Implemented
 > **Last Updated**: January 2025
 
 ## ⚠️ Important Notice
@@ -13,7 +13,7 @@ This document describes the **planned design** for ViolentUTF's Model Context Pr
 1. [Introduction & System Overview](#1-introduction--system-overview)
 2. [Current State Analysis](#2-current-state-analysis)
 3. [Implementation Roadmap](#3-implementation-roadmap)
-4. [System Architecture](#4-system-architecture)  
+4. [System Architecture](#4-system-architecture)
 5. [MCP Primitives Design](#5-mcp-primitives-design)
 6. [API Integration Architecture](#6-api-integration-architecture)
 7. [Security Architecture](#7-security-architecture)
@@ -242,12 +242,12 @@ Workflow phases integrate sampling requests for:
 The following API endpoints have been verified to exist and are ready for MCP exposure:
 
 **System Management**
-- ✅ `/api/v1/health/*` - Health checks and monitoring  
+- ✅ `/api/v1/health/*` - Health checks and monitoring
 - ✅ `/api/v1/database/*` - Database initialization, status, and management
 - ✅ `/api/v1/sessions/*` - Session state persistence and recovery
 - ✅ `/api/v1/config/*` - Configuration parameter management
 
-**Authentication & Security**  
+**Authentication & Security**
 - ✅ `/api/v1/auth/*` - JWT token management and user authentication
 - ✅ `/api/v1/keys/*` - JWT key rotation and management
 
@@ -282,7 +282,7 @@ The six-phase workflow is implemented but with more flexibility than originally 
 
 #### 2.2.1 MCP Components Not Yet Implemented
 - ❌ MCP Server infrastructure
-- ❌ FastAPI-MCP library integration  
+- ❌ FastAPI-MCP library integration
 - ❌ MCP primitive handlers (Tools, Resources, Prompts, Sampling)
 - ❌ OAuth proxy for MCP client compatibility
 - ❌ WebSocket subscriptions for real-time updates
@@ -306,7 +306,7 @@ The six-phase workflow is implemented but with more flexibility than originally 
 - [ ] Implement basic MCP server with stdio transport support
 - [ ] Add MCP server mount point to main FastAPI application
 
-#### 3.1.2 Authentication Integration  
+#### 3.1.2 Authentication Integration
 - [ ] Create Keycloak OAuth proxy for MCP clients
 - [ ] Implement JWT token bridge between Keycloak and ViolentUTF
 - [ ] Add MCP-specific authentication handlers
@@ -611,11 +611,11 @@ class CacheStrategy:
     # L1 Cache: In-memory for frequently accessed data
     memory_cache_size = 100MB
     memory_cache_ttl = 60_seconds
-    
+
     # L2 Cache: Redis for shared caching across instances
     redis_cache_ttl = 300_seconds
     redis_cache_max_size = 1GB
-    
+
     # L3 Cache: API response caching
     api_response_cache_ttl = 60_seconds
     api_response_max_entries = 1000
@@ -650,11 +650,11 @@ class AsyncOperationManager:
     # Connection pooling for API calls
     api_connection_pool_size = 20
     api_connection_timeout = 30_seconds
-    
+
     # Concurrent operation limits
     max_concurrent_tools = 10
     max_concurrent_resources = 50
-    
+
     # Background task management
     background_task_queue_size = 100
     background_task_workers = 5
@@ -1172,7 +1172,7 @@ The wrapper implements robust error handling for PyRIT orchestrator creation fai
 - **Code injection** - secure dependency management
 - **Supply chain** - verified distribution channels
 
-#### 7.1.2 Operation Phase Threats  
+#### 7.1.2 Operation Phase Threats
 - **Tool name conflicts** - unique, descriptive naming
 - **Malicious code execution** - strict input validation
 - **Credential theft** - secure API key management
@@ -1244,7 +1244,7 @@ The wrapper implements robust error handling for PyRIT orchestrator creation fai
 
 ### 9.2 MCP Evolution Adaptability
 - **Protocol abstraction** layer for MCP changes
-- **Feature flags** for experimental capabilities  
+- **Feature flags** for experimental capabilities
 - **Backward compatibility** maintenance strategy
 - **Migration tooling** for breaking changes
 

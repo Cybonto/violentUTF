@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # datasets/data_loaders.py
 
 """
@@ -31,6 +37,7 @@ import os
 from io import StringIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
+from urllib.parse import urlparse
 
 import pandas as pd
 import requests
@@ -251,7 +258,7 @@ def fetch_online_dataset(url: str) -> pd.DataFrame:
         response = requests.get(url, timeout=30)
         response.raise_for_status()
         # Determine the file extension based on the URL
-        parsed_url = requests.utils.urlparse(url)
+        parsed_url = urlparse(url)
         file_extension = Path(parsed_url.path).suffix.lower()
         content = response.content
         if file_extension not in [".csv", ".tsv", ".json", ".jsonl", ".yaml", ".yml", ".txt"]:

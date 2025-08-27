@@ -132,7 +132,7 @@ MCP will guide through:
      - Extract parameters from natural language
      - Suggest appropriate configuration steps
 
-3. **Extend Existing Infrastructure** 
+3. **Extend Existing Infrastructure**
    - **No need to update authentication** - MCP endpoints already configured in APISIX
    - Add SSE connection handling to existing error handling patterns
    - Ensure compatibility with existing `token_manager.py`
@@ -915,8 +915,8 @@ MCP will extract parameters from natural language:
 
 ---
 
-*Document Version: 3.0*  
-*Last Updated: [Current Date]*  
+*Document Version: 3.0*
+*Last Updated: [Current Date]*
 *Status: Enhanced with Integration Testing Requirements, Real MCP Server Usage, and Progressive Documentation Strategy*
 
 ### Key Improvements in Version 3.0:

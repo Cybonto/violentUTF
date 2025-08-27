@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Base Classes for MCP Prompts
 ============================
@@ -8,7 +14,7 @@ template rendering, argument validation, and context management.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from jinja2 import BaseLoader, Environment, Template, TemplateError
 from pydantic import BaseModel, Field
@@ -69,6 +75,7 @@ class BasePrompt(ABC):
         self.template_string = template
         self.category = category
         self.arguments: List[PromptArgument] = []
+        self.template: Optional[Template] = None
 
         # Create Jinja2 environment with security features
         self.jinja_env = Environment(loader=BaseLoader(), autoescape=True, trim_blocks=True, lstrip_blocks=True)
@@ -76,7 +83,7 @@ class BasePrompt(ABC):
         try:
             self.template = self.jinja_env.from_string(template)
         except TemplateError as e:
-            logger.error(f"Template error in prompt {name}: {e}")
+            logger.error("Template error in prompt %s: %s", name, e)
             self.template = None
 
     @abstractmethod
@@ -119,7 +126,7 @@ class BasePrompt(ABC):
         try:
             context = await self.get_context(params)
         except Exception as e:
-            logger.warning(f"Error getting context for prompt {self.name}: {e}")
+            logger.warning("Error getting context for prompt %s: %s", self.name, e)
             context = {}
 
         # Merge with provided parameters
@@ -133,10 +140,10 @@ class BasePrompt(ABC):
         # Render template
         try:
             rendered = self.template.render(**full_context)
-            logger.debug(f"Successfully rendered prompt: {self.name}")
+            logger.debug("Successfully rendered prompt: %s", self.name)
             return rendered
         except Exception as e:
-            logger.error(f"Prompt rendering error for {self.name}: {e}")
+            logger.error("Prompt rendering error for %s: %s", self.name, e)
             raise ValueError(f"Failed to render prompt: {e}")
 
 
@@ -159,9 +166,10 @@ class DynamicPrompt(BasePrompt):
         """Get dynamic context from provider"""
         if self.context_provider:
             try:
-                return await self.context_provider(params)
+                result = await self.context_provider(params)
+                return cast(Dict[str, Any], result)
             except Exception as e:
-                logger.error(f"Error getting dynamic context for {self.name}: {e}")
+                logger.error("Error getting dynamic context for %s: %s", self.name, e)
                 return {"error": str(e)}
         return {}
 
@@ -175,7 +183,7 @@ class PromptRegistry:
 
     def register(self, prompt: BasePrompt):
         """Register a prompt"""
-        logger.info(f"Registering prompt: {prompt.name} (category: {prompt.category})")
+        logger.info("Registering prompt: %s (category: %s)", prompt.name, prompt.category)
         self._prompts[prompt.name] = prompt
 
         # Add to category

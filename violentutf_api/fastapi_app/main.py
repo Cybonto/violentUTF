@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 ViolentUTF API - FastAPI application for programmatic access to LLM red-teaming tools
 """
@@ -5,6 +11,7 @@ ViolentUTF API - FastAPI application for programmatic access to LLM red-teaming 
 import logging
 import os
 from contextlib import asynccontextmanager
+from typing import Callable, cast
 
 from app.api.routes import api_router
 from app.core.config import settings
@@ -29,9 +36,9 @@ WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     logger.info("Starting ViolentUTF API...")
-    logger.info(f"API Title: {settings.PROJECT_NAME}")
-    logger.info(f"API Version: {settings.VERSION}")
-    logger.info(f"Environment: {settings.ENVIRONMENT}")
+    logger.info("API Title: %s", settings.PROJECT_NAME)
+    logger.info("API Version: %s", settings.VERSION)
+    logger.info("Environment: %s", settings.ENVIRONMENT)
 
     # Initialize database
     logger.info("Initializing database...")
@@ -41,11 +48,11 @@ async def lifespan(app: FastAPI):
     # Initialize PyRIT orchestrator service
     logger.info("Initializing PyRIT orchestrator service...")
     try:
-        from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
+        from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service  # noqa: F401
 
         logger.info("PyRIT orchestrator service initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize PyRIT orchestrator service: {e}")
+        logger.error("Failed to initialize PyRIT orchestrator service: %s", e)
         # Don't fail the startup, just log the error
 
     # Initialize MCP server
@@ -56,7 +63,7 @@ async def lifespan(app: FastAPI):
         await mcp_server.initialize()
         logger.info("MCP server initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize MCP server: {e}")
+        logger.error("Failed to initialize MCP server: %s", e)
         # Don't fail the startup, just log the error
 
     yield
@@ -85,7 +92,7 @@ setup_security_headers(app, environment=settings.ENVIRONMENT, api_version=settin
 
 # Add rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
+app.add_exception_handler(RateLimitExceeded, cast(Callable, custom_rate_limit_handler))
 
 # Setup secure error handlers
 setup_error_handlers(app, development_mode=settings.DEBUG)
@@ -100,7 +107,7 @@ try:
     mcp_server.mount_to_app(app)
     logger.info("MCP server mounted successfully")
 except Exception as e:
-    logger.error(f"Failed to mount MCP server: {e}")
+    logger.error("Failed to mount MCP server: %s", e)
 
 
 # Root endpoint

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Secure error handling module to prevent information disclosure
 SECURITY: Sanitizes error messages and prevents internal system information leakage
@@ -5,9 +11,8 @@ SECURITY: Sanitizes error messages and prevents internal system information leak
 
 import logging
 import re
-import sys
 import traceback
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -200,7 +205,8 @@ def handle_validation_error(error: ValidationError) -> Dict[str, Any]:
 
 async def security_error_handler(request: Request, exc: SecurityError) -> JSONResponse:
     """Handle security-related errors"""
-    logger.warning(f"Security error from {request.client.host}: {exc.detail}")
+    client_host = request.client.host if request.client else "unknown"
+    logger.warning("Security error from %s: %s", client_host, exc.detail)
 
     response = create_error_response(
         exc, status_code=exc.status_code, detail="Access denied"  # Generic message for security
@@ -211,7 +217,8 @@ async def security_error_handler(request: Request, exc: SecurityError) -> JSONRe
 
 async def rate_limit_error_handler(request: Request, exc: RateLimitError) -> JSONResponse:
     """Handle rate limit errors"""
-    logger.warning(f"Rate limit exceeded from {request.client.host}")
+    client_host = request.client.host if request.client else "unknown"
+    logger.warning("Rate limit exceeded from %s", client_host)
 
     response = create_error_response(
         exc, status_code=exc.status_code, detail="Rate limit exceeded. Please try again later."
@@ -229,11 +236,12 @@ async def validation_error_handler(request: Request, exc: ValidationError) -> JS
     # Log validation failure for security monitoring
     log_validation_failure(
         request=request,
-        field="multiple" if len(exc.errors()) > 1 else exc.errors()[0].get("loc", ["unknown"])[-1],
+        field="multiple" if len(exc.errors()) > 1 else str(exc.errors()[0].get("loc", ["unknown"])[-1]),
         error=f"{len(exc.errors())} validation errors",
     )
 
-    logger.info(f"Validation error from {request.client.host}: {len(exc.errors())} errors")
+    client_host = request.client.host if request.client else "unknown"
+    logger.info(f"Validation error from {client_host}: {len(exc.errors())} errors")
 
     response = handle_validation_error(exc)
 
@@ -244,10 +252,10 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     """Handle FastAPI HTTP exceptions"""
     # Log but don't expose details for server errors
     if exc.status_code >= 500:
-        logger.error(f"Server error {exc.status_code}: {exc.detail}")
+        logger.error("Server error %s: %s", exc.status_code, exc.detail)
         detail = "Internal server error"
     else:
-        logger.info(f"Client error {exc.status_code}: {exc.detail}")
+        logger.info("Client error %s: %s", exc.status_code, exc.detail)
         detail = exc.detail
 
     response = create_error_response(exc, status_code=exc.status_code, detail=detail)
@@ -335,7 +343,7 @@ def setup_error_handlers(app, development_mode: bool = False):
     else:
         app.add_exception_handler(Exception, general_exception_handler)
 
-    logger.info(f"Error handlers configured (development_mode={development_mode})")
+    logger.info("Error handlers configured (development_mode=%s)", development_mode)
 
 
 # Utility functions for endpoint error handling

@@ -1404,10 +1404,10 @@ embedding_type_name (String) – The name or type of the embedding, indicating t
 __init__(**kwargs)
 A simple constructor that allows initialization from kwargs.
 
-Sets 
+Sets
 #### Attributes: on the constructed instance using the names and values in kwargs.
 
-Only keys that are present as 
+Only keys that are present as
 #### Attributes: of the instance’s class are allowed. These could be, for example, any mapped columns or relationships.
 
 #### Methods:
@@ -2047,10 +2047,10 @@ Returns a string representation of the memory entry.
 __init__(*, entry)
 A simple constructor that allows initialization from kwargs.
 
-Sets 
+Sets
 #### Attributes: on the constructed instance using the names and values in kwargs.
 
-Only keys that are present as 
+Only keys that are present as
 #### Attributes: of the instance’s class are allowed. These could be, for example, any mapped columns or relationships.
 
 #### Methods:
@@ -4294,7 +4294,7 @@ class SeedPrompt(*, id: UUID | None = None, value: str, value_sha256: str | None
 
 Bases: YamlLoadable
 
-Represents a seed prompt with various 
+Represents a seed prompt with various
 #### Attributes: and metadata.
 
 __init__(*, id: UUID | None = None, value: str, value_sha256: str | None = None, data_type: Literal['text', 'image_path', 'audio_path', 'video_path', 'url', 'error'], name: str | None = None, dataset_name: str | None = None, harm_categories: List[str] | None = None, description: str | None = None, authors: List[str] | None = None, groups: List[str] | None = None, source: str | None = None, date_added: datetime | None = datetime.datetime(2025, 2, 28, 23, 16, 45, 135497), added_by: str | None = None, metadata: Dict[str, str | int] | None = None, parameters: List[str] | None = None, prompt_group_id: UUID | None = None, prompt_group_alias: str | None = None, sequence: int | None = 0)
@@ -9797,7 +9797,7 @@ role. (such as conversation ID and)
 #### Returns
 A response object containing generated text pieces as a list of
 PromptRequestPiece
-objects. Each PromptRequestPiece includes the generated text and relevant information such as conversation ID, role, and any additional response 
+objects. Each PromptRequestPiece includes the generated text and relevant information such as conversation ID, role, and any additional response
 #### Attributes:.
 
 #### Return type

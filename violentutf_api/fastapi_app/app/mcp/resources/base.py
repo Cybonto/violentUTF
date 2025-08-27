@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Advanced Base Classes for MCP Resources
 ======================================
@@ -10,7 +16,7 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -106,7 +112,7 @@ class CacheEntry:
 class BaseResourceProvider(ABC):
     """Enhanced base class for resource providers"""
 
-    def __init__(self, uri_pattern: str, provider_name: str = None):
+    def __init__(self, uri_pattern: str, provider_name: Optional[str] = None):
         self.pattern = ResourcePattern(uri_pattern)
         self.provider_name = provider_name or self.__class__.__name__
         self._cache: Dict[str, AdvancedResource] = {}
@@ -148,7 +154,7 @@ class BaseResourceProvider(ABC):
     def _get_cached_resource(self, uri: str) -> Optional[AdvancedResource]:
         """Get resource from cache if valid"""
         if self._is_cache_valid(uri):
-            logger.debug(f"Cache hit for resource: {uri}")
+            logger.debug("Cache hit for resource: %s", uri)
             return self._cache[uri]
         return None
 
@@ -156,7 +162,7 @@ class BaseResourceProvider(ABC):
         """Clear resource cache"""
         self._cache.clear()
         self._cache_timestamps.clear()
-        logger.info(f"Cleared cache for {self.provider_name}")
+        logger.info("Cleared cache for %s", self.provider_name)
 
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
@@ -186,7 +192,9 @@ class AdvancedResourceRegistry:
 
     def register(self, provider: BaseResourceProvider) -> None:
         """Register a resource provider"""
-        logger.info(f"Registering resource provider: {provider.provider_name} for pattern: {provider.pattern.pattern}")
+        logger.info(
+            "Registering resource provider: %s for pattern: %s", provider.provider_name, provider.pattern.pattern
+        )
         self._providers.append(provider)
         self._provider_map[provider.provider_name] = provider
 
@@ -198,7 +206,7 @@ class AdvancedResourceRegistry:
         logger.info(f"Initializing resource registry with {len(self._providers)} providers")
         self._initialized = True
 
-    async def get_resource(self, uri: str, params: Dict[str, Any] = None) -> Optional[AdvancedResource]:
+    async def get_resource(self, uri: str, params: Optional[Dict[str, Any]] = None) -> Optional[AdvancedResource]:
         """Get resource from appropriate provider"""
         if not self._initialized:
             await self.initialize()
@@ -222,10 +230,10 @@ class AdvancedResourceRegistry:
 
                     return resource
                 except Exception as e:
-                    logger.error(f"Error getting resource {uri} from {provider.provider_name}: {e}")
+                    logger.error("Error getting resource %s from %s: %s", uri, provider.provider_name, e)
                     continue
 
-        logger.warning(f"No provider found for URI: {uri}")
+        logger.warning("No provider found for URI: %s", uri)
         return None
 
     async def list_resources(
@@ -257,7 +265,7 @@ class AdvancedResourceRegistry:
                 all_resources.extend(resources)
 
             except Exception as e:
-                logger.error(f"Error listing resources from {provider.provider_name}: {e}")
+                logger.error("Error listing resources from %s: %s", provider.provider_name, e)
                 continue
 
         logger.info(f"Listed {len(all_resources)} resources from {len(providers_to_check)} providers")

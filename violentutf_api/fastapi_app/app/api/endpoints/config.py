@@ -1,12 +1,17 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Configuration management endpoints
 """
 
-import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import yaml
 from app.core.auth import get_current_user
@@ -17,6 +22,7 @@ from app.schemas.config import (
     EnvironmentConfigResponse,
     EnvironmentSchemaResponse,
     EnvironmentValidationResponse,
+    ParameterFile,
     ParameterFilesListResponse,
     SaltGenerationResponse,
     UpdateConfigRequest,
@@ -142,7 +148,7 @@ async def load_config_from_file(file: UploadFile = File(...), current_user: User
     """
     try:
         # Validate file type
-        if not file.filename.endswith((".yaml", ".yml")):
+        if not file.filename or not file.filename.endswith((".yaml", ".yml")):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="File must be a YAML file (.yaml or .yml)"
             )
@@ -169,7 +175,7 @@ async def load_config_from_file(file: UploadFile = File(...), current_user: User
 
         return ConfigLoadResponse(
             parameters=parameters,
-            loaded_from=file.filename,
+            loaded_from=file.filename or "Unknown file",
             validation_results=validation_results,
             success=True,
             message=f"Successfully loaded {len(parameters)} parameters from {file.filename}",
@@ -197,25 +203,25 @@ async def list_parameter_files(current_user: User = Depends(get_current_user)):
             for file_path in param_dir.glob("*.yaml"):
                 stat = file_path.stat()
                 parameter_files.append(
-                    {
-                        "filename": file_path.name,
-                        "path": str(file_path),
-                        "size_bytes": stat.st_size,
-                        "modified": datetime.fromtimestamp(stat.st_mtime),
-                        "type": "system",
-                    }
+                    ParameterFile(
+                        filename=file_path.name,
+                        path=str(file_path),
+                        size_bytes=stat.st_size,
+                        modified=datetime.fromtimestamp(stat.st_mtime),
+                        type="system",
+                    )
                 )
 
             for file_path in param_dir.glob("*.yml"):
                 stat = file_path.stat()
                 parameter_files.append(
-                    {
-                        "filename": file_path.name,
-                        "path": str(file_path),
-                        "size_bytes": stat.st_size,
-                        "modified": datetime.fromtimestamp(stat.st_mtime),
-                        "type": "system",
-                    }
+                    ParameterFile(
+                        filename=file_path.name,
+                        path=str(file_path),
+                        size_bytes=stat.st_size,
+                        modified=datetime.fromtimestamp(stat.st_mtime),
+                        type="system",
+                    )
                 )
 
         # Check user config directory
@@ -224,13 +230,13 @@ async def list_parameter_files(current_user: User = Depends(get_current_user)):
             for file_path in config_dir.glob("*.yaml"):
                 stat = file_path.stat()
                 parameter_files.append(
-                    {
-                        "filename": file_path.name,
-                        "path": str(file_path),
-                        "size_bytes": stat.st_size,
-                        "modified": datetime.fromtimestamp(stat.st_mtime),
-                        "type": "user",
-                    }
+                    ParameterFile(
+                        filename=file_path.name,
+                        path=str(file_path),
+                        size_bytes=stat.st_size,
+                        modified=datetime.fromtimestamp(stat.st_mtime),
+                        type="user",
+                    )
                 )
 
         return ParameterFilesListResponse(files=parameter_files, total_count=len(parameter_files))
@@ -251,7 +257,7 @@ async def get_environment_config(current_user: User = Depends(get_current_user))
     """
     try:
         # Get environment variables (mask sensitive ones)
-        env_vars = {}
+        env_vars: Dict[str, Optional[str]] = {}
         required_vars = [
             "PYRIT_DB_SALT",
             "VIOLENTUTF_API_KEY",
@@ -319,7 +325,7 @@ async def update_environment_config(
                 )
 
         # Simulate update (in production, this would actually update environment)
-        updated_vars = {}
+        updated_vars: Dict[str, Optional[str]] = {}
         for key, value in request.environment_variables.items():
             # Mask sensitive values in response
             if "KEY" in key or "SECRET" in key or "SALT" in key:

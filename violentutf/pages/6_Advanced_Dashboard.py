@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import asyncio
 import json
 import os
@@ -798,7 +804,7 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
             )
 
         # Scorer-based risk
-        scorer_risks = defaultdict(int)
+        scorer_risks: Dict[str, int] = defaultdict(int)
         for r in results:
             if r.get("score_value") is True:
                 scorer = r.get("metadata", {}).get("scorer_type", "Unknown")

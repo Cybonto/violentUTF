@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Pydantic schemas for generator management API endpoints
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks
@@ -7,9 +13,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from app.core.validation import (
-    SecurityLimits,
     ValidationPatterns,
-    create_validation_error,
     sanitize_string,
     validate_generator_parameters,
 )

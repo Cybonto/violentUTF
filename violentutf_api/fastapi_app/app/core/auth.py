@@ -1,11 +1,16 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Authentication and authorization middleware
 """
 
 import logging
-from typing import Optional, Tuple
+from typing import Optional
 
-import httpx
 from app.core.config import settings
 from app.core.security import decode_token
 from app.db.database import get_db_session
@@ -98,7 +103,7 @@ class AuthMiddleware:
                 request_time = int(apisix_timestamp)
 
                 if abs(current_time - request_time) > 300:
-                    logger.warning(f"APISIX timestamp outside valid window: {request_time}")
+                    logger.warning("APISIX timestamp outside valid window: %s", request_time)
                     return False
 
                 # Verify HMAC signature
@@ -107,8 +112,8 @@ class AuthMiddleware:
                     return False
 
                 logger.debug("APISIX HMAC verification successful")
-            except Exception as e:
-                logger.warning(f"APISIX HMAC verification error: {e}")
+            except (ValueError, KeyError, TypeError) as e:
+                logger.warning("APISIX HMAC verification error: %s", e)
                 # Continue without HMAC verification for now
 
         logger.debug("APISIX gateway verification successful")
@@ -127,7 +132,6 @@ class AuthMiddleware:
             True if signature is valid, False otherwise
         """
         try:
-            import base64
             import hashlib
             import hmac
 
@@ -154,8 +158,8 @@ class AuthMiddleware:
             # Compare signatures using constant-time comparison
             return hmac.compare_digest(signature, expected_signature)
 
-        except Exception as e:
-            logger.error(f"Error verifying APISIX signature: {str(e)}")
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.error("Error verifying APISIX signature: %s", str(e))
             return False
 
     async def _authenticate_jwt(self, token: str) -> User:
@@ -176,13 +180,13 @@ class AuthMiddleware:
             # IMPORTANT: Always use 'sub' claim as username, never 'name' or 'display_name'
             # The 'name' field is a display name and using it causes data isolation issues
             if "name" in payload:
-                logger.warning(f"JWT contains deprecated 'name' field: {payload.get('name')}, using sub: {username}")
+                logger.warning("JWT contains deprecated 'name' field: %s, using sub: %s", payload.get("name"), username)
             if "display_name" in payload:
-                logger.debug(f"JWT contains display_name: {payload.get('display_name')}, using sub: {username}")
+                logger.debug("JWT contains display_name: %s, using sub: %s", payload.get("display_name"), username)
 
             # Create user with ONLY the username from 'sub' claim
             user = User(username=username, email=payload.get("email"), roles=payload.get("roles", []), is_active=True)
-            logger.debug(f"Created User object with username: {user.username}")
+            logger.debug("Created User object with username: %s", user.username)
             return user
 
         except JWTError:
@@ -215,8 +219,14 @@ class AuthMiddleware:
                 await db.commit()
 
             # Return user object
+            username = payload.get("sub")
+            if not isinstance(username, str):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key: missing username"
+                )
+
             return User(
-                username=payload.get("sub"),
+                username=username,
                 email=None,
                 roles=["api_user"],
                 permissions=payload.get("permissions", []),

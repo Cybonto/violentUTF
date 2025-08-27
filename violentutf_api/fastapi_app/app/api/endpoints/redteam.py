@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Red-teaming endpoints for PyRIT and Garak integration
 """
@@ -8,7 +14,7 @@ from typing import Any, Dict, List, Optional
 from app.core.auth import get_current_user
 from app.services.garak_integration import garak_service
 from app.services.pyrit_integration import pyrit_service
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -82,7 +88,7 @@ async def get_redteam_status(current_user=Depends(get_current_user)):
         )
 
     except Exception as e:
-        logger.error(f"Error getting red-team status: {e}")
+        logger.error("Error getting red-team status: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get status: {str(e)}")
 
 
@@ -120,7 +126,7 @@ async def create_pyrit_target(request: PyRITTargetRequest, current_user=Depends(
         }
 
     except Exception as e:
-        logger.error(f"Error creating PyRIT target: {e}")
+        logger.error("Error creating PyRIT target: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to create target: {str(e)}")
 
 
@@ -131,7 +137,7 @@ async def run_pyrit_orchestration(request: PyRITOrchestrationRequest, current_us
         if not pyrit_service.is_available():
             raise HTTPException(status_code=503, detail="PyRIT is not available")
 
-        logger.info(f"User {current_user.username} running PyRIT orchestration")
+        logger.info("User %s running PyRIT orchestration", current_user.username)
 
         # In a real implementation, we'd retrieve the target by ID
         # For now, create a demo target
@@ -157,7 +163,7 @@ async def run_pyrit_orchestration(request: PyRITOrchestrationRequest, current_us
         }
 
     except Exception as e:
-        logger.error(f"Error running PyRIT orchestration: {e}")
+        logger.error("Error running PyRIT orchestration: %s", e)
         raise HTTPException(status_code=500, detail=f"Orchestration failed: {str(e)}")
 
 
@@ -168,14 +174,14 @@ async def list_garak_probes(current_user=Depends(get_current_user)):
         if not garak_service.is_available():
             raise HTTPException(status_code=503, detail="Garak is not available")
 
-        logger.info(f"User {current_user.username} requested Garak probes list")
+        logger.info("User %s requested Garak probes list", current_user.username)
 
         probes = garak_service.list_available_probes()
 
         return GarakProbesResponse(probes=probes, total=len(probes))
 
     except Exception as e:
-        logger.error(f"Error listing Garak probes: {e}")
+        logger.error("Error listing Garak probes: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to list probes: {str(e)}")
 
 
@@ -186,14 +192,14 @@ async def list_garak_generators(current_user=Depends(get_current_user)):
         if not garak_service.is_available():
             raise HTTPException(status_code=503, detail="Garak is not available")
 
-        logger.info(f"User {current_user.username} requested Garak generators list")
+        logger.info("User %s requested Garak generators list", current_user.username)
 
         generators = garak_service.list_available_generators()
 
         return {"generators": generators, "total": len(generators)}
 
     except Exception as e:
-        logger.error(f"Error listing Garak generators: {e}")
+        logger.error("Error listing Garak generators: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to list generators: {str(e)}")
 
 
@@ -204,7 +210,7 @@ async def run_garak_scan(request: GarakScanRequest, current_user=Depends(get_cur
         if not garak_service.is_available():
             raise HTTPException(status_code=503, detail="Garak is not available")
 
-        logger.info(f"User {current_user.username} starting Garak scan")
+        logger.info("User %s starting Garak scan", current_user.username)
 
         # Prepare probe configuration
         probe_config = {"module": request.probe_module, "name": request.probe_name}
@@ -217,7 +223,7 @@ async def run_garak_scan(request: GarakScanRequest, current_user=Depends(get_cur
         return GarakScanResponse(scan_id=scan_result["scan_id"], status=scan_result["status"], results=scan_result)
 
     except Exception as e:
-        logger.error(f"Error running Garak scan: {e}")
+        logger.error("Error running Garak scan: %s", e)
         raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
 
 
@@ -240,5 +246,5 @@ async def get_garak_scan_results(scan_id: str, current_user=Depends(get_current_
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting scan results: {e}")
+        logger.error("Error getting scan results: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get results: {str(e)}")

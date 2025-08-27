@@ -1,19 +1,22 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Keycloak JWT Token Verification Service
 SECURITY: Implements proper JWT signature verification using Keycloak public keys
 """
 
-import json
 import logging
 import time
-from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin
+from typing import Any, Dict, List, cast
 
 import httpx
 import jwt
 from app.core.config import settings
 from app.core.security_logging import log_authentication_failure, log_security_error
-from cryptography.hazmat.primitives import serialization
 from fastapi import HTTPException, status
 from jwt import PyJWKClient
 
@@ -38,7 +41,7 @@ class KeycloakJWTVerifier:
 
         # Cache for configuration
         self._config_cache = {}
-        self._config_cache_time = 0
+        self._config_cache_time = 0.0
         self._cache_ttl = 3600  # 1 hour cache
 
     async def _get_keycloak_config(self) -> Dict[str, Any]:
@@ -66,8 +69,8 @@ class KeycloakJWTVerifier:
                 # Store JWKS URI for key retrieval
                 self.jwks_uri = config.get("jwks_uri")
 
-                logger.info(f"Retrieved Keycloak configuration for realm: {self.realm}")
-                return config
+                logger.info("Retrieved Keycloak configuration for realm: %s", self.realm)
+                return cast(Dict[str, Any], config)
 
         except Exception as e:
             logger.error(f"Failed to retrieve Keycloak configuration: {str(e)}")
@@ -92,13 +95,12 @@ class KeycloakJWTVerifier:
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="JWKS URI not available from Keycloak"
                 )
 
-            # Create JWKS client with caching
+            # Create JWKS client with caching (using supported parameters only)
             self.jwks_client = PyJWKClient(
                 uri=self.jwks_uri,
                 cache_keys=True,
                 max_cached_keys=10,
-                cache_jwks_for=3600,  # Cache for 1 hour
-                jwks_request_timeout=10,
+                # Note: cache_jwks_for and jwks_request_timeout are not supported parameters
             )
 
         return self.jwks_client
@@ -155,7 +157,7 @@ class KeycloakJWTVerifier:
                 logger.debug(
                     f"Successfully verified Keycloak token for user: {decoded_token.get('preferred_username')}"
                 )
-                return decoded_token
+                return cast(Dict[str, Any], decoded_token)
 
             except jwt.ExpiredSignatureError:
                 logger.warning("Keycloak token has expired")
@@ -207,14 +209,14 @@ class KeycloakJWTVerifier:
         # Validate token type
         token_type = decoded_token.get("typ")
         if token_type and token_type.lower() != "bearer":
-            logger.warning(f"Invalid token type: {token_type}")
+            logger.warning("Invalid token type: %s", token_type)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
 
         # Validate required claims
         required_claims = ["sub", "preferred_username", "email", "realm_access"]
         for claim in required_claims:
             if claim not in decoded_token:
-                logger.warning(f"Missing required claim: {claim}")
+                logger.warning("Missing required claim: %s", claim)
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token missing required claim: {claim}"
                 )

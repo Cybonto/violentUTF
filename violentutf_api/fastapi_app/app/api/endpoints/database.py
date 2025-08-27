@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Database management endpoints for PyRIT Memory (DuckDB) operations
 """
@@ -5,10 +11,7 @@ Database management endpoints for PyRIT Memory (DuckDB) operations
 import hashlib
 import logging
 import os
-import tempfile
 from datetime import datetime
-from pathlib import Path
-from typing import List, Optional
 
 import duckdb
 from app.core.auth import get_current_user
@@ -77,8 +80,8 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
     """
     try:
         # Get configuration
-        salt = request.custom_salt or os.getenv("PYRIT_DB_SALT", "default_salt_2025")
-        app_data_dir = os.getenv("APP_DATA_DIR", "./app_data/violentutf")
+        salt = str(request.custom_salt or os.getenv("PYRIT_DB_SALT", "default_salt_2025"))
+        app_data_dir = str(os.getenv("APP_DATA_DIR", "./app_data/violentutf"))
 
         # Generate database path
         db_path = get_db_path(current_user.username, salt, app_data_dir)
@@ -244,7 +247,7 @@ async def get_database_stats(current_user: User = Depends(get_current_user)):
                     tables.append(TableStats(table_name=table_name, row_count=count))
                 except ValueError as e:
                     # Invalid table name
-                    logger.warning(f"Invalid table name in database stats: {e}")
+                    logger.warning("Invalid table name in database stats: %s", e)
                     tables.append(TableStats(table_name=table_name, row_count=0))
                 except Exception:
                     # Table might not exist
@@ -322,7 +325,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
             """
             )
     except Exception as e:
-        print(f"Error in reset_database_task: {e}")
+        logger.error("Error in reset_database_task: %s", e)
 
 
 @router.post("/reset")
@@ -353,7 +356,7 @@ async def reset_database(
             shutil.copy2(db_path, backup_path)
 
         # Schedule reset task
-        background_tasks.add_task(reset_database_task, db_path, request.preserve_user_data)
+        background_tasks.add_task(reset_database_task, db_path, bool(request.preserve_user_data))
 
         return {"message": "Database reset initiated", "task_status": "running"}
 

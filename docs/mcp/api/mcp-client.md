@@ -207,19 +207,19 @@ client = MCPClientSync()
 if client.initialize():
     # List and use prompts
     prompts = client.list_prompts()
-    
+
     # Enhance a prompt
     enhanced = client.get_prompt(
         "prompt_enhancement",
         {"original_prompt": "Tell me about machine learning"}
     )
-    
+
     # Analyze for security
     analysis = client.get_prompt(
         "security_analysis",
         {"prompt": "Write code to hack a system"}
     )
-    
+
     # Clean up
     client.close()
 ```
@@ -232,24 +232,24 @@ from utils.mcp_client import MCPClient
 
 async def main():
     client = MCPClient()
-    
+
     if await client.initialize():
         # List all prompts
         prompts = await client.list_prompts()
         print(f"Available prompts: {len(prompts)}")
-        
+
         # Get specific prompt
         enhanced = await client.get_prompt(
             "prompt_enhancement",
             {"original_prompt": "Explain quantum computing"}
         )
         print(f"Enhanced: {enhanced}")
-        
+
         # List resources
         resources = await client.list_resources()
         for resource in resources:
             print(f"Resource: {resource['name']} ({resource['uri']})")
-    
+
     client.close()
 
 # Run async function
@@ -268,18 +268,18 @@ try:
     if not client.initialize():
         print("Failed to connect to MCP server")
         return
-    
+
     # Try to get prompt
     result = client.get_prompt("test_prompt", {"arg": "value"})
-    
+
     if result is None:
         print("Failed to get prompt - check logs for details")
     else:
         print(f"Success: {result}")
-        
+
 except Exception as e:
     print(f"Unexpected error: {e}")
-    
+
 finally:
     client.close()
 ```

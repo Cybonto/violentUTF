@@ -26,7 +26,7 @@ repos:
         entry: scripts/check_filenames.py
         language: python
         pass_filenames: true
-        
+
       - id: check-path-length
         name: Check for excessively long paths
         entry: scripts/check_path_length.py
@@ -39,7 +39,7 @@ repos:
     hooks:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-        
+
   - repo: local
     hooks:
       - id: check-env-files
@@ -66,7 +66,7 @@ repos:
     rev: 7.0.0
     hooks:
       - id: flake8
-        additional_dependencies: 
+        additional_dependencies:
           - flake8-docstrings
           - flake8-annotations
         args: ['--max-line-length=120', '--extend-ignore=E203,W503']
@@ -167,43 +167,43 @@ def check_file(filepath):
     """Check a single file for naming issues."""
     path = Path(filepath)
     issues = []
-    
+
     # Check filename
     filename = path.name
-    
+
     # Check for problematic patterns
     for pattern, description in PROBLEMATIC_PATTERNS:
         if re.search(pattern, filename):
             issues.append(f"{description}: {filename}")
-    
+
     # Check for Windows reserved names
     name_without_ext = path.stem.upper()
     if name_without_ext in WINDOWS_RESERVED:
         issues.append(f"Windows reserved filename: {filename}")
-    
+
     # Check full path for spaces
     if ' /' in str(path) or '/ ' in str(path):
         issues.append(f"Spaces around path separator in: {path}")
-    
+
     return issues
 
 def main():
     """Main function to check all provided files."""
     files = sys.argv[1:]
     all_issues = []
-    
+
     for filepath in files:
         issues = check_file(filepath)
         if issues:
             all_issues.extend([(filepath, issue) for issue in issues])
-    
+
     if all_issues:
         print("❌ Filename validation failed!\n")
         for filepath, issue in all_issues:
             print(f"  {filepath}: {issue}")
         print("\nPlease rename these files to be cross-platform compatible.")
         return 1
-    
+
     return 0
 
 if __name__ == "__main__":
@@ -226,15 +226,15 @@ def main():
     """Check all provided files for path length issues."""
     files = sys.argv[1:]
     issues = []
-    
+
     for filepath in files:
         path_length = len(str(Path(filepath).absolute()))
-        
+
         if path_length > MAX_PATH_WINDOWS:
             issues.append((filepath, path_length, "exceeds Windows limit"))
         elif path_length > MAX_PATH_RECOMMENDED:
             issues.append((filepath, path_length, "close to Windows limit"))
-    
+
     if issues:
         print("⚠️  Path length issues detected!\n")
         for filepath, length, reason in issues:
@@ -242,7 +242,7 @@ def main():
         print(f"\nWindows max: {MAX_PATH_WINDOWS} chars")
         print(f"Recommended max: {MAX_PATH_RECOMMENDED} chars")
         return 1
-    
+
     return 0
 
 if __name__ == "__main__":
@@ -268,12 +268,12 @@ def main():
     """Check for .env files that shouldn't be committed."""
     files = sys.argv[1:]
     blocked_files = []
-    
+
     for filepath in files:
         path = Path(filepath)
         if path.name not in ALLOWED_ENV_FILES:
             blocked_files.append(filepath)
-    
+
     if blocked_files:
         print("🚫 Environment files cannot be committed!\n")
         for filepath in blocked_files:
@@ -281,7 +281,7 @@ def main():
         print("\nThese files may contain sensitive credentials.")
         print("Use .env.example or .env.template for templates.")
         return 1
-    
+
     return 0
 
 if __name__ == "__main__":

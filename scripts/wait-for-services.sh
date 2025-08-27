@@ -26,9 +26,9 @@ check_service() {
     local name=$1
     local url=$2
     local response
-    
+
     response=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
-    
+
     if [[ "$response" == "200" ]] || [[ "$response" == "401" ]] || [[ "$response" == "302" ]]; then
         return 0
     else
@@ -41,20 +41,20 @@ wait_for_service() {
     local name=$1
     local url=$2
     local elapsed=0
-    
+
     echo -e "${YELLOW}Waiting for $name to be ready...${NC}"
-    
+
     while [ $elapsed -lt $MAX_WAIT_TIME ]; do
         if check_service "$name" "$url"; then
             echo -e "${GREEN}✓ $name is ready${NC}"
             return 0
         fi
-        
+
         echo -n "."
         sleep $SLEEP_INTERVAL
         elapsed=$((elapsed + SLEEP_INTERVAL))
     done
-    
+
     echo -e "\n${RED}✗ $name failed to become ready within ${MAX_WAIT_TIME}s${NC}"
     return 1
 }
@@ -88,11 +88,11 @@ if $all_ready; then
     exit 0
 else
     echo -e "${RED}Some services failed to become ready${NC}"
-    
+
     # Print debugging information
     echo ""
     echo "=== Debugging Information ==="
-    
+
     # Check Docker logs if available
     if command -v docker &> /dev/null; then
         echo "Recent Docker logs:"
@@ -102,13 +102,13 @@ else
             echo ""
         done
     fi
-    
+
     # Check network connectivity
     echo "Network connectivity:"
     curl -s -o /dev/null -w "Keycloak: %{http_code}\n" http://localhost:8080 || echo "Keycloak: Failed"
     curl -s -o /dev/null -w "APISIX: %{http_code}\n" http://localhost:9080 || echo "APISIX: Failed"
     curl -s -o /dev/null -w "FastAPI: %{http_code}\n" http://localhost:8000 || echo "FastAPI: Failed"
     curl -s -o /dev/null -w "Streamlit: %{http_code}\n" http://localhost:8501 || echo "Streamlit: Failed"
-    
+
     exit 1
 fi

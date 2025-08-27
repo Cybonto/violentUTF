@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 JWT Token Management Utility for ViolentUTF Streamlit Application
 
@@ -38,7 +44,7 @@ class JWTManager:
         self._retry_delay = 5  # seconds
 
         # Track refresh state
-        self._last_refresh_attempt = 0
+        self._last_refresh_attempt: float = 0.0
         self._refresh_in_progress = False
         self._last_error = None
 

@@ -23,11 +23,11 @@ Based on the code analysis, the upgrades appear to be **generally safe** with mi
 
 **Identified Issues:**
 1. **Validator Decorators**: The codebase uses the v1-style `@validator` decorator extensively (found in 39 files). While these still work in v2.11.7, they are deprecated in favor of `@field_validator`.
-   
+
 2. **Config Classes**: Two files use nested `Config` classes:
    - `/app/core/config.py` (line 204)
    - `/app/mcp/config.py` (line 50)
-   
+
    These need to be migrated to the new configuration pattern.
 
 3. **pydantic_settings**: The codebase correctly uses `pydantic_settings` as a separate import, which is the v2 pattern.
@@ -69,8 +69,8 @@ Based on the code analysis, the upgrades appear to be **generally safe** with mi
 **Example Usage:**
 ```python
 async def upload_file(
-    file: UploadFile = File(...), 
-    description: Optional[str] = None, 
+    file: UploadFile = File(...),
+    description: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 )
 ```
@@ -120,7 +120,7 @@ class Config:
 
 # NEW
 model_config = {
-    "env_file": ".env", 
+    "env_file": ".env",
     "case_sensitive": True
 }
 ```

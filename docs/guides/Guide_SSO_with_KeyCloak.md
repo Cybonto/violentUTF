@@ -247,19 +247,19 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         # Get JWKS
         config = await get_oidc_config()
         jwks_uri = config["jwks_uri"]
-        
+
         async with httpx.AsyncClient() as client:
             jwks_response = await client.get(jwks_uri)
             jwks = jwks_response.json()
-        
+
         # Decode token
         payload = jwt.decode(
-            token, 
-            jwks, 
+            token,
+            jwks,
             algorithms=["RS256"],
             audience=CLIENT_ID
         )
-        
+
         return payload
     except JWTError:
         raise HTTPException(
@@ -335,14 +335,14 @@ create_client() {
     local client_id="$1"
     local client_name="$2"
     local redirect_uris="$3"
-    
+
     # Check if client already exists
     make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients?clientId=${client_id}"
     if [ "$API_CALL_STATUS" -eq 200 ] && [ "$(echo "$API_CALL_RESPONSE" | jq 'length')" -gt 0 ]; then
         echo "Client '$client_id' already exists. Skipping creation."
         return 0
     fi
-    
+
     # Create client configuration
     local client_data='{
         "clientId": "'$client_id'",
@@ -357,23 +357,23 @@ create_client() {
         "directAccessGrantsEnabled": true,
         "serviceAccountsEnabled": true
     }'
-    
+
     # Create the client
     make_api_call "POST" "/realms/${TARGET_REALM_NAME}/clients" "$client_data"
     if [ "$API_CALL_STATUS" -eq 201 ]; then
         echo "Client '$client_id' created successfully."
-        
+
         # Get the client UUID
         make_api_call "GET" "/realms/${TARGET_REALM_NAME}/clients?clientId=${client_id}"
         local client_uuid=$(echo "$API_CALL_RESPONSE" | jq -r '.[0].id')
-        
+
         # Generate client secret
         make_api_call "POST" "/realms/${TARGET_REALM_NAME}/clients/${client_uuid}/client-secret"
         local client_secret=$(echo "$API_CALL_RESPONSE" | jq -r '.value')
-        
+
         # Store secret for reporting
         SENSITIVE_VALUES+=("$client_name Client Secret: $client_secret")
-        
+
         # Return the client secret
         echo "$client_secret"
     else
@@ -395,7 +395,7 @@ echo "Creating roles in Keycloak..."
 create_realm_role() {
     local role_name="$1"
     local role_description="$2"
-    
+
     # Check if role exists
     make_api_call "GET" "/realms/${TARGET_REALM_NAME}/roles/${role_name}"
     if [ "$API_CALL_STATUS" -eq 200 ]; then
@@ -405,13 +405,13 @@ create_realm_role() {
         echo "Error checking for role '$role_name'. Status: $API_CALL_STATUS"
         return 1
     fi
-    
+
     # Create role
     local role_data='{
         "name": "'$role_name'",
         "description": "'$role_description'"
     }'
-    
+
     make_api_call "POST" "/realms/${TARGET_REALM_NAME}/roles" "$role_data"
     if [ "$API_CALL_STATUS" -eq 201 ]; then
         echo "Role '$role_name' created successfully."
@@ -430,11 +430,11 @@ create_realm_role "monitor" "User with access to monitoring tools"
 # Assign roles to test user
 if [ -n "$USER_EXISTS_ID" ]; then
     echo "Assigning roles to user '$KEYCLOAK_APP_USERNAME'..."
-    
+
     # Get role representation
     make_api_call "GET" "/realms/${TARGET_REALM_NAME}/roles/admin"
     local admin_role_representation="$API_CALL_RESPONSE"
-    
+
     # Assign role to user
     make_api_call "POST" "/realms/${TARGET_REALM_NAME}/users/${USER_EXISTS_ID}/role-mappings/realm" "[$admin_role_representation]"
     if [ "$API_CALL_STATUS" -eq 204 ]; then
@@ -454,7 +454,7 @@ configure_apisix_route() {
     local upstream_target="$3"
     local client_id="$4"
     local client_secret="$5"
-    
+
     local route_config='{
         "uri": "'$uri_pattern'",
         "plugins": {
@@ -476,13 +476,13 @@ configure_apisix_route() {
             }
         }
     }'
-    
+
     # Create the route in APISIX
     curl -i -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${route_config}"
-      
+
     if [ $? -eq 0 ]; then
         echo "Successfully configured APISIX route for $route_id"
     else

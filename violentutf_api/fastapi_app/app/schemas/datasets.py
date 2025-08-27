@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Pydantic schemas for dataset management API endpoints
 SECURITY: Enhanced with comprehensive input validation to prevent injection attacks
@@ -5,14 +11,12 @@ SECURITY: Enhanced with comprehensive input validation to prevent injection atta
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from app.core.validation import (
     SecurityLimits,
     ValidationPatterns,
-    create_validation_error,
     sanitize_string,
-    validate_file_upload,
     validate_json_data,
     validate_url,
 )
@@ -55,7 +59,7 @@ class SeedPromptInfo(BaseModel):
     dataset_name: Optional[str] = Field(
         default=None, max_length=SecurityLimits.MAX_NAME_LENGTH, description="Dataset this prompt belongs to"
     )
-    harm_categories: Optional[List[str]] = Field(default=None, max_items=20, description="Harm categories")
+    harm_categories: Optional[List[str]] = Field(default=None, description="Harm categories", max_length=20)
     description: Optional[str] = Field(
         default=None, max_length=SecurityLimits.MAX_DESCRIPTION_LENGTH, description="Prompt description"
     )
@@ -129,7 +133,7 @@ class DatasetCreateRequest(BaseModel):
     field_mappings: Optional[Dict[str, str]] = Field(default=None, description="Field mappings for custom datasets")
 
     # For combination datasets
-    dataset_ids: Optional[List[str]] = Field(default=None, max_items=20, description="Dataset IDs to combine")
+    dataset_ids: Optional[List[str]] = Field(default=None, description="Dataset IDs to combine", max_length=20)
 
     # For transformation datasets
     source_dataset_id: Optional[str] = Field(
@@ -254,7 +258,8 @@ class DatasetUpdateRequest(BaseModel):
             v = sanitize_string(v)
             if not ValidationPatterns.SAFE_NAME.match(v):
                 raise ValueError(
-                    "Name must contain only alphanumeric characters, spaces, underscores, hyphens, dots, and parentheses"
+                    "Name must contain only alphanumeric characters, spaces, underscores, "
+                    "hyphens, dots, and parentheses"
                 )
         return v
 

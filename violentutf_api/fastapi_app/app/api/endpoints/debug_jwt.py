@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Debug endpoint for JWT validation testing
 Temporarily bypasses APISIX gateway check for troubleshooting
@@ -8,7 +14,7 @@ from typing import Any, Dict, Optional
 
 from app.core.config import settings
 from app.core.security import decode_token
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -41,12 +47,14 @@ async def debug_jwt_validation(
     2. Attempting to decode the JWT token
     3. Showing the JWT secret being used (preview only)
     """
-    # Collect headers
-    headers_received = {
-        "authorization": authorization[:50] + "..." if authorization and len(authorization) > 50 else authorization,
-        "x-api-gateway": x_api_gateway,
-        "x-forwarded-for": x_forwarded_for,
-        "x-real-ip": x_real_ip,
+    # Collect headers (convert None to empty string)
+    headers_received: Dict[str, str] = {
+        "authorization": (
+            authorization[:50] + "..." if authorization and len(authorization) > 50 else (authorization or "")
+        ),
+        "x-api-gateway": x_api_gateway or "",
+        "x-forwarded-for": x_forwarded_for or "",
+        "x-real-ip": x_real_ip or "",
     }
 
     # Get JWT secret preview

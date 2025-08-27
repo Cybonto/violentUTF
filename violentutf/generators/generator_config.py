@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # generators/generator_config.py
 
 import asyncio
@@ -656,7 +662,7 @@ def save_generators() -> bool:
     for name, gen_instance in _generators_cache.items():
         if isinstance(gen_instance, Generator):
             # Ensure parameters are serializable (e.g., convert float NaN/inf)
-            serializable_params = {}
+            serializable_params: Dict[str, Any] = {}
             for k, v in gen_instance.parameters.items():
                 if isinstance(v, float):
                     if math.isnan(v):
@@ -674,6 +680,7 @@ def save_generators() -> bool:
             }
         else:
             logger.warning(f"Skipping save for '{name}': not a valid Generator instance.")
+
     try:
         os.makedirs(CONFIG_DIR, exist_ok=True)
         with open(GENERATORS_CONFIG_FILE_PATH, "w", encoding="utf-8") as f:
@@ -932,7 +939,7 @@ def get_generator_params(generator_type: str) -> List[Dict[str, Any]]:
         raise KeyError(f"Parameter definitions not found for generator type '{generator_type}'.")
 
     # Deep copy the parameters to avoid modifying the original
-    params = json.loads(json.dumps(GENERATOR_PARAMS[generator_type]))
+    params: List[Dict[str, Any]] = json.loads(json.dumps(GENERATOR_PARAMS[generator_type]))
 
     # For AI Gateway, dynamically populate model options based on default provider
     if generator_type == "AI Gateway":

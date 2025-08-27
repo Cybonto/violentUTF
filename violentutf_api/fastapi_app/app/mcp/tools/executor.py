@@ -1,9 +1,13 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """MCP Tool Executor - Executes MCP tools by calling FastAPI endpoints"""
 
-import asyncio
-import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
 import httpx
@@ -46,7 +50,7 @@ class MCPToolExecutor:
             }
 
         except Exception as e:
-            logger.error(f"Error executing tool {tool_name}: {e}")
+            logger.error("Error executing tool %s: %s", tool_name, e)
             return {"error": "execution_failed", "message": str(e), "tool_name": tool_name}
 
     async def _get_endpoint_info(self, tool_name: str) -> Optional[Dict[str, Any]]:
@@ -63,7 +67,7 @@ class MCPToolExecutor:
             if endpoint["name"] == tool_name:
                 return endpoint
 
-        logger.warning(f"No endpoint found for tool: {tool_name}")
+        logger.warning("No endpoint found for tool: %s", tool_name)
         return None
 
     def _build_api_request(self, endpoint_info: Dict[str, Any], arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -172,7 +176,7 @@ class MCPToolExecutor:
                 logger.error(f"Connection error executing API call: {request_info['url']}")
                 return {"error": "connection_error", "message": "Could not connect to ViolentUTF API"}
             except Exception as e:
-                logger.error(f"Unexpected error executing API call: {e}")
+                logger.error("Unexpected error executing API call: %s", e)
                 return {"error": "unexpected_error", "message": str(e)}
 
     async def validate_tool_arguments(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:

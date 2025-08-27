@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test Configuration for ViolentUTF MCP Tests
 ============================================
@@ -11,7 +17,6 @@ import asyncio
 import os
 import sys
 import tempfile
-from typing import Any, Dict, Generator
 from unittest.mock import Mock, patch
 
 import pytest

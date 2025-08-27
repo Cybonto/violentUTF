@@ -80,32 +80,32 @@ CREATED_AI_ROUTES=()
 # --- Function to gracefully shutdown ViolentUTF Streamlit server ---
 graceful_streamlit_shutdown() {
     echo "Gracefully shutting down ViolentUTF Streamlit server..."
-    
+
     # Find ViolentUTF Streamlit processes
     STREAMLIT_PIDS=()
-    
+
     # Check for Home.py process (ViolentUTF main entry point)
     HOME_PY_PIDS=$(pgrep -f "streamlit.*Home.py" 2>/dev/null || true)
     if [ -n "$HOME_PY_PIDS" ]; then
         STREAMLIT_PIDS+=($HOME_PY_PIDS)
     fi
-    
+
     # Check for violentutf directory processes
     VIOLENTUTF_PIDS=$(pgrep -f "streamlit.*violentutf" 2>/dev/null || true)
     if [ -n "$VIOLENTUTF_PIDS" ]; then
         STREAMLIT_PIDS+=($VIOLENTUTF_PIDS)
     fi
-    
+
     # Remove duplicates and process shutdown
     UNIQUE_PIDS=($(printf "%s\n" "${STREAMLIT_PIDS[@]}" | sort -u))
-    
+
     if [ ${#UNIQUE_PIDS[@]} -eq 0 ]; then
         echo "No ViolentUTF Streamlit processes found to shutdown"
         return 0
     fi
-    
+
     echo "Found ${#UNIQUE_PIDS[@]} ViolentUTF Streamlit process(es) to shutdown gracefully"
-    
+
     # Send SIGTERM for graceful shutdown
     for pid in "${UNIQUE_PIDS[@]}"; do
         if kill -0 "$pid" 2>/dev/null; then
@@ -113,12 +113,12 @@ graceful_streamlit_shutdown() {
             kill -TERM "$pid" 2>/dev/null || true
         fi
     done
-    
+
     # Wait for graceful shutdown (up to 15 seconds)
     echo "Waiting for graceful shutdown (up to 15 seconds)..."
     WAIT_COUNT=0
     MAX_WAIT=15
-    
+
     while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
         REMAINING_PIDS=()
         for pid in "${UNIQUE_PIDS[@]}"; do
@@ -126,16 +126,16 @@ graceful_streamlit_shutdown() {
                 REMAINING_PIDS+=($pid)
             fi
         done
-        
+
         if [ ${#REMAINING_PIDS[@]} -eq 0 ]; then
             echo "✅ All ViolentUTF Streamlit processes shutdown gracefully"
             break
         fi
-        
+
         sleep 1
         WAIT_COUNT=$((WAIT_COUNT + 1))
     done
-    
+
     # If processes still running, use SIGINT (Ctrl+C equivalent)
     REMAINING_PIDS=()
     for pid in "${UNIQUE_PIDS[@]}"; do
@@ -143,7 +143,7 @@ graceful_streamlit_shutdown() {
             REMAINING_PIDS+=($pid)
         fi
     done
-    
+
     if [ ${#REMAINING_PIDS[@]} -gt 0 ]; then
         echo "Some processes still running, sending interrupt signal (SIGINT)..."
         for pid in "${REMAINING_PIDS[@]}"; do
@@ -151,10 +151,10 @@ graceful_streamlit_shutdown() {
                 kill -INT "$pid" 2>/dev/null || true
             fi
         done
-        
+
         # Wait another 5 seconds
         sleep 5
-        
+
         # Check again
         FINAL_REMAINING=()
         for pid in "${REMAINING_PIDS[@]}"; do
@@ -162,7 +162,7 @@ graceful_streamlit_shutdown() {
                 FINAL_REMAINING+=($pid)
             fi
         done
-        
+
         if [ ${#FINAL_REMAINING[@]} -gt 0 ]; then
             echo "⚠️  Some processes still running after graceful attempts, using force kill as last resort..."
             for pid in "${FINAL_REMAINING[@]}"; do
@@ -172,7 +172,7 @@ graceful_streamlit_shutdown() {
             done
         fi
     fi
-    
+
     # Final cleanup: check port 8501 and handle any remaining processes
     if lsof -i :8501 > /dev/null 2>&1; then
         echo "Checking port 8501 for any remaining processes..."
@@ -181,7 +181,7 @@ graceful_streamlit_shutdown() {
             echo "Found processes still using port 8501, attempting graceful shutdown..."
             echo "$PORT_PIDS" | xargs kill -TERM 2>/dev/null || true
             sleep 3
-            
+
             # Final force kill if still there
             if lsof -i :8501 > /dev/null 2>&1; then
                 echo "Force killing remaining processes on port 8501..."
@@ -189,7 +189,7 @@ graceful_streamlit_shutdown() {
             fi
         fi
     fi
-    
+
     echo "✅ ViolentUTF Streamlit server shutdown completed"
 }
 
@@ -197,38 +197,38 @@ graceful_streamlit_shutdown() {
 backup_user_configs() {
     echo "Backing up user configurations..."
     mkdir -p "/tmp/vutf_backup"
-    
+
     # Backup AI tokens (user's API keys)
     [ -f "$AI_TOKENS_FILE" ] && cp "$AI_TOKENS_FILE" "/tmp/vutf_backup/"
-    
+
     # Backup any custom APISIX routes
     [ -f "apisix/conf/custom_routes.yml" ] && cp "apisix/conf/custom_routes.yml" "/tmp/vutf_backup/"
-    
+
     # Backup user application data preferences
     if [ -d "violentutf/app_data" ]; then
         tar -czf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf app_data 2>/dev/null || true
     fi
-    
+
     echo "✅ User configurations backed up"
 }
 
 # --- Restore user configurations function ---
 restore_user_configs() {
     echo "Restoring user configurations..."
-    
+
     if [ -d "/tmp/vutf_backup" ]; then
         # Restore AI tokens
         [ -f "/tmp/vutf_backup/$AI_TOKENS_FILE" ] && cp "/tmp/vutf_backup/$AI_TOKENS_FILE" .
-        
+
         # Restore custom routes
         [ -f "/tmp/vutf_backup/custom_routes.yml" ] && cp "/tmp/vutf_backup/custom_routes.yml" "apisix/conf/"
-        
+
         # Restore user application data if it was backed up
         if [ -f "/tmp/vutf_backup/app_data_backup.tar.gz" ]; then
             mkdir -p violentutf
             tar -xzf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf 2>/dev/null || true
         fi
-        
+
         rm -rf "/tmp/vutf_backup"
         echo "✅ User configurations restored"
     fi
@@ -237,16 +237,16 @@ restore_user_configs() {
 # --- Cleanup function ---
 perform_cleanup() {
     echo "Starting cleanup process..."
-    
+
     # 0. Backup user configurations before cleanup
     backup_user_configs
-    
+
     # 1. Gracefully shutdown ViolentUTF Streamlit server
     graceful_streamlit_shutdown
-    
+
     # Remember current directory
     ORIGINAL_DIR=$(pwd)
-    
+
     # 1. Stop and remove Keycloak containers
     echo "Stopping and removing Keycloak containers..."
     if [ -d "keycloak" ]; then
@@ -254,7 +254,7 @@ perform_cleanup() {
         docker-compose down -v 2>/dev/null || docker compose down -v 2>/dev/null
         cd "$ORIGINAL_DIR"
     fi
-    
+
     # 2. Stop and remove APISIX containers
     echo "Stopping and removing APISIX containers..."
     if [ -d "apisix" ]; then
@@ -262,10 +262,10 @@ perform_cleanup() {
         docker-compose down -v 2>/dev/null || docker compose down -v 2>/dev/null
         cd "$ORIGINAL_DIR"
     fi
-    
+
     # 3. Note: ViolentUTF API is now part of APISIX stack
     echo "ViolentUTF API containers are managed by APISIX stack..."
-    
+
     # 4. Remove shared network if it exists and is not in use
     echo "Removing shared Docker network..."
     if docker network inspect $SHARED_NETWORK_NAME >/dev/null 2>&1; then
@@ -275,66 +275,66 @@ perform_cleanup() {
             echo "Warning: Could not remove shared network '$SHARED_NETWORK_NAME'. It may still be in use."
         fi
     fi
-    
+
     # 5. Remove configuration files but preserve directories
     echo "Removing configuration files..."
-    
+
     # Keycloak files
     if [ -f "keycloak/.env" ]; then
         rm "keycloak/.env"
         echo "Removed keycloak/.env"
     fi
-    
+
     # APISIX files - remove all non-template configurations
     if [ -d "apisix/conf" ]; then
         # Move only template files to a temp directory
         mkdir -p "/tmp/apisix_templates"
         find "apisix/conf" -name "*.template" -exec cp {} "/tmp/apisix_templates/" \;
-        
+
         # Remove all config files
         rm -rf "apisix/conf/"*
-        
+
         # Move templates back
         mkdir -p "apisix/conf"
         cp "/tmp/apisix_templates/"* "apisix/conf/" 2>/dev/null || true
         rm -rf "/tmp/apisix_templates"
-        
+
         echo "Restored only template files in apisix/conf directory"
     fi
-    
+
     # ViolentUTF files
     if [ -f "violentutf/.env" ]; then
         rm "violentutf/.env"
         echo "Removed violentutf/.env"
     fi
-    
+
     if [ -f "violentutf/.streamlit/secrets.toml" ]; then
         rm "violentutf/.streamlit/secrets.toml"
         echo "Removed violentutf/.streamlit/secrets.toml"
     fi
-    
+
     # FastAPI files
     if [ -f "violentutf_api/fastapi_app/.env" ]; then
         rm "violentutf_api/fastapi_app/.env"
         echo "Removed violentutf_api/fastapi_app/.env"
     fi
-    
-    # AI tokens file (preserve user's configuration) 
+
+    # AI tokens file (preserve user's configuration)
     echo "Preserving user's AI tokens file: $AI_TOKENS_FILE"
-    
+
     # 5.5. Clean PyRIT orchestrator memory databases but preserve user application data
     echo "Cleaning PyRIT orchestrator memory databases..."
     if [ -d "violentutf/app_data/violentutf/api_memory" ]; then
         rm -f violentutf/app_data/violentutf/api_memory/orchestrator_memory*.db*
         echo "Removed orchestrator memory databases"
     fi
-    
+
     # Preserve user application data
     echo "Preserving user application data..."
     if [ -d "violentutf/app_data" ]; then
         echo "Preserving violentutf/app_data directory with user data"
     fi
-    
+
     # 6. Remove Docker volumes
     echo "Removing Docker volumes related to Keycloak, APISIX, and ViolentUTF API..."
     # Get volume list and filter for keycloak, apisix, fastapi, and violentutf_api volumes
@@ -345,7 +345,7 @@ perform_cleanup() {
     else
         echo "No relevant Docker volumes found to remove."
     fi
-    
+
     echo "Cleanup completed successfully!"
     echo "The Python virtual environment has been preserved."
     echo "You can now run the script again for a fresh setup."
@@ -357,10 +357,10 @@ perform_deep_cleanup() {
     echo "Starting DEEP cleanup process..."
     echo "This will remove ALL Docker containers, images, volumes, networks, and cache!"
     echo ""
-    
+
     # 0. Gracefully shutdown ViolentUTF Streamlit server first
     graceful_streamlit_shutdown
-    
+
     # Warning prompt
     echo "⚠️  WARNING: This will completely clean your Docker environment!"
     echo "   - All Docker containers will be stopped and removed"
@@ -371,22 +371,22 @@ perform_deep_cleanup() {
     echo "   - All Docker system cache will be pruned"
     echo ""
     read -p "Are you absolutely sure you want to continue? (type 'YES' to confirm): " confirm
-    
+
     if [ "$confirm" != "YES" ]; then
         echo "Deep cleanup cancelled."
         exit 0
     fi
-    
+
     echo ""
     echo "Proceeding with deep cleanup..."
-    
+
     # 0. Backup user configurations before deep cleanup
     backup_user_configs
-    
+
     # First perform regular cleanup
     echo "1. Performing standard cleanup..."
     perform_cleanup_internal
-    
+
     # Stop ALL Docker containers
     echo ""
     echo "2. Stopping ALL Docker containers..."
@@ -400,7 +400,7 @@ perform_deep_cleanup() {
     else
         echo "No running containers found."
     fi
-    
+
     # Remove ALL Docker images
     echo ""
     echo "3. Removing ALL Docker images..."
@@ -412,7 +412,7 @@ perform_deep_cleanup() {
     else
         echo "No Docker images found."
     fi
-    
+
     # Remove ALL Docker volumes
     echo ""
     echo "4. Removing ALL Docker volumes..."
@@ -424,7 +424,7 @@ perform_deep_cleanup() {
     else
         echo "No Docker volumes found."
     fi
-    
+
     # Remove ALL Docker networks (except default ones)
     echo ""
     echo "5. Removing ALL Docker networks (except defaults)..."
@@ -436,19 +436,19 @@ perform_deep_cleanup() {
     else
         echo "No custom Docker networks found."
     fi
-    
+
     # Prune Docker build cache
     echo ""
     echo "6. Pruning Docker build cache..."
     docker builder prune -af
     echo "Docker build cache pruned."
-    
+
     # Prune Docker system (everything)
     echo ""
     echo "7. Pruning Docker system cache..."
     docker system prune -af --volumes
     echo "Docker system cache pruned."
-    
+
     # Clean up any remaining Docker artifacts
     echo ""
     echo "8. Final Docker cleanup..."
@@ -457,7 +457,7 @@ perform_deep_cleanup() {
     docker volume prune -f
     docker network prune -f
     echo "Final Docker cleanup completed."
-    
+
     # Show final Docker status
     echo ""
     echo "9. Final Docker status:"
@@ -465,12 +465,12 @@ perform_deep_cleanup() {
     echo "Images: $(docker images -aq | wc -l)"
     echo "Volumes: $(docker volume ls -q | wc -l)"
     echo "Networks: $(docker network ls -q | wc -l)"
-    
+
     # Show disk space reclaimed
     echo ""
     echo "10. Docker system disk usage:"
     docker system df
-    
+
     echo ""
     echo "🧹 DEEP CLEANUP COMPLETED SUCCESSFULLY!"
     echo "✅ All Docker containers, images, volumes, networks, and cache have been removed"
@@ -485,10 +485,10 @@ perform_deep_cleanup() {
 # --- Internal cleanup function (without exit) ---
 perform_cleanup_internal() {
     echo "Starting cleanup process..."
-    
+
     # Remember current directory
     ORIGINAL_DIR=$(pwd)
-    
+
     # 1. Stop and remove Keycloak containers
     echo "Stopping and removing Keycloak containers..."
     if [ -d "keycloak" ]; then
@@ -496,7 +496,7 @@ perform_cleanup_internal() {
         docker-compose down -v 2>/dev/null || docker compose down -v 2>/dev/null
         cd "$ORIGINAL_DIR"
     fi
-    
+
     # 2. Stop and remove APISIX containers
     echo "Stopping and removing APISIX containers..."
     if [ -d "apisix" ]; then
@@ -504,10 +504,10 @@ perform_cleanup_internal() {
         docker-compose down -v 2>/dev/null || docker compose down -v 2>/dev/null
         cd "$ORIGINAL_DIR"
     fi
-    
+
     # 3. Note: ViolentUTF API is now part of APISIX stack
     echo "ViolentUTF API containers are managed by APISIX stack..."
-    
+
     # 4. Remove shared network if it exists and is not in use
     echo "Removing shared Docker network..."
     if docker network inspect $SHARED_NETWORK_NAME >/dev/null 2>&1; then
@@ -517,53 +517,53 @@ perform_cleanup_internal() {
             echo "Warning: Could not remove shared network '$SHARED_NETWORK_NAME'. It may still be in use."
         fi
     fi
-    
+
     # 5. Remove configuration files but preserve directories
     echo "Removing configuration files..."
-    
+
     # Keycloak files
     if [ -f "keycloak/.env" ]; then
         rm "keycloak/.env"
         echo "Removed keycloak/.env"
     fi
-    
+
     # APISIX files - remove all non-template configurations
     if [ -d "apisix/conf" ]; then
         # Move only template files to a temp directory
         mkdir -p "/tmp/apisix_templates"
         find "apisix/conf" -name "*.template" -exec cp {} "/tmp/apisix_templates/" \;
-        
+
         # Remove all config files
         rm -rf "apisix/conf/"*
-        
+
         # Move templates back
         mkdir -p "apisix/conf"
         cp "/tmp/apisix_templates/"* "apisix/conf/" 2>/dev/null || true
         rm -rf "/tmp/apisix_templates"
-        
+
         echo "Restored only template files in apisix/conf directory"
     fi
-    
+
     # ViolentUTF files
     if [ -f "violentutf/.env" ]; then
         rm "violentutf/.env"
         echo "Removed violentutf/.env"
     fi
-    
+
     if [ -f "violentutf/.streamlit/secrets.toml" ]; then
         rm "violentutf/.streamlit/secrets.toml"
         echo "Removed violentutf/.streamlit/secrets.toml"
     fi
-    
+
     # FastAPI files
     if [ -f "violentutf_api/fastapi_app/.env" ]; then
         rm "violentutf_api/fastapi_app/.env"
         echo "Removed violentutf_api/fastapi_app/.env"
     fi
-    
-    # AI tokens file (preserve user's configuration) 
+
+    # AI tokens file (preserve user's configuration)
     echo "Preserving user's AI tokens file: $AI_TOKENS_FILE"
-    
+
     # 6. Remove Docker volumes
     echo "Removing Docker volumes related to Keycloak, APISIX, and ViolentUTF API..."
     # Get volume list and filter for keycloak, apisix, fastapi, and violentutf_api volumes
@@ -580,17 +580,17 @@ perform_cleanup_internal() {
 ensure_network_in_compose() {
     local compose_file="$1"
     local service_name="$2"
-    
+
     # Check if file exists
     if [ ! -f "$compose_file" ]; then
         echo "Error: Docker Compose file $compose_file not found!"
         return 1
     fi
-    
+
     # Backup the compose file
     local backup_suffix=$(date +"%Y%m%d%H%M%S")
     cp "$compose_file" "${compose_file}.bak${backup_suffix}"
-    
+
     # Check if the file already has vutf-network section
     if ! grep -q "vutf-network:" "$compose_file"; then
         # Add networks section if missing
@@ -598,21 +598,21 @@ ensure_network_in_compose() {
             echo "" >> "$compose_file"
             echo "networks:" >> "$compose_file"
         fi
-        
+
         # Add vutf-network to networks section
         sed -i '' '/^networks:/a\
   vutf-network:\
     external: true' "$compose_file"
-        
+
         echo "Added vutf-network to networks section in $compose_file"
     fi
-    
+
     # Check if service section exists
     if ! grep -q "^  $service_name:" "$compose_file"; then
         echo "Warning: Service $service_name not found in $compose_file"
         return 0
     fi
-    
+
     # Add network to service if missing
     if ! grep -A20 "^  $service_name:" "$compose_file" | grep -q "vutf-network"; then
         # Check if networks section exists in the service
@@ -634,10 +634,10 @@ ensure_network_in_compose() {
     networks:\\
       - vutf-network" "$compose_file"
         fi
-        
+
         echo "Added vutf-network to $service_name service in $compose_file"
     fi
-    
+
     return 0
 }
 
@@ -654,7 +654,7 @@ create_ai_tokens_template() {
 OPENAI_ENABLED=true
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Anthropic Configuration  
+# Anthropic Configuration
 ANTHROPIC_ENABLED=true
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
@@ -727,9 +727,9 @@ load_ai_tokens() {
         echo "❌ $AI_TOKENS_FILE not found"
         return 1
     fi
-    
+
     echo "Loading AI configuration from $AI_TOKENS_FILE..."
-    
+
     # Clear any previously loaded OpenAPI variables to ensure fresh load
     for i in {1..10}; do
         unset OPENAPI_${i}_ENABLED
@@ -745,12 +745,12 @@ load_ai_tokens() {
         unset OPENAPI_${i}_BASIC_PASSWORD
         unset OPENAPI_${i}_CUSTOM_HEADERS
     done
-    
+
     # Load the .env file
     set -a  # automatically export all variables
     source "$AI_TOKENS_FILE"
     set +a  # stop automatically exporting
-    
+
     # Show loaded OpenAPI providers
     local openapi_count=0
     for i in {1..10}; do
@@ -762,7 +762,7 @@ load_ai_tokens() {
             openapi_count=$((openapi_count + 1))
         fi
     done
-    
+
     if [ $openapi_count -gt 0 ]; then
         echo "✅ AI configuration loaded with $openapi_count OpenAPI provider(s)"
     else
@@ -774,11 +774,11 @@ load_ai_tokens() {
 # Function to check if ai-proxy plugin is available
 check_ai_proxy_plugin() {
     echo "Checking if ai-proxy plugin is available in APISIX..."
-    
+
     # Debug environment variables
     echo "   APISIX_ADMIN_URL: ${APISIX_ADMIN_URL}"
     echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:0:8}..." # Show first 8 chars only
-    
+
     # Check if required variables are set
     if [ -z "$APISIX_ADMIN_URL" ] || [ -z "$APISIX_ADMIN_KEY" ]; then
         echo "❌ Required environment variables not set"
@@ -786,17 +786,17 @@ check_ai_proxy_plugin() {
         echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:+'SET'}${APISIX_ADMIN_KEY:-'NOT SET'}"
         return 1
     fi
-    
+
     local response
     local http_code
-    
+
     # Test APISIX connectivity first
     echo "   Testing APISIX admin API connectivity..."
     local connectivity_test
     connectivity_test=$(curl -s -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
     local connectivity_code="${connectivity_test: -3}"
-    
+
     if [ "$connectivity_code" != "200" ]; then
         echo "❌ Cannot connect to APISIX admin API"
         echo "   URL: ${APISIX_ADMIN_URL}/apisix/admin/routes"
@@ -806,14 +806,14 @@ check_ai_proxy_plugin() {
     else
         echo "✅ APISIX admin API is accessible"
     fi
-    
+
     # Now check for ai-proxy plugin
     echo "   Checking for ai-proxy plugin..."
     response=$(curl -s -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/plugins/ai-proxy" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
-    
+
     http_code="${response: -3}"
-    
+
     if [ "$http_code" = "200" ]; then
         echo "✅ ai-proxy plugin is available"
         echo "   Plugin supports providers: openai, deepseek, openai-compatible"
@@ -832,9 +832,9 @@ create_openai_route() {
     local model="$1"
     local uri="$2"
     local api_key="$3"
-    
+
     echo "🔧 Debug: Creating route for model='$model', uri='$uri'"
-    
+
     # Validate inputs
     if [ -z "$model" ] || [ -z "$uri" ] || [ -z "$api_key" ]; then
         echo "❌ Error: Missing required parameters"
@@ -843,10 +843,10 @@ create_openai_route() {
         echo "   API Key length: ${#api_key}"
         return 1
     fi
-    
+
     local route_id="openai-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]')"
     echo "🔧 Debug: Generated route_id='$route_id'"
-    
+
     local route_config='{
         "id": "'$route_id'",
         "uri": "'$uri'",
@@ -866,24 +866,24 @@ create_openai_route() {
             }
         }
     }'
-    
+
     echo "🔧 Debug: Route config created"
     echo "Creating OpenAI route for model $model at $uri..."
-    
+
     local response
     local http_code
-    
+
     # Use the correct URL format - no route ID in path
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${route_config}" 2>&1)
-    
+
     http_code="${response: -3}"
     response_body="${response%???}"
-    
+
     echo "🔧 Debug: HTTP Code: $http_code"
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created OpenAI route: $uri -> $model"
         CREATED_AI_ROUTES+=("OpenAI: $uri -> $model")
@@ -903,9 +903,9 @@ create_anthropic_route() {
     local model="$1"
     local uri="$2"
     local api_key="$3"
-    
+
     local route_id="anthropic-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]')"
-    
+
     local route_config='{
         "id": "'$route_id'",
         "uri": "'$uri'",
@@ -929,19 +929,19 @@ create_anthropic_route() {
             }
         }
     }'
-    
+
     echo "Creating Anthropic route for model $model at $uri..."
     local response
     local http_code
-    
+
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${route_config}" 2>&1)
-    
+
     http_code="${response: -3}"
     response_body="${response%???}"
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created Anthropic route: $uri -> $model"
         CREATED_AI_ROUTES+=("Anthropic: $uri -> $model")
@@ -958,9 +958,9 @@ create_ollama_route() {
     local model="$1"
     local uri="$2"
     local endpoint="$3"
-    
+
     local route_id="ollama-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]')"
-    
+
     local route_config='{
         "id": "'$route_id'",
         "uri": "'$uri'",
@@ -978,19 +978,19 @@ create_ollama_route() {
             }
         }
     }'
-    
+
     echo "Creating Ollama route for model $model at $uri..."
     local response
     local http_code
-    
+
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${route_config}" 2>&1)
-    
+
     http_code="${response: -3}"
     response_body="${response%???}"
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created Ollama route: $uri -> $model"
         CREATED_AI_ROUTES+=("Ollama: $uri -> $model")
@@ -1008,9 +1008,9 @@ create_open_webui_route() {
     local uri="$2"
     local endpoint="$3"
     local api_key="$4"
-    
+
     local route_id="webui-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]')"
-    
+
     # Build auth section only if API key is provided and not placeholder
     local auth_section=""
     if [ -n "$api_key" ] && [ "$api_key" != "your_open_webui_api_key_here" ]; then
@@ -1020,7 +1020,7 @@ create_open_webui_route() {
             }
         },'
     fi
-    
+
     local route_config='{
         "id": "'$route_id'",
         "uri": "'$uri'",
@@ -1039,19 +1039,19 @@ create_open_webui_route() {
             }
         }
     }'
-    
+
     echo "Creating Open WebUI route for model $model at $uri..."
     local response
     local http_code
-    
+
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${route_config}" 2>&1)
-    
+
     http_code="${response: -3}"
     response_body="${response%???}"
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created Open WebUI route: $uri -> $model"
         CREATED_AI_ROUTES+=("Open WebUI: $uri -> $model")
@@ -1071,9 +1071,9 @@ create_bedrock_route() {
     local access_key="$4"
     local secret_key="$5"
     local session_token="$6"
-    
+
     local route_id="bedrock-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]' | sed 's/anthropic-//g' | sed 's/meta-//g' | sed 's/amazon-//g')"
-    
+
     # Create route config with ai-proxy plugin for Bedrock (using openai-compatible + custom endpoint)
     local route_config='{
         "id": "'$route_id'",
@@ -1099,19 +1099,19 @@ create_bedrock_route() {
             }
         }
     }'
-    
+
     echo "Creating AWS Bedrock route for model $model at $uri..."
     local response
     local http_code
-    
+
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${route_config}" 2>&1)
-    
+
     http_code="${response: -3}"
     response_body="${response%???}"
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created AWS Bedrock route: $uri -> $model"
         CREATED_AI_ROUTES+=("AWS Bedrock: $uri -> $model")
@@ -1133,19 +1133,19 @@ create_apisix_consumer() {
             }
         }
     }'
-    
+
     echo "Creating APISIX consumer with API key authentication..."
     local response
     local http_code
-    
+
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf_user" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${consumer_config}" 2>&1)
-    
+
     http_code="${response: -3}"
     response_body="${response%???}"
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created API key consumer"
         echo "   API Key: $VIOLENTUTF_API_KEY"
@@ -1165,18 +1165,18 @@ setup_openai_routes() {
         echo "OpenAI provider disabled. Skipping setup."
         return 0
     fi
-    
+
     if [ -z "$OPENAI_API_KEY" ] || [ "$OPENAI_API_KEY" = "your_openai_api_key_here" ]; then
         echo "⚠️  OpenAI enabled but API key not configured. Skipping OpenAI setup."
         return 0
     fi
-    
+
     echo "Setting up OpenAI routes..."
-    
+
     # Use arrays instead of associative arrays to avoid syntax issues
     local models=("gpt-4" "gpt-3.5-turbo" "gpt-4-turbo" "gpt-4o" "gpt-4o-mini" "gpt-4.1" "gpt-4.1-mini" "gpt-4.1-nano" "o1-preview" "o1-mini" "o3-mini" "o4-mini")
     local uris=("/ai/openai/gpt4" "/ai/openai/gpt35" "/ai/openai/gpt4-turbo" "/ai/openai/gpt4o" "/ai/openai/gpt4o-mini" "/ai/openai/gpt41" "/ai/openai/gpt41-mini" "/ai/openai/gpt41-nano" "/ai/openai/o1-preview" "/ai/openai/o1-mini" "/ai/openai/o3-mini" "/ai/openai/o4-mini")
-    
+
     local setup_success=true
     for i in "${!models[@]}"; do
         local model="${models[$i]}"
@@ -1186,7 +1186,7 @@ setup_openai_routes() {
             setup_success=false
         fi
     done
-    
+
     if [ "$setup_success" = true ]; then
         return 0
     else
@@ -1200,18 +1200,18 @@ setup_anthropic_routes() {
         echo "Anthropic provider disabled. Skipping setup."
         return 0
     fi
-    
+
     if [ -z "$ANTHROPIC_API_KEY" ] || [ "$ANTHROPIC_API_KEY" = "your_anthropic_api_key_here" ]; then
         echo "⚠️  Anthropic enabled but API key not configured. Skipping Anthropic setup."
         return 0
     fi
-    
+
     echo "Setting up Anthropic routes..."
-    
+
     # Use arrays instead of associative arrays
     local models=("claude-3-opus-20240229" "claude-3-sonnet-20240229" "claude-3-haiku-20240307" "claude-3-5-sonnet-20241022" "claude-3-5-haiku-20241022" "claude-3-7-sonnet-latest" "claude-sonnet-4-20250514" "claude-opus-4-20250514")
     local uris=("/ai/anthropic/opus" "/ai/anthropic/sonnet" "/ai/anthropic/haiku" "/ai/anthropic/sonnet35" "/ai/anthropic/haiku35" "/ai/anthropic/sonnet37" "/ai/anthropic/sonnet4" "/ai/anthropic/opus4")
-    
+
     local setup_success=true
     for i in "${!models[@]}"; do
         local model="${models[$i]}"
@@ -1221,7 +1221,7 @@ setup_anthropic_routes() {
             setup_success=false
         fi
     done
-    
+
     if [ "$setup_success" = true ]; then
         return 0
     else
@@ -1235,15 +1235,15 @@ setup_ollama_routes() {
         echo "Ollama provider disabled. Skipping setup."
         return 0
     fi
-    
+
     echo "Setting up Ollama routes..."
-    
+
     local endpoint="${OLLAMA_ENDPOINT:-http://localhost:11434/v1/chat/completions}"
-    
+
     # Use arrays instead of associative arrays
     local models=("llama2" "codellama" "mistral" "llama3")
     local uris=("/ai/ollama/llama2" "/ai/ollama/codellama" "/ai/ollama/mistral" "/ai/ollama/llama3")
-    
+
     local setup_success=true
     for i in "${!models[@]}"; do
         local model="${models[$i]}"
@@ -1253,7 +1253,7 @@ setup_ollama_routes() {
             setup_success=false
         fi
     done
-    
+
     if [ "$setup_success" = true ]; then
         return 0
     else
@@ -1267,16 +1267,16 @@ setup_open_webui_routes() {
         echo "Open WebUI provider disabled. Skipping setup."
         return 0
     fi
-    
+
     echo "Setting up Open WebUI routes..."
-    
+
     local endpoint="${OPEN_WEBUI_ENDPOINT:-http://localhost:3000/ollama/v1/chat/completions}"
     local api_key="$OPEN_WEBUI_API_KEY"
-    
+
     # Use arrays instead of associative arrays
     local models=("llama2" "codellama")
     local uris=("/ai/webui/llama2" "/ai/webui/codellama")
-    
+
     local setup_success=true
     for i in "${!models[@]}"; do
         local model="${models[$i]}"
@@ -1286,7 +1286,7 @@ setup_open_webui_routes() {
             setup_success=false
         fi
     done
-    
+
     if [ "$setup_success" = true ]; then
         return 0
     else
@@ -1300,32 +1300,32 @@ setup_bedrock_routes() {
         echo "AWS Bedrock provider disabled. Skipping setup."
         return 0
     fi
-    
+
     echo "⚠️  AWS Bedrock integration is currently not supported by APISIX ai-proxy plugin."
     echo "   The ai-proxy plugin does not support native AWS SigV4 authentication required for Bedrock."
     echo "   Bedrock endpoints are configured in TokenManager for future implementation."
     echo "   Use the standalone Bedrock provider in Simple Chat for now."
     return 0
-    
+
     # Future implementation when AWS SigV4 support is added to APISIX
     if [ -z "$AWS_ACCESS_KEY_ID" ] || [ "$AWS_ACCESS_KEY_ID" = "your_aws_access_key_id_here" ]; then
         echo "⚠️  AWS Bedrock enabled but Access Key ID not configured. Skipping Bedrock setup."
         return 0
     fi
-    
+
     if [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ "$AWS_SECRET_ACCESS_KEY" = "your_aws_secret_access_key_here" ]; then
         echo "⚠️  AWS Bedrock enabled but Secret Access Key not configured. Skipping Bedrock setup."
         return 0
     fi
-    
+
     echo "Setting up AWS Bedrock routes..."
-    
+
     local region="${BEDROCK_REGION:-us-east-1}"
-    
+
     # Priority Bedrock models for AI Gateway
     local models=("anthropic.claude-opus-4-20250514-v1:0" "anthropic.claude-sonnet-4-20250514-v1:0" "anthropic.claude-3-5-sonnet-20241022-v2:0" "anthropic.claude-3-5-haiku-20241022-v1:0" "meta.llama3-3-70b-instruct-v1:0" "amazon.nova-pro-v1:0" "amazon.nova-lite-v1:0")
     local uris=("/ai/bedrock/claude-opus-4" "/ai/bedrock/claude-sonnet-4" "/ai/bedrock/claude-35-sonnet" "/ai/bedrock/claude-35-haiku" "/ai/bedrock/llama3-3-70b" "/ai/bedrock/nova-pro" "/ai/bedrock/nova-lite")
-    
+
     local setup_success=true
     for i in "${!models[@]}"; do
         local model="${models[$i]}"
@@ -1335,7 +1335,7 @@ setup_bedrock_routes() {
             setup_success=false
         fi
     done
-    
+
     if [ "$setup_success" = true ]; then
         return 0
     else
@@ -1352,12 +1352,12 @@ fetch_openapi_spec() {
     local auth_header="$5"
     local custom_headers="$6"
     local output_file="$7"
-    
+
     echo "Fetching OpenAPI spec from ${base_url}${spec_path}..."
-    
+
     # Use array for curl command to avoid eval
     local curl_args=(-s -f)
-    
+
     # Add authentication
     case "$auth_type" in
         "bearer")
@@ -1370,7 +1370,7 @@ fetch_openapi_spec() {
             curl_args+=(-u "$auth_value")
             ;;
     esac
-    
+
     # Add custom headers if provided
     if [ -n "$custom_headers" ]; then
         # Save IFS and restore it after
@@ -1385,10 +1385,10 @@ fetch_openapi_spec() {
         done
         IFS="$OLD_IFS"
     fi
-    
+
     # Normalize URL to prevent double slashes
     local full_url="${base_url%/}/${spec_path#/}"
-    
+
     # Execute curl with array expansion
     if curl "${curl_args[@]}" "$full_url" -o "$output_file"; then
         echo "✅ Successfully fetched OpenAPI spec"
@@ -1402,15 +1402,15 @@ fetch_openapi_spec() {
 # Function to validate OpenAPI specification
 validate_openapi_spec() {
     local spec_file="$1"
-    
+
     echo "Validating OpenAPI specification..."
-    
+
     # Check if file exists
     if [ ! -f "$spec_file" ]; then
         echo "❌ Spec file not found: $spec_file"
         return 1
     fi
-    
+
     # Check if it's valid JSON
     if python3 -c "import json; json.load(open('$spec_file'))" 2>/dev/null; then
         echo "✅ Valid JSON format"
@@ -1422,7 +1422,7 @@ validate_openapi_spec() {
             echo "❌ Invalid JSON format and YAML support not available"
             return 1
         fi
-        
+
         # Try YAML
         if python3 -c "import yaml; yaml.safe_load(open('$spec_file'))" 2>/dev/null; then
             echo "✅ Valid YAML format"
@@ -1432,7 +1432,7 @@ validate_openapi_spec() {
             return 1
         fi
     fi
-    
+
     # Check for OpenAPI version (3.0+) with proper variable passing
     local openapi_version=$(python3 - "$spec_file" "$spec_format" << 'EOF' 2>/dev/null
 import sys
@@ -1450,7 +1450,7 @@ with open(spec_file, 'r') as f:
     print(spec.get('openapi', ''))
 EOF
 )
-    
+
     if [[ "$openapi_version" =~ ^3\. ]]; then
         echo "✅ OpenAPI version: $openapi_version"
         return 0
@@ -1465,9 +1465,9 @@ parse_openapi_endpoints() {
     local spec_file="$1"
     local provider_id="$2"
     local endpoints_file="$3"
-    
+
     echo "Parsing OpenAPI endpoints..."
-    
+
     # Create Python script with proper parameter passing
     if ! python3 - "$spec_file" "$provider_id" > "$endpoints_file" << 'EOF'
 import json
@@ -1477,7 +1477,7 @@ import sys
 try:
     spec_file = sys.argv[1]
     provider_id = sys.argv[2]
-    
+
     # Load the spec
     with open(spec_file, 'r') as f:
         content = f.read()
@@ -1485,25 +1485,25 @@ try:
             spec = json.loads(content)
         except:
             spec = yaml.safe_load(content)
-    
+
     # Extract base information
     servers = spec.get('servers', [])
     base_path = servers[0].get('url', '') if servers else ''
-    
+
     # Extract paths and operations
     paths = spec.get('paths', {})
     endpoints = []
-    
+
     for path, path_item in paths.items():
         # Skip if path item is a reference
         if isinstance(path_item, dict) and '$ref' not in path_item:
             for method in ['get', 'post', 'put', 'delete', 'patch', 'head', 'options']:
                 if method in path_item:
                     operation = path_item[method]
-                    
+
                     # Generate unique operation ID if not provided
                     op_id = operation.get('operationId', f"{method}_{path.replace('/', '_').replace('{', '').replace('}', '')}")
-                    
+
                     # Extract operation details
                     endpoint = {
                         'path': path,
@@ -1517,14 +1517,14 @@ try:
                         'requestBody': operation.get('requestBody', {}),
                         'responses': operation.get('responses', {})
                     }
-                    
+
                     # Check if this looks like an AI/chat endpoint
-                    is_ai_endpoint = any(keyword in path.lower() or keyword in endpoint['summary'].lower() 
+                    is_ai_endpoint = any(keyword in path.lower() or keyword in endpoint['summary'].lower()
                                        for keyword in ['chat', 'completion', 'generate', 'predict', 'inference', 'embedding'])
                     endpoint['is_ai_endpoint'] = is_ai_endpoint
-                    
+
                     endpoints.append(endpoint)
-    
+
     # Output as JSON
     result = {
         'provider_id': provider_id,
@@ -1532,9 +1532,9 @@ try:
         'endpoints': endpoints,
         'security_schemes': spec.get('components', {}).get('securitySchemes', {})
     }
-    
+
     print(json.dumps(result, indent=2))
-    
+
 except Exception as e:
     import traceback
     sys.stderr.write(f"Error parsing OpenAPI spec: {str(e)}\n")
@@ -1561,23 +1561,23 @@ create_openapi_route() {
     local operation_id="$6"
     local auth_type="$7"
     local auth_config="$8"
-    
+
     # Generate route ID with path hash for uniqueness
     local path_hash=$(echo -n "${method}:${endpoint_path}" | md5sum | cut -c1-8)
     local safe_operation_id=$(echo "$operation_id" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
     local route_id="openapi-${provider_id}-${safe_operation_id}-${path_hash}"
-    
+
     # Convert OpenAPI path parameters to APISIX wildcards
     # {id} -> *, {userId} -> *, etc.
     local apisix_path=$(echo "$endpoint_path" | sed 's/{[^}]*}/*/g')
     local uri="/ai/openapi/${provider_id}${apisix_path}"
-    
+
     # Normalize base URL and endpoint path to prevent double slashes
     base_url="${base_url%/}"
     endpoint_path="${endpoint_path#/}"
-    
+
     echo "Creating route: $uri -> ${base_url}/${endpoint_path}"
-    
+
     # Build auth configuration for ai-proxy
     local auth_section=""
     case "$auth_type" in
@@ -1609,7 +1609,7 @@ create_openapi_route() {
             },'
             ;;
     esac
-    
+
     # Create route configuration
     local route_config='{
         "id": "'"$route_id"'",
@@ -1630,21 +1630,21 @@ create_openapi_route() {
             }
         }
     }'
-    
+
     # No need to check if route exists since we clear them first
-    
+
     # Create the route in APISIX
     local response
     local http_code
-    
+
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${route_config}" 2>&1)
-    
+
     http_code="${response: -3}"
     local response_body="${response:0:-3}"
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created route for $operation_id"
         return 0
@@ -1659,33 +1659,33 @@ create_openapi_route() {
 # Function to clear existing OpenAPI routes
 clear_openapi_routes() {
     echo "Clearing existing OpenAPI routes..."
-    
+
     # Get all routes from APISIX
     local routes_response=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
-    
+
     # Parse route IDs that start with "openapi-"
     local route_ids=$(echo "$routes_response" | grep -o '"id":"openapi-[^"]*"' | cut -d'"' -f4)
-    
+
     if [ -z "$route_ids" ]; then
         echo "No existing OpenAPI routes found"
         return 0
     fi
-    
+
     local deleted_count=0
     for route_id in $route_ids; do
         echo "Deleting route: $route_id"
         local delete_response=$(curl -s -w "%{http_code}" -X DELETE "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
             -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
         local http_code="${delete_response: -3}"
-        
+
         if [ "$http_code" = "200" ] || [ "$http_code" = "204" ]; then
             deleted_count=$((deleted_count + 1))
         else
             echo "⚠️  Failed to delete route $route_id (HTTP $http_code)"
         fi
     done
-    
+
     echo "✅ Deleted $deleted_count OpenAPI routes"
     return 0
 }
@@ -1696,23 +1696,23 @@ setup_openapi_routes() {
         echo "OpenAPI providers disabled. Skipping setup."
         return 0
     fi
-    
+
     echo "Setting up OpenAPI provider routes..."
-    
+
     # Clear existing OpenAPI routes to ensure fresh configuration
     clear_openapi_routes
-    
+
     local cache_dir="/tmp/violentutf_openapi_cache"
     mkdir -p "$cache_dir"
-    
+
     local total_success=0
     local total_failed=0
-    
+
     # Process up to 10 OpenAPI providers
     for i in {1..10}; do
         local enabled_var="OPENAPI_${i}_ENABLED"
         local enabled="${!enabled_var}"
-        
+
         if [ "$enabled" = "true" ]; then
             # Load provider configuration
             local id_var="OPENAPI_${i}_ID"
@@ -1720,23 +1720,23 @@ setup_openapi_routes() {
             local base_url_var="OPENAPI_${i}_BASE_URL"
             local spec_path_var="OPENAPI_${i}_SPEC_PATH"
             local auth_type_var="OPENAPI_${i}_AUTH_TYPE"
-            
+
             local provider_id="${!id_var}"
             local provider_name="${!name_var}"
             local base_url="${!base_url_var}"
             local spec_path="${!spec_path_var}"
             local auth_type="${!auth_type_var}"
-            
+
             # Validate required fields
             if [ -z "$provider_id" ] || [ -z "$base_url" ] || [ -z "$spec_path" ]; then
                 echo "⚠️  Skipping OpenAPI provider $i: missing required configuration"
                 continue
             fi
-            
+
             echo ""
             echo "Processing OpenAPI provider: $provider_name ($provider_id)"
             echo "----------------------------------------"
-            
+
             # Prepare auth configuration based on type
             local auth_value=""
             local auth_header=""
@@ -1757,22 +1757,22 @@ setup_openapi_routes() {
                     auth_value="${!username_var}:${!password_var}"
                     ;;
             esac
-            
+
             # Get custom headers if any
             local headers_var="OPENAPI_${i}_CUSTOM_HEADERS"
             local custom_headers="${!headers_var}"
-            
+
             # Fetch OpenAPI spec
             local spec_file="$cache_dir/${provider_id}_spec.json"
             if fetch_openapi_spec "$base_url" "$spec_path" "$auth_type" "$auth_value" "$auth_header" "$custom_headers" "$spec_file"; then
-                
+
                 # Validate spec
                 if validate_openapi_spec "$spec_file"; then
-                    
+
                     # Parse endpoints
                     local endpoints_file="$cache_dir/${provider_id}_endpoints.json"
                     if parse_openapi_endpoints "$spec_file" "$provider_id" "$endpoints_file"; then
-                        
+
                         # Process endpoints - save to temp file to avoid subshell issues
                         local temp_endpoints="$cache_dir/${provider_id}_temp_endpoints.txt"
                         python3 -c "
@@ -1783,13 +1783,13 @@ with open('$endpoints_file', 'r') as f:
     endpoints = sorted(data['endpoints'], key=lambda x: not x.get('is_ai_endpoint', False))
     for ep in endpoints:
         print(f\"{ep['path']}|{ep['method']}|{ep['operationId']}|{ep.get('is_ai_endpoint', False)}\")" > "$temp_endpoints"
-                        
+
                         while IFS='|' read -r path method op_id is_ai; do
                             local auth_config_value="$auth_value"
                             if [ "$auth_type" = "api_key" ]; then
                                 auth_config_value="${auth_header}:${auth_value}"
                             fi
-                            
+
                             if create_openapi_route "$provider_id" "$provider_name" "$base_url" \
                                 "$path" "$method" "$op_id" "$auth_type" "$auth_config_value"; then
                                 total_success=$((total_success + 1))
@@ -1802,10 +1802,10 @@ with open('$endpoints_file', 'r') as f:
             fi
         fi
     done
-    
+
     # Cleanup cache
     rm -rf "$cache_dir"
-    
+
     echo ""
     echo "OpenAPI route setup summary:"
     echo "✅ Successfully created: $total_success routes"
@@ -1813,20 +1813,20 @@ with open('$endpoints_file', 'r') as f:
         echo "❌ Failed to create: $total_failed routes"
         return 1
     fi
-    
+
     return 0
 }
 
 # Enhanced debugging function for AI proxy setup
 debug_ai_proxy_setup() {
     echo "🔍 Debugging AI Proxy Setup..."
-    
+
     # Check if APISIX admin API is accessible
     echo "Testing APISIX Admin API accessibility..."
     admin_response=$(curl -s -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
     admin_http_code="${admin_response: -3}"
-    
+
     if [ "$admin_http_code" != "200" ]; then
         echo "❌ APISIX Admin API not accessible. HTTP Code: $admin_http_code"
         echo "   Response: ${admin_response%???}"
@@ -1834,12 +1834,12 @@ debug_ai_proxy_setup() {
     else
         echo "✅ APISIX Admin API is accessible"
     fi
-    
+
     # Check available plugins
     echo "Checking available plugins..."
     plugins_response=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/plugins/list" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}")
-    
+
     if echo "$plugins_response" | grep -q "ai-proxy"; then
         echo "✅ ai-proxy plugin is available"
     else
@@ -1847,12 +1847,12 @@ debug_ai_proxy_setup() {
         echo "Available plugins: $plugins_response"
         return 1
     fi
-    
+
     # List existing routes
     echo "Existing routes:"
     curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" | jq -r '.list[]?.value | "\(.id): \(.uri)"' 2>/dev/null || echo "Could not parse routes"
-    
+
     return 0
 }
 
@@ -1862,60 +1862,60 @@ setup_ai_providers_enhanced() {
         echo "Skipping AI provider setup due to configuration issues."
         return 0
     fi
-    
+
     echo "Setting up AI providers with enhanced error handling..."
-    
+
     # Debug APISIX setup first
     if ! debug_ai_proxy_setup; then
         echo "❌ AI Proxy setup prerequisites not met"
         SKIP_AI_SETUP=true
         return 1
     fi
-    
+
     # Wait for APISIX to be fully ready
     echo "Waiting for APISIX to be fully ready..."
     sleep 10
-    
+
     local setup_errors=0
-    
+
     # Create API key consumer first
     echo "Creating API key consumer for authentication..."
     if ! create_apisix_consumer; then
         echo "❌ Failed to create API key consumer"
         setup_errors=$((setup_errors + 1))
     fi
-    
+
     # Setup each provider with error counting
     echo "Setting up OpenAI routes..."
     if ! setup_openai_routes; then
         setup_errors=$((setup_errors + 1))
     fi
-    
+
     echo "Setting up Anthropic routes..."
     if ! setup_anthropic_routes; then
         setup_errors=$((setup_errors + 1))
     fi
-    
+
     echo "Setting up Ollama routes..."
     if ! setup_ollama_routes; then
         setup_errors=$((setup_errors + 1))
     fi
-    
+
     echo "Setting up Open WebUI routes..."
     if ! setup_open_webui_routes; then
         setup_errors=$((setup_errors + 1))
     fi
-    
+
     echo "Setting up AWS Bedrock routes..."
     if ! setup_bedrock_routes; then
         setup_errors=$((setup_errors + 1))
     fi
-    
+
     echo "Setting up OpenAPI routes..."
     if ! setup_openapi_routes; then
         setup_errors=$((setup_errors + 1))
     fi
-    
+
     if [ $setup_errors -gt 0 ]; then
         echo "⚠️  Some AI provider setups encountered errors"
         return 1
@@ -1929,25 +1929,25 @@ setup_ai_providers_enhanced() {
 # Function to test AI routes (no yq)
 test_ai_routes() {
     echo "Testing AI provider routes..."
-    
+
     # First, list all routes to see what was created
     echo "Listing all APISIX routes:"
     curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" | jq -r '.list[]?.value | "\(.id): \(.uri)"' 2>/dev/null || echo "Could not list routes (jq not available)"
-    
+
     # Test some basic routes
     if [ "$OLLAMA_ENABLED" = "true" ]; then
         run_test "AI Ollama route accessibility" "curl -s -o /dev/null -w '%{http_code}' ${APISIX_URL}/ai/ollama/llama2 -X POST -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"test\"}]}' | grep -E '(200|422|400|404)'"
     fi
-    
+
     if [ "$OPENAI_ENABLED" = "true" ]; then
         run_test "AI OpenAI route accessibility" "curl -s -o /dev/null -w '%{http_code}' ${APISIX_URL}/ai/openai/gpt4 -X POST -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"test\"}]}' | grep -E '(200|401|422|400|404)'"
     fi
-    
+
     if [ "$ANTHROPIC_ENABLED" = "true" ]; then
         run_test "AI Anthropic route accessibility" "curl -s -o /dev/null -w '%{http_code}' ${APISIX_URL}/ai/anthropic/opus -X POST -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"test\"}]}' | grep -E '(200|401|422|400|404)'"
     fi
-    
+
     if [ "$BEDROCK_ENABLED" = "true" ]; then
         run_test "AI Bedrock route accessibility" "curl -s -o /dev/null -w '%{http_code}' ${APISIX_URL}/ai/bedrock/claude-opus-4 -X POST -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"test\"}]}' | grep -E '(200|401|422|400|404)'"
     fi
@@ -1959,7 +1959,7 @@ show_ai_summary() {
     echo "=========================================="
     echo "AI PROXY CONFIGURATION SUMMARY"
     echo "=========================================="
-    
+
     if [ "$SKIP_AI_SETUP" = true ]; then
         echo "❌ AI Proxy setup was skipped"
         echo "Configure $AI_TOKENS_FILE to enable AI providers"
@@ -1967,7 +1967,7 @@ show_ai_summary() {
         echo "AI Configuration file: $AI_TOKENS_FILE"
         echo ""
         echo "Enabled AI Providers:"
-        
+
         if [ "$OPENAI_ENABLED" = "true" ]; then
             echo "✅ OpenAI"
             echo "   - /ai/openai/gpt4 (gpt-4)"
@@ -1983,7 +1983,7 @@ show_ai_summary() {
             echo "   - /ai/openai/o3-mini (o3-mini)"
             echo "   - /ai/openai/o4-mini (o4-mini)"
         fi
-        
+
         if [ "$ANTHROPIC_ENABLED" = "true" ]; then
             echo "✅ Anthropic"
             echo "   - /ai/anthropic/opus (claude-3-opus-20240229)"
@@ -1995,7 +1995,7 @@ show_ai_summary() {
             echo "   - /ai/anthropic/sonnet4 (claude-sonnet-4-20250514)"
             echo "   - /ai/anthropic/opus4 (claude-opus-4-20250514)"
         fi
-        
+
         if [ "$OLLAMA_ENABLED" = "true" ]; then
             echo "✅ Ollama"
             echo "   - /ai/ollama/llama2"
@@ -2003,13 +2003,13 @@ show_ai_summary() {
             echo "   - /ai/ollama/mistral"
             echo "   - /ai/ollama/llama3"
         fi
-        
+
         if [ "$OPEN_WEBUI_ENABLED" = "true" ]; then
             echo "✅ Open WebUI"
             echo "   - /ai/webui/llama2"
             echo "   - /ai/webui/codellama"
         fi
-        
+
         if [ "$BEDROCK_ENABLED" = "true" ]; then
             echo "✅ AWS Bedrock"
             echo "   - /ai/bedrock/claude-opus-4 (anthropic.claude-opus-4-20250514-v1:0)"
@@ -2020,7 +2020,7 @@ show_ai_summary() {
             echo "   - /ai/bedrock/nova-pro (amazon.nova-pro-v1:0)"
             echo "   - /ai/bedrock/nova-lite (amazon.nova-lite-v1:0)"
         fi
-        
+
         if [ ${#CREATED_AI_ROUTES[@]} -eq 0 ]; then
             echo "⚠️  No AI routes were created"
         else
@@ -2031,7 +2031,7 @@ show_ai_summary() {
             done
         fi
     fi
-    
+
     echo ""
     echo "Example usage:"
     echo "curl -X POST http://localhost:9080/ai/ollama/llama2 \\"
@@ -2081,23 +2081,23 @@ prepare_config_from_template() {
     local template_file="$1"
     local target_file="${template_file%.template}"
     local backup_suffix=$(date +"%Y%m%d%H%M%S")
-    
+
     # Check if template exists
     if [ ! -f "$template_file" ]; then
         echo "Error: Template file $template_file not found!"
         return 1
     fi
-    
+
     # Backup existing file if it exists
     if [ -f "$target_file" ]; then
         cp "$target_file" "${target_file}.bak${backup_suffix}"
         echo "Backed up $target_file to ${target_file}.bak${backup_suffix}"
     fi
-    
+
     # Copy template to target
     cp "$template_file" "$target_file"
     echo "Created $target_file from template"
-    
+
     return 0
 }
 
@@ -2107,15 +2107,15 @@ replace_in_file() {
     local placeholder="$2"
     local value="$3"
     local description="$4"
-    
+
     # For macOS compatibility, use sed with backup extension
     sed -i '' "s|${placeholder}|${value}|g" "$file"
-    
+
     # Store for final report if description is provided
     if [ -n "$description" ]; then
         SENSITIVE_VALUES+=("$description: $value")
     fi
-    
+
     echo "Replaced $placeholder in $file"
 }
 
@@ -2188,35 +2188,35 @@ test_network_connectivity() {
     local to_service="$2"
     local to_port="$3"
     local container_id
-    
+
     # Find the container ID for the service
     container_id=$(docker ps --filter "name=${from_container}" --format "{{.ID}}" | head -n 1)
     if [ -z "$container_id" ]; then
         echo "Container '${from_container}' not found!"
         return 1
     fi
-    
+
     echo "⚙️ Testing connectivity from ${from_container} to ${to_service}:${to_port}..."
-    
+
     # Test 1: Basic ping (network layer)
     echo "Running ping test (network layer)..."
     if docker exec $container_id ping -c 2 $to_service &>/dev/null; then
         echo "✓ Ping successful - network layer connectivity confirmed"
     else
         echo "✗ Ping failed - DNS resolution or network connectivity issue"
-        
+
         # Try to diagnose DNS resolution
         echo "Checking DNS resolution inside container..."
         docker exec $container_id cat /etc/resolv.conf
         docker exec $container_id nslookup $to_service 2>/dev/null || true
-        
+
         # Show network list for diagnosis
         echo "Networks for $from_container container:"
         docker inspect --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}}{{end}}' $container_id
-        
+
         return 1
     fi
-    
+
     # Test 2: Try HTTP connection (application layer)
     echo "Running HTTP test (application layer)..."
     if docker exec $container_id curl -s -o /dev/null -w "%{http_code}" "http://${to_service}:${to_port}" 2>/dev/null; then
@@ -2262,7 +2262,7 @@ validate_network_configuration() {
         echo "❌ Shared network not found, creating..."
         docker network create $SHARED_NETWORK_NAME
     fi
-    
+
     # Verify network connectivity between services
     echo "✅ Network validation completed"
 }
@@ -2286,7 +2286,7 @@ verify_python_dependencies() {
 # --- JWT secret consistency check function ---
 check_jwt_consistency() {
     echo "Checking JWT secret consistency across services..."
-    
+
     # Ensure all services use the same JWT secret (this will be called during secret generation)
     echo "✅ JWT secret consistency will be enforced during configuration"
 }
@@ -2295,7 +2295,7 @@ check_jwt_consistency() {
 validate_all_services() {
     echo "Validating all service health..."
     local issues_found=0
-    
+
     # Check APISIX stack
     if [ -d "apisix" ]; then
         if ! (cd apisix && docker compose ps 2>/dev/null | grep -q "Up.*healthy\|Up.*running"); then
@@ -2305,7 +2305,7 @@ validate_all_services() {
             echo "✅ APISIX stack running"
         fi
     fi
-    
+
     # Check Keycloak
     if [ -d "keycloak" ]; then
         if ! (cd keycloak && docker compose ps 2>/dev/null | grep -q "Up.*healthy\|Up.*running"); then
@@ -2315,7 +2315,7 @@ validate_all_services() {
             echo "✅ Keycloak running"
         fi
     fi
-    
+
     # Verify API connectivity (with timeout)
     if timeout 10 curl -f http://localhost:9080/health >/dev/null 2>&1; then
         echo "✅ APISIX gateway responding"
@@ -2323,7 +2323,7 @@ validate_all_services() {
         echo "⚠️ APISIX gateway not responding (may still be starting up)"
         issues_found=$((issues_found + 1))
     fi
-    
+
     if [ $issues_found -eq 0 ]; then
         echo "✅ All services validated and healthy"
         return 0
@@ -2336,17 +2336,17 @@ validate_all_services() {
 # --- System state verification function ---
 verify_system_state() {
     echo "Verifying system restored to working state..."
-    
+
     # Check all expected files exist
     local required_files=(
         "ai-tokens.env"
-        "violentutf/.env" 
+        "violentutf/.env"
         "violentutf/.streamlit/secrets.toml"
         "violentutf_api/fastapi_app/.env"
         "keycloak/.env"
         ".vitutf/bin/activate"
     )
-    
+
     local missing_files=0
     for file in "${required_files[@]}"; do
         if [ ! -f "$file" ]; then
@@ -2354,14 +2354,14 @@ verify_system_state() {
             missing_files=$((missing_files + 1))
         fi
     done
-    
+
     if [ $missing_files -eq 0 ]; then
         echo "✅ All required configuration files present"
     else
         echo "❌ Missing $missing_files required files"
         return 1
     fi
-    
+
     # Check all expected services
     if validate_all_services; then
         echo "✅ System state verification completed - ready for use!"
@@ -2382,11 +2382,11 @@ echo "Docker and Docker Compose check passed."
 # Function to detect and handle Zscaler/SSL certificate issues
 handle_ssl_certificate_issues() {
     echo "Checking for SSL certificate issues (Zscaler/Corporate proxy)..."
-    
+
     # Test if we can reach common SSL sites
     if ! curl -s --connect-timeout 5 https://sh.rustup.rs > /dev/null 2>&1; then
         echo "⚠️  Detected SSL certificate verification issues (likely Zscaler or corporate proxy)"
-        
+
         # Check if certificates already exist
         if [ -f "violentutf_api/fastapi_app/zscaler.crt" ] || [ -f "violentutf_api/fastapi_app/CA.crt" ]; then
             echo "✅ Found Zscaler/CA certificates in FastAPI directory"
@@ -2394,7 +2394,7 @@ handle_ssl_certificate_issues() {
             export SSL_WORKAROUND_APPLIED=true
             return 0
         fi
-        
+
         echo ""
         echo "📌 You need to add your Zscaler/CA certificates for the build to work."
         echo ""
@@ -2409,14 +2409,14 @@ handle_ssl_certificate_issues() {
         echo ""
         echo "After adding certificates, run this setup script again."
         echo ""
-        
+
         # Ask user if they want to try automatic export
         if [ -f "./get-zscaler-certs.sh" ]; then
             read -p "Would you like to try automatic certificate export? (y/n): " -n 1 -r
             echo
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 ./get-zscaler-certs.sh
-                
+
                 # Check if certificates were exported successfully
                 if [ -f "violentutf_api/fastapi_app/zscaler.crt" ] || [ -f "violentutf_api/fastapi_app/CA.crt" ]; then
                     echo "✅ Certificates exported successfully. Continuing setup..."
@@ -2449,30 +2449,30 @@ validate_network_configuration
 # Function to discover actual container names for the network
 discover_container_names() {
     echo "Discovering container names for network configuration..."
-    
+
     # Get APISIX container name
     APISIX_CONTAINER_NAME=$(docker ps --filter "name=apisix" --filter "status=running" --format "{{.Names}}" | head -n 1)
     if [ -z "$APISIX_CONTAINER_NAME" ]; then
         APISIX_CONTAINER_NAME="apisix-apisix-1"  # Default fallback
     fi
-    
-    # Get Keycloak container name  
+
+    # Get Keycloak container name
     KEYCLOAK_CONTAINER_NAME=$(docker ps --filter "name=keycloak" --filter "status=running" --format "{{.Names}}" | head -n 1)
     if [ -z "$KEYCLOAK_CONTAINER_NAME" ]; then
         KEYCLOAK_CONTAINER_NAME="keycloak-keycloak-1"  # Default fallback
     fi
-    
+
     # Get ViolentUTF API container name
     VIOLENTUTF_API_CONTAINER_NAME=$(docker ps --filter "name=violentutf_api" --filter "status=running" --format "{{.Names}}" | head -n 1)
     if [ -z "$VIOLENTUTF_API_CONTAINER_NAME" ]; then
         VIOLENTUTF_API_CONTAINER_NAME="violentutf_api"  # Default fallback
     fi
-    
+
     echo "Discovered container names:"
     echo "  APISIX: $APISIX_CONTAINER_NAME"
-    echo "  Keycloak: $KEYCLOAK_CONTAINER_NAME" 
+    echo "  Keycloak: $KEYCLOAK_CONTAINER_NAME"
     echo "  ViolentUTF API: $VIOLENTUTF_API_CONTAINER_NAME"
-    
+
     # Export for use in environment files
     export APISIX_CONTAINER_NAME
     export KEYCLOAK_CONTAINER_NAME
@@ -2668,7 +2668,7 @@ if [ -f "violentutf_api/fastapi_app/app/core/config.py" ]; then
         echo "⚠️  WARNING: FastAPI config.py missing new environment variable definitions"
         echo "   The following fields need to be added to Settings class in config.py:"
         echo "   - VIOLENTUTF_API_URL"
-        echo "   - APISIX_CONTAINER_NAME" 
+        echo "   - APISIX_CONTAINER_NAME"
         echo "   - KEYCLOAK_CONTAINER_NAME"
         echo "   - DEFAULT_USERNAME"
         echo "   - GENERATOR_TYPE_MAPPING"
@@ -2742,21 +2742,21 @@ echo "✅ Created violentutf_api/fastapi_app/.env"
 # Synchronize environment variables between services
 sync_environment_variables() {
     echo "Synchronizing environment variables between services..."
-    
+
     # Update FastAPI .env with discovered container names
     if [ -f "violentutf_api/fastapi_app/.env" ] && [ -n "$APISIX_CONTAINER_NAME" ]; then
         # Update APISIX URLs to use actual container name
         sed -i '' "s/APISIX_BASE_URL=.*/APISIX_BASE_URL=http:\/\/$APISIX_CONTAINER_NAME:9080/" "violentutf_api/fastapi_app/.env"
         sed -i '' "s/APISIX_ADMIN_URL=.*/APISIX_ADMIN_URL=http:\/\/$APISIX_CONTAINER_NAME:9180/" "violentutf_api/fastapi_app/.env"
         sed -i '' "s/VIOLENTUTF_API_URL=.*/VIOLENTUTF_API_URL=http:\/\/$APISIX_CONTAINER_NAME:9080/" "violentutf_api/fastapi_app/.env"
-        
+
         echo "✅ Updated FastAPI environment variables with container names"
     fi
-    
+
     # Verify JWT secret consistency (existing functionality enhanced)
     STREAMLIT_JWT=$(grep "^JWT_SECRET_KEY=" violentutf/.env 2>/dev/null | cut -d'=' -f2)
     FASTAPI_JWT=$(grep "^JWT_SECRET_KEY=" violentutf_api/fastapi_app/.env 2>/dev/null | cut -d'=' -f2)
-    
+
     if [ "$STREAMLIT_JWT" = "$FASTAPI_JWT" ] && [ -n "$STREAMLIT_JWT" ]; then
         echo "✅ JWT secret consistency verified between services"
     else
@@ -2777,7 +2777,7 @@ else
     echo "   Streamlit JWT: ${STREAMLIT_JWT:0:8}..."
     echo "   FastAPI JWT:   ${FASTAPI_JWT:0:8}..."
     echo "   This will cause authentication failures. Regenerating with consistent key..."
-    
+
     # Use the FastAPI version as source of truth
     if [ -n "$FASTAPI_JWT" ]; then
         sed -i '' "s|^JWT_SECRET_KEY=.*|JWT_SECRET_KEY=$FASTAPI_JWT|" violentutf/.env
@@ -2827,7 +2827,7 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
     # Store current directory and cd into keycloak dir
     ORIGINAL_DIR=$(pwd)
     cd "$KEYCLOAK_ENV_DIR" || { echo "Failed to cd into $KEYCLOAK_ENV_DIR"; exit 1; }
-    
+
     # Check if .env file exists - it might have been removed or this is a fresh setup
     if [ ! -f ".env" ]; then
         echo "⚠️  Keycloak .env file missing. Creating it with all required credentials..."
@@ -2838,11 +2838,11 @@ KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
 EOF
         echo "✅ Created keycloak/.env"
     fi
-    
+
     # Ensure docker-compose.yml has network configuration
     echo "Ensuring Keycloak docker-compose.yml has proper network configuration..."
     ensure_network_in_compose "docker-compose.yml" "keycloak"
-    
+
     echo "Launching Docker Compose for Keycloak..."
     if ${DOCKER_COMPOSE_CMD} up -d; then
         echo "Keycloak stack started successfully."
@@ -2906,7 +2906,7 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
         echo "Error: $REALM_EXPORT_FILE not found!"
         exit 1
     fi
-    
+
     # Extract realm name from the export file
     TARGET_REALM_NAME=$(jq -r .realm "$REALM_EXPORT_FILE")
     if [ -z "$TARGET_REALM_NAME" ] || [ "$TARGET_REALM_NAME" == "null" ]; then
@@ -2970,84 +2970,84 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
 
     # Update client to use our pre-generated secret
     echo "Updating client secret for '${VUTF_CLIENT_ID_TO_CONFIGURE}' to use pre-generated value..."
-    
+
     # Get current client configuration
     make_api_call "GET" "/realms/${VUTF_REALM_NAME}/clients/${KC_CLIENT_UUID}"
     if [ "$API_CALL_STATUS" -ne 200 ]; then
         echo "Error: Failed to get client configuration. Status: $API_CALL_STATUS"
         exit 1
     fi
-    
+
     # Update the client configuration with our pre-generated secret
     CLIENT_CONFIG=$(echo "$API_CALL_RESPONSE" | jq --arg secret "$VIOLENTUTF_CLIENT_SECRET" '.secret = $secret')
-    
+
     # Save to temp file for the PUT request
     echo "$CLIENT_CONFIG" > /tmp/client-update.json
-    
+
     # Update the client
     make_api_call "PUT" "/realms/${VUTF_REALM_NAME}/clients/${KC_CLIENT_UUID}" "/tmp/client-update.json"
     if [ "$API_CALL_STATUS" -ne 204 ]; then
         echo "Error: Failed to update client secret. Status: $API_CALL_STATUS"
         exit 1
     fi
-    
+
     echo "Successfully updated client '${VUTF_CLIENT_ID_TO_CONFIGURE}' with pre-generated secret."
     rm -f /tmp/client-update.json
 
     # Update APISIX client secret
     echo "Updating APISIX client secret..."
-    
+
     # Find APISIX client UUID
     make_api_call "GET" "/realms/${VUTF_REALM_NAME}/clients?clientId=apisix"
     if [ "$API_CALL_STATUS" -ne 200 ]; then
         echo "Error: Failed to find APISIX client. Status: $API_CALL_STATUS, Response: $API_CALL_RESPONSE"
         exit 1
     fi
-    
+
     APISIX_CLIENT_UUID=$(echo "$API_CALL_RESPONSE" | jq -r '.[0].id')
     if [ -z "$APISIX_CLIENT_UUID" ] || [ "$APISIX_CLIENT_UUID" == "null" ]; then
         echo "Error: APISIX client not found in realm."
         exit 1
     fi
-    
+
     # Update APISIX client to use our pre-generated secret
     echo "Updating APISIX client to use pre-generated secret..."
-    
+
     # Get current client configuration
     make_api_call "GET" "/realms/${VUTF_REALM_NAME}/clients/${APISIX_CLIENT_UUID}"
     if [ "$API_CALL_STATUS" -ne 200 ]; then
         echo "Error: Failed to get APISIX client configuration. Status: $API_CALL_STATUS"
         exit 1
     fi
-    
+
     # Update the client configuration with our pre-generated secret
     CLIENT_CONFIG=$(echo "$API_CALL_RESPONSE" | jq --arg secret "$APISIX_CLIENT_SECRET" '.secret = $secret')
-    
+
     # Save to temp file for the PUT request
     echo "$CLIENT_CONFIG" > /tmp/apisix-client-update.json
-    
+
     # Update the client
     make_api_call "PUT" "/realms/${VUTF_REALM_NAME}/clients/${APISIX_CLIENT_UUID}" "/tmp/apisix-client-update.json"
     if [ "$API_CALL_STATUS" -ne 204 ]; then
         echo "Error: Failed to update APISIX client secret. Status: $API_CALL_STATUS"
         exit 1
     fi
-    
+
     echo "Successfully updated APISIX client with pre-generated secret."
     rm -f /tmp/apisix-client-update.json
-    
+
     # Export for use in route creation
     export KEYCLOAK_APISIX_SECRET=$APISIX_CLIENT_SECRET
-    
+
     # APISIX client credentials already stored in env files
 
     # Read KEYCLOAK_USERNAME from violentutf/.env
     # Use awk for more robust parsing, allowing for spaces around '=' and trimming whitespace.
     KEYCLOAK_APP_USERNAME=$(awk -F= '/^KEYCLOAK_USERNAME[[:space:]]*=/ {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}' "$VIOLENTUTF_ENV_FILE")
-    
+
     if [ -z "$KEYCLOAK_APP_USERNAME" ]; then
         echo "Warning: KEYCLOAK_USERNAME not found or is empty in $VIOLENTUTF_ENV_FILE."
-        KEYCLOAK_APP_USERNAME="testuser" 
+        KEYCLOAK_APP_USERNAME="testuser"
         echo "Defaulting KEYCLOAK_USERNAME to 'testuser'."
         # Check if the line exists to update, otherwise append
         if grep -q "^KEYCLOAK_USERNAME[[:space:]]*=" "$VIOLENTUTF_ENV_FILE"; then
@@ -3066,15 +3066,15 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
         echo "Error checking for user '${KEYCLOAK_APP_USERNAME}'. Status: $API_CALL_STATUS, Response: $API_CALL_RESPONSE"
         exit 1
     fi
-    
+
     # jq needs to handle an empty array if user not found, or an array with one user if found
     USER_EXISTS_ID=$(echo "$API_CALL_RESPONSE" | jq -r 'if type == "array" and length > 0 then .[0].id else null end')
-    
+
     if [ "$USER_EXISTS_ID" == "null" ] || [ -z "$USER_EXISTS_ID" ]; then
         echo "User '${KEYCLOAK_APP_USERNAME}' not found. Creating user via API..."
         USER_CREATE_PAYLOAD="{\"username\":\"${KEYCLOAK_APP_USERNAME}\", \"enabled\":true}"
         make_api_call "POST" "/realms/${VUTF_REALM_NAME}/users" "${USER_CREATE_PAYLOAD}"
-        
+
         if [ "$API_CALL_STATUS" -ne 201 ]; then
             echo "Error: Failed to create user '${KEYCLOAK_APP_USERNAME}' via API. Status: $API_CALL_STATUS, Response: $API_CALL_RESPONSE"
             exit 1
@@ -3115,31 +3115,31 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
 
     # Assign ai-api-access role to user
     echo "Assigning ai-api-access role to user '${KEYCLOAK_APP_USERNAME}'..."
-    
+
     # First, get the ai-api-access role ID
     make_api_call "GET" "/realms/${VUTF_REALM_NAME}/roles/ai-api-access"
     if [ "$API_CALL_STATUS" -ne 200 ]; then
         echo "Error: Failed to find ai-api-access role. Status: $API_CALL_STATUS, Response: $API_CALL_RESPONSE"
         exit 1
     fi
-    
+
     AI_API_ACCESS_ROLE_ID=$(echo "$API_CALL_RESPONSE" | jq -r '.id')
     AI_API_ACCESS_ROLE_NAME=$(echo "$API_CALL_RESPONSE" | jq -r '.name')
-    
+
     if [ -z "$AI_API_ACCESS_ROLE_ID" ] || [ "$AI_API_ACCESS_ROLE_ID" == "null" ]; then
         echo "Error: ai-api-access role not found or invalid ID."
         exit 1
     fi
-    
+
     # Assign role to user
     ROLE_ASSIGNMENT_PAYLOAD="[{\"id\":\"${AI_API_ACCESS_ROLE_ID}\", \"name\":\"${AI_API_ACCESS_ROLE_NAME}\"}]"
     make_api_call "POST" "/realms/${VUTF_REALM_NAME}/users/${USER_EXISTS_ID}/role-mappings/realm" "${ROLE_ASSIGNMENT_PAYLOAD}"
-    
+
     if [ "$API_CALL_STATUS" -ne 204 ]; then # 204 No Content is success for role assignment
         echo "Error: Failed to assign ai-api-access role to user. Status: $API_CALL_STATUS, Response: $API_CALL_RESPONSE"
         exit 1
     fi
-    
+
     echo "Successfully assigned ai-api-access role to user '${KEYCLOAK_APP_USERNAME}'."
 
     # ---------------------------------------------------------------
@@ -3184,13 +3184,13 @@ fi
 
 if [ "$APISIX_SETUP_NEEDED" = true ]; then
     echo "APISIX stack not found or not running. Proceeding with setup."
-    
+
     # Ensure APISIX directory exists
     if [ ! -d "apisix" ]; then
         echo "Error: APISIX directory not found!"
         exit 1
     fi
-    
+
     # Create a prometheus.yml file if it doesn't exist
     if [ ! -f "apisix/conf/prometheus.yml" ]; then
         echo "Creating default Prometheus configuration..."
@@ -3206,15 +3206,15 @@ scrape_configs:
     metrics_path: '/apisix/prometheus/metrics'
 EOF
     fi
-    
+
     # Store current directory and cd into apisix dir
     ORIGINAL_DIR=$(pwd)
     cd "apisix" || { echo "Failed to cd into apisix directory"; exit 1; }
-    
+
     # Ensure docker-compose.yml has network configuration
     echo "Ensuring APISIX docker-compose.yml has proper network configuration..."
     ensure_network_in_compose "docker-compose.yml" "apisix"
-    
+
     echo "Launching Docker Compose for APISIX..."
     if ${DOCKER_COMPOSE_CMD} up -d; then
         echo "APISIX stack started successfully."
@@ -3251,7 +3251,7 @@ EOF
         exit 1
     fi
     cd "$ORIGINAL_DIR" # Return to the original directory
-    
+
     # Ensure the container is connected to the shared network
     echo "Ensuring APISIX container is connected to shared network..."
     APISIX_CONTAINER=$(docker ps --filter "name=apisix" --format "{{.ID}}" | head -n 1)
@@ -3269,13 +3269,13 @@ EOF
 # Validate Docker network configuration for inter-service communication
 validate_docker_network_config() {
     echo "Validating Docker network configuration for inter-service communication..."
-    
+
     # Discover actual container names
     discover_container_names
-    
+
     # Test container-to-container connectivity
     echo "Testing container-to-container connectivity..."
-    
+
     # Test APISIX to ViolentUTF API connectivity using curl instead of nc
     if docker exec "$APISIX_CONTAINER_NAME" curl -s -o /dev/null -w "%{http_code}" "http://$VIOLENTUTF_API_CONTAINER_NAME:8000/health" 2>/dev/null | grep -qE "200|404"; then
         echo "✅ APISIX can reach ViolentUTF API"
@@ -3283,7 +3283,7 @@ validate_docker_network_config() {
         echo "⚠️  APISIX to ViolentUTF API connectivity check skipped (curl might not be available)"
         echo "   Will verify through API endpoint tests"
     fi
-    
+
     # Test ViolentUTF API to APISIX connectivity using Python urllib
     if docker exec "$VIOLENTUTF_API_CONTAINER_NAME" python -c "import urllib.request; urllib.request.urlopen('http://$APISIX_CONTAINER_NAME:9080').getcode()" 2>/dev/null; then
         echo "✅ ViolentUTF API can reach APISIX"
@@ -3294,20 +3294,20 @@ validate_docker_network_config() {
         else
             echo "⚠️  ViolentUTF API to APISIX connectivity needs verification"
             echo "   Ensuring containers are on the same network..."
-            
+
             # Ensure containers are on the same network
             docker network connect $SHARED_NETWORK_NAME "$VIOLENTUTF_API_CONTAINER_NAME" 2>/dev/null || true
             docker network connect $SHARED_NETWORK_NAME "$APISIX_CONTAINER_NAME" 2>/dev/null || true
-            
+
             echo "   Network connections refreshed. Will verify through API tests."
         fi
     fi
-    
+
     # Verify containers are on the same network
     echo "Verifying network configuration..."
     APISIX_NETWORKS=$(docker inspect "$APISIX_CONTAINER_NAME" --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}} {{end}}' 2>/dev/null || echo "")
     API_NETWORKS=$(docker inspect "$VIOLENTUTF_API_CONTAINER_NAME" --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}} {{end}}' 2>/dev/null || echo "")
-    
+
     if echo "$APISIX_NETWORKS" | grep -q "$SHARED_NETWORK_NAME" && echo "$API_NETWORKS" | grep -q "$SHARED_NETWORK_NAME"; then
         echo "✅ Both containers are on the shared network: $SHARED_NETWORK_NAME"
     else
@@ -3319,15 +3319,15 @@ validate_docker_network_config() {
 
     # Validate Docker network configuration
     validate_docker_network_config
-    
+
     # ---------------------------------------------------------------
     # B3. Configure APISIX routes to Keycloak if needed
     # ---------------------------------------------------------------
     echo "Step B3: Configuring APISIX routes to Keycloak..."
-    
+
     # Add a route in APISIX to proxy requests to Keycloak
     # This example creates a route that forwards all requests with prefix /auth to Keycloak
-    
+
     # Create a route to proxy to Keycloak
     echo "Creating APISIX route to Keycloak..."
     ROUTE_ID="keycloak-route"
@@ -3347,34 +3347,34 @@ validate_docker_network_config() {
         }
       }
     }'
-    
+
     # Send API request to create the route
     curl -i -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/${ROUTE_ID}" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${ROUTE_CONFIG}"
-    
+
     if [ $? -eq 0 ]; then
       echo "Successfully configured APISIX route to Keycloak."
     else
       echo "Warning: Failed to configure APISIX route to Keycloak. You may need to do this manually."
     fi
-    
+
     echo "APISIX setup complete."
-    
+
     # Configure all routes immediately after APISIX is ready
     echo ""
     echo "Configuring API routes now that APISIX is ready..."
-    
+
     # Wait a moment for services to stabilize
     sleep 5
-    
+
     # Configure routes
     if [ -f "configure_routes.sh" ]; then
         echo "Running route configuration script..."
         chmod +x configure_routes.sh
         ./configure_routes.sh
-        
+
         if [ $? -eq 0 ]; then
             echo "✅ Routes configured successfully"
         else
@@ -3383,11 +3383,11 @@ validate_docker_network_config() {
     else
         echo "⚠️  configure_routes.sh not found in apisix directory"
     fi
-    
+
     cd "$ORIGINAL_DIR"
 else
     echo "Skipped APISIX setup as stack was already running."
-    
+
     # If we're using an existing APISIX installation, extract the admin key from config.yaml
     if [ -f "apisix/conf/config.yaml" ]; then
         EXISTING_ADMIN_KEY=$(grep -A 5 "admin_key:" "apisix/conf/config.yaml" | grep "key:" | head -n 1 | awk '{print $2}')
@@ -3396,17 +3396,17 @@ else
             SENSITIVE_VALUES+=("APISIX Admin API Key (existing): $APISIX_ADMIN_KEY")
         fi
     fi
-    
+
     # Still configure routes even if APISIX was already running
     echo ""
     echo "Ensuring API routes are configured..."
     cd "apisix" || { echo "Failed to cd into apisix directory"; }
-    
+
     if [ -f "configure_routes.sh" ]; then
         echo "Running route configuration script..."
         chmod +x configure_routes.sh
         ./configure_routes.sh
-        
+
         if [ $? -eq 0 ]; then
             echo "✅ Routes configured/verified successfully"
         else
@@ -3415,7 +3415,7 @@ else
     else
         echo "⚠️  configure_routes.sh not found in apisix directory"
     fi
-    
+
     cd "$ORIGINAL_DIR"
 
     # Extract dashboard credentials if available
@@ -3424,13 +3424,13 @@ else
         if [ -n "$EXISTING_DASHBOARD_SECRET" ]; then
             SENSITIVE_VALUES+=("APISIX Dashboard JWT Secret (existing): $EXISTING_DASHBOARD_SECRET")
         fi
-        
+
         EXISTING_DASHBOARD_PASSWORD=$(grep -A 3 "users:" "apisix/conf/dashboard.yaml" | grep "password:" | head -n 1 | awk '{print $2}')
         if [ -n "$EXISTING_DASHBOARD_PASSWORD" ]; then
             SENSITIVE_VALUES+=("APISIX Dashboard Admin Password (existing): $EXISTING_DASHBOARD_PASSWORD")
         fi
     fi
-    
+
     # Ensure the container is connected to the shared network
     echo "Ensuring APISIX container is connected to shared network..."
     APISIX_CONTAINER=$(docker ps --filter "name=apisix" --format "{{.ID}}" | head -n 1)
@@ -3479,7 +3479,7 @@ if ! check_ai_proxy_plugin; then
     echo "❌ Cannot proceed with AI proxy setup - plugin not available"
     echo "   This may be due to:"
     echo "   - APISIX version doesn't include ai-proxy plugin"
-    echo "   - Plugin not enabled in APISIX configuration" 
+    echo "   - Plugin not enabled in APISIX configuration"
     echo "   - Admin key not properly configured"
     SKIP_AI_SETUP=true
 else
@@ -3524,7 +3524,7 @@ create_keycloak_client() {
     local client_id="$1"
     local client_secret="$2"
     local redirect_uri="$3"
-    
+
     cat > /tmp/fastapi-client.json <<EOF
 {
     "clientId": "${client_id}",
@@ -3585,10 +3585,10 @@ create_keycloak_client() {
     "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
 }
 EOF
-    
+
     # Create the client
     make_api_call "POST" "/realms/${VUTF_REALM_NAME}/clients" "/tmp/fastapi-client.json"
-    
+
     if [ "$API_CALL_STATUS" = "201" ] || [ "$API_CALL_STATUS" = "409" ]; then
         echo "FastAPI client created/exists in Keycloak."
         rm -f /tmp/fastapi-client.json
@@ -3622,18 +3622,18 @@ wait_for_apisix() {
     echo "Waiting for APISIX Admin API to be ready..."
     local max_attempts=30
     local attempt=0
-    
+
     while [ $attempt -lt $max_attempts ]; do
         if curl -s -o /dev/null -w "%{http_code}" "${APISIX_ADMIN_URL}/apisix/admin/routes" -H "X-API-KEY: ${APISIX_ADMIN_KEY}" | grep -q 200; then
             echo "APISIX Admin API is ready!"
             return 0
         fi
-        
+
         attempt=$((attempt + 1))
         echo "Waiting for APISIX... ($attempt/$max_attempts)"
         sleep 2
     done
-    
+
     echo "Warning: APISIX Admin API did not become ready within 60 seconds."
     return 1
 }
@@ -3642,16 +3642,16 @@ create_fastapi_route() {
     local route_name="violentutf-api"
     local route_uri="/api/*"
     local upstream_url="violentutf_api:8000"
-    
+
     # First check if route already exists
     echo "Checking if FastAPI route already exists..."
     local existing_route=$(curl -s "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_name}" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" | grep -o '"uri":"\/api\/\*"')
-    
+
     if [ -n "$existing_route" ]; then
         echo "FastAPI route already exists in APISIX. Updating..."
     fi
-    
+
     cat > /tmp/fastapi-route.json <<EOF
 {
     "uri": "${route_uri}",
@@ -3692,23 +3692,23 @@ create_fastapi_route() {
     }
 }
 EOF
-    
+
     # Use PUT to create or update the route
     local response=$(curl -s -w "\n%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_name}" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
         -H "Content-Type: application/json" \
         -d @/tmp/fastapi-route.json)
-    
+
     local http_code=$(echo "$response" | tail -n1)
     local body=$(echo "$response" | head -n-1)
-    
+
     rm -f /tmp/fastapi-route.json
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ FastAPI route successfully created/updated in APISIX."
         echo "Route ID: ${route_name}"
         echo "Route URI: ${route_uri} -> ${upstream_url}"
-        
+
         # Add route to tracking array
         CREATED_AI_ROUTES+=("FastAPI: ${route_uri} -> ${upstream_url}")
         return 0
@@ -3723,7 +3723,7 @@ EOF
 # Function to create FastAPI documentation routes
 create_fastapi_docs_routes() {
     echo "Creating FastAPI documentation routes..."
-    
+
     # Create /api/docs route
     cat > /tmp/fastapi-docs-route.json <<EOF
 {
@@ -3750,20 +3750,20 @@ create_fastapi_docs_routes() {
     }
 }
 EOF
-    
+
     # Create docs route
     local response=$(curl -s -w "\n%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/violentutf-docs" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
         -H "Content-Type: application/json" \
         -d @/tmp/fastapi-docs-route.json)
-    
+
     local status_code=$(echo "$response" | tail -n1)
     if [ "$status_code" = "200" ] || [ "$status_code" = "201" ]; then
         echo "✅ FastAPI docs route created successfully."
     else
         echo "⚠️  Warning: Failed to create FastAPI docs route. Status: $status_code"
     fi
-    
+
     # Create /api/redoc route
     cat > /tmp/fastapi-redoc-route.json <<EOF
 {
@@ -3790,23 +3790,23 @@ EOF
     }
 }
 EOF
-    
+
     # Create redoc route
     local response=$(curl -s -w "\n%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/violentutf-redoc" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
         -H "Content-Type: application/json" \
         -d @/tmp/fastapi-redoc-route.json)
-    
+
     local status_code=$(echo "$response" | tail -n1)
     if [ "$status_code" = "200" ] || [ "$status_code" = "201" ]; then
         echo "✅ FastAPI redoc route created successfully."
     else
         echo "⚠️  Warning: Failed to create FastAPI redoc route. Status: $status_code"
     fi
-    
+
     # Clean up temp files
     rm -f /tmp/fastapi-docs-route.json /tmp/fastapi-redoc-route.json
-    
+
     echo "FastAPI documentation routes configured."
 }
 
@@ -3832,22 +3832,22 @@ if [ -z "$VIOLENTUTF_API_CONTAINER" ]; then
     echo "⚠️  Warning: ViolentUTF API container not found. Routes configuration may fail."
 else
     echo "Found ViolentUTF API container: $VIOLENTUTF_API_CONTAINER"
-    
+
     # Wait for FastAPI to be ready
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
-        
+
         # Check if FastAPI is responding (through Docker internal network)
         if docker exec "$VIOLENTUTF_API_CONTAINER" curl -s -o /dev/null -w "%{http_code}" "http://localhost:8000/health" 2>/dev/null | grep -q "200"; then
             echo "✅ ViolentUTF API is ready and responding."
             FASTAPI_READY=true
             break
         fi
-        
+
         echo "Waiting for ViolentUTF API to be ready (attempt $RETRY_COUNT/$MAX_RETRIES)..."
         sleep 3
     done
-    
+
     if [ "$FASTAPI_READY" = false ]; then
         echo "⚠️  Warning: ViolentUTF API did not become ready in time. Routes configuration may fail."
         echo "Checking container logs for issues:"
@@ -3895,18 +3895,18 @@ sleep 3
 echo "Verifying API routes are accessible..."
 if curl -s -o /dev/null -w "%{http_code}" "${APISIX_URL}/api/v1/health" 2>/dev/null | grep -q "200"; then
     echo "✅ FastAPI routes are accessible through APISIX"
-    
+
     # Also verify MCP endpoints are configured and working
     echo "Verifying MCP endpoints..."
-    
+
     # First check if MCP routes exist
     MCP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${APISIX_URL}/mcp/sse" 2>/dev/null)
     if [ "$MCP_STATUS" = "401" ] || [ "$MCP_STATUS" = "403" ]; then
         echo "✅ MCP endpoints are configured (authentication required)"
-        
+
         # Try to test with a mock JWT token to verify the endpoint is functional
         echo "Testing MCP functionality with mock authentication..."
-        
+
         # Create a simple test JWT token using the FastAPI secret key
         if [ -f "violentutf_api/fastapi_app/.env" ]; then
             # Extract JWT secret key
@@ -3953,7 +3953,7 @@ except:
     print('')
 " 2>/dev/null)
                     fi
-                    
+
                     if [ -n "$TEST_TOKEN" ]; then
                         # Test MCP initialize method
                         MCP_INIT_RESPONSE=$(curl -s -X POST "${APISIX_URL}/mcp/sse/" \
@@ -3961,29 +3961,29 @@ except:
                             -H "Content-Type: application/json" \
                             -d '{"jsonrpc": "2.0", "method": "initialize", "params": {"capabilities": {}}, "id": 1}' \
                             2>/dev/null | head -1)
-                        
+
                         if echo "$MCP_INIT_RESPONSE" | grep -q "ViolentUTF MCP Server"; then
                             echo "✅ MCP server is fully functional"
                             echo "   - Initialize method works"
-                            
+
                             # Test prompts/list to verify full functionality
                             MCP_PROMPTS_RESPONSE=$(curl -s -X POST "${APISIX_URL}/mcp/sse/" \
                                 -H "Authorization: Bearer $TEST_TOKEN" \
                                 -H "Content-Type: application/json" \
                                 -d '{"jsonrpc": "2.0", "method": "prompts/list", "id": 2}' \
                                 2>/dev/null | head -1)
-                            
+
                             if echo "$MCP_PROMPTS_RESPONSE" | grep -q "jailbreak_test"; then
                                 echo "   - 12 security testing prompts available"
                             fi
-                            
+
                             # Test resources/list
                             MCP_RESOURCES_RESPONSE=$(curl -s -X POST "${APISIX_URL}/mcp/sse/" \
                                 -H "Authorization: Bearer $TEST_TOKEN" \
                                 -H "Content-Type: application/json" \
                                 -d '{"jsonrpc": "2.0", "method": "resources/list", "id": 3}' \
                                 2>/dev/null | head -1)
-                            
+
                             if echo "$MCP_RESOURCES_RESPONSE" | grep -q "violentutf://"; then
                                 echo "   - 8 system resources accessible"
                             fi
@@ -3999,18 +3999,18 @@ except:
                 fi
             fi
         fi
-        
+
     elif [ "$MCP_STATUS" = "405" ]; then
         echo "✅ MCP endpoints are configured (POST method required)"
     elif [ "$MCP_STATUS" = "404" ]; then
         echo "⚠️  MCP endpoints not found. Attempting to reconfigure routes..."
-        
+
         # Try to reconfigure routes one more time
         if [ -f "apisix/configure_routes.sh" ]; then
             cd apisix
             ./configure_routes.sh >/dev/null 2>&1
             cd ..
-            
+
             # Check again
             MCP_STATUS_RETRY=$(curl -s -o /dev/null -w "%{http_code}" "${APISIX_URL}/mcp/sse" 2>/dev/null)
             if [ "$MCP_STATUS_RETRY" != "404" ]; then
@@ -4025,7 +4025,7 @@ except:
     fi
 else
     echo "⚠️  FastAPI routes may not be ready yet. Checking container status..."
-    
+
     # Check if FastAPI container is having startup issues
     FASTAPI_STATUS=$(docker ps --filter "name=violentutf_api" --format "{{.Status}}" | head -1)
     if echo "$FASTAPI_STATUS" | grep -q "Restarting"; then
@@ -4145,7 +4145,7 @@ echo "Activated virtual environment: $VENV_DIR"
 REQUIREMENTS_PATH="violentutf/requirements.txt"
 if [ ! -f "$REQUIREMENTS_PATH" ]; then
     # Fallback to root if not in violentutf subdir
-    REQUIREMENTS_PATH="requirements.txt" 
+    REQUIREMENTS_PATH="requirements.txt"
 fi
 
 if [ -f "$REQUIREMENTS_PATH" ]; then
@@ -4175,7 +4175,7 @@ if [ -f "$VIOLENTUTF_ENV_FILE" ]; then
         echo "KEYCLOAK_URL_BASE=http://localhost:9080/auth" >> "$VIOLENTUTF_ENV_FILE"
     fi
     echo "Updated KEYCLOAK_URL_BASE in $VIOLENTUTF_ENV_FILE to use APISIX proxy."
-    
+
     # Add AI proxy configuration if not present
     if ! grep -q "^AI_PROXY_BASE_URL" "$VIOLENTUTF_ENV_FILE"; then
         echo "AI_PROXY_BASE_URL=http://localhost:9080/ai" >> "$VIOLENTUTF_ENV_FILE"
@@ -4202,14 +4202,14 @@ run_test() {
     local test_name="$1"
     local test_command="$2"
     local expected_exit_code="${3:-0}"
-    
+
     echo "Testing: $test_name"
-    
+
     # Capture both output and exit code
     local output
     output=$(eval "$test_command" 2>&1)
     local actual_exit_code=$?
-    
+
     if [ $actual_exit_code -eq $expected_exit_code ]; then
         TEST_RESULTS+=("✅ PASS: $test_name")
         echo "  Result: PASS"
@@ -4231,25 +4231,25 @@ run_test "APISIX to Keycloak network connectivity" "test_network_connectivity ap
 # Additional network diagnostics if the connectivity test fails
 if [ $? -ne 0 ]; then
     echo "Performing additional network diagnostics..."
-    
+
     # Show all networks and their containers
     echo "Docker Networks:"
     docker network ls
-    
+
     # Check containers on the shared network
     echo "Containers on $SHARED_NETWORK_NAME:"
     docker network inspect $SHARED_NETWORK_NAME
-    
+
     # Check if services can be resolved by DNS from host
     echo "DNS resolution of Keycloak from host:"
     docker run --rm --network=$SHARED_NETWORK_NAME alpine nslookup keycloak 2>/dev/null || echo "Failed to resolve keycloak"
-    
+
     echo "DNS resolution of APISIX from host:"
     docker run --rm --network=$SHARED_NETWORK_NAME alpine nslookup apisix 2>/dev/null || echo "Failed to resolve apisix"
-    
+
     # Try again to connect the containers to the shared network
     echo "Attempting to reconnect containers to the shared network..."
-    
+
     KEYCLOAK_CONTAINER=$(docker ps --filter "name=keycloak" --format "{{.ID}}" | head -n 1)
     if [ -n "$KEYCLOAK_CONTAINER" ]; then
         if docker network disconnect $SHARED_NETWORK_NAME $KEYCLOAK_CONTAINER 2>/dev/null; then
@@ -4258,7 +4258,7 @@ if [ $? -ne 0 ]; then
         docker network connect $SHARED_NETWORK_NAME $KEYCLOAK_CONTAINER || echo "Failed to reconnect Keycloak to network"
         echo "Reconnected Keycloak container to $SHARED_NETWORK_NAME"
     fi
-    
+
     APISIX_CONTAINER=$(docker ps --filter "name=apisix" --format "{{.ID}}" | head -n 1)
     if [ -n "$APISIX_CONTAINER" ]; then
         if docker network disconnect $SHARED_NETWORK_NAME $APISIX_CONTAINER 2>/dev/null; then
@@ -4267,7 +4267,7 @@ if [ $? -ne 0 ]; then
         docker network connect $SHARED_NETWORK_NAME $APISIX_CONTAINER || echo "Failed to reconnect APISIX to network"
         echo "Reconnected APISIX container to $SHARED_NETWORK_NAME"
     fi
-    
+
     # Try connectivity test one more time
     echo "Retrying connectivity test after network reconnection..."
     test_network_connectivity apisix keycloak 8080
@@ -4277,7 +4277,7 @@ fi
 run_test "APISIX main endpoint" "curl -s -o /dev/null -w '%{http_code}' ${APISIX_URL} | grep -q 404"
 # Note: 404 is expected for root path as no routes are defined by default
 
-# 4. Test APISIX admin API 
+# 4. Test APISIX admin API
 run_test "APISIX admin API" "curl -s -o /dev/null -w '%{http_code}' ${APISIX_ADMIN_URL}/apisix/admin/routes -H \"X-API-KEY: ${APISIX_ADMIN_KEY}\" | grep -q 200"
 
 # 5. Test APISIX dashboard is accessible
@@ -4358,7 +4358,7 @@ if [ $TEST_FAILURES -gt 0 ]; then
     echo "⚠️  WARNING: Some tests failed. The application may not function correctly."
     echo "Please check the test results above and fix any issues before proceeding."
     echo ""
-    
+
     # Ask user if they want to continue despite test failures
     read -p "Do you want to continue and launch the Streamlit app anyway? (y/n): " continue_choice
     if [[ ! $continue_choice =~ ^[Yy]$ ]]; then
@@ -4486,29 +4486,29 @@ echo "Step 15: Preparing to launch the Streamlit application..."
 launch_streamlit_background() {
     local app_path="$1"
     local app_dir="$2"
-    
+
     echo "Launching ViolentUTF in background with fresh JWT configuration..."
-    
+
     # Ensure log directory exists
     mkdir -p violentutf_logs
-    
+
     # Launch in background with virtual environment and proper directory handling
     if [ "$app_dir" = "violentutf" ]; then
         (cd violentutf && source ../.vitutf/bin/activate && nohup streamlit run Home.py --server.port 8501 --server.address 0.0.0.0 > ../violentutf_logs/streamlit.log 2>&1 &)
     else
         (source .vitutf/bin/activate && nohup streamlit run "$app_path" --server.port 8501 --server.address 0.0.0.0 > violentutf_logs/streamlit.log 2>&1 &)
     fi
-    
+
     STREAMLIT_PID=$!
     sleep 3  # Give time for Streamlit to initialize
-    
+
     # Check if process started successfully
     if kill -0 $STREAMLIT_PID 2>/dev/null; then
         echo "✅ ViolentUTF launched in background (PID: $STREAMLIT_PID)"
         echo "   Access the app at: http://localhost:8501"
         echo "   Logs: violentutf_logs/streamlit.log"
         echo "   Stop with: kill $STREAMLIT_PID"
-        
+
         # Health check for Streamlit
         echo "Verifying Streamlit is responding..."
         sleep 3
@@ -4529,7 +4529,7 @@ echo "🔄 Restarting FastAPI service with fresh JWT configuration..."
 if (cd apisix && docker compose ps 2>/dev/null | grep -q "violentutf_api.*Up"); then
     (cd apisix && docker compose restart fastapi) > /dev/null 2>&1
     sleep 5
-    
+
     # Quick health check
     if curl -s http://localhost:9080/api/v1/health >/dev/null 2>&1; then
         echo "✅ FastAPI service restarted successfully with new JWT secrets"
@@ -4575,21 +4575,21 @@ fi
 verify_configuration_integrity() {
     echo ""
     echo "🔍 Verifying configuration integrity..."
-    
+
     local issues_found=0
-    
+
     # 1. Check JWT secret consistency
     echo "Checking JWT secret consistency..."
     STREAMLIT_JWT=$(grep "^JWT_SECRET_KEY=" violentutf/.env 2>/dev/null | cut -d'=' -f2)
     FASTAPI_JWT=$(grep "^JWT_SECRET_KEY=" violentutf_api/fastapi_app/.env 2>/dev/null | cut -d'=' -f2)
-    
+
     if [ "$STREAMLIT_JWT" != "$FASTAPI_JWT" ] || [ -z "$STREAMLIT_JWT" ]; then
         echo "❌ JWT secret mismatch or missing"
         issues_found=$((issues_found + 1))
     else
         echo "✅ JWT secrets consistent"
     fi
-    
+
     # 2. Check Docker network connectivity
     echo "Checking Docker network connectivity..."
     # Use Python to test connectivity since nc might not be available
@@ -4599,7 +4599,7 @@ verify_configuration_integrity() {
         # Fallback: Check if containers are at least on the same network
         APISIX_NET=$(docker inspect "$APISIX_CONTAINER_NAME" --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}} {{end}}' 2>/dev/null | grep "$SHARED_NETWORK_NAME" || echo "")
         API_NET=$(docker inspect "$VIOLENTUTF_API_CONTAINER_NAME" --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}} {{end}}' 2>/dev/null | grep "$SHARED_NETWORK_NAME" || echo "")
-        
+
         if [ -n "$APISIX_NET" ] && [ -n "$API_NET" ]; then
             echo "⚠️  Containers are on the same network but connectivity test failed"
             echo "   This might be due to services still starting up"
@@ -4608,7 +4608,7 @@ verify_configuration_integrity() {
             issues_found=$((issues_found + 1))
         fi
     fi
-    
+
     # 3. Check environment variable consistency
     echo "Checking environment variable consistency..."
     FASTAPI_APISIX_URL=$(grep "^APISIX_BASE_URL=" violentutf_api/fastapi_app/.env 2>/dev/null | cut -d'=' -f2)
@@ -4618,7 +4618,7 @@ verify_configuration_integrity() {
     else
         echo "✅ FastAPI using proper container names"
     fi
-    
+
     # 4. Check container health
     echo "Checking container health..."
     if docker ps --filter "name=violentutf_api" --filter "status=running" | grep -q "healthy\|Up"; then
@@ -4627,7 +4627,7 @@ verify_configuration_integrity() {
         echo "❌ ViolentUTF API container not healthy"
         issues_found=$((issues_found + 1))
     fi
-    
+
     # Summary
     if [ $issues_found -eq 0 ]; then
         echo ""
@@ -4753,7 +4753,7 @@ echo "📝 Created DOCKER_NETWORK_TROUBLESHOOTING.md"
 # Function to validate PyRIT orchestrator parameter compatibility
 validate_pyrit_parameters() {
     echo "   Checking PyRIT PromptSendingOrchestrator parameter compatibility..."
-    
+
     # Test if PyRIT accepts correct parameters
     if docker exec violentutf_api python3 -c "
 from pyrit.orchestrator import PromptSendingOrchestrator
@@ -4778,7 +4778,7 @@ else:
 # Function to validate PyRIT memory initialization
 validate_pyrit_memory() {
     echo "   Checking PyRIT memory database initialization..."
-    
+
     # Test PyRIT memory access
     if docker exec violentutf_api python3 -c "
 from pyrit.memory import CentralMemory, DuckDBMemory
@@ -4806,7 +4806,7 @@ except Exception as e:
 # Function to validate scorer wrapper integration
 validate_scorer_wrapper() {
     echo "   Checking ConfiguredScorerWrapper integration..."
-    
+
     # Test scorer wrapper creation
     if docker exec violentutf_api python3 -c "
 from app.services.pyrit_orchestrator_service import ConfiguredScorerWrapper
@@ -4821,7 +4821,7 @@ try:
         'parameters': {'test_param': 'test_value'}
     }
     wrapper = ConfiguredScorerWrapper(test_config)
-    
+
     # Check it inherits from PyRIT Scorer
     if isinstance(wrapper, Scorer):
         print('✅ ConfiguredScorerWrapper integration works')
@@ -4844,7 +4844,7 @@ except Exception as e:
 # Function to test orchestrator service initialization
 validate_orchestrator_service() {
     echo "   Checking PyRIT orchestrator service initialization..."
-    
+
     # Test orchestrator service startup
     if docker exec violentutf_api python3 -c "
 from app.services.pyrit_orchestrator_service import PyRITOrchestratorService
@@ -4871,11 +4871,11 @@ except Exception as e:
 # Function to validate orchestrator API endpoints
 validate_orchestrator_endpoints() {
     echo "   Checking orchestrator API endpoints..."
-    
+
     # Wait for API to be ready
     local max_attempts=10
     local attempt=1
-    
+
     while [ $attempt -le $max_attempts ]; do
         # Check if endpoint returns proper security response (indicating it's routed correctly)
         local response=$(curl -s "http://localhost:9080/api/v1/orchestrators/types" 2>/dev/null)
@@ -4887,7 +4887,7 @@ validate_orchestrator_endpoints() {
         sleep 2
         attempt=$((attempt + 1))
     done
-    
+
     echo "❌ Orchestrator API endpoints not accessible"
     echo "   This may indicate orchestrator service startup issues"
     return 1
@@ -4896,38 +4896,38 @@ validate_orchestrator_endpoints() {
 # Main validation function
 validate_pyrit_orchestrator_integration() {
     local issues_found=0
-    
+
     echo "   This validation ensures the orchestrator-based scorer testing works correctly..."
     echo ""
-    
+
     # Check if FastAPI container is running
     if ! docker ps --filter "name=violentutf_api" --filter "status=running" | grep -q "violentutf_api"; then
         echo "❌ ViolentUTF API container is not running"
         echo "   Skipping PyRIT orchestrator validation"
         return 1
     fi
-    
+
     # Run all validation checks
     if ! validate_pyrit_parameters; then
         issues_found=$((issues_found + 1))
     fi
-    
+
     if ! validate_pyrit_memory; then
         issues_found=$((issues_found + 1))
     fi
-    
+
     if ! validate_scorer_wrapper; then
         issues_found=$((issues_found + 1))
     fi
-    
+
     if ! validate_orchestrator_service; then
         issues_found=$((issues_found + 1))
     fi
-    
+
     if ! validate_orchestrator_endpoints; then
         issues_found=$((issues_found + 1))
     fi
-    
+
     echo ""
     if [ $issues_found -eq 0 ]; then
         echo "✅ PyRIT Orchestrator integration validation passed"
@@ -4960,7 +4960,7 @@ echo "🔍 Final System State Verification..."
 if verify_system_state; then
     echo ""
     echo "🎉 Setup completed successfully! System is ready for use."
-    
+
     # Show SSL workaround status if applied
     if [ "$SSL_WORKAROUND_APPLIED" = "true" ]; then
         echo ""

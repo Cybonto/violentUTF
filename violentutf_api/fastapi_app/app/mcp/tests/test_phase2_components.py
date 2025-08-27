@@ -1,11 +1,15 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """Phase 2 Component Tests for ViolentUTF MCP Server"""
 
-import asyncio
 import logging
 import os
 import sys
 import tempfile
-from typing import Any, Dict, List
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -27,7 +31,7 @@ with patch.dict(
         from app.mcp.tools.generators import GeneratorConfigurationTools
         from app.mcp.tools.introspection import EndpointIntrospector, ViolentUTFToolFilter
         from app.mcp.tools.orchestrators import OrchestratorManagementTools
-        from mcp.types import Resource, Tool
+        from mcp.types import Resource, Tool  # noqa: F401
     except ImportError as e:
         # If imports fail, we'll skip the tests
         pytest.skip(f"Required modules not available: {e}")

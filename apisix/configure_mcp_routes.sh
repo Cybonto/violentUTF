@@ -23,9 +23,9 @@ create_route() {
     local route_id=$1
     local uri=$2
     local plugins=$3
-    
+
     echo "Creating route: $route_id"
-    
+
     response=$(curl -s -w "\n%{http_code}" -X PUT \
         "$APISIX_ADMIN_URL/apisix/admin/routes/$route_id" \
         -H "X-API-KEY: $APISIX_ADMIN_KEY" \
@@ -40,10 +40,10 @@ create_route() {
             },
             \"plugins\": $plugins
         }")
-    
+
     http_code=$(echo "$response" | tail -n1)
     body=$(echo "$response" | sed '$d')
-    
+
     if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
         echo "✓ Route $route_id created successfully"
     else

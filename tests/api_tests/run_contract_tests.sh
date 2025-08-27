@@ -87,16 +87,16 @@ if [ -f "contract-test-results.xml" ]; then
     echo ""
     echo "📊 Test Results Summary:"
     echo "======================"
-    
+
     # Extract test results from XML (simple grep)
     TESTS=$(grep -o 'tests="[0-9]*"' contract-test-results.xml | cut -d'"' -f2 || echo "0")
     FAILURES=$(grep -o 'failures="[0-9]*"' contract-test-results.xml | cut -d'"' -f2 || echo "0")
     ERRORS=$(grep -o 'errors="[0-9]*"' contract-test-results.xml | cut -d'"' -f2 || echo "0")
-    
+
     echo "Total tests: ${TESTS}"
     echo "Failures: ${FAILURES}"
     echo "Errors: ${ERRORS}"
-    
+
     if [ "${FAILURES}" -eq "0" ] && [ "${ERRORS}" -eq "0" ]; then
         echo "🎉 All tests passed!"
         exit 0

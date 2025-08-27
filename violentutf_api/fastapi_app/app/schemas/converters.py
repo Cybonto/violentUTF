@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Pydantic schemas for converter management API
 Supports the 3_Configure_Converters.py page functionality
@@ -6,12 +12,11 @@ SECURITY: Enhanced with comprehensive input validation to prevent injection atta
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional
 
 from app.core.validation import (
     SecurityLimits,
     ValidationPatterns,
-    create_validation_error,
     sanitize_string,
     validate_generator_parameters,
 )
@@ -173,7 +178,7 @@ class ConverterPreviewRequest(BaseModel):
     """Request to preview converter effect"""
 
     sample_prompts: Optional[List[str]] = Field(
-        None, max_items=20, description="Specific prompts to preview (optional)"
+        default=None, description="Specific prompts to preview (optional)", max_length=20
     )
     num_samples: int = Field(default=1, ge=1, le=20, description="Number of sample prompts to convert")
     dataset_id: Optional[str] = Field(None, max_length=100, description="Dataset to sample from")
@@ -336,7 +341,7 @@ class ConverterBatchRequest(BaseModel):
     """Request to apply multiple converters"""
 
     dataset_id: str = Field(..., max_length=100, description="Dataset to apply converters to")
-    converter_ids: List[str] = Field(..., max_items=10, description="List of converter IDs to apply")
+    converter_ids: List[str] = Field(default=[], description="List of converter IDs to apply", max_length=10)
     mode: ApplicationMode = Field(..., description="Application mode")
     parallel: bool = Field(default=False, description="Whether to apply converters in parallel")
 
@@ -383,7 +388,7 @@ class ConverterStats(BaseModel):
 class ConverterExportRequest(BaseModel):
     """Request to export converter configuration"""
 
-    converter_ids: List[str] = Field(..., max_items=50, description="Converter IDs to export")
+    converter_ids: List[str] = Field(..., description="Converter IDs to export", max_length=50)
     include_results: bool = Field(default=False, description="Include application results")
     format: Literal["json", "yaml", "csv"] = Field(default="json", description="Export format")
 

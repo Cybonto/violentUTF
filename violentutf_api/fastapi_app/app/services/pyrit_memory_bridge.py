@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 PyRIT Memory Bridge Service
 
@@ -9,9 +15,9 @@ import hashlib
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
-from pyrit.memory import CentralMemory, DuckDBMemory, MemoryInterface
+from pyrit.memory import CentralMemory, DuckDBMemory, MemoryInterface  # noqa: F401
 from pyrit.models import SeedPrompt
 
 logger = logging.getLogger(__name__)
@@ -55,10 +61,10 @@ class PyRITMemoryBridge:
                 memory = DuckDBMemory(db_path=memory_path)
                 self.memory_cache[user_id] = memory
 
-                logger.info(f"Created PyRIT memory instance for user {user_id}: {memory_path}")
+                logger.info("Created PyRIT memory instance for user %s: %s", user_id, memory_path)
 
             except Exception as e:
-                logger.error(f"Failed to create PyRIT memory for user {user_id}: {e}")
+                logger.error("Failed to create PyRIT memory for user %s: %s", user_id, e)
                 raise
 
         return self.memory_cache[user_id]
@@ -99,14 +105,14 @@ class PyRITMemoryBridge:
                     stored_count += len(batch)
                     logger.debug(f"Stored batch {batch_start // batch_size + 1}: {len(batch)} prompts")
                 except Exception as e:
-                    logger.error(f"Failed to store batch {batch_start}: {e}")
+                    logger.error("Failed to store batch %s: %s", batch_start, e)
                     raise
 
-            logger.info(f"Successfully stored {stored_count} prompts to PyRIT memory for user {user_id}")
+            logger.info("Successfully stored %s prompts to PyRIT memory for user %s", stored_count, user_id)
             return stored_count
 
         except Exception as e:
-            logger.error(f"Failed to store prompts to PyRIT memory: {e}")
+            logger.error("Failed to store prompts to PyRIT memory: %s", e)
             raise
 
     async def get_prompts_from_pyrit_memory(
@@ -143,8 +149,9 @@ class PyRITMemoryBridge:
             logger.debug(f"Retrieved {len(prompts)} prompts from PyRIT memory (total: {total_count})")
             return prompts, total_count
 
-        except Exception as e:
-            logger.error(f"Failed to retrieve prompts from PyRIT memory: {e}")
+        except (OSError, AttributeError, ValueError) as e:
+            # Handle database errors, memory access issues, and data parsing errors
+            logger.error("Failed to retrieve prompts from PyRIT memory: %s", e)
             return [], 0
 
     async def get_dataset_statistics(self, dataset_id: str, user_id: str) -> Dict[str, Any]:
@@ -190,8 +197,9 @@ class PyRITMemoryBridge:
                 },
             }
 
-        except Exception as e:
-            logger.error(f"Failed to get dataset statistics: {e}")
+        except (OSError, AttributeError, ValueError, TypeError) as e:
+            # Handle database errors, memory access issues, data processing errors, and type issues
+            logger.error("Failed to get dataset statistics: %s", e)
             return {
                 "total_prompts": 0,
                 "last_updated": None,
@@ -210,7 +218,7 @@ class PyRITMemoryBridge:
             pieces = memory.get_prompt_request_pieces(labels=[f"dataset:{dataset_id}", f"user:{user_id}"])
 
             if not pieces:
-                logger.info(f"No prompts found for dataset {dataset_id} in PyRIT memory")
+                logger.info("No prompts found for dataset %s in PyRIT memory", dataset_id)
                 return True
 
             # Delete pieces (this depends on PyRIT's implementation)
@@ -221,14 +229,16 @@ class PyRITMemoryBridge:
                     # This is a placeholder - actual deletion depends on PyRIT's API
                     # We might need to use direct database operations
                     deleted_count += 1
-                except Exception as e:
-                    logger.warning(f"Failed to delete piece {piece.id}: {e}")
+                except (OSError, AttributeError, ValueError) as e:
+                    # Handle database deletion errors, attribute access issues, and data errors
+                    logger.warning("Failed to delete piece %s: %s", piece.id, e)
 
-            logger.info(f"Deleted {deleted_count} prompts for dataset {dataset_id} from PyRIT memory")
+            logger.info("Deleted %s prompts for dataset %s from PyRIT memory", deleted_count, dataset_id)
             return True
 
-        except Exception as e:
-            logger.error(f"Failed to delete dataset from PyRIT memory: {e}")
+        except (OSError, AttributeError, ValueError) as e:
+            # Handle database errors, memory access issues, and data processing errors
+            logger.error("Failed to delete dataset from PyRIT memory: %s", e)
             return False
 
     async def cleanup_user_memory(self, user_id: str, max_age_days: int = 30) -> Dict[str, Any]:
@@ -252,10 +262,11 @@ class PyRITMemoryBridge:
                 try:
                     # This is a placeholder - actual cleanup depends on PyRIT's API
                     cleaned_count += 1
-                except Exception as e:
-                    logger.warning(f"Failed to cleanup piece {piece.id}: {e}")
+                except (OSError, AttributeError, ValueError) as e:
+                    # Handle database cleanup errors, attribute access issues, and data errors
+                    logger.warning("Failed to cleanup piece %s: %s", piece.id, e)
 
-            logger.info(f"Cleaned up {cleaned_count} old pieces from user {user_id} memory")
+            logger.info("Cleaned up %s old pieces from user %s memory", cleaned_count, user_id)
 
             return {
                 "cleaned_up": cleaned_count,
@@ -264,8 +275,9 @@ class PyRITMemoryBridge:
                 "message": f"Cleaned up {cleaned_count} pieces older than {max_age_days} days",
             }
 
-        except Exception as e:
-            logger.error(f"Failed to cleanup user memory: {e}")
+        except (OSError, AttributeError, ValueError, TypeError) as e:
+            # Handle database errors, memory access issues, data processing errors, and type issues
+            logger.error("Failed to cleanup user memory: %s", e)
             return {"cleaned_up": 0, "total_pieces": 0, "error": str(e)}
 
     def close_memory_connections(self) -> None:
@@ -274,9 +286,10 @@ class PyRITMemoryBridge:
             try:
                 if hasattr(memory, "dispose_engine"):
                     memory.dispose_engine()
-                logger.debug(f"Closed memory connection for user {user_id}")
-            except Exception as e:
-                logger.warning(f"Error closing memory connection for user {user_id}: {e}")
+                logger.debug("Closed memory connection for user %s", user_id)
+            except (OSError, AttributeError) as e:
+                # Handle connection cleanup errors and attribute access issues
+                logger.warning("Error closing memory connection for user %s: %s", user_id, e)
 
         self.memory_cache.clear()
         logger.info("All PyRIT memory connections closed")
@@ -285,5 +298,6 @@ class PyRITMemoryBridge:
         """Cleanup on object destruction"""
         try:
             self.close_memory_connections()
-        except Exception:
+        except (OSError, AttributeError, RuntimeError):
+            # Ignore database, attribute, and runtime errors during cleanup
             pass  # Ignore errors during cleanup

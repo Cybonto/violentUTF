@@ -1,8 +1,13 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import logging
 import os
 from typing import Any, Dict, List, Optional
 
-import requests
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +24,8 @@ async def get_dataset_prompts(
             raise ValueError(f"Dataset not found: {dataset_id}")
 
         logger.info(
-            f"Found dataset config for {dataset_id}: {dataset_config.get('name')} (source: {dataset_config.get('source_type')})"
+            f"Found dataset config for {dataset_id}: {dataset_config.get('name')} "
+            f"(source: {dataset_config.get('source_type')})"
         )
 
         # Extract prompts based on dataset type
@@ -46,11 +52,11 @@ async def get_dataset_prompts(
 
             prompts = random.sample(prompts, sample_size)
 
-        logger.info(f"Loaded {len(prompts)} prompts from dataset {dataset_id}")
+        logger.info("Loaded %s prompts from dataset %s", len(prompts), dataset_id)
         return prompts
 
     except Exception as e:
-        logger.error(f"Error getting dataset prompts: {e}")
+        logger.error("Error getting dataset prompts: %s", e)
         raise
 
 
@@ -109,15 +115,17 @@ async def _get_dataset_by_id(dataset_id: str, user_context: Optional[str] = None
                             "description": dataset_data.get("description", ""),
                             "prompt_count": dataset_data.get("prompt_count", 0),
                         }
-        except Exception as db_error:
-            logger.warning(f"Could not access dataset database: {db_error}")
+        except (OSError, ImportError, AttributeError) as db_error:
+            # Handle database access errors, import issues, and attribute access problems
+            logger.warning("Could not access dataset database: %s", db_error)
 
         # If not found, return None
-        logger.warning(f"Dataset not found: {dataset_id}")
+        logger.warning("Dataset not found: %s", dataset_id)
         return None
 
-    except Exception as e:
-        logger.error(f"Error calling dataset service: {e}")
+    except (ValueError, KeyError, TypeError) as e:
+        # Handle service call errors, missing data, and type conversion issues
+        logger.error("Error calling dataset service: %s", e)
         return None
 
 
@@ -125,11 +133,11 @@ async def _get_native_dataset_prompts(dataset_config: Dict) -> List[str]:
     """Get prompts from native dataset"""
     # Extract prompts from native dataset
     dataset_type = dataset_config.get("dataset_type")
-    logger.debug(f"Processing native dataset of type: {dataset_type}")
+    logger.debug("Processing native dataset of type: %s", dataset_type)
 
     # Get prompts from the dataset configuration
     prompts = dataset_config.get("prompts", [])
-    logger.info(f"Native dataset {dataset_config.get('name')} has {len(prompts)} prompts")
+    logger.info("Native dataset %s has %s prompts", dataset_config.get("name"), len(prompts))
 
     if isinstance(prompts, list):
         # Extract text values from prompt objects
@@ -180,21 +188,22 @@ async def _get_memory_dataset_prompts(
         dataset_id = dataset_config.get("id", "memory_0")
         dataset_name = dataset_config.get("name", "Unknown")
 
-        logger.info(f"Loading memory dataset prompts for {dataset_name} (ID: {dataset_id})")
+        logger.info("Loading memory dataset prompts for %s (ID: %s)", dataset_name, dataset_id)
 
         # Try to access real PyRIT memory database
         prompts = await _load_real_memory_dataset_prompts(dataset_id, limit, user_context)
 
         if prompts:
-            logger.info(f"Loaded {len(prompts)} real prompts from PyRIT memory dataset {dataset_name}")
+            logger.info("Loaded %s real prompts from PyRIT memory dataset %s", len(prompts), dataset_name)
             return prompts
         else:
-            logger.warning(f"No prompts found in PyRIT memory for dataset {dataset_id}")
+            logger.warning("No prompts found in PyRIT memory for dataset %s", dataset_id)
             # Return empty list instead of mock data - let calling code handle appropriately
             return []
 
-    except Exception as e:
-        logger.error(f"Error accessing PyRIT memory dataset {dataset_id}: {e}")
+    except (OSError, AttributeError, ValueError) as e:
+        # Handle database errors, memory access issues, and data parsing errors
+        logger.error("Error accessing PyRIT memory dataset %s: %s", dataset_id, e)
         # Return empty list instead of fallback mock data
         return []
 
@@ -215,7 +224,7 @@ async def _load_real_memory_dataset_prompts(
         try:
             memory_instance = CentralMemory.get_memory_instance()
             if memory_instance:
-                logger.info(f"Found active PyRIT memory instance for dataset {dataset_id}")
+                logger.info("Found active PyRIT memory instance for dataset %s", dataset_id)
 
                 # Get conversation pieces from memory that could be prompts
                 # Look for user - role pieces that contain the original prompts
@@ -227,7 +236,7 @@ async def _load_real_memory_dataset_prompts(
                         prompts.append(piece.original_value)
 
                 if prompts:
-                    logger.info(f"Extracted {len(prompts)} prompts from active PyRIT memory")
+                    logger.info("Extracted %s prompts from active PyRIT memory", len(prompts))
                     # Apply configurable limit if specified
                     if limit and limit > 0:
                         return prompts[:limit]
@@ -241,7 +250,9 @@ async def _load_real_memory_dataset_prompts(
         import hashlib
 
         if not user_id:
-            logger.error(f"Cannot load memory dataset {dataset_id} without user context - security violation prevented")
+            logger.error(
+                "Cannot load memory dataset %s without user context - security violation prevented", dataset_id
+            )
             return []
 
         # Generate the user's specific database filename
@@ -261,7 +272,7 @@ async def _load_real_memory_dataset_prompts(
                 user_db_path = os.path.join(base_path, user_db_filename)
                 if os.path.exists(user_db_path):
                     memory_db_paths.append(user_db_path)
-                    logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
+                    logger.info("Found user-specific database for %s: %s", user_id, user_db_filename)
                     break  # Only use the first found user database
 
         # Try to extract prompts from found database files
@@ -269,10 +280,10 @@ async def _load_real_memory_dataset_prompts(
             try:
                 # SECURITY: Double-check that we're only accessing the user's database
                 if user_db_filename not in db_path:
-                    logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
+                    logger.error("Security violation: Attempted to access non-user database: %s", db_path)
                     continue
 
-                logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
+                logger.info("Reading user-specific PyRIT memory database: %s", db_path)
 
                 with sqlite3.connect(db_path) as conn:
                     cursor = conn.cursor()
@@ -303,28 +314,30 @@ async def _load_real_memory_dataset_prompts(
                             prompts.append(row[0].strip())
 
                 if prompts:
-                    logger.info(f"Extracted {len(prompts)} prompts from PyRIT database {db_path}")
+                    logger.info("Extracted %s prompts from PyRIT database %s", len(prompts), db_path)
                     return prompts
 
             except sqlite3.Error as db_error:
-                logger.debug(f"Could not read database {db_path}: {db_error}")
+                logger.debug("Could not read database %s: %s", db_path, db_error)
                 continue
-            except Exception as db_error:
-                logger.debug(f"Error accessing database {db_path}: {db_error}")
+            except (OSError, ValueError, AttributeError) as db_error:
+                # Handle database access errors, data parsing errors, and attribute issues
+                logger.debug("Error accessing database %s: %s", db_path, db_error)
                 continue
 
-        logger.info(f"No PyRIT memory data found for dataset {dataset_id}")
+        logger.info("No PyRIT memory data found for dataset %s", dataset_id)
         return []
 
-    except Exception as e:
-        logger.error(f"Error loading real memory dataset prompts: {e}")
+    except (OSError, ImportError, AttributeError, ValueError) as e:
+        # Handle database errors, import issues, attribute access problems, and data parsing errors
+        logger.error("Error loading real memory dataset prompts: %s", e)
         return []
 
 
 async def _get_converter_dataset_prompts(dataset_config: Dict) -> List[str]:
     """Get prompts from converter - generated dataset"""
     try:
-        logger.info(f"Loading converter dataset: {dataset_config.get('name')}")
+        logger.info("Loading converter dataset: %s", dataset_config.get("name"))
 
         # Converter datasets store their prompts in the database with prompt_text field
         # First check if we have prompts directly in the config
@@ -352,18 +365,19 @@ async def _get_converter_dataset_prompts(dataset_config: Dict) -> List[str]:
             else:
                 text_prompts.append(str(prompt))
 
-        logger.info(f"Extracted {len(text_prompts)} prompts from converter dataset {dataset_config.get('name')}")
+        logger.info("Extracted %s prompts from converter dataset %s", len(text_prompts), dataset_config.get("name"))
         return text_prompts
 
-    except Exception as e:
-        logger.error(f"Error loading converter dataset prompts: {e}")
+    except (KeyError, ValueError, AttributeError, TypeError) as e:
+        # Handle config errors, data processing errors, attribute access issues, and type problems
+        logger.error("Error loading converter dataset prompts: %s", e)
         return []
 
 
 async def _get_transform_dataset_prompts(dataset_config: Dict) -> List[str]:
     """Get prompts from transform - generated dataset"""
     try:
-        logger.info(f"Loading transform dataset: {dataset_config.get('name')}")
+        logger.info("Loading transform dataset: %s", dataset_config.get("name"))
 
         # Transform datasets are similar to converter datasets but may have different structure
         prompts = dataset_config.get("prompts", [])
@@ -386,18 +400,19 @@ async def _get_transform_dataset_prompts(dataset_config: Dict) -> List[str]:
             else:
                 text_prompts.append(str(prompt))
 
-        logger.info(f"Extracted {len(text_prompts)} prompts from transform dataset {dataset_config.get('name')}")
+        logger.info("Extracted %s prompts from transform dataset %s", len(text_prompts), dataset_config.get("name"))
         return text_prompts
 
-    except Exception as e:
-        logger.error(f"Error loading transform dataset prompts: {e}")
+    except (KeyError, ValueError, AttributeError, TypeError) as e:
+        # Handle config errors, data processing errors, attribute access issues, and type problems
+        logger.error("Error loading transform dataset prompts: %s", e)
         return []
 
 
 async def _get_combination_dataset_prompts(dataset_config: Dict) -> List[str]:
     """Get prompts from combination dataset (combines multiple datasets)"""
     try:
-        logger.info(f"Loading combination dataset: {dataset_config.get('name')}")
+        logger.info("Loading combination dataset: %s", dataset_config.get("name"))
 
         # Combination datasets merge prompts from multiple source datasets
         prompts = dataset_config.get("prompts", [])
@@ -418,9 +433,10 @@ async def _get_combination_dataset_prompts(dataset_config: Dict) -> List[str]:
             else:
                 text_prompts.append(str(prompt))
 
-        logger.info(f"Extracted {len(text_prompts)} prompts from combination dataset {dataset_config.get('name')}")
+        logger.info("Extracted %s prompts from combination dataset %s", len(text_prompts), dataset_config.get("name"))
         return text_prompts
 
-    except Exception as e:
-        logger.error(f"Error loading combination dataset prompts: {e}")
+    except (KeyError, ValueError, AttributeError, TypeError) as e:
+        # Handle config errors, data processing errors, attribute access issues, and type problems
+        logger.error("Error loading combination dataset prompts: %s", e)
         return []

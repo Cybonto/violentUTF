@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Emergency fix script for corrupted regex patterns.
 This script can automatically fix common regex pattern corruptions.
 """
-import os
 import re
 import shutil
 import sys
 from datetime import datetime
-from pathlib import Path
 
 # ANSI color codes
 RED = "\033[91m"

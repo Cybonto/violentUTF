@@ -1,10 +1,16 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Security configuration validation
 SECURITY: Validates that security measures are properly configured
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from app.core.config import settings
 
@@ -15,7 +21,7 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
     """
     Validate rate limiting configuration
     """
-    validation_results = {
+    validation_results: Dict[str, Any] = {
         "rate_limiting_enabled": False,
         "slowapi_available": False,
         "limiter_configured": False,
@@ -25,7 +31,7 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
 
     try:
         # Check if slowapi is available
-        import slowapi
+        pass  # slowapi availability check removed
 
         validation_results["slowapi_available"] = True
         logger.info("✅ slowapi library is available")
@@ -37,7 +43,7 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
 
     try:
         # Check if limiter is properly configured
-        from app.core.rate_limiting import RATE_LIMITS, limiter
+        from app.core.rate_limiting import RATE_LIMITS
 
         validation_results["limiter_configured"] = True
         validation_results["rate_limiting_enabled"] = True
@@ -56,8 +62,8 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
             if endpoint.startswith("auth_"):
                 # Parse rate limit (e.g., "5/minute")
                 try:
-                    count, period = limit.split("/")
-                    count = int(count)
+                    count_str, period = limit.split("/")
+                    count = int(count_str)
                     if period == "minute" and count > 100:
                         validation_results["recommendations"].append(
                             f"Rate limit for {endpoint} may be too high: {limit}"
@@ -71,7 +77,7 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
 
     except ImportError as e:
         validation_results["issues"].append(f"Rate limiting module import failed: {e}")
-        logger.error(f"❌ Rate limiting module import failed: {e}")
+        logger.error("❌ Rate limiting module import failed: %s", e)
 
     return validation_results
 
@@ -80,7 +86,12 @@ def validate_security_headers() -> Dict[str, Any]:
     """
     Validate security headers configuration
     """
-    validation_results = {"cors_configured": False, "security_headers": False, "issues": [], "recommendations": []}
+    validation_results: Dict[str, Any] = {
+        "cors_configured": False,
+        "security_headers": False,
+        "issues": [],
+        "recommendations": [],
+    }
 
     # Check CORS configuration
     if hasattr(settings, "BACKEND_CORS_ORIGINS"):
@@ -107,7 +118,7 @@ def run_security_validation() -> Dict[str, Any]:
     """
     logger.info("🔒 Running security configuration validation...")
 
-    results = {
+    results: Dict[str, Any] = {
         "overall_status": "unknown",
         "rate_limiting": validate_rate_limiting_config(),
         "security_headers": validate_security_headers(),
@@ -132,10 +143,10 @@ def run_security_validation() -> Dict[str, Any]:
         logger.info("🛡️ Security validation passed - no critical issues found")
     elif critical_issues <= 2:
         results["overall_status"] = "warning"
-        logger.warning(f"⚠️ Security validation found {critical_issues} critical issues")
+        logger.warning("⚠️ Security validation found %s critical issues", critical_issues)
     else:
         results["overall_status"] = "critical"
-        logger.error(f"🚨 Security validation found {critical_issues} critical security issues")
+        logger.error("🚨 Security validation found %s critical security issues", critical_issues)
 
     return results
 

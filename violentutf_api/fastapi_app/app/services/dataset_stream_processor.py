@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Enhanced PyRIT Dataset Stream Processor
 
@@ -8,10 +14,9 @@ intelligent chunking, and comprehensive error handling.
 import asyncio
 import logging
 import os
-import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Tuple
+from typing import Any, AsyncIterator, Awaitable, Callable, Dict, List, Optional
 
 from pyrit.memory import CentralMemory, MemoryInterface
 
@@ -63,11 +68,11 @@ class PyRITStreamProcessor:
         dataset_type: str,
         config: Dict[str, Any],
         max_prompts: Optional[int] = None,
-        progress_callback: Optional[Callable[[int, int], None]] = None,
+        progress_callback: Optional[Callable[[int, int], Awaitable[None]]] = None,
     ) -> AsyncIterator[DatasetChunk]:
         """Stream process PyRIT datasets with intelligent chunking"""
 
-        logger.info(f"Starting stream processing for dataset: {dataset_type}")
+        logger.info("Starting stream processing for dataset: %s", dataset_type)
 
         # Initialize statistics
         stats = DatasetImportStats(start_time=datetime.utcnow(), total_estimated=max_prompts or 0)
@@ -123,7 +128,7 @@ class PyRITStreamProcessor:
 
                 # Stop if max limit reached
                 if max_prompts and prompts_processed >= max_prompts:
-                    logger.info(f"Reached maximum import limit: {max_prompts}")
+                    logger.info("Reached maximum import limit: %s", max_prompts)
                     break
 
             # Yield remaining prompts
@@ -141,10 +146,12 @@ class PyRITStreamProcessor:
                 stats.total_processed = prompts_processed
 
         except Exception as e:
-            logger.error(f"Stream processing failed for {dataset_type}: {e}")
+            logger.error("Stream processing failed for %s: %s", dataset_type, e)
             raise DatasetFetchError(f"Failed to process dataset {dataset_type}: {str(e)}")
 
-        logger.info(f"Completed stream processing: {stats.total_processed} prompts in {stats.chunks_processed} chunks")
+        logger.info(
+            "Completed stream processing: %s prompts in %s chunks", stats.total_processed, stats.chunks_processed
+        )
 
     def _calculate_optimal_chunk_size(self, dataset: Any) -> int:
         """Calculate optimal chunk size based on dataset characteristics"""
@@ -173,7 +180,7 @@ class PyRITStreamProcessor:
                     return optimal_size
 
         except Exception as e:
-            logger.debug(f"Could not calculate optimal chunk size: {e}")
+            logger.debug("Could not calculate optimal chunk size: %s", e)
 
         return self.chunk_size
 
@@ -201,7 +208,7 @@ class PyRITStreamProcessor:
             if not isinstance(config, dict):
                 raise ValueError("Configuration must be a dictionary")
 
-            logger.debug(f"Dataset validation passed for {dataset_type}")
+            logger.debug("Dataset validation passed for %s", dataset_type)
 
         except Exception as e:
             raise DatasetFetchError(f"Dataset validation failed: {str(e)}")
@@ -247,7 +254,7 @@ class PyRITStreamProcessor:
             return await self._fetch_with_retry(fetcher, clean_config)
 
         except Exception as e:
-            logger.error(f"Failed to fetch PyRIT dataset {dataset_type}: {e}")
+            logger.error("Failed to fetch PyRIT dataset %s: %s", dataset_type, e)
             raise DatasetFetchError(f"Could not fetch dataset {dataset_type}: {str(e)}")
 
     async def _fetch_with_retry(self, fetcher: Callable, config: Dict, max_retries: Optional[int] = None) -> Any:
@@ -268,7 +275,7 @@ class PyRITStreamProcessor:
 
             except Exception as e:
                 if attempt == max_retries - 1:
-                    logger.error(f"Dataset fetch failed after {max_retries} attempts: {e}")
+                    logger.error("Dataset fetch failed after %s attempts: %s", max_retries, e)
                     raise
 
                 # Exponential backoff
@@ -288,11 +295,11 @@ class PyRITStreamProcessor:
             # Filter config to only include supported parameters
             clean_config = {k: v for k, v in config.items() if k in supported_params}
 
-            logger.debug(f"Cleaned config: {clean_config}")
+            logger.debug("Cleaned config: %s", clean_config)
             return clean_config
 
         except Exception as e:
-            logger.warning(f"Could not clean config for fetcher: {e}")
+            logger.warning("Could not clean config for fetcher: %s", e)
             return config  # Return original config if cleaning fails
 
     async def _extract_prompts_with_metadata(self, dataset: Any) -> AsyncIterator[Dict[str, Any]]:
@@ -366,5 +373,5 @@ class PyRITStreamProcessor:
                 logger.warning(f"Unknown dataset format: {type(dataset)}")
 
         except Exception as e:
-            logger.error(f"Error extracting prompts from dataset: {e}")
+            logger.error("Error extracting prompts from dataset: %s", e)
             raise DatasetFetchError(f"Could not extract prompts: {str(e)}")

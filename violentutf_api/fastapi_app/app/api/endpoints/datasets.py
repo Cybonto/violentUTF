@@ -1,29 +1,27 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 FastAPI endpoints for dataset management
 Implements API backend for 2_Configure_Datasets.py page
 """
 
-import asyncio
-import base64
-import json
-import time
 import uuid
 from datetime import datetime
-from io import StringIO
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from app.schemas.datasets import (
     DatasetCreateRequest,
     DatasetCreateResponse,
     DatasetDeleteResponse,
-    DatasetError,
     DatasetFieldMappingRequest,
     DatasetFieldMappingResponse,
     DatasetInfo,
     DatasetPreviewRequest,
     DatasetPreviewResponse,
-    DatasetSaveRequest,
-    DatasetSaveResponse,
     DatasetsListResponse,
     DatasetSourceType,
     DatasetTransformRequest,
@@ -36,8 +34,7 @@ from app.schemas.datasets import (
     MemoryDatasetsResponse,
     SeedPromptInfo,
 )
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 # PyRIT imports for memory access
 try:
@@ -139,15 +136,28 @@ NATIVE_DATASET_TYPES = {
 async def get_dataset_types(current_user=Depends(get_current_user)):
     """Get list of available dataset types"""
     try:
-        logger.info(f"User {current_user.username} requested dataset types")
+        logger.info("User %s requested dataset types", current_user.username)
 
         dataset_types = []
         for name, info in NATIVE_DATASET_TYPES.items():
-            dataset_types.append(DatasetType(**info))
+            # Safely construct DatasetType with valid schema fields only
+            dataset_type = DatasetType(
+                name=str(info.get("name", name)),
+                description=str(info.get("description", "")),
+                category=str(info.get("category", "unknown")),
+                config_required=bool(info.get("config_required", False)),
+                available_configs=(
+                    cast(Optional[Dict[str, List[str]]], info.get("available_configs"))
+                    if isinstance(info.get("available_configs"), dict)
+                    else None
+                ),
+            )
+            dataset_types.append(dataset_type)
 
         return DatasetTypesResponse(dataset_types=dataset_types, total=len(dataset_types))
-    except Exception as e:
-        logger.error(f"Error getting dataset types: {e}")
+    except (ValueError, AttributeError, OSError) as e:
+        # Handle data processing errors, attribute access issues, and database errors
+        logger.error("Error getting dataset types: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get dataset types: {str(e)}")
 
 
@@ -156,7 +166,7 @@ async def get_datasets(current_user=Depends(get_current_user)):
     """Get list of configured datasets from session and memory"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} requested datasets list")
+        logger.info("User %s requested datasets list", user_id)
 
         datasets = []
         session_count = 0
@@ -197,28 +207,31 @@ async def get_datasets(current_user=Depends(get_current_user)):
                         prompts=[
                             SeedPromptInfo(
                                 id="preview_prompt_1",
-                                value=memory_dataset.first_prompt_preview,
+                                value=memory_dataset.first_prompt_preview or "No preview available",
                                 dataset_name=memory_dataset.dataset_name,
                                 data_type="text",
+                                harm_categories=None,
                             )
                         ],  # Just show preview for list view
                         created_at=datetime.utcnow(),
                         updated_at=datetime.utcnow(),
-                        created_by=memory_dataset.created_by,
+                        created_by=memory_dataset.created_by or "Unknown",
                         metadata={"source": "memory", "type": "pyrit_memory"},
                     )
                 )
                 memory_count += 1
 
-        except Exception as e:
-            logger.warning(f"Could not load real memory datasets: {e}")
+        except (OSError, AttributeError, ValueError) as e:
+            # Handle database errors, memory access issues, and data parsing errors
+            logger.warning("Could not load real memory datasets: %s", e)
             # Continue without memory datasets rather than showing mock data
 
         return DatasetsListResponse(
             datasets=datasets, total=len(datasets), session_count=session_count, memory_count=memory_count
         )
-    except Exception as e:
-        logger.error(f"Error getting datasets: {e}")
+    except (ValueError, AttributeError, OSError) as e:
+        # Handle data processing errors, attribute access issues, and database errors
+        logger.error("Error getting datasets: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get datasets: {str(e)}")
 
 
@@ -227,7 +240,7 @@ async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(g
     """Preview a dataset before creating it"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} previewing dataset of type: {request.source_type}")
+        logger.info("User %s previewing dataset of type: %s", user_id, request.source_type)
 
         preview_prompts = []
         total_prompts = 0
@@ -258,6 +271,7 @@ async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(g
                                 value=prompt_text,
                                 dataset_name=request.dataset_type,
                                 data_type="text",
+                                harm_categories=None,
                             )
                         )
 
@@ -265,12 +279,14 @@ async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(g
                 else:
                     # If no real prompts available, show warning instead of mock data
                     warnings.append(
-                        f"Could not load preview for {request.dataset_type} dataset. Dataset may be empty or unavailable."
+                        f"Could not load preview for {request.dataset_type} dataset. "
+                        f"Dataset may be empty or unavailable."
                     )
                     total_prompts = 0
 
-            except Exception as e:
-                logger.warning(f"Failed to load real preview for {request.dataset_type}: {e}")
+            except (OSError, AttributeError, ValueError, KeyError) as e:
+                # Handle database errors, memory access issues, data parsing errors, and missing keys
+                logger.warning("Failed to load real preview for %s: %s", request.dataset_type, e)
                 warnings.append(f"Could not load preview for {request.dataset_type}. Error: {str(e)}")
                 total_prompts = 0
 
@@ -301,8 +317,9 @@ async def preview_dataset(request: DatasetPreviewRequest, current_user=Depends(g
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error previewing dataset: {e}")
+    except (ValueError, KeyError, AttributeError, OSError) as e:
+        # Handle data processing errors, missing keys, attribute access issues, and database errors
+        logger.error("Error previewing dataset: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to preview dataset: {str(e)}")
 
 
@@ -311,7 +328,7 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
     """Create a new dataset configuration"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} creating dataset: {request.name}")
+        logger.info("User %s creating dataset: %s", user_id, request.name)
 
         now = datetime.utcnow()
 
@@ -328,19 +345,23 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
                     for i, prompt_text in enumerate(real_prompts):
                         prompts.append(
                             SeedPromptInfo(
-                                id=str(uuid.uuid4()), value=prompt_text, dataset_name=request.name, data_type="text"
+                                id=str(uuid.uuid4()),
+                                value=prompt_text,
+                                dataset_name=request.name,
+                                data_type="text",
+                                harm_categories=None,
                             )
                         )
                     logger.info(f"Loaded {len(prompts)} real prompts from PyRIT dataset '{request.dataset_type}'")
                 else:
                     # Return error instead of creating mock dataset
-                    logger.error(f"Failed to load real PyRIT dataset '{request.dataset_type}' - no prompts available")
+                    logger.error("Failed to load real PyRIT dataset '%s' - no prompts available", request.dataset_type)
                     raise HTTPException(
                         status_code=400,
                         detail=f"Could not load dataset '{request.dataset_type}'. Dataset may be empty or unavailable.",
                     )
             except Exception as e:
-                logger.error(f"Error loading PyRIT dataset '{request.dataset_type}': {e}")
+                logger.error("Error loading PyRIT dataset '%s': %s", request.dataset_type, e)
                 # Return error instead of creating mock dataset
                 raise HTTPException(
                     status_code=500, detail=f"Failed to load PyRIT dataset '{request.dataset_type}': {str(e)}"
@@ -397,7 +418,7 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
         # Update dataset_data with the actual ID from DuckDB
         dataset_data["id"] = actual_dataset_id
 
-        logger.info(f"Dataset '{request.name}' created successfully with ID: {actual_dataset_id}")
+        logger.info("Dataset '%s' created successfully with ID: %s", request.name, actual_dataset_id)
 
         return DatasetCreateResponse(
             dataset=DatasetInfo(**dataset_data),
@@ -407,7 +428,7 @@ async def create_dataset(request: DatasetCreateRequest, current_user=Depends(get
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error creating dataset {request.name}: {e}")
+        logger.error("Error creating dataset %s: %s", request.name, e)
         raise HTTPException(status_code=500, detail=f"Failed to create dataset: {str(e)}")
 
 
@@ -421,7 +442,7 @@ async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, c
     """Transform a dataset using a template"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} transforming dataset: {dataset_id}")
+        logger.info("User %s transforming dataset: %s", user_id, dataset_id)
 
         # Find original dataset in DuckDB
         db_manager = get_duckdb_manager(user_id)
@@ -449,6 +470,7 @@ async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, c
                     value=transformed_value,
                     dataset_name=f"{original_dataset['name']}_transformed",
                     data_type="text",
+                    harm_categories=None,
                     metadata={"original_prompt_id": prompt_data.get("id"), "transformation_template": request.template},
                 )
             )
@@ -467,14 +489,19 @@ async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, c
             "metadata": {"transformation_type": request.template_type, "source_dataset_id": dataset_id},
         }
 
-        # Store transformed dataset in DuckDB
-        db_manager.store_dataset(transformed_id, transformed_dataset_data)
+        # Store transformed dataset in DuckDB (use create_dataset method)
+        db_manager.create_dataset(
+            name=f"{original_dataset['name']}_transformed",
+            source_type="transform",
+            configuration={"original_dataset_id": dataset_id, "template": request.template},
+            prompts=[p["text"] for p in transformed_dataset_data["prompts"]],
+        )
 
         transform_summary = (
             f"Applied template to {len(original_prompts)} prompts using {request.template_type} template"
         )
 
-        logger.info(f"Dataset {dataset_id} transformed successfully, new ID: {transformed_id}")
+        logger.info("Dataset %s transformed successfully, new ID: %s", dataset_id, transformed_id)
 
         return DatasetTransformResponse(
             original_dataset_id=dataset_id,
@@ -485,7 +512,7 @@ async def transform_dataset(dataset_id: str, request: DatasetTransformRequest, c
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error transforming dataset {dataset_id}: {e}")
+        logger.error("Error transforming dataset %s: %s", dataset_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to transform dataset: {str(e)}")
 
 
@@ -494,7 +521,7 @@ async def get_memory_datasets(current_user=Depends(get_current_user)):
     """Get datasets saved in PyRIT memory"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} requested memory datasets")
+        logger.info("User %s requested memory datasets", user_id)
 
         # Get real PyRIT memory datasets
         memory_datasets = await _get_real_memory_datasets(user_id)
@@ -504,7 +531,7 @@ async def get_memory_datasets(current_user=Depends(get_current_user)):
         return MemoryDatasetsResponse(datasets=memory_datasets, total=len(memory_datasets), total_prompts=total_prompts)
 
     except Exception as e:
-        logger.error(f"Error getting memory datasets: {e}")
+        logger.error("Error getting memory datasets: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to get memory datasets: {str(e)}")
 
 
@@ -517,7 +544,7 @@ async def get_field_mapping(request: DatasetFieldMappingRequest, current_user=De
     """Analyze an uploaded file and return field mapping options"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} requesting field mapping for {request.file_type} file")
+        logger.info("User %s requesting field mapping for %s file", user_id, request.file_type)
 
         # Simulate file parsing
         if request.file_type.lower() == "csv":
@@ -550,7 +577,7 @@ async def get_field_mapping(request: DatasetFieldMappingRequest, current_user=De
         )
 
     except Exception as e:
-        logger.error(f"Error analyzing file for field mapping: {e}")
+        logger.error("Error analyzing file for field mapping: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to analyze file: {str(e)}")
 
 
@@ -564,7 +591,7 @@ async def delete_dataset(
     """Delete a dataset from session and / or PyRIT memory"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} deleting dataset: {dataset_id}")
+        logger.info("User %s deleting dataset: %s", user_id, dataset_id)
 
         deleted_from_session = False
         deleted_from_memory = False
@@ -575,13 +602,13 @@ async def delete_dataset(
             if db_manager.get_dataset(dataset_id):
                 db_manager.delete_dataset(dataset_id)
                 deleted_from_session = True
-                logger.info(f"Dataset {dataset_id} deleted from DuckDB storage")
+                logger.info("Dataset %s deleted from DuckDB storage", dataset_id)
 
         # Delete from memory (simulated)
         if delete_from_memory:
             # In real implementation, this would delete from PyRIT memory
             deleted_from_memory = True
-            logger.info(f"Dataset {dataset_id} would be deleted from PyRIT memory")
+            logger.info("Dataset %s would be deleted from PyRIT memory", dataset_id)
 
         if not deleted_from_session and not deleted_from_memory:
             raise HTTPException(status_code=404, detail="Dataset not found or no deletion location specified")
@@ -605,7 +632,7 @@ async def delete_dataset(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting dataset {dataset_id}: {e}")
+        logger.error("Error deleting dataset %s: %s", dataset_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to delete dataset: {str(e)}")
 
 
@@ -613,50 +640,26 @@ async def delete_dataset(
 async def _load_real_pyrit_dataset(dataset_type: str, config: Dict[str, Any], limit: Optional[int] = None) -> List[str]:
     """Enhanced PyRIT dataset loading with streaming support and configurable limits"""
     try:
-        logger.info(f"Loading real PyRIT dataset: {dataset_type} with config: {config}, limit: {limit}")
+        logger.info("Loading real PyRIT dataset: %s with config: %s, limit: %s", dataset_type, config, limit)
 
         # Import configuration system
-        from app.core.dataset_config import DatasetImportConfig, validate_dataset_config
-        from app.services.dataset_stream_processor import PyRITStreamProcessor
+        from app.core.dataset_config import validate_dataset_config
 
         # Validate configuration
         validate_dataset_config(dataset_type, config)
 
-        # Check if streaming is enabled and limit is high enough
-        import_config = DatasetImportConfig.from_env()
-
         # For small requests or preview, use legacy mode to avoid streaming overhead
         if limit and limit <= 100:  # Use legacy for small requests (increased from preview_limit)
-            logger.info(f"Using legacy mode for small dataset request (limit: {limit})")
+            logger.info("Using legacy mode for small dataset request (limit: %s)", limit)
             return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
 
-        # For larger requests, use streaming (temporarily disabled for testing)
-        if import_config.enable_streaming and False:  # Temporarily disabled
-            try:
-                processor = PyRITStreamProcessor()
-                all_prompts = []
-
-                # Stream process but collect all results (for backward compatibility)
-                async for chunk in processor.process_pyrit_dataset_stream(dataset_type, config, limit):
-                    all_prompts.extend(chunk.prompts)
-
-                    # Apply limit if specified
-                    if limit and len(all_prompts) >= limit:
-                        all_prompts = all_prompts[:limit]
-                        break
-
-                logger.info(f"Successfully loaded {len(all_prompts)} prompts using streaming")
-                return all_prompts
-
-            except Exception as e:
-                logger.warning(f"Streaming failed, falling back to legacy mode: {e}")
-                return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
-
-        # Fallback to legacy mode
+        # Streaming is temporarily disabled - use legacy mode for all requests
+        logger.info("Using legacy mode for dataset request (streaming disabled)")
         return await _load_real_pyrit_dataset_legacy(dataset_type, config, limit)
 
-    except Exception as e:
-        logger.error(f"Error loading PyRIT dataset '{dataset_type}': {e}")
+    except (OSError, AttributeError, ValueError, ImportError) as e:
+        # Handle database errors, memory access issues, data parsing errors, and import issues
+        logger.error("Error loading PyRIT dataset '%s': %s", dataset_type, e)
         return []
 
 
@@ -665,7 +668,7 @@ async def _load_real_pyrit_dataset_legacy(
 ) -> List[str]:
     """Legacy PyRIT dataset loading (kept for backward compatibility)"""
     try:
-        logger.info(f"Loading PyRIT dataset using legacy mode: {dataset_type}")
+        logger.info("Loading PyRIT dataset using legacy mode: %s", dataset_type)
 
         # Import PyRIT dataset functions
         from pyrit.datasets import (
@@ -696,7 +699,7 @@ async def _load_real_pyrit_dataset_legacy(
         }
 
         if dataset_type not in dataset_fetchers:
-            logger.warning(f"Dataset type '{dataset_type}' not supported for real dataset loading")
+            logger.warning("Dataset type '%s' not supported for real dataset loading", dataset_type)
             return []
 
         # Get the fetch function
@@ -706,7 +709,7 @@ async def _load_real_pyrit_dataset_legacy(
         # Remove None values and exclude 'dataset_type' (which is not a PyRIT parameter)
         clean_config = {k: v for k, v in config.items() if v is not None and k != "dataset_type"}
 
-        logger.info(f"Calling {fetch_function.__name__} with config: {clean_config}")
+        logger.info("Calling %s with config: %s", fetch_function.__name__, clean_config)
 
         # Call the PyRIT fetch function
         dataset = fetch_function(**clean_config)
@@ -722,7 +725,7 @@ async def _load_real_pyrit_dataset_legacy(
                         prompts.append(item["user"])
                     else:
                         prompts.append(str(item))
-                logger.info(f"Successfully loaded {len(prompts)} prompts from many_shot_jailbreaking (list format)")
+                logger.info("Successfully loaded %s prompts from many_shot_jailbreaking (list format)", len(prompts))
                 # Apply configurable limit if specified
                 if limit and limit > 0:
                     return prompts[:limit]
@@ -738,7 +741,7 @@ async def _load_real_pyrit_dataset_legacy(
                         prompts.append(question.value)
                     else:
                         prompts.append(str(question))
-                logger.info(f"Successfully loaded {len(prompts)} questions from wmdp dataset")
+                logger.info("Successfully loaded %s questions from wmdp dataset", len(prompts))
                 # Apply configurable limit if specified
                 if limit and limit > 0:
                     return prompts[:limit]
@@ -764,10 +767,11 @@ async def _load_real_pyrit_dataset_legacy(
         return []
 
     except ImportError as e:
-        logger.error(f"Failed to import PyRIT dataset functions: {e}")
+        logger.error("Failed to import PyRIT dataset functions: %s", e)
         return []
-    except Exception as e:
-        logger.error(f"Error loading PyRIT dataset '{dataset_type}': {e}")
+    except (OSError, AttributeError, ValueError, ImportError) as e:
+        # Handle database errors, memory access issues, data parsing errors, and import issues
+        logger.error("Error loading PyRIT dataset '%s': %s", dataset_type, e)
         return []
 
 
@@ -815,8 +819,9 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                                     try:
                                         conv_pieces = memory_instance.get_conversation(conversation_id=conv_id)
                                         all_pieces.extend(conv_pieces)
-                                    except Exception as conv_error:
-                                        logger.debug(f"Could not get conversation {conv_id}: {conv_error}")
+                                    except (OSError, AttributeError, ValueError) as conv_error:
+                                        # Handle database errors, memory access issues, and data parsing errors
+                                        logger.debug("Could not get conversation %s: %s", conv_id, conv_error)
                                         continue
                         else:
                             # If we can't access the database, skip memory datasets
@@ -824,15 +829,16 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                             all_pieces = []
 
                     # Group by conversation_id to create datasets
-                    conversations = {}
+                    conversations: Dict[str, List[Any]] = {}
                     for piece in all_pieces:
                         conv_id = piece.conversation_id
                         if conv_id not in conversations:
                             conversations[conv_id] = []
                         conversations[conv_id].append(piece)
 
-                except Exception as query_error:
-                    logger.warning(f"Failed to query memory entries: {query_error}")
+                except (OSError, AttributeError, ValueError) as query_error:
+                    # Handle database query errors, memory access issues, and data parsing errors
+                    logger.warning("Failed to query memory entries: %s", query_error)
                     conversations = {}
 
                 # Create dataset entries for each conversation
@@ -855,7 +861,7 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                         )
 
                 if memory_datasets:
-                    logger.info(f"Found {len(memory_datasets)} memory datasets from active PyRIT memory")
+                    logger.info("Found %s memory datasets from active PyRIT memory", len(memory_datasets))
                     return memory_datasets
 
         except ValueError:
@@ -882,7 +888,7 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                 user_db_path = os.path.join(base_path, user_db_filename)
                 if os.path.exists(user_db_path):
                     memory_db_paths.append(user_db_path)
-                    logger.info(f"Found user-specific database for {user_id}: {user_db_filename}")
+                    logger.info("Found user-specific database for %s: %s", user_id, user_db_filename)
                     break  # Only use the first found user database
 
         # Try to extract datasets from found database files
@@ -890,10 +896,10 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
             try:
                 # SECURITY: Double-check that we're only accessing the user's database
                 if user_db_filename not in db_path:
-                    logger.error(f"Security violation: Attempted to access non-user database: {db_path}")
+                    logger.error("Security violation: Attempted to access non-user database: %s", db_path)
                     continue
 
-                logger.info(f"Reading user-specific PyRIT memory database: {db_path}")
+                logger.info("Reading user-specific PyRIT memory database: %s", db_path)
 
                 with sqlite3.connect(db_path) as conn:
                     cursor = conn.cursor()
@@ -937,17 +943,19 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
                     return memory_datasets
 
             except sqlite3.Error as db_error:
-                logger.debug(f"Could not read database {db_path}: {db_error}")
+                logger.debug("Could not read database %s: %s", db_path, db_error)
                 continue
-            except Exception as db_error:
-                logger.debug(f"Error accessing database {db_path}: {db_error}")
+            except (OSError, ValueError, AttributeError) as db_error:
+                # Handle database access errors, data parsing errors, and attribute issues
+                logger.debug("Error accessing database %s: %s", db_path, db_error)
                 continue
 
         logger.info("No PyRIT memory datasets found")
         return []
 
-    except Exception as e:
-        logger.error(f"Error getting real memory datasets: {e}")
+    except (OSError, AttributeError, ValueError, ImportError) as e:
+        # Handle database errors, memory access issues, data parsing errors, and import issues
+        logger.error("Error getting real memory datasets: %s", e)
         return []
 
 
@@ -956,7 +964,7 @@ async def get_dataset(dataset_id: str, current_user=Depends(get_current_user)):
     """Get detailed information about a specific dataset"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} requested dataset details: {dataset_id}")
+        logger.info("User %s requested dataset details: %s", user_id, dataset_id)
 
         # Find dataset in DuckDB
         db_manager = get_duckdb_manager(user_id)
@@ -971,6 +979,7 @@ async def get_dataset(dataset_id: str, current_user=Depends(get_current_user)):
                         value=prompt.get("text", ""),  # Map 'text' to 'value'
                         dataset_name=dataset_data["name"],
                         data_type="text",
+                        harm_categories=None,
                         metadata=prompt.get("metadata", {}),
                     )
                 )
@@ -991,8 +1000,9 @@ async def get_dataset(dataset_id: str, current_user=Depends(get_current_user)):
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error getting dataset {dataset_id}: {e}")
+    except (ValueError, KeyError, AttributeError, OSError) as e:
+        # Handle data processing errors, missing keys, attribute access issues, and database errors
+        logger.error("Error getting dataset %s: %s", dataset_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to get dataset: {str(e)}")
 
 
@@ -1001,7 +1011,7 @@ async def update_dataset(dataset_id: str, request: DatasetUpdateRequest, current
     """Update an existing dataset, with optional save functionality"""
     try:
         user_id = current_user.username
-        logger.info(f"User {user_id} updating dataset: {dataset_id}")
+        logger.info("User %s updating dataset: %s", user_id, dataset_id)
 
         # Find dataset in DuckDB
         db_manager = get_duckdb_manager(user_id)
@@ -1043,7 +1053,7 @@ async def update_dataset(dataset_id: str, request: DatasetUpdateRequest, current
                 logger.info(f"Dataset {dataset_id} saved to PyRIT memory with name: {dataset_data['name']}")
 
         message = f"Dataset '{dataset_data['name']}' {' and '.join(message_parts)}"
-        logger.info(f"Dataset {dataset_id} operation completed: {message}")
+        logger.info("Dataset %s operation completed: %s", dataset_id, message)
 
         # Create updated dataset info
         updated_dataset = DatasetInfo(
@@ -1069,6 +1079,7 @@ async def update_dataset(dataset_id: str, request: DatasetUpdateRequest, current
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error updating dataset {dataset_id}: {e}")
+    except (ValueError, KeyError, AttributeError, OSError) as e:
+        # Handle data processing errors, missing keys, attribute access issues, and database errors
+        logger.error("Error updating dataset %s: %s", dataset_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to update dataset: {str(e)}")
