@@ -313,7 +313,7 @@ jobs:
     name: PR Status Check
     runs-on: ubuntu-22.04
     needs: [pr-validation, python-lint, security-scan, quick-test,
-    docker-lint]
+            docker-lint]
     if: always()
 
     steps:

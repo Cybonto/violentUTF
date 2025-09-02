@@ -17,7 +17,7 @@ on:
           - quick
           - pr-validation
           - full
-          - nightly
+          - weekly
 
 permissions:
   contents: read
@@ -177,14 +177,14 @@ jobs:
             console.log(`Triggered full-ci workflow on branch: ${ref}`);
 
   # Nightly testing
-  trigger-nightly:
+  trigger-weekly:
     name: Trigger Nightly Tests
     needs: dispatch-decision
-    if: needs.dispatch-decision.outputs.workflow == 'nightly'
+    if: needs.dispatch-decision.outputs.workflow == 'weekly'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger nightly workflow
+      - name: Trigger weekly workflow
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
@@ -203,10 +203,10 @@ jobs:
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'nightly.yml',
+              workflow_id: 'weekly.yml',
               ref: ref
             });
-            console.log(`Triggered nightly workflow on branch: ${ref}`);
+            console.log(`Triggered weekly workflow on branch: ${ref}`);
 
   # Skip notification
   skip-notification:
@@ -225,7 +225,7 @@ jobs:
   # Summary status
   dispatcher-status:
     name: Dispatcher Status
-    needs: [dispatch-decision, trigger-quick-checks, trigger-pr-validation, trigger-full-ci, trigger-nightly, skip-notification]
+    needs: [dispatch-decision, trigger-quick-checks, trigger-pr-validation, trigger-full-ci, trigger-weekly, skip-notification]
     if: always()
     runs-on: ubuntu-latest
 
@@ -251,8 +251,8 @@ jobs:
             "full")
               echo "✅ Triggered full CI matrix (20-30 minutes)" >> $GITHUB_STEP_SUMMARY
               ;;
-            "nightly")
-              echo "✅ Triggered nightly deep testing (60-90 minutes)" >> $GITHUB_STEP_SUMMARY
+            "weekly")
+              echo "✅ Triggered weekly deep testing (60-90 minutes)" >> $GITHUB_STEP_SUMMARY
               ;;
             "skip")
               echo "⏭️ CI skipped as requested" >> $GITHUB_STEP_SUMMARY

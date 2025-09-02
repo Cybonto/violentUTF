@@ -156,7 +156,11 @@ jobs:
           pip install pip-audit
           pip-audit --desc --format json --output pip-audit-report.json || true
           # Generate summary
-          python -c "import json; f = open('pip-audit-report.json'); data = json.load(f); f.close(); vulns = data.get('vulnerabilities', []); print(f'Found {len(vulns)} vulnerable dependencies'); [print(f\"- {v.get('name', 'unknown')}: {v.get('description', 'no description')[:100]}...\") for v in vulns[:10]]"
+          python3 -c "import json; \
+            data=json.load(open('pip-audit-report.json')); \
+            vulns=data.get('vulnerabilities',[]); \
+            print(f'Found {len(vulns)} vulnerable dependencies'); \
+            [print(f'- {v.get(\"name\",\"unknown\")}: {v.get(\"description\",\"no desc\")[:50]}...') for v in vulns[:5]]"
 
       - name: Run OWASP dependency check
         run: |
