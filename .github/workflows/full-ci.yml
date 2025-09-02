@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload coverage reports
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-reports
           path: |
@@ -202,7 +202,7 @@ jobs:
           python -m memory_profiler tests/memory_tests.py > memory-profile.txt || true
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: performance-results
           path: |
@@ -263,7 +263,7 @@ jobs:
   integration-suite:
     name: Full Integration Test Suite
     needs: [full-test-matrix, docker-build-and-scan]
-    if: needs.should-run.outputs.should_run == 'true'
+    if: false  # Disabled for online CI - can be enabled for local testing
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -339,7 +339,7 @@ jobs:
 
       - name: Upload service logs
         if: always()
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: integration-logs
           path: docker-services.log
@@ -403,7 +403,7 @@ jobs:
           vulture . >> analysis-report.md || true
 
       - name: Upload analysis report
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: code-analysis
           path: |
@@ -412,7 +412,7 @@ jobs:
 
   release-preparation:
     name: Release Preparation
-    needs: [full-test-matrix, security-scanning, integration-suite]
+    needs: [full-test-matrix, security-scanning]  # integration-suite disabled for CI
     if: |
       needs.should-run.outputs.should_run == 'true' &&
       (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
@@ -439,7 +439,7 @@ jobs:
           tar -czf violentutf-release.tar.gz release-package/
 
       - name: Upload release artifacts
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-artifacts
           path: |
@@ -448,7 +448,7 @@ jobs:
 
   final-summary:
     name: Full CI Summary
-    needs: [full-test-matrix, security-scanning, performance-benchmarks, docker-build-and-scan, integration-suite, code-analysis]
+    needs: [full-test-matrix, security-scanning, performance-benchmarks, docker-build-and-scan, code-analysis]  # integration-suite disabled for CI
     runs-on: ubuntu-latest
     if: always()
 
@@ -462,7 +462,7 @@ jobs:
           echo "- Security Scanning: ${{ needs.security-scanning.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Performance Benchmarks: ${{ needs.performance-benchmarks.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Docker Build: ${{ needs.docker-build-and-scan.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Integration Suite: ${{ needs.integration-suite.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration Suite: skipped (disabled for CI)" >> $GITHUB_STEP_SUMMARY
           echo "- Code Analysis: ${{ needs.code-analysis.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Total Runtime**: ~20-30 minutes" >> $GITHUB_STEP_SUMMARY

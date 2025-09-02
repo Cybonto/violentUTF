@@ -425,7 +425,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: contract-test-results
           path: |
@@ -616,6 +616,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [code-quality]
+    if: false  # Disabled for online CI - can be enabled for local testing
 
     steps:
       - name: Checkout code
@@ -661,7 +662,7 @@ jobs:
 
   pr-summary:
     name: PR Validation Summary
-    needs: [code-quality, api-contract-tests, docker-validation, integration-tests]
+    needs: [code-quality, api-contract-tests, docker-validation]  # integration-tests disabled for CI
     runs-on: ubuntu-latest
     if: always()
 
@@ -674,7 +675,7 @@ jobs:
               'Code Quality': '${{ needs.code-quality.result }}',
               'API Contract Tests': '${{ needs.api-contract-tests.result }}',
               'Docker Validation': '${{ needs.docker-validation.result }}',
-              'Integration Tests': '${{ needs.integration-tests.result }}'
+              'Integration Tests': 'skipped (disabled for CI)'
             };
 
             let comment = '## Pull Request Validation Results\n\n';

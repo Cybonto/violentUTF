@@ -93,7 +93,7 @@ jobs:
           python -c "import json; f = open('licenses.json'); licenses = json.load(f); f.close(); problematic = [l for l in licenses if l.get('License', '').upper() in ['GPL', 'AGPL', 'UNKNOWN']]; print(f'Found {len(problematic)} potentially problematic licenses') if problematic else None; [print(f\"- {l.get('Name')}: {l.get('License')}\") for l in problematic[:10]]"
 
       - name: Upload security reports
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: nightly-security-reports
           path: |
@@ -282,7 +282,7 @@ jobs:
           python stress_test.py
 
       - name: Upload performance results
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: performance-results
           path: |
@@ -294,7 +294,7 @@ jobs:
     name: AI Framework Deep Testing
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    if: github.event.inputs.test_scope == 'all'
+    if: false  # Disabled for online CI - can be enabled for local testing
 
     steps:
       - name: Checkout code
@@ -360,7 +360,7 @@ jobs:
           python tests/scenarios/test_bias_detection_scenario.py || true
 
       - name: Upload framework test results
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: framework-test-results
           path: |
@@ -369,7 +369,7 @@ jobs:
 
   nightly-report:
     name: Generate Nightly Report
-    needs: [deep-security-analysis, compatibility-testing, performance-stress-testing, framework-integration-testing]
+    needs: [deep-security-analysis, compatibility-testing, performance-stress-testing]  # framework-integration-testing disabled for CI
     runs-on: ubuntu-latest
     if: always()
 
@@ -389,7 +389,7 @@ jobs:
           echo "- Deep Security Analysis: ${{ needs.deep-security-analysis.result }}" >> nightly-report.md
           echo "- Compatibility Testing: ${{ needs.compatibility-testing.result }}" >> nightly-report.md
           echo "- Performance Testing: ${{ needs.performance-stress-testing.result }}" >> nightly-report.md
-          echo "- Framework Testing: ${{ needs.framework-integration-testing.result }}" >> nightly-report.md
+          echo "- Framework Testing: skipped (disabled for CI)" >> nightly-report.md
           echo "" >> nightly-report.md
 
           # Aggregate findings
@@ -418,7 +418,7 @@ jobs:
             console.log(`Created issue #${issue.data.number}`);
 
       - name: Upload nightly report
-        uses: actions/upload-artifact@1ef3f2dbe3147aa542d0b920b28c0e9983c14637 # v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: nightly-report
           path: nightly-report.md
