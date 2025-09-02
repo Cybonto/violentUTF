@@ -207,7 +207,7 @@ repos:
 
       - id: check-github-actions
         name: Validate GitHub Actions workflows
-        entry: yamllint -d relaxed
+        entry: yamllint -c .yamllint
         language: system
         files: '^\.github/workflows/.*\.(yml|yaml)$'
 

@@ -68,19 +68,19 @@ jobs:
           # Only check for high severity issues
           bandit -r . -ll -f json -o bandit-results.json --exclude ".vitutf,__pycache__,.git,venv,.venv,node_modules,htmlcov,.pytest_cache" 2>/dev/null || true
           if [ -f bandit-results.json ]; then
-            python3 -c '
+            python3 -c "
             import json
             import sys
             try:
-                data = json.load(open("bandit-results.json"))
-                high_severity = [r for r in data.get("results", []) if r.get("issue_severity") == "HIGH"]
-                print(f"High severity issues: {len(high_severity)}")
+                data = json.load(open('bandit-results.json'))
+                high_severity = [r for r in data.get('results', []) if r.get('issue_severity') == 'HIGH']
+                print(f'High severity issues: {len(high_severity)}')
                 sys.exit(1 if len(high_severity) > 0 else 0)
             except Exception as e:
-                print(f"Error processing bandit report: {e}")
-                print("High severity issues: 0")
+                print(f'Error processing bandit report: {e}')
+                print('High severity issues: 0')
                 sys.exit(0)
-            '
+            "
           fi
 
   core-tests:
