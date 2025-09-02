@@ -1,17 +1,18 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Dataset Import Configuration System.
+"""Dataset Import Configuration System
 
 This module provides enhanced configuration management for dataset imports
 with adaptive settings, validation, and environment variable support.
 """
-
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Self, cast
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,8 @@ logger = logging.getLogger(__name__)
 class DatasetImportConfig:
     """Enhanced configuration with adaptive and context-aware settings."""
 
-    # Basic limits.
+    # Basic limits
+
     preview_limit: int = 10
     chunk_size: int = 1000
     max_import_size: int = 0  # 0 = unlimited
@@ -59,24 +61,25 @@ class DatasetImportConfig:
     backup_enabled: bool = True
 
     @classmethod
-    def from_env(cls) -> "DatasetImportConfig":
+    def from_env(cls: type) -> "DatasetImportConfig":
         """Load configuration from environment variables."""
 
         def get_bool_env(key: str, default: bool) -> bool:
+
             return os.getenv(key, str(default)).lower() == "true"
 
         def get_int_env(key: str, default: int) -> int:
             try:
                 return int(os.getenv(key, str(default)))
             except ValueError:
-                logger.warning(f"Invalid integer value for {key}, using default: {default}")
+                logger.warning("Invalid integer value for %s, using default: %s", key, default)
                 return default
 
         def get_float_env(key: str, default: float) -> float:
             try:
                 return float(os.getenv(key, str(default)))
             except ValueError:
-                logger.warning(f"Invalid float value for {key}, using default: {default}")
+                logger.warning("Invalid float value for %s, using default: %s", key, default)
                 return default
 
         config = cls(
@@ -107,10 +110,10 @@ class DatasetImportConfig:
         # Validate configuration
         config.validate()
 
-        logger.info(f"Dataset import configuration loaded: {config}")
-        return config
+        logger.info("Dataset import configuration loaded: %s", config)
+        return cast("DatasetImportConfig", config)
 
-    def validate(self: "DatasetImportConfig") -> None:
+    def validate(self: "Self") -> None:
         """Validate configuration values."""
         errors = []
 
@@ -159,9 +162,10 @@ class DatasetImportConfig:
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-    def get_effective_chunk_size(self: "DatasetImportConfig", dataset_size: int = 0, avg_prompt_size: int = 0) -> int:
+    def get_effective_chunk_size(self: "Self", dataset_size: int = 0, avg_prompt_size: int = 0) -> int:
         """Calculate effective chunk size based on dataset characteristics."""
         if not self.adaptive_chunk_size:
+
             return self.chunk_size
 
         try:
@@ -183,13 +187,14 @@ class DatasetImportConfig:
                     return min(500, self.chunk_size)
 
         except Exception as e:
-            logger.warning(f"Error calculating effective chunk size: {e}")
+            logger.warning("Error calculating effective chunk size: %s", e)
 
         return self.chunk_size
 
-    def get_effective_retry_config(self: "DatasetImportConfig", dataset_type: str = "") -> Dict[str, Any]:
+    def get_effective_retry_config(self: "Self", dataset_type: str = "") -> Dict[str, Any]:
         """Get retry configuration based on dataset type."""
-        # Some datasets might need different retry strategies.
+        # Some datasets might need different retry strategies
+
         retry_config = {
             "max_retries": self.max_retries,
             "retry_delay": self.retry_delay,
@@ -205,15 +210,15 @@ class DatasetImportConfig:
 
         return retry_config
 
-    def should_use_pyrit_memory(self: "DatasetImportConfig") -> bool:
+    def should_use_pyrit_memory(self: "Self") -> bool:
         """Determine if PyRIT memory should be used based on configuration."""
         return self.use_pyrit_memory and self.storage_mode in ["dual", "pyrit_only"]
 
-    def should_use_violentutf_db(self: "DatasetImportConfig") -> bool:
+    def should_use_violentutf_db(self: "Self") -> bool:
         """Determine if ViolentUTF database should be used based on configuration."""
         return self.storage_mode in ["dual", "violentutf_only"]
 
-    def to_dict(self: "DatasetImportConfig") -> Dict[str, Any]:
+    def to_dict(self: "Self") -> Dict[str, Any]:
         """Convert configuration to dictionary for serialization."""
         return {
             "preview_limit": self.preview_limit,
@@ -241,23 +246,27 @@ class DatasetImportConfig:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DatasetImportConfig":
+    def from_dict(cls: type, data: Dict[str, Any]) -> "DatasetImportConfig":
         """Create configuration from dictionary."""
-        return cls(**data)
+        return cast("DatasetImportConfig", cls(**data))
 
-    def __str__(self: "DatasetImportConfig") -> str:
-        """String representation of configuration."""
-        return f"DatasetImportConfig(chunk_size={self.chunk_size}, max_import_size={self.max_import_size}, storage_mode={self.storage_mode})"
+    def __str__(self: "Self") -> str:
+        """Return string representation of configuration."""
+        return (
+            f"DatasetImportConfig(chunk_size={self.chunk_size}, "
+            f"max_import_size={self.max_import_size}, storage_mode={self.storage_mode})"
+        )
 
 
 # Configuration validation functions
 def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
     """Validate dataset-specific configuration."""
     if not isinstance(config, dict):
+
         raise ValueError("Configuration must be a dictionary")
 
     # Define required/optional parameters for each dataset type
-    dataset_requirements = {
+    dataset_requirements: Dict[str, Dict[str, List[str]]] = {
         "harmbench": {"optional": ["source", "source_type", "cache", "data_home"]},
         "many_shot_jailbreaking": {"optional": []},
         "decoding_trust_stereotypes": {
@@ -303,7 +312,7 @@ def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
     unknown_params = set(config.keys()) - allowed_params
 
     if unknown_params:
-        logger.warning(f"Unknown parameters for {dataset_type}: {unknown_params}")
+        logger.warning("Unknown parameters for %s: %s", dataset_type, unknown_params)
 
     # Validate parameter types and values
     for param, value in config.items():
@@ -330,12 +339,12 @@ def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
             if not isinstance(value, list):
                 raise ValueError(f"Parameter '{param}' must be a list")
 
-    logger.debug(f"Configuration validation passed for {dataset_type}")
+    logger.debug("Configuration validation passed for %s", dataset_type)
 
 
 # Environment configuration helper
 def setup_dataset_environment() -> None:
-    """Setup environment variables for dataset import if not already set."""
+    """Set up environment variables for dataset import if not already set."""
     default_env_vars = {
         "DATASET_PREVIEW_LIMIT": "10",
         "DATASET_CHUNK_SIZE": "1000",
@@ -359,31 +368,6 @@ def setup_dataset_environment() -> None:
         "DATASET_MAX_CONCURRENT_CHUNKS": "5",
         "DATASET_STORAGE_MODE": "dual",
         "DATASET_BACKUP_ENABLED": "true",
-        # Enhanced logging configuration
-        "DATASET_LOG_LEVEL": "INFO",
-        "DATASET_CONSOLE_LOG_LEVEL": "INFO",
-        "DATASET_FILE_LOG_LEVEL": "DEBUG",
-        "DATASET_ENABLE_FILE_LOGGING": "true",
-        "DATASET_LOG_DIR": "logs/datasets",
-        "DATASET_LOG_FILE_PREFIX": "dataset_ops",
-        "DATASET_MAX_LOG_FILE_SIZE_MB": "100",
-        "DATASET_LOG_BACKUP_COUNT": "10",
-        "DATASET_LOG_COMPRESSION": "true",
-        "DATASET_LOG_ROTATION_INTERVAL": "midnight",
-        "DATASET_LOG_RETENTION_DAYS": "30",
-        "DATASET_ASYNC_LOGGING": "true",
-        "DATASET_LOG_BUFFER_SIZE": "1024",
-        "DATASET_ENABLE_METRICS": "true",
-        "DATASET_ENABLE_CORRELATION_ID": "true",
-        "DATASET_ENABLE_STRUCTURED_LOGGING": "true",
-        "DATASET_ENABLE_PERFORMANCE_TRACKING": "true",
-        "DATASET_ENABLE_CENTRALIZED_LOGGING": "false",
-        "DATASET_ENABLE_PERFORMANCE_MONITORING": "true",
-        "DATASET_PERFORMANCE_SAMPLING_RATE": "0.1",
-        "DATASET_LOG_SENSITIVE_DATA": "false",
-        "DATASET_MAX_LOG_MESSAGE_SIZE": "10000",
-        "DATASET_ENABLE_AUDIT_TRAILS": "true",
-        "DATASET_AUDIT_LOG_RETENTION_DAYS": "90",
     }
 
     for key, default_value in default_env_vars.items():
@@ -399,7 +383,8 @@ _global_config: Optional[DatasetImportConfig] = None
 
 def get_global_config() -> DatasetImportConfig:
     """Get the global dataset import configuration."""
-    global _global_config
+    global _global_config  # pylint: disable=global-statement
+
     if _global_config is None:
         _global_config = DatasetImportConfig.from_env()
     return _global_config
@@ -407,5 +392,6 @@ def get_global_config() -> DatasetImportConfig:
 
 def reset_global_config() -> None:
     """Reset the global configuration (useful for testing)."""
-    global _global_config
+    global _global_config  # pylint: disable=global-statement
+
     _global_config = None

@@ -1,12 +1,27 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""Authentication and authorization middleware."""
+"""
+Auth module.
+
+Authentication and authorization middleware.
+
+
+"""
+
+# Copyright (c) 2025 ViolentUTF Contributors.
+
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 import logging
-from typing import Any, Optional, Tuple
+from typing import Optional, Self
 
-import httpx
 from app.core.config import settings
 from app.core.security import decode_token
 from app.db.database import get_db_session
@@ -27,13 +42,14 @@ class AuthMiddleware:
     """Authentication middleware that supports both JWT and API keys."""
 
     async def __call__(
-        self: "AuthMiddleware",
+        self: "Self",
         request: Request,
         credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme),
         api_key: Optional[str] = Security(api_key_header),
     ) -> User:
         """Authenticate request using either JWT or API key."""
-        # Check if request is from APISIX (cryptographically verified).
+        # Check if request is from APISIX (cryptographically verified)
+
         if not self._is_from_apisix(request):
             # Log security event for unauthorized direct access attempt
             from app.core.security_logging import log_suspicious_activity
@@ -44,7 +60,8 @@ class AuthMiddleware:
                 details="Attempt to bypass APISIX gateway detected",
             )
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Direct access not allowed. Use the API gateway."
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Direct access not allowed. Use the API gateway.",
             )
 
         # Try JWT authentication first
@@ -62,9 +79,10 @@ class AuthMiddleware:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    def _is_from_apisix(self: "AuthMiddleware", request: Request) -> bool:
+    def _is_from_apisix(self: "Self", request: Request) -> bool:
         """Verify request is coming from APISIX using practical security measures."""
-        # Check for basic APISIX gateway identification header.
+        # Check for basic APISIX gateway identification header
+
         apisix_gateway_header = request.headers.get("X-API-Gateway")
         if apisix_gateway_header != "APISIX":
             logger.warning("Missing or invalid X-API-Gateway header")
@@ -93,7 +111,7 @@ class AuthMiddleware:
                 request_time = int(apisix_timestamp)
 
                 if abs(current_time - request_time) > 300:
-                    logger.warning(f"APISIX timestamp outside valid window: {request_time}")
+                    logger.warning("APISIX timestamp outside valid window: %s", request_time)
                     return False
 
                 # Verify HMAC signature
@@ -102,16 +120,15 @@ class AuthMiddleware:
                     return False
 
                 logger.debug("APISIX HMAC verification successful")
-            except Exception as e:
-                logger.warning(f"APISIX HMAC verification error: {e}")
+            except (ValueError, KeyError, TypeError) as e:
+                logger.warning("APISIX HMAC verification error: %s", e)
                 # Continue without HMAC verification for now
 
         logger.debug("APISIX gateway verification successful")
         return True
 
-    def _verify_apisix_signature(self: "AuthMiddleware", request: Request, signature: str, timestamp: str) -> bool:
-        """
-        Verify HMAC signature from APISIX gateway.
+    def _verify_apisix_signature(self: "Self", request: Request, signature: str, timestamp: str) -> bool:
+        """Verify HMAC signature from APISIX gateway
 
         Args:
             request: FastAPI request object
@@ -120,9 +137,11 @@ class AuthMiddleware:
 
         Returns:
             True if signature is valid, False otherwise
+
+
         """
         try:
-            import base64
+
             import hashlib
             import hmac
 
@@ -143,19 +162,22 @@ class AuthMiddleware:
 
             # Calculate expected HMAC signature
             expected_signature = hmac.new(
-                gateway_secret.encode("utf-8"), signature_payload.encode("utf-8"), hashlib.sha256
+                gateway_secret.encode("utf-8"),
+                signature_payload.encode("utf-8"),
+                hashlib.sha256,
             ).hexdigest()
 
             # Compare signatures using constant-time comparison
             return hmac.compare_digest(signature, expected_signature)
 
-        except Exception as e:
-            logger.error(f"Error verifying APISIX signature: {str(e)}")
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.error("Error verifying APISIX signature: %s", str(e))
             return False
 
-    async def _authenticate_jwt(self: "AuthMiddleware", token: str) -> User:
+    async def _authenticate_jwt(self: "Self", token: str) -> User:
         """Authenticate using JWT token."""
         try:
+
             # Decode our internal JWT
             payload = decode_token(token)
             if not payload:
@@ -164,26 +186,46 @@ class AuthMiddleware:
             # Extract user information
             username = payload.get("sub")
             if not username:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token payload",
+                )
 
             # IMPORTANT: Always use 'sub' claim as username, never 'name' or 'display_name'
             # The 'name' field is a display name and using it causes data isolation issues
             if "name" in payload:
-                logger.warning(f"JWT contains deprecated 'name' field: {payload.get('name')}, using sub: {username}")
+                logger.warning(
+                    "JWT contains deprecated 'name' field: %s, using sub: %s",
+                    payload.get("name"),
+                    username,
+                )
             if "display_name" in payload:
-                logger.debug(f"JWT contains display_name: {payload.get('display_name')}, using sub: {username}")
+                logger.debug(
+                    "JWT contains display_name: %s, using sub: %s",
+                    payload.get("display_name"),
+                    username,
+                )
 
             # Create user with ONLY the username from 'sub' claim
-            user = User(username=username, email=payload.get("email"), roles=payload.get("roles", []), is_active=True)
-            logger.debug(f"Created User object with username: {user.username}")
+            user = User(
+                username=username,
+                email=payload.get("email"),
+                roles=payload.get("roles", []),
+                is_active=True,
+            )
+            logger.debug("Created User object with username: %s", user.username)
             return user
 
-        except JWTError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate token")
+        except JWTError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate token",
+            ) from exc
 
-    async def _authenticate_api_key(self: "AuthMiddleware", api_key: str) -> User:
+    async def _authenticate_api_key(self: "Self", api_key: str) -> User:
         """Authenticate using API key."""
-        # Decode API key (which is actually a JWT).
+        # Decode API key (which is actually a JWT)
+
         try:
             payload = decode_token(api_key)
             if not payload:
@@ -191,14 +233,18 @@ class AuthMiddleware:
 
             # Check if it's an API key type token
             if payload.get("type") != "api_key":
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token type",
+                )
 
             # Get API key from database
             async with get_db_session() as db:
                 db_key = await db.get(APIKey, payload.get("key_id"))
                 if not db_key or not db_key.is_active:
                     raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED, detail="API key not found or inactive"
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="API key not found or inactive",
                     )
 
                 # Update last used timestamp
@@ -206,16 +252,23 @@ class AuthMiddleware:
                 await db.commit()
 
             # Return user object
+            username = payload.get("sub")
+            if not isinstance(username, str):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid API key: missing username",
+                )
+
             return User(
-                username=payload.get("sub"),
+                username=username,
                 email=None,
                 roles=["api_user"],
                 permissions=payload.get("permissions", []),
                 is_active=True,
             )
 
-        except JWTError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key")
+        except JWTError as exc:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key") from exc
 
 
 # Create singleton instance
@@ -240,16 +293,18 @@ async def get_current_user_optional(
 ) -> Optional[User]:
     """Dependency to get current user if authenticated, None otherwise."""
     try:
+
         return await auth_middleware(request, credentials, api_key)
     except HTTPException:
         return None
 
 
 # Role-based access control
-def require_role(role: str) -> Any:
+def require_role(role: str) -> object:
     """Dependency factory for role-based access control."""
 
-    async def role_checker(current_user: User = Security(get_current_user)) -> Any:
+    async def role_checker(current_user: User = Security(get_current_user)) -> User:
+
         if role not in current_user.roles:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Role '{role}' required")
         return current_user
@@ -258,12 +313,18 @@ def require_role(role: str) -> Any:
 
 
 # Permission-based access control
-def require_permission(permission: str) -> Any:
+def require_permission(permission: str) -> object:
     """Dependency factory for permission-based access control."""
 
-    async def permission_checker(current_user: User = Security(get_current_user)) -> Any:
+    async def permission_checker(
+        current_user: User = Security(get_current_user),
+    ) -> User:
+
         if permission not in current_user.permissions:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Permission '{permission}' required")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Permission '{permission}' required",
+            )
         return current_user
 
     return permission_checker

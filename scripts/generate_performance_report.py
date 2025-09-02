@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Generate performance report from benchmark results."""
 
@@ -12,7 +15,7 @@ from pathlib import Path
 
 
 def main() -> int:
-    """Generate performance report from benchmark data."""
+    """Generate performance report from benchmark and memory profile data."""
     parser = argparse.ArgumentParser(description="Generate performance report")
     parser.add_argument("--benchmark-file", help="Benchmark JSON file")
     parser.add_argument("--memory-file", help="Memory profile file")
@@ -26,7 +29,7 @@ def main() -> int:
     # Process benchmark results if available
     if args.benchmark_file and Path(args.benchmark_file).exists():
         try:
-            with open(args.benchmark_file, "r") as f:
+            with open(args.benchmark_file, "r", encoding="utf-8") as f:
                 benchmark_data = json.load(f)
             report_content.append("## Benchmark Results")
             report_content.append("")
@@ -41,7 +44,7 @@ def main() -> int:
         report_content.append("## Memory Profile")
         report_content.append("")
         try:
-            with open(args.memory_file, "r") as f:
+            with open(args.memory_file, "r", encoding="utf-8") as f:
                 memory_data = f.read()
             report_content.append(f"Memory profiling data loaded: {len(memory_data)} bytes")
             report_content.append("")
@@ -56,7 +59,7 @@ def main() -> int:
         report_content.append("This report will be populated when benchmark and memory profiling data is available.")
 
     # Write report
-    with open(args.output, "w") as f:
+    with open(args.output, "w", encoding="utf-8") as f:
         f.write("\n".join(report_content))
 
     print(f"Performance report written to {args.output}")

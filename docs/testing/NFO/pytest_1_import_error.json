@@ -1,0 +1,27 @@
+{
+  "status": "fixed",
+  "tool_name": "pytest",
+  "exit_code": 1,
+  "test_file_name": "api_tests/conftest.py",
+  "failure_type": "IMPORT_ERROR",
+  "failure_subtype": "ImportError",
+  "file_path": "",
+  "file_path_log": ["tests/api_tests/conftest.py"],
+  "issue": "",
+  "issue_log": ["Cannot import non-existent fixtures from main conftest.py"],
+  "line_range": "18",
+  "severity": "HIGH",
+  "message": "ImportError: cannot import name 'auth_token' from 'conftest' (/Users/tamnguyen/Documents/GitHub/ViolentUTF/tests/conftest.py)",
+  "offending_code_snippet": "from conftest import api_headers, auth_token, service_health_check, setup_database",
+  "structured_details": {
+    "missing_fixtures": ["auth_token", "service_health_check", "setup_database"],
+    "available_fixtures": ["api_headers", "mock_headers", "authenticated_headers"],
+    "import_module": "conftest",
+    "import_line": 18
+  },
+  "solution": [
+    "Remove imports of non-existent fixtures from api_tests/conftest.py",
+    "Use only available fixtures: api_headers, mock_headers, authenticated_headers",
+    "Update test files to use correct fixture names"
+  ]
+}

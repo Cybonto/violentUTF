@@ -1,14 +1,20 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-import asyncio
+"""Dataset configuration page for ViolentUTF.
+
+Provides interface for configuring datasets used in red-teaming and adversarial testing.
+"""
+
 import base64
 import json
 import os
 import pathlib
-import sys
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import requests
 import streamlit as st
@@ -78,7 +84,7 @@ if "dataset_source_selection" not in st.session_state:
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway."""
+    """Get authentication headers for API requests through APISIX Gateway"""
     try:
         from utils.jwt_manager import jwt_manager
 
@@ -113,8 +119,8 @@ def get_auth_headers() -> Dict[str, str]:
         return {}
 
 
-def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
-    """Make an authenticated API request through APISIX Gateway."""
+def api_request(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, Any]]:  # noqa: ANN401
+    """Make an authenticated API request through APISIX Gateway"""
     headers = get_auth_headers()
     if not headers.get("Authorization"):
         logger.warning("No authentication token available for API request")
@@ -123,6 +129,7 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         logger.debug(f"Making {method} request to {url} through APISIX Gateway")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+
         # Debug: always log the response for troubleshooting
         logger.info(f"API Request: {method} {url} -> {response.status_code}")
         if response.status_code not in [200, 201]:
@@ -131,9 +138,9 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         if response.status_code == 200:
             result = response.json()
 
-            return result
+            return cast(Dict[str, Any], result)
         elif response.status_code == 201:
-            return response.json()
+            return cast(Dict[str, Any], response.json())
         elif response.status_code == 401:
             logger.error(f"401 Unauthorized: {response.text}")
             return None
@@ -163,8 +170,8 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def create_compatible_api_token() -> None:
-    """Create a FastAPI-compatible token using JWT manager."""
+def create_compatible_api_token() -> Optional[str]:
+    """Create a FastAPI-compatible token using JWT manager"""
     try:
         from utils.jwt_manager import jwt_manager
         from utils.user_context import get_user_context_for_token
@@ -180,9 +187,11 @@ def create_compatible_api_token() -> None:
             logger.info("Successfully created API token using JWT manager")
             # Store the token in session state for API calls
             st.session_state["api_token"] = api_token
-            return api_token
+            return cast(str, api_token)
         else:
-            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
+            st.error(
+                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
+            )
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 
@@ -195,27 +204,28 @@ def create_compatible_api_token() -> None:
 # --- API Backend Functions ---
 
 
-def load_dataset_types_from_api() -> Any:
-    """Load available dataset types from API."""
+def load_dataset_types_from_api() -> List[str]:
+    """Load available dataset types from API"""
     data = api_request("GET", API_ENDPOINTS["dataset_types"])
     if data:
         st.session_state.api_dataset_types = data.get("dataset_types", [])
-        return data.get("dataset_types", [])
+        return cast(List[str], data.get("dataset_types", []))
     return []
 
 
-def load_datasets_from_api() -> None:
-    """Load existing datasets from API."""
+def load_datasets_from_api() -> List[Dict[str, Any]]:
+    """Load existing datasets from API"""
     data = api_request("GET", API_ENDPOINTS["datasets"])
     if data:
-        datasets_dict = {ds["name"]: ds for ds in data.get("datasets", [])}
+        datasets_list = cast(List[Dict[str, Any]], data.get("datasets", []))
+        datasets_dict = {ds["name"]: ds for ds in datasets_list}
         st.session_state.api_datasets = datasets_dict
-        return data
-    return None
+        return datasets_list
+    return []
 
 
-def create_dataset_via_api(name: str, source_type: str, config: Dict[str, Any]) -> Any:
-    """Create a new dataset via API."""
+def create_dataset_via_api(name: str, source_type: str, config: Dict[str, Any]) -> bool:
+    """Create a new dataset via API"""
     payload = {"name": name, "source_type": source_type, "config": config}
 
     # Add source-specific fields
@@ -238,22 +248,22 @@ def create_dataset_via_api(name: str, source_type: str, config: Dict[str, Any]) 
     return False
 
 
-def load_memory_datasets_from_api() -> Any:
-    """Load datasets from PyRIT memory via API."""
+def load_memory_datasets_from_api() -> List[Dict[str, Any]]:
+    """Load datasets from PyRIT memory via API"""
     data = api_request("GET", API_ENDPOINTS["dataset_memory"])
     if data:
-        return data.get("datasets", [])
+        return cast(List[Dict[str, Any]], data.get("datasets", []))
     return []
 
 
 def auto_load_datasets() -> None:
     """
-    Automatically load existing datasets on page load.
+    Automatically load existing datasets on page load
 
     This ensures that previously configured datasets are immediately visible
     when the page loads, without requiring manual refresh.
     """
-    # Only load if not already loaded or if forced reload.
+    # Only load if not already loaded or if forced reload
     if not st.session_state.api_datasets or st.session_state.get("force_reload_datasets", False):
         with st.spinner("Loading existing datasets..."):
             datasets_data = load_datasets_from_api()
@@ -269,12 +279,12 @@ def auto_load_datasets() -> None:
 
 def auto_load_generators() -> None:
     """
-    Automatically load existing generators on page load.
+    Automatically load existing generators on page load
 
     This ensures that generators are available for dataset testing
     without requiring manual refresh.
     """
-    # Only load if not already loaded in session state.
+    # Only load if not already loaded in session state
     if "api_generators_cache" not in st.session_state or st.session_state.get("force_reload_generators", False):
         with st.spinner("Loading generators for testing..."):
             generators = get_generators(use_cache=False)
@@ -291,7 +301,7 @@ def auto_load_generators() -> None:
 
 
 def get_generators(use_cache: bool = True) -> List[Dict[str, Any]]:
-    """Get generators from cache or API.
+    """Get generators from cache or API
 
     Args:
         use_cache: If True, returns cached generators if available.
@@ -301,7 +311,7 @@ def get_generators(use_cache: bool = True) -> List[Dict[str, Any]]:
         List of generator configurations
     """
     if use_cache and "api_generators_cache" in st.session_state:
-        return st.session_state.api_generators_cache
+        return cast(List[Dict[str, Any]], st.session_state.api_generators_cache)
 
     # Load from API
     data = api_request("GET", API_ENDPOINTS["generators"])
@@ -316,7 +326,7 @@ def run_orchestrator_dataset_test(
     dataset: Dict[str, Any], generator: Dict[str, Any], num_prompts: int, test_mode: str
 ) -> bool:
     """
-    Run dataset test using orchestrator API.
+    Run dataset test using orchestrator API
 
     Args:
         dataset: Selected dataset configuration
@@ -332,7 +342,7 @@ def run_orchestrator_dataset_test(
 
         # Prepare orchestrator parameters
         # Pass generator configuration as a reference that the orchestrator can resolve
-        orchestrator_params = {
+        orchestrator_params: Dict[str, Any] = {
             "objective_target": {  # Correct parameter name for PromptSendingOrchestrator
                 "type": "configured_generator",
                 "generator_name": generator["name"],  # Use generator name for lookup
@@ -369,7 +379,7 @@ def run_orchestrator_dataset_test(
         logger.info(f"Dataset details: {dataset}")
 
         # Add user context to orchestrator parameters for generator resolution
-        orchestrator_params["user_context"] = user_context
+        orchestrator_params["user_context"] = str(user_context) if user_context else "unknown_user"
 
         # Make API request to create orchestrator
         logger.info(f"Creating orchestrator with payload: {orchestrator_payload}")
@@ -393,8 +403,6 @@ def run_orchestrator_dataset_test(
             logger.error("Failed to create orchestrator - no response from API")
             # Try to get more detailed error information
             try:
-                import requests
-
                 headers = get_auth_headers()
                 debug_response = requests.post(
                     API_ENDPOINTS["orchestrator_create"], json=orchestrator_payload, headers=headers, timeout=30
@@ -409,7 +417,8 @@ def run_orchestrator_dataset_test(
                     st.error(f"❌ Orchestrator creation failed: {error_msg}")
                 except Exception:
                     st.error(
-                        f"❌ Failed to create orchestrator - API returned {debug_response.status_code}: {debug_response.text}"
+                        f"❌ Failed to create orchestrator - API returned {debug_response.status_code}: "
+                        f"{debug_response.text}"
                     )
             except Exception as debug_error:
                 logger.error(f"Debug request also failed: {debug_error}")
@@ -636,16 +645,20 @@ def run_orchestrator_dataset_test(
                 # Possible reasons
                 st.markdown("**🤔 Possible reasons for missing data:**")
                 st.write(
-                    "1. **Orchestrator didn't execute prompts** - The orchestrator was created but didn't actually run the dataset test"
+                    "1. **Orchestrator didn't execute prompts** - The orchestrator was created "
+                    "but didn't actually run the dataset test"
                 )
                 st.write(
-                    "2. **Memory synchronization issue** - Results are stored in PyRIT memory but not returned in the response"
+                    "2. **Memory synchronization issue** - Results are stored in PyRIT memory "
+                    "but not returned in the response"
                 )
                 st.write(
-                    "3. **Response serialization issue** - Results exist but weren't properly formatted for the API response"
+                    "3. **Response serialization issue** - Results exist but weren't properly "
+                    "formatted for the API response"
                 )
                 st.write(
-                    "4. **Generator execution failure** - The generator failed to process prompts but the error wasn't propagated"
+                    "4. **Generator execution failure** - The generator failed to process prompts "
+                    "but the error wasn't propagated"
                 )
 
                 # Next steps
@@ -676,11 +689,13 @@ def run_orchestrator_dataset_test(
         # Provide helpful debugging information
         if "connection" in str(e).lower():
             st.info(
-                "💡 **Connection Issue**: Check that the FastAPI service is running and accessible through APISIX gateway"
+                "💡 **Connection Issue**: Check that the FastAPI service is running and "
+                "accessible through APISIX gateway"
             )
         elif "404" in str(e):
             st.info(
-                "💡 **Endpoint Not Found**: The orchestrator endpoints may not be fully configured. Please check the API routes."
+                "💡 **Endpoint Not Found**: The orchestrator endpoints may not be fully configured. "
+                "Please check the API routes."
             )
         elif "authentication" in str(e).lower() or "401" in str(e):
             st.info("💡 **Authentication Issue**: Your session may have expired. Try refreshing the page.")
@@ -690,7 +705,7 @@ def run_orchestrator_dataset_test(
 
 # --- Main Page Function ---
 def main() -> None:
-    """Renders the Configure Datasets page content with API backend."""
+    """Render the Configure Datasets page content with API backend."""
     logger.debug("Configure Datasets page (API-backed) loading.")
     st.set_page_config(page_title="Configure Datasets", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 
@@ -742,7 +757,7 @@ def main() -> None:
 
 
 def display_dataset_source_selection() -> None:
-    """Display dataset source selection options."""
+    """Display dataset source selection options"""
     st.subheader("➕ Configure a New Dataset")
     st.write("Select the source of your dataset:")
 
@@ -773,8 +788,8 @@ def display_dataset_source_selection() -> None:
 
 
 def display_configured_datasets() -> None:
-    """Display configured datasets and generators."""
-    # Display configured datasets.
+    """Display configured datasets and generators"""
+    # Display configured datasets
     datasets = st.session_state.api_datasets
     if datasets:
         with st.expander(f"📁 Datasets ({len(datasets)} configured)", expanded=True):
@@ -795,7 +810,7 @@ def display_configured_datasets() -> None:
 
 
 def handle_dataset_source_flow() -> None:
-    """Handle the flow based on selected dataset source."""
+    """Handle the flow based on selected dataset source"""
     source = st.session_state.get("dataset_source")
     logger.debug(f"Handling dataset source flow for: {source}")
 
@@ -816,7 +831,7 @@ def handle_dataset_source_flow() -> None:
 
 
 def flow_native_datasets() -> None:
-    """Handle native dataset selection and creation."""
+    """Handle native dataset selection and creation"""
     st.subheader("Select Native Dataset")
 
     # Load dataset types if not already loaded
@@ -879,7 +894,7 @@ def flow_native_datasets() -> None:
 
 
 def flow_upload_local_dataset() -> None:
-    """Handle local file upload and dataset creation."""
+    """Handle local file upload and dataset creation"""
     st.subheader("Upload Local Dataset File")
 
     uploaded_file = st.file_uploader(
@@ -931,7 +946,7 @@ def flow_upload_local_dataset() -> None:
 
 
 def flow_fetch_online_dataset() -> None:
-    """Handle online dataset fetching."""
+    """Handle online dataset fetching"""
     st.subheader("Fetch Online Dataset")
 
     dataset_url = st.text_input("Dataset URL*", placeholder="https://example.com/dataset.csv", key="online_dataset_url")
@@ -953,7 +968,7 @@ def flow_fetch_online_dataset() -> None:
 
 
 def flow_load_from_memory() -> None:
-    """Handle loading datasets from PyRIT memory."""
+    """Handle loading datasets from PyRIT memory"""
     st.subheader("Load from PyRIT Memory")
 
     if st.button("🔄 Refresh Memory Datasets", key="refresh_memory_datasets"):
@@ -984,7 +999,7 @@ def flow_load_from_memory() -> None:
 
 
 def flow_combine_datasets() -> None:
-    """Handle dataset combination."""
+    """Handle dataset combination"""
     st.subheader("Combine Datasets")
 
     datasets = st.session_state.api_datasets
@@ -1020,7 +1035,7 @@ def flow_combine_datasets() -> None:
 
 
 def flow_transform_datasets() -> None:
-    """Handle dataset transformation."""
+    """Handle dataset transformation"""
     st.subheader("Transform Dataset")
 
     datasets = st.session_state.api_datasets
@@ -1067,7 +1082,7 @@ def flow_transform_datasets() -> None:
 
 
 def test_dataset_section() -> None:
-    """Section for testing datasets with generators."""
+    """Section for testing datasets with generators"""
     st.divider()
     st.subheader("🧪 Test Dataset")
 
@@ -1145,7 +1160,8 @@ def test_dataset_section() -> None:
     # Get the selected generator
     selected_generator = next(gen for gen in generators if gen["name"] == selected_generator_name)
     st.write(
-        f"**Selected Generator:** {selected_generator.get('name', 'Unknown')} ({selected_generator.get('type', 'Unknown')})"
+        f"**Selected Generator:** {selected_generator.get('name', 'Unknown')} "
+        f"({selected_generator.get('type', 'Unknown')})"
     )
 
     # Test parameters
@@ -1187,7 +1203,8 @@ def test_dataset_section() -> None:
             st.error(f"❌ Test execution error: {str(e)}")
             logger.error(f"Dataset test error: {e}", exc_info=True)
             st.info(
-                "💡 This error suggests there might be an issue with the response data format. Try running in 'Detailed Test' mode to see more information."
+                "💡 This error suggests there might be an issue with the response data format. "
+                "Try running in 'Detailed Test' mode to see more information."
             )
 
     # Show available generators summary
@@ -1215,7 +1232,7 @@ def test_dataset_section() -> None:
 
 
 def proceed_to_next_step() -> None:
-    """Provide navigation to next step."""
+    """Provide navigation to next step"""
     st.divider()
     st.header("🚀 Proceed to Next Step")
     st.markdown("*Continue to converter configuration once datasets are ready*")

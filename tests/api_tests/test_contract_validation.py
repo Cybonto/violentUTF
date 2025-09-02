@@ -1,5 +1,8 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
 API Contract Testing for ViolentUTF API endpoints.
@@ -8,9 +11,13 @@ Tests API contracts against OpenAPI specification.
 """
 
 import json
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 import pytest
+from fastapi.testclient import TestClient
 
 from tests.api_tests.test_auth_mock import ContractTestingPatches
 
@@ -20,7 +27,7 @@ from tests.api_tests.test_auth_mock import ContractTestingPatches
 class TestAPIContractValidation:
     """Test API contract validation."""
 
-    def test_openapi_schema_generation(self: "TestAPIContractValidation", test_app: Any, openapi_schema: Any) -> None:
+    def test_openapi_schema_generation(self: "TestAPIContractValidation", test_app: "FastAPI", openapi_schema: Dict[str, Any]) -> None:
         """Test that OpenAPI schema can be generated from FastAPI app."""
         assert openapi_schema is not None
         assert "openapi" in openapi_schema
@@ -35,7 +42,7 @@ class TestAPIContractValidation:
         assert "title" in info
         assert "version" in info
 
-    def test_openapi_security_schemes(self: "TestAPIContractValidation", openapi_schema: Any) -> None:
+    def test_openapi_security_schemes(self: "TestAPIContractValidation", openapi_schema: Dict[str, Any]) -> None:
         """Test that security schemes are properly defined."""
         components = openapi_schema.get("components", {})
         security_schemes = components.get("securitySchemes", {})
@@ -49,7 +56,7 @@ class TestAPIContractValidation:
             assert bearer_auth["type"] == "http"
             assert bearer_auth["scheme"] == "bearer"
 
-    def test_api_endpoints_defined(self: "TestAPIContractValidation", openapi_schema: Any) -> None:
+    def test_api_endpoints_defined(self: "TestAPIContractValidation", openapi_schema: Dict[str, Any]) -> None:
         """Test that required API endpoints are defined."""
         paths = openapi_schema.get("paths", {})
 
@@ -70,7 +77,7 @@ class TestAPIContractValidation:
         # At least some endpoints should be present
         assert len(found_endpoints) > 0, f"No expected endpoints found in {list(paths.keys())}"
 
-    def test_error_response_schemas(self: "TestAPIContractValidation", openapi_schema: Any) -> None:
+    def test_error_response_schemas(self: "TestAPIContractValidation", openapi_schema: Dict[str, Any]) -> None:
         """Test that error response schemas are consistent."""
         paths = openapi_schema.get("paths", {})
 
@@ -93,7 +100,7 @@ class TestAPIContractValidation:
 class TestAPIEndpointContracts:
     """Test individual API endpoint contracts."""
 
-    def test_health_endpoint_contract(self: "TestAPIEndpointContracts", test_client: Any, test_headers: Any) -> None:
+    def test_health_endpoint_contract(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test health endpoint contract."""
         response = test_client.get("/health", headers=test_headers)
 
@@ -105,9 +112,7 @@ class TestAPIEndpointContracts:
             # Health endpoint should return status
             assert "status" in data
 
-    def test_generators_endpoint_contract(
-        self: "TestAPIEndpointContracts", test_client: Any, test_headers: Any
-    ) -> None:
+    def test_generators_endpoint_contract(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test generators endpoint contract."""
         response = test_client.get("/api/v1/generators", headers=test_headers)
 
@@ -119,7 +124,7 @@ class TestAPIEndpointContracts:
             # Should return a list
             assert isinstance(data, list)
 
-    def test_scorers_endpoint_contract(self: "TestAPIEndpointContracts", test_client: Any, test_headers: Any) -> None:
+    def test_scorers_endpoint_contract(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test scorers endpoint contract."""
         response = test_client.get("/api/v1/scorers", headers=test_headers)
 
@@ -131,9 +136,7 @@ class TestAPIEndpointContracts:
             # Should return a list
             assert isinstance(data, list)
 
-    def test_orchestrators_endpoint_contract(
-        self: "TestAPIEndpointContracts", test_client: Any, test_headers: Any
-    ) -> None:
+    def test_orchestrators_endpoint_contract(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test orchestrators endpoint contract."""
         response = test_client.get("/api/v1/orchestrators", headers=test_headers)
 
@@ -145,7 +148,7 @@ class TestAPIEndpointContracts:
             # Should return a list
             assert isinstance(data, list)
 
-    def test_datasets_endpoint_contract(self: "TestAPIEndpointContracts", test_client: Any, test_headers: Any) -> None:
+    def test_datasets_endpoint_contract(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test datasets endpoint contract."""
         response = test_client.get("/api/v1/datasets", headers=test_headers)
 
@@ -163,15 +166,15 @@ class TestAPIEndpointContracts:
 class TestAuthenticationContracts:
     """Test authentication contract compliance."""
 
-    def test_unauthorized_access_handling(self: "TestAuthenticationContracts", test_client: Any) -> None:
+    def test_unauthorized_access_handling(self: "TestAPIContractValidation", test_client: TestClient) -> None:
         """Test that unauthorized access is properly handled."""
-        # Test without authentication headers.
+        # Test without authentication headers
         response = test_client.get("/api/v1/generators")
 
         # Should return 401 or 403, or allow if endpoint is public
         assert response.status_code in [200, 401, 403, 404, 422]
 
-    def test_invalid_token_handling(self: "TestAuthenticationContracts", test_client: Any) -> None:
+    def test_invalid_token_handling(self: "TestAPIContractValidation", test_client: TestClient) -> None:
         """Test that invalid tokens are properly handled."""
         invalid_headers = {"Authorization": "Bearer invalid_token", "Content-Type": "application/json"}
 
@@ -180,7 +183,7 @@ class TestAuthenticationContracts:
         # Should return 401 or 403 for invalid token
         assert response.status_code in [200, 401, 403, 404, 422]
 
-    def test_api_key_authentication(self: "TestAuthenticationContracts", test_client: Any) -> None:
+    def test_api_key_authentication(self: "TestAPIContractValidation", test_client: TestClient) -> None:
         """Test API key authentication."""
         api_key_headers = {"apikey": "test_api_key", "Content-Type": "application/json"}
 
@@ -195,7 +198,7 @@ class TestAuthenticationContracts:
 class TestResponseFormatContracts:
     """Test response format contract compliance."""
 
-    def test_json_response_format(self: "TestResponseFormatContracts", test_client: Any, test_headers: Any) -> None:
+    def test_json_response_format(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test that API responses are in JSON format."""
         endpoints = ["/api/v1/generators", "/api/v1/scorers", "/api/v1/orchestrators", "/api/v1/datasets"]
 
@@ -212,9 +215,9 @@ class TestResponseFormatContracts:
                 except json.JSONDecodeError:
                     pytest.fail(f"Invalid JSON response from {endpoint}")
 
-    def test_error_response_format(self: "TestResponseFormatContracts", test_client: Any) -> None:
+    def test_error_response_format(self: "TestAPIContractValidation", test_client: TestClient) -> None:
         """Test that error responses follow expected format."""
-        # Test with invalid endpoint.
+        # Test with invalid endpoint
         response = test_client.get("/api/v1/invalid_endpoint")
 
         if response.status_code >= 400:
@@ -225,7 +228,7 @@ class TestResponseFormatContracts:
                 # Should have error details
                 assert "detail" in data or "message" in data or "error" in data
 
-    def test_cors_headers(self: "TestResponseFormatContracts", test_client: Any, test_headers: Any) -> None:
+    def test_cors_headers(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test that CORS headers are properly set."""
         response = test_client.options("/api/v1/generators", headers=test_headers)
 
@@ -238,29 +241,25 @@ class TestResponseFormatContracts:
 class TestDataValidationContracts:
     """Test data validation contract compliance."""
 
-    def test_post_request_validation(self: "TestDataValidationContracts", test_client: Any, test_headers: Any) -> None:
+    def test_post_request_validation(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test POST request validation."""
-        # Test with invalid JSON.
+        # Test with invalid JSON
         response = test_client.post("/api/v1/generators", headers=test_headers, json={"invalid": "data"})
 
         # Should handle validation errors appropriately
         assert response.status_code in [200, 400, 404, 422]
 
-    def test_query_parameter_validation(
-        self: "TestDataValidationContracts", test_client: Any, test_headers: Any
-    ) -> None:
+    def test_query_parameter_validation(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test query parameter validation."""
-        # Test with invalid query parameters.
+        # Test with invalid query parameters
         response = test_client.get("/api/v1/generators?invalid_param=value", headers=test_headers)
 
         # Should handle invalid parameters gracefully
         assert response.status_code in [200, 400, 404, 422]
 
-    def test_path_parameter_validation(
-        self: "TestDataValidationContracts", test_client: Any, test_headers: Any
-    ) -> None:
+    def test_path_parameter_validation(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test path parameter validation."""
-        # Test with invalid path parameter.
+        # Test with invalid path parameter
         response = test_client.get("/api/v1/generators/invalid_id", headers=test_headers)
 
         # Should handle invalid path parameters
@@ -272,7 +271,7 @@ class TestDataValidationContracts:
 class TestPerformanceContracts:
     """Test performance-related contract compliance."""
 
-    def test_response_time_reasonable(self: "TestPerformanceContracts", test_client: Any, test_headers: Any) -> None:
+    def test_response_time_reasonable(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test that response times are reasonable."""
         import time
 
@@ -288,7 +287,7 @@ class TestPerformanceContracts:
             # Response should be under 5 seconds for contract testing
             assert response_time < 5.0, f"Response time too slow for {endpoint}: {response_time}s"
 
-    def test_concurrent_request_handling(self: "TestPerformanceContracts", test_client: Any, test_headers: Any) -> None:
+    def test_concurrent_request_handling(self: "TestAPIContractValidation", test_client: TestClient, test_headers: Dict[str, str]) -> None:
         """Test that API can handle concurrent requests."""
         import threading
         import time

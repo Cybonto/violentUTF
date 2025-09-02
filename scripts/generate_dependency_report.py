@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Generate dependency report from outdated package info."""
 
@@ -13,7 +16,7 @@ from pathlib import Path
 
 
 def main() -> int:
-    """Generate dependency report from package information."""
+    """Generate dependency vulnerability and outdated package report."""
     parser = argparse.ArgumentParser(description="Generate dependency report")
     parser.add_argument("--outdated-files", help="Pattern for outdated JSON files")
     parser.add_argument("--safety-file", help="Safety report JSON file")
@@ -33,12 +36,14 @@ def main() -> int:
         for pattern in args.outdated_files.split():
             for file_path in glob.glob(pattern):
                 try:
-                    with open(file_path, "r") as f:
+                    with open(file_path, "r", encoding="utf-8") as f:
                         outdated_data = json.load(f)
                     outdated_count += len(outdated_data)
                     report_content.append(f"- Found {len(outdated_data)} outdated packages in {file_path}")
-                except Exception as e:
+                except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
                     report_content.append(f"- Error processing {file_path}: {e}")
+                except Exception as e:
+                    report_content.append(f"- Unexpected error processing {file_path}: {e}")
 
         if outdated_count == 0:
             report_content.append("All dependencies are up to date!")
@@ -49,7 +54,7 @@ def main() -> int:
         report_content.append("## Security Vulnerabilities")
         report_content.append("")
         try:
-            with open(args.safety_file, "r") as f:
+            with open(args.safety_file, "r", encoding="utf-8") as f:
                 safety_data = json.load(f)
 
             if isinstance(safety_data, list) and len(safety_data) > 0:
@@ -62,8 +67,10 @@ def main() -> int:
                     report_content.append(f"- ... and {len(safety_data) - 5} more")
             else:
                 report_content.append("No security vulnerabilities found!")
-        except Exception as e:
+        except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
             report_content.append(f"Error processing safety report: {e}")
+        except Exception as e:
+            report_content.append(f"Unexpected error processing safety report: {e}")
         report_content.append("")
 
     # Add recommendations
@@ -75,7 +82,7 @@ def main() -> int:
     report_content.append("4. Enable Dependabot for automated updates")
 
     # Write report
-    with open(args.output, "w") as f:
+    with open(args.output, "w", encoding="utf-8") as f:
         f.write("\n".join(report_content))
 
     print(f"Dependency report written to {args.output}")

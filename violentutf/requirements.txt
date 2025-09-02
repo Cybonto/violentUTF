@@ -4,12 +4,15 @@ aiohttp>=3.8.0
 anthropic>=0.3.0
 # Authentication
 Authlib>=1.3.2
+beautifulsoup4>=4.13.5
 boto3>=1.20.0
+charset-normalizer>=3.4.3
 cryptography
 docling
 duckdb>=0.7.0           # (Use the version range suitable for your project)
 garak>=0.9.0                      # NVIDIA Garak LLM vulnerability scanner
-google-cloud-aiplatform>=1.12.0
+google-api-python-client>=2.179.0
+google-cloud-aiplatform>=1.111.0
 httpx>=0.24.0
 httpx-sse>=0.3.0
 Jinja2>=3.0.0
@@ -17,6 +20,9 @@ lxml>=4.6.0
 matplotlib>=3.5.0
 mcp>=1.10.0  # Fixed CVE-2025-53365 server crash vulnerability
 neo4j>=5.0.0
+
+# Build tools
+ninja>=1.13.0
 
 # LLMs
 nltk>=3.7
@@ -29,6 +35,7 @@ peft>=0.1.0
 pillow>=11.3.0  # Fixed CVE-2025-48379 heap buffer overflow vulnerability
 plotly>=5.0.0
 protobuf>=6.31.1  # Fixed GHSA-8qvm-5x2c-j2w7 recursion DoS vulnerability
+puremagic>=1.30
 pydantic
 pydantic-settings
 
@@ -46,9 +53,9 @@ python-dateutil>=2.8.0
 python-dotenv>=1.0.0
 python-multipart
 PyYAML>=6.0
-requests>=2.32.4        # Consolidated duplicate "requests" entry
+requests>=2.32.4        # Consolidated duplicate “requests” entry
 scipy>=1.7.0
-semopy>=2.1.0           # (Adjust as needed based on semopy's release history)
+semopy>=2.1.0           # (Adjust as needed based on semopy’s release history)
 sentence-transformers>=2.2.0
 
 # Database and ORM support

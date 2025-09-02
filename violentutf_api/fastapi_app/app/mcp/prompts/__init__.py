@@ -1,69 +1,78 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-MCP Prompts Module.
+"""MCP Prompts Module
 
 =================
 
 This module provides MCP prompt functionality for ViolentUTF with
 security testing templates and dynamic prompt generation.
 """
-
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Self
 
 # Import prompt providers to auto-register them
-from app.mcp.prompts import security, testing
+from app.mcp.prompts import security, testing  # noqa: F401
 from app.mcp.prompts.base import prompt_registry
 
 logger = logging.getLogger(__name__)
 
 
 class PromptsManager:
-    """Manages MCP prompts for ViolentUTF."""
+    """Manage MCP prompts for ViolentUTF."""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self") -> None:
+
         self.registry = prompt_registry
         self._initialized = False
 
-    async def initialize(self: "PromptsManager") -> None:
+    async def initialize(self: "Self") -> None:
         """Initialize prompts manager."""
         if self._initialized:
+
             return
 
         logger.info("Initializing MCP prompts manager...")
         self._initialized = True
-        logger.info(f"Prompts manager initialized with {len(self.registry._prompts)} prompts")
+        logger.info(
+            "Prompts manager initialized with %s prompts",
+            len(self.registry._prompts),  # pylint: disable=protected-access
+        )
 
-    async def list_prompts(self: "PromptsManager") -> List[Dict[str, Any]]:
+    async def list_prompts(self: "Self") -> List[Dict[str, Any]]:
         """List all available prompts."""
         if not self._initialized:
+
             await self.initialize()
 
         prompts = self.registry.list_prompts()
         return [prompt.dict() for prompt in prompts]
 
-    async def get_prompt(self: "PromptsManager", name: str, args: Dict[str, Any] = None) -> str:
+    async def get_prompt(self: "Self", name: str, args: Optional[Dict[str, Any]] = None) -> str:
         """Get and render a prompt by name."""
         if not self._initialized:
+
             await self.initialize()
 
         prompt = self.registry.get(name)
         if not prompt:
             raise ValueError(f"Prompt not found: {name}")
 
-        return await prompt.render(args or {})
+        result = await prompt.render(args or {})
+        return str(result)
 
-    def get_prompt_info(self: "PromptsManager", name: str) -> Dict[str, Any]:
-        """Get prompt definition and metadata."""
+    def get_prompt_info(self: "Self", name: str) -> Dict[str, Any]:
         prompt = self.registry.get(name)
+
         if not prompt:
             return {"error": f"Prompt not found: {name}"}
 
         definition = prompt.get_definition()
-        return definition.dict()
+        result = definition.dict()
+        return dict(result)
 
 
 # Global prompts manager

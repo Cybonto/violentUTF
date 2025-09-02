@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""Test script to verify orchestrator executions endpoint."""
+"""Test script to verify orchestrator executions endpoint"""
 
 import json
 import os
@@ -42,7 +45,11 @@ if not jwt_token:
         exit(1)
 
 # Headers
-headers = {"Authorization": f"Bearer {jwt_token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+headers = {
+    "Authorization": f"Bearer {jwt_token}",
+    "Content-Type": "application/json",
+    "X-API-Gateway": "APISIX",
+}
 
 print("Testing orchestrator executions endpoint...")
 print(f"API Base URL: {API_BASE_URL}")
@@ -55,7 +62,7 @@ url = f"{API_BASE_URL}/api/v1/orchestrators/executions"
 print(f"URL: {url}")
 
 try:
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, timeout=30)
     print(f"Status Code: {response.status_code}")
     print(f"Response Headers: {dict(response.headers)}")
 
@@ -84,7 +91,7 @@ try:
     direct_headers = headers.copy()
     direct_headers.pop("X-API-Gateway", None)
 
-    response = requests.get(direct_url, headers=direct_headers)
+    response = requests.get(direct_url, headers=direct_headers, timeout=30)
     print(f"Status Code: {response.status_code}")
 
     if response.status_code == 200:
@@ -108,7 +115,7 @@ if admin_key:
     admin_headers = {"X-API-KEY": admin_key}
 
     try:
-        response = requests.get(admin_url, headers=admin_headers)
+        response = requests.get(admin_url, headers=admin_headers, timeout=30)
         if response.status_code == 200:
             routes = response.json()
             print("APISIX Routes related to orchestrators:")
@@ -128,8 +135,7 @@ print("-" * 50)
 
 print(
     """
-The issue is that the APISIX route pattern '/api/v1/orchestrators*' is matching.
-
+The issue is that the APISIX route pattern '/api/v1/orchestrators*' is matching
 '/api/v1/orchestrators/executions' and treating 'executions' as a UUID parameter.
 
 SOLUTION:

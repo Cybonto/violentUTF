@@ -1,27 +1,26 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Cross-platform test runner for ViolentUTF.
 
 Specifically designed to work on Windows, macOS, and Linux.
 """
-
 import argparse
-import glob
-import json
 import os
-import subprocess
+import subprocess  # nosec B404 - needed for test execution
 import sys
-import tempfile
 from pathlib import Path
-from typing import List
 
 
-def find_requirements_files() -> List[str]:
+def find_requirements_files() -> list[str]:
     """Find all requirements*.txt files in the project."""
     req_files = []
-    for root, _dirs, files in os.walk("."):
+
+    for root, _, files in os.walk("."):
         # Skip virtual environment directories
         if "venv" in root or ".venv" in root or "env" in root:
             continue
@@ -33,56 +32,29 @@ def find_requirements_files() -> List[str]:
     return req_files
 
 
-def install_dependencies(req_files: List[str]) -> None:
+def install_dependencies(req_files: list[str]) -> None:
     """Install dependencies from requirements files."""
     print("Installing test dependencies...")
 
     # Install core test dependencies first
     core_deps = ["pytest", "pytest-cov", "pytest-timeout", "pytest-xdist"]
     for dep in core_deps:
-        subprocess.run([sys.executable, "-m", "pip", "install", dep], check=False)
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", dep], check=False
+        )  # nosec B603 - controlled pip install
 
-    # Install from each requirements file with timeout
+    # Install from each requirements file
     for req_file in req_files:
         print(f"Installing from {req_file}")
         try:
-            # Skip heavy ML dependencies in CI to avoid timeout
-            # Filter out large packages that cause timeouts
-            with open(req_file, "r") as f:
-                lines = f.readlines()
-
-            # Create temporary requirements file without heavy packages
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as tmp:
-                for line in lines:
-                    # Skip heavy ML packages that cause timeouts in CI
-                    if not any(
-                        pkg in line.lower()
-                        for pkg in ["torch", "transformers", "docling", "weasyprint", "sentence-transformers", "peft"]
-                    ):
-                        tmp.write(line)
-                tmp_file = tmp.name
-
-            # Install with timeout
-            result = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-r", tmp_file],
-                check=False,
-                timeout=180,  # 3 minutes timeout
-                capture_output=True,
-                text=True,
-            )
-
-            # Clean up temp file
-            os.unlink(tmp_file)
-
-            if result.returncode != 0:
-                print(f"Warning: Some packages failed to install from {req_file}")
-        except subprocess.TimeoutExpired:
-            print(f"Warning: Installation timed out for {req_file}, continuing...")
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-r", req_file], check=False
+            )  # nosec B603 - controlled pip install
         except Exception as e:
             print(f"Warning: Failed to install from {req_file}: {e}")
 
 
-def find_test_files(test_dir: str = "tests/unit") -> List[str]:
+def find_test_files(test_dir: str = "tests/unit") -> list[str]:
     """Find Python test files in the specified directory."""
     test_files = []
 
@@ -116,7 +88,14 @@ def run_tests(test_dir: str = "tests/unit", coverage: bool = True, parallel: boo
     cmd = [sys.executable, "-m", "pytest", test_dir, "-v"]
 
     if coverage:
-        cmd.extend(["--cov=violentutf", "--cov=violentutf_api", "--cov-report=xml", "--cov-report=term-missing"])
+        cmd.extend(
+            [
+                "--cov=violentutf",
+                "--cov=violentutf_api",
+                "--cov-report=xml",
+                "--cov-report=term-missing",
+            ]
+        )
 
     cmd.extend(["--timeout=300"])
 
@@ -130,7 +109,7 @@ def run_tests(test_dir: str = "tests/unit", coverage: bool = True, parallel: boo
     print(f"Running command: {' '.join(cmd)}")
 
     # Run tests
-    result = subprocess.run(cmd)
+    result = subprocess.run(cmd, check=False)  # nosec B603 - controlled pytest command
 
     return result.returncode
 
@@ -141,36 +120,41 @@ def create_empty_results() -> None:
 
     # Create minimal JUnit XML
     junit_xml = """<?xml version="1.0" encoding="utf-8"?>
-
 <testsuites>
     <testsuite name="empty" tests="0" errors="0" failures="0" skipped="0">
         <testcase name="no_tests_found" classname="empty">
             <skipped message="No test files found"/>
         </testcase>
     </testsuite>
-</testsuites>"""
-
+</testsuites>
+"""
     with open("junit.xml", "w", encoding="utf-8") as f:
+
         f.write(junit_xml)
 
     # Create minimal coverage XML
     coverage_xml = """<?xml version="1.0" encoding="utf-8"?>
-
 <coverage version="1">
     <packages/>
-</coverage>"""
-
+</coverage>
+"""
     with open("coverage.xml", "w", encoding="utf-8") as f:
+
         f.write(coverage_xml)
 
 
 def main() -> None:
-    """Run the test suite."""
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Cross-platform test runner for ViolentUTF")
+
     parser.add_argument("--test-dir", default="tests/unit", help="Directory containing tests")
     parser.add_argument("--no-coverage", action="store_true", help="Disable coverage reporting")
     parser.add_argument("--no-parallel", action="store_true", help="Disable parallel test execution")
-    parser.add_argument("--install-deps", action="store_true", help="Install dependencies before running tests")
+    parser.add_argument(
+        "--install-deps",
+        action="store_true",
+        help="Install dependencies before running tests",
+    )
 
     args = parser.parse_args()
 
@@ -187,7 +171,11 @@ def main() -> None:
             print("No requirements files found")
 
     # Run tests
-    exit_code = run_tests(test_dir=args.test_dir, coverage=not args.no_coverage, parallel=not args.no_parallel)
+    exit_code = run_tests(
+        test_dir=args.test_dir,
+        coverage=not args.no_coverage,
+        parallel=not args.no_parallel,
+    )
 
     sys.exit(exit_code)
 

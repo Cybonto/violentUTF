@@ -1,28 +1,34 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Fix GitHub Actions YAML files with multi-line Python string issues."""
 
 import os
 import re
 import sys
-from typing import Match
 
 
 def fix_python_multiline_strings(content: str) -> str:
     """Fix multi-line Python strings in YAML files."""
-    # Pattern to find python -c with double quotes.
+    # Pattern to find python -c with double quotes
+
     pattern = r'(\s+)python -c "([^"]*(?:\n[^"]*)*)"'
 
-    def replace_python_block(match: Match[str]) -> str:
+    def replace_python_block(match: re.Match[str]) -> str:
         indent = match.group(1)
         code = match.group(2)
 
         # If the code contains both single and double quotes, use heredoc
         if "'" in code and '"' in code:
             # Use heredoc approach
-            return f"{indent}cat > temp_script.py << 'EOF'\n{code}\n{indent}EOF\n{indent}python temp_script.py\n{indent}rm temp_script.py"
+            return (
+                f"{indent}cat > temp_script.py << 'EOF'\n{code}\n{indent}EOF\n"
+                f"{indent}python temp_script.py\n{indent}rm temp_script.py"
+            )
         elif '"' in code:
             # Use single quotes
             return f"{indent}python -c '{code}'"
@@ -39,6 +45,7 @@ def fix_python_multiline_strings(content: str) -> str:
 def fix_trailing_spaces(content: str) -> str:
     """Remove trailing spaces from each line."""
     lines = content.split("\n")
+
     fixed_lines = [line.rstrip() for line in lines]
     return "\n".join(fixed_lines)
 
@@ -46,6 +53,7 @@ def fix_trailing_spaces(content: str) -> str:
 def ensure_final_newline(content: str) -> str:
     """Ensure file ends with a newline."""
     if not content.endswith("\n"):
+
         content += "\n"
     return content
 
@@ -55,7 +63,7 @@ def fix_workflow_file(filepath: str) -> bool:
     print(f"Processing {filepath}...")
 
     try:
-        with open(filepath, "r") as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         original_content = content
@@ -66,7 +74,7 @@ def fix_workflow_file(filepath: str) -> bool:
         content = ensure_final_newline(content)
 
         if content != original_content:
-            with open(filepath, "w") as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)
             print(f"  ✓ Fixed {filepath}")
             return True
@@ -80,7 +88,7 @@ def fix_workflow_file(filepath: str) -> bool:
 
 
 def main() -> None:
-    """Fix all workflow files."""
+    """Fix all GitHub Actions workflow files."""
     workflow_dir = ".github/workflows"
 
     if not os.path.exists(workflow_dir):

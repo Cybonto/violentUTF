@@ -1,8 +1,11 @@
-#!/Home.py
+#!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
-
+"""Home module."""
 import logging  # Import base logging for potential direct use if needed
 import os
 
@@ -23,7 +26,12 @@ load_dotenv()
 logger = get_logger(__name__)
 
 # Have to call Streamlit page config before anything else
-st.set_page_config(page_title=app_title, page_icon=app_icon, layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title=app_title,
+    page_icon=app_icon,
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 
 # --- Setup Logging (Call this ONCE per session) ---
 # Ensure this block runs before any other code that might log,
@@ -35,7 +43,7 @@ if "logging_setup_done" not in st.session_state:
         st.session_state["logging_setup_done"] = True
         # Log that setup is complete (using the logger from the logging module itself)
         logging.getLogger("utils.logging").info("Central logging setup completed for Streamlit session.")
-    except Exception as e:
+    except (ImportError, AttributeError, OSError, ValueError) as e:
         # Display error in Streamlit if setup fails critically
         st.error(f"CRITICAL ERROR: Failed to initialize application logging: {e}")
         # Optionally stop the app if logging is essential
@@ -45,8 +53,9 @@ if "logging_setup_done" not in st.session_state:
 # Hide the default Streamlit menu and footer, and remove the default sidebar navigation
 st.markdown(
     """
-    <style>.
-    #MainMenu {visibility: hidden;}
+    <style>
+
+    # MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     [data-testid="collapsedControl"] {display: none;}
     [data-testid="stSidebarNav"] {display: none;}
@@ -59,7 +68,8 @@ st.markdown(
 # CSS to position the logout button at the bottom of the sidebar
 st.markdown(
     """
-    <style>.
+    <style>
+
     [data-testid="stSidebar"] > div:first-child {
         display: flex;
         flex-direction: column;
@@ -75,7 +85,8 @@ st.markdown(
 # Global button styling to ensure proper contrast
 st.markdown(
     """
-    <style>.
+    <style>
+
     /* Ensure primary buttons have proper contrast */
     .stButton > button[kind="primary"] {
         background-color: #1f77b4 !important;
@@ -146,25 +157,35 @@ st.title(app_title)
 st.write(app_description)
 st.text("")
 
-
 # Function to extract variables from page files
-def extract_variables(file_path: str) -> dict:
-    """Extract variables from a page file."""
-    variables = {}
-    with open(file_path, "r", encoding="utf-8") as f:
+
+
+def extract_variables(python_file_path: str) -> dict:
+    """Extract app variables from a Python file.
+
+    Args:
+        python_file_path: Path to the Python file to extract variables from.
+
+    Returns:
+        Dictionary containing extracted app variables (version, title, description, icon).
+
+    """
+    extracted_vars = {}
+
+    with open(python_file_path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line.startswith("app_version"):
-                variables["app_version"] = line.split("=", 1)[1].strip().strip("'\"")
+                extracted_vars["app_version"] = line.split("=", 1)[1].strip().strip("'\"")
             elif line.startswith("app_title"):
-                variables["app_title"] = line.split("=", 1)[1].strip().strip("'\"")
+                extracted_vars["app_title"] = line.split("=", 1)[1].strip().strip("'\"")
             elif line.startswith("app_description"):
-                variables["app_description"] = line.split("=", 1)[1].strip().strip("'\"")
+                extracted_vars["app_description"] = line.split("=", 1)[1].strip().strip("'\"")
             elif line.startswith("app_icon"):
-                variables["app_icon"] = line.split("=", 1)[1].strip().strip("'\"")
-            if len(variables) == 4:
+                extracted_vars["app_icon"] = line.split("=", 1)[1].strip().strip("'\"")
+            if len(extracted_vars) == 4:
                 break
-    return variables
+    return extracted_vars
 
 
 # Directory containing the page files
@@ -191,8 +212,10 @@ for idx, file_name in enumerate(page_files):
         # Use the emoji short code directly in the button label
         icon = f"{app_icon} " if app_icon else ""
         button_label = f"""{icon}\n**{app_title}** (v. {app_version})\n
-        {app_description}"""
 
+{app_description}
+"""
         with cols[idx % tiles_per_row]:
+
             if st.button(button_label, key=page_name):
                 st.switch_page(f"pages/{file_name}")

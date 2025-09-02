@@ -1,5 +1,8 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Configuration management schemas."""
 
@@ -85,7 +88,7 @@ class EnvironmentValidationResponse(BaseModel):
 class EnvironmentSchemaResponse(BaseModel):
     """Environment variable schema definition."""
 
-    schema: Dict[str, Any]
+    env_schema: Dict[str, Any] = Field(alias="schema")
     version: str
     last_updated: datetime
 

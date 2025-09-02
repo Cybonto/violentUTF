@@ -3328,24 +3328,8 @@ echo ""
 
 
 # ---------------------------------------------------------------
-# 12. Validate PyRIT Orchestrator Integration
+# 12-15. Functions moved to end after definitions
 # ---------------------------------------------------------------
-validate_pyrit_orchestrator_integration
-
-# ---------------------------------------------------------------
-# 13. Restore User Configurations
-# ---------------------------------------------------------------
-restore_user_configs
-
-# ---------------------------------------------------------------
-# 14. Verify Configuration Integrity
-# ---------------------------------------------------------------
-verify_configuration_integrity
-
-# ---------------------------------------------------------------
-# 15. Verify System State
-# ---------------------------------------------------------------
-verify_system_state
 
 # ---------------------------------------------------------------
 # 16. Display AI Configuration Summary
@@ -4048,6 +4032,12 @@ echo ""
 echo "=========================================="
 echo "SETUP COMPLETED SUCCESSFULLY!"
 echo "=========================================="
+# Execute validation functions now that they're defined
+validate_pyrit_orchestrator_integration
+restore_user_configs
+verify_configuration_integrity
+verify_system_state
+
 echo "Your ViolentUTF platform with Keycloak SSO, APISIX Gateway, AI Proxy, and PyRIT Orchestrator is now ready!"
 echo ""
 echo "💡 Next Steps:"

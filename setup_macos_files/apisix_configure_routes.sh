@@ -189,7 +189,7 @@ create_route "3002" "/mcp/oauth/*" "[\"GET\", \"POST\"]" "MCP OAuth proxy endpoi
 
 # Generic API catch-all route (lowest priority)
 log_detail "Creating generic API catch-all route..."
-local catchall_response=$(curl -s -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "{
+catchall_response=$(curl -s -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "{
     \"id\": \"violentutf-api\",
     \"uri\": \"/api/*\",
     \"name\": \"violentutf-api\",

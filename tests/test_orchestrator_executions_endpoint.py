@@ -1,13 +1,14 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Test the new /orchestrators/executions endpoint for Dashboard_2 support.
-
+Test the new /orchestrators/executions endpoint for Dashboard_2 support
 """
 
 from datetime import datetime
-from typing import Any
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -20,25 +21,25 @@ client = TestClient(app)
 
 
 @pytest.fixture
-def mock_auth() -> None:
-    """Mock authentication dependency."""
+def mock_auth():
+    """Mock authentication dependency"""
     with patch("violentutf_api.fastapi_app.app.core.auth.get_current_user") as mock_auth:
         mock_auth.return_value = Mock(username="test_user", email="test@example.com")
         yield mock_auth
 
 
 @pytest.fixture
-def mock_db() -> None:
-    """Mock database session."""
+def mock_db():
+    """Mock database session"""
     with patch("violentutf_api.fastapi_app.app.db.database.get_session") as mock_get_session:
         mock_session = Mock()
         mock_get_session.return_value.__aenter__.return_value = mock_session
         yield mock_session
 
 
-def test_list_all_orchestrator_executions(mock_auth, mock_db) -> None:
-    """Test the /orchestrators/executions endpoint returns all executions."""
-    # Create mock execution data.
+def test_list_all_orchestrator_executions(mock_auth, mock_db):
+    """Test the /orchestrators/executions endpoint returns all executions"""
+    # Create mock execution data
     execution1_id = uuid4()
     execution2_id = uuid4()
     orchestrator1_id = uuid4()
@@ -81,24 +82,34 @@ def test_list_all_orchestrator_executions(mock_auth, mock_db) -> None:
 
     # Mock orchestrator configurations
     mock_orchestrator1 = Mock(
-        id=orchestrator1_id, name="Security Test Orchestrator", orchestrator_type="PromptSendingOrchestrator"
+        id=orchestrator1_id,
+        name="Security Test Orchestrator",
+        orchestrator_type="PromptSendingOrchestrator",
     )
 
     mock_orchestrator2 = Mock(
-        id=orchestrator2_id, name="Dataset Test Orchestrator", orchestrator_type="RedTeamingOrchestrator"
+        id=orchestrator2_id,
+        name="Dataset Test Orchestrator",
+        orchestrator_type="RedTeamingOrchestrator",
     )
 
     # Setup mock database queries
     mock_executions_result = Mock()
-    mock_executions_result.scalars.return_value.all.return_value = [mock_execution1, mock_execution2]
+    mock_executions_result.scalars.return_value.all.return_value = [
+        mock_execution1,
+        mock_execution2,
+    ]
 
     mock_orchestrators_result = Mock()
-    mock_orchestrators_result.scalars.return_value.all.return_value = [mock_orchestrator1, mock_orchestrator2]
+    mock_orchestrators_result.scalars.return_value.all.return_value = [
+        mock_orchestrator1,
+        mock_orchestrator2,
+    ]
 
     # Mock the execute method to return different results based on query
     call_count = 0
 
-    def mock_execute(stmt) -> Any:
+    def mock_execute(stmt):
         nonlocal call_count
         call_count += 1
         if call_count == 1:  # First call is for executions
@@ -138,15 +149,15 @@ def test_list_all_orchestrator_executions(mock_auth, mock_db) -> None:
     assert exec2["status"] == "completed"
 
 
-def test_list_all_orchestrator_executions_no_auth() -> None:
-    """Test that the endpoint requires authentication."""
+def test_list_all_orchestrator_executions_no_auth():
+    """Test that the endpoint requires authentication"""
     response = client.get("/api/v1/orchestrators/executions")
     assert response.status_code == 401
 
 
-def test_list_all_orchestrator_executions_empty(mock_auth, mock_db) -> None:
-    """Test the endpoint when no executions exist."""
-    # Setup mock database queries.
+def test_list_all_orchestrator_executions_empty(mock_auth, mock_db):
+    """Test the endpoint when no executions exist"""
+    # Setup mock database queries
     mock_executions_result = Mock()
     mock_executions_result.scalars.return_value.all.return_value = []
 
@@ -156,7 +167,7 @@ def test_list_all_orchestrator_executions_empty(mock_auth, mock_db) -> None:
     # Mock the execute method
     call_count = 0
 
-    def mock_execute(stmt) -> Any:
+    def mock_execute(stmt):
         nonlocal call_count
         call_count += 1
         if call_count == 1:  # First call is for executions

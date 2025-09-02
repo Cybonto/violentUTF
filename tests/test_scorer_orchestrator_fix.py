@@ -1,10 +1,11 @@
-from typing import Any
-
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""Test script to verify scorer orchestrator creation fix."""
+"""Test script to verify scorer orchestrator creation fix"""
 
 import json
 from datetime import datetime
@@ -17,17 +18,24 @@ API_BASE_URL = "http://localhost:9080"  # APISIX Gateway
 # Test JWT token (matches FastAPI secret)
 JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ0ZXN0X3VzZXIiLCJleHAiOjk5OTk5OTk5OTl9.K6pX5GqMDZ8PQBoFJGwvIhbVHtQvh7kKoCHbZrjfQ_I"
 
-headers = {"Authorization": f"Bearer {JWT_TOKEN}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+headers = {
+    "Authorization": f"Bearer {JWT_TOKEN}",
+    "Content-Type": "application/json",
+    "X-API-Gateway": "APISIX",
+}
 
 
-def test_orchestrator_creation() -> Any:
-    """Test creating an orchestrator for scorer testing."""
+def test_orchestrator_creation():
+    """Test creating an orchestrator for scorer testing"""
     print("🧪 Testing Orchestrator Creation for Scorer Testing")
     print("=" * 60)
 
     # Create test orchestrator configuration (simulating scorer test)
     orchestrator_params = {
-        "objective_target": {"type": "configured_generator", "generator_name": "TestGenerator"},
+        "objective_target": {
+            "type": "configured_generator",
+            "generator_name": "TestGenerator",
+        },
         "scorers": [
             {
                 "type": "configured_scorer",
@@ -59,7 +67,12 @@ def test_orchestrator_creation() -> Any:
     print(json.dumps(orchestrator_payload, indent=2))
 
     # Make request
-    response = requests.post(f"{API_BASE_URL}/api/v1/orchestrators", headers=headers, json=orchestrator_payload)
+    response = requests.post(
+        f"{API_BASE_URL}/api/v1/orchestrators",
+        headers=headers,
+        json=orchestrator_payload,
+        timeout=30,
+    )
 
     print(f"\n📡 Response status: {response.status_code}")
 

@@ -1,10 +1,19 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-# orchestrators/orchestrator_config.py
+"""Orchestrator Config module.
 
-"""
+Copyright (c) 2025 ViolentUTF Contributors.
+Licensed under the MIT License.
+
+This file is part of ViolentUTF - An AI Red Teaming Platform.
+See LICENSE file in the project root for license information.
+
 Module: orchestrator_config
+
 Contains functions for Orchestrator configuration and management.
 
 Key Functions:
@@ -19,15 +28,13 @@ Dependencies:
 - PyRIT Orchestrator classes
 - Utils modules for error handling and logging
 - Configuration storage mechanisms (e.g., files or databases)
+
 """
 
-import asyncio
 import inspect
 import json
-import logging
-import os
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Union
 
 # Import PyRIT Orchestrator classes
 import pyrit.orchestrator as pyrit_orchestrator
@@ -46,8 +53,7 @@ CONFIG_FILE_PATH = Path("parameters/orchestrators.json")
 
 
 def list_orchestrator_types() -> List[str]:
-    """
-    Lists available Orchestrator types/classes from PyRIT.
+    """List available Orchestrator types/classes from PyRIT.
 
     Returns:
         List[str]: A list of available Orchestrator class names.
@@ -59,20 +65,20 @@ def list_orchestrator_types() -> List[str]:
         - pyrit.orchestrator
     """
     try:
+
         orchestrator_classes = []
         for name, obj in inspect.getmembers(pyrit_orchestrator):
             if inspect.isclass(obj) and issubclass(obj, Orchestrator) and obj != Orchestrator:
                 orchestrator_classes.append(name)
-        logger.debug(f"Available Orchestrator types: {orchestrator_classes}")
+        logger.debug("Available Orchestrator types: %s", orchestrator_classes)
         return orchestrator_classes
     except Exception as e:
-        logger.error(f"Error listing Orchestrator types: {e}")
-        raise OrchestratorLoadingError(f"Error listing Orchestrator types: {e}")
+        logger.error("Error listing Orchestrator types: %s", e)
+        raise OrchestratorLoadingError(f"Error listing Orchestrator types: {e}") from e
 
 
 def get_orchestrator_params(orchestrator_class: str) -> List[Dict[str, Any]]:
-    """
-    Retrieves the parameters required for the specified Orchestrator class.
+    """Retrieve the parameters required for the specified Orchestrator class.
 
     Parameters:
         orchestrator_class (str): The class name of the Orchestrator.
@@ -88,6 +94,7 @@ def get_orchestrator_params(orchestrator_class: str) -> List[Dict[str, Any]]:
         - inspect
     """
     try:
+
         # Get the class from pyrit.orchestrator by name
         clazz = getattr(pyrit_orchestrator, orchestrator_class, None)
         if clazz is None:
@@ -104,8 +111,8 @@ def get_orchestrator_params(orchestrator_class: str) -> List[Dict[str, Any]]:
 
             param_info = {
                 "name": param.name,
-                "default": param.default if param.default != inspect.Parameter.empty else None,
-                "annotation": param.annotation if param.annotation != inspect.Parameter.empty else None,
+                "default": (param.default if param.default != inspect.Parameter.empty else None),
+                "annotation": (param.annotation if param.annotation != inspect.Parameter.empty else None),
                 "required": param.default == inspect.Parameter.empty,
             }
 
@@ -124,12 +131,11 @@ def get_orchestrator_params(orchestrator_class: str) -> List[Dict[str, Any]]:
         return params_list
     except Exception as e:
         logger.error(f"Error getting parameters for Orchestrator '{orchestrator_class}': {e}")
-        raise OrchestratorLoadingError(f"Error getting parameters for Orchestrator '{orchestrator_class}': {e}")
+        raise OrchestratorLoadingError(f"Error getting parameters for Orchestrator '{orchestrator_class}': {e}") from e
 
 
 def load_orchestrators() -> Dict[str, Dict[str, Any]]:
-    """
-    Loads the existing Orchestrator configurations.
+    """Load the existing Orchestrator configurations.
 
     Returns:
         Dict[str, Dict[str, Any]]: A dictionary of Orchestrator configurations.
@@ -141,23 +147,23 @@ def load_orchestrators() -> Dict[str, Dict[str, Any]]:
         - Reads from 'parameters/orchestrators.json'
     """
     try:
+
         if CONFIG_FILE_PATH.exists():
-            with open(CONFIG_FILE_PATH, "r") as f:
+            with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as f:
                 orchestrators = json.load(f)
-            logger.debug(f"Loaded orchestrators: {orchestrators}")
-            return orchestrators
+            logger.debug("Loaded orchestrators: %s", orchestrators)
+            return orchestrators if isinstance(orchestrators, dict) else {}
         else:
             # Return empty dict if config file doesn't exist
             logger.debug("No existing orchestrator configurations found.")
             return {}
     except Exception as e:
-        logger.error(f"Error loading orchestrators: {e}")
-        raise OrchestratorLoadingError(f"Error loading orchestrators: {e}")
+        logger.error("Error loading orchestrators: %s", e)
+        raise OrchestratorLoadingError(f"Error loading orchestrators: {e}") from e
 
 
 def save_orchestrators(orchestrators: Dict[str, Dict[str, Any]]) -> None:
-    """
-    Saves the Orchestrator configurations to the config file.
+    """Save the Orchestrator configurations to the config file.
 
     Parameters:
         orchestrators (Dict[str, Dict[str, Any]]): The Orchestrator configurations to save.
@@ -169,19 +175,19 @@ def save_orchestrators(orchestrators: Dict[str, Dict[str, Any]]) -> None:
         - Writes to 'parameters/orchestrators.json'
     """
     try:
+
         # Ensure the directory exists
         CONFIG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(CONFIG_FILE_PATH, "w") as f:
+        with open(CONFIG_FILE_PATH, "w", encoding="utf-8") as f:
             json.dump(orchestrators, f, indent=4)
         logger.debug("Orchestrator configurations saved successfully.")
     except Exception as e:
-        logger.error(f"Error saving orchestrators: {e}")
-        raise OrchestratorConfigurationError(f"Error saving orchestrators: {e}")
+        logger.error("Error saving orchestrators: %s", e)
+        raise OrchestratorConfigurationError(f"Error saving orchestrators: {e}") from e
 
 
 def add_orchestrator(name: str, orchestrator_class: str, parameters: Dict[str, Any]) -> Orchestrator:
-    """
-    Adds a new Orchestrator configuration and saves it.
+    """Add a new Orchestrator configuration and saves it.
 
     Parameters:
         name (str): The unique name for the Orchestrator.
@@ -202,6 +208,7 @@ def add_orchestrator(name: str, orchestrator_class: str, parameters: Dict[str, A
         - save_orchestrators()
     """
     try:
+
         # Check if the name already exists
         existing_orchestrators = load_orchestrators()
         if name in existing_orchestrators:
@@ -245,12 +252,11 @@ def add_orchestrator(name: str, orchestrator_class: str, parameters: Dict[str, A
         raise
     except Exception as e:
         logger.exception(f"Error instantiating Orchestrator '{name}': {e}")
-        raise OrchestratorInstantiationError(f"Error instantiating Orchestrator '{name}': {e}")
+        raise OrchestratorInstantiationError(f"Error instantiating Orchestrator '{name}': {e}") from e
 
 
 def delete_orchestrator(name: str) -> bool:
-    """
-    Deletes the Orchestrator configuration with the given name.
+    """Delete the Orchestrator configuration with the given name.
 
     Parameters:
         name (str): The name of the Orchestrator to delete.
@@ -266,6 +272,7 @@ def delete_orchestrator(name: str) -> bool:
         - save_orchestrators()
     """
     try:
+
         orchestrators = load_orchestrators()
         if name in orchestrators:
             del orchestrators[name]
@@ -277,12 +284,11 @@ def delete_orchestrator(name: str) -> bool:
             return False
     except Exception as e:
         logger.error(f"Error deleting Orchestrator '{name}': {e}")
-        raise OrchestratorDeletionError(f"Error deleting Orchestrator '{name}': {e}")
+        raise OrchestratorDeletionError(f"Error deleting Orchestrator '{name}': {e}") from e
 
 
 def get_orchestrator(name: str) -> Orchestrator:
-    """
-    Retrieves the Orchestrator instance with the given name.
+    """Retrieve the Orchestrator instance with the given name.
 
     Parameters:
         name (str): The name of the Orchestrator to retrieve.
@@ -299,6 +305,7 @@ def get_orchestrator(name: str) -> Orchestrator:
         - get_orchestrator_params()
     """
     try:
+
         orchestrators = load_orchestrators()
         if name not in orchestrators:
             raise OrchestratorLoadingError(f"Orchestrator '{name}' not found.")
@@ -334,4 +341,4 @@ def get_orchestrator(name: str) -> Orchestrator:
         return orchestrator_instance
     except Exception as e:
         logger.error(f"Error retrieving Orchestrator '{name}': {e}")
-        raise OrchestratorLoadingError(f"Error retrieving Orchestrator '{name}': {e}")
+        raise OrchestratorLoadingError(f"Error retrieving Orchestrator '{name}': {e}") from e

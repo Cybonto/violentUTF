@@ -1,24 +1,28 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 import asyncio
-from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import PyRITOrchestratorService
+from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import (
+    PyRITOrchestratorService,
+)
 
 
 @pytest.fixture
-def orchestrator_service() -> Any:
-    """Create orchestrator service instance for testing."""
+def orchestrator_service():
+    """Create orchestrator service instance for testing"""
     return PyRITOrchestratorService()
 
 
 @pytest.mark.asyncio
 async def test_get_orchestrator_types(orchestrator_service) -> None:
-    """Test orchestrator type discovery."""
+    """Test orchestrator type discovery"""
     types = orchestrator_service.get_orchestrator_types()
 
     assert len(types) > 0
@@ -33,11 +37,14 @@ async def test_get_orchestrator_types(orchestrator_service) -> None:
 
 @pytest.mark.asyncio
 async def test_create_orchestrator_instance(orchestrator_service) -> None:
-    """Test orchestrator instance creation."""
+    """Test orchestrator instance creation"""
     config = {
         "orchestrator_type": "PromptSendingOrchestrator",
         "parameters": {
-            "objective_target": {"type": "configured_generator", "generator_name": "test_generator"},
+            "objective_target": {
+                "type": "configured_generator",
+                "generator_name": "test_generator",
+            },
             "batch_size": 5,
             "verbose": True,
         },
@@ -54,8 +61,8 @@ async def test_create_orchestrator_instance(orchestrator_service) -> None:
 
 @pytest.mark.asyncio
 async def test_execute_prompt_list(orchestrator_service) -> None:
-    """Test executing orchestrator with prompt list."""
-    # Create mock orchestrator.
+    """Test executing orchestrator with prompt list"""
+    # Create mock orchestrator
     mock_orchestrator = Mock()
     mock_results = [Mock()]
     mock_orchestrator.send_prompts_async = AsyncMock(return_value=mock_results)
@@ -83,8 +90,8 @@ async def test_execute_prompt_list(orchestrator_service) -> None:
 
 @pytest.mark.asyncio
 async def test_execute_dataset(orchestrator_service) -> None:
-    """Test executing orchestrator with dataset."""
-    # Create mock orchestrator.
+    """Test executing orchestrator with dataset"""
+    # Create mock orchestrator
     mock_orchestrator = Mock()
     mock_results = [Mock()]
     mock_orchestrator.send_prompts_async = AsyncMock(return_value=mock_results)
@@ -96,7 +103,11 @@ async def test_execute_dataset(orchestrator_service) -> None:
 
     execution_config = {
         "execution_type": "dataset",
-        "input_data": {"dataset_id": "test_dataset", "sample_size": 5, "memory_labels": {"dataset_test": "true"}},
+        "input_data": {
+            "dataset_id": "test_dataset",
+            "sample_size": 5,
+            "memory_labels": {"dataset_test": "true"},
+        },
     }
 
     # Mock dataset loading
@@ -113,10 +124,12 @@ async def test_execute_dataset(orchestrator_service) -> None:
 
 @pytest.mark.asyncio
 async def test_generator_target_bridge() -> None:
-    """Test ConfiguredGeneratorTarget bridge functionality."""
+    """Test ConfiguredGeneratorTarget bridge functionality"""
     from pyrit.models import PromptRequestPiece
 
-    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import ConfiguredGeneratorTarget
+    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import (
+        ConfiguredGeneratorTarget,
+    )
 
     generator_config = {"name": "test_generator", "type": "test_type"}
 
@@ -143,7 +156,7 @@ async def test_generator_target_bridge() -> None:
 
 
 def test_parameter_descriptions(orchestrator_service) -> None:
-    """Test parameter description generation."""
+    """Test parameter description generation"""
     descriptions = orchestrator_service._get_parameter_description(Mock, "objective_target")
     assert "target" in descriptions.lower()
 
@@ -152,7 +165,7 @@ def test_parameter_descriptions(orchestrator_service) -> None:
 
 
 def test_use_cases(orchestrator_service) -> None:
-    """Test use case mapping."""
+    """Test use case mapping"""
     use_cases = orchestrator_service._get_use_cases("PromptSendingOrchestrator")
     assert "basic_prompting" in use_cases
     assert "dataset_testing" in use_cases
@@ -163,7 +176,7 @@ def test_use_cases(orchestrator_service) -> None:
 
 @pytest.mark.asyncio
 async def test_orchestrator_memory_retrieval(orchestrator_service) -> None:
-    """Test orchestrator memory retrieval."""
+    """Test orchestrator memory retrieval"""
     mock_orchestrator = Mock()
     mock_memory_pieces = [Mock(id="1", role="user", original_value="test")]
     mock_orchestrator.get_memory.return_value = mock_memory_pieces
@@ -179,7 +192,7 @@ async def test_orchestrator_memory_retrieval(orchestrator_service) -> None:
 
 @pytest.mark.asyncio
 async def test_orchestrator_scores_retrieval(orchestrator_service) -> None:
-    """Test orchestrator scores retrieval."""
+    """Test orchestrator scores retrieval"""
     mock_orchestrator = Mock()
     mock_scores = [Mock(id="1", score_value=0.8, score_type="test")]
     mock_orchestrator.get_score_memory.return_value = mock_scores
@@ -194,7 +207,7 @@ async def test_orchestrator_scores_retrieval(orchestrator_service) -> None:
 
 
 def test_orchestrator_disposal(orchestrator_service) -> None:
-    """Test orchestrator instance cleanup."""
+    """Test orchestrator instance cleanup"""
     mock_orchestrator = Mock()
     orchestrator_id = "test-id"
     orchestrator_service._orchestrator_instances[orchestrator_id] = mock_orchestrator
@@ -207,7 +220,7 @@ def test_orchestrator_disposal(orchestrator_service) -> None:
 
 @pytest.mark.asyncio
 async def test_invalid_orchestrator_type(orchestrator_service) -> None:
-    """Test error handling for invalid orchestrator type."""
+    """Test error handling for invalid orchestrator type"""
     config = {"orchestrator_type": "InvalidOrchestrator", "parameters": {}}
 
     with pytest.raises(ValueError, match="Unknown orchestrator type"):
@@ -216,8 +229,11 @@ async def test_invalid_orchestrator_type(orchestrator_service) -> None:
 
 @pytest.mark.asyncio
 async def test_missing_orchestrator_execution(orchestrator_service) -> None:
-    """Test error handling for missing orchestrator during execution."""
-    execution_config = {"execution_type": "prompt_list", "input_data": {"prompt_list": ["test"]}}
+    """Test error handling for missing orchestrator during execution"""
+    execution_config = {
+        "execution_type": "prompt_list",
+        "input_data": {"prompt_list": ["test"]},
+    }
 
     with pytest.raises(ValueError, match="Orchestrator not found"):
         await orchestrator_service.execute_orchestrator("nonexistent", execution_config)
@@ -225,7 +241,7 @@ async def test_missing_orchestrator_execution(orchestrator_service) -> None:
 
 @pytest.mark.asyncio
 async def test_unsupported_execution_type(orchestrator_service) -> None:
-    """Test error handling for unsupported execution type."""
+    """Test error handling for unsupported execution type"""
     mock_orchestrator = Mock()
     orchestrator_id = "test-id"
     orchestrator_service._orchestrator_instances[orchestrator_id] = mock_orchestrator

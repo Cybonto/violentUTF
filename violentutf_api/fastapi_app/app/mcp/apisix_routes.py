@@ -1,10 +1,12 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """APISIX Route Configuration for MCP."""
-
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Self
 
 import httpx
 from app.core.config import settings
@@ -13,14 +15,15 @@ logger = logging.getLogger(__name__)
 
 
 class APISIXRouteManager:
-    """Manages APISIX routes for MCP endpoints."""
+    """Manage APISIX routes for MCP endpoints."""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         self.admin_url = settings.APISIX_ADMIN_URL
+
         self.admin_key = settings.APISIX_ADMIN_KEY
 
-    async def create_mcp_routes(self: "APISIXRouteManager") -> Dict[str, Any]:
+    async def create_mcp_routes(self: "Self") -> Dict[str, Any]:
         """Create all required MCP routes in APISIX."""
         routes = []
 
@@ -35,7 +38,11 @@ class APISIXRouteManager:
                     "allow_methods": "GET,POST,PUT,DELETE,OPTIONS",
                     "allow_headers": "Authorization,Content-Type",
                 },
-                "jwt-auth": {"key": "user-key", "secret": settings.JWT_SECRET_KEY, "algorithm": "HS256"},
+                "jwt-auth": {
+                    "key": "user-key",
+                    "secret": settings.JWT_SECRET_KEY,
+                    "algorithm": "HS256",
+                },
                 "limit-req": {"rate": 100, "burst": 20, "key": "remote_addr"},
                 "prometheus": {"prefer_name": True},
             },
@@ -47,31 +54,44 @@ class APISIXRouteManager:
             route_id="mcp-oauth",
             uri="/mcp/oauth/*",
             upstream_url="http://violentutf-api:8000",
-            plugins={"cors": {"allow_origins": "*"}, "limit-req": {"rate": 10, "burst": 5}},
+            plugins={
+                "cors": {"allow_origins": "*"},
+                "limit-req": {"rate": 10, "burst": 5},
+            },
         )
         routes.append(oauth_route)
 
         return {"routes": routes, "status": "created"}
 
     async def _create_route(
-        self: "APISIXRouteManager", route_id: str, uri: str, upstream_url: str, plugins: Dict[str, Any]
+        self: "Self",
+        route_id: str,
+        uri: str,
+        upstream_url: str,
+        plugins: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Create individual route in APISIX."""
-        route_config = {"uri": uri, "upstream": {"type": "roundrobin", "nodes": {upstream_url: 1}}, "plugins": plugins}
+        route_config = {
+            "uri": uri,
+            "upstream": {"type": "roundrobin", "nodes": {upstream_url: 1}},
+            "plugins": plugins,
+        }
 
         async with httpx.AsyncClient() as client:
             response = await client.put(
-                f"{self.admin_url}/routes/{route_id}", json=route_config, headers={"X-API-KEY": self.admin_key}
+                f"{self.admin_url}/routes/{route_id}",
+                json=route_config,
+                headers={"X-API-KEY": self.admin_key},
             )
 
             if response.status_code not in [200, 201]:
-                logger.error(f"Failed to create route {route_id}: {response.text}")
-                raise Exception(f"Route creation failed: {response.status_code}")
+                logger.error("Failed to create route %s: %s", route_id, response.text)
+                raise RuntimeError(f"Route creation failed: {response.status_code}")
 
-            logger.info(f"Created APISIX route: {route_id}")
+            logger.info("Created APISIX route: %s", route_id)
             return response.json()
 
-    async def delete_mcp_routes(self: "APISIXRouteManager") -> Dict[str, Any]:
+    async def delete_mcp_routes(self: "Self") -> Dict[str, Any]:
         """Delete MCP routes from APISIX."""
         deleted = []
 
@@ -79,17 +99,22 @@ class APISIXRouteManager:
             try:
                 async with httpx.AsyncClient() as client:
                     response = await client.delete(
-                        f"{self.admin_url}/routes/{route_id}", headers={"X-API-KEY": self.admin_key}
+                        f"{self.admin_url}/routes/{route_id}",
+                        headers={"X-API-KEY": self.admin_key},
                     )
 
                     if response.status_code in [200, 204, 404]:
                         deleted.append(route_id)
-                        logger.info(f"Deleted APISIX route: {route_id}")
+                        logger.info("Deleted APISIX route: %s", route_id)
                     else:
-                        logger.error(f"Failed to delete route {route_id}: {response.status_code}")
+                        logger.error(
+                            "Failed to delete route %s: %s",
+                            route_id,
+                            response.status_code,
+                        )
 
             except Exception as e:
-                logger.error(f"Error deleting route {route_id}: {e}")
+                logger.error("Error deleting route %s: %s", route_id, e)
 
         return {"deleted": deleted, "status": "complete"}
 

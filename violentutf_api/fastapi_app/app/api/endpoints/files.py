@@ -1,19 +1,25 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """File management endpoints."""
-
 import os
-import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Dict, Optional
 
 from app.core.auth import get_current_user
 from app.models.auth import User
-from app.schemas.files import FileInfo, FileListResponse, FileMetadataResponse, FileUploadResponse
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from app.schemas.files import (
+    FileInfo,
+    FileListResponse,
+    FileMetadataResponse,
+    FileUploadResponse,
+)
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
 router = APIRouter()
@@ -22,6 +28,7 @@ router = APIRouter()
 def get_user_files_dir(username: str) -> str:
     """Get user's files directory."""
     files_dir = os.path.join(os.getenv("APP_DATA_DIR", "./app_data"), "files", username)
+
     os.makedirs(files_dir, exist_ok=True)
     return files_dir
 
@@ -29,6 +36,7 @@ def get_user_files_dir(username: str) -> str:
 def get_file_metadata(file_path: str, file_id: str, username: str) -> FileInfo:
     """Get file metadata."""
     stat = os.stat(file_path)
+
     return FileInfo(
         file_id=file_id,
         filename=os.path.basename(file_path),
@@ -43,10 +51,13 @@ def get_file_metadata(file_path: str, file_id: str, username: str) -> FileInfo:
 
 @router.post("/upload", response_model=FileUploadResponse)
 async def upload_file(
-    file: UploadFile = File(...), description: Optional[str] = None, current_user: User = Depends(get_current_user)
-) -> Any:
+    file: UploadFile = File(...),
+    description: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+) -> object:
     """Upload parameter files, datasets, or other configuration files."""
     try:
+
         # Generate unique file ID
         file_id = str(uuid.uuid4())
 
@@ -77,12 +88,12 @@ async def upload_file(
         metadata_path = os.path.join(user_files_dir, f"{file_id}.metadata.json")
         import json
 
-        with open(metadata_path, "w") as f:
+        with open(metadata_path, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2)
 
         return FileUploadResponse(
             file_id=file_id,
-            filename=file.filename,
+            filename=file.filename or "unknown_file",
             size_bytes=len(content),
             content_type=file.content_type or "application/octet-stream",
             uploaded_at=datetime.now(),
@@ -91,13 +102,19 @@ async def upload_file(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error uploading file: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error uploading file: {str(e)}",
+        ) from e
 
 
 @router.get("/{file_id}", response_model=FileMetadataResponse)
-async def get_file_metadata_endpoint(file_id: str, current_user: User = Depends(get_current_user)) -> Any:
+async def get_file_metadata_endpoint(
+    file_id: str, current_user: User = Depends(get_current_user)
+) -> FileMetadataResponse:
     """Get file metadata and download URL."""
     try:
+
         user_files_dir = get_user_files_dir(current_user.username)
 
         # Load metadata
@@ -107,7 +124,7 @@ async def get_file_metadata_endpoint(file_id: str, current_user: User = Depends(
 
         import json
 
-        with open(metadata_path, "r") as f:
+        with open(metadata_path, "r", encoding="utf-8") as f:
             metadata = json.load(f)
 
         # Find actual file
@@ -129,21 +146,25 @@ async def get_file_metadata_endpoint(file_id: str, current_user: User = Depends(
         )
 
         return FileMetadataResponse(
-            file_info=file_info, download_url=f"/api/v1/files/{file_id}/download", available=True
+            file_info=file_info,
+            download_url=f"/api/v1/files/{file_id}/download",
+            available=True,
         )
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error getting file metadata: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting file metadata: {str(e)}",
+        ) from e
 
 
 @router.get("/{file_id}/download")
-async def download_file(file_id: str, current_user: User = Depends(get_current_user)) -> Any:
+async def download_file(file_id: str, current_user: User = Depends(get_current_user)) -> FileResponse:
     """Download file by ID."""
     try:
+
         user_files_dir = get_user_files_dir(current_user.username)
 
         # Load metadata
@@ -153,7 +174,7 @@ async def download_file(file_id: str, current_user: User = Depends(get_current_u
 
         import json
 
-        with open(metadata_path, "r") as f:
+        with open(metadata_path, "r", encoding="utf-8") as f:
             metadata = json.load(f)
 
         # Find actual file
@@ -163,20 +184,28 @@ async def download_file(file_id: str, current_user: User = Depends(get_current_u
         if not os.path.exists(file_path):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File data not found")
 
-        return FileResponse(path=file_path, filename=metadata["original_filename"], media_type=metadata["content_type"])
+        return FileResponse(
+            path=file_path,
+            filename=metadata["original_filename"],
+            media_type=metadata["content_type"],
+        )
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error downloading file: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error downloading file: {str(e)}",
+        ) from e
 
 
 @router.get("", response_model=FileListResponse)
-async def list_files(limit: int = 50, offset: int = 0, current_user: User = Depends(get_current_user)) -> Any:
+async def list_files(
+    limit: int = 50, offset: int = 0, current_user: User = Depends(get_current_user)
+) -> FileListResponse:
     """List user's uploaded files."""
     try:
+
         user_files_dir = get_user_files_dir(current_user.username)
 
         # Find all metadata files
@@ -187,7 +216,7 @@ async def list_files(limit: int = 50, offset: int = 0, current_user: User = Depe
             try:
                 import json
 
-                with open(metadata_file, "r") as f:
+                with open(metadata_file, "r", encoding="utf-8") as f:
                     metadata = json.load(f)
 
                 file_info = FileInfo(
@@ -201,7 +230,7 @@ async def list_files(limit: int = 50, offset: int = 0, current_user: User = Depe
                     file_path="",  # Don't expose full path
                 )
                 files.append(file_info)
-            except Exception:
+            except Exception:  # nosec B112 - acceptable exception handling for file listing
                 continue  # Skip corrupted metadata files
 
         # Sort by upload date (newest first)
@@ -214,13 +243,17 @@ async def list_files(limit: int = 50, offset: int = 0, current_user: User = Depe
         return FileListResponse(files=paginated_files, total_count=total_files, limit=limit, offset=offset)
 
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error listing files: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error listing files: {str(e)}",
+        ) from e
 
 
 @router.delete("/{file_id}")
-async def delete_file(file_id: str, current_user: User = Depends(get_current_user)) -> Any:
+async def delete_file(file_id: str, current_user: User = Depends(get_current_user)) -> Optional[Dict[str, object]]:
     """Delete uploaded file."""
     try:
+
         user_files_dir = get_user_files_dir(current_user.username)
 
         # Load metadata to get original filename
@@ -230,7 +263,7 @@ async def delete_file(file_id: str, current_user: User = Depends(get_current_use
 
         import json
 
-        with open(metadata_path, "r") as f:
+        with open(metadata_path, "r", encoding="utf-8") as f:
             metadata = json.load(f)
 
         # Delete actual file
@@ -247,4 +280,7 @@ async def delete_file(file_id: str, current_user: User = Depends(get_current_use
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error deleting file: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting file: {str(e)}",
+        ) from e

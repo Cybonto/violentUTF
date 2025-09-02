@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
 Enhanced OpenAPI schema validation for API contract testing.
+
 Validates OpenAPI 3.0 specifications and ensures compatibility.
 """
 
@@ -25,7 +29,7 @@ OPENAPI_3_0_SCHEMA = {
     "type": "object",
     "required": ["openapi", "info", "paths"],
     "properties": {
-        "openapi": {"type": "string", "pattern": "^3\\.0\\.[0-9]+(\\.[0-9]+)*$"},
+        "openapi": {"type": "string", "pattern": r"^3\.0\.[0-9]+(\.[0-9]+)*$"},
         "info": {
             "type": "object",
             "required": ["title", "version"],
@@ -48,12 +52,13 @@ OPENAPI_3_0_SCHEMA = {
 class OpenAPIValidator:
     """Enhanced OpenAPI schema validator for contract testing."""
 
-    def __init__(self, base_url: str = "http://localhost:8000"):
+    def __init__(self: "OpenAPIValidator", base_url: str = "http://localhost:8000") -> None:
+        """Initialize OpenAPI validator with base URL."""
         self.base_url = base_url
         self.errors: List[str] = []
         self.warnings: List[str] = []
 
-    def validate_schema_file(self, schema_path: Path) -> bool:
+    def validate_schema_file(self: "OpenAPIValidator", schema_path: Path) -> bool:
         """Validate OpenAPI schema file."""
         try:
             with open(schema_path, "r", encoding="utf-8") as f:
@@ -71,7 +76,7 @@ class OpenAPIValidator:
             self.errors.append(f"Error reading {schema_path}: {e}")
             return False
 
-    def validate_dynamic_schema(self, app_url: str = None) -> bool:
+    def validate_dynamic_schema(self: "OpenAPIValidator", app_url: str = None) -> bool:
         """Validate dynamically generated OpenAPI schema from FastAPI app."""
         if not app_url:
             app_url = f"{self.base_url}/openapi.json"
@@ -93,7 +98,7 @@ class OpenAPIValidator:
             self.errors.append(f"Error validating dynamic schema: {e}")
             return False
 
-    def _validate_schema_dict(self, schema: Dict[str, Any], source: str) -> bool:
+    def _validate_schema_dict(self: "OpenAPIValidator", schema: Dict[str, Any], source: str) -> bool:
         """Validate OpenAPI schema dictionary."""
         success = True
 
@@ -120,7 +125,7 @@ class OpenAPIValidator:
 
         return success
 
-    def _validate_violentutf_specific(self, schema: Dict[str, Any], source: str) -> bool:
+    def _validate_violentutf_specific(self: "OpenAPIValidator", schema: Dict[str, Any], source: str) -> bool:
         """Validate ViolentUTF-specific API contract requirements."""
         success = True
 
@@ -157,7 +162,7 @@ class OpenAPIValidator:
 
         return success
 
-    def _validate_error_responses(self, schema: Dict[str, Any], source: str) -> bool:
+    def _validate_error_responses(self: "OpenAPIValidator", schema: Dict[str, Any], source: str) -> bool:
         """Validate that error responses follow consistent format."""
         paths = schema.get("paths", {})
 
@@ -183,7 +188,7 @@ class OpenAPIValidator:
 
         return True
 
-    def _is_valid_error_schema(self, schema: Dict[str, Any]) -> bool:
+    def _is_valid_error_schema(self: "OpenAPIValidator", schema: Dict[str, Any]) -> bool:
         """Check if error response schema follows expected format."""
         if not schema:
             return True  # No schema defined is acceptable
@@ -192,7 +197,7 @@ class OpenAPIValidator:
         properties = schema.get("properties", {})
         return "detail" in properties or "message" in properties or "error" in properties
 
-    def get_validation_summary(self) -> Dict[str, Any]:
+    def get_validation_summary(self: "OpenAPIValidator") -> Dict[str, Any]:
         """Get summary of validation results."""
         return {
             "valid": len(self.errors) == 0,
@@ -202,7 +207,7 @@ class OpenAPIValidator:
             "warning_count": len(self.warnings),
         }
 
-    def print_results(self):
+    def print_results(self: "OpenAPIValidator") -> None:
         """Print validation results to console."""
         if not self.errors and not self.warnings:
             print("✅ All OpenAPI schemas are valid!")
@@ -221,8 +226,8 @@ class OpenAPIValidator:
         print(f"\nSummary: {len(self.errors)} errors, {len(self.warnings)} warnings")
 
 
-def main():
-    """Main validation function for CLI usage."""
+def main() -> None:
+    """Execute main validation for CLI usage."""
     logging.basicConfig(level=logging.INFO)
 
     validator = OpenAPIValidator()

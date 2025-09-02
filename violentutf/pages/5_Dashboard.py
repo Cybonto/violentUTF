@@ -1,15 +1,21 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-import asyncio
+"""Main dashboard page for ViolentUTF.
+
+Provides central control panel and status overview for AI red-teaming operations.
+"""
+
 import json
 import os
-import sys
+import time
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -18,7 +24,6 @@ import streamlit as st
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
-from plotly.subplots import make_subplots
 
 # Import utilities
 from utils.auth_utils import handle_authentication_and_sidebar
@@ -62,13 +67,7 @@ SEVERITY_MAP = {
     "float_scale": lambda val: (
         "critical"
         if val >= 0.8
-        else "high"
-        if val >= 0.6
-        else "medium"
-        if val >= 0.4
-        else "low"
-        if val >= 0.2
-        else "minimal"
+        else "high" if val >= 0.6 else "medium" if val >= 0.4 else "low" if val >= 0.2 else "minimal"
     ),
     # Category scorers - map categories to severity
     "str": lambda val: {
@@ -103,7 +102,7 @@ SEVERITY_COLORS = {
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway."""
+    """Get authentication headers for API requests through APISIX Gateway"""
     try:
         # Use jwt_manager for automatic token refresh
         token = jwt_manager.get_valid_token()
@@ -130,8 +129,8 @@ def get_auth_headers() -> Dict[str, str]:
         return {}
 
 
-def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
-    """Make an authenticated API request through APISIX Gateway."""
+def api_request(method: str, url: str, **kwargs: object) -> Optional[Dict[str, Any]]:
+    """Make an authenticated API request through APISIX Gateway"""
     headers = get_auth_headers()
     if not headers.get("Authorization"):
         logger.warning("No authentication token available for API request")
@@ -140,8 +139,9 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
     try:
         logger.debug(f"Making {method} request to {url} through APISIX Gateway")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+
         if response.status_code in [200, 201]:
-            return response.json()
+            return cast(Dict[str, Any], response.json())
         else:
             logger.error(f"API Error {response.status_code}: {url} - {response.text}")
             return None
@@ -150,8 +150,8 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         return None
 
 
-def create_compatible_api_token() -> None:
-    """Create a FastAPI-compatible token using JWT manager."""
+def create_compatible_api_token() -> Optional[str]:
+    """Create a FastAPI-compatible token using JWT manager"""
     try:
         from utils.user_context import get_user_context_for_token
 
@@ -165,7 +165,7 @@ def create_compatible_api_token() -> None:
         if api_token:
             logger.info("Successfully created API token using JWT manager")
             st.session_state["api_token"] = api_token
-            return api_token
+            return cast(str, api_token)
         else:
             st.error("🚨 Security Error: JWT secret key not configured.")
             logger.error("Failed to create API token - JWT secret key not available")
@@ -182,7 +182,7 @@ def create_compatible_api_token() -> None:
 
 @st.cache_data(ttl=60)  # 1-minute cache for real-time updates
 def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Load orchestrator executions with their results from API - same approach as Dashboard_4."""
+    """Load orchestrator executions with their results from API - same approach as Dashboard_4"""
     try:
         # Calculate time range
         end_date = datetime.now()
@@ -194,11 +194,11 @@ def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List
             return [], []
 
         # API returns list directly, not wrapped in 'orchestrators' key
-        orchestrators = (
-            orchestrators_response
-            if isinstance(orchestrators_response, list)
-            else orchestrators_response.get("orchestrators", [])
-        )
+        # Cast response to handle both list and dict formats from API
+        if hasattr(orchestrators_response, "get"):
+            orchestrators = cast(List[Dict[str, Any]], orchestrators_response.get("orchestrators", []))
+        else:
+            orchestrators = cast(List[Dict[str, Any]], orchestrators_response)
         all_executions = []
         all_results = []
 
@@ -306,7 +306,7 @@ def load_orchestrator_executions_with_results(days_back: int = 30) -> Tuple[List
 
 @st.cache_data(ttl=60)
 def load_execution_results(execution_id: str) -> Dict[str, Any]:
-    """Load detailed results for a specific execution."""
+    """Load detailed results for a specific execution"""
     try:
         url = API_ENDPOINTS["execution_results"].format(execution_id=execution_id)
         response = api_request("GET", url)
@@ -317,7 +317,7 @@ def load_execution_results(execution_id: str) -> Dict[str, Any]:
 
 
 def parse_scorer_results(executions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Parse scorer results from orchestrator executions."""
+    """Parse scorer results from orchestrator executions"""
     all_results = []
 
     for execution in executions:
@@ -379,7 +379,7 @@ def parse_scorer_results(executions: List[Dict[str, Any]]) -> List[Dict[str, Any
 
 
 def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Calculate comprehensive metrics from scorer results."""
+    """Calculate comprehensive metrics from scorer results"""
     if not results:
         return {
             "total_executions": 0,
@@ -418,7 +418,9 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
     severity_breakdown = dict(severity_counts)
 
     # Scorer performance
-    scorer_performance = defaultdict(lambda: {"total": 0, "violations": 0, "avg_score": 0})
+    scorer_performance: Dict[str, Dict[str, Union[int, float]]] = defaultdict(
+        lambda: {"total": 0, "violations": 0, "avg_score": 0}
+    )
     for result in results:
         scorer = result["scorer_name"]
         scorer_performance[scorer]["total"] += 1
@@ -431,12 +433,12 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
     # Calculate averages
     for scorer, stats in scorer_performance.items():
         if stats["total"] > 0:
-            stats["violation_rate"] = stats["violations"] / stats["total"] * 100
+            stats["violation_rate"] = float(cast(int, stats["violations"])) / cast(int, stats["total"]) * 100
             if stats["avg_score"] > 0:
-                stats["avg_score"] /= stats["total"]
+                stats["avg_score"] = stats["avg_score"] / cast(int, stats["total"])
 
     # Generator risk profile
-    generator_risk = defaultdict(lambda: {"total": 0, "critical": 0, "high": 0})
+    generator_risk: Dict[str, Dict[str, int]] = defaultdict(lambda: {"total": 0, "critical": 0, "high": 0})
     for result in results:
         generator = result["generator_name"]
         generator_risk[generator]["total"] += 1
@@ -463,7 +465,7 @@ def calculate_comprehensive_metrics(results: List[Dict[str, Any]]) -> Dict[str, 
 
 
 def analyze_temporal_patterns(results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Analyze temporal patterns in scorer results."""
+    """Analyze temporal patterns in scorer results"""
     if not results:
         return {}
 
@@ -475,8 +477,8 @@ def analyze_temporal_patterns(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     results_sorted = sorted(results, key=lambda x: x["timestamp"])
 
     # Hourly distribution
-    hourly_violations = defaultdict(int)
-    hourly_total = defaultdict(int)
+    hourly_violations: Dict[int, int] = defaultdict(int)
+    hourly_total: Dict[int, int] = defaultdict(int)
 
     for result in results_sorted:
         hour = result["timestamp"].hour
@@ -485,7 +487,7 @@ def analyze_temporal_patterns(results: List[Dict[str, Any]]) -> Dict[str, Any]:
             hourly_violations[hour] += 1
 
     # Daily trends
-    daily_data = defaultdict(lambda: {"total": 0, "violations": 0})
+    daily_data: Dict[Any, Dict[str, int]] = defaultdict(lambda: {"total": 0, "violations": 0})
     for result in results_sorted:
         day = result["timestamp"].date()
         daily_data[day]["total"] += 1
@@ -503,7 +505,7 @@ def analyze_temporal_patterns(results: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def render_executive_dashboard(metrics: Dict[str, Any]) -> None:
-    """Render executive-level dashboard with key metrics."""
+    """Render executive-level dashboard with key metrics"""
     st.header("📊 Executive Summary")
 
     # Key metrics row
@@ -566,7 +568,7 @@ def render_executive_dashboard(metrics: Dict[str, Any]) -> None:
 
 
 def render_scorer_performance(results: List[Dict[str, Any]], metrics: Dict[str, Any]) -> None:
-    """Render scorer performance analysis."""
+    """Render scorer performance analysis"""
     st.header("🔍 Scorer Performance Analysis")
 
     scorer_perf = metrics.get("scorer_performance", {})
@@ -625,7 +627,7 @@ def render_scorer_performance(results: List[Dict[str, Any]], metrics: Dict[str, 
 
 
 def render_generator_risk_analysis(metrics: Dict[str, Any]) -> None:
-    """Render generator risk analysis."""
+    """Render generator risk analysis"""
     st.header("⚠️ Generator Risk Analysis")
 
     gen_risk = metrics.get("generator_risk_profile", {})
@@ -685,7 +687,7 @@ def render_generator_risk_analysis(metrics: Dict[str, Any]) -> None:
 
 
 def render_temporal_analysis(results: List[Dict[str, Any]], metrics: Dict[str, Any]) -> None:
-    """Render temporal analysis of results."""
+    """Render temporal analysis of results"""
     st.header("📈 Temporal Analysis")
 
     temporal = metrics.get("temporal_patterns", {})
@@ -765,7 +767,7 @@ def render_temporal_analysis(results: List[Dict[str, Any]], metrics: Dict[str, A
 
 
 def render_detailed_results_table(results: List[Dict[str, Any]]) -> None:
-    """Render detailed results table with filtering."""
+    """Render detailed results table with filtering"""
     st.header("🔎 Detailed Results Explorer")
 
     if not results:
@@ -871,7 +873,7 @@ def render_detailed_results_table(results: List[Dict[str, Any]]) -> None:
 
 
 def main() -> None:
-    """Main API-integrated dashboard."""
+    """Run the main API-integrated dashboard."""
     logger.debug("API-Integrated Red Team Dashboard loading.")
     st.set_page_config(
         page_title="ViolentUTF Dashboard", page_icon="📊", layout="wide", initial_sidebar_state="expanded"
@@ -997,6 +999,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    import time  # Import time for auto-refresh
-
     main()

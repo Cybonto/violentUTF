@@ -1,7 +1,11 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""Authentication mock layer for API contract testing.
+"""
+Authentication mock layer for API contract testing.
 
 Provides simplified authentication bypass for testing purposes.
 """
@@ -10,26 +14,31 @@ import json
 import logging
 import os
 import time
-from types import TracebackType
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
-from unittest.mock import Mock, patch
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Optional
+import types
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
+    import pytest
+from unittest.mock import MagicMock, Mock, patch
 
 import jwt
 from fastapi import HTTPException
 from fastapi.security import HTTPBearer
+from fastapi.testclient import TestClient
 
 logger = logging.getLogger(__name__)
 
 # Test JWT secret - only for testing
-TEST_JWT_SECRET = "test_jwt_secret_for_contract_testing_only"
-TEST_API_KEY = "test_api_key_for_contract_testing"
+TEST_JWT_SECRET = "test_jwt_secret_for_contract_testing_only"  # nosec B105 - test secret
+TEST_API_KEY = "test_api_key_for_contract_testing"  # nosec B105 - test secret
 
 
 class MockTokenManager:
     """Mock token manager for contract testing."""
 
-    def __init__(self) -> None:
-        """ "Initialize mock token manager."""
+    def __init__(self: "MockTokenManager") -> None:
+        """Initialize authentication manager with test user payload."""
         self.test_user_payload = {
             "sub": "test_user",
             "username": "violentutf.test",
@@ -53,7 +62,7 @@ class MockTokenManager:
         """Mock AI access check."""
         return True
 
-    def get_user_roles(self: "MockTokenManager", token: str) -> List[str]:
+    def get_user_roles(self: "MockTokenManager", token: str) -> list:
         """Mock user roles."""
         return ["ai-api-access", "admin"]
 
@@ -61,19 +70,14 @@ class MockTokenManager:
 class MockAuthenticationMiddleware:
     """Mock authentication middleware for contract testing."""
 
-    def __init__(self, app=None) -> None:
-        """Initialize mock authentication middleware."""
+    def __init__(self: "MockAuthenticationMiddleware", app: "FastAPI") -> None:
+        """Initialize mock authentication middleware with app."""
         self.app = app
         self.token_manager = MockTokenManager()
 
-    async def __call__(
-        self: "MockAuthenticationMiddleware",
-        scope: Dict[str, Any],
-        receive: Callable[[], Awaitable[Dict[str, Any]]],
-        send: Callable[[Dict[str, Any]], Awaitable[None]],
-    ) -> None:
+    async def __call__(self: "MockAuthenticationMiddleware", scope: Dict[str, Any], receive: Callable[[], Awaitable[Dict[str, Any]]], send: Callable[[Dict[str, Any]], Awaitable[None]]) -> None:
         """Mock authentication middleware."""
-        # Add test authentication headers.
+        # Add test authentication headers
         if scope["type"] == "http":
             headers = dict(scope.get("headers", []))
 
@@ -117,7 +121,7 @@ def setup_test_environment() -> None:
 
 def mock_jwt_decode(token: str, secret: str = None, algorithms: list = None) -> Dict[str, Any]:
     """Mock JWT decode function."""
-    # Return mock payload for any token during testing.
+    # Return mock payload for any token during testing
     return {
         "sub": "test_user",
         "username": "violentutf.test",
@@ -157,8 +161,8 @@ def mock_apisix_endpoints() -> Dict[str, Dict[str, str]]:
 class ContractTestingPatches:
     """Context manager for applying all contract testing patches."""
 
-    def __init__(self) -> None:
-        """ "Initialize contract testing patches."""
+    def __init__(self: "ContractTestingPatches") -> None:
+        """Initialize contract testing patches context manager."""
         self.patches = []
 
     def __enter__(self: "ContractTestingPatches") -> "ContractTestingPatches":
@@ -175,32 +179,40 @@ class ContractTestingPatches:
         self.patches.append(requests_patch)
         requests_patch.start()
 
-        # Patch token manager
-        token_manager_patch = patch("violentutf.utils.token_manager.token_manager", MockTokenManager())
-        self.patches.append(token_manager_patch)
-        token_manager_patch.start()
+        # Patch streamlit secrets to avoid import issues
+        streamlit_patch = patch("streamlit.secrets", {"auth": {"keycloak": {"client_id": "test"}}})
+        self.patches.append(streamlit_patch)
+        streamlit_patch.start()
 
-        # Patch APISIX endpoints
-        endpoints_patch = patch(
-            "violentutf.utils.token_manager.TokenManager.get_apisix_endpoints", return_value=mock_apisix_endpoints()
-        )
-        self.patches.append(endpoints_patch)
-        endpoints_patch.start()
+        # Patch token manager with additional error handling
+        try:
+            token_manager_patch = patch("violentutf.utils.token_manager.token_manager", MockTokenManager())
+            self.patches.append(token_manager_patch)
+            token_manager_patch.start()
+        except ImportError:
+            # Skip token manager patching if module can't be imported
+            pass
+
+        # Patch APISIX endpoints with error handling
+        try:
+            endpoints_patch = patch(
+                "violentutf.utils.token_manager.TokenManager.get_apisix_endpoints", return_value=mock_apisix_endpoints()
+            )
+            self.patches.append(endpoints_patch)
+            endpoints_patch.start()
+        except ImportError:
+            # Skip endpoints patching if module can't be imported
+            pass
 
         return self
 
-    def __exit__(
-        self: "ContractTestingPatches",
-        exc_type: Optional[type],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> None:
+    def __exit__(self: "ContractTestingPatches", exc_type: Optional[type], exc_val: Optional[BaseException], exc_tb: Optional[types.TracebackType]) -> None:
         """Stop all patches."""
         for patch_obj in self.patches:
             patch_obj.stop()
 
 
-def create_test_client_with_auth() -> Optional[object]:
+def create_test_client_with_auth() -> Optional[TestClient]:
     """Create a test client with authentication mocking."""
     from fastapi.testclient import TestClient
 
@@ -218,7 +230,7 @@ def create_test_client_with_auth() -> Optional[object]:
 
 
 # Pytest fixtures for contract testing
-def pytest_configure(config: object) -> None:
+def pytest_configure(config: "pytest.Config") -> None:
     """Configure pytest for contract testing."""
     setup_test_environment()
 
@@ -250,14 +262,14 @@ def validate_response_schema(response_data: Dict[str, Any], expected_schema: Dic
         jsonschema.validate(response_data, expected_schema)
         return True
     except jsonschema.ValidationError as e:
-        logger.error(f"Response schema validation failed: {e}")
+        logger.error("Response schema validation failed: %s", e)
         return False
     except Exception as e:
-        logger.error(f"Schema validation error: {e}")
+        logger.error("Schema validation error: %s", e)
         return False
 
 
-def create_mock_database_session() -> Mock:
+def create_mock_database_session() -> MagicMock:
     """Create a mock database session for testing."""
     from unittest.mock import Mock
 

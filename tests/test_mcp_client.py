@@ -1,9 +1,11 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Unit Tests for MCP Client.
-
+Unit Tests for MCP Client
 ========================
 
 Tests for MCP client SSE connection, JSON-RPC handling, and authentication.
@@ -33,18 +35,18 @@ from violentutf.utils.mcp_client import (
 
 
 class TestMCPResponse:
-    """Test MCPResponse dataclass."""
+    """Test MCPResponse dataclass"""
 
     def test_successful_response(self) -> None:
-        """ "Test successful response creation."""
+        """Test successful response creation"""
         response = MCPResponse(id=1, result={"data": "test"})
         assert response.id == 1
         assert response.result == {"data": "test"}
         assert response.error is None
         assert not response.is_error
 
-    def test_error_response(self: "TestMCPResponse") -> None:
-        """Test error response creation."""
+    def test_error_response(self) -> None:
+        """Test error response creation"""
         response = MCPResponse(id=2, error={"code": -32000, "message": "Test error"})
         assert response.id == 2
         assert response.result is None
@@ -54,24 +56,24 @@ class TestMCPResponse:
 
 
 class TestMCPClient:
-    """Test async MCP client."""
+    """Test async MCP client"""
 
     @pytest.fixture
-    def client(self: "TestMCPClient") -> Any:
-        """Create test client."""
+    def client(self):
+        """Create test client"""
         return MCPClient(base_url="http://test.local:9080")
 
     @pytest.mark.asyncio
-    async def test_initialization(self: "TestMCPClient", client: Any) -> None:
-        """Test client initialization."""
+    async def test_initialization(self, client) -> None:
+        """Test client initialization"""
         assert client.base_url == "http://test.local:9080"
         assert client.mcp_endpoint == "http://test.local:9080/mcp/sse/"
         assert not client._initialized
         assert client._server_info == {}
 
     @pytest.mark.asyncio
-    async def test_get_auth_headers(self: "TestMCPClient", client: Any) -> None:
-        """Test authentication header generation."""
+    async def test_get_auth_headers(self, client) -> None:
+        """Test authentication header generation"""
         with patch("violentutf.utils.jwt_manager.jwt_manager.get_valid_token") as mock_token:
             mock_token.return_value = "test-jwt-token"
 
@@ -84,8 +86,8 @@ class TestMCPClient:
                 assert headers["apikey"] == "test-api-key"
 
     @pytest.mark.asyncio
-    async def test_get_auth_headers_no_token(self: "TestMCPClient", client: Any) -> None:
-        """Test authentication headers when no token available."""
+    async def test_get_auth_headers_no_token(self, client) -> None:
+        """Test authentication headers when no token available"""
         with patch("violentutf.utils.jwt_manager.jwt_manager.get_valid_token") as mock_token:
             mock_token.return_value = None
 
@@ -93,8 +95,8 @@ class TestMCPClient:
             assert headers == {}
 
     @pytest.mark.asyncio
-    async def test_send_request_success(self: "TestMCPClient", client: Any) -> None:
-        """Test successful JSON-RPC request."""
+    async def test_send_request_success(self, client) -> None:
+        """Test successful JSON-RPC request"""
         mock_response_data = {"jsonrpc": "2.0", "result": {"tools": ["tool1", "tool2"]}, "id": 1}
 
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -118,8 +120,8 @@ class TestMCPClient:
                 assert not response.is_error
 
     @pytest.mark.asyncio
-    async def test_send_request_auth_failure(self: "TestMCPClient", client: Any) -> None:
-        """Test request with authentication failure."""
+    async def test_send_request_auth_failure(self, client) -> None:
+        """Test request with authentication failure"""
         with patch.object(client, "_get_auth_headers", return_value={}):
             response = await client._send_request(MCPMethod.TOOLS_LIST)
 
@@ -128,8 +130,8 @@ class TestMCPClient:
             assert "Authentication failed" in response.error["message"]
 
     @pytest.mark.asyncio
-    async def test_initialize_success(self: "TestMCPClient", client: Any) -> None:
-        """Test successful initialization."""
+    async def test_initialize_success(self, client) -> None:
+        """Test successful initialization"""
         mock_response = MCPResponse(
             id=1, result={"name": "Test MCP Server", "version": "1.0.0", "capabilities": {"tools": True}}
         )
@@ -142,8 +144,8 @@ class TestMCPClient:
             assert client._server_info["name"] == "Test MCP Server"
 
     @pytest.mark.asyncio
-    async def test_initialize_failure(self: "TestMCPClient", client: Any) -> None:
-        """Test initialization failure."""
+    async def test_initialize_failure(self, client) -> None:
+        """Test initialization failure"""
         mock_response = MCPResponse(id=1, error={"code": -32603, "message": "Server error"})
 
         with patch.object(client, "_send_request", return_value=mock_response):
@@ -153,8 +155,8 @@ class TestMCPClient:
             assert client._initialized is False
 
     @pytest.mark.asyncio
-    async def test_list_tools(self: "TestMCPClient", client: Any) -> None:
-        """Test listing tools."""
+    async def test_list_tools(self, client) -> None:
+        """Test listing tools"""
         client._initialized = True
 
         mock_response = MCPResponse(
@@ -175,8 +177,8 @@ class TestMCPClient:
             assert tools[1]["name"] == "list_datasets"
 
     @pytest.mark.asyncio
-    async def test_execute_tool(self: "TestMCPClient", client: Any) -> None:
-        """Test tool execution."""
+    async def test_execute_tool(self, client) -> None:
+        """Test tool execution"""
         client._initialized = True
 
         mock_response = MCPResponse(id=1, result={"success": True, "generator_id": "gen-123"})
@@ -188,8 +190,8 @@ class TestMCPClient:
             assert result["generator_id"] == "gen-123"
 
     @pytest.mark.asyncio
-    async def test_list_prompts(self: "TestMCPClient", client: Any) -> None:
-        """Test listing prompts."""
+    async def test_list_prompts(self, client) -> None:
+        """Test listing prompts"""
         client._initialized = True
 
         mock_response = MCPResponse(
@@ -209,8 +211,8 @@ class TestMCPClient:
             assert prompts[0]["name"] == "enhancement"
 
     @pytest.mark.asyncio
-    async def test_get_prompt(self: "TestMCPClient", client: Any) -> None:
-        """Test getting a specific prompt."""
+    async def test_get_prompt(self, client) -> None:
+        """Test getting a specific prompt"""
         client._initialized = True
 
         mock_response = MCPResponse(id=1, result={"messages": [{"role": "user", "content": "Enhanced prompt text"}]})
@@ -221,8 +223,8 @@ class TestMCPClient:
             assert prompt == "Enhanced prompt text"
 
     @pytest.mark.asyncio
-    async def test_list_resources(self: "TestMCPClient", client: Any) -> None:
-        """Test listing resources."""
+    async def test_list_resources(self, client) -> None:
+        """Test listing resources"""
         client._initialized = True
 
         mock_response = MCPResponse(
@@ -242,8 +244,8 @@ class TestMCPClient:
             assert resources[0]["uri"] == "violentutf://datasets/jailbreak"
 
     @pytest.mark.asyncio
-    async def test_read_resource(self: "TestMCPClient", client: Any) -> None:
-        """Test reading a resource."""
+    async def test_read_resource(self, client) -> None:
+        """Test reading a resource"""
         client._initialized = True
 
         mock_response = MCPResponse(id=1, result={"content": {"prompts": ["test1", "test2"]}})
@@ -254,8 +256,8 @@ class TestMCPClient:
             assert resource == {"content": {"prompts": ["test1", "test2"]}}
 
     @pytest.mark.asyncio
-    async def test_health_check(self: "TestMCPClient", client: Any) -> None:
-        """Test health check."""
+    async def test_health_check(self, client) -> None:
+        """Test health check"""
         with patch.object(client, "initialize", return_value=True):
             result = await client.health_check()
             assert result is True
@@ -266,53 +268,53 @@ class TestMCPClient:
 
 
 class TestMCPClientSync:
-    """Test synchronous MCP client wrapper."""
+    """Test synchronous MCP client wrapper"""
 
     @pytest.fixture
-    def client(self: "TestMCPClientSync") -> Any:
-        """Create test sync client."""
+    def client(self):
+        """Create test sync client"""
         return MCPClientSync(base_url="http://test.local:9080")
 
-    def test_initialization(self: "TestMCPClientSync", client: Any) -> None:
-        """Test sync client initialization."""
+    def test_initialization(self, client) -> None:
+        """Test sync client initialization"""
         assert isinstance(client.client, MCPClient)
         assert client.client.base_url == "http://test.local:9080"
 
-    def test_run_async(self: "TestMCPClientSync", client: Any) -> Any:
-        """Test running async functions in sync context."""
+    def test_run_async(self, client) -> None:
+        """Test running async functions in sync context"""
 
-        async def test_coro() -> Any:
+        async def test_coro() -> None:
             return "test_result"
 
         result = client._run_async(test_coro())
         assert result == "test_result"
 
-    def test_initialize(self: "TestMCPClientSync", client: Any) -> None:
-        """Test sync initialize."""
-        with patch.object(client.client, "initialize", return_value=asyncio.coroutine(lambda: True)()):
+    def test_initialize(self, client) -> None:
+        """Test sync initialize"""
+        with patch.object(client.client, "initialize", return_value=AsyncMock(return_value=True)):
             result = client.initialize()
             assert result is True
 
-    def test_list_tools(self: "TestMCPClientSync", client: Any) -> None:
-        """Test sync list tools."""
+    def test_list_tools(self, client) -> None:
+        """Test sync list tools"""
         mock_tools = [{"name": "tool1"}, {"name": "tool2"}]
-        with patch.object(client.client, "list_tools", return_value=asyncio.coroutine(lambda: mock_tools)()):
+        with patch.object(client.client, "list_tools", return_value=AsyncMock(return_value=mock_tools)):
             tools = client.list_tools()
             assert len(tools) == 2
             assert tools[0]["name"] == "tool1"
 
-    def test_execute_tool(self: "TestMCPClientSync", client: Any) -> None:
-        """Test sync tool execution."""
+    def test_execute_tool(self, client) -> None:
+        """Test sync tool execution"""
         mock_result = {"success": True, "data": "test"}
-        with patch.object(client.client, "execute_tool", return_value=asyncio.coroutine(lambda: mock_result)()):
+        with patch.object(client.client, "execute_tool", return_value=AsyncMock(return_value=mock_result)):
             result = client.execute_tool("test_tool", {"arg": "value"})
             assert result["success"] is True
             assert result["data"] == "test"
 
-    def test_error_handling(self: "TestMCPClientSync", client: Any) -> None:
-        """Test error handling in sync wrapper."""
+    def test_error_handling(self, client) -> None:
+        """Test error handling in sync wrapper"""
 
-        async def failing_coro() -> None:
+        async def failing_coro():
             raise MCPConnectionError("Test error")
 
         with pytest.raises(MCPConnectionError, match="Test error"):

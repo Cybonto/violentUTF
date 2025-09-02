@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
 Test script to verify the sequential execution implementation for avoiding 504 Gateway Timeout.
@@ -11,6 +14,7 @@ This script demonstrates the batch processing approach implemented in 4_Configur
 import json
 import time
 from datetime import datetime
+from typing import Any, Dict, List
 
 import requests
 
@@ -46,7 +50,7 @@ def test_batch_processing() -> None:
 
     total_successful = 0
     total_failed = 0
-    batch_results = []
+    batch_results: List[Dict[str, Any]] = []
 
     # Process each batch
     for batch_idx in range(num_batches):
@@ -135,9 +139,9 @@ def test_batch_processing() -> None:
     print("✓ Results saved - each batch saves to database")
 
 
-def test_api_timeout_handling() -> None:
+def test_api_timeout_handling():
     """
-    Test how the implementation handles API timeouts.
+    Test how the implementation handles API timeouts
     """
     print("\n\nAPI Timeout Handling Test")
     print("=" * 60)

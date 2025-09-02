@@ -1,19 +1,30 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""ViolentUTF MCP Server Base Implementation."""
+"""MCP server base classes and core server functionality.
 
-import asyncio
+ViolentUTF MCP Server Base Implementation.
+"""
+
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 
-from app.core.config import settings
 from app.mcp.auth import MCPAuthHandler
 from app.mcp.config import mcp_settings
 from fastapi import FastAPI, HTTPException
 from mcp.server import Server
-from mcp.server.sse import SseServerTransport
 from mcp.types import CreateMessageRequest, Prompt, Resource, ServerCapabilities, Tool
+
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 logger = logging.getLogger(__name__)
 
@@ -21,46 +32,54 @@ logger = logging.getLogger(__name__)
 class ViolentUTFMCPServer:
     """MCP Server that integrates with the existing ViolentUTF FastAPI instance."""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: ViolentUTFMCPServer) -> None:
+        """Initialize instance."""
         self.server = Server(mcp_settings.MCP_SERVER_NAME)
+
         self.auth_handler = MCPAuthHandler()
         self._setup_handlers()
         self._initialized = False
 
-    def _setup_handlers(self: "ViolentUTFMCPServer") -> None:
+    def _setup_handlers(self: ViolentUTFMCPServer) -> None:
         """Set up MCP server handlers."""
-        # Tool handlers.
+        # Store handler references for dynamic dispatch using Any type to avoid signature conflicts
+        self._handlers: Dict[str, Callable[..., Any]] = {}
+
+        # Tool handlers
         if mcp_settings.MCP_ENABLE_TOOLS:
-            self.server.list_tools = self._list_tools
-            self.server.call_tool = self._call_tool
+            self._handlers["list_tools"] = self._list_tools
+            self._handlers["call_tool"] = self._call_tool
 
         # Resource handlers
         if mcp_settings.MCP_ENABLE_RESOURCES:
-            self.server.list_resources = self._list_resources
-            self.server.read_resource = self._read_resource
+            self._handlers["list_resources"] = self._list_resources
+            self._handlers["read_resource"] = self._read_resource
 
         # Prompt handlers
         if mcp_settings.MCP_ENABLE_PROMPTS:
-            self.server.list_prompts = self._list_prompts
-            self.server.get_prompt = self._get_prompt
+            self._handlers["list_prompts"] = self._list_prompts
+            self._handlers["get_prompt"] = self._get_prompt
 
         # Sampling handlers
         if mcp_settings.MCP_ENABLE_SAMPLING:
-            self.server.create_message = self._create_message
+            # Note: create_message handler would be set up here if supported by MCP server
+            pass
 
-    async def initialize(self: "ViolentUTFMCPServer") -> None:
+    async def initialize(self: ViolentUTFMCPServer) -> None:
         """Initialize the MCP server."""
         if self._initialized:
+
             return
 
-        logger.info(f"Initializing {mcp_settings.MCP_SERVER_NAME} v{mcp_settings.MCP_SERVER_VERSION}")
+        logger.info(
+            "Initializing %s v%s",
+            mcp_settings.MCP_SERVER_NAME,
+            mcp_settings.MCP_SERVER_VERSION,
+        )
 
         # Import tool and resource modules here to avoid circular imports
         if mcp_settings.MCP_ENABLE_TOOLS:
-            from app.mcp.tools import tool_registry
-
-            # Note: Tool discovery will be done when FastAPI app is provided
+            # Tool registry import removed - tool discovery done when FastAPI app is provided
             logger.info("Tool registry ready for discovery")
 
         if mcp_settings.MCP_ENABLE_RESOURCES:
@@ -77,7 +96,7 @@ class ViolentUTFMCPServer:
         self._initialized = True
         logger.info("MCP server initialized successfully")
 
-    def mount_to_app(self: "ViolentUTFMCPServer", app: FastAPI) -> None:
+    def mount_to_app(self: ViolentUTFMCPServer, app: FastAPI) -> None:
         """Mount MCP server to existing ViolentUTF FastAPI app."""
         logger.info("Mounting MCP server to FastAPI app")
 
@@ -89,7 +108,7 @@ class ViolentUTFMCPServer:
                 initialize_introspector(app)
                 logger.info("Initialized FastAPI endpoint introspector")
             except Exception as e:
-                logger.error(f"Failed to initialize introspector: {e}")
+                logger.error("Failed to initialize introspector: %s", e)
 
         # Mount transport endpoints based on configuration
         if mcp_settings.MCP_TRANSPORT_TYPE == "sse":
@@ -98,7 +117,7 @@ class ViolentUTFMCPServer:
 
             sse_app = create_sse_transport(self.server, self.auth_handler)
             app.mount(mcp_settings.MCP_SSE_ENDPOINT, sse_app)
-            logger.info(f"Mounted SSE transport at {mcp_settings.MCP_SSE_ENDPOINT}")
+            logger.info("Mounted SSE transport at %s", mcp_settings.MCP_SSE_ENDPOINT)
 
         # Mount OAuth proxy
         try:
@@ -107,7 +126,7 @@ class ViolentUTFMCPServer:
             app.include_router(mcp_oauth_proxy.router)
             logger.info("Mounted MCP OAuth proxy")
         except Exception as e:
-            logger.error(f"Failed to mount OAuth proxy: {e}")
+            logger.error("Failed to mount OAuth proxy: %s", e)
 
         # Add startup event to initialize server and discover tools
         @app.on_event("startup")
@@ -120,59 +139,53 @@ class ViolentUTFMCPServer:
                     from app.mcp.tools import tool_registry
 
                     await tool_registry.discover_tools(app)
-                    logger.info(f"Discovered {tool_registry.get_tool_count()} MCP tools")
+                    logger.info("Discovered %s MCP tools", tool_registry.get_tool_count())
                 except Exception as e:
-                    logger.error(f"Failed to discover tools: {e}")
+                    logger.error("Failed to discover tools: %s", e)
 
-    def get_capabilities(self: "ViolentUTFMCPServer") -> ServerCapabilities:
+    def get_capabilities(self: ViolentUTFMCPServer) -> ServerCapabilities:
         """Get server capabilities."""
-        capabilities = {}
+        from mcp.types import PromptsCapability, ResourcesCapability, ToolsCapability
 
-        if mcp_settings.MCP_ENABLE_TOOLS:
-            capabilities["tools"] = True
-
-        if mcp_settings.MCP_ENABLE_RESOURCES:
-            capabilities["resources"] = True
-            capabilities["resource_subscriptions"] = True
-
-        if mcp_settings.MCP_ENABLE_PROMPTS:
-            capabilities["prompts"] = True
-
-        if mcp_settings.MCP_ENABLE_SAMPLING:
-            capabilities["sampling"] = True
-
-        return ServerCapabilities(**capabilities)
+        # Create ServerCapabilities with proper capability objects
+        return ServerCapabilities(
+            tools=ToolsCapability() if mcp_settings.MCP_ENABLE_TOOLS else None,
+            resources=(ResourcesCapability() if mcp_settings.MCP_ENABLE_RESOURCES else None),
+            prompts=PromptsCapability() if mcp_settings.MCP_ENABLE_PROMPTS else None,
+            logging=None,  # Default disabled
+        )
 
     # Tool handlers
-    async def _list_tools(self: "ViolentUTFMCPServer") -> List[Tool]:
+    async def _list_tools(self: ViolentUTFMCPServer) -> List[Tool]:
         """List available tools."""
         from app.mcp.tools import tool_registry
 
-        return await tool_registry.list_tools()
+        return cast(List[Any], await tool_registry.list_tools())
 
-    async def _call_tool(self: "ViolentUTFMCPServer", name: str, arguments: Dict[str, Any]) -> Any:
+    async def _call_tool(self: ViolentUTFMCPServer, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a tool."""
         from app.mcp.tools import tool_registry
 
         return await tool_registry.call_tool(name, arguments)
 
     # Resource handlers
-    async def _list_resources(self: "ViolentUTFMCPServer") -> List[Resource]:
+    async def _list_resources(self: ViolentUTFMCPServer) -> List[Resource]:
         """List available resources."""
         from app.mcp.resources import resource_registry
 
-        return await resource_registry.list_resources()
+        return cast(List[Any], await resource_registry.list_resources())
 
-    async def _read_resource(self: "ViolentUTFMCPServer", uri: str) -> Any:
+    async def _read_resource(self: ViolentUTFMCPServer, uri: str) -> Optional[Dict[str, Any]]:
         """Read a resource."""
         from app.mcp.resources import resource_registry
 
         return await resource_registry.read_resource(uri)
 
     # Prompt handlers
-    async def _list_prompts(self: "ViolentUTFMCPServer") -> List[Prompt]:
+    async def _list_prompts(self: ViolentUTFMCPServer) -> List[Prompt]:
         """List available prompts."""
         try:
+
             from app.mcp.prompts import prompts_manager
 
             prompt_definitions = await prompts_manager.list_prompts()
@@ -187,16 +200,17 @@ class ViolentUTFMCPServer:
                 )
                 prompts.append(prompt)
 
-            logger.debug(f"Listed {len(prompts)} prompts")
+            logger.debug("Listed %s prompts", len(prompts))
             return prompts
 
         except Exception as e:
-            logger.error(f"Error listing prompts: {e}")
+            logger.error("Error listing prompts: %s", e)
             return []
 
-    async def _get_prompt(self: "ViolentUTFMCPServer", name: str, arguments: Dict[str, Any]) -> Any:
+    async def _get_prompt(self: ViolentUTFMCPServer, name: str, arguments: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Get and render a prompt."""
         try:
+
             from app.mcp.prompts import prompts_manager
 
             # Get prompt definition for metadata
@@ -215,15 +229,16 @@ class ViolentUTFMCPServer:
             }
 
         except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from e
         except Exception as e:
-            logger.error(f"Error getting prompt {name}: {e}")
-            raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+            logger.error("Error getting prompt %s: %s", name, e)
+            raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}") from e
 
     # Sampling handlers
-    async def _create_message(self: "ViolentUTFMCPServer", request: CreateMessageRequest) -> Any:
+    async def _create_message(self: ViolentUTFMCPServer, request: CreateMessageRequest) -> Dict[str, Any]:
         """Create a message using sampling."""
-        # Implementation will be added in Phase 3.
+        # Implementation will be added in Phase 3
+
         raise HTTPException(status_code=501, detail="Sampling not yet implemented")
 
 

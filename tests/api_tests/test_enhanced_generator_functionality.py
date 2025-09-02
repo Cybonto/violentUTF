@@ -1,5 +1,8 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
 Enhanced test cases for Save and Test Generator functionality.
@@ -13,33 +16,37 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Generator, Optional
 
 import jwt
 import pytest
 import requests
+from fastapi.testclient import TestClient
 
 # Add tests directory to path for imports
 tests_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(tests_dir))
 
-from utils.keycloak_auth import keycloak_auth
+from utils.keycloak_auth_helper import keycloak_auth
 
 
 @pytest.mark.requires_apisix
 @pytest.mark.allows_mock_auth
 class TestEnhancedGeneratorFunctionality:
-    """Enhanced test suite for Generator functionality with live authentication."""
+    """Enhanced test suite for Generator functionality with live authentication"""
 
-    def test_api_connectivity(self: "TestEnhancedGeneratorFunctionality", api_base_url: Any) -> None:
-        """Test that the API is reachable and responding."""
-        # Test basic connectivity to APISIX gateway.
+    def test_api_connectivity(self: "TestEnhancedGeneratorFunctionality", api_base_url: str) -> None:
+        """Test that the API is reachable and responding"""
+        # Test basic connectivity to APISIX gateway
         response = requests.get(f"{api_base_url.replace('/api', '')}/health", timeout=5)
-        assert response.status_code in [200, 404], f"APISIX gateway connectivity failed: {response.status_code}"
+        assert response.status_code in [
+            200,
+            404,
+        ], f"APISIX gateway connectivity failed: {response.status_code}"
 
     @pytest.mark.requires_auth
-    def test_keycloak_authentication_flow(self: "TestEnhancedGeneratorFunctionality", keycloak_available: Any) -> None:
-        """Test the complete Keycloak authentication flow."""
+    def test_keycloak_authentication_flow(self: "TestEnhancedGeneratorFunctionality", keycloak_available: bool) -> None:
+        """Test the complete Keycloak authentication flow"""
         if not keycloak_available:
             pytest.skip("Keycloak not available for authentication testing")
 
@@ -66,10 +73,8 @@ class TestEnhancedGeneratorFunctionality:
         except jwt.InvalidTokenError as e:
             pytest.fail(f"Invalid JWT token: {e}")
 
-    def test_get_generator_types_live(
-        self: "TestEnhancedGeneratorFunctionality", api_headers: Any, api_base_url: Any
-    ) -> None:
-        """Test retrieving available generator types with live authentication."""
+    def test_get_generator_types_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Dict[str, str], api_base_url: str) -> None:
+        """Test retrieving available generator types with live authentication"""
         print("\n📋 Testing generator types endpoint...")
 
         response = requests.get(f"{api_base_url}/api/v1/generators/types", headers=api_headers, timeout=10)
@@ -88,14 +93,14 @@ class TestEnhancedGeneratorFunctionality:
 
         print(f"✅ Found {len(data['generator_types'])} generator types: {data['generator_types']}")
 
-    def test_get_ai_gateway_parameters_live(
-        self: "TestEnhancedGeneratorFunctionality", api_headers: Any, api_base_url: Any
-    ) -> None:
-        """Test retrieving AI Gateway parameter definitions with live authentication."""
+    def test_get_ai_gateway_parameters_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Dict[str, str], api_base_url: str) -> None:
+        """Test retrieving AI Gateway parameter definitions with live authentication"""
         print("\n🔧 Testing AI Gateway parameters endpoint...")
 
         response = requests.get(
-            f"{api_base_url}/api/v1/generators/types/AI Gateway/params", headers=api_headers, timeout=10
+            f"{api_base_url}/api/v1/generators/types/AI Gateway/params",
+            headers=api_headers,
+            timeout=10,
         )
 
         if response.status_code == 401:
@@ -115,10 +120,8 @@ class TestEnhancedGeneratorFunctionality:
 
         print(f"✅ Found {len(data['parameters'])} parameters: {param_names}")
 
-    def test_get_apisix_models_live(
-        self: "TestEnhancedGeneratorFunctionality", api_headers: Any, api_base_url: Any
-    ) -> None:
-        """Test retrieving available models for different providers with live authentication."""
+    def test_get_apisix_models_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Dict[str, str], api_base_url: str) -> None:
+        """Test retrieving available models for different providers with live authentication"""
         print("\n🤖 Testing APISIX models endpoint...")
 
         providers = ["openai", "anthropic", "ollama"]
@@ -147,10 +150,8 @@ class TestEnhancedGeneratorFunctionality:
 
             print(f"   ✅ {provider}: {len(data['models'])} models available")
 
-    def test_create_openai_generator_live(
-        self: "TestEnhancedGeneratorFunctionality", api_headers: Any, api_base_url: Any, cleanup_generators: Any
-    ) -> None:
-        """Test creating an AI Gateway generator with OpenAI provider using live authentication."""
+    def test_create_openai_generator_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
+        """Test creating an AI Gateway generator with OpenAI provider using live authentication"""
         print("\n🔨 Testing OpenAI generator creation...")
 
         generator_config = {
@@ -166,7 +167,10 @@ class TestEnhancedGeneratorFunctionality:
         }
 
         response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         if response.status_code == 401:
@@ -191,10 +195,8 @@ class TestEnhancedGeneratorFunctionality:
 
         print(f"✅ Created OpenAI generator: {data['name']} (ID: {generator_id})")
 
-    def test_create_anthropic_generator_live(
-        self: "TestEnhancedGeneratorFunctionality", api_headers: Any, api_base_url: Any, cleanup_generators: Any
-    ) -> None:
-        """Test creating an AI Gateway generator with Anthropic provider using live authentication."""
+    def test_create_anthropic_generator_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
+        """Test creating an AI Gateway generator with Anthropic provider using live authentication"""
         print("\n🔨 Testing Anthropic generator creation...")
 
         generator_config = {
@@ -210,7 +212,10 @@ class TestEnhancedGeneratorFunctionality:
         }
 
         response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         if response.status_code == 401:
@@ -231,21 +236,27 @@ class TestEnhancedGeneratorFunctionality:
 
         print(f"✅ Created Anthropic generator: {data['name']} (ID: {generator_id})")
 
-    def test_generator_testing_live(
-        self: "TestEnhancedGeneratorFunctionality", api_headers: Any, api_base_url: Any, cleanup_generators: Any
-    ) -> None:
-        """Test the generator testing functionality with live authentication."""
+    def test_generator_testing_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
+        """Test the generator testing functionality with live authentication"""
         print("\n⚡ Testing generator test functionality...")
 
         # First create a generator
         generator_config = {
             "name": f"test_generator_testing_live_{int(time.time())}",
             "type": "AI Gateway",
-            "parameters": {"provider": "openai", "model": "gpt-3.5-turbo", "temperature": 0.7, "max_tokens": 100},
+            "parameters": {
+                "provider": "openai",
+                "model": "gpt-3.5-turbo",
+                "temperature": 0.7,
+                "max_tokens": 100,
+            },
         }
 
         create_response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         if create_response.status_code == 401:
@@ -299,10 +310,8 @@ class TestEnhancedGeneratorFunctionality:
                     f"Generator test failed with unexpected error: {test_response.status_code} - {test_response.text}"
                 )
 
-    def test_list_generators_live(
-        self: "TestEnhancedGeneratorFunctionality", api_headers: Any, api_base_url: Any, cleanup_generators: Any
-    ) -> None:
-        """Test that created generators appear in the list with live authentication."""
+    def test_list_generators_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
+        """Test that created generators appear in the list with live authentication"""
         print("\n📋 Testing generator listing...")
 
         # Get initial count
@@ -324,7 +333,10 @@ class TestEnhancedGeneratorFunctionality:
         }
 
         create_response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         assert create_response.status_code == 200, f"Failed to create generator: {create_response.status_code}"
@@ -344,17 +356,21 @@ class TestEnhancedGeneratorFunctionality:
 
         print(f"✅ Generator list updated: {len(generators)} total generators")
 
-    def test_validation_errors_live(
-        self: "TestEnhancedGeneratorFunctionality", api_headers: Any, api_base_url: Any
-    ) -> None:
-        """Test validation errors with live authentication."""
+    def test_validation_errors_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Dict[str, str], api_base_url: str) -> None:
+        """Test validation errors with live authentication"""
         print("\n🔍 Testing validation errors...")
 
         # Test missing name
-        invalid_config = {"type": "AI Gateway", "parameters": {"provider": "openai", "model": "gpt-4"}}
+        invalid_config = {
+            "type": "AI Gateway",
+            "parameters": {"provider": "openai", "model": "gpt-4"},
+        }
 
         response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=invalid_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=invalid_config,
+            timeout=10,
         )
 
         if response.status_code == 401:
@@ -363,8 +379,8 @@ class TestEnhancedGeneratorFunctionality:
         assert response.status_code == 422, f"Expected validation error for missing name: {response.status_code}"
         print("✅ Validation error correctly returned for missing name")
 
-    def test_apisix_api_key_integration_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Any) -> None:
-        """Test that APISIX API key is properly included in requests."""
+    def test_apisix_api_key_integration_live(self: "TestEnhancedGeneratorFunctionality", api_headers: Dict[str, str]) -> None:
+        """Test that APISIX API key is properly included in requests"""
         print("\n🔑 Testing APISIX API key integration...")
 
         # Verify headers include APISIX API key
@@ -387,10 +403,10 @@ class TestEnhancedGeneratorFunctionality:
 @pytest.mark.requires_apisix
 @pytest.mark.allows_mock_auth
 class TestGeneratorParameterLogicLive:
-    """Test suite for parameter visibility logic with live authentication."""
+    """Test suite for parameter visibility logic with live authentication"""
 
     def test_openai_parameter_logic_live(self: "TestGeneratorParameterLogicLive") -> None:
-        """Test that OpenAI providers show correct parameters."""
+        """Test that OpenAI providers show correct parameters"""
         print("\n🔧 Testing OpenAI parameter logic...")
 
         standard_openai_models = ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o"]
@@ -405,7 +421,7 @@ class TestGeneratorParameterLogicLive:
         print("✅ OpenAI parameter logic validated")
 
     def test_anthropic_parameter_logic_live(self: "TestGeneratorParameterLogicLive") -> None:
-        """Test that Anthropic providers show correct parameters."""
+        """Test that Anthropic providers show correct parameters"""
         print("\n🔧 Testing Anthropic parameter logic...")
 
         anthropic_models = ["claude-3-sonnet-20240229", "claude-3-5-sonnet-20241022"]
@@ -419,7 +435,7 @@ class TestGeneratorParameterLogicLive:
         print("✅ Anthropic parameter logic validated")
 
     def test_apisix_api_key_environment_variables_live(self: "TestGeneratorParameterLogicLive") -> None:
-        """Test environment variable priority for APISIX API key authentication."""
+        """Test environment variable priority for APISIX API key authentication"""
         print("\n🔑 Testing APISIX API key environment variable priority...")
 
         import os
@@ -438,7 +454,10 @@ class TestGeneratorParameterLogicLive:
             assert api_key == "violentutf_key", "VIOLENTUTF_API_KEY should have highest priority"
 
         # Test fallback to APISIX_API_KEY
-        with patch.dict(os.environ, {"APISIX_API_KEY": "apisix_key", "AI_GATEWAY_API_KEY": "gateway_key"}):
+        with patch.dict(
+            os.environ,
+            {"APISIX_API_KEY": "apisix_key", "AI_GATEWAY_API_KEY": "gateway_key"},
+        ):
             api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
             assert api_key == "apisix_key", "Should fallback to APISIX_API_KEY"
 

@@ -1,5 +1,8 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Session management schemas."""
 
@@ -33,6 +36,6 @@ class SessionStateResponse(BaseModel):
 class SessionSchemaResponse(BaseModel):
     """Session state schema definition."""
 
-    schema: Dict[str, Any]
+    session_schema: Dict[str, Any] = Field(alias="schema")
     version: str
     last_updated: datetime

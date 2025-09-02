@@ -1,5 +1,8 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
 Test cases for parameter visibility logic in AI Gateway configuration.
@@ -13,7 +16,7 @@ import pytest
 
 
 def should_show_parameter(param_name: str, provider: str) -> bool:
-    """Determine if a parameter should be shown based on provider selection."""
+    """Determine if a parameter should be shown based on provider selection"""
     cloud_providers = ["openai", "anthropic"]
 
     if provider in cloud_providers:
@@ -29,10 +32,10 @@ def should_show_parameter(param_name: str, provider: str) -> bool:
 
 
 class TestParameterVisibility:
-    """Test suite for parameter visibility logic in generator configuration."""
+    """Test suite for parameter visibility logic in generator configuration"""
 
     def test_should_show_parameter_openai_provider(self: "TestParameterVisibility") -> None:
-        """Test parameter visibility for OpenAI provider."""
+        """Test parameter visibility for OpenAI provider"""
         provider = "openai"
 
         # API key should be hidden for OpenAI (gateway handles it)
@@ -47,7 +50,7 @@ class TestParameterVisibility:
         assert should_show_parameter("top_p", provider) is True
 
     def test_should_show_parameter_anthropic_provider(self: "TestParameterVisibility") -> None:
-        """Test parameter visibility for Anthropic provider."""
+        """Test parameter visibility for Anthropic provider"""
         provider = "anthropic"
 
         # API key should be hidden for Anthropic (gateway handles it)
@@ -62,7 +65,7 @@ class TestParameterVisibility:
         assert should_show_parameter("top_p", provider) is True
 
     def test_should_show_parameter_ollama_provider(self: "TestParameterVisibility") -> None:
-        """Test parameter visibility for Ollama (local) provider."""
+        """Test parameter visibility for Ollama (local) provider"""
         provider = "ollama"
 
         # API key should be hidden for local providers
@@ -76,7 +79,7 @@ class TestParameterVisibility:
         assert should_show_parameter("max_tokens", provider) is True
 
     def test_should_show_parameter_webui_provider(self: "TestParameterVisibility") -> None:
-        """Test parameter visibility for WebUI (local) provider."""
+        """Test parameter visibility for WebUI (local) provider"""
         provider = "webui"
 
         # API key should be hidden for local providers
@@ -91,21 +94,17 @@ class TestParameterVisibility:
 
 
 class TestParameterVisibilityIntegration:
-    """Integration tests for parameter visibility in Streamlit components."""
+    """Integration tests for parameter visibility in Streamlit components"""
 
     @patch("streamlit.session_state")
     @patch("streamlit.selectbox")
     @patch("streamlit.text_input")
     @patch("streamlit.number_input")
     def test_ai_gateway_openai_parameters_rendered_correctly(
-        self: "TestParameterVisibilityIntegration",
-        mock_number_input,
-        mock_text_input,
-        mock_selectbox,
-        mock_session_state,
+        self: "TestParameterVisibilityIntegration", mock_number_input: MagicMock, mock_text_input: MagicMock, mock_selectbox: MagicMock, mock_session_state: MagicMock
     ) -> None:
-        """Test that AI Gateway with OpenAI provider renders correct parameters."""
-        # Mock session state.
+        """Test that AI Gateway with OpenAI provider renders correct parameters"""
+        # Mock session state
         mock_session_state.get.side_effect = lambda key, default=None: {
             "AI Gateway_provider": "openai",
             "ai_gateway_available_models": ["gpt-4", "gpt-3.5-turbo"],
@@ -174,8 +173,8 @@ class TestParameterVisibilityIntegration:
                 assert should_show is True, f"{param_name} should be shown for {provider}"
 
     def test_parameter_visibility_documentation(self: "TestParameterVisibilityIntegration") -> None:
-        """Document the expected parameter visibility behavior."""
-        # Document expected behavior for each provider.
+        """Document the expected parameter visibility behavior"""
+        # Document expected behavior for each provider
         test_cases = [
             # OpenAI - cloud provider
             ("openai", "api_key", False, "API key handled by gateway"),

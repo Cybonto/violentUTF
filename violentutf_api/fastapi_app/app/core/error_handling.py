@@ -1,19 +1,21 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Secure error handling module to prevent information disclosure.
+"""Secure error handling module to prevent information disclosure
 
 SECURITY: Sanitizes error messages and prevents internal system information leakage
-"""
 
+"""
 import logging
 import re
-import sys
 import traceback
-from typing import Any, Dict, Optional, Union
+import uuid
+from typing import Any, Dict, Optional, Self
 
-from fastapi import HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
@@ -50,38 +52,39 @@ SENSITIVE_PATTERNS = [
 class SecurityError(HTTPException):
     """Security-related error that requires special handling."""
 
-    def __init__(self: "SecurityError", detail: str, status_code: int = status.HTTP_403_FORBIDDEN) -> None:
-        """Initialize the instance."""
+    def __init__(self: "Self", detail: str, status_code: int = status.HTTP_403_FORBIDDEN) -> None:
+        """Initialize instance."""
         super().__init__(status_code=status_code, detail=detail)
 
 
 class RateLimitError(HTTPException):
     """Rate limit exceeded error."""
 
-    def __init__(self: "RateLimitError", detail: str = "Rate limit exceeded") -> None:
-        """Initialize the instance."""
+    def __init__(self: "Self", detail: str = "Rate limit exceeded") -> None:
+        """Initialize instance."""
         super().__init__(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=detail)
 
 
 class ValidationSecurityError(HTTPException):
     """Validation error with security implications."""
 
-    def __init__(self, detail: str = "Validation error") -> None:
-        """Initialize the instance."""
+    def __init__(self: "Self", detail: str) -> None:
+        """Initialize instance."""
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail)
 
 
 def sanitize_error_message(message: str) -> str:
-    """
-    Sanitize error message to remove sensitive information.
+    """Sanitize error message to remove sensitive information
 
     Args:
         message: Original error message
 
     Returns:
         Sanitized error message safe for client exposure
+
     """
     if not message:
+
         return "An error occurred"
 
     # Convert to string and limit length
@@ -116,8 +119,7 @@ def create_error_response(
     detail: Optional[str] = None,
     include_error_id: bool = True,
 ) -> Dict[str, Any]:
-    """
-    Create a secure error response with sanitized information.
+    """Create secure error response with sanitized information
 
     Args:
         error: Original exception
@@ -127,15 +129,17 @@ def create_error_response(
 
     Returns:
         Sanitized error response dictionary
-    """
-    # Generate error ID for tracking.
-    import uuid
 
+    """
+    # Generate error ID for tracking
     error_id = str(uuid.uuid4())[:8] if include_error_id else None
 
     # Log the full error for debugging (server-side only)
     logger.error(
-        f"Error {error_id}: {type(error).__name__}: {str(error)}",
+        "Error %s: %s: %s",
+        error_id,
+        type(error).__name__,
+        str(error),
         exc_info=True if logger.isEnabledFor(logging.DEBUG) else False,
     )
 
@@ -173,16 +177,17 @@ def create_error_response(
 
 
 def handle_validation_error(error: ValidationError) -> Dict[str, Any]:
-    """
-    Handle Pydantic validation errors securely.
+    """Handle Pydantic validation errors securely
 
     Args:
         error: Pydantic ValidationError
 
     Returns:
         Sanitized validation error response
+
     """
-    # Extract validation errors but sanitize them.
+    # Extract validation errors but sanitize them
+
     errors = []
     for err in error.errors():
         field = err.get("loc", ["unknown"])[-1]  # Get last part of field path
@@ -207,10 +212,14 @@ def handle_validation_error(error: ValidationError) -> Dict[str, Any]:
 
 async def security_error_handler(request: Request, exc: SecurityError) -> JSONResponse:
     """Handle security-related errors."""
-    logger.warning(f"Security error from {request.client.host}: {exc.detail}")
+    client_host = request.client.host if request.client else "unknown"
+
+    logger.warning("Security error from %s: %s", client_host, exc.detail)
 
     response = create_error_response(
-        exc, status_code=exc.status_code, detail="Access denied"  # Generic message for security
+        exc,
+        status_code=exc.status_code,
+        detail="Access denied",  # Generic message for security
     )
 
     return JSONResponse(status_code=exc.status_code, content=response)
@@ -218,14 +227,20 @@ async def security_error_handler(request: Request, exc: SecurityError) -> JSONRe
 
 async def rate_limit_error_handler(request: Request, exc: RateLimitError) -> JSONResponse:
     """Handle rate limit errors."""
-    logger.warning(f"Rate limit exceeded from {request.client.host}")
+    client_host = request.client.host if request.client else "unknown"
+
+    logger.warning("Rate limit exceeded from %s", client_host)
 
     response = create_error_response(
-        exc, status_code=exc.status_code, detail="Rate limit exceeded. Please try again later."
+        exc,
+        status_code=exc.status_code,
+        detail="Rate limit exceeded. Please try again later.",
     )
 
     return JSONResponse(
-        status_code=exc.status_code, content=response, headers={"Retry-After": "60"}  # Suggest retry after 1 minute
+        status_code=exc.status_code,
+        content=response,
+        headers={"Retry-After": "60"},  # Suggest retry after 1 minute
     )
 
 
@@ -236,25 +251,29 @@ async def validation_error_handler(request: Request, exc: ValidationError) -> JS
     # Log validation failure for security monitoring
     log_validation_failure(
         request=request,
-        field="multiple" if len(exc.errors()) > 1 else exc.errors()[0].get("loc", ["unknown"])[-1],
+        field=("multiple" if len(exc.errors()) > 1 else str(exc.errors()[0].get("loc", ["unknown"])[-1])),
         error=f"{len(exc.errors())} validation errors",
     )
 
-    logger.info(f"Validation error from {request.client.host}: {len(exc.errors())} errors")
+    client_host = request.client.host if request.client else "unknown"
+    logger.info("Validation error from %s: %s errors", client_host, len(exc.errors()))
 
     response = handle_validation_error(exc)
 
     return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=response)
 
 
-async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+async def http_exception_handler(  # pylint: disable=unused-argument
+    request: Request, exc: HTTPException
+) -> JSONResponse:
     """Handle FastAPI HTTP exceptions."""
-    # Log but don't expose details for server errors.
+    # Log but don't expose details for server errors
+
     if exc.status_code >= 500:
-        logger.error(f"Server error {exc.status_code}: {exc.detail}")
+        logger.error("Server error %s: %s", exc.status_code, exc.detail)
         detail = "Internal server error"
     else:
-        logger.info(f"Client error {exc.status_code}: {exc.detail}")
+        logger.info("Client error %s: %s", exc.status_code, exc.detail)
         detail = exc.detail
 
     response = create_error_response(exc, status_code=exc.status_code, detail=detail)
@@ -262,15 +281,21 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     return JSONResponse(status_code=exc.status_code, content=response)
 
 
-async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def general_exception_handler(  # pylint: disable=unused-argument
+    request: Request, exc: Exception
+) -> JSONResponse:
     """Handle unexpected exceptions."""
-    # Generate error ID for tracking.
-    import uuid
-
+    # Generate error ID for tracking
     error_id = str(uuid.uuid4())[:8]
 
     # Log full error details server-side
-    logger.error(f"Unhandled exception {error_id}: {type(exc).__name__}: {str(exc)}", exc_info=True)
+    logger.error(
+        "Unhandled exception %s: %s: %s",
+        error_id,
+        type(exc).__name__,
+        str(exc),
+        exc_info=True,
+    )
 
     # Return generic error to client
     response = {
@@ -285,14 +310,20 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 
 # Development mode error handler (more verbose for debugging)
-async def development_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def development_exception_handler(  # pylint: disable=unused-argument
+    request: Request, exc: Exception
+) -> JSONResponse:
     """Handle exceptions in development mode with more details."""
-    import uuid
-
     error_id = str(uuid.uuid4())[:8]
 
     # Log full error
-    logger.error(f"Development exception {error_id}: {type(exc).__name__}: {str(exc)}", exc_info=True)
+    logger.error(
+        "Development exception %s: %s: %s",
+        error_id,
+        type(exc).__name__,
+        str(exc),
+        exc_info=True,
+    )
 
     # In development, provide more details but still sanitize
     response = {
@@ -316,15 +347,16 @@ async def development_exception_handler(request: Request, exc: Exception) -> JSO
     return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=response)
 
 
-def setup_error_handlers(app, development_mode: bool = False) -> None:
-    """
-    Setup error handlers for the FastAPI application.
+def setup_error_handlers(app: "FastAPI", development_mode: bool = False) -> None:
+    """Set up error handlers for the FastAPI application
 
     Args:
         app: FastAPI application instance
         development_mode: Whether to use development error handlers
+
     """
-    # Security errors.
+    # Security errors
+
     app.add_exception_handler(SecurityError, security_error_handler)
 
     # Rate limit errors
@@ -342,13 +374,14 @@ def setup_error_handlers(app, development_mode: bool = False) -> None:
     else:
         app.add_exception_handler(Exception, general_exception_handler)
 
-    logger.info(f"Error handlers configured (development_mode={development_mode})")
+    logger.info("Error handlers configured (development_mode=%s)", development_mode)
 
 
 # Utility functions for endpoint error handling
 def safe_error_response(message: str, status_code: int = status.HTTP_400_BAD_REQUEST) -> HTTPException:
-    """Create a safe error response for endpoints."""
+    """Create safe error response for endpoints."""
     sanitized_message = sanitize_error_message(message)
+
     return HTTPException(status_code=status_code, detail=sanitized_message)
 
 
@@ -365,4 +398,5 @@ def authorization_error(message: str = "Access denied") -> SecurityError:
 def validation_error(message: str) -> ValidationSecurityError:
     """Create validation error."""
     sanitized_message = sanitize_error_message(message)
+
     return ValidationSecurityError(detail=sanitized_message)

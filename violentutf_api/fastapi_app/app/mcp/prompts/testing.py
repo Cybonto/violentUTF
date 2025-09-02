@@ -1,20 +1,26 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-General Testing Prompts for MCP.
+"""General Testing Prompts for MCP
 
 ===============================
 
 This module provides general - purpose prompts for AI system testing,
 capability assessment, and quality evaluation.
 """
-
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, Self
 
-from app.mcp.prompts.base import BasePrompt, DynamicPrompt, PromptArgument, StaticPrompt, prompt_registry
+from app.mcp.prompts.base import (
+    DynamicPrompt,
+    PromptArgument,
+    StaticPrompt,
+    prompt_registry,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +28,16 @@ logger = logging.getLogger(__name__)
 class CapabilityTestPrompt(StaticPrompt):
     """Test AI system capabilities and limitations."""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         template = """AI Capability Assessment Test
 
 **Assessment Type:** {{ assessment_type }}
 **Capability Domain:** {{ domain }}
 
 **Test Instructions:**
-You are evaluating an AI system's capabilities in {{ domain }}. Please assess the target AI's performance on the following task:
+You are evaluating an AI system's capabilities in {{ domain }}. Please assess the target AI's
+performance on the following task:
 
 **Task Description:**
 {{ task_description }}
@@ -53,8 +60,8 @@ You are evaluating an AI system's capabilities in {{ domain }}. Please assess th
 **Test Prompt:**
 {{ test_content }}
 
-Please evaluate the response based on the criteria above."""
-
+Please evaluate the response based on the criteria above.
+"""
         super().__init__(
             name="capability_test",
             description="Assess AI system capabilities in specific domains",
@@ -68,26 +75,50 @@ Please evaluate the response based on the criteria above."""
                 description="Type of capability assessment",
                 type="string",
                 required=True,
-                enum=["reasoning", "knowledge", "creativity", "problem_solving", "communication"],
+                enum=[
+                    "reasoning",
+                    "knowledge",
+                    "creativity",
+                    "problem_solving",
+                    "communication",
+                ],
             )
-        )
-
-        self.add_argument(
-            PromptArgument(name="domain", description="The domain being tested", type="string", required=True)
-        )
-
-        self.add_argument(
-            PromptArgument(name="task_description", description="Description of the task", type="string", required=True)
         )
 
         self.add_argument(
             PromptArgument(
-                name="test_content", description="The actual test content or question", type="string", required=True
+                name="domain",
+                description="The domain being tested",
+                type="string",
+                required=True,
             )
         )
 
         self.add_argument(
-            PromptArgument(name="criteria", description="List of evaluation criteria", type="array", required=True)
+            PromptArgument(
+                name="task_description",
+                description="Description of the task",
+                type="string",
+                required=True,
+            )
+        )
+
+        self.add_argument(
+            PromptArgument(
+                name="test_content",
+                description="The actual test content or question",
+                type="string",
+                required=True,
+            )
+        )
+
+        self.add_argument(
+            PromptArgument(
+                name="criteria",
+                description="List of evaluation criteria",
+                type="array",
+                required=True,
+            )
         )
 
         self.add_argument(
@@ -101,25 +132,38 @@ Please evaluate the response based on the criteria above."""
         )
 
         self.add_argument(
-            PromptArgument(name="accuracy_target", description="Target accuracy level", type="string", default="80%")
-        )
-
-        self.add_argument(
             PromptArgument(
-                name="completeness_target", description="Target completeness level", type="string", default="high"
+                name="accuracy_target",
+                description="Target accuracy level",
+                type="string",
+                default="80%",
             )
         )
 
         self.add_argument(
-            PromptArgument(name="relevance_target", description="Target relevance level", type="string", default="high")
+            PromptArgument(
+                name="completeness_target",
+                description="Target completeness level",
+                type="string",
+                default="high",
+            )
+        )
+
+        self.add_argument(
+            PromptArgument(
+                name="relevance_target",
+                description="Target relevance level",
+                type="string",
+                default="high",
+            )
         )
 
 
 class ReasoningTestPrompt(StaticPrompt):
     """Test logical reasoning and problem - solving abilities."""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         template = """Logical Reasoning Assessment
 
 **Reasoning Type:** {{ reasoning_type }}
@@ -152,8 +196,8 @@ Please solve the following problem step by step:
 - Logical consistency
 - Step - by - step reasoning
 - Accuracy of conclusions
-- Clarity of explanation"""
-
+- Clarity of explanation
+"""
         super().__init__(
             name="reasoning_test",
             description="Test logical reasoning and problem - solving capabilities",
@@ -183,13 +227,19 @@ Please solve the following problem step by step:
 
         self.add_argument(
             PromptArgument(
-                name="problem_statement", description="The problem to be solved", type="string", required=True
+                name="problem_statement",
+                description="The problem to be solved",
+                type="string",
+                required=True,
             )
         )
 
         self.add_argument(
             PromptArgument(
-                name="reasoning_challenge", description="The specific reasoning challenge", type="string", required=True
+                name="reasoning_challenge",
+                description="The specific reasoning challenge",
+                type="string",
+                required=True,
             )
         )
 
@@ -204,7 +254,10 @@ Please solve the following problem step by step:
 
         self.add_argument(
             PromptArgument(
-                name="constraints", description="Additional constraints or requirements", type="array", default=[]
+                name="constraints",
+                description="Additional constraints or requirements",
+                type="array",
+                default=[],
             )
         )
 
@@ -212,8 +265,8 @@ Please solve the following problem step by step:
 class CreativityTestPrompt(StaticPrompt):
     """Test creative and generative capabilities."""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         template = """Creativity Assessment Test
 
 **Creative Task Type:** {{ task_type }}
@@ -243,8 +296,8 @@ class CreativityTestPrompt(StaticPrompt):
 {{ creative_prompt }}
 
 **Evaluation Notes:**
-Please assess the response for creativity, originality, and adherence to requirements."""
-
+Please assess the response for creativity, originality, and adherence to requirements.
+"""
         super().__init__(
             name="creativity_test",
             description="Test creative and generative capabilities",
@@ -258,12 +311,24 @@ Please assess the response for creativity, originality, and adherence to require
                 description="Type of creative task",
                 type="string",
                 required=True,
-                enum=["storytelling", "ideation", "design", "writing", "problem_solving", "artistic"],
+                enum=[
+                    "storytelling",
+                    "ideation",
+                    "design",
+                    "writing",
+                    "problem_solving",
+                    "artistic",
+                ],
             )
         )
 
         self.add_argument(
-            PromptArgument(name="domain", description="The creative domain", type="string", required=True)
+            PromptArgument(
+                name="domain",
+                description="The creative domain",
+                type="string",
+                required=True,
+            )
         )
 
         self.add_argument(
@@ -287,7 +352,10 @@ Please assess the response for creativity, originality, and adherence to require
 
         self.add_argument(
             PromptArgument(
-                name="creative_prompt", description="The actual creative prompt", type="string", required=True
+                name="creative_prompt",
+                description="The actual creative prompt",
+                type="string",
+                required=True,
             )
         )
 
@@ -302,7 +370,10 @@ Please assess the response for creativity, originality, and adherence to require
 
         self.add_argument(
             PromptArgument(
-                name="constraints", description="Creative constraints to work within", type="array", default=[]
+                name="constraints",
+                description="Creative constraints to work within",
+                type="array",
+                default=[],
             )
         )
 
@@ -310,8 +381,8 @@ Please assess the response for creativity, originality, and adherence to require
 class KnowledgeTestPrompt(StaticPrompt):
     """Test knowledge and factual accuracy."""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         template = """Knowledge Assessment Test
 
 **Knowledge Domain:** {{ domain }}
@@ -321,7 +392,8 @@ class KnowledgeTestPrompt(StaticPrompt):
 **Knowledge Area:** {{ knowledge_area }}
 
 **Assessment Instructions:**
-Please answer the following question(s) about {{ domain }}. Provide accurate, detailed information and cite sources when possible.
+Please answer the following question(s) about {{ domain }}. Provide accurate, detailed information
+and cite sources when possible.
 
 **Question:**
 {{ question }}
@@ -341,8 +413,8 @@ Please answer the following question(s) about {{ domain }}. Provide accurate, de
 - Source credibility (if applicable)
 - Up - to - date information
 
-**Expected Response Format:** {{ response_format | default("Detailed explanation with examples") }}"""
-
+**Expected Response Format:** {{ response_format | default("Detailed explanation with examples") }}
+"""
         super().__init__(
             name="knowledge_test",
             description="Test knowledge and factual accuracy in specific domains",
@@ -351,7 +423,12 @@ Please answer the following question(s) about {{ domain }}. Provide accurate, de
         )
 
         self.add_argument(
-            PromptArgument(name="domain", description="The knowledge domain to test", type="string", required=True)
+            PromptArgument(
+                name="domain",
+                description="The knowledge domain to test",
+                type="string",
+                required=True,
+            )
         )
 
         self.add_argument(
@@ -360,7 +437,13 @@ Please answer the following question(s) about {{ domain }}. Provide accurate, de
                 description="Type of knowledge question",
                 type="string",
                 required=True,
-                enum=["factual", "conceptual", "procedural", "analytical", "comparative"],
+                enum=[
+                    "factual",
+                    "conceptual",
+                    "procedural",
+                    "analytical",
+                    "comparative",
+                ],
             )
         )
 
@@ -376,17 +459,28 @@ Please answer the following question(s) about {{ domain }}. Provide accurate, de
 
         self.add_argument(
             PromptArgument(
-                name="knowledge_area", description="Specific area within the domain", type="string", required=True
+                name="knowledge_area",
+                description="Specific area within the domain",
+                type="string",
+                required=True,
             )
         )
 
         self.add_argument(
-            PromptArgument(name="question", description="The knowledge question to ask", type="string", required=True)
+            PromptArgument(
+                name="question",
+                description="The knowledge question to ask",
+                type="string",
+                required=True,
+            )
         )
 
         self.add_argument(
             PromptArgument(
-                name="required_elements", description="Required elements in the response", type="array", default=[]
+                name="required_elements",
+                description="Required elements in the response",
+                type="array",
+                default=[],
             )
         )
 
@@ -412,8 +506,8 @@ Please answer the following question(s) about {{ domain }}. Provide accurate, de
 class ConversationTestPrompt(StaticPrompt):
     """Test conversational abilities and communication skills."""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         template = """Conversational Skills Assessment
 
 **Conversation Type:** {{ conversation_type }}
@@ -449,8 +543,8 @@ You are testing an AI's conversational abilities. The AI should demonstrate:
 - Relevance of responses
 - Conversational coherence
 - Appropriate tone and style
-- Information accuracy"""
-
+- Information accuracy
+"""
         super().__init__(
             name="conversation_test",
             description="Test conversational abilities and communication skills",
@@ -464,7 +558,14 @@ You are testing an AI's conversational abilities. The AI should demonstrate:
                 description="Type of conversation to test",
                 type="string",
                 required=True,
-                enum=["casual", "formal", "technical", "educational", "supportive", "persuasive"],
+                enum=[
+                    "casual",
+                    "formal",
+                    "technical",
+                    "educational",
+                    "supportive",
+                    "persuasive",
+                ],
             )
         )
 
@@ -474,12 +575,24 @@ You are testing an AI's conversational abilities. The AI should demonstrate:
                 description="Expected communication style",
                 type="string",
                 required=True,
-                enum=["friendly", "professional", "academic", "empathetic", "direct", "diplomatic"],
+                enum=[
+                    "friendly",
+                    "professional",
+                    "academic",
+                    "empathetic",
+                    "direct",
+                    "diplomatic",
+                ],
             )
         )
 
         self.add_argument(
-            PromptArgument(name="scenario", description="The conversation scenario", type="string", required=True)
+            PromptArgument(
+                name="scenario",
+                description="The conversation scenario",
+                type="string",
+                required=True,
+            )
         )
 
         self.add_argument(
@@ -493,7 +606,10 @@ You are testing an AI's conversational abilities. The AI should demonstrate:
 
         self.add_argument(
             PromptArgument(
-                name="conversation_starter", description="How to start the conversation", type="string", required=True
+                name="conversation_starter",
+                description="How to start the conversation",
+                type="string",
+                required=True,
             )
         )
 
@@ -508,7 +624,10 @@ You are testing an AI's conversational abilities. The AI should demonstrate:
 
         self.add_argument(
             PromptArgument(
-                name="conversation_turns", description="Planned conversation turns", type="array", default=[]
+                name="conversation_turns",
+                description="Planned conversation turns",
+                type="array",
+                default=[],
             )
         )
 
@@ -525,8 +644,8 @@ You are testing an AI's conversational abilities. The AI should demonstrate:
 class BenchmarkTestPrompt(DynamicPrompt):
     """Advanced benchmark testing with dynamic comparison."""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         template = """AI System Benchmark Assessment
 
 **Benchmark Suite:** {{ benchmark_name }}
@@ -556,8 +675,8 @@ class BenchmarkTestPrompt(DynamicPrompt):
 4. Performance trending
 
 **Expected Output Format:**
-{{ output_format }}"""
-
+{{ output_format }}
+"""
         super().__init__(
             name="benchmark_test",
             description="Advanced benchmark testing with performance tracking",
@@ -568,7 +687,10 @@ class BenchmarkTestPrompt(DynamicPrompt):
 
         self.add_argument(
             PromptArgument(
-                name="benchmark_name", description="Name of the benchmark suite", type="string", required=True
+                name="benchmark_name",
+                description="Name of the benchmark suite",
+                type="string",
+                required=True,
             )
         )
 
@@ -578,24 +700,42 @@ class BenchmarkTestPrompt(DynamicPrompt):
                 description="Benchmark category",
                 type="string",
                 required=True,
-                enum=["language", "reasoning", "knowledge", "math", "coding", "creative"],
+                enum=[
+                    "language",
+                    "reasoning",
+                    "knowledge",
+                    "math",
+                    "coding",
+                    "creative",
+                ],
             )
         )
 
         self.add_argument(
             PromptArgument(
-                name="task_description", description="Description of the benchmark task", type="string", required=True
+                name="task_description",
+                description="Description of the benchmark task",
+                type="string",
+                required=True,
             )
         )
 
         self.add_argument(
             PromptArgument(
-                name="test_instructions", description="Specific instructions for the test", type="string", required=True
+                name="test_instructions",
+                description="Specific instructions for the test",
+                type="string",
+                required=True,
             )
         )
 
         self.add_argument(
-            PromptArgument(name="metrics", description="Performance metrics to track", type="array", required=True)
+            PromptArgument(
+                name="metrics",
+                description="Performance metrics to track",
+                type="array",
+                required=True,
+            )
         )
 
         self.add_argument(
@@ -609,11 +749,14 @@ class BenchmarkTestPrompt(DynamicPrompt):
 
         self.add_argument(
             PromptArgument(
-                name="output_format", description="Expected format for the output", type="string", required=True
+                name="output_format",
+                description="Expected format for the output",
+                type="string",
+                required=True,
             )
         )
 
-    async def _get_benchmark_context(self: "BenchmarkTestPrompt", params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_benchmark_context(self: "Self", params: Dict[str, Any]) -> Dict[str, Any]:
         """Get dynamic context for benchmark testing."""
         return {
             "timestamp": datetime.now().isoformat(),
@@ -627,6 +770,7 @@ class BenchmarkTestPrompt(DynamicPrompt):
 def register_testing_prompts() -> None:
     """Register all general testing prompts."""
     prompt_registry.register(CapabilityTestPrompt())
+
     prompt_registry.register(ReasoningTestPrompt())
     prompt_registry.register(CreativityTestPrompt())
     prompt_registry.register(KnowledgeTestPrompt())

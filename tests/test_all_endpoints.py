@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Comprehensive ViolentUTF API Endpoint Testing Script.
-
+Comprehensive ViolentUTF API Endpoint Testing Script
 Tests all 69 API endpoints systematically to ensure they work properly
 """
 
@@ -12,20 +14,26 @@ import json
 import os
 import sys
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"
-JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbWFpbCI6InRlc3RAdmlvbGVudHV0Zi5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicm9sZXMiOlsiYWktYXBpLWFjY2VzcyJdLCJpYXQiOjE3NDkzNDEzMzEsImV4cCI6MTc0OTM0NDkzMX0.IuvBNOICkgUzxhVOlxvFVoYFWDJ4wwBL6CxQXJkVdYs"
+JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbWFpbCI6InRlc3RAdmlvbGVudHV0Zi5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicm9sZXMiOlsiYWktYXBpLWFjY2VzcyJdLCJpYXQiOjE3NDkzNDEzMzEsImV4cCI6MTc0OTM0NDkzMX0.IuvBNOICkgUzxhVOlxvFVoYFWDJ4wwBL6CxQXJkVdYs"  # nosec B105 - test JWT token
 
 # Test results tracking
-test_results = {"passed": 0, "failed": 0, "skipped": 0, "total": 0, "details": []}
+test_results: Dict[str, Union[int, List[Dict[str, Any]]]] = {
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "total": 0,
+    "details": [],
+}
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests."""
+    """Get authentication headers for API requests"""
     return {
         "Authorization": f"Bearer {JWT_TOKEN}",
         "Content-Type": "application/json",
@@ -45,6 +53,7 @@ def make_request(method: str, endpoint: str, **kwargs) -> Tuple[bool, int, str, 
 
     try:
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+
         # Try to parse JSON response
         try:
             response_data = response.json()
@@ -80,8 +89,9 @@ def test_endpoint(
     expected_status: Optional[int] = None,
     skip_reason: Optional[str] = None,
 ) -> bool:
-    """Test a single endpoint and record results."""
+    """Test a single endpoint and record results"""
     test_results["total"] += 1
+
     if skip_reason:
         test_results["skipped"] += 1
         print(f"⏸️  SKIP {method} {endpoint} - {skip_reason}")
@@ -102,6 +112,7 @@ def test_endpoint(
         kwargs["json"] = payload
 
     success, status_code, message, response_data = make_request(method, endpoint, **kwargs)
+
     # Check if result matches expectations
     if expected_status and status_code != expected_status:
         success = False
@@ -134,19 +145,24 @@ def test_endpoint(
     return success
 
 
-def test_health_endpoints() -> None:
-    """Test health and testing endpoints."""
+def test_health_endpoints():
+    """Test health and testing endpoints"""
     print("\n🏥 Testing Health & Testing Endpoints")
     print("=" * 50)
 
     test_endpoint("GET", "/health", "Basic health check")
-    test_endpoint("GET", "/ready", "Readiness check", skip_reason="/ready endpoint not implemented")
+    test_endpoint(
+        "GET",
+        "/ready",
+        "Readiness check",
+        skip_reason="/ready endpoint not implemented",
+    )
     test_endpoint("POST", "/api/v1/test/echo", "Echo endpoint", {"message": "test"})
     test_endpoint("GET", "/api/v1/test/echo/hello", "GET echo endpoint")
 
 
-def test_auth_endpoints() -> None:
-    """Test authentication endpoints."""
+def test_auth_endpoints():
+    """Test authentication endpoints"""
     print("\n🔐 Testing Authentication Endpoints")
     print("=" * 50)
 
@@ -165,13 +181,28 @@ def test_auth_endpoints() -> None:
     test_endpoint("GET", "/api/v1/auth/me", "Get current user")
 
     # Skip endpoints that require specific credentials
-    test_endpoint("POST", "/api/v1/auth/token", "Login endpoint", skip_reason="Requires Keycloak credentials")
-    test_endpoint("POST", "/api/v1/auth/refresh", "Refresh token", skip_reason="Requires refresh token")
-    test_endpoint("POST", "/api/v1/auth/logout", "Logout", skip_reason="Would invalidate test token")
+    test_endpoint(
+        "POST",
+        "/api/v1/auth/token",
+        "Login endpoint",
+        skip_reason="Requires Keycloak credentials",
+    )
+    test_endpoint(
+        "POST",
+        "/api/v1/auth/refresh",
+        "Refresh token",
+        skip_reason="Requires refresh token",
+    )
+    test_endpoint(
+        "POST",
+        "/api/v1/auth/logout",
+        "Logout",
+        skip_reason="Would invalidate test token",
+    )
 
 
-def test_jwt_key_endpoints() -> None:
-    """Test JWT key management endpoints."""
+def test_jwt_key_endpoints():
+    """Test JWT key management endpoints"""
     print("\n🔑 Testing JWT Key Management Endpoints")
     print("=" * 50)
 
@@ -180,19 +211,25 @@ def test_jwt_key_endpoints() -> None:
 
     # Test key creation
     key_created = test_endpoint(
-        "POST", "/api/v1/keys/create", "Create API key", {"name": "test_key", "description": "Test key"}
+        "POST",
+        "/api/v1/keys/create",
+        "Create API key",
+        {"name": "test_key", "description": "Test key"},
     )
 
     # If key creation succeeded, try to delete it
     if key_created:
         # Would need to extract key_id from response to test deletion
         test_endpoint(
-            "DELETE", "/api/v1/keys/test_key_id", "Delete API key", skip_reason="Requires actual key ID from creation"
+            "DELETE",
+            "/api/v1/keys/test_key_id",
+            "Delete API key",
+            skip_reason="Requires actual key ID from creation",
         )
 
 
-def test_database_endpoints() -> None:
-    """Test database management endpoints."""
+def test_database_endpoints():
+    """Test database management endpoints"""
     print("\n🗄️  Testing Database Management Endpoints")
     print("=" * 50)
 
@@ -200,18 +237,26 @@ def test_database_endpoints() -> None:
 
     # Test database initialization first (should fix stats issue)
     test_endpoint(
-        "POST", "/api/v1/database/initialize", "Initialize database", {"force_recreate": False, "backup_existing": True}
+        "POST",
+        "/api/v1/database/initialize",
+        "Initialize database",
+        {"force_recreate": False, "backup_existing": True},
     )
 
     test_endpoint("GET", "/api/v1/database/stats", "Get database stats")
 
     # Skip destructive operations
-    test_endpoint("POST", "/api/v1/database/reset", "Reset database", skip_reason="Destructive operation")
+    test_endpoint(
+        "POST",
+        "/api/v1/database/reset",
+        "Reset database",
+        skip_reason="Destructive operation",
+    )
     test_endpoint("POST", "/api/v1/database/backup", "Backup database")
 
 
-def test_session_endpoints() -> None:
-    """Test session management endpoints."""
+def test_session_endpoints():
+    """Test session management endpoints"""
     print("\n📊 Testing Session Management Endpoints")
     print("=" * 50)
 
@@ -231,11 +276,16 @@ def test_session_endpoints() -> None:
     )
 
     # Skip reset to avoid losing session data
-    test_endpoint("POST", "/api/v1/sessions/reset", "Reset session", skip_reason="Would reset test session")
+    test_endpoint(
+        "POST",
+        "/api/v1/sessions/reset",
+        "Reset session",
+        skip_reason="Would reset test session",
+    )
 
 
-def test_config_endpoints() -> None:
-    """Test configuration management endpoints."""
+def test_config_endpoints():
+    """Test configuration management endpoints"""
     print("\n⚙️  Testing Configuration Management Endpoints")
     print("=" * 50)
 
@@ -254,40 +304,76 @@ def test_config_endpoints() -> None:
 
     # Test environment validation
     test_endpoint(
-        "POST", "/api/v1/config/environment/validate", "Validate environment", {"DATABASE_URL": "test://localhost"}
+        "POST",
+        "/api/v1/config/environment/validate",
+        "Validate environment",
+        {"DATABASE_URL": "test://localhost"},
     )
 
     # Test salt generation
     test_endpoint("POST", "/api/v1/config/environment/generate-salt", "Generate salt")
 
     # Skip file upload and environment updates
-    test_endpoint("POST", "/api/v1/config/parameters/load", "Load config from file", skip_reason="Requires file upload")
-    test_endpoint("PUT", "/api/v1/config/environment", "Update environment", skip_reason="Could affect system state")
+    test_endpoint(
+        "POST",
+        "/api/v1/config/parameters/load",
+        "Load config from file",
+        skip_reason="Requires file upload",
+    )
+    test_endpoint(
+        "PUT",
+        "/api/v1/config/environment",
+        "Update environment",
+        skip_reason="Could affect system state",
+    )
 
 
-def test_file_endpoints() -> None:
-    """Test file management endpoints."""
+def test_file_endpoints():
+    """Test file management endpoints"""
     print("\n📁 Testing File Management Endpoints")
     print("=" * 50)
 
     test_endpoint("GET", "/api/v1/files", "List files")
 
     # Skip file operations that require actual files
-    test_endpoint("POST", "/api/v1/files/upload", "Upload file", skip_reason="Requires multipart file upload")
-    test_endpoint("GET", "/api/v1/files/test_id", "Get file metadata", skip_reason="Requires actual file ID")
-    test_endpoint("GET", "/api/v1/files/test_id/download", "Download file", skip_reason="Requires actual file ID")
-    test_endpoint("DELETE", "/api/v1/files/test_id", "Delete file", skip_reason="Requires actual file ID")
+    test_endpoint(
+        "POST",
+        "/api/v1/files/upload",
+        "Upload file",
+        skip_reason="Requires multipart file upload",
+    )
+    test_endpoint(
+        "GET",
+        "/api/v1/files/test_id",
+        "Get file metadata",
+        skip_reason="Requires actual file ID",
+    )
+    test_endpoint(
+        "GET",
+        "/api/v1/files/test_id/download",
+        "Download file",
+        skip_reason="Requires actual file ID",
+    )
+    test_endpoint(
+        "DELETE",
+        "/api/v1/files/test_id",
+        "Delete file",
+        skip_reason="Requires actual file ID",
+    )
 
 
-def test_generator_endpoints() -> None:
-    """Test generator management endpoints."""
+def test_generator_endpoints():
+    """Test generator management endpoints"""
     print("\n🎯 Testing Generator Management Endpoints")
     print("=" * 50)
 
     test_endpoint("GET", "/api/v1/generators/types", "Get generator types")
     test_endpoint("GET", "/api/v1/generators", "List generators")
     test_endpoint(
-        "GET", "/api/v1/generators/apisix/models", "Get APISIX models", skip_reason="Requires provider parameter"
+        "GET",
+        "/api/v1/generators/apisix/models",
+        "Get APISIX models",
+        skip_reason="Requires provider parameter",
     )
 
     # Test parameter endpoint for specific generator type
@@ -304,7 +390,11 @@ def test_generator_endpoints() -> None:
     generator_payload = {
         "name": f"test_generator_{int(time.time())}",  # Unique name
         "type": "AI Gateway",  # Use correct generator type
-        "parameters": {"provider": "openai", "model": "gpt-3.5-turbo", "temperature": 0.7},
+        "parameters": {
+            "provider": "openai",
+            "model": "gpt-3.5-turbo",
+            "temperature": 0.7,
+        },
     }
 
     gen_created = test_endpoint("POST", "/api/v1/generators", "Create generator", generator_payload)
@@ -318,15 +408,21 @@ def test_generator_endpoints() -> None:
             skip_reason="Requires actual generator ID and working AI service",
         )
         test_endpoint(
-            "PUT", "/api/v1/generators/test_gen_id", "Update generator", skip_reason="Requires actual generator ID"
+            "PUT",
+            "/api/v1/generators/test_gen_id",
+            "Update generator",
+            skip_reason="Requires actual generator ID",
         )
         test_endpoint(
-            "DELETE", "/api/v1/generators/test_gen_id", "Delete generator", skip_reason="Requires actual generator ID"
+            "DELETE",
+            "/api/v1/generators/test_gen_id",
+            "Delete generator",
+            skip_reason="Requires actual generator ID",
         )
 
 
-def test_dataset_endpoints() -> None:
-    """Test dataset management endpoints."""
+def test_dataset_endpoints():
+    """Test dataset management endpoints"""
     print("\n📊 Testing Dataset Management Endpoints")
     print("=" * 50)
 
@@ -361,20 +457,46 @@ def test_dataset_endpoints() -> None:
     )
 
     # Skip operations requiring actual dataset IDs
-    test_endpoint("GET", "/api/v1/datasets/test_id", "Get dataset details", skip_reason="Requires actual dataset ID")
     test_endpoint(
-        "POST", "/api/v1/datasets/test_id/test", "Test dataset", skip_reason="Requires actual dataset and generator IDs"
+        "GET",
+        "/api/v1/datasets/test_id",
+        "Get dataset details",
+        skip_reason="Requires actual dataset ID",
     )
-    test_endpoint("POST", "/api/v1/datasets/test_id/save", "Save dataset", skip_reason="Requires actual dataset ID")
     test_endpoint(
-        "POST", "/api/v1/datasets/test_id/transform", "Transform dataset", skip_reason="Requires actual dataset ID"
+        "POST",
+        "/api/v1/datasets/test_id/test",
+        "Test dataset",
+        skip_reason="Requires actual dataset and generator IDs",
     )
-    test_endpoint("PUT", "/api/v1/datasets/test_id", "Update dataset", skip_reason="Requires actual dataset ID")
-    test_endpoint("DELETE", "/api/v1/datasets/test_id", "Delete dataset", skip_reason="Requires actual dataset ID")
+    test_endpoint(
+        "POST",
+        "/api/v1/datasets/test_id/save",
+        "Save dataset",
+        skip_reason="Requires actual dataset ID",
+    )
+    test_endpoint(
+        "POST",
+        "/api/v1/datasets/test_id/transform",
+        "Transform dataset",
+        skip_reason="Requires actual dataset ID",
+    )
+    test_endpoint(
+        "PUT",
+        "/api/v1/datasets/test_id",
+        "Update dataset",
+        skip_reason="Requires actual dataset ID",
+    )
+    test_endpoint(
+        "DELETE",
+        "/api/v1/datasets/test_id",
+        "Delete dataset",
+        skip_reason="Requires actual dataset ID",
+    )
 
 
-def test_converter_endpoints() -> None:
-    """Test converter management endpoints."""
+def test_converter_endpoints():
+    """Test converter management endpoints"""
     print("\n🔄 Testing Converter Management Endpoints")
     print("=" * 50)
 
@@ -385,16 +507,26 @@ def test_converter_endpoints() -> None:
     test_endpoint("GET", "/api/v1/converters/params/ROT13Converter", "Get converter params")
 
     # Test converter creation
-    converter_payload = {"name": "test_converter", "converter_type": "ROT13Converter", "parameters": {}}
+    converter_payload = {
+        "name": "test_converter",
+        "converter_type": "ROT13Converter",
+        "parameters": {},
+    }
 
     test_endpoint("POST", "/api/v1/converters", "Create converter", converter_payload)
 
     # Skip operations requiring actual converter IDs
     test_endpoint(
-        "GET", "/api/v1/converters/test_id", "Get converter details", skip_reason="Requires actual converter ID"
+        "GET",
+        "/api/v1/converters/test_id",
+        "Get converter details",
+        skip_reason="Requires actual converter ID",
     )
     test_endpoint(
-        "POST", "/api/v1/converters/test_id/preview", "Preview converter", skip_reason="Requires actual converter ID"
+        "POST",
+        "/api/v1/converters/test_id/preview",
+        "Preview converter",
+        skip_reason="Requires actual converter ID",
     )
     test_endpoint(
         "POST",
@@ -408,14 +540,22 @@ def test_converter_endpoints() -> None:
         "Test converter",
         skip_reason="Requires actual converter and dataset IDs",
     )
-    test_endpoint("PUT", "/api/v1/converters/test_id", "Update converter", skip_reason="Requires actual converter ID")
     test_endpoint(
-        "DELETE", "/api/v1/converters/test_id", "Delete converter", skip_reason="Requires actual converter ID"
+        "PUT",
+        "/api/v1/converters/test_id",
+        "Update converter",
+        skip_reason="Requires actual converter ID",
+    )
+    test_endpoint(
+        "DELETE",
+        "/api/v1/converters/test_id",
+        "Delete converter",
+        skip_reason="Requires actual converter ID",
     )
 
 
-def test_scorer_endpoints() -> None:
-    """Test scorer management endpoints."""
+def test_scorer_endpoints():
+    """Test scorer management endpoints"""
     print("\n🎯 Testing Scorer Management Endpoints")
     print("=" * 50)
 
@@ -427,7 +567,10 @@ def test_scorer_endpoints() -> None:
     test_endpoint("GET", "/api/v1/scorers/params/SubStringScorer", "Get scorer params")
 
     # Test scorer validation
-    validation_payload = {"scorer_type": "SubStringScorer", "parameters": {"substring": "test", "category": "match"}}
+    validation_payload = {
+        "scorer_type": "SubStringScorer",
+        "parameters": {"substring": "test", "category": "match"},
+    }
     test_endpoint("POST", "/api/v1/scorers/validate", "Validate scorer config", validation_payload)
 
     # Test scorer creation
@@ -440,14 +583,34 @@ def test_scorer_endpoints() -> None:
     test_endpoint("POST", "/api/v1/scorers", "Create scorer", scorer_payload)
 
     # Skip operations requiring actual scorer IDs
-    test_endpoint("POST", "/api/v1/scorers/test_id/test", "Test scorer", skip_reason="Requires actual scorer ID")
-    test_endpoint("POST", "/api/v1/scorers/test_id/clone", "Clone scorer", skip_reason="Requires actual scorer ID")
-    test_endpoint("PUT", "/api/v1/scorers/test_id", "Update scorer", skip_reason="Requires actual scorer ID")
-    test_endpoint("DELETE", "/api/v1/scorers/test_id", "Delete scorer", skip_reason="Requires actual scorer ID")
+    test_endpoint(
+        "POST",
+        "/api/v1/scorers/test_id/test",
+        "Test scorer",
+        skip_reason="Requires actual scorer ID",
+    )
+    test_endpoint(
+        "POST",
+        "/api/v1/scorers/test_id/clone",
+        "Clone scorer",
+        skip_reason="Requires actual scorer ID",
+    )
+    test_endpoint(
+        "PUT",
+        "/api/v1/scorers/test_id",
+        "Update scorer",
+        skip_reason="Requires actual scorer ID",
+    )
+    test_endpoint(
+        "DELETE",
+        "/api/v1/scorers/test_id",
+        "Delete scorer",
+        skip_reason="Requires actual scorer ID",
+    )
 
 
-def print_summary() -> None:
-    """Print test summary."""
+def print_summary():
+    """Print test summary"""
     print("\n" + "=" * 60)
     print("📊 TEST SUMMARY")
     print("=" * 60)
@@ -472,8 +635,8 @@ def print_summary() -> None:
     print(f"\n🎯 Overall Status: {'✅ PASS' if test_results['failed'] == 0 else '❌ FAIL'}")
 
 
-def main() -> None:
-    """Main test execution."""
+def main():
+    """Main test execution"""
     print("🚀 ViolentUTF API Comprehensive Endpoint Testing")
     print("=" * 60)
     print(f"Testing API at: {API_BASE_URL}")

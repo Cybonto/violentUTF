@@ -1,27 +1,27 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""Basic API contract tests that work without full application dependencies.
+"""
+Basic API contract tests that work without full application dependencies.
 
 These tests validate the contract testing setup itself.
 """
 
 import json
 import os
-from typing import TYPE_CHECKING
 
 import pytest
-
-if TYPE_CHECKING:
-    pass  # For future type imports if needed
 
 
 @pytest.mark.contract
 class TestBasicContract:
     """Basic contract validation tests."""
 
-    def test_environment_setup(self) -> None:
-        """ "Test that contract testing environment is properly configured."""
+    def test_environment_setup(self: "TestBasicContract") -> None:
+        """Test that contract testing environment is properly configured."""
         assert os.getenv("CONTRACT_TESTING") == "true"
         assert os.getenv("TESTING") == "true"
         assert os.getenv("JWT_SECRET_KEY") is not None
@@ -48,7 +48,7 @@ class TestBasicContract:
 
     def test_minimal_api_structure(self: "TestBasicContract") -> None:
         """Test minimal API structure expectations."""
-        # This test passes if we can import basic modules.
+        # This test passes if we can import basic modules
         try:
             import fastapi
             import pydantic
@@ -59,7 +59,8 @@ class TestBasicContract:
             pytest.fail(f"Required module not available: {e}")
 
     @pytest.mark.skipif(
-        not os.path.exists("tests/api_tests/test_auth_mock.py"), reason="Auth mock module not available"
+        not os.path.exists("tests/api_tests/test_auth_mock.py"),
+        reason="Auth mock module not available",
     )
     def test_auth_mock_available(self: "TestBasicContract") -> None:
         """Test that auth mocking utilities are available."""
@@ -77,7 +78,7 @@ class TestBasicContract:
 
     def test_contract_markers(self: "TestBasicContract") -> None:
         """Test that pytest contract markers are working."""
-        # This test verifies the test infrastructure itself.
+        # This test verifies the test infrastructure itself
         markers = [mark.name for mark in self.test_contract_markers.__pytest_wrapped__.pytestmark]
         assert "contract" in markers or hasattr(self.__class__, "pytestmark")
 
@@ -107,6 +108,6 @@ def test_api_contract_dependencies() -> None:
 # Minimal test to ensure at least one test runs
 def test_contract_testing_enabled() -> None:
     """Verify contract testing is enabled."""
-    # This test should always pass in contract testing environment.
+    # This test should always pass in contract testing environment
     contract_testing = os.getenv("CONTRACT_TESTING", "false")
     assert contract_testing.lower() in ["true", "false"]

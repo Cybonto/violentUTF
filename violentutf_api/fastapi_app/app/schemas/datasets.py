@@ -1,32 +1,33 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
+"""Pydantic schemas for dataset management API endpoints.
+
+SECURITY: Enhanced with comprehensive input validation to prevent injection attacks.
 """
-Pydantic schemas for dataset management API endpoints.
-
-SECURITY: Enhanced with comprehensive input validation to prevent injection attacks
-"""
-
+# pylint: disable=no-self-argument  # Pydantic validators use cls, not self
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Type
 
 from app.core.validation import (
     SecurityLimits,
     ValidationPatterns,
-    create_validation_error,
     sanitize_string,
-    validate_file_upload,
     validate_json_data,
     validate_url,
 )
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class DatasetSourceType(str, Enum):
     """Dataset source types."""
 
     NATIVE = "native"
+
     LOCAL = "local"
     ONLINE = "online"
     MEMORY = "memory"
@@ -39,6 +40,7 @@ class DatasetType(BaseModel):
     """Dataset type information."""
 
     name: str = Field(..., description="Dataset type name")
+
     description: str = Field(..., description="Description of the dataset")
     category: str = Field(..., description="Category of the dataset")
     config_required: bool = Field(default=False, description="Whether configuration is required")
@@ -51,38 +53,55 @@ class SeedPromptInfo(BaseModel):
     """Seed prompt information."""
 
     id: Optional[str] = Field(default=None, description="Prompt unique identifier")
+
     value: str = Field(
-        ..., min_length=1, max_length=SecurityLimits.MAX_DESCRIPTION_LENGTH, description="Prompt text content"
+        ...,
+        min_length=1,
+        max_length=SecurityLimits.MAX_DESCRIPTION_LENGTH,
+        description="Prompt text content",
     )
     data_type: str = Field(default="text", max_length=50, description="Data type of the prompt")
-    name: Optional[str] = Field(default=None, max_length=SecurityLimits.MAX_NAME_LENGTH, description="Prompt name")
+    name: Optional[str] = Field(
+        default=None,
+        max_length=SecurityLimits.MAX_NAME_LENGTH,
+        description="Prompt name",
+    )
     dataset_name: Optional[str] = Field(
-        default=None, max_length=SecurityLimits.MAX_NAME_LENGTH, description="Dataset this prompt belongs to"
+        default=None,
+        max_length=SecurityLimits.MAX_NAME_LENGTH,
+        description="Dataset this prompt belongs to",
     )
-    harm_categories: Optional[List[str]] = Field(default=None, max_items=20, description="Harm categories")
+    harm_categories: Optional[List[str]] = Field(default=None, description="Harm categories", max_length=20)
     description: Optional[str] = Field(
-        default=None, max_length=SecurityLimits.MAX_DESCRIPTION_LENGTH, description="Prompt description"
+        default=None,
+        max_length=SecurityLimits.MAX_DESCRIPTION_LENGTH,
+        description="Prompt description",
     )
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
+    metadata: Optional[Dict[str, object]] = Field(default=None, description="Additional metadata")
 
-    @validator("value")
-    def validate_value_field(cls: type["SeedPromptInfo"], v: Any) -> bool:
+    @field_validator("value")
+    @classmethod
+    def validate_value_field(cls: Type["SeedPromptInfo"], v: str) -> str:
         """Validate prompt value."""
         return sanitize_string(v)
 
-    @validator("name")
-    def validate_name_field(cls: type["SeedPromptInfo"], v: Any) -> bool:
+    @field_validator("name")
+    @classmethod
+    def validate_name_field(cls: Type["SeedPromptInfo"], v: Optional[str]) -> Optional[str]:
         """Validate prompt name."""
         if v is not None:
+
             v = sanitize_string(v)
             if not ValidationPatterns.SAFE_NAME.match(v):
                 raise ValueError("Name contains invalid characters")
         return v
 
-    @validator("harm_categories")
-    def validate_harm_categories_field(cls: type["SeedPromptInfo"], v: Any) -> bool:
+    @field_validator("harm_categories")
+    @classmethod
+    def validate_harm_categories_field(cls: Type["SeedPromptInfo"], v: Optional[List[str]]) -> Optional[List[str]]:
         """Validate harm categories."""
         if v is not None:
+
             validated = []
             for category in v:
                 if not isinstance(category, str):
@@ -93,8 +112,11 @@ class SeedPromptInfo(BaseModel):
             return validated
         return v
 
-    @validator("metadata")
-    def validate_metadata_field(cls: type["SeedPromptInfo"], v: Any) -> bool:
+    @field_validator("metadata")
+    @classmethod
+    def validate_metadata_field(
+        cls: Type["SeedPromptInfo"], v: Optional[Dict[str, object]]
+    ) -> Optional[Dict[str, object]]:
         """Validate metadata."""
         if v is not None:
             return validate_json_data(v, max_depth=3)
@@ -105,23 +127,30 @@ class DatasetInfo(BaseModel):
     """Dataset information."""
 
     id: str = Field(..., description="Dataset unique identifier")
+
     name: str = Field(..., description="Dataset name")
     source_type: DatasetSourceType = Field(..., description="Dataset source type")
     prompt_count: int = Field(..., description="Number of prompts in dataset")
     prompts: List[SeedPromptInfo] = Field(..., description="Dataset prompts")
-    config: Optional[Dict[str, Any]] = Field(default=None, description="Dataset configuration")
+    config: Optional[Dict[str, object]] = Field(default=None, description="Dataset configuration")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
     created_by: str = Field(..., description="User who created the dataset")
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
+    metadata: Optional[Dict[str, object]] = Field(default=None, description="Additional metadata")
 
 
 class DatasetCreateRequest(BaseModel):
     """Request model for creating a dataset."""
 
-    name: str = Field(..., min_length=3, max_length=SecurityLimits.MAX_NAME_LENGTH, description="Dataset name")
+    name: str = Field(
+        ...,
+        min_length=3,
+        max_length=SecurityLimits.MAX_NAME_LENGTH,
+        description="Dataset name",
+    )
+
     source_type: DatasetSourceType = Field(..., description="Dataset source type")
-    config: Optional[Dict[str, Any]] = Field(default=None, description="Dataset configuration")
+    config: Optional[Dict[str, object]] = Field(default=None, description="Dataset configuration")
 
     # For native datasets
     dataset_type: Optional[str] = Field(default=None, max_length=100, description="Native dataset type name")
@@ -133,19 +162,25 @@ class DatasetCreateRequest(BaseModel):
     field_mappings: Optional[Dict[str, str]] = Field(default=None, description="Field mappings for custom datasets")
 
     # For combination datasets
-    dataset_ids: Optional[List[str]] = Field(default=None, max_items=20, description="Dataset IDs to combine")
+    dataset_ids: Optional[List[str]] = Field(default=None, description="Dataset IDs to combine", max_length=20)
 
     # For transformation datasets
     source_dataset_id: Optional[str] = Field(
         default=None, max_length=100, description="Source dataset ID for transformation"
     )
     template: Optional[str] = Field(
-        default=None, max_length=SecurityLimits.MAX_DESCRIPTION_LENGTH, description="Transformation template"
+        default=None,
+        max_length=SecurityLimits.MAX_DESCRIPTION_LENGTH,
+        description="Transformation template",
     )
 
-    @validator("name")
-    def validate_name_field(cls: type["DatasetCreateRequest"], v: Any) -> bool:
+    @field_validator("name")
+    @classmethod
+    def validate_name_field(cls: Type["DatasetCreateRequest"], v: Optional[str]) -> Optional[str]:
         """Validate dataset name."""
+        if v is None:
+
+            return v
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_NAME.match(v):
             raise ValueError(
@@ -153,43 +188,57 @@ class DatasetCreateRequest(BaseModel):
             )
         return v
 
-    @validator("dataset_type")
-    def validate_dataset_type_field(cls: type["DatasetCreateRequest"], v: Any) -> bool:
+    @field_validator("dataset_type")
+    @classmethod
+    def validate_dataset_type_field(cls: Type["DatasetCreateRequest"], v: Optional[str]) -> Optional[str]:
         """Validate dataset type."""
         if v is not None:
+
             v = sanitize_string(v)
             if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
                 raise ValueError("Dataset type must contain only alphanumeric characters, underscores, and hyphens")
         return v
 
-    @validator("url")
-    def validate_url_field(cls: type["DatasetCreateRequest"], v: Any) -> bool:
+    @field_validator("url")
+    @classmethod
+    def validate_url_field(cls: Type["DatasetCreateRequest"], v: Optional[str]) -> Optional[str]:
         """Validate URL."""
         if v is not None:
-            return validate_url(v)
+
+            return str(validate_url(v))
         return v
 
-    @validator("file_type")
-    def validate_file_type_field(cls: type["DatasetCreateRequest"], v: Any) -> bool:
+    @field_validator("file_type")
+    @classmethod
+    def validate_file_type_field(cls: Type["DatasetCreateRequest"], v: Optional[str]) -> Optional[str]:
         """Validate file type."""
         if v is not None:
+
             v = sanitize_string(v).lower()
             allowed_types = ["csv", "json", "txt", "yaml", "yml", "tsv"]
             if v not in allowed_types:
                 raise ValueError(f"File type must be one of: {', '.join(allowed_types)}")
         return v
 
-    @validator("config")
-    def validate_config_field(cls: type["DatasetCreateRequest"], v: Any) -> bool:
+    @field_validator("config")
+    @classmethod
+    def validate_config_field(
+        cls: Type["DatasetCreateRequest"], v: Optional[Dict[str, object]]
+    ) -> Optional[Dict[str, object]]:
         """Validate configuration."""
         if v is not None:
+
             return validate_json_data(v, max_depth=3)
         return v
 
-    @validator("field_mappings")
-    def validate_field_mappings_field(cls: type["DatasetCreateRequest"], v: Any) -> bool:
+    @field_validator("field_mappings")
+    @classmethod
+    def validate_field_mappings_field(
+        cls: Type["DatasetCreateRequest"], v: Optional[Dict[str, str]]
+    ) -> Optional[Dict[str, str]]:
         """Validate field mappings."""
         if v is not None:
+
             if len(v) > 50:
                 raise ValueError("Too many field mappings")
             validated = {}
@@ -204,10 +253,12 @@ class DatasetCreateRequest(BaseModel):
             return validated
         return v
 
-    @validator("dataset_ids")
-    def validate_dataset_ids_field(cls: type["DatasetCreateRequest"], v: Any) -> bool:
+    @field_validator("dataset_ids")
+    @classmethod
+    def validate_dataset_ids_field(cls: Type["DatasetCreateRequest"], v: Optional[List[str]]) -> Optional[List[str]]:
         """Validate dataset IDs list."""
         if v is not None:
+
             validated = []
             for dataset_id in v:
                 if not isinstance(dataset_id, str):
@@ -219,46 +270,60 @@ class DatasetCreateRequest(BaseModel):
             return validated
         return v
 
-    @validator("template")
-    def validate_template_field(cls: type["DatasetCreateRequest"], v: Any) -> bool:
+    @field_validator("template")
+    @classmethod
+    def validate_template_field(cls: Type["DatasetCreateRequest"], v: Optional[str]) -> Optional[str]:
         """Validate transformation template."""
         if v is not None:
-            return sanitize_string(v)
+
+            return str(sanitize_string(v))
         return v
 
-    @validator("dataset_type")
-    def validate_native_dataset(cls: type["DatasetCreateRequest"], v: Any, values: Dict[str, Any]) -> bool:
+    @field_validator("dataset_type")
+    @classmethod
+    def validate_native_dataset(cls: type, v: object, info) -> str:  # noqa: ANN001
+        """Validate native dataset."""
+        values = info.data if info else {}
         if values.get("source_type") == DatasetSourceType.NATIVE and not v:
-            raise ValueError("dataset_type is required for native datasets")
-        return v
 
-    @validator("url")
-    def validate_online_dataset(cls: type["DatasetCreateRequest"], v: Any, values: Dict[str, Any]) -> bool:
+            raise ValueError("dataset_type is required for native datasets")
+        return str(v)
+
+    @field_validator("url")
+    @classmethod
+    def validate_online_dataset(cls: type, v: object, info) -> str:  # noqa: ANN001
+        """Validate online dataset."""
+        values = info.data if info else {}
         if values.get("source_type") == DatasetSourceType.ONLINE and not v:
+
             raise ValueError("url is required for online datasets")
-        return v
+        return str(v)
 
 
 class DatasetUpdateRequest(BaseModel):
     """Request model for updating a dataset."""
 
     name: Optional[str] = Field(default=None, description="New dataset name")
-    config: Optional[Dict[str, Any]] = Field(default=None, description="Updated configuration")
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Updated metadata")
+
+    config: Optional[Dict[str, object]] = Field(default=None, description="Updated configuration")
+    metadata: Optional[Dict[str, object]] = Field(default=None, description="Updated metadata")
 
     # Save functionality (replaces the deprecated POST /{dataset_id}/save endpoint)
     save_to_session: Optional[bool] = Field(default=None, description="Save to current session")
     save_to_memory: Optional[bool] = Field(default=None, description="Save to PyRIT memory")
     overwrite: Optional[bool] = Field(default=False, description="Whether to overwrite if exists")
 
-    @validator("name")
-    def validate_name_field(cls: type["DatasetUpdateRequest"], v: Any) -> bool:
+    @field_validator("name")
+    @classmethod
+    def validate_name_field(cls: Type["DatasetUpdateRequest"], v: Optional[str]) -> Optional[str]:
         """Validate dataset name."""
         if v is not None:
+
             v = sanitize_string(v)
             if not ValidationPatterns.SAFE_NAME.match(v):
                 raise ValueError(
-                    "Name must contain only alphanumeric characters, spaces, underscores, hyphens, dots, and parentheses"
+                    "Name must contain only alphanumeric characters, spaces, underscores, "
+                    "hyphens, dots, and parentheses"
                 )
         return v
 
@@ -267,29 +332,46 @@ class DatasetTransformRequest(BaseModel):
     """Request model for transforming a dataset."""
 
     template: str = Field(
-        ..., min_length=1, max_length=SecurityLimits.MAX_DESCRIPTION_LENGTH, description="Transformation template"
+        ...,
+        min_length=1,
+        max_length=SecurityLimits.MAX_DESCRIPTION_LENGTH,
+        description="Transformation template",
     )
-    template_type: str = Field(default="custom", max_length=50, description="Type of template (custom, existing)")
-    template_variables: Optional[Dict[str, Any]] = Field(default=None, description="Template variables")
+    template_type: str = Field(
+        default="custom",
+        max_length=50,
+        description="Type of template (custom, existing)",
+    )
+    template_variables: Optional[Dict[str, object]] = Field(default=None, description="Template variables")
 
-    @validator("template")
-    def validate_template_field(cls: type["DatasetTransformRequest"], v: Any) -> bool:
+    @field_validator("template")
+    @classmethod
+    def validate_template_field(cls: Type["DatasetTransformRequest"], v: Optional[str]) -> Optional[str]:
         """Validate transformation template."""
+        if v is None:
+
+            return v
         return sanitize_string(v)
 
-    @validator("template_type")
-    def validate_template_type_field(cls: type["DatasetTransformRequest"], v: Any) -> bool:
+    @field_validator("template_type")
+    @classmethod
+    def validate_template_type_field(cls: Type["DatasetTransformRequest"], v: str) -> str:
         """Validate template type."""
         v = sanitize_string(v).lower()
+
         allowed_types = ["custom", "existing", "predefined"]
         if v not in allowed_types:
             raise ValueError(f"Template type must be one of: {', '.join(allowed_types)}")
         return v
 
-    @validator("template_variables")
-    def validate_template_variables_field(cls: type["DatasetTransformRequest"], v: Any) -> bool:
+    @field_validator("template_variables")
+    @classmethod
+    def validate_template_variables_field(
+        cls: Type["DatasetTransformRequest"], v: Optional[Dict[str, object]]
+    ) -> Optional[Dict[str, object]]:
         """Validate template variables."""
         if v is not None:
+
             return validate_json_data(v, max_depth=2)
         return v
 
@@ -298,6 +380,7 @@ class DatasetTestRequest(BaseModel):
     """Request model for testing a dataset."""
 
     generator_id: str = Field(..., description="Generator ID to test with")
+
     num_samples: int = Field(default=3, ge=1, le=10, description="Number of samples to test")
     save_results: bool = Field(default=True, description="Whether to save test results to memory")
 
@@ -306,15 +389,22 @@ class DatasetSaveRequest(BaseModel):
     """Request model for saving a dataset."""
 
     name: str = Field(
-        ..., min_length=3, max_length=SecurityLimits.MAX_NAME_LENGTH, description="Name to save the dataset under"
+        ...,
+        min_length=3,
+        max_length=SecurityLimits.MAX_NAME_LENGTH,
+        description="Name to save the dataset under",
     )
     save_to_session: bool = Field(default=True, description="Save to current session")
     save_to_memory: bool = Field(default=True, description="Save to PyRIT memory")
     overwrite: bool = Field(default=False, description="Whether to overwrite if exists")
 
-    @validator("name")
-    def validate_name_field(cls: type["DatasetSaveRequest"], v: Any) -> bool:
+    @field_validator("name")
+    @classmethod
+    def validate_name_field(cls: Type["DatasetSaveRequest"], v: Optional[str]) -> Optional[str]:
         """Validate dataset save name."""
+        if v is None:
+
+            return v
         v = sanitize_string(v)
         if not ValidationPatterns.SAFE_IDENTIFIER.match(v):
             raise ValueError("Name must contain only alphanumeric characters, underscores, and hyphens")
@@ -325,6 +415,7 @@ class DatasetTestResult(BaseModel):
     """Dataset test result."""
 
     prompt_id: str = Field(..., description="Prompt ID that was tested")
+
     prompt_value: str = Field(..., description="Prompt text")
     response: Optional[str] = Field(default=None, description="Generator response")
     error: Optional[str] = Field(default=None, description="Error message if failed")
@@ -336,6 +427,7 @@ class DatasetTestResponse(BaseModel):
     """Response model for dataset testing."""
 
     dataset_id: str = Field(..., description="Dataset ID that was tested")
+
     generator_id: str = Field(..., description="Generator ID used for testing")
     num_samples: int = Field(..., description="Number of samples tested")
     results: List[DatasetTestResult] = Field(..., description="Test results")
@@ -348,6 +440,7 @@ class DatasetTypesResponse(BaseModel):
     """Response model for dataset types list."""
 
     dataset_types: List[DatasetType] = Field(..., description="Available dataset types")
+
     total: int = Field(..., description="Total number of dataset types")
 
 
@@ -355,6 +448,7 @@ class DatasetsListResponse(BaseModel):
     """Response model for datasets list."""
 
     datasets: List[DatasetInfo] = Field(..., description="List of datasets")
+
     total: int = Field(..., description="Total number of datasets")
     session_count: int = Field(..., description="Number of session datasets")
     memory_count: int = Field(..., description="Number of memory datasets")
@@ -364,6 +458,7 @@ class DatasetCreateResponse(BaseModel):
     """Response model for dataset creation."""
 
     dataset: DatasetInfo = Field(..., description="Created dataset information")
+
     message: str = Field(..., description="Success message")
 
 
@@ -371,6 +466,7 @@ class DatasetUpdateResponse(BaseModel):
     """Response model for dataset update/save operations."""
 
     dataset: DatasetInfo = Field(..., description="Updated dataset information")
+
     message: str = Field(..., description="Update result message")
 
     # Save operation results (when save parameters are included in PUT request)
@@ -383,6 +479,7 @@ class DatasetSaveResponse(BaseModel):
     """Response model for dataset saving (DEPRECATED: Use DatasetUpdateResponse with PUT /{dataset_id})."""
 
     dataset_id: str = Field(..., description="Dataset ID")
+
     saved_to_session: bool = Field(..., description="Whether saved to session")
     saved_to_memory: bool = Field(..., description="Whether saved to PyRIT memory")
     message: str = Field(..., description="Save result message")
@@ -393,6 +490,7 @@ class DatasetTransformResponse(BaseModel):
     """Response model for dataset transformation."""
 
     original_dataset_id: str = Field(..., description="Original dataset ID")
+
     transformed_dataset: DatasetInfo = Field(..., description="Transformed dataset")
     transform_summary: str = Field(..., description="Summary of transformation applied")
 
@@ -401,6 +499,7 @@ class MemoryDatasetInfo(BaseModel):
     """Information about datasets saved in PyRIT memory."""
 
     dataset_name: str = Field(..., description="Dataset name")
+
     prompt_count: int = Field(..., description="Number of prompts")
     created_by: Optional[str] = Field(default=None, description="Creator information")
     first_prompt_preview: Optional[str] = Field(default=None, description="Preview of first prompt")
@@ -410,6 +509,7 @@ class MemoryDatasetsResponse(BaseModel):
     """Response model for PyRIT memory datasets."""
 
     datasets: List[MemoryDatasetInfo] = Field(..., description="Datasets in PyRIT memory")
+
     total: int = Field(..., description="Total number of memory datasets")
     total_prompts: int = Field(..., description="Total prompts across all datasets")
 
@@ -418,6 +518,7 @@ class DatasetFieldMappingRequest(BaseModel):
     """Request model for dataset field mapping."""
 
     file_content: str = Field(..., description="File content (base64 encoded)")
+
     file_type: str = Field(..., description="File type (csv, json, etc.)")
 
 
@@ -425,8 +526,9 @@ class DatasetFieldMappingResponse(BaseModel):
     """Response model for dataset field mapping."""
 
     available_fields: List[str] = Field(..., description="Available fields in the dataset")
+
     required_fields: List[str] = Field(..., description="Required fields for SeedPrompt")
-    preview_data: List[Dict[str, Any]] = Field(..., description="Preview of the data")
+    preview_data: List[Dict[str, object]] = Field(..., description="Preview of the data")
     total_rows: int = Field(..., description="Total number of rows")
 
 
@@ -434,6 +536,7 @@ class DatasetDeleteResponse(BaseModel):
     """Response model for dataset deletion."""
 
     success: bool = Field(..., description="Whether deletion was successful")
+
     message: str = Field(..., description="Deletion result message")
     deleted_from_session: bool = Field(..., description="Whether deleted from session")
     deleted_from_memory: bool = Field(..., description="Whether deleted from memory")
@@ -441,10 +544,13 @@ class DatasetDeleteResponse(BaseModel):
 
 
 # Error response models
+
+
 class DatasetError(BaseModel):
     """Error response for dataset operations."""
 
     error: str = Field(..., description="Error message")
+
     details: Optional[str] = Field(default=None, description="Additional error details")
     dataset_name: Optional[str] = Field(default=None, description="Dataset name if applicable")
     error_code: Optional[str] = Field(default=None, description="Error code for programmatic handling")
@@ -455,17 +561,21 @@ class DatasetValidationError(BaseModel):
     """Validation error response."""
 
     error: str = Field(..., description="Validation error message")
+
     field: str = Field(..., description="Field that failed validation")
-    value: Any = Field(..., description="Invalid value provided")
+    value: object = Field(..., description="Invalid value provided")
     expected: Optional[str] = Field(default=None, description="Expected value format")
 
 
 # Helper models for complex operations
+
+
 class DatasetPreviewRequest(BaseModel):
     """Request model for previewing a dataset before creation."""
 
     source_type: DatasetSourceType = Field(..., description="Dataset source type")
-    config: Optional[Dict[str, Any]] = Field(default=None, description="Dataset configuration")
+
+    config: Optional[Dict[str, object]] = Field(default=None, description="Dataset configuration")
     dataset_type: Optional[str] = Field(default=None, description="Native dataset type")
     url: Optional[str] = Field(default=None, description="URL for online datasets")
     file_content: Optional[str] = Field(default=None, description="File content for local datasets")
@@ -475,6 +585,7 @@ class DatasetPreviewResponse(BaseModel):
     """Response model for dataset preview."""
 
     preview_prompts: List[SeedPromptInfo] = Field(..., description="Preview of dataset prompts")
+
     total_prompts: int = Field(..., description="Total number of prompts available")
-    dataset_info: Dict[str, Any] = Field(..., description="Additional dataset information")
+    dataset_info: Dict[str, object] = Field(..., description="Additional dataset information")
     warnings: Optional[List[str]] = Field(default=None, description="Any warnings about the dataset")

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Test script for orchestrator dataset testing functionality.
-
+Test script for orchestrator dataset testing functionality
 """
 
 import json
@@ -12,21 +14,28 @@ import os
 import sys
 import time
 from datetime import datetime, timedelta
-from typing import Any
 
 import requests
 
-# Add project paths
-sys.path.append("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf")
+# Add project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(project_root, "violentutf"))
 
-# Load environment
+# Load environment from project
 from dotenv import load_dotenv
 
-load_dotenv("/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf/.env")
+env_files = [
+    os.path.join(project_root, "violentutf", ".env"),
+    os.path.join(project_root, "violentutf_api", "fastapi_app", ".env"),
+]
+
+for env_file in env_files:
+    if os.path.exists(env_file):
+        load_dotenv(env_file)
 
 
-def create_test_token() -> None:
-    """Create a test JWT token for authentication."""
+def create_test_token():
+    """Create a test JWT token for authentication"""
     import jwt
 
     secret = os.getenv("JWT_SECRET_KEY")
@@ -48,8 +57,8 @@ def create_test_token() -> None:
     return token
 
 
-def get_auth_headers() -> None:
-    """Get authentication headers."""
+def get_auth_headers():
+    """Get authentication headers"""
     token = create_test_token()
     if not token:
         return None
@@ -64,8 +73,8 @@ def get_auth_headers() -> None:
     return headers
 
 
-def test_orchestrator_types() -> Any:
-    """Test orchestrator types endpoint."""
+def test_orchestrator_types():
+    """Test orchestrator types endpoint"""
     print("🔍 Testing orchestrator types discovery...")
 
     headers = get_auth_headers()
@@ -92,8 +101,8 @@ def test_orchestrator_types() -> Any:
         return False
 
 
-def test_dataset_endpoints() -> Any:
-    """Test dataset endpoints."""
+def test_dataset_endpoints():
+    """Test dataset endpoints"""
     print("📊 Testing dataset endpoints...")
 
     headers = get_auth_headers()
@@ -119,8 +128,8 @@ def test_dataset_endpoints() -> Any:
         return False
 
 
-def test_generator_endpoints() -> Any:
-    """Test generator endpoints."""
+def test_generator_endpoints():
+    """Test generator endpoints"""
     print("⚙️ Testing generator endpoints...")
 
     headers = get_auth_headers()
@@ -146,8 +155,8 @@ def test_generator_endpoints() -> Any:
         return False
 
 
-def main() -> Any:
-    """Run main test function."""
+def main():
+    """Main test function"""
     print("🧪 Testing Orchestrator Dataset Testing Implementation")
     print("=" * 60)
 

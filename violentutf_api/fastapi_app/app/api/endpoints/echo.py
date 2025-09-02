@@ -1,11 +1,14 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Echo endpoint for testing API connectivity."""
 
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -27,9 +30,8 @@ class EchoResponse(BaseModel):
 
 
 @router.post("", response_model=EchoResponse)
-async def echo(request: EchoRequest) -> Any:
-    """
-    Echo endpoint for testing API connectivity.
+async def echo(request: EchoRequest) -> EchoResponse:
+    """Echo endpoint for testing API connectivity.
 
     Returns the same message that was sent.
 
@@ -41,13 +43,17 @@ async def echo(request: EchoRequest) -> Any:
     """
     from datetime import datetime
 
-    return EchoResponse(echo=request.message, metadata=request.metadata, timestamp=datetime.utcnow().isoformat())
+    return EchoResponse(
+        echo=request.message,
+        metadata=request.metadata,
+        timestamp=datetime.utcnow().isoformat(),
+    )
 
 
 @router.get("/{message}")
-async def echo_get(message: str) -> Any:
+async def echo_get(message: str) -> Optional[Dict[str, Any]]:
     """
-    Simple GET echo endpoint for testing.
+    Handle simple GET echo endpoint for testing.
 
     Args:
         message: Message to echo back
@@ -57,4 +63,8 @@ async def echo_get(message: str) -> Any:
     """
     from datetime import datetime
 
-    return {"echo": message, "method": "GET", "timestamp": datetime.utcnow().isoformat()}
+    return {
+        "echo": message,
+        "method": "GET",
+        "timestamp": datetime.utcnow().isoformat(),
+    }

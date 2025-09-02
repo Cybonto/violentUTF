@@ -1,5 +1,8 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Logging configuration for ViolentUTF API."""
 
@@ -8,13 +11,14 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Optional, Self
 
 
 class JSONFormatter(logging.Formatter):
     """Custom JSON formatter for structured logging."""
 
-    def format(self: "JSONFormatter", record: Any) -> Any:
+    def format(self: "Self", record: logging.LogRecord) -> str:
+        """Format."""
         log_obj = {
             "timestamp": datetime.utcnow().isoformat(),
             "level": record.levelname,
@@ -57,15 +61,15 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(log_obj)
 
 
-def setup_logging(log_level: str = "INFO", log_dir: Path = None) -> Any:
+def setup_logging(log_level: str = "INFO", log_dir: Optional[Path] = None) -> logging.Logger:
     """
-    Setup logging configuration for the application.
+    Set up logging configuration for the application
 
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         log_dir: Directory to store log files (optional)
     """
-    # Create logger.
+    # Create logger
     logger = logging.getLogger()
     logger.setLevel(getattr(logging, log_level.upper()))
 

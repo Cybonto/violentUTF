@@ -1,8 +1,10 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Phase 3 Integration Tests for ViolentUTF MCP Server.
+"""Phase 3 Integration Tests for ViolentUTF MCP Server.
 
 ==================================================
 
@@ -12,24 +14,28 @@ These tests validate the advanced features implemented in Phase 3:
 - End-to-end integration of all components
 """
 
-import asyncio
+# pylint: disable=protected-access
 import logging
+import time
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Self
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from app.mcp.prompts import prompts_manager
-from app.mcp.prompts.base import PromptArgument, prompt_registry
-from app.mcp.prompts.security import BiasDetectionPrompt, JailbreakPrompt
-from app.mcp.prompts.testing import CapabilityTestPrompt, ReasoningTestPrompt
+from app.mcp.prompts.base import prompt_registry
 
 # Test the actual implemented components
-from app.mcp.resources.base import AdvancedResource, ResourceMetadata, advanced_resource_registry
-from app.mcp.resources.configuration import ConfigurationResourceProvider, StatusResourceProvider
-from app.mcp.resources.datasets import DatasetResourceProvider, ResultsResourceProvider
+from app.mcp.resources.base import (
+    AdvancedResource,
+    ResourceMetadata,
+    advanced_resource_registry,
+)
+from app.mcp.resources.configuration import ConfigurationResourceProvider
+from app.mcp.resources.datasets import DatasetResourceProvider
 from app.mcp.resources.manager import resource_manager
 from app.mcp.server.base import ViolentUTFMCPServer
+from fastapi import FastAPI  # pylint: disable=unused-import
 from mcp.types import Prompt, Resource
 
 logger = logging.getLogger(__name__)
@@ -39,16 +45,22 @@ class TestPhase3ResourceSystem:
     """Test the advanced resource system implementation."""
 
     @pytest.mark.asyncio
-    async def test_advanced_resource_registry(self: "TestPhase3ResourceSystem") -> None:
+    async def test_advanced_resource_registry(self: "Self") -> None:
         """Test advanced resource registry functionality."""
-        # Initialize registry.
+        # Initialize registry
+
         await advanced_resource_registry.initialize()
 
         # Check that providers are registered
         providers = advanced_resource_registry.get_providers()
         assert len(providers) >= 4, f"Expected at least 4 providers, got {len(providers)}"
 
-        expected_providers = ["DatasetProvider", "ResultsProvider", "ConfigProvider", "StatusProvider"]
+        expected_providers = [
+            "DatasetProvider",
+            "ResultsProvider",
+            "ConfigProvider",
+            "StatusProvider",
+        ]
         for expected in expected_providers:
             assert expected in providers, f"Missing provider: {expected}"
 
@@ -64,7 +76,7 @@ class TestPhase3ResourceSystem:
             assert "cache_ttl_seconds" in stat
 
     @pytest.mark.asyncio
-    async def test_dataset_resource_provider(self: "TestPhase3ResourceSystem") -> None:
+    async def test_dataset_resource_provider(self: "Self") -> None:
         """Test dataset resource provider functionality."""
         provider = DatasetResourceProvider()
 
@@ -108,7 +120,7 @@ class TestPhase3ResourceSystem:
             assert "security" in resource.metadata.tags
 
     @pytest.mark.asyncio
-    async def test_configuration_resource_provider(self: "TestPhase3ResourceSystem") -> None:
+    async def test_configuration_resource_provider(self: "Self") -> None:
         """Test configuration resource provider."""
         provider = ConfigurationResourceProvider()
 
@@ -132,7 +144,7 @@ class TestPhase3ResourceSystem:
         assert resource.content["mcp"]["enabled"] is True
 
     @pytest.mark.asyncio
-    async def test_resource_caching(self: "TestPhase3ResourceSystem") -> None:
+    async def test_resource_caching(self: "Self") -> None:
         """Test resource caching functionality."""
         provider = DatasetResourceProvider()
 
@@ -168,9 +180,10 @@ class TestPhase3ResourceSystem:
             assert stats_after["total_entries"] == 0
 
     @pytest.mark.asyncio
-    async def test_resource_manager_integration(self: "TestPhase3ResourceSystem") -> None:
+    async def test_resource_manager_integration(self: "Self") -> None:
         """Test resource manager integration with advanced registry."""
-        # Initialize registry.
+        # Initialize registry
+
         await advanced_resource_registry.initialize()
 
         # Test listing resources through manager
@@ -181,7 +194,11 @@ class TestPhase3ResourceSystem:
                     name="Test Dataset",
                     description="Test description",
                     content={"test": True},
-                    metadata=ResourceMetadata(created_at=datetime.now(), updated_at=datetime.now(), tags=["test"]),
+                    metadata=ResourceMetadata(
+                        created_at=datetime.now(),
+                        updated_at=datetime.now(),
+                        tags=["test"],
+                    ),
                 )
             ]
 
@@ -199,12 +216,16 @@ class TestPhase3ResourceSystem:
             assert found_test, "Test dataset resource not found"
 
     @pytest.mark.asyncio
-    async def test_resource_summary(self: "TestPhase3ResourceSystem") -> None:
+    async def test_resource_summary(self: "Self") -> None:
         """Test resource summary functionality."""
         with patch("app.mcp.resources.base.advanced_resource_registry.list_resources") as mock_list:
+
             mock_list.return_value = [
                 AdvancedResource(
-                    uri="violentutf://datasets/ds1", name="Dataset 1", description="Test dataset", content={}
+                    uri="violentutf://datasets/ds1",
+                    name="Dataset 1",
+                    description="Test dataset",
+                    content={},
                 ),
                 AdvancedResource(
                     uri="violentutf://config/system/info",
@@ -213,7 +234,10 @@ class TestPhase3ResourceSystem:
                     content={},
                 ),
                 AdvancedResource(
-                    uri="violentutf://results/result1", name="Results 1", description="Test results", content={}
+                    uri="violentutf://results/result1",
+                    name="Results 1",
+                    description="Test results",
+                    content={},
                 ),
             ]
 
@@ -231,9 +255,10 @@ class TestPhase3ResourceSystem:
 class TestPhase3PromptsSystem:
     """Test the MCP prompts system implementation."""
 
-    def test_prompt_registry_initialization(self: "TestPhase3PromptsSystem") -> None:
+    def test_prompt_registry_initialization(self: "Self") -> None:
         """Test prompt registry is properly initialized."""
-        # Check registry has prompts.
+        # Check registry has prompts
+
         prompts = prompt_registry.list_prompts()
         assert len(prompts) >= 12, f"Expected at least 12 prompts, got {len(prompts)}"
 
@@ -249,7 +274,7 @@ class TestPhase3PromptsSystem:
         assert stats["categories"]["security"] >= 6
         assert stats["categories"]["testing"] >= 6
 
-    def test_security_prompts_registration(self: "TestPhase3PromptsSystem") -> None:
+    def test_security_prompts_registration(self: "Self") -> None:
         """Test security prompts are properly registered."""
         security_prompts = [
             "jailbreak_test",
@@ -266,7 +291,7 @@ class TestPhase3PromptsSystem:
             assert prompt.category == "security"
             assert len(prompt.arguments) > 0
 
-    def test_testing_prompts_registration(self: "TestPhase3PromptsSystem") -> None:
+    def test_testing_prompts_registration(self: "Self") -> None:
         """Test general testing prompts are properly registered."""
         testing_prompts = [
             "capability_test",
@@ -284,9 +309,10 @@ class TestPhase3PromptsSystem:
             assert len(prompt.arguments) > 0
 
     @pytest.mark.asyncio
-    async def test_jailbreak_prompt_rendering(self: "TestPhase3PromptsSystem") -> None:
+    async def test_jailbreak_prompt_rendering(self: "Self") -> None:
         """Test jailbreak prompt rendering."""
         prompt = prompt_registry.get("jailbreak_test")
+
         assert prompt is not None
 
         # Test with valid arguments
@@ -305,9 +331,10 @@ class TestPhase3PromptsSystem:
         assert "roleplay, hypothetical" in rendered
 
     @pytest.mark.asyncio
-    async def test_prompt_argument_validation(self: "TestPhase3PromptsSystem") -> None:
+    async def test_prompt_argument_validation(self: "Self") -> None:
         """Test prompt argument validation."""
         prompt = prompt_registry.get("bias_detection")
+
         assert prompt is not None
 
         # Test with missing required argument
@@ -332,9 +359,10 @@ class TestPhase3PromptsSystem:
         assert len(errors) > 0
 
     @pytest.mark.asyncio
-    async def test_dynamic_prompt_context(self: "TestPhase3PromptsSystem") -> None:
+    async def test_dynamic_prompt_context(self: "Self") -> None:
         """Test dynamic prompt with context provider."""
         prompt = prompt_registry.get("adversarial_test")
+
         assert prompt is not None
 
         args = {
@@ -354,7 +382,7 @@ class TestPhase3PromptsSystem:
         assert "context switching" in rendered
 
     @pytest.mark.asyncio
-    async def test_prompts_manager_integration(self: "TestPhase3PromptsSystem") -> None:
+    async def test_prompts_manager_integration(self: "Self") -> None:
         """Test prompts manager functionality."""
         await prompts_manager.initialize()
 
@@ -388,9 +416,10 @@ class TestPhase3EndToEndIntegration:
     """Test end-to-end integration of all Phase 3 components."""
 
     @pytest.mark.asyncio
-    async def test_mcp_server_with_prompts(self: "TestPhase3EndToEndIntegration") -> None:
+    async def test_mcp_server_with_prompts(self: "Self") -> None:
         """Test MCP server integration with prompts."""
         server = ViolentUTFMCPServer()
+
         await server.initialize()
 
         # Test listing prompts through server
@@ -405,9 +434,10 @@ class TestPhase3EndToEndIntegration:
             assert hasattr(prompt, "arguments")
 
     @pytest.mark.asyncio
-    async def test_mcp_server_get_prompt(self: "TestPhase3EndToEndIntegration") -> None:
+    async def test_mcp_server_get_prompt(self: "Self") -> None:
         """Test getting and rendering prompt through MCP server."""
         server = ViolentUTFMCPServer()
+
         await server.initialize()
 
         # Test successful prompt rendering
@@ -434,9 +464,10 @@ class TestPhase3EndToEndIntegration:
         assert "404" in str(exc_info.value) or "not found" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
-    async def test_mcp_server_capabilities(self: "TestPhase3EndToEndIntegration") -> None:
+    async def test_mcp_server_capabilities(self: "Self") -> None:
         """Test server capabilities reflect Phase 3 features."""
         server = ViolentUTFMCPServer()
+
         capabilities = server.get_capabilities()
 
         # All features should be enabled
@@ -446,9 +477,10 @@ class TestPhase3EndToEndIntegration:
         assert getattr(capabilities, "resource_subscriptions", False) is True
 
     @pytest.mark.asyncio
-    async def test_full_workflow_security_testing(self: "TestPhase3EndToEndIntegration") -> None:
+    async def test_full_workflow_security_testing(self: "Self") -> None:
         """Test a full security testing workflow."""
-        # Initialize all components.
+        # Initialize all components
+
         server = ViolentUTFMCPServer()
         await server.initialize()
 
@@ -480,7 +512,9 @@ class TestPhase3EndToEndIntegration:
                     description="Collection of jailbreak test cases",
                     content={"size": 500, "category": "security"},
                     metadata=ResourceMetadata(
-                        created_at=datetime.now(), updated_at=datetime.now(), tags=["jailbreak", "security", "testing"]
+                        created_at=datetime.now(),
+                        updated_at=datetime.now(),
+                        tags=["jailbreak", "security", "testing"],
                     ),
                 )
             ]
@@ -509,10 +543,8 @@ class TestPhase3EndToEndIntegration:
             assert len(dataset_content["content"]["content"]) == 2
 
     @pytest.mark.asyncio
-    async def test_performance_and_caching(self: "TestPhase3EndToEndIntegration") -> None:
+    async def test_performance_and_caching(self: "Self") -> None:
         """Test performance optimizations and caching."""
-        import time
-
         # Test resource caching performance
         provider = ConfigurationResourceProvider()
 
@@ -550,9 +582,10 @@ class TestPhase3EndToEndIntegration:
         assert render_time < 0.1  # Should render quickly
 
     @pytest.mark.asyncio
-    async def test_error_handling_and_recovery(self: "TestPhase3EndToEndIntegration") -> None:
+    async def test_error_handling_and_recovery(self: "Self") -> None:
         """Test error handling and recovery mechanisms."""
-        # Test resource provider error handling.
+        # Test resource provider error handling
+
         provider = DatasetResourceProvider()
 
         with patch("httpx.AsyncClient") as mock_client:
@@ -577,9 +610,10 @@ class TestPhase3EndToEndIntegration:
 class TestPhase3Documentation:
     """Test that Phase 3 is properly documented."""
 
-    def test_phase3_implementation_complete(self: "TestPhase3Documentation") -> None:
+    def test_phase3_implementation_complete(self: "Self") -> None:
         """Verify all Phase 3 components are implemented."""
-        # Check resource providers exist.
+        # Check resource providers exist
+
         from app.mcp.resources import configuration, datasets
 
         assert hasattr(datasets, "DatasetResourceProvider")
@@ -596,7 +630,7 @@ class TestPhase3Documentation:
         assert hasattr(testing, "ReasoningTestPrompt")
 
         # Check integration points
-        from app.mcp.server.base import ViolentUTFMCPServer
+        from app.mcp.server.base import ViolentUTFMCPServer  # pylint: disable=reimported,redefined-outer-name
 
         server = ViolentUTFMCPServer()
         assert hasattr(server, "_list_prompts")

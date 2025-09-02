@@ -1,27 +1,25 @@
-#!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Diagnostic script for ViolentUTF user context issues.
+"""Diagnose User Context module."""
 
-This script helps diagnose user context mismatches that prevent
-scorer testing from working properly.
-"""
-
-import os
 import sys
 from pathlib import Path
 
-# Add app directory to path
-sys.path.append(str(Path(__file__).parent / "app"))
-
 from app.db.duckdb_manager import DuckDBManager  # noqa: E402
 
+# Add app directory to path
 
-def diagnose_user_contexts() -> None:
+sys.path.append(str(Path(__file__).parent / "app"))
+
+
+def diagnose_user_context() -> None:
     """Diagnose what user contexts have data."""
     print("🔍 ViolentUTF User Context Diagnostic")
+
     print("=" * 50)
 
     # Common user contexts to check
@@ -81,4 +79,4 @@ def diagnose_user_contexts() -> None:
 
 
 if __name__ == "__main__":
-    diagnose_user_contexts()
+    diagnose_user_context()

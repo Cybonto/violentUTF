@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Test script to verify scorer batch execution improvements.
-
+Test script to verify scorer batch execution improvements
 """
 
 import os
@@ -12,17 +14,16 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import time
 import unittest
 from unittest.mock import MagicMock, patch
 
 
 class TestScorerBatchExecution(unittest.TestCase):
-    """Test scorer batch execution with timeout handling."""
+    """Test scorer batch execution with timeout handling"""
 
-    def test_api_request_custom_timeout(self) -> None:
-        """ "Test that api_request accepts custom timeout parameter."""
-        # Import the function.
+    def test_api_request_custom_timeout(self):
+        """Test that api_request accepts custom timeout parameter"""
+        # Import the function
         from violentutf.pages import Configure_Scorers as scorer_page
 
         # Mock requests.request
@@ -48,9 +49,9 @@ class TestScorerBatchExecution(unittest.TestCase):
                     "POST", "http://test.com", headers={"Authorization": "Bearer test"}, timeout=60
                 )
 
-    def test_batch_size_reduction(self: "TestScorerBatchExecution") -> None:
-        """Test that batch size is reduced from 10 to 5."""
-        # Check the code contains the reduced batch size.
+    def test_batch_size_reduction(self):
+        """Test that batch size is reduced from 10 to 5"""
+        # Check the code contains the reduced batch size
         import inspect
 
         import violentutf.pages.Configure_Scorers as scorer_page
@@ -62,9 +63,9 @@ class TestScorerBatchExecution(unittest.TestCase):
         self.assertIn("batch_size = 5", source)
         self.assertNotIn("batch_size = 10", source)
 
-    def test_consecutive_failure_handling(self: "TestScorerBatchExecution") -> None:
-        """Test that execution stops after consecutive failures."""
-        # This would require more complex mocking of the execution flow.
+    def test_consecutive_failure_handling(self):
+        """Test that execution stops after consecutive failures"""
+        # This would require more complex mocking of the execution flow
         # For now, verify the code includes consecutive failure handling
         import inspect
 
@@ -77,8 +78,8 @@ class TestScorerBatchExecution(unittest.TestCase):
         self.assertIn("max_consecutive_failures", source)
         self.assertIn("consecutive_failures >= max_consecutive_failures", source)
 
-    def test_timeout_values(self: "TestScorerBatchExecution") -> None:
-        """Test that appropriate timeout values are set."""
+    def test_timeout_values(self):
+        """Test that appropriate timeout values are set"""
         import inspect
 
         import violentutf.pages.Configure_Scorers as scorer_page
@@ -91,8 +92,8 @@ class TestScorerBatchExecution(unittest.TestCase):
         source = inspect.getsource(scorer_page._test_scorer_orchestrator_mode)
         self.assertIn("timeout=45", source)  # 45-second timeout for test execution
 
-    def test_performance_expectations(self: "TestScorerBatchExecution") -> None:
-        """Test performance expectations with new configuration."""
+    def test_performance_expectations(self):
+        """Test performance expectations with new configuration"""
         batch_size = 5
         timeout = 60
 

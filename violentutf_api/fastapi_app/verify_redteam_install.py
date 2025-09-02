@@ -1,71 +1,81 @@
-#!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Verify PyRIT and Garak installation.
+"""Red Team Installation Verification Tool.
 
-This script checks that the AI red-teaming frameworks are properly installed
+Verify that required red teaming packages are properly installed.
+
 """
 
 import importlib
 import sys
-from typing import Any, Optional
+from typing import Optional
 
 
-def verify_package(package_name: str, import_name: Optional[str] = None) -> Any:
-    """Verify a package can be imported."""
-    if import_name is None:
-        import_name = package_name
+def verify_package(package_name: str, import_name: Optional[str] = None) -> bool:
+    """Verify that a package is properly installed and importable.
+
+    Args:
+        package_name: Name of the package to verify
+        import_name: Optional import name if different from package name
+
+    Returns:
+        bool: True if package is available and importable
+
+    """
+    import_name = import_name or package_name
 
     try:
+        # Try to import the module
         module = importlib.import_module(import_name)
-        print(f"✅ {package_name} installed successfully")
+
+        # Check if module has version info
         if hasattr(module, "__version__"):
-            print(f"   Version: {module.__version__}")
+            pass  # Version info available
+
         return True
-    except ImportError as e:
-        print(f"❌ {package_name} import failed: {e}")
+
+    except ImportError:
+        # Package not available or not properly installed
         return False
-    except Exception as e:
-        print(f"⚠️  {package_name} import warning: {e}")
-        return True  # Some packages may have import warnings but still work
+    except Exception:
+        # Other error during import
+        return False
 
 
 def main() -> None:
-    """Main verification function."""
-    print("Verifying AI red-teaming frameworks installation...")
-    print("-" * 50)
+    """Run main verification function."""
+    print("🔍 Verifying Red Team Package Installation...")
+
+    # List of critical packages for red teaming
+    packages_to_verify = [
+        ("pyrit", "pyrit"),
+        ("garak", "garak"),
+        ("requests", "requests"),
+        ("pydantic", "pydantic"),
+        ("fastapi", "fastapi"),
+        ("streamlit", "streamlit"),
+    ]
 
     all_good = True
 
-    # Check PyRIT
-    print("Checking PyRIT...")
-    if not verify_package("PyRIT", "pyrit"):
-        all_good = False
-
-    # Check Garak
-    print("\nChecking Garak...")
-    if not verify_package("Garak", "garak"):
-        all_good = False
-
-    # Check MCP SDK
-    print("\nChecking MCP SDK...")
-    if not verify_package("MCP", "mcp"):
-        all_good = False
-
-    # Check SSE Starlette
-    print("\nChecking SSE Starlette...")
-    if not verify_package("SSE-Starlette", "sse_starlette"):
-        all_good = False
-
-    print("-" * 50)
+    for package_name, import_name in packages_to_verify:
+        if verify_package(package_name, import_name):
+            print(f"   ✅ {package_name}: Available")
+        else:
+            print(f"   ❌ {package_name}: Not available or not properly installed")
+            all_good = False
 
     if all_good:
-        print("✅ All required packages verified successfully!")
-        sys.exit(0)
+        print("\n🎉 All red team packages are properly installed!")
+        return
     else:
-        print("❌ Some packages failed verification. Check the errors above.")
+        print("\n⚠️ Some packages are missing or not properly installed.")
+        print("Please install missing packages using:")
+        print("   pip install -r requirements.txt")
         sys.exit(1)
 
 

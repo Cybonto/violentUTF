@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
 Test script to verify that all endpoints used in 0_Start.py are properly routed through APISIX
-
 Run this script to ensure the Start page will work correctly with the API
 """
 
 import os
 import re
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 import requests
 
@@ -20,7 +22,7 @@ START_PAGE_PATH = "../violentutf/pages/0_Start.py"
 
 
 def extract_endpoints_from_start_page() -> List[str]:
-    """Extract all API endpoints from the Start and Configure Generators pages."""
+    """Extract all API endpoints from the Start and Configure Generators pages"""
     endpoints = []
 
     # Check Start page, Configure Generators page, and Configure Datasets page
@@ -52,7 +54,7 @@ def extract_endpoints_from_start_page() -> List[str]:
 
 
 def test_apisix_connectivity() -> bool:
-    """Test basic APISIX connectivity."""
+    """Test basic APISIX connectivity"""
     try:
         response = requests.get(f"{APISIX_BASE_URL}/health", timeout=10)
         return response.status_code == 200
@@ -61,7 +63,7 @@ def test_apisix_connectivity() -> bool:
 
 
 def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
-    """Test if an endpoint is routed through APISIX."""
+    """Test if an endpoint is routed through APISIX"""
     headers = {
         "Authorization": "Bearer test_token",
         "X-Real-IP": "127.0.0.1",
@@ -74,9 +76,17 @@ def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
         response = requests.get(f"{APISIX_BASE_URL}{endpoint}", headers=headers, timeout=10)
 
         if response.status_code == 404:
-            return "❌ NOT ROUTED", response.status_code, "Route not configured in APISIX"
+            return (
+                "❌ NOT ROUTED",
+                response.status_code,
+                "Route not configured in APISIX",
+            )
         elif response.status_code in [401, 403]:
-            return "✅ ROUTED", response.status_code, "Authentication required (expected)"
+            return (
+                "✅ ROUTED",
+                response.status_code,
+                "Authentication required (expected)",
+            )
         elif response.status_code == 200:
             return "✅ ROUTED", response.status_code, "Accessible"
         else:
@@ -88,8 +98,8 @@ def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
         return "❌ ERROR", 0, str(e)
 
 
-def main() -> Any:
-    """Run main test function."""
+def main():
+    """Main test function"""
     print("🚀 Testing 0_Start.py API Endpoints Through APISIX")
     print("=" * 60)
     print()

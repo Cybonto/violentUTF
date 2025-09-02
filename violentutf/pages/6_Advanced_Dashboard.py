@@ -1,13 +1,23 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-import asyncio
+"""6 Advanced Dashboard module."""
+
+# Copyright (c) 2025 ViolentUTF Contributors.
+
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import json
 import os
-import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -57,8 +67,9 @@ API_ENDPOINTS = {
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway."""
+    """Get authentication headers for API requests through APISIX Gateway"""
     try:
+
         # Use jwt_manager for automatic token refresh
         token = jwt_manager.get_valid_token()
 
@@ -69,7 +80,11 @@ def get_auth_headers() -> Dict[str, str]:
         if not token:
             return {}
 
-        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "X-API-Gateway": "APISIX",
+        }
 
         # Add APISIX API key for AI model access
         apisix_api_key = (
@@ -80,33 +95,36 @@ def get_auth_headers() -> Dict[str, str]:
 
         return headers
     except Exception as e:
-        logger.error(f"Failed to get auth headers: {e}")
+        logger.error("Failed to get auth headers: %s", e)
         return {}
 
 
-def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
-    """Make an authenticated API request through APISIX Gateway."""
+def api_request(method: str, url: str, **kwargs: object) -> Optional[Dict[str, object]]:
+    """Make an authenticated API request through APISIX Gateway"""
     headers = get_auth_headers()
+
     if not headers.get("Authorization"):
         logger.warning("No authentication token available for API request")
         return None
 
     try:
-        logger.debug(f"Making {method} request to {url} through APISIX Gateway")
+        logger.debug("Making %s request to %s through APISIX Gateway", method, url)
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+
         if response.status_code in [200, 201]:
-            return response.json()
+            return cast(Dict[str, object], response.json())
         else:
-            logger.error(f"API Error {response.status_code}: {url} - {response.text}")
+            logger.error("API Error %s: %s - %s", response.status_code, url, response.text)
             return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"Request exception to {url}: {e}")
+        logger.error("Request exception to %s: %s", url, e)
         return None
 
 
-def create_compatible_api_token() -> None:
-    """Create a FastAPI-compatible token using JWT manager."""
+def create_compatible_api_token() -> Optional[str]:
+    """Create a FastAPI-compatible token using JWT manager"""
     try:
+
         from utils.user_context import get_user_context_for_token
 
         # Get consistent user context regardless of authentication source
@@ -119,7 +137,7 @@ def create_compatible_api_token() -> None:
         if api_token:
             logger.info("Successfully created API token using JWT manager")
             st.session_state["api_token"] = api_token
-            return api_token
+            return cast(str, api_token)
         else:
             st.error("🚨 Security Error: JWT secret key not configured.")
             logger.error("Failed to create API token - JWT secret key not available")
@@ -127,7 +145,7 @@ def create_compatible_api_token() -> None:
 
     except Exception as e:
         st.error("❌ Failed to generate API token.")
-        logger.error(f"Token creation failed: {e}")
+        logger.error("Token creation failed: %s", e)
         return None
 
 
@@ -135,9 +153,10 @@ def create_compatible_api_token() -> None:
 
 
 @st.cache_data(ttl=300)  # 5-minute cache
-def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
-    """Load comprehensive execution data for analysis."""
+def load_all_execution_data(days_back: int = 30) -> Dict[str, object]:
+    """Load comprehensive execution data for analysis"""
     try:
+
         # First get all orchestrators (same approach as Dashboard_2)
         orchestrators_response = api_request("GET", API_ENDPOINTS["orchestrators"])
         if not orchestrators_response:
@@ -153,7 +172,7 @@ def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
         all_results = []
 
         # For each orchestrator, get its executions
-        for orchestrator in orchestrators:
+        for orchestrator in cast(List[Dict[str, Any]], orchestrators):
             orch_id = orchestrator.get("orchestrator_id")  # Use correct field name
             if not orch_id:
                 continue
@@ -163,7 +182,7 @@ def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
             exec_response = api_request("GET", exec_url)
 
             if exec_response and "executions" in exec_response:
-                for execution in exec_response["executions"]:
+                for execution in cast(List[Dict[str, Any]], exec_response["executions"]):
                     # Add orchestrator info to execution
                     execution["orchestrator_name"] = orchestrator.get("name", "")
                     execution["orchestrator_type"] = orchestrator.get("type", "")
@@ -186,7 +205,7 @@ def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
 
                     # Extract scores directly from the response (not nested under 'results')
                     if details and "scores" in details:
-                        for score in details["scores"]:
+                        for score in cast(List[Dict[str, Any]], details["scores"]):
                             try:
                                 # Parse metadata
                                 metadata = score.get("score_metadata", "{}")
@@ -201,30 +220,33 @@ def load_all_execution_data(days_back: int = 30) -> Dict[str, Any]:
 
                                 all_results.append(score)
                             except Exception as e:
-                                logger.error(f"Failed to parse score result: {e}")
+                                logger.error("Failed to parse score result: %s", e)
                                 continue
 
         return {"executions": all_executions, "results": all_results}
 
     except Exception as e:
-        logger.error(f"Failed to load execution data: {e}")
+        logger.error("Failed to load execution data: %s", e)
         return {"executions": [], "results": []}
 
 
 # --- ML Analysis Functions ---
 
 
-def prepare_feature_matrix(results: List[Dict[str, Any]]) -> Tuple[pd.DataFrame, np.ndarray]:
-    """Prepare feature matrix for ML analysis."""
+def prepare_feature_matrix(
+    results: List[Dict[str, object]],
+) -> Tuple[pd.DataFrame, np.ndarray]:
+    """Prepare feature matrix for ML analysis"""
     features = []
 
     for result in results:
-        metadata = result.get("metadata", {})
+        metadata = cast(Dict[str, Any], result.get("metadata", {}))
 
         # Extract features with proper score value cleaning
-        def clean_score_for_features(x) -> Any:
-            """Clean score value for feature extraction."""
+        def clean_score_for_features(x: object) -> float:
+            """Clean score value for feature extraction"""
             if x is None or (isinstance(x, float) and np.isnan(x)):
+
                 return 0.0
             if isinstance(x, bool):
                 return float(x)
@@ -259,17 +281,17 @@ def prepare_feature_matrix(results: List[Dict[str, Any]]) -> Tuple[pd.DataFrame,
             "batch_position": metadata.get("batch_index", 0) / max(metadata.get("total_batches", 1), 1),
             # Temporal features
             "hour": datetime.fromisoformat(
-                result.get("execution_time", datetime.now().isoformat()).replace("Z", "+00:00")
+                str(result.get("execution_time", datetime.now().isoformat())).replace("Z", "+00:00")
             ).hour,
             "day_of_week": datetime.fromisoformat(
-                result.get("execution_time", datetime.now().isoformat()).replace("Z", "+00:00")
+                str(result.get("execution_time", datetime.now().isoformat())).replace("Z", "+00:00")
             ).weekday(),
             # Text features (simplified)
-            "rationale_length": len(result.get("score_rationale", "")),
+            "rationale_length": len(str(result.get("score_rationale", ""))),
             "has_critical_keywords": (
                 1
                 if any(
-                    kw in result.get("score_rationale", "").lower()
+                    kw in str(result.get("score_rationale", "")).lower()
                     for kw in ["critical", "severe", "dangerous", "harmful"]
                 )
                 else 0
@@ -289,9 +311,10 @@ def prepare_feature_matrix(results: List[Dict[str, Any]]) -> Tuple[pd.DataFrame,
     return df_features, feature_matrix
 
 
-def perform_clustering_analysis(feature_matrix: np.ndarray, n_clusters: int = 5) -> Dict[str, Any]:
-    """Perform clustering analysis on scorer results."""
-    # Standardize features.
+def perform_clustering_analysis(feature_matrix: np.ndarray, n_clusters: int = 5) -> Dict[str, object]:
+    """Perform clustering analysis on scorer results"""
+    # Standardize features
+
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(feature_matrix)
 
@@ -328,9 +351,10 @@ def perform_clustering_analysis(feature_matrix: np.ndarray, n_clusters: int = 5)
     }
 
 
-def perform_anomaly_detection(feature_matrix: np.ndarray, contamination: float = 0.1) -> Dict[str, Any]:
-    """Perform anomaly detection using Isolation Forest."""
-    # Standardize features.
+def perform_anomaly_detection(feature_matrix: np.ndarray, contamination: float = 0.1) -> Dict[str, object]:
+    """Perform anomaly detection using Isolation Forest"""
+    # Standardize features
+
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(feature_matrix)
 
@@ -353,17 +377,19 @@ def perform_anomaly_detection(feature_matrix: np.ndarray, contamination: float =
     }
 
 
-def analyze_patterns_and_trends(results: List[Dict[str, Any]], df_features: pd.DataFrame) -> Dict[str, Any]:
-    """Analyze patterns and trends in the data."""
-    # Time series analysis.
+def analyze_patterns_and_trends(results: List[Dict[str, object]], df_features: pd.DataFrame) -> Dict[str, object]:
+    """Analyze patterns and trends in the data"""
+    # Time series analysis
+
     df_results = pd.DataFrame(results)
     df_results["timestamp"] = pd.to_datetime(df_results["execution_time"])
     df_results = df_results.sort_values("timestamp")
 
     # Clean and convert score_value to numeric where possible
-    def clean_score_value(x) -> Any:
-        """Convert score values to numeric for analysis."""
+    def clean_score_value(x: object) -> float:
+        """Convert score values to numeric for analysis"""
         if x is None or (isinstance(x, float) and np.isnan(x)):
+
             return 0.0
         if isinstance(x, bool):
             return float(x)
@@ -400,7 +426,7 @@ def analyze_patterns_and_trends(results: List[Dict[str, Any]], df_features: pd.D
     if len(daily_stats) > 1:
         x = np.arange(len(daily_stats))
         y = daily_stats["score_value"].values
-        slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+        slope, _, r_value, p_value, _ = stats.linregress(x, y)
         trend = {
             "slope": float(slope),
             "direction": "increasing" if slope > 0 else "decreasing",
@@ -431,41 +457,55 @@ def analyze_patterns_and_trends(results: List[Dict[str, Any]], df_features: pd.D
 # --- Visualization Functions ---
 
 
-def render_ml_overview(clustering_results: Dict[str, Any], anomaly_results: Dict[str, Any]) -> None:
-    """Render ML analysis overview."""
+def render_ml_overview(clustering_results: Dict[str, object], anomaly_results: Dict[str, object]) -> None:
+    """Render ML analysis overview"""
     st.header("🤖 Machine Learning Analysis Overview")
 
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
-        n_clusters = len(clustering_results.get("cluster_stats", {}))
+        n_clusters = len(cast(Dict[str, Any], clustering_results.get("cluster_stats", {})))
         st.metric("Data Clusters", n_clusters, help="Number of distinct patterns identified")
 
     with col2:
-        n_anomalies = anomaly_results.get("n_anomalies", 0)
+        n_anomalies = int(cast(Union[int, float, str], anomaly_results.get("n_anomalies", 0)))
         st.metric("Anomalies Detected", n_anomalies, help="Unusual patterns in the data")
 
     with col3:
         anomaly_rate = anomaly_results.get("anomaly_percentage", 0)
-        st.metric("Anomaly Rate", f"{anomaly_rate:.1f}%", help="Percentage of anomalous results")
+        st.metric(
+            "Anomaly Rate",
+            f"{anomaly_rate:.1f}%",
+            help="Percentage of anomalous results",
+        )
 
     with col4:
-        explained_var = sum(clustering_results.get("pca_explained_variance", [])) * 100
-        st.metric("Variance Explained", f"{explained_var:.1f}%", help="By top 3 principal components")
+        explained_var = sum(cast(List[float], clustering_results.get("pca_explained_variance", []))) * 100
+        st.metric(
+            "Variance Explained",
+            f"{explained_var:.1f}%",
+            help="By top 3 principal components",
+        )
 
     with col5:
-        statistical_anomalies = anomaly_results.get("n_statistical_anomalies", 0)
-        st.metric("Statistical Outliers", statistical_anomalies, help="Based on z-score analysis")
+        statistical_anomalies = int(cast(Union[int, float, str], anomaly_results.get("n_statistical_anomalies", 0)))
+        st.metric(
+            "Statistical Outliers",
+            statistical_anomalies,
+            help="Based on z-score analysis",
+        )
 
 
 def render_clustering_visualization(
-    results: List[Dict[str, Any]], clustering_results: Dict[str, Any], df_features: pd.DataFrame
+    results: List[Dict[str, object]],
+    clustering_results: Dict[str, object],
+    df_features: pd.DataFrame,
 ) -> None:
-    """Render clustering visualization."""
+    """Render clustering visualization"""
     st.header("🎯 Result Clustering Analysis")
 
-    pca_features = clustering_results.get("pca_features", [])
-    kmeans_labels = clustering_results.get("kmeans_labels", [])
+    pca_features = np.array(clustering_results.get("pca_features", []))
+    kmeans_labels = np.array(clustering_results.get("kmeans_labels", []))
 
     if len(pca_features) == 0:
         st.info("Insufficient data for clustering visualization")
@@ -505,7 +545,7 @@ def render_clustering_visualization(
             # 2D visualization fallback
             fig = px.scatter(
                 x=pca_features[:, 0],
-                y=pca_features[:, 1] if pca_features.shape[1] > 1 else np.zeros(len(pca_features)),
+                y=(pca_features[:, 1] if pca_features.shape[1] > 1 else np.zeros(len(pca_features))),
                 color=kmeans_labels,
                 title="2D Cluster Visualization (PCA)",
                 labels={"x": "PC1", "y": "PC2", "color": "Cluster"},
@@ -519,12 +559,22 @@ def render_clustering_visualization(
         if cluster_stats:
             cluster_data = pd.DataFrame(
                 [
-                    {"Cluster": k.replace("cluster_", "Cluster "), "Size": v["size"], "Percentage": v["percentage"]}
-                    for k, v in cluster_stats.items()
+                    {
+                        "Cluster": k.replace("cluster_", "Cluster "),
+                        "Size": v["size"],
+                        "Percentage": v["percentage"],
+                    }
+                    for k, v in cast(Dict[str, Any], cluster_stats).items()
                 ]
             )
 
-            fig = px.pie(cluster_data, values="Size", names="Cluster", title="Cluster Distribution", hole=0.4)
+            fig = px.pie(
+                cluster_data,
+                values="Size",
+                names="Cluster",
+                title="Cluster Distribution",
+                hole=0.4,
+            )
             st.plotly_chart(fig, use_container_width=True)
 
     # Cluster characteristics
@@ -532,7 +582,7 @@ def render_clustering_visualization(
 
     # Analyze each cluster
     cluster_analysis = []
-    for cluster_id in range(len(cluster_stats)):
+    for cluster_id in range(len(cast(Dict[str, Any], cluster_stats))):
         cluster_mask = kmeans_labels == cluster_id
         cluster_results = [r for r, m in zip(results, cluster_mask) if m]
 
@@ -542,8 +592,13 @@ def render_clustering_visualization(
             violation_rate = violations / len(cluster_results) * 100 if cluster_results else 0
 
             # Most common scorer in cluster
-            scorer_counts = Counter(r.get("metadata", {}).get("scorer_type", "Unknown") for r in cluster_results)
+            scorer_counts = Counter(
+                cast(Dict[str, Any], r).get("metadata", {}).get("scorer_type", "Unknown") for r in cluster_results
+            )
             most_common_scorer = scorer_counts.most_common(1)[0][0] if scorer_counts else "Unknown"
+
+            # Calculate average hour for this cluster
+            avg_hour = np.mean([cast(Dict[str, Any], r).get("metadata", {}).get("hour", 12) for r in cluster_results])
 
             cluster_analysis.append(
                 {
@@ -551,7 +606,7 @@ def render_clustering_visualization(
                     "Size": len(cluster_results),
                     "Violation Rate": f"{violation_rate:.1f}%",
                     "Primary Scorer": most_common_scorer,
-                    "Avg Hour": f"{np.mean([r.get('metadata', {}).get('hour', 12) for r in cluster_results]):.1f}",
+                    "Avg Hour": f"{avg_hour:.1f}",
                 }
             )
 
@@ -561,15 +616,17 @@ def render_clustering_visualization(
 
 
 def render_anomaly_detection(
-    results: List[Dict[str, Any]], anomaly_results: Dict[str, Any], df_features: pd.DataFrame
+    results: List[Dict[str, object]],
+    anomaly_results: Dict[str, object],
+    df_features: pd.DataFrame,
 ) -> None:
-    """Render anomaly detection results."""
+    """Render anomaly detection results"""
     st.header("🔍 Anomaly Detection")
 
-    anomaly_labels = anomaly_results.get("anomaly_labels", [])
-    anomaly_scores = anomaly_results.get("anomaly_scores", [])
+    anomaly_labels = np.array(anomaly_results.get("anomaly_labels", []))
+    anomaly_scores = np.array(anomaly_results.get("anomaly_scores", []))
 
-    if len(anomaly_labels) == 0:
+    if len(cast(List[Any], anomaly_labels)) == 0:
         st.info("No anomaly detection results available")
         return
 
@@ -581,17 +638,32 @@ def render_anomaly_detection(
 
         # Normal points
         normal_mask = anomaly_labels != -1
-        fig.add_trace(go.Histogram(x=anomaly_scores[normal_mask], name="Normal", marker_color="blue", opacity=0.7))
+        fig.add_trace(
+            go.Histogram(
+                x=anomaly_scores[normal_mask],
+                name="Normal",
+                marker_color="blue",
+                opacity=0.7,
+            )
+        )
 
         # Anomalies
         anomaly_mask = anomaly_labels == -1
         if np.any(anomaly_mask):
             fig.add_trace(
-                go.Histogram(x=anomaly_scores[anomaly_mask], name="Anomalies", marker_color="red", opacity=0.7)
+                go.Histogram(
+                    x=anomaly_scores[anomaly_mask],
+                    name="Anomalies",
+                    marker_color="red",
+                    opacity=0.7,
+                )
             )
 
         fig.update_layout(
-            title="Anomaly Score Distribution", xaxis_title="Anomaly Score", yaxis_title="Count", barmode="overlay"
+            title="Anomaly Score Distribution",
+            xaxis_title="Anomaly Score",
+            yaxis_title="Count",
+            barmode="overlay",
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -622,15 +694,15 @@ def render_anomaly_detection(
         anomaly_data = []
         for idx in anomaly_indices[:20]:  # Show top 20
             if idx < len(results):
-                result = results[idx]
-                metadata = result.get("metadata", {})
+                result = cast(Dict[str, Any], results[idx])
+                metadata = cast(Dict[str, Any], result.get("metadata", {}))
                 anomaly_data.append(
                     {
                         "Time": result.get("execution_time", "Unknown")[:19],
                         "Scorer": metadata.get("scorer_name", "Unknown"),
                         "Generator": metadata.get("generator_name", "Unknown"),
                         "Score": str(result.get("score_value", "N/A")),
-                        "Anomaly Score": f"{anomaly_scores[idx]:.3f}",
+                        "Anomaly Score": f"{float(anomaly_scores[idx]):.3f}",
                     }
                 )
 
@@ -638,44 +710,47 @@ def render_anomaly_detection(
         st.dataframe(df_anomalies, use_container_width=True, hide_index=True)
 
 
-def render_pattern_trends(pattern_analysis: Dict[str, Any]) -> None:
-    """Render pattern and trend analysis."""
+def render_pattern_trends(pattern_analysis: Dict[str, object]) -> None:
+    """Render pattern and trend analysis"""
     st.header("📈 Pattern & Trend Analysis")
 
     # Trend overview
-    trend = pattern_analysis.get("trend", {})
+    trend = cast(Dict[str, Any], pattern_analysis.get("trend", {}))
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        direction = trend.get("direction", "stable")
+        direction = str(trend.get("direction", "stable"))
         icon = "📈" if direction == "increasing" else "📉" if direction == "decreasing" else "➡️"
         st.metric("Trend Direction", f"{icon} {direction.capitalize()}")
 
     with col2:
-        slope = trend.get("slope", 0)
+        slope = float(trend.get("slope", 0))
         st.metric("Trend Strength", f"{abs(slope):.4f}", help="Rate of change per day")
 
     with col3:
-        r_squared = trend.get("r_squared", 0)
+        r_squared = float(trend.get("r_squared", 0))
         st.metric("R-squared", f"{r_squared:.3f}", help="Goodness of fit")
 
     with col4:
-        p_value = trend.get("p_value", 1)
+        p_value = float(trend.get("p_value", 1))
         significance = "Significant" if p_value < 0.05 else "Not Significant"
         st.metric("Statistical Significance", significance)
 
     # Time series visualization
     daily_stats = pattern_analysis.get("daily_stats")
 
-    if daily_stats is not None and len(daily_stats) > 0:
+    if daily_stats is not None and len(cast(List[Any], daily_stats)) > 0:
         st.subheader("📊 Time Series Analysis")
 
         # Reset index for plotting
-        daily_stats_plot = daily_stats.reset_index()
+        daily_stats_plot = cast(Any, daily_stats).reset_index()
 
         fig = make_subplots(
-            rows=2, cols=1, subplot_titles=("Daily Violation Rate", "Test Volume"), vertical_spacing=0.1
+            rows=2,
+            cols=1,
+            subplot_titles=("Daily Violation Rate", "Test Volume"),
+            vertical_spacing=0.1,
         )
 
         # Violation rate
@@ -728,7 +803,7 @@ def render_pattern_trends(pattern_analysis: Dict[str, Any]) -> None:
     st.subheader("🔗 Feature Correlations")
 
     correlation_matrix = pattern_analysis.get("correlation_matrix")
-    if correlation_matrix is not None and len(correlation_matrix) > 0:
+    if correlation_matrix is not None and len(cast(Any, correlation_matrix)) > 0:
         # Select important features for visualization
         important_features = [
             "is_violation",
@@ -741,10 +816,10 @@ def render_pattern_trends(pattern_analysis: Dict[str, Any]) -> None:
         ]
 
         # Filter to available features
-        available_features = [f for f in important_features if f in correlation_matrix.columns]
+        available_features = [f for f in important_features if f in cast(Any, correlation_matrix).columns]
 
         if len(available_features) > 1:
-            corr_subset = correlation_matrix.loc[available_features, available_features]
+            corr_subset = cast(Any, correlation_matrix).loc[available_features, available_features]
 
             fig = px.imshow(
                 corr_subset,
@@ -759,15 +834,15 @@ def render_pattern_trends(pattern_analysis: Dict[str, Any]) -> None:
             st.plotly_chart(fig, use_container_width=True)
 
             # Top correlations with violations
-            top_corr = pattern_analysis.get("top_correlations", {})
+            top_corr = cast(Dict[str, Any], pattern_analysis.get("top_correlations", {}))
             if top_corr:
                 st.markdown("**Top Correlations with Violations:**")
                 for feature, corr in list(top_corr.items())[:5]:
                     st.text(f"• {feature}: {corr:.3f}")
 
 
-def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: Dict[str, Any]) -> None:
-    """Render predictive insights and recommendations."""
+def render_predictive_insights(results: List[Dict[str, object]], pattern_analysis: Dict[str, object]) -> None:
+    """Render predictive insights and recommendations"""
     st.header("💡 Predictive Insights & Recommendations")
 
     # Risk prediction model (simplified)
@@ -782,10 +857,11 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
         # Time-based risk
         hour_violations = defaultdict(list)
         for r in results:
+            r_dict = cast(Dict[str, Any], r)
             hour = datetime.fromisoformat(
-                r.get("execution_time", datetime.now().isoformat()).replace("Z", "+00:00")
+                str(r_dict.get("execution_time", datetime.now().isoformat())).replace("Z", "+00:00")
             ).hour
-            if r.get("score_value") is True:
+            if r_dict.get("score_value") is True:
                 hour_violations[hour].append(1)
 
         high_risk_hours = [
@@ -802,17 +878,22 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
             )
 
         # Scorer-based risk
-        scorer_risks = defaultdict(int)
+        scorer_risks: Dict[str, int] = defaultdict(int)
         for r in results:
-            if r.get("score_value") is True:
-                scorer = r.get("metadata", {}).get("scorer_type", "Unknown")
+            r_dict = cast(Dict[str, Any], r)
+            if r_dict.get("score_value") is True:
+                scorer = cast(Dict[str, Any], r_dict.get("metadata", {})).get("scorer_type", "Unknown")
                 scorer_risks[scorer] += 1
 
         high_risk_scorers = [s for s, c in scorer_risks.items() if c > np.mean(list(scorer_risks.values()))]
 
         if high_risk_scorers:
             risk_factors.append(
-                {"Factor": "High-Risk Scorers", "Description": ", ".join(high_risk_scorers[:3]), "Impact": "Medium"}
+                {
+                    "Factor": "High-Risk Scorers",
+                    "Description": ", ".join(high_risk_scorers[:3]),
+                    "Impact": "Medium",
+                }
             )
 
         if risk_factors:
@@ -826,8 +907,8 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
         recommendations = []
 
         # Trend-based recommendations
-        trend = pattern_analysis.get("trend", {})
-        if trend.get("direction") == "increasing" and trend.get("p_value", 1) < 0.05:
+        trend = cast(Dict[str, Any], pattern_analysis.get("trend", {}))
+        if trend.get("direction") == "increasing" and float(trend.get("p_value", 1)) < 0.05:
             recommendations.append(
                 {
                     "Priority": "🔴 High",
@@ -837,7 +918,11 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
             )
 
         # Anomaly-based recommendations
-        anomaly_rate = len([r for r in results if r.get("is_anomaly", False)]) / len(results) * 100 if results else 0
+        anomaly_rate = (
+            len([r for r in results if cast(Dict[str, Any], r).get("is_anomaly", False)]) / len(results) * 100
+            if results
+            else 0
+        )
         if anomaly_rate > 5:
             recommendations.append(
                 {
@@ -867,14 +952,14 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
     st.subheader("📊 Violation Rate Forecast")
 
     daily_stats = pattern_analysis.get("daily_stats")
-    if daily_stats is not None and len(daily_stats) > 7:
+    if daily_stats is not None and len(cast(Any, daily_stats)) > 7:
         # Simple linear forecast
-        n_days = len(daily_stats)
+        n_days = len(cast(Any, daily_stats))
         x = np.arange(n_days)
-        y = daily_stats["score_value"].values
+        y = cast(Any, daily_stats)["score_value"].values
 
         # Fit linear model
-        slope = trend.get("slope", 0)
+        slope = float(trend.get("slope", 0))
         intercept = np.mean(y) - slope * np.mean(x)
 
         # Generate forecast
@@ -887,19 +972,29 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
 
         # Historical data
         fig.add_trace(
-            go.Scatter(x=daily_stats.index, y=y, mode="lines+markers", name="Historical", line=dict(color="blue"))
+            go.Scatter(
+                x=cast(Any, daily_stats).index,
+                y=y,
+                mode="lines+markers",
+                name="Historical",
+                line=dict(color="blue"),
+            )
         )
 
         # Forecast
-        future_dates = pd.date_range(start=daily_stats.index[-1] + timedelta(days=1), periods=forecast_days)
+        future_dates = pd.date_range(start=cast(Any, daily_stats).index[-1] + timedelta(days=1), periods=forecast_days)
         fig.add_trace(
             go.Scatter(
-                x=future_dates, y=forecast_y, mode="lines+markers", name="Forecast", line=dict(color="red", dash="dash")
+                x=future_dates,
+                y=forecast_y,
+                mode="lines+markers",
+                name="Forecast",
+                line=dict(color="red", dash="dash"),
             )
         )
 
         # Confidence interval (simplified)
-        std = daily_stats["score_value"].std()
+        std = cast(Any, daily_stats)["score_value"].std()
         fig.add_trace(
             go.Scatter(
                 x=future_dates,
@@ -921,7 +1016,11 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
             )
         )
 
-        fig.update_layout(title="7-Day Violation Rate Forecast", xaxis_title="Date", yaxis_title="Violation Rate")
+        fig.update_layout(
+            title="7-Day Violation Rate Forecast",
+            xaxis_title="Date",
+            yaxis_title="Violation Rate",
+        )
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -929,10 +1028,14 @@ def render_predictive_insights(results: List[Dict[str, Any]], pattern_analysis: 
 
 
 def main() -> None:
-    """Main advanced analytics dashboard with ML insights."""
+    """Run main advanced analytics dashboard with ML insights"""
     logger.debug("Advanced Analytics Dashboard loading.")
+
     st.set_page_config(
-        page_title="ViolentUTF Advanced Dashboard", page_icon="🧬", layout="wide", initial_sidebar_state="expanded"
+        page_title="ViolentUTF Advanced Dashboard",
+        page_icon="🧬",
+        layout="wide",
+        initial_sidebar_state="expanded",
     )
 
     # Authentication and sidebar
@@ -978,11 +1081,19 @@ def main() -> None:
         st.subheader("ML Parameters")
 
         n_clusters = st.slider(
-            "Number of Clusters", min_value=3, max_value=10, value=5, help="Number of clusters for K-means"
+            "Number of Clusters",
+            min_value=3,
+            max_value=10,
+            value=5,
+            help="Number of clusters for K-means",
         )
 
         anomaly_threshold = st.slider(
-            "Anomaly Threshold (%)", min_value=1, max_value=20, value=10, help="Expected percentage of anomalies"
+            "Anomaly Threshold (%)",
+            min_value=1,
+            max_value=20,
+            value=10,
+            help="Expected percentage of anomalies",
         )
 
         # Analysis options
@@ -1028,37 +1139,48 @@ def main() -> None:
             return
 
         # Prepare feature matrix
-        df_features, feature_matrix = prepare_feature_matrix(results)
+        df_features, feature_matrix = prepare_feature_matrix(cast(List[Dict[str, Any]], results))
 
         # Perform ML analysis
         clustering_results = perform_clustering_analysis(feature_matrix, n_clusters)
         anomaly_results = perform_anomaly_detection(feature_matrix, anomaly_threshold / 100)
-        pattern_analysis = analyze_patterns_and_trends(results, df_features)
+        pattern_analysis = analyze_patterns_and_trends(cast(List[Dict[str, Any]], results), df_features)
 
         # Add anomaly labels to results
-        anomaly_labels = anomaly_results.get("anomaly_labels", [])
-        for i, result in enumerate(results):
+        anomaly_labels = cast(List[Any], anomaly_results.get("anomaly_labels", []))
+        for i, result in enumerate(cast(List[Dict[str, Any]], results)):
             if i < len(anomaly_labels):
                 result["is_anomaly"] = anomaly_labels[i] == -1
 
     # Display success message
-    st.success(f"✅ Analyzed {len(results)} results from {len(executions)} executions over {days_back} days")
+    st.success(
+        f"✅ Analyzed {len(cast(List[Any], results))} results from "
+        f"{len(cast(List[Any], executions))} executions over {days_back} days"
+    )
 
     # Render dashboard sections
-    tabs = st.tabs(["🤖 ML Overview", "🎯 Clustering", "🔍 Anomalies", "📈 Patterns & Trends", "💡 Insights"])
+    tabs = st.tabs(
+        [
+            "🤖 ML Overview",
+            "🎯 Clustering",
+            "🔍 Anomalies",
+            "📈 Patterns & Trends",
+            "💡 Insights",
+        ]
+    )
 
     with tabs[0]:
         render_ml_overview(clustering_results, anomaly_results)
 
     with tabs[1]:
         if show_clustering:
-            render_clustering_visualization(results, clustering_results, df_features)
+            render_clustering_visualization(cast(List[Dict[str, Any]], results), clustering_results, df_features)
         else:
             st.info("Clustering analysis is disabled. Enable it in the sidebar.")
 
     with tabs[2]:
         if show_anomalies:
-            render_anomaly_detection(results, anomaly_results, df_features)
+            render_anomaly_detection(cast(List[Dict[str, Any]], results), anomaly_results, df_features)
         else:
             st.info("Anomaly detection is disabled. Enable it in the sidebar.")
 
@@ -1067,7 +1189,7 @@ def main() -> None:
 
     with tabs[4]:
         if show_predictions:
-            render_predictive_insights(results, pattern_analysis)
+            render_predictive_insights(cast(List[Dict[str, Any]], results), pattern_analysis)
         else:
             st.info("Predictive insights are disabled. Enable them in the sidebar.")
 

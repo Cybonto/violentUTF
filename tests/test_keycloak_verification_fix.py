@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Test script to verify the Keycloak JWT signature verification fix.
-
+Test script to verify the Keycloak JWT signature verification fix
 """
 
 import json
+import os
 import time
 from typing import Any, Dict
 
@@ -16,8 +19,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-def generate_test_rsa_keys() -> Any:
-    """Generate test RSA key pair for testing."""
+def generate_test_rsa_keys():
+    """Generate test RSA key pair for testing"""
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
     private_pem = private_key.private_bytes(
@@ -28,21 +31,22 @@ def generate_test_rsa_keys() -> Any:
 
     public_key = private_key.public_key()
     public_pem = public_key.public_bytes(
-        encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
 
     return private_pem, public_pem
 
 
 def create_test_keycloak_token(private_key_pem: bytes, payload: Dict[str, Any]) -> str:
-    """Create a test Keycloak-style JWT token."""
+    """Create a test Keycloak-style JWT token"""
     headers = {"alg": "RS256", "typ": "JWT", "kid": "test-key-id"}
 
     return jwt.encode(payload, private_key_pem, algorithm="RS256", headers=headers)
 
 
-def test_keycloak_verification_implementation() -> Any:
-    """Test the Keycloak verification implementation."""
+def test_keycloak_verification_implementation():
+    """Test the Keycloak verification implementation"""
     print("🔐 Testing Keycloak JWT Signature Verification Fix")
     print("=" * 55)
 
@@ -52,10 +56,18 @@ def test_keycloak_verification_implementation() -> Any:
 
     # Read the verification service to check implementation
     try:
-        with open(
-            "/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf_api/fastapi_app/app/services/keycloak_verification.py",
-            "r",
-        ) as f:
+        # Get project root dynamically
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        keycloak_file = os.path.join(
+            project_root,
+            "violentutf_api",
+            "fastapi_app",
+            "app",
+            "services",
+            "keycloak_verification.py",
+        )
+
+        with open(keycloak_file, "r") as f:
             content = f.read()
 
         # Check for proper verification flags
@@ -92,10 +104,16 @@ def test_keycloak_verification_implementation() -> Any:
     # Test 2: Verify authentication endpoint uses verification
     print("\n2. Testing authentication endpoint integration")
     try:
-        with open(
-            "/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf_api/fastapi_app/app/api/endpoints/auth.py",
-            "r",
-        ) as f:
+        auth_file = os.path.join(
+            project_root,
+            "violentutf_api",
+            "fastapi_app",
+            "app",
+            "api",
+            "endpoints",
+            "auth.py",
+        )
+        with open(auth_file, "r") as f:
             auth_content = f.read()
 
         integration_checks = [
@@ -191,8 +209,8 @@ def test_keycloak_verification_implementation() -> Any:
     return True
 
 
-def test_security_improvements() -> Any:
-    """Test security improvements implemented."""
+def test_security_improvements():
+    """Test security improvements implemented"""
     print("\n🛡️  Testing Security Improvements")
     print("=" * 40)
 
@@ -208,10 +226,18 @@ def test_security_improvements() -> Any:
     ]
 
     try:
-        with open(
-            "/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf_api/fastapi_app/app/services/keycloak_verification.py",
-            "r",
-        ) as f:
+        # Get project root dynamically
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        keycloak_file = os.path.join(
+            project_root,
+            "violentutf_api",
+            "fastapi_app",
+            "app",
+            "services",
+            "keycloak_verification.py",
+        )
+
+        with open(keycloak_file, "r") as f:
             content = f.read()
 
         for improvement, check_string in improvements:
@@ -226,24 +252,42 @@ def test_security_improvements() -> Any:
     return True
 
 
-def test_vulnerability_fixes() -> Any:
-    """Test that vulnerabilities have been fixed."""
+def test_vulnerability_fixes():
+    """Test that vulnerabilities have been fixed"""
     print("\n🔒 Testing Vulnerability Fixes")
     print("=" * 35)
 
     try:
+        # Get project root dynamically
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
         # Check that environment fallback is removed
-        with open(
-            "/Users/tamnguyen/Documents/GitHub/ViolentUTF_nightly/violentutf_api/fastapi_app/app/api/endpoints/auth.py",
-            "r",
-        ) as f:
+        auth_file = os.path.join(
+            project_root,
+            "violentutf_api",
+            "fastapi_app",
+            "app",
+            "api",
+            "endpoints",
+            "auth.py",
+        )
+        with open(auth_file, "r") as f:
             auth_content = f.read()
 
         vulnerability_fixes = [
-            ("Environment fallback removed", 'os.getenv("KEYCLOAK_USERNAME"' not in auth_content),
+            (
+                "Environment fallback removed",
+                'os.getenv("KEYCLOAK_USERNAME"' not in auth_content,
+            ),
             ("Signature verification enabled", "verify_keycloak_token" in auth_content),
-            ("TODO comments removed", "TODO: Implement proper Keycloak" not in auth_content),
-            ("Proper error handling", "HTTPException" in auth_content and "except" in auth_content),
+            (
+                "TODO comments removed",
+                "TODO: Implement proper Keycloak" not in auth_content,
+            ),
+            (
+                "Proper error handling",
+                "HTTPException" in auth_content and "except" in auth_content,
+            ),
         ]
 
         for fix_name, is_fixed in vulnerability_fixes:
@@ -258,8 +302,8 @@ def test_vulnerability_fixes() -> Any:
         return False
 
 
-def main() -> Any:
-    """Run all tests."""
+def main():
+    """Run all tests"""
     print("🛡️  ViolentUTF Keycloak Verification Fix Verification")
     print("=" * 60)
 

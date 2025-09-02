@@ -1,25 +1,26 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """FastAPI Endpoint Introspection for MCP Tool Discovery."""
-
 import inspect
 import logging
-from typing import Any, Dict, List, Optional, Union, get_type_hints
+import re
+from typing import Any, Dict, List, Optional, Self, Type, Union
 
-from app.core.config import settings
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
-from mcp.types import Tool
-from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
 
 class ViolentUTFToolFilter:
-    """Custom tool filter for ViolentUTF API endpoints."""
+    """Customize tool filter for ViolentUTF API endpoints."""
 
-    # Endpoints to include in MCP exposure.
+    # Endpoints to include in MCP exposure
+
     INCLUDE_PATTERNS = [
         r"^/api/v1/orchestrators",
         r"^/api/v1/generators",
@@ -49,10 +50,8 @@ class ViolentUTFToolFilter:
     INCLUDE_METHODS = ["GET", "POST", "PUT", "DELETE"]
 
     @classmethod
-    def should_include_endpoint(cls, path: str, method: str) -> bool:
+    def should_include_endpoint(cls: Type["ViolentUTFToolFilter"], path: str, method: str) -> bool:
         """Check if endpoint should be included in MCP tools."""
-        import re
-
         # Check method inclusion
         if method.upper() not in cls.INCLUDE_METHODS:
             return False
@@ -73,12 +72,13 @@ class ViolentUTFToolFilter:
 class EndpointIntrospector:
     """Introspects FastAPI application for available endpoints."""
 
-    def __init__(self, app: FastAPI) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self", app: FastAPI) -> None:
+        """Initialize instance."""
         self.app = app
+
         self.tool_filter = ViolentUTFToolFilter()
 
-    def discover_endpoints(self: "EndpointIntrospector") -> List[Dict[str, Any]]:
+    def discover_endpoints(self: "Self") -> List[Dict[str, Any]]:
         """Discover all available endpoints from FastAPI app."""
         endpoints = []
 
@@ -99,12 +99,13 @@ class EndpointIntrospector:
                     if endpoint_info:
                         endpoints.append(endpoint_info)
 
-        logger.info(f"Discovered {len(endpoints)} MCP-compatible endpoints")
+        logger.info("Discovered %s MCP-compatible endpoints", len(endpoints))
         return endpoints
 
-    def _extract_endpoint_info(self: "EndpointIntrospector", route: APIRoute, method: str) -> Optional[Dict[str, Any]]:
+    def _extract_endpoint_info(self: "Self", route: APIRoute, method: str) -> Optional[Dict[str, Any]]:
         """Extract detailed information about an endpoint."""
         try:
+
             endpoint_func = route.endpoint
 
             # Get function signature and documentation
@@ -137,13 +138,14 @@ class EndpointIntrospector:
                 "response_model": self._extract_response_model(route),
             }
 
-        except Exception as e:
-            logger.error(f"Error extracting endpoint info for {route.path} {method}: {e}")
+        except (AttributeError, ValueError, TypeError, KeyError) as e:
+            logger.error("Error extracting endpoint info for %s %s: %s", route.path, method, e)
             return None
 
-    def _generate_tool_name(self: "EndpointIntrospector", path: str, method: str) -> str:
+    def _generate_tool_name(self: "Self", path: str, method: str) -> str:
         """Generate a descriptive tool name from path and method."""
-        # Convert path to tool name.
+        # Convert path to tool name
+
         # /api/v1/orchestrators/{id} -> orchestrator_by_id
         # /api/v1/generators -> generators
 
@@ -161,7 +163,12 @@ class EndpointIntrospector:
                 segments.append("by_id")
 
         # Add method prefix for non-GET methods
-        method_prefixes = {"POST": "create", "PUT": "update", "DELETE": "delete", "GET": "get"}
+        method_prefixes = {
+            "POST": "create",
+            "PUT": "update",
+            "DELETE": "delete",
+            "GET": "get",
+        }
 
         tool_name = "_".join(segments)
 
@@ -173,12 +180,8 @@ class EndpointIntrospector:
 
         return tool_name
 
-    def _extract_path_parameters(
-        self: "EndpointIntrospector", path: str, signature: inspect.Signature
-    ) -> List[Dict[str, Any]]:
+    def _extract_path_parameters(self: "Self", path: str, signature: inspect.Signature) -> List[Dict[str, Any]]:
         """Extract path parameters from route path and function signature."""
-        import re
-
         path_params = []
 
         # Find path parameters like {id}, {orchestrator_id}
@@ -202,7 +205,7 @@ class EndpointIntrospector:
 
         return path_params
 
-    def _extract_query_parameters(self: "EndpointIntrospector", signature: inspect.Signature) -> List[Dict[str, Any]]:
+    def _extract_query_parameters(self: "Self", signature: inspect.Signature) -> List[Dict[str, Any]]:
         """Extract query parameters from function signature."""
         query_params = []
 
@@ -228,11 +231,10 @@ class EndpointIntrospector:
 
         return query_params
 
-    def _extract_request_body_schema(
-        self: "EndpointIntrospector", signature: inspect.Signature
-    ) -> Optional[Dict[str, Any]]:
+    def _extract_request_body_schema(self: "Self", signature: inspect.Signature) -> Optional[Dict[str, Any]]:
         """Extract request body schema from Pydantic models."""
-        for param_name, param in signature.parameters.items():
+        for _, param in signature.parameters.items():
+
             if param.annotation != inspect.Parameter.empty:
                 # Check if it's a Pydantic model
                 if hasattr(param.annotation, "__bases__") and any(
@@ -241,21 +243,33 @@ class EndpointIntrospector:
                     try:
                         # Get Pydantic model schema
                         schema = param.annotation.model_json_schema()
-                        return {"type": "object", "schema": schema, "model_name": param.annotation.__name__}
-                    except Exception as e:
-                        logger.warning(f"Could not extract schema for {param.annotation}: {e}")
+                        return {
+                            "type": "object",
+                            "schema": schema,
+                            "model_name": param.annotation.__name__,
+                        }
+                    except (AttributeError, ValueError, TypeError) as e:
+                        logger.warning("Could not extract schema for %s: %s", param.annotation, e)
 
         return None
 
-    def _extract_response_model(self: "EndpointIntrospector", route: APIRoute) -> Optional[str]:
+    def _extract_response_model(self: "Self", route: APIRoute) -> Optional[str]:
         """Extract response model information."""
         if hasattr(route, "response_model") and route.response_model:
-            return route.response_model.__name__
+
+            return str(route.response_model.__name__)
         return None
 
-    def _python_type_to_json_type(self: "EndpointIntrospector", python_type: Any) -> str:
+    def _python_type_to_json_type(self: "Self", python_type: type) -> str:
         """Convert Python type annotation to JSON schema type."""
-        type_mapping = {str: "string", int: "integer", float: "number", bool: "boolean", list: "array", dict: "object"}
+        type_mapping = {
+            str: "string",
+            int: "integer",
+            float: "number",
+            bool: "boolean",
+            list: "array",
+            dict: "object",
+        }
 
         # Handle Optional types
         if hasattr(python_type, "__origin__"):
@@ -279,7 +293,8 @@ endpoint_introspector: Optional[EndpointIntrospector] = None
 
 def initialize_introspector(app: FastAPI) -> EndpointIntrospector:
     """Initialize the endpoint introspector with FastAPI app."""
-    global endpoint_introspector
+    global endpoint_introspector  # pylint: disable=global-statement
+
     endpoint_introspector = EndpointIntrospector(app)
     logger.info("FastAPI endpoint introspector initialized")
     return endpoint_introspector

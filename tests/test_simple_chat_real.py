@@ -1,9 +1,11 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Real integration test for Simple Chat with MCP features.
-
+Real integration test for Simple Chat with MCP features
 """
 
 import os
@@ -19,9 +21,9 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def test_simple_chat_starts_without_errors() -> None:
-    """Test that Simple Chat can start without import errors."""
-    # Start Streamlit in a subprocess.
+def test_simple_chat_starts_without_errors():
+    """Test that Simple Chat can start without import errors"""
+    # Start Streamlit in a subprocess
     env = os.environ.copy()
     env["STREAMLIT_SERVER_HEADLESS"] = "true"
     env["STREAMLIT_SERVER_PORT"] = "8507"  # Use different port to avoid conflicts
@@ -29,7 +31,7 @@ def test_simple_chat_starts_without_errors() -> None:
     process = None
     try:
         # Start Simple Chat
-        process = subprocess.Popen(
+        process = subprocess.Popen(  # nosec B603 - controlled streamlit command
             ["python3", "-m", "streamlit", "run", "pages/Simple_Chat.py"],
             cwd=os.path.join(os.path.dirname(__file__), "..", "violentutf"),
             env=env,
@@ -79,9 +81,10 @@ def test_simple_chat_starts_without_errors() -> None:
             process.wait(timeout=5)
 
 
-def test_mcp_imports_in_context() -> None:
-    """Test that MCP imports work in the Simple Chat context."""
+def test_mcp_imports_in_context():
+    """Test that MCP imports work in the Simple Chat context"""
     test_script = """
+
 import sys
 import os
 sys.path.insert(0, 'violentutf')
@@ -98,8 +101,11 @@ analyzer = ContextAnalyzer()
 print("All imports successful")
 """
 
-    result = subprocess.run(
-        ["python3", "-c", test_script], cwd=os.path.dirname(os.path.dirname(__file__)), capture_output=True, text=True
+    result = subprocess.run(  # nosec B603 - controlled python test script
+        ["python3", "-c", test_script],
+        cwd=os.path.dirname(os.path.dirname(__file__)),
+        capture_output=True,
+        text=True,
     )
 
     assert result.returncode == 0, f"Import test failed: {result.stderr}"

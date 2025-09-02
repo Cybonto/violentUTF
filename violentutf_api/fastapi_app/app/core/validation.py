@@ -1,31 +1,34 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Comprehensive input validation module.
 
 SECURITY: Validates and sanitizes all user inputs to prevent injection attacks and data corruption.
 """
-
 import json
 import logging
 import re
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Callable, Dict, Generator, List, Self, Type, Union
 from urllib.parse import urlparse
 
 import jwt
 from fastapi import HTTPException, status
-from pydantic import BaseModel, EmailStr, Field, validator
 
 logger = logging.getLogger(__name__)
 
 # Constants to avoid bandit B104 hardcoded binding warnings
 WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
 
-
 # Security constants for validation
+
+
 class SecurityLimits:
     """Security limits for input validation."""
+
     MAX_STRING_LENGTH = 1000
     MAX_DESCRIPTION_LENGTH = 2000
     MAX_LIST_ITEMS = 100
@@ -45,9 +48,13 @@ class SecurityLimits:
 
 
 # Validation patterns
+
+
 class ValidationPatterns:
     """Regex patterns for validation."""
+
     # fmt: off
+
     # SECURITY CRITICAL: DO NOT MODIFY THESE PATTERNS
     # These regex patterns are security-critical and must not be modified by automated tools.
     # Any spaces added to character ranges (e.g., [A-Z] becoming [A - Z]) will break validation.
@@ -56,34 +63,44 @@ class ValidationPatterns:
     USERNAME = re.compile(r"^[a-zA-Z0-9_-]+$")  # noqa: E501
 
     # Safe name pattern (letters, spaces, basic punctuation)
-    SAFE_NAME = re.compile(r"^[a-zA-Z0-9\s\-_.()]+$")     # Safe identifier for API keys, dataset names, etc.
+    SAFE_NAME = re.compile(r"^[a-zA-Z0-9\s\-_.()]+$")
+
+    # Safe identifier for API keys, dataset names, etc.
     SAFE_IDENTIFIER = re.compile(r"^[a-zA-Z0-9_-]+$")
 
     # Generator name pattern (allows dots for model names like gpt3.5)
     GENERATOR_NAME = re.compile(r"^[a-zA-Z0-9._-]+$")
 
     # Generator type pattern (allows spaces for types like "AI Gateway")
-    GENERATOR_TYPE = re.compile(r"^[a-zA-Z0-9\s_-]+$")     # Safe file name pattern
+    GENERATOR_TYPE = re.compile(r"^[a-zA-Z0-9\s_-]+$")
+
+    # Safe file name pattern
     SAFE_FILENAME = re.compile(r"^[a-zA-Z0-9_.-]+$")
 
     # Safe URL pattern (basic validation)
     SAFE_URL = re.compile(r"^https?://[a-zA-Z0-9.-]+[a-zA-Z0-9/._-]*$")
 
     # JWT token pattern
-    JWT_TOKEN = re.compile(r"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$")     # Role pattern (lowercase alphanumeric with dash)
+    JWT_TOKEN = re.compile(r"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$")
+
+    # Role pattern (lowercase alphanumeric with dash)
     ROLE_PATTERN = re.compile(r"^[a-z0-9-]+$")  # noqa: E501
     # fmt: on
 
 
 class SafeString(str):
     """String type that ensures content is sanitized."""
+
     @classmethod
-    def __get_validators__(cls) -> None:
+    def __get_validators__(cls: Type["SafeString"]) -> Generator[Callable, None, None]:
+        """Get validators for SafeString."""
         yield cls.validate
 
     @classmethod
-    def validate(cls, v: Any) -> str:
+    def validate(cls: Type["SafeString"], v: object) -> str:
+        """Validate."""
         if not isinstance(v, str):
+
             raise ValueError("String expected")
 
         # Check length
@@ -97,13 +114,17 @@ class SafeString(str):
 
 class SafeIdentifier(str):
     """Safe identifier for API keys, usernames, etc."""
+
     @classmethod
-    def __get_validators__(cls) -> None:
+    def __get_validators__(cls: Type["SafeIdentifier"]) -> Generator[Callable, None, None]:
+        """Get validators for SafeIdentifier."""
         yield cls.validate
 
     @classmethod
-    def validate(cls, v: Any) -> str:
+    def validate(cls: Type["SafeIdentifier"], v: object) -> str:
+        """Validate."""
         if not isinstance(v, str):
+
             raise ValueError("String expected")
 
         v = v.strip()
@@ -123,14 +144,15 @@ class SafeIdentifier(str):
 
 def sanitize_string(value: str) -> str:
     """Sanitize string input to prevent injection attacks."""
-    if not isinstance(value, str):
-        return str(value)
+    # Value is guaranteed to be str by type annotation
 
     # Remove null bytes and control characters
-    sanitized = "".join(char for char in value if ord(char) >= 32 or char in ["\n", "\r", "\t"])     # Limit length
+    sanitized = "".join(char for char in value if ord(char) >= 32 or char in ["\n", "\r", "\t"])
+
+    # Limit length
     if len(sanitized) > SecurityLimits.MAX_STRING_LENGTH:
         sanitized = sanitized[: SecurityLimits.MAX_STRING_LENGTH]
-        logger.warning(f"String truncated to {SecurityLimits.MAX_STRING_LENGTH} characters")
+        logger.warning("String truncated to %s characters", SecurityLimits.MAX_STRING_LENGTH)
 
     return sanitized.strip()
 
@@ -138,6 +160,7 @@ def sanitize_string(value: str) -> str:
 def validate_email(email: str) -> str:
     """Validate email address format."""
     if not email:
+
         raise ValueError("Email is required")
 
     email = email.strip().lower()
@@ -155,6 +178,7 @@ def validate_email(email: str) -> str:
 def validate_username(username: str) -> str:
     """Validate username format and length."""
     if not username:
+
         raise ValueError("Username is required")
 
     username = username.strip()
@@ -174,6 +198,7 @@ def validate_username(username: str) -> str:
 def validate_role_list(roles: List[str]) -> List[str]:
     """Validate list of roles."""
     if not roles:
+
         return []
 
     if len(roles) > SecurityLimits.MAX_PERMISSIONS:
@@ -203,9 +228,10 @@ def validate_role_list(roles: List[str]) -> List[str]:
     return validated_roles
 
 
-def validate_jwt_token(token: str) -> Dict[str, Any]:
+def validate_jwt_token(token: str) -> Dict[str, object]:
     """Validate JWT token structure and basic format."""
     if not token:
+
         raise ValueError("Token is required")
 
     token = token.strip()
@@ -249,15 +275,16 @@ def validate_jwt_token(token: str) -> Dict[str, Any]:
             if exp_time < datetime.now():
                 raise ValueError("JWT token has expired")
 
-        return payload
+        return dict(payload) if payload else {}
 
     except jwt.InvalidTokenError as e:
-        raise ValueError(f"Invalid JWT token: {str(e)}")
+        raise ValueError(f"Invalid JWT token: {str(e)}") from e
 
 
 def validate_url(url: str) -> str:
     """Validate URL format and security."""
     if not url:
+
         raise ValueError("URL is required")
 
     url = url.strip()
@@ -265,8 +292,8 @@ def validate_url(url: str) -> str:
     # Parse URL
     try:
         parsed = urlparse(url)
-    except Exception:
-        raise ValueError("Invalid URL format")
+    except Exception as exc:
+        raise ValueError("Invalid URL format") from exc
 
     # Check scheme
     if parsed.scheme not in ["http", "https"]:
@@ -322,18 +349,21 @@ def validate_url(url: str) -> str:
     return url
 
 
-def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLimits.MAX_NESTED_DEPTH) -> Any:
+def validate_json_data(
+    data: Union[str, Dict, List], max_depth: int = SecurityLimits.MAX_NESTED_DEPTH
+) -> Union[str, Dict, List]:
     """Validate JSON data structure and prevent deeply nested objects."""
     if isinstance(data, str):
+
         if len(data.encode("utf-8")) > SecurityLimits.MAX_JSON_SIZE:
             raise ValueError(f"JSON data too large (max {SecurityLimits.MAX_JSON_SIZE} bytes)")
 
         try:
             data = json.loads(data)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON format: {str(e)}")
+            raise ValueError(f"Invalid JSON format: {str(e)}") from e
 
-    def check_depth(obj, current_depth: Any = 0) -> None:
+    def check_depth(obj: object, current_depth: int = 0) -> None:
         if current_depth > max_depth:
             raise ValueError(f"JSON structure too deeply nested (max depth {max_depth})")
 
@@ -366,6 +396,7 @@ def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLi
 def validate_file_upload(filename: str, content_type: str, file_size: int) -> str:
     """Validate file upload parameters."""
     if not filename:
+
         raise ValueError("Filename is required")
 
     filename = filename.strip()
@@ -395,7 +426,7 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
     ]
 
     if content_type not in allowed_content_types:
-        logger.warning(f"Unexpected content type: {content_type}")
+        logger.warning("Unexpected content type: %s", content_type)
 
     # Check file size (10MB limit)
     max_size = 10 * 1024 * 1024  # 10MB
@@ -406,25 +437,30 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
 
 
 class ValidationError(HTTPException):
-    """Custom validation error with proper HTTP status."""
-    def __init__(self, detail: str = "Validation error") -> None:
-        """Initialize the instance."""
+    """Customize validation error with proper HTTP status."""
+
+    def __init__(self: "Self", detail: str) -> None:
+        """Initialize instance."""
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Validation error: {detail}")
 
 
 def create_validation_error(detail: str) -> ValidationError:
     """Create a validation error with security logging."""
-    logger.warning(f"Validation error: {detail}")
+    logger.warning("Validation error: %s", detail)
+
     return ValidationError(detail)
 
 
 # Enhanced validators for common patterns
-def validate_generator_parameters(parameters: Dict[str, Any]) -> Dict[str, Any]:
+
+
+def validate_generator_parameters(parameters: Dict[str, object]) -> Dict[str, object]:
     """Validate generator parameters dictionary."""
     if not isinstance(parameters, dict):
+
         raise ValueError("Parameters must be a dictionary")
 
-    validated = {}
+    validated: Dict[str, object] = {}
 
     for key, value in parameters.items():
         # Validate key

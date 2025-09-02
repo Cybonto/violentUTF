@@ -1,11 +1,15 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-import json
+"""Ironutf module."""
+
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Self, cast
 
 import requests
 import streamlit as st
@@ -40,8 +44,9 @@ if VIOLENTUTF_API_URL.endswith("/api"):
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway."""
+    """Get authentication headers for API requests through APISIX Gateway"""
     try:
+
         #         from utils.jwt_manager import jwt_manager # F811: removed duplicate import
 
         # Use jwt_manager for automatic token refresh
@@ -69,13 +74,14 @@ def get_auth_headers() -> Dict[str, str]:
 
         return headers
     except Exception as e:
-        logger.error(f"Failed to get auth headers: {e}")
+        logger.error("Failed to get auth headers: %s", e)
         return {}
 
 
-def create_compatible_api_token() -> None:
-    """Create a FastAPI - compatible token using JWT manager - NEVER implement manually."""
+def create_compatible_api_token() -> Optional[str]:
+    """Create a FastAPI - compatible token using JWT manager - NEVER implement manually"""
     try:
+
         #         from utils.jwt_manager import jwt_manager # F811: removed duplicate import
 
         # Check for Keycloak token first
@@ -87,7 +93,11 @@ def create_compatible_api_token() -> None:
             decoded = {
                 "preferred_username": "keycloak_user",
                 "email": "user@keycloak.local",
-                "roles": ["ai - api - access", "admin", "apisix - admin"],  # Include admin roles for IronUTF
+                "roles": [
+                    "ai - api - access",
+                    "admin",
+                    "apisix - admin",
+                ],  # Include admin roles for IronUTF
             }
             api_token = jwt_manager.create_token(decoded)
         else:
@@ -98,62 +108,76 @@ def create_compatible_api_token() -> None:
                 "email": "violentutf@example.com",
                 "name": "ViolentUTF Admin",
                 "sub": "violentutf - admin",
-                "roles": ["ai - api - access", "admin", "apisix - admin"],  # Admin roles for IronUTF
+                "roles": [
+                    "ai - api - access",
+                    "admin",
+                    "apisix - admin",
+                ],  # Admin roles for IronUTF
             }
             api_token = jwt_manager.create_token(mock_keycloak_data)
 
         if api_token:
             logger.info("Successfully created admin API token for IronUTF using JWT manager")
-            return api_token
+            return cast(str, api_token)
         else:
-            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
+            st.error(
+                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
+            )
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 
     except Exception as e:
         st.error("❌ Failed to generate API token. Please try refreshing the page.")
-        logger.error(f"Token creation failed: {e}")
+        logger.error("Token creation failed: %s", e)
         return None
 
 
 class APISIXAdmin:
-    """Class to interact with APISIX Admin through ViolentUTF API."""
+    """Clas to interact with APISIX Admin through ViolentUTF API"""
 
-    def __init__(self: "APISIXAdmin") -> None:
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         self.api_url = f"{VIOLENTUTF_API_URL}/api/v1/apisix-admin"
+
         self.headers = get_auth_headers()
 
-    def get_all_routes(self: "APISIXAdmin") -> Optional[Dict]:
-        """Get all AI routes from APISIX through API."""
+    def get_all_routes(self: "Self") -> Optional[Dict]:
+        """Get all AI routes from APISIX through API"""
         try:
+
             response = requests.get(f"{self.api_url}/routes", headers=self.headers, timeout=10)
             if response.status_code == 200:
-                return response.json()
+                return cast(Dict[Any, Any], response.json())
             else:
-                logger.error(f"Failed to get routes: {response.status_code} - {response.text}")
+                logger.error("Failed to get routes: %s - %s", response.status_code, response.text)
                 return None
         except Exception as e:
-            logger.error(f"Error getting routes: {e}")
+            logger.error("Error getting routes: %s", e)
             return None
 
-    def get_route(self: "APISIXAdmin", route_id: str) -> Optional[Dict]:
-        """Get specific route configuration through API."""
+    def get_route(self: "Self", route_id: str) -> Optional[Dict]:
+        """Get specific route configuration through API"""
         try:
+
             response = requests.get(f"{self.api_url}/routes/{route_id}", headers=self.headers, timeout=10)
             if response.status_code == 200:
-                return response.json()
+                return cast(Dict[Any, Any], response.json())
             else:
-                logger.error(f"Failed to get route {route_id}: {response.status_code}")
+                logger.error("Failed to get route %s: %s", route_id, response.status_code)
                 return None
         except Exception as e:
-            logger.error(f"Error getting route {route_id}: {e}")
+            logger.error("Error getting route %s: %s", route_id, e)
             return None
 
-    def update_route_plugins(self: "APISIXAdmin", route_id: str, route_config: Dict) -> tuple[bool, str]:
-        """Update route configuration with new plugins through API."""
+    def update_route_plugins(self: "Self", route_id: str, route_config: Dict) -> tuple[bool, str]:
+        """Update route configuration with new plugins through API"""
         try:
+
             response = requests.put(
-                f"{self.api_url}/routes/{route_id}/plugins", headers=self.headers, json=route_config, timeout=10
+                f"{self.api_url}/routes/{route_id}/plugins",
+                headers=self.headers,
+                json=route_config,
+                timeout=10,
             )
             if response.status_code in [200, 201]:
                 return True, "Success"
@@ -172,20 +196,19 @@ class APISIXAdmin:
             return False, error_msg
 
 
-def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai - prompt - guard plugin configuration."""
+def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict[str, Any]:
+    """Provide Render UI for ai - prompt - guard plugin configuration"""
     # st.subheader("🛡️ AI Prompt Guard Configuration")
 
     with st.expander("ℹ️ About AI Prompt Guard", expanded=False):
         st.markdown(
-            """
-        The **ai - prompt - guard** plugin helps protect your AI models from harmful or inappropriate prompts by:
+            """The **ai - prompt - guard** plugin helps protect your AI models from harmful or inappropriate prompts by:
         - Blocking prompts containing specific patterns or keywords
         - Allowing only prompts that match certain criteria
         - Customizing error messages for blocked requests
 
         [📚 Official Documentation](https://apisix.apache.org/docs/apisix/plugins/ai-prompt-guard/)
-        """
+"""
         )
 
     config = current_config.get("ai - prompt - guard", {})
@@ -235,7 +258,9 @@ def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
 
         # Deny message
         deny_message = st.text_input(
-            "Custom deny message", key=f"deny_message_{route_id}", help="Message shown when a prompt is blocked"
+            "Custom deny message",
+            key=f"deny_message_{route_id}",
+            help="Message shown when a prompt is blocked",
         )
 
     with col2:
@@ -257,7 +282,7 @@ def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
         )
 
     # Build new configuration
-    new_config = {}
+    new_config: Dict[str, Any] = {}
 
     if new_deny_patterns.strip():
         new_config["deny_patterns"] = [p.strip() for p in new_deny_patterns.strip().split("\n") if p.strip()]
@@ -275,11 +300,10 @@ def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
 
 def test_plugin_configuration(route_id: str, provider: str, model: str, plugins: Dict) -> Dict:
     """Test plugin configuration with a simple prompt."""
-    import requests
-
     try:
         # Get API key
-        api_key = _get_api_key()
+        api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
+
         if not api_key:
             return {
                 "success": False,
@@ -287,120 +311,94 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
                 "suggestion": "Please ensure VIOLENTUTF_API_KEY is set in your .env file",
             }
 
-        # Build endpoint and request data
-        endpoint = _build_test_endpoint(route_id, provider, model)
-        headers, payload = _prepare_test_request(api_key, model)
+        # Determine endpoint based on route
+        base_url = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
+        if base_url.endswith("/api"):
+            base_url = base_url[:-4]
+
+        # Extract endpoint from route_id or use URI directly for GSAi
+        if "gsai" in route_id:
+            # GSAi uses a single endpoint for all models
+            endpoint = f"{base_url}/ai/gsai-api-1/chat/completions"
+        elif "openai" in route_id:
+            endpoint = f"{base_url}/ai/openai/{model}"
+        elif "anthropic" in route_id:
+            endpoint = f"{base_url}/ai/anthropic/{model}"
+        elif "ollama" in route_id:
+            endpoint = f"{base_url}/ai/ollama/{model}"
+        elif "webui" in route_id:
+            endpoint = f"{base_url}/ai/webui/{model}"
+        else:
+            endpoint = f"{base_url}/ai/{provider}/{model}"
+
+        # Test prompt
+        test_prompt = "Hello, please respond with 'Test successful' if you receive this message."
+
+        # Prepare request
+        headers = {"apikey": api_key, "Content-Type": "application/json"}
+
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": test_prompt}],
+            "max_tokens": 50,
+            "temperature": 0,
+        }
 
         # Make test request
         response = requests.post(endpoint, headers=headers, json=payload, timeout=10)
 
-        # Process response
-        return _process_test_response(response, route_id)
+        if response.status_code == 200:
+            data = response.json()
+
+            # Extract response based on format
+            response_text = ""
+            if "choices" in data:
+                response_text = data["choices"][0]["message"]["content"]
+            elif "content" in data and isinstance(data["content"], list):
+                if data["content"] and "text" in data["content"][0]:
+                    response_text = data["content"][0]["text"]
+            elif "content" in data and isinstance(data["content"], str):
+                response_text = data["content"]
+
+            return {
+                "success": True,
+                "test_prompt": test_prompt,
+                "response": response_text,
+                "filtered": False,
+            }
+        elif response.status_code == 400:
+            # Check if it's a plugin - related error
+            error_text = response.text
+            if "system" in error_text and "anthropic" in route_id.lower():
+                return {
+                    "success": False,
+                    "error": "System role not supported by Anthropic",
+                    "suggestion": "Use 'user' or 'assistant' roles instead of 'system' for Anthropic routes",
+                }
+            elif "prohibited content" in error_text.lower():
+                return {
+                    "success": True,
+                    "test_prompt": test_prompt,
+                    "response": "Blocked by prompt guard",
+                    "filtered": True,
+                    "filter_reason": "Content matched deny patterns",
+                }
+            else:
+                return {"success": False, "error": f"Bad request: {error_text}"}
+        else:
+            return {
+                "success": False,
+                "error": f"HTTP {response.status_code}: {response.text}",
+            }
 
     except Exception as e:
         return {"success": False, "error": str(e)}
 
 
-def _get_api_key() -> Optional[str]:
-    """Get API key from environment."""
-    return os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
-
-
-def _build_test_endpoint(route_id: str, provider: str, model: str) -> str:
-    """Build test endpoint URL based on route configuration."""
-    base_url = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
-    if base_url.endswith("/api"):
-        base_url = base_url[:-4]
-
-    # Route-specific endpoint mapping
-    endpoint_map = {
-        "gsai": f"{base_url}/ai/gsai-api-1/chat/completions",
-        "openai": f"{base_url}/ai/openai/{model}",
-        "anthropic": f"{base_url}/ai/anthropic/{model}",
-        "ollama": f"{base_url}/ai/ollama/{model}",
-        "webui": f"{base_url}/ai/webui/{model}",
-    }
-
-    # Find matching endpoint or use default
-    for key, endpoint in endpoint_map.items():
-        if key in route_id:
-            return endpoint
-
-    return f"{base_url}/ai/{provider}/{model}"
-
-
-def _prepare_test_request(api_key: str, model: str) -> Tuple[Dict, Dict]:
-    """Prepare test request headers and payload."""
-    test_prompt = "Hello, please respond with 'Test successful' if you receive this message."
-
-    headers = {"apikey": api_key, "Content-Type": "application/json"}
-
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": test_prompt}],
-        "max_tokens": 50,
-        "temperature": 0,
-    }
-
-    return headers, payload
-
-
-def _process_test_response(response, route_id: str) -> Dict:
-    """Process test response and return result."""
-    test_prompt = "Hello, please respond with 'Test successful' if you receive this message."
-
-    if response.status_code == 200:
-        return _handle_success_response(response, test_prompt)
-    elif response.status_code == 400:
-        return _handle_bad_request(response, route_id, test_prompt)
-    else:
-        return {"success": False, "error": f"HTTP {response.status_code}: {response.text}"}
-
-
-def _handle_success_response(response, test_prompt: str) -> Dict:
-    """Handle successful test response."""
-    data = response.json()
-    response_text = _extract_response_text(data)
-    return {"success": True, "test_prompt": test_prompt, "response": response_text, "filtered": False}
-
-
-def _extract_response_text(data: Dict) -> str:
-    """Extract response text from different response formats."""
-    if "choices" in data:
-        return data["choices"][0]["message"]["content"]
-    elif "content" in data and isinstance(data["content"], list):
-        if data["content"] and "text" in data["content"][0]:
-            return data["content"][0]["text"]
-    elif "content" in data and isinstance(data["content"], str):
-        return data["content"]
-    return ""
-
-
-def _handle_bad_request(response, route_id: str, test_prompt: str) -> Dict:
-    """Handle 400 Bad Request errors."""
-    error_text = response.text
-
-    if "system" in error_text and "anthropic" in route_id.lower():
-        return {
-            "success": False,
-            "error": "System role not supported by Anthropic",
-            "suggestion": "Use 'user' or 'assistant' roles instead of 'system' for Anthropic routes",
-        }
-    elif "prohibited content" in error_text.lower():
-        return {
-            "success": True,
-            "test_prompt": test_prompt,
-            "response": "Blocked by prompt guard",
-            "filtered": True,
-            "filter_reason": "Content matched deny patterns",
-        }
-    else:
-        return {"success": False, "error": f"Bad request: {error_text}"}
-
-
 def detect_provider_type(route_config: Dict) -> str:
     """Detect the AI provider type from route configuration."""
     plugins = route_config.get("plugins", {})
+
     uri = route_config.get("uri", "")
 
     # Check for ai-proxy plugin first
@@ -443,7 +441,8 @@ def detect_provider_type(route_config: Dict) -> str:
 
 def handle_prepend_role_change() -> None:
     """Handle prepend role changes - restore original content when switching back."""
-    # Find the route_id from session state keys.
+    # Find the route_id from session state keys
+
     for key in st.session_state:
         if key.startswith("prepend_role_") and "_last_" not in key and "_original_" not in key:
             route_id = key.replace("prepend_role_", "")
@@ -472,7 +471,8 @@ def handle_prepend_role_change() -> None:
 
 def handle_append_role_change() -> None:
     """Handle append role changes - restore original content when switching back."""
-    # Find the route_id from session state keys.
+    # Find the route_id from session state keys
+
     for key in st.session_state:
         if key.startswith("append_role_") and "_last_" not in key and "_original_" not in key:
             route_id = key.replace("append_role_", "")
@@ -500,7 +500,7 @@ def handle_append_role_change() -> None:
 
 
 def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai - prompt - decorator plugin configuration."""
+    """Provide Render UI for ai - prompt - decorator plugin configuration"""
     # st.subheader("🎨 AI Prompt Decorator Configuration")
 
     # Detect provider type
@@ -509,17 +509,15 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
     # Show provider - specific warnings
     if provider_type == "anthropic":
         st.warning(
-            """
-        ⚠️ **Anthropic API Limitation**: System messages cannot be added to the messages array.
+            """⚠️ **Anthropic API Limitation**: System messages cannot be added to the messages array.
         Only 'user' and 'assistant' roles are supported for prepend / append operations.
         To add system - like instructions, use the 'user' role with clear directives.
-        """
+"""
         )
 
     with st.expander("ℹ️ About AI Prompt Decorator", expanded=False):
         st.markdown(
-            """
-        The **ai - prompt - decorator** plugin allows you to modify prompts before they reach the AI model by:
+            """The **ai - prompt - decorator** plugin allows you to modify prompts before they reach the AI model by:
         - Adding messages before the user prompt (prepend)
         - Adding messages after the user prompt (append)
         - Injecting system prompts or context
@@ -527,11 +525,11 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
         Messages are added as chat conversation entries with specified roles (system, user, assistant).
 
         [📚 Official Documentation](https://apisix.apache.org/docs/apisix/plugins/ai-prompt-decorator/)
-        """
+"""
         )
 
     # Show detected provider
-    col1, col2 = st.columns([2, 1])
+    col1, _ = st.columns([2, 1])
     with col1:
         st.info(f"🤖 Detected Provider: **{provider_type.title()}**")
 
@@ -676,8 +674,9 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
 
 
 def main() -> None:
-    """Main function for IronUTF page."""
-    # Handle authentication.
+    """Provide Main function for IronUTF page"""
+    # Handle authentication
+
     handle_authentication_and_sidebar("IronUTF - Defense Module")
 
     # Check authentication
@@ -705,11 +704,7 @@ def main() -> None:
 
     # Page header
     st.title("🛡️ IronUTF - Defense Module")
-    st.markdown(
-        """
-    Customize prompt filtering and decoration for your AI endpoints.
-    """
-    )
+    st.markdown("""Customize prompt filtering and decoration for your AI endpoints..""")
 
     # Initialize APISIX admin client
     apisix_admin = APISIXAdmin()
@@ -746,7 +741,9 @@ def main() -> None:
         # Add "All" option
         provider_options = ["All"] + sorted(list(all_providers))
         selected_provider_filter = st.selectbox(
-            "Filter by Provider", options=provider_options, help="Filter routes by AI provider"
+            "Filter by Provider",
+            options=provider_options,
+            help="Filter routes by AI provider",
         )
 
     with col2:
@@ -799,7 +796,7 @@ def main() -> None:
 
                 # Clear old route's form fields
                 for key in list(st.session_state.keys()):
-                    if key.endswith(f"_{old_route_id}"):
+                    if isinstance(key, str) and key.endswith(f"_{old_route_id}"):
                         del st.session_state[key]
 
             st.session_state.selected_route_name = selected_route_name
@@ -848,11 +845,15 @@ def main() -> None:
                 st.session_state[decorator_key] = "ai - prompt - decorator" in current_plugins
 
             enable_guard = st.checkbox(
-                "Enable AI Prompt Guard", key=guard_key, help="Enable prompt filtering and blocking"
+                "Enable AI Prompt Guard",
+                key=guard_key,
+                help="Enable prompt filtering and blocking",
             )
 
             enable_decorator = st.checkbox(
-                "Enable AI Prompt Decorator", key=decorator_key, help="Enable prompt modification and enhancement"
+                "Enable AI Prompt Decorator",
+                key=decorator_key,
+                help="Enable prompt modification and enhancement",
             )
 
         with col2:
@@ -906,13 +907,18 @@ def main() -> None:
                     del new_plugins["ai - prompt - decorator"]
 
                 # Debug: Show what we're sending
-                logger.info(f"Updating route {route_id} with plugins: {new_plugins}")
+                logger.info("Updating route %s with plugins: %s", route_id, new_plugins)
 
                 # Update route configuration
                 route_value["plugins"] = new_plugins
 
                 # Remove read - only fields that APISIX doesn't accept in updates
-                fields_to_remove = ["create_time", "update_time", "createdIndex", "modifiedIndex"]
+                fields_to_remove = [
+                    "create_time",
+                    "update_time",
+                    "createdIndex",
+                    "modifiedIndex",
+                ]
                 for field in fields_to_remove:
                     route_value.pop(field, None)
 
@@ -936,17 +942,16 @@ def main() -> None:
                                 )
                     except Exception as e:
                         st.error(f"❌ Error updating configuration: {str(e)}")
-                        logger.error(f"Error in IronUTF update: {e}")
+                        logger.error("Error in IronUTF update: %s", e)
                         with st.expander("Error Details", expanded=True):
                             st.code(str(e))
 
         # Security notice
         st.markdown("---")
         st.info(
-            """
-        🔒 **Security Notice**: Changes to AI plugin configurations take effect immediately.
+            """🔒 **Security Notice**: Changes to AI plugin configurations take effect immediately.
         Please test your changes thoroughly to ensure they don't inadvertently block legitimate requests.
-        """
+"""
         )
 
 

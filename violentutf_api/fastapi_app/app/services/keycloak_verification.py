@@ -1,23 +1,21 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Keycloak JWT Token Verification Service.
+"""Keycloak JWT Token Verification Service
 
 SECURITY: Implements proper JWT signature verification using Keycloak public keys
 """
-
-import json
 import logging
 import time
-from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin
+from typing import Any, Dict, List, Optional, Self
 
 import httpx
 import jwt
 from app.core.config import settings
 from app.core.security_logging import log_authentication_failure, log_security_error
-from cryptography.hazmat.primitives import serialization
 from fastapi import HTTPException, status
 from jwt import PyJWKClient
 
@@ -25,28 +23,28 @@ logger = logging.getLogger(__name__)
 
 
 class KeycloakJWTVerifier:
-    """Keycloak JWT token verification with proper signature validation."""
+    """Keycloak JWT token verification with proper signature validation"""
 
-    def __init__(self) -> None:
-        """ "Initialize the instance."""
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         self.keycloak_url = settings.KEYCLOAK_URL
+
         self.realm = settings.KEYCLOAK_REALM
         self.client_id = settings.KEYCLOAK_CLIENT_ID
 
         # Keycloak well-known configuration URL
         self.well_known_url = f"{self.keycloak_url}/realms/{self.realm}/.well-known/openid_configuration"
-        self.jwks_uri = None
-        self.jwks_client = None
+        self.jwks_uri: Optional[str] = None
+        self.jwks_client: Optional[PyJWKClient] = None
         self.issuer = f"{self.keycloak_url}/realms/{self.realm}"
 
         # Cache for configuration
-        self._config_cache = {}
-        self._config_cache_time = 0
+        self._config_cache: Dict[str, Any] = {}
+        self._config_cache_time = 0.0
         self._cache_ttl = 3600  # 1 hour cache
 
-    async def _get_keycloak_config(self: "KeycloakJWTVerifier") -> Dict[str, Any]:
-        """
-        Get Keycloak OpenID Connect configuration.
+    async def _get_keycloak_config(self: "Self") -> Dict[str, Any]:
+        """Get Keycloak OpenID Connect configuration
 
         Returns:
             Dictionary containing Keycloak configuration
@@ -69,46 +67,45 @@ class KeycloakJWTVerifier:
                 # Store JWKS URI for key retrieval
                 self.jwks_uri = config.get("jwks_uri")
 
-                logger.info(f"Retrieved Keycloak configuration for realm: {self.realm}")
+                logger.info("Retrieved Keycloak configuration for realm: %s", self.realm)
                 return config
 
         except Exception as e:
-            logger.error(f"Failed to retrieve Keycloak configuration: {str(e)}")
+            logger.error("Failed to retrieve Keycloak configuration: %s", str(e))
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Authentication service configuration unavailable",
-            )
+            ) from e
 
-    async def _get_jwks_client(self: "KeycloakJWTVerifier") -> PyJWKClient:
-        """
-        Get or create JWKS client for key retrieval.
+    async def _get_jwks_client(self: "Self") -> PyJWKClient:
+        """Get or create JWKS client for key retrieval
 
         Returns:
             PyJWKClient instance
         """
         if not self.jwks_client or not self.jwks_uri:
+
             # Ensure we have the JWKS URI
             await self._get_keycloak_config()
 
             if not self.jwks_uri:
                 raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="JWKS URI not available from Keycloak"
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="JWKS URI not available from Keycloak",
                 )
 
-            # Create JWKS client with caching
+            # Create JWKS client with caching (using supported parameters only)
             self.jwks_client = PyJWKClient(
                 uri=self.jwks_uri,
                 cache_keys=True,
                 max_cached_keys=10,
-                cache_jwks_for=3600,  # Cache for 1 hour
-                jwks_request_timeout=10,
+                # Note: cache_jwks_for and jwks_request_timeout are not supported parameters
             )
 
         return self.jwks_client
 
-    async def verify_keycloak_token(self: "KeycloakJWTVerifier", token: str) -> Dict[str, Any]:
-        """
-        Verify Keycloak JWT token with proper signature validation.
+    async def verify_keycloak_token(self: "Self", token: str) -> Dict[str, Any]:
+        """Verify Keycloak JWT token with proper signature validation
 
         Args:
             token: Keycloak JWT token to verify
@@ -120,6 +117,7 @@ class KeycloakJWTVerifier:
             HTTPException: If token verification fails
         """
         try:
+
             # Get JWKS client
             jwks_client = await self._get_jwks_client()
 
@@ -127,18 +125,23 @@ class KeycloakJWTVerifier:
             try:
                 signing_key = jwks_client.get_signing_key_from_jwt(token)
             except jwt.PyJWKClientError as e:
-                logger.warning(f"Failed to get signing key from Keycloak: {str(e)}")
+                logger.warning("Failed to get signing key from Keycloak: %s", str(e))
                 log_authentication_failure(reason="Invalid JWT signing key", keycloak_error=str(e))
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token: unable to verify signature"
-                )
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token: unable to verify signature",
+                ) from e
 
             # Verify token signature and claims
             try:
                 decoded_token = jwt.decode(
                     token,
                     signing_key.key,
-                    algorithms=["RS256", "ES256", "HS256"],  # Common Keycloak algorithms
+                    algorithms=[
+                        "RS256",
+                        "ES256",
+                        "HS256",
+                    ],  # Common Keycloak algorithms
                     audience=self.client_id,  # Verify audience matches our client
                     issuer=self.issuer,  # Verify issuer matches our realm
                     options={
@@ -156,50 +159,60 @@ class KeycloakJWTVerifier:
                 self._validate_token_claims(decoded_token)
 
                 logger.debug(
-                    f"Successfully verified Keycloak token for user: {decoded_token.get('preferred_username')}"
+                    "Successfully verified Keycloak token for user: %s", decoded_token.get("preferred_username")
                 )
                 return decoded_token
 
-            except jwt.ExpiredSignatureError:
+            except jwt.ExpiredSignatureError as exc:
                 logger.warning("Keycloak token has expired")
                 log_authentication_failure(reason="Token expired")
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired")
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired") from exc
 
-            except jwt.InvalidAudienceError:
+            except jwt.InvalidAudienceError as exc:
                 logger.warning("Keycloak token has invalid audience")
                 log_authentication_failure(reason="Invalid token audience")
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token audience mismatch")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token audience mismatch",
+                ) from exc
 
-            except jwt.InvalidIssuerError:
+            except jwt.InvalidIssuerError as exc:
                 logger.warning("Keycloak token has invalid issuer")
                 log_authentication_failure(reason="Invalid token issuer")
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token issuer mismatch")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token issuer mismatch",
+                ) from exc
 
-            except jwt.InvalidSignatureError:
+            except jwt.InvalidSignatureError as exc:
                 logger.warning("Keycloak token has invalid signature")
                 log_authentication_failure(reason="Invalid token signature")
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Token signature verification failed"
-                )
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token signature verification failed",
+                ) from exc
 
             except jwt.InvalidTokenError as e:
-                logger.warning(f"Keycloak token validation failed: {str(e)}")
+                logger.warning("Keycloak token validation failed: %s", str(e))
                 log_authentication_failure(reason=f"Token validation failed: {str(e)}")
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token validation failed")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token validation failed",
+                ) from e
 
         except HTTPException:
             # Re-raise HTTP exceptions as-is
             raise
         except Exception as e:
-            logger.error(f"Unexpected error during token verification: {str(e)}")
+            logger.error("Unexpected error during token verification: %s", str(e))
             log_security_error(error_type="keycloak_verification_error", error_message=str(e))
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Token verification service error"
-            )
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Token verification service error",
+            ) from e
 
-    def _validate_token_claims(self: "KeycloakJWTVerifier", decoded_token: Dict[str, Any]) -> None:
-        """
-        Perform additional validation on token claims.
+    def _validate_token_claims(self: "Self", decoded_token: Dict[str, Any]) -> None:
+        """Perform additional validation on token claims
 
         Args:
             decoded_token: Decoded JWT payload
@@ -207,19 +220,21 @@ class KeycloakJWTVerifier:
         Raises:
             HTTPException: If validation fails
         """
-        # Validate token type.
+        # Validate token type
+
         token_type = decoded_token.get("typ")
         if token_type and token_type.lower() != "bearer":
-            logger.warning(f"Invalid token type: {token_type}")
+            logger.warning("Invalid token type: %s", token_type)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
 
         # Validate required claims
         required_claims = ["sub", "preferred_username", "email", "realm_access"]
         for claim in required_claims:
             if claim not in decoded_token:
-                logger.warning(f"Missing required claim: {claim}")
+                logger.warning("Missing required claim: %s", claim)
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token missing required claim: {claim}"
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=f"Token missing required claim: {claim}",
                 )
 
         # Validate subject is not empty
@@ -232,7 +247,10 @@ class KeycloakJWTVerifier:
         username = decoded_token.get("preferred_username")
         if not username or not isinstance(username, str) or len(username.strip()) == 0:
             logger.warning("Invalid or empty username claim")
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token username")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token username",
+            )
 
         # Validate email format (basic check)
         email = decoded_token.get("email")
@@ -244,11 +262,13 @@ class KeycloakJWTVerifier:
         realm_access = decoded_token.get("realm_access", {})
         if not isinstance(realm_access, dict):
             logger.warning("Invalid realm_access claim structure")
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token realm access")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token realm access",
+            )
 
-    def extract_user_info(self: "KeycloakJWTVerifier", decoded_token: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Extract user information from verified Keycloak token.
+    def extract_user_info(self: "Self", decoded_token: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract user information from verified Keycloak token
 
         Args:
             decoded_token: Verified Keycloak JWT payload
@@ -256,7 +276,8 @@ class KeycloakJWTVerifier:
         Returns:
             Dictionary containing user information
         """
-        # Extract realm roles.
+        # Extract realm roles
+
         realm_access = decoded_token.get("realm_access", {})
         realm_roles = realm_access.get("roles", [])
 
@@ -288,9 +309,8 @@ class KeycloakJWTVerifier:
             "session_state": decoded_token.get("session_state"),
         }
 
-    def _map_keycloak_roles(self: "KeycloakJWTVerifier", keycloak_roles: List[str]) -> List[str]:
-        """
-        Map Keycloak roles to ViolentUTF application roles.
+    def _map_keycloak_roles(self: "Self", keycloak_roles: List[str]) -> List[str]:
+        """Map Keycloak roles to ViolentUTF application roles
 
         Args:
             keycloak_roles: List of Keycloak roles

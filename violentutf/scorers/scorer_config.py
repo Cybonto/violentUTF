@@ -1,10 +1,11 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
-
-# scorers/scorer_config.py
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Module: Scorer Configuration.
+Scorer Configuration module.
 
 Contains functions for loading available Scorer classes, retrieving Scorer parameters,
 and managing Scorer configurations.
@@ -22,28 +23,34 @@ Key Functions:
 - update_parameter_file(configured_scorers): Update the YAML parameter file with current Scorer configurations.
 
 Dependencies:
-- logging
-- inspect
-- yaml
-- os
-- asyncio
-- pathlib.Path
-- typing
-- pyrit.score
-- pyrit.models
-- pyrit.prompt_target
-- utils.logging
-- utils.error_handling
+- logging, inspect, yaml, os, asyncio, pathlib.Path, typing
+- pyrit.score, pyrit.models, pyrit.prompt_target
+- utils.logging, utils.error_handling
+
 """
+
+# Copyright (c) 2025 ViolentUTF Contributors.
+
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 import asyncio
 import collections.abc  # To check for Callable if needed, though not typical for scorers
 import inspect
-import logging
-import os
 from pathlib import Path
-from typing import Tuple  # Added Tuple here
-from typing import Any, Dict, List, Literal, Optional, Type, Union, get_args, get_origin, get_type_hints
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Tuple,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 # PyRIT imports
 import pyrit.score as score  # Import the pyrit.score module as score
@@ -71,13 +78,13 @@ PARAMETER_FILE = Path("parameters/scorers.yaml")
 
 
 def list_scorer_types() -> List[str]:
-    """
-    Lists all available concrete Scorer types defined in pyrit.score.
+    """List all available concrete Scorer types defined in pyrit.score.
 
     Returns:
         List[str]: A list of available Scorer class names.
     """
     available_scorers = []
+
     try:
         # Use pyrit.score.__all__ if available and maintained, otherwise inspect members
         if hasattr(score, "__all__"):
@@ -101,16 +108,15 @@ def list_scorer_types() -> List[str]:
                             available_scorers.append(name)
 
         available_scorers.sort()  # Sort for consistency
-        logger.debug(f"Available scorer types: {available_scorers}")
+        logger.debug("Available scorer types: %s", available_scorers)
         return available_scorers
     except Exception as e:
-        logger.error(f"Error listing scorer types: {e}", exc_info=True)
+        logger.error("Error listing scorer types: %s", e, exc_info=True)
         return []
 
 
 def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
-    """
-    Retrieves detailed parameters for the specified Scorer type's __init__ method.
+    """Retrieve detailed parameters for the specified Scorer type's __init__ method.
 
     Includes type information, requirement status, defaults, and flags complex types.
 
@@ -123,232 +129,157 @@ def get_scorer_params(scorer_type: str) -> List[Dict[str, Any]]:
     Raises:
         ScorerLoadingError: If the scorer type is not found or params can't be retrieved.
     """
-    # Get scorer class and method signature
-    scorer_class = _get_scorer_class(scorer_type)
-    init_signature = _get_init_signature(scorer_class, scorer_type)
-    if not init_signature:
+    try:
+
+        scorer_class = getattr(score, scorer_type)
+    except AttributeError as exc:
+        logger.error(f"Scorer type '{scorer_type}' not found in pyrit.score module.")
+        raise ScorerLoadingError(f"Scorer type '{scorer_type}' not found.") from exc
+
+    try:
+        init_method = scorer_class.__init__
+        if init_method is object.__init__:
+            logger.debug(f"Scorer '{scorer_type}' uses default object.__init__, no parameters.")
+            return []
+        init_signature = inspect.signature(init_method)
+    except ValueError as e:
+        logger.error(
+            "Could not get signature for %s.__init__: %s. Assuming no parameters.",
+            scorer_type,
+            e,
+        )
+        return []
+    except TypeError as e:
+        logger.error(
+            "TypeError getting signature for %s.__init__: %s. Assuming no parameters.",
+            scorer_type,
+            e,
+        )
         return []
 
-    # Get type hints for parameters
-    type_hints = _get_scorer_type_hints(scorer_class.__init__, scorer_type)
+    try:
+        type_hints = get_type_hints(init_method)
+    except Exception as e:
+        logger.warning(
+            "Could not get type hints for %s.__init__: %s. Type info may be incomplete.",
+            scorer_type,
+            e,
+        )
+        type_hints = {}
 
-    # Build parameter definitions
     param_definitions = []
     for param_name, param in init_signature.parameters.items():
-        if _should_skip_parameter(param):
+        if param.name == "self" or param.kind in [
+            param.VAR_POSITIONAL,
+            param.VAR_KEYWORD,
+        ]:
             continue
 
-        param_info = _build_parameter_info(param_name, param, type_hints)
+        raw_annotation = type_hints.get(param_name, Any)
+        origin_type = get_origin(raw_annotation)
+        type_args = get_args(raw_annotation)
+
+        primary_type = raw_annotation
+        literal_choices = None
+        type_str = (
+            str(raw_annotation)
+            .replace("typing.", "")
+            .replace("pyrit.score.", "")
+            .replace("pyrit.prompt_target.", "")
+            .replace("pathlib.", "")
+        )
+
+        # --- Determine Primary Type, Literal Choices, and String Representation ---
+        if origin_type is Literal:
+            literal_choices = list(get_args(raw_annotation))
+            if literal_choices:
+                primary_type = type(literal_choices[0])
+                type_str = f"Literal[{', '.join(repr(choice) for choice in literal_choices)}]"
+            else:
+                primary_type = Any
+                type_str = "Literal[]"
+        elif origin_type is Union:
+            non_none_types = [t for t in type_args if t is not type(None)]
+            if len(non_none_types) == 1:
+                primary_type = non_none_types[0]
+                inner_origin = get_origin(primary_type)
+                inner_args = get_args(primary_type)
+                if inner_origin is Literal:
+                    literal_choices = list(inner_args)
+                    if literal_choices:
+                        type_str = f"Optional[Literal[{', '.join(repr(choice) for choice in literal_choices)}]]"
+                        primary_type = type(literal_choices[0])
+                    else:
+                        type_str = "Optional[Literal[]]"
+                        primary_type = Any
+                else:
+                    inner_type_str = (
+                        str(primary_type).replace("typing.", "").replace("pyrit.", "").replace("pathlib.", "")
+                    )
+                    type_str = f"Optional[{inner_type_str}]"
+            else:
+                primary_type = Union
+                type_str = str(raw_annotation).replace("typing.", "").replace("pyrit.", "")
+        elif origin_type is list or origin_type is List:
+            primary_type = list
+            type_str = f"List[{str(type_args[0]).replace('typing.', '') if type_args else 'Any'}]"
+        elif origin_type is tuple or origin_type is Tuple:
+            primary_type = tuple
+            type_str = f"Tuple[{', '.join(str(t).replace('typing.', '') for t in type_args)}]" if type_args else "Tuple"
+        else:
+            if isinstance(raw_annotation, type):
+                primary_type = raw_annotation
+            else:
+                primary_type = Any
+                type_str = str(raw_annotation).replace("typing.", "").replace("pyrit.", "").replace("pathlib.", "")
+
+        # --- Identify Complex Types to Skip in Generic UI ---
+        complex_types_to_skip = (
+            PromptChatTarget,
+            PromptShieldTarget,
+            Scorer,
+            Path,
+            TrueFalseQuestion,
+        )
+        callable_types = (collections.abc.Callable,)
+
+        # Safe issubclass check
+        def safe_issubclass(cls: type, class_tuple: tuple) -> bool:
+            try:
+                return isinstance(cls, type) and issubclass(cls, class_tuple)
+            except TypeError:
+                return False
+
+        skip_in_ui = safe_issubclass(primary_type, complex_types_to_skip) or safe_issubclass(
+            primary_type, callable_types
+        )
+        if primary_type is list and type_args and safe_issubclass(type_args[0], complex_types_to_skip):
+            skip_in_ui = True
+        if safe_issubclass(raw_annotation, complex_types_to_skip) or safe_issubclass(raw_annotation, callable_types):
+            skip_in_ui = True
+
+        # --- Get Default Value ---
+        default_value = None if param.default == param.empty else param.default
+
+        param_info = {
+            "name": param_name,
+            "type_str": type_str,
+            "raw_type": raw_annotation,
+            "primary_type": primary_type,
+            "literal_choices": literal_choices,
+            "required": param.default == param.empty,
+            "default": default_value,
+            "skip_in_ui": skip_in_ui,
+            "description": param_name.replace("_", " ").capitalize(),
+        }
         param_definitions.append(param_info)
 
     logger.debug(f"Parameters for scorer '{scorer_type}': {param_definitions}")
     return param_definitions
 
 
-def _get_scorer_class(scorer_type: str):
-    """Get scorer class from pyrit.score module."""
-    try:
-        return getattr(score, scorer_type)
-    except AttributeError:
-        logger.error(f"Scorer type '{scorer_type}' not found in pyrit.score module.")
-        raise ScorerLoadingError(f"Scorer type '{scorer_type}' not found.")
-
-
-def _get_init_signature(scorer_class, scorer_type: str):
-    """Get init method signature for scorer class."""
-    try:
-        init_method = scorer_class.__init__
-        if init_method is object.__init__:
-            logger.debug(f"Scorer '{scorer_type}' uses default object.__init__, no parameters.")
-            return None
-        return inspect.signature(init_method)
-    except ValueError as e:
-        logger.error(f"Could not get signature for {scorer_type}.__init__: {e}. Assuming no parameters.")
-        return None
-    except TypeError as e:
-        logger.error(f"TypeError getting signature for {scorer_type}.__init__: {e}. Assuming no parameters.")
-        return None
-
-
-def _get_scorer_type_hints(init_method, scorer_type: str) -> Dict:
-    """Get type hints for scorer init method."""
-    try:
-        return get_type_hints(init_method)
-    except Exception as e:
-        logger.warning(f"Could not get type hints for {scorer_type}.__init__: {e}. Type info may be incomplete.")
-        return {}
-
-
-def _should_skip_parameter(param) -> bool:
-    """Check if parameter should be skipped."""
-    return param.name == "self" or param.kind in [param.VAR_POSITIONAL, param.VAR_KEYWORD]
-
-
-def _build_parameter_info(param_name: str, param, type_hints: Dict) -> Dict[str, Any]:
-    """Build complete parameter information dictionary."""
-    raw_annotation = type_hints.get(param_name, Any)
-    origin_type = get_origin(raw_annotation)
-    type_args = get_args(raw_annotation)
-
-    # Determine type information
-    type_info = _determine_type_info(raw_annotation, origin_type, type_args)
-
-    # Check if should skip in UI
-    skip_in_ui = _should_skip_in_ui(type_info["primary_type"], raw_annotation, type_args)
-
-    # Get default value
-    default_value = None if param.default == param.empty else param.default
-
-    return {
-        "name": param_name,
-        "type_str": type_info["type_str"],
-        "raw_type": raw_annotation,
-        "primary_type": type_info["primary_type"],
-        "literal_choices": type_info["literal_choices"],
-        "required": param.default == param.empty,
-        "default": default_value,
-        "skip_in_ui": skip_in_ui,
-        "description": param_name.replace("_", " ").capitalize(),
-    }
-
-
-def _determine_type_info(raw_annotation, origin_type, type_args) -> Dict[str, Any]:
-    """Determine primary type, literal choices, and string representation."""
-    # Use dispatch pattern for different type origins
-    type_handlers = {
-        Literal: _handle_literal_type,
-        Union: _handle_union_type,
-        list: _handle_list_type,
-        List: _handle_list_type,
-        tuple: _handle_tuple_type,
-        Tuple: _handle_tuple_type,
-    }
-
-    handler = type_handlers.get(origin_type)
-    if handler:
-        return handler(raw_annotation, type_args)
-    else:
-        return _handle_default_type(raw_annotation)
-
-
-def _handle_literal_type(raw_annotation, type_args) -> Dict[str, Any]:
-    """Handle Literal type annotations."""
-    literal_choices = list(type_args)
-    if literal_choices:
-        primary_type = type(literal_choices[0])
-        type_str = f"Literal[{', '.join(repr(choice) for choice in literal_choices)}]"
-    else:
-        primary_type = Any
-        type_str = "Literal[]"
-
-    return {"primary_type": primary_type, "literal_choices": literal_choices, "type_str": type_str}
-
-
-def _handle_union_type(raw_annotation, type_args) -> Dict[str, Any]:
-    """Handle Union type annotations."""
-    non_none_types = [t for t in type_args if t is not type(None)]
-
-    if len(non_none_types) == 1:
-        # Optional type
-        return _handle_optional_type(non_none_types[0])
-    else:
-        # Complex Union
-        primary_type = Union
-        type_str = str(raw_annotation).replace("typing.", "").replace("pyrit.", "")
-        return {"primary_type": primary_type, "literal_choices": None, "type_str": type_str}
-
-
-def _handle_optional_type(inner_type) -> Dict[str, Any]:
-    """Handle Optional type annotations."""
-    inner_origin = get_origin(inner_type)
-    inner_args = get_args(inner_type)
-
-    if inner_origin is Literal:
-        literal_choices = list(inner_args)
-        if literal_choices:
-            type_str = f"Optional[Literal[{', '.join(repr(choice) for choice in literal_choices)}]]"
-            primary_type = type(literal_choices[0])
-        else:
-            type_str = "Optional[Literal[]]"
-            primary_type = Any
-            literal_choices = None
-    else:
-        inner_type_str = str(inner_type).replace("typing.", "").replace("pyrit.", "").replace("pathlib.", "")
-        type_str = f"Optional[{inner_type_str}]"
-        primary_type = inner_type
-        literal_choices = None
-
-    return {"primary_type": primary_type, "literal_choices": literal_choices, "type_str": type_str}
-
-
-def _handle_list_type(raw_annotation, type_args) -> Dict[str, Any]:
-    """Handle List type annotations."""
-    type_str = f"List[{str(type_args[0]).replace('typing.', '') if type_args else 'Any'}]"
-    return {"primary_type": list, "literal_choices": None, "type_str": type_str}
-
-
-def _handle_tuple_type(raw_annotation, type_args) -> Dict[str, Any]:
-    """Handle Tuple type annotations."""
-    if type_args:
-        type_str = f"Tuple[{', '.join(str(t).replace('typing.', '') for t in type_args)}]"
-    else:
-        type_str = "Tuple"
-
-    return {"primary_type": tuple, "literal_choices": None, "type_str": type_str}
-
-
-def _handle_default_type(raw_annotation) -> Dict[str, Any]:
-    """Handle default/other type annotations."""
-    if isinstance(raw_annotation, type):
-        primary_type = raw_annotation
-    else:
-        primary_type = Any
-
-    type_str = (
-        str(raw_annotation)
-        .replace("typing.", "")
-        .replace("pyrit.score.", "")
-        .replace("pyrit.prompt_target.", "")
-        .replace("pathlib.", "")
-    )
-
-    return {"primary_type": primary_type, "literal_choices": None, "type_str": type_str}
-
-
-def _should_skip_in_ui(primary_type, raw_annotation, type_args) -> bool:
-    """Check if parameter should be skipped in UI."""
-    complex_types_to_skip = (
-        PromptChatTarget,
-        PromptShieldTarget,
-        Scorer,
-        Path,
-        TrueFalseQuestion,
-        collections.abc.Callable,
-    )
-
-    # Check primary type
-    if isinstance(primary_type, type) and issubclass(primary_type, complex_types_to_skip):
-        return True
-
-    # Check list of complex types
-    if (
-        primary_type is list
-        and type_args
-        and isinstance(type_args[0], type)
-        and issubclass(type_args[0], complex_types_to_skip)
-    ):
-        return True
-
-    # Check raw annotation
-    if isinstance(raw_annotation, type) and issubclass(raw_annotation, complex_types_to_skip):
-        return True
-
-    return False
-
-
 def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
-    """
-    Instantiates a Scorer class with the provided parameters.
+    """Instantiate a Scorer class with the provided parameters.
 
     Parameters:
         scorer_type (str): The name of the Scorer class.
@@ -362,6 +293,7 @@ def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
         ScorerInstantiationError: If instantiation fails.
     """
     logger.debug(f"Attempting to instantiate scorer '{scorer_type}' with params: {params}")
+
     try:
         scorer_class = getattr(score, scorer_type)
     except AttributeError as e:
@@ -371,11 +303,15 @@ def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
     try:
         init_method = scorer_class.__init__
         if init_method is object.__init__:
-            scorer_init_params = {}
+            scorer_init_params: dict[str, inspect.Parameter] = {}
         else:
-            scorer_init_params = inspect.signature(init_method).parameters
+            scorer_init_params = dict(inspect.signature(init_method).parameters)
     except (ValueError, TypeError) as e:
-        logger.error(f"Could not get/parse signature for {scorer_type}.__init__: {e}. Assuming no named params needed.")
+        logger.error(
+            "Could not get/parse signature for %s.__init__: %s. Assuming no named params needed.",
+            scorer_type,
+            e,
+        )
         scorer_init_params = {}
 
     # Determine the names of parameters, excluding self, *args, **kwargs
@@ -384,7 +320,7 @@ def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
         for pname, p in scorer_init_params.items()
         if pname != "self" and p.kind in [inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY]
     ]
-    logger.debug(f"Found __init__ param names for {scorer_type}: {init_param_names}")
+    logger.debug("Found __init__ param names for %s: %s", scorer_type, init_param_names)
 
     if not init_param_names:
         if params:
@@ -395,12 +331,15 @@ def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
             scorer_instance = scorer_class()
             logger.info(f"Scorer '{scorer_type}' instantiated without parameters.")
         except TypeError as te:
-            logger.error(f"TypeError during instantiation of zero-arg scorer '{scorer_type}': {te}", exc_info=True)
+            logger.error(
+                f"TypeError during instantiation of zero-arg scorer '{scorer_type}': {te}",
+                exc_info=True,
+            )
             raise ScorerInstantiationError(f"TypeError instantiating {scorer_type}(): {te}") from te
     else:
         # Filter and validate parameters
         filtered_params = {k: v for k, v in params.items() if k in init_param_names}
-        logger.debug(f"Filtered params for {scorer_type}: {filtered_params}")
+        logger.debug("Filtered params for %s: %s", scorer_type, filtered_params)
 
         required_param_names = {
             p.name
@@ -423,7 +362,8 @@ def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
         except TypeError as te:
             params_safe_log = {k: ("***" if "key" in k.lower() else v) for k, v in filtered_params.items()}
             logger.error(
-                f"TypeError during instantiation of '{scorer_type}' with params {params_safe_log}: {te}", exc_info=True
+                f"TypeError during instantiation of '{scorer_type}' with params {params_safe_log}: {te}",
+                exc_info=True,
             )
             raise ScorerInstantiationError(
                 f"TypeError instantiating {scorer_type}: {te}. Check parameter types/counts."
@@ -436,8 +376,7 @@ def instantiate_scorer(scorer_type: str, params: Dict[str, Any]) -> Scorer:
 
 
 def add_scorer(scorer_name: str, scorer_type: str, params: Dict[str, Any]) -> Scorer:
-    """
-    Adds a new Scorer configuration after validating instantiation.
+    """Add new Scorer configuration after validating instantiation.
 
     Parameters:
         scorer_name: Unique name for this configuration.
@@ -452,6 +391,7 @@ def add_scorer(scorer_name: str, scorer_type: str, params: Dict[str, Any]) -> Sc
         ScorerInstantiationError: If instantiation fails.
     """
     configured_scorers = load_scorers()
+
     if scorer_name in configured_scorers:
         logger.error(f"Scorer name '{scorer_name}' already exists.")
         raise ScorerConfigurationError(f"Scorer name '{scorer_name}' already exists.")
@@ -477,7 +417,11 @@ def add_scorer(scorer_name: str, scorer_type: str, params: Dict[str, Any]) -> Sc
         raise e
     except Exception as e:
         # Catch other potential errors during pre-processing or instantiation
-        logger.exception(f"Unexpected error during pre-save instantiation check for {scorer_type}: {e}")
+        logger.exception(
+            "Unexpected error during pre-save instantiation check for %s: %s",
+            scorer_type,
+            e,
+        )
         raise ScorerInstantiationError(f"Validation failed for {scorer_type}: {e}") from e
 
     # Save configuration if instantiation was successful
@@ -493,36 +437,35 @@ def add_scorer(scorer_name: str, scorer_type: str, params: Dict[str, Any]) -> Sc
 
 
 def load_scorers() -> Dict[str, Dict[str, Any]]:
-    """
-    Loads all configured Scorer configurations from the parameter file.
+    """Load all configured Scorer configurations from the parameter file.
 
     Returns:
         Dict[str, Dict[str, Any]]: Scorer configurations keyed by name.
-                                   Inner dict has 'type' and 'params'
+                                   Inner dict has 'type' and 'params'.
     """
     if not PARAMETER_FILE.exists():
+
         logger.debug(f"Parameter file '{PARAMETER_FILE}' not found. Returning empty configuration.")
         return {}
     try:
-        with open(PARAMETER_FILE, "r") as f:
+        with open(PARAMETER_FILE, "r", encoding="utf-8") as f:
             # Use yaml.FullLoader or yaml.Loader if needing to load custom Python objects (like Path)
             # For simple types, safe_load is best. If storing Path objects, need custom handling or use Loader.
             data = yaml.safe_load(f)
             if data is None:
                 data = {}
-            logger.debug(f"Loaded scorer configurations ({len(data)} items).")
-            return data
+            logger.debug("Loaded scorer configurations (%s items).", len(data))
+            return data if isinstance(data, dict) else {}
     except yaml.YAMLError as ye:
         logger.error(f"Error parsing YAML file '{PARAMETER_FILE}': {ye}", exc_info=True)
         raise ScorerConfigurationError(f"Error parsing scorer configurations file: {ye}") from ye
     except Exception as e:
-        logger.error(f"Error loading scorer configurations: {e}", exc_info=True)
+        logger.error("Error loading scorer configurations: %s", e, exc_info=True)
         raise ScorerConfigurationError(f"Error loading scorer configurations: {e}") from e
 
 
 def get_scorer(scorer_name: str) -> Scorer:
-    """
-    Retrieves and instantiates a configured Scorer by name.
+    """Retrieve and instantiate a configured Scorer by name.
 
     Parameters:
         scorer_name: The name of the Scorer configuration.
@@ -535,6 +478,7 @@ def get_scorer(scorer_name: str) -> Scorer:
         ScorerInstantiationError: If instantiation fails.
     """
     configured_scorers = load_scorers()
+
     if scorer_name not in configured_scorers:
         logger.error(f"Scorer configuration '{scorer_name}' not found.")
         raise ScorerConfigurationError(f"Scorer configuration '{scorer_name}' not found.")
@@ -588,8 +532,7 @@ def get_scorer(scorer_name: str) -> Scorer:
 
 
 def delete_scorer(scorer_name: str) -> bool:
-    """
-    Deletes a configured Scorer.
+    """Delete configured Scorer.
 
     Parameters:
         scorer_name: The name of the Scorer configuration to delete.
@@ -601,6 +544,7 @@ def delete_scorer(scorer_name: str) -> bool:
         ScorerDeletionError: If saving the updated configurations fails.
     """
     configured_scorers = load_scorers()
+
     if scorer_name not in configured_scorers:
         logger.warning(f"Scorer configuration '{scorer_name}' not found. Cannot delete.")
         return False
@@ -618,8 +562,7 @@ def delete_scorer(scorer_name: str) -> bool:
 
 
 async def test_scorer_async(scorer_name: str, sample_input: PromptRequestPiece) -> List[Score]:
-    """
-    Tests a configured Scorer asynchronously with a sample input.
+    """Test configured Scorer asynchronously with a sample input.
 
     Parameters:
         scorer_name: The name of the configured Scorer to test.
@@ -633,14 +576,15 @@ async def test_scorer_async(scorer_name: str, sample_input: PromptRequestPiece) 
         ScorerInstantiationError: If scorer instantiation fails.
         ScorerTestingError: If scoring the sample input fails.
     """
-    # get_scorer handles loading and instantiation errors.
+    # get_scorer handles loading and instantiation errors
+
     scorer_instance = get_scorer(scorer_name)
     try:
         logger.debug(f"Testing scorer '{scorer_name}' with input: {sample_input}")
         # Scorer methods are async, so await directly
         scores = await scorer_instance.score_async(sample_input)
         logger.info(f"Scorer '{scorer_name}' tested successfully. Scores: {scores}")
-        return scores
+        return list(scores) if scores else []
     except Exception as e:
         logger.error(f"Error testing scorer '{scorer_name}': {e}", exc_info=True)
         raise ScorerTestingError(f"Error testing scorer '{scorer_name}': {e}") from e
@@ -648,8 +592,7 @@ async def test_scorer_async(scorer_name: str, sample_input: PromptRequestPiece) 
 
 # Keep sync wrapper if needed by parts of the app that aren't async
 def test_scorer(scorer_name: str, sample_input: PromptRequestPiece) -> List[Score]:
-    """
-    Synchronous wrapper to test a configured Scorer with a sample input.
+    """Synchronous wrapper to test a configured Scorer with a sample input.
 
     Parameters:
         scorer_name: The name of the configured Scorer to test.
@@ -659,6 +602,7 @@ def test_scorer(scorer_name: str, sample_input: PromptRequestPiece) -> List[Scor
         List[Score]: The Scorer's output on the sample input.
     """
     try:
+
         # Get or create an event loop
         try:
             loop = asyncio.get_running_loop()
@@ -687,8 +631,7 @@ def test_scorer(scorer_name: str, sample_input: PromptRequestPiece) -> List[Scor
 
 
 def update_parameter_file(configured_scorers: Dict[str, Any]) -> None:
-    """
-    Updates the YAML parameter file with the current Scorer configurations.
+    """Update the YAML parameter file with the current Scorer configurations.
 
     Parameters:
         configured_scorers: The current configurations to save.
@@ -697,11 +640,15 @@ def update_parameter_file(configured_scorers: Dict[str, Any]) -> None:
         ScorerConfigurationError: If updating the parameter file fails.
     """
     try:
+
         PARAMETER_FILE.parent.mkdir(parents=True, exist_ok=True)  # Use pathlib's mkdir
-        with open(PARAMETER_FILE, "w") as f:
+        with open(PARAMETER_FILE, "w", encoding="utf-8") as f:
             # Use default_flow_style=False for better readability
             yaml.safe_dump(configured_scorers, f, default_flow_style=False, sort_keys=False)
         logger.info(f"Scorer configurations updated in '{PARAMETER_FILE}'.")
     except Exception as e:
-        logger.error(f"Error updating scorer parameter file '{PARAMETER_FILE}': {e}", exc_info=True)
+        logger.error(
+            f"Error updating scorer parameter file '{PARAMETER_FILE}': {e}",
+            exc_info=True,
+        )
         raise ScorerConfigurationError(f"Error updating scorer parameter file: {e}") from e

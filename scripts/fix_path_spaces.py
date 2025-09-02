@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """Fix directory paths with spaces that cause Windows CI failures.
 
@@ -10,11 +13,9 @@ This script renames directories with spaces to use underscores.
 import os
 import shutil
 import sys
-from pathlib import Path
-from typing import List, Tuple
 
 
-def find_paths_with_spaces(root_dir: str = ".") -> List[Tuple[str, str]]:
+def find_paths_with_spaces(root_dir: str = ".") -> list[tuple[str, str]]:
     """Find all paths containing spaces."""
     paths_with_spaces = []
 
@@ -76,8 +77,9 @@ def fix_path_spaces(dry_run: bool = False) -> None:
 
 
 def main() -> None:
-    """Execute the main path fixing logic."""
+    """Run the path space fixing process."""
     print("Path Space Fixer for ViolentUTF")
+
     print("=" * 50)
 
     dry_run = "--dry-run" in sys.argv or "-n" in sys.argv

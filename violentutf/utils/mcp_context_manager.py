@@ -1,30 +1,36 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-MCP Context Manager for Phase 4 Implementation.
+"""Mcp Context Manager module."""
 
-=============================================
-
-This module provides context awareness and real-time monitoring
-for the ViolentUTF MCP integration.
-"""
+from __future__ import annotations
 
 import asyncio
-import json
 import logging
+from asyncio import Task
 from collections import deque
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, cast
+
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 logger = logging.getLogger(__name__)
 
 
 class ConversationContext:
-    """Manages conversation context and metadata."""
+    """Manage conversation context and metadata.."""
 
-    def __init__(self: "ConversationContext", max_turns: int = 20) -> None:
+    def __init__(self: ConversationContext, max_turns: int = 20) -> None:
+        """Initialize conversation context manager."""
         self.max_turns = max_turns
+
         self.turns: deque = deque(maxlen=max_turns)
         self.metadata: Dict[str, Any] = {}
         self.active_resources: List[str] = []
@@ -32,28 +38,47 @@ class ConversationContext:
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
 
-    def add_turn(self: "ConversationContext", role: str, content: str, metadata: Optional[Dict] = None) -> None:
-        """Add a conversation turn."""
-        turn = {"role": role, "content": content, "timestamp": datetime.now().isoformat(), "metadata": metadata or {}}
+    def add_turn(
+        self: ConversationContext,
+        role: str,
+        content: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Add conversation turn."""
+        turn = {
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now().isoformat(),
+            "metadata": metadata or {},
+        }
+
         self.turns.append(turn)
         self.updated_at = datetime.now()
 
-    def get_recent_turns(self: "ConversationContext", count: int = 5) -> List[Dict[str, Any]]:
+    def get_recent_turns(self: ConversationContext, count: int = 5) -> List[Dict[str, Any]]:
         """Get recent conversation turns."""
         return list(self.turns)[-count:]
 
-    def add_resource(self: "ConversationContext", resource_uri: str) -> None:
+    def add_resource(self: ConversationContext, resource_uri: str) -> None:
         """Track active resource."""
         if resource_uri not in self.active_resources:
+
             self.active_resources.append(resource_uri)
             self.updated_at = datetime.now()
 
-    def add_test_result(self: "ConversationContext", test_type: str, result: Any) -> None:
+    def add_test_result(self: ConversationContext, test_type: str, result: object) -> None:
         """Add test result to context."""
-        self.test_results.append({"type": test_type, "result": result, "timestamp": datetime.now().isoformat()})
+        self.test_results.append(
+            {
+                "type": test_type,
+                "result": result,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
         self.updated_at = datetime.now()
 
-    def get_context_summary(self: "ConversationContext") -> Dict[str, Any]:
+    def get_context_summary(self: ConversationContext) -> Dict[str, Any]:
         """Get summary of current context."""
         return {
             "turn_count": len(self.turns),
@@ -63,7 +88,7 @@ class ConversationContext:
             "last_activity": self.updated_at.isoformat(),
         }
 
-    def extract_topics(self: "ConversationContext") -> List[str]:
+    def extract_topics(self: ConversationContext) -> List[str]:
         """Extract main topics from conversation."""
         topics = set()
 
@@ -88,21 +113,28 @@ class ConversationContext:
 
 
 class ContextAwareMonitor:
-    """Monitors conversation and provides real-time insights."""
+    """Monitor conversation and provides real-time insights."""
 
-    def __init__(self: "ContextAwareMonitor") -> None:
+    def __init__(self: ContextAwareMonitor) -> None:
+        """Initialize context-aware monitor."""
         self.contexts: Dict[str, ConversationContext] = {}
+
         self.alerts: List[Dict[str, Any]] = []
         self.suggestions_queue: deque = deque(maxlen=10)
-        self._callbacks: Dict[str, List[Callable]] = {"context_update": [], "alert": [], "suggestion": []}
+        self._callbacks: Dict[str, List[Callable]] = {
+            "context_update": [],
+            "alert": [],
+            "suggestion": [],
+        }
 
-    def get_or_create_context(self: "ContextAwareMonitor", session_id: str) -> ConversationContext:
+    def get_or_create_context(self: ContextAwareMonitor, session_id: str) -> ConversationContext:
         """Get or create context for session."""
         if session_id not in self.contexts:
+
             self.contexts[session_id] = ConversationContext()
         return self.contexts[session_id]
 
-    def analyze_conversation(self: "ContextAwareMonitor", session_id: str, user_input: str) -> Dict[str, Any]:
+    def analyze_conversation(self: ContextAwareMonitor, session_id: str, user_input: str) -> Dict[str, Any]:
         """Analyze conversation and provide insights."""
         context = self.get_or_create_context(session_id)
 
@@ -110,7 +142,7 @@ class ContextAwareMonitor:
         context.add_turn("user", user_input)
 
         # Extract insights
-        insights = {
+        insights: Dict[str, Any] = {
             "topics": context.extract_topics(),
             "suggestions": [],
             "alerts": [],
@@ -147,7 +179,7 @@ class ContextAwareMonitor:
         return insights
 
     def _generate_suggestions(
-        self: "ContextAwareMonitor", context: ConversationContext, user_input: str
+        self: ContextAwareMonitor, context: ConversationContext, user_input: str
     ) -> List[Dict[str, Any]]:
         """Generate contextual suggestions."""
         suggestions = []
@@ -192,39 +224,44 @@ class ContextAwareMonitor:
 
         return suggestions
 
-    def register_callback(self: "ContextAwareMonitor", event_type: str, callback: Callable) -> None:
-        """Register callback for events."""
+    def register_callback(self: ContextAwareMonitor, event_type: str, callback: Callable) -> None:
+        """Provide Register callback for events."""
         if event_type in self._callbacks:
+
             self._callbacks[event_type].append(callback)
 
-    def _trigger_alert(self: "ContextAwareMonitor", alert: Dict[str, Any]) -> None:
+    def _trigger_alert(self: ContextAwareMonitor, alert: Dict[str, Any]) -> None:
         """Trigger alert callbacks."""
         self.alerts.append(alert)
+
         for callback in self._callbacks["alert"]:
             try:
                 callback(alert)
-            except Exception as e:
-                logger.error(f"Alert callback error: {e}")
+            except (TypeError, ValueError, RuntimeError) as e:
+                logger.error("Alert callback error: %s", e)
 
-    def _trigger_suggestion(self: "ContextAwareMonitor", suggestion: Dict[str, Any]) -> None:
+    def _trigger_suggestion(self: ContextAwareMonitor, suggestion: Dict[str, Any]) -> None:
         """Trigger suggestion callbacks."""
         for callback in self._callbacks["suggestion"]:
+
             try:
                 callback(suggestion)
-            except Exception as e:
-                logger.error(f"Suggestion callback error: {e}")
+            except (TypeError, ValueError, RuntimeError) as e:
+                logger.error("Suggestion callback error: %s", e)
 
-    def _trigger_context_update(self: "ContextAwareMonitor", session_id: str, insights: Dict[str, Any]) -> None:
+    def _trigger_context_update(self: ContextAwareMonitor, session_id: str, insights: Dict[str, Any]) -> None:
         """Trigger context update callbacks."""
         for callback in self._callbacks["context_update"]:
+
             try:
                 callback(session_id, insights)
-            except Exception as e:
-                logger.error(f"Context update callback error: {e}")
+            except (TypeError, ValueError, RuntimeError) as e:
+                logger.error("Context update callback error: %s", e)
 
-    def get_session_stats(self: "ContextAwareMonitor", session_id: str) -> Dict[str, Any]:
-        """Get statistics for a session."""
+    def get_session_stats(self: ContextAwareMonitor, session_id: str) -> Dict[str, Any]:
+        """Provide Get statistics for a session."""
         context = self.contexts.get(session_id)
+
         if not context:
             return {}
 
@@ -238,51 +275,62 @@ class ContextAwareMonitor:
 
 
 class ResourceMonitor:
-    """Monitors MCP resources and provides updates."""
+    """Monitor MCP resources and provides updates."""
 
-    def __init__(self: "ResourceMonitor", mcp_client: Any) -> None:
+    def __init__(self: ResourceMonitor, mcp_client: object) -> None:
+        """Initialize instance."""
         self.mcp_client = mcp_client
-        self.resource_cache: Dict[str, Any] = {}
+
+        self.resource_cache: Dict[str, object] = {}
         self.subscriptions: Dict[str, List[Callable]] = {}
         self._monitoring = False
-        self._monitor_task = None
+        self._monitor_task: Optional[Task[None]] = None
 
-    async def start_monitoring(self: "ResourceMonitor", interval: int = 5) -> None:
+    async def start_monitoring(self: ResourceMonitor, interval: int = 5) -> None:
         """Start resource monitoring."""
         if self._monitoring:
+
             return
 
         self._monitoring = True
         self._monitor_task = asyncio.create_task(self._monitor_loop(interval))
         logger.info("Resource monitoring started")
 
-    async def stop_monitoring(self: "ResourceMonitor") -> None:
+    async def stop_monitoring(self: ResourceMonitor) -> None:
         """Stop resource monitoring."""
         self._monitoring = False
+
         if self._monitor_task:
             self._monitor_task.cancel()
             try:
                 await self._monitor_task
-            except asyncio.CancelledError:
+            except asyncio.CancelledError:  # nosec B110 - acceptable exception handling
+
                 pass
         logger.info("Resource monitoring stopped")
 
-    async def _monitor_loop(self: "ResourceMonitor", interval: int) -> None:
-        """Main monitoring loop."""
+    async def _monitor_loop(self: ResourceMonitor, interval: int) -> None:
+        """Run main monitoring loop."""
         while self._monitoring:
+
             try:
                 # Check for resource updates
                 await self._check_resources()
                 await asyncio.sleep(interval)
-            except Exception as e:
-                logger.error(f"Monitor loop error: {e}")
+            except (asyncio.CancelledError, RuntimeError, OSError) as e:
+                logger.error("Monitor loop error: %s", e)
                 await asyncio.sleep(interval)
 
-    async def _check_resources(self: "ResourceMonitor") -> None:
-        """Check resources for updates."""
+    async def _check_resources(self: ResourceMonitor) -> None:
+        """Provide Check resources for updates."""
         try:
+
             # Get current resources
-            resources = await self.mcp_client.list_resources()
+            list_resources_method: Callable[[], Any] = getattr(self.mcp_client, "list_resources", lambda: [])
+            if asyncio.iscoroutinefunction(list_resources_method):
+                resources = await list_resources_method()
+            else:
+                resources = cast(List[Any], list_resources_method())
 
             # Check for changes
             for resource in resources:
@@ -291,50 +339,56 @@ class ResourceMonitor:
                 # Check if resource changed
                 if uri in self.resource_cache:
                     # Simple change detection (would be more sophisticated in production)
-                    if self._has_changed(resource, self.resource_cache[uri]):
+                    if self._has_changed(cast(str, resource), cast(str, self.resource_cache[uri])):
                         await self._notify_subscribers(uri, resource)
 
                 # Update cache
                 self.resource_cache[uri] = resource
 
-        except Exception as e:
-            logger.error(f"Resource check error: {e}")
+        except (AttributeError, TypeError, RuntimeError) as e:
+            logger.error("Resource check error: %s", e)
 
-    def _has_changed(self: "ResourceMonitor", new_resource, cached_resource: Any) -> bool:
+    def _has_changed(self: ResourceMonitor, new_resource: str, cached_resource: str) -> bool:
         """Check if resource has changed."""
-        # Simple comparison - in production would use proper change detection.
+        # Simple comparison - in production would use proper change detection
+
         return str(new_resource) != str(cached_resource)
 
-    async def _notify_subscribers(self: "ResourceMonitor", uri: str, resource: Any) -> None:
+    async def _notify_subscribers(self: ResourceMonitor, uri: str, resource: object) -> None:
         """Notify subscribers of resource change."""
         if uri in self.subscriptions:
+
             for callback in self.subscriptions[uri]:
                 try:
                     await callback(uri, resource)
-                except Exception as e:
-                    logger.error(f"Subscriber notification error: {e}")
+                except (TypeError, ValueError, RuntimeError) as e:
+                    logger.error("Subscriber notification error: %s", e)
 
-    def subscribe(self: "ResourceMonitor", uri: str, callback: Callable) -> None:
+    def subscribe(self: ResourceMonitor, uri: str, callback: Callable) -> None:
         """Subscribe to resource updates."""
         if uri not in self.subscriptions:
+
             self.subscriptions[uri] = []
         self.subscriptions[uri].append(callback)
-        logger.info(f"Subscribed to resource: {uri}")
+        logger.info("Subscribed to resource: %s", uri)
 
-    def unsubscribe(self: "ResourceMonitor", uri: str, callback: Callable) -> None:
+    def unsubscribe(self: ResourceMonitor, uri: str, callback: Callable) -> None:
         """Unsubscribe from resource updates."""
         if uri in self.subscriptions and callback in self.subscriptions[uri]:
+
             self.subscriptions[uri].remove(callback)
             if not self.subscriptions[uri]:
                 del self.subscriptions[uri]
-            logger.info(f"Unsubscribed from resource: {uri}")
+            logger.info("Unsubscribed from resource: %s", uri)
 
 
 class IntegratedContextManager:
-    """Integrates context awareness with MCP operations."""
+    """Integrate context awareness with MCP operations."""
 
-    def __init__(self: "IntegratedContextManager", mcp_client: Any) -> None:
+    def __init__(self: IntegratedContextManager, mcp_client: object) -> None:
+        """Initialize instance."""
         self.mcp_client = mcp_client
+
         self.monitor = ContextAwareMonitor()
         self.resource_monitor = ResourceMonitor(mcp_client)
 
@@ -342,17 +396,18 @@ class IntegratedContextManager:
         self.monitor.register_callback("suggestion", self._handle_suggestion)
         self.monitor.register_callback("alert", self._handle_alert)
 
-    def _handle_suggestion(self: "IntegratedContextManager", suggestion: Dict[str, Any]) -> None:
+    def _handle_suggestion(self: IntegratedContextManager, suggestion: Dict[str, Any]) -> None:
         """Handle generated suggestions."""
-        logger.info(f"Suggestion generated: {suggestion['text']}")
+        logger.info("Suggestion generated: %s", suggestion["text"])
 
-    def _handle_alert(self: "IntegratedContextManager", alert: Dict[str, Any]) -> None:
+    def _handle_alert(self: IntegratedContextManager, alert: Dict[str, Any]) -> None:
         """Handle security alerts."""
-        logger.warning(f"Security alert: {alert['message']}")
+        logger.warning("Security alert: %s", alert["message"])
 
-    def process_input(self: "IntegratedContextManager", session_id: str, user_input: str) -> Dict[str, Any]:
+    def process_input(self: IntegratedContextManager, session_id: str, user_input: str) -> Dict[str, Any]:
         """Process user input with context awareness."""
-        # Analyze conversation.
+        # Analyze conversation
+
         insights = self.monitor.analyze_conversation(session_id, user_input)
 
         # Get session context
@@ -364,7 +419,7 @@ class IntegratedContextManager:
 
         return insights
 
-    def track_command_execution(self: "IntegratedContextManager", session_id: str, command: str, result: Any) -> None:
+    def track_command_execution(self: IntegratedContextManager, session_id: str, command: str, result: object) -> None:
         """Track command execution in context."""
         context = self.monitor.get_or_create_context(session_id)
 
@@ -372,7 +427,10 @@ class IntegratedContextManager:
         context.add_turn(
             "system",
             f"Executed: {command}",
-            {"command": command, "success": result.get("success", True) if isinstance(result, dict) else True},
+            {
+                "command": command,
+                "success": (result.get("success", True) if isinstance(result, dict) else True),
+            },
         )
 
         # Track specific results
@@ -382,9 +440,10 @@ class IntegratedContextManager:
             if result.get("type") == "dataset_loaded":
                 context.add_resource(f"dataset:{result.get('name', 'unknown')}")
 
-    def get_contextual_help(self: "IntegratedContextManager", session_id: str) -> List[Dict[str, Any]]:
+    def get_contextual_help(self: IntegratedContextManager, session_id: str) -> List[Dict[str, Any]]:
         """Get contextual help based on current session."""
         context = self.monitor.get_or_create_context(session_id)
+
         topics = context.extract_topics()
 
         help_items = []
@@ -418,11 +477,11 @@ class IntegratedContextManager:
 
         return help_items
 
-    async def start_monitoring(self: "IntegratedContextManager") -> None:
+    async def start_monitoring(self: IntegratedContextManager) -> None:
         """Start resource monitoring."""
         await self.resource_monitor.start_monitoring()
 
-    async def stop_monitoring(self: "IntegratedContextManager") -> None:
+    async def stop_monitoring(self: IntegratedContextManager) -> None:
         """Stop resource monitoring."""
         await self.resource_monitor.stop_monitoring()
 

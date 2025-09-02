@@ -1,17 +1,17 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Password strength validation and policy enforcement.
+"""Password strength validation and policy enforcement
 
 SECURITY: Implements comprehensive password security requirements to prevent weak passwords
 """
-
 import logging
-import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Self
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ class PasswordStrength(Enum):
     """Password strength levels."""
 
     VERY_WEAK = "very_weak"
+
     WEAK = "weak"
     MODERATE = "moderate"
     STRONG = "strong"
@@ -31,6 +32,7 @@ class PasswordPolicy:
     """Password policy configuration."""
 
     min_length: int = 12
+
     max_length: int = 128
     require_uppercase: bool = True
     require_lowercase: bool = True
@@ -57,6 +59,7 @@ class PasswordValidationResult:
     """Result of password validation."""
 
     is_valid: bool
+
     strength: PasswordStrength
     score: int  # 0-100
     errors: List[str]
@@ -65,17 +68,19 @@ class PasswordValidationResult:
 
 
 class PasswordValidator:
-    """Comprehensive password validation and strength assessment."""
+    """Comprehensive password validation and strength assessment"""
 
-    def __init__(self: "PasswordValidator", policy: Optional[PasswordPolicy] = None) -> None:
-        """Initialize the instance."""
+    def __init__(self: "Self", policy: Optional[PasswordPolicy] = None) -> None:
+        """Initialize instance."""
         self.policy = policy or PasswordPolicy()
+
         self._load_common_passwords()
         self._load_keyboard_patterns()
 
-    def _load_common_passwords(self: "PasswordValidator") -> None:
+    def _load_common_passwords(self: "Self") -> None:
         """Load common/weak passwords list."""
-        # Top 100 most common passwords - in production, load from file.
+        # Top 100 most common passwords - in production, load from file
+
         self.common_passwords = {
             "password",
             "123456",
@@ -151,7 +156,6 @@ class PasswordValidator:
             "hr",
             "it",
             "tech",
-            "support",
             "helpdesk",
             "maintenance",
             "facility",
@@ -186,7 +190,7 @@ class PasswordValidator:
             "terminal",
         }
 
-    def _load_keyboard_patterns(self: "PasswordValidator") -> None:
+    def _load_keyboard_patterns(self: "Self") -> None:
         """Load keyboard pattern sequences."""
         self.keyboard_patterns = [
             # QWERTY rows
@@ -231,14 +235,13 @@ class PasswordValidator:
         ]
 
     def validate_password(
-        self: "PasswordValidator",
+        self: "Self",
         password: str,
         username: Optional[str] = None,
         email: Optional[str] = None,
         personal_info: Optional[List[str]] = None,
     ) -> PasswordValidationResult:
-        """
-        Comprehensive password validation.
+        """Comprehensive password validation
 
         Args:
             password: Password to validate
@@ -250,6 +253,7 @@ class PasswordValidator:
             PasswordValidationResult with validation details
         """
         errors = []
+
         warnings = []
         suggestions = []
         score = 0
@@ -364,7 +368,10 @@ class PasswordValidator:
 
         # Determine strength and validity
         strength = self._calculate_strength(score)
-        is_valid = len(errors) == 0 and strength not in [PasswordStrength.VERY_WEAK, PasswordStrength.WEAK]
+        is_valid = len(errors) == 0 and strength not in [
+            PasswordStrength.VERY_WEAK,
+            PasswordStrength.WEAK,
+        ]
 
         # Add strength-based suggestions
         if strength == PasswordStrength.VERY_WEAK:
@@ -383,9 +390,10 @@ class PasswordValidator:
             suggestions=suggestions,
         )
 
-    def _check_repeated_characters(self: "PasswordValidator", password: str) -> int:
+    def _check_repeated_characters(self: "Self", password: str) -> int:
         """Check for repeated character sequences."""
         max_repeated = 0
+
         current_repeated = 1
 
         for i in range(1, len(password)):
@@ -397,7 +405,7 @@ class PasswordValidator:
 
         return max(max_repeated, current_repeated)
 
-    def _check_sequential_characters(self: "PasswordValidator", password: str) -> int:
+    def _check_sequential_characters(self: "Self", password: str) -> int:
         """Check for sequential character patterns."""
         max_sequential = 0
 
@@ -423,7 +431,7 @@ class PasswordValidator:
 
         return max_sequential
 
-    def _check_keyboard_patterns(self: "PasswordValidator", password: str) -> Optional[str]:
+    def _check_keyboard_patterns(self: "Self", password: str) -> Optional[str]:
         """Check for keyboard walking patterns."""
         password_lower = password.lower()
 
@@ -439,7 +447,7 @@ class PasswordValidator:
         return None
 
     def _check_personal_info(
-        self: "PasswordValidator",
+        self: "Self",
         password: str,
         username: Optional[str] = None,
         email: Optional[str] = None,
@@ -472,9 +480,10 @@ class PasswordValidator:
 
         return None
 
-    def _calculate_strength(self: "PasswordValidator", score: int) -> PasswordStrength:
+    def _calculate_strength(self: "Self", score: int) -> PasswordStrength:
         """Calculate password strength based on score."""
         if score < 30:
+
             return PasswordStrength.VERY_WEAK
         elif score < 50:
             return PasswordStrength.WEAK
@@ -485,7 +494,7 @@ class PasswordValidator:
         else:
             return PasswordStrength.VERY_STRONG
 
-    def generate_password_requirements(self: "PasswordValidator") -> Dict:
+    def generate_password_requirements(self: "Self") -> Dict:
         """Generate password requirements description for UI."""
         return {
             "min_length": self.policy.min_length,
@@ -519,8 +528,7 @@ def validate_password_strength(
     email: Optional[str] = None,
     personal_info: Optional[List[str]] = None,
 ) -> PasswordValidationResult:
-    """
-    Convenience function for password validation.
+    """Validate password conveniently for password validation
 
     Args:
         password: Password to validate
@@ -536,9 +544,8 @@ def validate_password_strength(
     )
 
 
-def is_password_secure(password: str, **kwargs) -> bool:
-    """
-    Quick check if password meets security requirements.
+def is_password_secure(password: str, **kwargs: object) -> bool:
+    """Quick check if password meets security requirements
 
     Args:
         password: Password to check
@@ -547,5 +554,17 @@ def is_password_secure(password: str, **kwargs) -> bool:
     Returns:
         True if password is secure, False otherwise
     """
-    result = validate_password_strength(password, **kwargs)
-    return result.is_valid and result.strength not in [PasswordStrength.VERY_WEAK, PasswordStrength.WEAK]
+    # Extract only the expected parameters for validate_password_strength
+    from typing import cast
+
+    result = validate_password_strength(
+        password,
+        username=cast(Optional[str], kwargs.get("username")),
+        email=cast(Optional[str], kwargs.get("email")),
+        personal_info=cast(Optional[List[str]], kwargs.get("personal_info")),
+    )
+
+    return result.is_valid and result.strength not in [
+        PasswordStrength.VERY_WEAK,
+        PasswordStrength.WEAK,
+    ]

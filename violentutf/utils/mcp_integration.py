@@ -1,10 +1,12 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-MCP Integration Utilities for ViolentUTF.
+"""MCP Integration Utilities for ViolentUTF.
 
-Provides natural language command parsing and context analysis for MCP features
+Provides natural language command parsing and context analysis for MCP features.
 """
 
 import json
@@ -13,11 +15,11 @@ import re
 import sys
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 # Import existing utilities
 from .logging import get_logger
-from .mcp_client import MCPClient, MCPClientSync
+from .mcp_client import MCPClientSync
 
 # Import existing dataset utilities
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -33,7 +35,7 @@ logger = get_logger(__name__)
 
 
 class MCPCommandType(Enum):
-    """Types of MCP commands."""
+    """Types of MCP commands"""
 
     HELP = "help"
     TEST = "test"
@@ -43,29 +45,28 @@ class MCPCommandType(Enum):
     RESOURCES = "resources"
     PROMPT = "prompt"
     LIST = "list"
-    DOCUMENTATION = "documentation"
-    SEARCH = "search"
     UNKNOWN = "unknown"
 
 
 @dataclass
 class MCPCommand:
-    """Parsed MCP command."""
+    """Parsed MCP command"""
 
     type: MCPCommandType
     subcommand: Optional[str] = None
-    arguments: Dict[str, Any] = None
+    arguments: Optional[Dict[str, Any]] = None
     raw_text: str = ""
 
     def __post_init__(self: "MCPCommand") -> None:
+        """Initialize arguments dictionary if not provided."""
         if self.arguments is None:
             self.arguments = {}
 
 
 class NaturalLanguageParser:
-    """Parse natural language commands for MCP operations."""
+    """Parse natural language commands for MCP operations"""
 
-    # Command patterns.
+    # Command patterns
     COMMAND_PATTERNS = {
         MCPCommandType.HELP: [r"/mcp\s+help", r"show\s+mcp\s+commands?", r"what\s+can\s+mcp\s+do", r"mcp\s+usage"],
         MCPCommandType.TEST: [
@@ -110,37 +111,17 @@ class NaturalLanguageParser:
             r"show\s+(?:me\s+)?(?:all\s+)?(?:available\s+)?(?P<resource>[\w-]+)",
             r"what\s+(?P<resource>[\w-]+)\s+are\s+available",
         ],
-        MCPCommandType.DOCUMENTATION: [
-            r"/mcp\s+docs?\s+(?P<query>.+)",
-            r"/mcp\s+documentation\s+(?P<query>.+)",
-            r"show\s+(?:me\s+)?(?:the\s+)?docs?\s+(?:for\s+|about\s+)?(?P<query>.+)",
-            r"(?:find\s+|search\s+)?docs?\s+(?:for\s+|about\s+)?(?P<query>.+)",
-            r"how\s+(?:do\s+i|to)\s+(?P<query>.+)",
-            r"what\s+is\s+(?P<query>.+)",
-            r"guide\s+(?:for\s+|on\s+)?(?P<query>.+)",
-            r"help\s+(?:me\s+)?(?:with\s+)?(?P<query>.+)",
-            r"troubleshoot(?:ing)?\s+(?P<query>.+)",
-            r"setup\s+(?P<query>.+)",
-            r"configure?\s+(?P<query>.+)",
-            r"install(?:ing)?\s+(?P<query>.+)",
-        ],
-        MCPCommandType.SEARCH: [
-            r"/mcp\s+search\s+(?P<query>.+)",
-            r"search\s+(?:for\s+|about\s+)?(?P<query>.+)",
-            r"find\s+(?:information\s+)?(?:about\s+)?(?P<query>.+)",
-            r"look\s+(?:up\s+|for\s+)?(?P<query>.+)",
-        ],
     }
 
     def __init__(self: "NaturalLanguageParser") -> None:
-        """Initialize parser with compiled patterns."""
+        """Initialize parser with compiled patterns"""
         self.compiled_patterns = {}
         for cmd_type, patterns in self.COMMAND_PATTERNS.items():
             self.compiled_patterns[cmd_type] = [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
 
     def parse(self: "NaturalLanguageParser", text: str) -> MCPCommand:
         """
-        Parse natural language text into MCP command.
+        Parse natural language text into MCP command
 
         Args:
             text: Input text to parse
@@ -167,7 +148,7 @@ class NaturalLanguageParser:
 
     def suggest_command(self: "NaturalLanguageParser", partial_text: str) -> List[str]:
         """
-        Suggest commands based on partial input.
+        Suggest commands based on partial input
 
         Args:
             partial_text: Partial command text
@@ -190,12 +171,6 @@ class NaturalLanguageParser:
             "/mcp dataset jailbreak",
             "/mcp resources",
             "/mcp prompt security_test",
-            "/mcp docs setup",
-            "/mcp docs API",
-            "/mcp search authentication",
-            "how to setup ViolentUTF",
-            "troubleshooting Docker",
-            "guide for MCP",
         ]
 
         # Basic command suggestions
@@ -210,14 +185,6 @@ class NaturalLanguageParser:
             suggestions.extend(["/mcp test jailbreak", "/mcp test bias", "/mcp test privacy"])
         elif partial_lower.startswith("load") or partial_lower.startswith("data"):
             suggestions.extend(["/mcp dataset harmbench", "/mcp dataset jailbreak"])
-        elif partial_lower.startswith("how") or partial_lower.startswith("what") or partial_lower.startswith("guide"):
-            suggestions.extend(["how to setup ViolentUTF", "guide for MCP", "/mcp docs setup"])
-        elif partial_lower.startswith("troubl") or partial_lower.startswith("help"):
-            suggestions.extend(["troubleshooting Docker", "/mcp docs troubleshooting"])
-        elif partial_lower.startswith("setup") or partial_lower.startswith("install"):
-            suggestions.extend(["/mcp docs setup", "how to setup ViolentUTF"])
-        elif partial_lower.startswith("search") or partial_lower.startswith("find"):
-            suggestions.extend(["/mcp search authentication", "/mcp docs API"])
         else:
             # For any other text, suggest relevant commands based on keywords
             for cmd in all_commands:
@@ -235,7 +202,7 @@ class NaturalLanguageParser:
 
     def extract_parameters(self: "NaturalLanguageParser", text: str) -> Dict[str, Any]:
         """
-        Extract parameters from natural language text.
+        Extract parameters from natural language text
 
         Args:
             text: Natural language text
@@ -278,9 +245,9 @@ class NaturalLanguageParser:
 
 
 class ContextAnalyzer:
-    """Analyze conversation context for MCP opportunities."""
+    """Analyze conversation context for MCP opportunities"""
 
-    # Keywords that might trigger suggestions.
+    # Keywords that might trigger suggestions
     ENHANCEMENT_TRIGGERS = [
         "improve",
         "better",
@@ -307,13 +274,13 @@ class ContextAnalyzer:
     BIAS_TRIGGERS = ["bias", "fair", "discriminat", "stereotyp", "prejudic", "neutral", "balanced", "inclusive"]
 
     def __init__(self: "ContextAnalyzer", mcp_client: Optional[MCPClientSync] = None) -> None:
-        """Initialize analyzer with optional MCP client."""
+        """Initialize analyzer with optional MCP client"""
         self.mcp_client = mcp_client or MCPClientSync()
         self.logger = logger
 
     def analyze_for_suggestions(self: "ContextAnalyzer", text: str) -> List[Dict[str, Any]]:
         """
-        Analyze text and suggest relevant MCP operations.
+        Analyze text and suggest relevant MCP operations
 
         Args:
             text: Text to analyze
@@ -366,13 +333,13 @@ class ContextAnalyzer:
             )
 
         # Sort by priority
-        suggestions.sort(key=lambda x: x.get("priority", 999))
+        suggestions.sort(key=lambda x: int(cast(Union[str, int], x.get("priority", 999))))
 
-        return suggestions[:3]  # Return top 3 suggestions
+        return cast(List[Dict[str, Any]], suggestions[:3])  # Return top 3 suggestions
 
     def detect_prompt_type(self: "ContextAnalyzer", text: str) -> str:
         """
-        Detect the type of prompt based on content.
+        Detect the type of prompt based on content
 
         Args:
             text: Prompt text to analyze
@@ -403,20 +370,20 @@ class ContextAnalyzer:
 
 
 class ResourceSearcher:
-    """Search and filter MCP resources."""
+    """Search and filter MCP resources"""
 
     def __init__(self: "ResourceSearcher", mcp_client: Optional[MCPClientSync] = None) -> None:
-        """Initialize searcher with MCP client."""
+        """Initialize searcher with MCP client"""
         self.mcp_client = mcp_client or MCPClientSync()
-        self._resources_cache = None
-        self._prompts_cache = None
+        self._resources_cache: Optional[List[Dict[str, Any]]] = None
+        self._prompts_cache: Optional[List[Dict[str, Any]]] = None
         self.logger = logger
 
     def search_resources(
         self: "ResourceSearcher", query: str, resource_type: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
-        Search for resources matching query.
+        Search for resources matching query
 
         Args:
             query: Search query
@@ -425,25 +392,26 @@ class ResourceSearcher:
         Returns:
             List of matching resources
         """
-        # Get all resources (with caching).
+        # Get all resources (with caching)
         if self._resources_cache is None:
             self._resources_cache = self.mcp_client.list_resources()
 
         resources = self._resources_cache
+
         query_lower = query.lower()
 
         # Filter by query
         matches = []
-        for resource in resources:
+        for resource in cast(List[Dict[str, Any]], resources):
             # Check name and description
             if (
-                query_lower in resource.get("name", "").lower()
-                or query_lower in resource.get("description", "").lower()
-                or query_lower in resource.get("uri", "").lower()
+                query_lower in str(resource.get("name", "")).lower()
+                or query_lower in str(resource.get("description", "")).lower()
+                or query_lower in str(resource.get("uri", "")).lower()
             ):
                 # Filter by type if specified
                 if resource_type:
-                    if resource_type in resource.get("uri", ""):
+                    if resource_type in str(resource.get("uri", "")):
                         matches.append(resource)
                 else:
                     matches.append(resource)
@@ -452,7 +420,7 @@ class ResourceSearcher:
 
     def search_prompts(self: "ResourceSearcher", query: str, category: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        Search for prompts matching query.
+        Search for prompts matching query
 
         Args:
             query: Search query
@@ -461,22 +429,26 @@ class ResourceSearcher:
         Returns:
             List of matching prompts
         """
-        # Get all prompts (with caching).
+        # Get all prompts (with caching)
         if self._prompts_cache is None:
             self._prompts_cache = self.mcp_client.list_prompts()
 
         prompts = self._prompts_cache
+
         query_lower = query.lower()
 
         # Filter by query
         matches = []
-        for prompt in prompts:
+        for prompt in cast(List[Dict[str, Any]], prompts):
             # Check name and description
-            if query_lower in prompt.get("name", "").lower() or query_lower in prompt.get("description", "").lower():
+            if (
+                query_lower in str(prompt.get("name", "")).lower()
+                or query_lower in str(prompt.get("description", "")).lower()
+            ):
                 # Filter by category if specified
                 if category:
                     # Category might be in name or tags
-                    if category.lower() in prompt.get("name", "").lower():
+                    if category.lower() in str(prompt.get("name", "")).lower():
                         matches.append(prompt)
                 else:
                     matches.append(prompt)
@@ -484,7 +456,7 @@ class ResourceSearcher:
         return matches
 
     def get_resource_by_uri(self: "ResourceSearcher", uri: str) -> Optional[Dict[str, Any]]:
-        """Get specific resource by URI."""
+        """Get specific resource by URI"""
         resources = self._resources_cache or self.mcp_client.list_resources()
 
         for resource in resources:
@@ -494,7 +466,7 @@ class ResourceSearcher:
         return None
 
     def get_prompt_by_name(self: "ResourceSearcher", name: str) -> Optional[Dict[str, Any]]:
-        """Get specific prompt by name."""
+        """Get specific prompt by name"""
         prompts = self._prompts_cache or self.mcp_client.list_prompts()
 
         for prompt in prompts:
@@ -505,10 +477,10 @@ class ResourceSearcher:
 
 
 class TestScenarioInterpreter:
-    """Interpret and execute test scenarios using MCP."""
+    """Interpret and execute test scenarios using MCP"""
 
     def __init__(self: "TestScenarioInterpreter", mcp_client: Optional[MCPClientSync] = None) -> None:
-        """Initialize interpreter with MCP client."""
+        """Initialize interpreter with MCP client"""
         self.mcp_client = mcp_client or MCPClientSync()
         self.logger = logger
 
@@ -516,7 +488,7 @@ class TestScenarioInterpreter:
         self: "TestScenarioInterpreter", test_type: str, context: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Interpret a test request and prepare test configuration.
+        Interpret a test request and prepare test configuration
 
         Args:
             test_type: Type of test requested
@@ -558,7 +530,7 @@ class TestScenarioInterpreter:
         return config
 
     def _get_default_parameters(self: "TestScenarioInterpreter", prompt_name: str) -> Dict[str, Any]:
-        """Get default parameters for a prompt."""
+        """Get default parameters for a prompt"""
         defaults = {
             "jailbreak_test": {
                 "scenario": "standard",
@@ -591,11 +563,14 @@ class TestScenarioInterpreter:
             },
         }
 
-        return defaults.get(prompt_name, {})
+        result = defaults.get(prompt_name, {})
+        if not isinstance(result, dict):
+            return {}
+        return result
 
     def execute_test(self: "TestScenarioInterpreter", test_config: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Execute a test based on configuration.
+        Execute a test based on configuration
 
         Args:
             test_config: Test configuration from interpret_test_request
@@ -636,21 +611,21 @@ class TestScenarioInterpreter:
             }
 
         except Exception as e:
-            self.logger.error(f"Test execution failed: {e}")
+            self.logger.error("Test execution failed: %s", e)
             return {"error": str(e), "test_type": test_config.get("test_type", "unknown")}
 
 
 class DatasetIntegration:
-    """Integrate MCP with existing dataset system."""
+    """Integrate MCP with existing dataset system"""
 
     def __init__(self: "DatasetIntegration", mcp_client: Optional[MCPClientSync] = None) -> None:
-        """Initialize with MCP client."""
+        """Initialize with MCP client"""
         self.mcp_client = mcp_client or MCPClientSync()
         self.logger = logger
 
     def load_mcp_dataset(self: "DatasetIntegration", dataset_uri: str) -> Optional[Any]:
         """
-        Load dataset from MCP resource.
+        Load dataset from MCP resource
 
         Args:
             dataset_uri: MCP resource URI for dataset
@@ -663,30 +638,29 @@ class DatasetIntegration:
             content = self.mcp_client.read_resource(dataset_uri)
 
             if not content:
-                self.logger.error(f"Failed to read dataset: {dataset_uri}")
+                self.logger.error("Failed to read dataset: %s", dataset_uri)
                 return None
 
-            # If content is already structured, return it
+            # Handle different content types from MCP
             if isinstance(content, (list, dict)):
+                # Content is already structured
                 return content
-
-            # If content is JSON string, parse it
-            if isinstance(content, str):
+            else:
+                # Content should be a string, try to parse as JSON
+                content_str = str(content)
                 try:
-                    return json.loads(content)
+                    return json.loads(content_str)
                 except json.JSONDecodeError:
                     # Return as raw text if not JSON
-                    return content
-
-            return content
+                    return content_str
 
         except Exception as e:
-            self.logger.error(f"Failed to load MCP dataset: {e}")
+            self.logger.error("Failed to load MCP dataset: %s", e)
             return None
 
-    def transform_with_jinja(self: "DatasetIntegration", data: Any, template: str) -> Optional[str]:
+    def transform_with_jinja(self: "DatasetIntegration", data: object, template: str) -> Optional[str]:
         """
-        Transform data using Jinja2 template.
+        Transform data using Jinja2 template
 
         Args:
             data: Data to transform
@@ -708,9 +682,9 @@ class DatasetIntegration:
                 elif isinstance(data, dict):
                     template_data = data
                 else:
-                    template_data = {"content": data}
+                    template_data = {"content": cast(List[Any], data)}
 
-                return jinja_template.render(**template_data)
+                return cast(Optional[str], jinja_template.render(**template_data))
 
             # Use existing Jinja transformer
             config = TransformationConfig(template=template, output_format="text")
@@ -723,29 +697,30 @@ class DatasetIntegration:
             elif isinstance(data, dict):
                 template_data = data
             else:
-                template_data = {"content": data}
+                template_data = {"content": cast(List[Any], data)}
 
             # Transform
-            return transformer.transform([template_data])
+            result = transformer.transform([template_data])
+            return cast(Optional[str], result)
 
         except Exception as e:
-            self.logger.error(f"Jinja transformation failed: {e}")
+            self.logger.error("Jinja transformation failed: %s", e)
             return None
 
     def list_available_datasets(self: "DatasetIntegration") -> Dict[str, List[Dict[str, Any]]]:
         """
-        List all available datasets from both MCP and local sources.
+        List all available datasets from both MCP and local sources
 
         Returns:
             Dictionary with 'mcp' and 'local' dataset lists
         """
-        datasets = {"mcp": [], "local": []}
+        datasets: dict[str, list] = {"mcp": [], "local": []}
 
         # Get MCP datasets
         try:
             resources = self.mcp_client.list_resources()
-            for resource in resources:
-                if "dataset" in resource.get("uri", "").lower():
+            for resource in cast(List[Dict[str, Any]], resources):
+                if "dataset" in str(resource.get("uri", "")).lower():
                     datasets["mcp"].append(
                         {
                             "name": resource.get("name", "Unknown"),
@@ -755,7 +730,7 @@ class DatasetIntegration:
                         }
                     )
         except Exception as e:
-            self.logger.error(f"Failed to list MCP datasets: {e}")
+            self.logger.error("Failed to list MCP datasets: %s", e)
 
         # Get local PyRIT datasets
         try:
@@ -769,15 +744,16 @@ class DatasetIntegration:
                 }
             )
         except Exception as e:
-            self.logger.error(f"Failed to list local datasets: {e}")
+            self.logger.error("Failed to list local datasets: %s", e)
 
         return datasets
 
 
 class ConfigurationIntentDetector:
-    """Detects configuration-related intents in natural language."""
+    """Detects configuration-related intents in natural language"""
 
     def __init__(self: "ConfigurationIntentDetector") -> None:
+        """Initialize the configuration intent detector with keyword mappings."""
         self.generator_keywords = ["generator", "create", "model", "gpt", "claude", "llm"]
         self.dataset_keywords = ["dataset", "data", "load", "prompts"]
         self.orchestrator_keywords = ["orchestrator", "test", "run", "execute", "red team"]
@@ -785,7 +761,7 @@ class ConfigurationIntentDetector:
         self.converter_keywords = ["converter", "convert", "transform", "transformation", "translation"]
 
     def detect_configuration_intent(self: "ConfigurationIntentDetector", text: str) -> Optional[Dict[str, Any]]:
-        """Detect if text contains configuration intent."""
+        """Detect if text contains configuration intent"""
         text_lower = text.lower()
 
         # Check for orchestrator setup first (most specific)
@@ -832,7 +808,7 @@ class ConfigurationIntentDetector:
         return None
 
     def extract_generator_params(self: "ConfigurationIntentDetector", text: str) -> Dict[str, Any]:
-        """Extract generator parameters from natural language."""
+        """Extract generator parameters from natural language"""
         parser = NaturalLanguageParser()
         params = parser.extract_parameters(text)
 
@@ -854,8 +830,8 @@ class ConfigurationIntentDetector:
         return params
 
     def _extract_dataset_name(self: "ConfigurationIntentDetector", text: str) -> str:
-        """Extract dataset name from text."""
-        # Simple extraction - look for common dataset names.
+        """Extract dataset name from text"""
+        # Simple extraction - look for common dataset names
         text_lower = text.lower()
         if "jailbreak" in text_lower:
             return "jailbreak"
@@ -866,7 +842,7 @@ class ConfigurationIntentDetector:
         return "custom"
 
     def _extract_scorer_type(self: "ConfigurationIntentDetector", text: str) -> str:
-        """Extract scorer type from text."""
+        """Extract scorer type from text"""
         text_lower = text.lower()
         if "bias" in text_lower:
             return "bias"
@@ -878,9 +854,10 @@ class ConfigurationIntentDetector:
 
 
 class ConversationContextAnalyzer:
-    """Analyzes conversation context to provide intelligent suggestions."""
+    """Analyzes conversation context to provide intelligent suggestions"""
 
     def __init__(self: "ConversationContextAnalyzer") -> None:
+        """Initialize the conversation context analyzer with topic keyword mappings."""
         self.topic_keywords = {
             "security": ["jailbreak", "injection", "attack", "vulnerability", "exploit"],
             "bias": ["bias", "fairness", "discrimination", "stereotype"],
@@ -893,7 +870,7 @@ class ConversationContextAnalyzer:
         }
 
     def analyze_context(self: "ConversationContextAnalyzer", messages: List[Dict[str, str]]) -> Dict[str, Any]:
-        """Analyze conversation context."""
+        """Analyze conversation context"""
         if not messages:
             return {"message_count": 0, "topics": [], "suggested_actions": [], "mentioned_resources": []}
 

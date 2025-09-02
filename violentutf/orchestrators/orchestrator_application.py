@@ -1,12 +1,13 @@
-from typing import Any
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+"""Orchestrator Application module.
 
-# orchestrators/orchestrator_application.py
-
-"""
 Module: orchestrator_application
+
 Contains functions to run Orchestrators.
 
 Key Functions:
@@ -16,11 +17,11 @@ Key Functions:
 Dependencies:
 - PyRIT Orchestrator classes
 - Utils modules for error handling and logging
+
 """
 
 import asyncio
 import inspect
-import logging
 
 from pyrit.orchestrator import Orchestrator
 from utils.error_handling import OrchestratorExecutionError, OrchestratorTestingError
@@ -30,8 +31,7 @@ logger = get_logger(__name__)
 
 
 async def test_orchestrator(orchestrator: Orchestrator) -> bool:
-    """
-    Tests the configured Orchestrator.
+    """Test the configured Orchestrator.
 
     Parameters:
         orchestrator (Orchestrator): The Orchestrator instance to test.
@@ -44,8 +44,10 @@ async def test_orchestrator(orchestrator: Orchestrator) -> bool:
 
     Dependencies:
         - Orchestrator's own test methods or a simple operation
+
     """
     try:
+
         orchestrator_name = orchestrator.get_identifier().get("name", "unknown")
         logger.info(f"Testing Orchestrator '{orchestrator_name}'")
         # For testing purposes, we will just validate that the orchestrator can be instantiated
@@ -56,12 +58,11 @@ async def test_orchestrator(orchestrator: Orchestrator) -> bool:
         return True
     except Exception as e:
         logger.error(f"Error testing Orchestrator '{orchestrator_name}': {e}")
-        raise OrchestratorTestingError(f"Error testing Orchestrator '{orchestrator_name}': {e}")
+        raise OrchestratorTestingError(f"Error testing Orchestrator '{orchestrator_name}': {e}") from e
 
 
 async def run_orchestrator(orchestrator: Orchestrator) -> None:
-    """
-    Runs the configured Orchestrator.
+    """Run the configured Orchestrator.
 
     Parameters:
         orchestrator (Orchestrator): The Orchestrator instance to run.
@@ -73,6 +74,7 @@ async def run_orchestrator(orchestrator: Orchestrator) -> None:
         - Orchestrator's run or execute methods
     """
     try:
+
         orchestrator_name = orchestrator.get_identifier().get("name", "unknown")
         logger.info(f"Running Orchestrator '{orchestrator_name}'")
         # Depending on the Orchestrator type, we may need to call different methods
@@ -100,4 +102,4 @@ async def run_orchestrator(orchestrator: Orchestrator) -> None:
             raise OrchestratorExecutionError("Orchestrator does not have a 'run_attack_async' method.")
     except Exception as e:
         logger.error(f"Error running Orchestrator '{orchestrator_name}': {e}")
-        raise OrchestratorExecutionError(f"Error running Orchestrator '{orchestrator_name}': {e}")
+        raise OrchestratorExecutionError(f"Error running Orchestrator '{orchestrator_name}': {e}") from e

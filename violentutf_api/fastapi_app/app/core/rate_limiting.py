@@ -1,32 +1,33 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Rate limiting implementation for authentication endpoints.
-
-SECURITY: Implements rate limiting to prevent brute force attacks
-"""
+"""Rate Limiting module."""
 
 import logging
-from typing import Any
+from typing import Callable
 
-from fastapi import HTTPException, Request, status
+from app.core.security_logging import log_rate_limit_exceeded
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 logger = logging.getLogger(__name__)
 
-
 # Rate limiter configuration
+
+
 def get_client_ip(request: Request) -> str:
-    """
-    Get client IP for rate limiting.
+    """Get client IP for rate limiting.
 
     SECURITY: Uses proper forwarded headers from APISIX gateway
     """
-    # Check for forwarded IP from APISIX gateway.
+    # Check for forwarded IP from APISIX gateway
+
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
         # Take the first IP (original client) from X-Forwarded-For chain
@@ -54,19 +55,22 @@ RATE_LIMITS = {
 
 
 def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
-    """Handle rate limit exceeded handler with security logging."""
+    """Customize rate limit exceeded handler with security logging"""
     client_ip = get_client_ip(request)
+
     endpoint = request.url.path
 
     # Log security event
-    from app.core.security_logging import log_rate_limit_exceeded
 
     log_rate_limit_exceeded(request=request, limit_type=endpoint, limit_details=str(exc.detail))
 
     # Log the rate limit violation for security monitoring
     logger.warning(
-        f"Rate limit exceeded for IP {client_ip} on endpoint {endpoint}. "
-        f"Limit: {exc.detail}, User-Agent: {request.headers.get('User-Agent', 'Unknown')}"
+        "Rate limit exceeded for IP %s on endpoint %s. Limit: %s, User-Agent: %s",
+        client_ip,
+        endpoint,
+        exc.detail,
+        request.headers.get("User-Agent", "Unknown"),
     )
 
     return JSONResponse(
@@ -81,18 +85,22 @@ def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONR
 
 
 def get_rate_limit(endpoint_type: str) -> str:
-    """Get rate limit configuration for endpoint type."""
+    """Get rate limit configuration for endpoint type"""
     return RATE_LIMITS.get(endpoint_type, RATE_LIMITS["api_general"])
 
 
 # Rate limiting decorators for different endpoint types
-def auth_rate_limit(endpoint_type: str = "auth_login") -> Any:
-    """Rate limiting decorator for authentication endpoints."""
+
+
+def auth_rate_limit(endpoint_type: str = "auth_login") -> Callable:
+    """Rate limiting decorator for authentication endpoints"""
     rate_limit = get_rate_limit(endpoint_type)
+
     return limiter.limit(rate_limit)
 
 
-def api_rate_limit(endpoint_type: str = "api_general") -> Any:
-    """Rate limiting decorator for general API endpoints."""
+def api_rate_limit(endpoint_type: str = "api_general") -> Callable:
+    """Rate limiting decorator for general API endpoints"""
     rate_limit = get_rate_limit(endpoint_type)
+
     return limiter.limit(rate_limit)

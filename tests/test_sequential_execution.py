@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Sequential Execution Plan for Full Scorer Testing.
+Sequential Execution Plan for Full Scorer Testing
 
 This demonstrates how to implement sequential execution with progress tracking
 to avoid the 504 Gateway Timeout issue.
@@ -13,7 +16,7 @@ import asyncio
 import time
 
 
-def sequential_execution_flow() -> None:
+def sequential_execution_flow():
     """
     Proposed flow for Full Execution with progress tracking:
 
@@ -65,7 +68,7 @@ def sequential_execution_flow() -> None:
     print("- Works with any dataset size")
 
 
-def proposed_ui_changes() -> None:
+def proposed_ui_changes():
     """
     UI changes needed in 4_Configure_Scorers.py
     """
@@ -89,9 +92,9 @@ def proposed_ui_changes() -> None:
     print("   display_results(results)")
 
 
-def api_endpoints_needed() -> None:
+def api_endpoints_needed():
     """
-    API endpoints that need to be added/modified.
+    API endpoints that need to be added/modified
     """
     print("\n\nAPI Endpoints Needed:")
     print("=" * 60)

@@ -1,46 +1,9 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Schemas package."""
 
 # Pydantic schemas package
-
-from .cob_schemas import (
-    COBExportRequest,
-    COBExportResponse,
-    COBReportCreate,
-    COBReportListResponse,
-    COBReportResponse,
-    COBScheduleCreate,
-    COBScheduleExecutionListResponse,
-    COBScheduleExecutionResponse,
-    COBScheduleListResponse,
-    COBScheduleResponse,
-    COBScheduleUpdate,
-    COBSystemStatusResponse,
-    COBTemplateCreate,
-    COBTemplateListResponse,
-    COBTemplateResponse,
-    COBTemplateUpdate,
-)
-from .dashboard import DataBrowseRequest, DataBrowseResponse, ScanDataSummary
-
-__all__ = [
-    "COBTemplateCreate",
-    "COBTemplateUpdate",
-    "COBTemplateResponse",
-    "COBTemplateListResponse",
-    "COBScheduleCreate",
-    "COBScheduleUpdate",
-    "COBScheduleResponse",
-    "COBScheduleListResponse",
-    "COBReportCreate",
-    "COBReportResponse",
-    "COBReportListResponse",
-    "COBScheduleExecutionResponse",
-    "COBScheduleExecutionListResponse",
-    "COBSystemStatusResponse",
-    "COBExportRequest",
-    "COBExportResponse",
-    "DataBrowseRequest",
-    "DataBrowseResponse",
-    "ScanDataSummary",
-]

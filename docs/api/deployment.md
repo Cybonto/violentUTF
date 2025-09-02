@@ -838,11 +838,12 @@ spec:
 ssl:
   cert: |
     -----BEGIN CERTIFICATE-----
-    ...
+    [YOUR_CERTIFICATE_CONTENT_HERE]
     -----END CERTIFICATE-----
   key: |
-    # Private key content goes here (PEM format)
-    # Do not commit actual private keys
+    -----BEGIN PRIVATE-KEY-----
+    [YOUR_PRIVATE_KEY_CONTENT_HERE]
+    -----END PRIVATE-KEY-----
   sni: api.violentutf.com
 ```
 

@@ -1,8 +1,11 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-ViolentUTF Testing Suite.
+ViolentUTF Testing Suite
 
 This package contains comprehensive tests for the ViolentUTF API system,
 including unit tests, integration tests, and endpoint verification.
@@ -24,5 +27,4 @@ Usage:
 """
 
 __version__ = "1.0.0"
-
 __author__ = "ViolentUTF Team"

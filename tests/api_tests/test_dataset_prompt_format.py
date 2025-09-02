@@ -1,8 +1,9 @@
-from typing import Any
-
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
 Test dataset prompt format consistency between creation and retrieval.
@@ -20,6 +21,7 @@ import sys
 import time
 import uuid
 from datetime import datetime
+from typing import Dict
 
 import pytest
 import requests
@@ -40,8 +42,8 @@ API_ENDPOINTS = {
 }
 
 
-def create_test_jwt_token() -> None:
-    """Create a test JWT token for authentication."""
+def create_test_jwt_token() -> str:
+    """Create a test JWT token for authentication"""
     try:
         import jwt
 
@@ -61,50 +63,69 @@ def create_test_jwt_token() -> None:
         return None
 
 
-def get_auth_headers() -> Any:
-    """Get authentication headers for API requests."""
+def get_auth_headers() -> Dict[str, str]:
+    """Get authentication headers for API requests"""
     token = create_test_jwt_token()
     if not token:
         raise ValueError("Failed to create JWT token")
 
-    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "X-API-Gateway": "APISIX",
+    }
 
 
 class TestDatasetPromptFormat:
-    """Test dataset prompt format consistency."""
+    """Test dataset prompt format consistency"""
 
-    def __init__(self) -> None:
-        """ "Initialize test environment."""
+    def setup_method(self: "TestDatasetPromptFormat") -> None:
+        """Initialize test environment for each test method"""
         self.headers = get_auth_headers()
         self.created_resources = {"datasets": [], "converters": []}
 
-    def cleanup_resources(self: "TestDatasetPromptFormat") -> None:
-        """Clean up created resources."""
-        # Delete created datasets.
+    def teardown_method(self: "TestDatasetPromptFormat") -> None:
+        """Clean up created resources after each test method"""
+        # Delete created datasets
         for dataset_id in self.created_resources["datasets"]:
             try:
-                requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
-            except Exception:
-                pass
+                requests.delete(
+                    f"{API_ENDPOINTS['datasets']}/{dataset_id}",
+                    headers=self.headers,
+                    timeout=30,
+                )
+            except Exception as e:
+                print(f"Warning: Error in cleanup: {e}")
 
         # Delete created converters
         for converter_id in self.created_resources["converters"]:
             try:
-                requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers)
-            except Exception:
-                pass
+                requests.delete(
+                    f"{API_ENDPOINTS['converters']}/{converter_id}",
+                    headers=self.headers,
+                    timeout=30,
+                )
+            except Exception as e:
+                print(f"Warning: Error in cleanup: {e}")
 
     def test_dataset_creation_and_retrieval(self: "TestDatasetPromptFormat") -> None:
-        """Test that dataset prompts are properly stored and retrieved."""
-        # Create a dataset for testing.
+        """Test that dataset prompts are properly stored and retrieved"""
+        # Create a dataset for testing
         dataset_name = f"test_dataset_{uuid.uuid4().hex[:8]}"
 
         # Create dataset via API
-        payload = {"name": dataset_name, "source_type": "local", "config": {"test": True}}
+        payload = {
+            "name": dataset_name,
+            "source_type": "local",
+            "config": {"test": True},
+        }
 
-        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers, timeout=30)
 
-        assert response.status_code in [200, 201], f"Failed to create dataset: {response.text}"
+        assert response.status_code in [
+            200,
+            201,
+        ], f"Failed to create dataset: {response.text}"
 
         dataset_data = response.json()
         dataset_id = dataset_data["dataset"]["id"]
@@ -113,7 +134,7 @@ class TestDatasetPromptFormat:
         print(f"✅ Created dataset: {dataset_name} with ID: {dataset_id}")
 
         # First list all datasets to verify it exists
-        list_response = requests.get(API_ENDPOINTS["datasets"], headers=self.headers)
+        list_response = requests.get(API_ENDPOINTS["datasets"], headers=self.headers, timeout=30)
 
         if list_response.status_code == 200:
             datasets = list_response.json().get("datasets", [])
@@ -126,7 +147,11 @@ class TestDatasetPromptFormat:
                 print(f"   Available IDs: {dataset_ids[:3]}...")  # Show first 3
 
         # Retrieve the dataset
-        response = requests.get(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
+        response = requests.get(
+            f"{API_ENDPOINTS['datasets']}/{dataset_id}",
+            headers=self.headers,
+            timeout=30,
+        )
 
         assert response.status_code == 200, f"Failed to retrieve dataset: {response.text}"
 
@@ -153,15 +178,23 @@ class TestDatasetPromptFormat:
                 print(f"❌ Prompts don't have expected field. Keys: {list(first_prompt.keys())}")
 
     def test_converter_apply_with_dataset(self: "TestDatasetPromptFormat") -> None:
-        """Test that converter can properly access dataset prompts."""
-        # Create a dataset.
+        """Test that converter can properly access dataset prompts"""
+        # Create a dataset
         dataset_name = f"converter_test_{uuid.uuid4().hex[:8]}"
 
-        payload = {"name": dataset_name, "source_type": "native", "dataset_type": "harmbench", "config": {}}
+        payload = {
+            "name": dataset_name,
+            "source_type": "native",
+            "dataset_type": "harmbench",
+            "config": {},
+        }
 
-        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers, timeout=30)
 
-        assert response.status_code in [200, 201], f"Failed to create dataset: {response.text}"
+        assert response.status_code in [
+            200,
+            201,
+        ], f"Failed to create dataset: {response.text}"
 
         dataset_id = response.json()["dataset"]["id"]
         self.created_resources["datasets"].append(dataset_id)
@@ -175,9 +208,17 @@ class TestDatasetPromptFormat:
             "parameters": {"append_description": True},
         }
 
-        response = requests.post(API_ENDPOINTS["converters"], json=converter_payload, headers=self.headers)
+        response = requests.post(
+            API_ENDPOINTS["converters"],
+            json=converter_payload,
+            headers=self.headers,
+            timeout=30,
+        )
 
-        assert response.status_code in [200, 201], f"Failed to create converter: {response.text}"
+        assert response.status_code in [
+            200,
+            201,
+        ], f"Failed to create converter: {response.text}"
 
         converter_id = response.json()["converter"]["id"]
         self.created_resources["converters"].append(converter_id)
@@ -193,7 +234,10 @@ class TestDatasetPromptFormat:
         }
 
         response = requests.post(
-            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id), json=apply_payload, headers=self.headers
+            API_ENDPOINTS["converter_apply"].format(converter_id=converter_id),
+            json=apply_payload,
+            headers=self.headers,
+            timeout=30,
         )
 
         if response.status_code == 200:
@@ -213,15 +257,19 @@ class TestDatasetPromptFormat:
                 )
 
     def test_dataset_field_consistency(self: "TestDatasetPromptFormat") -> None:
-        """Test field naming consistency across the entire dataset lifecycle."""
+        """Test field naming consistency across the entire dataset lifecycle"""
         print("\n🔍 Testing Dataset Field Naming Consistency\n")
 
         # Test 1: Check dataset creation response
         print("1️⃣ Testing dataset creation response format...")
 
-        payload = {"name": f"consistency_test_{uuid.uuid4().hex[:8]}", "source_type": "local", "config": {}}
+        payload = {
+            "name": f"consistency_test_{uuid.uuid4().hex[:8]}",
+            "source_type": "local",
+            "config": {},
+        }
 
-        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers)
+        response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers, timeout=30)
 
         if response.status_code in [200, 201]:
             dataset_data = response.json()["dataset"]
@@ -244,7 +292,11 @@ class TestDatasetPromptFormat:
         # Test 2: Check dataset retrieval format
         print("\n2️⃣ Testing dataset retrieval format...")
 
-        response = requests.get(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers)
+        response = requests.get(
+            f"{API_ENDPOINTS['datasets']}/{dataset_id}",
+            headers=self.headers,
+            timeout=30,
+        )
 
         if response.status_code == 200:
             retrieved_data = response.json()
@@ -271,7 +323,7 @@ class TestDatasetPromptFormat:
 
 
 def main() -> None:
-    """Run tests manually."""
+    """Run tests manually"""
     test = TestDatasetPromptFormat()
 
     try:

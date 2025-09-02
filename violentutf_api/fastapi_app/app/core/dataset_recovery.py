@@ -1,25 +1,26 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Error recovery mechanisms for dataset import operations
+"""Error recovery mechanisms for dataset import operations
 
 This module provides robust error recovery strategies including retry logic,
 partial import recovery, and automated cleanup procedures.
-"""
 
+"""
 import asyncio
 import logging
 import time
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Self, TypeVar, Union
+from types import TracebackType
+from typing import Callable, Dict, List, Optional, Self, TypeVar, cast
 
 from app.core.dataset_config import DatasetImportConfig
 from app.core.dataset_logging import dataset_logger
 from app.exceptions.dataset_exceptions import (
-    DatasetMemoryError,
     DatasetRetryExhaustedException,
-    DatasetStorageError,
     DatasetStreamingError,
     DatasetTimeoutError,
 )
@@ -33,36 +34,38 @@ class RetryStrategy:
     """Configurable retry strategy for dataset operations."""
 
     def __init__(
-        self: "RetryStrategy",
+        self: "Self",
         max_retries: int = 3,
         base_delay: float = 1.0,
         backoff_factor: float = 2.0,
         max_delay: float = 60.0,
         jitter: bool = True,
     ) -> None:
-        """Initialize the instance."""
+        """Initialize instance."""
         self.max_retries = max_retries
+
         self.base_delay = base_delay
         self.backoff_factor = backoff_factor
         self.max_delay = max_delay
         self.jitter = jitter
 
-    def calculate_delay(self: "RetryStrategy", attempt: int) -> float:
-        """Calculate delay for given attempt number."""
+    def calculate_delay(self: "Self", attempt: int) -> float:
+        """Provide Calculate delay for given attempt number."""
         delay = self.base_delay * (self.backoff_factor**attempt)
+
         delay = min(delay, self.max_delay)
 
         if self.jitter:
             import random
 
             # Add up to 20% jitter
-            jitter_amount = delay * 0.2 * random.random()
+            jitter_amount = delay * 0.2 * random.random()  # nosec B311 - jitter for retry backoff, not cryptographic
             delay += jitter_amount
 
         return delay
 
     @classmethod
-    def from_config(cls, config: DatasetImportConfig, dataset_type: str = "") -> "RetryStrategy":
+    def from_config(cls: type["RetryStrategy"], config: DatasetImportConfig, dataset_type: str = "") -> "RetryStrategy":
         """Create retry strategy from configuration."""
         retry_config = config.get_effective_retry_config(dataset_type)
 
@@ -75,22 +78,30 @@ class RetryStrategy:
 
 
 def with_retry(
-    retry_strategy: Optional[RetryStrategy] = None, exceptions: tuple = (Exception,), operation_name: str = "operation"
-) -> Any:
-    """Decorator for adding retry logic to functions."""
+    retry_strategy: Optional[RetryStrategy] = None,
+    exceptions: tuple = (Exception,),
+    operation_name: str = "operation",
+) -> Callable:
+    """Add retry logic to functions."""
 
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+    def decorator(
+        func: Callable[..., T],
+    ) -> Callable[..., T]:  # Proper typing for decorator
+
         @wraps(func)
-        async def wrapper(*args, **kwargs) -> T:
+        async def wrapper(*args: object, **kwargs: object) -> T:
             strategy = retry_strategy or RetryStrategy()
             last_exception = None
 
             for attempt in range(strategy.max_retries + 1):
                 try:
                     if asyncio.iscoroutinefunction(func):
-                        return await func(*args, **kwargs)
+                        result = cast(T, await func(*args, **kwargs))
+                        return result
                     else:
-                        return func(*args, **kwargs)
+                        result = func(*args, **kwargs)
+                        return result
+
                 except exceptions as e:
                     last_exception = e
 
@@ -106,7 +117,7 @@ def with_retry(
                             f"Maximum retries ({strategy.max_retries}) exceeded for {operation_name}",
                             max_retries=strategy.max_retries,
                             last_error=e,
-                        )
+                        ) from e
 
                     delay = strategy.calculate_delay(attempt)
 
@@ -127,44 +138,52 @@ def with_retry(
                 last_error=last_exception,
             )
 
-        return wrapper
+        return cast(Callable[..., T], wrapper)
 
     return decorator
 
 
 class PartialImportRecovery:
-    """Handles recovery of partial dataset imports."""
+    """Handle recovery of partial dataset imports."""
 
-    def __init__(self: "PartialImportRecovery", config: DatasetImportConfig) -> None:
-        """Initialize the instance."""
+    def __init__(self: "Self", config: DatasetImportConfig) -> None:
+        """Initialize instance."""
         self.config = config
-        self.successful_chunks: List[Dict[str, Any]] = []
-        self.failed_chunks: List[Dict[str, Any]] = []
-        self.partial_data: Dict[str, Any] = {}
+
+        self.successful_chunks: List[Dict[str, object]] = []
+        self.failed_chunks: List[Dict[str, object]] = []
+        self.partial_data: Dict[str, object] = {}
 
     def record_successful_chunk(
-        self: "PartialImportRecovery",
+        self: "Self",
         chunk_index: int,
         chunk_data: List[str],
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, object]] = None,
     ) -> None:
-        """Record a successfully processed chunk."""
+        """Record successfully processed chunk."""
         self.successful_chunks.append(
-            {"chunk_index": chunk_index, "size": len(chunk_data), "timestamp": time.time(), "metadata": metadata or {}}
+            {
+                "chunk_index": chunk_index,
+                "size": len(chunk_data),
+                "timestamp": time.time(),
+                "metadata": metadata or {},
+            }
         )
 
         dataset_logger.debug(
-            f"Recorded successful chunk {chunk_index}", chunk_index=chunk_index, chunk_size=len(chunk_data)
+            f"Recorded successful chunk {chunk_index}",
+            chunk_index=chunk_index,
+            chunk_size=len(chunk_data),
         )
 
     def record_failed_chunk(
-        self: "PartialImportRecovery",
+        self: "Self",
         chunk_index: int,
         error: Exception,
         chunk_data: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, object]] = None,
     ) -> None:
-        """Record a failed chunk for potential recovery."""
+        """Record failed chunk for potential recovery."""
         self.failed_chunks.append(
             {
                 "chunk_index": chunk_index,
@@ -183,12 +202,17 @@ class PartialImportRecovery:
             chunk_size=len(chunk_data) if chunk_data else 0,
         )
 
-    async def attempt_recovery(self: "PartialImportRecovery") -> Dict[str, Any]:
+    async def attempt_recovery(self: "Self") -> Dict[str, object]:
         """Attempt to recover failed chunks."""
         if not self.config.enable_partial_import:
+
             raise DatasetStreamingError("Partial import recovery is disabled in configuration")
 
-        recovery_results = {"recovered_chunks": 0, "still_failed_chunks": 0, "total_attempted": len(self.failed_chunks)}
+        recovery_results: Dict[str, object] = {
+            "recovered_chunks": 0,
+            "still_failed_chunks": 0,
+            "total_attempted": len(self.failed_chunks),
+        }
 
         dataset_logger.info(
             f"Starting recovery for {len(self.failed_chunks)} failed chunks",
@@ -197,7 +221,9 @@ class PartialImportRecovery:
         )
 
         retry_strategy = RetryStrategy(
-            max_retries=2, base_delay=0.5, backoff_factor=1.5  # Less aggressive retries for recovery
+            max_retries=2,
+            base_delay=0.5,
+            backoff_factor=1.5,  # Less aggressive retries for recovery
         )
 
         for chunk_info in self.failed_chunks[:]:  # Copy list to allow modification
@@ -208,10 +234,12 @@ class PartialImportRecovery:
                 # Move from failed to successful
                 self.failed_chunks.remove(chunk_info)
                 self.record_successful_chunk(
-                    chunk_info["chunk_index"], chunk_info.get("data", []), chunk_info.get("metadata", {})
+                    cast(int, chunk_info["chunk_index"]),
+                    cast(List[str], chunk_info.get("data", [])),
+                    cast(Optional[Dict[str, object]], chunk_info.get("metadata", {})),
                 )
 
-                recovery_results["recovered_chunks"] += 1
+                recovery_results["recovered_chunks"] = int(recovery_results["recovered_chunks"]) + 1
 
             except Exception as e:
                 dataset_logger.warning(
@@ -219,17 +247,17 @@ class PartialImportRecovery:
                     chunk_index=chunk_info["chunk_index"],
                     error=str(e),
                 )
-                recovery_results["still_failed_chunks"] += 1
+                recovery_results["still_failed_chunks"] = int(recovery_results["still_failed_chunks"]) + 1
 
         dataset_logger.info("Recovery attempt completed", **recovery_results)
 
         return recovery_results
 
-    async def _recover_single_chunk(
-        self: "PartialImportRecovery", chunk_info: Dict[str, Any], retry_strategy: RetryStrategy
+    async def _recover_single_chunk(  # pylint: disable=unused-argument
+        self: "Self", chunk_info: Dict[str, object], retry_strategy: RetryStrategy
     ) -> None:
-        """Attempt to recover a single failed chunk."""
-        # This is a placeholder - actual recovery logic would depend on.
+        # This is a placeholder - actual recovery logic would depend on
+
         # the specific failure type and data available
 
         chunk_index = chunk_info["chunk_index"]
@@ -245,9 +273,10 @@ class PartialImportRecovery:
 
         dataset_logger.debug(f"Successfully recovered chunk {chunk_index}", chunk_index=chunk_index)
 
-    def get_recovery_summary(self: "PartialImportRecovery") -> Dict[str, Any]:
+    def get_recovery_summary(self: "Self") -> Dict[str, object]:
         """Get summary of recovery status."""
         total_chunks = len(self.successful_chunks) + len(self.failed_chunks)
+
         success_rate = len(self.successful_chunks) / total_chunks if total_chunks > 0 else 0
 
         return {
@@ -261,36 +290,41 @@ class PartialImportRecovery:
 
 
 class AutoCleanupManager:
-    """Manages automatic cleanup of failed or partial imports."""
+    """Manage automatic cleanup of failed or partial imports."""
 
-    def __init__(self, config: Optional[DatasetImportConfig] = None) -> None:
-        """ "Initialize the instance."""
-        self.config = config or DatasetImportConfig()
+    def __init__(self: "Self", config: DatasetImportConfig) -> None:
+        """Initialize instance."""
+        self.config = config
+
         self.cleanup_tasks: List[Callable] = []
         self.temp_files: List[str] = []
-        self.temp_data: List[Any] = []
+        self.temp_data: List[object] = []
 
-    def register_cleanup_task(self: "AutoCleanupManager", task: Callable) -> None:
-        """Register a cleanup task to be executed on failure."""
+    def register_cleanup_task(self: "Self", task: Callable) -> None:
+        """Register cleanup task to be executed on failure."""
         self.cleanup_tasks.append(task)
 
-    def register_temp_file(self: "AutoCleanupManager", file_path: str) -> None:
-        """Register a temporary file for cleanup."""
+    def register_temp_file(self: "Self", file_path: str) -> None:
+        """Register temporary file for cleanup."""
         self.temp_files.append(file_path)
 
-    def register_temp_data(self: "AutoCleanupManager", data: Any) -> None:
+    def register_temp_data(self: "Self", data: object) -> None:
         """Register temporary data for cleanup."""
         self.temp_data.append(data)
 
     async def cleanup_on_failure(
-        self: "AutoCleanupManager",
+        self: "Self",
         error: Exception,
         dataset_id: str,
-        partial_recovery: Optional[PartialImportRecovery] = None,
+        partial_recovery: Optional[PartialImportRecovery] = None,  # pylint: disable=unused-argument
     ) -> None:
         """Perform cleanup operations after a failure."""
         if not self.config.cleanup_on_failure:
-            dataset_logger.info("Cleanup on failure is disabled, skipping cleanup", dataset_id=dataset_id)
+
+            dataset_logger.info(
+                "Cleanup on failure is disabled, skipping cleanup",
+                dataset_id=dataset_id,
+            )
             return
 
         dataset_logger.info(
@@ -301,7 +335,12 @@ class AutoCleanupManager:
             temp_files=len(self.temp_files),
         )
 
-        cleanup_results = {"tasks_executed": 0, "tasks_failed": 0, "files_cleaned": 0, "files_failed": 0}
+        cleanup_results = {
+            "tasks_executed": 0,
+            "tasks_failed": 0,
+            "files_cleaned": 0,
+            "files_failed": 0,
+        }
 
         # Execute cleanup tasks
         for i, task in enumerate(self.cleanup_tasks):
@@ -313,7 +352,11 @@ class AutoCleanupManager:
                 cleanup_results["tasks_executed"] += 1
 
             except Exception as cleanup_error:
-                dataset_logger.warning(f"Cleanup task {i} failed", cleanup_task_index=i, error=str(cleanup_error))
+                dataset_logger.warning(
+                    f"Cleanup task {i} failed",
+                    cleanup_task_index=i,
+                    error=str(cleanup_error),
+                )
                 cleanup_results["tasks_failed"] += 1
 
         # Clean up temporary files
@@ -327,7 +370,9 @@ class AutoCleanupManager:
 
             except Exception as cleanup_error:
                 dataset_logger.warning(
-                    f"Failed to clean up file: {file_path}", file_path=file_path, error=str(cleanup_error)
+                    f"Failed to clean up file: {file_path}",
+                    file_path=file_path,
+                    error=str(cleanup_error),
                 )
                 cleanup_results["files_failed"] += 1
 
@@ -336,48 +381,60 @@ class AutoCleanupManager:
 
         dataset_logger.info("Cleanup completed", dataset_id=dataset_id, **cleanup_results)
 
-    def __enter__(self: "AutoCleanupManager") -> Self:
+    def __enter__(self: "Self") -> "AutoCleanupManager":
+        """Enter context manager."""
         return self
 
-    def __exit__(self: "AutoCleanupManager", exc_type, exc_val, exc_tb: Any) -> None:
+    def __exit__(
+        self: "Self",
+        exc_type: Optional[type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        """Exit context manager."""
         if exc_type is not None and self.config.cleanup_on_failure:
             # Synchronous cleanup for context manager
-            import asyncio
-
             try:
                 loop = asyncio.get_event_loop()
-                loop.create_task(self.cleanup_on_failure(exc_val, "unknown"))
+                loop.create_task(self.cleanup_on_failure(cast(Exception, exc_val), "unknown"))
             except RuntimeError:
                 # Fallback to synchronous cleanup if no event loop
                 for task in self.cleanup_tasks:
                     try:
                         if not asyncio.iscoroutinefunction(task):
                             task()
-                    except Exception:
+                    except Exception:  # nosec B110 - acceptable exception handling
+
                         pass
 
 
 # Utility functions for common recovery patterns
 async def with_timeout(
-    operation: Callable[..., T], timeout_seconds: float, operation_name: str = "operation", *args, **kwargs: Any
+    operation: Callable[..., T],
+    timeout_seconds: float,
+    *args: object,
+    operation_name: str = "operation",
+    **kwargs: object,
 ) -> T:
     """Execute operation with timeout."""
     try:
+
         if asyncio.iscoroutinefunction(operation):
             return await asyncio.wait_for(operation(*args, **kwargs), timeout=timeout_seconds)
         else:
             # For non-async functions, we need to run in executor
             loop = asyncio.get_event_loop()
             return await asyncio.wait_for(
-                loop.run_in_executor(None, operation, *args, **kwargs), timeout=timeout_seconds
+                loop.run_in_executor(None, operation, *args, **kwargs),
+                timeout=timeout_seconds,
             )
 
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as exc:
         raise DatasetTimeoutError(
             f"Operation '{operation_name}' exceeded timeout of {timeout_seconds} seconds",
             timeout_seconds=timeout_seconds,
             operation=operation_name,
-        )
+        ) from exc
 
 
 def create_recovery_context(
@@ -385,6 +442,7 @@ def create_recovery_context(
 ) -> tuple[PartialImportRecovery, AutoCleanupManager]:
     """Create recovery context for dataset operations."""
     partial_recovery = PartialImportRecovery(config)
+
     cleanup_manager = AutoCleanupManager(config)
 
     dataset_logger.info(

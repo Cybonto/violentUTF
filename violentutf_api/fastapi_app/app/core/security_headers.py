@@ -1,37 +1,39 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Security headers middleware and configuration.
+"""Configure security headers middleware
 
 SECURITY: Implements comprehensive security headers to protect against common web vulnerabilities
 """
-
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, Self, cast
 
-from fastapi import Request, Response
+from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """
-    Middleware to add security headers to all responses.
+    """Middleware to add security headers to all responses
 
     Protects against XSS, clickjacking, MIME sniffing, and other attacks
     """
 
-    def __init__(self: "SecurityHeadersMiddleware", app: Any, environment: str = "production") -> None:
-        """Initialize the instance."""
+    def __init__(self: "Self", app: "FastAPI", environment: str = "production") -> None:
+        """Initialize instance."""
         super().__init__(app)
+
         self.environment = environment.lower()
         self.headers = self._get_security_headers()
 
-    def _get_security_headers(self: "SecurityHeadersMiddleware") -> Dict[str, str]:
-        """Generate security headers based on environment."""
-        # Base security headers for all environments.
+    def _get_security_headers(self: "Self") -> Dict[str, str]:
+        """Generate security headers based on environment"""
+        # Base security headers for all environments
+
         headers = {
             # Prevent MIME type sniffing
             "X-Content-Type-Options": "nosniff",
@@ -47,8 +49,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "X-Permitted-Cross-Domain-Policies": "none",
             # Control download behavior
             "X-Download-Options": "noopen",
-            # Prevent content type sniffing for downloads
-            "X-Content-Type-Options": "nosniff",
         }
 
         # Content Security Policy (CSP)
@@ -109,8 +109,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         return headers
 
-    async def dispatch(self: "SecurityHeadersMiddleware", request: Request, call_next: Callable) -> Response:
-        """Add security headers to response."""
+    async def dispatch(self: "Self", request: Request, call_next: Callable) -> Response:
+        """Add security headers to response"""
         response = await call_next(request)
 
         # Add all security headers
@@ -119,14 +119,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Add security-related information to logs (without exposing in response)
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Security headers added to {request.method} {request.url.path}")
+            logger.debug("Security headers added to %s %s", request.method, request.url.path)
 
-        return response
+        return cast(Response, response)
 
 
 def configure_cors_settings(environment: str = "production") -> Dict:
-    """
-    Configure CORS settings based on environment.
+    """Configure CORS settings based on environment
 
     Args:
         environment: Environment name (production, development, testing)
@@ -135,6 +134,7 @@ def configure_cors_settings(environment: str = "production") -> Dict:
         Dictionary of CORS configuration settings
     """
     if environment.lower() == "production":
+
         # Strict CORS for production
         return {
             "allow_origins": [
@@ -153,7 +153,11 @@ def configure_cors_settings(environment: str = "production") -> Dict:
                 "X-API-Key",
                 "X-API-Gateway",  # APISIX gateway header
             ],
-            "expose_headers": ["X-Rate-Limit-Limit", "X-Rate-Limit-Remaining", "X-Rate-Limit-Reset"],
+            "expose_headers": [
+                "X-Rate-Limit-Limit",
+                "X-Rate-Limit-Remaining",
+                "X-Rate-Limit-Reset",
+            ],
             "max_age": 3600,  # Cache preflight responses for 1 hour
         }
     else:
@@ -174,24 +178,29 @@ def configure_cors_settings(environment: str = "production") -> Dict:
             "allow_credentials": True,
             "allow_methods": ["*"],
             "allow_headers": ["*"],
-            "expose_headers": ["X-Rate-Limit-Limit", "X-Rate-Limit-Remaining", "X-Rate-Limit-Reset"],
+            "expose_headers": [
+                "X-Rate-Limit-Limit",
+                "X-Rate-Limit-Remaining",
+                "X-Rate-Limit-Reset",
+            ],
             "max_age": 86400,  # Cache preflight responses for 24 hours in dev
         }
 
 
 class APISecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """
-    Additional API-specific security headers middleware.
+    """Add API-specific security headers middleware
 
     Adds headers specific to API security concerns
     """
 
-    def __init__(self: "APISecurityHeadersMiddleware", app: Any, api_version: str = "1.0") -> None:
-        """Initialize the instance."""
+    def __init__(self: "Self", app: "FastAPI", api_version: str = "1.0") -> None:
+        """Initialize instance."""
         super().__init__(app)
+
         self.api_version = api_version
 
-    async def dispatch(self: "APISecurityHeadersMiddleware", request: Request, call_next: Callable) -> Response:
+    async def dispatch(self: "Self", request: Request, call_next: Callable) -> Response:
+        """Dispatch."""
         response = await call_next(request)
 
         # API-specific headers
@@ -208,30 +217,29 @@ class APISecurityHeadersMiddleware(BaseHTTPMiddleware):
         if request.method == "OPTIONS":
             response.headers["Access-Control-Max-Age"] = "86400"
 
-        return response
+        return cast(Response, response)
 
 
-def setup_security_headers(app, environment: str = "production", api_version: str = "1.0") -> None:
-    """
-    Setup all security headers middleware for the FastAPI application.
+def setup_security_headers(app: "FastAPI", environment: str = "production", api_version: str = "1.0") -> None:
+    """Set up all security headers middleware for the FastAPI application
 
     Args:
         app: FastAPI application instance
         environment: Environment name (production, development, testing)
         api_version: API version string
     """
-    # Add security headers middleware.
+    # Add security headers middleware
+
     app.add_middleware(SecurityHeadersMiddleware, environment=environment)
 
     # Add API-specific security headers
     app.add_middleware(APISecurityHeadersMiddleware, api_version=api_version)
 
-    logger.info(f"Security headers configured for {environment} environment")
+    logger.info("Security headers configured for %s environment", environment)
 
 
 def get_csp_nonce() -> str:
-    """
-    Generate a cryptographically secure nonce for CSP.
+    """Generate cryptographically secure nonce for CSP
 
     Useful for inline scripts/styles when needed
     """
@@ -246,8 +254,7 @@ def get_csp_nonce() -> str:
 
 
 def validate_security_headers(response_headers: Dict[str, str]) -> Dict[str, bool]:
-    """
-    Validate that required security headers are present.
+    """Validate that required security headers are present
 
     Useful for testing and monitoring
 
@@ -293,14 +300,14 @@ SECURITY_HEADER_TEMPLATES = {
 
 
 def apply_response_headers(response: Response, template_name: str = "json_api") -> None:
-    """
-    Apply response-specific headers from templates.
+    """Apply response-specific headers from templates
 
     Args:
         response: FastAPI Response object
         template_name: Name of header template to apply
     """
     if template_name in SECURITY_HEADER_TEMPLATES:
+
         headers = SECURITY_HEADER_TEMPLATES[template_name]
         for header_name, header_value in headers.items():
             response.headers[header_name] = header_value

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Test script to verify the authentication bypass vulnerability has been fixed.
-
+Test script to verify the authentication bypass vulnerability has been fixed
 """
 
 import hashlib
@@ -12,22 +14,28 @@ import hmac
 import os
 import sys
 import time
-from typing import Any, Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 
-def generate_hmac_signature(gateway_secret: str, method: str, path: str, timestamp: str = None) -> Tuple[str, str]:
-    """Generate HMAC signature for testing."""
+def generate_hmac_signature(
+    gateway_secret: str, method: str, path: str, timestamp: Optional[str] = None
+) -> Tuple[str, str]:
+    """Generate HMAC signature for testing"""
     if timestamp is None:
         timestamp = str(int(time.time()))
 
     signature_payload = f"{method}:{path}:{timestamp}"
-    signature = hmac.new(gateway_secret.encode("utf-8"), signature_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    signature = hmac.new(
+        gateway_secret.encode("utf-8"),
+        signature_payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
 
     return signature, timestamp
 
 
-def test_authentication_bypass_blocked() -> Any:
-    """Test that the old bypass method is now blocked."""
+def test_authentication_bypass_blocked():
+    """Test that the old bypass method is now blocked"""
     print("🧪 Testing Authentication Bypass Vulnerability Fix")
     print("=" * 55)
 
@@ -46,7 +54,7 @@ def test_authentication_bypass_blocked() -> Any:
     print("   Status: ✅ BLOCKED - Signature verification fails")
 
     # Test 3: Verify old timestamp is blocked (replay attack)
-    gateway_secret = "test_secret_123"
+    gateway_secret = "test_secret_123"  # nosec B105 - test secret for security validation
     old_timestamp = str(int(time.time()) - 3600)  # 1 hour ago
     signature, _ = generate_hmac_signature(gateway_secret, "GET", "/health", old_timestamp)
 
@@ -71,13 +79,13 @@ def test_authentication_bypass_blocked() -> Any:
     return True
 
 
-def test_hmac_implementation() -> Any:
-    """Test the HMAC implementation matches the FastAPI code."""
+def test_hmac_implementation():
+    """Test the HMAC implementation matches the FastAPI code"""
     print("\n🔐 Testing HMAC Implementation")
     print("=" * 35)
 
     # Test vector 1
-    secret = "test_secret_key_123"
+    secret = "test_secret_key_123"  # nosec B105 - test secret for HMAC validation
     method = "GET"
     path = "/api/v1/health"
     timestamp = "1609459200"  # Fixed timestamp for reproducible test
@@ -111,12 +119,12 @@ def test_hmac_implementation() -> Any:
     return signature2 != signature
 
 
-def test_timing_attack_resistance() -> Any:
-    """Test that signature comparison is constant-time."""
+def test_timing_attack_resistance():
+    """Test that signature comparison is constant-time"""
     print("\n⏱️  Testing Timing Attack Resistance")
     print("=" * 40)
 
-    secret = "test_secret"
+    secret = "test_secret"  # nosec B105 - test secret for timing attack test
     correct_sig, timestamp = generate_hmac_signature(secret, "GET", "/test", "1609459200")
 
     # Test signatures that differ early vs late
@@ -132,8 +140,8 @@ def test_timing_attack_resistance() -> Any:
     return True
 
 
-def main() -> Any:
-    """Run all tests."""
+def main():
+    """Run all tests"""
     print("🛡️  ViolentUTF Authentication Bypass Fix Verification")
     print("=" * 60)
 

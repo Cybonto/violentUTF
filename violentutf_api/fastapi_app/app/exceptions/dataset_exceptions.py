@@ -1,14 +1,18 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""Custom exceptions for dataset import operations
+"""
+Customize exceptions for dataset import operations
 
 This module provides specialized exception classes for different types
-
 of dataset import failures, enabling more precise error handling and reporting.
+
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Mapping, Optional
 
 
 class DatasetImportBaseException(Exception):
@@ -19,16 +23,17 @@ class DatasetImportBaseException(Exception):
         message: str,
         dataset_id: Optional[str] = None,
         dataset_type: Optional[str] = None,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[Mapping[str, Any]] = None,
     ) -> None:
-        """Initialize the instance."""
+        """Initialize instance."""
         super().__init__(message)
+
         self.message = message
         self.dataset_id = dataset_id
         self.dataset_type = dataset_type
-        self.context = context or {}
+        self.context = dict(context) if context is not None else {}
 
-    def to_dict(self: "DatasetImportBaseException") -> Dict[str, Any]:
+    def to_dict(self: "DatasetImportBaseException") -> Dict[str, object]:
         """Convert exception to dictionary for API responses."""
         return {
             "error_type": self.__class__.__name__,
@@ -42,13 +47,9 @@ class DatasetImportBaseException(Exception):
 class DatasetConfigurationError(DatasetImportBaseException):
     """Raised when dataset configuration is invalid or missing."""
 
-    pass
-
 
 class DatasetNotFoundError(DatasetImportBaseException):
     """Raised when requested dataset cannot be found."""
-
-    pass
 
 
 class DatasetStreamingError(DatasetImportBaseException):
@@ -59,15 +60,18 @@ class DatasetStreamingError(DatasetImportBaseException):
         message: str,
         chunk_index: Optional[int] = None,
         total_chunks: Optional[int] = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> None:
-        """Initialize the instance."""
-        super().__init__(message, **kwargs)
+        """Initialize instance."""
+        super().__init__(message)
+
         self.chunk_index = chunk_index
         self.total_chunks = total_chunks
 
-    def to_dict(self: "DatasetStreamingError") -> Dict[str, Any]:
+    def to_dict(self: "DatasetStreamingError") -> Dict[str, object]:
+        """To dict."""
         result = super().to_dict()
+
         result.update({"chunk_index": self.chunk_index, "total_chunks": self.total_chunks})
         return result
 
@@ -80,15 +84,18 @@ class DatasetMemoryError(DatasetImportBaseException):
         message: str,
         memory_path: Optional[str] = None,
         operation: Optional[str] = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> None:
-        """Initialize the instance."""
-        super().__init__(message, **kwargs)
+        """Initialize instance."""
+        super().__init__(message)
+
         self.memory_path = memory_path
         self.operation = operation
 
-    def to_dict(self: "DatasetMemoryError") -> Dict[str, Any]:
+    def to_dict(self: "DatasetMemoryError") -> Dict[str, object]:
+        """To dict."""
         result = super().to_dict()
+
         result.update({"memory_path": self.memory_path, "operation": self.operation})
         return result
 
@@ -101,16 +108,24 @@ class DatasetValidationError(DatasetImportBaseException):
         message: str,
         validation_errors: Optional[list] = None,
         prompt_index: Optional[int] = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> None:
-        """Initialize the instance."""
-        super().__init__(message, **kwargs)
+        """Initialize instance."""
+        super().__init__(message)
+
         self.validation_errors = validation_errors or []
         self.prompt_index = prompt_index
 
-    def to_dict(self: "DatasetValidationError") -> Dict[str, Any]:
+    def to_dict(self: "DatasetValidationError") -> Dict[str, object]:
+        """To dict."""
         result = super().to_dict()
-        result.update({"validation_errors": self.validation_errors, "prompt_index": self.prompt_index})
+
+        result.update(
+            {
+                "validation_errors": self.validation_errors,
+                "prompt_index": self.prompt_index,
+            }
+        )
         return result
 
 
@@ -122,17 +137,23 @@ class DatasetRetryExhaustedException(DatasetImportBaseException):
         message: str,
         max_retries: int,
         last_error: Optional[Exception] = None,
-        **kwargs,
+        **kwargs: object,
     ) -> None:
-        """Initialize the instance."""
-        super().__init__(message, **kwargs)
+        """Initialize instance."""
+        super().__init__(message)
+
         self.max_retries = max_retries
         self.last_error = last_error
 
-    def to_dict(self: "DatasetRetryExhaustedException") -> Dict[str, Any]:
+    def to_dict(self: "DatasetRetryExhaustedException") -> Dict[str, object]:
+        """To dict."""
         result = super().to_dict()
+
         result.update(
-            {"max_retries": self.max_retries, "last_error": str(self.last_error) if self.last_error else None}
+            {
+                "max_retries": self.max_retries,
+                "last_error": str(self.last_error) if self.last_error else None,
+            }
         )
         return result
 
@@ -141,16 +162,28 @@ class DatasetConcurrencyError(DatasetImportBaseException):
     """Raised when concurrent import limits are exceeded."""
 
     def __init__(
-        self: "DatasetConcurrencyError", message: str, active_imports: int, max_concurrent: int, **kwargs
+        self: "DatasetConcurrencyError",
+        message: str,
+        active_imports: int,
+        max_concurrent: int,
+        **kwargs: object,
     ) -> None:
-        """Initialize the instance."""
-        super().__init__(message, **kwargs)
+        """Initialize instance."""
+        super().__init__(message)
+
         self.active_imports = active_imports
         self.max_concurrent = max_concurrent
 
-    def to_dict(self: "DatasetConcurrencyError") -> Dict[str, Any]:
+    def to_dict(self: "DatasetConcurrencyError") -> Dict[str, object]:
+        """To dict."""
         result = super().to_dict()
-        result.update({"active_imports": self.active_imports, "max_concurrent": self.max_concurrent})
+
+        result.update(
+            {
+                "active_imports": self.active_imports,
+                "max_concurrent": self.max_concurrent,
+            }
+        )
         return result
 
 
@@ -162,15 +195,18 @@ class DatasetStorageError(DatasetImportBaseException):
         message: str,
         storage_type: Optional[str] = None,
         storage_path: Optional[str] = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> None:
-        """Initialize the instance."""
-        super().__init__(message, **kwargs)
+        """Initialize instance."""
+        super().__init__(message)
+
         self.storage_type = storage_type
         self.storage_path = storage_path
 
-    def to_dict(self: "DatasetStorageError") -> Dict[str, Any]:
+    def to_dict(self: "DatasetStorageError") -> Dict[str, object]:
+        """To dict."""
         result = super().to_dict()
+
         result.update({"storage_type": self.storage_type, "storage_path": self.storage_path})
         return result
 
@@ -183,15 +219,18 @@ class DatasetTimeoutError(DatasetImportBaseException):
         message: str,
         timeout_seconds: Optional[float] = None,
         operation: Optional[str] = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> None:
-        """Initialize the instance."""
-        super().__init__(message, **kwargs)
+        """Initialize instance."""
+        super().__init__(message)
+
         self.timeout_seconds = timeout_seconds
         self.operation = operation
 
-    def to_dict(self: "DatasetTimeoutError") -> Dict[str, Any]:
+    def to_dict(self: "DatasetTimeoutError") -> Dict[str, object]:
+        """To dict."""
         result = super().to_dict()
+
         result.update({"timeout_seconds": self.timeout_seconds, "operation": self.operation})
         return result
 
@@ -214,6 +253,7 @@ EXCEPTION_STATUS_MAPPING = {
 def get_http_status_for_exception(exception: Exception) -> int:
     """Get appropriate HTTP status code for a dataset exception."""
     for exc_type, status_code in EXCEPTION_STATUS_MAPPING.items():
+
         if isinstance(exception, exc_type):
             return status_code
     return 500  # Default to internal server error

@@ -1,56 +1,58 @@
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """MCP Server Configuration."""
 
-from typing import List, Optional
+from typing import List
 
-from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
 class MCPSettings(BaseSettings):
     """MCP-specific configuration settings."""
 
-    # Server settings.
-    MCP_SERVER_NAME: str = Field(default="ViolentUTF MCP Server", env="MCP_SERVER_NAME")
-    MCP_SERVER_VERSION: str = Field(default="0.1.0", env="MCP_SERVER_VERSION")
-    MCP_SERVER_DESCRIPTION: str = Field(
-        default="Model Context Protocol server for ViolentUTF AI red-teaming platform", env="MCP_SERVER_DESCRIPTION"
-    )
+    # Server settings
+    MCP_SERVER_NAME: str = "ViolentUTF MCP Server"
+    MCP_SERVER_VERSION: str = "0.1.0"
+    MCP_SERVER_DESCRIPTION: str = "Model Context Protocol server for ViolentUTF AI red-teaming platform"
 
     # Transport settings
-    MCP_TRANSPORT_TYPE: str = Field(default="sse", env="MCP_TRANSPORT_TYPE")  # sse, stdio, asgi
-    MCP_SSE_ENDPOINT: str = Field(default="/mcp/sse", env="MCP_SSE_ENDPOINT")
+    MCP_TRANSPORT_TYPE: str = "sse"  # sse, stdio, asgi
+    MCP_SSE_ENDPOINT: str = "/mcp/sse"
 
     # Feature flags
-    MCP_ENABLE_TOOLS: bool = Field(default=True, env="MCP_ENABLE_TOOLS")
-    MCP_ENABLE_RESOURCES: bool = Field(default=True, env="MCP_ENABLE_RESOURCES")
-    MCP_ENABLE_PROMPTS: bool = Field(default=True, env="MCP_ENABLE_PROMPTS")
-    MCP_ENABLE_SAMPLING: bool = Field(default=True, env="MCP_ENABLE_SAMPLING")
+    MCP_ENABLE_TOOLS: bool = True
+    MCP_ENABLE_RESOURCES: bool = True
+    MCP_ENABLE_PROMPTS: bool = True
+    MCP_ENABLE_SAMPLING: bool = True
 
     # Security settings
-    MCP_REQUIRE_AUTH: bool = Field(default=True, env="MCP_REQUIRE_AUTH")
-    MCP_ALLOWED_ORIGINS: List[str] = Field(
-        default=["http://localhost:*", "https://localhost:*"], env="MCP_ALLOWED_ORIGINS"
-    )
+    MCP_REQUIRE_AUTH: bool = True
+    MCP_ALLOWED_ORIGINS: List[str] = ["http://localhost:*", "https://localhost:*"]
 
     # Tool settings
-    MCP_TOOL_TIMEOUT: int = Field(default=300, env="MCP_TOOL_TIMEOUT")  # 5 minutes
-    MCP_MAX_TOOL_RESULTS: int = Field(default=100, env="MCP_MAX_TOOL_RESULTS")
+    MCP_TOOL_TIMEOUT: int = 300  # 5 minutes
+    MCP_MAX_TOOL_RESULTS: int = 100
 
     # Resource settings
-    MCP_RESOURCE_CACHE_TTL: int = Field(default=3600, env="MCP_RESOURCE_CACHE_TTL")  # 1 hour
-    MCP_MAX_RESOURCE_SIZE: int = Field(default=10485760, env="MCP_MAX_RESOURCE_SIZE")  # 10MB
+    MCP_RESOURCE_CACHE_TTL: int = 3600  # 1 hour
+    MCP_MAX_RESOURCE_SIZE: int = 10485760  # 10MB
 
     # Prompt settings
-    MCP_PROMPT_TEMPLATE_DIR: str = Field(default="./prompts", env="MCP_PROMPT_TEMPLATE_DIR")
+    MCP_PROMPT_TEMPLATE_DIR: str = "./prompts"
 
     # Sampling settings
-    MCP_SAMPLING_MAX_TOKENS: int = Field(default=2000, env="MCP_SAMPLING_MAX_TOKENS")
-    MCP_SAMPLING_DEFAULT_TEMPERATURE: float = Field(default=0.7, env="MCP_SAMPLING_DEFAULT_TEMPERATURE")
+    MCP_SAMPLING_MAX_TOKENS: int = 2000
+    MCP_SAMPLING_DEFAULT_TEMPERATURE: float = 0.7
 
-    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}  # Ignore extra fields from .env file
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+        "extra": "ignore",
+    }  # Ignore extra fields from .env file
 
 
 # Create global MCP settings instance

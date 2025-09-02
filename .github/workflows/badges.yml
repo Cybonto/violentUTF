@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v5.0.0
       - name: Create badges directory
         run: mkdir -p .github/badges
 
@@ -37,11 +37,13 @@ jobs:
       - name: Generate test coverage badge
         run: |
           # This would normally parse actual coverage data
-          echo '{"schemaVersion":1,"label":"coverage","message":"80%","color":"green"}' > .github/badges/coverage.json
+          echo '{"schemaVersion":1,"label":"coverage","message":"80%","color":"green"}' \
+            > .github/badges/coverage.json
 
       - name: Generate security badge
         run: |
-          echo '{"schemaVersion":1,"label":"security","message":"passing","color":"green"}' > .github/badges/security.json
+          echo '{"schemaVersion":1,"label":"security","message":"passing","color":"green"}' \
+            > .github/badges/security.json
 
       - name: Update README badges
         run: |

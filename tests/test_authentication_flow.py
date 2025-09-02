@@ -1,13 +1,14 @@
-from typing import Any
-
 #!/usr/bin/env python3
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Test the complete authentication flow to verify the fix.
-
+Test the complete authentication flow to verify the fix
 """
+
 import os
 import sys
 
@@ -16,25 +17,25 @@ sys.path.append("violentutf")
 
 # Set up a mock Streamlit session state
 class MockSessionState:
-    def __init__(self: "MockSessionState") -> None:
+    def __init__(self):
         self._state = {}
 
-    def get(self: "MockSessionState", key, default=None) -> Any:
+    def get(self, key, default=None):
         return self._state.get(key, default)
 
-    def __setitem__(self: "MockSessionState", key, value: Any) -> None:
+    def __setitem__(self, key, value):
         self._state[key] = value
 
-    def __getitem__(self: "MockSessionState", key: Any) -> Any:
+    def __getitem__(self, key):
         return self._state[key]
 
-    def __contains__(self: "MockSessionState", key: Any) -> Any:
+    def __contains__(self, key):
         return key in self._state
 
-    def pop(self: "MockSessionState", key, default=None) -> Any:
+    def pop(self, key, default=None):
         return self._state.pop(key, default)
 
-    def keys(self: "MockSessionState") -> Any:
+    def keys(self):
         return self._state.keys()
 
 
@@ -45,15 +46,15 @@ st.session_state = MockSessionState()
 
 
 # Mock streamlit functions to prevent errors
-def mock_error(*args, **kwargs) -> None:
+def mock_error(*args, **kwargs):
     print(f"STREAMLIT ERROR: {args}")
 
 
-def mock_warning(*args, **kwargs) -> None:
+def mock_warning(*args, **kwargs):
     print(f"STREAMLIT WARNING: {args}")
 
 
-def mock_info(*args, **kwargs) -> None:
+def mock_info(*args, **kwargs):
     print(f"STREAMLIT INFO: {args}")
 
 
@@ -149,7 +150,10 @@ api_accessible = False
 
 try:
     if st.session_state.get("api_token"):
-        headers = {"Authorization": f'Bearer {st.session_state["api_token"]}', "X-API-Gateway": "APISIX"}
+        headers = {
+            "Authorization": f'Bearer {st.session_state["api_token"]}',
+            "X-API-Gateway": "APISIX",
+        }
         response = requests.get("http://localhost:9080/api/v1/auth/token/info", headers=headers, timeout=5)
         api_accessible = response.status_code == 200
 except Exception:
