@@ -160,3 +160,4 @@ mypy_sample.txt
 .backup
 _backup
 /node_modules
+bandit-report.json
