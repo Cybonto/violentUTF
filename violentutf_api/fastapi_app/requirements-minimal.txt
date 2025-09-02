@@ -1,5 +1,5 @@
 aiosqlite==0.21.0
-alembic==1.13.1
+alembic==1.16.5
 anthropic>=0.7.0
 bcrypt==4.3.0
 cryptography==41.0.7
