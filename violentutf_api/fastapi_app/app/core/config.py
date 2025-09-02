@@ -4,9 +4,7 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Application configuration using Pydantic Settings
-"""
+"""Application configuration using Pydantic Settings."""
 
 from pathlib import Path
 from typing import List, Optional, Union
@@ -16,6 +14,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    """Settings class."""
+
     # Project info
     PROJECT_NAME: str = "ViolentUTF API"
     DESCRIPTION: str = "Programmatic interface for ViolentUTF LLM red-teaming platform"
@@ -37,15 +37,16 @@ class Settings(BaseSettings):
 
     @field_validator("JWT_SECRET_KEY", mode="before")
     @classmethod
-    def set_jwt_secret_key(cls, v, info):
-        """Use SECRET_KEY if JWT_SECRET_KEY is not set"""
+    def set_jwt_secret_key(cls: type, v: object, info: object) -> object:
+        """Use SECRET_KEY if JWT_SECRET_KEY is not set."""
         if hasattr(info, "data") and v is None:
             return info.data.get("SECRET_KEY", "")
         return v or ""
 
     # CORS
     BACKEND_CORS_ORIGINS: List[Union[str, AnyHttpUrl]] = Field(
-        default=["http://localhost", "http://localhost:3000", "http://localhost:8501"], alias="BACKEND_CORS_ORIGINS"
+        default=["http://localhost", "http://localhost:3000", "http://localhost:8501"],
+        alias="BACKEND_CORS_ORIGINS",
     )
 
     # Database
@@ -179,7 +180,8 @@ class Settings(BaseSettings):
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+    def assemble_cors_origins(cls: type, v: Union[str, List[str]]) -> Union[List[str], str]:
+        """Assemble cors origins."""
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
@@ -188,7 +190,8 @@ class Settings(BaseSettings):
 
     @field_validator("SECRET_KEY", mode="before")
     @classmethod
-    def validate_secret_key(cls, v: str) -> str:
+    def validate_secret_key(cls: type, v: str) -> str:
+        """Validate secret key."""
         if not v:
             # Generate a default secret key for development
             import secrets
@@ -198,7 +201,8 @@ class Settings(BaseSettings):
 
     @field_validator("APISIX_GATEWAY_SECRET", mode="before")
     @classmethod
-    def validate_apisix_gateway_secret(cls, v: str) -> str:
+    def validate_apisix_gateway_secret(cls: type, v: str) -> str:
+        """Validate apisix gateway secret."""
         if not v:
             # Generate a default gateway secret for development
             import secrets
@@ -208,14 +212,16 @@ class Settings(BaseSettings):
 
     @field_validator("APP_DATA_DIR", mode="before")
     @classmethod
-    def validate_app_data_dir_path(cls, v: Union[str, Path]) -> Path:
+    def validate_app_data_dir_path(cls: type, v: Union[str, Path]) -> Path:
+        """Validate app data dir path."""
         path = Path(v) if isinstance(v, str) else v
         path.mkdir(parents=True, exist_ok=True)
         return path
 
     @field_validator("CONFIG_DIR", mode="before")
     @classmethod
-    def validate_config_dir_path(cls, v: Union[str, Path]) -> Path:
+    def validate_config_dir_path(cls: type, v: Union[str, Path]) -> Path:
+        """Validate config dir path."""
         path = Path(v) if isinstance(v, str) else v
         path.mkdir(parents=True, exist_ok=True)
         return path

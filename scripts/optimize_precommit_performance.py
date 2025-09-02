@@ -1,29 +1,38 @@
 #!/usr/bin/env python3
 # Copyright (c) 2025 ViolentUTF Contributors.
 # Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Pre-commit Performance Optimizer
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+
+
+"""Pre-commit Performance Optimizer
+
 Analyzes and optimizes pre-commit hook performance
 """
 
-import subprocess
+import subprocess  # nosec B404 - needed for controlled pre-commit performance testing
 import sys
 import time
 from pathlib import Path
+from typing import Any, Dict
 
 
-def time_hook(hook_name, config_file=".pre-commit-config.yaml") -> tuple[float, bool]:
-    """Time how long a specific hook takes to run"""
+def time_hook(hook_name: str, config_file: str = ".pre-commit-config.yaml") -> tuple[float, bool]:
+    """Time how long a specific hook takes to run."""
     print(f"⏱️  Timing {hook_name}...")
 
     start_time = time.time()
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603 B607 - controlled pre-commit execution for performance testing
             ["pre-commit", "run", hook_name, "--config", config_file, "--all-files"],
             capture_output=True,
             text=True,
             timeout=60,
+            check=False,
         )
 
         end_time = time.time()
@@ -43,8 +52,9 @@ def time_hook(hook_name, config_file=".pre-commit-config.yaml") -> tuple[float, 
 
 
 def benchmark_configs() -> dict:
-    """Benchmark full vs fast pre-commit configs"""
+    """Benchmark full vs fast pre-commit configs."""
     print("🏁 Benchmarking Pre-commit Configurations")
+
     print("=" * 50)
 
     # Test hooks that are common to both configs
@@ -55,8 +65,6 @@ def benchmark_configs() -> dict:
         "black",
         "trailing-whitespace",
     ]
-
-    from typing import Any, Dict
 
     results: Dict[str, Dict[str, Any]] = {}
 
@@ -71,11 +79,11 @@ def benchmark_configs() -> dict:
         print(f"\n📊 Testing {config_name} ({config_file})")
         print("-" * 30)
 
-        total_time = 0
+        total_time: float = 0.0
         hook_times = {}
 
         for hook in common_hooks:
-            duration, success = time_hook(hook, config_file)
+            duration, _ = time_hook(hook, config_file)
             total_time += duration
             hook_times[hook] = duration
 
@@ -91,7 +99,7 @@ def benchmark_configs() -> dict:
         fast_time = cast(float, results["Fast Config"]["total_time"])
         speedup = full_time / fast_time if fast_time > 0 else 0
 
-        print(f"\n🚀 Performance Improvement:")
+        print("\n🚀 Performance Improvement:")
         print(f"  Full config: {full_time:.2f}s")
         print(f"  Fast config: {fast_time:.2f}s")
         print(f"  Speedup: {speedup:.1f}x faster")
@@ -100,34 +108,7 @@ def benchmark_configs() -> dict:
 
 
 def create_staged_only_hooks() -> None:
-    """Create hooks that only run on staged files for maximum speed"""
-
-    staged_config = {  # noqa: F841
-        "repos": [
-            {
-                "repo": "https://github.com/pre-commit/pre-commit-hooks",
-                "rev": "v4.5.0",
-                "hooks": [
-                    {"id": "check-ast"},
-                    {"id": "check-json"},
-                    {"id": "trailing-whitespace"},
-                    {"id": "end-of-file-fixer"},
-                ],
-            },
-            {
-                "repo": "https://github.com/psf/black",
-                "rev": "23.12.1",
-                "hooks": [
-                    {
-                        "id": "black",
-                        "args": ["--line-length", "120"],
-                        "types_or": ["python"],
-                    }
-                ],
-            },
-        ]
-    }
-
+    """Create hooks that only run on staged files for maximum speed."""
     print("💡 Optimization Tips:")
     print("1. Use 'types_or' to limit file processing")
     print("2. Add 'files' patterns to target specific directories")
@@ -136,8 +117,9 @@ def create_staged_only_hooks() -> None:
 
 
 def main() -> int:
-    """Main optimization function"""
+    """Execute optimization."""
     print("🎯 Pre-commit Performance Optimization")
+
     print("=" * 50)
 
     # Check if fast config exists
@@ -147,10 +129,10 @@ def main() -> int:
         return 1
 
     # Benchmark both configurations
-    results = benchmark_configs()  # noqa: F841
+    benchmark_configs()
 
     # Show optimization recommendations
-    print(f"\n💡 Speed Optimization Recommendations:")
+    print("\n💡 Speed Optimization Recommendations:")
     print("=" * 40)
     print("1. Use fast config for local development:")
     print("   bash scripts/setup_fast_precommit.sh")

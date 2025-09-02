@@ -8,6 +8,7 @@
 """
 Test the complete authentication flow to verify the fix
 """
+
 import os
 import sys
 
@@ -149,7 +150,10 @@ api_accessible = False
 
 try:
     if st.session_state.get("api_token"):
-        headers = {"Authorization": f'Bearer {st.session_state["api_token"]}', "X-API-Gateway": "APISIX"}
+        headers = {
+            "Authorization": f'Bearer {st.session_state["api_token"]}',
+            "X-API-Gateway": "APISIX",
+        }
         response = requests.get("http://localhost:9080/api/v1/auth/token/info", headers=headers, timeout=5)
         api_accessible = response.status_code == 200
 except Exception:

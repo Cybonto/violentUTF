@@ -1,5 +1,12 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
-Test suite for converter apply functionality
+Test suite for converter apply functionality.
+
 Tests the ability to apply converters to datasets and create new datasets with converted prompts
 """
 
@@ -14,7 +21,7 @@ import pytest
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from tests.utils.keycloak_auth import keycloak_auth
+from tests.utils.keycloak_auth_helper import keycloak_auth
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +68,7 @@ class TestConverterApplyFunctionality:
     """Test converter apply functionality"""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self: "TestConverterApplyFunctionality") -> None:
         """Set up test environment"""
         self.headers = get_auth_headers()
         self.created_resources = {"datasets": [], "converters": []}
@@ -69,7 +76,7 @@ class TestConverterApplyFunctionality:
         # Cleanup
         self.cleanup_resources()
 
-    def cleanup_resources(self):
+    def cleanup_resources(self: "TestConverterApplyFunctionality") -> None:
         """Clean up created resources after tests"""
         import requests
 
@@ -87,7 +94,7 @@ class TestConverterApplyFunctionality:
             except Exception as e:
                 print(f"Warning: Error in cleanup: {e}")
 
-    def test_converter_apply_copy_mode(self):
+    def test_converter_apply_copy_mode(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter in COPY mode to create new dataset"""
         import requests
 
@@ -157,7 +164,7 @@ class TestConverterApplyFunctionality:
 
         logger.info(f"Successfully applied converter in COPY mode, created dataset: {result['dataset_id']}")
 
-    def test_converter_apply_overwrite_mode(self):
+    def test_converter_apply_overwrite_mode(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter in OVERWRITE mode to replace dataset prompts"""
         import requests
 
@@ -206,9 +213,9 @@ class TestConverterApplyFunctionality:
         if new_dataset_id != dataset_id:
             self.created_resources["datasets"].append(new_dataset_id)
 
-        logger.info(f"Successfully applied converter in OVERWRITE mode, dataset ID: {new_dataset_id}")
+        logger.info("Successfully applied converter in OVERWRITE mode, dataset ID: %s", new_dataset_id)
 
-    def test_converter_apply_with_parameters(self):
+    def test_converter_apply_with_parameters(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter with specific parameters"""
         import requests
 
@@ -268,7 +275,7 @@ class TestConverterApplyFunctionality:
 
         logger.info("Successfully applied_Caesar_cipher converter with offset 7")
 
-    def test_converter_apply_invalid_dataset(self):
+    def test_converter_apply_invalid_dataset(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter to non-existent dataset"""
         import requests
 
@@ -297,7 +304,7 @@ class TestConverterApplyFunctionality:
         # In a real implementation, this should return 404
         assert response.status_code in [200, 404, 500]  # Accept mock behavior for now
 
-    def test_converter_apply_missing_new_name_for_copy(self):
+    def test_converter_apply_missing_new_name_for_copy(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter in COPY mode without new dataset name"""
         import requests
 

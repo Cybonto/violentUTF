@@ -1,3 +1,5 @@
+"""Generator Integration Service module."""
+
 # Copyright (c) 2025 ViolentUTF Contributors.
 # Licensed under the MIT License.
 #
@@ -16,14 +18,15 @@ logger = logging.getLogger(__name__)
 async def execute_generator_prompt(
     generator_name: str, prompt: str, conversation_id: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Execute prompt through configured generator"""
+    """Execute prompt through configured generator."""
     try:
         # Get generator configuration by calling the backend function directly
         generator_config = await get_generator_by_name(generator_name)
 
         if not generator_config:
             raise ValueError(
-                f"Generator '{generator_name}' not found. Please configure this generator first in the 'Configure Generators' page."
+                f"Generator '{generator_name}' not found. Please configure this generator first "
+                "in the 'Configure Generators' page."
             )
 
         # Execute prompt based on generator type
@@ -52,7 +55,7 @@ async def execute_generator_prompt(
 async def _execute_apisix_generator(
     generator_config: Dict, prompt: str, conversation_id: Optional[str]
 ) -> Dict[str, Any]:
-    """Execute prompt through APISIX AI Gateway"""
+    """Execute prompt through APISIX AI Gateway."""
     try:
         # Get APISIX endpoint for generator
         provider = generator_config["parameters"]["provider"]
@@ -84,7 +87,10 @@ async def _execute_apisix_generator(
             }
         elif provider.startswith("openapi-"):
             # OpenAPI format - always include model in payload
-            payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
+            payload = {
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+            }
             # Add optional parameters if the OpenAPI spec supports them
             if generator_config["parameters"].get("temperature") is not None:
                 payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
@@ -93,14 +99,20 @@ async def _execute_apisix_generator(
             logger.info("OpenAPI request payload: %s", payload)
         else:
             # OpenAI format - handle o1-series models differently
-            payload = {"model": model, "messages": [{"role": "user", "content": prompt}]}
+            payload = {
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+            }
 
             # o1-series models don't support temperature or max_tokens
             if model and not model.startswith("o1"):
                 payload["temperature"] = generator_config["parameters"].get("temperature", 0.7)
                 payload["max_tokens"] = generator_config["parameters"].get("max_tokens", 1000)
             else:
-                logger.info("Using o1-series model '%s' - skipping temperature and max_tokens parameters", model)
+                logger.info(
+                    "Using o1-series model '%s' - skipping temperature and max_tokens parameters",
+                    model,
+                )
 
         headers = {"Content-Type": "application/json", "X-API-Gateway": "APISIX"}
 
@@ -116,7 +128,10 @@ async def _execute_apisix_generator(
         # For OpenAPI providers, APISIX proxy-rewrite plugin handles upstream auth
         if provider.startswith("openapi-"):
             provider_id = provider.replace("openapi-", "")
-            logger.info("OpenAPI provider %s - authentication will be handled by APISIX proxy-rewrite", provider_id)
+            logger.info(
+                "OpenAPI provider %s - authentication will be handled by APISIX proxy-rewrite",
+                provider_id,
+            )
 
         # Log request details for debugging
         logger.info("Making request to: %s", url)
@@ -144,18 +159,35 @@ async def _execute_apisix_generator(
             else:
                 content = str(result.get("response", result))
 
-            logger.info(f"Successfully got response from {provider}/{model}, content length: {len(content)}")
+            logger.info(
+                "Successfully got response from %s/%s, content length: %d",
+                provider,
+                model,
+                len(content),
+            )
 
-            return {"success": True, "response": content, "provider": provider, "model": model}
+            return {
+                "success": True,
+                "response": content,
+                "provider": provider,
+                "model": model,
+            }
         else:
-            logger.error(f"APISIX request failed: {response.status_code} - {response.text[:200]}")
+            logger.error(
+                "APISIX request failed: %d - %s",
+                response.status_code,
+                response.text[:200],
+            )
 
             # Handle common APISIX errors with helpful messages
             if response.status_code == 502:
                 # Bad Gateway - AI provider not accessible
                 return {
                     "success": False,
-                    "response": f"AI provider not accessible. Please check your APISIX configuration and {provider.upper()} API credentials.",
+                    "response": (
+                        f"AI provider not accessible. Please check your APISIX configuration "
+                        f"and {provider.upper()} API credentials."
+                    ),
                     "error": f"502 Bad Gateway - {provider} service unavailable",
                 }
             elif response.status_code == 401:
@@ -183,22 +215,33 @@ async def _execute_apisix_generator(
                 "error": "Connection refused",
             }
 
-        return {"success": False, "response": f"Generator execution error: {str(e)}", "error": str(e)}
+        return {
+            "success": False,
+            "response": f"Generator execution error: {str(e)}",
+            "error": str(e),
+        }
 
 
 async def _execute_generic_generator(
     generator_config: Dict, prompt: str, conversation_id: Optional[str]
 ) -> Dict[str, Any]:
-    """Execute prompt through generic generator"""
+    """Execute prompt through generic generator."""
     # Generic generators are not yet implemented
     generator_type = generator_config.get("type", "unknown")
     generator_name = generator_config.get("name", "unknown")
 
-    logger.error("Attempted to execute unsupported generator type: %s (name: %s)", generator_type, generator_name)
+    logger.error(
+        "Attempted to execute unsupported generator type: %s (name: %s)",
+        generator_type,
+        generator_name,
+    )
 
     return {
         "success": False,
-        "response": f"Generator type '{generator_type}' is not yet supported. Only 'AI Gateway' (apisix_ai_gateway) generators are currently implemented.",
+        "response": (
+            f"Generator type '{generator_type}' is not yet supported. "
+            f"Only 'AI Gateway' (apisix_ai_gateway) generators are currently implemented."
+        ),
         "error": f"Unsupported generator type: {generator_type}",
         "generator_type": generator_type,
         "generator_name": generator_name,
@@ -206,18 +249,21 @@ async def _execute_generic_generator(
 
 
 def _get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
-    """Get APISIX endpoint for provider/model combination"""
-
+    """Get APISIX endpoint for provider/model combination."""
     # Handle OpenAPI providers
     if provider.startswith("openapi-"):
         # Use the function from generators.py to get the endpoint
         from app.api.endpoints.generators import get_apisix_endpoint_for_model
 
-        endpoint = get_apisix_endpoint_for_model(provider, model)
+        endpoint: Optional[str] = get_apisix_endpoint_for_model(provider, model)
         if endpoint:
             return endpoint
         # If no endpoint found, log detailed error
-        logger.error("No APISIX endpoint found for OpenAPI provider %s with model %s", provider, model)
+        logger.error(
+            "No APISIX endpoint found for OpenAPI provider %s with model %s",
+            provider,
+            model,
+        )
         return None
 
     # Map model names to APISIX route endpoints
@@ -264,7 +310,7 @@ def _get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
 
 
 async def get_generator_by_name(generator_name: str, user_context: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Get generator configuration by name from backend service"""
+    """Get generator configuration by name from backend service."""
     try:
         # Get generators from DuckDB using proper user context
         from app.db.duckdb_manager import get_duckdb_manager
@@ -277,11 +323,15 @@ async def get_generator_by_name(generator_name: str, user_context: Optional[str]
         db_manager = get_duckdb_manager(user_id)
         generators_data = db_manager.list_generators()
 
-        logger.info(f"Found {len(generators_data)} generators for user '{user_id}'")
+        logger.info("Found %d generators for user '%s'", len(generators_data), user_id)
 
         # Find the specific generator by name
         for generator_data in generators_data:
-            logger.debug(f"Checking generator: {generator_data.get('name')} (type: {generator_data.get('type')})")
+            logger.debug(
+                "Checking generator: %s (type: %s)",
+                generator_data.get("name"),
+                generator_data.get("type"),
+            )
             if generator_data.get("name") == generator_name:
                 # Format the generator data to match expected structure
                 result = {
@@ -293,12 +343,20 @@ async def get_generator_by_name(generator_name: str, user_context: Optional[str]
                     "provider": generator_data.get("parameters", {}).get("provider"),
                     "model": generator_data.get("parameters", {}).get("model"),
                 }
-                logger.info(f"Found generator '{generator_name}' with type '{result.get('type')}'")
+                logger.info(
+                    "Found generator '%s' with type '%s'",
+                    generator_name,
+                    result.get("type"),
+                )
                 return result
 
         # If not found, log available generators and return None
         available_names = [gen.get("name") for gen in generators_data]
-        logger.error("Generator '%s' not found in database for user '%s'", generator_name, user_id)
+        logger.error(
+            "Generator '%s' not found in database for user '%s'",
+            generator_name,
+            user_id,
+        )
         logger.error("Available generators for user '%s': %s", user_id, available_names)
         return None
 

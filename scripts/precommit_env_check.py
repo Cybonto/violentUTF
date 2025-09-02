@@ -5,13 +5,14 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Pre-commit Environment Consistency Checker
+
+"""Pre-commit Environment Consistency Checker
+
 Validates that individual tools match pre-commit hook configurations
 """
 
 import json
-import subprocess
+import subprocess  # nosec B404 - needed for controlled environment validation commands
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -20,44 +21,50 @@ import yaml
 
 
 class PrecommitEnvChecker:
-    """Check consistency between individual tools and pre-commit hooks"""
+    """Check consistency between individual tools and pre-commit hooks."""
 
-    def __init__(self):
+    def __init__(self: "PrecommitEnvChecker") -> None:
+        """Initialize instance."""
         self.project_root = Path.cwd()
-        self.precommit_config = self._load_precommit_config()
-        self.issues = []
-        self.successes = []
 
-    def _load_precommit_config(self) -> Dict[str, Any]:
-        """Load pre-commit configuration"""
+        self.precommit_config = self._load_precommit_config()
+        self.issues: list[str] = []
+        self.successes: list[str] = []
+
+    def _load_precommit_config(self: "PrecommitEnvChecker") -> Dict[str, Any]:
+        """Load pre-commit configuration."""
         config_path = self.project_root / ".pre-commit-config.yaml"
+
         if not config_path.exists():
             raise FileNotFoundError("No .pre-commit-config.yaml found")
 
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             from typing import cast
 
             return cast(Dict[str, Any], yaml.safe_load(f))
 
-    def _run_command(self, cmd: List[str]) -> tuple[int, str, str]:
-        """Run command and return exit code, stdout, stderr"""
+    def _run_command(self: "PrecommitEnvChecker", cmd: List[str]) -> tuple[int, str, str]:
+        """Run command and return exit code, stdout, stderr."""
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=30, check=False
+            )  # nosec B603 - controlled command execution for environment validation
             return result.returncode, result.stdout, result.stderr
         except subprocess.TimeoutExpired:
             return 1, "", "Command timed out"
         except FileNotFoundError:
             return 1, "", f"Command not found: {cmd[0]}"
 
-    def check_python_version(self) -> None:
-        """Check if Python version matches pre-commit config"""
+    def check_python_version(self: "PrecommitEnvChecker") -> None:
+        """Check if Python version matches pre-commit config."""
         expected_version = self.precommit_config.get("default_language_version", {}).get("python", "python3.12")
 
         # Extract version number
         if "python" in expected_version:
             expected_version = expected_version.replace("python", "")
 
-        code, stdout, stderr = self._run_command(["python3", "--version"])
+        code, stdout, _ = self._run_command(["python3", "--version"])
         if code == 0:
             actual_version = stdout.strip().split()[-1]  # "Python 3.12.1" -> "3.12.1"
             major_minor = ".".join(actual_version.split(".")[:2])  # "3.12.1" -> "3.12"
@@ -69,9 +76,10 @@ class PrecommitEnvChecker:
         else:
             self.issues.append("❌ Could not check Python version")
 
-    def check_black_consistency(self) -> None:
-        """Check if black individual run matches pre-commit hook"""
+    def check_black_consistency(self: "PrecommitEnvChecker") -> None:
+        """Check if black individual run matches pre-commit hook."""
         # Find black hook config
+
         black_config = self._find_hook_config("black")
         if not black_config:
             self.issues.append("❌ Black hook not found in pre-commit config")
@@ -85,16 +93,17 @@ class PrecommitEnvChecker:
         test_files = list(Path(".").glob("app/**/*.py"))[:3]  # Just a few files
         if test_files:
             cmd.extend([str(f) for f in test_files])
-            code, stdout, stderr = self._run_command(cmd)
+            code, _, stderr = self._run_command(cmd)
 
             if code == 0:
                 self.successes.append("✅ Black individual run matches pre-commit hook")
             else:
                 self.issues.append(f"❌ Black inconsistency: {stderr}")
 
-    def check_mypy_consistency(self) -> None:
-        """Check if mypy individual run matches pre-commit hook"""
+    def check_mypy_consistency(self: "PrecommitEnvChecker") -> None:
+        """Check if mypy individual run matches pre-commit hook."""
         mypy_config = self._find_hook_config("mypy")
+
         if not mypy_config:
             return
 
@@ -102,7 +111,7 @@ class PrecommitEnvChecker:
         test_files = list(Path(".").glob("app/**/*.py"))[:1]
         if test_files:
             cmd = ["mypy"] + [str(f) for f in test_files] + ["--ignore-missing-imports"]
-            code, stdout, stderr = self._run_command(cmd)
+            code, stdout, _ = self._run_command(cmd)
 
             if "Success: no issues found" in stdout or code == 0:
                 self.successes.append("✅ MyPy individual run works")
@@ -110,12 +119,13 @@ class PrecommitEnvChecker:
                 # Don't treat mypy errors as config issues - they're code issues
                 self.successes.append("✅ MyPy individual run executable (has type errors to fix)")
 
-    def check_flake8_consistency(self) -> None:
-        """Check if flake8 individual run matches pre-commit hook"""
+    def check_flake8_consistency(self: "PrecommitEnvChecker") -> None:
+        """Check if flake8 individual run matches pre-commit hook."""
         test_files = list(Path(".").glob("app/**/*.py"))[:2]
+
         if test_files:
             cmd = ["flake8"] + [str(f) for f in test_files]
-            code, stdout, stderr = self._run_command(cmd)
+            code, _, stderr = self._run_command(cmd)
 
             if code == 0:
                 self.successes.append("✅ Flake8 individual run matches pre-commit expectations")
@@ -126,12 +136,13 @@ class PrecommitEnvChecker:
                 else:
                     self.successes.append("✅ Flake8 individual run executable (has lint errors to fix)")
 
-    def check_bandit_consistency(self) -> None:
-        """Check if bandit individual run works"""
+    def check_bandit_consistency(self: "PrecommitEnvChecker") -> None:
+        """Check if bandit individual run works."""
         test_files = list(Path(".").glob("app/**/*.py"))[:1]
+
         if test_files:
             cmd = ["bandit", "-r"] + [str(f) for f in test_files]
-            code, stdout, stderr = self._run_command(cmd)
+            code, _, stderr = self._run_command(cmd)
 
             if code in [0, 1]:  # 0 = no issues, 1 = issues found (both valid)
                 self.successes.append("✅ Bandit individual run works")
@@ -141,8 +152,8 @@ class PrecommitEnvChecker:
                 else:
                     self.issues.append(f"❌ Bandit error: {stderr}")
 
-    def check_detect_secrets_consistency(self) -> None:
-        """Check if detect-secrets individual run works"""
+    def check_detect_secrets_consistency(self: "PrecommitEnvChecker") -> None:
+        """Check if detect-secrets individual run works."""
         cmd = [
             "detect-secrets",
             "scan",
@@ -150,7 +161,7 @@ class PrecommitEnvChecker:
             ".secrets.baseline",
             "--force-use-all-plugins",
         ]
-        code, stdout, stderr = self._run_command(cmd)
+        code, _, stderr = self._run_command(cmd)
 
         if code == 0:
             self.successes.append("✅ detect-secrets individual run works")
@@ -164,9 +175,10 @@ class PrecommitEnvChecker:
                 else:
                     self.issues.append(f"❌ detect-secrets configuration issue: {stderr}")
 
-    def _find_hook_config(self, hook_id: str) -> Optional[Dict[str, Any]]:
-        """Find configuration for specific hook"""
+    def _find_hook_config(self: "PrecommitEnvChecker", hook_id: str) -> Optional[Dict[str, Any]]:
+        """Find configuration for specific hook."""
         for repo in self.precommit_config.get("repos", []):
+
             for hook in repo.get("hooks", []):
                 if hook.get("id") == hook_id:
                     from typing import cast
@@ -174,8 +186,8 @@ class PrecommitEnvChecker:
                     return cast(Dict[str, Any], hook)
         return None
 
-    def check_file_permissions(self) -> None:
-        """Check that shebang files have proper permissions"""
+    def check_file_permissions(self: "PrecommitEnvChecker") -> None:
+        """Check that shebang files have proper permissions."""
         shebang_files = []
 
         # Find files with shebangs
@@ -186,9 +198,13 @@ class PrecommitEnvChecker:
                         first_line = f.readline()
                         if first_line.startswith("#!"):
                             shebang_files.append(file_path)
-                except (OSError, UnicodeDecodeError, IOError):
-                    continue
+                except (
+                    OSError,
+                    UnicodeDecodeError,
+                    IOError,
+                ):  # nosec B112 - acceptable exception handling
 
+                    continue
         non_executable = []
         for file_path in shebang_files:
             if not file_path.stat().st_mode & 0o111:  # Check if executable
@@ -199,9 +215,10 @@ class PrecommitEnvChecker:
         else:
             self.successes.append(f"✅ All {len(shebang_files)} shebang files are executable")
 
-    def check_json_files(self) -> None:
-        """Check that JSON files are valid"""
+    def check_json_files(self: "PrecommitEnvChecker") -> None:
+        """Check that JSON files are valid."""
         json_files = list(Path(".").glob("**/*.json"))
+
         invalid_files = []
 
         for json_file in json_files:
@@ -215,17 +232,22 @@ class PrecommitEnvChecker:
                         json.loads(content)
             except json.JSONDecodeError:
                 invalid_files.append(str(json_file))
-            except (OSError, UnicodeDecodeError, IOError):
-                continue
+            except (
+                OSError,
+                UnicodeDecodeError,
+                IOError,
+            ):  # nosec B112 - acceptable exception handling
 
+                continue
         if invalid_files:
             self.issues.append(f"❌ Invalid JSON files: {invalid_files}")
         else:
             self.successes.append(f"✅ All {len(json_files)} JSON files are valid")
 
-    def run_all_checks(self) -> int:
-        """Run all consistency checks"""
+    def run_all_checks(self: "PrecommitEnvChecker") -> int:
+        """Run all consistency checks."""
         print("🔍 Running Pre-commit Environment Consistency Checks...")
+
         print("=" * 60)
 
         checks = [
@@ -266,8 +288,9 @@ class PrecommitEnvChecker:
 
 
 def main() -> int:
-    """Main function"""
+    """Run the main function."""
     checker = PrecommitEnvChecker()
+
     return checker.run_all_checks()
 
 

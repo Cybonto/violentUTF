@@ -5,8 +5,7 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-ViolentUTF JWT CLI Tool - Command line interface for JWT key management
+"""ViolentUTF JWT CLI Tool - Command line interface for JWT key management
 
 Requirements:
     pip install click requests
@@ -31,14 +30,15 @@ AUTH_TIMEOUT = 10  # shorter for auth operations
 TOKEN_FILE = CONFIG_DIR / "token.json"
 
 
-def ensure_config_dir():
+def ensure_config_dir() -> None:
     """Ensure configuration directory exists"""
     CONFIG_DIR.mkdir(exist_ok=True)
 
 
-def save_token(token_data: dict):
+def save_token(token_data: dict) -> None:
     """Save token to local file"""
     ensure_config_dir()
+
     with open(TOKEN_FILE, "w", encoding="utf-8") as f:
         json.dump(token_data, f, indent=2)
     os.chmod(TOKEN_FILE, 0o600)  # Restrict permissions
@@ -47,6 +47,7 @@ def save_token(token_data: dict):
 def load_token() -> Optional[Dict[str, Any]]:
     """Load token from local file"""
     if TOKEN_FILE.exists():
+
         with open(TOKEN_FILE, "r", encoding="utf-8") as f:
             return cast(Dict[str, Any], json.load(f))
     return None
@@ -55,6 +56,7 @@ def load_token() -> Optional[Dict[str, Any]]:
 def get_auth_header() -> dict:
     """Get authorization header from saved token"""
     token_data = load_token()
+
     if not token_data:
         click.echo("No authentication token found. Please login first.", err=True)
         sys.exit(1)
@@ -62,16 +64,17 @@ def get_auth_header() -> dict:
 
 
 @click.group()
-def cli():
-    """ViolentUTF JWT CLI - Manage JWT tokens for API access"""
+def cli() -> None:
+    """Manage JWT tokens for ViolentUTF API access."""
 
 
 @cli.command()
 @click.option("--username", "-u", prompt=True, help="Username")
 @click.option("--password", "-p", prompt=True, hide_input=True, help="Password")
-def login(username: str, password: str):
+def login(username: str, password: str) -> None:
     """Login to ViolentUTF and obtain JWT token"""
     try:
+
         response = requests.post(
             f"{API_BASE_URL}/api/v1/auth/token",
             data={"username": username, "password": password, "grant_type": "password"},
@@ -86,7 +89,10 @@ def login(username: str, password: str):
             click.echo(f"Successfully logged in as {username}")
             click.echo(f"Token saved to {TOKEN_FILE}")
         else:
-            click.echo(f"Login failed: {response.json().get('detail', 'Unknown error')}", err=True)
+            click.echo(
+                f"Login failed: {response.json().get('detail', 'Unknown error')}",
+                err=True,
+            )
             sys.exit(1)
 
     except requests.exceptions.ConnectionError:
@@ -101,9 +107,10 @@ def login(username: str, password: str):
 
 
 @cli.command()
-def logout():
+def logout() -> None:
     """Logout and remove stored token"""
     if TOKEN_FILE.exists():
+
         TOKEN_FILE.unlink()
         click.echo("Successfully logged out")
     else:
@@ -111,9 +118,10 @@ def logout():
 
 
 @cli.command()
-def whoami():
+def whoami() -> None:
     """Show current user information"""
     try:
+
         response = requests.get(f"{API_BASE_URL}/api/v1/auth/me", headers=get_auth_header(), timeout=30)
 
         if response.status_code == 200:
@@ -133,9 +141,10 @@ def whoami():
 
 
 @cli.command()
-def get_token():
+def get_token() -> None:
     """Display current JWT token"""
     token_data = load_token()
+
     if token_data:
         click.echo(f"Token: {token_data['access_token']}")
         click.echo(f"Type: {token_data.get('token_type', 'bearer')}")
@@ -160,10 +169,15 @@ def get_token():
 
 
 @cli.command()
-def refresh():
+def refresh() -> None:
     """Refresh the current token"""
     try:
-        response = requests.post(f"{API_BASE_URL}/api/v1/auth/refresh", headers=get_auth_header(), timeout=AUTH_TIMEOUT)
+
+        response = requests.post(
+            f"{API_BASE_URL}/api/v1/auth/refresh",
+            headers=get_auth_header(),
+            timeout=AUTH_TIMEOUT,
+        )
 
         if response.status_code == 200:
             token_data = response.json()
@@ -173,7 +187,10 @@ def refresh():
             save_token(token_data)
             click.echo("Token refreshed successfully")
         else:
-            click.echo(f"Refresh failed: {response.json().get('detail', 'Unknown error')}", err=True)
+            click.echo(
+                f"Refresh failed: {response.json().get('detail', 'Unknown error')}",
+                err=True,
+            )
 
     except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
@@ -184,16 +201,23 @@ def refresh():
 
 
 @cli.group()
-def api_keys():
+def api_keys() -> None:
     """Manage API keys"""
 
 
 @api_keys.command("create")
 @click.option("--name", "-n", prompt=True, help="Name for the API key")
-@click.option("--permissions", "-p", multiple=True, default=["api:access"], help="Permissions for the key")
-def create_key(name: str, permissions: tuple):
+@click.option(
+    "--permissions",
+    "-p",
+    multiple=True,
+    default=["api:access"],
+    help="Permissions for the key",
+)
+def create_key(name: str, permissions: tuple) -> None:
     """Create a new API key"""
     try:
+
         response = requests.post(
             f"{API_BASE_URL}/api/v1/keys/create",
             headers=get_auth_header(),
@@ -221,10 +245,15 @@ def create_key(name: str, permissions: tuple):
 
 
 @api_keys.command("list")
-def list_keys():
+def list_keys() -> None:
     """List all API keys"""
     try:
-        response = requests.get(f"{API_BASE_URL}/api/v1/keys/list", headers=get_auth_header(), timeout=DEFAULT_TIMEOUT)
+
+        response = requests.get(
+            f"{API_BASE_URL}/api/v1/keys/list",
+            headers=get_auth_header(),
+            timeout=DEFAULT_TIMEOUT,
+        )
 
         if response.status_code == 200:
             keys_data = response.json()
@@ -256,11 +285,14 @@ def list_keys():
 
 @api_keys.command("revoke")
 @click.argument("key_id")
-def revoke_key(key_id: str):
+def revoke_key(key_id: str) -> None:
     """Revoke an API key"""
     try:
+
         response = requests.delete(
-            f"{API_BASE_URL}/api/v1/keys/{key_id}", headers=get_auth_header(), timeout=DEFAULT_TIMEOUT
+            f"{API_BASE_URL}/api/v1/keys/{key_id}",
+            headers=get_auth_header(),
+            timeout=DEFAULT_TIMEOUT,
         )
 
         if response.status_code == 200:
@@ -277,11 +309,14 @@ def revoke_key(key_id: str):
 
 
 @api_keys.command("current")
-def get_current_key():
+def get_current_key() -> None:
     """Get current session as API key format"""
     try:
+
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/keys/current", headers=get_auth_header(), timeout=DEFAULT_TIMEOUT
+            f"{API_BASE_URL}/api/v1/keys/current",
+            headers=get_auth_header(),
+            timeout=DEFAULT_TIMEOUT,
         )
 
         if response.status_code == 200:

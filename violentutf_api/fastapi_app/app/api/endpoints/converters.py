@@ -4,18 +4,18 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-FastAPI endpoints for converter management
+"""FastAPI endpoints for converter management
+
 Implements API backend for 3_Configure_Converters.py page
 """
-
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
+from app.models.auth import User
 from app.schemas.converters import (
     ApplicationMode,
     ConvertedPrompt,
@@ -37,9 +37,10 @@ from fastapi import APIRouter, Depends, HTTPException
 logger = logging.getLogger(__name__)
 
 
-def _safe_convert_choices(choices) -> Optional[List[Any]]:
-    """Safely convert choices to list of Any"""
+def _safe_convert_choices(choices: object) -> Optional[List[object]]:
+    """Safely convert choices to list of Any."""
     if not choices:
+
         return None
     if isinstance(choices, (list, tuple)):
         return list(choices)
@@ -49,8 +50,8 @@ def _safe_convert_choices(choices) -> Optional[List[Any]]:
 router = APIRouter()
 
 # DuckDB storage replaces in-memory storage
-# _converters_store: Dict[str, Dict[str, Any]] = {} - REMOVED
-# _session_converters: Dict[str, Dict[str, Any]] = {} - REMOVED
+# _converters_store: Dict[str, Dict[str, object]] = {} - REMOVED
+# _session_converters: Dict[str, Dict[str, object]] = {} - REMOVED
 
 # Converter type definitions (based on PyRIT converters)
 CONVERTER_CATEGORIES = {
@@ -76,11 +77,11 @@ CONVERTER_CATEGORIES = {
 # TODO: Replace with real PyRIT converter parameter definitions
 CONVERTER_PARAMETERS = {
     "ROT13Converter": [
-        # ROT13Converter in PyRIT takes no specific parameters beyond *args, **kwargs
+        # ROT13Converter in PyRIT takes no specific parameters beyond *args, **kwargs: object
         # It's a simple converter that rotates characters by 13 positions
     ],
     "Base64Converter": [
-        # Base64Converter in PyRIT takes no specific parameters beyond *args, **kwargs
+        # Base64Converter in PyRIT takes no specific parameters beyond *args, **kwargs: object
         # It encodes the prompt using base64 encoding
     ],
     "CaesarCipherConverter": [
@@ -202,7 +203,13 @@ CONVERTER_PARAMETERS = {
             "required": False,
             "default": "custom",
             "description": "Type of code chameleon encryption",
-            "literal_choices": ["custom", "reverse", "binary_tree", "odd_even", "length"],
+            "literal_choices": [
+                "custom",
+                "reverse",
+                "binary_tree",
+                "odd_even",
+                "length",
+            ],
             "skip_in_ui": False,
         }
     ],
@@ -221,10 +228,17 @@ CONVERTER_PARAMETERS = {
 }
 
 
-@router.get("/types", response_model=ConverterTypesResponse, summary="Get available converter types")
-async def get_converter_types(current_user=Depends(get_current_user)):
-    """Get list of available converter categories and classes"""
+@router.get(
+    "/types",
+    response_model=ConverterTypesResponse,
+    summary="Get available converter types",
+)
+async def get_converter_types(
+    current_user: User = Depends(get_current_user),
+) -> ConverterTypesResponse:
+    """Get list of available converter categories and classes."""
     try:
+
         logger.info("User %s requested converter types", current_user.username)
 
         total_converters = sum(len(converters) for converters in CONVERTER_CATEGORIES.values())
@@ -232,14 +246,25 @@ async def get_converter_types(current_user=Depends(get_current_user)):
         return ConverterTypesResponse(categories=CONVERTER_CATEGORIES, total=total_converters)
     except Exception as e:
         logger.error("Error getting converter types: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get converter types: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get converter types: {str(e)}") from e
 
 
-@router.get("/params/{converter_type}", response_model=ConverterParametersResponse, summary="Get converter parameters")
-async def get_converter_parameters(converter_type: str, current_user=Depends(get_current_user)):
-    """Get parameter definitions for a specific converter type"""
+@router.get(
+    "/params/{converter_type}",
+    response_model=ConverterParametersResponse,
+    summary="Get converter parameters",
+)
+async def get_converter_parameters(
+    converter_type: str, current_user: User = Depends(get_current_user)
+) -> ConverterParametersResponse:
+    """Get parameter definitions for a specific converter type."""
     try:
-        logger.info("User %s requested parameters for converter: %s", current_user.username, converter_type)
+
+        logger.info(
+            "User %s requested parameters for converter: %s",
+            current_user.username,
+            converter_type,
+        )
 
         if converter_type not in CONVERTER_PARAMETERS:
             raise HTTPException(status_code=404, detail=f"Converter type '{converter_type}' not found")
@@ -266,19 +291,24 @@ async def get_converter_parameters(converter_type: str, current_user=Depends(get
         )
 
         return ConverterParametersResponse(
-            converter_name=converter_type, parameters=parameters, requires_target=requires_target
+            converter_name=converter_type,
+            parameters=parameters,
+            requires_target=requires_target,
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error("Error getting parameters for %s: %s", converter_type, e)
-        raise HTTPException(status_code=500, detail=f"Failed to get converter parameters: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get converter parameters: {str(e)}") from e
 
 
 @router.get("", response_model=ConvertersListResponse, summary="Get configured converters")
-async def get_converters(current_user=Depends(get_current_user)):
-    """Get list of configured converters from session"""
+async def get_converters(
+    current_user: User = Depends(get_current_user),
+) -> ConvertersListResponse:
+    """Get list of configured converters from session."""
     try:
+
         user_id = current_user.username
         logger.info("User %s requested converters list", user_id)
 
@@ -304,13 +334,16 @@ async def get_converters(current_user=Depends(get_current_user)):
         return ConvertersListResponse(converters=converters, total=len(converters))
     except Exception as e:
         logger.error("Error getting converters: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get converters: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get converters: {str(e)}") from e
 
 
 @router.post("", response_model=ConverterCreateResponse, summary="Create a new converter")
-async def create_converter(request: ConverterCreateRequest, current_user=Depends(get_current_user)):
-    """Create a new converter configuration"""
+async def create_converter(
+    request: ConverterCreateRequest, current_user: User = Depends(get_current_user)
+) -> ConverterCreateResponse:
+    """Create a new converter configuration."""
     try:
+
         user_id = current_user.username
         logger.info("User %s creating converter: %s", user_id, request.name)
 
@@ -323,7 +356,10 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
             all_converter_types.extend(category_converters)
 
         if request.converter_type not in all_converter_types:
-            raise HTTPException(status_code=400, detail=f"Invalid converter type: {request.converter_type}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid converter type: {request.converter_type}",
+            )
 
         # Validate parameters against converter definition
         if request.converter_type in CONVERTER_PARAMETERS:
@@ -332,15 +368,24 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
 
             for required_param in required_params:
                 if required_param not in request.parameters:
-                    raise HTTPException(status_code=400, detail=f"Required parameter '{required_param}' missing")
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Required parameter '{required_param}' missing",
+                    )
 
         # Store converter in DuckDB
         db_manager = get_duckdb_manager(user_id)
         converter_id = db_manager.create_converter(
-            name=request.name, converter_type=request.converter_type, parameters=request.parameters
+            name=request.name,
+            converter_type=request.converter_type,
+            parameters=request.parameters,
         )
 
-        logger.info("Converter '%s' created successfully with ID: %s", request.name, converter_id)
+        logger.info(
+            "Converter '%s' created successfully with ID: %s",
+            request.name,
+            converter_id,
+        )
 
         # Get the created converter data
         created_converter = db_manager.get_converter(converter_id)
@@ -364,15 +409,22 @@ async def create_converter(request: ConverterCreateRequest, current_user=Depends
         raise
     except Exception as e:
         logger.error("Error creating converter %s: %s", request.name, e)
-        raise HTTPException(status_code=500, detail=f"Failed to create converter: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create converter: {str(e)}") from e
 
 
-@router.post("/{converter_id}/preview", response_model=ConverterPreviewResponse, summary="Preview converter effect")
+@router.post(
+    "/{converter_id}/preview",
+    response_model=ConverterPreviewResponse,
+    summary="Preview converter effect",
+)
 async def preview_converter(
-    converter_id: str, request: ConverterPreviewRequest, current_user=Depends(get_current_user)
-):
-    """Preview the effect of a converter on sample prompts"""
+    converter_id: str,
+    request: ConverterPreviewRequest,
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Preview the effect of a converter on sample prompts."""
     try:
+
         user_id = current_user.username
         logger.info("User %s previewing converter: %s", user_id, converter_id)
 
@@ -393,24 +445,35 @@ async def preview_converter(
                 from app.services.dataset_integration_service import get_dataset_prompts
 
                 real_prompts = await get_dataset_prompts(
-                    dataset_id=request.dataset_id, sample_size=request.num_samples, user_context=user_id
+                    dataset_id=request.dataset_id,
+                    sample_size=request.num_samples,
+                    user_context=user_id,
                 )
 
                 if real_prompts:
                     sample_prompts = real_prompts[: request.num_samples]
-                    logger.info(f"Loaded {len(sample_prompts)} real prompts from dataset {request.dataset_id}")
+                    logger.info(
+                        "Loaded %s real prompts from dataset %s",
+                        len(sample_prompts),
+                        request.dataset_id,
+                    )
                 else:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"No prompts found in dataset {request.dataset_id}. Please check if the dataset exists and contains prompts.",
+                        detail=f"No prompts found in dataset {request.dataset_id}. "
+                        f"Please check if the dataset exists and contains prompts.",
                     )
             except Exception as e:
                 logger.error("Failed to load prompts from dataset %s: %s", request.dataset_id, e)
-                raise HTTPException(status_code=500, detail=f"Failed to load prompts from dataset: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to load prompts from dataset: {str(e)}",
+                ) from e
         else:
             # No dataset specified - return error instead of using dangerous mock prompts
             raise HTTPException(
-                status_code=400, detail="Either sample_prompts or dataset_id is required for converter preview."
+                status_code=400,
+                detail="Either sample_prompts or dataset_id is required for converter preview.",
             )
 
         # Simulate converter application
@@ -418,7 +481,7 @@ async def preview_converter(
         parameters = converter_data["parameters"]
 
         preview_results = []
-        for i, prompt in enumerate(sample_prompts):
+        for _, prompt in enumerate(sample_prompts):
             converted_prompt = simulate_converter_application(converter_type, prompt, parameters)
 
             preview_results.append(
@@ -427,27 +490,46 @@ async def preview_converter(
                     original_value=prompt,
                     converted_value=converted_prompt,
                     dataset_name=request.dataset_id,
-                    metadata={"converter_type": converter_type, "parameters": parameters},
+                    metadata={
+                        "converter_type": converter_type,
+                        "parameters": parameters,
+                    },
                 )
             )
 
         return ConverterPreviewResponse(
-            converter_id=converter_id, preview_results=preview_results, converter_info=converter_data
+            converter_id=converter_id,
+            preview_results=preview_results,
+            converter_info=converter_data,
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error("Error previewing converter %s: %s", converter_id, e)
-        raise HTTPException(status_code=500, detail=f"Failed to preview converter: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to preview converter: {str(e)}") from e
 
 
-@router.post("/{converter_id}/apply", response_model=ConverterApplyResponse, summary="Apply converter to dataset")
-async def apply_converter(converter_id: str, request: ConverterApplyRequest, current_user=Depends(get_current_user)):
-    """Apply a converter to an entire dataset"""
+@router.post(
+    "/{converter_id}/apply",
+    response_model=ConverterApplyResponse,
+    summary="Apply converter to dataset",
+)
+async def apply_converter(
+    converter_id: str,
+    request: ConverterApplyRequest,
+    current_user: User = Depends(get_current_user),
+) -> ConverterApplyResponse:
+    """Apply a converter to an entire dataset."""
     try:
+
         user_id = current_user.username
-        logger.info("User %s applying converter %s to dataset %s", user_id, converter_id, request.dataset_id)
+        logger.info(
+            "User %s applying converter %s to dataset %s",
+            user_id,
+            converter_id,
+            request.dataset_id,
+        )
 
         # Get DuckDB manager
         db_manager = get_duckdb_manager(user_id)
@@ -459,7 +541,10 @@ async def apply_converter(converter_id: str, request: ConverterApplyRequest, cur
 
         # Validate request based on mode
         if request.mode == ApplicationMode.COPY and not request.new_dataset_name:
-            raise HTTPException(status_code=400, detail="new_dataset_name is required when mode is 'copy'")
+            raise HTTPException(
+                status_code=400,
+                detail="new_dataset_name is required when mode is 'copy'",
+            )
 
         # Get the source dataset
         source_dataset = db_manager.get_dataset(request.dataset_id)
@@ -504,11 +589,14 @@ async def apply_converter(converter_id: str, request: ConverterApplyRequest, cur
             )
 
             result_dataset_name = request.new_dataset_name  # Already validated to be non-None above
-            assert result_dataset_name is not None  # For mypy
+            assert result_dataset_name is not None  # nosec B101 - mypy type narrowing, already validated above
             result_dataset_id = new_dataset_id
 
             logger.info(
-                f"Created new dataset '{result_dataset_name}' (ID: {result_dataset_id}) with {len(converted_prompts)} converted prompts"
+                "Created new dataset '%s' (ID: %s) with %d converted prompts",
+                result_dataset_name,
+                result_dataset_id,
+                len(converted_prompts),
             )
 
         else:  # OVERWRITE mode
@@ -536,13 +624,19 @@ async def apply_converter(converter_id: str, request: ConverterApplyRequest, cur
             result_dataset_id = new_dataset_id
 
             logger.info(
-                f"Overwrote dataset '{result_dataset_name}' (new ID: {result_dataset_id}) with {len(converted_prompts)} converted prompts"
+                "Overwrote dataset '%s' (new ID: %s) with %d converted prompts",
+                result_dataset_name,
+                result_dataset_id,
+                len(converted_prompts),
             )
 
         # Save to PyRIT memory if requested
         if request.save_to_memory:
             # TODO: Integrate with PyRIT memory when available
-            logger.info(f"Would save {len(converted_prompts)} converted prompts to PyRIT memory")
+            logger.info(
+                "Would save %s converted prompts to PyRIT memory",
+                len(converted_prompts),
+            )
 
         return ConverterApplyResponse(
             success=True,
@@ -561,13 +655,20 @@ async def apply_converter(converter_id: str, request: ConverterApplyRequest, cur
         raise
     except Exception as e:
         logger.error("Error applying converter %s: %s", converter_id, e)
-        raise HTTPException(status_code=500, detail=f"Failed to apply converter: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to apply converter: {str(e)}") from e
 
 
-@router.delete("/{converter_id}", response_model=ConverterDeleteResponse, summary="Delete a converter")
-async def delete_converter(converter_id: str, current_user=Depends(get_current_user)):
-    """Delete a converter configuration"""
+@router.delete(
+    "/{converter_id}",
+    response_model=ConverterDeleteResponse,
+    summary="Delete a converter",
+)
+async def delete_converter(
+    converter_id: str, current_user: User = Depends(get_current_user)
+) -> ConverterDeleteResponse:
+    """Delete a converter configuration."""
     try:
+
         user_id = current_user.username
         logger.info("User %s deleting converter: %s", user_id, converter_id)
 
@@ -578,7 +679,9 @@ async def delete_converter(converter_id: str, current_user=Depends(get_current_u
         if deleted:
             logger.info("Converter %s deleted successfully", converter_id)
             return ConverterDeleteResponse(
-                success=True, message="Converter deleted successfully", deleted_at=datetime.utcnow()
+                success=True,
+                message="Converter deleted successfully",
+                deleted_at=datetime.utcnow(),
             )
         else:
             raise HTTPException(status_code=404, detail="Converter not found")
@@ -587,13 +690,18 @@ async def delete_converter(converter_id: str, current_user=Depends(get_current_u
         raise
     except Exception as e:
         logger.error("Error deleting converter %s: %s", converter_id, e)
-        raise HTTPException(status_code=500, detail=f"Failed to delete converter: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete converter: {str(e)}") from e
 
 
-@router.put("/{converter_id}", response_model=Dict[str, Any], summary="Update a converter")
-async def update_converter(converter_id: str, request: ConverterUpdateRequest, current_user=Depends(get_current_user)):
-    """Update an existing converter configuration"""
+@router.put("/{converter_id}", response_model=Dict[str, object], summary="Update a converter")
+async def update_converter(
+    converter_id: str,
+    request: ConverterUpdateRequest,
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, object]:
+    """Update an existing converter configuration."""
     try:
+
         user_id = current_user.username
         logger.info("User %s updating converter: %s", user_id, converter_id)
 
@@ -631,13 +739,14 @@ async def update_converter(converter_id: str, request: ConverterUpdateRequest, c
         raise
     except Exception as e:
         logger.error("Error updating converter %s: %s", converter_id, e)
-        raise HTTPException(status_code=500, detail=f"Failed to update converter: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update converter: {str(e)}") from e
 
 
-@router.get("/{converter_id}", response_model=Dict[str, Any], summary="Get converter details")
-async def get_converter(converter_id: str, current_user=Depends(get_current_user)):
-    """Get detailed information about a specific converter"""
+@router.get("/{converter_id}", response_model=Dict[str, object], summary="Get converter details")
+async def get_converter(converter_id: str, current_user: User = Depends(get_current_user)) -> Dict[str, object]:
+    """Get detailed information about a specific converter."""
     try:
+
         user_id = current_user.username
         logger.info("User %s requested converter details: %s", user_id, converter_id)
 
@@ -661,29 +770,31 @@ async def get_converter(converter_id: str, current_user=Depends(get_current_user
         raise
     except Exception as e:
         logger.error("Error getting converter %s: %s", converter_id, e)
-        raise HTTPException(status_code=500, detail=f"Failed to get converter: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get converter: {str(e)}") from e
 
 
 # --- Helper Functions ---
 
 
-def simulate_converter_application(converter_type: str, prompt: str, parameters: Dict[str, Any]) -> str:
-    """Simulate applying a converter to a prompt"""
+def simulate_converter_application(converter_type: str, prompt: str, parameters: Dict[str, object]) -> str:
+    """Simulate applying a converter to a prompt."""
     try:
+
         if converter_type == "ROT13Converter":
             # Simple ROT13 simulation
             converted = "".join(
                 (
                     chr((ord(c) - ord("a") + 13) % 26 + ord("a"))
                     if "a" <= c <= "z"
-                    else chr((ord(c) - ord("A") + 13) % 26 + ord("A"))
-                    if "A" <= c <= "Z"
-                    else c
+                    else (chr((ord(c) - ord("A") + 13) % 26 + ord("A")) if "A" <= c <= "Z" else c)
                 )
                 for c in prompt
             )
             if parameters.get("append_description", True):
-                converted += "\n\n[This message has been encoded using ROT13 cipher. Please decode and respond using the same cipher.]"
+                converted += (
+                    "\n\n[This message has been encoded using ROT13 cipher. "
+                    "Please decode and respond using the same cipher.]"
+                )
             return converted
 
         elif converter_type == "Base64Converter":
@@ -692,23 +803,28 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
 
             encoded = base64.b64encode(prompt.encode()).decode()
             if parameters.get("append_description", True):
-                encoded += "\n\n[This message has been encoded using Base64. Please decode and respond using the same encoding.]"
+                encoded += (
+                    "\n\n[This message has been encoded using Base64. "
+                    "Please decode and respond using the same encoding.]"
+                )
             return encoded
 
         elif converter_type == "CaesarCipherConverter":
-            offset = parameters.get("caesar_offset", 3)
+            caesar_offset = parameters.get("caesar_offset")
+            offset = int(caesar_offset) if caesar_offset is not None else 3
             converted = "".join(
                 (
                     chr((ord(c) - ord("a") + offset) % 26 + ord("a"))
                     if "a" <= c <= "z"
-                    else chr((ord(c) - ord("A") + offset) % 26 + ord("A"))
-                    if "A" <= c <= "Z"
-                    else c
+                    else (chr((ord(c) - ord("A") + offset) % 26 + ord("A")) if "A" <= c <= "Z" else c)
                 )
                 for c in prompt
             )
             if parameters.get("append_description", True):
-                converted += f"\n\n[This message has been encoded using Caesar cipher with offset {offset}. Please decode and respond using the same cipher.]"
+                converted += (
+                    f"\n\n[This message has been encoded using Caesar cipher with offset {offset}. "
+                    f"Please decode and respond using the same cipher.]"
+                )
             return converted
 
         elif converter_type == "MorseCodeConverter":
@@ -732,8 +848,8 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
             return converted
 
         elif converter_type == "SearchReplaceConverter":
-            old_value = parameters.get("old_value", "")
-            new_value = parameters.get("new_value", "")
+            old_value = str(parameters.get("old_value", ""))
+            new_value = str(parameters.get("new_value", ""))
             return prompt.replace(old_value, new_value)
 
         elif converter_type == "TranslationConverter":
@@ -741,7 +857,7 @@ def simulate_converter_application(converter_type: str, prompt: str, parameters:
             return f"[Translated to {language}] {prompt} [Translation placeholder]"
 
         elif converter_type == "CodeChameleonConverter":
-            encrypt_type = parameters.get("encrypt_type", "custom")
+            encrypt_type = str(parameters.get("encrypt_type", "custom"))
             if encrypt_type == "reverse":
                 return prompt[::-1] + "\n\n[This message has been reversed. Please decode and respond.]"
             elif encrypt_type == "odd_even":

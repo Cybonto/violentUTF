@@ -4,33 +4,35 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Garak Integration Service
+"""Garak Integration Service
+
 Provides NVIDIA Garak LLM vulnerability scanning functionality for ViolentUTF platform
 """
-
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Self
 
 logger = logging.getLogger(__name__)
 
 
 class GarakService:
-    """Service class for Garak integration"""
+    """Service class for Garak integration."""
 
-    def __init__(self):
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         self.available = False
+
         self._initialize_garak()
 
-    def _initialize_garak(self):
-        """Initialize Garak scanner and core components"""
+    def _initialize_garak(self: "Self") -> None:
+        """Initialize Garak scanner and core components."""
         try:
-            import garak  # noqa: F401
+
+            import garak  # noqa: F401  # pylint: disable=unused-import
             from garak import _plugins  # noqa: F401
-            from garak.evaluators import Evaluator  # noqa: F401
-            from garak.generators import Generator  # noqa: F401
+            from garak.evaluators import Evaluator  # noqa: F401  # pylint: disable=unused-import
+            from garak.generators import Generator  # noqa: F401  # pylint: disable=unused-import
 
             self.available = True
             logger.info("✅ Garak initialized successfully")
@@ -42,13 +44,14 @@ class GarakService:
             logger.error("❌ Failed to initialize Garak: %s", e)
             self.available = False
 
-    def is_available(self) -> bool:
-        """Check if Garak is properly initialized"""
+    def is_available(self: "Self") -> bool:
+        """Check if Garak is properly initialized."""
         return self.available
 
-    def list_available_probes(self) -> List[Dict[str, Any]]:
-        """List all available Garak vulnerability probes"""
+    def list_available_probes(self: "Self") -> List[Dict[str, Any]]:
+        """List all available Garak vulnerability probes."""
         if not self.is_available():
+
             return []
 
         try:
@@ -60,7 +63,7 @@ class GarakService:
 
             for module_name in probe_modules:
                 try:
-                    module = garak._plugins.load_plugin(f"probes.{module_name}")
+                    module = garak._plugins.load_plugin(f"probes.{module_name}")  # pylint: disable=protected-access
 
                     # Get probe classes from module
                     for attr_name in dir(module):
@@ -79,16 +82,17 @@ class GarakService:
                     logger.warning("Failed to load probe module %s: %s", module_name, e)
                     continue
 
-            logger.info(f"Found {len(probes)} Garak probes")
+            logger.info("Found %s Garak probes", len(probes))
             return probes
 
         except Exception as e:
             logger.error("Failed to list Garak probes: %s", e)
             return []
 
-    def list_available_generators(self) -> List[Dict[str, Any]]:
-        """List all available Garak generators"""
+    def list_available_generators(self: "Self") -> List[Dict[str, Any]]:
+        """List all available Garak generators."""
         if not self.is_available():
+
             return []
 
         try:
@@ -100,7 +104,7 @@ class GarakService:
 
             for module_name in generator_modules:
                 try:
-                    module = garak._plugins.load_plugin(f"generators.{module_name}")
+                    module = garak._plugins.load_plugin(f"generators.{module_name}")  # pylint: disable=protected-access
 
                     # Get generator classes from module
                     for attr_name in dir(module):
@@ -119,7 +123,7 @@ class GarakService:
                     logger.warning("Failed to load generator module %s: %s", module_name, e)
                     continue
 
-            logger.info(f"Found {len(generators)} Garak generators")
+            logger.info("Found %s Garak generators", len(generators))
             return generators
 
         except Exception as e:
@@ -127,20 +131,22 @@ class GarakService:
             return []
 
     async def run_vulnerability_scan(
-        self, target_config: Dict[str, Any], probe_config: Dict[str, Any], scan_id: Optional[str] = None
+        self: "Self",
+        target_config: Dict[str, Any],
+        probe_config: Dict[str, Any],
+        scan_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Run Garak vulnerability scan against a target
-        """
+        """Run Garak vulnerability scan against a target"""
         if not self.is_available():
+
             raise RuntimeError("Garak is not available")
 
         scan_id = scan_id or str(uuid.uuid4())
 
         try:
-            import garak.cli  # noqa: F401
+            import garak.cli  # noqa: F401  # pylint: disable=unused-import
             from garak._plugins import load_plugin
-            from garak.generators import Generator  # noqa: F401
+            from garak.generators import Generator  # noqa: F401  # pylint: disable=unused-import
 
             # Create generator based on target configuration
             generator = await self._create_garak_generator(target_config)
@@ -153,7 +159,12 @@ class GarakService:
             probe_instance = getattr(probe_class, probe_name)()
 
             # Run the scan
-            logger.info("Starting Garak scan %s with probe %s.%s", scan_id, probe_module, probe_name)
+            logger.info(
+                "Starting Garak scan %s with probe %s.%s",
+                scan_id,
+                probe_module,
+                probe_name,
+            )
 
             # This is a simplified version - in production, you'd use Garak's full CLI
             # Generate test prompts
@@ -196,16 +207,17 @@ class GarakService:
                 "error": str(e),
             }
 
-    async def _create_garak_generator(self, target_config: Dict[str, Any]):
-        """Create Garak generator from target configuration"""
+    async def _create_garak_generator(self: "Self", target_config: Dict[str, Any]) -> object:
+        """Create Garak generator from target configuration."""
         try:
+
             import garak._plugins
 
             target_type = target_config.get("type", "rest")
 
             if target_type == "AI Gateway":
                 # Map to REST generator for APISIX
-                generator_class = garak._plugins.load_plugin("generators.rest")
+                generator_class = garak._plugins.load_plugin("generators.rest")  # pylint: disable=protected-access
 
                 # Get APISIX endpoint
                 from app.api.endpoints.generators import get_apisix_endpoint_for_model
@@ -227,22 +239,24 @@ class GarakService:
 
             else:
                 # Use default OpenAI generator as fallback
-                generator_class = garak._plugins.load_plugin("generators.openai")
+                generator_class = garak._plugins.load_plugin("generators.openai")  # pylint: disable=protected-access
                 return generator_class.OpenAIGenerator()
 
         except Exception as e:
             logger.error("Failed to create Garak generator: %s", e)
             raise
 
-    def get_scan_results(self, scan_id: str) -> Optional[Dict[str, Any]]:
-        """Get results for a specific scan"""
+    def get_scan_results(self: "Self", scan_id: str) -> Optional[Dict[str, Any]]:
+        """Get results for a specific scan."""
         # In a real implementation, this would query a database or file system
+
         # For now, return None
         return None
 
-    def list_scan_history(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """List recent scan history"""
+    def list_scan_history(self: "Self", limit: int = 50) -> List[Dict[str, Any]]:
+        """List recent scan history."""
         # In a real implementation, this would query stored scan results
+
         # For now, return empty list
         return []
 

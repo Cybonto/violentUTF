@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Pytest configuration and fixtures for ViolentUTF tests
 Provides authentication, environment setup, and common test utilities
@@ -17,7 +23,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 
-from tests.utils.keycloak_auth import keycloak_auth
+from tests.utils.keycloak_auth_helper import keycloak_auth
 
 
 # Load environment variables from project root
@@ -207,7 +213,11 @@ def cleanup_generators(api_headers, api_base_url) -> Generator[Any, None, None]:
     # Cleanup after test
     for gen_id in created_generators:
         try:
-            requests.delete(f"{api_base_url}/api/v1/generators/{gen_id}", headers=api_headers, timeout=10)
+            requests.delete(
+                f"{api_base_url}/api/v1/generators/{gen_id}",
+                headers=api_headers,
+                timeout=10,
+            )
         except Exception as e:
             print(f"Warning: Error in cleanup: {e}")  # Ignore cleanup failures
 
@@ -382,7 +392,11 @@ def cleanup_contract_tests():
 
     # Cleanup test artifacts if contract testing was enabled
     if os.getenv("CONTRACT_TESTING", "false").lower() == "true":
-        test_files = ["generated_openapi.json", "contract-test-results.xml", "test_output.log"]
+        test_files = [
+            "generated_openapi.json",
+            "contract-test-results.xml",
+            "test_output.log",
+        ]
 
         for file in test_files:
             if os.path.exists(file):

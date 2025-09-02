@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Phase 3: Command Parser Tests
 Tests for natural language command parsing and MCP command recognition
@@ -46,7 +52,11 @@ class TestNaturalLanguageParser(unittest.TestCase):
 
     def test_dataset_commands(self) -> None:
         """Test parsing dataset commands"""
-        test_cases = ["/mcp dataset harmbench", "load dataset jailbreak-prompts", "use harmful-content dataset"]
+        test_cases = [
+            "/mcp dataset harmbench",
+            "load dataset jailbreak-prompts",
+            "use harmful-content dataset",
+        ]
 
         for cmd_text in test_cases:
             with self.subTest(command=cmd_text):
@@ -56,7 +66,12 @@ class TestNaturalLanguageParser(unittest.TestCase):
 
     def test_enhance_commands(self) -> None:
         """Test parsing enhance commands"""
-        test_cases = ["/mcp enhance", "enhance this prompt", "improve this prompt", "make this prompt better"]
+        test_cases = [
+            "/mcp enhance",
+            "enhance this prompt",
+            "improve this prompt",
+            "make this prompt better",
+        ]
 
         for cmd_text in test_cases:
             with self.subTest(command=cmd_text):
@@ -65,7 +80,12 @@ class TestNaturalLanguageParser(unittest.TestCase):
 
     def test_analyze_commands(self) -> None:
         """Test parsing analyze commands"""
-        test_cases = ["/mcp analyze", "analyze this prompt", "analyze for security", "find bias issues"]
+        test_cases = [
+            "/mcp analyze",
+            "analyze this prompt",
+            "analyze for security",
+            "find bias issues",
+        ]
 
         for cmd_text in test_cases:
             with self.subTest(command=cmd_text):
@@ -153,7 +173,11 @@ class TestConfigurationIntentDetector(unittest.TestCase):
 
     def test_orchestrator_intent_detection(self) -> None:
         """Test detecting orchestrator configuration intents"""
-        test_cases = ["Set up a red team test", "Create a new orchestrator", "Run security testing pipeline"]
+        test_cases = [
+            "Set up a red team test",
+            "Create a new orchestrator",
+            "Run security testing pipeline",
+        ]
 
         for text in test_cases:
             with self.subTest(text=text):
@@ -180,7 +204,11 @@ class TestConfigurationIntentDetector(unittest.TestCase):
 
     def test_no_intent_detection(self) -> None:
         """Test that regular text doesn't trigger intent detection"""
-        test_cases = ["Hello, how are you?", "What's the weather like?", "Tell me a joke"]
+        test_cases = [
+            "Hello, how are you?",
+            "What's the weather like?",
+            "Tell me a joke",
+        ]
 
         for text in test_cases:
             with self.subTest(text=text):
@@ -190,8 +218,14 @@ class TestConfigurationIntentDetector(unittest.TestCase):
     def test_extract_generator_params(self) -> None:
         """Test extracting generator parameters from natural language"""
         test_cases = [
-            ("Create a GPT-4 generator with temperature 0.7", {"model": "gpt-4", "temperature": 0.7}),
-            ("Set up OpenAI GPT-3.5 model", {"model": "gpt-3.5-turbo", "provider": "openai"}),
+            (
+                "Create a GPT-4 generator with temperature 0.7",
+                {"model": "gpt-4", "temperature": 0.7},
+            ),
+            (
+                "Set up OpenAI GPT-3.5 model",
+                {"model": "gpt-3.5-turbo", "provider": "openai"},
+            ),
             (
                 "Configure Anthropic Claude with temp 0.5",
                 {"model": "claude-3", "provider": "anthropic", "temperature": 0.5},
@@ -215,7 +249,10 @@ class TestMCPCommandStructure(unittest.TestCase):
     def test_command_creation(self) -> None:
         """Test creating MCPCommand objects"""
         command = MCPCommand(
-            type=MCPCommandType.HELP, subcommand="test", arguments={"param": "value"}, raw_text="/mcp help test"
+            type=MCPCommandType.HELP,
+            subcommand="test",
+            arguments={"param": "value"},
+            raw_text="/mcp help test",
         )
 
         self.assertEqual(command.type, MCPCommandType.HELP)

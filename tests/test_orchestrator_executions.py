@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """Test script to verify orchestrator executions endpoint"""
 
 import json
@@ -39,7 +45,11 @@ if not jwt_token:
         exit(1)
 
 # Headers
-headers = {"Authorization": f"Bearer {jwt_token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+headers = {
+    "Authorization": f"Bearer {jwt_token}",
+    "Content-Type": "application/json",
+    "X-API-Gateway": "APISIX",
+}
 
 print("Testing orchestrator executions endpoint...")
 print(f"API Base URL: {API_BASE_URL}")

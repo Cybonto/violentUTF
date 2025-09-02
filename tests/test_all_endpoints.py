@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Comprehensive ViolentUTF API Endpoint Testing Script
 Tests all 69 API endpoints systematically to ensure they work properly
@@ -145,7 +151,12 @@ def test_health_endpoints():
     print("=" * 50)
 
     test_endpoint("GET", "/health", "Basic health check")
-    test_endpoint("GET", "/ready", "Readiness check", skip_reason="/ready endpoint not implemented")
+    test_endpoint(
+        "GET",
+        "/ready",
+        "Readiness check",
+        skip_reason="/ready endpoint not implemented",
+    )
     test_endpoint("POST", "/api/v1/test/echo", "Echo endpoint", {"message": "test"})
     test_endpoint("GET", "/api/v1/test/echo/hello", "GET echo endpoint")
 
@@ -170,9 +181,24 @@ def test_auth_endpoints():
     test_endpoint("GET", "/api/v1/auth/me", "Get current user")
 
     # Skip endpoints that require specific credentials
-    test_endpoint("POST", "/api/v1/auth/token", "Login endpoint", skip_reason="Requires Keycloak credentials")
-    test_endpoint("POST", "/api/v1/auth/refresh", "Refresh token", skip_reason="Requires refresh token")
-    test_endpoint("POST", "/api/v1/auth/logout", "Logout", skip_reason="Would invalidate test token")
+    test_endpoint(
+        "POST",
+        "/api/v1/auth/token",
+        "Login endpoint",
+        skip_reason="Requires Keycloak credentials",
+    )
+    test_endpoint(
+        "POST",
+        "/api/v1/auth/refresh",
+        "Refresh token",
+        skip_reason="Requires refresh token",
+    )
+    test_endpoint(
+        "POST",
+        "/api/v1/auth/logout",
+        "Logout",
+        skip_reason="Would invalidate test token",
+    )
 
 
 def test_jwt_key_endpoints():
@@ -185,14 +211,20 @@ def test_jwt_key_endpoints():
 
     # Test key creation
     key_created = test_endpoint(
-        "POST", "/api/v1/keys/create", "Create API key", {"name": "test_key", "description": "Test key"}
+        "POST",
+        "/api/v1/keys/create",
+        "Create API key",
+        {"name": "test_key", "description": "Test key"},
     )
 
     # If key creation succeeded, try to delete it
     if key_created:
         # Would need to extract key_id from response to test deletion
         test_endpoint(
-            "DELETE", "/api/v1/keys/test_key_id", "Delete API key", skip_reason="Requires actual key ID from creation"
+            "DELETE",
+            "/api/v1/keys/test_key_id",
+            "Delete API key",
+            skip_reason="Requires actual key ID from creation",
         )
 
 
@@ -205,13 +237,21 @@ def test_database_endpoints():
 
     # Test database initialization first (should fix stats issue)
     test_endpoint(
-        "POST", "/api/v1/database/initialize", "Initialize database", {"force_recreate": False, "backup_existing": True}
+        "POST",
+        "/api/v1/database/initialize",
+        "Initialize database",
+        {"force_recreate": False, "backup_existing": True},
     )
 
     test_endpoint("GET", "/api/v1/database/stats", "Get database stats")
 
     # Skip destructive operations
-    test_endpoint("POST", "/api/v1/database/reset", "Reset database", skip_reason="Destructive operation")
+    test_endpoint(
+        "POST",
+        "/api/v1/database/reset",
+        "Reset database",
+        skip_reason="Destructive operation",
+    )
     test_endpoint("POST", "/api/v1/database/backup", "Backup database")
 
 
@@ -236,7 +276,12 @@ def test_session_endpoints():
     )
 
     # Skip reset to avoid losing session data
-    test_endpoint("POST", "/api/v1/sessions/reset", "Reset session", skip_reason="Would reset test session")
+    test_endpoint(
+        "POST",
+        "/api/v1/sessions/reset",
+        "Reset session",
+        skip_reason="Would reset test session",
+    )
 
 
 def test_config_endpoints():
@@ -259,15 +304,28 @@ def test_config_endpoints():
 
     # Test environment validation
     test_endpoint(
-        "POST", "/api/v1/config/environment/validate", "Validate environment", {"DATABASE_URL": "test://localhost"}
+        "POST",
+        "/api/v1/config/environment/validate",
+        "Validate environment",
+        {"DATABASE_URL": "test://localhost"},
     )
 
     # Test salt generation
     test_endpoint("POST", "/api/v1/config/environment/generate-salt", "Generate salt")
 
     # Skip file upload and environment updates
-    test_endpoint("POST", "/api/v1/config/parameters/load", "Load config from file", skip_reason="Requires file upload")
-    test_endpoint("PUT", "/api/v1/config/environment", "Update environment", skip_reason="Could affect system state")
+    test_endpoint(
+        "POST",
+        "/api/v1/config/parameters/load",
+        "Load config from file",
+        skip_reason="Requires file upload",
+    )
+    test_endpoint(
+        "PUT",
+        "/api/v1/config/environment",
+        "Update environment",
+        skip_reason="Could affect system state",
+    )
 
 
 def test_file_endpoints():
@@ -278,10 +336,30 @@ def test_file_endpoints():
     test_endpoint("GET", "/api/v1/files", "List files")
 
     # Skip file operations that require actual files
-    test_endpoint("POST", "/api/v1/files/upload", "Upload file", skip_reason="Requires multipart file upload")
-    test_endpoint("GET", "/api/v1/files/test_id", "Get file metadata", skip_reason="Requires actual file ID")
-    test_endpoint("GET", "/api/v1/files/test_id/download", "Download file", skip_reason="Requires actual file ID")
-    test_endpoint("DELETE", "/api/v1/files/test_id", "Delete file", skip_reason="Requires actual file ID")
+    test_endpoint(
+        "POST",
+        "/api/v1/files/upload",
+        "Upload file",
+        skip_reason="Requires multipart file upload",
+    )
+    test_endpoint(
+        "GET",
+        "/api/v1/files/test_id",
+        "Get file metadata",
+        skip_reason="Requires actual file ID",
+    )
+    test_endpoint(
+        "GET",
+        "/api/v1/files/test_id/download",
+        "Download file",
+        skip_reason="Requires actual file ID",
+    )
+    test_endpoint(
+        "DELETE",
+        "/api/v1/files/test_id",
+        "Delete file",
+        skip_reason="Requires actual file ID",
+    )
 
 
 def test_generator_endpoints():
@@ -292,7 +370,10 @@ def test_generator_endpoints():
     test_endpoint("GET", "/api/v1/generators/types", "Get generator types")
     test_endpoint("GET", "/api/v1/generators", "List generators")
     test_endpoint(
-        "GET", "/api/v1/generators/apisix/models", "Get APISIX models", skip_reason="Requires provider parameter"
+        "GET",
+        "/api/v1/generators/apisix/models",
+        "Get APISIX models",
+        skip_reason="Requires provider parameter",
     )
 
     # Test parameter endpoint for specific generator type
@@ -309,7 +390,11 @@ def test_generator_endpoints():
     generator_payload = {
         "name": f"test_generator_{int(time.time())}",  # Unique name
         "type": "AI Gateway",  # Use correct generator type
-        "parameters": {"provider": "openai", "model": "gpt-3.5-turbo", "temperature": 0.7},
+        "parameters": {
+            "provider": "openai",
+            "model": "gpt-3.5-turbo",
+            "temperature": 0.7,
+        },
     }
 
     gen_created = test_endpoint("POST", "/api/v1/generators", "Create generator", generator_payload)
@@ -323,10 +408,16 @@ def test_generator_endpoints():
             skip_reason="Requires actual generator ID and working AI service",
         )
         test_endpoint(
-            "PUT", "/api/v1/generators/test_gen_id", "Update generator", skip_reason="Requires actual generator ID"
+            "PUT",
+            "/api/v1/generators/test_gen_id",
+            "Update generator",
+            skip_reason="Requires actual generator ID",
         )
         test_endpoint(
-            "DELETE", "/api/v1/generators/test_gen_id", "Delete generator", skip_reason="Requires actual generator ID"
+            "DELETE",
+            "/api/v1/generators/test_gen_id",
+            "Delete generator",
+            skip_reason="Requires actual generator ID",
         )
 
 
@@ -366,16 +457,42 @@ def test_dataset_endpoints():
     )
 
     # Skip operations requiring actual dataset IDs
-    test_endpoint("GET", "/api/v1/datasets/test_id", "Get dataset details", skip_reason="Requires actual dataset ID")
     test_endpoint(
-        "POST", "/api/v1/datasets/test_id/test", "Test dataset", skip_reason="Requires actual dataset and generator IDs"
+        "GET",
+        "/api/v1/datasets/test_id",
+        "Get dataset details",
+        skip_reason="Requires actual dataset ID",
     )
-    test_endpoint("POST", "/api/v1/datasets/test_id/save", "Save dataset", skip_reason="Requires actual dataset ID")
     test_endpoint(
-        "POST", "/api/v1/datasets/test_id/transform", "Transform dataset", skip_reason="Requires actual dataset ID"
+        "POST",
+        "/api/v1/datasets/test_id/test",
+        "Test dataset",
+        skip_reason="Requires actual dataset and generator IDs",
     )
-    test_endpoint("PUT", "/api/v1/datasets/test_id", "Update dataset", skip_reason="Requires actual dataset ID")
-    test_endpoint("DELETE", "/api/v1/datasets/test_id", "Delete dataset", skip_reason="Requires actual dataset ID")
+    test_endpoint(
+        "POST",
+        "/api/v1/datasets/test_id/save",
+        "Save dataset",
+        skip_reason="Requires actual dataset ID",
+    )
+    test_endpoint(
+        "POST",
+        "/api/v1/datasets/test_id/transform",
+        "Transform dataset",
+        skip_reason="Requires actual dataset ID",
+    )
+    test_endpoint(
+        "PUT",
+        "/api/v1/datasets/test_id",
+        "Update dataset",
+        skip_reason="Requires actual dataset ID",
+    )
+    test_endpoint(
+        "DELETE",
+        "/api/v1/datasets/test_id",
+        "Delete dataset",
+        skip_reason="Requires actual dataset ID",
+    )
 
 
 def test_converter_endpoints():
@@ -390,16 +507,26 @@ def test_converter_endpoints():
     test_endpoint("GET", "/api/v1/converters/params/ROT13Converter", "Get converter params")
 
     # Test converter creation
-    converter_payload = {"name": "test_converter", "converter_type": "ROT13Converter", "parameters": {}}
+    converter_payload = {
+        "name": "test_converter",
+        "converter_type": "ROT13Converter",
+        "parameters": {},
+    }
 
     test_endpoint("POST", "/api/v1/converters", "Create converter", converter_payload)
 
     # Skip operations requiring actual converter IDs
     test_endpoint(
-        "GET", "/api/v1/converters/test_id", "Get converter details", skip_reason="Requires actual converter ID"
+        "GET",
+        "/api/v1/converters/test_id",
+        "Get converter details",
+        skip_reason="Requires actual converter ID",
     )
     test_endpoint(
-        "POST", "/api/v1/converters/test_id/preview", "Preview converter", skip_reason="Requires actual converter ID"
+        "POST",
+        "/api/v1/converters/test_id/preview",
+        "Preview converter",
+        skip_reason="Requires actual converter ID",
     )
     test_endpoint(
         "POST",
@@ -413,9 +540,17 @@ def test_converter_endpoints():
         "Test converter",
         skip_reason="Requires actual converter and dataset IDs",
     )
-    test_endpoint("PUT", "/api/v1/converters/test_id", "Update converter", skip_reason="Requires actual converter ID")
     test_endpoint(
-        "DELETE", "/api/v1/converters/test_id", "Delete converter", skip_reason="Requires actual converter ID"
+        "PUT",
+        "/api/v1/converters/test_id",
+        "Update converter",
+        skip_reason="Requires actual converter ID",
+    )
+    test_endpoint(
+        "DELETE",
+        "/api/v1/converters/test_id",
+        "Delete converter",
+        skip_reason="Requires actual converter ID",
     )
 
 
@@ -432,7 +567,10 @@ def test_scorer_endpoints():
     test_endpoint("GET", "/api/v1/scorers/params/SubStringScorer", "Get scorer params")
 
     # Test scorer validation
-    validation_payload = {"scorer_type": "SubStringScorer", "parameters": {"substring": "test", "category": "match"}}
+    validation_payload = {
+        "scorer_type": "SubStringScorer",
+        "parameters": {"substring": "test", "category": "match"},
+    }
     test_endpoint("POST", "/api/v1/scorers/validate", "Validate scorer config", validation_payload)
 
     # Test scorer creation
@@ -445,10 +583,30 @@ def test_scorer_endpoints():
     test_endpoint("POST", "/api/v1/scorers", "Create scorer", scorer_payload)
 
     # Skip operations requiring actual scorer IDs
-    test_endpoint("POST", "/api/v1/scorers/test_id/test", "Test scorer", skip_reason="Requires actual scorer ID")
-    test_endpoint("POST", "/api/v1/scorers/test_id/clone", "Clone scorer", skip_reason="Requires actual scorer ID")
-    test_endpoint("PUT", "/api/v1/scorers/test_id", "Update scorer", skip_reason="Requires actual scorer ID")
-    test_endpoint("DELETE", "/api/v1/scorers/test_id", "Delete scorer", skip_reason="Requires actual scorer ID")
+    test_endpoint(
+        "POST",
+        "/api/v1/scorers/test_id/test",
+        "Test scorer",
+        skip_reason="Requires actual scorer ID",
+    )
+    test_endpoint(
+        "POST",
+        "/api/v1/scorers/test_id/clone",
+        "Clone scorer",
+        skip_reason="Requires actual scorer ID",
+    )
+    test_endpoint(
+        "PUT",
+        "/api/v1/scorers/test_id",
+        "Update scorer",
+        skip_reason="Requires actual scorer ID",
+    )
+    test_endpoint(
+        "DELETE",
+        "/api/v1/scorers/test_id",
+        "Delete scorer",
+        skip_reason="Requires actual scorer ID",
+    )
 
 
 def print_summary():

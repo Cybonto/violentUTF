@@ -1,28 +1,34 @@
 #!/usr/bin/env python3
-"""
-Diagnose formatting differences between local and CI environment.
-"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Diagnose formatting differences between local and CI environment."""
 
 import os
 import subprocess  # nosec B404 - needed for code quality checks
 import sys
 
 
-def run_command(cmd) -> str:
+def run_command(cmd: str | list[str]) -> str:
     """Run a command and return output."""
     try:
+
         # Convert string command to list for safer execution without shell=True
         if isinstance(cmd, str):
             import shlex
 
             cmd = shlex.split(cmd)
-        result = subprocess.run(cmd, capture_output=True, text=True)  # nosec B603 - controlled input
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)  # nosec B603 - controlled input
         return result.stdout + result.stderr
     except Exception as e:
         return f"Error: {e}"
 
 
 def main() -> None:
+    """Run formatting diagnostics."""
     print("=== Formatting Diagnostics ===\n")
 
     # Check versions
@@ -63,15 +69,15 @@ def main() -> None:
             with open(pf, "rb") as f:
                 first_bytes = f.read(3)
                 if first_bytes == b"\xef\xbb\xbf":
-                    print(f"  ⚠️  Has UTF-8 BOM")
+                    print("  ⚠️  Has UTF-8 BOM")
 
             # Check line endings
             with open(pf, "rb") as f:
                 content = f.read()
                 if b"\r\n" in content:
-                    print(f"  ⚠️  Has CRLF line endings")
+                    print("  ⚠️  Has CRLF line endings")
                 elif b"\r" in content:
-                    print(f"  ⚠️  Has CR line endings")
+                    print("  ⚠️  Has CR line endings")
         else:
             print(f"✗ {pf} - file not found")
 

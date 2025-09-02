@@ -17,14 +17,14 @@ import time
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Dict, Generator, Optional, Self, cast
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class ImportMetrics:
-    """Metrics collected during dataset import operations"""
+    """Metrics collected during dataset import operations."""
 
     # Basic metrics
     total_prompts: int = 0
@@ -54,8 +54,8 @@ class ImportMetrics:
     pyrit_storage_size_mb: float = 0.0
     pyrit_storage_time_seconds: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert metrics to dictionary"""
+    def to_dict(self: "Self") -> Dict[str, object]:
+        """Convert metrics to dictionary."""
         result = asdict(self)
         # Convert datetime objects to ISO strings
         if self.start_time:
@@ -64,8 +64,8 @@ class ImportMetrics:
             result["end_time"] = self.end_time.isoformat()
         return result
 
-    def calculate_rates(self) -> Dict[str, float]:
-        """Calculate derived rates and percentages"""
+    def calculate_rates(self: "Self") -> Dict[str, float]:
+        """Calculate derived rates and percentages."""
         rates = {}
 
         if self.total_prompts > 0:
@@ -83,26 +83,26 @@ class ImportMetrics:
 
 
 class DatasetLogger:
-    """Enhanced logger for dataset operations with structured logging"""
+    """Enhanced logger for dataset operations with structured logging."""
 
-    def __init__(self, logger_name: str = __name__):
+    def __init__(self: "Self", logger_name: str = __name__) -> None:
+        """Initialize instance."""
         self.logger = logging.getLogger(logger_name)
         self.current_operation: Optional[str] = None
         self.operation_start_time: Optional[float] = None
         self.metrics = ImportMetrics()
 
     def _log_structured(
-        self,
+        self: "Self",
         level: int,
         message: str,
         operation: Optional[str] = None,
         dataset_id: Optional[str] = None,
         dataset_type: Optional[str] = None,
         user_id: Optional[str] = None,
-        **kwargs,
+        **kwargs: object,
     ) -> None:
-        """Log with structured data"""
-
+        """Log with structured data."""
         structured_data = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "message": message,
@@ -120,32 +120,67 @@ class DatasetLogger:
         log_message = f"{message} | {json.dumps(structured_data, default=str)}"
         self.logger.log(level, log_message)
 
-    def info(self, message: str, **kwargs) -> None:
-        """Log info message with structured data"""
-        self._log_structured(logging.INFO, message, **kwargs)
+    def info(self: "Self", message: str, **kwargs: object) -> None:
+        """Log info message with structured data."""
+        # Extract expected parameters from kwargs
+        self._log_structured(
+            logging.INFO,
+            message,
+            operation=cast(Optional[str], kwargs.get("operation")),
+            dataset_id=cast(Optional[str], kwargs.get("dataset_id")),
+            dataset_type=cast(Optional[str], kwargs.get("dataset_type")),
+            user_id=cast(Optional[str], kwargs.get("user_id")),
+            **{k: v for k, v in kwargs.items() if k not in ["operation", "dataset_id", "dataset_type", "user_id"]},
+        )
 
-    def warning(self, message: str, **kwargs) -> None:
-        """Log warning message with structured data"""
-        self._log_structured(logging.WARNING, message, **kwargs)
+    def warning(self: "Self", message: str, **kwargs: object) -> None:
+        """Log warning message with structured data."""
+        # Extract expected parameters from kwargs
+        self._log_structured(
+            logging.WARNING,
+            message,
+            operation=cast(Optional[str], kwargs.get("operation")),
+            dataset_id=cast(Optional[str], kwargs.get("dataset_id")),
+            dataset_type=cast(Optional[str], kwargs.get("dataset_type")),
+            user_id=cast(Optional[str], kwargs.get("user_id")),
+            **{k: v for k, v in kwargs.items() if k not in ["operation", "dataset_id", "dataset_type", "user_id"]},
+        )
 
-    def error(self, message: str, **kwargs) -> None:
-        """Log error message with structured data"""
-        self._log_structured(logging.ERROR, message, **kwargs)
+    def error(self: "Self", message: str, **kwargs: object) -> None:
+        """Log error message with structured data."""
+        # Extract expected parameters from kwargs
+        self._log_structured(
+            logging.ERROR,
+            message,
+            operation=cast(Optional[str], kwargs.get("operation")),
+            dataset_id=cast(Optional[str], kwargs.get("dataset_id")),
+            dataset_type=cast(Optional[str], kwargs.get("dataset_type")),
+            user_id=cast(Optional[str], kwargs.get("user_id")),
+            **{k: v for k, v in kwargs.items() if k not in ["operation", "dataset_id", "dataset_type", "user_id"]},
+        )
 
-    def debug(self, message: str, **kwargs) -> None:
-        """Log debug message with structured data"""
-        self._log_structured(logging.DEBUG, message, **kwargs)
+    def debug(self: "Self", message: str, **kwargs: object) -> None:
+        """Log debug message with structured data."""
+        # Extract expected parameters from kwargs
+        self._log_structured(
+            logging.DEBUG,
+            message,
+            operation=cast(Optional[str], kwargs.get("operation")),
+            dataset_id=cast(Optional[str], kwargs.get("dataset_id")),
+            dataset_type=cast(Optional[str], kwargs.get("dataset_type")),
+            user_id=cast(Optional[str], kwargs.get("user_id")),
+            **{k: v for k, v in kwargs.items() if k not in ["operation", "dataset_id", "dataset_type", "user_id"]},
+        )
 
     @contextmanager
     def operation_context(
-        self,
+        self: "Self",
         operation: str,
         dataset_id: Optional[str] = None,
         dataset_type: Optional[str] = None,
         user_id: Optional[str] = None,
-    ):
-        """Context manager for tracking operations"""
-
+    ) -> Generator["Self", None, None]:
+        """Context manager for tracking operations."""
         previous_operation = self.current_operation
         self.current_operation = operation
         self.operation_start_time = time.time()
@@ -186,10 +221,14 @@ class DatasetLogger:
             self.current_operation = previous_operation
 
     def log_chunk_progress(
-        self, chunk_index: int, total_chunks: int, chunk_size: int, success: bool = True, **kwargs
+        self: "Self",
+        chunk_index: int,
+        total_chunks: int,
+        chunk_size: int,
+        success: bool = True,
+        **kwargs: object,
     ) -> None:
-        """Log chunk processing progress"""
-
+        """Log chunk processing progress."""
         progress_percent = (chunk_index + 1) / total_chunks * 100
 
         self.debug(
@@ -208,18 +247,26 @@ class DatasetLogger:
         else:
             self.metrics.failed_chunks += 1
 
-    def log_memory_usage(self, memory_mb: float, operation: str = "unknown") -> None:
-        """Log current memory usage"""
-
-        self.debug(f"Memory usage: {memory_mb:.2f} MB", memory_mb=memory_mb, operation=operation)
+    def log_memory_usage(self: "Self", memory_mb: float, operation: str = "unknown") -> None:
+        """Log current memory usage."""
+        self.debug(
+            f"Memory usage: {memory_mb:.2f} MB",
+            memory_mb=memory_mb,
+            operation=operation,
+        )
 
         # Update metrics
         if memory_mb > self.metrics.peak_memory_mb:
             self.metrics.peak_memory_mb = memory_mb
 
-    def log_retry_attempt(self, attempt: int, max_attempts: int, error: Optional[Exception] = None, **kwargs) -> None:
-        """Log retry attempts"""
-
+    def log_retry_attempt(
+        self: "Self",
+        attempt: int,
+        max_attempts: int,
+        error: Optional[Exception] = None,
+        **kwargs: object,
+    ) -> None:
+        """Log retry attempts."""
         self.warning(
             f"Retry attempt {attempt}/{max_attempts}",
             retry_attempt=attempt,
@@ -235,10 +282,13 @@ class DatasetLogger:
             self.metrics.max_retries_per_operation = attempt
 
     def log_pyrit_storage(
-        self, prompts_stored: int, storage_time_seconds: float, storage_size_mb: float, **kwargs
+        self: "Self",
+        prompts_stored: int,
+        storage_time_seconds: float,
+        storage_size_mb: float,
+        **kwargs: object,
     ) -> None:
-        """Log PyRIT memory storage operations"""
-
+        """Log PyRIT memory storage operations."""
         self.info(
             f"Stored {prompts_stored} prompts to PyRIT memory",
             prompts_stored=prompts_stored,
@@ -251,9 +301,10 @@ class DatasetLogger:
         self.metrics.pyrit_storage_time_seconds += storage_time_seconds
         self.metrics.pyrit_storage_size_mb += storage_size_mb
 
-    def log_import_summary(self, dataset_id: str, dataset_type: str, success: bool = True, **kwargs) -> None:
-        """Log comprehensive import summary"""
-
+    def log_import_summary(
+        self: "Self", dataset_id: str, dataset_type: str, success: bool = True, **kwargs: object
+    ) -> None:
+        """Log comprehensive import summary."""
         # Calculate final metrics
         rates = self.metrics.calculate_rates()
 
@@ -271,13 +322,13 @@ class DatasetLogger:
         else:
             self.error(f"Dataset import failed: {dataset_id}", **summary_data)
 
-    def reset_metrics(self) -> None:
-        """Reset metrics for a new operation"""
+    def reset_metrics(self: "Self") -> None:
+        """Reset metrics for a new operation."""
         self.metrics = ImportMetrics()
         self.metrics.start_time = datetime.now(timezone.utc)
 
-    def finalize_metrics(self) -> ImportMetrics:
-        """Finalize metrics and return copy"""
+    def finalize_metrics(self: "Self") -> ImportMetrics:
+        """Finalize metrics and return copy."""
         self.metrics.end_time = datetime.now(timezone.utc)
 
         if self.metrics.start_time and self.metrics.end_time:
@@ -292,9 +343,13 @@ dataset_logger = DatasetLogger("violentutf.datasets")
 
 # Convenience functions for common logging patterns
 def log_dataset_operation_start(
-    operation: str, dataset_id: str, dataset_type: str, user_id: Optional[str] = None, **kwargs
+    operation: str,
+    dataset_id: str,
+    dataset_type: str,
+    user_id: Optional[str] = None,
+    **kwargs: object,
 ) -> None:
-    """Log the start of a dataset operation"""
+    """Log the start of a dataset operation."""
     dataset_logger.info(
         f"Starting {operation}",
         operation=operation,
@@ -305,8 +360,8 @@ def log_dataset_operation_start(
     )
 
 
-def log_dataset_operation_error(operation: str, dataset_id: str, error: Exception, **kwargs) -> None:
-    """Log a dataset operation error"""
+def log_dataset_operation_error(operation: str, dataset_id: str, error: Exception, **kwargs: object) -> None:
+    """Log a dataset operation error."""
     dataset_logger.error(
         f"Error in {operation}: {str(error)}",
         operation=operation,
@@ -317,6 +372,11 @@ def log_dataset_operation_error(operation: str, dataset_id: str, error: Exceptio
     )
 
 
-def log_dataset_operation_success(operation: str, dataset_id: str, **kwargs) -> None:
-    """Log successful completion of a dataset operation"""
-    dataset_logger.info(f"Successfully completed {operation}", operation=operation, dataset_id=dataset_id, **kwargs)
+def log_dataset_operation_success(operation: str, dataset_id: str, **kwargs: object) -> None:
+    """Log successful completion of a dataset operation."""
+    dataset_logger.info(
+        f"Successfully completed {operation} for dataset {dataset_id}",
+        operation=operation,
+        dataset_id=dataset_id,
+        **kwargs,
+    )

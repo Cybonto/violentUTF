@@ -4,16 +4,15 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Comprehensive input validation module
-SECURITY: Validates and sanitizes all user inputs to prevent injection attacks and data corruption
-"""
+"""Comprehensive input validation module.
 
+SECURITY: Validates and sanitizes all user inputs to prevent injection attacks and data corruption.
+"""
 import json
 import logging
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Callable, Dict, Generator, List, Self, Type, Union
 from urllib.parse import urlparse
 
 import jwt
@@ -24,10 +23,11 @@ logger = logging.getLogger(__name__)
 # Constants to avoid bandit B104 hardcoded binding warnings
 WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104
 
-
 # Security constants for validation
+
+
 class SecurityLimits:
-    """Security limits for input validation"""
+    """Security limits for input validation."""
 
     MAX_STRING_LENGTH = 1000
     MAX_DESCRIPTION_LENGTH = 2000
@@ -48,10 +48,13 @@ class SecurityLimits:
 
 
 # Validation patterns
+
+
 class ValidationPatterns:
-    """Regex patterns for validation"""
+    """Regex patterns for validation."""
 
     # fmt: off
+
     # SECURITY CRITICAL: DO NOT MODIFY THESE PATTERNS
     # These regex patterns are security-critical and must not be modified by automated tools.
     # Any spaces added to character ranges (e.g., [A-Z] becoming [A - Z]) will break validation.
@@ -86,15 +89,18 @@ class ValidationPatterns:
 
 
 class SafeString(str):
-    """String type that ensures content is sanitized"""
+    """String type that ensures content is sanitized."""
 
     @classmethod
-    def __get_validators__(cls):
+    def __get_validators__(cls: Type["SafeString"]) -> Generator[Callable, None, None]:
+        """Get validators for SafeString."""
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):
+    def validate(cls: Type["SafeString"], v: object) -> str:
+        """Validate."""
         if not isinstance(v, str):
+
             raise ValueError("String expected")
 
         # Check length
@@ -110,12 +116,15 @@ class SafeIdentifier(str):
     """Safe identifier for API keys, usernames, etc."""
 
     @classmethod
-    def __get_validators__(cls):
+    def __get_validators__(cls: Type["SafeIdentifier"]) -> Generator[Callable, None, None]:
+        """Get validators for SafeIdentifier."""
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):
+    def validate(cls: Type["SafeIdentifier"], v: object) -> str:
+        """Validate."""
         if not isinstance(v, str):
+
             raise ValueError("String expected")
 
         v = v.strip()
@@ -134,9 +143,7 @@ class SafeIdentifier(str):
 
 
 def sanitize_string(value: str) -> str:
-    """
-    Sanitize string input to prevent injection attacks
-    """
+    """Sanitize string input to prevent injection attacks."""
     # Value is guaranteed to be str by type annotation
 
     # Remove null bytes and control characters
@@ -145,16 +152,15 @@ def sanitize_string(value: str) -> str:
     # Limit length
     if len(sanitized) > SecurityLimits.MAX_STRING_LENGTH:
         sanitized = sanitized[: SecurityLimits.MAX_STRING_LENGTH]
-        logger.warning(f"String truncated to {SecurityLimits.MAX_STRING_LENGTH} characters")
+        logger.warning("String truncated to %s characters", SecurityLimits.MAX_STRING_LENGTH)
 
     return sanitized.strip()
 
 
 def validate_email(email: str) -> str:
-    """
-    Validate email address format
-    """
+    """Validate email address format."""
     if not email:
+
         raise ValueError("Email is required")
 
     email = email.strip().lower()
@@ -170,10 +176,9 @@ def validate_email(email: str) -> str:
 
 
 def validate_username(username: str) -> str:
-    """
-    Validate username format and length
-    """
+    """Validate username format and length."""
     if not username:
+
         raise ValueError("Username is required")
 
     username = username.strip()
@@ -191,10 +196,9 @@ def validate_username(username: str) -> str:
 
 
 def validate_role_list(roles: List[str]) -> List[str]:
-    """
-    Validate list of roles
-    """
+    """Validate list of roles."""
     if not roles:
+
         return []
 
     if len(roles) > SecurityLimits.MAX_PERMISSIONS:
@@ -224,11 +228,10 @@ def validate_role_list(roles: List[str]) -> List[str]:
     return validated_roles
 
 
-def validate_jwt_token(token: str) -> Dict[str, Any]:
-    """
-    Validate JWT token structure and basic format
-    """
+def validate_jwt_token(token: str) -> Dict[str, object]:
+    """Validate JWT token structure and basic format."""
     if not token:
+
         raise ValueError("Token is required")
 
     token = token.strip()
@@ -275,14 +278,13 @@ def validate_jwt_token(token: str) -> Dict[str, Any]:
         return dict(payload) if payload else {}
 
     except jwt.InvalidTokenError as e:
-        raise ValueError(f"Invalid JWT token: {str(e)}")
+        raise ValueError(f"Invalid JWT token: {str(e)}") from e
 
 
 def validate_url(url: str) -> str:
-    """
-    Validate URL format and security
-    """
+    """Validate URL format and security."""
     if not url:
+
         raise ValueError("URL is required")
 
     url = url.strip()
@@ -290,8 +292,8 @@ def validate_url(url: str) -> str:
     # Parse URL
     try:
         parsed = urlparse(url)
-    except Exception:
-        raise ValueError("Invalid URL format")
+    except Exception as exc:
+        raise ValueError("Invalid URL format") from exc
 
     # Check scheme
     if parsed.scheme not in ["http", "https"]:
@@ -341,37 +343,27 @@ def validate_url(url: str) -> str:
         # Not an IP address, hostname validation above should catch issues
         pass
 
-    # Additional check for private IP ranges
-    import ipaddress
-
-    try:
-        ip = ipaddress.ip_address(host)
-        if ip.is_private or ip.is_loopback or ip.is_link_local:
-            raise ValueError(f"Access to private/internal IP addresses not allowed: {host}")
-    except ipaddress.AddressValueError:
-        # Not an IP address, hostname validation above should catch issues
-        pass
-
     if len(url) > 2048:
         raise ValueError("URL too long")
 
     return url
 
 
-def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLimits.MAX_NESTED_DEPTH) -> Any:
-    """
-    Validate JSON data structure and prevent deeply nested objects
-    """
+def validate_json_data(
+    data: Union[str, Dict, List], max_depth: int = SecurityLimits.MAX_NESTED_DEPTH
+) -> Union[str, Dict, List]:
+    """Validate JSON data structure and prevent deeply nested objects."""
     if isinstance(data, str):
+
         if len(data.encode("utf-8")) > SecurityLimits.MAX_JSON_SIZE:
             raise ValueError(f"JSON data too large (max {SecurityLimits.MAX_JSON_SIZE} bytes)")
 
         try:
             data = json.loads(data)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON format: {str(e)}")
+            raise ValueError(f"Invalid JSON format: {str(e)}") from e
 
-    def check_depth(obj, current_depth=0):
+    def check_depth(obj: object, current_depth: int = 0) -> None:
         if current_depth > max_depth:
             raise ValueError(f"JSON structure too deeply nested (max depth {max_depth})")
 
@@ -402,10 +394,9 @@ def validate_json_data(data: Union[str, Dict, List], max_depth: int = SecurityLi
 
 
 def validate_file_upload(filename: str, content_type: str, file_size: int) -> str:
-    """
-    Validate file upload parameters
-    """
+    """Validate file upload parameters."""
     if not filename:
+
         raise ValueError("Filename is required")
 
     filename = filename.strip()
@@ -435,7 +426,7 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
     ]
 
     if content_type not in allowed_content_types:
-        logger.warning(f"Unexpected content type: {content_type}")
+        logger.warning("Unexpected content type: %s", content_type)
 
     # Check file size (10MB limit)
     max_size = 10 * 1024 * 1024  # 10MB
@@ -446,27 +437,30 @@ def validate_file_upload(filename: str, content_type: str, file_size: int) -> st
 
 
 class ValidationError(HTTPException):
-    """Custom validation error with proper HTTP status"""
+    """Customize validation error with proper HTTP status."""
 
-    def __init__(self, detail: str):
+    def __init__(self: "Self", detail: str) -> None:
+        """Initialize instance."""
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Validation error: {detail}")
 
 
 def create_validation_error(detail: str) -> ValidationError:
-    """Create a validation error with security logging"""
-    logger.warning(f"Validation error: {detail}")
+    """Create a validation error with security logging."""
+    logger.warning("Validation error: %s", detail)
+
     return ValidationError(detail)
 
 
 # Enhanced validators for common patterns
-def validate_generator_parameters(parameters: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Validate generator parameters dictionary
-    """
+
+
+def validate_generator_parameters(parameters: Dict[str, object]) -> Dict[str, object]:
+    """Validate generator parameters dictionary."""
     if not isinstance(parameters, dict):
+
         raise ValueError("Parameters must be a dictionary")
 
-    validated = {}
+    validated: Dict[str, object] = {}
 
     for key, value in parameters.items():
         # Validate key

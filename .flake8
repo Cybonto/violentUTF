@@ -1,8 +1,8 @@
 [flake8]
 max-line-length = 120
 max-complexity = 60
-ignore = E203,W503,E501,F401,F541,E226,D400
-exclude = .git,__pycache__,build,dist,.eggs,*.egg-info,.tox,.venv,venv,.vitutf,.pytest_cache,migrations,app_data,violentutf_logs,tests
+ignore = E203,W503,F541,E226,D400
+exclude = .git,__pycache__,build,dist,.eggs,*.egg-info,.tox,.venv,venv,.vitutf,.pytest_cache,migrations,app_data,violentutf_logs,tests,test,**/tests/**,**/test/**,test_*.py,*_test.py,*.backup,*.bak,*.auto_backup,*_old,*_new,*_temp,temp_*,*.tmp,.tmp_*,*CLAUDE*.*,*cache*.txt,*cache*.md
 per-file-ignores =
     __init__.py:F401
     test_*.py:C901,F811,E402

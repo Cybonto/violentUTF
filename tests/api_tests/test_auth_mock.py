@@ -1,5 +1,12 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Authentication mock layer for API contract testing.
+
 Provides simplified authentication bypass for testing purposes.
 """
 
@@ -7,12 +14,18 @@ import json
 import logging
 import os
 import time
-from typing import Any, Dict, Optional
-from unittest.mock import Mock, patch
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Optional
+import types
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
+    import pytest
+from unittest.mock import MagicMock, Mock, patch
 
 import jwt
 from fastapi import HTTPException
 from fastapi.security import HTTPBearer
+from fastapi.testclient import TestClient
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +37,8 @@ TEST_API_KEY = "test_api_key_for_contract_testing"  # nosec B105 - test secret
 class MockTokenManager:
     """Mock token manager for contract testing."""
 
-    def __init__(self):
+    def __init__(self: "MockTokenManager") -> None:
+        """Initialize authentication manager with test user payload."""
         self.test_user_payload = {
             "sub": "test_user",
             "username": "violentutf.test",
@@ -35,20 +49,20 @@ class MockTokenManager:
             "iss": "ViolentUTF-Test",
         }
 
-    def generate_test_token(self, user_payload: Optional[Dict[str, Any]] = None) -> str:
+    def generate_test_token(self: "MockTokenManager", user_payload: Optional[Dict[str, Any]] = None) -> str:
         """Generate a test JWT token."""
         payload = user_payload or self.test_user_payload
         return jwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
 
-    def extract_user_token(self) -> Optional[str]:
+    def extract_user_token(self: "MockTokenManager") -> Optional[str]:
         """Mock token extraction."""
         return self.generate_test_token()
 
-    def has_ai_access(self, token: str) -> bool:
+    def has_ai_access(self: "MockTokenManager", token: str) -> bool:
         """Mock AI access check."""
         return True
 
-    def get_user_roles(self, token: str) -> list:
+    def get_user_roles(self: "MockTokenManager", token: str) -> list:
         """Mock user roles."""
         return ["ai-api-access", "admin"]
 
@@ -56,11 +70,12 @@ class MockTokenManager:
 class MockAuthenticationMiddleware:
     """Mock authentication middleware for contract testing."""
 
-    def __init__(self, app):
+    def __init__(self: "MockAuthenticationMiddleware", app: "FastAPI") -> None:
+        """Initialize mock authentication middleware with app."""
         self.app = app
         self.token_manager = MockTokenManager()
 
-    async def __call__(self, scope, receive, send):
+    async def __call__(self: "MockAuthenticationMiddleware", scope: Dict[str, Any], receive: Callable[[], Awaitable[Dict[str, Any]]], send: Callable[[Dict[str, Any]], Awaitable[None]]) -> None:
         """Mock authentication middleware."""
         # Add test authentication headers
         if scope["type"] == "http":
@@ -81,7 +96,7 @@ class MockAuthenticationMiddleware:
 
 
 def setup_test_environment() -> None:
-    """Setup test environment variables for contract testing."""
+    """Set up test environment variables for contract testing."""
     test_env_vars = {
         "JWT_SECRET_KEY": TEST_JWT_SECRET,
         "SECRET_KEY": TEST_JWT_SECRET,
@@ -118,7 +133,7 @@ def mock_jwt_decode(token: str, secret: str = None, algorithms: list = None) -> 
     }
 
 
-def mock_requests_post(*args, **kwargs) -> Any:
+def mock_requests_post(*args: object, **kwargs: object) -> Mock:
     """Mock requests.post for authentication calls."""
     mock_response = Mock()
     mock_response.status_code = 200
@@ -146,10 +161,11 @@ def mock_apisix_endpoints() -> Dict[str, Dict[str, str]]:
 class ContractTestingPatches:
     """Context manager for applying all contract testing patches."""
 
-    def __init__(self):
+    def __init__(self: "ContractTestingPatches") -> None:
+        """Initialize contract testing patches context manager."""
         self.patches = []
 
-    def __enter__(self):
+    def __enter__(self: "ContractTestingPatches") -> "ContractTestingPatches":
         """Apply all contract testing patches."""
         setup_test_environment()
 
@@ -190,13 +206,13 @@ class ContractTestingPatches:
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self: "ContractTestingPatches", exc_type: Optional[type], exc_val: Optional[BaseException], exc_tb: Optional[types.TracebackType]) -> None:
         """Stop all patches."""
         for patch_obj in self.patches:
             patch_obj.stop()
 
 
-def create_test_client_with_auth() -> Any:
+def create_test_client_with_auth() -> Optional[TestClient]:
     """Create a test client with authentication mocking."""
     from fastapi.testclient import TestClient
 
@@ -214,13 +230,13 @@ def create_test_client_with_auth() -> Any:
 
 
 # Pytest fixtures for contract testing
-def pytest_configure(config) -> None:
+def pytest_configure(config: "pytest.Config") -> None:
     """Configure pytest for contract testing."""
     setup_test_environment()
 
 
-def pytest_fixture_setup() -> Any:
-    """Setup fixtures for contract testing."""
+def pytest_fixture_setup() -> ContractTestingPatches:
+    """Set up fixtures for contract testing."""
     return ContractTestingPatches()
 
 
@@ -246,14 +262,14 @@ def validate_response_schema(response_data: Dict[str, Any], expected_schema: Dic
         jsonschema.validate(response_data, expected_schema)
         return True
     except jsonschema.ValidationError as e:
-        logger.error(f"Response schema validation failed: {e}")
+        logger.error("Response schema validation failed: %s", e)
         return False
     except Exception as e:
-        logger.error(f"Schema validation error: {e}")
+        logger.error("Schema validation error: %s", e)
         return False
 
 
-def create_mock_database_session() -> Any:
+def create_mock_database_session() -> MagicMock:
     """Create a mock database session for testing."""
     from unittest.mock import Mock
 

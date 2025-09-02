@@ -5,8 +5,7 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-APISIX Gateway Authentication Configuration Script.
+"""APISIX Gateway Authentication Configuration Script.
 
 Configures HMAC-based authentication between APISIX and FastAPI.
 """
@@ -24,17 +23,25 @@ import requests
 class APISIXGatewayAuth:
     """Manage APISIX Gateway Authentication configuration."""
 
-    def __init__(self, admin_url: str = "http://localhost:9180", admin_key: str = ""):
+    def __init__(
+        self: "APISIXGatewayAuth",
+        admin_url: str = "http://localhost:9180",
+        admin_key: str = "",
+    ) -> None:
         """Initialize APISIX Gateway Authentication manager."""
         self.admin_url = admin_url.rstrip("/")
+
         self.admin_key = admin_key
         self.headers = {"X-API-KEY": admin_key, "Content-Type": "application/json"}
 
     def generate_hmac_signature(
-        self, gateway_secret: str, method: str, path: str, timestamp: Optional[str] = None
+        self: "APISIXGatewayAuth",
+        gateway_secret: str,
+        method: str,
+        path: str,
+        timestamp: Optional[str] = None,
     ) -> tuple:
-        """
-        Generate HMAC signature for APISIX gateway authentication
+        """Generate HMAC signature for APISIX gateway authentication
 
         Args:
             gateway_secret: Shared secret between APISIX and FastAPI
@@ -46,6 +53,7 @@ class APISIXGatewayAuth:
             Tuple of (signature, timestamp)
         """
         if timestamp is None:
+
             timestamp = str(int(time.time()))
 
         # Create signature payload: METHOD:PATH:TIMESTAMP
@@ -53,14 +61,19 @@ class APISIXGatewayAuth:
 
         # Generate HMAC-SHA256 signature
         signature = hmac.new(
-            gateway_secret.encode("utf-8"), signature_payload.encode("utf-8"), hashlib.sha256
+            gateway_secret.encode("utf-8"),
+            signature_payload.encode("utf-8"),
+            hashlib.sha256,
         ).hexdigest()
 
         return signature, timestamp
 
-    def test_authentication(self, gateway_secret: str, fastapi_url: str = "http://localhost:8000") -> bool:
-        """
-        Test HMAC authentication with FastAPI
+    def test_authentication(
+        self: "APISIXGatewayAuth",
+        gateway_secret: str,
+        fastapi_url: str = "http://localhost:8000",
+    ) -> bool:
+        """Test HMAC authentication with FastAPI
 
         Args:
             gateway_secret: Shared secret
@@ -70,6 +83,7 @@ class APISIXGatewayAuth:
             True if authentication successful, False otherwise
         """
         try:
+
             # Test endpoint
             method = "GET"
             path = "/health"
@@ -98,13 +112,12 @@ class APISIXGatewayAuth:
         except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
             print(f"❌ Gateway authentication test error: {str(e)}")
             return False
-        except Exception as e:
+        except (ValueError, TypeError, OSError) as e:
             print(f"❌ Unexpected error during authentication test: {str(e)}")
             return False
 
-    def configure_plugin_config(self, gateway_secret: str) -> bool:
-        """
-        Configure APISIX plugin for gateway authentication
+    def configure_plugin_config(self: "APISIXGatewayAuth", gateway_secret: str) -> bool:
+        """Configure APISIX plugin for gateway authentication
 
         Args:
             gateway_secret: Shared secret for HMAC
@@ -113,6 +126,7 @@ class APISIXGatewayAuth:
             True if configuration successful, False otherwise
         """
         try:
+
             # Plugin configuration for global use
             plugin_config = {
                 "id": "gateway-auth-global",
@@ -122,6 +136,7 @@ class APISIXGatewayAuth:
                         "functions": [
                             """
                             return function(conf, ctx)
+
                                 local ngx = ngx
                                 local ngx_time = ngx.time
                                 local resty_hmac = require("resty.hmac")
@@ -177,14 +192,15 @@ class APISIXGatewayAuth:
         except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
             print(f"❌ Error configuring APISIX plugin: {str(e)}")
             return False
-        except Exception as e:
+        except (ValueError, TypeError, OSError) as e:
             print(f"❌ Unexpected error configuring APISIX plugin: {str(e)}")
             return False
 
 
 def main() -> None:
-    """Main configuration function"""
+    """Configure APISIX Gateway Authentication."""
     print("🔐 APISIX Gateway Authentication Configuration")
+
     print("=" * 50)
 
     # Get configuration from environment

@@ -1,16 +1,20 @@
-import asyncio
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""1 Configure Generators module."""
+
 import json
 import math
 import os
 import pathlib
-import sys
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union, cast
 
-import pandas as pd
 import requests
 import streamlit as st
-import yaml
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -69,8 +73,9 @@ if "api_session_data" not in st.session_state:
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway"""
+    """Get authentication header for API requests through APISIX Gateway."""
     try:
+
         from utils.jwt_manager import jwt_manager
 
         # Get valid token (automatically handles refresh if needed)
@@ -100,28 +105,29 @@ def get_auth_headers() -> Dict[str, str]:
 
         return headers
     except Exception as e:
-        logger.error(f"Failed to get auth headers: {e}")
+        logger.error("Failed to get auth headers: %s", e)
         return {}
 
 
-def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
+def api_request(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, object]]:  # noqa: ANN401
     """Make an authenticated API request through APISIX Gateway"""
     headers = get_auth_headers()
+
     if not headers.get("Authorization"):
         logger.warning("No authentication token available for API request")
         st.error("❌ No authentication token available. Please refresh the page.")
         return None
 
     try:
-        logger.debug(f"Making {method} request to {url} through APISIX Gateway")
+        logger.debug("Making %s request to %s through APISIX Gateway", method, url)
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
 
         if response.status_code == 200:
-            return response.json()
+            return dict(response.json())
         elif response.status_code == 201:
-            return response.json()
+            return dict(response.json())
         elif response.status_code == 400:
-            logger.error(f"400 Bad Request: {response.text}")
+            logger.error("400 Bad Request: %s", response.text)
             try:
                 error_detail = response.json().get("detail", response.text)
                 st.error(f"❌ Request validation failed: {error_detail}")
@@ -129,19 +135,19 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
                 st.error(f"❌ Bad request: {response.text}")
             return None
         elif response.status_code == 401:
-            logger.error(f"401 Unauthorized: {response.text}")
+            logger.error("401 Unauthorized: %s", response.text)
             st.error("❌ Authentication failed. Please refresh your token.")
             return None
         elif response.status_code == 403:
-            logger.error(f"403 Forbidden: {response.text}")
+            logger.error("403 Forbidden: %s", response.text)
             st.error("❌ Access forbidden. Check your permissions.")
             return None
         elif response.status_code == 404:
-            logger.error(f"404 Not Found: {url} - {response.text}")
+            logger.error("404 Not Found: %s - %s", url, response.text)
             st.error("❌ API endpoint not found. Check APISIX configuration.")
             return None
         elif response.status_code == 422:
-            logger.error(f"422 Validation Error: {response.text}")
+            logger.error("422 Validation Error: %s", response.text)
             try:
                 error_detail = response.json().get("detail", response.text)
                 st.error(f"❌ Validation error: {error_detail}")
@@ -149,38 +155,39 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
                 st.error(f"❌ Validation failed: {response.text}")
             return None
         elif response.status_code == 500:
-            logger.error(f"500 Internal Server Error: {response.text}")
+            logger.error("500 Internal Server Error: %s", response.text)
             st.error("❌ Server error. Check FastAPI logs.")
             return None
         elif response.status_code == 502:
-            logger.error(f"502 Bad Gateway: {response.text}")
+            logger.error("502 Bad Gateway: %s", response.text)
             st.error("❌ Bad Gateway. APISIX cannot reach FastAPI service.")
             return None
         elif response.status_code == 503:
-            logger.error(f"503 Service Unavailable: {response.text}")
+            logger.error("503 Service Unavailable: %s", response.text)
             st.error("❌ Service unavailable. FastAPI service may be down.")
             return None
         else:
-            logger.error(f"API Error {response.status_code}: {url} - {response.text}")
+            logger.error("API Error %s: %s - %s", response.status_code, url, response.text)
             st.error(f"❌ API request failed: {response.status_code} - {response.text}")
             return None
     except requests.exceptions.ConnectionError as e:
-        logger.error(f"Connection error to {url}: {e}")
+        logger.error("Connection error to %s: %s", url, e)
         st.error(f"❌ Connection error: Cannot reach APISIX Gateway at {url}")
         return None
     except requests.exceptions.Timeout as e:
-        logger.error(f"Timeout error to {url}: {e}")
+        logger.error("Timeout error to %s: %s", url, e)
         st.error("❌ Request timeout. Gateway or backend service is slow.")
         return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"Request exception to {url}: {e}")
+        logger.error("Request exception to %s: %s", url, e)
         st.error(f"❌ Request error: {e}")
         return None
 
 
-def create_compatible_api_token() -> None:
+def create_compatible_api_token() -> Optional[str]:
     """Create a FastAPI-compatible token using JWT manager"""
     try:
+
         from utils.jwt_manager import jwt_manager
         from utils.user_context import get_user_context_for_token
 
@@ -193,15 +200,17 @@ def create_compatible_api_token() -> None:
 
         if api_token:
             logger.info("Successfully created API token using JWT manager")
-            return api_token
+            return str(api_token)
         else:
-            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
+            st.error(
+                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
+            )
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 
     except Exception as e:
         st.error("❌ Failed to generate API token. Please try refreshing the page.")
-        logger.error(f"Token creation failed: {e}")
+        logger.error("Token creation failed: %s", e)
         return None
 
 
@@ -209,44 +218,50 @@ def create_compatible_api_token() -> None:
 
 
 def load_generator_types_from_api() -> List[str]:
-    """Load available generator types from API"""
+    """Load available generator type from API."""
     logger.debug(f"Loading generator types from: {API_ENDPOINTS['generator_types']}")
+
     data = api_request("GET", API_ENDPOINTS["generator_types"])
     if data:
-        generator_types = data.get("generator_types", [])
+        generator_types_data = cast(List[str], data.get("generator_types", []))
+        generator_types = list(generator_types_data)
         st.session_state.api_generator_types = generator_types
-        logger.info(f"Loaded {len(generator_types)} generator types: {generator_types}")
+        logger.info("Loaded %s generator types: %s", len(generator_types), generator_types)
         return generator_types
     else:
         logger.warning("Failed to load generator types from API")
         return []
 
 
-def load_generators_from_api() -> List[Dict[str, Any]]:
-    """Load existing generators from API"""
+def load_generators_from_api() -> List[Dict[str, object]]:
+    """Load existing generator from API."""
     data = api_request("GET", API_ENDPOINTS["generators"])
-    if data:
-        st.session_state.api_generators = {gen["name"]: gen for gen in data.get("generators", [])}
-        return st.session_state.api_generators
-    return {}
 
-
-def get_generator_params_from_api(generator_type: str):
-    """Get parameter definitions for a generator type from API"""
-    url = API_ENDPOINTS["generator_params"].format(generator_type=generator_type)
-    data = api_request("GET", url)
     if data:
-        return data.get("parameters", [])
+        data_dict = cast(Dict[str, Any], data)
+        generators_list = cast(List[Dict[str, Any]], data_dict.get("generators", []))
+        st.session_state.api_generators = {gen["name"]: gen for gen in generators_list}
+        return list(generators_list)
     return []
 
 
-def save_generator_to_api(name: str, generator_type: str, parameters: Dict[str, Any]) -> bool:
+def get_generator_params_from_api(generator_type: str) -> List[Dict[str, object]]:
+    """Get parameter definition for a generator type from API."""
+    url = API_ENDPOINTS["generator_params"].format(generator_type=generator_type)
+
+    data = api_request("GET", url)
+    if data:
+        return list(cast(List[Dict[str, object]], cast(Dict[str, Any], data).get("parameters", [])))
+    return []
+
+
+def save_generator_to_api(name: str, generator_type: str, parameters: Dict[str, object]) -> bool:
     """Save a new generator configuration to API"""
     logger.info(f"Saving generator: name='{name}', type='{generator_type}', params={parameters}")
 
     payload = {"name": name, "type": generator_type, "parameters": parameters}
 
-    logger.debug(f"API payload: {payload}")
+    logger.debug("API payload: %s", payload)
     logger.debug(f"API endpoint: {API_ENDPOINTS['generators']}")
 
     data = api_request("POST", API_ENDPOINTS["generators"], json=payload)
@@ -260,9 +275,10 @@ def save_generator_to_api(name: str, generator_type: str, parameters: Dict[str, 
         return False
 
 
-def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = None) -> None:
+def test_generator_via_orchestrator(generator_name: str, custom_prompt: Optional[str] = None) -> Dict[str, object]:
     """Test a generator via orchestrator API (replacing removed test endpoint)"""
     # Find generator from name
+
     generator = st.session_state.api_generators.get(generator_name)
     if not generator:
         return {"success": False, "error": "Generator not found"}
@@ -277,17 +293,23 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
         # Get current user context for generator resolution
         user_info = api_request("GET", API_ENDPOINTS["auth_token_info"])
         user_context = user_info.get("username") if user_info else "unknown_user"
-        logger.info(f"User info from API: {user_info}")
-        logger.info(f"Using user context: {user_context}")
+        logger.info("User info from API: %s", user_info)
+        logger.info("Using user context: %s", user_context)
 
         # Also debug the generator being tested
-        logger.info(f"Generator being tested: {generator_name}")
-        logger.info(f"Generator details: {generator}")
-        logger.info(f"Available generators in session: {list(st.session_state.api_generators.keys())}")
+        logger.info("Generator being tested: %s", generator_name)
+        logger.info("Generator details: %s", generator)
+        logger.info(
+            "Available generators in session: %s",
+            list(st.session_state.api_generators.keys()),
+        )
 
         # Create temporary orchestrator for testing
         orchestrator_params = {
-            "objective_target": {"type": "configured_generator", "generator_name": generator_name},
+            "objective_target": {
+                "type": "configured_generator",
+                "generator_name": generator_name,
+            },
             "user_context": user_context,  # Add user context for generator resolution
         }
 
@@ -299,28 +321,33 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
             "tags": ["generator_test", generator_name, user_context],
         }
 
-        logger.info(f"Creating test orchestrator with payload: {orchestrator_payload}")
+        logger.info("Creating test orchestrator with payload: %s", orchestrator_payload)
         logger.info(f"Orchestrator create URL: {API_ENDPOINTS['orchestrator_create']}")
 
         # Create orchestrator
         try:
             orchestrator_response = api_request("POST", API_ENDPOINTS["orchestrator_create"], json=orchestrator_payload)
         except Exception as e:
-            logger.error(f"Exception during orchestrator creation: {e}")
-            return {"success": False, "error": f"Exception during orchestrator creation: {str(e)}"}
+            logger.error("Exception during orchestrator creation: %s", e)
+            return {
+                "success": False,
+                "error": f"Exception during orchestrator creation: {str(e)}",
+            }
 
         if not orchestrator_response:
             logger.error("Failed to create orchestrator - no response from API")
             # Try to get more detailed error information
             try:
-                import requests
 
                 headers = get_auth_headers()
                 debug_response = requests.post(
-                    API_ENDPOINTS["orchestrator_create"], json=orchestrator_payload, headers=headers, timeout=30
+                    API_ENDPOINTS["orchestrator_create"],
+                    json=orchestrator_payload,
+                    headers=headers,
+                    timeout=30,
                 )
-                logger.error(f"Debug response status: {debug_response.status_code}")
-                logger.error(f"Debug response text: {debug_response.text}")
+                logger.error("Debug response status: %s", debug_response.status_code)
+                logger.error("Debug response text: %s", debug_response.text)
 
                 # Try to parse JSON error for more details
                 try:
@@ -329,21 +356,27 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
                     error_id = error_details.get("error_id", "unknown")
                     return {
                         "success": False,
-                        "error": f"Orchestrator creation failed (ID: {error_id}): {error_msg}. This suggests an issue with the orchestrator service or generator lookup.",
+                        "error": (
+                            f"Orchestrator creation failed (ID: {error_id}): {error_msg}. "
+                            "This suggests an issue with the orchestrator service or generator lookup."
+                        ),
                     }
                 except Exception:
                     return {
                         "success": False,
-                        "error": f"Failed to create test orchestrator - API returned {debug_response.status_code}: {debug_response.text}",
+                        "error": (
+                            f"Failed to create test orchestrator - API returned "
+                            f"{debug_response.status_code}: {debug_response.text}"
+                        ),
                     }
             except Exception as debug_error:
-                logger.error(f"Debug request also failed: {debug_error}")
+                logger.error("Debug request also failed: %s", debug_error)
                 return {
                     "success": False,
                     "error": "Failed to create test orchestrator - check API connectivity and authentication",
                 }
 
-        logger.info(f"Orchestrator creation response: {orchestrator_response}")
+        logger.info("Orchestrator creation response: %s", orchestrator_response)
 
         orchestrator_id = orchestrator_response.get("orchestrator_id")
 
@@ -355,8 +388,12 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
         }
 
         execution_url = API_ENDPOINTS["orchestrator_execute"].format(orchestrator_id=orchestrator_id)
-        logger.info(f"Executing orchestrator {orchestrator_id} with payload: {execution_payload}")
-        logger.info(f"Execution URL: {execution_url}")
+        logger.info(
+            "Executing orchestrator %s with payload: %s",
+            orchestrator_id,
+            execution_payload,
+        )
+        logger.info("Execution URL: %s", execution_url)
 
         start_time = datetime.now()
         execution_response = api_request("POST", execution_url, json=execution_payload)
@@ -366,37 +403,40 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
             logger.error("Failed to execute orchestrator - no response from API")
             # Try to get more detailed error information
             try:
-                import requests
 
                 headers = get_auth_headers()
                 debug_response = requests.post(execution_url, json=execution_payload, headers=headers, timeout=30)
-                logger.error(f"Debug execution response status: {debug_response.status_code}")
-                logger.error(f"Debug execution response text: {debug_response.text}")
+                logger.error("Debug execution response status: %s", debug_response.status_code)
+                logger.error("Debug execution response text: %s", debug_response.text)
                 return {
                     "success": False,
-                    "error": f"Failed to execute test orchestrator - API returned {debug_response.status_code}: {debug_response.text}",
+                    "error": (
+                        f"Failed to execute test orchestrator - API returned "
+                        f"{debug_response.status_code}: {debug_response.text}"
+                    ),
                     "duration_ms": duration_ms,
                 }
             except Exception as debug_error:
-                logger.error(f"Debug execution request also failed: {debug_error}")
+                logger.error("Debug execution request also failed: %s", debug_error)
                 return {
                     "success": False,
                     "error": "Failed to execute test orchestrator - check API connectivity and orchestrator status",
                     "duration_ms": duration_ms,
                 }
 
-        logger.info(f"Execution response: {execution_response}")
+        logger.info("Execution response: %s", execution_response)
 
         execution_status = execution_response.get("status")
 
         if execution_status == "completed":
             # Extract response from orchestrator results
-            prompt_responses = execution_response.get("prompt_request_responses", [])
+            execution_dict = cast(Dict[str, Any], execution_response)
+            prompt_responses = cast(List[Dict[str, Any]], execution_dict.get("prompt_request_responses", []))
             if prompt_responses and len(prompt_responses) > 0:
                 response_data = prompt_responses[0]
-                response_content = response_data.get("response", {})
+                response_content = cast(Dict[str, Any], response_data.get("response", {}))
                 if response_content:
-                    actual_response = response_content.get("content", "No response content")
+                    actual_response = str(response_content.get("content", "No response content"))
                     return {
                         "success": True,
                         "response": actual_response,
@@ -404,11 +444,19 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
                         "duration_ms": duration_ms,
                     }
 
-            return {"success": False, "error": "No response received from generator", "duration_ms": duration_ms}
+            return {
+                "success": False,
+                "error": "No response received from generator",
+                "duration_ms": duration_ms,
+            }
 
         elif execution_status == "failed":
             error_msg = execution_response.get("error", "Unknown execution error")
-            return {"success": False, "error": f"Test execution failed: {error_msg}", "duration_ms": duration_ms}
+            return {
+                "success": False,
+                "error": f"Test execution failed: {error_msg}",
+                "duration_ms": duration_ms,
+            }
 
         else:
             return {
@@ -418,7 +466,7 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
             }
 
     except Exception as e:
-        logger.error(f"Error testing generator via orchestrator: {e}")
+        logger.error("Error testing generator via orchestrator: %s", e)
         # Show the actual exception in the UI for debugging
         import traceback
 
@@ -429,6 +477,7 @@ def test_generator_via_orchestrator(generator_name: str, custom_prompt: str = No
 def delete_generator_via_api(generator_name: str) -> bool:
     """Delete a generator via API"""
     generator = st.session_state.api_generators.get(generator_name)
+
     if not generator:
         logger.warning(f"Generator '{generator_name}' not found in local state")
         return False
@@ -464,15 +513,17 @@ def delete_generator_via_api(generator_name: str) -> bool:
 
 
 def get_apisix_models_from_api(provider: str) -> List[str]:
-    """Get available models for a provider from APISIX Gateway"""
+    """Get available model for a provider from APISIX Gateway."""
     url = f"{API_ENDPOINTS['apisix_models']}?provider={provider}"
+
     data = api_request("GET", url)
     if data:
-        return data.get("models", [])
+        models_data = cast(List[str], data.get("models", []))
+        return list(models_data)
     return []
 
 
-def get_provider_display_name(provider: str):
+def get_provider_display_name(provider: str) -> str:
     """Get user-friendly display name for provider"""
     provider_names = {
         "openai": "OpenAI",
@@ -484,9 +535,10 @@ def get_provider_display_name(provider: str):
     return provider_names.get(provider, provider)
 
 
-def save_session_to_api(session_update: Dict[str, Any]):
+def save_session_to_api(session_update: Dict[str, object]) -> bool:
     """Save session state to API"""
     data = api_request("PUT", API_ENDPOINTS["sessions_update"], json=session_update)
+
     if data:
         st.session_state.api_session_data = data
         return True
@@ -494,9 +546,10 @@ def save_session_to_api(session_update: Dict[str, Any]):
 
 
 # --- Main Page Function ---
-def main():
-    """Renders the Configure Generators page content with API backend."""
+def main() -> None:
+    """Render the Configure Generators page content with API backend.."""
     logger.debug("Configure Generators page (API-backed) loading.")
+
     st.set_page_config(
         page_title="Configure Generators",
         # page_icon="⚙️",
@@ -538,7 +591,7 @@ def main():
     display_main_content()
 
 
-def display_main_content():
+def display_main_content() -> None:
     """Display the main content with clean organization"""
     # Single column layout - Existing generators first, then add new generator
 
@@ -558,25 +611,26 @@ def display_main_content():
     proceed_to_next_step()
 
 
-def display_header():
-    """Displays the main header for the page."""
+def display_header() -> None:
+    """Display the main header for the page.."""
     st.title("⚙️ Configure Generators")
+
     st.markdown("*Configure AI model generators for red-teaming conversations*")
 
 
-def auto_load_existing_generators():
-    """
-    Automatically load existing generators on page load
+def auto_load_existing_generators() -> None:
+    """Automatically load existing generators on page load
 
     This ensures that previously configured generators are immediately visible
     when the page loads, without requiring manual refresh.
     """
     # Only load if not already loaded or if forced reload
+
     if not st.session_state.api_generators or st.session_state.get("force_reload_generators", False):
         with st.spinner("Loading existing generators..."):
             generators = load_generators_from_api()
             if generators:
-                logger.info(f"Auto-loaded {len(generators)} existing generators")
+                logger.info("Auto-loaded %s existing generators", len(generators))
             else:
                 logger.info("No existing generators found during auto-load")
 
@@ -585,7 +639,7 @@ def auto_load_existing_generators():
             del st.session_state["force_reload_generators"]
 
 
-def manage_existing_generators_clean():
+def manage_existing_generators_clean() -> None:
     """Clean display of existing generators"""
     generators = st.session_state.api_generators
 
@@ -631,9 +685,10 @@ def manage_existing_generators_clean():
         manage_existing_generators_actions()
 
 
-def manage_existing_generators_actions():
-    """Clean management actions for generators"""
+def manage_existing_generators_actions() -> None:
+    """Clean management action for generators."""
     generators = st.session_state.api_generators
+
     generator_names = list(generators.keys())
 
     # Refresh button
@@ -658,9 +713,10 @@ def manage_existing_generators_actions():
                 st.warning("Select at least one generator to delete.")
 
 
-def delete_generators_action(selected_generators: List[str]):
+def delete_generators_action(selected_generators: List[str]) -> None:
     """Handle deletion of selected generators"""
-    logger.info(f"Processing deletion for: {selected_generators}")
+    logger.info("Processing deletion for: %s", selected_generators)
+
     success_count = 0
     total_count = len(selected_generators)
 
@@ -691,13 +747,13 @@ def delete_generators_action(selected_generators: List[str]):
     else:
         st.error(f"❌ Failed to delete any of the {total_count} selected generators.")
 
-    logger.info(f"Deletion complete: {success_count}/{total_count} successful")
+    logger.info("Deletion complete: %s/%s successful", success_count, total_count)
 
 
-def add_new_generator_form():
+def add_new_generator_form() -> None:
     """Clean form for adding new generators"""
-
     # Load generator types if not already loaded
+
     if not st.session_state.api_generator_types:
         with st.spinner("Loading generator types..."):
             load_generator_types_from_api()
@@ -756,7 +812,7 @@ def add_new_generator_form():
                     st.warning(f"No parameters defined for {generator_type} or API unavailable.")
             except Exception as e:
                 st.error(f"Error getting params for {generator_type}: {e}")
-                logger.exception(f"Error getting params for {generator_type}.")
+                logger.exception("Error getting params for %s.", generator_type)
         else:
             st.info("Select a Generator Technology to see parameters.")
 
@@ -771,28 +827,34 @@ def add_new_generator_form():
             save_generator_form_submission(param_defs_for_render)
 
 
-def handle_ai_gateway_provider_selection():
+def handle_ai_gateway_provider_selection() -> None:
     """Handle AI Gateway provider selection outside the form to enable dynamic model loading"""
     try:
+
         # Add refresh button for debugging
-        col_refresh, col_debug = st.columns([3, 1])
+        _, col_debug = st.columns([3, 1])
         with col_debug:
             if st.button("🔄 Refresh Providers", help="Refresh provider list from API"):
                 st.session_state.pop("ai_gateway_param_cache", None)
                 st.rerun()
 
         param_defs = get_generator_params_from_api("AI Gateway")
-        provider_param = next((p for p in param_defs if p["name"] == "provider"), None)
+        provider_param = next(
+            (cast(Dict[str, Any], p) for p in param_defs if cast(Dict[str, Any], p)["name"] == "provider"), None
+        )
 
         # Debug information
         with st.expander("🔍 Debug Info", expanded=False):
             st.write("**API Response Debug:**")
             st.write(f"Total parameters found: {len(param_defs)}")
             if provider_param:
-                st.write(f"Provider options: {provider_param['options']}")
-                st.write(f"Total providers: {len(provider_param['options'])}")
+                provider_dict = provider_param
+                st.write(f"Provider options: {provider_dict['options']}")
+                st.write(f"Total providers: {len(cast(List[str], provider_dict['options']))}")
                 # Highlight OpenAPI providers
-                openapi_providers = [p for p in provider_param["options"] if p.startswith("openapi-")]
+                openapi_providers = [
+                    str(p) for p in cast(List[str], provider_dict["options"]) if str(p).startswith("openapi-")
+                ]
                 if openapi_providers:
                     st.success(f"✅ OpenAPI providers found: {openapi_providers}")
                 else:
@@ -806,8 +868,20 @@ def handle_ai_gateway_provider_selection():
                 openapi_data = api_request("GET", API_ENDPOINTS["openapi_providers"])
                 if openapi_data:
                     st.write(f"Direct API call result: {openapi_data}")
-                    if isinstance(openapi_data, list) and len(openapi_data) > 0:
-                        st.success(f"✅ Direct API call found {len(openapi_data)} OpenAPI providers")
+                    # Extract list data or convert to list for consistent handling
+                    # Handle both list and dict response types using simple approach
+                    data_as_list: List[object] = []
+                    try:
+                        if hasattr(openapi_data, "__len__"):  # Has length (list or dict)
+                            if hasattr(openapi_data, "get"):  # It's a dict
+                                providers_data = cast(List[Any], openapi_data.get("providers", []))
+                                data_as_list = list(providers_data)
+                            else:  # It's a list
+                                data_as_list = list(openapi_data)
+                    except Exception:
+                        data_as_list = []
+                    if len(data_as_list) > 0:
+                        st.success(f"✅ Direct API call found {len(data_as_list)} OpenAPI providers")
                     else:
                         st.warning("⚠️ Direct API call returned empty list")
                 else:
@@ -861,12 +935,13 @@ def handle_ai_gateway_provider_selection():
 
     except Exception as e:
         st.error(f"Error setting up AI Gateway provider selection: {e}")
-        logger.error(f"Error in handle_ai_gateway_provider_selection: {e}")
+        logger.error("Error in handle_ai_gateway_provider_selection: %s", e)
 
 
-def configure_generator_parameters(generator_type: str, param_defs: List[Dict[str, Any]]):
-    """Display input fields for configuring parameters"""
+def configure_generator_parameters(generator_type: str, param_defs: List[Dict[str, object]]) -> None:
+    """Display input field for configuring parameters."""
     with st.expander(f"Configure Parameters for `{generator_type}`", expanded=True):
+
         if not param_defs:
             st.caption("No parameters defined for this generator type.")
             return
@@ -881,6 +956,7 @@ def configure_generator_parameters(generator_type: str, param_defs: List[Dict[st
 def should_show_parameter(param_name: str, provider: str) -> bool:
     """Determine if a parameter should be shown based on provider selection"""
     # For standard cloud providers, hide API key and custom endpoint
+
     # These are handled by the APISIX gateway configuration
     cloud_providers = ["openai", "anthropic"]
 
@@ -900,9 +976,10 @@ def should_show_parameter(param_name: str, provider: str) -> bool:
     return True
 
 
-def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
-    """Configure AI Gateway parameters with dynamic model loading and two-column layout"""
+def configure_ai_gateway_parameters(param_defs: List[Dict[str, object]]) -> None:
+    """Configure AI Gateway parameter with dynamic model loading and two-column layout."""
     # Split parameters by category
+
     config_params = [p for p in param_defs if p.get("category") == "configuration"]
     model_params = [p for p in param_defs if p.get("category") == "model"]
 
@@ -948,7 +1025,7 @@ def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
         for param in config_params:
             if param["name"] not in ["provider", "model"]:
                 # Skip API key and endpoint for standard cloud providers
-                if should_show_parameter(param["name"], selected_provider):
+                if should_show_parameter(str(param["name"]), selected_provider):
                     render_parameter_widget("AI Gateway", param)
 
     with param_col2:
@@ -959,15 +1036,17 @@ def configure_ai_gateway_parameters(param_defs: List[Dict[str, Any]]):
             render_parameter_widget("AI Gateway", param)
 
 
-def configure_standard_parameters(generator_type: str, param_defs: List[Dict[str, Any]]):
+def configure_standard_parameters(generator_type: str, param_defs: List[Dict[str, object]]) -> None:
     """Configure standard generator parameters"""
     for param in param_defs:
+
         render_parameter_widget(generator_type, param)
 
 
-def render_parameter_widget(generator_type: str, param: Dict[str, Any]):
+def render_parameter_widget(generator_type: str, param: Dict[str, object]) -> None:
     """Render a single parameter widget"""
     param_name = param["name"]
+
     param_type = param["type"]
     param_required = param["required"]
     param_description = param["description"]
@@ -975,7 +1054,7 @@ def render_parameter_widget(generator_type: str, param: Dict[str, Any]):
     param_options = param.get("options")
     label = f"{param_description}{'*' if param_required else ''}"
     key = f"{generator_type}_{param_name}"
-    help_text = param_description + (" (Required)" if param_required else " (Optional)")
+    help_text = str(param_description) + (" (Required)" if param_required else " (Optional)")
 
     if generator_type in ["OpenAIDALLETarget", "OpenAITTSTarget"] and param_name in [
         "deployment_name",
@@ -995,12 +1074,27 @@ def render_parameter_widget(generator_type: str, param: Dict[str, Any]):
                 default_index = param_options.index(param_default) if param_default in param_options else 0
             except ValueError:
                 default_index = 0
-            st.selectbox(label, options=param_options, index=default_index, key=key, help=help_text)
+            st.selectbox(
+                label,
+                options=param_options,
+                index=default_index,
+                key=key,
+                help=help_text,
+            )
         elif param_type == "bool":
-            st.checkbox(label, value=param_default if param_default is not None else False, key=key, help=help_text)
+            st.checkbox(
+                label,
+                value=bool(param_default) if param_default is not None else False,
+                key=key,
+                help=help_text,
+            )
         elif param_type == "str":
             default_value = param_default or ""
-            if "key" in param_name.lower() or "secret" in param_name.lower() or "token" in param_name.lower():
+            if (
+                "key" in str(param_name).lower()
+                or "secret" in str(param_name).lower()
+                or "token" in str(param_name).lower()
+            ):
                 st.text_input(label, value=default_value, key=key, type="password", help=help_text)
             else:
                 st.text_input(label, value=default_value, key=key, help=help_text)
@@ -1008,15 +1102,28 @@ def render_parameter_widget(generator_type: str, param: Dict[str, Any]):
             default_json_str = (
                 json.dumps(param_default, indent=2) if isinstance(param_default, dict) else (param_default or "")
             )
-            st.text_area(label + " (Enter as JSON)", value=default_json_str, key=key, help=help_text, height=100)
+            st.text_area(
+                label + " (Enter as JSON)",
+                value=default_json_str,
+                key=key,
+                help=help_text,
+                height=100,
+            )
         elif param_type == "int":
-            num_default = param_default if param_default is not None else 0
+            num_default = int(cast(Union[str, int, float], param_default)) if param_default is not None else 0
             st.number_input(label, value=num_default, step=1, key=key, help=help_text)
         elif param_type == "float":
-            num_default = param_default if param_default is not None else 0.0
-            step = param.get("step", 0.01)
+            float_default = float(cast(Union[str, int, float], param_default)) if param_default is not None else 0.0
+            step = float(cast(Union[str, int, float], param.get("step", 0.01)))
             precision = max(0, -int(math.log10(step))) if step > 0 and step != 1 else 2
-            st.number_input(label, value=num_default, step=step, format=f"%.{precision}f", key=key, help=help_text)
+            st.number_input(
+                label,
+                value=float_default,
+                step=step,
+                format=f"%.{precision}f",
+                key=key,
+                help=help_text,
+            )
         elif param_type == "list":
             default_str = (
                 ",".join(map(str, param_default)) if isinstance(param_default, list) else (param_default or "")
@@ -1035,9 +1142,10 @@ def render_parameter_widget(generator_type: str, param: Dict[str, Any]):
         logger.exception(f"Error rendering widget '{param_name}' for type '{generator_type}'.")
 
 
-def save_generator_form_submission(param_defs_for_render: List[Dict[str, Any]]):
+def save_generator_form_submission(param_defs_for_render: List[Dict[str, object]]) -> None:
     """Save the generator form submission directly without testing"""
     submitted_generator_name = st.session_state.get("new_generator_name")
+
     submitted_generator_type = st.session_state.get("generator_type_select")
     logger.info(
         f"Save Generator form submitted for name: '{submitted_generator_name}' type: '{submitted_generator_type}'"
@@ -1070,17 +1178,18 @@ def save_generator_form_submission(param_defs_for_render: List[Dict[str, Any]]):
             param_description = param.get("description", param_name)
             widget_key = f"{submitted_generator_type}_{param_name}"
 
-            processed_value = None
+            processed_value: Any = None
             if widget_key in st.session_state:
                 raw_value = st.session_state[widget_key]
                 if isinstance(raw_value, str):
-                    processed_value = raw_value.strip() if raw_value and raw_value.strip() else None
-                    if param_type == "list" and processed_value:
-                        processed_value = [item.strip() for item in processed_value.split(",") if item.strip()]
+                    cleaned_value = raw_value.strip() if raw_value and raw_value.strip() else None
+                    if param_type == "list" and cleaned_value:
+                        processed_value = [item.strip() for item in cleaned_value.split(",") if item.strip()]
+                    else:
+                        # Use Any type for processed_value to handle multiple types
+                        processed_value = cleaned_value
                         if not processed_value:
                             processed_value = None
-                    elif param_type == "list":
-                        processed_value = None
                 elif (
                     param_name == "headers"
                     and param_type == "dict"
@@ -1114,7 +1223,9 @@ def save_generator_form_submission(param_defs_for_render: List[Dict[str, Any]]):
                         logger.error(f"Invalid float '{raw_value}' for '{param_name}'")
                         processed_value = None
                 elif param_type == "selectbox":
-                    if param_required and (raw_value is None or raw_value not in param.get("options", [])):
+                    if param_required and (
+                        raw_value is None or raw_value not in cast(List[Any], param.get("options", []))
+                    ):
                         validation_passed = False
                         st.error(f"Please select a valid option for '{param_description}'.")
                         logger.error(f"Invalid selection for '{param_name}'")
@@ -1127,7 +1238,7 @@ def save_generator_form_submission(param_defs_for_render: List[Dict[str, Any]]):
                 if not param_required and processed_value is not None and param_default is not None:
                     is_default = False
                     if param_type == "float":
-                        is_default = math.isclose(processed_value, param_default)
+                        is_default = math.isclose(processed_value, float(cast(Union[str, int, float], param_default)))
                     elif param_type == "selectbox":
                         is_default = processed_value == param_default
                     elif processed_value == param_default:
@@ -1135,7 +1246,8 @@ def save_generator_form_submission(param_defs_for_render: List[Dict[str, Any]]):
 
                     if is_default:
                         logger.debug(
-                            f"Optional parameter '{param_name}' value '{processed_value}' matches default '{param_default}'. Excluding."
+                            f"Optional parameter '{param_name}' value '{processed_value}' "
+                            f"matches default '{param_default}'. Excluding."
                         )
                         processed_value = None
             else:
@@ -1164,9 +1276,13 @@ def save_generator_form_submission(param_defs_for_render: List[Dict[str, Any]]):
                     parameters[param_name] = processed_value
 
         if missing_required_fields:
-            st.error(f"The following required fields are missing: {', '.join(missing_required_fields)}")
+            st.error(
+                f"The following required fields are missing: "
+                f"{', '.join([str(field) for field in missing_required_fields])}"
+            )
             logger.error(
-                f"Required fields missing for '{submitted_generator_name}': {', '.join(missing_required_fields)}"
+                f"Required fields missing for '{submitted_generator_name}': "
+                f"{', '.join([str(field) for field in missing_required_fields])}"
             )
             return
 
@@ -1190,12 +1306,14 @@ def save_generator_form_submission(param_defs_for_render: List[Dict[str, Any]]):
                     validation_passed = False
                 if "api_version" not in parameters or not parameters["api_version"]:
                     azure_api_version_default = next(
-                        (p.get("default") for p in param_defs_for_render if p["name"] == "api_version"), None
+                        (p.get("default") for p in param_defs_for_render if p["name"] == "api_version"),
+                        None,
                     )
                     if azure_api_version_default:
                         parameters["api_version"] = azure_api_version_default
                         logger.info(
-                            f"Using default API version '{azure_api_version_default}' for Azure target '{submitted_generator_name}'."
+                            f"Using default API version '{azure_api_version_default}' "
+                            f"for Azure target '{submitted_generator_name}'."
                         )
 
         if not validation_passed:
@@ -1204,7 +1322,7 @@ def save_generator_form_submission(param_defs_for_render: List[Dict[str, Any]]):
 
         log_params = parameters.copy()
         for key in list(log_params.keys()):
-            if "key" in key.lower() or "token" in key.lower() or "secret" in key.lower():
+            if "key" in str(key).lower() or "token" in str(key).lower() or "secret" in str(key).lower():
                 log_params[key] = "****"
         logger.debug(f"Final parameters collected for '{submitted_generator_name}': {log_params}")
 
@@ -1219,9 +1337,10 @@ def save_generator_form_submission(param_defs_for_render: List[Dict[str, Any]]):
         logger.exception(f"Unexpected error during parameter collection for '{submitted_generator_name}'.")
 
 
-def save_generator_directly(generator_name: str, generator_type: str, parameters: Dict):
+def save_generator_directly(generator_name: str, generator_type: str, parameters: Dict) -> None:
     """Save generator directly without opening test interface"""
     log_params_received = parameters.copy()
+
     for key in list(log_params_received.keys()):
         if "key" in key.lower() or "token" in key.lower() or "secret" in key.lower():
             log_params_received[key] = "****"
@@ -1259,7 +1378,7 @@ def save_generator_directly(generator_name: str, generator_type: str, parameters
         logger.error(f"Error saving generator '{generator_name}': {e}")
 
 
-def display_interactive_chat_test_section():
+def display_interactive_chat_test_section() -> None:
     """Display interactive chat test section for existing generators"""
     generators = st.session_state.api_generators
 
@@ -1285,16 +1404,19 @@ def display_interactive_chat_test_section():
     # Get the selected generator
     selected_generator = generators[selected_generator_name]
     st.write(
-        f"**Selected Generator:** {selected_generator.get('name', 'Unknown')} ({selected_generator.get('type', 'Unknown')})"
+        f"**Selected Generator:** {selected_generator.get('name', 'Unknown')} "
+        f"({selected_generator.get('type', 'Unknown')})"
     )
 
     # Display chat interface for selected generator
+    # Check if generator name exists and call chat interface
     display_generator_test_chat(selected_generator_name)
 
 
-def display_generator_test_chat(generator_name: str = None):
+def display_generator_test_chat(generator_name: Optional[str] = None) -> None:
     """Display the interactive chat interface for testing generator"""
     if not generator_name:
+
         return
 
     # Initialize chat history for this generator if not exists
@@ -1320,7 +1442,7 @@ def display_generator_test_chat(generator_name: str = None):
                 show_technical = st.checkbox("🔧 Show technical details", key=f"show_tech_{generator_name}")
 
             # Display chat in a clean format
-            for i, (user_msg, ai_msg, duration) in enumerate(chat_history):
+            for user_msg, ai_msg, duration in chat_history:
                 # User message
                 with st.chat_message("user"):
                     st.markdown(user_msg)
@@ -1348,7 +1470,9 @@ def display_generator_test_chat(generator_name: str = None):
     with st.form(key=f"chat_form_{generator_name}"):
         user_input = st.text_area(
             "💬 Enter your test message:",
-            placeholder="Type a message to test the generator (e.g., 'Tell me a joke', 'Explain quantum physics', etc.)...",
+            placeholder=(
+                "Type a message to test the generator (e.g., 'Tell me a joke', " "'Explain quantum physics', etc.)..."
+            ),
             height=80,
             key=f"chat_input_{generator_name}",
             help="Test your generator with any message to see how it responds",
@@ -1378,13 +1502,13 @@ def display_generator_test_chat(generator_name: str = None):
 
 
 def extract_clean_response(ai_msg: str) -> str:
-    """
-    Extract clean AI response from technical details
+    """Extract clean AI response from technical details
 
     The API response may contain technical information like configuration details,
     endpoints, etc. This function extracts just the actual AI model response.
     """
     if ai_msg.startswith("❌"):
+
         return ai_msg
 
     # For API errors from GSAi, show the full error message
@@ -1472,7 +1596,7 @@ def extract_clean_response(ai_msg: str) -> str:
     return cleaned.strip() or ai_msg
 
 
-def send_test_message_to_generator(generator_name: str, message: str):
+def send_test_message_to_generator(generator_name: str, message: str) -> None:
     """Send a test message to a specific generator"""
     chat_key = f"generator_chat_{generator_name}"
 
@@ -1510,9 +1634,10 @@ def send_test_message_to_generator(generator_name: str, message: str):
 # The old /generators/{id}/test endpoint has been retired in favor of orchestrator workflows
 
 
-def proceed_to_next_step():
+def proceed_to_next_step() -> None:
     """Provide button to proceed to next step"""
     st.divider()
+
     st.header("🚀 Proceed to Next Step")
     st.markdown("*Continue to dataset configuration once generators are ready*")
 
@@ -1539,7 +1664,10 @@ def proceed_to_next_step():
 
         # Save progress to session
         session_update = {
-            "workflow_state": {"current_step": "proceeding_to_datasets", "generators_ready": len(ready_generators)},
+            "workflow_state": {
+                "current_step": "proceeding_to_datasets",
+                "generators_ready": len(ready_generators),
+            },
             "temporary_data": {"transition_time": datetime.now().isoformat()},
         }
         save_session_to_api(session_update)

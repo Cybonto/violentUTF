@@ -1,8 +1,15 @@
-import json
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Ironutf module."""
+
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, Self, cast
 
 import requests
 import streamlit as st
@@ -39,6 +46,7 @@ if VIOLENTUTF_API_URL.endswith("/api"):
 def get_auth_headers() -> Dict[str, str]:
     """Get authentication headers for API requests through APISIX Gateway"""
     try:
+
         #         from utils.jwt_manager import jwt_manager # F811: removed duplicate import
 
         # Use jwt_manager for automatic token refresh
@@ -66,13 +74,14 @@ def get_auth_headers() -> Dict[str, str]:
 
         return headers
     except Exception as e:
-        logger.error(f"Failed to get auth headers: {e}")
+        logger.error("Failed to get auth headers: %s", e)
         return {}
 
 
-def create_compatible_api_token():
+def create_compatible_api_token() -> Optional[str]:
     """Create a FastAPI - compatible token using JWT manager - NEVER implement manually"""
     try:
+
         #         from utils.jwt_manager import jwt_manager # F811: removed duplicate import
 
         # Check for Keycloak token first
@@ -84,7 +93,11 @@ def create_compatible_api_token():
             decoded = {
                 "preferred_username": "keycloak_user",
                 "email": "user@keycloak.local",
-                "roles": ["ai - api - access", "admin", "apisix - admin"],  # Include admin roles for IronUTF
+                "roles": [
+                    "ai - api - access",
+                    "admin",
+                    "apisix - admin",
+                ],  # Include admin roles for IronUTF
             }
             api_token = jwt_manager.create_token(decoded)
         else:
@@ -95,62 +108,76 @@ def create_compatible_api_token():
                 "email": "violentutf@example.com",
                 "name": "ViolentUTF Admin",
                 "sub": "violentutf - admin",
-                "roles": ["ai - api - access", "admin", "apisix - admin"],  # Admin roles for IronUTF
+                "roles": [
+                    "ai - api - access",
+                    "admin",
+                    "apisix - admin",
+                ],  # Admin roles for IronUTF
             }
             api_token = jwt_manager.create_token(mock_keycloak_data)
 
         if api_token:
             logger.info("Successfully created admin API token for IronUTF using JWT manager")
-            return api_token
+            return cast(str, api_token)
         else:
-            st.error("🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable.")
+            st.error(
+                "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
+            )
             logger.error("Failed to create API token - JWT secret key not available")
             return None
 
     except Exception as e:
         st.error("❌ Failed to generate API token. Please try refreshing the page.")
-        logger.error(f"Token creation failed: {e}")
+        logger.error("Token creation failed: %s", e)
         return None
 
 
 class APISIXAdmin:
-    """Class to interact with APISIX Admin through ViolentUTF API"""
+    """Clas to interact with APISIX Admin through ViolentUTF API"""
 
-    def __init__(self):
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         self.api_url = f"{VIOLENTUTF_API_URL}/api/v1/apisix-admin"
+
         self.headers = get_auth_headers()
 
-    def get_all_routes(self) -> Optional[Dict]:
+    def get_all_routes(self: "Self") -> Optional[Dict]:
         """Get all AI routes from APISIX through API"""
         try:
+
             response = requests.get(f"{self.api_url}/routes", headers=self.headers, timeout=10)
             if response.status_code == 200:
-                return response.json()
+                return cast(Dict[Any, Any], response.json())
             else:
-                logger.error(f"Failed to get routes: {response.status_code} - {response.text}")
+                logger.error("Failed to get routes: %s - %s", response.status_code, response.text)
                 return None
         except Exception as e:
-            logger.error(f"Error getting routes: {e}")
+            logger.error("Error getting routes: %s", e)
             return None
 
-    def get_route(self, route_id: str) -> Optional[Dict]:
+    def get_route(self: "Self", route_id: str) -> Optional[Dict]:
         """Get specific route configuration through API"""
         try:
+
             response = requests.get(f"{self.api_url}/routes/{route_id}", headers=self.headers, timeout=10)
             if response.status_code == 200:
-                return response.json()
+                return cast(Dict[Any, Any], response.json())
             else:
-                logger.error(f"Failed to get route {route_id}: {response.status_code}")
+                logger.error("Failed to get route %s: %s", route_id, response.status_code)
                 return None
         except Exception as e:
-            logger.error(f"Error getting route {route_id}: {e}")
+            logger.error("Error getting route %s: %s", route_id, e)
             return None
 
-    def update_route_plugins(self, route_id: str, route_config: Dict) -> tuple[bool, str]:
+    def update_route_plugins(self: "Self", route_id: str, route_config: Dict) -> tuple[bool, str]:
         """Update route configuration with new plugins through API"""
         try:
+
             response = requests.put(
-                f"{self.api_url}/routes/{route_id}/plugins", headers=self.headers, json=route_config, timeout=10
+                f"{self.api_url}/routes/{route_id}/plugins",
+                headers=self.headers,
+                json=route_config,
+                timeout=10,
             )
             if response.status_code in [200, 201]:
                 return True, "Success"
@@ -169,20 +196,19 @@ class APISIXAdmin:
             return False, error_msg
 
 
-def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai - prompt - guard plugin configuration"""
+def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict[str, Any]:
+    """Provide Render UI for ai - prompt - guard plugin configuration"""
     # st.subheader("🛡️ AI Prompt Guard Configuration")
 
     with st.expander("ℹ️ About AI Prompt Guard", expanded=False):
         st.markdown(
-            """
-        The **ai - prompt - guard** plugin helps protect your AI models from harmful or inappropriate prompts by:
+            """The **ai - prompt - guard** plugin helps protect your AI models from harmful or inappropriate prompts by:
         - Blocking prompts containing specific patterns or keywords
         - Allowing only prompts that match certain criteria
         - Customizing error messages for blocked requests
 
         [📚 Official Documentation](https://apisix.apache.org/docs/apisix/plugins/ai-prompt-guard/)
-        """
+"""
         )
 
     config = current_config.get("ai - prompt - guard", {})
@@ -232,7 +258,9 @@ def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
 
         # Deny message
         deny_message = st.text_input(
-            "Custom deny message", key=f"deny_message_{route_id}", help="Message shown when a prompt is blocked"
+            "Custom deny message",
+            key=f"deny_message_{route_id}",
+            help="Message shown when a prompt is blocked",
         )
 
     with col2:
@@ -254,7 +282,7 @@ def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
         )
 
     # Build new configuration
-    new_config = {}
+    new_config: Dict[str, Any] = {}
 
     if new_deny_patterns.strip():
         new_config["deny_patterns"] = [p.strip() for p in new_deny_patterns.strip().split("\n") if p.strip()]
@@ -272,8 +300,6 @@ def render_ai_prompt_guard_config(current_config: Dict, route_id: str) -> Dict:
 
 def test_plugin_configuration(route_id: str, provider: str, model: str, plugins: Dict) -> Dict:
     """Test plugin configuration with a simple prompt."""
-    import requests
-
     try:
         # Get API key
         api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
@@ -334,7 +360,12 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
             elif "content" in data and isinstance(data["content"], str):
                 response_text = data["content"]
 
-            return {"success": True, "test_prompt": test_prompt, "response": response_text, "filtered": False}
+            return {
+                "success": True,
+                "test_prompt": test_prompt,
+                "response": response_text,
+                "filtered": False,
+            }
         elif response.status_code == 400:
             # Check if it's a plugin - related error
             error_text = response.text
@@ -355,7 +386,10 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
             else:
                 return {"success": False, "error": f"Bad request: {error_text}"}
         else:
-            return {"success": False, "error": f"HTTP {response.status_code}: {response.text}"}
+            return {
+                "success": False,
+                "error": f"HTTP {response.status_code}: {response.text}",
+            }
 
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -364,6 +398,7 @@ def test_plugin_configuration(route_id: str, provider: str, model: str, plugins:
 def detect_provider_type(route_config: Dict) -> str:
     """Detect the AI provider type from route configuration."""
     plugins = route_config.get("plugins", {})
+
     uri = route_config.get("uri", "")
 
     # Check for ai-proxy plugin first
@@ -404,9 +439,10 @@ def detect_provider_type(route_config: Dict) -> str:
     return "unknown"
 
 
-def handle_prepend_role_change():
+def handle_prepend_role_change() -> None:
     """Handle prepend role changes - restore original content when switching back."""
     # Find the route_id from session state keys
+
     for key in st.session_state:
         if key.startswith("prepend_role_") and "_last_" not in key and "_original_" not in key:
             route_id = key.replace("prepend_role_", "")
@@ -433,9 +469,10 @@ def handle_prepend_role_change():
             break
 
 
-def handle_append_role_change():
+def handle_append_role_change() -> None:
     """Handle append role changes - restore original content when switching back."""
     # Find the route_id from session state keys
+
     for key in st.session_state:
         if key.startswith("append_role_") and "_last_" not in key and "_original_" not in key:
             route_id = key.replace("append_role_", "")
@@ -463,7 +500,7 @@ def handle_append_role_change():
 
 
 def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, route_id: str) -> Dict:
-    """Render UI for ai - prompt - decorator plugin configuration"""
+    """Provide Render UI for ai - prompt - decorator plugin configuration"""
     # st.subheader("🎨 AI Prompt Decorator Configuration")
 
     # Detect provider type
@@ -472,17 +509,15 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
     # Show provider - specific warnings
     if provider_type == "anthropic":
         st.warning(
-            """
-        ⚠️ **Anthropic API Limitation**: System messages cannot be added to the messages array.
+            """⚠️ **Anthropic API Limitation**: System messages cannot be added to the messages array.
         Only 'user' and 'assistant' roles are supported for prepend / append operations.
         To add system - like instructions, use the 'user' role with clear directives.
-        """
+"""
         )
 
     with st.expander("ℹ️ About AI Prompt Decorator", expanded=False):
         st.markdown(
-            """
-        The **ai - prompt - decorator** plugin allows you to modify prompts before they reach the AI model by:
+            """The **ai - prompt - decorator** plugin allows you to modify prompts before they reach the AI model by:
         - Adding messages before the user prompt (prepend)
         - Adding messages after the user prompt (append)
         - Injecting system prompts or context
@@ -490,11 +525,11 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
         Messages are added as chat conversation entries with specified roles (system, user, assistant).
 
         [📚 Official Documentation](https://apisix.apache.org/docs/apisix/plugins/ai-prompt-decorator/)
-        """
+"""
         )
 
     # Show detected provider
-    col1, col2 = st.columns([2, 1])
+    col1, _ = st.columns([2, 1])
     with col1:
         st.info(f"🤖 Detected Provider: **{provider_type.title()}**")
 
@@ -638,9 +673,10 @@ def render_ai_prompt_decorator_config(current_config: Dict, route_config: Dict, 
     return new_config
 
 
-def main():
-    """Main function for IronUTF page"""
+def main() -> None:
+    """Provide Main function for IronUTF page"""
     # Handle authentication
+
     handle_authentication_and_sidebar("IronUTF - Defense Module")
 
     # Check authentication
@@ -668,11 +704,7 @@ def main():
 
     # Page header
     st.title("🛡️ IronUTF - Defense Module")
-    st.markdown(
-        """
-    Customize prompt filtering and decoration for your AI endpoints.
-    """
-    )
+    st.markdown("""Customize prompt filtering and decoration for your AI endpoints..""")
 
     # Initialize APISIX admin client
     apisix_admin = APISIXAdmin()
@@ -709,7 +741,9 @@ def main():
         # Add "All" option
         provider_options = ["All"] + sorted(list(all_providers))
         selected_provider_filter = st.selectbox(
-            "Filter by Provider", options=provider_options, help="Filter routes by AI provider"
+            "Filter by Provider",
+            options=provider_options,
+            help="Filter routes by AI provider",
         )
 
     with col2:
@@ -762,7 +796,7 @@ def main():
 
                 # Clear old route's form fields
                 for key in list(st.session_state.keys()):
-                    if key.endswith(f"_{old_route_id}"):
+                    if isinstance(key, str) and key.endswith(f"_{old_route_id}"):
                         del st.session_state[key]
 
             st.session_state.selected_route_name = selected_route_name
@@ -811,11 +845,15 @@ def main():
                 st.session_state[decorator_key] = "ai - prompt - decorator" in current_plugins
 
             enable_guard = st.checkbox(
-                "Enable AI Prompt Guard", key=guard_key, help="Enable prompt filtering and blocking"
+                "Enable AI Prompt Guard",
+                key=guard_key,
+                help="Enable prompt filtering and blocking",
             )
 
             enable_decorator = st.checkbox(
-                "Enable AI Prompt Decorator", key=decorator_key, help="Enable prompt modification and enhancement"
+                "Enable AI Prompt Decorator",
+                key=decorator_key,
+                help="Enable prompt modification and enhancement",
             )
 
         with col2:
@@ -869,13 +907,18 @@ def main():
                     del new_plugins["ai - prompt - decorator"]
 
                 # Debug: Show what we're sending
-                logger.info(f"Updating route {route_id} with plugins: {new_plugins}")
+                logger.info("Updating route %s with plugins: %s", route_id, new_plugins)
 
                 # Update route configuration
                 route_value["plugins"] = new_plugins
 
                 # Remove read - only fields that APISIX doesn't accept in updates
-                fields_to_remove = ["create_time", "update_time", "createdIndex", "modifiedIndex"]
+                fields_to_remove = [
+                    "create_time",
+                    "update_time",
+                    "createdIndex",
+                    "modifiedIndex",
+                ]
                 for field in fields_to_remove:
                     route_value.pop(field, None)
 
@@ -899,17 +942,16 @@ def main():
                                 )
                     except Exception as e:
                         st.error(f"❌ Error updating configuration: {str(e)}")
-                        logger.error(f"Error in IronUTF update: {e}")
+                        logger.error("Error in IronUTF update: %s", e)
                         with st.expander("Error Details", expanded=True):
                             st.code(str(e))
 
         # Security notice
         st.markdown("---")
         st.info(
-            """
-        🔒 **Security Notice**: Changes to AI plugin configurations take effect immediately.
+            """🔒 **Security Notice**: Changes to AI plugin configurations take effect immediately.
         Please test your changes thoroughly to ensure they don't inadvertently block legitimate requests.
-        """
+"""
         )
 
 

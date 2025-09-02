@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Comprehensive tests for 0_Welcome.py backend API endpoints
 """
@@ -27,7 +33,12 @@ client = TestClient(app)
 @pytest.fixture
 def mock_user():
     """Mock user object"""
-    return User(username="testuser", email="test@example.com", roles=["ai-api-access"], is_active=True)
+    return User(
+        username="testuser",
+        email="test@example.com",
+        roles=["ai-api-access"],
+        is_active=True,
+    )
 
 
 @pytest.fixture
@@ -108,7 +119,11 @@ class TestDatabaseEndpoints:
         mock_conn = mock_duckdb.return_value.__enter__.return_value
         mock_conn.execute.return_value = None
 
-        payload = {"force_recreate": False, "custom_salt": "test_salt_123", "backup_existing": True}
+        payload = {
+            "force_recreate": False,
+            "custom_salt": "test_salt_123",
+            "backup_existing": True,
+        }
 
         response = client.post("/api/v1/database/initialize", headers=auth_headers, json=payload)
         assert response.status_code == 200
@@ -175,7 +190,11 @@ class TestDatabaseEndpoints:
             "APP_DATA_DIR": "./app_data/violentutf",
         }.get(key, default)
 
-        payload = {"confirmation": True, "backup_before_reset": True, "preserve_user_data": False}
+        payload = {
+            "confirmation": True,
+            "backup_before_reset": True,
+            "preserve_user_data": False,
+        }
 
         response = client.post("/api/v1/database/reset", headers=auth_headers, json=payload)
         assert response.status_code == 200
@@ -273,7 +292,11 @@ class TestSessionEndpoints:
 class TestConfigEndpoints:
     """Test configuration management endpoints"""
 
-    @patch("builtins.open", new_callable=mock_open, read_data='APP_DATA_DIR: ./app_data/violentutf\nversion: "1.0"')
+    @patch(
+        "builtins.open",
+        new_callable=mock_open,
+        read_data='APP_DATA_DIR: ./app_data/violentutf\nversion: "1.0"',
+    )
     @patch("os.path.exists")
     @patch("os.path.getmtime")
     def test_get_config_parameters(self, mock_getmtime, mock_exists, mock_file, auth_headers) -> None:

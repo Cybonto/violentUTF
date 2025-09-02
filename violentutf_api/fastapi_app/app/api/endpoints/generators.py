@@ -4,16 +4,15 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-FastAPI endpoints for generator management
+"""FastAPI endpoints for generator management.
+
 Implements API backend for 1_Configure_Generators.py page
 SECURITY: Enhanced with secure error handling to prevent information disclosure
 """
-
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import httpx
 import requests
@@ -21,6 +20,7 @@ from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.error_handling import safe_error_response, validation_error
 from app.db.duckdb_manager import get_duckdb_manager
+from app.models.auth import User
 from app.schemas.generators import (
     APIXModelsResponse,
     GeneratorCreateRequest,
@@ -40,11 +40,12 @@ router = APIRouter()
 
 
 def get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
-    """
-    Map AI provider and model to APISIX endpoint path
+    """Map AI provider and model to APISIX endpoint path.
+
     Based on the setup_macos.sh AI proxy route configuration
     """
     # OpenAI model mappings
+
     if provider == "openai":
         openai_mappings = {
             "gpt-4": "/ai/openai/gpt4",
@@ -88,7 +89,10 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
 
     # Open WebUI model mappings
     elif provider == "webui":
-        webui_mappings = {"llama2": "/ai/webui/llama2", "codellama": "/ai/webui/codellama"}
+        webui_mappings = {
+            "llama2": "/ai/webui/llama2",
+            "codellama": "/ai/webui/codellama",
+        }
         return webui_mappings.get(model)
 
     # AWS Bedrock - REMOVED (not supported)
@@ -112,7 +116,9 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
 
             logger.info("Querying APISIX admin API at %s for OpenAPI routes", apisix_admin_url)
             response = requests.get(
-                f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=5
+                f"{apisix_admin_url}/apisix/admin/routes",
+                headers={"X-API-KEY": apisix_admin_key},
+                timeout=5,
             )
 
             if response.status_code == 200:
@@ -123,7 +129,11 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
                     openapi_routes = [
                         r for r in routes_data["list"] if r.get("value", {}).get("id", "").startswith("openapi-")
                     ]
-                    logger.info("Found %s total routes, %s OpenAPI routes", total_routes, len(openapi_routes))
+                    logger.info(
+                        "Found %s total routes, %s OpenAPI routes",
+                        total_routes,
+                        len(openapi_routes),
+                    )
 
                     for route_item in routes_data["list"]:
                         route = route_item.get("value", {})
@@ -155,7 +165,11 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
                             and "converse" in route_id.lower()
                             and f"/openapi/{provider_id}/" in uri
                         ):
-                            logger.info("Found OpenAPI converse endpoint for %s: %s", provider, uri)
+                            logger.info(
+                                "Found OpenAPI converse endpoint for %s: %s",
+                                provider,
+                                uri,
+                            )
                             return str(uri)
 
             else:
@@ -167,7 +181,13 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
             logger.error("Network error querying APISIX admin API: %s", e)
         except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
             # Handle data processing, missing keys, attribute access, type, and database errors
-            logger.error("Error finding OpenAPI endpoint for %s/%s: %s", provider, model, e, exc_info=True)
+            logger.error(
+                "Error finding OpenAPI endpoint for %s/%s: %s",
+                provider,
+                model,
+                e,
+                exc_info=True,
+            )
 
         return None
 
@@ -175,7 +195,7 @@ def get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
 
 
 # DuckDB storage replaces in-memory storage
-# _generators_store: Dict[str, Dict[str, Any]] = {} - REMOVED
+# _generators_store: Dict[str, Dict[str, object]] = {} - REMOVED
 
 # Generator type definitions (this would normally come from a configuration file or database)
 GENERATOR_TYPE_DEFINITIONS = {
@@ -289,17 +309,20 @@ GENERATOR_TYPE_DEFINITIONS = {
 
 # Dynamic model discovery from APISIX routes
 def discover_apisix_models(provider: str) -> List[str]:
-    """
-    Dynamically discover available models for a provider by querying APISIX routes
+    """Dynamically discover available models for a provider by querying APISIX routes
+
     This replaces hardcoded model lists with real-time discovery
     """
     try:
+
         apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
         apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
 
         # Query APISIX for all routes
         response = requests.get(
-            f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=10
+            f"{apisix_admin_url}/apisix/admin/routes",
+            headers={"X-API-KEY": apisix_admin_key},
+            timeout=10,
         )
 
         if response.status_code != 200:
@@ -374,7 +397,12 @@ def discover_apisix_models(provider: str) -> List[str]:
         models.sort()
 
         if models:
-            logger.info("Discovered %s models for provider %s: %s", len(models), provider, models)
+            logger.info(
+                "Discovered %s models for provider %s: %s",
+                len(models),
+                provider,
+                models,
+            )
             return models
         else:
             logger.warning("No models discovered for provider %s, using fallback", provider)
@@ -387,10 +415,9 @@ def discover_apisix_models(provider: str) -> List[str]:
 
 
 def map_uri_to_model(provider: str, uri_key: str) -> str:
-    """
-    Map URI key back to actual model name based on setup_macos.sh configuration
-    """
+    """Map URI key back to actual model name based on setup_macos.sh configuration"""
     # OpenAI URI mappings (reverse of setup_macos.sh)
+
     if provider == "openai":
         uri_to_model = {
             "gpt4": "gpt-4",
@@ -432,9 +459,7 @@ def map_uri_to_model(provider: str, uri_key: str) -> str:
 
 
 def get_fallback_models(provider: str) -> List[str]:
-    """
-    Fallback model lists if APISIX discovery fails
-    """
+    """Fallback model lists if APISIX discovery fails"""
     fallback_mappings = {
         "openai": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-4o", "gpt-4o-mini"],
         "anthropic": [
@@ -469,14 +494,18 @@ def get_fallback_models(provider: str) -> List[str]:
 
 
 async def discover_openapi_models_from_provider(provider_id: str, base_url: str, auth_token: str) -> List[str]:
-    """
-    Discover available models directly from OpenAPI provider's /api/v1/models endpoint
+    """Discover available models directly from OpenAPI provider's /api/v1/models endpoint
+
     Phase 1 Enhancement: Query actual provider APIs for real-time model discovery
     """
     try:
+
         # Construct models endpoint URL
         models_url = f"{base_url.rstrip('/')}/api/v1/models"
-        headers = {"Authorization": f"Bearer {auth_token}", "Accept": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Accept": "application/json",
+        }
 
         logger.info("Discovering models from %s at %s", provider_id, models_url)
 
@@ -484,7 +513,10 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
         # TODO: Make this configurable via environment variable for security
         ssl_verify = False  # Disabled for corporate proxy compatibility
         if not ssl_verify:
-            logger.warning("SSL verification disabled for %s - ensure network security", provider_id)
+            logger.warning(
+                "SSL verification disabled for %s - ensure network security",
+                provider_id,
+            )
 
         async with httpx.AsyncClient(timeout=10.0, verify=ssl_verify) as client:
             response = await client.get(models_url, headers=headers)
@@ -495,10 +527,18 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
             # Parse OpenAI-compatible models response
             if "data" in data and isinstance(data["data"], list):
                 models = [model["id"] for model in data["data"] if "id" in model]
-                logger.info("Successfully discovered %s models from %s: %s", len(models), provider_id, models)
+                logger.info(
+                    "Successfully discovered %s models from %s: %s",
+                    len(models),
+                    provider_id,
+                    models,
+                )
                 return models
             else:
-                logger.warning("Unexpected response format from %s: missing 'data' array", provider_id)
+                logger.warning(
+                    "Unexpected response format from %s: missing 'data' array",
+                    provider_id,
+                )
                 return []
 
         elif response.status_code == 403:
@@ -511,7 +551,11 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
             logger.warning("Rate limited by %s, falling back to cached models", provider_id)
             return []
         else:
-            logger.warning("Failed to discover models from %s: HTTP %s", provider_id, response.status_code)
+            logger.warning(
+                "Failed to discover models from %s: HTTP %s",
+                provider_id,
+                response.status_code,
+            )
             return []
 
     except httpx.TimeoutException:
@@ -527,11 +571,12 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
 
 
 def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
-    """
-    Get configuration for an OpenAPI provider from settings
+    """Get configuration for an OpenAPI provider from settings
+
     Phase 1 Enhancement: Centralized provider configuration mapping
     """
     # Try numbered format first (OPENAPI_1_*, OPENAPI_2_*, etc.)
+
     for i in range(1, 11):  # Support up to 10 providers
         # Use getattr to access settings dynamically
         id_value = getattr(settings, f"OPENAPI_{i}_ID", None)
@@ -558,15 +603,22 @@ def get_openapi_provider_config(provider_id: str) -> Dict[str, Optional[str]]:
             "auth_type": getattr(settings, f"OPENAPI_{provider_key}_AUTH_TYPE", "bearer"),
         }
 
-    return {"id": provider_id, "name": None, "base_url": None, "auth_token": None, "auth_type": None}
+    return {
+        "id": provider_id,
+        "name": None,
+        "base_url": None,
+        "auth_token": None,
+        "auth_type": None,
+    }
 
 
 async def discover_apisix_models_enhanced(provider: str) -> List[str]:
-    """
-    Enhanced model discovery that queries actual OpenAPI providers
+    """Enhanced model discovery that queries actual OpenAPI providers
+
     Phase 1 Enhancement: Dynamic model discovery with fallback to route parsing
     """
     if provider.startswith("openapi-"):
+
         provider_id = provider.replace("openapi-", "")
 
         # Special handling for GSAi - use hardcoded models since models endpoint has issues
@@ -587,25 +639,41 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
         config = get_openapi_provider_config(provider_id)
 
         logger.info(
-            f"Configuration for {provider_id}: base_url={'***' if config['base_url'] else None}, auth_token={'***' if config['auth_token'] else None}"
+            "Configuration for %s: base_url=%s, auth_token=%s",
+            provider_id,
+            "***" if config["base_url"] else None,
+            "***" if config["auth_token"] else None,
         )
 
         if config["base_url"] and config["auth_token"]:
-            logger.info("Attempting dynamic model discovery for %s at %s", provider_id, config["base_url"])
+            logger.info(
+                "Attempting dynamic model discovery for %s at %s",
+                provider_id,
+                config["base_url"],
+            )
 
             # Try to discover models from actual provider API
             models = await discover_openapi_models_from_provider(provider_id, config["base_url"], config["auth_token"])
 
             if models:
                 logger.info(
-                    "✅ Dynamic discovery successful for %s: found %s models: %s", provider_id, len(models), models
+                    "✅ Dynamic discovery successful for %s: found %s models: %s",
+                    provider_id,
+                    len(models),
+                    models,
                 )
                 return models
             else:
-                logger.warning("❌ Dynamic discovery failed for %s, falling back to route parsing", provider_id)
+                logger.warning(
+                    "❌ Dynamic discovery failed for %s, falling back to route parsing",
+                    provider_id,
+                )
         else:
             logger.warning(
-                f"❌ Missing configuration for {provider_id}: base_url={bool(config['base_url'])}, auth_token={bool(config['auth_token'])}"
+                "❌ Missing configuration for %s: base_url=%s, auth_token=%s",
+                provider_id,
+                bool(config["base_url"]),
+                bool(config["auth_token"]),
             )
             logger.info("Config details: %s", config)
 
@@ -613,10 +681,17 @@ async def discover_apisix_models_enhanced(provider: str) -> List[str]:
     return discover_apisix_models(provider)
 
 
-@router.get("/types", response_model=GeneratorTypesResponse, summary="Get available generator types")
-async def get_generator_types(current_user=Depends(get_current_user)):
-    """Get list of available generator types"""
+@router.get(
+    "/types",
+    response_model=GeneratorTypesResponse,
+    summary="Get available generator types",
+)
+async def get_generator_types(
+    current_user: User = Depends(get_current_user),
+) -> GeneratorTypesResponse:
+    """Get list of available generator types."""
     try:
+
         logger.info("User %s requested generator types", current_user.username)
 
         generator_types = list(GENERATOR_TYPE_DEFINITIONS.keys())
@@ -625,7 +700,7 @@ async def get_generator_types(current_user=Depends(get_current_user)):
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error getting generator types: %s", e)
-        raise safe_error_response("Failed to retrieve generator types", status_code=500)
+        raise safe_error_response("Failed to retrieve generator types", status_code=500) from e
 
 
 @router.get(
@@ -633,21 +708,28 @@ async def get_generator_types(current_user=Depends(get_current_user)):
     response_model=GeneratorParametersResponse,
     summary="Get parameter definitions for a generator type",
 )
-async def get_generator_type_params(generator_type: str, current_user=Depends(get_current_user)):
-    """Get parameter definitions for a specific generator type"""
+async def get_generator_type_params(
+    generator_type: str, current_user: User = Depends(get_current_user)
+) -> GeneratorParametersResponse:
+    """Get parameter definitions for a specific generator type."""
     try:
-        logger.info("User %s requested params for type: %s", current_user.username, generator_type)
+
+        logger.info(
+            "User %s requested params for type: %s",
+            current_user.username,
+            generator_type,
+        )
 
         if generator_type not in GENERATOR_TYPE_DEFINITIONS:
             raise safe_error_response("Generator type not found", status_code=404)
 
-        type_def: Dict[str, Any] = GENERATOR_TYPE_DEFINITIONS[generator_type]
+        type_def: Dict[str, object] = cast(Dict[str, object], GENERATOR_TYPE_DEFINITIONS[generator_type])
 
         # For AI Gateway, dynamically add OpenAPI providers to options
         if generator_type == "AI Gateway":
             # Make a copy to avoid modifying the original
             type_def = type_def.copy()
-            type_def["parameters"] = [param.copy() for param in type_def["parameters"]]
+            type_def["parameters"] = [cast(Dict[str, object], param.copy()) for param in type_def["parameters"]]
 
             # Find the provider parameter and add enabled providers
             for param in type_def["parameters"]:
@@ -671,8 +753,17 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
                     if settings.OPENAPI_ENABLED:
                         try:
                             openapi_providers = get_openapi_providers()
-                            logger.info("Successfully discovered OpenAPI providers: %s", openapi_providers)
-                        except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
+                            logger.info(
+                                "Successfully discovered OpenAPI providers: %s",
+                                openapi_providers,
+                            )
+                        except (
+                            ValueError,
+                            KeyError,
+                            AttributeError,
+                            TypeError,
+                            OSError,
+                        ) as e:
                             # Handle data processing, missing keys, attribute access, type, and database errors
                             logger.error("Error discovering OpenAPI providers: %s", e)
                             openapi_providers = []
@@ -684,27 +775,39 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
                     param["options"] = all_providers
 
                     logger.info("Final enabled providers list: %s", all_providers)
-                    logger.info("Base providers: %s, OpenAPI providers: %s", base_providers, openapi_providers)
                     logger.info(
-                        f"Settings - OPENAI: {settings.OPENAI_ENABLED}, ANTHROPIC: {settings.ANTHROPIC_ENABLED}, OLLAMA: {settings.OLLAMA_ENABLED}, OPEN_WEBUI: {settings.OPEN_WEBUI_ENABLED}, OPENAPI: {settings.OPENAPI_ENABLED}"
+                        "Base providers: %s, OpenAPI providers: %s",
+                        base_providers,
+                        openapi_providers,
+                    )
+                    logger.info(
+                        "Settings - OPENAI: %s, ANTHROPIC: %s, OLLAMA: %s, OPEN_WEBUI: %s, OPENAPI: %s",
+                        settings.OPENAI_ENABLED,
+                        settings.ANTHROPIC_ENABLED,
+                        settings.OLLAMA_ENABLED,
+                        settings.OPEN_WEBUI_ENABLED,
+                        settings.OPENAPI_ENABLED,
                     )
                     break
 
         parameters = [GeneratorParameter(**param) for param in type_def["parameters"]]
 
         return GeneratorParametersResponse(generator_type=generator_type, parameters=parameters)
-    except HTTPException:
+    except HTTPException:  # pylint: disable=try-except-raise
         raise
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error getting params for generator type %s: %s", generator_type, e)
-        raise safe_error_response("Failed to retrieve generator parameters", status_code=500)
+        raise safe_error_response("Failed to retrieve generator parameters", status_code=500) from e
 
 
 @router.get("", response_model=GeneratorsListResponse, summary="Get configured generators")
-async def get_generators(current_user=Depends(get_current_user)):
-    """Get list of configured generators"""
+async def get_generators(
+    current_user: User = Depends(get_current_user),
+) -> GeneratorsListResponse:
+    """Get list of configured generators."""
     try:
+
         user_id = current_user.username
         logger.info("User %s requested generators list", user_id)
 
@@ -722,7 +825,11 @@ async def get_generators(current_user=Depends(get_current_user)):
                     if isinstance(last_time_str, str):
                         last_test_time = datetime.fromisoformat(last_time_str)
                 except (ValueError, TypeError) as e:
-                    logger.warning("Failed to parse last_test_time for generator %s: %s", gen_data["id"], e)
+                    logger.warning(
+                        "Failed to parse last_test_time for generator %s: %s",
+                        gen_data["id"],
+                        e,
+                    )
                     last_test_time = None
 
             generators.append(
@@ -745,13 +852,16 @@ async def get_generators(current_user=Depends(get_current_user)):
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error getting generators: %s", e)
-        raise safe_error_response("Failed to retrieve generators", status_code=500)
+        raise safe_error_response("Failed to retrieve generators", status_code=500) from e
 
 
 @router.post("", response_model=GeneratorInfo, summary="Create a new generator")
-async def create_generator(request: GeneratorCreateRequest, current_user=Depends(get_current_user)):
-    """Create a new generator configuration"""
+async def create_generator(
+    request: GeneratorCreateRequest, current_user: User = Depends(get_current_user)
+) -> GeneratorInfo:
+    """Create a new generator configuration."""
     try:
+
         user_id = current_user.username
         logger.info("User %s creating generator: %s", user_id, request.name)
 
@@ -769,7 +879,9 @@ async def create_generator(request: GeneratorCreateRequest, current_user=Depends
 
         # Create generator in DuckDB
         generator_id = db_manager.create_generator(
-            name=request.name, generator_type=request.type, parameters=request.parameters
+            name=request.name,
+            generator_type=request.type,
+            parameters=request.parameters,
         )
 
         # Get the created generator to return with proper timestamps
@@ -777,7 +889,11 @@ async def create_generator(request: GeneratorCreateRequest, current_user=Depends
         if not created_generator:
             raise HTTPException(status_code=500, detail="Failed to retrieve created generator")
 
-        logger.info("Generator '%s' created successfully with ID: %s", request.name, generator_id)
+        logger.info(
+            "Generator '%s' created successfully with ID: %s",
+            request.name,
+            generator_id,
+        )
 
         return GeneratorInfo(
             id=generator_id,
@@ -789,18 +905,25 @@ async def create_generator(request: GeneratorCreateRequest, current_user=Depends
             updated_at=created_generator["updated_at"],
         )
 
-    except HTTPException:
+    except HTTPException:  # pylint: disable=try-except-raise
         raise
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error creating generator %s: %s", request.name, e)
-        raise safe_error_response("Failed to create generator", status_code=500)
+        raise safe_error_response("Failed to create generator", status_code=500) from e
 
 
-@router.delete("/{generator_id}", response_model=GeneratorDeleteResponse, summary="Delete a generator")
-async def delete_generator(generator_id: str, current_user=Depends(get_current_user)):
-    """Delete a generator configuration"""
+@router.delete(
+    "/{generator_id}",
+    response_model=GeneratorDeleteResponse,
+    summary="Delete a generator",
+)
+async def delete_generator(
+    generator_id: str, current_user: User = Depends(get_current_user)
+) -> GeneratorDeleteResponse:
+    """Delete a generator configuration."""
     try:
+
         user_id = current_user.username
         logger.info("User %s deleting generator: %s", user_id, generator_id)
 
@@ -821,23 +944,31 @@ async def delete_generator(generator_id: str, current_user=Depends(get_current_u
         logger.info("Generator '%s' deleted successfully", generator_name)
 
         return GeneratorDeleteResponse(
-            success=True, message=f"Generator '{generator_name}' deleted successfully", deleted_at=datetime.utcnow()
+            success=True,
+            message=f"Generator '{generator_name}' deleted successfully",
+            deleted_at=datetime.utcnow(),
         )
 
-    except HTTPException:
+    except HTTPException:  # pylint: disable=try-except-raise
         raise
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error deleting generator %s: %s", generator_id, e)
-        raise safe_error_response("Failed to delete generator", status_code=500)
+        raise safe_error_response("Failed to delete generator", status_code=500) from e
 
 
-@router.get("/apisix/models", response_model=APIXModelsResponse, summary="Get available models from APISIX AI Gateway")
+@router.get(
+    "/apisix/models",
+    response_model=APIXModelsResponse,
+    summary="Get available models from APISIX AI Gateway",
+)
 async def get_apisix_models(
-    provider: str = Query(..., description="AI provider name"), current_user=Depends(get_current_user)
-):
-    """Get available models for a specific APISIX AI Gateway provider"""
+    provider: str = Query(..., description="AI provider name"),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Get available models for a specific APISIX AI Gateway provider."""
     try:
+
         logger.info("User %s requested models for provider: %s", current_user.username, provider)
 
         # Phase 1 Enhancement: Use enhanced discovery with OpenAPI provider support
@@ -852,18 +983,23 @@ async def get_apisix_models(
 
         return APIXModelsResponse(provider=provider, models=models, total=len(models))
 
-    except HTTPException:
+    except HTTPException:  # pylint: disable=try-except-raise
         raise
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error getting APISIX models for provider %s: %s", provider, e)
-        raise safe_error_response("Failed to retrieve models", status_code=500)
+        raise safe_error_response("Failed to retrieve models", status_code=500) from e
 
 
 @router.put("/{generator_id}", response_model=GeneratorInfo, summary="Update a generator")
-async def update_generator(generator_id: str, request: GeneratorUpdateRequest, current_user=Depends(get_current_user)):
-    """Update an existing generator configuration"""
+async def update_generator(
+    generator_id: str,
+    request: GeneratorUpdateRequest,
+    current_user: User = Depends(get_current_user),
+) -> GeneratorInfo:
+    """Update an existing generator configuration."""
     try:
+
         user_id = current_user.username
         logger.info("User %s updating generator: %s", user_id, generator_id)
 
@@ -918,24 +1054,25 @@ async def update_generator(generator_id: str, request: GeneratorUpdateRequest, c
             ),
         )
 
-    except HTTPException:
+    except HTTPException:  # pylint: disable=try-except-raise
         raise
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error updating generator %s: %s", generator_id, e)
-        raise safe_error_response("Failed to update generator", status_code=500)
+        raise safe_error_response("Failed to update generator", status_code=500) from e
 
 
 def get_openapi_providers() -> List[str]:
-    """
-    Discover available OpenAPI providers from APISIX routes
-    """
+    """Discover available OpenAPI providers from APISIX routes"""
     try:
+
         apisix_admin_url = os.getenv("APISIX_ADMIN_URL", "http://localhost:9180")
         apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
 
         response = requests.get(
-            f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=10
+            f"{apisix_admin_url}/apisix/admin/routes",
+            headers={"X-API-KEY": apisix_admin_key},
+            timeout=10,
         )
 
         if response.status_code != 200:
@@ -968,27 +1105,42 @@ def get_openapi_providers() -> List[str]:
         return []
 
 
-@router.get("/apisix/openapi-providers", response_model=List[str], summary="Get list of available OpenAPI providers")
-async def get_openapi_providers_endpoint(current_user=Depends(get_current_user)) -> List[str]:
-    """Get list of available OpenAPI providers"""
+@router.get(
+    "/apisix/openapi-providers",
+    response_model=List[str],
+    summary="Get list of available OpenAPI providers",
+)
+async def get_openapi_providers_endpoint(
+    current_user: User = Depends(get_current_user),
+) -> List[str]:
+    """Get list of available OpenAPI providers."""
     try:
+
         providers = get_openapi_providers()
         return providers
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error getting OpenAPI providers: %s", e)
-        raise HTTPException(status_code=500, detail=safe_error_response("Failed to get OpenAPI providers"))
+        raise HTTPException(
+            status_code=500,
+            detail=safe_error_response("Failed to get OpenAPI providers"),
+        ) from e
 
 
 @router.get(
-    "/apisix/openapi-models", response_model=Dict[str, List[str]], summary="Get models for all OpenAPI providers"
+    "/apisix/openapi-models",
+    response_model=Dict[str, List[str]],
+    summary="Get models for all OpenAPI providers",
 )
-async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict[str, List[str]]:
-    """
-    Get available models for all configured OpenAPI providers
+async def get_all_openapi_models(
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, List[str]]:
+    """Get available models for all configured OpenAPI providers
+
     Phase 1 Enhancement: Provides comprehensive model listing for debugging and validation
     """
     try:
+
         logger.info("User %s requested models for all OpenAPI providers", current_user.username)
 
         providers = get_openapi_providers()
@@ -1012,26 +1164,33 @@ async def get_all_openapi_models(current_user=Depends(get_current_user)) -> Dict
                 all_models[provider] = []
 
         total_models = sum(len(models) for models in all_models.values())
-        logger.info("Total models discovered across %s providers: %s", len(providers), total_models)
+        logger.info(
+            "Total models discovered across %s providers: %s",
+            len(providers),
+            total_models,
+        )
 
         return all_models
 
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error getting OpenAPI models: %s", e)
-        raise HTTPException(status_code=500, detail=safe_error_response("Failed to get OpenAPI models"))
+        raise HTTPException(status_code=500, detail=safe_error_response("Failed to get OpenAPI models")) from e
 
 
 @router.get("/apisix/openapi-debug", summary="Debug OpenAPI provider configurations")
-async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dict[str, Any]:
-    """
-    Debug endpoint for OpenAPI provider configurations
+async def debug_openapi_providers(
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, object]:
+    """Debug endpoint for OpenAPI provider configurations
+
     Phase 1 Enhancement: Provides detailed debugging information
     """
     try:
+
         logger.info("User %s requested OpenAPI debug information", current_user.username)
 
-        debug_info: Dict[str, Any] = {
+        debug_info: Dict[str, object] = {
             "openapi_enabled": settings.OPENAPI_ENABLED,
             "discovered_providers": [],
             "provider_configs": {},
@@ -1054,19 +1213,19 @@ async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dic
             if auth_token and isinstance(auth_token, str) and len(auth_token) >= 4:
                 safe_config["auth_token"] = f"***{auth_token[-4:]}"
 
-            debug_info["provider_configs"][provider] = safe_config
+            cast(Dict[str, Any], debug_info["provider_configs"])[provider] = safe_config
 
         # Also check settings directly for debugging
         debug_info["settings_check"] = {}
         for i in range(1, 11):
             enabled = getattr(settings, f"OPENAPI_{i}_ENABLED", None)
             if enabled:
-                debug_info["settings_check"][f"provider_{i}"] = {
+                cast(Dict[str, Any], debug_info["settings_check"])[f"provider_{i}"] = {
                     "enabled": enabled,
                     "id": getattr(settings, f"OPENAPI_{i}_ID", None),
                     "name": getattr(settings, f"OPENAPI_{i}_NAME", None),
                     "base_url": getattr(settings, f"OPENAPI_{i}_BASE_URL", None),
-                    "auth_token": "***" if getattr(settings, f"OPENAPI_{i}_AUTH_TOKEN", None) else None,
+                    "auth_token": ("***" if getattr(settings, f"OPENAPI_{i}_AUTH_TOKEN", None) else None),
                     "auth_type": getattr(settings, f"OPENAPI_{i}_AUTH_TYPE", None),
                 }
 
@@ -1083,9 +1242,9 @@ async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dic
         for var in env_vars:
             value = os.getenv(var)
             if "TOKEN" in var and value:
-                debug_info["environment_check"][var] = f"***{value[-4:]}"
+                cast(Dict[str, Any], debug_info["environment_check"])[var] = f"***{value[-4:]}"
             else:
-                debug_info["environment_check"][var] = bool(value)
+                cast(Dict[str, Any], debug_info["environment_check"])[var] = bool(value)
 
         # Check APISIX routes
         try:
@@ -1093,7 +1252,9 @@ async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dic
             apisix_admin_key = os.getenv("APISIX_ADMIN_KEY", "2exEp0xPj8qlOBABX3tAQkVz6OANnVRB")
 
             response = requests.get(
-                f"{apisix_admin_url}/apisix/admin/routes", headers={"X-API-KEY": apisix_admin_key}, timeout=5
+                f"{apisix_admin_url}/apisix/admin/routes",
+                headers={"X-API-KEY": apisix_admin_key},
+                timeout=5,
             )
 
             if response.status_code == 200:
@@ -1106,7 +1267,11 @@ async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dic
                         uri = route.get("uri", "")
                         if uri.startswith("/ai/openapi/"):
                             openapi_routes.append(
-                                {"id": route.get("id", ""), "uri": uri, "desc": route.get("desc", "")}
+                                {
+                                    "id": route.get("id", ""),
+                                    "uri": uri,
+                                    "desc": route.get("desc", ""),
+                                }
                             )
 
                 debug_info["routes_check"] = {
@@ -1115,7 +1280,10 @@ async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dic
                     "routes": openapi_routes[:10],  # Limit to first 10 for readability
                 }
             else:
-                debug_info["routes_check"] = {"status": "error", "http_code": response.status_code}
+                debug_info["routes_check"] = {
+                    "status": "error",
+                    "http_code": response.status_code,
+                }
         except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
             # Handle data processing, missing keys, attribute access, type, and database errors
             debug_info["routes_check"] = {"status": "error", "error": str(e)}
@@ -1125,4 +1293,7 @@ async def debug_openapi_providers(current_user=Depends(get_current_user)) -> Dic
     except (ValueError, KeyError, AttributeError, TypeError, OSError) as e:
         # Handle data processing, missing keys, attribute access, type, and database errors
         logger.error("Error in OpenAPI debug endpoint: %s", e)
-        raise HTTPException(status_code=500, detail=safe_error_response("Failed to get debug information"))
+        raise HTTPException(
+            status_code=500,
+            detail=safe_error_response("Failed to get debug information"),
+        ) from e

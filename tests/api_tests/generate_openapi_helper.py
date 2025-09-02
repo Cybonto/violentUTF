@@ -5,8 +5,8 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Dynamic OpenAPI schema generation from FastAPI app.
+"""Dynamic OpenAPI schema generation from FastAPI app.
+
 Generates OpenAPI schemas for contract testing and validation.
 """
 
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def setup_test_environment() -> None:
-    """Setup environment for schema generation."""
+    """Set up environment for schema generation."""
     os.environ.update(
         {
             "TESTING": "true",
@@ -67,16 +67,16 @@ def generate_openapi_schema(output_file: str = "generated_openapi.json") -> bool
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(schema, f, indent=2, ensure_ascii=False)
 
-            logger.info(f"OpenAPI schema generated successfully: {output_path}")
+            logger.info("OpenAPI schema generated successfully: %s", output_path)
 
             # Validate the generated schema
             return validate_generated_schema(schema)
 
     except ImportError as e:
-        logger.error(f"Could not import FastAPI app: {e}")
+        logger.error("Could not import FastAPI app: %s", e)
         return create_minimal_schema(output_file)
     except Exception as e:
-        logger.error(f"Error generating OpenAPI schema: {e}")
+        logger.error("Error generating OpenAPI schema: %s", e)
         return create_minimal_schema(output_file)
 
 
@@ -88,7 +88,10 @@ def enhance_schema_metadata(schema: Dict[str, Any]) -> Dict[str, Any]:
             "title": "ViolentUTF API",
             "description": "AI Red-teaming Platform API with enterprise authentication",
             "version": "1.0.0",
-            "contact": {"name": "ViolentUTF API Support", "url": "https://github.com/Cybonto/violentUTF"},
+            "contact": {
+                "name": "ViolentUTF API Support",
+                "url": "https://github.com/Cybonto/violentUTF",
+            },
             "license": {"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
         }
     )
@@ -136,7 +139,10 @@ def enhance_schema_metadata(schema: Dict[str, Any]) -> Dict[str, Any]:
                 "properties": {
                     "detail": {"type": "string", "description": "Error message"},
                     "error": {"type": "string", "description": "Error type"},
-                    "status_code": {"type": "integer", "description": "HTTP status code"},
+                    "status_code": {
+                        "type": "integer",
+                        "description": "HTTP status code",
+                    },
                 },
                 "required": ["detail"],
             },
@@ -167,14 +173,14 @@ def validate_generated_schema(schema: Dict[str, Any]) -> bool:
         else:
             logger.error("Generated schema validation failed")
             for error in validator.errors:
-                logger.error(f"  - {error}")
+                logger.error("  - %s", error)
             return False
 
     except ImportError:
         logger.warning("Could not import OpenAPI validator, skipping validation")
         return True
     except Exception as e:
-        logger.error(f"Error validating generated schema: {e}")
+        logger.error("Error validating generated schema: %s", e)
         return False
 
 
@@ -200,7 +206,10 @@ def create_minimal_schema(output_file: str) -> bool:
                             "description": "Health status",
                             "content": {
                                 "application/json": {
-                                    "schema": {"type": "object", "properties": {"status": {"type": "string"}}}
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {"status": {"type": "string"}},
+                                    }
                                 }
                             },
                         }
@@ -214,7 +223,14 @@ def create_minimal_schema(output_file: str) -> bool:
                     "responses": {
                         "200": {
                             "description": "List of generators",
-                            "content": {"application/json": {"schema": {"type": "array", "items": {"type": "object"}}}},
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "array",
+                                        "items": {"type": "object"},
+                                    }
+                                }
+                            },
                         }
                     },
                 }
@@ -222,7 +238,11 @@ def create_minimal_schema(output_file: str) -> bool:
         },
         "components": {
             "securitySchemes": {
-                "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
+                "bearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                    "bearerFormat": "JWT",
+                },
                 "apiKeyAuth": {"type": "apiKey", "in": "header", "name": "apikey"},
             }
         },
@@ -233,20 +253,24 @@ def create_minimal_schema(output_file: str) -> bool:
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(minimal_schema, f, indent=2, ensure_ascii=False)
 
-        logger.info(f"Minimal OpenAPI schema created: {output_file}")
+        logger.info("Minimal OpenAPI schema created: %s", output_file)
         return True
 
     except Exception as e:
-        logger.error(f"Error creating minimal schema: {e}")
+        logger.error("Error creating minimal schema: %s", e)
         return False
 
 
 def main() -> None:
-    """Main function for CLI usage."""
+    """Execute main CLI functionality."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Generate OpenAPI schema for ViolentUTF API")
-    parser.add_argument("--output", default="generated_openapi.json", help="Output file for generated schema")
+    parser.add_argument(
+        "--output",
+        default="generated_openapi.json",
+        help="Output file for generated schema",
+    )
     parser.add_argument("--validate", action="store_true", help="Validate generated schema")
 
     args = parser.parse_args()

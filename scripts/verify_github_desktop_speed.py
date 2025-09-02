@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
 # Copyright (c) 2025 ViolentUTF Contributors.
 # Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Verify GitHub Desktop is using fast pre-commit configuration
-"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
 
-import subprocess
+"""Verify GitHub Desktop is using fast pre-commit configuration"""
+
+import subprocess  # nosec B404 - needed for GitHub Desktop speed verification
 import sys
 import time
 from pathlib import Path
 
 
-def check_git_hook_config() -> bool:
+def check_git_hook_config() -> tuple[bool, str]:
     """Check what configuration the Git hook is using"""
     hook_path = Path(".git/hooks/pre-commit")
+
     if not hook_path.exists():
         return False, "No pre-commit hook found"
 
-    with open(hook_path, "r") as f:
+    with open(hook_path, "r", encoding="utf-8") as f:
         content = f.read()
 
     if ".pre-commit-config-ultrafast.yaml" in content:
@@ -31,17 +36,24 @@ def check_git_hook_config() -> bool:
         return False, "Unknown configuration"
 
 
-def test_ultrafast_performance() -> bool:
+def test_ultrafast_performance() -> tuple[bool, str]:
     """Test ultra-fast configuration performance"""
     print("🏃 Testing ultra-fast configuration performance...")
 
     start_time = time.time()
     try:
-        result = subprocess.run(
-            ["pre-commit", "run", "--config", ".pre-commit-config-ultrafast.yaml", "--all-files"],
+        result = subprocess.run(  # nosec B603 B607 - controlled pre-commit speed testing
+            [
+                "pre-commit",
+                "run",
+                "--config",
+                ".pre-commit-config-ultrafast.yaml",
+                "--all-files",
+            ],
             capture_output=True,
             text=True,
             timeout=30,
+            check=False,
         )
 
         duration = time.time() - start_time
@@ -49,7 +61,10 @@ def test_ultrafast_performance() -> bool:
         if result.returncode == 0:
             return True, f"✅ Completed in {duration:.2f}s - All checks passed"
         else:
-            return False, f"⚠️  Completed in {duration:.2f}s - Some checks failed (normal)"
+            return (
+                False,
+                f"⚠️  Completed in {duration:.2f}s - Some checks failed (normal)",
+            )
 
     except subprocess.TimeoutExpired:
         return False, "❌ Timed out (>30s) - Configuration not optimized"
@@ -57,9 +72,10 @@ def test_ultrafast_performance() -> bool:
         return False, f"❌ Error: {e}"
 
 
-def main() -> None:
-    """Main verification function"""
+def main() -> int:
+    """Execute verification"""
     print("🔍 GitHub Desktop Pre-commit Speed Verification")
+
     print("=" * 55)
 
     # Check Git hook configuration

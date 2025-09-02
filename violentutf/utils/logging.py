@@ -1,7 +1,12 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # utils/logging.py
 
-"""
-Module: Logging
+"""Logging configuration and utilities for ViolentUTF.
 
 Setup and configuration for application-wide logging.
 
@@ -12,6 +17,7 @@ Key Functions:
 Dependencies:
 - logging
 - os
+
 """
 
 import logging
@@ -19,6 +25,7 @@ import os
 import sys
 
 # Simple flag to ensure setup runs only once per Python process execution
+
 _setup_done = False
 
 # Define handler names for uniqueness checks
@@ -26,9 +33,8 @@ _FILE_HANDLER_NAME = "app_file_handler"
 _CONSOLE_HANDLER_NAME = "app_console_handler"
 
 
-def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
-    """
-    Configures the logging settings for the application.
+def setup_logging(log_level: int = logging.DEBUG, console_level: int = logging.INFO) -> None:
+    """Configure the logging settings for the application.
 
     Sets up a file handler (DEBUG level by default) writing to 'app_logs/app.log'
     and a console handler (INFO level by default). Prevents duplicate handler
@@ -42,8 +48,10 @@ def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
 
     Returns:
         None
+
     """
-    global _setup_done
+    global _setup_done  # pylint: disable=global-statement
+
     if _setup_done:
         # Prevent re-running setup in the same process
         return
@@ -56,7 +64,6 @@ def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
         print(f"Error creating log directory '{log_dir}': {e}", file=sys.stderr)
         # Optionally, fall back to console-only logging or raise the error
         # For now, we'll proceed but file logging might fail
-        pass
 
     log_file = os.path.join(log_dir, "app.log")
 
@@ -78,7 +85,10 @@ def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
             root_logger.addHandler(file_handler)
         except (OSError, IOError) as e:
             # Handle potential file opening errors
-            print(f"Error setting up file log handler for '{log_file}': {e}", file=sys.stderr)
+            print(
+                f"Error setting up file log handler for '{log_file}': {e}",
+                file=sys.stderr,
+            )
 
     # --- Console Handler ---
     # Check if our specific console handler already exists
@@ -100,8 +110,7 @@ def setup_logging(log_level=logging.DEBUG, console_level=logging.INFO):
 
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    Returns a logger instance with the specified name.
+    """Return a logger instance with the specified name.
 
     Assumes setup_logging() has been called previously at application startup.
 
@@ -110,7 +119,9 @@ def get_logger(name: str) -> logging.Logger:
 
     Returns:
         logging.Logger: Configured logger instance.
+
     """
     # Setup is no longer called implicitly here.
+
     # It relies on the initial call in the main application entry point (e.g., Home.py).
     return logging.getLogger(name)

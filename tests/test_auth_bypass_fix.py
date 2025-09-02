@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test script to verify the authentication bypass vulnerability has been fixed
 """
@@ -19,7 +25,11 @@ def generate_hmac_signature(
         timestamp = str(int(time.time()))
 
     signature_payload = f"{method}:{path}:{timestamp}"
-    signature = hmac.new(gateway_secret.encode("utf-8"), signature_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    signature = hmac.new(
+        gateway_secret.encode("utf-8"),
+        signature_payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
 
     return signature, timestamp
 

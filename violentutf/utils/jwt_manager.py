@@ -4,37 +4,43 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-JWT Token Management Utility for ViolentUTF Streamlit Application
+"""JWT Token Management Utility for ViolentUTF Streamlit Application
 
 This module handles JWT token creation, validation, and refresh logic
 between Streamlit frontend and FastAPI backend.
 """
 
-import asyncio
+from __future__ import annotations
+
 import logging
 import os
-import threading
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from datetime import datetime
+from typing import Dict, Optional
 
 import jwt
-import requests
 import streamlit as st
+
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 logger = logging.getLogger(__name__)
 
 
 class JWTManager:
-    """Manages JWT tokens for Streamlit to FastAPI communication"""
+    """Manage JWT tokens for Streamlit to FastAPI communication"""
 
-    def __init__(self):
+    def __init__(self: JWTManager) -> None:
+        """Initialize JWT Manager with configuration and environment."""
         # Load environment variables from .env file
+
         self._load_environment()
         self.api_base_url = self._get_api_base_url()
-        self._cached_secret = None
-        self._secret_cache_time = None
+        self._cached_secret: Optional[str] = None
+        self._secret_cache_time: Optional[float] = None
         self._secret_cache_duration = 300  # 5 minutes
 
         # Proactive refresh settings
@@ -46,12 +52,12 @@ class JWTManager:
         # Track refresh state
         self._last_refresh_attempt: float = 0.0
         self._refresh_in_progress = False
-        self._last_error = None
+        self._last_error: Optional[str] = None
 
-    def _load_environment(self):
+    def _load_environment(self: JWTManager) -> None:
         """Load environment variables from .env file if available"""
         try:
-            import os
+
             from pathlib import Path
 
             from dotenv import load_dotenv
@@ -67,40 +73,48 @@ class JWTManager:
             for env_file in env_locations:
                 if env_file.exists():
                     load_dotenv(env_file)
-                    logger.info(f"Loaded environment from {env_file}")
+                    logger.info("Loaded environment from %s", env_file)
                     loaded = True
                     break
 
             if not loaded:
-                logger.warning(f"Environment file not found in any of: {env_locations}")
+                logger.warning("Environment file not found in any of: %s", env_locations)
 
             # Log what we actually loaded for debugging
             jwt_secret = os.getenv("JWT_SECRET_KEY")
             logger.info(
-                f"JWT_SECRET_KEY loaded: {bool(jwt_secret)} (preview: {jwt_secret[:8] + '...' if jwt_secret else 'None'})"
+                "JWT_SECRET_KEY loaded: %s (preview: %s)",
+                bool(jwt_secret),
+                jwt_secret[:8] + "..." if jwt_secret else "None",
             )
 
         except ImportError:
             logger.warning("python-dotenv not available, environment variables may not be loaded")
-        except Exception as e:
-            logger.error(f"Failed to load environment variables: {e}")
+        except (OSError, IOError) as e:
+            logger.error("Failed to load environment variables: %s", e)
 
-    def _get_api_base_url(self) -> str:
+    def _get_api_base_url(self: JWTManager) -> str:
         """Get the API base URL from environment or default"""
         raw_url = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080")
+
         return raw_url.rstrip("/api").rstrip("/")
 
-    def _get_jwt_secret(self) -> Optional[str]:
-        """
-        Get JWT secret key using multiple fallback strategies:
+    def _get_jwt_secret(self: JWTManager) -> Optional[str]:
+        """Get JWT secret key using multiple fallback strategies.
+
         1. Environment variable JWT_SECRET_KEY
         2. Cached secret from previous API call
         3. API call to FastAPI /keys/jwt-public endpoint
+
         """
         # Strategy 1: Try environment variable first (already loaded by _load_environment)
+
         secret = os.getenv("JWT_SECRET_KEY")
         if secret:
-            logger.info(f"JWT secret obtained from environment variable (preview: {secret[:8]}...)")
+            logger.info(
+                "JWT secret obtained from environment variable (preview: %s...)",
+                secret[:8],
+            )
             return secret
 
         # Strategy 2: Try to manually load from .env files if environment loading failed
@@ -115,14 +129,18 @@ class JWTManager:
         for env_file in env_locations:
             if env_file.exists():
                 try:
-                    with open(env_file, "r") as f:
+                    with open(env_file, "r", encoding="utf-8") as f:
                         for line in f:
                             if line.strip().startswith("JWT_SECRET_KEY="):
                                 file_secret = line.strip().split("=", 1)[1]
-                                logger.info(f"JWT secret found in {env_file} (preview: {file_secret[:8]}...)")
+                                logger.info(
+                                    "JWT secret found in %s (preview: %s...)",
+                                    env_file,
+                                    file_secret[:8],
+                                )
                                 return file_secret
-                except Exception as e:
-                    logger.error(f"Failed to read {env_file}: {e}")
+                except (OSError, IOError) as e:
+                    logger.error("Failed to read %s: %s", env_file, e)
 
         # Strategy 3: Check cached secret
         current_time = time.time()
@@ -136,14 +154,13 @@ class JWTManager:
 
         # No secret found - provide detailed debugging
         logger.error("JWT_SECRET_KEY not found in any location!")
-        logger.error(f"Checked environment variable: {bool(os.getenv('JWT_SECRET_KEY'))}")
-        logger.error(f"Checked files: {[str(f) for f in env_locations if f.exists()]}")
-        logger.error(f"Current working directory: {Path.cwd()}")
+        logger.error("Checked environment variable: %s", bool(os.getenv("JWT_SECRET_KEY")))
+        logger.error("Checked files: %s", [str(f) for f in env_locations if f.exists()])
+        logger.error("Current working directory: %s", Path.cwd())
         return None
 
-    def create_token(self, keycloak_token_data: Dict[str, Any]) -> Optional[str]:
-        """
-        Create a FastAPI-compatible JWT token from Keycloak token data
+    def create_token(self: JWTManager, keycloak_token_data: Dict[str, object]) -> Optional[str]:
+        """Create a FastAPI-compatible JWT token from Keycloak token data
 
         Args:
             keycloak_token_data: Decoded Keycloak token payload
@@ -152,6 +169,7 @@ class JWTManager:
             JWT token string or None if failed
         """
         try:
+
             secret_key = self._get_jwt_secret()
             if not secret_key:
                 return None
@@ -161,7 +179,7 @@ class JWTManager:
             username = keycloak_token_data.get("preferred_username") or keycloak_token_data.get("sub", "user")
             email = keycloak_token_data.get("email", "user@example.com")
 
-            logger.info(f"Creating JWT token for Keycloak user: {username}")
+            logger.info("Creating JWT token for Keycloak user: %s", username)
 
             # Create FastAPI-compatible token with shorter expiry for security
             current_time = int(time.time())
@@ -184,21 +202,27 @@ class JWTManager:
             st.session_state["api_token_exp"] = payload["exp"]
             st.session_state["api_token_created"] = current_time
 
-            logger.info(f"Created JWT token for user: {username}, expires at: {datetime.fromtimestamp(payload['exp'])}")
+            exp_time = payload["exp"]
+            assert isinstance(exp_time, int), "Expected exp to be int"
+            logger.info(
+                "Created JWT token for user: %s, expires at: %s",
+                username,
+                datetime.fromtimestamp(exp_time),
+            )
             return api_token
 
-        except Exception as e:
-            logger.error(f"Failed to create JWT token: {e}")
+        except (KeyError, ValueError, jwt.PyJWTError) as e:
+            logger.error("Failed to create JWT token: %s", e)
             return None
 
-    def get_valid_token(self) -> Optional[str]:
-        """
-        Get a valid JWT token, refreshing if necessary
+    def get_valid_token(self: JWTManager) -> Optional[str]:
+        """Get a valid JWT token, refreshing if necessary
 
         Returns:
             Valid JWT token or None if unavailable
         """
         try:
+
             # Check if we have a token in session state
             if "api_token" not in st.session_state:
                 logger.debug("No API token in session state")
@@ -226,25 +250,27 @@ class JWTManager:
                 self._clear_token()
                 return None
 
-            return st.session_state["api_token"]
+            return str(st.session_state["api_token"])
 
-        except Exception as e:
-            logger.error(f"Error checking token validity: {e}")
+        except (KeyError, ValueError, jwt.PyJWTError) as e:
+            logger.error("Error checking token validity: %s", e)
             return None
 
-    def is_token_expired(self) -> bool:
+    def is_token_expired(self: JWTManager) -> bool:
         """Check if the current token is expired"""
         if "api_token_exp" not in st.session_state:
+
             return True
 
         current_time = int(time.time())
-        token_exp = st.session_state.get("api_token_exp", 0)
+        token_exp = int(st.session_state.get("api_token_exp", 0))
 
         return current_time >= token_exp
 
-    def get_token_info(self) -> Dict[str, Any]:
+    def get_token_info(self: JWTManager) -> Dict[str, object]:
         """Get information about the current token"""
         if "api_token" not in st.session_state:
+
             return {"status": "no_token"}
 
         current_time = int(time.time())
@@ -263,14 +289,14 @@ class JWTManager:
             "created_at": datetime.fromtimestamp(token_created).isoformat(),
         }
 
-    def clear_token(self):
+    def clear_token(self: JWTManager) -> None:
         """Clear the stored token from session state"""
         self._clear_token()
+
         logger.info("JWT token manually cleared from session state")
 
-    def _validate_token_signature(self, token: str) -> bool:
-        """
-        Validate JWT token signature using the current secret
+    def _validate_token_signature(self: JWTManager, token: str) -> bool:
+        """Validate JWT token signature using the current secret
 
         Args:
             token: JWT token to validate
@@ -279,6 +305,7 @@ class JWTManager:
             True if signature is valid, False otherwise
         """
         try:
+
             secret_key = self._get_jwt_secret()
             if not secret_key:
                 logger.error("Cannot validate token - no JWT secret available")
@@ -294,19 +321,17 @@ class JWTManager:
         except jwt.ExpiredSignatureError:
             # Token is expired but signature is valid
             return True
-        except Exception as e:
-            logger.error(f"JWT token validation error: {e}")
+        except (KeyError, ValueError, jwt.PyJWTError) as e:
+            logger.error("JWT token validation error: %s", e)
             return False
 
-    def _attempt_token_recreation(self) -> Optional[str]:
-        """
-        Attempt to recreate a JWT token using environment credentials
+    def _attempt_token_recreation(self: JWTManager) -> Optional[str]:
+        """Attempt to recreate a JWT token using environment credentials
 
         Returns:
             New JWT token or None if failed
         """
         try:
-            import os
 
             # Get consistent username (always account name, not display name)
             from utils.user_context import get_consistent_username
@@ -331,18 +356,19 @@ class JWTManager:
                 logger.error("Failed to recreate JWT token")
                 return None
 
-        except Exception as e:
-            logger.error(f"Token recreation failed: {e}")
+        except (ImportError, KeyError, ValueError) as e:
+            logger.error("Token recreation failed: %s", e)
             return None
 
-    def _clear_token(self):
-        """Internal method to clear token state"""
+    def _clear_token(self: JWTManager) -> None:
+        """Clear token state from session."""
         st.session_state.pop("api_token", None)
+
         st.session_state.pop("api_token_exp", None)
         st.session_state.pop("api_token_created", None)
         self._refresh_in_progress = False
 
-    def _attempt_proactive_refresh(self):
+    def _attempt_proactive_refresh(self: JWTManager) -> None:
         """Attempt to proactively refresh the token before it expires"""
         current_time = time.time()
 
@@ -372,15 +398,16 @@ class JWTManager:
             else:
                 logger.warning("Proactive token refresh failed")
 
-        except Exception as e:
-            logger.error(f"Error during proactive token refresh: {e}")
+        except (KeyError, ValueError, jwt.PyJWTError) as e:
+            logger.error("Error during proactive token refresh: %s", e)
             self._last_error = str(e)
         finally:
             self._refresh_in_progress = False
 
-    def _get_current_token_data(self) -> Optional[Dict[str, Any]]:
+    def _get_current_token_data(self: JWTManager) -> Optional[Dict[str, object]]:
         """Extract user data from current token for refresh"""
         try:
+
             current_token = st.session_state.get("api_token")
             if not current_token:
                 return None
@@ -399,7 +426,7 @@ class JWTManager:
                 logger.warning("JWT token has expired")
                 return None
             except jwt.InvalidTokenError as e:
-                logger.error(f"JWT signature verification failed: {e}")
+                logger.error("JWT signature verification failed: %s", e)
                 return None
 
             # Return user data for token recreation
@@ -410,29 +437,31 @@ class JWTManager:
                 "sub": payload.get("sub", "user"),
                 "roles": payload.get("roles", ["ai-api-access"]),
             }
-        except Exception as e:
-            logger.error(f"Error extracting token data: {e}")
+        except (KeyError, ValueError, jwt.PyJWTError) as e:
+            logger.error("Error extracting token data: %s", e)
             return None
 
-    def _refresh_token_with_retry(self, token_data: Dict[str, Any]) -> Optional[str]:
+    def _refresh_token_with_retry(self: JWTManager, token_data: Dict[str, object]) -> Optional[str]:
         """Refresh token with retry logic"""
         for attempt in range(self._max_retry_attempts):
+
             try:
-                logger.info(f"Token refresh attempt {attempt + 1}/{self._max_retry_attempts}")
+                logger.info("Token refresh attempt %d/%d", attempt + 1, self._max_retry_attempts)
                 new_token = self.create_token(token_data)
                 if new_token:
                     return new_token
 
-            except Exception as e:
-                logger.warning(f"Token refresh attempt {attempt + 1} failed: {e}")
+            except (KeyError, ValueError, jwt.PyJWTError) as e:
+                logger.warning("Token refresh attempt %d failed: %s", attempt + 1, e)
                 if attempt < self._max_retry_attempts - 1:
                     time.sleep(self._retry_delay)
 
         return None
 
-    def get_refresh_status(self) -> Dict[str, Any]:
+    def get_refresh_status(self: JWTManager) -> Dict[str, object]:
         """Get current refresh status for UI display"""
         current_time = int(time.time())
+
         token_exp = st.session_state.get("api_token_exp", 0)
         time_remaining = max(0, token_exp - current_time)
 

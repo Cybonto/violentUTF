@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test suite for MCP Integration Utilities
 Tests natural language parsing, context analysis, and integration features
@@ -67,7 +73,12 @@ class TestNaturalLanguageParser:
 
     def test_parse_enhance_commands(self, parser) -> None:
         """Test parsing enhance commands"""
-        test_cases = ["/mcp enhance", "enhance this prompt", "improve this prompt", "make this prompt better"]
+        test_cases = [
+            "/mcp enhance",
+            "enhance this prompt",
+            "improve this prompt",
+            "make this prompt better",
+        ]
 
         for text in test_cases:
             command = parser.parse(text)
@@ -201,7 +212,10 @@ class TestResourceSearcher:
 
         # Mock prompts
         mock_client.list_prompts.return_value = [
-            {"name": "jailbreak_test", "description": "Test for jailbreak vulnerabilities"},
+            {
+                "name": "jailbreak_test",
+                "description": "Test for jailbreak vulnerabilities",
+            },
             {"name": "bias_detection", "description": "Detect bias in responses"},
         ]
 
@@ -308,7 +322,11 @@ class TestTestScenarioInterpreter:
 
     def test_execute_test(self, interpreter) -> None:
         """Test test execution"""
-        config = {"test_type": "jailbreak", "prompt_name": "jailbreak_test", "parameters": {"scenario": "test"}}
+        config = {
+            "test_type": "jailbreak",
+            "prompt_name": "jailbreak_test",
+            "parameters": {"scenario": "test"},
+        }
 
         result = interpreter.execute_test(config)
         assert "error" not in result
@@ -369,7 +387,8 @@ class TestDatasetIntegration:
         """Test Jinja transformation"""
         # Test with list data
         result = integration.transform_with_jinja(
-            [{"name": "test1"}, {"name": "test2"}], "{% for item in items %}{{ item.name }}{% endfor %}"
+            [{"name": "test1"}, {"name": "test2"}],
+            "{% for item in items %}{{ item.name }}{% endfor %}",
         )
 
         # Should contain both names (either from JinjaTransformer or fallback)
@@ -380,8 +399,16 @@ class TestDatasetIntegration:
         """Test listing all available datasets"""
         # Mock MCP resources
         integration.mcp_client.list_resources.return_value = [
-            {"uri": "violentutf://datasets/test1", "name": "Test Dataset 1", "description": "Test dataset"},
-            {"uri": "violentutf://other/resource", "name": "Other Resource", "description": "Not a dataset"},
+            {
+                "uri": "violentutf://datasets/test1",
+                "name": "Test Dataset 1",
+                "description": "Test dataset",
+            },
+            {
+                "uri": "violentutf://other/resource",
+                "name": "Other Resource",
+                "description": "Not a dataset",
+            },
         ]
 
         datasets = integration.list_available_datasets()

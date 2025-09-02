@@ -4,19 +4,27 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Enhanced PyRIT Dataset Stream Processor
+"""Enhanced PyRIT Dataset Stream Processor
 
 This module provides streaming capabilities for PyRIT datasets with memory optimization,
 intelligent chunking, and comprehensive error handling.
 """
-
 import asyncio
+import inspect
 import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, AsyncIterator, Awaitable, Callable, Dict, List, Optional
+from typing import (
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Self,
+    cast,
+)
 
 from pyrit.memory import CentralMemory, MemoryInterface
 
@@ -25,10 +33,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DatasetChunk:
-    """Container for a chunk of dataset prompts with metadata"""
+    """Container for a chunk of dataset prompts with metadata."""
 
     prompts: List[str]
-    metadata: List[Dict[str, Any]]
+    metadata: List[Dict[str, object]]
     chunk_index: int
     total_processed: int
     estimated_remaining: Optional[int] = None
@@ -36,7 +44,7 @@ class DatasetChunk:
 
 @dataclass
 class DatasetImportStats:
-    """Statistics tracking for dataset import operations"""
+    """Statistics tracking for dataset import operations."""
 
     start_time: datetime
     total_processed: int = 0
@@ -48,30 +56,29 @@ class DatasetImportStats:
 
 
 class DatasetFetchError(Exception):
-    """Custom exception for dataset fetching errors"""
-
-    pass
+    """Customize exception for dataset fetching errors."""
 
 
 class PyRITStreamProcessor:
-    """Enhanced streaming processor with memory-aware chunking"""
+    """Enhanced streaming processor with memory-aware chunking."""
 
-    def __init__(self, memory_interface: Optional[MemoryInterface] = None):
+    def __init__(self: "Self", memory_interface: Optional[MemoryInterface] = None) -> None:
+        """Initialize instance."""
         self.memory = memory_interface or CentralMemory.get_memory_instance()
-        self.chunk_size = int(os.getenv("DATASET_CHUNK_SIZE", 1000))
-        self.max_memory_mb = int(os.getenv("DATASET_MAX_MEMORY_MB", 512))
-        self.max_retries = int(os.getenv("DATASET_MAX_RETRIES", 3))
-        self.retry_delay = float(os.getenv("DATASET_RETRY_DELAY", 1.0))
+
+        self.chunk_size = int(os.getenv("DATASET_CHUNK_SIZE", "1000"))
+        self.max_memory_mb = int(os.getenv("DATASET_MAX_MEMORY_MB", "512"))
+        self.max_retries = int(os.getenv("DATASET_MAX_RETRIES", "3"))
+        self.retry_delay = float(os.getenv("DATASET_RETRY_DELAY", "1.0"))
 
     async def process_pyrit_dataset_stream(
-        self,
+        self: "Self",
         dataset_type: str,
-        config: Dict[str, Any],
+        config: Dict[str, object],
         max_prompts: Optional[int] = None,
         progress_callback: Optional[Callable[[int, int], Awaitable[None]]] = None,
     ) -> AsyncIterator[DatasetChunk]:
-        """Stream process PyRIT datasets with intelligent chunking"""
-
+        """Stream process PyRIT datasets with intelligent chunking."""
         logger.info("Starting stream processing for dataset: %s", dataset_type)
 
         # Initialize statistics
@@ -93,8 +100,8 @@ class PyRITStreamProcessor:
             chunk_metadata = []
 
             async for prompt_info in self._extract_prompts_with_metadata(dataset):
-                chunk_data.append(prompt_info["text"])
-                chunk_metadata.append(prompt_info["metadata"])
+                chunk_data.append(cast(str, prompt_info["text"]))
+                chunk_metadata.append(cast(Dict[str, object], prompt_info["metadata"]))
                 prompts_processed += 1
 
                 # Yield chunk when optimal size reached
@@ -104,7 +111,7 @@ class PyRITStreamProcessor:
                         metadata=chunk_metadata,
                         chunk_index=stats.chunks_processed,
                         total_processed=prompts_processed,
-                        estimated_remaining=(max_prompts - prompts_processed) if max_prompts else None,
+                        estimated_remaining=((max_prompts - prompts_processed) if max_prompts else None),
                     )
 
                     yield chunk
@@ -147,15 +154,18 @@ class PyRITStreamProcessor:
 
         except Exception as e:
             logger.error("Stream processing failed for %s: %s", dataset_type, e)
-            raise DatasetFetchError(f"Failed to process dataset {dataset_type}: {str(e)}")
+            raise DatasetFetchError(f"Failed to process dataset {dataset_type}: {str(e)}") from e
 
         logger.info(
-            "Completed stream processing: %s prompts in %s chunks", stats.total_processed, stats.chunks_processed
+            "Completed stream processing: %s prompts in %s chunks",
+            stats.total_processed,
+            stats.chunks_processed,
         )
 
-    def _calculate_optimal_chunk_size(self, dataset: Any) -> int:
-        """Calculate optimal chunk size based on dataset characteristics"""
+    def _calculate_optimal_chunk_size(self: "Self", dataset: object) -> int:
+        """Calculate optimal chunk size based on dataset characteristics."""
         try:
+
             # Try to get dataset size information
             if hasattr(dataset, "prompts") and hasattr(dataset.prompts, "__len__"):
                 dataset_size = len(dataset.prompts)
@@ -175,7 +185,7 @@ class PyRITStreamProcessor:
                     optimal_size = max(100, min(calculated_chunk_size, self.chunk_size))
 
                     logger.debug(
-                        f"Calculated optimal chunk size: {optimal_size} (avg_prompt_size: {avg_prompt_size:.0f})"
+                        "Calculated optimal chunk size: %d (avg_prompt_size: %.0f)", optimal_size, avg_prompt_size
                     )
                     return optimal_size
 
@@ -184,9 +194,10 @@ class PyRITStreamProcessor:
 
         return self.chunk_size
 
-    async def _validate_dataset_access(self, dataset_type: str, config: Dict[str, Any]) -> None:
-        """Validate that the dataset can be accessed with the given configuration"""
+    async def _validate_dataset_access(self: "Self", dataset_type: str, config: Dict[str, object]) -> None:
+        """Validate that the dataset can be accessed with the given configuration."""
         try:
+
             # Check if dataset type is supported
             supported_types = {
                 "aya_redteaming",
@@ -211,11 +222,14 @@ class PyRITStreamProcessor:
             logger.debug("Dataset validation passed for %s", dataset_type)
 
         except Exception as e:
-            raise DatasetFetchError(f"Dataset validation failed: {str(e)}")
+            raise DatasetFetchError(f"Dataset validation failed: {str(e)}") from e
 
-    async def _fetch_full_pyrit_dataset(self, dataset_type: str, config: Dict[str, Any]) -> Any:
-        """Fetch complete PyRIT dataset without 50-row limit"""
+    async def _fetch_full_pyrit_dataset(
+        self: "Self", dataset_type: str, config: Dict[str, object]
+    ) -> Optional[Dict[str, object]]:
+        """Fetch complete PyRIT dataset without 50-row limit."""
         try:
+
             # Import all PyRIT dataset functions
             from pyrit.datasets import (
                 fetch_adv_bench_dataset,
@@ -255,10 +269,12 @@ class PyRITStreamProcessor:
 
         except Exception as e:
             logger.error("Failed to fetch PyRIT dataset %s: %s", dataset_type, e)
-            raise DatasetFetchError(f"Could not fetch dataset {dataset_type}: {str(e)}")
+            raise DatasetFetchError(f"Could not fetch dataset {dataset_type}: {str(e)}") from e
 
-    async def _fetch_with_retry(self, fetcher: Callable, config: Dict, max_retries: Optional[int] = None) -> Any:
-        """Fetch dataset with retry logic and exponential backoff"""
+    async def _fetch_with_retry(
+        self: "Self", fetcher: Callable, config: Dict, max_retries: Optional[int] = None
+    ) -> Optional[Dict[str, object]]:
+        """Fetch dataset with retry logic and exponential backoff."""
         max_retries = max_retries or self.max_retries
 
         for attempt in range(max_retries):
@@ -270,7 +286,7 @@ class PyRITStreamProcessor:
                     # Run synchronous fetcher in thread pool
                     result = await asyncio.get_event_loop().run_in_executor(None, lambda: fetcher(**config))
 
-                logger.debug(f"Dataset fetch successful on attempt {attempt + 1}")
+                logger.debug("Dataset fetch successful on attempt %d", attempt + 1)
                 return result
 
             except Exception as e:
@@ -280,13 +296,18 @@ class PyRITStreamProcessor:
 
                 # Exponential backoff
                 wait_time = self.retry_delay * (2**attempt)
-                logger.warning(f"Dataset fetch attempt {attempt + 1} failed, retrying in {wait_time}s: {e}")
+                logger.warning(
+                    "Dataset fetch attempt %d failed, retrying in %ds: %s",
+                    attempt + 1,
+                    wait_time,
+                    e,
+                )
                 await asyncio.sleep(wait_time)
 
-    def _clean_config_for_fetcher(self, fetcher: Callable, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Clean configuration to only include parameters supported by the fetcher"""
-        import inspect
+        return None
 
+    def _clean_config_for_fetcher(self: "Self", fetcher: Callable, config: Dict[str, object]) -> Dict[str, object]:
+        """Clean configuration to only include parameters supported by the fetcher."""
         try:
             # Get the function signature
             sig = inspect.signature(fetcher)
@@ -302,9 +323,10 @@ class PyRITStreamProcessor:
             logger.warning("Could not clean config for fetcher: %s", e)
             return config  # Return original config if cleaning fails
 
-    async def _extract_prompts_with_metadata(self, dataset: Any) -> AsyncIterator[Dict[str, Any]]:
-        """Extract prompts with metadata from PyRIT dataset"""
+    async def _extract_prompts_with_metadata(self: "Self", dataset: object) -> AsyncIterator[Dict[str, object]]:
+        """Extract prompts with metadata from PyRIT dataset."""
         try:
+
             # Handle different dataset return types
             if hasattr(dataset, "prompts"):
                 # Standard SeedPromptDataset format
@@ -319,9 +341,15 @@ class PyRITStreamProcessor:
                             },
                         }
                     elif hasattr(prompt, "prompt"):
-                        yield {"text": prompt.prompt, "metadata": {"source": "pyrit_dataset"}}
+                        yield {
+                            "text": prompt.prompt,
+                            "metadata": {"source": "pyrit_dataset"},
+                        }
                     else:
-                        yield {"text": str(prompt), "metadata": {"source": "pyrit_dataset"}}
+                        yield {
+                            "text": str(prompt),
+                            "metadata": {"source": "pyrit_dataset"},
+                        }
 
                     # Yield control periodically to prevent blocking
                     if i % 100 == 0:
@@ -335,12 +363,20 @@ class PyRITStreamProcessor:
                         text = item.get("user") or item.get("prompt") or str(item)
                         yield {
                             "text": text,
-                            "metadata": {"index": i, "source": "pyrit_dataset", "original_format": "dict"},
+                            "metadata": {
+                                "index": i,
+                                "source": "pyrit_dataset",
+                                "original_format": "dict",
+                            },
                         }
                     else:
                         yield {
                             "text": str(item),
-                            "metadata": {"index": i, "source": "pyrit_dataset", "original_format": type(item).__name__},
+                            "metadata": {
+                                "index": i,
+                                "source": "pyrit_dataset",
+                                "original_format": type(item).__name__,
+                            },
                         }
 
                     # Yield control periodically to prevent blocking
@@ -353,25 +389,37 @@ class PyRITStreamProcessor:
                     if hasattr(question, "question"):
                         yield {
                             "text": question.question,
-                            "metadata": {"index": i, "source": "wmdp_dataset", "question_type": "question"},
+                            "metadata": {
+                                "index": i,
+                                "source": "wmdp_dataset",
+                                "question_type": "question",
+                            },
                         }
                     elif hasattr(question, "value"):
                         yield {
                             "text": question.value,
-                            "metadata": {"index": i, "source": "wmdp_dataset", "question_type": "value"},
+                            "metadata": {
+                                "index": i,
+                                "source": "wmdp_dataset",
+                                "question_type": "value",
+                            },
                         }
                     else:
                         yield {
                             "text": str(question),
-                            "metadata": {"index": i, "source": "wmdp_dataset", "question_type": "unknown"},
+                            "metadata": {
+                                "index": i,
+                                "source": "wmdp_dataset",
+                                "question_type": "unknown",
+                            },
                         }
 
                     # Yield control periodically to prevent blocking
                     if i % 100 == 0:
                         await asyncio.sleep(0)
             else:
-                logger.warning(f"Unknown dataset format: {type(dataset)}")
+                logger.warning("Unknown dataset format: %s", type(dataset))
 
         except Exception as e:
             logger.error("Error extracting prompts from dataset: %s", e)
-            raise DatasetFetchError(f"Could not extract prompts: {str(e)}")
+            raise DatasetFetchError(f"Could not extract prompts: {str(e)}") from e

@@ -4,12 +4,11 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""OAuth Proxy for MCP Client Compatibility"""
-
+"""OAuth Proxy for MCP Client Compatibility."""
 import logging
 import secrets
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, Self
 from urllib.parse import urlencode
 
 import httpx
@@ -23,43 +22,56 @@ logger = logging.getLogger(__name__)
 
 
 class MCPOAuthProxy:
-    """Provides OAuth proxy endpoints for MCP client compatibility"""
+    """Provide OAuth proxy endpoints for MCP client compatibility."""
 
-    def __init__(self):
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         self.keycloak_verifier = keycloak_verifier
+
         self.router = APIRouter(prefix="/mcp/oauth")
         self.pkce_verifiers: Dict[str, str] = {}  # Store PKCE verifiers
         self._setup_routes()
 
-    def _setup_routes(self):
-        """Configure OAuth proxy routes"""
+    def _setup_routes(self: "Self") -> None:
+        """Configure OAuth proxy routes."""
         self.router.get("/.well-known/oauth-authorization-server")(self.get_oauth_metadata)
+
         self.router.get("/authorize")(self.proxy_authorize)
         self.router.post("/token")(self.proxy_token_exchange)
         self.router.get("/callback")(self.handle_callback)
 
-    async def get_oauth_metadata(self) -> JSONResponse:
-        """Provide OAuth metadata for MCP clients"""
+    async def get_oauth_metadata(self: "Self") -> JSONResponse:
+        """Provide OAuth metadata for MCP clients."""
         base_url = settings.EXTERNAL_URL or "http://localhost:9080"
 
         metadata = {
             "issuer": f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}",
             "authorization_endpoint": f"{base_url}/mcp/oauth/authorize",
             "token_endpoint": f"{base_url}/mcp/oauth/token",
-            "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
+            "token_endpoint_auth_methods_supported": [
+                "client_secret_post",
+                "client_secret_basic",
+            ],
             "grant_types_supported": ["authorization_code", "refresh_token"],
             "response_types_supported": ["code"],
             "code_challenge_methods_supported": ["S256"],
             "scopes_supported": ["openid", "profile", "email", "violentutf-api"],
             "subject_types_supported": ["public"],
             "id_token_signing_alg_values_supported": ["RS256"],
-            "claims_supported": ["sub", "email", "email_verified", "name", "preferred_username", "roles"],
+            "claims_supported": [
+                "sub",
+                "email",
+                "email_verified",
+                "name",
+                "preferred_username",
+                "roles",
+            ],
         }
 
         return JSONResponse(content=metadata)
 
     async def proxy_authorize(
-        self,
+        self: "Self",
         client_id: str = Query(...),
         redirect_uri: str = Query(...),
         response_type: str = Query(...),
@@ -68,9 +80,9 @@ class MCPOAuthProxy:
         code_challenge: Optional[str] = Query(None),
         code_challenge_method: Optional[str] = Query(None),
     ) -> RedirectResponse:
-        """Proxy authorization request to Keycloak"""
-
+        """Proxy authorization request to Keycloak."""
         # Build Keycloak authorization URL
+
         keycloak_auth_url = f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}/protocol/openid-connect/auth"
 
         # Store PKCE verifier if provided
@@ -84,7 +96,7 @@ class MCPOAuthProxy:
             self.pkce_verifiers = {
                 k: v
                 for k, v in self.pkce_verifiers.items()
-                if not hasattr(v, "_timestamp") or current_time - v._timestamp < 600
+                if not hasattr(v, "_timestamp") or current_time - v._timestamp < 600  # pylint: disable=protected-access
             }
 
         # Prepare Keycloak parameters
@@ -106,23 +118,30 @@ class MCPOAuthProxy:
         return RedirectResponse(url=redirect_url)
 
     async def handle_callback(
-        self,
+        self: "Self",
         code: Optional[str] = Query(None),
         state: Optional[str] = Query(None),
         error: Optional[str] = Query(None),
         error_description: Optional[str] = Query(None),
     ) -> JSONResponse:
-        """Handle OAuth callback from Keycloak"""
-
+        """Handle OAuth callback from Keycloak."""
         if error:
+
             return JSONResponse(
                 status_code=400,
-                content={"error": error, "error_description": error_description or "Authorization failed"},
+                content={
+                    "error": error,
+                    "error_description": error_description or "Authorization failed",
+                },
             )
 
         if not code:
             return JSONResponse(
-                status_code=400, content={"error": "invalid_request", "error_description": "Authorization code missing"}
+                status_code=400,
+                content={
+                    "error": "invalid_request",
+                    "error_description": "Authorization code missing",
+                },
             )
 
         # Return the authorization code to the client
@@ -135,17 +154,17 @@ class MCPOAuthProxy:
             }
         )
 
-    async def proxy_token_exchange(self, request: Request) -> JSONResponse:
-        """Exchange authorization code for tokens"""
-
+    async def proxy_token_exchange(self: "Self", request: Request) -> JSONResponse:
+        """Exchange authorization code for tokens."""
         # Parse form data
+
         form_data = await request.form()
         grant_type = form_data.get("grant_type")
 
         if grant_type == "authorization_code":
-            return await self._handle_authorization_code_exchange(form_data)
+            return await self._handle_authorization_code_exchange(dict(form_data))
         elif grant_type == "refresh_token":
-            return await self._handle_refresh_token_exchange(form_data)
+            return await self._handle_refresh_token_exchange(dict(form_data))
         else:
             return JSONResponse(
                 status_code=400,
@@ -155,16 +174,19 @@ class MCPOAuthProxy:
                 },
             )
 
-    async def _handle_authorization_code_exchange(self, form_data) -> JSONResponse:
-        """Handle authorization code exchange"""
-
+    async def _handle_authorization_code_exchange(self: "Self", form_data: Dict[str, object]) -> JSONResponse:
         code = form_data.get("code")
+
         redirect_uri = form_data.get("redirect_uri")
         code_verifier = form_data.get("code_verifier")
 
         if not code:
             return JSONResponse(
-                status_code=400, content={"error": "invalid_request", "error_description": "Code required"}
+                status_code=400,
+                content={
+                    "error": "invalid_request",
+                    "error_description": "Code required",
+                },
             )
 
         try:
@@ -195,47 +217,61 @@ class MCPOAuthProxy:
 
                 token_response = response.json()
 
-            # Verify the received token
-            access_token = token_response.get("access_token")
-            keycloak_payload = await self.keycloak_verifier.verify_keycloak_token(access_token)
+                # Verify the received token
+                access_token = token_response.get("access_token")
+                keycloak_payload = await self.keycloak_verifier.verify_keycloak_token(access_token)
 
-            if not keycloak_payload:
-                return JSONResponse(
-                    status_code=401,
-                    content={"error": "invalid_token", "error_description": "Token verification failed"},
+                if not keycloak_payload:
+                    return JSONResponse(
+                        status_code=401,
+                        content={
+                            "error": "invalid_token",
+                            "error_description": "Token verification failed",
+                        },
+                    )
+
+                # Create local JWT for API access
+                user_info = self.keycloak_verifier.extract_user_info(keycloak_payload)
+                api_token = create_access_token(
+                    {
+                        "sub": user_info["username"],
+                        "email": user_info["email"],
+                        "roles": user_info["roles"],
+                    }
                 )
 
-            # Create local JWT for API access
-            user_info = self.keycloak_verifier.extract_user_info(keycloak_payload)
-            api_token = create_access_token(
-                {"sub": user_info["username"], "email": user_info["email"], "roles": user_info["roles"]}
-            )
-
-            # Return tokens
-            return JSONResponse(
-                content={
-                    "access_token": api_token,
-                    "token_type": "Bearer",
-                    "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-                    "refresh_token": token_response.get("refresh_token"),
-                    "scope": token_response.get("scope", ""),
-                }
-            )
+                # Return tokens
+                return JSONResponse(
+                    content={
+                        "access_token": api_token,
+                        "token_type": "Bearer",
+                        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                        "refresh_token": token_response.get("refresh_token"),
+                        "scope": token_response.get("scope", ""),
+                    }
+                )
 
         except Exception as e:
             logger.error("Token exchange error: %s", e)
             return JSONResponse(
-                status_code=500, content={"error": "server_error", "error_description": "Token exchange failed"}
+                status_code=500,
+                content={
+                    "error": "server_error",
+                    "error_description": "Token exchange failed",
+                },
             )
 
-    async def _handle_refresh_token_exchange(self, form_data) -> JSONResponse:
-        """Handle refresh token exchange"""
-
+    async def _handle_refresh_token_exchange(self: "Self", form_data: Dict[str, object]) -> JSONResponse:
+        """Handle refresh token exchange."""
         refresh_token = form_data.get("refresh_token")
 
         if not refresh_token:
             return JSONResponse(
-                status_code=400, content={"error": "invalid_request", "error_description": "Refresh token required"}
+                status_code=400,
+                content={
+                    "error": "invalid_request",
+                    "error_description": "Refresh token required",
+                },
             )
 
         try:
@@ -260,37 +296,48 @@ class MCPOAuthProxy:
 
                 token_response = response.json()
 
-            # Verify the new token
-            access_token = token_response.get("access_token")
-            keycloak_payload = await self.keycloak_verifier.verify_keycloak_token(access_token)
+                # Verify the new token
+                access_token = token_response.get("access_token")
+                keycloak_payload = await self.keycloak_verifier.verify_keycloak_token(access_token)
 
-            if not keycloak_payload:
-                return JSONResponse(
-                    status_code=401,
-                    content={"error": "invalid_token", "error_description": "Token verification failed"},
+                if not keycloak_payload:
+                    return JSONResponse(
+                        status_code=401,
+                        content={
+                            "error": "invalid_token",
+                            "error_description": "Token verification failed",
+                        },
+                    )
+
+                # Create new local JWT
+                user_info = self.keycloak_verifier.extract_user_info(keycloak_payload)
+                api_token = create_access_token(
+                    {
+                        "sub": user_info["username"],
+                        "email": user_info["email"],
+                        "roles": user_info["roles"],
+                    }
                 )
 
-            # Create new local JWT
-            user_info = self.keycloak_verifier.extract_user_info(keycloak_payload)
-            api_token = create_access_token(
-                {"sub": user_info["username"], "email": user_info["email"], "roles": user_info["roles"]}
-            )
-
-            # Return new tokens
-            return JSONResponse(
-                content={
-                    "access_token": api_token,
-                    "token_type": "Bearer",
-                    "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-                    "refresh_token": token_response.get("refresh_token"),
-                    "scope": token_response.get("scope", ""),
-                }
-            )
+                # Return new tokens
+                return JSONResponse(
+                    content={
+                        "access_token": api_token,
+                        "token_type": "Bearer",
+                        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                        "refresh_token": token_response.get("refresh_token"),
+                        "scope": token_response.get("scope", ""),
+                    }
+                )
 
         except Exception as e:
             logger.error("Refresh token error: %s", e)
             return JSONResponse(
-                status_code=500, content={"error": "server_error", "error_description": "Token refresh failed"}
+                status_code=500,
+                content={
+                    "error": "server_error",
+                    "error_description": "Token refresh failed",
+                },
             )
 
 

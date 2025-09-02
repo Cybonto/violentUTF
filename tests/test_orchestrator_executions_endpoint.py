@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test the new /orchestrators/executions endpoint for Dashboard_2 support
 """
@@ -76,19 +82,29 @@ def test_list_all_orchestrator_executions(mock_auth, mock_db):
 
     # Mock orchestrator configurations
     mock_orchestrator1 = Mock(
-        id=orchestrator1_id, name="Security Test Orchestrator", orchestrator_type="PromptSendingOrchestrator"
+        id=orchestrator1_id,
+        name="Security Test Orchestrator",
+        orchestrator_type="PromptSendingOrchestrator",
     )
 
     mock_orchestrator2 = Mock(
-        id=orchestrator2_id, name="Dataset Test Orchestrator", orchestrator_type="RedTeamingOrchestrator"
+        id=orchestrator2_id,
+        name="Dataset Test Orchestrator",
+        orchestrator_type="RedTeamingOrchestrator",
     )
 
     # Setup mock database queries
     mock_executions_result = Mock()
-    mock_executions_result.scalars.return_value.all.return_value = [mock_execution1, mock_execution2]
+    mock_executions_result.scalars.return_value.all.return_value = [
+        mock_execution1,
+        mock_execution2,
+    ]
 
     mock_orchestrators_result = Mock()
-    mock_orchestrators_result.scalars.return_value.all.return_value = [mock_orchestrator1, mock_orchestrator2]
+    mock_orchestrators_result.scalars.return_value.all.return_value = [
+        mock_orchestrator1,
+        mock_orchestrator2,
+    ]
 
     # Mock the execute method to return different results based on query
     call_count = 0

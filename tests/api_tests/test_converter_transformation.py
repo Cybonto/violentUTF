@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test to verify converter actually transforms prompts correctly.
 
@@ -12,6 +18,7 @@ import os
 import sys
 import time
 import uuid
+from typing import Dict
 
 import requests
 
@@ -23,7 +30,7 @@ API_BASE_URL = "http://localhost:9080"
 JWT_SECRET_KEY = "ZtZDeFsgTqUm3KHSKINa46TUV13JJw7T"  # nosec B105 - test JWT secret
 
 
-def create_jwt_token():
+def create_jwt_token() -> str:
     """Create a test JWT token"""
     try:
         import jwt
@@ -43,17 +50,21 @@ def create_jwt_token():
         return None
 
 
-def get_headers():
+def get_headers() -> Dict[str, str]:
     """Get API request headers"""
     token = create_jwt_token()
     if not token:
         raise ValueError("Failed to create JWT token")
 
-    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "X-API-Gateway": "APISIX",
+    }
 
 
-def simple_rot13(text):
-    """Simple ROT13 implementation for verification"""
+def simple_rot13(text: str) -> str:
+    """Implement simple ROT13 for verification."""
     result = []
     for char in text:
         if "a" <= char <= "z":
@@ -65,7 +76,7 @@ def simple_rot13(text):
     return "".join(result)
 
 
-def test_converter_transformations():
+def test_converter_transformations() -> None:
     """Test that converters actually transform prompts correctly"""
     headers = get_headers()
     resources_to_cleanup = {"datasets": [], "converters": []}
@@ -77,7 +88,11 @@ def test_converter_transformations():
         print("1️⃣ Testing ROT13 Converter...")
 
         # Create source dataset with known prompts
-        test_prompts = ["Hello World", "Testing ROT13 converter", "This is a secret message"]
+        test_prompts = [
+            "Hello World",
+            "Testing ROT13 converter",
+            "This is a secret message",
+        ]
 
         # Create dataset via API using local source type
         dataset_payload = {
@@ -88,7 +103,12 @@ def test_converter_transformations():
             "config": {},
         }
 
-        response = requests.post(f"{API_BASE_URL}/api/v1/datasets", json=dataset_payload, headers=headers, timeout=30)
+        response = requests.post(
+            f"{API_BASE_URL}/api/v1/datasets",
+            json=dataset_payload,
+            headers=headers,
+            timeout=30,
+        )
 
         if response.status_code not in [200, 201]:
             # If local source doesn't work as expected, use native type
@@ -99,10 +119,16 @@ def test_converter_transformations():
                 "config": {},
             }
             response = requests.post(
-                f"{API_BASE_URL}/api/v1/datasets", json=dataset_payload, headers=headers, timeout=30
+                f"{API_BASE_URL}/api/v1/datasets",
+                json=dataset_payload,
+                headers=headers,
+                timeout=30,
             )
 
-        assert response.status_code in [200, 201], f"Failed to create dataset: {response.text}"
+        assert response.status_code in [
+            200,
+            201,
+        ], f"Failed to create dataset: {response.text}"
 
         dataset_id = response.json()["dataset"]["id"]
         resources_to_cleanup["datasets"].append(dataset_id)
@@ -115,7 +141,10 @@ def test_converter_transformations():
         }
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30
+            f"{API_BASE_URL}/api/v1/converters",
+            json=converter_payload,
+            headers=headers,
+            timeout=30,
         )
 
         assert response.status_code in [200, 201]
@@ -132,7 +161,10 @@ def test_converter_transformations():
         }
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/converters/{converter_id}/apply", json=apply_payload, headers=headers, timeout=30
+            f"{API_BASE_URL}/api/v1/converters/{converter_id}/apply",
+            json=apply_payload,
+            headers=headers,
+            timeout=30,
         )
 
         assert response.status_code == 200
@@ -140,7 +172,11 @@ def test_converter_transformations():
         resources_to_cleanup["datasets"].append(new_dataset_id)
 
         # Get the converted dataset to check prompts
-        response = requests.get(f"{API_BASE_URL}/api/v1/datasets/{new_dataset_id}", headers=headers, timeout=30)
+        response = requests.get(
+            f"{API_BASE_URL}/api/v1/datasets/{new_dataset_id}",
+            headers=headers,
+            timeout=30,
+        )
 
         assert response.status_code == 200
         converted_dataset = response.json()
@@ -164,7 +200,10 @@ def test_converter_transformations():
         }
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30
+            f"{API_BASE_URL}/api/v1/converters",
+            json=converter_payload,
+            headers=headers,
+            timeout=30,
         )
 
         assert response.status_code in [200, 201]
@@ -203,7 +242,10 @@ def test_converter_transformations():
         }
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers, timeout=30
+            f"{API_BASE_URL}/api/v1/converters",
+            json=converter_payload,
+            headers=headers,
+            timeout=30,
         )
 
         assert response.status_code in [200, 201]
@@ -254,12 +296,20 @@ def test_converter_transformations():
         print("\n🧹 Cleaning up test resources...")
         for converter_id in resources_to_cleanup["converters"]:
             try:
-                requests.delete(f"{API_BASE_URL}/api/v1/converters/{converter_id}", headers=headers, timeout=30)
+                requests.delete(
+                    f"{API_BASE_URL}/api/v1/converters/{converter_id}",
+                    headers=headers,
+                    timeout=30,
+                )
             except Exception as e:
                 print(f"Warning: Error in cleanup: {e}")
         for dataset_id in resources_to_cleanup["datasets"]:
             try:
-                requests.delete(f"{API_BASE_URL}/api/v1/datasets/{dataset_id}", headers=headers, timeout=30)
+                requests.delete(
+                    f"{API_BASE_URL}/api/v1/datasets/{dataset_id}",
+                    headers=headers,
+                    timeout=30,
+                )
             except Exception as e:
                 print(f"Warning: Error in cleanup: {e}")
 

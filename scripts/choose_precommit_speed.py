@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 # Copyright (c) 2025 ViolentUTF Contributors.
 # Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Interactive script to choose pre-commit speed configuration
-"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+
+"""Interactive script to choose pre-commit speed configuration."""
 
 import shutil
-import subprocess
+import subprocess  # nosec B404 - needed for controlled pre-commit command execution
 import sys
 from pathlib import Path
 
@@ -15,17 +19,21 @@ from pathlib import Path
 def backup_current_hook() -> None:
     """Backup current pre-commit hook"""
     hook_path = Path(".git/hooks/pre-commit")
+
     if hook_path.exists():
         backup_path = Path(".git/hooks/pre-commit.backup")
         shutil.copy(hook_path, backup_path)
         print("💾 Backed up current pre-commit hook")
 
 
-def install_config(config_name, config_file, estimated_time) -> bool:
+def install_config(config_name: str, config_file: str, estimated_time: str) -> bool:
     """Install specific pre-commit configuration"""
     try:
+
         # Install the configuration
-        subprocess.run(["pre-commit", "install", "--config", config_file], check=True)
+        subprocess.run(
+            ["pre-commit", "install", "--config", config_file], check=True
+        )  # nosec B603 B607 - controlled pre-commit installation
         print(f"✅ Installed {config_name}")
         print(f"   Config file: {config_file}")
         print(f"   Estimated time: {estimated_time}")
@@ -38,6 +46,7 @@ def install_config(config_name, config_file, estimated_time) -> bool:
 def show_menu() -> None:
     """Show speed configuration menu"""
     print("🚀 Pre-commit Speed Configuration")
+
     print("=" * 40)
     print()
     print("Choose your pre-commit speed:")
@@ -81,10 +90,18 @@ def benchmark_all() -> None:
             import time
 
             start = time.time()
-            result = subprocess.run(
-                ["pre-commit", "run", "check-ast", "--config", config_file, "--all-files"],
+            result = subprocess.run(  # nosec B603 B607 - controlled pre-commit execution
+                [
+                    "pre-commit",
+                    "run",
+                    "check-ast",
+                    "--config",
+                    config_file,
+                    "--all-files",
+                ],
                 capture_output=True,
                 timeout=30,
+                check=False,
             )
             duration = time.time() - start
 
@@ -98,8 +115,9 @@ def benchmark_all() -> None:
 
 
 def main() -> int:
-    """Main interactive function"""
+    """Run interactive pre-commit configuration selection."""
     while True:
+
         show_menu()
 
         try:
@@ -127,7 +145,11 @@ def main() -> int:
             if not Path(".pre-commit-config-ultrafast.yaml").exists():
                 print("❌ Ultra-fast config not found. Creating...")
             backup_current_hook()
-            if install_config("Ultra-Fast Configuration", ".pre-commit-config-ultrafast.yaml", "~0.3 seconds"):
+            if install_config(
+                "Ultra-Fast Configuration",
+                ".pre-commit-config-ultrafast.yaml",
+                "~0.3 seconds",
+            ):
                 print("\n💡 Great for frequent small commits and rapid iteration")
             break
 
@@ -142,7 +164,9 @@ def main() -> int:
                 shutil.copy(backup_path, Path(".git/hooks/pre-commit"))
                 print("✅ Restored original pre-commit configuration")
             else:
-                subprocess.run(["pre-commit", "install"], check=True)
+                subprocess.run(
+                    ["pre-commit", "install"], check=True
+                )  # nosec B603 B607 - controlled pre-commit installation
                 print("✅ Reinstalled default pre-commit configuration")
             break
 

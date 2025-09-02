@@ -1,7 +1,10 @@
-# utils/error_handling.py
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-"""
-Module: Error Handling
+"""Error Handling module.
 
 Contains custom exception classes and error handling utilities.
 
@@ -29,7 +32,7 @@ Dependencies:
 - logging
 """
 
-import logging
+from __future__ import annotations
 
 
 class DatasetLoadingError(Exception):
@@ -40,7 +43,8 @@ class DatasetLoadingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: DatasetLoadingError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -52,7 +56,8 @@ class DatasetParsingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: DatasetParsingError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -64,7 +69,8 @@ class TemplateError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: TemplateError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -76,7 +82,8 @@ class ConverterLoadingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: ConverterLoadingError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -88,7 +95,8 @@ class ConverterApplicationError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: ConverterApplicationError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -100,7 +108,8 @@ class ScorerLoadingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: ScorerLoadingError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -112,7 +121,8 @@ class ScorerInstantiationError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: ScorerInstantiationError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -124,7 +134,8 @@ class ScorerConfigurationError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: ScorerConfigurationError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -136,7 +147,8 @@ class ScorerDeletionError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: ScorerDeletionError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -148,7 +160,8 @@ class ScorerTestingError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: ScorerTestingError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
@@ -160,41 +173,54 @@ class ScorerApplicationError(Exception):
         message (str): Description of the error.
     """
 
-    def __init__(self, message: str):
+    def __init__(self: ScorerApplicationError, message: str) -> None:
+        """Initialize instance."""
         super().__init__(message)
 
 
 class OrchestratorLoadingError(Exception):
     """Exception raised when an Orchestrator fails to load."""
 
-    pass
+    def __init__(self: OrchestratorLoadingError, message: str) -> None:
+        """Initialize instance."""
+        super().__init__(message)
 
 
 class OrchestratorInstantiationError(Exception):
     """Exception raised when an Orchestrator cannot be instantiated."""
 
-    pass
+    def __init__(self: OrchestratorInstantiationError, message: str) -> None:
+        """Initialize instance."""
+        super().__init__(message)
 
 
 class OrchestratorConfigurationError(Exception):
     """Exception raised when there is a configuration error with an Orchestrator."""
 
-    pass
+    def __init__(self: OrchestratorConfigurationError, message: str) -> None:
+        """Initialize instance."""
+        super().__init__(message)
 
 
 class OrchestratorDeletionError(Exception):
     """Exception raised when deleting an Orchestrator fails."""
 
-    pass
+    def __init__(self: OrchestratorDeletionError, message: str) -> None:
+        """Initialize instance."""
+        super().__init__(message)
 
 
 class OrchestratorTestingError(Exception):
     """Exception raised when testing an Orchestrator fails."""
 
-    pass
+    def __init__(self: OrchestratorTestingError, message: str) -> None:
+        """Initialize instance."""
+        super().__init__(message)
 
 
 class OrchestratorExecutionError(Exception):
     """Exception raised when executing an Orchestrator fails."""
 
-    pass
+    def __init__(self: OrchestratorExecutionError, message: str) -> None:
+        """Initialize instance."""
+        super().__init__(message)

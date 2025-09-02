@@ -4,10 +4,12 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""MCP Orchestrator Management Tools"""
+"""MCP Orchestrator Management Tools."""
+
+from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, cast
+from typing import Dict, List, Optional
 from urllib.parse import urljoin
 
 import httpx
@@ -19,18 +21,20 @@ logger = logging.getLogger(__name__)
 
 
 class OrchestratorManagementTools:
-    """MCP tools for orchestrator management and execution"""
+    """MCP tools for orchestrator management and execution."""
 
-    def __init__(self):
+    def __init__(self: OrchestratorManagementTools) -> None:
+        """Initialize instance."""
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
+
         # Use internal URL for direct API access from within container
         if self.base_url and "localhost:9080" in self.base_url:
             self.base_url = "http://violentutf-api:8000"
 
         self.auth_handler = MCPAuthHandler()
 
-    def get_tools(self) -> List[Tool]:
-        """Get all orchestrator management tools"""
+    def get_tools(self: OrchestratorManagementTools) -> List[Tool]:
+        """Get all orchestrator management tools."""
         return [
             self._create_list_orchestrators_tool(),
             self._create_get_orchestrator_tool(),
@@ -48,8 +52,8 @@ class OrchestratorManagementTools:
             self._create_validate_orchestrator_config_tool(),
         ]
 
-    def _create_list_orchestrators_tool(self) -> Tool:
-        """Create tool for listing orchestrators"""
+    def _create_list_orchestrators_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for listing orchestrators."""
         return Tool(
             name="list_orchestrators",
             description="List all orchestrator executions with filtering options",
@@ -59,12 +63,24 @@ class OrchestratorManagementTools:
                     "status": {
                         "type": "string",
                         "description": "Filter by execution status",
-                        "enum": ["pending", "running", "completed", "failed", "paused", "cancelled"],
+                        "enum": [
+                            "pending",
+                            "running",
+                            "completed",
+                            "failed",
+                            "paused",
+                            "cancelled",
+                        ],
                     },
                     "orchestrator_type": {
                         "type": "string",
                         "description": "Filter by orchestrator type",
-                        "enum": ["multi_turn", "red_teaming", "tree_of_attacks", "prompt_sending"],
+                        "enum": [
+                            "multi_turn",
+                            "red_teaming",
+                            "tree_of_attacks",
+                            "prompt_sending",
+                        ],
                     },
                     "created_after": {
                         "type": "string",
@@ -88,15 +104,18 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_get_orchestrator_tool(self) -> Tool:
-        """Create tool for getting orchestrator details"""
+    def _create_get_orchestrator_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for getting orchestrator details."""
         return Tool(
             name="get_orchestrator",
             description="Get detailed information about a specific orchestrator execution",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "orchestrator_id": {"type": "string", "description": "Unique identifier of the orchestrator"},
+                    "orchestrator_id": {
+                        "type": "string",
+                        "description": "Unique identifier of the orchestrator",
+                    },
                     "include_configuration": {
                         "type": "boolean",
                         "description": "Include full configuration details",
@@ -117,26 +136,37 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_create_orchestrator_tool(self) -> Tool:
-        """Create tool for creating new orchestrators"""
+    def _create_create_orchestrator_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for creating new orchestrators."""
         return Tool(
             name="create_orchestrator",
             description="Create a new orchestrator execution with specified configuration",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "name": {"type": "string", "description": "Human-readable name for the orchestrator"},
+                    "name": {
+                        "type": "string",
+                        "description": "Human-readable name for the orchestrator",
+                    },
                     "orchestrator_type": {
                         "type": "string",
                         "description": "Type of orchestrator to create",
-                        "enum": ["multi_turn", "red_teaming", "tree_of_attacks", "prompt_sending"],
+                        "enum": [
+                            "multi_turn",
+                            "red_teaming",
+                            "tree_of_attacks",
+                            "prompt_sending",
+                        ],
                     },
                     "target_generators": {
                         "type": "array",
                         "items": {"type": "string"},
                         "description": "List of generator IDs to target",
                     },
-                    "dataset_name": {"type": "string", "description": "Dataset to use for prompts"},
+                    "dataset_name": {
+                        "type": "string",
+                        "description": "Dataset to use for prompts",
+                    },
                     "converters": {
                         "type": "array",
                         "items": {"type": "string"},
@@ -163,19 +193,27 @@ class OrchestratorManagementTools:
                         "minimum": 1,
                         "maximum": 20,
                     },
-                    "memory_labels": {"type": "object", "description": "Memory labels for result tracking"},
+                    "memory_labels": {
+                        "type": "object",
+                        "description": "Memory labels for result tracking",
+                    },
                     "auto_start": {
                         "type": "boolean",
                         "description": "Start execution immediately after creation",
                         "default": False,
                     },
                 },
-                "required": ["name", "orchestrator_type", "target_generators", "dataset_name"],
+                "required": [
+                    "name",
+                    "orchestrator_type",
+                    "target_generators",
+                    "dataset_name",
+                ],
             },
         )
 
-    def _create_start_orchestrator_tool(self) -> Tool:
-        """Create tool for starting orchestrators"""
+    def _create_start_orchestrator_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for starting orchestrators."""
         return Tool(
             name="start_orchestrator",
             description="Start execution of a configured orchestrator",
@@ -202,8 +240,8 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_stop_orchestrator_tool(self) -> Tool:
-        """Create tool for stopping orchestrators"""
+    def _create_stop_orchestrator_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for stopping orchestrators."""
         return Tool(
             name="stop_orchestrator",
             description="Stop a running orchestrator execution",
@@ -229,8 +267,8 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_pause_orchestrator_tool(self) -> Tool:
-        """Create tool for pausing orchestrators"""
+    def _create_pause_orchestrator_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for pausing orchestrators."""
         return Tool(
             name="pause_orchestrator",
             description="Pause a running orchestrator execution",
@@ -241,14 +279,18 @@ class OrchestratorManagementTools:
                         "type": "string",
                         "description": "Unique identifier of the orchestrator to pause",
                     },
-                    "save_state": {"type": "boolean", "description": "Save current execution state", "default": True},
+                    "save_state": {
+                        "type": "boolean",
+                        "description": "Save current execution state",
+                        "default": True,
+                    },
                 },
                 "required": ["orchestrator_id"],
             },
         )
 
-    def _create_resume_orchestrator_tool(self) -> Tool:
-        """Create tool for resuming orchestrators"""
+    def _create_resume_orchestrator_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for resuming orchestrators."""
         return Tool(
             name="resume_orchestrator",
             description="Resume a paused orchestrator execution",
@@ -270,15 +312,20 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_get_orchestrator_results_tool(self) -> Tool:
-        """Create tool for getting orchestrator results"""
+    def _create_get_orchestrator_results_tool(
+        self: OrchestratorManagementTools,
+    ) -> Tool:
+        """Create tool for getting orchestrator results."""
         return Tool(
             name="get_orchestrator_results",
             description="Get execution results from an orchestrator",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "orchestrator_id": {"type": "string", "description": "Unique identifier of the orchestrator"},
+                    "orchestrator_id": {
+                        "type": "string",
+                        "description": "Unique identifier of the orchestrator",
+                    },
                     "result_format": {
                         "type": "string",
                         "description": "Format for results",
@@ -292,7 +339,11 @@ class OrchestratorManagementTools:
                         "minimum": 1,
                         "maximum": 1000,
                     },
-                    "include_scores": {"type": "boolean", "description": "Include scoring results", "default": True},
+                    "include_scores": {
+                        "type": "boolean",
+                        "description": "Include scoring results",
+                        "default": True,
+                    },
                     "filter_by_score": {
                         "type": "object",
                         "description": "Filter results by score thresholds",
@@ -307,15 +358,18 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_get_orchestrator_logs_tool(self) -> Tool:
-        """Create tool for getting orchestrator logs"""
+    def _create_get_orchestrator_logs_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for getting orchestrator logs."""
         return Tool(
             name="get_orchestrator_logs",
             description="Get execution logs from an orchestrator",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "orchestrator_id": {"type": "string", "description": "Unique identifier of the orchestrator"},
+                    "orchestrator_id": {
+                        "type": "string",
+                        "description": "Unique identifier of the orchestrator",
+                    },
                     "log_level": {
                         "type": "string",
                         "description": "Minimum log level to include",
@@ -339,8 +393,8 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_delete_orchestrator_tool(self) -> Tool:
-        """Create tool for deleting orchestrators"""
+    def _create_delete_orchestrator_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for deleting orchestrators."""
         return Tool(
             name="delete_orchestrator",
             description="Delete an orchestrator and its results",
@@ -351,7 +405,11 @@ class OrchestratorManagementTools:
                         "type": "string",
                         "description": "Unique identifier of the orchestrator to delete",
                     },
-                    "force": {"type": "boolean", "description": "Force deletion even if running", "default": False},
+                    "force": {
+                        "type": "boolean",
+                        "description": "Force deletion even if running",
+                        "default": False,
+                    },
                     "keep_results": {
                         "type": "boolean",
                         "description": "Keep execution results after deletion",
@@ -362,16 +420,22 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_clone_orchestrator_tool(self) -> Tool:
-        """Create tool for cloning orchestrators"""
+    def _create_clone_orchestrator_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for cloning orchestrators."""
         return Tool(
             name="clone_orchestrator",
             description="Clone an existing orchestrator configuration",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "source_orchestrator_id": {"type": "string", "description": "ID of the orchestrator to clone"},
-                    "new_name": {"type": "string", "description": "Name for the cloned orchestrator"},
+                    "source_orchestrator_id": {
+                        "type": "string",
+                        "description": "ID of the orchestrator to clone",
+                    },
+                    "new_name": {
+                        "type": "string",
+                        "description": "Name for the cloned orchestrator",
+                    },
                     "configuration_overrides": {
                         "type": "object",
                         "description": "Configuration parameters to override",
@@ -386,15 +450,18 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_get_orchestrator_stats_tool(self) -> Tool:
-        """Create tool for getting orchestrator statistics"""
+    def _create_get_orchestrator_stats_tool(self: OrchestratorManagementTools) -> Tool:
+        """Create tool for getting orchestrator statistics."""
         return Tool(
             name="get_orchestrator_stats",
             description="Get execution statistics and metrics for an orchestrator",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "orchestrator_id": {"type": "string", "description": "Unique identifier of the orchestrator"},
+                    "orchestrator_id": {
+                        "type": "string",
+                        "description": "Unique identifier of the orchestrator",
+                    },
                     "include_performance_metrics": {
                         "type": "boolean",
                         "description": "Include performance and timing metrics",
@@ -415,15 +482,20 @@ class OrchestratorManagementTools:
             },
         )
 
-    def _create_export_orchestrator_results_tool(self) -> Tool:
-        """Create tool for exporting orchestrator results"""
+    def _create_export_orchestrator_results_tool(
+        self: OrchestratorManagementTools,
+    ) -> Tool:
+        """Create tool for exporting orchestrator results."""
         return Tool(
             name="export_orchestrator_results",
             description="Export orchestrator results in various formats",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "orchestrator_id": {"type": "string", "description": "Unique identifier of the orchestrator"},
+                    "orchestrator_id": {
+                        "type": "string",
+                        "description": "Unique identifier of the orchestrator",
+                    },
                     "export_format": {
                         "type": "string",
                         "description": "Export format",
@@ -440,14 +512,20 @@ class OrchestratorManagementTools:
                         "description": "Include metadata and configuration",
                         "default": True,
                     },
-                    "compress": {"type": "boolean", "description": "Compress export file", "default": False},
+                    "compress": {
+                        "type": "boolean",
+                        "description": "Compress export file",
+                        "default": False,
+                    },
                 },
                 "required": ["orchestrator_id"],
             },
         )
 
-    def _create_validate_orchestrator_config_tool(self) -> Tool:
-        """Create tool for validating orchestrator configuration"""
+    def _create_validate_orchestrator_config_tool(
+        self: OrchestratorManagementTools,
+    ) -> Tool:
+        """Create tool for validating orchestrator configuration."""
         return Tool(
             name="validate_orchestrator_config",
             description="Validate an orchestrator configuration without creating it",
@@ -457,14 +535,22 @@ class OrchestratorManagementTools:
                     "orchestrator_type": {
                         "type": "string",
                         "description": "Type of orchestrator to validate",
-                        "enum": ["multi_turn", "red_teaming", "tree_of_attacks", "prompt_sending"],
+                        "enum": [
+                            "multi_turn",
+                            "red_teaming",
+                            "tree_of_attacks",
+                            "prompt_sending",
+                        ],
                     },
                     "target_generators": {
                         "type": "array",
                         "items": {"type": "string"},
                         "description": "List of generator IDs to validate",
                     },
-                    "dataset_name": {"type": "string", "description": "Dataset name to validate"},
+                    "dataset_name": {
+                        "type": "string",
+                        "description": "Dataset name to validate",
+                    },
                     "converters": {
                         "type": "array",
                         "items": {"type": "string"},
@@ -491,81 +577,124 @@ class OrchestratorManagementTools:
         )
 
     async def execute_tool(
-        self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        """Execute an orchestrator management tool"""
+        self: OrchestratorManagementTools,
+        tool_name: str,
+        arguments: Dict[str, object],
+        user_context: Optional[Dict[str, object]] = None,
+    ) -> Dict[str, object]:
+        """Execute an orchestrator management tool."""
         logger.info("Executing orchestrator tool: %s", tool_name)
 
         try:
             # Route to appropriate execution method
             execution_method = getattr(self, f"_execute_{tool_name}", None)
-            if execution_method:
-                result = await execution_method(arguments)
-                return cast(Dict[str, Any], result)
+            if execution_method and callable(execution_method):
+                result = await execution_method(arguments)  # pylint: disable=not-callable
+                return result
             else:
-                return {"error": "unknown_tool", "message": f"Unknown orchestrator tool: {tool_name}"}
+                return {
+                    "error": "unknown_tool",
+                    "message": f"Unknown orchestrator tool: {tool_name}",
+                }
 
-        except Exception as e:
+        except (AttributeError, KeyError, ValueError, TypeError) as e:
             logger.error("Error executing orchestrator tool %s: %s", tool_name, e)
-            return {"error": "execution_failed", "message": str(e), "tool_name": tool_name}
+            return {
+                "error": "execution_failed",
+                "message": str(e),
+                "tool_name": tool_name,
+            }
 
     # Individual execution methods for each tool
-    async def _execute_list_orchestrators(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_list_orchestrators(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         return await self._api_request("GET", "/api/v1/orchestrators", params=args)
 
-    async def _execute_get_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_get_orchestrator(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("GET", f"/api/v1/orchestrators/{orch_id}", params=args)
 
-    async def _execute_create_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_create_orchestrator(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         return await self._api_request("POST", "/api/v1/orchestrators", json=args)
 
-    async def _execute_start_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_start_orchestrator(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/start", json=args)
 
-    async def _execute_stop_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_stop_orchestrator(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/stop", json=args)
 
-    async def _execute_pause_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_pause_orchestrator(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/pause", json=args)
 
-    async def _execute_resume_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_resume_orchestrator(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/resume", json=args)
 
-    async def _execute_get_orchestrator_results(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_get_orchestrator_results(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("GET", f"/api/v1/orchestrators/{orch_id}/results", params=args)
 
-    async def _execute_get_orchestrator_logs(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_get_orchestrator_logs(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("GET", f"/api/v1/orchestrators/{orch_id}/logs", params=args)
 
-    async def _execute_delete_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_delete_orchestrator(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("DELETE", f"/api/v1/orchestrators/{orch_id}", params=args)
 
-    async def _execute_clone_orchestrator(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_clone_orchestrator(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         source_id = args.pop("source_orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{source_id}/clone", json=args)
 
-    async def _execute_get_orchestrator_stats(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_get_orchestrator_stats(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("GET", f"/api/v1/orchestrators/{orch_id}/stats", params=args)
 
-    async def _execute_export_orchestrator_results(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_export_orchestrator_results(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         orch_id = args.pop("orchestrator_id")
         return await self._api_request("POST", f"/api/v1/orchestrators/{orch_id}/export", json=args)
 
-    async def _execute_validate_orchestrator_config(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_validate_orchestrator_config(
+        self: OrchestratorManagementTools, args: Dict[str, object]
+    ) -> Dict[str, object]:
         return await self._api_request("POST", "/api/v1/orchestrators/validate", json=args)
 
-    async def _api_request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
-        """Make authenticated API request"""
-        headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Orchestrator"}
+    async def _api_request(
+        self: OrchestratorManagementTools, method: str, path: str, **kwargs: object
+    ) -> Dict[str, object]:
+        """Make authenticated API request."""
+        headers = {
+            "Content-Type": "application/json",
+            "X-API-Gateway": "MCP-Orchestrator",
+        }
 
         # Add authentication headers if available
         auth_headers = await self.auth_handler.get_auth_headers()
@@ -578,14 +707,19 @@ class OrchestratorManagementTools:
             try:
                 response = await client.request(method=method, url=url, headers=headers, **kwargs)
 
-                logger.debug("Orchestrator API call: %s %s -> %s", method, url, response.status_code)
+                logger.debug(
+                    "Orchestrator API call: %s %s -> %s",
+                    method,
+                    url,
+                    response.status_code,
+                )
 
                 if response.status_code >= 400:
                     error_detail = "Unknown error"
                     try:
                         error_data = response.json()
                         error_detail = error_data.get("detail", str(error_data))
-                    except Exception:
+                    except (ValueError, KeyError, TypeError):
                         error_detail = response.text
 
                     return {
@@ -594,15 +728,21 @@ class OrchestratorManagementTools:
                         "status_code": response.status_code,
                     }
 
-                return cast(Dict[str, Any], response.json())
+                return response.json()
 
             except httpx.TimeoutException:
                 logger.error("Timeout on orchestrator API call: %s", url)
-                return {"error": "timeout", "message": "Orchestrator API call timed out"}
+                return {
+                    "error": "timeout",
+                    "message": "Orchestrator API call timed out",
+                }
             except httpx.ConnectError:
                 logger.error("Connection error on orchestrator API call: %s", url)
-                return {"error": "connection_error", "message": "Could not connect to ViolentUTF API"}
-            except Exception as e:
+                return {
+                    "error": "connection_error",
+                    "message": "Could not connect to ViolentUTF API",
+                }
+            except (ValueError, TypeError, OSError) as e:
                 logger.error("Unexpected error on orchestrator API call %s: %s", url, e)
                 return {"error": "unexpected_error", "message": str(e)}
 

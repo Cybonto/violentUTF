@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -89,7 +95,10 @@ def test_create_orchestrator_configuration(mock_auth, mock_db) -> None:
         "orchestrator_type": "PromptSendingOrchestrator",
         "description": "Test orchestrator for API testing",
         "parameters": {
-            "objective_target": {"type": "configured_generator", "generator_name": "test_generator"},
+            "objective_target": {
+                "type": "configured_generator",
+                "generator_name": "test_generator",
+            },
             "batch_size": 5,
             "verbose": True,
         },
@@ -209,7 +218,10 @@ def test_execute_orchestrator(mock_auth, mock_db) -> None:
     execution_data = {
         "execution_type": "prompt_list",
         "execution_name": "test_execution",
-        "input_data": {"prompt_list": ["Test prompt"], "memory_labels": {"test": "true"}},
+        "input_data": {
+            "prompt_list": ["Test prompt"],
+            "memory_labels": {"test": "true"},
+        },
     }
 
     # Mock database operations
@@ -253,7 +265,10 @@ def test_execute_orchestrator(mock_auth, mock_db) -> None:
 
 def test_execute_orchestrator_not_found(mock_auth, mock_db) -> None:
     """Test executing non-existent orchestrator"""
-    execution_data = {"execution_type": "prompt_list", "input_data": {"prompt_list": ["test"]}}
+    execution_data = {
+        "execution_type": "prompt_list",
+        "input_data": {"prompt_list": ["test"]},
+    }
 
     # Mock database query
     mock_db_session = Mock()
@@ -277,14 +292,21 @@ def test_get_execution_results(mock_auth, mock_db) -> None:
     mock_execution.status = "completed"
     mock_execution.orchestrator_id = "orch-uuid"
     mock_execution.execution_summary = {"total_prompts": 1}
-    mock_execution.results = {"prompt_request_responses": [], "scores": [], "memory_export": {}}
+    mock_execution.results = {
+        "prompt_request_responses": [],
+        "scores": [],
+        "memory_export": {},
+    }
 
     # Mock orchestrator config
     mock_config = Mock()
     mock_config.name = "test_orchestrator"
     mock_config.orchestrator_type = "PromptSendingOrchestrator"
 
-    mock_db_session.query.return_value.filter.return_value.first.side_effect = [mock_execution, mock_config]
+    mock_db_session.query.return_value.filter.return_value.first.side_effect = [
+        mock_execution,
+        mock_config,
+    ]
 
     response = client.get("/api/v1/orchestrators/executions/exec-uuid/results")
 

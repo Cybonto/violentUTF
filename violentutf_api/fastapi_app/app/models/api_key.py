@@ -4,11 +4,9 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-API Key database model
-"""
-
+"""API Key database model."""
 from datetime import datetime
+from typing import Self
 
 from app.db.database import Base
 from sqlalchemy import JSON, Boolean, Column, DateTime, String
@@ -16,7 +14,7 @@ from sqlalchemy.sql import func
 
 
 class APIKey(Base):
-    """API Key model for database storage"""
+    """API Key model for database storage."""
 
     __tablename__ = "api_keys"
 
@@ -25,28 +23,26 @@ class APIKey(Base):
     name = Column(String, nullable=False)
     key_hash = Column(String, nullable=False, unique=True)  # Store hash of the key
     permissions = Column(JSON, default=list)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())  # pylint: disable=not-callable
     expires_at = Column(DateTime(timezone=True), nullable=True)
     last_used_at = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=True)
 
-    async def update_last_used(self) -> None:
-        """Update last used timestamp"""
-        from sqlalchemy import update  # noqa: F401
-
+    async def update_last_used(self: "Self") -> None:
+        """Update last used timestamp."""
         # This would be handled by the database session
-        # self.last_used_at = datetime.utcnow()
-        pass
+        self.last_used_at = datetime.utcnow()
 
-    def is_expired(self) -> bool:
-        """Check if key is expired"""
+    def is_expired(self: "Self") -> bool:
+        """Check if key is expired."""
         if not self.expires_at:
+
             return False
         # Handle SQLAlchemy comparison properly
         return bool(datetime.utcnow() > self.expires_at)
 
-    def to_dict(self) -> dict:
-        """Convert to dictionary"""
+    def to_dict(self: "Self") -> dict:
+        """Convert to dictionary."""
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -54,6 +50,6 @@ class APIKey(Base):
             "permissions": self.permissions,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
-            "last_used_at": self.last_used_at.isoformat() if self.last_used_at else None,
+            "last_used_at": (self.last_used_at.isoformat() if self.last_used_at else None),
             "is_active": self.is_active,
         }

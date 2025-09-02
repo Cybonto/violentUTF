@@ -1,9 +1,17 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import PyRITOrchestratorService
+from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import (
+    PyRITOrchestratorService,
+)
 
 
 @pytest.fixture
@@ -33,7 +41,10 @@ async def test_create_orchestrator_instance(orchestrator_service) -> None:
     config = {
         "orchestrator_type": "PromptSendingOrchestrator",
         "parameters": {
-            "objective_target": {"type": "configured_generator", "generator_name": "test_generator"},
+            "objective_target": {
+                "type": "configured_generator",
+                "generator_name": "test_generator",
+            },
             "batch_size": 5,
             "verbose": True,
         },
@@ -92,7 +103,11 @@ async def test_execute_dataset(orchestrator_service) -> None:
 
     execution_config = {
         "execution_type": "dataset",
-        "input_data": {"dataset_id": "test_dataset", "sample_size": 5, "memory_labels": {"dataset_test": "true"}},
+        "input_data": {
+            "dataset_id": "test_dataset",
+            "sample_size": 5,
+            "memory_labels": {"dataset_test": "true"},
+        },
     }
 
     # Mock dataset loading
@@ -112,7 +127,9 @@ async def test_generator_target_bridge() -> None:
     """Test ConfiguredGeneratorTarget bridge functionality"""
     from pyrit.models import PromptRequestPiece
 
-    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import ConfiguredGeneratorTarget
+    from violentutf_api.fastapi_app.app.services.pyrit_orchestrator_service import (
+        ConfiguredGeneratorTarget,
+    )
 
     generator_config = {"name": "test_generator", "type": "test_type"}
 
@@ -213,7 +230,10 @@ async def test_invalid_orchestrator_type(orchestrator_service) -> None:
 @pytest.mark.asyncio
 async def test_missing_orchestrator_execution(orchestrator_service) -> None:
     """Test error handling for missing orchestrator during execution"""
-    execution_config = {"execution_type": "prompt_list", "input_data": {"prompt_list": ["test"]}}
+    execution_config = {
+        "execution_type": "prompt_list",
+        "input_data": {"prompt_list": ["test"]},
+    }
 
     with pytest.raises(ValueError, match="Orchestrator not found"):
         await orchestrator_service.execute_orchestrator("nonexistent", execution_config)

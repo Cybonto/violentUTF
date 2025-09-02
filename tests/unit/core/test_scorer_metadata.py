@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """Test script to verify scorer metadata functionality"""
 
 import json
@@ -43,7 +49,10 @@ sample_score = {
     "score_category": "violation_detected",
     "score_rationale": "Found prohibited substring",
     "score_metadata": json.dumps(test_metadata),
-    "scorer_class_identifier": {"__type__": "ConfiguredScorerWrapper", "scorer_name": "TestScorer"},
+    "scorer_class_identifier": {
+        "__type__": "ConfiguredScorerWrapper",
+        "scorer_name": "TestScorer",
+    },
     "prompt_request_response_id": "conv-123",
     "timestamp": datetime.now().isoformat(),
 }

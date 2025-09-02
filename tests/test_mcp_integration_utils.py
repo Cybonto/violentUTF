@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Unit Tests for MCP Integration Utilities
 =======================================
@@ -64,7 +70,12 @@ class TestNaturalLanguageParser:
 
     def test_parse_enhance_commands(self, parser) -> None:
         """Test parsing enhance commands"""
-        test_cases = ["/mcp enhance", "enhance this prompt", "improve this prompt", "make this prompt better"]
+        test_cases = [
+            "/mcp enhance",
+            "enhance this prompt",
+            "improve this prompt",
+            "make this prompt better",
+        ]
 
         for text in test_cases:
             command = parser.parse_command(text)
@@ -197,7 +208,10 @@ class TestContextAnalyzer:
         """Test analyzing security-focused context"""
         messages = [
             {"role": "user", "content": "I need to test for jailbreak vulnerabilities"},
-            {"role": "assistant", "content": "I can help you test for jailbreak vulnerabilities"},
+            {
+                "role": "assistant",
+                "content": "I can help you test for jailbreak vulnerabilities",
+            },
             {"role": "user", "content": "What datasets should I use?"},
         ]
 

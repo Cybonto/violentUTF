@@ -4,9 +4,9 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-# datasets/data_loaders.py
-
 """
+Data Loaders module.
+
 Module: Data Loaders
 
 Contains functions for loading datasets from various sources.
@@ -28,15 +28,20 @@ Dependencies:
 - requests
 - utils.error_handling
 - utils.logging
+
 """
 
-import asyncio
+# Copyright (c) 2025 ViolentUTF Contributors.
+
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import json
-import logging
-import os
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, cast
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -48,10 +53,7 @@ from pyrit.datasets import (  # Add other datasets as needed
     fetch_decoding_trust_stereotypes_dataset,
     fetch_forbidden_questions_dataset,
     fetch_harmbench_dataset,
-    fetch_many_shot_jailbreaking_dataset,
-    fetch_pku_safe_rlhf_dataset,
     fetch_seclists_bias_testing_dataset,
-    fetch_wmdp_dataset,
     fetch_xstest_dataset,
 )
 from pyrit.models import SeedPrompt, SeedPromptDataset
@@ -77,8 +79,7 @@ PYRIT_DATASETS = {
 
 
 def get_pyrit_datasets() -> List[str]:
-    """
-    Retrieves a list of natively supported datasets for PyRIT.
+    """Retrieve list of natively supported datasets for PyRIT.
 
     Parameters:
         None
@@ -99,13 +100,13 @@ def get_pyrit_datasets() -> List[str]:
         - PYRIT_DATASETS (dict)
     """
     datasets_list = list(PYRIT_DATASETS.keys())
-    logger.debug(f"Retrieved PyRIT datasets: {datasets_list}")
+
+    logger.debug("Retrieved PyRIT datasets: %s", datasets_list)
     return datasets_list
 
 
 def get_garak_probes() -> List[str]:
-    """
-    Retrieves a list of natively supported probes for Garak.
+    """Retrieve list of natively supported probes for Garak.
 
     Parameters:
         None
@@ -126,12 +127,12 @@ def get_garak_probes() -> List[str]:
         - garak (when implemented)
     """
     logger.warning("get_garak_probes() is not yet implemented.")
+
     raise NotImplementedError("get_garak_probes() is not implemented yet.")
 
 
-def load_dataset(dataset_name: str, config: Dict[str, Any]) -> Optional[SeedPromptDataset]:
-    """
-    Loads a dataset by name and returns a SeedPromptDataset object.
+def load_dataset(dataset_name: str, config: Dict[str, object]) -> Optional[SeedPromptDataset]:
+    """Load dataset by name and returns a SeedPromptDataset object.
 
     Parameters:
         dataset_name (str): The name or identifier of the dataset to load.
@@ -154,6 +155,7 @@ def load_dataset(dataset_name: str, config: Dict[str, Any]) -> Optional[SeedProm
         - utils.error_handling
     """
     try:
+
         if dataset_name in PYRIT_DATASETS:
             fetch_function = PYRIT_DATASETS[dataset_name]
             # Remove None values from config
@@ -174,9 +176,8 @@ def load_dataset(dataset_name: str, config: Dict[str, Any]) -> Optional[SeedProm
         raise DatasetLoadingError(f"Error loading dataset '{dataset_name}': {e}") from e
 
 
-def parse_local_dataset_file(uploaded_file) -> pd.DataFrame:
-    """
-    Parses an uploaded local dataset file in various formats.
+def parse_local_dataset_file(uploaded_file: object) -> pd.DataFrame:
+    """Parse an uploaded local dataset file in various formats.
 
     Parameters:
         uploaded_file (UploadedFile): The uploaded file object from Streamlit.
@@ -198,9 +199,11 @@ def parse_local_dataset_file(uploaded_file) -> pd.DataFrame:
         - utils.error_handling
     """
     try:
-        file_extension = Path(uploaded_file.name).suffix.lower()
-        content = uploaded_file.read()
-        logger.info(f"Parsing uploaded file '{uploaded_file.name}' with extension '{file_extension}'")
+        # Cast uploaded_file to access its attributes (it's a Streamlit UploadedFile)
+        uploaded_file_obj = cast(Any, uploaded_file)  # UploadedFile has .name and .read() methods
+        file_extension = Path(uploaded_file_obj.name).suffix.lower()
+        content = uploaded_file_obj.read()
+        logger.info(f"Parsing uploaded file '{uploaded_file_obj.name}' with extension '{file_extension}'")
         if file_extension in [".csv", ".tsv"]:
             delimiter = "," if file_extension == ".csv" else "\t"
             dataframe = pd.read_csv(StringIO(content.decode("utf-8")), delimiter=delimiter)
@@ -221,16 +224,17 @@ def parse_local_dataset_file(uploaded_file) -> pd.DataFrame:
         else:
             logger.error(f"Unsupported file type: '{file_extension}'")
             raise DatasetParsingError(f"Unsupported file type: '{file_extension}'")
-        logger.info(f"Uploaded file '{uploaded_file.name}' parsed successfully.")
+        logger.info(f"Uploaded file '{uploaded_file_obj.name}' parsed successfully.")
         return dataframe
     except Exception as e:
-        logger.exception(f"Error parsing uploaded file '{uploaded_file.name}': {e}")
-        raise DatasetParsingError(f"Error parsing uploaded file '{uploaded_file.name}': {e}") from e
+        # Handle case where uploaded_file_obj might not be defined due to earlier error
+        file_name = getattr(cast(Any, uploaded_file), "name", "unknown file")
+        logger.exception(f"Error parsing uploaded file '{file_name}': {e}")
+        raise DatasetParsingError(f"Error parsing uploaded file '{file_name}': {e}") from e
 
 
 def fetch_online_dataset(url: str) -> pd.DataFrame:
-    """
-    Downloads and parses a dataset from a given URL.
+    """Download and parse a dataset from a given URL.
 
     Parameters:
         url (str): The URL of the dataset file.
@@ -254,21 +258,32 @@ def fetch_online_dataset(url: str) -> pd.DataFrame:
         - utils.error_handling
     """
     try:
-        logger.info(f"Fetching dataset from URL: {url}")
+
+        logger.info("Fetching dataset from URL: %s", url)
         response = requests.get(url, timeout=30)
         response.raise_for_status()
         # Determine the file extension based on the URL
         parsed_url = urlparse(url)
         file_extension = Path(parsed_url.path).suffix.lower()
         content = response.content
-        if file_extension not in [".csv", ".tsv", ".json", ".jsonl", ".yaml", ".yml", ".txt"]:
+        if file_extension not in [
+            ".csv",
+            ".tsv",
+            ".json",
+            ".jsonl",
+            ".yaml",
+            ".yml",
+            ".txt",
+        ]:
             logger.warning("Could not determine file type from URL. Assuming CSV format.")
             file_extension = ".csv"  # Default to CSV
         uploaded_file = type(
-            "UploadedFile", (object,), {"name": f"downloaded{file_extension}", "read": lambda: content}
+            "UploadedFile",
+            (object,),
+            {"name": f"downloaded{file_extension}", "read": lambda: content},
         )
         dataframe = parse_local_dataset_file(uploaded_file)
-        logger.info(f"Dataset fetched and parsed successfully from URL: {url}")
+        logger.info("Dataset fetched and parsed successfully from URL: %s", url)
         return dataframe
     except requests.HTTPError as e:
         logger.exception(f"HTTP error fetching dataset from URL '{url}': {e}")
@@ -279,8 +294,7 @@ def fetch_online_dataset(url: str) -> pd.DataFrame:
 
 
 def map_dataset_fields(dataframe: pd.DataFrame, mappings: Dict[str, str]) -> List[SeedPrompt]:
-    """
-    Maps fields from the dataframe to the required SeedPrompt attributes.
+    """Map fields from the dataframe to the required SeedPrompt attributes.
 
     Parameters:
         dataframe (pandas.DataFrame): The DataFrame containing dataset data.
@@ -304,6 +318,7 @@ def map_dataset_fields(dataframe: pd.DataFrame, mappings: Dict[str, str]) -> Lis
         - utils.error_handling
     """
     try:
+
         required_attributes = ["value"]
         seed_prompts = []
         for index, row in dataframe.iterrows():
@@ -316,21 +331,20 @@ def map_dataset_fields(dataframe: pd.DataFrame, mappings: Dict[str, str]) -> Lis
             # Ensure required attributes are present
             if not all(attr in seed_prompt_data for attr in required_attributes):
                 missing_attrs = [attr for attr in required_attributes if attr not in seed_prompt_data]
-                logger.error(f"Missing required attributes: {missing_attrs} in row {index}")
+                logger.error("Missing required attributes: %s in row %s", missing_attrs, index)
                 raise DatasetParsingError(f"Missing required attributes: {missing_attrs}")
             # Create SeedPrompt object
             seed_prompt = SeedPrompt(**seed_prompt_data)
             seed_prompts.append(seed_prompt)
-        logger.info(f"Mapped dataset fields successfully. Total prompts: {len(seed_prompts)}")
+        logger.info("Mapped dataset fields successfully. Total prompts: %s", len(seed_prompts))
         return seed_prompts
     except Exception as e:
-        logger.exception(f"Error mapping dataset fields: {e}")
+        logger.exception("Error mapping dataset fields: %s", e)
         raise DatasetParsingError(f"Error mapping dataset fields: {e}") from e
 
 
 def create_seed_prompt_dataset(seed_prompts: List[SeedPrompt]) -> SeedPromptDataset:
-    """
-    Creates a SeedPromptDataset from a list of SeedPrompts.
+    """Create a SeedPromptDataset from a list of SeedPrompts.
 
     Parameters:
         seed_prompts (list): A list of SeedPrompt objects.
@@ -351,8 +365,9 @@ def create_seed_prompt_dataset(seed_prompts: List[SeedPrompt]) -> SeedPromptData
         - pyrit.models.SeedPromptDataset
     """
     if not seed_prompts:
+
         logger.error("Seed prompts list is empty. Cannot create dataset.")
         raise ValueError("Cannot create SeedPromptDataset with an empty seed prompts list.")
     dataset = SeedPromptDataset(prompts=seed_prompts)
-    logger.info(f"Created SeedPromptDataset with {len(seed_prompts)} prompts.")
+    logger.info("Created SeedPromptDataset with %s prompts.", len(seed_prompts))
     return dataset

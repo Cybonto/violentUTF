@@ -4,9 +4,9 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Security configuration validation
-SECURITY: Validates that security measures are properly configured
+"""Security configuration validation.
+
+SECURITY: Validates that security measures are properly configured.
 """
 
 import logging
@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def validate_rate_limiting_config() -> Dict[str, Any]:
-    """
-    Validate rate limiting configuration
-    """
+    """Validate rate limiting configuration."""
     validation_results: Dict[str, Any] = {
         "rate_limiting_enabled": False,
         "slowapi_available": False,
@@ -30,9 +28,7 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
     }
 
     try:
-        # Check if slowapi is available
-        pass  # slowapi availability check removed
-
+        # Check if slowapi is available - availability check removed
         validation_results["slowapi_available"] = True
         logger.info("✅ slowapi library is available")
     except ImportError:
@@ -49,7 +45,12 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
         validation_results["rate_limiting_enabled"] = True
 
         # Validate rate limit configurations
-        required_endpoints = ["auth_login", "auth_token", "auth_refresh", "auth_validate"]
+        required_endpoints = [
+            "auth_login",
+            "auth_token",
+            "auth_refresh",
+            "auth_validate",
+        ]
         missing_endpoints = [ep for ep in required_endpoints if ep not in RATE_LIMITS]
 
         if missing_endpoints:
@@ -83,9 +84,7 @@ def validate_rate_limiting_config() -> Dict[str, Any]:
 
 
 def validate_security_headers() -> Dict[str, Any]:
-    """
-    Validate security headers configuration
-    """
+    """Validate security headers configuration."""
     validation_results: Dict[str, Any] = {
         "cors_configured": False,
         "security_headers": False,
@@ -113,59 +112,65 @@ def validate_security_headers() -> Dict[str, Any]:
 
 
 def run_security_validation() -> Dict[str, Any]:
-    """
-    Run comprehensive security validation
-    """
+    """Run comprehensive security validation."""
     logger.info("🔒 Running security configuration validation...")
 
-    results: Dict[str, Any] = {
+    validation_results: Dict[str, Any] = {
         "overall_status": "unknown",
         "rate_limiting": validate_rate_limiting_config(),
         "security_headers": validate_security_headers(),
-        "summary": {"total_issues": 0, "total_recommendations": 0, "critical_issues": 0},
+        "summary": {
+            "total_issues": 0,
+            "total_recommendations": 0,
+            "critical_issues": 0,
+        },
     }
 
     # Count issues and recommendations
-    for category in ["rate_limiting", "security_headers"]:
-        if category in results:
-            results["summary"]["total_issues"] += len(results[category].get("issues", []))
-            results["summary"]["total_recommendations"] += len(results[category].get("recommendations", []))
+    for validation_category in ["rate_limiting", "security_headers"]:
+        if validation_category in validation_results:
+            validation_results["summary"]["total_issues"] += len(
+                validation_results[validation_category].get("issues", [])
+            )
+            validation_results["summary"]["total_recommendations"] += len(
+                validation_results[validation_category].get("recommendations", [])
+            )
 
     # Determine overall status
     critical_issues = 0
-    if not results["rate_limiting"]["rate_limiting_enabled"]:
+    if not validation_results["rate_limiting"]["rate_limiting_enabled"]:
         critical_issues += 1
 
-    results["summary"]["critical_issues"] = critical_issues
+    validation_results["summary"]["critical_issues"] = critical_issues
 
     if critical_issues == 0:
-        results["overall_status"] = "secure"
+        validation_results["overall_status"] = "secure"
         logger.info("🛡️ Security validation passed - no critical issues found")
     elif critical_issues <= 2:
-        results["overall_status"] = "warning"
+        validation_results["overall_status"] = "warning"
         logger.warning("⚠️ Security validation found %s critical issues", critical_issues)
     else:
-        results["overall_status"] = "critical"
+        validation_results["overall_status"] = "critical"
         logger.error("🚨 Security validation found %s critical security issues", critical_issues)
 
-    return results
+    return validation_results
 
 
 if __name__ == "__main__":
     # CLI interface for security validation
-    results = run_security_validation()
+    security_results = run_security_validation()
 
     print("\n🔒 SECURITY CONFIGURATION VALIDATION REPORT")
     print("=" * 60)
 
-    print(f"\n📊 Overall Status: {results['overall_status'].upper()}")
-    print(f"   Critical Issues: {results['summary']['critical_issues']}")
-    print(f"   Total Issues: {results['summary']['total_issues']}")
-    print(f"   Recommendations: {results['summary']['total_recommendations']}")
+    print(f"\n📊 Overall Status: {security_results['overall_status'].upper()}")
+    print(f"   Critical Issues: {security_results['summary']['critical_issues']}")
+    print(f"   Total Issues: {security_results['summary']['total_issues']}")
+    print(f"   Recommendations: {security_results['summary']['total_recommendations']}")
 
-    for category, data in results.items():
-        if category in ["rate_limiting", "security_headers"]:
-            print(f"\n📋 {category.replace('_', ' ').title()}:")
+    for security_category, data in security_results.items():
+        if security_category in ["rate_limiting", "security_headers"]:
+            print(f"\n📋 {security_category.replace('_', ' ').title()}:")
 
             if data.get("issues"):
                 print("   ❌ Issues:")

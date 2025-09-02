@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Integration tests for ViolentUTF API through APISIX Gateway
 Tests the actual APISIX routing to ensure endpoints work as expected

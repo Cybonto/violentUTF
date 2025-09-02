@@ -4,35 +4,35 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
+"""Generator Config module."""
+
+# Copyright (c) 2025 ViolentUTF Contributors.
+
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # generators/generator_config.py
 
-import asyncio
 import json  # Ensure json is imported
 import math  # Ensure math is imported
 import os
 import uuid  # Ensure uuid is imported
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Self, cast
 
 import httpx  # Needed for test_generator_async exception handling
 import yaml
 
 # PyRIT imports
-from pyrit.models import PromptRequestPiece, PromptRequestResponse, construct_response_from_request
+from pyrit.models import (
+    PromptRequestPiece,
+    PromptRequestResponse,
+)
 
 # Note: PromptResponseError is not explicitly needed here as errors are strings
 from pyrit.prompt_target import HTTPTarget  # Keep original import name
-from pyrit.prompt_target import PromptChatTarget  # Base class for chat targets
 from pyrit.prompt_target import PromptTarget  # Base class for all targets
-from pyrit.prompt_target import (
-    AzureBlobStorageTarget,
-    AzureMLChatTarget,
-    CrucibleTarget,
-    GandalfTarget,
-    HuggingFaceChatTarget,
-    HuggingFaceEndpointTarget,
-    OpenAIDALLETarget,
-    OpenAITTSTarget,
-)
 
 # Use the centralized logging setup
 from utils.logging import get_logger
@@ -58,14 +58,14 @@ try:
         APISIXAIGatewayTarget = None
 except ImportError as import_err:
     logger.error(
-        f"Could not import APISIXAIGatewayTarget: {import_err}. Please ensure custom_targets/apisix_ai_gateway.py exists and is valid."
+        f"Could not import APISIXAIGatewayTarget: {import_err}. "
+        f"Please ensure custom_targets/apisix_ai_gateway.py exists and is valid."
     )
     APISIXAIGatewayTarget = None
 except Exception as e:
-    logger.exception(f"An unexpected error occurred during import of APISIXAIGatewayTarget: {e}")
+    logger.exception("An unexpected error occurred during import of APISIXAIGatewayTarget: %s", e)
     APISIXAIGatewayTarget = None
 # --- End Custom Target Imports ---
-
 
 # --- Constants ---
 CONFIG_DIR = "parameters"
@@ -77,18 +77,20 @@ DEFAULT_PARAMS_FILE_PATH = os.path.join(CONFIG_DIR, DEFAULT_PARAMS_FILENAME)
 # --- Default Parameters Section Removed ---
 # OpenAI_Completion removed - parameters no longer needed
 
-
 # In-memory storage for Generator configurations (loaded from file)
 _generators_cache: Dict[str, "Generator"] = {}
 
 # Mapping of generator type names (user-facing) to Python classes
-logger.debug(f"Defining GENERATOR_TYPE_CLASSES. APISIXAIGatewayTarget is: {APISIXAIGatewayTarget}")
+logger.debug(
+    "Defining GENERATOR_TYPE_CLASSES. APISIXAIGatewayTarget is: %s",
+    APISIXAIGatewayTarget,
+)
 GENERATOR_TYPE_CLASSES = {
     # Keep only the main generator types for streamlined interface
     **({"AI Gateway": APISIXAIGatewayTarget} if APISIXAIGatewayTarget else {}),
     "HTTP REST": HTTPTarget,  # Renamed from HTTPTarget
 }
-logger.debug(f"GENERATOR_TYPE_CLASSES defined with keys: {list(GENERATOR_TYPE_CLASSES.keys())}")
+logger.debug("GENERATOR_TYPE_CLASSES defined with keys: %s", list(GENERATOR_TYPE_CLASSES.keys()))
 
 # Definitions of parameters required for each generator type
 # (GENERATOR_PARAMS dictionary remains largely the same as provided previously,
@@ -267,7 +269,9 @@ GENERATOR_PARAMS = {
             "name": "image_size",
             "type": "str",
             "required": False,
-            "description": 'Image Size ("1024x1024", "1792x1024", "1024x1792" for D3; "256x256", "512x512", "1024x1024" for D2)',
+            "description": (
+                'Image Size ("1024x1024", "1792x1024", "1024x1792" for D3; ' '"256x256", "512x512", "1024x1024" for D2)'
+            ),
             "default": "1024x1024",
         },
         {
@@ -437,7 +441,12 @@ GENERATOR_PARAMS = {
         },
     ],
     "CrucibleTarget": [
-        {"name": "endpoint", "type": "str", "required": True, "description": "Crucible Endpoint URL"},
+        {
+            "name": "endpoint",
+            "type": "str",
+            "required": True,
+            "description": "Crucible Endpoint URL",
+        },
         {
             "name": "api_key",
             "type": "str",
@@ -541,7 +550,12 @@ GENERATOR_PARAMS = {
             "description": "Trust remote code (default: False)",
             "default": False,
         },
-        {"name": "device_map", "type": "str", "required": False, "description": "Device map (optional)"},
+        {
+            "name": "device_map",
+            "type": "str",
+            "required": False,
+            "description": "Device map (optional)",
+        },
         {
             "name": "torch_dtype",
             "type": "str",
@@ -562,8 +576,18 @@ GENERATOR_PARAMS = {
             "required": True,
             "description": "Hugging Face Token (or set HUGGINGFACE_TOKEN env var)",
         },
-        {"name": "endpoint", "type": "str", "required": True, "description": "Endpoint URL"},
-        {"name": "model_id", "type": "str", "required": True, "description": "Model ID associated with the endpoint"},
+        {
+            "name": "endpoint",
+            "type": "str",
+            "required": True,
+            "description": "Endpoint URL",
+        },
+        {
+            "name": "model_id",
+            "type": "str",
+            "required": True,
+            "description": "Model ID associated with the endpoint",
+        },
         {
             "name": "max_tokens",
             "type": "int",
@@ -601,10 +625,14 @@ GENERATOR_PARAMS = {
 
 
 def load_generators() -> Dict[str, "Generator"]:
-    """Loads Generator configurations from the YAML file."""
-    global _generators_cache  # noqa: F824
+    """Load Generator configurations from the YAML file.."""
+    global _generators_cache  # pylint: disable=global-statement  # noqa: F824
+
     if not os.path.isfile(GENERATORS_CONFIG_FILE_PATH):
-        logger.info(f"Generator config file not found at {GENERATORS_CONFIG_FILE_PATH}. Starting empty.")
+        logger.info(
+            "Generator config file not found at %s. Starting empty.",
+            GENERATORS_CONFIG_FILE_PATH,
+        )
         _generators_cache = {}
         return _generators_cache
     try:
@@ -612,7 +640,8 @@ def load_generators() -> Dict[str, "Generator"]:
             data = yaml.safe_load(f) or {}
         if not isinstance(data, dict):
             logger.error(
-                f"Invalid format in {GENERATORS_CONFIG_FILE_PATH}: Expected a dictionary, got {type(data)}. Loading empty config."
+                f"Invalid format in {GENERATORS_CONFIG_FILE_PATH}: Expected a dictionary, "
+                f"got {type(data)}. Loading empty config."
             )
             _generators_cache = {}
             return _generators_cache
@@ -630,7 +659,8 @@ def load_generators() -> Dict[str, "Generator"]:
 
             if generator_type not in GENERATOR_TYPE_CLASSES or GENERATOR_TYPE_CLASSES[generator_type] is None:
                 logger.warning(
-                    f"Skipping entry '{name}': Unknown or unavailable generator_type '{generator_type}'. Check imports and definition."
+                    f"Skipping entry '{name}': Unknown or unavailable generator_type '{generator_type}'. "
+                    f"Check imports and definition."
                 )
                 continue
             try:
@@ -647,22 +677,28 @@ def load_generators() -> Dict[str, "Generator"]:
         )
         return _generators_cache
     except (yaml.YAMLError, IOError) as e:
-        logger.error(f"Error reading or parsing {GENERATORS_CONFIG_FILE_PATH}: {e}", exc_info=True)
+        logger.error(
+            "Error reading or parsing %s: %s",
+            GENERATORS_CONFIG_FILE_PATH,
+            e,
+            exc_info=True,
+        )
         _generators_cache = {}
         return _generators_cache
     except Exception:
-        logger.exception(f"Unexpected error loading generators from {GENERATORS_CONFIG_FILE_PATH}.")
+        logger.exception("Unexpected error loading generators from %s.", GENERATORS_CONFIG_FILE_PATH)
         _generators_cache = {}
         return _generators_cache
 
 
 def save_generators() -> bool:
-    """Saves the current state of the generator cache to the YAML file."""
+    """Save the current state of the generator cache to the YAML file.."""
     data_to_save = {}
+
     for name, gen_instance in _generators_cache.items():
         if isinstance(gen_instance, Generator):
             # Ensure parameters are serializable (e.g., convert float NaN/inf)
-            serializable_params: Dict[str, Any] = {}
+            serializable_params: Dict[str, object] = {}
             for k, v in gen_instance.parameters.items():
                 if isinstance(v, float):
                     if math.isnan(v):
@@ -685,27 +721,38 @@ def save_generators() -> bool:
         os.makedirs(CONFIG_DIR, exist_ok=True)
         with open(GENERATORS_CONFIG_FILE_PATH, "w", encoding="utf-8") as f:
             yaml.safe_dump(data_to_save, f, default_flow_style=False, sort_keys=False)
-        logger.info(f"Generators saved successfully to {GENERATORS_CONFIG_FILE_PATH}. Count: {len(data_to_save)}")
+        logger.info(
+            "Generators saved successfully to %s. Count: %s",
+            GENERATORS_CONFIG_FILE_PATH,
+            len(data_to_save),
+        )
         return True
     except (IOError, yaml.YAMLError) as e:
-        logger.error(f"Error writing generators to {GENERATORS_CONFIG_FILE_PATH}: {e}", exc_info=True)
+        logger.error(
+            "Error writing generators to %s: %s",
+            GENERATORS_CONFIG_FILE_PATH,
+            e,
+            exc_info=True,
+        )
         return False
     except Exception:
-        logger.exception(f"Unexpected error saving generators to {GENERATORS_CONFIG_FILE_PATH}.")
+        logger.exception("Unexpected error saving generators to %s.", GENERATORS_CONFIG_FILE_PATH)
         return False
 
 
 def get_generators() -> Dict[str, "Generator"]:
-    """Retrieves the current dictionary of loaded Generator instances."""
+    """Retrieve the current dictionary of loaded Generator instances.."""
     if not _generators_cache:
+
         logger.debug("Generator cache empty, loading from file.")
         load_generators()
     return {name: gen for name, gen in _generators_cache.items() if isinstance(gen, Generator)}
 
 
-def add_generator(generator_name: str, generator_type: str, parameters: Dict[str, Any]) -> "Generator":
-    """Adds a new Generator configuration."""
-    global _generators_cache  # noqa: F824
+def add_generator(generator_name: str, generator_type: str, parameters: Dict[str, object]) -> "Generator":
+    """Add a new Generator configuration.."""
+    global _generators_cache  # pylint: disable=global-variable-not-assigned  # noqa: F824
+
     if generator_name in _generators_cache:
         raise ValueError(f"Generator name '{generator_name}' already exists.")
     if generator_type not in GENERATOR_TYPE_CLASSES or GENERATOR_TYPE_CLASSES[generator_type] is None:
@@ -730,8 +777,9 @@ def add_generator(generator_name: str, generator_type: str, parameters: Dict[str
 
 
 def delete_generator(generator_name: str) -> bool:
-    """Deletes a Generator configuration."""
-    global _generators_cache  # noqa: F824
+    """Delete a Generator configuration.."""
+    global _generators_cache  # pylint: disable=global-variable-not-assigned  # noqa: F824
+
     if generator_name not in _generators_cache:
         raise KeyError(f"Cannot delete: Generator '{generator_name}' does not exist.")
     try:
@@ -747,9 +795,10 @@ def delete_generator(generator_name: str) -> bool:
         return False
 
 
-def configure_generator(generator_name: str, parameters: Dict[str, Any]) -> "Generator":
-    """Updates the parameters of an existing Generator."""
+def configure_generator(generator_name: str, parameters: Dict[str, object]) -> "Generator":
+    """Update the parameters of an existing Generator.."""
     if generator_name not in _generators_cache:
+
         raise KeyError(f"Cannot configure: Generator '{generator_name}' does not exist.")
     try:
         gen_instance = _generators_cache[generator_name]
@@ -770,15 +819,16 @@ def configure_generator(generator_name: str, parameters: Dict[str, Any]) -> "Gen
 
 
 async def test_generator_async(generator_name: str) -> tuple[bool, str]:
-    """
-    Tests a configured Generator by sending a simple prompt via its instance.
+    """Test a configured Generator by sending a simple prompt via its instance.
+
     Handles PyRIT PromptTarget instances.
     Logs pass/fail status explicitly.
     """
     if generator_name not in _generators_cache:
+
         error_msg = f"Cannot test: Generator '{generator_name}' does not exist."
         logger.error(error_msg)
-        raise KeyError(error_msg)  # Raise error to be caught upstream
+        return False, error_msg  # Return failure for missing generator
 
     generator_instance_wrapper = _generators_cache[generator_name]
     if not isinstance(generator_instance_wrapper, Generator):
@@ -826,12 +876,18 @@ async def test_generator_async(generator_name: str) -> tuple[bool, str]:
                     # Use string literal 'none' for comparison
                     if assistant_response_piece.response_error == "none" and assistant_response_piece.converted_value:
                         success = True
-                        message = f"Test successful. Received response snippet: {assistant_response_piece.converted_value[:100]}..."
+                        message = (
+                            f"Test successful. Received response snippet: "
+                            f"{assistant_response_piece.converted_value[:100]}..."
+                        )
                         logger.debug(
                             f"Full test response for '{generator_name}': {assistant_response_piece.converted_value}"
                         )
                     elif assistant_response_piece.response_error and assistant_response_piece.response_error != "none":
-                        message = f"Test failed. API returned error: {assistant_response_piece.response_error}. Details: {assistant_response_piece.original_value}"
+                        message = (
+                            f"Test failed. API returned error: {assistant_response_piece.response_error}. "
+                            f"Details: {assistant_response_piece.original_value}"
+                        )
                     elif not assistant_response_piece.converted_value:
                         message = (
                             "Test failed. Received an empty or invalid response content from assistant (error='none')."
@@ -848,17 +904,20 @@ async def test_generator_async(generator_name: str) -> tuple[bool, str]:
             message = f"Test failed. Target instance type '{type(target_instance).__name__}' is not a PromptTarget."
 
     except NotImplementedError:
-        message = f"Test failed. Generator '{generator_name}' (Type: {generator_instance_wrapper.generator_type}) does not support async sending."
+        message = (
+            f"Test failed. Generator '{generator_name}' "
+            f"(Type: {generator_instance_wrapper.generator_type}) does not support async sending."
+        )
         logger.error(message)
     except Exception as e:
         message = f"Test failed. Unexpected error during execution: {e}"
         logger.exception(f"Unexpected error during test execution for '{generator_name}'.")
         if isinstance(e, httpx.HTTPStatusError):
             try:
-                message += f" Response body: {e.response.text[:500]}"
-            except Exception:
-                pass
+                message += f" Response body: {e.response.text[:500]}"  # pylint: disable=no-member
+            except Exception:  # nosec B110 - acceptable exception handling
 
+                pass
     if success:
         logger.info(f"Test result for '{generator_name}': PASSED. Message: {message}")
     else:
@@ -868,8 +927,9 @@ async def test_generator_async(generator_name: str) -> tuple[bool, str]:
 
 
 def get_generator_by_name(generator_name: str) -> Optional["Generator"]:
-    """Retrieves a specific Generator instance by name."""
+    """Retrieve a specific Generator instance by name.."""
     gen = _generators_cache.get(generator_name)
+
     if not gen:
         logger.debug(f"Generator '{generator_name}' not in cache, attempting reload.")
         load_generators()
@@ -885,26 +945,28 @@ def get_generator_by_name(generator_name: str) -> Optional["Generator"]:
             except Exception as e:
                 logger.error(f"Failed to instantiate target for '{generator_name}' on retrieval: {e}")
         return gen
-    elif gen is not None:
+
+    # If we reach here, gen is not a Generator instance
+    if gen is not None:
         logger.error(f"Entry '{generator_name}' in cache is not a valid Generator instance (type: {type(gen)}).")
-        return None
-    else:
-        return None
+    return None
 
 
 def list_generator_types() -> List[str]:
-    """
-    Returns a list of available Generator type names in the defined order.
+    """Return a list of available Generator type names in the defined order.
+
     Filters out types whose classes failed to import.
     """
     valid_types = [name for name, cls in GENERATOR_TYPE_CLASSES.items() if cls is not None]
-    logger.debug(f"Listing valid generator types: {valid_types}")
+
+    logger.debug("Listing valid generator types: %s", valid_types)
     return valid_types
 
 
 def get_apisix_models_for_provider(provider: str) -> List[str]:
-    """Get available models for a specific APISIX provider."""
+    """Get available model for a specific APISIX provider.."""
     try:
+
         # Import here to avoid circular imports
         from utils.token_manager import TokenManager
 
@@ -929,9 +991,10 @@ def get_apisix_models_for_provider(provider: str) -> List[str]:
         return fallback_models.get(provider, ["default-model"])
 
 
-def get_generator_params(generator_type: str) -> List[Dict[str, Any]]:
-    """Retrieves the parameter definitions for a specific Generator type."""
+def get_generator_params(generator_type: str) -> List[Dict[str, object]]:
+    """Retrieve the parameter definitions for a specific Generator type.."""
     if generator_type == "HTTP REST" and "HTTP REST" not in GENERATOR_PARAMS and "HTTPTarget" in GENERATOR_PARAMS:
+
         logger.warning("Using 'HTTPTarget' params for 'HTTP REST' request.")
         return [param.copy() for param in GENERATOR_PARAMS["HTTPTarget"]]
 
@@ -939,7 +1002,7 @@ def get_generator_params(generator_type: str) -> List[Dict[str, Any]]:
         raise KeyError(f"Parameter definitions not found for generator type '{generator_type}'.")
 
     # Deep copy the parameters to avoid modifying the original
-    params: List[Dict[str, Any]] = json.loads(json.dumps(GENERATOR_PARAMS[generator_type]))
+    params: List[Dict[str, object]] = json.loads(json.dumps(GENERATOR_PARAMS[generator_type]))
 
     # For AI Gateway, dynamically populate model options based on default provider
     if generator_type == "AI Gateway":
@@ -950,7 +1013,7 @@ def get_generator_params(generator_type: str) -> List[Dict[str, Any]]:
                 default_provider = provider_param.get("default", "openai") if provider_param else "openai"
 
                 # Populate model options for default provider
-                models = get_apisix_models_for_provider(default_provider)
+                models = get_apisix_models_for_provider(str(default_provider))
                 param["options"] = models
                 if models:
                     param["default"] = models[0]
@@ -963,14 +1026,15 @@ def get_generator_params(generator_type: str) -> List[Dict[str, Any]]:
 
 # --- Generator Wrapper Class ---
 class Generator:
-    """
-    A wrapper class for target instances (PyRIT PromptTarget or standalone)
+    """A wrapper class for target instances (PyRIT PromptTarget or standalone)
+
     managed by this application.
     """
 
-    def __init__(self, name: str, generator_type: str, parameters: Dict[str, Any]):
-        """Initializes the Generator wrapper."""
+    def __init__(self: "Self", name: str, generator_type: str, parameters: Dict[str, object]) -> None:
+        """Initialize the Generator wrapper.."""
         if not name:
+
             raise ValueError("Generator name cannot be empty.")
         if generator_type not in GENERATOR_TYPE_CLASSES or GENERATOR_TYPE_CLASSES[generator_type] is None:
             if generator_type in GENERATOR_PARAMS:
@@ -980,8 +1044,8 @@ class Generator:
 
         self.name: str = name
         self.generator_type: str = generator_type
-        self.parameters: Dict[str, Any] = parameters.copy()
-        self.instance: Optional[Any] = None  # Can hold PromptTarget or other types
+        self.parameters: Dict[str, object] = parameters.copy()
+        self.instance: Optional[object] = None  # Can hold PromptTarget or other types
         self._target_class: type = GENERATOR_TYPE_CLASSES[generator_type]
 
         logger.debug(f"Initializing Generator wrapper for '{self.name}' (Type: {self.generator_type})")
@@ -989,20 +1053,21 @@ class Generator:
         self.instantiate_target()
 
     @property
-    def prompt_target(self):
-        """Compatibility property to access the instance as prompt_target."""
+    def prompt_target(self: "Self") -> Optional[object]:
+        """Compatibility property to acce the instance as prompt_target..."""
         return self.instance
 
-    def validate_parameters(self):
-        """Validates the stored parameters."""
+    def validate_parameters(self: "Self") -> None:
+        """Validate the stored parameters.."""
         logger.debug(f"Validating parameters for '{self.name}'...")
+
         try:
             param_defs = get_generator_params(self.generator_type)
         except KeyError:
             logger.error(f"Cannot validate parameters: Definitions not found for '{self.generator_type}'.")
             raise
 
-        required_param_names = {p["name"] for p in param_defs if p["required"]}
+        required_param_names = {str(p["name"]) for p in param_defs if p["required"]}
         provided_params = self.parameters
         missing_required = set()
 
@@ -1011,7 +1076,10 @@ class Generator:
             if is_missing:
                 env_var_value = None
                 # Basic Env Var Check (example)
-                if req_param == "api_key" and self.generator_type in ["OpenAIDALLETarget", "OpenAITTSTarget"]:
+                if req_param == "api_key" and self.generator_type in [
+                    "OpenAIDALLETarget",
+                    "OpenAITTSTarget",
+                ]:
                     env_var_value = (
                         os.environ.get("OPENAI_API_KEY")
                         or os.environ.get("AZURE_OPENAI_CHAT_KEY")
@@ -1026,11 +1094,14 @@ class Generator:
                     logger.debug(f"Required param '{req_param}' for '{self.name}' seems provided by env var.")
 
         if missing_required:
-            raise ValueError(f"Missing required parameter(s) for '{self.name}': {', '.join(sorted(missing_required))}.")
+            raise ValueError(
+                f"Missing required parameter(s) for '{self.name}': "
+                f"{', '.join(sorted([str(x) for x in missing_required]))}."
+            )
 
         # Basic Type Check (can be improved)
         for p_def in param_defs:
-            p_name = p_def["name"]
+            p_name = str(p_def["name"])
             p_type_str = p_def["type"]
             if p_name in self.parameters and self.parameters[p_name] is not None:
                 current_value = self.parameters[p_name]
@@ -1046,8 +1117,8 @@ class Generator:
                         if current_value is None:
                             continue
                         actual_type = type(current_value)
-                    except json.JSONDecodeError:
-                        raise ValueError(f"Invalid JSON string provided for 'headers' parameter '{p_name}'.")
+                    except json.JSONDecodeError as exc:
+                        raise ValueError(f"Invalid JSON string provided for 'headers' parameter '{p_name}'.") from exc
 
                 mismatch = False
                 if p_type_str == "selectbox":
@@ -1075,22 +1146,28 @@ class Generator:
 
                 if mismatch:
                     logger.error(
-                        f"Type mismatch for '{p_name}' in '{self.name}'. Expected '{p_type_str}', got '{actual_type.__name__}'. Value: {current_value}"
+                        f"Type mismatch for '{p_name}' in '{self.name}'. Expected '{p_type_str}', "
+                        f"got '{actual_type.__name__}'. Value: {current_value}"
                     )
 
         logger.debug(f"Parameters validated for '{self.name}'.")
 
-    def instantiate_target(self):
-        """Instantiates the underlying target class."""
+    def instantiate_target(self: "Self") -> None:
+        """Instantiate the underlying target class.."""
         logger.info(f"Attempting to instantiate target for '{self.name}' (Type: {self.generator_type})")
+
         target_class = self._target_class
         init_params = self.parameters.copy()
 
         # Parameter Cleaning specific to PyRIT OpenAI targets
         # Remove unused azure flag
         init_params.pop("is_azure_target", None)
-        if self.generator_type in ["OpenAIChatTarget", "OpenAIDALLETarget", "OpenAITTSTarget"]:
-            endpoint_val = init_params.get("endpoint", "").lower()
+        if self.generator_type in [
+            "OpenAIChatTarget",
+            "OpenAIDALLETarget",
+            "OpenAITTSTarget",
+        ]:
+            endpoint_val = str(init_params.get("endpoint", "")).lower()
             is_azure = "openai.azure.com" in endpoint_val
             if not is_azure:
                 init_params.pop("deployment_name", None)
@@ -1102,7 +1179,7 @@ class Generator:
 
         # Filter out None values before passing to ANY constructor
         cleaned_params = {k: v for k, v in init_params.items() if v is not None}
-        logger.debug(f"Parameters after filtering None values: {cleaned_params}")
+        logger.debug("Parameters after filtering None values: %s", cleaned_params)
 
         # Log parameters (mask secrets)
         log_params = cleaned_params.copy()
@@ -1111,10 +1188,14 @@ class Generator:
                 log_params[key] = "****"
             elif key == "headers" and isinstance(log_params[key], dict):
                 log_params[key] = {
-                    h_k: "****" if "auth" in h_k.lower() or "key" in h_k.lower() else h_v
-                    for h_k, h_v in log_params[key].items()
+                    h_k: ("****" if "auth" in h_k.lower() or "key" in h_k.lower() else h_v)
+                    for h_k, h_v in cast(Dict[str, Any], log_params[key]).items()
                 }
-        logger.debug(f"Passing final parameters to {self.generator_type}.__init__: {log_params}")
+        logger.debug(
+            "Passing final parameters to %s.__init__: %s",
+            self.generator_type,
+            log_params,
+        )
 
         try:
             self.instance = target_class(**cleaned_params)
@@ -1123,14 +1204,22 @@ class Generator:
             import inspect
 
             try:
-                sig = inspect.signature(target_class.__init__)
+                sig = inspect.signature(target_class)
                 valid_params = list(sig.parameters.keys())
                 invalid_passed = {k: v for k, v in cleaned_params.items() if k not in valid_params and k != "self"}
                 if invalid_passed:
-                    logger.error(f"Invalid parameters passed to {self.generator_type}: {invalid_passed}")
-            except Exception:
+                    logger.error(
+                        "Invalid parameters passed to %s: %s",
+                        self.generator_type,
+                        invalid_passed,
+                    )
+            except Exception:  # nosec B110 - acceptable exception handling
+
                 pass
-            logger.error(f"Parameter error instantiating {self.generator_type} for '{self.name}': {e}", exc_info=True)
+            logger.error(
+                f"Parameter error instantiating {self.generator_type} for '{self.name}': {e}",
+                exc_info=True,
+            )
             self.instance = None
             raise ValueError(f"Parameter error instantiating {self.generator_type}: {e}") from e
         except Exception:
@@ -1138,14 +1227,16 @@ class Generator:
             self.instance = None
             raise
 
-    def save(self) -> bool:
-        """Saves the current state of all generators."""
+    def save(self: "Self") -> bool:
+        """Save the current state of all generators.."""
         logger.debug(f"Instance save method called for '{self.name}'. Triggering global save.")
+
         return save_generators()
 
-    def update_parameters(self, parameters: Dict[str, Any]):
-        """Updates parameters and re-instantiates the target."""
-        logger.info(f"Updating parameters for generator '{self.name}'...")
+    def update_parameters(self: "Self", parameters: Dict[str, object]) -> None:
+        """Update parameters and re-instantiate the target..."""
+        logger.debug(f"Updating parameters for '{self.name}'...")
+
         self.parameters.update(parameters)
         try:
             self.validate_parameters()
@@ -1155,7 +1246,7 @@ class Generator:
             logger.error(f"Failed to update parameters for '{self.name}': {e}")
             raise
         except Exception:
-            logger.exception(f"Unexpected error updating parameters for '{self.name}.'")
+            logger.exception(f"Unexpected error updating parameters for '{self.name}'.")
             raise
 
 

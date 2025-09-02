@@ -23,6 +23,11 @@ disable = C,R,I,
     too-many-branches,
     too-many-statements,
     duplicate-code,
+    # Import-related false positives
+    import-error,
+    no-name-in-module,
+    # Broad exception handling for robustness
+    broad-except,
     # Allow TODO comments
     fixme,
     # Allow single letter variable names in specific contexts

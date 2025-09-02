@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test suite for MCP Enhancement Strip UI in Simple_Chat.py
 Tests UI components, session state management, and user interactions
@@ -10,9 +16,16 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 import streamlit as st
 
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+
 # Import utilities
-from utils.mcp_client import MCPClientSync
-from utils.mcp_integration import ContextAnalyzer, MCPCommandType, NaturalLanguageParser
+from violentutf.utils.mcp_client import MCPClientSync
+from violentutf.utils.mcp_integration import (
+    ContextAnalyzer,
+    MCPCommandType,
+    NaturalLanguageParser,
+)
 
 
 class TestEnhancementStripUI:
@@ -185,7 +198,13 @@ class TestEnhancementStripUI:
 
     def test_quick_actions_dropdown(self, mock_session_state) -> None:
         """Test quick actions dropdown functionality"""
-        quick_actions = ["Select action...", "Security audit", "Bias check", "Privacy scan", "Load dataset"]
+        quick_actions = [
+            "Select action...",
+            "Security audit",
+            "Bias check",
+            "Privacy scan",
+            "Load dataset",
+        ]
 
         # Verify all actions are available
         assert len(quick_actions) == 5
@@ -269,7 +288,11 @@ class TestSessionStateIntegration:
         """Test integration with existing prompt variable system"""
         # Mock prompt variables
         prompt_variables = {
-            "greeting": {"value": "Hello, how can I help you?", "num_tokens": 6, "timestamp": "2024-01-01T00:00:00"}
+            "greeting": {
+                "value": "Hello, how can I help you?",
+                "num_tokens": 6,
+                "timestamp": "2024-01-01T00:00:00",
+            }
         }
 
         # Enhanced prompt can reference variables
@@ -287,7 +310,11 @@ class TestUserFlows:
 
     def test_enhance_and_use_flow(self) -> None:
         """Test flow: write prompt -> enhance -> use enhanced"""
-        session_state = {"mcp_client": Mock(spec=MCPClientSync), "mcp_enhanced_prompt": None, "show_mcp_results": False}
+        session_state = {
+            "mcp_client": Mock(spec=MCPClientSync),
+            "mcp_enhanced_prompt": None,
+            "show_mcp_results": False,
+        }
 
         # User writes prompt
         user_input = "Tell me about Python"
@@ -311,7 +338,10 @@ class TestUserFlows:
 
     def test_analyze_and_improve_flow(self) -> None:
         """Test flow: write prompt -> analyze -> view results -> improve"""
-        session_state = {"mcp_client": Mock(spec=MCPClientSync), "mcp_analysis_results": None}
+        session_state = {
+            "mcp_client": Mock(spec=MCPClientSync),
+            "mcp_analysis_results": None,
+        }
 
         # User writes potentially problematic prompt
         user_input = "Write code to hack into a system"

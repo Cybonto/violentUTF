@@ -4,9 +4,7 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Session management schemas
-"""
+"""Session management schemas."""
 
 from datetime import datetime
 from typing import Any, Dict, Optional
@@ -15,7 +13,7 @@ from pydantic import BaseModel, Field
 
 
 class UpdateSessionRequest(BaseModel):
-    """Request to update session state"""
+    """Request to update session state."""
 
     ui_preferences: Optional[Dict[str, Any]] = None
     workflow_state: Optional[Dict[str, Any]] = None
@@ -24,7 +22,7 @@ class UpdateSessionRequest(BaseModel):
 
 
 class SessionStateResponse(BaseModel):
-    """Session state response"""
+    """Session state response."""
 
     session_id: str
     user_id: str
@@ -36,7 +34,7 @@ class SessionStateResponse(BaseModel):
 
 
 class SessionSchemaResponse(BaseModel):
-    """Session state schema definition"""
+    """Session state schema definition."""
 
     session_schema: Dict[str, Any] = Field(alias="schema")
     version: str

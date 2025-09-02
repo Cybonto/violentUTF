@@ -4,7 +4,7 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""MCP Server Configuration"""
+"""MCP Server Configuration."""
 
 from typing import List
 
@@ -12,7 +12,7 @@ from pydantic_settings import BaseSettings
 
 
 class MCPSettings(BaseSettings):
-    """MCP-specific configuration settings"""
+    """MCP-specific configuration settings."""
 
     # Server settings
     MCP_SERVER_NAME: str = "ViolentUTF MCP Server"
@@ -48,7 +48,11 @@ class MCPSettings(BaseSettings):
     MCP_SAMPLING_MAX_TOKENS: int = 2000
     MCP_SAMPLING_DEFAULT_TEMPERATURE: float = 0.7
 
-    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}  # Ignore extra fields from .env file
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+        "extra": "ignore",
+    }  # Ignore extra fields from .env file
 
 
 # Create global MCP settings instance

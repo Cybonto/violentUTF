@@ -1,6 +1,10 @@
-"""
-Database management schemas
-"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Database management schemas."""
 
 from datetime import datetime
 from typing import List, Literal, Optional
@@ -9,7 +13,7 @@ from pydantic import BaseModel, Field
 
 
 class InitializeDatabaseRequest(BaseModel):
-    """Request to initialize database"""
+    """Request to initialize database."""
 
     force_recreate: Optional[bool] = False
     custom_salt: Optional[str] = None
@@ -17,7 +21,7 @@ class InitializeDatabaseRequest(BaseModel):
 
 
 class DatabaseInitResponse(BaseModel):
-    """Response from database initialization"""
+    """Response from database initialization."""
 
     database_path: str
     database_filename: str
@@ -28,7 +32,7 @@ class DatabaseInitResponse(BaseModel):
 
 
 class DatabaseStatusResponse(BaseModel):
-    """Database status information"""
+    """Database status information."""
 
     is_initialized: bool
     database_path: str
@@ -39,14 +43,14 @@ class DatabaseStatusResponse(BaseModel):
 
 
 class TableStats(BaseModel):
-    """Statistics for a single table"""
+    """Statistics for a single table."""
 
     table_name: str
     row_count: int
 
 
 class DatabaseStatsResponse(BaseModel):
-    """Comprehensive database statistics"""
+    """Comprehensive database statistics."""
 
     tables: List[TableStats]
     total_records: int
@@ -56,7 +60,7 @@ class DatabaseStatsResponse(BaseModel):
 
 
 class ResetDatabaseRequest(BaseModel):
-    """Request to reset database"""
+    """Request to reset database."""
 
     confirmation: bool = Field(description="Must be True to confirm reset")
     backup_before_reset: Optional[bool] = True

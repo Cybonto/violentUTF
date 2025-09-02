@@ -1,5 +1,12 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Basic API contract tests that work without full application dependencies.
+
 These tests validate the contract testing setup itself.
 """
 
@@ -13,14 +20,14 @@ import pytest
 class TestBasicContract:
     """Basic contract validation tests."""
 
-    def test_environment_setup(self) -> None:
+    def test_environment_setup(self: "TestBasicContract") -> None:
         """Test that contract testing environment is properly configured."""
         assert os.getenv("CONTRACT_TESTING") == "true"
         assert os.getenv("TESTING") == "true"
         assert os.getenv("JWT_SECRET_KEY") is not None
         assert os.getenv("SECRET_KEY") is not None
 
-    def test_openapi_schema_exists(self) -> None:
+    def test_openapi_schema_exists(self: "TestBasicContract") -> None:
         """Test that OpenAPI schema file was generated."""
         schema_file = "generated_openapi.json"
 
@@ -39,7 +46,7 @@ class TestBasicContract:
             # In CI, minimal schema should always be created
             pytest.skip("OpenAPI schema file not found")
 
-    def test_minimal_api_structure(self) -> None:
+    def test_minimal_api_structure(self: "TestBasicContract") -> None:
         """Test minimal API structure expectations."""
         # This test passes if we can import basic modules
         try:
@@ -52,9 +59,10 @@ class TestBasicContract:
             pytest.fail(f"Required module not available: {e}")
 
     @pytest.mark.skipif(
-        not os.path.exists("tests/api_tests/test_auth_mock.py"), reason="Auth mock module not available"
+        not os.path.exists("tests/api_tests/test_auth_mock.py"),
+        reason="Auth mock module not available",
     )
-    def test_auth_mock_available(self) -> None:
+    def test_auth_mock_available(self: "TestBasicContract") -> None:
         """Test that auth mocking utilities are available."""
         try:
             from tests.api_tests.test_auth_mock import MockTokenManager
@@ -68,7 +76,7 @@ class TestBasicContract:
         except ImportError:
             pytest.skip("Auth mock utilities not available")
 
-    def test_contract_markers(self) -> None:
+    def test_contract_markers(self: "TestBasicContract") -> None:
         """Test that pytest contract markers are working."""
         # This test verifies the test infrastructure itself
         markers = [mark.name for mark in self.test_contract_markers.__pytest_wrapped__.pytestmark]

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 UI Tests for MCP Enhancement Strip in Simple Chat
 ================================================
@@ -64,8 +70,16 @@ class TestEnhancementStripUI:
         mock_button = Mock(side_effect=button_side_effect)
 
         # Simulate the enhancement strip button creation
-        mock_button("✨ Enhance", help="Improve prompt quality using MCP", use_container_width=True)
-        mock_button("🔍 Analyze", help="Analyze for security & bias issues", use_container_width=True)
+        mock_button(
+            "✨ Enhance",
+            help="Improve prompt quality using MCP",
+            use_container_width=True,
+        )
+        mock_button(
+            "🔍 Analyze",
+            help="Analyze for security & bias issues",
+            use_container_width=True,
+        )
         mock_button("🧪 Test", help="Generate test variations", use_container_width=True)
 
         # Verify buttons were created with correct labels
@@ -140,7 +154,11 @@ class TestEnhancementStripUI:
         # Set up session state with results
         st.session_state["show_enhancement_results"] = True
         st.session_state["mcp_enhancement_history"] = [
-            {"original": "Test prompt", "enhanced": "Enhanced test prompt", "timestamp": datetime.now().isoformat()}
+            {
+                "original": "Test prompt",
+                "enhanced": "Enhanced test prompt",
+                "timestamp": datetime.now().isoformat(),
+            }
         ]
 
         # Mock tab creation
@@ -171,7 +189,11 @@ class TestEnhancementStripUI:
         assert st.session_state["show_enhancement_results"] is True
 
         # Add enhancement to history
-        enhancement = {"original": "test", "enhanced": "enhanced test", "timestamp": datetime.now().isoformat()}
+        enhancement = {
+            "original": "test",
+            "enhanced": "enhanced test",
+            "timestamp": datetime.now().isoformat(),
+        }
         st.session_state["mcp_enhancement_history"].append(enhancement)
 
         assert len(st.session_state["mcp_enhancement_history"]) == 1

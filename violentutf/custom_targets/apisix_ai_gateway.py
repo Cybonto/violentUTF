@@ -1,9 +1,16 @@
-# custom_targets/apisix_ai_gateway.py
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Apisix Ai Gateway module."""
+
+from __future__ import annotations
 
 import logging
-import os
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Self
 
 from pyrit.models import PromptRequestPiece, PromptRequestResponse
 from pyrit.models.prompt_request_response import construct_response_from_request
@@ -12,18 +19,21 @@ from pyrit.prompt_target import PromptChatTarget
 # Import the TokenManager for APISIX integration
 from utils.token_manager import TokenManager
 
+# custom_targets/apisix_ai_gateway.py
+
 # Configure logger
 logger = logging.getLogger(__name__)
 
 
 class APISIXAIGatewayTarget(PromptChatTarget):
-    """
-    A PyRIT PromptTarget that integrates with APISIX AI Gateway.
+    """A PyRIT PromptTarget that integrates with APISIX AI Gateway.
+
     This target uses the TokenManager to make authenticated calls to APISIX AI proxy endpoints.
+
     """
 
     def __init__(
-        self,
+        self: APISIXAIGatewayTarget,
         provider: str,
         model: str,
         temperature: Optional[float] = 0.7,
@@ -33,10 +43,9 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         presence_penalty: Optional[float] = 0.0,
         seed: Optional[int] = None,
         max_requests_per_minute: Optional[int] = None,
-        **kwargs,
-    ):
-        """
-        Initialize APISIX AI Gateway target.
+        **kwargs: object,
+    ) -> None:
+        """Initialize APISIX AI Gateway target.
 
         Args:
             provider: AI provider (openai, anthropic, ollama, webui, gsai)
@@ -48,8 +57,10 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             presence_penalty: Presence penalty (-2.0 to 2.0)
             seed: Random seed for reproducibility
             max_requests_per_minute: Rate limiting
+
         """
         # Initialize base class
+
         super().__init__(max_requests_per_minute=max_requests_per_minute)
 
         self.provider = provider
@@ -67,11 +78,12 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         # Verify provider and model are available
         self._verify_model_availability()
 
-        logger.info(f"Initialized APISIX AI Gateway target for {provider}/{model}")
+        logger.info("Initialized APISIX AI Gateway target for %s/%s", provider, model)
 
-    def _verify_model_availability(self):
+    def _verify_model_availability(self: "Self") -> None:
         """Verify that the specified provider and model are available through APISIX."""
         try:
+
             endpoints = self.token_manager.get_apisix_endpoints()
             if self.provider not in endpoints:
                 available_providers = list(endpoints.keys())
@@ -83,17 +95,18 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             if self.model not in provider_models:
                 available_models = list(provider_models.keys())
                 raise ValueError(
-                    f"Model '{self.model}' not available for provider '{self.provider}'. Available models: {available_models}"
+                    f"Model '{self.model}' not available for provider '{self.provider}'. "
+                    f"Available models: {available_models}"
                 )
 
-            logger.debug(f"Verified model availability: {self.provider}/{self.model}")
+            logger.debug("Verified model availability: %s/%s", self.provider, self.model)
 
         except Exception as e:
-            logger.error(f"Failed to verify model availability: {e}")
+            logger.error("Failed to verify model availability: %s", e)
             raise
 
-    def get_identifier(self) -> Dict[str, str]:
-        """Return identifier for this target."""
+    def get_identifier(self: "Self") -> Dict[str, str]:
+        """Provide Return identifier for thi target.."""
         return {
             "type": "apisix_ai_gateway",
             "provider": self.provider,
@@ -101,9 +114,8 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             "__typename__": "APISIXAIGatewayTarget",
         }
 
-    def is_json_response_supported(self) -> bool:
-        """
-        Indicates whether this target supports JSON response format.
+    def is_json_response_supported(self: "Self") -> bool:
+        """Indicate whether this target supports JSON response format.
 
         APISIX AI Gateway supports JSON responses for OpenAI and Anthropic providers,
         but may not support it for Ollama or WebUI depending on the underlying model.
@@ -112,6 +124,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             bool: True if JSON response format is supported, False otherwise.
         """
         # OpenAI and Anthropic generally support JSON response format
+
         json_supported_providers = ["openai", "anthropic"]
 
         if not self.provider:
@@ -119,9 +132,8 @@ class APISIXAIGatewayTarget(PromptChatTarget):
 
         return self.provider.lower() in json_supported_providers
 
-    async def send_prompt_async(self, *, prompt_request: PromptRequestResponse) -> PromptRequestResponse:
-        """
-        Send a prompt to the APISIX AI Gateway and return the response.
+    async def send_prompt_async(self: "Self", *, prompt_request: PromptRequestResponse) -> PromptRequestResponse:
+        """Send a prompt to the APISIX AI Gateway and return the response.
 
         Args:
             prompt_request: The prompt request to send
@@ -130,9 +142,19 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             PromptRequestResponse with the AI response
         """
         # Debug logging for role consistency issue
-        logger.debug(f"APISIX Gateway received prompt_request with {len(prompt_request.request_pieces)} pieces")
+
+        logger.debug(
+            "APISIX Gateway received prompt_request with %d pieces",
+            len(prompt_request.request_pieces),
+        )
         for i, piece in enumerate(prompt_request.request_pieces):
-            logger.debug(f"  Piece {i}: role='{piece.role}', conv_id='{piece.conversation_id}', seq={piece.sequence}")
+            logger.debug(
+                "  Piece %d: role='%s', conv_id='%s', seq=%d",
+                i,
+                piece.role,
+                piece.conversation_id,
+                piece.sequence,
+            )
 
         self._validate_request(prompt_request)
 
@@ -168,21 +190,31 @@ class APISIXAIGatewayTarget(PromptChatTarget):
 
             # Make the call through TokenManager
             logger.debug(
-                f"Calling APISIX AI endpoint: provider={self.provider}, model={self.model}, params={call_params}"
+                "Calling APISIX AI endpoint: provider=%s, model=%s, params=%s",
+                self.provider,
+                self.model,
+                call_params,
             )
 
+            if not user_token:
+                raise ValueError("User token is required for AI endpoint calls")
+
             response_data = self.token_manager.call_ai_endpoint(
-                token=user_token or "dummy_token",  # Use dummy token if no user token
+                token=user_token,
                 provider=self.provider,
                 model=self.model,
                 messages=messages,
                 **call_params,
             )
 
-            logger.debug(f"APISIX response received: {type(response_data)}, data={response_data}")
+            logger.debug(
+                "APISIX response received: %s, data=%s",
+                type(response_data),
+                response_data,
+            )
 
             if not response_data:
-                error_msg = f"Failed to get response from APISIX AI Gateway for {self.provider}/{self.model}"
+                error_msg = "Failed to get response from APISIX AI Gateway for %s/%s" % (self.provider, self.model)
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
 
@@ -190,13 +222,14 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             return self._convert_response_to_pyrit(prompt_request, response_data)
 
         except Exception as e:
-            logger.error(f"Error in APISIX AI Gateway call: {e}")
+            logger.error("Error in APISIX AI Gateway call: %s", e)
             # Return error response in PyRIT format
             return self._create_error_response(prompt_request, str(e))
 
-    def _validate_request(self, prompt_request: PromptRequestResponse):
+    def _validate_request(self: "Self", prompt_request: PromptRequestResponse) -> None:
         """Validate the incoming prompt request."""
         if not prompt_request or not prompt_request.request_pieces:
+
             raise ValueError("Invalid prompt request: missing request pieces")
 
         # Check that we have at least one user message
@@ -204,22 +237,28 @@ class APISIXAIGatewayTarget(PromptChatTarget):
         if not user_messages:
             raise ValueError("Invalid prompt request: no user messages found")
 
-    def _convert_request_to_messages(self, prompt_request: PromptRequestResponse) -> List[Dict[str, str]]:
-        """Convert PyRIT request to APISIX messages format."""
+    def _convert_request_to_messages(self: "Self", prompt_request: PromptRequestResponse) -> List[Dict[str, str]]:
+        """Convert PyRIT request to APISIX message format.."""
         messages = []
 
         for piece in prompt_request.request_pieces:
             if piece.role in ["user", "assistant", "system"]:
-                message = {"role": piece.role, "content": piece.converted_value or piece.original_value}
+                message = {
+                    "role": piece.role,
+                    "content": piece.converted_value or piece.original_value,
+                }
                 messages.append(message)
 
         return messages
 
     def _convert_response_to_pyrit(
-        self, original_request: PromptRequestResponse, response_data: Dict[str, Any]
+        self: APISIXAIGatewayTarget,
+        original_request: PromptRequestResponse,
+        response_data: Dict[str, Any],
     ) -> PromptRequestResponse:
         """Convert APISIX response to PyRIT format using proper PyRIT pattern."""
         try:
+
             # Extract content from different possible response formats
             content = ""
 
@@ -253,7 +292,9 @@ class APISIXAIGatewayTarget(PromptChatTarget):
 
             request_piece = original_request.request_pieces[0]
             logger.debug(
-                f"Creating response from request piece: role='{request_piece.role}', conv_id='{request_piece.conversation_id}'"
+                "Creating response from request piece: role='%s', conv_id='%s'",
+                request_piece.role,
+                request_piece.conversation_id,
             )
 
             # Use PyRIT's proper helper function to create assistant response
@@ -268,7 +309,7 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             return response
 
         except Exception as e:
-            logger.error(f"Error converting APISIX response to PyRIT format: {e}")
+            logger.error("Error converting APISIX response to PyRIT format: %s", e)
             # For errors, create a simple error response using the helper
             if original_request.request_pieces:
                 request_piece = original_request.request_pieces[0]
@@ -283,10 +324,13 @@ class APISIXAIGatewayTarget(PromptChatTarget):
                 return self._create_simple_error_response(original_request, str(e))
 
     def _create_error_response(
-        self, original_request: PromptRequestResponse, error_message: str
+        self: APISIXAIGatewayTarget,
+        original_request: PromptRequestResponse,
+        error_message: str,
     ) -> PromptRequestResponse:
         """Create an error response in PyRIT format using proper pattern."""
         if original_request.request_pieces:
+
             request_piece = original_request.request_pieces[0]
             return construct_response_from_request(
                 request=request_piece,
@@ -299,9 +343,11 @@ class APISIXAIGatewayTarget(PromptChatTarget):
             return self._create_simple_error_response(original_request, error_message)
 
     def _create_simple_error_response(
-        self, original_request: PromptRequestResponse, error_message: str
+        self: APISIXAIGatewayTarget,
+        original_request: PromptRequestResponse,
+        error_message: str,
     ) -> PromptRequestResponse:
-        """Create a simple error response that avoids role consistency issues."""
+        """Create a simple error response that avoid role consistency issues.."""
         conversation_id = str(uuid.uuid4())  # Use a fresh conversation ID
 
         # Create just a single user request and assistant error response

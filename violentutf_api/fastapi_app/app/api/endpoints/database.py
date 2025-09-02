@@ -4,13 +4,12 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Database management endpoints for PyRIT Memory (DuckDB) operations
-"""
+"""Database module."""
 
 import hashlib
 import logging
 import os
+import shutil
 from datetime import datetime
 
 import duckdb
@@ -31,8 +30,9 @@ router = APIRouter()
 
 
 def get_db_filename(username: str, salt: str) -> str:
-    """Generate database filename based on salted hash of username"""
+    """Generate database filename based on salted hash of username."""
     if not username or not salt:
+
         return ""
     salt_bytes = salt.encode("utf-8") if isinstance(salt, str) else salt
     hashed_username = hashlib.sha256(salt_bytes + username.encode("utf-8")).hexdigest()
@@ -40,8 +40,9 @@ def get_db_filename(username: str, salt: str) -> str:
 
 
 def get_db_path(username: str, salt: str, app_data_dir: str) -> str:
-    """Construct full path for user's database file"""
+    """Construct full path for user's database file."""
     if not app_data_dir:
+
         return ""
     filename = get_db_filename(username, salt)
     if not filename:
@@ -62,9 +63,10 @@ ALLOWED_PYRIT_TABLES = {
 }
 
 
-def get_secure_table_count(conn, table_name: str) -> int:
-    """Get row count for table with name validation to prevent SQL injection"""
+def get_secure_table_count(conn: object, table_name: str) -> int:
+    """Get row count for table with name validation to prevent SQL injection."""
     if table_name not in ALLOWED_PYRIT_TABLES:
+
         raise ValueError(f"Invalid table name: {table_name}")
 
     # Use string formatting with pre-validated table name (table_name is whitelisted above)
@@ -74,11 +76,12 @@ def get_secure_table_count(conn, table_name: str) -> int:
 
 
 @router.post("/initialize", response_model=DatabaseInitResponse)
-async def initialize_database(request: InitializeDatabaseRequest, current_user: User = Depends(get_current_user)):
-    """
-    Initialize user-specific PyRIT DuckDB database using salted hash-based path generation
-    """
+async def initialize_database(
+    request: InitializeDatabaseRequest, current_user: User = Depends(get_current_user)
+) -> object:
+    """Initialize user-specific PyRIT DuckDB database using salted hash-based path generation."""
     try:
+
         # Get configuration
         salt = str(request.custom_salt or os.getenv("PYRIT_DB_SALT", "default_salt_2025"))
         app_data_dir = str(os.getenv("APP_DATA_DIR", "./app_data/violentutf"))
@@ -87,7 +90,8 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
         db_path = get_db_path(current_user.username, salt, app_data_dir)
         if not db_path:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not generate database path"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Could not generate database path",
             )
 
         db_filename = os.path.basename(db_path)
@@ -116,8 +120,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
         with duckdb.connect(db_path) as conn:
             # Create basic PyRIT schema
             conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS prompt_pieces (
+                """CREATE TABLE IF NOT EXISTS prompt_pieces (
                     id INTEGER PRIMARY KEY,
                     conversation_id TEXT,
                     role TEXT,
@@ -125,23 +128,21 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     user_id TEXT
                 )
-            """
+"""
             )
 
             conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS conversations (
+                """CREATE TABLE IF NOT EXISTS conversations (
                     id TEXT PRIMARY KEY,
                     user_id TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     metadata TEXT
                 )
-            """
+"""
             )
 
             conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS scores (
+                """CREATE TABLE IF NOT EXISTS scores (
                     id INTEGER PRIMARY KEY,
                     prompt_piece_id INTEGER,
                     scorer_name TEXT,
@@ -150,7 +151,7 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (prompt_piece_id) REFERENCES prompt_pieces(id)
                 )
-            """
+"""
             )
 
         return DatabaseInitResponse(
@@ -164,16 +165,16 @@ async def initialize_database(request: InitializeDatabaseRequest, current_user: 
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Database initialization failed: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database initialization failed: {str(e)}",
+        ) from e
 
 
 @router.get("/status", response_model=DatabaseStatusResponse)
-async def get_database_status(current_user: User = Depends(get_current_user)):
-    """
-    Check database initialization status and health
-    """
+async def get_database_status(current_user: User = Depends(get_current_user)) -> object:
+    """Check database initialization status and health."""
     try:
+
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
         app_data_dir = os.getenv("APP_DATA_DIR", "./app_data/violentutf")
         db_path = get_db_path(current_user.username, salt, app_data_dir)
@@ -212,23 +213,24 @@ async def get_database_status(current_user: User = Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error checking database status: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error checking database status: {str(e)}",
+        ) from e
 
 
 @router.get("/stats", response_model=DatabaseStatsResponse)
-async def get_database_stats(current_user: User = Depends(get_current_user)):
-    """
-    Get comprehensive database statistics and table information
-    """
+async def get_database_stats(current_user: User = Depends(get_current_user)) -> object:
+    """Get comprehensive database statistics and table information."""
     try:
+
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
         app_data_dir = os.getenv("APP_DATA_DIR", "./app_data/violentutf")
         db_path = get_db_path(current_user.username, salt, app_data_dir)
 
         if not os.path.exists(db_path):
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Database not found. Please initialize first."
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Database not found. Please initialize first.",
             )
 
         tables = []
@@ -267,13 +269,15 @@ async def get_database_stats(current_user: User = Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error getting database stats: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting database stats: {str(e)}",
+        ) from e
 
 
-async def reset_database_task(db_path: str, preserve_user_data: bool = False):
-    """Background task to reset database"""
+async def reset_database_task(db_path: str, preserve_user_data: bool = False) -> object:
+    """Background task to reset database."""
     try:
+
         with duckdb.connect(db_path) as conn:
             if not preserve_user_data:
                 # Drop all tables
@@ -288,8 +292,7 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
 
             # Recreate schema
             conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS prompt_pieces (
+                """CREATE TABLE IF NOT EXISTS prompt_pieces (
                     id INTEGER PRIMARY KEY,
                     conversation_id TEXT,
                     role TEXT,
@@ -297,23 +300,21 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     user_id TEXT
                 )
-            """
+"""
             )
 
             conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS conversations (
+                """CREATE TABLE IF NOT EXISTS conversations (
                     id TEXT PRIMARY KEY,
                     user_id TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     metadata TEXT
                 )
-            """
+"""
             )
 
             conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS scores (
+                """CREATE TABLE IF NOT EXISTS scores (
                     id INTEGER PRIMARY KEY,
                     prompt_piece_id INTEGER,
                     scorer_name TEXT,
@@ -322,22 +323,27 @@ async def reset_database_task(db_path: str, preserve_user_data: bool = False):
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (prompt_piece_id) REFERENCES prompt_pieces(id)
                 )
-            """
+"""
             )
+
     except Exception as e:
         logger.error("Error in reset_database_task: %s", e)
+        raise
+    return None
 
 
 @router.post("/reset")
 async def reset_database(
-    request: ResetDatabaseRequest, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)
-):
-    """
-    Reset database tables (drops and recreates schema). Requires confirmation.
-    """
+    request: ResetDatabaseRequest,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Reset database tables (drops and recreates schema). Requires confirmation."""
     if not request.confirmation:
+
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Database reset requires explicit confirmation"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Database reset requires explicit confirmation",
         )
 
     try:
@@ -346,12 +352,14 @@ async def reset_database(
         db_path = get_db_path(current_user.username, salt, app_data_dir)
 
         if not os.path.exists(db_path):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Database not found. Nothing to reset.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Database not found. Nothing to reset.",
+            )
 
         # Create backup if requested
         if request.backup_before_reset:
             backup_path = f"{db_path}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            import shutil
 
             shutil.copy2(db_path, backup_path)
 
@@ -362,36 +370,43 @@ async def reset_database(
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error resetting database: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error resetting database: {str(e)}",
+        ) from e
 
 
 @router.post("/backup")
-async def backup_database(background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
-    """
-    Create database backup
-    """
+async def backup_database(background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)) -> object:
+    """Create database backup."""
     try:
+
         salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
         app_data_dir = os.getenv("APP_DATA_DIR", "./app_data/violentutf")
         db_path = get_db_path(current_user.username, salt, app_data_dir)
 
         if not os.path.exists(db_path):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Database not found. Nothing to backup.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Database not found. Nothing to backup.",
+            )
 
         # Create backup
         backup_path = f"{db_path}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-        def backup_task():
-            import shutil
-
+        def backup_task() -> object:
             shutil.copy2(db_path, backup_path)
+            return None
 
         background_tasks.add_task(backup_task)
 
-        return {"message": "Database backup initiated", "backup_path": backup_path, "task_status": "running"}
+        return {
+            "message": "Database backup initiated",
+            "backup_path": backup_path,
+            "task_status": "running",
+        }
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error creating backup: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating backup: {str(e)}",
+        ) from e

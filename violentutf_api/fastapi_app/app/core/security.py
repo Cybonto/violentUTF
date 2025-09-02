@@ -4,11 +4,10 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Security utilities for JWT token generation and validation
+"""Security utilities for JWT token generation and validation
+
 SECURITY: Enhanced with comprehensive validation to prevent token injection attacks
 """
-
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
@@ -31,8 +30,7 @@ SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """
-    Create a JWT access token
+    """Create a JWT access token
 
     Args:
         data: Payload data to encode
@@ -55,8 +53,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 def decode_token(token: str) -> Dict[str, Any] | None:
-    """
-    Decode and validate a JWT token with comprehensive security checks
+    """Decode and validate a JWT token with comprehensive security checks
 
     Args:
         token: JWT token to decode
@@ -65,6 +62,7 @@ def decode_token(token: str) -> Dict[str, Any] | None:
         Decoded payload or None if invalid
     """
     if not token:
+
         logger.warning("Empty token provided for validation")
         return None
 
@@ -136,8 +134,7 @@ def decode_token(token: str) -> Dict[str, Any] | None:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Verify a plain password against a hashed password with input validation
+    """Verify a plain password against a hashed password with input validation
 
     Args:
         plain_password: Plain text password
@@ -147,6 +144,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         True if password matches, False otherwise
     """
     if not plain_password or not hashed_password:
+
         logger.warning("Empty password or hash provided for verification")
         return False
 
@@ -163,8 +161,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def get_password_hash(password: str, username: Optional[str] = None, email: Optional[str] = None) -> str:
-    """
-    Hash a password using bcrypt with comprehensive security validation
+    """Hash a password using bcrypt with comprehensive security validation
 
     Args:
         password: Plain text password
@@ -178,6 +175,7 @@ def get_password_hash(password: str, username: Optional[str] = None, email: Opti
         ValueError: If password doesn't meet security requirements
     """
     if not password:
+
         raise ValueError("Password is required")
 
     # Comprehensive password strength validation
@@ -191,7 +189,9 @@ def get_password_hash(password: str, username: Optional[str] = None, email: Opti
     # Warn about weak passwords but allow them if they pass basic validation
     if validation_result.strength in [PasswordStrength.WEAK, PasswordStrength.MODERATE]:
         logger.warning(
-            f"Weak password detected (strength: {validation_result.strength.value}, score: {validation_result.score})"
+            "Weak password detected (strength: %s, score: %s)",
+            validation_result.strength.value,
+            validation_result.score,
         )
         if validation_result.warnings:
             logger.info("Password warnings: %s", "; ".join(validation_result.warnings))
@@ -199,20 +199,23 @@ def get_password_hash(password: str, username: Optional[str] = None, email: Opti
     try:
         hashed = pwd_context.hash(password)
         logger.info(
-            f"Password hashed successfully (strength: {validation_result.strength.value}, "
-            f"score: {validation_result.score})"
+            "Password hashed successfully (strength: %s, score: %s)",
+            validation_result.strength.value,
+            validation_result.score,
         )
         return str(hashed)
     except Exception as e:
         logger.error("Password hashing error: %s", str(e))
-        raise ValueError("Failed to hash password")
+        raise ValueError("Failed to hash password") from e
 
 
 def create_api_key_token(
-    user_id: str, key_name: str, permissions: Optional[list] = None, key_id: Optional[str] = None
+    user_id: str,
+    key_name: str,
+    permissions: Optional[list] = None,
+    key_id: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """
-    Create an API key token with extended expiration and input validation
+    """Create an API key token with extended expiration and input validation
 
     Args:
         user_id: User identifier
@@ -227,6 +230,7 @@ def create_api_key_token(
         ValueError: If input validation fails
     """
     # Validate inputs
+
     if not user_id:
         raise ValueError("User ID is required")
 
@@ -284,7 +288,13 @@ def create_api_key_token(
     # API keys have longer expiration (1 year by default)
     expires_delta = timedelta(days=365)
 
-    data = {"sub": user_id, "key_name": key_name, "key_id": key_id, "type": "api_key", "permissions": permissions}
+    data = {
+        "sub": user_id,
+        "key_name": key_name,
+        "key_id": key_id,
+        "type": "api_key",
+        "permissions": permissions,
+    }
 
     try:
         token = create_access_token(data, expires_delta)
@@ -298,4 +308,4 @@ def create_api_key_token(
         }
     except Exception as e:
         logger.error("Failed to create API key token: %s", str(e))
-        raise ValueError("Failed to create API key token")
+        raise ValueError("Failed to create API key token") from e

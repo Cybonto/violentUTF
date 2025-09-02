@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test converter apply functionality to verify COPY mode creates new datasets.
 
@@ -12,6 +18,7 @@ import sys
 import time
 import uuid
 from datetime import datetime
+from typing import Dict
 
 import pytest
 import requests
@@ -32,7 +39,7 @@ API_ENDPOINTS = {
 }
 
 
-def create_test_jwt_token():
+def create_test_jwt_token() -> str:
     """Create a test JWT token for authentication"""
     try:
         import jwt
@@ -53,42 +60,59 @@ def create_test_jwt_token():
         return None
 
 
-def get_auth_headers():
+def get_auth_headers() -> Dict[str, str]:
     """Get authentication headers for API requests"""
     token = create_test_jwt_token()
     if not token:
         raise ValueError("Failed to create JWT token")
 
-    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "X-API-Gateway": "APISIX",
+    }
 
 
 class TestConverterApply:
     """Test converter apply functionality"""
 
-    def setup_method(self):
+    def setup_method(self: "TestConverterApply") -> None:
         """Initialize test environment for each test method"""
         self.headers = get_auth_headers()
         self.created_resources = {"datasets": [], "converters": []}
 
-    def teardown_method(self):
+    def teardown_method(self: "TestConverterApply") -> None:
         """Clean up created resources after each test method"""
         # Delete created datasets
         for dataset_id in self.created_resources["datasets"]:
             try:
-                requests.delete(f"{API_ENDPOINTS['datasets']}/{dataset_id}", headers=self.headers, timeout=30)
+                requests.delete(
+                    f"{API_ENDPOINTS['datasets']}/{dataset_id}",
+                    headers=self.headers,
+                    timeout=30,
+                )
             except Exception as e:
                 print(f"Warning: Failed to clean up dataset {dataset_id}: {e}")
 
         # Delete created converters
         for converter_id in self.created_resources["converters"]:
             try:
-                requests.delete(f"{API_ENDPOINTS['converters']}/{converter_id}", headers=self.headers, timeout=30)
+                requests.delete(
+                    f"{API_ENDPOINTS['converters']}/{converter_id}",
+                    headers=self.headers,
+                    timeout=30,
+                )
             except Exception as e:
                 print(f"Warning: Failed to clean up dataset {dataset_id}: {e}")
 
-    def create_test_dataset(self, name: str, prompts: list) -> str:
+    def create_test_dataset(self: "TestConverterApply", name: str, prompts: list) -> str:
         """Create a test dataset and return its ID"""
-        payload = {"name": name, "source_type": "local", "prompts": prompts, "config": {"test": True}}
+        payload = {
+            "name": name,
+            "source_type": "local",
+            "prompts": prompts,
+            "config": {"test": True},
+        }
 
         response = requests.post(API_ENDPOINTS["datasets"], json=payload, headers=self.headers, timeout=30)
 
@@ -99,9 +123,13 @@ class TestConverterApply:
         self.created_resources["datasets"].append(dataset_id)
         return dataset_id
 
-    def create_test_converter(self, name: str, converter_type: str) -> str:
+    def create_test_converter(self: "TestConverterApply", name: str, converter_type: str) -> str:
         """Create a test converter and return its ID"""
-        payload = {"name": name, "converter_type": converter_type, "parameters": {"append_description": True}}
+        payload = {
+            "name": name,
+            "converter_type": converter_type,
+            "parameters": {"append_description": True},
+        }
 
         response = requests.post(API_ENDPOINTS["converters"], json=payload, headers=self.headers, timeout=30)
 
@@ -112,7 +140,7 @@ class TestConverterApply:
         self.created_resources["converters"].append(converter_id)
         return converter_id
 
-    def test_converter_apply_copy_mode(self):
+    def test_converter_apply_copy_mode(self: "TestConverterApply") -> None:
         """Test that COPY mode creates a new dataset with converted prompts"""
         # Create source dataset
         source_prompts = [
@@ -153,7 +181,11 @@ class TestConverterApply:
         self.created_resources["datasets"].append(new_dataset_id)
 
         # Get the new dataset to verify it exists
-        response = requests.get(f"{API_ENDPOINTS['datasets']}/{new_dataset_id}", headers=self.headers, timeout=30)
+        response = requests.get(
+            f"{API_ENDPOINTS['datasets']}/{new_dataset_id}",
+            headers=self.headers,
+            timeout=30,
+        )
 
         assert response.status_code == 200, f"New dataset not found: {response.text}"
 
@@ -165,7 +197,7 @@ class TestConverterApply:
             f"✅ COPY mode successfully created new dataset '{new_dataset_name}' with {result['converted_count']} converted prompts"
         )
 
-    def test_converter_apply_overwrite_mode(self):
+    def test_converter_apply_overwrite_mode(self: "TestConverterApply") -> None:
         """Test that OVERWRITE mode updates the existing dataset"""
         # Create source dataset
         source_prompts = ["Test prompt 1", "Test prompt 2"]
@@ -205,7 +237,7 @@ class TestConverterApply:
             f"✅ OVERWRITE mode successfully updated dataset '{original_name}' with {result['converted_count']} converted prompts"
         )
 
-    def test_converter_apply_with_parameters(self):
+    def test_converter_apply_with_parameters(self: "TestConverterApply") -> None:
         """Test converter with custom parameters"""
         # Create dataset
         source_prompts = ["Caesar cipher test"]
@@ -249,7 +281,7 @@ class TestConverterApply:
 
         print("✅ Converter with custom parameters successfully applied")
 
-    def test_converter_apply_missing_dataset(self):
+    def test_converter_apply_missing_dataset(self: "TestConverterApply") -> None:
         """Test error handling for non-existent dataset"""
         # Create converter
         converter_id = self.create_test_converter("test_converter", "ROT13Converter")
@@ -274,7 +306,7 @@ class TestConverterApply:
 
         print("✅ Properly handles non-existent dataset error")
 
-    def test_converter_apply_missing_new_name(self):
+    def test_converter_apply_missing_new_name(self: "TestConverterApply") -> None:
         """Test validation for missing new dataset name in COPY mode"""
         # Create dataset and converter
         source_dataset_id = self.create_test_dataset("validation_test", ["test"])
@@ -301,7 +333,7 @@ class TestConverterApply:
         print("✅ Properly validates required fields for COPY mode")
 
 
-def main():
+def main() -> None:
     """Run tests manually"""
     test = TestConverterApply()
 

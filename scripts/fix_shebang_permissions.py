@@ -5,11 +5,9 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Automated script to fix shebang permissions for all files
-"""
+"""Automated script to fix shebang permissions for all files."""
 
-import subprocess
+import subprocess  # nosec B404 - needed for controlled git command execution
 import sys
 from pathlib import Path
 
@@ -17,6 +15,7 @@ from pathlib import Path
 def find_shebang_files() -> tuple[list, list]:
     """Find all files with shebangs that aren't executable"""
     shebang_files = []
+
     non_executable = []
 
     # Search common file extensions
@@ -26,7 +25,15 @@ def find_shebang_files() -> tuple[list, list]:
         for file_path in Path(".").glob(pattern):
             path_str = str(file_path)
             # Skip common directories that shouldn't be tracked
-            skip_dirs = ["node_modules", ".git", ".vitutf", "venv", ".venv", "__pycache__", ".mypy_cache"]
+            skip_dirs = [
+                "node_modules",
+                ".git",
+                ".vitutf",
+                "venv",
+                ".venv",
+                "__pycache__",
+                ".mypy_cache",
+            ]
             if any(skip_dir in path_str for skip_dir in skip_dirs):
                 continue
 
@@ -38,15 +45,16 @@ def find_shebang_files() -> tuple[list, list]:
                         # Check if executable
                         if not file_path.stat().st_mode & 0o111:
                             non_executable.append(file_path)
-            except Exception:
-                continue
+            except Exception:  # nosec B112 - acceptable exception handling
 
+                continue
     return shebang_files, non_executable
 
 
-def fix_permissions(files) -> tuple[int, int]:
+def fix_permissions(files: list[Path]) -> tuple[list[Path], list[Path]]:
     """Fix permissions using git add --chmod=+x"""
     fixed = []
+
     failed = []
 
     # Process in batches to avoid command line length limits
@@ -56,7 +64,9 @@ def fix_permissions(files) -> tuple[int, int]:
         file_paths = [str(f) for f in batch]
 
         try:
-            subprocess.run(["git", "add", "--chmod=+x"] + file_paths, check=True)
+            subprocess.run(
+                ["git", "add", "--chmod=+x"] + file_paths, check=True
+            )  # nosec B603 B607 - controlled git command with validated file paths
             fixed.extend(batch)
             print(f"✅ Fixed {len(batch)} files in batch {i//batch_size + 1}")
         except subprocess.CalledProcessError as e:
@@ -66,7 +76,8 @@ def fix_permissions(files) -> tuple[int, int]:
     return fixed, failed
 
 
-def main() -> None:
+def main() -> int:
+    """Run the shebang permission fixing process."""
     print("🔧 Finding files with shebangs that need executable permissions...")
 
     all_shebang, non_executable = find_shebang_files()
@@ -81,12 +92,12 @@ def main() -> None:
     print(f"\n🔧 Fixing permissions for {len(non_executable)} files...")
     fixed, failed = fix_permissions(non_executable)
 
-    print(f"\n📋 Results:")
+    print("\n📋 Results:")
     print(f"✅ Fixed: {len(fixed)} files")
     print(f"❌ Failed: {len(failed)} files")
 
     if failed:
-        print(f"\n❌ Failed files:")
+        print("\n❌ Failed files:")
         for f in failed[:10]:  # Show first 10
             print(f"  {f}")
         if len(failed) > 10:

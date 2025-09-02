@@ -6,6 +6,7 @@
 # See LICENSE file in the project root for license information.
 
 """Generate dependency report from outdated package info."""
+
 import argparse
 import glob
 import json
@@ -14,7 +15,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-def main() -> None:
+def main() -> int:
+    """Generate dependency vulnerability and outdated package report."""
     parser = argparse.ArgumentParser(description="Generate dependency report")
     parser.add_argument("--outdated-files", help="Pattern for outdated JSON files")
     parser.add_argument("--safety-file", help="Safety report JSON file")

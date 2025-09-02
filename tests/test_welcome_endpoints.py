@@ -1,12 +1,16 @@
-"""
-Comprehensive tests for 0_Welcome.py backend API endpoints
-"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Comprehensive tests for 0_Welcome.py backend API endpoints"""
 
 import json
 import os
 import sys
 from typing import Any, Dict
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -20,12 +24,16 @@ from main import app
 client = TestClient(app)
 
 # Mock JWT token for authentication
-MOCK_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGVzIjpbImFpLWFwaS1hY2Nlc3MiXSwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE3MDA2NTQ5MjF9.example_signature"
+MOCK_TOKEN = (
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsImVtYWlsIjoidGVzdEB"
+    "leGFtcGxlLmNvbSIsInJvbGVzIjpbImFpLWFwaS1hY2Nlc3MiXSwiZXhwIjo5OTk5OTk5OTk5LCJpYXQi"
+    ":MTcwMDY1NDkyMX0.example_signature"
+)
 
 
 @pytest.fixture
 def auth_headers() -> Dict[str, str]:
-    """Authentication headers for API requests"""
+    """Return authentication headers for API requests"""
     return {
         "Authorization": f"Bearer {MOCK_TOKEN}",
         "X-Real-IP": "127.0.0.1",  # Mock APISIX header
@@ -34,7 +42,7 @@ def auth_headers() -> Dict[str, str]:
 
 
 @pytest.fixture
-def mock_user() -> Any:
+def mock_user() -> User:
     """Mock user object"""
     return User(username="testuser", email="test@example.com", roles=["ai-api-access"], is_active=True)
 
@@ -42,7 +50,7 @@ def mock_user() -> Any:
 class TestAuthenticationEndpoints:
     """Test authentication endpoints"""
 
-    def test_get_token_info(self, auth_headers, mock_user) -> None:
+    def test_get_token_info(self: "TestAuthenticationEndpoints", auth_headers: Dict[str, str], mock_user: User) -> None:
         """Test GET /auth/token/info endpoint"""
         # Override dependency
         app.dependency_overrides[get_current_user] = lambda: mock_user
@@ -215,10 +223,12 @@ class TestSessionEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, "workflow_state": {}, "temporary_data": {}, "cache_data": {}, "last_updated": "2024-01-01T00:00:00"}',
+        read_data='{"session_id": "test_session", "user_id": "testuser", "ui_preferences": {}, '
+                  '"workflow_state": {}, "temporary_data": {}, "cache_data": {}, '
+                  '"last_updated": "2024-01-01T00:00:00"}',
     )
     @patch("os.path.exists")
-    def test_get_session_state(self, mock_exists, mock_file, mock_get_user, auth_headers, mock_user) -> None:
+    def test_get_session_state(self: "TestSessionEndpoints", mock_exists: MagicMock, mock_file: MagicMock, mock_get_user: MagicMock, auth_headers: Dict[str, str], mock_user: User) -> None:
         """Test GET /sessions endpoint"""
         mock_get_user.return_value = mock_user
         mock_exists.return_value = True
@@ -410,7 +420,7 @@ class TestEnvironmentConfigEndpoints:
             "APP_DATA_DIR": "./app_data",
         },
     )
-    def test_get_environment_config(self, mock_get_user, auth_headers, mock_user) -> None:
+    def test_get_environment_config(self: "TestConfigEndpoints", mock_get_user: MagicMock, auth_headers: Dict[str, str], mock_user: Any) -> None:
         """Test GET /config/environment endpoint"""
         mock_get_user.return_value = mock_user
 
@@ -424,7 +434,7 @@ class TestEnvironmentConfigEndpoints:
         assert data["environment_variables"]["PYRIT_DB_SALT"] == "test_sal..."
 
     @patch("app.core.auth.get_current_user")
-    def test_update_environment_config(self, mock_get_user, auth_headers, mock_user) -> None:
+    def test_update_environment_config(self: "TestConfigEndpoints", mock_get_user: MagicMock, auth_headers: Dict[str, str], mock_user: Any) -> None:
         """Test PUT /config/environment endpoint"""
         mock_get_user.return_value = mock_user
 
@@ -440,7 +450,7 @@ class TestEnvironmentConfigEndpoints:
         assert data["configuration_complete"] is True
 
     @patch("app.core.auth.get_current_user")
-    def test_validate_environment_config(self, mock_get_user, auth_headers, mock_user) -> None:
+    def test_validate_environment_config(self: "TestConfigEndpoints", mock_get_user: MagicMock, auth_headers: Dict[str, str], mock_user: Any) -> None:
         """Test POST /config/environment/validate endpoint"""
         mock_get_user.return_value = mock_user
 
@@ -452,7 +462,7 @@ class TestEnvironmentConfigEndpoints:
             assert "validation_results" in data
             assert "recommendations" in data
 
-    def test_get_environment_schema(self) -> None:
+    def test_get_environment_schema(self: "TestConfigEndpoints") -> None:
         """Test GET /config/environment/schema endpoint"""
         response = client.get("/api/v1/config/environment/schema")
         assert response.status_code == 200
@@ -463,7 +473,7 @@ class TestEnvironmentConfigEndpoints:
         assert data["schema"]["PYRIT_DB_SALT"]["required"] is True
 
     @patch("app.core.auth.get_current_user")
-    def test_generate_salt(self, mock_get_user, auth_headers, mock_user) -> None:
+    def test_generate_salt(self: "TestConfigEndpoints", mock_get_user: MagicMock, auth_headers: Dict[str, str], mock_user: Any) -> None:
         """Test POST /config/environment/generate-salt endpoint"""
         mock_get_user.return_value = mock_user
 
@@ -482,7 +492,7 @@ class TestFileEndpoints:
     @patch("app.core.auth.get_current_user")
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.makedirs")
-    def test_upload_file(self, mock_makedirs, mock_file, mock_get_user, auth_headers, mock_user) -> None:
+    def test_upload_file(self: "TestFileEndpoints", mock_makedirs: MagicMock, mock_file: MagicMock, mock_get_user: MagicMock, auth_headers: Dict[str, str], mock_user: Any) -> None:
         """Test POST /files/upload endpoint"""
         mock_get_user.return_value = mock_user
 
@@ -501,10 +511,12 @@ class TestFileEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
+        read_data='{"file_id": "test-id", "original_filename": "test.txt", '
+                  '"content_type": "text/plain", "size_bytes": 100, '
+                  '"uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
     )
     @patch("os.path.exists")
-    def test_get_file_metadata(self, mock_exists, mock_file, mock_get_user, auth_headers, mock_user) -> None:
+    def test_get_file_metadata(self: "TestFileEndpoints", mock_exists: MagicMock, mock_file: MagicMock, mock_get_user: MagicMock, auth_headers: Dict[str, str], mock_user: Any) -> None:
         """Test GET /files/{file_id} endpoint"""
         mock_get_user.return_value = mock_user
         mock_exists.return_value = True
@@ -517,7 +529,7 @@ class TestFileEndpoints:
         assert data["file_info"]["filename"] == "test.txt"
         assert data["available"] is True
 
-    def test_get_file_not_found(self, auth_headers) -> None:
+    def test_get_file_not_found(self: "TestFileEndpoints", auth_headers: Dict[str, str]) -> None:
         """Test GET /files/{file_id} with non-existent file"""
         response = client.get("/api/v1/files/nonexistent", headers=auth_headers)
         assert response.status_code == 404
@@ -527,10 +539,12 @@ class TestFileEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
+        read_data='{"file_id": "test-id", "original_filename": "test.txt", '
+                  '"content_type": "text/plain", "size_bytes": 100, '
+                  '"uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
     )
     @patch("os.makedirs")
-    def test_list_files(self, mock_makedirs, mock_file, mock_glob, mock_get_user, auth_headers, mock_user) -> None:
+    def test_list_files(self: "TestFileEndpoints", mock_makedirs: MagicMock, mock_file: MagicMock, mock_glob: MagicMock, mock_get_user: MagicMock, auth_headers: Dict[str, str], mock_user: Any) -> None:
         """Test GET /files endpoint"""
         mock_get_user.return_value = mock_user
 
@@ -548,11 +562,13 @@ class TestFileEndpoints:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='{"file_id": "test-id", "original_filename": "test.txt", "content_type": "text/plain", "size_bytes": 100, "uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
+        read_data='{"file_id": "test-id", "original_filename": "test.txt", '
+                  '"content_type": "text/plain", "size_bytes": 100, '
+                  '"uploaded_at": "2024-01-01T00:00:00", "uploaded_by": "testuser"}',
     )
     @patch("os.path.exists")
     @patch("os.remove")
-    def test_delete_file(self, mock_remove, mock_exists, mock_file, mock_get_user, auth_headers, mock_user) -> None:
+    def test_delete_file(self: "TestFileEndpoints", mock_remove: MagicMock, mock_exists: MagicMock, mock_file: MagicMock, mock_get_user: MagicMock, auth_headers: Dict[str, str], mock_user: Any) -> None:
         """Test DELETE /files/{file_id} endpoint"""
         mock_get_user.return_value = mock_user
         mock_exists.return_value = True

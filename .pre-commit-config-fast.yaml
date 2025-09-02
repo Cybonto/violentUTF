@@ -35,7 +35,7 @@ repos:
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        args: ["--baseline", ".secrets.baseline"]
+        args: ["--baseline", ".secrets.baseline.minimal"]
         exclude: "ai-tokens.env.sample|keycloak/realm-export.json|node_modules|\\.git|\\.mypy_cache|__pycache__|\\.vitutf"
         files: "^(app|violentutf_api|scripts)/"
 

@@ -5,20 +5,23 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Validation script to demonstrate the pre-commit process improvements
-"""
+"""Validation script to demonstrate the pre-commit process improvements"""
 
-import subprocess
+import subprocess  # nosec B404 - needed for pre-commit validation testing
 import sys
 from pathlib import Path
 
 
-def run_command(cmd, description="") -> tuple[bool, str, float]:
+def run_command(cmd: str, description: str = "") -> bool:
     """Run command and return success status"""
     print(f"🔍 {description}")
+
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+        # Split command for safe execution without shell=True
+        cmd_parts = cmd.split()
+        result = subprocess.run(
+            cmd_parts, capture_output=True, text=True, timeout=30, check=False
+        )  # nosec B603 # controlled input
         if result.returncode == 0:
             print(f"✅ PASSED: {description}")
             return True
@@ -35,16 +38,22 @@ def run_command(cmd, description="") -> tuple[bool, str, float]:
         return False
 
 
-def main() -> None:
-    """Main validation function"""
+def main() -> int:
+    """Execute validation"""
     print("🎯 Pre-commit Process Improvements Validation")
+
     print("=" * 60)
 
     results = []
 
     # Test 1: Core hook validation
     print("\\n📋 Testing Core Pre-commit Hooks:")
-    core_hooks = ["check-json", "check-yaml", "check-shebang-scripts-are-executable", "name-tests-test"]
+    core_hooks = [
+        "check-json",
+        "check-yaml",
+        "check-shebang-scripts-are-executable",
+        "name-tests-test",
+    ]
 
     for hook in core_hooks:
         success = run_command(f"pre-commit run {hook} --all-files", f"Core hook: {hook}")

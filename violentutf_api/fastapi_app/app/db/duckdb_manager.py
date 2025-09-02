@@ -4,10 +4,12 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
+"""DuckDB Manager for ViolentUTF Configuration Storage.
+
+Extends existing PyRIT database functionality to support configuration persistence.
 """
-DuckDB Manager for ViolentUTF Configuration Storage
-Extends existing PyRIT database functionality to support configuration persistence
-"""
+
+from __future__ import annotations
 
 import hashlib
 import json
@@ -22,10 +24,19 @@ logger = logging.getLogger(__name__)
 
 
 class DuckDBManager:
-    """Manages DuckDB operations for ViolentUTF configuration storage"""
+    """Manage DuckDB operations for ViolentUTF configuration storage."""
 
     # Security: Allowed columns for UPDATE operations to prevent SQL injection
-    ALLOWED_UPDATE_COLUMNS = {"parameters", "status", "test_results", "updated_at", "name", "type", "config"}
+
+    ALLOWED_UPDATE_COLUMNS = {
+        "parameters",
+        "status",
+        "test_results",
+        "updated_at",
+        "name",
+        "type",
+        "config",
+    }
 
     # Security: Allowed table names for counting operations
     ALLOWED_TABLES = {
@@ -40,30 +51,39 @@ class DuckDBManager:
         "user_sessions",
     }
 
-    def __init__(self, username: str, salt: Optional[str] = None, app_data_dir: Optional[str] = None):
+    def __init__(
+        self: DuckDBManager,
+        username: str,
+        salt: Optional[str] = None,
+        app_data_dir: Optional[str] = None,
+    ) -> None:
+        """Initialize instance."""
         self.username = username
+
         self.salt = salt or os.getenv("PYRIT_DB_SALT", "default_salt_2025")
         self.app_data_dir = app_data_dir or os.getenv("APP_DATA_DIR", "./app_data/violentutf")
         self.db_path = self._get_db_path()
         self._ensure_tables()
 
-    def _get_db_filename(self) -> str:
-        """Generate database filename based on salted hash of username"""
+    def _get_db_filename(self: DuckDBManager) -> str:
+        """Generate database filename based on salted hash of username."""
         if not self.username or not self.salt:
+
             return ""
         salt_bytes = self.salt.encode("utf-8") if isinstance(self.salt, str) else self.salt
         hashed_username = hashlib.sha256(salt_bytes + self.username.encode("utf-8")).hexdigest()
         return f"pyrit_memory_{hashed_username}.db"
 
-    def _get_db_path(self) -> str:
-        """Construct full path for user's database file"""
+    def _get_db_path(self: DuckDBManager) -> str:
+        """Construct full path for user's database file."""
         filename = self._get_db_filename()
+
         if not filename:
             return ""
         return os.path.join(self.app_data_dir or "./app_data/violentutf", filename)
 
-    def _ensure_tables(self):
-        """Create all required tables if they don't exist"""
+    def _ensure_tables(self: DuckDBManager) -> None:
+        """Create all required tables if they don't exist."""
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
 
         try:
@@ -72,7 +92,11 @@ class DuckDBManager:
         except Exception as e:
             # If there's a schema conflict, log it and recreate the database
             if "FOREIGN KEY" in str(e) or "CASCADE" in str(e):
-                logger.warning("Schema conflict detected in %s, recreating database: %s", self.db_path, e)
+                logger.warning(
+                    "Schema conflict detected in %s, recreating database: %s",
+                    self.db_path,
+                    e,
+                )
                 # Remove the problematic database file
                 if os.path.exists(self.db_path):
                     os.remove(self.db_path)
@@ -84,12 +108,12 @@ class DuckDBManager:
 
         logger.info("DuckDB tables initialized for user %s at %s", self.username, self.db_path)
 
-    def _create_tables(self, conn):
-        """Create database tables"""
+    def _create_tables(self: DuckDBManager, conn: duckdb.DuckDBPyConnection) -> None:
+        """Create database tables."""
         # Generators table
+
         conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS generators (
+            """CREATE TABLE IF NOT EXISTS generators (
                 id TEXT PRIMARY KEY,
                 name TEXT UNIQUE NOT NULL,
                 type TEXT NOT NULL,
@@ -100,13 +124,12 @@ class DuckDBManager:
                 user_id TEXT NOT NULL,
                 test_results TEXT  -- JSON string for test history
             )
-        """
+"""
         )
 
         # Datasets table
         conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS datasets (
+            """CREATE TABLE IF NOT EXISTS datasets (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 source_type TEXT NOT NULL,
@@ -117,13 +140,12 @@ class DuckDBManager:
                 user_id TEXT NOT NULL,
                 metadata TEXT  -- JSON string for additional metadata
             )
-        """
+"""
         )
 
         # Dataset prompts table
         conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS dataset_prompts (
+            """CREATE TABLE IF NOT EXISTS dataset_prompts (
                 id TEXT PRIMARY KEY,
                 dataset_id TEXT NOT NULL,
                 prompt_text TEXT NOT NULL,
@@ -131,13 +153,12 @@ class DuckDBManager:
                 metadata TEXT,  -- JSON string
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
+"""
         )
 
         # Converters table
         conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS converters (
+            """CREATE TABLE IF NOT EXISTS converters (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 type TEXT NOT NULL,
@@ -148,13 +169,12 @@ class DuckDBManager:
                 user_id TEXT NOT NULL,
                 test_results TEXT  -- JSON string
             )
-        """
+"""
         )
 
         # Scorers table
         conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS scorers (
+            """CREATE TABLE IF NOT EXISTS scorers (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 type TEXT NOT NULL,
@@ -165,13 +185,12 @@ class DuckDBManager:
                 user_id TEXT NOT NULL,
                 test_results TEXT  -- JSON string
             )
-        """
+"""
         )
 
         # Sessions table
         conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS user_sessions (
+            """CREATE TABLE IF NOT EXISTS user_sessions (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 session_key TEXT NOT NULL,
@@ -181,16 +200,19 @@ class DuckDBManager:
                 expires_at TIMESTAMP,
                 UNIQUE(user_id, session_key)
             )
-        """
+"""
         )
 
     # Security helper methods
     def _build_safe_update_query(
-        self, updates_dict: Dict[str, Any], generator_id: str, user_id: str
+        self: DuckDBManager,
+        updates_dict: Dict[str, Any],
+        generator_id: str,
+        user_id: str,
     ) -> Tuple[str, List]:
-        """Build parameterized UPDATE query with column validation to prevent SQL injection"""
-
+        """Build parameterized UPDATE query with column validation to prevent SQL injection."""
         # Validate column names against whitelist
+
         for column in updates_dict.keys():
             if column not in self.ALLOWED_UPDATE_COLUMNS:
                 raise ValueError(f"Invalid column for update: {column}")
@@ -205,9 +227,10 @@ class DuckDBManager:
 
         return query, params
 
-    def _get_table_count(self, conn, table_name: str) -> int:
-        """Get row count for table with name validation to prevent SQL injection"""
+    def _get_table_count(self: DuckDBManager, conn: duckdb.DuckDBPyConnection, table_name: str) -> int:
+        """Get row count for table with name validation to prevent SQL injection."""
         if table_name not in self.ALLOWED_TABLES:
+
             raise ValueError(f"Invalid table name: {table_name}")
 
         # Use string formatting with pre-validated table name (table_name is whitelisted above)
@@ -216,29 +239,32 @@ class DuckDBManager:
         return result[0] if result else 0
 
     # Generator operations
-    def create_generator(self, name: str, generator_type: str, parameters: Dict[str, Any]) -> str:
-        """Create a new generator configuration"""
+    def create_generator(self: DuckDBManager, name: str, generator_type: str, parameters: Dict[str, Any]) -> str:
+        """Create new generator configuration."""
         generator_id = str(uuid.uuid4())
 
         with duckdb.connect(self.db_path) as conn:
             conn.execute(
-                """
-                INSERT INTO generators (id, name, type, parameters, user_id)
-                VALUES (?, ?, ?, ?, ?)
-            """,
-                [generator_id, name, generator_type, json.dumps(parameters), self.username],
+                """INSERT INTO generators (id, name, type, parameters, user_id)
+                VALUES (?, ?, ?, ?, ?)""",
+                [
+                    generator_id,
+                    name,
+                    generator_type,
+                    json.dumps(parameters),
+                    self.username,
+                ],
             )
 
         return generator_id
 
-    def get_generator(self, generator_id: str) -> Optional[Dict[str, Any]]:
-        """Get generator by ID"""
+    def get_generator(self: DuckDBManager, generator_id: str) -> Optional[Dict[str, Any]]:
+        """Get generator by ID."""
         with duckdb.connect(self.db_path) as conn:
+
             result = conn.execute(
-                """
-                SELECT id, name, type, parameters, status, created_at, updated_at, test_results
-                FROM generators WHERE id = ? AND user_id = ?
-            """,
+                """SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+                FROM generators WHERE id = ? AND user_id = ?""",
                 [generator_id, self.username],
             ).fetchone()
 
@@ -255,14 +281,13 @@ class DuckDBManager:
                 }
         return None
 
-    def get_generator_by_name(self, name: str) -> Optional[Dict[str, Any]]:
-        """Get generator by name"""
+    def get_generator_by_name(self: DuckDBManager, name: str) -> Optional[Dict[str, Any]]:
+        """Get generator by name."""
         with duckdb.connect(self.db_path) as conn:
+
             result = conn.execute(
-                """
-                SELECT id, name, type, parameters, status, created_at, updated_at, test_results
-                FROM generators WHERE name = ? AND user_id = ?
-            """,
+                """SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+                FROM generators WHERE name = ? AND user_id = ?""",
                 [name, self.username],
             ).fetchone()
 
@@ -279,14 +304,13 @@ class DuckDBManager:
                 }
         return None
 
-    def list_generators(self) -> List[Dict[str, Any]]:
-        """List all generators for user"""
+    def list_generators(self: DuckDBManager) -> List[Dict[str, Any]]:
+        """List all generators for user."""
         with duckdb.connect(self.db_path) as conn:
+
             results = conn.execute(
-                """
-                SELECT id, name, type, parameters, status, created_at, updated_at, test_results
-                FROM generators WHERE user_id = ? ORDER BY created_at DESC
-            """,
+                """SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+                FROM generators WHERE user_id = ? ORDER BY created_at DESC""",
                 [self.username],
             ).fetchall()
 
@@ -305,13 +329,13 @@ class DuckDBManager:
             ]
 
     def update_generator(
-        self,
+        self: DuckDBManager,
         generator_id: str,
         parameters: Optional[Dict[str, Any]] = None,
         status: Optional[str] = None,
         test_results: Optional[Dict[str, Any]] = None,
     ) -> bool:
-        """Update generator configuration with SQL injection protection"""
+        """Update generator configuration with SQL injection protection."""
         updates_dict = {}
 
         if parameters is not None:
@@ -351,58 +375,64 @@ class DuckDBManager:
             logger.error("Security validation failed in update_generator: %s", e)
             raise
 
-    def delete_generator(self, generator_id: str) -> bool:
-        """Delete generator"""
+    def delete_generator(self: DuckDBManager, generator_id: str) -> bool:
+        """Delete generator."""
         with duckdb.connect(self.db_path) as conn:
+
             # First check if generator exists
             result = conn.execute(
-                """
-                SELECT COUNT(*) FROM generators WHERE id = ? AND user_id = ?
-            """,
+                """SELECT COUNT(*) FROM generators WHERE id = ? AND user_id = ?""",
                 [generator_id, self.username],
             ).fetchone()
 
-            if result[0] == 0:
+            if result is None or result[0] == 0:
                 logger.warning("Generator %s not found for user %s", generator_id, self.username)
                 return False
 
             # Delete the generator
             conn.execute(
-                """
-                DELETE FROM generators WHERE id = ? AND user_id = ?
-            """,
+                """DELETE FROM generators WHERE id = ? AND user_id = ?""",
                 [generator_id, self.username],
             )
 
             # Verify deletion
             result = conn.execute(
-                """
-                SELECT COUNT(*) FROM generators WHERE id = ? AND user_id = ?
-            """,
+                """SELECT COUNT(*) FROM generators WHERE id = ? AND user_id = ?""",
                 [generator_id, self.username],
             ).fetchone()
 
-            success = result[0] == 0
+            success = result is not None and result[0] == 0
             logger.info(
-                f"Generator {generator_id} deletion {'successful' if success else 'failed'} for user {self.username}"
+                "Generator %s deletion %s for user %s",
+                generator_id,
+                "successful" if success else "failed",
+                self.username,
             )
             return bool(success)
 
     # Dataset operations
     def create_dataset(
-        self, name: str, source_type: str, configuration: Dict[str, Any], prompts: Optional[List[str]] = None
+        self: DuckDBManager,
+        name: str,
+        source_type: str,
+        configuration: Dict[str, Any],
+        prompts: Optional[List[str]] = None,
     ) -> str:
-        """Create a new dataset"""
+        """Create new dataset."""
         dataset_id = str(uuid.uuid4())
 
         with duckdb.connect(self.db_path) as conn:
             # Create dataset record
             conn.execute(
-                """
-                INSERT INTO datasets (id, name, source_type, configuration, user_id)
-                VALUES (?, ?, ?, ?, ?)
-            """,
-                [dataset_id, name, source_type, json.dumps(configuration), self.username],
+                """INSERT INTO datasets (id, name, source_type, configuration, user_id)
+                VALUES (?, ?, ?, ?, ?)""",
+                [
+                    dataset_id,
+                    name,
+                    source_type,
+                    json.dumps(configuration),
+                    self.username,
+                ],
             )
 
             # Add prompts if provided
@@ -410,24 +440,21 @@ class DuckDBManager:
                 for i, prompt in enumerate(prompts):
                     prompt_id = str(uuid.uuid4())
                     conn.execute(
-                        """
-                        INSERT INTO dataset_prompts (id, dataset_id, prompt_text, prompt_index)
-                        VALUES (?, ?, ?, ?)
-                    """,
+                        """INSERT INTO dataset_prompts (id, dataset_id, prompt_text, prompt_index)
+                        VALUES (?, ?, ?, ?)""",
                         [prompt_id, dataset_id, prompt, i],
                     )
 
         return dataset_id
 
-    def get_dataset(self, dataset_id: str) -> Optional[Dict[str, Any]]:
-        """Get dataset with prompts"""
+    def get_dataset(self: DuckDBManager, dataset_id: str) -> Optional[Dict[str, Any]]:
+        """Get dataset with prompts."""
         with duckdb.connect(self.db_path) as conn:
+
             # Get dataset info
             dataset_result = conn.execute(
-                """
-                SELECT id, name, source_type, configuration, status, created_at, updated_at, metadata
-                FROM datasets WHERE id = ? AND user_id = ?
-            """,
+                """SELECT id, name, source_type, configuration, status, created_at, updated_at, metadata
+                FROM datasets WHERE id = ? AND user_id = ?""",
                 [dataset_id, self.username],
             ).fetchone()
 
@@ -436,11 +463,9 @@ class DuckDBManager:
 
             # Get prompts
             prompts_results = conn.execute(
-                """
-                SELECT prompt_text, prompt_index, metadata
+                """SELECT prompt_text, prompt_index, metadata
                 FROM dataset_prompts WHERE dataset_id = ?
-                ORDER BY prompt_index
-            """,
+                ORDER BY prompt_index""",
                 [dataset_id],
             ).fetchall()
 
@@ -454,17 +479,21 @@ class DuckDBManager:
                 "updated_at": dataset_result[6],
                 "metadata": json.loads(dataset_result[7]) if dataset_result[7] else {},
                 "prompts": [
-                    {"text": prompt[0], "index": prompt[1], "metadata": json.loads(prompt[2]) if prompt[2] else {}}
+                    {
+                        "text": prompt[0],
+                        "index": prompt[1],
+                        "metadata": json.loads(prompt[2]) if prompt[2] else {},
+                    }
                     for prompt in prompts_results
                 ],
             }
 
-    def list_datasets(self) -> List[Dict[str, Any]]:
-        """List all datasets for user"""
+    def list_datasets(self: DuckDBManager) -> List[Dict[str, Any]]:
+        """List all datasets for user."""
         with duckdb.connect(self.db_path) as conn:
+
             results = conn.execute(
-                """
-                SELECT d.id, d.name, d.source_type, d.configuration, d.status,
+                """SELECT d.id, d.name, d.source_type, d.configuration, d.status,
                        d.created_at, d.updated_at, d.metadata,
                        COUNT(dp.id) as prompt_count
                 FROM datasets d
@@ -472,8 +501,7 @@ class DuckDBManager:
                 WHERE d.user_id = ?
                 GROUP BY d.id, d.name, d.source_type, d.configuration, d.status,
                          d.created_at, d.updated_at, d.metadata
-                ORDER BY d.created_at DESC
-            """,
+                ORDER BY d.created_at DESC""",
                 [self.username],
             ).fetchall()
 
@@ -492,91 +520,96 @@ class DuckDBManager:
                 for result in results
             ]
 
-    def delete_dataset(self, dataset_id: str) -> bool:
-        """Delete dataset and all its prompts"""
+    def delete_dataset(self: DuckDBManager, dataset_id: str) -> bool:
+        """Delete dataset and all its prompts."""
         with duckdb.connect(self.db_path) as conn:
+
             # Delete prompts first (foreign key constraint)
             conn.execute("DELETE FROM dataset_prompts WHERE dataset_id = ?", [dataset_id])
 
             # Delete dataset
-            conn.execute("DELETE FROM datasets WHERE id = ? AND user_id = ?", [dataset_id, self.username])
+            conn.execute(
+                "DELETE FROM datasets WHERE id = ? AND user_id = ?",
+                [dataset_id, self.username],
+            )
 
             return bool(conn.rowcount > 0)
 
     # Session operations
-    def save_session(self, session_key: str, session_data: Dict[str, Any]) -> bool:
-        """Save session data"""
+    def save_session(self: DuckDBManager, session_key: str, session_data: Dict[str, Any]) -> bool:
+        """Save session data."""
         with duckdb.connect(self.db_path) as conn:
+
             # Check if session exists
             existing = conn.execute(
-                """
-                SELECT id FROM user_sessions WHERE user_id = ? AND session_key = ?
-            """,
+                """SELECT id FROM user_sessions WHERE user_id = ? AND session_key = ?""",
                 [self.username, session_key],
             ).fetchone()
 
             if existing:
                 # Update existing session
                 conn.execute(
-                    """
-                    UPDATE user_sessions
+                    """UPDATE user_sessions
                     SET session_data = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE user_id = ? AND session_key = ?
-                """,
+                    WHERE user_id = ? AND session_key = ?""",
                     [json.dumps(session_data), self.username, session_key],
                 )
             else:
                 # Insert new session
                 session_id = str(uuid.uuid4())
                 conn.execute(
-                    """
-                    INSERT INTO user_sessions (id, user_id, session_key, session_data)
-                    VALUES (?, ?, ?, ?)
-                """,
+                    """INSERT INTO user_sessions (id, user_id, session_key, session_data)
+                    VALUES (?, ?, ?, ?)""",
                     [session_id, self.username, session_key, json.dumps(session_data)],
                 )
 
             return True
 
-    def get_session(self, session_key: str) -> Optional[Dict[str, Any]]:
-        """Get session data"""
+    def get_session(self: DuckDBManager, session_key: str) -> Optional[Dict[str, Any]]:
+        """Get session data."""
         with duckdb.connect(self.db_path) as conn:
+
             result = conn.execute(
-                """
-                SELECT session_data, created_at, updated_at
-                FROM user_sessions WHERE user_id = ? AND session_key = ?
-            """,
+                """SELECT session_data, created_at, updated_at
+                FROM user_sessions WHERE user_id = ? AND session_key = ?""",
                 [self.username, session_key],
             ).fetchone()
 
             if result:
-                return {"data": json.loads(result[0]), "created_at": result[1], "updated_at": result[2]}
+                return {
+                    "data": json.loads(result[0]),
+                    "created_at": result[1],
+                    "updated_at": result[2],
+                }
         return None
 
     # Converter operations (similar pattern)
-    def create_converter(self, name: str, converter_type: str, parameters: Dict[str, Any]) -> str:
-        """Create a new converter configuration"""
+    def create_converter(self: DuckDBManager, name: str, converter_type: str, parameters: Dict[str, Any]) -> str:
+        """Create new converter configuration."""
         converter_id = str(uuid.uuid4())
 
         with duckdb.connect(self.db_path) as conn:
             conn.execute(
-                """
-                INSERT INTO converters (id, name, type, parameters, user_id)
-                VALUES (?, ?, ?, ?, ?)
-            """,
-                [converter_id, name, converter_type, json.dumps(parameters), self.username],
+                """INSERT INTO converters (id, name, type, parameters, user_id)
+                VALUES (?, ?, ?, ?, ?)""",
+                [
+                    converter_id,
+                    name,
+                    converter_type,
+                    json.dumps(parameters),
+                    self.username,
+                ],
             )
 
         return converter_id
 
-    def list_converters(self) -> List[Dict[str, Any]]:
-        """List all converters for user"""
+    def list_converters(self: DuckDBManager) -> List[Dict[str, Any]]:
+        """List all converters for user."""
         with duckdb.connect(self.db_path) as conn:
+
             results = conn.execute(
-                """
-                SELECT id, name, type, parameters, status, created_at, updated_at, test_results
-                FROM converters WHERE user_id = ? ORDER BY created_at DESC
-            """,
+                """SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+                FROM converters WHERE user_id = ? ORDER BY created_at DESC""",
                 [self.username],
             ).fetchall()
 
@@ -594,14 +627,13 @@ class DuckDBManager:
                 for result in results
             ]
 
-    def get_converter(self, converter_id: str) -> Optional[Dict[str, Any]]:
-        """Get converter by ID"""
+    def get_converter(self: DuckDBManager, converter_id: str) -> Optional[Dict[str, Any]]:
+        """Get converter by ID."""
         with duckdb.connect(self.db_path) as conn:
+
             result = conn.execute(
-                """
-                SELECT id, name, type, parameters, status, created_at, updated_at, test_results
-                FROM converters WHERE id = ? AND user_id = ?
-            """,
+                """SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+                FROM converters WHERE id = ? AND user_id = ?""",
                 [converter_id, self.username],
             ).fetchone()
 
@@ -618,36 +650,37 @@ class DuckDBManager:
                 }
         return None
 
-    def delete_converter(self, converter_id: str) -> bool:
-        """Delete converter"""
+    def delete_converter(self: DuckDBManager, converter_id: str) -> bool:
+        """Delete converter."""
         with duckdb.connect(self.db_path) as conn:
-            conn.execute("DELETE FROM converters WHERE id = ? AND user_id = ?", [converter_id, self.username])
+
+            conn.execute(
+                "DELETE FROM converters WHERE id = ? AND user_id = ?",
+                [converter_id, self.username],
+            )
             return bool(conn.rowcount > 0)
 
     # Scorer operations (similar pattern)
-    def create_scorer(self, name: str, scorer_type: str, parameters: Dict[str, Any]) -> str:
-        """Create a new scorer configuration"""
+    def create_scorer(self: DuckDBManager, name: str, scorer_type: str, parameters: Dict[str, Any]) -> str:
+        """Create new scorer configuration."""
         scorer_id = str(uuid.uuid4())
 
         with duckdb.connect(self.db_path) as conn:
             conn.execute(
-                """
-                INSERT INTO scorers (id, name, type, parameters, user_id)
-                VALUES (?, ?, ?, ?, ?)
-            """,
+                """INSERT INTO scorers (id, name, type, parameters, user_id)
+                VALUES (?, ?, ?, ?, ?)""",
                 [scorer_id, name, scorer_type, json.dumps(parameters), self.username],
             )
 
         return scorer_id
 
-    def list_scorers(self) -> List[Dict[str, Any]]:
-        """List all scorers for user"""
+    def list_scorers(self: DuckDBManager) -> List[Dict[str, Any]]:
+        """List all scorers for user."""
         with duckdb.connect(self.db_path) as conn:
+
             results = conn.execute(
-                """
-                SELECT id, name, type, parameters, status, created_at, updated_at, test_results
-                FROM scorers WHERE user_id = ? ORDER BY created_at DESC
-            """,
+                """SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+                FROM scorers WHERE user_id = ? ORDER BY created_at DESC""",
                 [self.username],
             ).fetchall()
 
@@ -665,14 +698,13 @@ class DuckDBManager:
                 for result in results
             ]
 
-    def get_scorer(self, scorer_id: str) -> Optional[Dict[str, Any]]:
-        """Get scorer by ID"""
+    def get_scorer(self: DuckDBManager, scorer_id: str) -> Optional[Dict[str, Any]]:
+        """Get scorer by ID."""
         with duckdb.connect(self.db_path) as conn:
+
             result = conn.execute(
-                """
-                SELECT id, name, type, parameters, status, created_at, updated_at, test_results
-                FROM scorers WHERE id = ? AND user_id = ?
-            """,
+                """SELECT id, name, type, parameters, status, created_at, updated_at, test_results
+                FROM scorers WHERE id = ? AND user_id = ?""",
                 [scorer_id, self.username],
             ).fetchone()
 
@@ -689,20 +721,32 @@ class DuckDBManager:
                 }
         return None
 
-    def delete_scorer(self, scorer_id: str) -> bool:
-        """Delete scorer"""
+    def delete_scorer(self: DuckDBManager, scorer_id: str) -> bool:
+        """Delete scorer."""
         with duckdb.connect(self.db_path) as conn:
-            conn.execute("DELETE FROM scorers WHERE id = ? AND user_id = ?", [scorer_id, self.username])
+
+            conn.execute(
+                "DELETE FROM scorers WHERE id = ? AND user_id = ?",
+                [scorer_id, self.username],
+            )
             return bool(conn.rowcount > 0)
 
     # Utility methods
-    def get_stats(self) -> Dict[str, Any]:
-        """Get database statistics"""
+    def get_stats(self: DuckDBManager) -> Dict[str, Any]:
+        """Get database statistics."""
         with duckdb.connect(self.db_path) as conn:
+
             stats = {}
 
             # Count records in each table using secure method
-            for table in ["generators", "datasets", "dataset_prompts", "converters", "scorers", "user_sessions"]:
+            for table in [
+                "generators",
+                "datasets",
+                "dataset_prompts",
+                "converters",
+                "scorers",
+                "user_sessions",
+            ]:
                 try:
                     # Use secure helper method to prevent SQL injection
                     count = self._get_table_count(conn, table)
@@ -726,5 +770,5 @@ class DuckDBManager:
 
 
 def get_duckdb_manager(username: str) -> DuckDBManager:
-    """Factory function to get DuckDB manager for user"""
+    """Get DuckDB manager for user."""
     return DuckDBManager(username)

@@ -4,21 +4,31 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
+"""Orchestrators module."""
+
+# Copyright (c) 2025 ViolentUTF Contributors.
+
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, cast
+from typing import Dict, List, Optional, cast
 from uuid import UUID
 
 from app.core.auth import get_current_user
 from app.db.database import get_session
+from app.models.auth import User
 from app.models.orchestrator import OrchestratorConfiguration, OrchestratorExecution
-from app.schemas.orchestrator import OrchestratorExecuteResponse  # Keep for backward compatibility in RESTful endpoint
-from app.schemas.orchestrator import (  # RESTful schemas
+from app.schemas.orchestrator import (  # Keep for backward compatibility in RESTful endpoint; RESTful schemas
     ExecutionCreate,
     ExecutionListResponse,
     ExecutionResponse,
     OrchestratorConfigCreate,
     OrchestratorConfigResponse,
+    OrchestratorExecuteResponse,
     OrchestratorMemoryResponse,
     OrchestratorResultsResponse,
     OrchestratorScoresResponse,
@@ -33,60 +43,91 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/types", response_model=List[OrchestratorTypeInfo], summary="List orchestrator types")
-async def list_orchestrator_types(current_user=Depends(get_current_user)):
-    """Get all available PyRIT orchestrator types with metadata"""
+@router.get(
+    "/types",
+    response_model=List[OrchestratorTypeInfo],
+    summary="List orchestrator types",
+)
+async def list_orchestrator_types(
+    current_user: str = Depends(get_current_user),
+) -> List[OrchestratorTypeInfo]:
+    """Get all available PyRIT orchestrator types with metadata."""
     try:
+
         orchestrator_types = pyrit_orchestrator_service.get_orchestrator_types()
-        return orchestrator_types
+        return cast(List[OrchestratorTypeInfo], orchestrator_types)
     except Exception as e:
         logger.error("Error listing orchestrator types: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to list orchestrator types: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list orchestrator types: {str(e)}") from e
 
 
 @router.get("/types/{orchestrator_type}", summary="Get orchestrator type details")
-async def get_orchestrator_type_details(orchestrator_type: str, current_user=Depends(get_current_user)):
-    """Get detailed information about a specific orchestrator type"""
+async def get_orchestrator_type_details(
+    orchestrator_type: str, current_user: str = Depends(get_current_user)
+) -> Optional[OrchestratorTypeInfo]:
+    """Get detailed information about a specific orchestrator type."""
     try:
+
         orchestrator_types = pyrit_orchestrator_service.get_orchestrator_types()
         type_info = next((t for t in orchestrator_types if t["name"] == orchestrator_type), None)
 
         if not type_info:
-            raise HTTPException(status_code=404, detail=f"Orchestrator type not found: {orchestrator_type}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Orchestrator type not found: {orchestrator_type}",
+            )
 
-        return type_info
+        return cast(Optional[OrchestratorTypeInfo], type_info)
     except HTTPException:
         raise
     except Exception as e:
         logger.error("Error getting orchestrator type details: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get orchestrator type details: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get orchestrator type details: {str(e)}") from e
 
 
-@router.post("", response_model=OrchestratorConfigResponse, summary="Create orchestrator configuration")
+@router.post(
+    "",
+    response_model=OrchestratorConfigResponse,
+    summary="Create orchestrator configuration",
+)
 async def create_orchestrator_configuration(
-    request: OrchestratorConfigCreate, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
-    """Create and save PyRIT orchestrator configuration"""
+    request: OrchestratorConfigCreate,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Create and save PyRIT orchestrator configuration."""
     return await _create_orchestrator_configuration_impl(request, db, current_user)
 
 
-@router.post("/create", response_model=OrchestratorConfigResponse, summary="Create orchestrator configuration (alias)")
+@router.post(
+    "/create",
+    response_model=OrchestratorConfigResponse,
+    summary="Create orchestrator configuration (alias)",
+)
 async def create_orchestrator_configuration_alias(
-    request: OrchestratorConfigCreate, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
-    """Create and save PyRIT orchestrator configuration (alias endpoint)"""
+    request: OrchestratorConfigCreate,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Create and save PyRIT orchestrator configuration (alias endpoint)."""
     return await _create_orchestrator_configuration_impl(request, db, current_user)
 
 
-async def _create_orchestrator_configuration_impl(request: OrchestratorConfigCreate, db: AsyncSession, current_user):
-    """Create and save PyRIT orchestrator configuration"""
+async def _create_orchestrator_configuration_impl(
+    request: OrchestratorConfigCreate, db: AsyncSession, current_user: User
+) -> object:
+    """Create and save PyRIT orchestrator configuration."""
     try:
+
         # Check if name already exists
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.name == request.name)
         result = await db.execute(stmt)
         existing = result.scalar_one_or_none()
         if existing:
-            raise HTTPException(status_code=400, detail=f"Orchestrator with name '{request.name}' already exists")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Orchestrator with name '{request.name}' already exists",
+            )
 
         # Create orchestrator instance with user context for generator resolution
         orchestrator_id = await pyrit_orchestrator_service.create_orchestrator_instance(
@@ -114,23 +155,23 @@ async def _create_orchestrator_configuration_impl(request: OrchestratorConfigCre
         await db.commit()
         await db.refresh(config)
 
-        logger.info(f"User {current_user.username} created orchestrator: {request.name}")
+        logger.info("User %s created orchestrator: %s", current_user.username, request.name)
 
         return OrchestratorConfigResponse(
             orchestrator_id=UUID(str(config.id)),
             name=str(config.name),
             orchestrator_type=str(config.orchestrator_type),
             status=str(config.status),
-            created_at=datetime.fromisoformat(str(config.created_at)) if config.created_at else datetime.now(),
+            created_at=(datetime.fromisoformat(str(config.created_at)) if config.created_at else datetime.now()),
             parameters_validated=True,
-            pyrit_identifier=dict(config.pyrit_identifier) if config.pyrit_identifier else None,
+            pyrit_identifier=(dict(config.pyrit_identifier) if config.pyrit_identifier else None),
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error("Error creating orchestrator configuration: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to create orchestrator: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create orchestrator: {str(e)}") from e
 
 
 @router.get("", summary="List orchestrator configurations")
@@ -138,10 +179,11 @@ async def list_orchestrator_configurations(
     orchestrator_type: Optional[str] = Query(None, description="Filter by orchestrator type"),
     status: Optional[str] = Query(None, description="Filter by status"),
     db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
-):
-    """List all configured orchestrators with optional filtering"""
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """List all configured orchestrators with optional filtering."""
     try:
+
         stmt = select(OrchestratorConfiguration)
 
         if orchestrator_type:
@@ -169,15 +211,18 @@ async def list_orchestrator_configurations(
 
     except Exception as e:
         logger.error("Error listing orchestrator configurations: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to list orchestrators: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list orchestrators: {str(e)}") from e
 
 
 @router.get("/{orchestrator_id}", summary="Get orchestrator configuration")
 async def get_orchestrator_configuration(
-    orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
-    """Get specific orchestrator configuration"""
+    orchestrator_id: UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Get specific orchestrator configuration."""
     try:
+
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.id == orchestrator_id)
         result = await db.execute(stmt)
         config = result.scalar_one_or_none()
@@ -203,7 +248,7 @@ async def get_orchestrator_configuration(
         raise
     except Exception as e:
         logger.error("Error getting orchestrator configuration: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get orchestrator: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get orchestrator: {str(e)}") from e
 
 
 # DEPRECATED: This endpoint has been replaced by POST /{orchestrator_id}/executions
@@ -212,13 +257,18 @@ async def get_orchestrator_configuration(
 
 
 @router.get(
-    "/executions/{execution_id}/results", response_model=OrchestratorResultsResponse, summary="Get execution results"
+    "/executions/{execution_id}/results",
+    response_model=OrchestratorResultsResponse,
+    summary="Get execution results",
 )
 async def get_execution_results(
-    execution_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
-    """Get results from orchestrator execution"""
+    execution_id: UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Get results from orchestrator execution."""
     try:
+
         stmt = select(OrchestratorExecution).where(OrchestratorExecution.id == execution_id)
         result = await db.execute(stmt)
         execution = result.scalar_one_or_none()
@@ -235,14 +285,17 @@ async def get_execution_results(
             raise HTTPException(status_code=404, detail="Orchestrator configuration not found")
 
         if execution.status != "completed":
-            raise HTTPException(status_code=400, detail=f"Execution not completed. Status: {execution.status}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Execution not completed. Status: {execution.status}",
+            )
 
         return OrchestratorResultsResponse(
             execution_id=UUID(str(execution.id)),
             status=str(execution.status),
             orchestrator_name=config.name,
             orchestrator_type=config.orchestrator_type,
-            execution_summary=dict(execution.execution_summary) if execution.execution_summary else {},
+            execution_summary=(dict(execution.execution_summary) if execution.execution_summary else {}),
             prompt_request_responses=execution.results.get("prompt_request_responses", []),
             scores=execution.results.get("scores", []),
             memory_export=execution.results.get("memory_export", {}),
@@ -252,15 +305,22 @@ async def get_execution_results(
         raise
     except Exception as e:
         logger.error("Error getting execution results: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get execution results: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get execution results: {str(e)}") from e
 
 
-@router.get("/{orchestrator_id}/memory", response_model=OrchestratorMemoryResponse, summary="Get orchestrator memory")
+@router.get(
+    "/{orchestrator_id}/memory",
+    response_model=OrchestratorMemoryResponse,
+    summary="Get orchestrator memory",
+)
 async def get_orchestrator_memory(
-    orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
-    """Get PyRIT memory entries for orchestrator"""
+    orchestrator_id: UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Get PyRIT memory entries for orchestrator."""
     try:
+
         # Verify orchestrator exists
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.id == orchestrator_id)
         result = await db.execute(stmt)
@@ -283,15 +343,22 @@ async def get_orchestrator_memory(
         raise
     except Exception as e:
         logger.error("Error getting orchestrator memory: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get orchestrator memory: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get orchestrator memory: {str(e)}") from e
 
 
-@router.get("/{orchestrator_id}/scores", response_model=OrchestratorScoresResponse, summary="Get orchestrator scores")
+@router.get(
+    "/{orchestrator_id}/scores",
+    response_model=OrchestratorScoresResponse,
+    summary="Get orchestrator scores",
+)
 async def get_orchestrator_scores(
-    orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
-    """Get PyRIT scores for orchestrator"""
+    orchestrator_id: UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Get PyRIT scores for orchestrator."""
     try:
+
         # Verify orchestrator exists
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.id == orchestrator_id)
         result = await db.execute(stmt)
@@ -309,7 +376,7 @@ async def get_orchestrator_scores(
         raise
     except Exception as e:
         logger.error("Error getting orchestrator scores: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get orchestrator scores: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get orchestrator scores: {str(e)}") from e
 
 
 # RESTful Execution Endpoints (Phase 1 Implementation)
@@ -318,10 +385,11 @@ async def create_orchestrator_execution(
     orchestrator_id: UUID,
     request: ExecutionCreate,
     db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
-):
-    """Create a new orchestrator execution (RESTful endpoint)"""
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Create a new orchestrator execution (RESTful endpoint)."""
     try:
+
         # Get orchestrator configuration
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.id == orchestrator_id)
         result = await db.execute(stmt)
@@ -362,10 +430,19 @@ async def create_orchestrator_execution(
 
             await db.commit()
 
-            logger.info(f"User {current_user.username} executed orchestrator {config.name}")
-            logger.info("Execution results keys: %s", list(results.keys()) if results else "None")
-            logger.info("Has execution_summary: %s", "execution_summary" in results if results else False)
-            logger.info("Has prompt_request_responses: %s", "prompt_request_responses" in results if results else False)
+            logger.info("User %s executed orchestrator %s", current_user.username, config.name)
+            logger.info(
+                "Execution results keys: %s",
+                list(results.keys()) if results else "None",
+            )
+            logger.info(
+                "Has execution_summary: %s",
+                "execution_summary" in results if results else False,
+            )
+            logger.info(
+                "Has prompt_request_responses: %s",
+                "prompt_request_responses" in results if results else False,
+            )
 
         except Exception as exec_error:
             # Update execution with error
@@ -379,16 +456,17 @@ async def create_orchestrator_execution(
         expected_ops = (
             len(request.input_data.get("prompt_list", []))
             if request.execution_type == "prompt_list"
-            else request.input_data.get("sample_size", 1)
-            if request.execution_type == "dataset"
-            else 1
+            else (request.input_data.get("sample_size", 1) if request.execution_type == "dataset" else 1)
         )
 
         # For completed executions, return the full results directly (EXACTLY like original)
         # This provides better UX for synchronous operations like dataset testing
         if execution.status == "completed" and execution.results:
             # Log what we're about to return
-            logger.info("Returning completed execution with results. Keys: %s", list(execution.results.keys()))
+            logger.info(
+                "Returning completed execution with results. Keys: %s",
+                list(execution.results.keys()),
+            )
 
             # Return the actual execution results for immediate use
             response_data = {
@@ -400,7 +478,11 @@ async def create_orchestrator_execution(
                 "started_at": execution.started_at,
                 "completed_at": execution.completed_at,
                 "expected_operations": expected_ops,
-                "progress": {"completed": expected_ops, "total": expected_ops, "current_operation": "Completed"},
+                "progress": {
+                    "completed": expected_ops,
+                    "total": expected_ops,
+                    "current_operation": "Completed",
+                },
             }
 
             # Spread the execution results if they exist
@@ -416,7 +498,7 @@ async def create_orchestrator_execution(
                 status=str(execution.status),
                 orchestrator_id=orchestrator_id,
                 orchestrator_type=str(config.orchestrator_type),
-                execution_name=str(execution.execution_name) if execution.execution_name else None,
+                execution_name=(str(execution.execution_name) if execution.execution_name else None),
                 started_at=(
                     datetime.fromisoformat(str(execution.started_at)) if execution.started_at else datetime.now()
                 ),
@@ -424,7 +506,7 @@ async def create_orchestrator_execution(
                 progress={
                     "completed": expected_ops if execution.status == "completed" else 0,
                     "total": expected_ops,
-                    "current_operation": "Completed" if execution.status == "completed" else "Processing...",
+                    "current_operation": ("Completed" if execution.status == "completed" else "Processing..."),
                 },
             )
 
@@ -432,15 +514,17 @@ async def create_orchestrator_execution(
         raise
     except Exception as e:
         logger.error("Error creating orchestrator execution: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to create execution: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create execution: {str(e)}") from e
 
 
 @router.get("/executions", summary="List all orchestrator executions")
 async def list_all_orchestrator_executions(
-    db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
-    """List all executions across all orchestrators"""
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """List all executions across all orchestrators."""
     try:
+
         # Get all executions with their orchestrator info
         stmt = select(OrchestratorExecution).order_by(OrchestratorExecution.started_at.desc())
         result = await db.execute(stmt)
@@ -459,9 +543,11 @@ async def list_all_orchestrator_executions(
             has_scorer_results = False
             if execution.results:
                 try:
-                    results_dict: Dict[str, Any] = cast(Dict[str, Any], execution.results) if execution.results else {}
+                    results_dict: Dict[str, object] = (
+                        cast(Dict[str, object], execution.results) if execution.results else {}
+                    )
                     scores = results_dict.get("scores", [])
-                    has_scorer_results = len(scores) > 0
+                    has_scorer_results = len(cast(List[object], scores)) > 0
                 except Exception:
                     has_scorer_results = False
 
@@ -469,13 +555,13 @@ async def list_all_orchestrator_executions(
                 "id": str(execution.id),
                 "orchestrator_id": str(execution.orchestrator_id),
                 "name": orchestrator.name if orchestrator else "Unknown",
-                "orchestrator_type": orchestrator.orchestrator_type if orchestrator else "Unknown",
+                "orchestrator_type": (orchestrator.orchestrator_type if orchestrator else "Unknown"),
                 "execution_type": execution.execution_type,
                 "execution_name": execution.execution_name,
                 "status": execution.status,
-                "created_at": execution.started_at.isoformat() if execution.started_at else None,
-                "started_at": execution.started_at.isoformat() if execution.started_at else None,
-                "completed_at": execution.completed_at.isoformat() if execution.completed_at else None,
+                "created_at": (execution.started_at.isoformat() if execution.started_at else None),
+                "started_at": (execution.started_at.isoformat() if execution.started_at else None),
+                "completed_at": (execution.completed_at.isoformat() if execution.completed_at else None),
                 "has_scorer_results": has_scorer_results,
                 "created_by": execution.created_by,
             }
@@ -485,7 +571,7 @@ async def list_all_orchestrator_executions(
 
     except Exception as e:
         logger.error("Error listing all orchestrator executions: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to list executions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list executions: {str(e)}") from e
 
 
 @router.get(
@@ -494,10 +580,13 @@ async def list_all_orchestrator_executions(
     summary="List orchestrator executions (RESTful)",
 )
 async def list_orchestrator_executions(
-    orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
-    """List all executions for an orchestrator (RESTful endpoint)"""
+    orchestrator_id: UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """List all executions for an orchestrator (RESTful endpoint)."""
     try:
+
         # Verify orchestrator exists
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.id == orchestrator_id)
         result = await db.execute(stmt)
@@ -531,18 +620,18 @@ async def list_orchestrator_executions(
                 ExecutionResponse(
                     id=UUID(str(execution.id)),
                     orchestrator_id=orchestrator_id,
-                    execution_type=str(execution.execution_type) if execution.execution_type else "unknown",
-                    execution_name=str(execution.execution_name) if execution.execution_name else None,
+                    execution_type=(str(execution.execution_type) if execution.execution_type else "unknown"),
+                    execution_name=(str(execution.execution_name) if execution.execution_name else None),
                     status=str(execution.status),
-                    created_at=execution.started_at if isinstance(execution.started_at, datetime) else datetime.now(),
+                    created_at=(execution.started_at if isinstance(execution.started_at, datetime) else datetime.now()),
                     started_at=(
                         datetime.fromisoformat(str(execution.started_at)) if execution.started_at else datetime.now()
                     ),
-                    completed_at=execution.completed_at if isinstance(execution.completed_at, datetime) else None,
-                    input_data=dict(execution.input_data) if execution.input_data else {},
+                    completed_at=(execution.completed_at if isinstance(execution.completed_at, datetime) else None),
+                    input_data=(dict(execution.input_data) if execution.input_data else {}),
                     results=dict(execution.results) if execution.results else {},
-                    execution_summary=dict(execution.execution_summary) if execution.execution_summary else {},
-                    created_by=str(execution.created_by) if execution.created_by else "system",
+                    execution_summary=(dict(execution.execution_summary) if execution.execution_summary else {}),
+                    created_by=(str(execution.created_by) if execution.created_by else "system"),
                     links=links,
                 )
             )
@@ -553,13 +642,17 @@ async def list_orchestrator_executions(
             "create": f"{base_url}/executions",
         }
 
-        return ExecutionListResponse(executions=execution_responses, total=len(execution_responses), links=list_links)
+        return ExecutionListResponse(
+            executions=execution_responses,
+            total=len(execution_responses),
+            links=list_links,
+        )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error("Error listing orchestrator executions: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to list executions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list executions: {str(e)}") from e
 
 
 @router.get(
@@ -571,10 +664,11 @@ async def get_orchestrator_execution(
     orchestrator_id: UUID,
     execution_id: UUID,
     db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
-):
-    """Get a specific orchestrator execution (RESTful endpoint)"""
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Get a specific orchestrator execution (RESTful endpoint)."""
     try:
+
         # Verify orchestrator exists
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.id == orchestrator_id)
         result = await db.execute(stmt)
@@ -585,7 +679,8 @@ async def get_orchestrator_execution(
 
         # Get execution
         stmt = select(OrchestratorExecution).where(
-            OrchestratorExecution.id == execution_id, OrchestratorExecution.orchestrator_id == orchestrator_id
+            OrchestratorExecution.id == execution_id,
+            OrchestratorExecution.orchestrator_id == orchestrator_id,
         )
         result = await db.execute(stmt)
         execution = result.scalar_one_or_none()
@@ -605,15 +700,15 @@ async def get_orchestrator_execution(
         return ExecutionResponse(
             id=UUID(str(execution.id)),
             orchestrator_id=orchestrator_id,
-            execution_type=str(execution.execution_type) if execution.execution_type else "unknown",
-            execution_name=str(execution.execution_name) if execution.execution_name else None,
+            execution_type=(str(execution.execution_type) if execution.execution_type else "unknown"),
+            execution_name=(str(execution.execution_name) if execution.execution_name else None),
             status=str(execution.status),
-            created_at=execution.started_at if isinstance(execution.started_at, datetime) else datetime.now(),
-            started_at=datetime.fromisoformat(str(execution.started_at)) if execution.started_at else datetime.now(),
-            completed_at=execution.completed_at if isinstance(execution.completed_at, datetime) else None,
+            created_at=(execution.started_at if isinstance(execution.started_at, datetime) else datetime.now()),
+            started_at=(datetime.fromisoformat(str(execution.started_at)) if execution.started_at else datetime.now()),
+            completed_at=(execution.completed_at if isinstance(execution.completed_at, datetime) else None),
             input_data=dict(execution.input_data) if execution.input_data else {},
             results=dict(execution.results) if execution.results else {},
-            execution_summary=dict(execution.execution_summary) if execution.execution_summary else {},
+            execution_summary=(dict(execution.execution_summary) if execution.execution_summary else {}),
             created_by=str(execution.created_by) if execution.created_by else "system",
             links=links,
         )
@@ -622,7 +717,7 @@ async def get_orchestrator_execution(
         raise
     except Exception as e:
         logger.error("Error getting orchestrator execution: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get execution: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get execution: {str(e)}") from e
 
 
 @router.get(
@@ -634,10 +729,11 @@ async def get_execution_results_restful(
     orchestrator_id: UUID,
     execution_id: UUID,
     db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
-):
-    """Get results from orchestrator execution (RESTful endpoint - mirrors original exactly)"""
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Get results from orchestrator execution (RESTful endpoint - mirrors original exactly)."""
     try:
+
         # Get execution (exactly like original - no orchestrator_id validation)
         stmt = select(OrchestratorExecution).where(OrchestratorExecution.id == execution_id)
         result = await db.execute(stmt)
@@ -656,7 +752,10 @@ async def get_execution_results_restful(
 
         # Same status check as original (400 not 409)
         if execution.status != "completed":
-            raise HTTPException(status_code=400, detail=f"Execution not completed. Status: {execution.status}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Execution not completed. Status: {execution.status}",
+            )
 
         # Return exactly the same format as original
         return OrchestratorResultsResponse(
@@ -664,7 +763,7 @@ async def get_execution_results_restful(
             status=str(execution.status),
             orchestrator_name=config.name,
             orchestrator_type=config.orchestrator_type,
-            execution_summary=dict(execution.execution_summary) if execution.execution_summary else {},
+            execution_summary=(dict(execution.execution_summary) if execution.execution_summary else {}),
             prompt_request_responses=execution.results.get("prompt_request_responses", []),
             scores=execution.results.get("scores", []),
             memory_export=execution.results.get("memory_export", {}),
@@ -674,15 +773,18 @@ async def get_execution_results_restful(
         raise
     except Exception as e:
         logger.error("Error getting execution results: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get execution results: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get execution results: {str(e)}") from e
 
 
 @router.delete("/{orchestrator_id}", summary="Delete orchestrator configuration")
 async def delete_orchestrator_configuration(
-    orchestrator_id: UUID, db: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)
-):
-    """Delete orchestrator configuration and clean up instance"""
+    orchestrator_id: UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Delete orchestrator configuration and clean up instance."""
     try:
+
         stmt = select(OrchestratorConfiguration).where(OrchestratorConfiguration.id == orchestrator_id)
         result = await db.execute(stmt)
         config = result.scalar_one_or_none()
@@ -697,7 +799,7 @@ async def delete_orchestrator_configuration(
         await db.delete(config)
         await db.commit()
 
-        logger.info(f"User {current_user.username} deleted orchestrator: {config.name}")
+        logger.info("User %s deleted orchestrator: %s", current_user.username, config.name)
 
         return {"message": f"Orchestrator '{config.name}' deleted successfully"}
 
@@ -705,4 +807,4 @@ async def delete_orchestrator_configuration(
         raise
     except Exception as e:
         logger.error("Error deleting orchestrator: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to delete orchestrator: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete orchestrator: {str(e)}") from e

@@ -68,7 +68,11 @@ def get_auth_headers():
     if not token:
         return None
 
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "X-API-Gateway": "APISIX",
+    }
 
     apisix_api_key = os.getenv("VIOLENTUTF_API_KEY") or os.getenv("APISIX_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
     if apisix_api_key:

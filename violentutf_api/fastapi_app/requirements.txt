@@ -35,10 +35,10 @@ pyrit
 python-dotenv>=1.0.0
 python-multipart>=0.0.6
 PyYAML>=6.0.2
-requests>=2.32.4  # Fixed CVE-2025-47287 credential leakage vulnerability
 
 # Additional dependencies for PyRIT and Garak (constrained for compatibility)
 requests>=2.32.4  # Fixed CVE-2024-47081 credential leakage vulnerability
+requests>=2.32.4  # Fixed CVE-2025-47287 credential leakage vulnerability
 scipy
 slowapi>=0.1.9
 sqlalchemy[asyncio]>=2.0.25

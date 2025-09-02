@@ -20,10 +20,10 @@ python-dotenv==1.1.1
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.20
 PyYAML==6.0.2
-requests==2.31.0
 
 # Essential AI dependencies (without problematic packages)
 requests>=2.31.0
+requests==2.31.0
 slowapi==0.1.9
 sqlalchemy[asyncio]==2.0.43
 uvicorn[standard]==0.25.0

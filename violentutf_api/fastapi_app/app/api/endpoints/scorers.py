@@ -4,18 +4,18 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-FastAPI endpoints for scorer management
-Implements API backend for 4_Configure_Scorers.py page
-"""
+"""FastAPI endpoints for scorer management.
 
+Implements API backend for 4_Configure_Scorers.py page.
+"""
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
+from app.models.auth import User
 from app.schemas.scorers import (
     ScorerCategoryInfo,
     ScorerCloneRequest,
@@ -39,8 +39,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # DuckDB storage replaces in-memory storage
-# _scorers_store: Dict[str, Dict[str, Any]] = {} - REMOVED
-# _session_scorers: Dict[str, Dict[str, Any]] = {} - REMOVED
+# _scorers_store: Dict[str, Dict[str, object]] = {} - REMOVED
+# _session_scorers: Dict[str, Dict[str, object]] = {} - REMOVED
 
 # Scorer category definitions based on PyRIT implementation
 # NOTE: Missing some legitimate PyRIT scorers like GandalfScorer, LookBackScorer,
@@ -49,8 +49,17 @@ router = APIRouter()
 SCORER_CATEGORIES = {
     "Pattern Matching Scorers": {
         "description": "Fast, reliable detection of specific content patterns using simple matching techniques",
-        "strengths": ["Lightning fast (no LLM calls)", "100% reliable", "Resource efficient", "Perfect for keywords"],
-        "limitations": ["Limited context understanding", "High false positives", "Narrow scope"],
+        "strengths": [
+            "Lightning fast (no LLM calls)",
+            "100% reliable",
+            "Resource efficient",
+            "Perfect for keywords",
+        ],
+        "limitations": [
+            "Limited context understanding",
+            "High false positives",
+            "Narrow scope",
+        ],
         "best_scenarios": [
             "Quick pre-filtering",
             "Policy violations",
@@ -61,7 +70,12 @@ SCORER_CATEGORIES = {
     },
     "Self-Ask Scorer Family": {
         "description": "Versatile LLM-based evaluation using custom questions for flexible, context-aware scoring",
-        "strengths": ["Highly customizable", "Context aware", "Natural language criteria", "Flexible output formats"],
+        "strengths": [
+            "Highly customizable",
+            "Context aware",
+            "Natural language criteria",
+            "Flexible output formats",
+        ],
         "limitations": [
             "Requires LLM calls",
             "Variable results",
@@ -83,7 +97,10 @@ SCORER_CATEGORIES = {
         ],
     },
     "Utility and Meta-Scoring": {
-        "description": "Tools for combining, transforming, and orchestrating other scorers into sophisticated evaluation pipelines",
+        "description": (
+            "Tools for combining, transforming, and orchestrating "
+            "other scorers into sophisticated evaluation pipelines"
+        ),
         "strengths": [
             "Orchestration capabilities",
             "Logical operations",
@@ -102,7 +119,11 @@ SCORER_CATEGORIES = {
             "Research workflows",
             "Multi-requirement systems",
         ],
-        "scorers": ["CompositeScorer", "FloatScaleThresholdScorer", "TrueFalseInverterScorer"],
+        "scorers": [
+            "CompositeScorer",
+            "FloatScaleThresholdScorer",
+            "TrueFalseInverterScorer",
+        ],
     },
 }
 
@@ -294,9 +315,10 @@ SCORER_PARAMETERS = {
 }
 
 
-def get_user_id(current_user) -> str:
-    """Extract user ID from current user object"""
+def get_user_id(current_user: str) -> str:
+    """Extract user ID from current user object."""
     if hasattr(current_user, "sub"):
+
         return str(current_user.sub)
     elif hasattr(current_user, "email"):
         return str(current_user.email)
@@ -307,9 +329,12 @@ def get_user_id(current_user) -> str:
 
 
 @router.get("/types", response_model=ScorerTypesResponse, summary="Get available scorer types")
-async def get_scorer_types(current_user=Depends(get_current_user)):
-    """Get list of available scorer categories and types"""
+async def get_scorer_types(
+    current_user: User = Depends(get_current_user),
+) -> ScorerTypesResponse:
+    """Get list of available scorer categories and types."""
     try:
+
         logger.info("Loading scorer types and categories")
 
         # Convert categories to response format
@@ -329,30 +354,40 @@ async def get_scorer_types(current_user=Depends(get_current_user)):
             all_scorers.extend(cat_info["scorers"])
 
         response = ScorerTypesResponse(
-            categories=categories, available_scorers=all_scorers, test_cases=CATEGORY_TEST_CASES
+            categories=categories,
+            available_scorers=all_scorers,
+            test_cases=CATEGORY_TEST_CASES,
         )
 
-        logger.info(f"Loaded {len(all_scorers)} scorer types in {len(categories)} categories")
+        logger.info("Loaded %s scorer types in %s categories", len(all_scorers), len(categories))
         return response
 
     except Exception as e:
         logger.error("Error loading scorer types: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to load scorer types: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to load scorer types: {str(e)}") from e
 
 
-def _safe_convert_choices(choices):
-    """Safely convert choices to list of strings"""
+def _safe_convert_choices(choices: object) -> object:
+    """Safely convert choices to list of strings."""
     if not choices:
+
         return None
     if isinstance(choices, (list, tuple)):
         return [str(x) for x in choices]
     return None
 
 
-@router.get("/params/{scorer_type}", response_model=ScorerParametersResponse, summary="Get scorer parameters")
-async def get_scorer_parameters(scorer_type: str, current_user=Depends(get_current_user)):
-    """Get parameter definitions for a specific scorer type"""
+@router.get(
+    "/params/{scorer_type}",
+    response_model=ScorerParametersResponse,
+    summary="Get scorer parameters",
+)
+async def get_scorer_parameters(
+    scorer_type: str, current_user: User = Depends(get_current_user)
+) -> ScorerParametersResponse:
+    """Get parameter definitions for a specific scorer type."""
     try:
+
         logger.info("Getting parameters for scorer type: %s", scorer_type)
 
         if scorer_type not in SCORER_PARAMETERS:
@@ -393,20 +428,23 @@ async def get_scorer_parameters(scorer_type: str, current_user=Depends(get_curre
             description=f"Parameter definitions for {scorer_type}",
         )
 
-        logger.info(f"Retrieved {len(parameters)} parameters for {scorer_type}")
+        logger.info("Retrieved %s parameters for %s", len(parameters), scorer_type)
         return response
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error("Error getting scorer parameters: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to get scorer parameters: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get scorer parameters: {str(e)}") from e
 
 
 @router.get("", response_model=ScorersListResponse, summary="List configured scorers")
-async def list_scorers(current_user=Depends(get_current_user)):
-    """Get list of all configured scorers"""
+async def list_scorers(
+    current_user: User = Depends(get_current_user),
+) -> ScorersListResponse:
+    """Get list of all configured scorers."""
     try:
+
         user_id = current_user.username
         logger.info("Listing scorers for user: %s", user_id)
 
@@ -457,20 +495,28 @@ async def list_scorers(current_user=Depends(get_current_user)):
 
         response = ScorersListResponse(scorers=scorer_list, total=len(scorer_list), by_category=category_counts)
 
-        logger.info(f"Listed {len(scorer_list)} scorers for user {user_id}")
+        logger.info("Listed %s scorers for user %s", len(scorer_list), user_id)
         return response
 
     except Exception as e:
         logger.error("Error listing scorers: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to list scorers: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list scorers: {str(e)}") from e
 
 
 @router.post("", response_model=ScorerCreateResponse, summary="Create new scorer")
-async def create_scorer(request: ScorerCreateRequest, current_user=Depends(get_current_user)):
-    """Create a new scorer configuration"""
+async def create_scorer(
+    request: ScorerCreateRequest, current_user: User = Depends(get_current_user)
+) -> ScorerCreateResponse:
+    """Create a new scorer configuration."""
     try:
+
         user_id = current_user.username
-        logger.info("Creating scorer '%s' of type '%s' for user %s", request.name, request.scorer_type, user_id)
+        logger.info(
+            "Creating scorer '%s' of type '%s' for user %s",
+            request.name,
+            request.scorer_type,
+            user_id,
+        )
 
         # Check if scorer type is valid
         if request.scorer_type not in SCORER_PARAMETERS:
@@ -481,7 +527,10 @@ async def create_scorer(request: ScorerCreateRequest, current_user=Depends(get_c
         existing_scorers = db_manager.list_scorers()
         for scorer in existing_scorers:
             if scorer["name"] == request.name:
-                raise HTTPException(status_code=409, detail=f"Scorer with name '{request.name}' already exists")
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Scorer with name '{request.name}' already exists",
+                )
 
         # Validate parameters
         param_defs = SCORER_PARAMETERS[request.scorer_type]
@@ -494,7 +543,10 @@ async def create_scorer(request: ScorerCreateRequest, current_user=Depends(get_c
                     # Handle chat_target via generator_id
                     continue
                 else:
-                    raise HTTPException(status_code=400, detail=f"Required parameter '{param_name}' is missing")
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Required parameter '{param_name}' is missing",
+                    )
 
         # Create scorer configuration
         scorer_id = str(uuid.uuid4())
@@ -511,7 +563,9 @@ async def create_scorer(request: ScorerCreateRequest, current_user=Depends(get_c
 
         # Store in DuckDB
         scorer_id = db_manager.create_scorer(
-            name=request.name, scorer_type=request.scorer_type, parameters=request.parameters
+            name=request.name,
+            scorer_type=request.scorer_type,
+            parameters=request.parameters,
         )
 
         # Create response
@@ -522,7 +576,11 @@ async def create_scorer(request: ScorerCreateRequest, current_user=Depends(get_c
                 "name": request.name,
                 "type": request.scorer_type,
                 "parameters": request.parameters,
-                "created_at": scorer_config["created_at"].isoformat(),
+                "created_at": (
+                    scorer_config["created_at"].isoformat()
+                    if isinstance(scorer_config["created_at"], datetime)
+                    else str(scorer_config["created_at"])
+                ),
             },
             message=f"Scorer '{request.name}' created successfully",
         )
@@ -534,15 +592,25 @@ async def create_scorer(request: ScorerCreateRequest, current_user=Depends(get_c
         raise
     except Exception as e:
         logger.error("Error creating scorer: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to create scorer: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create scorer: {str(e)}") from e
 
 
 @router.post("/{scorer_id}/clone", response_model=ScorerCreateResponse, summary="Clone scorer")
-async def clone_scorer(scorer_id: str, request: ScorerCloneRequest, current_user=Depends(get_current_user)):
-    """Clone an existing scorer configuration"""
+async def clone_scorer(
+    scorer_id: str,
+    request: ScorerCloneRequest,
+    current_user: User = Depends(get_current_user),
+) -> ScorerCreateResponse:
+    """Clone an existing scorer configuration."""
     try:
+
         user_id = current_user.username
-        logger.info("Cloning scorer %s as '%s' for user %s", scorer_id, request.new_name, user_id)
+        logger.info(
+            "Cloning scorer %s as '%s' for user %s",
+            scorer_id,
+            request.new_name,
+            user_id,
+        )
 
         # Find original scorer in DuckDB
         db_manager = get_duckdb_manager(user_id)
@@ -555,7 +623,10 @@ async def clone_scorer(scorer_id: str, request: ScorerCloneRequest, current_user
         existing_scorers = db_manager.list_scorers()
         for scorer in existing_scorers:
             if scorer["name"] == request.new_name:
-                raise HTTPException(status_code=409, detail=f"Scorer with name '{request.new_name}' already exists")
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Scorer with name '{request.new_name}' already exists",
+                )
 
         # Create cloned configuration
         new_scorer_id = str(uuid.uuid4())
@@ -563,7 +634,7 @@ async def clone_scorer(scorer_id: str, request: ScorerCloneRequest, current_user
             "id": new_scorer_id,
             "name": request.new_name,
             "type": original_config["type"],
-            "parameters": original_config["parameters"].copy() if request.clone_parameters else {},
+            "parameters": (original_config["parameters"].copy() if request.clone_parameters else {}),
             "generator_id": original_config.get("generator_id"),
             "created_at": datetime.now(),
             "created_by": user_id,
@@ -575,7 +646,7 @@ async def clone_scorer(scorer_id: str, request: ScorerCloneRequest, current_user
         new_scorer_id = db_manager.create_scorer(
             name=request.new_name,
             scorer_type=original_config["type"],
-            parameters=original_config["parameters"].copy() if request.clone_parameters else {},
+            parameters=(original_config["parameters"].copy() if request.clone_parameters else {}),
         )
 
         response = ScorerCreateResponse(
@@ -597,13 +668,18 @@ async def clone_scorer(scorer_id: str, request: ScorerCloneRequest, current_user
         raise
     except Exception as e:
         logger.error("Error cloning scorer: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to clone scorer: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to clone scorer: {str(e)}") from e
 
 
 @router.put("/{scorer_id}", response_model=ScorerCreateResponse, summary="Update scorer")
-async def update_scorer(scorer_id: str, request: ScorerUpdateRequest, current_user=Depends(get_current_user)):
-    """Update an existing scorer configuration"""
+async def update_scorer(
+    scorer_id: str,
+    request: ScorerUpdateRequest,
+    current_user: User = Depends(get_current_user),
+) -> ScorerCreateResponse:
+    """Update an existing scorer configuration."""
     try:
+
         user_id = current_user.username
         logger.info("Updating scorer %s for user %s", scorer_id, user_id)
 
@@ -616,7 +692,10 @@ async def update_scorer(scorer_id: str, request: ScorerUpdateRequest, current_us
 
         # Update fields (Note: Update functionality needs implementation in DuckDB manager)
         if request.name is not None:
-            logger.info("Scorer name update requested: %s (update functionality needs implementation)", request.name)
+            logger.info(
+                "Scorer name update requested: %s (update functionality needs implementation)",
+                request.name,
+            )
 
         if request.parameters is not None:
             logger.info("Scorer parameters update requested (update functionality needs implementation)")
@@ -640,13 +719,14 @@ async def update_scorer(scorer_id: str, request: ScorerUpdateRequest, current_us
         raise
     except Exception as e:
         logger.error("Error updating scorer: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to update scorer: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update scorer: {str(e)}") from e
 
 
 @router.delete("/{scorer_id}", response_model=ScorerDeleteResponse, summary="Delete scorer")
-async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)):
-    """Delete a scorer configuration"""
+async def delete_scorer(scorer_id: str, current_user: User = Depends(get_current_user)) -> ScorerDeleteResponse:
+    """Delete a scorer configuration."""
     try:
+
         user_id = current_user.username
         logger.info("Deleting scorer %s for user %s", scorer_id, user_id)
 
@@ -663,7 +743,11 @@ async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)):
         if not deleted:
             raise HTTPException(status_code=500, detail=f"Failed to delete scorer with ID '{scorer_id}'")
 
-        response = ScorerDeleteResponse(success=True, message="Scorer deleted successfully", deleted_scorer=scorer_name)
+        response = ScorerDeleteResponse(
+            success=True,
+            message="Scorer deleted successfully",
+            deleted_scorer=scorer_name,
+        )
 
         logger.info("Successfully deleted scorer %s", scorer_id)
         return response
@@ -672,20 +756,22 @@ async def delete_scorer(scorer_id: str, current_user=Depends(get_current_user)):
         raise
     except Exception as e:
         logger.error("Error deleting scorer: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to delete scorer: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete scorer: {str(e)}") from e
 
 
 async def _execute_real_pyrit_scorer(
-    scorer_type: str, parameters: Dict[str, Any], test_input: str
-) -> List[Dict[str, Any]]:
-    """Execute real PyRIT scorer and return results"""
+    scorer_type: str, parameters: Dict[str, object], test_input: str
+) -> List[Dict[str, object]]:
+    """Execute real PyRIT scorer and return results."""
     try:
-        import uuid
-        from datetime import datetime
 
         from pyrit.models import PromptRequestPiece, PromptRequestResponse
 
-        logger.info("Executing real PyRIT scorer: %s with parameters: %s", scorer_type, parameters)
+        logger.info(
+            "Executing real PyRIT scorer: %s with parameters: %s",
+            scorer_type,
+            parameters,
+        )
 
         # Create scorer instance based on type
         scorer_instance = await _create_pyrit_scorer_instance(scorer_type, parameters)
@@ -729,9 +815,10 @@ async def _execute_real_pyrit_scorer(
         raise
 
 
-async def _create_pyrit_scorer_instance(scorer_type: str, parameters: Dict[str, Any]):
-    """Create a real PyRIT scorer instance"""
+async def _create_pyrit_scorer_instance(scorer_type: str, parameters: Dict[str, object]) -> object:
+    """Create a real PyRIT scorer instance."""
     try:
+
         logger.info("Creating PyRIT scorer instance: %s", scorer_type)
 
         # Import PyRIT scorers based on type
@@ -779,10 +866,17 @@ async def _create_pyrit_scorer_instance(scorer_type: str, parameters: Dict[str, 
         return None
 
 
-@router.post("/validate", response_model=ScorerValidationResponse, summary="Validate scorer configuration")
-async def validate_scorer_config(request: ScorerValidationRequest, current_user=Depends(get_current_user)):
-    """Validate a scorer configuration before creation"""
+@router.post(
+    "/validate",
+    response_model=ScorerValidationResponse,
+    summary="Validate scorer configuration",
+)
+async def validate_scorer_config(
+    request: ScorerValidationRequest, current_user: User = Depends(get_current_user)
+) -> ScorerValidationResponse:
+    """Validate a scorer configuration before creation."""
     try:
+
         logger.info("Validating scorer configuration for type: %s", request.scorer_type)
 
         errors: List[str] = []
@@ -833,7 +927,10 @@ async def validate_scorer_config(request: ScorerValidationRequest, current_user=
         is_valid = len(errors) == 0
 
         response = ScorerValidationResponse(
-            valid=is_valid, errors=errors, warnings=warnings, suggested_fixes=suggested_fixes
+            valid=is_valid,
+            errors=errors,
+            warnings=warnings,
+            suggested_fixes=suggested_fixes,
         )
 
         logger.info("Validation completed for %s: valid=%s", request.scorer_type, is_valid)
@@ -841,13 +938,16 @@ async def validate_scorer_config(request: ScorerValidationRequest, current_user=
 
     except Exception as e:
         logger.error("Error validating scorer configuration: %s", e)
-        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}") from e
 
 
 @router.get("/health", response_model=ScorerHealthResponse, summary="Get scorer system health")
-async def get_scorer_health(current_user=Depends(get_current_user)):
-    """Get health status of scorer system"""
+async def get_scorer_health(
+    current_user: User = Depends(get_current_user),
+) -> ScorerHealthResponse:
+    """Get health status of scorer system."""
     try:
+
         user_id = current_user.username
         logger.info("Checking scorer health for user %s", user_id)
 
@@ -878,7 +978,7 @@ async def get_scorer_health(current_user=Depends(get_current_user)):
 
     except Exception as e:
         logger.error("Error checking scorer health: %s", e)
-        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}") from e
 
 
 # Helper functions for scorer testing modes are now handled by orchestrator patterns

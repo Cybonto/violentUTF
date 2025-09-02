@@ -4,8 +4,7 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Phase 2 Integration Tests for ViolentUTF MCP Server - Revised
+"""Phase 2 Integration Tests for ViolentUTF MCP Server - Revised
 ============================================================
 
 These tests validate Phase 2 implementation with proper architecture:
@@ -14,12 +13,12 @@ These tests validate Phase 2 implementation with proper architecture:
 - Mock external dependencies appropriately
 - Test actual implementation, not future phases
 """
-
+# pylint: disable=protected-access
 import asyncio
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Self
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -32,7 +31,11 @@ from app.mcp.server.base import ViolentUTFMCPServer
 # Test the actual implemented components
 from app.mcp.tools import tool_registry
 from app.mcp.tools.generators import generator_tools
-from app.mcp.tools.introspection import EndpointIntrospector, ViolentUTFToolFilter, initialize_introspector
+from app.mcp.tools.introspection import (
+    EndpointIntrospector,
+    ViolentUTFToolFilter,
+    initialize_introspector,
+)
 from app.mcp.tools.orchestrators import orchestrator_tools
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
@@ -44,11 +47,11 @@ logger = logging.getLogger(__name__)
 
 
 class TestPhase2Architecture:
-    """Test Phase 2 architecture compliance and integration"""
+    """Test Phase 2 architecture compliance and integration."""
 
     @pytest.fixture
-    def realistic_fastapi_app(self) -> FastAPI:
-        """Create a realistic FastAPI app mimicking ViolentUTF API structure"""
+    def realistic_fastapi_app(self: "Self") -> FastAPI:
+        """Create a realistic FastAPI app mimicking ViolentUTF API structure."""
         app = FastAPI(title="ViolentUTF API", version="1.0.0")
 
         # Create realistic API routes based on ViolentUTF API structure
@@ -180,10 +183,11 @@ class TestPhase2Architecture:
         return app
 
     @pytest.fixture
-    def mock_apisix_responses(self) -> Dict[str, Any]:
-        """Mock APISIX gateway responses for API calls"""
+    def mock_apisix_responses(self: "Self") -> Dict[str, Any]:
+        """Mock APISIX gateway responses for API calls."""
 
         def create_mock_response(status_code=200, json_data=None, text="") -> Mock:
+
             mock_response = Mock()
             mock_response.status_code = status_code
             mock_response.json.return_value = json_data or {"success": True}
@@ -220,7 +224,16 @@ class TestPhase2Architecture:
                 },
             ),
             "datasets_list": create_mock_response(
-                200, {"datasets": [{"name": "test_dataset", "category": "harmful_behaviors", "size": 100}]}
+                200,
+                {
+                    "datasets": [
+                        {
+                            "name": "test_dataset",
+                            "category": "harmful_behaviors",
+                            "size": 100,
+                        }
+                    ]
+                },
             ),
             "not_found": create_mock_response(404, {"detail": "Resource not found"}),
             "server_error": create_mock_response(500, {"detail": "Internal server error"}),
@@ -228,10 +241,10 @@ class TestPhase2Architecture:
 
 
 class TestPhase2EndpointIntrospection(TestPhase2Architecture):
-    """Test FastAPI endpoint introspection functionality"""
+    """Test FastAPI endpoint introspection functionality."""
 
-    def test_tool_filter_patterns(self) -> None:
-        """Test ViolentUTF tool filter with realistic patterns"""
+    def test_tool_filter_patterns(self: "Self") -> None:
+        """Test ViolentUTF tool filter with realistic patterns."""
         tool_filter = ViolentUTFToolFilter()
 
         # Test included endpoints (should be exposed via MCP)
@@ -266,9 +279,10 @@ class TestPhase2EndpointIntrospection(TestPhase2Architecture):
             assert not tool_filter.should_include_endpoint(path, method), f"Should exclude {method} {path}"
 
     @pytest.mark.asyncio
-    async def test_endpoint_introspection_realistic(self, realistic_fastapi_app) -> None:
-        """Test endpoint introspection with realistic FastAPI app"""
+    async def test_endpoint_introspection_realistic(self: "Self", realistic_fastapi_app: "FastAPI") -> None:
+        """Test endpoint introspection with realistic FastAPI app."""
         # Initialize introspector
+
         introspector = initialize_introspector(realistic_fastapi_app)
 
         assert introspector is not None
@@ -305,8 +319,8 @@ class TestPhase2EndpointIntrospection(TestPhase2Architecture):
             assert endpoint["method"] in ["GET", "POST", "PUT", "DELETE"]
             assert endpoint["path"].startswith("/api/v1/")
 
-    def test_tool_name_generation(self) -> None:
-        """Test tool name generation from endpoints"""
+    def test_tool_name_generation(self: "Self") -> None:
+        """Test tool name generation from endpoints."""
         introspector = EndpointIntrospector(Mock())
 
         test_cases = [
@@ -316,7 +330,11 @@ class TestPhase2EndpointIntrospection(TestPhase2Architecture):
             ("/api/v1/generators/{generator_id}", "GET", "get_generators_by_id"),
             ("/api/v1/generators/{generator_id}", "PUT", "update_generators_by_id"),
             ("/api/v1/generators/{generator_id}", "DELETE", "delete_generators_by_id"),
-            ("/api/v1/orchestrators/{id}/start", "POST", "create_orchestrators_start_by_id"),
+            (
+                "/api/v1/orchestrators/{id}/start",
+                "POST",
+                "create_orchestrators_start_by_id",
+            ),
             ("/api/v1/datasets", "GET", "get_datasets"),
         ]
 
@@ -326,10 +344,10 @@ class TestPhase2EndpointIntrospection(TestPhase2Architecture):
 
 
 class TestPhase2SpecializedTools(TestPhase2Architecture):
-    """Test specialized tool implementations"""
+    """Test specialized tool implementations."""
 
-    def test_generator_tools_structure(self) -> None:
-        """Test generator tools structure and completeness"""
+    def test_generator_tools_structure(self: "Self") -> None:
+        """Test generator tools structure and completeness."""
         tools = generator_tools.get_tools()
 
         assert len(tools) == 10, f"Expected 10 generator tools, got {len(tools)}"
@@ -360,8 +378,8 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
             assert tool.inputSchema["type"] == "object"
             assert "properties" in tool.inputSchema
 
-    def test_orchestrator_tools_structure(self) -> None:
-        """Test orchestrator tools structure and completeness"""
+    def test_orchestrator_tools_structure(self: "Self") -> None:
+        """Test orchestrator tools structure and completeness."""
         tools = orchestrator_tools.get_tools()
 
         assert len(tools) == 14, f"Expected 14 orchestrator tools, got {len(tools)}"
@@ -388,10 +406,10 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
             assert expected_tool in tool_names, f"Missing orchestrator tool: {expected_tool}"
 
     @pytest.mark.asyncio
-    async def test_generator_tool_execution_with_apisix_mock(self, mock_apisix_responses) -> None:
-        """Test generator tool execution with mocked APISIX responses"""
-
+    async def test_generator_tool_execution_with_apisix_mock(self: "Self", mock_apisix_responses) -> None:
+        """Test generator tool execution with mocked APISIX responses."""
         with patch("httpx.AsyncClient") as mock_client:
+
             # Mock successful API response through APISIX
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
                 return_value=mock_apisix_responses["generators_list"]
@@ -420,10 +438,10 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
             assert headers["X-API-Gateway"] == "MCP-Generator"
 
     @pytest.mark.asyncio
-    async def test_orchestrator_tool_execution_with_apisix_mock(self, mock_apisix_responses) -> None:
+    async def test_orchestrator_tool_execution_with_apisix_mock(self: "Self", mock_apisix_responses) -> None:
         """Test orchestrator tool execution with mocked APISIX responses"""
-
         with patch("httpx.AsyncClient") as mock_client:
+
             # Mock successful API response
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
                 return_value=mock_apisix_responses["orchestrators_list"]
@@ -447,10 +465,10 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
             assert headers["X-API-Gateway"] == "MCP-Orchestrator"
 
     @pytest.mark.asyncio
-    async def test_tool_error_handling_apisix_failures(self, mock_apisix_responses) -> None:
+    async def test_tool_error_handling_apisix_failures(self: "Self", mock_apisix_responses) -> None:
         """Test tool error handling when APISIX returns errors"""
-
         with patch("httpx.AsyncClient") as mock_client:
+
             # Mock API error response
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
                 return_value=mock_apisix_responses["not_found"]
@@ -458,7 +476,9 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
 
             # Test generator tool with 404 response
             result = await generator_tools.execute_tool(
-                "get_generator", {"generator_id": "nonexistent"}, {"token": "mock_token"}
+                "get_generator",
+                {"generator_id": "nonexistent"},
+                {"token": "mock_token"},
             )
 
             assert isinstance(result, dict)
@@ -467,10 +487,10 @@ class TestPhase2SpecializedTools(TestPhase2Architecture):
             assert "not found" in result["message"].lower()
 
     @pytest.mark.asyncio
-    async def test_tool_network_error_handling(self) -> None:
+    async def test_tool_network_error_handling(self: "Self") -> None:
         """Test tool handling of network errors (APISIX unreachable)"""
-
         with patch("httpx.AsyncClient") as mock_client:
+
             # Mock connection error
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
                 side_effect=Exception("Connection refused")
@@ -488,9 +508,10 @@ class TestPhase2ResourceManagement(TestPhase2Architecture):
     """Test resource management system"""
 
     @pytest.mark.asyncio
-    async def test_resource_manager_initialization(self) -> None:
+    async def test_resource_manager_initialization(self: "Self") -> None:
         """Test resource manager initialization"""
         # Test direct resource manager
+
         manager = ViolentUTFResourceManager()
         assert manager.base_url
         assert manager.auth_handler
@@ -502,18 +523,24 @@ class TestPhase2ResourceManagement(TestPhase2Architecture):
         assert resource_registry._initialized
 
     @pytest.mark.asyncio
-    async def test_resource_uri_parsing(self) -> None:
+    async def test_resource_uri_parsing(self: "Self") -> None:
         """Test resource URI parsing functionality"""
         manager = ViolentUTFResourceManager()
 
         # Test valid URIs
         test_cases = [
             ("violentutf://generator/gen_001", ("generator", "gen_001")),
-            ("violentutf://dataset/harmful_behaviors", ("dataset", "harmful_behaviors")),
+            (
+                "violentutf://dataset/harmful_behaviors",
+                ("dataset", "harmful_behaviors"),
+            ),
             ("violentutf://orchestrator/orch_123", ("orchestrator", "orch_123")),
             ("violentutf://config/system", ("config", "system")),
             ("violentutf://session/sess_456", ("session", "sess_456")),
-            ("violentutf://generator/complex/path/id", ("generator", "complex/path/id")),
+            (
+                "violentutf://generator/complex/path/id",
+                ("generator", "complex/path/id"),
+            ),
         ]
 
         for uri, expected in test_cases:
@@ -535,12 +562,12 @@ class TestPhase2ResourceManagement(TestPhase2Architecture):
                 manager._parse_resource_uri(invalid_uri)
 
     @pytest.mark.asyncio
-    async def test_resource_listing_with_apisix_mock(self, mock_apisix_responses) -> None:
+    async def test_resource_listing_with_apisix_mock(self: "Self", mock_apisix_responses) -> None:
         """Test resource listing with mocked APISIX responses"""
-
         with patch("httpx.AsyncClient") as mock_client:
+
             # Mock responses for different resource types
-            def mock_request(*args, **kwargs):
+            def mock_request(*args, **kwargs: object):
                 url = kwargs.get("url", "")
                 if "/generators" in url:
                     return mock_apisix_responses["generators_list"]
@@ -567,10 +594,10 @@ class TestPhase2ResourceManagement(TestPhase2Architecture):
             assert any(uri.startswith("violentutf://dataset/") for uri in resource_uris)
 
     @pytest.mark.asyncio
-    async def test_resource_caching_functionality(self, mock_apisix_responses) -> None:
+    async def test_resource_caching_functionality(self: "Self", mock_apisix_responses) -> None:
         """Test resource caching functionality"""
-
         with patch("httpx.AsyncClient") as mock_client:
+
             mock_client.return_value.__aenter__.return_value.request = AsyncMock(
                 return_value=mock_apisix_responses["generators_list"]
             )
@@ -592,7 +619,7 @@ class TestPhase2ResourceManagement(TestPhase2Architecture):
             # Verify only one API call was made (second was cached)
             assert mock_client.return_value.__aenter__.return_value.request.call_count == 1
 
-    def test_resource_cache_statistics(self) -> None:
+    def test_resource_cache_statistics(self: "Self") -> None:
         """Test resource cache statistics functionality"""
         manager = ViolentUTFResourceManager()
 
@@ -613,9 +640,10 @@ class TestPhase2ToolRegistry(TestPhase2Architecture):
     """Test tool registry and discovery system"""
 
     @pytest.mark.asyncio
-    async def test_tool_discovery_integration(self, realistic_fastapi_app) -> None:
+    async def test_tool_discovery_integration(self: "Self", realistic_fastapi_app: "FastAPI") -> None:
         """Test complete tool discovery process"""
         # Clear existing tools
+
         tool_registry.clear_tools()
 
         # Perform discovery
@@ -643,7 +671,9 @@ class TestPhase2ToolRegistry(TestPhase2Architecture):
         assert len(endpoint_tools) > 0, "Should have some auto-generated endpoint tools"
 
     @pytest.mark.asyncio
-    async def test_tool_execution_routing(self, realistic_fastapi_app, mock_apisix_responses) -> None:
+    async def test_tool_execution_routing(
+        self: "Self", realistic_fastapi_app: "FastAPI", mock_apisix_responses
+    ) -> None:
         """Test tool execution routing to appropriate handlers"""
         await tool_registry.discover_tools(realistic_fastapi_app)
 
@@ -666,7 +696,7 @@ class TestPhase2ToolRegistry(TestPhase2Architecture):
             assert isinstance(result, dict)
 
     @pytest.mark.asyncio
-    async def test_tool_validation_integration(self, realistic_fastapi_app) -> None:
+    async def test_tool_validation_integration(self: "Self", realistic_fastapi_app: "FastAPI") -> None:
         """Test tool argument validation"""
         await tool_registry.discover_tools(realistic_fastapi_app)
 
@@ -677,9 +707,10 @@ class TestPhase2ToolRegistry(TestPhase2Architecture):
         assert result["error"] == "tool_not_found"
         assert "available_tools" in result
 
-    def test_tool_registry_state_management(self) -> None:
+    def test_tool_registry_state_management(self: "Self") -> None:
         """Test tool registry state management"""
         # Test initial state
+
         assert hasattr(tool_registry, "tools")
         assert hasattr(tool_registry, "endpoints_discovered")
 
@@ -697,7 +728,7 @@ class TestPhase2MCPServerIntegration(TestPhase2Architecture):
     """Test complete MCP server integration"""
 
     @pytest.mark.asyncio
-    async def test_mcp_server_initialization(self) -> None:
+    async def test_mcp_server_initialization(self: "Self") -> None:
         """Test MCP server initialization"""
         mcp_server = ViolentUTFMCPServer()
 
@@ -711,7 +742,7 @@ class TestPhase2MCPServerIntegration(TestPhase2Architecture):
         assert mcp_server._initialized
 
     @pytest.mark.asyncio
-    async def test_mcp_server_capabilities(self) -> None:
+    async def test_mcp_server_capabilities(self: "Self") -> None:
         """Test MCP server capabilities"""
         mcp_server = ViolentUTFMCPServer()
 
@@ -723,9 +754,10 @@ class TestPhase2MCPServerIntegration(TestPhase2Architecture):
         assert capabilities.resources is True
 
     @pytest.mark.asyncio
-    async def test_mcp_server_mounting(self, realistic_fastapi_app) -> None:
+    async def test_mcp_server_mounting(self: "Self", realistic_fastapi_app: "FastAPI") -> None:
         """Test MCP server mounting to FastAPI app"""
         mcp_server = ViolentUTFMCPServer()
+
         await mcp_server.initialize()
 
         # Test mounting (should not raise exceptions)
@@ -734,12 +766,13 @@ class TestPhase2MCPServerIntegration(TestPhase2Architecture):
         except Exception as e:
             # Some mount operations may fail in test environment (e.g., OAuth setup)
             # But the core mounting should work
-            logger.warning(f"Mount operation warning: {e}")
+            logger.warning("Mount operation warning: %s", e)
 
     @pytest.mark.asyncio
-    async def test_mcp_server_handlers(self, realistic_fastapi_app, mock_apisix_responses) -> None:
+    async def test_mcp_server_handlers(self: "Self", realistic_fastapi_app: "FastAPI", mock_apisix_responses) -> None:
         """Test MCP server handler methods"""
         mcp_server = ViolentUTFMCPServer()
+
         await mcp_server.initialize()
         mcp_server.mount_to_app(realistic_fastapi_app)
 
@@ -767,9 +800,10 @@ class TestPhase2AuthenticationIntegration(TestPhase2Architecture):
     """Test authentication integration"""
 
     @pytest.mark.asyncio
-    async def test_auth_handler_initialization(self) -> None:
+    async def test_auth_handler_initialization(self: "Self") -> None:
         """Test MCP auth handler initialization"""
         auth_handler = MCPAuthHandler()
+
         assert auth_handler is not None
 
         # Test auth header generation (should not error)
@@ -777,11 +811,14 @@ class TestPhase2AuthenticationIntegration(TestPhase2Architecture):
         assert isinstance(headers, dict)
 
     @pytest.mark.asyncio
-    async def test_tool_authentication_flow(self, mock_apisix_responses) -> None:
+    async def test_tool_authentication_flow(self: "Self", mock_apisix_responses) -> None:
         """Test authentication flow in tool execution"""
-
         # Mock environment variables for auth
-        with patch.dict(os.environ, {"KEYCLOAK_USERNAME": "test_user", "KEYCLOAK_PASSWORD": "test_pass"}):
+
+        with patch.dict(
+            os.environ,
+            {"KEYCLOAK_USERNAME": "test_user", "KEYCLOAK_PASSWORD": "test_pass"},
+        ):
             with patch("httpx.AsyncClient") as mock_client:
                 mock_client.return_value.__aenter__.return_value.request = AsyncMock(
                     return_value=mock_apisix_responses["success"]
@@ -802,9 +839,10 @@ class TestPhase2AuthenticationIntegration(TestPhase2Architecture):
 class TestPhase2ConfigurationCompliance(TestPhase2Architecture):
     """Test configuration compliance"""
 
-    def test_mcp_settings_validation(self) -> None:
+    def test_mcp_settings_validation(self: "Self") -> None:
         """Test MCP settings are properly configured for Phase 2"""
         # Verify Phase 2 features are enabled
+
         assert mcp_settings.MCP_ENABLE_TOOLS is True
         assert mcp_settings.MCP_ENABLE_RESOURCES is True
 
@@ -821,7 +859,9 @@ class TestPhase2PerformanceAndReliability(TestPhase2Architecture):
     """Test performance and reliability aspects"""
 
     @pytest.mark.asyncio
-    async def test_concurrent_tool_execution(self, realistic_fastapi_app, mock_apisix_responses) -> None:
+    async def test_concurrent_tool_execution(
+        self: "Self", realistic_fastapi_app: "FastAPI", mock_apisix_responses
+    ) -> None:
         """Test concurrent tool execution performance"""
         await tool_registry.discover_tools(realistic_fastapi_app)
 
@@ -845,10 +885,10 @@ class TestPhase2PerformanceAndReliability(TestPhase2Architecture):
                 assert isinstance(result, dict)
 
     @pytest.mark.asyncio
-    async def test_error_recovery_and_resilience(self, realistic_fastapi_app) -> None:
+    async def test_error_recovery_and_resilience(self: "Self", realistic_fastapi_app: "FastAPI") -> None:
         """Test error recovery and system resilience"""
-
         # Test tool discovery with no app
+
         await tool_registry.discover_tools(None)
         tools = await tool_registry.list_tools()
 

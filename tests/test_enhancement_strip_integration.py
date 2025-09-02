@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Integration Tests for Enhancement Strip with Real MCP Server
 ==========================================================
@@ -306,6 +312,7 @@ class TestEnhancementStripIntegration:
 
     def test_performance_with_real_operations(self, mcp_client, test_prompt):
         """Test performance of enhancement operations with real MCP"""
+
         import time
 
         performance_results = []

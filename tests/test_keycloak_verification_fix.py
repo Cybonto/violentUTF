@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test script to verify the Keycloak JWT signature verification fix
 """
@@ -25,7 +31,8 @@ def generate_test_rsa_keys():
 
     public_key = private_key.public_key()
     public_pem = public_key.public_bytes(
-        encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
 
     return private_pem, public_pem
@@ -52,7 +59,12 @@ def test_keycloak_verification_implementation():
         # Get project root dynamically
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         keycloak_file = os.path.join(
-            project_root, "violentutf_api", "fastapi_app", "app", "services", "keycloak_verification.py"
+            project_root,
+            "violentutf_api",
+            "fastapi_app",
+            "app",
+            "services",
+            "keycloak_verification.py",
         )
 
         with open(keycloak_file, "r") as f:
@@ -92,7 +104,15 @@ def test_keycloak_verification_implementation():
     # Test 2: Verify authentication endpoint uses verification
     print("\n2. Testing authentication endpoint integration")
     try:
-        auth_file = os.path.join(project_root, "violentutf_api", "fastapi_app", "app", "api", "endpoints", "auth.py")
+        auth_file = os.path.join(
+            project_root,
+            "violentutf_api",
+            "fastapi_app",
+            "app",
+            "api",
+            "endpoints",
+            "auth.py",
+        )
         with open(auth_file, "r") as f:
             auth_content = f.read()
 
@@ -209,7 +229,12 @@ def test_security_improvements():
         # Get project root dynamically
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         keycloak_file = os.path.join(
-            project_root, "violentutf_api", "fastapi_app", "app", "services", "keycloak_verification.py"
+            project_root,
+            "violentutf_api",
+            "fastapi_app",
+            "app",
+            "services",
+            "keycloak_verification.py",
         )
 
         with open(keycloak_file, "r") as f:
@@ -237,15 +262,32 @@ def test_vulnerability_fixes():
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
         # Check that environment fallback is removed
-        auth_file = os.path.join(project_root, "violentutf_api", "fastapi_app", "app", "api", "endpoints", "auth.py")
+        auth_file = os.path.join(
+            project_root,
+            "violentutf_api",
+            "fastapi_app",
+            "app",
+            "api",
+            "endpoints",
+            "auth.py",
+        )
         with open(auth_file, "r") as f:
             auth_content = f.read()
 
         vulnerability_fixes = [
-            ("Environment fallback removed", 'os.getenv("KEYCLOAK_USERNAME"' not in auth_content),
+            (
+                "Environment fallback removed",
+                'os.getenv("KEYCLOAK_USERNAME"' not in auth_content,
+            ),
             ("Signature verification enabled", "verify_keycloak_token" in auth_content),
-            ("TODO comments removed", "TODO: Implement proper Keycloak" not in auth_content),
-            ("Proper error handling", "HTTPException" in auth_content and "except" in auth_content),
+            (
+                "TODO comments removed",
+                "TODO: Implement proper Keycloak" not in auth_content,
+            ),
+            (
+                "Proper error handling",
+                "HTTPException" in auth_content and "except" in auth_content,
+            ),
         ]
 
         for fix_name, is_fixed in vulnerability_fixes:

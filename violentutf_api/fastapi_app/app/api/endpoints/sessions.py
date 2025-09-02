@@ -4,10 +4,7 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Session management endpoints for user state persistence
-"""
-
+"""Session management endpoints for user state persistence."""
 import json
 import logging
 import os
@@ -18,7 +15,11 @@ from typing import Any, Dict
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
 from app.models.auth import User
-from app.schemas.sessions import SessionSchemaResponse, SessionStateResponse, UpdateSessionRequest
+from app.schemas.sessions import (
+    SessionSchemaResponse,
+    SessionStateResponse,
+    UpdateSessionRequest,
+)
 from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
@@ -29,26 +30,27 @@ logger = logging.getLogger(__name__)
 
 
 def get_session_file_path(username: str) -> str:
-    """Get path to user's session file"""
+    """Get path to user's session file."""
     sessions_dir = os.getenv("SESSIONS_DIR", "./app_data/sessions")
+
     os.makedirs(sessions_dir, exist_ok=True)
     return os.path.join(sessions_dir, f"{username}_session.json")
 
 
 def load_session_data(username: str) -> Dict[str, Any]:
-    """Load session data from file"""
+    """Load session data from file."""
     session_file = get_session_file_path(username)
 
     if os.path.exists(session_file):
         try:
-            with open(session_file, "r") as f:
+            with open(session_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict):
                     return data
                 return {}
-        except Exception:
-            pass
+        except Exception:  # nosec B110 - acceptable exception handling
 
+            pass
     # Return default session data
     return {
         "session_id": f"session_{username}_{datetime.now().isoformat()}",
@@ -62,23 +64,25 @@ def load_session_data(username: str) -> Dict[str, Any]:
 
 
 def save_session_data(username: str, session_data: Dict[str, Any]) -> None:
-    """Save session data to file"""
+    """Save session data to file."""
     session_file = get_session_file_path(username)
+
     session_data["last_updated"] = datetime.now().isoformat()
 
     try:
-        with open(session_file, "w") as f:
+        with open(session_file, "w", encoding="utf-8") as f:
             json.dump(session_data, f, indent=2, default=str)
     except Exception as e:
-        logger.error(f"Error saving session data: {e}")
+        logger.error("Error saving session data: %s", e)
 
 
 @router.get("", response_model=SessionStateResponse)
-async def get_session_state(current_user: User = Depends(get_current_user)):
-    """
-    Get user's complete session state including UI preferences, workflow state, and cached data
-    """
+async def get_session_state(
+    current_user: User = Depends(get_current_user),
+) -> SessionStateResponse:
+    """Get user's complete session state including UI preferences, workflow state, and cached data."""
     try:
+
         # Get session data from DuckDB
         db_manager = get_duckdb_manager(current_user.username)
         session_result = db_manager.get_session("main_session")
@@ -108,16 +112,18 @@ async def get_session_state(current_user: User = Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error loading session state: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error loading session state: {str(e)}",
+        ) from e
 
 
 @router.put("", response_model=SessionStateResponse)
-async def update_session_state(request: UpdateSessionRequest, current_user: User = Depends(get_current_user)):
-    """
-    Update session state (UI preferences, workflow state, temporary data)
-    """
+async def update_session_state(
+    request: UpdateSessionRequest, current_user: User = Depends(get_current_user)
+) -> SessionStateResponse:
+    """Update session state (UI preferences, workflow state, temporary data)."""
     try:
+
         # Get DuckDB manager and load existing session data
         db_manager = get_duckdb_manager(current_user.username)
         session_result = db_manager.get_session("main_session")
@@ -169,16 +175,18 @@ async def update_session_state(request: UpdateSessionRequest, current_user: User
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error updating session state: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating session state: {str(e)}",
+        ) from e
 
 
 @router.post("/reset", response_model=SessionStateResponse)
-async def reset_session_state(current_user: User = Depends(get_current_user)):
-    """
-    Reset session state to defaults, clearing all temporary data
-    """
+async def reset_session_state(
+    current_user: User = Depends(get_current_user),
+) -> SessionStateResponse:
+    """Reset session state to defaults, clearing all temporary data."""
     try:
+
         # Create fresh session data
         session_data: Dict[str, Any] = {
             "session_id": f"session_{current_user.username}_{datetime.utcnow().isoformat()}",
@@ -206,18 +214,25 @@ async def reset_session_state(current_user: User = Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error resetting session state: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error resetting session state: {str(e)}",
+        ) from e
 
 
 @router.get("/schema", response_model=SessionSchemaResponse)
-async def get_session_schema():
-    """
-    Get the complete session state schema definition for client implementation
-    """
+async def get_session_schema() -> SessionSchemaResponse:
+    """Get the complete session state schema definition for client implementation."""
     schema = {
-        "session_id": {"type": "string", "description": "Unique session identifier", "required": True},
-        "user_id": {"type": "string", "description": "User identifier", "required": True},
+        "session_id": {
+            "type": "string",
+            "description": "Unique session identifier",
+            "required": True,
+        },
+        "user_id": {
+            "type": "string",
+            "description": "User identifier",
+            "required": True,
+        },
         "ui_preferences": {
             "type": "object",
             "description": "User interface preferences and settings",

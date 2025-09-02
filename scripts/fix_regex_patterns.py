@@ -5,14 +5,16 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""
-Emergency fix script for corrupted regex patterns.
+"""Emergency fix script for corrupted regex patterns.
+
 This script can automatically fix common regex pattern corruptions.
 """
+
 import re
 import shutil
 import sys
 from datetime import datetime
+from typing import cast
 
 # ANSI color codes
 RED = "\033[91m"
@@ -24,28 +26,60 @@ RESET = "\033[0m"
 # Pattern fixes - order matters!
 PATTERN_FIXES = [
     # Character range fixes
-    (r"\[([A-Za-z0-9])\s+-\s+([A-Za-z0-9])\]", r"[\1-\2]", "Fix character range spaces"),
+    (
+        r"\[([A-Za-z0-9])\s+-\s+([A-Za-z0-9])\]",
+        r"[\1-\2]",
+        "Fix character range spaces",
+    ),
     (r"\[([a-z])\s+-\s+([a-z])\]", r"[\1-\2]", "Fix lowercase range spaces"),
     (r"\[([A-Z])\s+-\s+([A-Z])\]", r"[\1-\2]", "Fix uppercase range spaces"),
     (r"\[([0-9])\s+-\s+([0-9])\]", r"[\1-\2]", "Fix digit range spaces"),
     # More complex character class fixes
-    (r"\[([A-Za-z0-9._%-]+)\s+-\s+([A-Za-z0-9._%-]+)\]", r"[\1-\2]", "Fix complex character range"),
+    (
+        r"\[([A-Za-z0-9._%-]+)\s+-\s+([A-Za-z0-9._%-]+)\]",
+        r"[\1-\2]",
+        "Fix complex character range",
+    ),
     # Content-Type fixes
-    (r'"(text|application|image|video|audio)\s+/\s+([^"]+)"', r'"\1/\2"', "Fix content-type in double quotes"),
-    (r"'(text|application|image|video|audio)\s+/\s+([^']+)'", r"'\1/\2'", "Fix content-type in single quotes"),
+    (
+        r'"(text|application|image|video|audio)\s+/\s+([^"]+)"',
+        r'"\1/\2"',
+        "Fix content-type in double quotes",
+    ),
+    (
+        r"'(text|application|image|video|audio)\s+/\s+([^']+)'",
+        r"'\1/\2'",
+        "Fix content-type in single quotes",
+    ),
     # UTF-8 encoding fixes
     (r'"utf\s+-\s+8"', r'"utf-8"', "Fix UTF-8 in double quotes"),
     (r"'utf\s+-\s+8'", r"'utf-8'", "Fix UTF-8 in single quotes"),
-    (r'\.encode\((["\'])utf\s+-\s+8\1\)', r".encode(\1utf-8\1)", "Fix UTF-8 in encode()"),
-    (r'\.decode\((["\'])utf\s+-\s+8\1\)', r".decode(\1utf-8\1)", "Fix UTF-8 in decode()"),
+    (
+        r'\.encode\((["\'])utf\s+-\s+8\1\)',
+        r".encode(\1utf-8\1)",
+        "Fix UTF-8 in encode()",
+    ),
+    (
+        r'\.decode\((["\'])utf\s+-\s+8\1\)',
+        r".decode(\1utf-8\1)",
+        "Fix UTF-8 in decode()",
+    ),
     # Fix other common MIME types
     (r'"text\s+/\s+csv"', r'"text/csv"', "Fix text/csv"),
     (r'"text\s+/\s+plain"', r'"text/plain"', "Fix text/plain"),
     (r'"text\s+/\s+html"', r'"text/html"', "Fix text/html"),
     (r'"application\s+/\s+json"', r'"application/json"', "Fix application/json"),
-    (r'"application\s+/\s+x\s+-\s+yaml"', r'"application/x-yaml"', "Fix application/x-yaml"),
+    (
+        r'"application\s+/\s+x\s+-\s+yaml"',
+        r'"application/x-yaml"',
+        "Fix application/x-yaml",
+    ),
     (r'"text\s+/\s+yaml"', r'"text/yaml"', "Fix text/yaml"),
-    (r'"text\s+/\s+tab\s+-\s+separated\s+-\s+values"', r'"text/tab-separated-values"', "Fix TSV content type"),
+    (
+        r'"text\s+/\s+tab\s+-\s+separated\s+-\s+values"',
+        r'"text/tab-separated-values"',
+        "Fix TSV content type",
+    ),
 ]
 
 # Known good patterns for validation
@@ -57,14 +91,14 @@ KNOWN_GOOD_PATTERNS = {
 }
 
 
-def create_backup(filepath) -> str:
+def create_backup(filepath: str) -> str:
     """Create a backup of the file before fixing."""
     backup_path = f"{filepath}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     shutil.copy2(filepath, backup_path)
     return backup_path
 
 
-def fix_file(filepath, dry_run=False) -> tuple[bool, list]:
+def fix_file(filepath: str, dry_run: bool = False) -> tuple[bool, list[dict[str, object]]]:
     """Fix regex patterns in a file."""
     try:
         with open(filepath, "r", encoding="utf-8") as f:
@@ -83,7 +117,11 @@ def fix_file(filepath, dry_run=False) -> tuple[bool, list]:
             if not dry_run:
                 content = re.sub(pattern, replacement, content)
             fixes_applied.append(
-                {"description": description, "count": len(matches), "examples": matches[:3]}  # Show first 3 examples
+                {
+                    "description": description,
+                    "count": len(matches),
+                    "examples": matches[:3],
+                }  # Show first 3 examples
             )
 
     # Check if any fixes were applied
@@ -103,7 +141,7 @@ def fix_file(filepath, dry_run=False) -> tuple[bool, list]:
     return True, fixes_applied
 
 
-def validate_common_patterns(filepath) -> list[str]:
+def validate_common_patterns(filepath: str) -> list[str]:
     """Validate that common patterns match known good patterns."""
     warnings = []
 
@@ -126,8 +164,8 @@ def validate_common_patterns(filepath) -> list[str]:
     return warnings
 
 
-def main(files, dry_run=False) -> None:
-    """Main function to fix files."""
+def main(files: list[str], dry_run: bool = False) -> int:
+    """Fix regex patterns in specified files."""
     print(f"{YELLOW}{'DRY RUN - ' if dry_run else ''}Regex Pattern Fix Tool{RESET}")
     print("=" * 60)
 
@@ -144,9 +182,9 @@ def main(files, dry_run=False) -> None:
             files_fixed += 1
             print(f"\n{GREEN}✓ {'Would fix' if dry_run else 'Fixed'} {filepath}{RESET}")
             for fix in fixes:
-                total_fixes += fix["count"]
-                print(f"  - {fix['description']}: {fix['count']} occurrence(s)")
-                for example in fix["examples"]:
+                total_fixes += cast(int, fix["count"])
+                print(f"  - {cast(str, fix['description'])}: {cast(int, fix['count'])} occurrence(s)")
+                for example in cast(list, fix["examples"]):
                     print(f"    Example: {example}")
 
         # Validate patterns
@@ -173,7 +211,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Fix corrupted regex patterns")
     parser.add_argument("files", nargs="+", help="Files to fix")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would be fixed without making changes")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be fixed without making changes",
+    )
 
     args = parser.parse_args()
 

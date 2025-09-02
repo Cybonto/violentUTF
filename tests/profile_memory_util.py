@@ -6,6 +6,7 @@
 # See LICENSE file in the project root for license information.
 
 """Memory profiling script for ViolentUTF components."""
+
 import time
 import tracemalloc
 
