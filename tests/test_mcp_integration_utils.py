@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Unit Tests for MCP Integration Utilities
 =======================================
@@ -25,11 +31,11 @@ class TestNaturalLanguageParser:
     """Test natural language command parsing"""
 
     @pytest.fixture
-    def parser(self):
+    def parser(self) -> Any:
         """Create parser instance"""
         return NaturalLanguageParser()
 
-    def test_parse_mcp_help_command(self, parser):
+    def test_parse_mcp_help_command(self, parser) -> None:
         """Test parsing help commands"""
         test_cases = ["/mcp help", "show mcp commands", "what can mcp do", "mcp usage"]
 
@@ -38,7 +44,7 @@ class TestNaturalLanguageParser:
             assert command.type == MCPCommandType.HELP
             assert command.raw_text == text
 
-    def test_parse_test_commands(self, parser):
+    def test_parse_test_commands(self, parser) -> None:
         """Test parsing test commands"""
         command = parser.parse_command("/mcp test jailbreak")
         assert command.type == MCPCommandType.TEST
@@ -52,7 +58,7 @@ class TestNaturalLanguageParser:
         assert command.type == MCPCommandType.TEST
         assert command.arguments["test_type"] == "bias"
 
-    def test_parse_dataset_commands(self, parser):
+    def test_parse_dataset_commands(self, parser) -> None:
         """Test parsing dataset commands"""
         command = parser.parse_command("/mcp dataset jailbreak-v1")
         assert command.type == MCPCommandType.DATASET
@@ -62,15 +68,20 @@ class TestNaturalLanguageParser:
         assert command.type == MCPCommandType.DATASET
         assert command.arguments["dataset_name"] == "harmful-behaviors"
 
-    def test_parse_enhance_commands(self, parser):
+    def test_parse_enhance_commands(self, parser) -> None:
         """Test parsing enhance commands"""
-        test_cases = ["/mcp enhance", "enhance this prompt", "improve this prompt", "make this prompt better"]
+        test_cases = [
+            "/mcp enhance",
+            "enhance this prompt",
+            "improve this prompt",
+            "make this prompt better",
+        ]
 
         for text in test_cases:
             command = parser.parse_command(text)
             assert command.type == MCPCommandType.ENHANCE
 
-    def test_parse_unknown_command(self, parser):
+    def test_parse_unknown_command(self, parser) -> None:
         """Test parsing unknown commands"""
         command = parser.parse_command("random text")
         assert command.type == MCPCommandType.UNKNOWN
@@ -78,7 +89,7 @@ class TestNaturalLanguageParser:
         command = parser.parse_command("/mcp invalid")
         assert command.type == MCPCommandType.UNKNOWN
 
-    def test_extract_parameters(self, parser):
+    def test_extract_parameters(self, parser) -> None:
         """Test parameter extraction from natural language"""
         params = parser.extract_parameters("create a generator with temperature 0.8 and max_tokens 1000")
         assert params.get("temperature") == 0.8
@@ -88,14 +99,14 @@ class TestNaturalLanguageParser:
         assert params.get("model") == "gpt-4"
         assert params.get("top_p") == 0.9
 
-    def test_detect_mcp_intent(self, parser):
+    def test_detect_mcp_intent(self, parser) -> None:
         """Test MCP intent detection"""
         assert parser.detect_mcp_intent("I want to enhance my prompt") is True
         assert parser.detect_mcp_intent("analyze this for security issues") is True
         assert parser.detect_mcp_intent("load the jailbreak dataset") is True
         assert parser.detect_mcp_intent("hello world") is False
 
-    def test_get_command_suggestions(self, parser):
+    def test_get_command_suggestions(self, parser) -> None:
         """Test command suggestions"""
         suggestions = parser.get_command_suggestions("enh")
         assert any("enhance" in s.lower() for s in suggestions)
@@ -111,7 +122,7 @@ class TestConfigurationIntentDetector:
     """Test configuration intent detection"""
 
     @pytest.fixture
-    def detector(self):
+    def detector(self) -> Any:
         """Create detector instance"""
         return ConfigurationIntentDetector()
 
@@ -197,7 +208,10 @@ class TestContextAnalyzer:
         """Test analyzing security-focused context"""
         messages = [
             {"role": "user", "content": "I need to test for jailbreak vulnerabilities"},
-            {"role": "assistant", "content": "I can help you test for jailbreak vulnerabilities"},
+            {
+                "role": "assistant",
+                "content": "I can help you test for jailbreak vulnerabilities",
+            },
             {"role": "user", "content": "What datasets should I use?"},
         ]
 

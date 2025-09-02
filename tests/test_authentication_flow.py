@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test the complete authentication flow to verify the fix
 """
+
 import os
 import sys
 
@@ -143,7 +150,10 @@ api_accessible = False
 
 try:
     if st.session_state.get("api_token"):
-        headers = {"Authorization": f'Bearer {st.session_state["api_token"]}', "X-API-Gateway": "APISIX"}
+        headers = {
+            "Authorization": f'Bearer {st.session_state["api_token"]}',
+            "X-API-Gateway": "APISIX",
+        }
         response = requests.get("http://localhost:9080/api/v1/auth/token/info", headers=headers, timeout=5)
         api_accessible = response.status_code == 200
 except Exception:

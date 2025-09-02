@@ -8,7 +8,7 @@ Comprehensive guides for using ViolentUTF's AI red-teaming and security testing 
 - **[IronUTF Defense Module](Guide_IronUTF.md)** - AI prompt filtering and protection
 - **[Red Teaming GenAI Systems](Guide_RedTeaming_GenAIsystems.md)** - Comprehensive red-teaming methodology
 
-### 🔧 Configuration & Tools  
+### 🔧 Configuration & Tools
 - **[PyRIT Scorers](Guide_Scorers.md)** - AI response evaluation and scoring systems
 - **[Simple Chat Enhancement](Guide_SimpleChat_enhancementStrip.md)** - MCP-powered prompt enhancement tools
 - **[Simple Chat MCP Workflows](Guide_SimpleChat_mcp-workflows.md)** - Natural language workflow configuration
@@ -36,7 +36,7 @@ Comprehensive guides for using ViolentUTF's AI red-teaming and security testing 
 - **Scoring Systems**: Automated evaluation of AI safety and compliance
 - **Defense Modules**: Real-time protection and filtering
 
-### 🛠️ **Tool Usage Guides**  
+### 🛠️ **Tool Usage Guides**
 - **Simple Chat**: Interactive testing with MCP integration
 - **Enhancement Tools**: Prompt engineering and optimization
 - **Workflow Automation**: Natural language configuration

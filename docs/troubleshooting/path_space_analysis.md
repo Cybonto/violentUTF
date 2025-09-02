@@ -31,7 +31,7 @@ The issue appears to be one of the following:
 ### Option 1: Git History Issue
 The path with spaces might exist in git history from a previous commit. Windows is more sensitive to these issues than Linux/macOS.
 
-**Check**: 
+**Check**:
 ```bash
 git log --all --full-history -- "*app_data *"
 ```

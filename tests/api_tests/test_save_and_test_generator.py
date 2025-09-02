@@ -1,5 +1,12 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
-Test cases for Save and Test Generator functionality in 1_Configure_Generators.py
+Test cases for Save and Test Generator functionality in 1_Configure_Generators.py.
+
 Tests the complete flow from generator creation to testing via API with live authentication
 """
 
@@ -11,18 +18,19 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Generator, Optional
 from unittest.mock import patch
 
 import jwt
 import pytest
 import requests
+from fastapi.testclient import TestClient
 
 # Add tests directory to path for imports
 tests_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(tests_dir))
 
-from utils.keycloak_auth import keycloak_auth
+from utils.keycloak_auth_helper import keycloak_auth
 
 
 @pytest.mark.requires_apisix
@@ -30,13 +38,16 @@ from utils.keycloak_auth import keycloak_auth
 class TestSaveAndTestGenerator:
     """Test suite for Save and Test Generator functionality with live authentication"""
 
-    def test_api_connectivity(self, api_base_url):
+    def test_api_connectivity(self: "TestSaveAndTestGenerator", api_base_url: str) -> None:
         """Test that the API is reachable and responding"""
         # Test basic connectivity to APISIX gateway
         response = requests.get(f"{api_base_url.replace('/api', '')}/health", timeout=5)
-        assert response.status_code in [200, 404], f"APISIX gateway connectivity failed: {response.status_code}"
+        assert response.status_code in [
+            200,
+            404,
+        ], f"APISIX gateway connectivity failed: {response.status_code}"
 
-    def test_authentication_flow(self, keycloak_available):
+    def test_authentication_flow(self: "TestSaveAndTestGenerator", keycloak_available: bool) -> None:
         """Test the complete authentication flow"""
         if not keycloak_available:
             pytest.skip("Keycloak not available for authentication testing")
@@ -61,7 +72,7 @@ class TestSaveAndTestGenerator:
         except jwt.InvalidTokenError as e:
             pytest.fail(f"Invalid JWT token: {e}")
 
-    def test_get_generator_types(self, api_headers, api_base_url):
+    def test_get_generator_types(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str) -> None:
         """Test retrieving available generator types with live authentication"""
         response = requests.get(f"{api_base_url}/api/v1/generators/types", headers=api_headers, timeout=10)
 
@@ -77,10 +88,12 @@ class TestSaveAndTestGenerator:
         assert len(data["generator_types"]) > 0, "No generator types available"
         assert "AI Gateway" in data["generator_types"], "AI Gateway type not available"
 
-    def test_get_ai_gateway_parameters(self, api_headers, api_base_url):
+    def test_get_ai_gateway_parameters(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str) -> None:
         """Test retrieving AI Gateway parameter definitions with live authentication"""
         response = requests.get(
-            f"{api_base_url}/api/v1/generators/types/AI Gateway/params", headers=api_headers, timeout=10
+            f"{api_base_url}/api/v1/generators/types/AI Gateway/params",
+            headers=api_headers,
+            timeout=10,
         )
 
         if response.status_code == 401:
@@ -98,7 +111,7 @@ class TestSaveAndTestGenerator:
         assert "provider" in param_names, "Missing provider parameter"
         assert "model" in param_names, "Missing model parameter"
 
-    def test_get_apisix_models(self, api_headers, api_base_url):
+    def test_get_apisix_models(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str) -> None:
         """Test retrieving available models for different providers"""
         providers = ["openai", "anthropic", "ollama"]
 
@@ -123,7 +136,7 @@ class TestSaveAndTestGenerator:
             assert "models" in data, f"Response missing models field for {provider}"
             assert data["provider"] == provider, f"Provider mismatch in response for {provider}"
 
-    def test_create_ai_gateway_generator_openai(self, api_headers, api_base_url, cleanup_generators):
+    def test_create_ai_gateway_generator_openai(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
         """Test creating an AI Gateway generator with OpenAI provider"""
         generator_config = {
             "name": "test_openai_generator",
@@ -138,7 +151,10 @@ class TestSaveAndTestGenerator:
         }
 
         response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         if response.status_code == 401:
@@ -161,7 +177,7 @@ class TestSaveAndTestGenerator:
         assert data["parameters"]["provider"] == "openai"
         assert data["parameters"]["model"] == "gpt-4"
 
-    def test_create_ai_gateway_generator_anthropic(self, api_headers, api_base_url, cleanup_generators):
+    def test_create_ai_gateway_generator_anthropic(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
         """Test creating an AI Gateway generator with Anthropic provider"""
         generator_config = {
             "name": "test_anthropic_generator",
@@ -176,7 +192,10 @@ class TestSaveAndTestGenerator:
         }
 
         response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         if response.status_code == 401:
@@ -195,17 +214,25 @@ class TestSaveAndTestGenerator:
         assert data["parameters"]["provider"] == "anthropic"
         assert data["parameters"]["model"] == "claude-3-sonnet-20240229"
 
-    def test_test_generator_functionality(self, api_headers, api_base_url, cleanup_generators):
+    def test_test_generator_functionality(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
         """Test the generator testing functionality"""
         # First create a generator
         generator_config = {
             "name": "test_generator_for_testing",
             "type": "AI Gateway",
-            "parameters": {"provider": "openai", "model": "gpt-3.5-turbo", "temperature": 0.7, "max_tokens": 100},
+            "parameters": {
+                "provider": "openai",
+                "model": "gpt-3.5-turbo",
+                "temperature": 0.7,
+                "max_tokens": 100,
+            },
         }
 
         create_response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         if create_response.status_code == 401:
@@ -220,7 +247,10 @@ class TestSaveAndTestGenerator:
         test_request = {"test_prompt": "Hello, this is a test prompt for AI red-teaming configuration."}
 
         test_response = requests.post(
-            f"{api_base_url}/api/v1/generators/{generator_id}/test", headers=api_headers, json=test_request
+            f"{api_base_url}/api/v1/generators/{generator_id}/test",
+            headers=api_headers,
+            json=test_request,
+            timeout=30,
         )
 
         assert (
@@ -232,12 +262,20 @@ class TestSaveAndTestGenerator:
         assert "test_time" in test_data, "Test response missing test_time field"
         assert "duration_ms" in test_data, "Test response missing duration_ms field"
 
-    def test_validation_missing_required_fields(self, api_headers, api_base_url):
+    def test_validation_missing_required_fields(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str) -> None:
         """Test validation when required fields are missing"""
         # Test missing name
-        invalid_config = {"type": "AI Gateway", "parameters": {"provider": "openai", "model": "gpt-4"}}
+        invalid_config = {
+            "type": "AI Gateway",
+            "parameters": {"provider": "openai", "model": "gpt-4"},
+        }
 
-        response = requests.post(f"{api_base_url}/api/v1/generators", headers=api_headers, json=invalid_config)
+        response = requests.post(
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=invalid_config,
+            timeout=30,
+        )
 
         if response.status_code == 401:
             pytest.fail(f"Authentication failed: {response.text}")
@@ -246,7 +284,7 @@ class TestSaveAndTestGenerator:
 
         assert response.status_code == 422, f"Expected validation error for missing name: {response.status_code}"
 
-    def test_validation_duplicate_generator_name(self, api_headers, api_base_url, cleanup_generators):
+    def test_validation_duplicate_generator_name(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
         """Test validation when trying to create generators with duplicate names"""
         generator_config = {
             "name": "duplicate_name_test",
@@ -256,7 +294,10 @@ class TestSaveAndTestGenerator:
 
         # Create first generator
         response1 = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         if response1.status_code == 401:
@@ -269,17 +310,29 @@ class TestSaveAndTestGenerator:
 
         # Try to create second generator with same name
         response2 = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         assert response2.status_code == 400, f"Expected duplicate name error: {response2.status_code}"
         assert "already exists" in response2.json().get("detail", "").lower()
 
-    def test_invalid_generator_type(self, api_headers, api_base_url):
+    def test_invalid_generator_type(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str) -> None:
         """Test creating generator with invalid type"""
-        invalid_config = {"name": "invalid_type_test", "type": "NonExistentType", "parameters": {}}
+        invalid_config = {
+            "name": "invalid_type_test",
+            "type": "NonExistentType",
+            "parameters": {},
+        }
 
-        response = requests.post(f"{api_base_url}/api/v1/generators", headers=api_headers, json=invalid_config)
+        response = requests.post(
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=invalid_config,
+            timeout=30,
+        )
 
         if response.status_code == 401:
             pytest.fail(f"Authentication failed: {response.text}")
@@ -288,7 +341,7 @@ class TestSaveAndTestGenerator:
 
         assert response.status_code == 400, f"Expected invalid type error: {response.status_code}"
 
-    def test_list_generators_after_creation(self, api_headers, api_base_url, cleanup_generators):
+    def test_list_generators_after_creation(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
         """Test that created generators appear in the list"""
         # Get initial count
         list_response = requests.get(f"{api_base_url}/api/v1/generators", headers=api_headers, timeout=10)
@@ -306,7 +359,10 @@ class TestSaveAndTestGenerator:
         }
 
         create_response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         assert create_response.status_code == 200
@@ -324,7 +380,7 @@ class TestSaveAndTestGenerator:
         generator_names = [g["name"] for g in generators]
         assert "list_test_generator" in generator_names, "Created generator not found in list"
 
-    def test_apisix_api_key_authentication_fix(self, api_headers, api_base_url, cleanup_generators):
+    def test_apisix_api_key_authentication_fix(self: "TestSaveAndTestGenerator", api_headers: Dict[str, str], api_base_url: str, cleanup_generators: Generator[Callable[[str], str], None, None]) -> None:
         """Test that generator testing includes APISIX API key for AI model access"""
         # This test verifies the fix for "Missing API key in request" error
 
@@ -332,11 +388,19 @@ class TestSaveAndTestGenerator:
         generator_config = {
             "name": "apisix_auth_test_generator",
             "type": "AI Gateway",
-            "parameters": {"provider": "openai", "model": "gpt-3.5-turbo", "temperature": 0.7, "max_tokens": 50},
+            "parameters": {
+                "provider": "openai",
+                "model": "gpt-3.5-turbo",
+                "temperature": 0.7,
+                "max_tokens": 50,
+            },
         }
 
         create_response = requests.post(
-            f"{api_base_url}/api/v1/generators", headers=api_headers, json=generator_config, timeout=10
+            f"{api_base_url}/api/v1/generators",
+            headers=api_headers,
+            json=generator_config,
+            timeout=10,
         )
 
         if create_response.status_code == 401:
@@ -353,7 +417,10 @@ class TestSaveAndTestGenerator:
         test_request = {"test_prompt": "Test prompt for APISIX API key verification"}
 
         test_response = requests.post(
-            f"{api_base_url}/api/v1/generators/{generator_id}/test", headers=api_headers, json=test_request, timeout=15
+            f"{api_base_url}/api/v1/generators/{generator_id}/test",
+            headers=api_headers,
+            json=test_request,
+            timeout=15,
         )
 
         # Handle case where FastAPI service is not running (404 response)
@@ -424,7 +491,11 @@ class TestSaveAndTestGenerator:
 
             is_acceptable_error = any(error in str(error_detail).lower() for error in acceptable_errors)
 
-            if not is_acceptable_error and test_response.status_code not in [500, 502, 503]:
+            if not is_acceptable_error and test_response.status_code not in [
+                500,
+                502,
+                503,
+            ]:
                 # If it's not an acceptable AI provider error and not a server error, investigate
                 print(f"⚠️  Unexpected error: {test_response.status_code} - {error_detail}")
                 # Don't fail the test for unexpected errors - they might be environment specific
@@ -441,7 +512,7 @@ class TestSaveAndTestGenerator:
 class TestGeneratorParameterLogic:
     """Test suite for parameter visibility logic based on provider selection"""
 
-    def test_openai_parameter_logic(self):
+    def test_openai_parameter_logic(self: "TestGeneratorParameterLogic") -> None:
         """Test that OpenAI providers show correct parameters"""
         # For standard OpenAI models like gpt-4, gpt-3.5-turbo:
         # - API Key should NOT be shown (uses gateway credentials)
@@ -459,7 +530,7 @@ class TestGeneratorParameterLogic:
             # This would be tested against the actual UI logic
             assert True  # Placeholder - actual implementation would test UI state
 
-    def test_anthropic_parameter_logic(self):
+    def test_anthropic_parameter_logic(self: "TestGeneratorParameterLogic") -> None:
         """Test that Anthropic providers show correct parameters"""
         # For Anthropic models:
         # - API Key should NOT be shown (uses gateway credentials)
@@ -472,7 +543,7 @@ class TestGeneratorParameterLogic:
 
             assert True  # Placeholder for actual UI logic test
 
-    def test_custom_endpoint_parameter_logic(self):
+    def test_custom_endpoint_parameter_logic(self: "TestGeneratorParameterLogic") -> None:
         """Test when custom endpoint parameters should be shown"""
         # Custom endpoint should only be shown for:
         # - Local models (ollama, webui)
@@ -487,7 +558,7 @@ class TestGeneratorParameterLogic:
 
             assert True  # Placeholder for actual UI logic test
 
-    def test_apisix_api_key_environment_variables(self):
+    def test_apisix_api_key_environment_variables(self: "TestGeneratorParameterLogic") -> None:
         """Test environment variable priority for APISIX API key authentication"""
         # This test verifies the environment variable setup for the "Missing API key in request" fix
 
@@ -504,7 +575,10 @@ class TestGeneratorParameterLogic:
             assert api_key == "violentutf_key", "VIOLENTUTF_API_KEY should have highest priority"
 
         # Test fallback to APISIX_API_KEY (clear VIOLENTUTF_API_KEY first)
-        test_env_fallback = {"APISIX_API_KEY": "apisix_key", "AI_GATEWAY_API_KEY": "gateway_key"}
+        test_env_fallback = {
+            "APISIX_API_KEY": "apisix_key",
+            "AI_GATEWAY_API_KEY": "gateway_key",
+        }
         # Remove VIOLENTUTF_API_KEY from the test environment
         if "VIOLENTUTF_API_KEY" in test_env_fallback:
             del test_env_fallback["VIOLENTUTF_API_KEY"]

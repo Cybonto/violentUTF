@@ -6,17 +6,17 @@ set -e
 # Function to start all services
 start_services() {
     echo "Starting ViolentUTF services..."
-    
+
     # Start services in order
     echo "1. Starting Keycloak..."
     docker compose -f keycloak/docker-compose.yml up -d
-    
+
     echo "2. Starting APISIX..."
     docker compose -f apisix/docker-compose.yml up -d
-    
+
     echo "3. Starting API..."
     docker compose -f violentutf_api/docker-compose.yml up -d
-    
+
     echo "Services started. Waiting for health checks..."
     sleep 30
 }

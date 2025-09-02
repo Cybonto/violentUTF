@@ -1,8 +1,8 @@
 # Implementation Plan for Cybersecurity Fixes - June 29, 2025
 
-**Document Date**: June 29, 2025  
-**Based On**: docs/fixes/cybersecurity_28JUL.md  
-**Target Branch**: dev_nightly  
+**Document Date**: June 29, 2025
+**Based On**: docs/fixes/cybersecurity_28JUL.md
+**Target Branch**: dev_nightly
 **Estimated Timeline**: 3-4 weeks for full implementation
 
 ## Executive Summary
@@ -51,25 +51,25 @@ import re
 
 def migrate_jose_to_pyjwt(file_content):
     """Convert python-jose imports to PyJWT"""
-    
+
     # Replace imports
     content = re.sub(r'from jose import jwt', 'import jwt', file_content)
     content = re.sub(r'from jose\.exceptions import .*', '', content)
-    
+
     # Replace jwt.encode calls (PyJWT has different signature)
     # python-jose: jwt.encode(payload, key, algorithm)
     # PyJWT: jwt.encode(payload, key, algorithm)
     # Note: signatures are similar but error handling differs
-    
+
     return content
 
 # Apply to all files using python-jose
 for file_path in affected_files:
     with open(file_path, 'r') as f:
         content = f.read()
-    
+
     new_content = migrate_jose_to_pyjwt(content)
-    
+
     with open(file_path, 'w') as f:
         f.write(new_content)
 ```
@@ -108,13 +108,13 @@ import re
 def fix_requests_calls(file_content):
     # Add trust_env=False to sensitive requests
     patterns = [
-        (r'(requests\.(?:get|post|put|delete|patch)\([^)]+)\)', 
+        (r'(requests\.(?:get|post|put|delete|patch)\([^)]+)\)',
          r'\1, trust_env=False)'),
     ]
-    
+
     for pattern, replacement in patterns:
         file_content = re.sub(pattern, replacement, file_content)
-    
+
     return file_content
 EOF
 ```
@@ -132,7 +132,7 @@ echo "=== Upgrading critical dependencies ==="
 
 # Critical security upgrades
 pip install "tornado>=6.5.0"
-pip install "protobuf>=6.31.1" 
+pip install "protobuf>=6.31.1"
 pip install "urllib3>=2.5.0"
 pip install "requests>=2.32.4"
 
@@ -143,7 +143,7 @@ echo "WARNING: torch 2.7.1rc1 not available yet - monitoring for release"
 python -c "
 import tornado, protobuf, urllib3, requests
 print(f'tornado: {tornado.version}')
-print(f'protobuf: {protobuf.__version__}')  
+print(f'protobuf: {protobuf.__version__}')
 print(f'urllib3: {urllib3.__version__}')
 print(f'requests: {requests.__version__}')
 "
@@ -169,9 +169,9 @@ import re
 def find_sql_patterns(directory):
     """Find potential SQL injection vulnerabilities"""
     vulnerabilities = []
-    
+
     sql_keywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE']
-    
+
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith('.py'):
@@ -179,7 +179,7 @@ def find_sql_patterns(directory):
                 with open(file_path, 'r') as f:
                     content = f.read()
                     lines = content.split('\n')
-                    
+
                 for i, line in enumerate(lines, 1):
                     # Check for f-strings with SQL
                     if re.search(r'f["\'][^"\']*(?:' + '|'.join(sql_keywords) + r')[^"\']*["\']', line, re.IGNORECASE):
@@ -189,8 +189,8 @@ def find_sql_patterns(directory):
                             'content': line.strip(),
                             'type': 'f-string SQL'
                         })
-                    
-                    # Check for .format() with SQL  
+
+                    # Check for .format() with SQL
                     if re.search(r'["\'][^"\']*(?:' + '|'.join(sql_keywords) + r')[^"\']*["\']\.format\(', line, re.IGNORECASE):
                         vulnerabilities.append({
                             'file': file_path,
@@ -198,7 +198,7 @@ def find_sql_patterns(directory):
                             'content': line.strip(),
                             'type': 'format SQL'
                         })
-    
+
     return vulnerabilities
 
 if __name__ == "__main__":
@@ -227,19 +227,19 @@ ALLOWED_UPDATE_COLUMNS = {
 
 def build_safe_update_query(updates_dict: Dict[str, Any]) -> Tuple[str, List]:
     """Build parameterized UPDATE query with column validation"""
-    
+
     # Validate column names against whitelist
     for column in updates_dict.keys():
         if column not in ALLOWED_UPDATE_COLUMNS:
             raise ValueError(f"Invalid column for update: {column}")
-    
+
     # Build parameterized query
     set_clauses = [f"{col} = ?" for col in updates_dict.keys()]
     query = f"UPDATE generators SET {', '.join(set_clauses)} WHERE id = ? AND user_id = ?"
-    
+
     # Build parameter list
     params = list(updates_dict.values()) + [generator_id, user_id]
-    
+
     return query, params
 
 # Usage:
@@ -254,7 +254,7 @@ count = conn.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
 
 # AFTER: Table name validation
 ALLOWED_TABLES = {
-    'generators', 'scorers', 'datasets', 'conversations', 
+    'generators', 'scorers', 'datasets', 'conversations',
     'orchestrator_executions', 'orchestrator_results'
 }
 
@@ -262,7 +262,7 @@ def get_table_count(conn, table_name: str) -> int:
     """Get row count for table with name validation"""
     if table_name not in ALLOWED_TABLES:
         raise ValueError(f"Invalid table name: {table_name}")
-    
+
     # Safe to use f-string after validation
     result = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()
     return result[0] if result else 0
@@ -302,13 +302,13 @@ AUTH_TIMEOUT = 10     # shorter for auth operations
 def refresh_token():
     try:
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/auth/refresh", 
+            f"{API_BASE_URL}/api/v1/auth/refresh",
             headers=get_auth_header(),
             timeout=AUTH_TIMEOUT
         )
         # ... rest of function
 
-# Line 180: create API key  
+# Line 180: create API key
 def create_api_key(name: str, permissions: Set[str]):
     try:
         response = requests.post(
@@ -323,7 +323,7 @@ def create_api_key(name: str, permissions: Set[str]):
 def list_api_keys():
     try:
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/keys/list", 
+            f"{API_BASE_URL}/api/v1/keys/list",
             headers=get_auth_header(),
             timeout=DEFAULT_TIMEOUT
         )
@@ -333,7 +333,7 @@ def list_api_keys():
 def delete_api_key(key_id: str):
     try:
         response = requests.delete(
-            f"{API_BASE_URL}/api/v1/keys/{key_id}", 
+            f"{API_BASE_URL}/api/v1/keys/{key_id}",
             headers=get_auth_header(),
             timeout=DEFAULT_TIMEOUT
         )
@@ -343,7 +343,7 @@ def delete_api_key(key_id: str):
 def get_current_key_info():
     try:
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/keys/current", 
+            f"{API_BASE_URL}/api/v1/keys/current",
             headers=get_auth_header(),
             timeout=DEFAULT_TIMEOUT
         )
@@ -366,7 +366,7 @@ def get_secure_binding_config():
     """Get secure network binding configuration"""
     host = os.getenv("API_HOST", "127.0.0.1")
     port = int(os.getenv("API_PORT", "8000"))
-    
+
     # Security check for public binding
     if host == "0.0.0.0":
         if os.getenv("ALLOW_PUBLIC_BINDING", "false").lower() != "true":
@@ -379,7 +379,7 @@ def get_secure_binding_config():
             logger.warning(
                 "Binding to all interfaces (0.0.0.0) - ensure firewall rules are properly configured"
             )
-    
+
     return host, port
 
 # Replace line 129:
@@ -399,17 +399,17 @@ def validate_url_security(url: str) -> None:
     """Validate URL for security concerns"""
     parsed = urlparse(url)
     host = parsed.hostname
-    
+
     if not host:
         raise ValueError("Invalid URL: no hostname")
-    
+
     # Enhanced dangerous hosts list
     dangerous_hosts = [
         "localhost",
         "127.",
         "::1",
         "10.",           # Private network
-        "192.168.",      # Private network  
+        "192.168.",      # Private network
         "172.",          # Private network (172.16-31.x.x)
         "169.254.",      # Link-local
         "metadata.google.internal",
@@ -417,15 +417,15 @@ def validate_url_security(url: str) -> None:
         "metadata.aws",
         "metadata.azure.com",
     ]
-    
+
     # Special handling for 0.0.0.0 - always block
     if host == "0.0.0.0":
         raise ValueError("Access to 0.0.0.0 is not allowed")
-    
+
     for dangerous in dangerous_hosts:
         if host.startswith(dangerous):
             raise ValueError(f"Access to internal/localhost URLs not allowed: {host}")
-    
+
     # Additional check for private IP ranges
     import ipaddress
     try:
@@ -444,28 +444,28 @@ def validate_url_security(url: str) -> None:
 **Update docker-compose files**:
 ```yaml
 # apisix/docker-compose.yml
-# keycloak/docker-compose.yml  
+# keycloak/docker-compose.yml
 # violentutf_api/docker-compose.yml
 
 services:
   grafana:
     image: grafana/grafana:10.2.3  # Instead of :latest
-    
+
   prometheus:
     image: prom/prometheus:v2.47.2  # Instead of :latest
-    
+
   postgres:
     image: postgres:15.5  # Keep specific version
-    
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.1.4  # Already pinned
-    
+
   etcd:
     image: bitnami/etcd:3.5.15  # Instead of :latest
-    
+
   apisix:
     image: apache/apisix:3.8.0  # Instead of :latest
-    
+
   apisix-dashboard:
     image: apache/apisix-dashboard:3.0.1  # Instead of :latest
 ```
@@ -474,7 +474,7 @@ services:
 
 **Audit custom apisix-fastapi image**:
 ```bash
-# Scan custom image for vulnerabilities  
+# Scan custom image for vulnerabilities
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
   aquasec/trivy image apisix-fastapi:latest
 
@@ -485,26 +485,26 @@ import os
 def audit_dockerfile(dockerfile_path):
     """Audit Dockerfile for security issues"""
     issues = []
-    
+
     with open(dockerfile_path, 'r') as f:
         lines = f.readlines()
-    
+
     for i, line in enumerate(lines, 1):
         line = line.strip()
-        
+
         # Check for common security issues
         if line.startswith('USER root'):
             issues.append(f"Line {i}: Running as root user")
-        
+
         if 'curl' in line and '|' in line and 'sh' in line:
             issues.append(f"Line {i}: Dangerous pipe to shell")
-        
+
         if '--no-check-certificate' in line:
             issues.append(f"Line {i}: Certificate validation disabled")
-        
+
         if 'chmod 777' in line:
             issues.append(f"Line {i}: Overly permissive permissions")
-    
+
     return issues
 
 # Audit all Dockerfiles
@@ -536,30 +536,30 @@ from pathlib import Path
 @pytest.fixture
 def test_environment():
     """Create secure test environment with proper temp directories"""
-    
+
     # Create secure temporary directories
     with tempfile.TemporaryDirectory(prefix="vutf_test_") as temp_root:
         app_data_dir = os.path.join(temp_root, "app_data")
         config_dir = os.path.join(temp_root, "config")
-        
+
         os.makedirs(app_data_dir, mode=0o700)  # Secure permissions
         os.makedirs(config_dir, mode=0o700)
-        
+
         test_env = {
             # Secure temporary directories
             "APP_DATA_DIR": app_data_dir,
             "CONFIG_DIR": config_dir,
-            
+
             # Database (use in-memory for tests)
             "DATABASE_URL": "sqlite:///:memory:",
-            
+
             # Performance settings for tests
             "MCP_TOOL_TIMEOUT_SECONDS": "30",
             "MCP_CONCURRENT_TOOL_LIMIT": "5",
-            "MCP_RESOURCE_CACHE_TTL": "60", 
+            "MCP_RESOURCE_CACHE_TTL": "60",
             "MCP_RESOURCE_CACHE_SIZE": "100",
         }
-        
+
         with patch.dict(os.environ, test_env):
             yield test_env
 
@@ -574,7 +574,7 @@ def test_mcp_components(test_environment):
     # test_environment fixture provides secure temp dirs
     assert os.path.exists(test_environment["APP_DATA_DIR"])
     assert os.path.exists(test_environment["CONFIG_DIR"])
-    
+
     # Run component tests
     # ... test implementation
 ```
@@ -594,21 +594,21 @@ class TestDependencySecurity:
     def test_no_vulnerable_dependencies_safety(self):
         """Test no vulnerabilities in dependencies via Safety"""
         result = subprocess.run(
-            ['safety', 'check', '--json'], 
+            ['safety', 'check', '--json'],
             capture_output=True, text=True
         )
-        
+
         if result.returncode != 0:
             vulnerabilities = json.loads(result.stdout)
             pytest.fail(f"Found {len(vulnerabilities)} vulnerabilities: {vulnerabilities}")
-    
+
     def test_no_vulnerable_dependencies_pip_audit(self):
         """Test no vulnerabilities in dependencies via pip-audit"""
         result = subprocess.run(
-            ['pip-audit', '--format', 'json'], 
+            ['pip-audit', '--format', 'json'],
             capture_output=True, text=True
         )
-        
+
         if result.returncode != 0:
             vulnerabilities = json.loads(result.stdout)
             if vulnerabilities:
@@ -619,20 +619,20 @@ class TestCodeSecurity:
     def test_no_sql_injection_vulnerabilities(self):
         """Test SQL queries are parameterized"""
         from violentutf_api.fastapi_app.app.db.duckdb_manager import DuckDBManager
-        
+
         # Test with malicious input
         manager = DuckDBManager("test_user")
-        
+
         with pytest.raises(ValueError, match="Invalid table name"):
             manager.get_table_count("users'; DROP TABLE users; --")
-    
+
     def test_request_timeouts_configured(self):
         """Test all HTTP requests have timeouts"""
         import ast
         import os
-        
+
         timeout_missing = []
-        
+
         for root, dirs, files in os.walk('violentutf_api/'):
             for file in files:
                 if file.endswith('.py'):
@@ -642,40 +642,40 @@ class TestCodeSecurity:
                             tree = ast.parse(f.read())
                             for node in ast.walk(tree):
                                 if isinstance(node, ast.Call):
-                                    if (hasattr(node.func, 'attr') and 
+                                    if (hasattr(node.func, 'attr') and
                                         hasattr(node.func.value, 'id') and
                                         node.func.value.id == 'requests'):
-                                        
+
                                         # Check if timeout is in keywords
                                         has_timeout = any(
-                                            kw.arg == 'timeout' 
+                                            kw.arg == 'timeout'
                                             for kw in node.keywords
                                         )
-                                        
+
                                         if not has_timeout:
                                             timeout_missing.append(f"{file_path}:{node.lineno}")
                         except:
                             pass
-        
+
         if timeout_missing:
             pytest.fail(f"Requests without timeout: {timeout_missing}")
-    
+
     def test_network_binding_security(self):
         """Test network binding security"""
         import os
         from unittest.mock import patch
-        
+
         # Test default binding (should be localhost)
         with patch.dict(os.environ, {}, clear=True):
             from violentutf_api.fastapi_app.main import get_secure_binding_config
             host, port = get_secure_binding_config()
             assert host == "127.0.0.1"
-        
+
         # Test 0.0.0.0 without permission (should fallback)
         with patch.dict(os.environ, {"API_HOST": "0.0.0.0"}, clear=True):
             host, port = get_secure_binding_config()
             assert host == "127.0.0.1"
-        
+
         # Test 0.0.0.0 with permission (should allow)
         with patch.dict(os.environ, {"API_HOST": "0.0.0.0", "ALLOW_PUBLIC_BINDING": "true"}):
             host, port = get_secure_binding_config()
@@ -687,57 +687,57 @@ class TestAuthenticationSecurity:
         """Test JWT implementation prevents algorithm confusion attacks"""
         import jwt
         from violentutf_api.fastapi_app.app.core.auth import verify_token
-        
+
         # Create token with 'none' algorithm (should fail)
         malicious_token = jwt.encode(
-            {"sub": "test", "exp": 9999999999}, 
-            "", 
+            {"sub": "test", "exp": 9999999999},
+            "",
             algorithm="none"
         )
-        
+
         with pytest.raises(Exception):  # Should reject 'none' algorithm
             verify_token(malicious_token)
-    
+
     def test_no_hardcoded_secrets(self):
         """Test no hardcoded secrets in codebase"""
         import os
         import re
-        
+
         secret_patterns = [
             r'(?i)(password|secret|key|token)\s*=\s*["\'][^"\']{8,}["\']',
             r'(?i)api[_-]?key\s*=\s*["\'][^"\']+["\']',
             r'(?i)(aws|anthropic|openai)[_-]?(access[_-]?key|secret[_-]?key|api[_-]?key)\s*=\s*["\'][^"\']+["\']'
         ]
-        
+
         hardcoded_secrets = []
-        
+
         for root, dirs, files in os.walk('.'):
             # Skip test files and virtual environments
             if any(skip in root for skip in ['.git', '.vitutf', '__pycache__', 'node_modules']):
                 continue
-                
+
             for file in files:
                 if file.endswith(('.py', '.js', '.yml', '.yaml', '.json', '.env')):
                     file_path = os.path.join(root, file)
-                    
+
                     # Skip sample files
                     if file.endswith('.sample') or 'example' in file:
                         continue
-                    
+
                     try:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             content = f.read()
-                            
+
                         for i, line in enumerate(content.split('\n'), 1):
                             for pattern in secret_patterns:
                                 if re.search(pattern, line):
                                     # Exclude obvious placeholders
-                                    if not any(placeholder in line.lower() for placeholder in 
+                                    if not any(placeholder in line.lower() for placeholder in
                                              ['your_', 'example', 'placeholder', 'xxx', '***']):
                                         hardcoded_secrets.append(f"{file_path}:{i} - {line.strip()}")
                     except:
                         pass
-        
+
         if hardcoded_secrets:
             pytest.fail(f"Found potential hardcoded secrets:\n" + "\n".join(hardcoded_secrets))
 ```
@@ -755,56 +755,56 @@ class TestAPISecurityIntegration:
     def client(self):
         from violentutf_api.fastapi_app.main import app
         return TestClient(app)
-    
+
     def test_sql_injection_protection(self, client):
         """Test API endpoints are protected against SQL injection"""
-        
+
         # Test database endpoint
         response = client.post("/api/v1/database/query", json={
             "table": "users'; DROP TABLE users; --"
         })
         assert response.status_code == 400
         assert "Invalid table name" in response.json()["detail"]
-        
+
         # Test other endpoints with malicious input
         malicious_inputs = [
             "'; DROP TABLE users; --",
             "1' OR '1'='1",
             "1'; UPDATE users SET admin=1; --"
         ]
-        
+
         for malicious in malicious_inputs:
             response = client.get(f"/api/v1/generators/{malicious}")
             assert response.status_code in [400, 404, 422]  # Should not succeed
-    
+
     def test_authentication_bypass_protection(self, client):
         """Test API is protected against authentication bypass"""
-        
+
         # Test protected endpoint without auth
         response = client.get("/api/v1/generators")
         assert response.status_code == 401
-        
+
         # Test with invalid JWT
         headers = {"Authorization": "Bearer invalid_token"}
         response = client.get("/api/v1/generators", headers=headers)
         assert response.status_code == 401
-        
+
         # Test with 'none' algorithm JWT
         import jwt
         malicious_token = jwt.encode({"sub": "admin"}, "", algorithm="none")
         headers = {"Authorization": f"Bearer {malicious_token}"}
         response = client.get("/api/v1/generators", headers=headers)
         assert response.status_code == 401
-    
+
     def test_rate_limiting(self, client):
         """Test API rate limiting is enforced"""
-        
+
         # Make many requests rapidly
         responses = []
         for i in range(100):
             response = client.get("/api/v1/health")
             responses.append(response.status_code)
-        
+
         # Should have some rate limiting responses
         assert 429 in responses or all(r == 200 for r in responses[:50])  # Allow for rate limiting
 ```
@@ -828,35 +828,35 @@ jobs:
   dependency-security:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
           pip install safety pip-audit
-      
+
       - name: Run Safety scan
         run: |
           safety check --json --output safety-report.json || true
-          
-      - name: Run pip-audit scan  
+
+      - name: Run pip-audit scan
         run: |
           pip-audit --format json --output pip-audit-report.json || true
-      
+
       - name: Process security reports
         run: |
           python scripts/process_security_reports.py \
             --safety safety-report.json \
             --pip-audit pip-audit-report.json \
             --fail-on-critical
-      
+
       - name: Upload security reports
         uses: actions/upload-artifact@v3
         if: always()
@@ -869,24 +869,24 @@ jobs:
   code-security:
     name: Code Security Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install Bandit
         run: pip install bandit[toml]
-      
+
       - name: Run Bandit scan
         run: |
           bandit -r violentutf/ violentutf_api/ \
             -f json -o bandit-report.json \
             -ll -x tests/
-      
+
       - name: Check for high severity issues
         run: |
           if [ -f bandit-report.json ]; then
@@ -897,13 +897,13 @@ jobs:
             high = [r for r in data.get('results', []) if r.get('issue_severity') == 'HIGH']
             print(len(high))
             ")
-            
+
             if [ "$high_issues" -gt 0 ]; then
               echo "Found $high_issues high severity security issues"
               exit 1
             fi
           fi
-      
+
       - name: Upload Bandit report
         uses: actions/upload-artifact@v3
         if: always()
@@ -914,29 +914,29 @@ jobs:
   container-security:
     name: Container Security Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Build custom images
         run: |
           docker build -t violentutf:test violentutf/
           docker build -t violentutf-api:test violentutf_api/fastapi_app/
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'violentutf:test'
           format: 'json'
           output: 'trivy-violentutf.json'
-      
+
       - name: Run Trivy on API image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'violentutf-api:test'
           format: 'json'
           output: 'trivy-api.json'
-      
+
       - name: Upload Trivy reports
         uses: actions/upload-artifact@v3
         if: always()
@@ -948,26 +948,26 @@ jobs:
   security-tests:
     name: Security Test Suite
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
           pip install pytest pytest-asyncio
-      
+
       - name: Run security tests
         run: |
           pytest tests/security/ -v \
             --junitxml=security-tests.xml \
             --tb=short
-      
+
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
@@ -980,21 +980,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: [dependency-security, code-security, container-security, security-tests]
     if: always()
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download all reports
         uses: actions/download-artifact@v3
         with:
           path: security-reports
-      
+
       - name: Generate security summary
         run: |
           python scripts/generate_security_summary.py \
             --reports-dir security-reports \
             --output security-summary.md
-      
+
       - name: Comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v6
@@ -1002,7 +1002,7 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.readFileSync('security-summary.md', 'utf8');
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -1027,30 +1027,30 @@ def process_safety_report(report_path):
     """Process Safety scan report"""
     if not Path(report_path).exists():
         return {"vulnerabilities": 0, "critical": 0}
-    
+
     with open(report_path) as f:
         try:
             data = json.load(f)
             # Safety reports are arrays of vulnerabilities
             if isinstance(data, list):
-                critical = sum(1 for vuln in data 
+                critical = sum(1 for vuln in data
                              if vuln.get('vulnerability_id', '').startswith('CVE'))
                 return {"vulnerabilities": len(data), "critical": critical}
         except json.JSONDecodeError:
             return {"vulnerabilities": 0, "critical": 0}
-    
+
     return {"vulnerabilities": 0, "critical": 0}
 
 def process_pip_audit_report(report_path):
     """Process pip-audit scan report"""
     if not Path(report_path).exists():
         return {"vulnerabilities": 0, "critical": 0}
-    
+
     with open(report_path) as f:
         try:
             data = json.load(f)
             vulns = data.get('vulnerabilities', [])
-            critical = sum(1 for vuln in vulns 
+            critical = sum(1 for vuln in vulns
                           if 'CRITICAL' in str(vuln.get('id', '')).upper())
             return {"vulnerabilities": len(vulns), "critical": critical}
         except json.JSONDecodeError:
@@ -1062,23 +1062,23 @@ def main():
     parser.add_argument('--pip-audit', required=True)
     parser.add_argument('--fail-on-critical', action='store_true')
     args = parser.parse_args()
-    
+
     safety_results = process_safety_report(args.safety)
     pip_audit_results = process_pip_audit_report(args.pip_audit)
-    
+
     total_vulns = safety_results['vulnerabilities'] + pip_audit_results['vulnerabilities']
     total_critical = safety_results['critical'] + pip_audit_results['critical']
-    
+
     print(f"Security scan results:")
     print(f"  Total vulnerabilities: {total_vulns}")
     print(f"  Critical vulnerabilities: {total_critical}")
     print(f"  Safety: {safety_results['vulnerabilities']} vulnerabilities")
     print(f"  pip-audit: {pip_audit_results['vulnerabilities']} vulnerabilities")
-    
+
     if args.fail_on_critical and total_critical > 0:
         print(f"FAIL: Found {total_critical} critical vulnerabilities")
         sys.exit(1)
-    
+
     print("PASS: No critical vulnerabilities found")
 
 if __name__ == "__main__":
@@ -1103,22 +1103,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Check for security updates
         run: |
           pip install pip-upgrader safety
-          
+
           # Generate upgrade recommendations
           pip-upgrade --dry-run --skip-git > upgrade-recommendations.txt
-          
+
           # Check for security issues in current versions
           safety check --json > current-vulnerabilities.json || true
-          
+
           # Generate update PR if security issues found
           if [ -s current-vulnerabilities.json ]; then
             echo "Security vulnerabilities found - creating update PR"
@@ -1147,23 +1147,23 @@ def collect_metrics():
         "test_coverage": get_security_test_coverage(),
         "container_vulnerabilities": get_container_vulnerabilities(),
     }
-    
+
     return metrics
 
 def get_dependency_vulnerabilities():
     """Get dependency vulnerability count"""
     try:
         # Safety check
-        result = subprocess.run(['safety', 'check', '--json'], 
+        result = subprocess.run(['safety', 'check', '--json'],
                               capture_output=True, text=True)
         safety_vulns = len(json.loads(result.stdout)) if result.stdout else 0
-        
+
         # pip-audit check
-        result = subprocess.run(['pip-audit', '--format', 'json'], 
+        result = subprocess.run(['pip-audit', '--format', 'json'],
                               capture_output=True, text=True)
         pip_audit_data = json.loads(result.stdout) if result.stdout else {}
         pip_audit_vulns = len(pip_audit_data.get('vulnerabilities', []))
-        
+
         return {
             "safety": safety_vulns,
             "pip_audit": pip_audit_vulns,
@@ -1176,19 +1176,19 @@ def get_code_security_issues():
     """Get Bandit security issue count"""
     try:
         result = subprocess.run([
-            'bandit', '-r', 'violentutf/', 'violentutf_api/', 
+            'bandit', '-r', 'violentutf/', 'violentutf_api/',
             '-f', 'json', '-ll'
         ], capture_output=True, text=True)
-        
+
         if result.stdout:
             data = json.loads(result.stdout)
             results = data.get('results', [])
-            
+
             by_severity = {}
             for result in results:
                 severity = result.get('issue_severity', 'UNKNOWN')
                 by_severity[severity] = by_severity.get(severity, 0) + 1
-            
+
             return {
                 "total": len(results),
                 "by_severity": by_severity
@@ -1203,7 +1203,7 @@ def get_security_test_coverage():
             'pytest', 'tests/security/', '--cov=violentutf', '--cov=violentutf_api',
             '--cov-report=json', '--quiet'
         ], capture_output=True, text=True)
-        
+
         if Path('.coverage.json').exists():
             with open('.coverage.json') as f:
                 data = json.load(f)
@@ -1215,11 +1215,11 @@ def get_security_test_coverage():
 
 if __name__ == "__main__":
     metrics = collect_metrics()
-    
+
     # Save to file for tracking
     with open('security-metrics.json', 'w') as f:
         json.dump(metrics, f, indent=2)
-    
+
     print(json.dumps(metrics, indent=2))
 ```
 

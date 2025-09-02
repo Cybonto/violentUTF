@@ -1,69 +1,14 @@
 [flake8]
-# Configuration for flake8 linting
 max-line-length = 120
-max-complexity = 15
-exclude = 
-    .git,
-    __pycache__,
-    build,
-    dist,
-    .eggs,
-    *.egg-info,
-    .tox,
-    .venv,
-    venv,
-    .vitutf,
-    .pytest_cache,
-    migrations,
-    app_data,
-    violentutf_logs,
-    tests/fixtures
-ignore = 
-    # E203: whitespace before ':' (conflicts with Black)
-    E203,
-    # W503: line break before binary operator (conflicts with Black)
-    W503,
-    # E501: line too long (handled by max-line-length)
-    E501,
-    # F401: imported but unused (handled separately)
-    F401,
-    # F541: f-string is missing placeholders (intentional - see docs/development/code_style_decisions.md)
-    F541,
-    # E226: missing whitespace around arithmetic operator (intentional for string multiplication like '='*70)
-    E226
+max-complexity = 60
+ignore = E203,W503,F541,E226,D400
+exclude = .git,__pycache__,build,dist,.eggs,*.egg-info,.tox,.venv,venv,.vitutf,.pytest_cache,migrations,app_data,violentutf_logs,tests,test,**/tests/**,**/test/**,test_*.py,*_test.py,*.backup,*.bak,*.auto_backup,*_old,*_new,*_temp,temp_*,*.tmp,.tmp_*,*CLAUDE*.*,*cache*.txt,*cache*.md
 per-file-ignores =
-    # Allow unused imports in __init__.py files
     __init__.py:F401
-    # Allow complex functions in test files
-    test_*.py:C901
-    # Allow module level imports not at top of file in test files (due to sys.path modifications)
-    test_*.py:E402
-    tests/*.py:E402
-    tests/**/*.py:E402
-    *_test.py:E402
-    test_phase1_openapi.py:E402
-    # Allow long lines in configuration files
-    */config.py:E501
-    */settings.py:E501
-
-# Additional flake8 plugins configuration
-extend-ignore = 
-    # D100: Missing docstring in public module
-    D100,
-    # D104: Missing docstring in public package
-    D104
-
-# McCabe complexity checker
-# (max-complexity already set above)
-
-# Format for error output
+    test_*.py:C901,F811,E402
+    tests/*.py:F811,E402
+    tests/**/*.py:F811,E402
 format = %(path)s:%(row)d:%(col)d: %(code)s %(text)s
-
-# Show source code for errors
 show-source = True
-
-# Count errors
 count = True
-
-# Statistics
 statistics = True

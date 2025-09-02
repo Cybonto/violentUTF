@@ -11,7 +11,7 @@
 3. Maximum context
   - Always err on providing more information than needed
   - Always provide the lastest and most accurate information (watch out for chat history)
-4. Maximum documentation 
+4. Maximum documentation
 5. Always use the best LLM for the tasks (not necessarily the most expensive one, different tasks require different LLMs)
 
 ## Methodology & Examples
@@ -32,13 +32,13 @@ The system design document describes the system to be produced. This is the grou
   - Maintainability and Support
   - Data Quality and Validation
   - Security Considerations
-- **Section C: Use Cases**: This section helps with informally documenting the complex requirements and dependencies that are not yet formalized. Stakeholders may feel the need to iteratively add more use cases. It is best if stakeholders can contribute use cases as fast and as comprehensive as possible. This section is optional as the additional requirements and dependencies will be specified in the "Program Steps" sections. Include this section especially when your code generation phase has started and use cases keep coming in. 
+- **Section C: Use Cases**: This section helps with informally documenting the complex requirements and dependencies that are not yet formalized. Stakeholders may feel the need to iteratively add more use cases. It is best if stakeholders can contribute use cases as fast and as comprehensive as possible. This section is optional as the additional requirements and dependencies will be specified in the "Program Steps" sections. Include this section especially when your code generation phase has started and use cases keep coming in.
 - **Section D: Key Definitions**: This section unifies and/or clarifies key definitions to be used throughout the project. "Definitions" can be anything from a technical terms, an API function, to a particular product. This is essential in cases where there are:
   - Conflicting or different versions of a definition
   - Different leveraged products/packages/APIs that have confusing overlaps
   - New knowledge that the LLMs are not aware of
   - Obsolete knowledge that must be explicitly black-listed
-- **Section E: Main Structure**: 
+- **Section E: Main Structure**:
   - Outline of the project layers with brief descriptions and key features
     - Administrative layers (i.e. authentication and authorization, logging, dashboarding)
     - Application layers (i.e. front-end, back-end, api)
@@ -68,7 +68,7 @@ The system design document describes the system to be produced. This is the grou
       - Retrieve and display the list of saved Generators from PyRIT's memory.
       - Implement add and delete functionalities. The add functionality will be further described in the following sub-sections.
       - Update `st.session_state`, other data store (if any), and the parameter file when changes are made.
-    - The below steps (3b to 3f) are displayed when user choose to Add or Edit 
+    - The below steps (3b to 3f) are displayed when user choose to Add or Edit
   ```
 
 ### 2. The Development Plan

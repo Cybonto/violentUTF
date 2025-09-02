@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Phase 3: Integration Tests
 Tests for command processing integration with MCP server
@@ -42,7 +48,7 @@ class TestCommandProcessingIntegration:
         yield temp_dir
         shutil.rmtree(temp_dir)
 
-    def test_help_command_integration(self, mcp_client):
+    def test_help_command_integration(self, mcp_client) -> None:
         """Test /mcp help command through full pipeline"""
         parser = NaturalLanguageParser()
 
@@ -54,7 +60,7 @@ class TestCommandProcessingIntegration:
         # This tests that help is available offline
         assert command.arguments == {}
 
-    def test_natural_language_generator_creation(self):
+    def test_natural_language_generator_creation(self) -> None:
         """Test natural language generator creation intent"""
         detector = ConfigurationIntentDetector()
 
@@ -81,7 +87,7 @@ class TestCommandProcessingIntegration:
             if "max tokens" in text:
                 assert "max_tokens" in params
 
-    def test_dataset_loading_workflow(self):
+    def test_dataset_loading_workflow(self) -> None:
         """Test dataset loading command workflow"""
         parser = NaturalLanguageParser()
         detector = ConfigurationIntentDetector()
@@ -93,11 +99,12 @@ class TestCommandProcessingIntegration:
 
         # Test natural language
         intent = detector.detect_configuration_intent("Load the jailbreak dataset")
+        assert intent is not None and isinstance(intent, dict)
         assert intent["type"] == "dataset"
         assert intent["action"] == "load"
         assert intent["target"] == "jailbreak"
 
-    def test_command_suggestions_context(self):
+    def test_command_suggestions_context(self) -> None:
         """Test context-aware command suggestions"""
         parser = NaturalLanguageParser()
         analyzer = ConversationContextAnalyzer()
@@ -118,7 +125,7 @@ class TestCommandProcessingIntegration:
         assert len(context["suggested_actions"]) > 0
 
     @patch("violentutf.utils.mcp_client.httpx.AsyncClient")
-    async def test_enhancement_command_with_mcp(self, mock_client_class):
+    async def test_enhancement_command_with_mcp(self, mock_client_class) -> None:
         """Test enhancement command with MCP server"""
         # Mock the HTTP client
         mock_client = MagicMock()
@@ -152,7 +159,7 @@ class TestCommandProcessingIntegration:
         # Should get enhanced prompt
         assert result is not None
 
-    def test_configuration_workflow_end_to_end(self):
+    def test_configuration_workflow_end_to_end(self) -> None:
         """Test complete configuration workflow"""
         parser = NaturalLanguageParser()
         detector = ConfigurationIntentDetector()
@@ -175,7 +182,7 @@ class TestCommandProcessingIntegration:
             assert params["temperature"] == 0.8
             assert params["max_tokens"] == 1500
 
-    def test_multi_command_session(self):
+    def test_multi_command_session(self) -> None:
         """Test handling multiple commands in a session"""
         parser = NaturalLanguageParser()
         detector = ConfigurationIntentDetector()
@@ -208,7 +215,7 @@ class TestCommandProcessingIntegration:
         assert "generator" in context["mentioned_resources"]
         assert "dataset" in context["mentioned_resources"]
 
-    def test_error_handling_invalid_commands(self):
+    def test_error_handling_invalid_commands(self) -> None:
         """Test handling of invalid commands"""
         parser = NaturalLanguageParser()
 
@@ -232,7 +239,7 @@ class TestCommandProcessingIntegration:
         assert command.type.value == "test"
         assert command.arguments["test_type"] == "jailbreak"
 
-    def test_command_autocomplete(self):
+    def test_command_autocomplete(self) -> None:
         """Test command autocomplete functionality"""
         parser = NaturalLanguageParser()
 
@@ -256,7 +263,7 @@ class TestCommandProcessingIntegration:
 class TestCommandHandlerIntegration:
     """Test integration with Streamlit command handlers"""
 
-    def test_command_result_formatting(self):
+    def test_command_result_formatting(self) -> None:
         """Test formatting of command results for display"""
         # Simulate command results
         results = [
@@ -272,7 +279,7 @@ class TestCommandHandlerIntegration:
             assert "content" in result
             assert isinstance(result["content"], str)
 
-    def test_session_state_integration(self):
+    def test_session_state_integration(self) -> None:
         """Test integration with Streamlit session state"""
         # Simulate session state
         session_state = {
@@ -288,11 +295,16 @@ class TestCommandHandlerIntegration:
             "timestamp": "2024-01-01T00:00:00",
         }
 
-        session_state["mcp_command_history"].append(command_result)
+        # Ensure mcp_command_history is a list before appending
+        if isinstance(session_state.get("mcp_command_history"), list):
+            session_state["mcp_command_history"].append(command_result)
+        else:
+            session_state["mcp_command_history"] = [command_result]
 
         # Verify history tracking
-        assert len(session_state["mcp_command_history"]) == 1
-        assert session_state["mcp_command_history"][0]["command"] == "Create a GPT-4 generator"
+        history = session_state.get("mcp_command_history")
+        assert isinstance(history, list) and len(history) == 1
+        assert isinstance(history[0], dict) and history[0]["command"] == "Create a GPT-4 generator"
 
 
 if __name__ == "__main__":

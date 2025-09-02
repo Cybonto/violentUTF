@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test script to verify ViolentUTF API integration
 """
+
 import json
 import sys
 
@@ -14,13 +21,13 @@ def test_api_health():
 
     try:
         # Test direct API
-        response = requests.get("http://localhost:8000/health")
+        response = requests.get("http://localhost:8000/health", timeout=30)
         print(f"Direct API: {response.status_code}")
         if response.status_code == 200:
             print(f"Response: {response.json()}")
 
         # Test via APISIX
-        response = requests.get("http://localhost:9080/api/v1/health")
+        response = requests.get("http://localhost:9080/api/v1/health", timeout=30)
         print(f"Via APISIX: {response.status_code}")
         if response.status_code == 200:
             print(f"Response: {response.json()}")
@@ -36,7 +43,7 @@ def test_api_docs():
     print("\nTesting API Documentation...")
 
     try:
-        response = requests.get("http://localhost:8000/docs")
+        response = requests.get("http://localhost:8000/docs", timeout=30)
         print(f"API Docs Status: {response.status_code}")
         if response.status_code == 200:
             print("API documentation is accessible at http://localhost:8000/docs")
@@ -54,7 +61,7 @@ def test_authentication():
     data = {"username": "testuser", "password": "testpass", "grant_type": "password"}
 
     try:
-        response = requests.post("http://localhost:8000/api/v1/auth/token", data=data)
+        response = requests.post("http://localhost:8000/api/v1/auth/token", data=data, timeout=30)
         print(f"Auth Status: {response.status_code}")
         if response.status_code == 200:
             token_data = response.json()

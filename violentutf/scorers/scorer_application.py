@@ -1,7 +1,11 @@
-# scorers/scorer_application.py
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 """
-Module: Scorer Application
+Scorer Application module.
 
 Contains functions to apply Scorers to inputs or datasets.
 
@@ -13,13 +17,17 @@ Dependencies:
 - pyrit.models (for PromptRequestPiece, SeedPromptDataset, Score)
 - utils.logging
 - utils.error_handling
-"""
+"""  # Copyright (c) 2025 ViolentUTF Contributors.
+
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
 import asyncio
-import logging
-from typing import List
+from typing import Any, List
 
-from pyrit.models import PromptRequestPiece, Score, SeedPrompt, SeedPromptDataset
+from pyrit.models import PromptRequestPiece, Score, SeedPromptDataset
 from pyrit.score import Scorer
 from utils.error_handling import ScorerApplicationError
 from utils.logging import get_logger
@@ -30,7 +38,7 @@ logger = get_logger(__name__)
 
 async def apply_scorer_to_input(scorer_instance: Scorer, input_data: PromptRequestPiece) -> List[Score]:
     """
-    Applies the given Scorer to a single input data.
+    Apply the given Scorer to a single input data.
 
     Parameters:
         scorer_instance (Scorer): The Scorer instance to use.
@@ -47,17 +55,17 @@ async def apply_scorer_to_input(scorer_instance: Scorer, input_data: PromptReque
         - The input_data must be properly formatted.
     """
     try:
+
         scores = await scorer_instance.score_async(input_data)
-        logger.debug(f"Applied scorer to input_data. Scores: {scores}")
-        return scores
+        logger.debug("Applied scorer to input_data. Scores: %s", scores)
+        return list(scores) if scores else []
     except Exception as e:
-        logger.error(f"Error applying scorer to input: {e}")
+        logger.error("Error applying scorer to input: %s", e)
         raise ScorerApplicationError(f"Error applying scorer to input: {e}") from e
 
 
 def apply_scorer_to_input_sync(scorer_instance: Scorer, input_data: PromptRequestPiece) -> List[Score]:
-    """
-    Synchronous wrapper to apply the given Scorer to a single input data.
+    """Apply the given Scorer to a single input data synchronously.
 
     Parameters:
         scorer_instance (Scorer): The Scorer instance to use.
@@ -70,19 +78,19 @@ def apply_scorer_to_input_sync(scorer_instance: Scorer, input_data: PromptReques
         ScorerApplicationError: If scoring fails.
     """
     try:
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         scores = loop.run_until_complete(apply_scorer_to_input(scorer_instance, input_data))
         loop.close()
         return scores
     except Exception as e:
-        logger.error(f"Error applying scorer to input data synchronously: {e}")
+        logger.error("Error applying scorer to input data synchronously: %s", e)
         raise ScorerApplicationError(f"Error applying scorer to input data synchronously: {e}") from e
 
 
 async def apply_scorer_to_dataset(scorer_instance: Scorer, dataset: SeedPromptDataset) -> List[Score]:
-    """
-    Applies the given Scorer to an entire dataset.
+    """Apply the given Scorer to an entire dataset.
 
     Parameters:
         scorer_instance (Scorer): The Scorer instance to use.
@@ -98,7 +106,8 @@ async def apply_scorer_to_dataset(scorer_instance: Scorer, dataset: SeedPromptDa
         - The Scorer instance must be properly instantiated.
         - The dataset must contain valid prompts.
     """
-    all_scores = []
+    all_scores: list[Any] = []
+
     try:
         # Collect all PromptRequestPieces from the dataset
         # Assuming dataset.prompts is a list of SeedPrompts
@@ -107,7 +116,9 @@ async def apply_scorer_to_dataset(scorer_instance: Scorer, dataset: SeedPromptDa
         for seed_prompt in dataset.prompts:
             # Create a PromptRequestPiece for each seed_prompt
             prp = PromptRequestPiece(
-                role="user", original_value=seed_prompt.value, original_value_data_type=seed_prompt.data_type
+                role="user",
+                original_value=seed_prompt.value,
+                original_value_data_type=seed_prompt.data_type,
             )
             request_pieces.append(prp)
 
@@ -125,20 +136,22 @@ async def apply_scorer_to_dataset(scorer_instance: Scorer, dataset: SeedPromptDa
                     f"Error scoring request_piece '{request_pieces[i].id}': {scores}"
                 ) from scores
             else:
-                all_scores.extend(scores)
+                if isinstance(scores, list):
+                    all_scores.extend(scores)
+                else:
+                    all_scores.append(scores)
                 logger.debug(f"Scored request_piece '{request_pieces[i].id}': {scores}")
 
         dataset_name = dataset.name if hasattr(dataset, "name") else "Unnamed Dataset"
         logger.info(f"Applied scorer to dataset '{dataset_name}'. Total scores: {len(all_scores)}")
         return all_scores
     except Exception as e:
-        logger.error(f"Error applying scorer to dataset: {e}")
+        logger.error("Error applying scorer to dataset: %s", e)
         raise ScorerApplicationError(f"Error applying scorer to dataset: {e}") from e
 
 
 def apply_scorer_to_dataset_sync(scorer_instance: Scorer, dataset: SeedPromptDataset) -> List[Score]:
-    """
-    Synchronous wrapper to apply the Scorer to an entire dataset.
+    """Apply the Scorer to an entire dataset synchronously.
 
     Parameters:
         scorer_instance (Scorer): The Scorer instance to use.
@@ -151,11 +164,12 @@ def apply_scorer_to_dataset_sync(scorer_instance: Scorer, dataset: SeedPromptDat
         ScorerApplicationError: If scoring fails.
     """
     try:
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         scores = loop.run_until_complete(apply_scorer_to_dataset(scorer_instance, dataset))
         loop.close()
         return scores
     except Exception as e:
-        logger.error(f"Error applying scorer to dataset synchronously: {e}")
+        logger.error("Error applying scorer to dataset synchronously: %s", e)
         raise ScorerApplicationError(f"Error applying scorer to dataset synchronously: {e}") from e

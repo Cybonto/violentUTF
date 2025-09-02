@@ -29,7 +29,7 @@ print_status() {
 check_service() {
     local service_url=$1
     local service_name=$2
-    
+
     if curl -s "$service_url" > /dev/null 2>&1; then
         print_status $GREEN "✅ $service_name is running"
         return 0
@@ -66,11 +66,11 @@ echo "--------------------------------------"
 
 if [ "$FASTAPI_RUNNING" = true ]; then
     cd ../violentutf_api/fastapi_app
-    
+
     if [ -d "venv_api" ]; then
         source venv_api/bin/activate
         export PYTHONPATH=$(pwd)
-        
+
         print_status $BLUE "Running unit tests..."
         if python -m pytest ../../../tests/test_unit_api_endpoints.py -v; then
             print_status $GREEN "✅ Unit tests passed"
@@ -83,9 +83,9 @@ if [ "$FASTAPI_RUNNING" = true ]; then
         source venv_api/bin/activate
         pip install -r requirements.txt
         pip install pytest duckdb
-        
+
         export PYTHONPATH=$(pwd)
-        
+
         print_status $BLUE "Running unit tests..."
         if python -m pytest ../../../tests/test_unit_api_endpoints.py -v; then
             print_status $GREEN "✅ Unit tests passed"
@@ -93,7 +93,7 @@ if [ "$FASTAPI_RUNNING" = true ]; then
             print_status $RED "❌ Unit tests failed"
         fi
     fi
-    
+
     cd ../../tests
 else
     print_status $YELLOW "⚠️  Skipping unit tests - FastAPI service not running"
@@ -210,23 +210,23 @@ echo
 # Next steps
 if [ "$APISIX_RUNNING" = false ] || [ "$FASTAPI_RUNNING" = false ] || [ "$ROUTES_CONFIGURED" = false ] || [ "$JWT_TESTS_PASSED" = false ]; then
     echo "🛠️  Next Steps:"
-    
+
     if [ "$APISIX_RUNNING" = false ]; then
         echo "   1. Start APISIX: cd ../apisix && docker compose up -d"
     fi
-    
+
     if [ "$ROUTES_CONFIGURED" = false ] && [ "$APISIX_RUNNING" = true ]; then
         echo "   2. Configure routes: cd ../apisix && ./configure_routes.sh"
     fi
-    
+
     if [ "$FASTAPI_RUNNING" = false ]; then
         echo "   3. Start FastAPI: cd ../violentutf_api && docker compose up -d"
     fi
-    
+
     if [ "$JWT_TESTS_PASSED" = false ]; then
         echo "   4. Check JWT configuration: verify environment variables in .env files"
     fi
-    
+
     echo "   5. Re-run tests: ./run_tests.sh"
 else
     print_status $GREEN "🎉 All tests passed! System is ready for use."

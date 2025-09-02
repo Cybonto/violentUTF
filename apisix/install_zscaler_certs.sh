@@ -52,7 +52,7 @@ echo -e "${BLUE}Step 2: Copying certificates to APISIX container${NC}"
 for cert in "${CERT_FILES[@]}"; do
     filename=$(basename "$cert")
     echo "Copying $filename to APISIX container..."
-    
+
     if docker cp "$cert" apisix-apisix-1:/usr/local/share/ca-certificates/; then
         echo -e "${GREEN}✓ Copied $filename${NC}"
     else

@@ -43,7 +43,7 @@ fi
 if [ -n "${VIOLENTUTF_API_KEY:-}" ]; then
     echo "Testing chat completions route with verbose output..."
     echo
-    
+
     # Use -v for verbose output to see what APISIX is doing
     curl -v -X POST http://localhost:9080/ai/openapi/gsai-api-1/api/v1/chat/completions \
         -H "apikey: $VIOLENTUTF_API_KEY" \

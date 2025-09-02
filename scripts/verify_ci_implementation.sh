@@ -24,7 +24,7 @@ command_exists() {
 run_check() {
     local name=$1
     local command=$2
-    
+
     echo -n "Checking $name... "
     if eval "$command" > /dev/null 2>&1; then
         echo -e "${GREEN}✓${NC}"
@@ -56,7 +56,7 @@ if command_exists actionlint; then
 else
     echo "  actionlint not installed. Install with: brew install actionlint"
     echo "  Fallback: Checking YAML syntax..."
-    
+
     for workflow in .github/workflows/*.yml; do
         if [ -f "$workflow" ]; then
             run_check "$(basename $workflow)" "python -c \"import yaml; yaml.safe_load(open('$workflow'))\""

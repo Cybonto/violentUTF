@@ -10,10 +10,10 @@ Generated: Wed Jul  9 18:14:28 EDT 2025
 - 0: GET:/openapi/gsai-api-1/api/v1/models
 
 ## Discovered Routes
-- 0: 
+- 0:
 
 ## Failed Routes
-- 0: 
+- 0:
 
 ## Route Coverage Analysis
 [0;34m📊 Analyzing route coverage...[0m

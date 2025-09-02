@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test to verify converter COPY mode creates new datasets correctly.
 
@@ -11,6 +17,7 @@ import os
 import sys
 import time
 import uuid
+from typing import Dict
 
 import requests
 
@@ -19,10 +26,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"
-JWT_SECRET_KEY = "ZtZDeFsgTqUm3KHSKINa46TUV13JJw7T"
+JWT_SECRET_KEY = "ZtZDeFsgTqUm3KHSKINa46TUV13JJw7T"  # nosec B105 - test JWT secret
 
 
-def create_jwt_token():
+def create_jwt_token() -> str:
     """Create a test JWT token"""
     try:
         import jwt
@@ -42,16 +49,20 @@ def create_jwt_token():
         return None
 
 
-def get_headers():
+def get_headers() -> Dict[str, str]:
     """Get API request headers"""
     token = create_jwt_token()
     if not token:
         raise ValueError("Failed to create JWT token")
 
-    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-API-Gateway": "APISIX"}
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "X-API-Gateway": "APISIX",
+    }
 
 
-def test_converter_copy_mode():
+def test_converter_copy_mode() -> None:
     """Test that converter COPY mode creates a new dataset"""
     headers = get_headers()
 
@@ -66,7 +77,12 @@ def test_converter_copy_mode():
         "config": {},
     }
 
-    response = requests.post(f"{API_BASE_URL}/api/v1/datasets", json=dataset_payload, headers=headers)
+    response = requests.post(
+        f"{API_BASE_URL}/api/v1/datasets",
+        json=dataset_payload,
+        headers=headers,
+        timeout=30,
+    )
 
     if response.status_code not in [200, 201]:
         print(f"❌ Failed to create dataset: Status {response.status_code}: {response.text}")
@@ -86,7 +102,12 @@ def test_converter_copy_mode():
         "parameters": {"append_description": True},
     }
 
-    response = requests.post(f"{API_BASE_URL}/api/v1/converters", json=converter_payload, headers=headers)
+    response = requests.post(
+        f"{API_BASE_URL}/api/v1/converters",
+        json=converter_payload,
+        headers=headers,
+        timeout=30,
+    )
 
     if response.status_code not in [200, 201]:
         print(f"❌ Failed to create converter: {response.text}")
@@ -108,7 +129,10 @@ def test_converter_copy_mode():
     }
 
     response = requests.post(
-        f"{API_BASE_URL}/api/v1/converters/{converter_id}/apply", json=apply_payload, headers=headers
+        f"{API_BASE_URL}/api/v1/converters/{converter_id}/apply",
+        json=apply_payload,
+        headers=headers,
+        timeout=30,
     )
 
     if response.status_code != 200:
@@ -126,7 +150,7 @@ def test_converter_copy_mode():
     print("\n4️⃣ Verifying new dataset was created...")
     new_dataset_id = apply_result["dataset_id"]
 
-    response = requests.get(f"{API_BASE_URL}/api/v1/datasets/{new_dataset_id}", headers=headers)
+    response = requests.get(f"{API_BASE_URL}/api/v1/datasets/{new_dataset_id}", headers=headers, timeout=30)
 
     if response.status_code != 200:
         print(f"❌ New dataset not found: {response.text}")
@@ -140,7 +164,7 @@ def test_converter_copy_mode():
 
     # Step 5: List all datasets to confirm it appears
     print("\n5️⃣ Listing all datasets to confirm...")
-    response = requests.get(f"{API_BASE_URL}/api/v1/datasets", headers=headers)
+    response = requests.get(f"{API_BASE_URL}/api/v1/datasets", headers=headers, timeout=30)
 
     if response.status_code == 200:
         datasets = response.json()["datasets"]
@@ -155,10 +179,14 @@ def test_converter_copy_mode():
     # Cleanup
     print("\n🧹 Cleaning up test resources...")
     # Delete converter
-    requests.delete(f"{API_BASE_URL}/api/v1/converters/{converter_id}", headers=headers)
+    requests.delete(f"{API_BASE_URL}/api/v1/converters/{converter_id}", headers=headers, timeout=30)
     # Delete datasets
-    requests.delete(f"{API_BASE_URL}/api/v1/datasets/{source_dataset_id}", headers=headers)
-    requests.delete(f"{API_BASE_URL}/api/v1/datasets/{new_dataset_id}", headers=headers)
+    requests.delete(
+        f"{API_BASE_URL}/api/v1/datasets/{source_dataset_id}",
+        headers=headers,
+        timeout=30,
+    )
+    requests.delete(f"{API_BASE_URL}/api/v1/datasets/{new_dataset_id}", headers=headers, timeout=30)
 
     print("\n✅ TEST PASSED: Converter COPY mode successfully creates new datasets!")
     return True

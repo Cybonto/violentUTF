@@ -1,18 +1,18 @@
-import hashlib
-import json
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""0 Start module."""
+
 import os
 import pathlib
-import shutil
-import sys
-import tempfile
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, cast
 
-import jwt
 import pandas as pd
 import requests
 import streamlit as st
-import yaml
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -67,13 +67,13 @@ if "api_user_info" not in st.session_state:
 if "api_session_data" not in st.session_state:
     st.session_state.api_session_data = {}
 
-
 # --- API Helper Functions ---
 
 
 def get_auth_headers() -> Dict[str, str]:
-    """Get authentication headers for API requests through APISIX Gateway"""
+    """Get authentication header for API requests through APISIX Gateway."""
     try:
+
         from utils.jwt_manager import jwt_manager
 
         # Get valid token (automatically handles refresh if needed)
@@ -103,23 +103,24 @@ def get_auth_headers() -> Dict[str, str]:
 
         return headers
     except Exception as e:
-        logger.error(f"Failed to get auth headers: {e}")
+        logger.error("Failed to get auth headers: %s", e)
         return {}
 
 
-def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
+def api_request(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, object]]:  # noqa: ANN401
     """Make an authenticated API request through APISIX Gateway"""
     headers = get_auth_headers()
+
     if not headers.get("Authorization"):
         st.error("No authentication token available. Please log in.")
         return None
 
     try:
-        logger.debug(f"Making {method} request to {url} through APISIX Gateway")
+        logger.debug("Making %s request to %s through APISIX Gateway", method, url)
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
 
         if response.status_code == 200:
-            return response.json()
+            return cast(Dict[str, object], response.json())
         elif response.status_code == 401:
             # Attempt to refresh token and retry once
             logger.warning("401 Unauthorized - attempting token refresh")
@@ -131,9 +132,9 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
                 # Force JWT manager to refresh secret from environment
                 from utils.jwt_manager import jwt_manager
 
-                jwt_manager._cached_secret = None  # Clear cached secret
-                jwt_manager._secret_cache_time = None
-                jwt_manager._load_environment()  # Reload environment variables
+                jwt_manager._cached_secret = None  # pylint: disable=protected-access  # Clear cached secret
+                jwt_manager._secret_cache_time = None  # pylint: disable=protected-access
+                jwt_manager._load_environment()  # pylint: disable=protected-access  # Reload environment variables
 
                 # Create new token
                 new_token = create_compatible_api_token()
@@ -147,71 +148,77 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
                         retry_response = requests.request(method, url, headers=fresh_headers, timeout=30, **kwargs)
                         if retry_response.status_code == 200:
                             st.success("🔄 Token refreshed successfully!")
-                            return retry_response.json()
+                            return cast(Dict[str, object], retry_response.json())
                         else:
-                            logger.error(f"Retry failed with status {retry_response.status_code}")
+                            logger.error(
+                                "Retry failed with status %s",
+                                retry_response.status_code,
+                            )
 
             except Exception as e:
-                logger.error(f"Token refresh failed: {e}")
+                logger.error("Token refresh failed: %s", e)
 
             st.error("Authentication failed. Please refresh your token.")
-            logger.error(f"401 Unauthorized: {response.text}")
+            logger.error("401 Unauthorized: %s", response.text)
             return None
         elif response.status_code == 403:
             st.error("Access forbidden. Check your permissions or APISIX routing.")
-            logger.error(f"403 Forbidden: {response.text}")
+            logger.error("403 Forbidden: %s", response.text)
             return None
         elif response.status_code == 404:
             st.error("Endpoint not found. Check APISIX routing configuration.")
-            logger.error(f"404 Not Found: {url} - {response.text}")
+            logger.error("404 Not Found: %s - %s", url, response.text)
             return None
         elif response.status_code == 502:
             st.error("Bad Gateway. APISIX cannot reach the FastAPI service.")
-            logger.error(f"502 Bad Gateway: {response.text}")
+            logger.error("502 Bad Gateway: %s", response.text)
             return None
         elif response.status_code == 503:
             st.error("Service Unavailable. FastAPI service may be down.")
-            logger.error(f"503 Service Unavailable: {response.text}")
+            logger.error("503 Service Unavailable: %s", response.text)
             return None
         else:
             st.error(f"API request failed: {response.status_code} - {response.text}")
-            logger.error(f"API Error {response.status_code}: {url} - {response.text}")
+            logger.error("API Error %s: %s - %s", response.status_code, url, response.text)
             return None
     except requests.exceptions.ConnectionError as e:
         st.error(f"Connection error: Cannot reach APISIX Gateway at {API_BASE_URL}. Is it running?")
-        logger.error(f"Connection error to {url}: {e}")
+        logger.error("Connection error to %s: %s", url, e)
         return None
     except requests.exceptions.Timeout as e:
         st.error("Request timeout. APISIX Gateway or backend service is slow to respond.")
-        logger.error(f"Timeout error to {url}: {e}")
+        logger.error("Timeout error to %s: %s", url, e)
         return None
     except requests.exceptions.RequestException as e:
         st.error(f"API request error: {e}")
-        logger.error(f"Request exception to {url}: {e}")
+        logger.error("Request exception to %s: %s", url, e)
         return None
 
 
-def load_user_session_from_api():
+def load_user_session_from_api() -> bool:
     """Load user session data from API"""
     data = api_request("GET", API_ENDPOINTS["sessions"])
+
     if data:
         st.session_state.api_session_data = data
         return True
     return False
 
 
-def save_user_session_to_api(session_update: Dict[str, Any]):
+def save_user_session_to_api(session_update: Dict[str, object]) -> bool:
     """Save user session data to API"""
     data = api_request("PUT", API_ENDPOINTS["sessions"], json=session_update)
+
     if data:
         st.session_state.api_session_data = data
         return True
     return False
 
 
-def create_compatible_api_token():
+def create_compatible_api_token() -> Optional[str]:
     """Create a FastAPI-compatible token using JWT manager"""
     try:
+
         from utils.jwt_manager import jwt_manager
         from utils.user_context import get_user_context_for_token
 
@@ -224,7 +231,7 @@ def create_compatible_api_token():
 
         if api_token:
             logger.info("Successfully created API token using JWT manager")
-            return api_token
+            return cast(str, api_token)
         else:
             st.error(
                 "🚨 Security Error: JWT secret key not configured. Please set JWT_SECRET_KEY environment variable."
@@ -234,64 +241,83 @@ def create_compatible_api_token():
 
     except Exception as e:
         st.error("❌ Failed to generate API token. Please try refreshing the page.")
-        logger.error(f"Token creation failed: {e}")
+        logger.error("Token creation failed: %s", e)
         return None
 
 
-def get_token_info_from_api():
+def get_token_info_from_api() -> Optional[Dict[str, object]]:
     """Get token information from API"""
     data = api_request("GET", API_ENDPOINTS["auth_token_info"])
+
     if data:
         st.session_state.api_user_info = data
         return data
     return None
 
 
-def get_database_status_from_api():
-    """Get database status from API"""
+def get_database_status_from_api() -> Optional[Dict[str, object]]:
+    """Get database statu from API."""
     return api_request("GET", API_ENDPOINTS["database_status"])
 
 
-def initialize_database_via_api(custom_salt: Optional[str] = None):
+def initialize_database_via_api(
+    custom_salt: Optional[str] = None,
+) -> Optional[Dict[str, object]]:
     """Initialize database via API"""
-    payload = {"force_recreate": False, "backup_existing": True}
+    payload: Dict[str, object] = {"force_recreate": False, "backup_existing": True}
+
     if custom_salt:
         payload["custom_salt"] = custom_salt
 
     return api_request("POST", API_ENDPOINTS["database_initialize"], json=payload)
 
 
-def reset_database_via_api():
+def reset_database_via_api() -> Optional[Dict[str, object]]:
     """Reset database via API"""
-    payload = {"confirmation": True, "backup_before_reset": True, "preserve_user_data": False}
+    payload = {
+        "confirmation": True,
+        "backup_before_reset": True,
+        "preserve_user_data": False,
+    }
+
     return api_request("POST", API_ENDPOINTS["database_reset"], json=payload)
 
 
-def get_database_stats_from_api():
-    """Get database statistics from API"""
+def get_database_stats_from_api() -> Optional[Dict[str, object]]:
+    """Get database statistic from API."""
     return api_request("GET", API_ENDPOINTS["database_stats"])
 
 
-def load_config_from_api():
-    """Load configuration parameters from API"""
+def load_config_from_api() -> Optional[Dict[str, object]]:
+    """Load configuration parameter from API."""
     return api_request("GET", API_ENDPOINTS["config_parameters"])
 
 
-def get_environment_config_from_api():
+def get_environment_config_from_api() -> Optional[Dict[str, object]]:
     """Get environment configuration from API"""
     return api_request("GET", API_ENDPOINTS["config_environment"])
 
 
-def generate_salt_via_api():
+def generate_salt_via_api() -> Optional[str]:
     """Generate new salt via API"""
-    return api_request("POST", API_ENDPOINTS["config_generate_salt"])
+    result = api_request("POST", API_ENDPOINTS["config_generate_salt"])
+
+    if result and isinstance(result, dict):
+        return cast(Optional[str], result.get("salt"))
+    return None
 
 
 # --- Main Page Function ---
-def main():
-    """Renders the Start page content with API backend."""
+def main() -> None:
+    """Render the Start page content with API backend.."""
     logger.debug("Start page (API-backed) loading.")
-    st.set_page_config(page_title=app_title, page_icon=app_icon, layout="wide", initial_sidebar_state="expanded")
+
+    st.set_page_config(
+        page_title=app_title,
+        page_icon=app_icon,
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
 
     # --- Authentication and Sidebar ---
     handle_authentication_and_sidebar("Start (API)")
@@ -347,7 +373,10 @@ def main():
             with st.spinner("Setting up database..."):
                 result = initialize_database_via_api()
                 if result:
-                    if result.get("initialization_status") in ["success", "already_exists"]:
+                    if result.get("initialization_status") in [
+                        "success",
+                        "already_exists",
+                    ]:
                         st.session_state.api_db_initialized = True
                     else:
                         st.session_state.api_db_initialized = False
@@ -385,7 +414,8 @@ def main():
         if st.button(
             "📥 Load Session",
             key="load_session",
-            help="Restores your previous session data including UI preferences, workflow state, and temporary configurations",
+            help="Restores your previous session data including UI preferences, "
+            "workflow state, and temporary configurations",
         ):
             with st.spinner("Loading session from API..."):
                 if load_user_session_from_api():
@@ -420,18 +450,21 @@ def main():
     #     "Upload configuration files:",
     #     type=['yaml', 'yml', 'json', 'txt'],
     #     key="api_file_upload",
-    #     help="Upload configuration files like YAML parameters, JSON settings, or text datasets that will be stored in the system"
+    #     help="Upload configuration files like YAML parameters, JSON settings, or text datasets "
+    #          "that will be stored in the system"
     # )
 
     # if uploaded_file is not None:
-    #     if st.button("📤 Upload File", key="upload_file", help="Uploads the selected file to the ViolentUTF system storage for use in configurations and datasets"):
+    #     if st.button("📤 Upload File", key="upload_file",
+    #                  help="Uploads the selected file to the ViolentUTF system storage "
+    #                       "for use in configurations and datasets"):
     #         with st.spinner("Uploading file..."):
     #             files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
     #             headers = get_auth_headers()
     #             headers.pop("Content-Type", None)  # Remove content-type for file upload
 
     #             try:
-    #                 logger.debug(f"Uploading file {uploaded_file.name}")
+    #                 logger.debug("Uploading file %s", uploaded_file.name)
     #                 response = requests.post(
     #                     API_ENDPOINTS["files_upload"],
     #                     headers=headers,
@@ -446,12 +479,12 @@ def main():
     #                     st.error("File too large. Check upload size limits.")
     #                 else:
     #                     st.error(f"Upload failed: {response.status_code} - {response.text}")
-    #                     logger.error(f"File upload failed: {response.status_code} - {response.text}")
+    #                     logger.error("File upload failed: %s - %s", response.status_code, response.text)
     #             except requests.exceptions.Timeout:
     #                 st.error("Upload timeout. File may be too large or network is slow.")
     #             except Exception as e:
     #                 st.error(f"Upload error: {e}")
-    #                 logger.error(f"File upload exception: {e}")
+    #                 logger.error("File upload exception: %s", e)
 
     # --- Start Button ---
     st.divider()
@@ -471,9 +504,10 @@ def main():
 # --- Helper Functions ---
 
 
-def display_header():
-    """Displays the main header for the page."""
+def display_header() -> None:
+    """Display the main header for the page.."""
     st.title(f"{app_icon} {app_title}")
+
     st.markdown(app_description)
     st.write(f"Version: {app_version}")
 

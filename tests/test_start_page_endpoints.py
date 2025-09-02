@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test script to verify that all endpoints used in 0_Start.py are properly routed through APISIX
 Run this script to ensure the Start page will work correctly with the API
@@ -6,7 +12,7 @@ Run this script to ensure the Start page will work correctly with the API
 
 import os
 import re
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import requests
 
@@ -70,9 +76,17 @@ def test_endpoint_routing(endpoint: str) -> Tuple[str, int, str]:
         response = requests.get(f"{APISIX_BASE_URL}{endpoint}", headers=headers, timeout=10)
 
         if response.status_code == 404:
-            return "❌ NOT ROUTED", response.status_code, "Route not configured in APISIX"
+            return (
+                "❌ NOT ROUTED",
+                response.status_code,
+                "Route not configured in APISIX",
+            )
         elif response.status_code in [401, 403]:
-            return "✅ ROUTED", response.status_code, "Authentication required (expected)"
+            return (
+                "✅ ROUTED",
+                response.status_code,
+                "Authentication required (expected)",
+            )
         elif response.status_code == 200:
             return "✅ ROUTED", response.status_code, "Accessible"
         else:

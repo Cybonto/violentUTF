@@ -61,7 +61,7 @@ docker compose up -d
 
 ### 3. Start ViolentUTF API
 ```bash
-cd ../violentutf_api  
+cd ../violentutf_api
 docker compose up -d
 ```
 
@@ -694,7 +694,7 @@ Configure routes to external services:
 
 **🔒 Security Note**: Always use the APISIX gateway for production deployments. Direct FastAPI access should be blocked by firewall rules and container network isolation.
 
-**📋 Best Practices**: 
+**📋 Best Practices**:
 - Regularly update APISIX admin keys
 - Monitor gateway logs for suspicious activity
 - Use HTTPS in production environments

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Real integration test for Simple Chat with MCP features
 """
@@ -25,7 +31,7 @@ def test_simple_chat_starts_without_errors():
     process = None
     try:
         # Start Simple Chat
-        process = subprocess.Popen(
+        process = subprocess.Popen(  # nosec B603 - controlled streamlit command
             ["python3", "-m", "streamlit", "run", "pages/Simple_Chat.py"],
             cwd=os.path.join(os.path.dirname(__file__), "..", "violentutf"),
             env=env,
@@ -78,6 +84,7 @@ def test_simple_chat_starts_without_errors():
 def test_mcp_imports_in_context():
     """Test that MCP imports work in the Simple Chat context"""
     test_script = """
+
 import sys
 import os
 sys.path.insert(0, 'violentutf')
@@ -94,8 +101,11 @@ analyzer = ContextAnalyzer()
 print("All imports successful")
 """
 
-    result = subprocess.run(
-        ["python3", "-c", test_script], cwd=os.path.dirname(os.path.dirname(__file__)), capture_output=True, text=True
+    result = subprocess.run(  # nosec B603 - controlled python test script
+        ["python3", "-c", test_script],
+        cwd=os.path.dirname(os.path.dirname(__file__)),
+        capture_output=True,
+        text=True,
     )
 
     assert result.returncode == 0, f"Import test failed: {result.stderr}"

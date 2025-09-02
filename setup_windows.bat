@@ -81,41 +81,41 @@ REM --- Backup user configurations function ---
 :backup_user_configs
     echo Backing up user configurations...
     if not exist "%TEMP%\vutf_backup" mkdir "%TEMP%\vutf_backup"
-    
+
     REM Backup AI tokens (user's API keys)
     if exist "!AI_TOKENS_FILE!" copy "!AI_TOKENS_FILE!" "%TEMP%\vutf_backup\" >nul
-    
+
     REM Backup any custom APISIX routes
     if exist "apisix\conf\custom_routes.yml" copy "apisix\conf\custom_routes.yml" "%TEMP%\vutf_backup\" >nul
-    
+
     REM Backup user application data preferences
     if exist "violentutf\app_data" (
         powershell -Command "if (Test-Path 'violentutf\app_data') { Compress-Archive -Path 'violentutf\app_data' -DestinationPath '%TEMP%\vutf_backup\app_data_backup.zip' -Force -ErrorAction SilentlyContinue }"
     )
-    
+
     echo ✅ User configurations backed up
     goto :eof
 
 REM --- Restore user configurations function ---
 :restore_user_configs
     echo Restoring user configurations...
-    
+
     if exist "%TEMP%\vutf_backup" (
         REM Restore AI tokens
         if exist "%TEMP%\vutf_backup\!AI_TOKENS_FILE!" copy "%TEMP%\vutf_backup\!AI_TOKENS_FILE!" . >nul
-        
+
         REM Restore custom routes
         if exist "%TEMP%\vutf_backup\custom_routes.yml" (
             if not exist "apisix\conf" mkdir "apisix\conf"
             copy "%TEMP%\vutf_backup\custom_routes.yml" "apisix\conf\" >nul
         )
-        
+
         REM Restore user application data if it was backed up
         if exist "%TEMP%\vutf_backup\app_data_backup.zip" (
             if not exist "violentutf" mkdir "violentutf"
             powershell -Command "if (Test-Path '%TEMP%\vutf_backup\app_data_backup.zip') { Expand-Archive -Path '%TEMP%\vutf_backup\app_data_backup.zip' -DestinationPath 'violentutf' -Force -ErrorAction SilentlyContinue }"
         )
-        
+
         rmdir /s /q "%TEMP%\vutf_backup" >nul 2>nul
         echo ✅ User configurations restored
     )
@@ -129,7 +129,7 @@ REM --- Network validation function ---
         echo ❌ Shared network not found, creating...
         docker network create !SHARED_NETWORK_NAME!
     )
-    
+
     REM Verify network connectivity between services
     echo ✅ Network validation completed
     goto :eof
@@ -154,21 +154,21 @@ REM --- JWT consistency check function ---
 :check_jwt_consistency
     echo Checking JWT configuration consistency...
     set "JWT_ISSUES_FOUND=false"
-    
+
     REM Check if JWT_SECRET_KEY exists in main environment
     if exist "violentutf\.env" (
         findstr /C:"JWT_SECRET_KEY" "violentutf\.env" >nul || set "JWT_ISSUES_FOUND=true"
     ) else (
         set "JWT_ISSUES_FOUND=true"
     )
-    
+
     REM Check Streamlit secrets
     if exist "violentutf\.streamlit\secrets.toml" (
         findstr /C:"JWT_SECRET_KEY" "violentutf\.streamlit\secrets.toml" >nul || set "JWT_ISSUES_FOUND=true"
     ) else (
         set "JWT_ISSUES_FOUND=true"
     )
-    
+
     if "!JWT_ISSUES_FOUND!"=="true" (
         echo ⚠️ JWT configuration issues detected - will be fixed during setup
     ) else (
@@ -180,31 +180,31 @@ REM --- Services validation function ---
 :validate_all_services
     echo Validating all services...
     set "ALL_SERVICES_HEALTHY=true"
-    
+
     REM Check Docker
     docker --version >nul 2>nul || (
         echo ❌ Docker not available
         set "ALL_SERVICES_HEALTHY=false"
     )
-    
+
     REM Check Docker Compose
     docker-compose --version >nul 2>nul || docker compose version >nul 2>nul || (
         echo ❌ Docker Compose not available
         set "ALL_SERVICES_HEALTHY=false"
     )
-    
+
     REM Check Python
     python --version >nul 2>nul || (
         echo ❌ Python not available
         set "ALL_SERVICES_HEALTHY=false"
     )
-    
+
     if "!ALL_SERVICES_HEALTHY!"=="true" (
         echo ✅ All core services are available
     ) else (
         echo ❌ Some core services are missing
     )
-    
+
     if "!ALL_SERVICES_HEALTHY!"=="false" exit /b 1
     goto :eof
 
@@ -212,18 +212,18 @@ REM --- System state verification function ---
 :verify_system_state
     echo Verifying final system state...
     set "SYSTEM_READY=true"
-    
+
     REM Check Docker network
     docker network inspect !SHARED_NETWORK_NAME! >nul 2>nul || set "SYSTEM_READY=false"
-    
+
     REM Check key configuration files
     if not exist "violentutf\.env" set "SYSTEM_READY=false"
     if not exist "keycloak\.env" set "SYSTEM_READY=false"
     if not exist "apisix\conf\config.yaml" set "SYSTEM_READY=false"
-    
+
     REM Check Python environment
     if not exist ".vitutf\Scripts\activate.bat" set "SYSTEM_READY=false"
-    
+
     if "!SYSTEM_READY!"=="true" (
         echo ✅ System state verification passed
     ) else (
@@ -235,10 +235,10 @@ REM --- System state verification function ---
 REM --- Cleanup function ---
 :perform_cleanup
     echo Starting cleanup process...
-    
+
     REM 0. Backup user configurations before cleanup
     call :backup_user_configs
-    
+
     set "ORIGINAL_DIR=%cd%"
 
     echo Stopping and removing Keycloak containers...
@@ -283,7 +283,7 @@ REM --- Cleanup function ---
     if exist "violentutf\.env" ( del "violentutf\.env" & echo Removed violentutf\.env )
     if exist "violentutf\.streamlit\secrets.toml" ( del "violentutf\.streamlit\secrets.toml" & echo Removed violentutf\.streamlit\secrets.toml )
     if exist "violentutf_api\fastapi_app\.env" ( del "violentutf_api\fastapi_app\.env" & echo Removed violentutf_api\fastapi_app\.env )
-    
+
     REM Preserve PyRIT memory databases and user app data
     echo Preserving PyRIT memory databases and user data...
     echo ✅ PyRIT memory databases preserved in violentutf/app_data/violentutf/
@@ -485,7 +485,7 @@ REM %5 = Endpoint (for Ollama/WebUI) / API Key for WebUI if different
 REM --- Create APISIX API Key Consumer ---
 :create_apisix_consumer_ps
     echo Creating APISIX consumer with API key authentication...
-    
+
     set "PS_CREATE_CONSUMER=powershell -NoProfile -ErrorAction Stop -Command ^
         $payload = @{ ^
             username = 'violentutf_user'; ^
@@ -507,7 +507,7 @@ REM --- Create APISIX API Key Consumer ---
             Write-Host ('   HTTP Status: ' + $_.Exception.Response.StatusCode.value__ + ' Error: ' + $_.Exception.Message) -ForegroundColor Red; ^
             exit 1; ^
         }"
-    
+
     !PS_CREATE_CONSUMER!
     goto :eof
 
@@ -617,29 +617,29 @@ REM --- Setup AWS Bedrock Routes ---
         echo AWS Bedrock provider disabled. Skipping setup.
         exit /b 0
     )
-    
+
     echo ⚠️  AWS Bedrock integration is currently not supported by APISIX ai-proxy plugin.
     echo    The ai-proxy plugin does not support native AWS SigV4 authentication required for Bedrock.
     echo    Bedrock endpoints are configured in TokenManager for future implementation.
     echo    Use the standalone Bedrock provider in Simple Chat for now.
     exit /b 0
-    
+
     REM Future implementation when AWS SigV4 support is added to APISIX
     if "!AWS_ACCESS_KEY_ID!"=="your_aws_access_key_id_here" (
         echo ⚠️  AWS Bedrock enabled but Access Key ID not configured. Skipping Bedrock setup.
         exit /b 0
     )
-    
+
     if "!AWS_SECRET_ACCESS_KEY!"=="your_aws_secret_access_key_here" (
         echo ⚠️  AWS Bedrock enabled but Secret Access Key not configured. Skipping Bedrock setup.
         exit /b 0
     )
-    
+
     echo Setting up AWS Bedrock routes...
-    
+
     set "BEDROCK_REGION_EFFECTIVE=!BEDROCK_REGION!"
     if not defined BEDROCK_REGION_EFFECTIVE set "BEDROCK_REGION_EFFECTIVE=us-east-1"
-    
+
     set "overall_success=0"
     call :create_bedrock_route_ps "anthropic.claude-opus-4-20250514-v1:0" "/ai/bedrock/claude-opus-4" "!BEDROCK_REGION_EFFECTIVE!" "!AWS_ACCESS_KEY_ID!" "!AWS_SECRET_ACCESS_KEY!"
     if errorlevel 1 set "overall_success=1"
@@ -661,11 +661,11 @@ goto :eof
 REM --- Create AWS Bedrock Route (PowerShell) ---
 :create_bedrock_route_ps
     set "MODEL_NAME=%~1"
-    set "URI_PATH=%~2" 
+    set "URI_PATH=%~2"
     set "REGION=%~3"
     set "ACCESS_KEY=%~4"
     set "SECRET_KEY=%~5"
-    
+
     REM Generate route ID from model name
     set "ROUTE_ID=%MODEL_NAME%"
     set "ROUTE_ID=!ROUTE_ID:.=-!"
@@ -673,10 +673,10 @@ REM --- Create AWS Bedrock Route (PowerShell) ---
     set "ROUTE_ID=!ROUTE_ID:meta-=!"
     set "ROUTE_ID=!ROUTE_ID:amazon-=!"
     set "ROUTE_ID=bedrock-!ROUTE_ID!"
-    
+
     REM Get current date for AWS signature
     for /f %%i in ('powershell -Command "Get-Date -Format 'yyyyMMdd'"') do set "AWS_DATE=%%i"
-    
+
     set "PAYLOAD_SCRIPT=$payload = @{ ^
         'id' = '!ROUTE_ID!'; ^
         'uri' = '!URI_PATH!'; ^
@@ -701,7 +701,7 @@ REM --- Create AWS Bedrock Route (PowerShell) ---
             } ^
         } ^
     }"
-    
+
     set "PS_CREATE_BEDROCK_ROUTE=powershell -NoProfile -ErrorAction Stop -Command ^
         !PAYLOAD_SCRIPT!; ^
         $jsonPayload = $payload | ConvertTo-Json -Depth 10; ^
@@ -714,7 +714,7 @@ REM --- Create AWS Bedrock Route (PowerShell) ---
             Write-Host ('   HTTP Status: ' + $_.Exception.Response.StatusCode.value__ + ' Error: ' + $_.Exception.Message) -ForegroundColor Red; ^
             exit 1; ^
         }"
-    
+
     !PS_CREATE_BEDROCK_ROUTE!
     set "route_creation_result=%errorlevel%"
     if !route_creation_result! equ 0 (
@@ -773,7 +773,7 @@ REM --- Setup AI Providers Enhanced ---
     timeout /t 10 /nobreak >nul
 
     set "setup_errors=0"
-    
+
     REM Create API key consumer first
     echo Creating API key consumer for authentication...
     call :create_apisix_consumer_ps
@@ -781,7 +781,7 @@ REM --- Setup AI Providers Enhanced ---
         echo ❌ Failed to create API key consumer
         set /a setup_errors+=1
     )
-    
+
     call :setup_openai_routes_ps
     if errorlevel 1 set /a setup_errors+=1
     call :setup_anthropic_routes_ps
@@ -808,7 +808,7 @@ REM --- Test AI Routes ---
         try { ^
             (Invoke-RestMethod -Uri '!APISIX_ADMIN_URL!/apisix/admin/routes' -Method Get -Headers @{'X-API-KEY'='!APISIX_ADMIN_KEY!'} -TimeoutSec 5).node.nodes | ForEach-Object { $_.value | Select-Object id, uri, name } | ConvertTo-Json -Depth 3 | Write-Output; ^
         } catch { Write-Host ('❌ Could not list routes. Error: ' + $_.Exception.Message) -ForegroundColor Red; }"
-    
+
     set "TEST_PAYLOAD_JSON={'messages':[{'role':'user','content':'test'}]}"
 
     if /i "!OLLAMA_ENABLED!" equ "true" (
@@ -894,17 +894,17 @@ REM Function to backup and prepare config file from template (enhanced)
 :prepare_config_from_template
     set "template_file=%~1"
     set "target_file=%~2"
-    
+
     REM If target_file not provided, auto-derive by removing .template extension
     if not defined target_file (
         set "target_file=!template_file:.template=!"
     )
-    
+
     if not exist "!template_file!" (
         echo Error: Template file !template_file! not found!
         exit /b 1
     )
-    
+
     REM Create backup with timestamp if target exists
     if exist "!target_file!" (
         set "backup_suffix_date="
@@ -912,7 +912,7 @@ REM Function to backup and prepare config file from template (enhanced)
         copy "!target_file!" "!target_file!.bak!backup_suffix_date!" >nul
         echo Backed up !target_file! to !target_file!.bak!backup_suffix_date!
     )
-    
+
     REM Copy template to target
     copy "!template_file!" "!target_file!" >nul
     echo Created !target_file! from template
@@ -931,7 +931,7 @@ REM Function to replace placeholder in a file with a value using PowerShell
         $placeHolder = '!placeholder!'; ^
         $newValue = '!value_to_insert!'; ^
         (Get-Content $filePath -Raw) -replace [regex]::Escape($placeHolder), $newValue | Set-Content -Path $filePath -NoNewline -Encoding Ascii;
-    
+
     if defined description_for_report if not "!description_for_report!"=="" (
         echo !description_for_report!: !value_to_insert! >> "!SENSITIVE_VALUES_FILE!"
     )
@@ -982,7 +982,7 @@ REM Function-like section to make an authenticated API call to Keycloak using Po
     set "_STATUS_VAR_NAME=%~5"
 
     set "_FULL_URL=!KEYCLOAK_SERVER_URL!/admin!_ENDPOINT_PATH!"
-    
+
     set "PS_API_CALL=powershell -NoProfile -Command ^
         $uri = '!_FULL_URL!'; ^
         $method = '!_METHOD!'; ^
@@ -1009,7 +1009,7 @@ REM Function-like section to make an authenticated API call to Keycloak using Po
             Write-Output ('STATUS_CODE:599'); ^
             Write-Output ('RESPONSE_BODY:Unknown PowerShell error during API call: ' + ($_.Exception.Message -replace \"`r`n\", ' ')); ^
         }"
-    
+
     echo Executing API call: !_METHOD! !_FULL_URL!
 
     set "!_RESPONSE_VAR_NAME%="
@@ -1061,7 +1061,7 @@ REM Enhanced network test function with comprehensive diagnostics
             Write-Host \"HTTP Result: $httpResult\"; ^
             exit 1; ^
         }"
-    
+
     !PS_NETWORK_TEST!
     set "test_status=%errorlevel%"
     exit /b !test_status!
@@ -1070,27 +1070,27 @@ goto :eof
 REM Network diagnostics and recovery function
 :network_diagnostics_and_recovery_ps
     echo Performing additional network diagnostics...
-    
+
     REM Show all networks and their containers
     echo Docker Networks:
     docker network ls
-    
+
     REM Check containers on the shared network
     echo Containers on !SHARED_NETWORK_NAME!:
     docker network inspect !SHARED_NETWORK_NAME! --format "{{range .Containers}}{{.Name}} {{end}}"
-    
+
     REM Check if services can be resolved by DNS
     echo DNS resolution test:
     docker run --rm --network=!SHARED_NETWORK_NAME! alpine nslookup keycloak 2>nul || echo "Failed to resolve keycloak"
-    
+
     REM Check if APISIX container is properly connected to network
     set "APISIX_CONTAINER_ID="
     for /f "delims=" %%i in ('docker ps --filter "name=apisix" --format "{{.ID}}" 2^>nul') do set "APISIX_CONTAINER_ID=%%i"
-    
+
     if defined APISIX_CONTAINER_ID (
         echo Checking APISIX container network connections...
         docker inspect --format="{{range $net,$v := .NetworkSettings.Networks}}{{$net}} {{end}}" !APISIX_CONTAINER_ID!
-        
+
         REM Check if APISIX is connected to shared network
         docker inspect --format="{{.NetworkSettings.Networks.!SHARED_NETWORK_NAME!}}" !APISIX_CONTAINER_ID! | findstr "null" >nul
         if !errorlevel! equ 0 (
@@ -1099,7 +1099,7 @@ REM Network diagnostics and recovery function
             docker network connect !SHARED_NETWORK_NAME! !APISIX_CONTAINER_ID!
             if !errorlevel! equ 0 (
                 echo ✅ Reconnected APISIX container to !SHARED_NETWORK_NAME!
-                
+
                 REM Retry connectivity test
                 echo Retrying connectivity test after network reconnection...
                 call :test_network_connectivity_ps apisix keycloak 8080
@@ -1109,7 +1109,7 @@ REM Network diagnostics and recovery function
             )
         )
     )
-    
+
     exit /b 1
 goto :eof
 
@@ -1123,11 +1123,11 @@ REM Function to run a test and record the result
 
     echo Testing: !test_name!
     echo   Command: !test_command!
-    
+
     REM Execute command and capture output (stdout and stderr)
     cmd /c "!test_command!" > "!temp_output_file!" 2>&1
     set "test_exit_code=%errorlevel%"
-    
+
     set "output_matched=false"
     REM Check if output contains expected pattern (case-insensitive for status codes)
     findstr /R /I /C:"!expected_match_pattern!" "!temp_output_file!" >nul
@@ -1153,11 +1153,11 @@ REM Function to run a test and record the result
 REM --- Create FastAPI Route ---
 :create_fastapi_route_ps
     echo Creating APISIX route for FastAPI service...
-    
+
     set "ROUTE_NAME=violentutf-api"
     set "ROUTE_URI=/api/*"
     set "UPSTREAM_URL=violentutf_api:8000"
-    
+
     set "PS_CREATE_FASTAPI_ROUTE=powershell -NoProfile -ErrorAction Stop -Command ^
         $routeConfig = @{ ^
             uri = '!ROUTE_URI!'; ^
@@ -1213,7 +1213,7 @@ REM --- Create FastAPI Route ---
             Write-Host ('Response: ' + $_.Exception.Message) -ForegroundColor Red; ^
             exit 1; ^
         }"
-    
+
     !PS_CREATE_FASTAPI_ROUTE!
     set "route_creation_result=%errorlevel%"
     if !route_creation_result! equ 0 (
@@ -1224,7 +1224,7 @@ REM --- Create FastAPI Route ---
 REM --- Create FastAPI Documentation Routes ---
 :create_fastapi_docs_routes_ps
     echo Creating FastAPI documentation routes...
-    
+
     REM Create /api/docs route
     set "DOCS_ROUTE_CONFIG=$docsConfig = @{ ^
         'uri' = '/api/docs'; ^
@@ -1248,7 +1248,7 @@ REM --- Create FastAPI Documentation Routes ---
             } ^
         } ^
     }"
-    
+
     set "PS_CREATE_DOCS_ROUTE=powershell -NoProfile -ErrorAction Stop -Command ^
         !DOCS_ROUTE_CONFIG!; ^
         $jsonPayload = $docsConfig | ConvertTo-Json -Depth 10; ^
@@ -1261,10 +1261,10 @@ REM --- Create FastAPI Documentation Routes ---
             Write-Host ('Status: ' + $_.Exception.Response.StatusCode.value__) -ForegroundColor Yellow; ^
             exit 1; ^
         }"
-    
+
     !PS_CREATE_DOCS_ROUTE!
     set "docs_result=%errorlevel%"
-    
+
     REM Create /api/redoc route
     set "REDOC_ROUTE_CONFIG=$redocConfig = @{ ^
         'uri' = '/api/redoc'; ^
@@ -1288,7 +1288,7 @@ REM --- Create FastAPI Documentation Routes ---
             } ^
         } ^
     }"
-    
+
     set "PS_CREATE_REDOC_ROUTE=powershell -NoProfile -ErrorAction Stop -Command ^
         !REDOC_ROUTE_CONFIG!; ^
         $jsonPayload = $redocConfig | ConvertTo-Json -Depth 10; ^
@@ -1301,17 +1301,17 @@ REM --- Create FastAPI Documentation Routes ---
             Write-Host ('Status: ' + $_.Exception.Response.StatusCode.value__) -ForegroundColor Yellow; ^
             exit 1; ^
         }"
-    
+
     !PS_CREATE_REDOC_ROUTE!
     set "redoc_result=%errorlevel%"
-    
+
     if !docs_result! equ 0 (
         echo FastAPI Docs: /api/docs -> violentutf_api:8000 >> "!CREATED_AI_ROUTES_FILE!"
     )
     if !redoc_result! equ 0 (
         echo FastAPI ReDoc: /api/redoc -> violentutf_api:8000 >> "!CREATED_AI_ROUTES_FILE!"
     )
-    
+
     echo FastAPI documentation routes configured.
     goto :eof
 
@@ -1320,11 +1320,11 @@ REM --- Create FastAPI Client in Keycloak ---
     set "client_id=%~1"
     set "client_secret=%~2"
     set "redirect_uri=%~3"
-    
+
     echo Creating FastAPI client in Keycloak...
-    
+
     set "TEMP_FASTAPI_CLIENT_FILE=%TEMP%\fastapi-client.json"
-    
+
     REM Create FastAPI client configuration JSON
     powershell -NoProfile -Command ^
         $clientConfig = @{ ^
@@ -1420,10 +1420,10 @@ REM --- Create FastAPI Client in Keycloak ---
             'optionalClientScopes' = @('address', 'phone', 'offline_access', 'microprofile-jwt') ^
         }; ^
         $clientConfig | ConvertTo-Json -Depth 10 | Set-Content -Path '!TEMP_FASTAPI_CLIENT_FILE!' -Encoding UTF8
-    
+
     REM Create the client via API
     call :make_api_call_ps "POST" "/realms/!VUTF_REALM_NAME!/clients" "!TEMP_FASTAPI_CLIENT_FILE!" API_FASTAPI_CREATE_RESP API_FASTAPI_CREATE_STATUS
-    
+
     if "!API_FASTAPI_CREATE_STATUS!"=="201" (
         echo ✅ FastAPI client created successfully in Keycloak.
         del "!TEMP_FASTAPI_CLIENT_FILE!"
@@ -1712,7 +1712,7 @@ if "!KEYCLOAK_SETUP_NEEDED!"=="true" (
     echo Keycloak stack not found or not running. Proceeding with setup.
     pushd "!KEYCLOAK_ENV_DIR!"
     if errorlevel 1 ( echo Failed to cd into !KEYCLOAK_ENV_DIR!; goto :eof_error )
-    
+
     echo Ensuring Keycloak docker-compose.yml has proper network configuration...
     call :ensure_network_in_compose "docker-compose.yml" "!KEYCLOAK_SERVICE_NAME_IN_COMPOSE!"
 
@@ -1754,7 +1754,7 @@ if "!KEYCLOAK_SETUP_NEEDED!"=="true" (
     echo Step 4: Importing Keycloak realm via API...
     set "REALM_EXPORT_FILE_PATH=!KEYCLOAK_ENV_DIR!\realm-export.json"
     if not exist "!REALM_EXPORT_FILE_PATH!" ( echo Error: !REALM_EXPORT_FILE_PATH! not found! & goto :eof_error )
-    
+
     set "TARGET_REALM_NAME="
     for /f "delims=" %%N in ('powershell -NoProfile -Command "(Get-Content -Path '!REALM_EXPORT_FILE_PATH!' -Raw | ConvertFrom-Json).realm"') do set "TARGET_REALM_NAME=%%N"
     if not defined TARGET_REALM_NAME ( echo Error: Could not extract realm name. & goto :eof_error )
@@ -1785,7 +1785,7 @@ if "!KEYCLOAK_SETUP_NEEDED!"=="true" (
 
     call :make_api_call_ps "GET" "/realms/!VUTF_REALM_NAME!/clients?clientId=!VUTF_CLIENT_ID_TO_CONFIGURE!" "" API_CLIENT_INFO_RESP API_CLIENT_INFO_STATUS
     if not "!API_CLIENT_INFO_STATUS!"=="200" ( echo Error getting client info. Status: !API_CLIENT_INFO_STATUS! & goto :eof_error )
-    
+
     set "KC_CLIENT_UUID="
     for /f "delims=" %%U in ('powershell -NoProfile -Command "(!API_CLIENT_INFO_RESP! | ConvertFrom-Json).[0].id"') do set "KC_CLIENT_UUID=%%U"
     if not defined KC_CLIENT_UUID ( echo Error: Client not found via API. & goto :eof_error )
@@ -1794,13 +1794,13 @@ if "!KEYCLOAK_SETUP_NEEDED!"=="true" (
     echo Updating client secret...
     call :make_api_call_ps "GET" "/realms/!VUTF_REALM_NAME!/clients/!KC_CLIENT_UUID!" "" API_CLIENT_GET_RESP API_CLIENT_GET_STATUS
     if not "!API_CLIENT_GET_STATUS!"=="200" ( echo Error: Failed to get client configuration. Status: !API_CLIENT_GET_STATUS! & goto :eof_error )
-    
+
     set "TEMP_CLIENT_CONFIG_FILE=%TEMP%\client-update.json"
     powershell -NoProfile -Command ^
         $clientConfig = !API_CLIENT_GET_RESP! | ConvertFrom-Json; ^
         $clientConfig.secret = '!VIOLENTUTF_CLIENT_SECRET!'; ^
         $clientConfig | ConvertTo-Json -Depth 10 | Set-Content -Path '!TEMP_CLIENT_CONFIG_FILE!' -Encoding UTF8
-    
+
     call :make_api_call_ps "PUT" "/realms/!VUTF_REALM_NAME!/clients/!KC_CLIENT_UUID!" "!TEMP_CLIENT_CONFIG_FILE!" API_CLIENT_UPDATE_RESP API_CLIENT_UPDATE_STATUS
     if not "!API_CLIENT_UPDATE_STATUS!"=="204" ( echo Error: Failed to update client secret. Status: !API_CLIENT_UPDATE_STATUS! & goto :eof_error )
     echo Successfully updated client '!VUTF_CLIENT_ID_TO_CONFIGURE!' with pre-generated secret.
@@ -1810,21 +1810,21 @@ if "!KEYCLOAK_SETUP_NEEDED!"=="true" (
     echo Updating APISIX client secret...
     call :make_api_call_ps "GET" "/realms/!VUTF_REALM_NAME!/clients?clientId=apisix" "" API_APISIX_CLIENT_RESP API_APISIX_CLIENT_STATUS
     if not "!API_APISIX_CLIENT_STATUS!"=="200" ( echo Error: Failed to find APISIX client. Status: !API_APISIX_CLIENT_STATUS! & goto :eof_error )
-    
+
     set "APISIX_CLIENT_UUID="
     for /f "delims=" %%U in ('powershell -NoProfile -Command "(!API_APISIX_CLIENT_RESP! | ConvertFrom-Json).[0].id"') do set "APISIX_CLIENT_UUID=%%U"
     if not defined APISIX_CLIENT_UUID ( echo Error: APISIX client not found in realm. & goto :eof_error )
-    
+
     echo Updating APISIX client to use pre-generated secret...
     call :make_api_call_ps "GET" "/realms/!VUTF_REALM_NAME!/clients/!APISIX_CLIENT_UUID!" "" API_APISIX_GET_RESP API_APISIX_GET_STATUS
     if not "!API_APISIX_GET_STATUS!"=="200" ( echo Error: Failed to get APISIX client configuration. Status: !API_APISIX_GET_STATUS! & goto :eof_error )
-    
+
     set "TEMP_APISIX_CONFIG_FILE=%TEMP%\apisix-client-update.json"
     powershell -NoProfile -Command ^
         $clientConfig = !API_APISIX_GET_RESP! | ConvertFrom-Json; ^
         $clientConfig.secret = '!APISIX_CLIENT_SECRET!'; ^
         $clientConfig | ConvertTo-Json -Depth 10 | Set-Content -Path '!TEMP_APISIX_CONFIG_FILE!' -Encoding UTF8
-    
+
     call :make_api_call_ps "PUT" "/realms/!VUTF_REALM_NAME!/clients/!APISIX_CLIENT_UUID!" "!TEMP_APISIX_CONFIG_FILE!" API_APISIX_UPDATE_RESP API_APISIX_UPDATE_STATUS
     if not "!API_APISIX_UPDATE_STATUS!"=="204" ( echo Error: Failed to update APISIX client secret. Status: !API_APISIX_UPDATE_STATUS! & goto :eof_error )
     echo Successfully updated APISIX client with pre-generated secret.
@@ -1864,23 +1864,23 @@ if "!KEYCLOAK_SETUP_NEEDED!"=="true" (
     echo Assigning ai-api-access role to user '!KEYCLOAK_APP_USERNAME!'...
     call :make_api_call_ps "GET" "/realms/!VUTF_REALM_NAME!/roles/ai-api-access" "" API_ROLE_RESP API_ROLE_STATUS
     if not "!API_ROLE_STATUS!"=="200" ( echo Error: Failed to find ai-api-access role. Status: !API_ROLE_STATUS! & goto :eof_error )
-    
+
     set "AI_API_ACCESS_ROLE_ID="
     set "AI_API_ACCESS_ROLE_NAME="
     for /f "delims=" %%I in ('powershell -NoProfile -Command "(!API_ROLE_RESP! | ConvertFrom-Json).id"') do set "AI_API_ACCESS_ROLE_ID=%%I"
     for /f "delims=" %%N in ('powershell -NoProfile -Command "(!API_ROLE_RESP! | ConvertFrom-Json).name"') do set "AI_API_ACCESS_ROLE_NAME=%%N"
-    
+
     if not defined AI_API_ACCESS_ROLE_ID ( echo Error: ai-api-access role not found or invalid ID. & goto :eof_error )
-    
+
     set "ROLE_ASSIGNMENT_PAYLOAD=[{'id':'!AI_API_ACCESS_ROLE_ID!', 'name':'!AI_API_ACCESS_ROLE_NAME!'}]"
     call :make_api_call_ps "POST" "/realms/!VUTF_REALM_NAME!/users/!USER_EXISTS_ID!/role-mappings/realm" "!ROLE_ASSIGNMENT_PAYLOAD!" API_ROLE_ASSIGN_RESP API_ROLE_ASSIGN_STATUS
-    
+
     if not "!API_ROLE_ASSIGN_STATUS!"=="204" ( echo Error: Failed to assign ai-api-access role to user. Status: !API_ROLE_ASSIGN_STATUS! & goto :eof_error )
     echo Successfully assigned ai-api-access role to user '!KEYCLOAK_APP_USERNAME!'.
 
     echo Step 7: Secrets already configured.
     echo Keycloak client and user configuration complete via API.
-    
+
     REM Create FastAPI client in Keycloak
     echo Creating FastAPI client in Keycloak...
     call :create_fastapi_client_ps "!FASTAPI_CLIENT_ID!" "!FASTAPI_CLIENT_SECRET!" "http://localhost:8000/*"
@@ -1889,10 +1889,10 @@ if "!KEYCLOAK_SETUP_NEEDED!"=="true" (
     ) else (
         echo ⚠️ Warning: FastAPI client creation failed, but continuing...
     )
-    
+
 ) else (
     echo Skipped Keycloak setup steps 4-7 as stack was already running.
-    
+
     REM Still try to create FastAPI client if Keycloak is running
     if "!KEYCLOAK_SETUP_NEEDED!"=="false" (
         call :get_keycloak_admin_token_ps
@@ -2473,10 +2473,10 @@ call :launch_streamlit_background
 goto :skip_launch_function
 :launch_streamlit_background
     echo Launching ViolentUTF in background...
-    
+
     set "APP_LAUNCHED=false"
     set "STREAMLIT_PID="
-    
+
     if exist "violentutf\Home.py" (
         set "APP_PATH=violentutf\Home.py"
         set "APP_DIR=violentutf"
@@ -2502,14 +2502,14 @@ goto :skip_launch_function
         set "APP_LAUNCHED=false"
         goto :eof
     )
-    
+
     REM Wait a moment for process to start
     timeout /t 2 /nobreak >nul
-    
+
     if exist "violentutf_logs\streamlit_pid.txt" (
         set /p STREAMLIT_PID=<violentutf_logs\streamlit_pid.txt
         del violentutf_logs\streamlit_pid.txt
-        
+
         REM Check if process is still running
         tasklist /FI "PID eq !STREAMLIT_PID!" 2>nul | find "!STREAMLIT_PID!" >nul
         if !errorlevel! equ 0 (
@@ -2531,11 +2531,11 @@ goto :skip_launch_function
 :skip_launch_function
 
 echo. & echo ==========================================
-if /i "!APP_LAUNCHED!"=="true" ( 
+if /i "!APP_LAUNCHED!"=="true" (
     echo SETUP COMPLETED SUCCESSFULLY!
     echo ViolentUTF is launching in the background.
-) else ( 
-    echo SETUP COMPLETED! 
+) else (
+    echo SETUP COMPLETED!
     echo (Application not auto-started)
 )
 echo ==========================================
@@ -2723,7 +2723,7 @@ if exist "keycloak" (
     cd ..
 )
 
-REM Stop and remove APISIX containers  
+REM Stop and remove APISIX containers
 echo Stopping and removing APISIX containers...
 if exist "apisix" (
     cd apisix

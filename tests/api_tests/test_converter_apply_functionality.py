@@ -1,5 +1,12 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
-Test suite for converter apply functionality
+Test suite for converter apply functionality.
+
 Tests the ability to apply converters to datasets and create new datasets with converted prompts
 """
 
@@ -14,7 +21,7 @@ import pytest
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from tests.utils.keycloak_auth import keycloak_auth
+from tests.utils.keycloak_auth_helper import keycloak_auth
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +68,7 @@ class TestConverterApplyFunctionality:
     """Test converter apply functionality"""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self: "TestConverterApplyFunctionality") -> None:
         """Set up test environment"""
         self.headers = get_auth_headers()
         self.created_resources = {"datasets": [], "converters": []}
@@ -69,25 +76,25 @@ class TestConverterApplyFunctionality:
         # Cleanup
         self.cleanup_resources()
 
-    def cleanup_resources(self):
+    def cleanup_resources(self: "TestConverterApplyFunctionality") -> None:
         """Clean up created resources after tests"""
         import requests
 
         # Delete datasets
         for dataset_id in self.created_resources["datasets"]:
             try:
-                requests.delete(f"{API_BASE}/datasets/{dataset_id}", headers=self.headers)
-            except Exception:
-                pass
+                requests.delete(f"{API_BASE}/datasets/{dataset_id}", headers=self.headers, timeout=30)
+            except Exception as e:
+                print(f"Warning: Error in cleanup: {e}")
 
         # Delete converters
         for converter_id in self.created_resources["converters"]:
             try:
-                requests.delete(f"{API_BASE}/converters/{converter_id}", headers=self.headers)
-            except Exception:
-                pass
+                requests.delete(f"{API_BASE}/converters/{converter_id}", headers=self.headers, timeout=30)
+            except Exception as e:
+                print(f"Warning: Error in cleanup: {e}")
 
-    def test_converter_apply_copy_mode(self):
+    def test_converter_apply_copy_mode(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter in COPY mode to create new dataset"""
         import requests
 
@@ -99,7 +106,7 @@ class TestConverterApplyFunctionality:
             "config": {},
         }
 
-        response = requests.post(f"{API_BASE}/datasets", json=dataset_data, headers=self.headers)
+        response = requests.post(f"{API_BASE}/datasets", json=dataset_data, headers=self.headers, timeout=30)
         print(f"\nDataset creation response status: {response.status_code}")
         print(f"Request URL: {response.url}")
         print(f"Request headers: {self.headers}")
@@ -116,7 +123,7 @@ class TestConverterApplyFunctionality:
             "parameters": {"append_description": True},
         }
 
-        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers)
+        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers, timeout=30)
         assert response.status_code == 200, f"Failed to create converter: {response.text}"
         converter_id = response.json()["converter"]["id"]
         self.created_resources["converters"].append(converter_id)
@@ -129,7 +136,9 @@ class TestConverterApplyFunctionality:
             "save_to_memory": False,
         }
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         print(f"\nConverter apply response status: {response.status_code}")
         if response.status_code != 200:
             print(f"Response text: {response.text}")
@@ -147,7 +156,7 @@ class TestConverterApplyFunctionality:
 
         # Step 4: Verify new dataset exists
         # Note: Dataset GET endpoint has an issue - skipping for now
-        # response = requests.get(f"{API_BASE}/datasets/{result['dataset_id']}", headers=self.headers)
+        # response = requests.get(f"{API_BASE}/datasets/{result['dataset_id']}", headers=self.headers, timeout=30)
         # assert response.status_code == 200
         # new_dataset = response.json()
         # assert new_dataset["name"] == apply_data["new_dataset_name"]
@@ -155,7 +164,7 @@ class TestConverterApplyFunctionality:
 
         logger.info(f"Successfully applied converter in COPY mode, created dataset: {result['dataset_id']}")
 
-    def test_converter_apply_overwrite_mode(self):
+    def test_converter_apply_overwrite_mode(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter in OVERWRITE mode to replace dataset prompts"""
         import requests
 
@@ -167,7 +176,7 @@ class TestConverterApplyFunctionality:
             "config": {},
         }
 
-        response = requests.post(f"{API_BASE}/datasets", json=dataset_data, headers=self.headers)
+        response = requests.post(f"{API_BASE}/datasets", json=dataset_data, headers=self.headers, timeout=30)
         assert response.status_code == 200, f"Failed to create dataset: {response.text}"
         original_dataset = response.json()["dataset"]
         dataset_id = original_dataset["id"]
@@ -180,7 +189,7 @@ class TestConverterApplyFunctionality:
             "parameters": {"append_description": False},
         }
 
-        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers)
+        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers, timeout=30)
         assert response.status_code == 200, f"Failed to create converter: {response.text}"
         converter_id = response.json()["converter"]["id"]
         self.created_resources["converters"].append(converter_id)
@@ -188,7 +197,9 @@ class TestConverterApplyFunctionality:
         # Step 3: Apply converter in OVERWRITE mode
         apply_data = {"dataset_id": dataset_id, "mode": "overwrite", "save_to_memory": False}
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         assert response.status_code == 200, f"Failed to apply converter: {response.text}"
 
         result = response.json()
@@ -202,9 +213,9 @@ class TestConverterApplyFunctionality:
         if new_dataset_id != dataset_id:
             self.created_resources["datasets"].append(new_dataset_id)
 
-        logger.info(f"Successfully applied converter in OVERWRITE mode, dataset ID: {new_dataset_id}")
+        logger.info("Successfully applied converter in OVERWRITE mode, dataset ID: %s", new_dataset_id)
 
-    def test_converter_apply_with_parameters(self):
+    def test_converter_apply_with_parameters(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter with specific parameters"""
         import requests
 
@@ -216,7 +227,7 @@ class TestConverterApplyFunctionality:
             "config": {},
         }
 
-        response = requests.post(f"{API_BASE}/datasets", json=dataset_data, headers=self.headers)
+        response = requests.post(f"{API_BASE}/datasets", json=dataset_data, headers=self.headers, timeout=30)
         assert response.status_code == 200, f"Failed to create dataset: {response.text}"
         dataset_id = response.json()["dataset"]["id"]
         self.created_resources["datasets"].append(dataset_id)
@@ -228,7 +239,7 @@ class TestConverterApplyFunctionality:
             "parameters": {"caesar_offset": 7, "append_description": True},
         }
 
-        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers)
+        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers, timeout=30)
         assert response.status_code == 200, f"Failed to create converter: {response.text}"
         converter_id = response.json()["converter"]["id"]
         self.created_resources["converters"].append(converter_id)
@@ -237,7 +248,7 @@ class TestConverterApplyFunctionality:
         preview_data = {"dataset_id": dataset_id, "num_samples": 3}
 
         response = requests.post(
-            f"{API_BASE}/converters/{converter_id}/preview", json=preview_data, headers=self.headers
+            f"{API_BASE}/converters/{converter_id}/preview", json=preview_data, headers=self.headers, timeout=30
         )
         assert response.status_code == 200, f"Failed to preview converter: {response.text}"
         preview_result = response.json()
@@ -251,7 +262,9 @@ class TestConverterApplyFunctionality:
             "save_to_memory": False,
         }
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         assert response.status_code == 200, f"Failed to apply converter: {response.text}"
 
         result = response.json()
@@ -262,7 +275,7 @@ class TestConverterApplyFunctionality:
 
         logger.info("Successfully applied_Caesar_cipher converter with offset 7")
 
-    def test_converter_apply_invalid_dataset(self):
+    def test_converter_apply_invalid_dataset(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter to non-existent dataset"""
         import requests
 
@@ -273,7 +286,7 @@ class TestConverterApplyFunctionality:
             "parameters": {"append_description": True},
         }
 
-        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers)
+        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers, timeout=30)
         assert response.status_code == 200
         converter_id = response.json()["converter"]["id"]
         self.created_resources["converters"].append(converter_id)
@@ -281,7 +294,9 @@ class TestConverterApplyFunctionality:
         # Try to apply to non-existent dataset
         apply_data = {"dataset_id": "non-existent-dataset-id", "mode": "copy", "new_dataset_name": "Should_Fail"}
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         print(f"\nInvalid dataset response: {response.status_code}")
         print(f"Response body: {response.text}")
         # Note: Current implementation creates mock data for non-existent datasets
@@ -289,7 +304,7 @@ class TestConverterApplyFunctionality:
         # In a real implementation, this should return 404
         assert response.status_code in [200, 404, 500]  # Accept mock behavior for now
 
-    def test_converter_apply_missing_new_name_for_copy(self):
+    def test_converter_apply_missing_new_name_for_copy(self: "TestConverterApplyFunctionality") -> None:
         """Test applying converter in COPY mode without new dataset name"""
         import requests
 
@@ -301,7 +316,7 @@ class TestConverterApplyFunctionality:
             "config": {},
         }
 
-        response = requests.post(f"{API_BASE}/datasets", json=dataset_data, headers=self.headers)
+        response = requests.post(f"{API_BASE}/datasets", json=dataset_data, headers=self.headers, timeout=30)
         assert response.status_code == 200
         dataset_id = response.json()["dataset"]["id"]
         self.created_resources["datasets"].append(dataset_id)
@@ -312,7 +327,7 @@ class TestConverterApplyFunctionality:
             "parameters": {"start_value": 0x1D400},
         }
 
-        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers)
+        response = requests.post(f"{API_BASE}/converters", json=converter_data, headers=self.headers, timeout=30)
         assert response.status_code == 200
         converter_id = response.json()["converter"]["id"]
         self.created_resources["converters"].append(converter_id)
@@ -324,7 +339,9 @@ class TestConverterApplyFunctionality:
             # Missing new_dataset_name
         }
 
-        response = requests.post(f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers)
+        response = requests.post(
+            f"{API_BASE}/converters/{converter_id}/apply", json=apply_data, headers=self.headers, timeout=30
+        )
         print(f"\nMissing name response: {response.status_code}")
         print(f"Response body: {response.text}")
         # Check if validation error or success (implementation might have different behavior)

@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
-"""
-Validates that regex patterns haven't been corrupted by automated tools.
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Validates that regex patterns haven't been corrupted by automated tools.
+
 This script is designed to be run in CI/CD pipelines and pre-commit hooks.
 """
-import os
+
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 # ANSI color codes for output
 RED = "\033[91m"
@@ -17,16 +24,25 @@ RESET = "\033[0m"
 # Invalid patterns that indicate corruption
 INVALID_PATTERNS = [
     # Regex patterns with spaces in character ranges
-    (r"\[[A-Za-z0-9]*\s+-\s+[A-Za-z0-9]*\]", "Spaces in character range (e.g., [A - Z])"),
-    (r"\[[a-z]*\s+-\s+[a-z]*\]", "Spaces in lowercase range (e.g., [a - z])"),
-    (r"\[[A-Z]*\s+-\s+[A-Z]*\]", "Spaces in uppercase range (e.g., [A - Z])"),
-    (r"\[[0-9]*\s+-\s+[0-9]*\]", "Spaces in digit range (e.g., [0 - 9])"),
+    (
+        r"(?<![\w\]])\[[A-Za-z]+\s+-\s+[A-Za-z]+\]",
+        "Spaces in character range (e.g., [A-Z])",
+    ),
+    (r"(?<![\w\]])\[[a-z]+\s+-\s+[a-z]+\]", "Spaces in lowercase range (e.g., [a-z])"),
+    (r"(?<![\w\]])\[[A-Z]+\s+-\s+[A-Z]+\]", "Spaces in uppercase range (e.g., [A-Z])"),
+    (r"(?<![\w\]])\[[0-9]+\s+-\s+[0-9]+\]", "Spaces in digit range (e.g., [0-9])"),
     # Content-Type strings with spaces (more specific patterns)
-    (r'"(text|application|image|video|audio)\s+/\s+[^"]+"', 'Spaces in quoted content type (e.g., "text / plain")'),
-    (r"'(text|application|image|video|audio)\s+/\s+[^']+'", "Spaces in quoted content type (e.g., 'text / plain')"),
+    (
+        r'"(text|application|image|video|audio)\s+/\s+[^"]+"',
+        "Spaces in quoted content type (should be no spaces)",
+    ),
+    (
+        r"'(text|application|image|video|audio)\s+/\s+[^']+'",
+        "Spaces in quoted content type (should be no spaces)",
+    ),
     # Encoding strings with spaces
-    (r'"utf\s+-\s+8"', 'Spaces in UTF-8 string ("utf - 8")'),
-    (r"'utf\s+-\s+8'", "Spaces in UTF-8 string ('utf - 8')"),
+    (r'"utf\s+-\s+8"', "Spaces in UTF-8 string (should be utf-8)"),
+    (r"'utf\s+-\s+8'", "Spaces in UTF-8 string (should be utf-8)"),
     (r'\.encode\(["\']utf\s+-\s+8["\']\)', "Spaces in encode() call"),
     (r'\.decode\(["\']utf\s+-\s+8["\']\)', "Spaces in decode() call"),
 ]
@@ -45,7 +61,7 @@ EXCLUDE_PATTERNS = [
 ]
 
 
-def should_check_file(filepath):
+def should_check_file(filepath: str) -> bool:
     """Determine if a file should be checked."""
     path = Path(filepath)
 
@@ -58,9 +74,9 @@ def should_check_file(filepath):
     return path.suffix == ".py"
 
 
-def check_file(filepath):
+def check_file(filepath: str) -> list[dict[str, Any] | str]:
     """Check a file for corrupted regex patterns."""
-    errors = []
+    errors: list[dict[str, Any] | str] = []
 
     try:
         with open(filepath, "r", encoding="utf-8") as f:
@@ -93,8 +109,8 @@ def check_file(filepath):
     return errors
 
 
-def main(files):
-    """Main function to check files."""
+def main(files: list[str]) -> int:
+    """Check files for corrupted regex patterns."""
     all_errors = []
     files_checked = 0
 
@@ -110,7 +126,7 @@ def main(files):
         print(f"\nFound {len(all_errors)} issue(s) in {files_checked} file(s):\n")
 
         # Group errors by file
-        errors_by_file = {}
+        errors_by_file: dict[str, list] = {}
         for error in all_errors:
             if isinstance(error, dict):
                 file = error["file"]
@@ -121,20 +137,21 @@ def main(files):
                 print(f"  {error}")
 
         # Print grouped errors
-        for file, errors in errors_by_file.items():
+        for file, file_errors in errors_by_file.items():
             print(f"{YELLOW}📄 {file}:{RESET}")
-            for error in errors:
-                print(f"  Line {error['line']}: {error['description']}")
-                print(f"    Found: {error['pattern']}")
-                print(f"    Code: {error['content'][:80]}...")
+            for error in file_errors:
+                if isinstance(error, dict):
+                    print(f"  Line {error['line']}: {error['description']}")
+                    print(f"    Found: {error['pattern']}")
+                    print(f"    Code: {error['content'][:80]}...")
                 print()
 
         print(f"{RED}Please fix these issues before committing.{RESET}")
         print("\nCommon fixes:")
-        print("  - [A - Z] → [A-Z]")
-        print("  - [0 - 9] → [0-9]")
-        print('  - "text / plain" → "text/plain"')
-        print('  - "utf - 8" → "utf-8"')
+        print("  - Remove spaces in character ranges: [A-Z]")
+        print("  - Remove spaces in digit ranges: [0-9]")
+        print("  - Remove spaces in content types: text/plain")
+        print("  - Remove spaces in encoding: utf-8")
 
         return 1
     else:

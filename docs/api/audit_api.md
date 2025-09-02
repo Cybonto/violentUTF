@@ -1,7 +1,7 @@
 ./# ViolentUTF API Design Audit Report
 
-**Date**: June 9, 2025  
-**Based on**: REST API Optimization Recommendations and analysis of FastAPI routes  
+**Date**: June 9, 2025
+**Based on**: REST API Optimization Recommendations and analysis of FastAPI routes
 **Scope**: Critical architectural and design issues in the ViolentUTF FastAPI implementation
 
 ## 🚨 Critical Issues Found
@@ -19,7 +19,7 @@ raise safe_error_response("Failed to retrieve generator types", status_code=500)
 raise HTTPException(status_code=500, detail=f"Failed to create orchestrator: {str(e)}")
 ```
 
-**Best Practice Violation**: 
+**Best Practice Violation**:
 - **400 Bad Request** should be used for client errors (validation, missing parameters)
 - **500 Internal Server Error** should only be for unexpected server failures
 - **409 Conflict** should be used for resource conflicts (duplicate names)
@@ -51,14 +51,14 @@ if existing_generator:
 ```python
 # NEW: RESTful execution endpoints
 POST /orchestrators/{orchestrator_id}/executions      # Create execution
-GET /orchestrators/{orchestrator_id}/executions       # List executions  
+GET /orchestrators/{orchestrator_id}/executions       # List executions
 GET /orchestrators/{orchestrator_id}/executions/{id}  # Get specific execution
 GET /orchestrators/{orchestrator_id}/executions/{id}/results  # Get results
 ```
 
 **Impact Resolution**: API now follows proper REST resource naming conventions and provides complete CRUD operations for executions.
 
-**✅ Progress Update**: 
+**✅ Progress Update**:
 - Generator and scorer test endpoints have been successfully retired and replaced with orchestrator-based testing patterns
 - Dataset save endpoint (`POST /{dataset_id}/save`) has been eliminated and functionality integrated into RESTful `PUT /{dataset_id}` endpoint
 - Multiple non-RESTful verb-based URIs removed from the API surface
@@ -84,7 +84,7 @@ raise HTTPException(status_code=500, detail=f"Failed to create: {str(e)}")
 raise safe_error_response("Failed to retrieve", status_code=500)
 ```
 
-**Best Practice Violation**: 
+**Best Practice Violation**:
 > "Design a standardized JSON structure for all error responses (accompanying 4xx and 5xx HTTP status codes)."
 
 **Impact**: Clients must implement different error handling logic for different endpoints.
@@ -121,7 +121,7 @@ api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
 api_router.include_router(generators.router, prefix="/generators", tags=["generators"])
 ```
 
-**Best Practice Violation**: 
+**Best Practice Violation**:
 > "Version from the start: Begin versioning your API early in its lifecycle, even if it's initially for internal use only."
 
 **Impact**: Future breaking changes will require complete API redesign or break existing clients.
@@ -133,7 +133,7 @@ api_v1_router = APIRouter(prefix="/v1")
 api_v1_router.include_router(auth.router, prefix="/auth")
 api_v1_router.include_router(generators.router, prefix="/generators")
 
-# main.py  
+# main.py
 app.include_router(api_v1_router, prefix="/api")
 ```
 
@@ -149,12 +149,12 @@ app.include_router(api_v1_router, prefix="/api")
 - ~~`POST /{dataset_id}/save` (should be PUT)~~ - **FIXED**: Removed non-RESTful save endpoint and integrated functionality into proper `PUT /{dataset_id}` endpoint
 - ~~Generator and scorer test endpoints~~ - **FIXED**: Retired non-RESTful test endpoints and replaced with orchestrator-based patterns
 
-**Best Practice Compliance**: 
+**Best Practice Compliance**:
 > "PUT: Used to update an existing resource in its entirety or to create a resource if it does not exist at the specified URI."
 
 **Impact Resolution**: API now follows proper HTTP semantics and enables appropriate caching behavior.
 
-**Current Implementation**: 
+**Current Implementation**:
 - **PUT** `/datasets/{id}` - Proper resource update with optional save parameters
 - **POST** `/orchestrators/{id}/executions` - Appropriate resource creation pattern for testing
 
@@ -168,7 +168,7 @@ app.include_router(api_v1_router, prefix="/api")
 ```python
 # Inconsistent pluralization
 "/auth/token/info"        # token (singular)
-"/generators"             # generators (plural)  
+"/generators"             # generators (plural)
 "/auth/me"               # me (not a resource noun)
 
 # Inconsistent nesting patterns
@@ -176,7 +176,7 @@ app.include_router(api_v1_router, prefix="/api")
 "/executions/{id}/results"       # different pattern for same type
 ```
 
-**Best Practice Violation**: 
+**Best Practice Violation**:
 > "Use plural nouns for collections: Collections of resources should be represented by plural nouns."
 
 **Impact**: Confusing API structure that's hard to learn and remember.
@@ -197,7 +197,7 @@ app.include_router(api_v1_router, prefix="/api")
 
 **Evidence**: No `Accept` header handling or `?fields=` query parameter support found in endpoints.
 
-**Best Practice Violation**: 
+**Best Practice Violation**:
 > "Concise payloads: Keep payloads focused and relevant to the specific API operation. Support for sparse fieldsets using query parameter (e.g., ?fields=id,name,email)."
 
 **Impact**: Large payloads waste bandwidth and processing time.
@@ -219,7 +219,7 @@ async def get_generators(
 
 **Evidence**: Large collection endpoints like `/generators`, `/datasets`, `/orchestrators` lack pagination.
 
-**Best Practice Violation**: 
+**Best Practice Violation**:
 > "Implement pagination for all list endpoints: Any endpoint that returns a collection of resources which could potentially grow large should implement pagination."
 
 **Impact**: Performance degradation with large datasets.
@@ -247,12 +247,12 @@ async def get_generators(
 if request.type not in GENERATOR_TYPE_DEFINITIONS:
     raise validation_error("Invalid generator type specified")
 
-# datasets.py:242 - Missing validation  
+# datasets.py:242 - Missing validation
 if not request.dataset_type or request.dataset_type not in NATIVE_DATASET_TYPES:
     # Only checked in some code paths
 ```
 
-**Best Practice Violation**: 
+**Best Practice Violation**:
 > "Implement rigorous validation on the server side to ensure that input conforms to expected formats, types, lengths, and ranges."
 
 **Impact**: Inconsistent error handling and potential security vulnerabilities.
@@ -267,7 +267,7 @@ if not request.dataset_type or request.dataset_type not in NATIVE_DATASET_TYPES:
 
 **Evidence**: No navigation links in collection responses or related resource references.
 
-**Best Practice Violation**: 
+**Best Practice Violation**:
 > "Return URIs to the related resources within the response payload, aligning with the HATEOAS principle."
 
 **Impact**: Clients must construct URLs manually, making API harder to evolve.

@@ -43,11 +43,11 @@ if [ -n "${OPENAPI_1_AUTH_TOKEN:-}" ]; then
         -H "Content-Type: application/json" \
         -d '{"model": "claude_3_5_sonnet", "messages": [{"role": "user", "content": "test"}]}' \
         --insecure 2>&1)
-    
+
     echo "Full error response:"
     echo "$response" | jq . 2>/dev/null || echo "$response"
     echo
-    
+
     echo -e "${BLUE}What this tells us:${NC}"
     echo
     echo "The GSA API is poorly designed because it:"
@@ -89,7 +89,7 @@ cat << 'EOF'
 │ (Security Token │ ← Checks OIDC provider
 │    Service)     │
 └────────┬────────┘
-         │ 
+         │
          ✗ InvalidIdentityToken error
          │
          ↓ Error bubbles up

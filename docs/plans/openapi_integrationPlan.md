@@ -41,18 +41,18 @@ async def discover_openapi_models_from_provider(provider_id: str, base_url: str,
     try:
         models_url = f"{base_url.rstrip('/')}/api/v1/models"
         headers = {"Authorization": f"Bearer {auth_token}"}
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.get(models_url, headers=headers, timeout=10.0)
-            
+
         if response.status_code == 200:
             data = response.json()
             if "data" in data and isinstance(data["data"], list):
                 return [model["id"] for model in data["data"]]
-        
+
         logger.warning(f"Failed to discover models from {provider_id}: HTTP {response.status_code}")
         return []
-        
+
     except Exception as e:
         logger.error(f"Error discovering models from {provider_id}: {e}")
         return []
@@ -66,16 +66,16 @@ def discover_apisix_models(provider: str) -> List[str]:
     """Enhanced version that queries OpenAPI providers directly"""
     if provider.startswith("openapi-"):
         provider_id = provider.replace("openapi-", "")
-        
+
         # Get provider configuration from environment
         base_url = os.getenv(f"OPENAPI_{provider_id.upper()}_BASE_URL")
         auth_token = os.getenv(f"OPENAPI_{provider_id.upper()}_AUTH_TOKEN")
-        
+
         if base_url and auth_token:
             models = await discover_openapi_models_from_provider(provider_id, base_url, auth_token)
             if models:
                 return models
-    
+
     # Fallback to existing APISIX route parsing
     return discover_apisix_models_from_routes(provider)
 ```
@@ -88,24 +88,24 @@ def discover_apisix_models(provider: str) -> List[str]:
 ```python
 class OpenAPIOperationMapper:
     """Maps OpenAPI operations to AI service functions"""
-    
+
     OPERATION_PATTERNS = {
         "chat_completion": ["chat", "completion", "converse", "generate"],
         "embedding": ["embedding", "embed"],
         "model_list": ["models", "list"],
     }
-    
+
     def classify_operation(self, operation_id: str, path: str, method: str) -> str:
         """Classify what type of AI operation this endpoint provides"""
         operation_lower = operation_id.lower()
         path_lower = path.lower()
-        
+
         for op_type, patterns in self.OPERATION_PATTERNS.items():
             if any(pattern in operation_lower or pattern in path_lower for pattern in patterns):
                 return op_type
-        
+
         return "unknown"
-    
+
     def get_model_parameter_mapping(self, operation_type: str) -> Dict[str, Any]:
         """Get appropriate parameter defaults for different operation types"""
         mappings = {
@@ -132,7 +132,7 @@ create_openapi_route_enhanced() {
     local path="$3"
     local method="$4"
     local operation_type="$5"  # New parameter: chat_completion, embedding, etc.
-    
+
     # Create route with operation-specific configuration
     local route_config='{
         "uri": "'"$uri"'",
@@ -172,23 +172,23 @@ create_openapi_route_enhanced() {
 ```python
 class OpenAPIProviderHealth:
     """Monitor health and availability of OpenAPI providers"""
-    
+
     async def check_provider_health(self, provider_id: str) -> Dict[str, Any]:
         """Check if OpenAPI provider is accessible and responsive"""
         base_url = os.getenv(f"OPENAPI_{provider_id.upper()}_BASE_URL")
         auth_token = os.getenv(f"OPENAPI_{provider_id.upper()}_AUTH_TOKEN")
-        
+
         if not base_url or not auth_token:
             return {"status": "misconfigured", "error": "Missing configuration"}
-        
+
         try:
             # Test models endpoint (lightweight check)
             models_url = f"{base_url.rstrip('/')}/api/v1/models"
             headers = {"Authorization": f"Bearer {auth_token}"}
-            
+
             async with httpx.AsyncClient() as client:
                 response = await client.get(models_url, headers=headers, timeout=5.0)
-            
+
             if response.status_code == 200:
                 return {"status": "healthy", "models_count": len(response.json().get("data", []))}
             elif response.status_code == 403:
@@ -199,7 +199,7 @@ class OpenAPIProviderHealth:
                 return {"status": "rate_limited", "error": "Too many requests"}
             else:
                 return {"status": "error", "error": f"HTTP {response.status_code}"}
-                
+
         except Exception as e:
             return {"status": "unreachable", "error": str(e)}
 ```
@@ -212,27 +212,27 @@ async def get_generator_type_params(generator_type: str, current_user=Depends(ge
     """Enhanced version with OpenAPI provider health checks"""
     if generator_type == "AI Gateway":
         # ... existing code ...
-        
+
         # Enhanced OpenAPI provider discovery with health checks
         openapi_providers = []
         if settings.OPENAPI_ENABLED:
             try:
                 health_checker = OpenAPIProviderHealth()
                 raw_providers = get_openapi_providers()
-                
+
                 for provider in raw_providers:
                     provider_id = provider.replace("openapi-", "")
                     health = await health_checker.check_provider_health(provider_id)
-                    
+
                     if health["status"] == "healthy":
                         openapi_providers.append(provider)
                         logger.info(f"Provider {provider} is healthy with {health.get('models_count', 0)} models")
                     else:
                         logger.warning(f"Provider {provider} is unhealthy: {health['error']}")
-                        
+
             except Exception as e:
                 logger.error(f"Error checking OpenAPI provider health: {e}")
-        
+
         # ... rest of function ...
 ```
 
@@ -275,15 +275,15 @@ Update generator parameters to be model-aware:
 def get_model_specific_parameters(model_id: str, operation_type: str) -> List[Dict]:
     """Generate parameter definitions based on specific model capabilities"""
     base_params = get_base_parameters_for_operation(operation_type)
-    
+
     if model_id in MODEL_PARAMETER_TEMPLATES:
         model_config = MODEL_PARAMETER_TEMPLATES[model_id]
-        
+
         # Override defaults and constraints based on model
         for param in base_params:
             if param["name"] in model_config:
                 param.update(model_config[param["name"]])
-    
+
     return base_params
 ```
 
@@ -295,28 +295,28 @@ def get_model_specific_parameters(model_id: str, operation_type: str) -> List[Di
 ```python
 class OpenAPITokenManager:
     """Manage authentication tokens for OpenAPI providers"""
-    
+
     async def validate_token(self, provider_id: str) -> bool:
         """Validate that the current token is still valid"""
         base_url = os.getenv(f"OPENAPI_{provider_id.upper()}_BASE_URL")
         auth_token = os.getenv(f"OPENAPI_{provider_id.upper()}_AUTH_TOKEN")
-        
+
         if not base_url or not auth_token:
             return False
-        
+
         try:
             # Test with lightweight endpoint
             test_url = f"{base_url.rstrip('/')}/api/v1/models"
             headers = {"Authorization": f"Bearer {auth_token}"}
-            
+
             async with httpx.AsyncClient() as client:
                 response = await client.get(test_url, headers=headers, timeout=5.0)
-            
+
             return response.status_code != 403
-            
+
         except Exception:
             return False
-    
+
     async def get_token_info(self, provider_id: str) -> Dict[str, Any]:
         """Get information about the token (if provider supports it)"""
         # Implementation depends on provider's token info endpoint
@@ -332,16 +332,16 @@ validate_openapi_token() {
     local provider_id="$1"
     local base_url="$2"
     local auth_token="$3"
-    
+
     echo "Validating OpenAPI token for provider: $provider_id"
-    
+
     local test_response=$(curl -s -w "%{http_code}" \
         -H "Authorization: Bearer $auth_token" \
         -H "Accept: application/json" \
         "$base_url/api/v1/models" 2>/dev/null)
-    
+
     local http_code="${test_response: -3}"
-    
+
     case "$http_code" in
         "200")
             echo "✅ Token valid for $provider_id"

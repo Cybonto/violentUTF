@@ -1,7 +1,7 @@
 # Code Quality and Security Analysis Report
 
-**Date**: December 28, 2024  
-**Branch**: dev_test  
+**Date**: December 28, 2024
+**Branch**: dev_test
 **Analysis Tools**: isort, flake8, Bandit, mypy
 
 ## Executive Summary
@@ -16,7 +16,7 @@ Comprehensive code quality and security analysis revealed 1,293 total issues acr
 
 **Common Issues Identified**:
 - Standard library imports mixed with third-party imports
-- Missing blank lines between import groups  
+- Missing blank lines between import groups
 - Imports not alphabetically sorted within groups
 
 **Example**:
@@ -55,7 +55,7 @@ from utils.logging import get_logger, setup_logging
 
 **Most Complex Functions** (C901 violations):
 - `PyRITOrchestratorService.create_orchestrator_instance` - complexity: 20
-- `PyRITOrchestratorService._execute_prompt_sending_orchestrator` - complexity: 21  
+- `PyRITOrchestratorService._execute_prompt_sending_orchestrator` - complexity: 21
 - `PyRITOrchestratorService._format_execution_results` - complexity: 28
 - `_execute_likert_scorer` - complexity: 18
 

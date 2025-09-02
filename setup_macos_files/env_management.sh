@@ -14,7 +14,7 @@ create_ai_tokens_template() {
 OPENAI_ENABLED=false
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Anthropic Configuration  
+# Anthropic Configuration
 ANTHROPIC_ENABLED=false
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
@@ -100,24 +100,24 @@ load_ai_tokens() {
 # Function to update FastAPI .env with AI provider flags
 update_fastapi_env() {
     local fastapi_env_file="violentutf_api/fastapi_app/.env"
-    
+
     log_detail "Updating FastAPI environment with AI provider flags..."
-    
+
     # Load AI tokens first
     load_ai_tokens
-    
+
     if [ ! -f "$fastapi_env_file" ]; then
         log_debug "Creating FastAPI .env file..."
         touch "$fastapi_env_file"
     fi
-    
+
     # Update provider flags
     local providers=("OPENAI" "ANTHROPIC" "OLLAMA" "OPEN_WEBUI" "OPENAPI")
-    
+
     for provider in "${providers[@]}"; do
         local enabled_var="${provider}_ENABLED"
         local enabled_value="${!enabled_var:-false}"
-        
+
         # Update or add the provider flag
         if grep -q "^${enabled_var}=" "$fastapi_env_file"; then
             sed -i '' "s/^${enabled_var}=.*/${enabled_var}=${enabled_value}/" "$fastapi_env_file"
@@ -125,48 +125,48 @@ update_fastapi_env() {
             echo "${enabled_var}=${enabled_value}" >> "$fastapi_env_file"
         fi
     done
-    
+
     log_success "FastAPI environment updated with provider flags"
 }
 
 # Function to backup user configurations
 backup_user_configs() {
     log_detail "Backing up user configurations..."
-    
+
     # Create backup directory
     mkdir -p "/tmp/vutf_backup"
-    
+
     # Backup AI tokens (user's API keys)
     [ -f "$AI_TOKENS_FILE" ] && cp "$AI_TOKENS_FILE" "/tmp/vutf_backup/"
-    
+
     # Backup any custom APISIX routes
     [ -f "apisix/conf/custom_routes.yml" ] && cp "apisix/conf/custom_routes.yml" "/tmp/vutf_backup/"
-    
+
     # Backup user application data preferences
     if [ -d "violentutf/app_data" ]; then
         tar -czf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf app_data 2>/dev/null || true
     fi
-    
+
     log_debug "User configurations backed up to /tmp/vutf_backup"
 }
 
 # Function to restore user configurations
 restore_user_configs() {
     echo "Restoring user configurations..."
-    
+
     if [ -d "/tmp/vutf_backup" ]; then
         # Restore AI tokens
         [ -f "/tmp/vutf_backup/$AI_TOKENS_FILE" ] && cp "/tmp/vutf_backup/$AI_TOKENS_FILE" .
-        
+
         # Restore custom routes
         [ -f "/tmp/vutf_backup/custom_routes.yml" ] && cp "/tmp/vutf_backup/custom_routes.yml" "apisix/conf/"
-        
+
         # Restore user application data if it was backed up
         if [ -f "/tmp/vutf_backup/app_data_backup.tar.gz" ]; then
             mkdir -p violentutf
             tar -xzf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf 2>/dev/null || true
         fi
-        
+
         rm -rf "/tmp/vutf_backup"
         echo "✅ User configurations restored"
     else
@@ -177,33 +177,33 @@ restore_user_configs() {
 # Function to create all environment files
 create_env_files() {
     echo "Creating environment files for all services..."
-    
+
     # Create AI tokens template if needed
     create_ai_tokens_template
-    
+
     # Create Keycloak .env
     create_keycloak_env
-    
+
     # Create APISIX .env
     create_apisix_env
-    
+
     # Create ViolentUTF .env
     create_violentutf_env
-    
+
     # Create FastAPI .env
     create_fastapi_env
-    
+
     echo "✅ All environment files created"
 }
 
 # Helper function to create Keycloak environment file
 create_keycloak_env() {
     local env_file="keycloak/.env"
-    
+
     if [ ! -f "$env_file" ]; then
         echo "Creating Keycloak environment file..."
         local postgres_password=$(generate_random_string 32)
-        
+
         cat > "$env_file" << EOF
 POSTGRES_PASSWORD=${postgres_password}
 EOF
@@ -216,11 +216,11 @@ EOF
 # Helper function to create APISIX environment file
 create_apisix_env() {
     local env_file="apisix/.env"
-    
+
     if [ ! -f "$env_file" ]; then
         echo "Creating APISIX environment file..."
         local admin_key=$(generate_random_string 32)
-        
+
         cat > "$env_file" << EOF
 # APISIX Configuration
 APISIX_ADMIN_KEY=${admin_key}
@@ -234,7 +234,7 @@ EOF
 # Helper function to create ViolentUTF environment file
 create_violentutf_env() {
     local env_file="violentutf/.env"
-    
+
     if [ ! -f "$env_file" ]; then
         echo "Creating ViolentUTF environment file..."
         local client_secret=$(generate_random_string 32)
@@ -243,7 +243,7 @@ create_violentutf_env() {
         local pyrit_salt=$(generate_random_string 32)
         local jwt_secret=$(generate_random_string 32)
         local api_key=$(generate_random_string 32)
-        
+
         cat > "$env_file" << EOF
 KEYCLOAK_URL=http://localhost:8080/
 KEYCLOAK_REALM=ViolentUTF
@@ -272,12 +272,12 @@ EOF
 # Helper function to create FastAPI environment file
 create_fastapi_env() {
     local env_file="violentutf_api/fastapi_app/.env"
-    
+
     if [ ! -f "$env_file" ]; then
         echo "Creating FastAPI environment file..."
         local jwt_secret=$(generate_random_string 32)
         local api_key=$(generate_random_string 32)
-        
+
         cat > "$env_file" << EOF
 # JWT Configuration
 JWT_SECRET_KEY=${jwt_secret}
@@ -312,13 +312,13 @@ EOF
 # Function to generate all environment files (CRITICAL: After secrets are generated)
 generate_all_env_files() {
     log_detail "Creating configuration files..."
-    
+
     # Ensure secrets are available
     if [ -z "$KEYCLOAK_POSTGRES_PASSWORD" ]; then
         echo "❌ Error: Secrets not generated! Must call generate_all_secrets first."
         return 1
     fi
-    
+
     # Create Keycloak .env
     log_detail "Creating Keycloak configuration..."
     mkdir -p keycloak
@@ -328,11 +328,11 @@ KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_ADMIN_USERNAME
 KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
 EOF
     echo "✅ Created keycloak/.env"
-    
+
     # Create APISIX configurations
     log_detail "Creating APISIX configurations..."
     mkdir -p apisix/conf
-    
+
     # Process config.yaml template if it exists
     if [ -f "apisix/conf/config.yaml.template" ]; then
         prepare_config_from_template "apisix/conf/config.yaml.template"
@@ -341,7 +341,7 @@ EOF
         replace_in_file "apisix/conf/config.yaml" "APISIX_KEYRING_VALUE_2_PLACEHOLDER" "$APISIX_KEYRING_VALUE_2" "APISIX Keyring Value 2"
         echo "✅ Created apisix/conf/config.yaml"
     fi
-    
+
     # Process dashboard.yaml template if it exists
     if [ -f "apisix/conf/dashboard.yaml.template" ]; then
         prepare_config_from_template "apisix/conf/dashboard.yaml.template"
@@ -349,7 +349,7 @@ EOF
         replace_in_file "apisix/conf/dashboard.yaml" "APISIX_DASHBOARD_PASSWORD_PLACEHOLDER" "$APISIX_DASHBOARD_PASSWORD" "APISIX Dashboard Admin Password"
         echo "✅ Created apisix/conf/dashboard.yaml"
     fi
-    
+
     # Create prometheus.yml configuration file
     cat > apisix/conf/prometheus.yml <<EOF
 global:
@@ -362,18 +362,18 @@ scrape_configs:
     metrics_path: /apisix/prometheus/metrics
 EOF
     echo "✅ Created apisix/conf/prometheus.yml"
-    
+
     # Create APISIX .env file
     cat > apisix/.env <<EOF
 # APISIX Configuration
 APISIX_ADMIN_KEY=$APISIX_ADMIN_KEY
 EOF
     echo "✅ Created apisix/.env"
-    
+
     # Create ViolentUTF configurations
     log_detail "Creating ViolentUTF configurations..."
     mkdir -p violentutf/.streamlit
-    
+
     # Create ViolentUTF .env file
     cat > violentutf/.env <<EOF
 KEYCLOAK_URL=http://localhost:8080/
@@ -390,7 +390,7 @@ KEYCLOAK_URL_BASE=http://localhost:9080/auth
 AI_PROXY_BASE_URL=http://localhost:9080/ai
 EOF
     echo "✅ Created violentutf/.env"
-    
+
     # Create secrets.toml
     cat > violentutf/.streamlit/secrets.toml <<EOF
 [auth]
@@ -414,11 +414,11 @@ client_id = "apisix"
 client_secret = "$APISIX_CLIENT_SECRET"
 EOF
     echo "✅ Created violentutf/.streamlit/secrets.toml"
-    
+
     # Create FastAPI configuration
     log_detail "Creating FastAPI configuration..."
     mkdir -p violentutf_api/fastapi_app
-    
+
     cat > violentutf_api/fastapi_app/.env <<EOF
 # FastAPI Configuration
 SECRET_KEY=$FASTAPI_SECRET_KEY
@@ -458,7 +458,7 @@ OPEN_WEBUI_ENABLED=\${OPEN_WEBUI_ENABLED:-false}
 OPENAPI_ENABLED=\${OPENAPI_ENABLED:-false}
 EOF
     echo "✅ Created violentutf_api/fastapi_app/.env"
-    
+
     echo "✅ All configuration files created successfully"
     return 0
 }
@@ -467,38 +467,38 @@ EOF
 backup_existing_configs() {
     log_detail "Backing up user configurations..."
     mkdir -p "/tmp/vutf_backup"
-    
+
     # Backup AI tokens (user's API keys)
     [ -f "$AI_TOKENS_FILE" ] && cp "$AI_TOKENS_FILE" "/tmp/vutf_backup/"
-    
+
     # Backup any custom APISIX routes
     [ -f "apisix/conf/custom_routes.yml" ] && cp "apisix/conf/custom_routes.yml" "/tmp/vutf_backup/"
-    
+
     # Backup user application data preferences
     if [ -d "violentutf/app_data" ]; then
         tar -czf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf app_data 2>/dev/null || true
     fi
-    
+
     log_success "User configurations backed up"
 }
 
 # Function to restore user configurations
 restore_user_configs() {
     echo "Restoring user configurations..."
-    
+
     if [ -d "/tmp/vutf_backup" ]; then
         # Restore AI tokens
         [ -f "/tmp/vutf_backup/$AI_TOKENS_FILE" ] && cp "/tmp/vutf_backup/$AI_TOKENS_FILE" .
-        
+
         # Restore custom routes
         [ -f "/tmp/vutf_backup/custom_routes.yml" ] && cp "/tmp/vutf_backup/custom_routes.yml" "apisix/conf/"
-        
+
         # Restore user application data if it was backed up
         if [ -f "/tmp/vutf_backup/app_data_backup.tar.gz" ]; then
             mkdir -p violentutf
             tar -xzf "/tmp/vutf_backup/app_data_backup.tar.gz" -C violentutf 2>/dev/null || true
         fi
-        
+
         rm -rf "/tmp/vutf_backup"
         echo "✅ User configurations restored"
     fi

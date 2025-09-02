@@ -17,7 +17,7 @@ on:
           - quick
           - pr-validation
           - full
-          - nightly
+          - weekly
 
 permissions:
   contents: read
@@ -36,40 +36,45 @@ jobs:
     steps:
       - name: Analyze context and decide workflow
         id: decide
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_TYPE: ${{ inputs.workflow_type }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          GITHUB_REF: ${{ github.ref }}
         run: |
           # Check if manual dispatch with specific workflow
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ "${{ inputs.workflow_type }}" != "auto" ]]; then
-            echo "workflow=${{ inputs.workflow_type }}" >> $GITHUB_OUTPUT
-            echo "Manual dispatch: ${{ inputs.workflow_type }}"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]] && [[ "$WORKFLOW_TYPE" != "auto" ]]; then
+            echo "workflow=$WORKFLOW_TYPE" >> $GITHUB_OUTPUT
+            echo "Manual dispatch: $WORKFLOW_TYPE"
             exit 0
           fi
 
           # Check if commit message contains special flags
-          if [[ "${{ github.event.head_commit.message }}" == *"[full-ci]"* ]]; then
+          if [[ "$COMMIT_MESSAGE" == *"[full-ci]"* ]]; then
             echo "workflow=full" >> $GITHUB_OUTPUT
             echo "Full CI requested via commit message"
             exit 0
           fi
 
-          if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]] || \
-             [[ "${{ github.event.head_commit.message }}" == *"[ci skip]"* ]]; then
+          if [[ "$COMMIT_MESSAGE" == *"[skip ci]"* ]] || \
+             [[ "$COMMIT_MESSAGE" == *"[ci skip]"* ]]; then
             echo "workflow=skip" >> $GITHUB_OUTPUT
             echo "CI skipped via commit message"
             exit 0
           fi
 
           # Pull request logic
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
             echo "workflow=pr-validation" >> $GITHUB_OUTPUT
             echo "Pull request validation workflow"
             exit 0
           fi
 
           # Branch-based logic
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
             echo "workflow=full" >> $GITHUB_OUTPUT
             echo "Main branch: full CI"
-          elif [[ "${{ github.ref }}" =~ ^refs/heads/dev_ ]]; then
+          elif [[ "$GITHUB_REF" =~ ^refs/heads/dev_ ]]; then
             echo "workflow=quick" >> $GITHUB_OUTPUT
             echo "Dev branch: quick checks"
           else
@@ -89,16 +94,16 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            // Use appropriate ref based on event type
+            // Use branch name for workflow_dispatch, not SHA
             let ref;
             if (context.eventName === 'pull_request') {
-              // For PRs, use the head SHA to avoid issues with merge refs
-              ref = context.payload.pull_request.head.sha;
-              console.log(`Using PR head SHA: ${ref}`);
+              // For PRs, use the head branch name
+              ref = context.payload.pull_request.head.ref;
+              console.log(`Using PR head branch: ${ref}`);
             } else {
-              // For other events, use the normal ref
-              ref = context.ref;
-              console.log(`Using context ref: ${ref}`);
+              // For other events, extract branch name from ref
+              ref = context.ref.replace('refs/heads/', '');
+              console.log(`Using branch name: ${ref}`);
             }
 
             await github.rest.actions.createWorkflowDispatch({
@@ -107,7 +112,7 @@ jobs:
               workflow_id: 'quick-checks.yml',
               ref: ref
             });
-            console.log(`Triggered quick-checks workflow on ref: ${ref}`);
+            console.log(`Triggered quick-checks workflow on branch: ${ref}`);
 
   # PR validation for pull requests
   trigger-pr-validation:
@@ -120,16 +125,16 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            // Use appropriate ref based on event type
+            // Use branch name for workflow_dispatch, not SHA
             let ref;
             if (context.eventName === 'pull_request') {
-              // For PRs, use the head SHA to avoid issues with merge refs
-              ref = context.payload.pull_request.head.sha;
-              console.log(`Using PR head SHA: ${ref}`);
+              // For PRs, use the head branch name
+              ref = context.payload.pull_request.head.ref;
+              console.log(`Using PR head branch: ${ref}`);
             } else {
-              // For other events, use the normal ref
-              ref = context.ref;
-              console.log(`Using context ref: ${ref}`);
+              // For other events, extract branch name from ref
+              ref = context.ref.replace('refs/heads/', '');
+              console.log(`Using branch name: ${ref}`);
             }
 
             await github.rest.actions.createWorkflowDispatch({
@@ -138,7 +143,7 @@ jobs:
               workflow_id: 'pr-validation.yml',
               ref: ref
             });
-            console.log(`Triggered pr-validation workflow on ref: ${ref}`);
+            console.log(`Triggered pr-validation workflow on branch: ${ref}`);
   # Full CI for main branch and releases
   trigger-full-ci:
     name: Trigger Full CI
@@ -151,16 +156,16 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            // Use appropriate ref based on event type
+            // Use branch name for workflow_dispatch, not SHA
             let ref;
             if (context.eventName === 'pull_request') {
-              // For PRs, use the head SHA to avoid issues with merge refs
-              ref = context.payload.pull_request.head.sha;
-              console.log(`Using PR head SHA: ${ref}`);
+              // For PRs, use the head branch name
+              ref = context.payload.pull_request.head.ref;
+              console.log(`Using PR head branch: ${ref}`);
             } else {
-              // For other events, use the normal ref
-              ref = context.ref;
-              console.log(`Using context ref: ${ref}`);
+              // For other events, extract branch name from ref
+              ref = context.ref.replace('refs/heads/', '');
+              console.log(`Using branch name: ${ref}`);
             }
 
             await github.rest.actions.createWorkflowDispatch({
@@ -169,39 +174,39 @@ jobs:
               workflow_id: 'full-ci.yml',
               ref: ref
             });
-            console.log(`Triggered full-ci workflow on ref: ${ref}`);
+            console.log(`Triggered full-ci workflow on branch: ${ref}`);
 
   # Nightly testing
-  trigger-nightly:
+  trigger-weekly:
     name: Trigger Nightly Tests
     needs: dispatch-decision
-    if: needs.dispatch-decision.outputs.workflow == 'nightly'
+    if: needs.dispatch-decision.outputs.workflow == 'weekly'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger nightly workflow
+      - name: Trigger weekly workflow
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            // Use appropriate ref based on event type
+            // Use branch name for workflow_dispatch, not SHA
             let ref;
             if (context.eventName === 'pull_request') {
-              // For PRs, use the head SHA to avoid issues with merge refs
-              ref = context.payload.pull_request.head.sha;
-              console.log(`Using PR head SHA: ${ref}`);
+              // For PRs, use the head branch name
+              ref = context.payload.pull_request.head.ref;
+              console.log(`Using PR head branch: ${ref}`);
             } else {
-              // For other events, use the normal ref
-              ref = context.ref;
-              console.log(`Using context ref: ${ref}`);
+              // For other events, extract branch name from ref
+              ref = context.ref.replace('refs/heads/', '');
+              console.log(`Using branch name: ${ref}`);
             }
 
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'nightly.yml',
+              workflow_id: 'weekly.yml',
               ref: ref
             });
-            console.log(`Triggered nightly workflow on ref: ${ref}`);
+            console.log(`Triggered weekly workflow on branch: ${ref}`);
 
   # Skip notification
   skip-notification:
@@ -220,7 +225,7 @@ jobs:
   # Summary status
   dispatcher-status:
     name: Dispatcher Status
-    needs: [dispatch-decision, trigger-quick-checks, trigger-pr-validation, trigger-full-ci, trigger-nightly, skip-notification]
+    needs: [dispatch-decision, trigger-quick-checks, trigger-pr-validation, trigger-full-ci, trigger-weekly, skip-notification]
     if: always()
     runs-on: ubuntu-latest
 
@@ -246,8 +251,8 @@ jobs:
             "full")
               echo "✅ Triggered full CI matrix (20-30 minutes)" >> $GITHUB_STEP_SUMMARY
               ;;
-            "nightly")
-              echo "✅ Triggered nightly deep testing (60-90 minutes)" >> $GITHUB_STEP_SUMMARY
+            "weekly")
+              echo "✅ Triggered weekly deep testing (60-90 minutes)" >> $GITHUB_STEP_SUMMARY
               ;;
             "skip")
               echo "⏭️ CI skipped as requested" >> $GITHUB_STEP_SUMMARY

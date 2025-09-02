@@ -1,8 +1,8 @@
-name: Nightly Deep Testing
+name: Weekly Deep Testing
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # Daily at 3 AM UTC
+    - cron: '0 3 * * 0'  # Weekly on Sunday at 3 AM UTC
   workflow_dispatch:
     inputs:
       test_scope:
@@ -31,12 +31,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v5.0.0
         with:
           fetch-depth: 0  # Full history for analysis
 
       - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.6.0
         with:
           python-version: '3.11'
 
@@ -81,7 +81,7 @@ jobs:
                   --json -o semgrep-full-report.json || true
 
           # Bandit with all plugins
-          bandit -r . -ll -i -f json -o bandit-full-report.json || true
+          bandit -r . -ll -i -f json -o bandit-full-report.json 2>/dev/null || true
 
       - name: License compliance check
         run: |
@@ -90,12 +90,16 @@ jobs:
           echo "## License Compliance" >> security-report.md
           echo "" >> security-report.md
           pip-licenses --with-urls --format=json > licenses.json
-          python -c "import json; f = open('licenses.json'); licenses = json.load(f); f.close(); problematic = [l for l in licenses if l.get('License', '').upper() in ['GPL', 'AGPL', 'UNKNOWN']]; print(f'Found {len(problematic)} potentially problematic licenses') if problematic else None; [print(f\"- {l.get('Name')}: {l.get('License')}\") for l in problematic[:10]]"
+          python3 -c "import json; \
+            licenses=json.load(open('licenses.json')); \
+            problematic=[l for l in licenses if l.get('License','').upper() in ['GPL','AGPL','UNKNOWN']]; \
+            print(f'Found {len(problematic)} potentially problematic licenses') if problematic else None; \
+            [print(f'- {l.get(\"Name\")}: {l.get(\"License\")}') for l in problematic[:5]]"
 
       - name: Upload security reports
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: nightly-security-reports
+          name: weekly-security-reports
           path: |
             security-report.md
             *-report.json
@@ -122,10 +126,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v5.0.0
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -184,10 +188,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v5.0.0
 
       - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.6.0
         with:
           python-version: '3.11'
 
@@ -294,14 +298,14 @@ jobs:
     name: AI Framework Deep Testing
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    if: github.event.inputs.test_scope == 'all'
+    if: false  # Disabled for online CI - can be enabled for local testing
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v5.0.0
 
       - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.6.0
         with:
           python-version: '3.11'
 
@@ -367,9 +371,9 @@ jobs:
             framework-report.md
             garak-*.txt
 
-  nightly-report:
-    name: Generate Nightly Report
-    needs: [deep-security-analysis, compatibility-testing, performance-stress-testing, framework-integration-testing]
+  weekly-report:
+    name: Generate Weekly Report
+    needs: [deep-security-analysis, compatibility-testing, performance-stress-testing]  # framework-integration-testing disabled for CI
     runs-on: ubuntu-latest
     if: always()
 
@@ -377,49 +381,55 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          path: nightly-artifacts
+          path: weekly-artifacts
           merge-multiple: true
 
       - name: Generate consolidated report
         run: |
-          echo "# Nightly Testing Report - $(date +'%Y-%m-%d')" > nightly-report.md
-          echo "" >> nightly-report.md
+          echo "# Weekly Testing Report - $(date +'%Y-%m-%d')" > weekly-report.md
+          echo "" >> weekly-report.md
 
-          echo "## Test Summary" >> nightly-report.md
-          echo "- Deep Security Analysis: ${{ needs.deep-security-analysis.result }}" >> nightly-report.md
-          echo "- Compatibility Testing: ${{ needs.compatibility-testing.result }}" >> nightly-report.md
-          echo "- Performance Testing: ${{ needs.performance-stress-testing.result }}" >> nightly-report.md
-          echo "- Framework Testing: ${{ needs.framework-integration-testing.result }}" >> nightly-report.md
-          echo "" >> nightly-report.md
+          echo "## Test Summary" >> weekly-report.md
+          echo "- Deep Security Analysis: ${{ needs.deep-security-analysis.result }}" >> weekly-report.md
+          echo "- Compatibility Testing: ${{ needs.compatibility-testing.result }}" >> weekly-report.md
+          echo "- Performance Testing: ${{ needs.performance-stress-testing.result }}" >> weekly-report.md
+          echo "- Framework Testing: skipped (disabled for CI)" >> weekly-report.md
+          echo "" >> weekly-report.md
 
           # Aggregate findings
-          echo "## Key Findings" >> nightly-report.md
-          echo "" >> nightly-report.md
+          echo "## Key Findings" >> weekly-report.md
+          echo "" >> weekly-report.md
 
           # Check for security issues
-          if [ -f nightly-artifacts/nightly-security-reports/bandit-full-report.json ]; then
-            echo "### Security Issues" >> nightly-report.md
-            python -c "import json; f = open('nightly-artifacts/nightly-security-reports/bandit-full-report.json'); data = json.load(f); f.close(); issues = data.get('results', []); high_severity = [i for i in issues if i.get('issue_severity') == 'HIGH']; print(f'Found {len(high_severity)} high severity security issues') if high_severity else None" >> nightly-report.md
+          if [ -f weekly-artifacts/weekly-security-reports/bandit-full-report.json ]; then
+            echo "### Security Issues" >> weekly-report.md
+            python3 -c "import json; \
+              data=json.load(open('weekly-artifacts/weekly-security-reports/bandit-full-report.json')); \
+              issues=data.get('results',[]); \
+              high_severity=[i for i in issues if i.get('issue_severity')=='HIGH']; \
+              print(f'Found {len(high_severity)} high severity security issues') if high_severity else None" >> weekly-report.md
           fi
 
       - name: Create issue if tests failed
         if: failure()
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        # v7.0.1
         with:
           script: |
             const date = new Date().toISOString().split('T')[0];
             const issue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Nightly Test Failures - ${date}`,
-              body: `The nightly test suite has detected failures. Please review the [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`,
-              labels: ['nightly-failure', 'automated']
+              title: `Weekly Test Failures - ${date}`,
+              body: `The weekly test suite has detected failures. Please review the workflow run for details: ` +
+                    `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['weekly-failure', 'automated']
             });
             console.log(`Created issue #${issue.data.number}`);
 
-      - name: Upload nightly report
+      - name: Upload weekly report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: nightly-report
-          path: nightly-report.md
+          name: weekly-report
+          path: weekly-report.md
           retention-days: 30

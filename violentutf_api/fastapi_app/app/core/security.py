@@ -1,8 +1,13 @@
-"""
-Security utilities for JWT token generation and validation
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Security utilities for JWT token generation and validation
+
 SECURITY: Enhanced with comprehensive validation to prevent token injection attacks
 """
-
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
@@ -11,7 +16,6 @@ import jwt
 from app.core.config import settings
 from app.core.password_policy import PasswordStrength, validate_password_strength
 from app.core.validation import SecurityLimits, sanitize_string, validate_jwt_token
-from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
 logger = logging.getLogger(__name__)
@@ -26,8 +30,7 @@ SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """
-    Create a JWT access token
+    """Create a JWT access token
 
     Args:
         data: Payload data to encode
@@ -49,9 +52,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-def decode_token(token: str) -> Optional[Dict[str, Any]]:
-    """
-    Decode and validate a JWT token with comprehensive security checks
+def decode_token(token: str) -> Dict[str, Any] | None:
+    """Decode and validate a JWT token with comprehensive security checks
 
     Args:
         token: JWT token to decode
@@ -60,6 +62,7 @@ def decode_token(token: str) -> Optional[Dict[str, Any]]:
         Decoded payload or None if invalid
     """
     if not token:
+
         logger.warning("Empty token provided for validation")
         return None
 
@@ -78,7 +81,7 @@ def decode_token(token: str) -> Optional[Dict[str, Any]]:
         # Validate subject (username/user_id)
         subject = sanitize_string(payload["sub"])
         if len(subject) > SecurityLimits.MAX_USERNAME_LENGTH:
-            logger.warning(f"JWT subject too long: {len(subject)} characters")
+            logger.warning("JWT subject too long: %s characters", len(subject))
             return None
 
         payload["sub"] = subject
@@ -110,8 +113,8 @@ def decode_token(token: str) -> Optional[Dict[str, Any]]:
             except Exception:
                 payload["email"] = None
 
-        logger.debug(f"Successfully validated JWT token for user: {payload.get('sub')}")
-        return payload
+        logger.debug("Successfully validated JWT token for user: %s", payload.get("sub"))
+        return dict(payload)
 
     except jwt.ExpiredSignatureError:
         logger.warning("JWT token has expired")
@@ -120,19 +123,18 @@ def decode_token(token: str) -> Optional[Dict[str, Any]]:
         logger.warning("JWT token has invalid signature")
         return None
     except jwt.InvalidTokenError as e:
-        logger.warning(f"Invalid JWT token: {str(e)}")
+        logger.warning("Invalid JWT token: %s", str(e))
         return None
     except ValueError as e:
-        logger.warning(f"JWT validation failed: {str(e)}")
+        logger.warning("JWT validation failed: %s", str(e))
         return None
     except Exception as e:
-        logger.error(f"Unexpected error during JWT validation: {str(e)}")
+        logger.error("Unexpected error during JWT validation: %s", str(e))
         return None
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Verify a plain password against a hashed password with input validation
+    """Verify a plain password against a hashed password with input validation
 
     Args:
         plain_password: Plain text password
@@ -142,6 +144,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         True if password matches, False otherwise
     """
     if not plain_password or not hashed_password:
+
         logger.warning("Empty password or hash provided for verification")
         return False
 
@@ -151,15 +154,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return False
 
     try:
-        return pwd_context.verify(plain_password, hashed_password)
+        return bool(pwd_context.verify(plain_password, hashed_password))
     except Exception as e:
-        logger.error(f"Password verification error: {str(e)}")
+        logger.error("Password verification error: %s", str(e))
         return False
 
 
-def get_password_hash(password: str, username: str = None, email: str = None) -> str:
-    """
-    Hash a password using bcrypt with comprehensive security validation
+def get_password_hash(password: str, username: Optional[str] = None, email: Optional[str] = None) -> str:
+    """Hash a password using bcrypt with comprehensive security validation
 
     Args:
         password: Plain text password
@@ -173,6 +175,7 @@ def get_password_hash(password: str, username: str = None, email: str = None) ->
         ValueError: If password doesn't meet security requirements
     """
     if not password:
+
         raise ValueError("Password is required")
 
     # Comprehensive password strength validation
@@ -180,31 +183,39 @@ def get_password_hash(password: str, username: str = None, email: str = None) ->
 
     if not validation_result.is_valid:
         error_msg = "Password does not meet security requirements: " + "; ".join(validation_result.errors)
-        logger.warning(f"Password validation failed: {len(validation_result.errors)} errors")
+        logger.warning("Password validation failed: %s errors", len(validation_result.errors))
         raise ValueError(error_msg)
 
     # Warn about weak passwords but allow them if they pass basic validation
     if validation_result.strength in [PasswordStrength.WEAK, PasswordStrength.MODERATE]:
         logger.warning(
-            f"Weak password detected (strength: {validation_result.strength.value}, score: {validation_result.score})"
+            "Weak password detected (strength: %s, score: %s)",
+            validation_result.strength.value,
+            validation_result.score,
         )
         if validation_result.warnings:
-            logger.info(f"Password warnings: {'; '.join(validation_result.warnings)}")
+            logger.info("Password warnings: %s", "; ".join(validation_result.warnings))
 
     try:
         hashed = pwd_context.hash(password)
         logger.info(
-            f"Password hashed successfully (strength: {validation_result.strength.value}, score: {validation_result.score})"
+            "Password hashed successfully (strength: %s, score: %s)",
+            validation_result.strength.value,
+            validation_result.score,
         )
-        return hashed
+        return str(hashed)
     except Exception as e:
-        logger.error(f"Password hashing error: {str(e)}")
-        raise ValueError("Failed to hash password")
+        logger.error("Password hashing error: %s", str(e))
+        raise ValueError("Failed to hash password") from e
 
 
-def create_api_key_token(user_id: str, key_name: str, permissions: list = None, key_id: str = None) -> Dict[str, Any]:
-    """
-    Create an API key token with extended expiration and input validation
+def create_api_key_token(
+    user_id: str,
+    key_name: str,
+    permissions: Optional[list] = None,
+    key_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Create an API key token with extended expiration and input validation
 
     Args:
         user_id: User identifier
@@ -219,6 +230,7 @@ def create_api_key_token(user_id: str, key_name: str, permissions: list = None, 
         ValueError: If input validation fails
     """
     # Validate inputs
+
     if not user_id:
         raise ValueError("User ID is required")
 
@@ -276,7 +288,13 @@ def create_api_key_token(user_id: str, key_name: str, permissions: list = None, 
     # API keys have longer expiration (1 year by default)
     expires_delta = timedelta(days=365)
 
-    data = {"sub": user_id, "key_name": key_name, "key_id": key_id, "type": "api_key", "permissions": permissions}
+    data = {
+        "sub": user_id,
+        "key_name": key_name,
+        "key_id": key_id,
+        "type": "api_key",
+        "permissions": permissions,
+    }
 
     try:
         token = create_access_token(data, expires_delta)
@@ -289,5 +307,5 @@ def create_api_key_token(user_id: str, key_name: str, permissions: list = None, 
             "permissions": permissions,
         }
     except Exception as e:
-        logger.error(f"Failed to create API key token: {str(e)}")
-        raise ValueError("Failed to create API key token")
+        logger.error("Failed to create API key token: %s", str(e))
+        raise ValueError("Failed to create API key token") from e

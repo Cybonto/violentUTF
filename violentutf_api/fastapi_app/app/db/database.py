@@ -1,6 +1,10 @@
-"""
-Database configuration and session management
-"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Database configuration and session management."""
 
 import os
 from contextlib import asynccontextmanager
@@ -24,11 +28,10 @@ async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit
 Base = declarative_base()
 
 
-async def init_db():
-    """
-    Initialize database tables
-    """
+async def init_db() -> None:
+    """Initialize database tables"""
     # Ensure the database directory exists
+
     if "sqlite" in DATABASE_URL:
         db_path = DATABASE_URL.split("///")[1]
         db_dir = os.path.dirname(db_path)
@@ -40,10 +43,9 @@ async def init_db():
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """
-    Dependency to get database session
-    """
+    """Dependency to get database session"""
     async with async_session() as session:
+
         try:
             yield session
             await session.commit()
@@ -56,10 +58,9 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 @asynccontextmanager
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
-    """
-    Context manager for database session
-    """
+    """Context manager for database session"""
     async with async_session() as session:
+
         try:
             yield session
             await session.commit()

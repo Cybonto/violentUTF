@@ -1,39 +1,38 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 # converters/converter_application.py
 
-"""
-Module: Converter Application
-
-Contains functions to apply converters to prompts and datasets.
-
-Key Functions:
-- apply_converter_to_prompt(converter, prompt): Applies a converter to a single prompt.
-- apply_converter_to_dataset(converter, dataset): Applies a converter to an entire dataset.
-- preview_converter_effect(converter, prompt): Returns a preview of applying converter to a prompt.
-
-Dependencies:
-- pyrit.models (SeedPrompt, SeedPromptDataset)
-- pyrit.prompt_converter
-- asyncio
-- typing
-- utils.error_handling
-- utils.logging
-"""
-
+"""Converter Application module."""
 import asyncio
-import logging
-from typing import Any, Dict, List, Optional
 
 from pyrit.models import SeedPrompt, SeedPromptDataset
 from pyrit.prompt_converter import PromptConverter
 from utils.error_handling import ConverterApplicationError
 from utils.logging import get_logger
 
+# Module: Converter Application
+#
+# Contains functions to apply converters to prompts and datasets.
+#
+# Key Functions:
+# - apply_converter_to_prompt(converter, prompt): Applies a converter to a single prompt.
+# - apply_converter_to_dataset(converter, dataset): Applies a converter to an entire dataset.
+# - preview_converter_effect(converter, prompt): Returns a preview of applying converter to a prompt.
+#
+# Dependencies:
+# - pyrit.models (SeedPrompt, SeedPromptDataset)
+# - pyrit.prompt_converter
+# - asyncio
+# - utils.error_handling
+# - utils.logging
 logger = get_logger(__name__)
 
 
 async def apply_converter_to_prompt(converter: PromptConverter, prompt: SeedPrompt) -> SeedPrompt:
-    """
-    Applies a converter to a single prompt asynchronously.
+    """Apply converter to a single prompt asynchronously.
 
     Parameters:
         converter (PromptConverter): The converter instance to apply.
@@ -50,6 +49,7 @@ async def apply_converter_to_prompt(converter: PromptConverter, prompt: SeedProm
         - pyrit.prompt_converter
     """
     try:
+
         # Handle input and output data types
         input_type = prompt.data_type
         # Apply the converter
@@ -79,17 +79,16 @@ async def apply_converter_to_prompt(converter: PromptConverter, prompt: SeedProm
             sequence=prompt.sequence,
         )
 
-        logger.debug(f"Applied converter to prompt ID {prompt.id}")
+        logger.debug("Applied converter to prompt ID %s", prompt.id)
         return transformed_prompt
 
     except Exception as e:
-        logger.error(f"Error applying converter to prompt ID {prompt.id}: {e}")
+        logger.error("Error applying converter to prompt ID %s: %s", prompt.id, e)
         raise ConverterApplicationError(f"Error applying converter to prompt ID {prompt.id}: {e}") from e
 
 
 async def apply_converter_to_dataset(converter: PromptConverter, dataset: SeedPromptDataset) -> SeedPromptDataset:
-    """
-    Applies a converter to each prompt in a dataset asynchronously.
+    """Apply converter to each prompt in a dataset asynchronously.
 
     Parameters:
         converter (PromptConverter): The converter instance to apply.
@@ -105,6 +104,7 @@ async def apply_converter_to_dataset(converter: PromptConverter, dataset: SeedPr
         - asyncio
     """
     try:
+
         transformed_prompts = []
         # Create a list of tasks
         tasks = [apply_converter_to_prompt(converter, prompt) for prompt in dataset.prompts]
@@ -124,17 +124,16 @@ async def apply_converter_to_dataset(converter: PromptConverter, dataset: SeedPr
             date_added=dataset.date_added,
             added_by=dataset.added_by,
         )
-        logger.info(f"Applied converter to dataset with {len(dataset.prompts)} prompts.")
+        logger.info("Applied converter to dataset with %s prompts.", len(dataset.prompts))
         return transformed_dataset
 
     except Exception as e:
-        logger.error(f"Error applying converter to dataset: {e}")
+        logger.error("Error applying converter to dataset: %s", e)
         raise ConverterApplicationError(f"Error applying converter to dataset: {e}") from e
 
 
 async def preview_converter_effect(converter: PromptConverter, prompt: SeedPrompt) -> str:
-    """
-    Applies a converter to a single prompt asynchronously and returns the transformed value.
+    """Apply converter to a single prompt asynchronously and returns the transformed value.
 
     Parameters:
         converter (PromptConverter): The converter instance to apply.
@@ -150,16 +149,16 @@ async def preview_converter_effect(converter: PromptConverter, prompt: SeedPromp
         - asyncio
     """
     try:
+
         transformed_prompt = await apply_converter_to_prompt(converter, prompt)
-        return transformed_prompt.value
+        return str(transformed_prompt.value) if transformed_prompt.value is not None else ""
     except Exception as e:
-        logger.error(f"Error previewing converter effect: {e}")
+        logger.error("Error previewing converter effect: %s", e)
         raise ConverterApplicationError(f"Error previewing converter effect: {e}") from e
 
 
 def apply_converter_to_dataset_sync(converter: PromptConverter, dataset: SeedPromptDataset) -> SeedPromptDataset:
-    """
-    Synchronous wrapper to apply a converter to a dataset.
+    """Apply a converter to a dataset synchronously.
 
     Parameters:
         converter (PromptConverter): The converter instance to apply.
@@ -175,17 +174,17 @@ def apply_converter_to_dataset_sync(converter: PromptConverter, dataset: SeedPro
         - asyncio
     """
     try:
+
         # Use asyncio.run to execute the coroutine
         transformed_dataset = asyncio.run(apply_converter_to_dataset(converter, dataset))
         return transformed_dataset
     except Exception as e:
-        logger.error(f"Error in apply_converter_to_dataset_sync: {e}")
+        logger.error("Error in apply_converter_to_dataset_sync: %s", e)
         raise ConverterApplicationError(f"Error applying converter to dataset (sync): {e}") from e
 
 
 def apply_converter_to_prompt_sync(converter: PromptConverter, prompt: SeedPrompt) -> SeedPrompt:
-    """
-    Synchronous wrapper to apply a converter to a single prompt.
+    """Apply a converter to a single prompt synchronously.
 
     Parameters:
         converter (PromptConverter): The converter instance to apply.
@@ -201,9 +200,10 @@ def apply_converter_to_prompt_sync(converter: PromptConverter, prompt: SeedPromp
         - asyncio
     """
     try:
+
         # Use asyncio.run to execute the coroutine
         transformed_prompt = asyncio.run(apply_converter_to_prompt(converter, prompt))
         return transformed_prompt
     except Exception as e:
-        logger.error(f"Error in apply_converter_to_prompt_sync: {e}")
+        logger.error("Error in apply_converter_to_prompt_sync: %s", e)
         raise ConverterApplicationError(f"Error applying converter to prompt (sync): {e}") from e

@@ -1,0 +1,96 @@
+[MAIN]
+# Use multiple processes to speed up Pylint
+jobs = 4
+
+# Python code to execute, usually for sys.path manipulation
+init-hook = 'import sys; sys.path.append(".")'
+
+# Files or directories to be skipped
+ignore = migrations,venv,env,.venv,.env,build,dist
+
+# Directories to ignore
+ignore-paths = ^tests/.*$,^app_data/.*$,^violentutf_logs/.*$
+
+[MESSAGES CONTROL]
+# Only show warnings and errors
+# Disable: convention (C), refactor (R), info (I)
+disable = C,R,I,
+    # Specific disables for this project
+    too-many-locals,
+    too-many-arguments,
+    too-many-instance-attributes,
+    too-many-public-methods,
+    too-many-branches,
+    too-many-statements,
+    duplicate-code,
+    # Import-related false positives
+    import-error,
+    no-name-in-module,
+    # Broad exception handling for robustness
+    broad-except,
+    # Allow TODO comments
+    fixme,
+    # Allow single letter variable names in specific contexts
+    invalid-name,
+    # Allow missing docstrings for now
+    missing-docstring,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    # Import related - handled by isort
+    wrong-import-order,
+    ungrouped-imports,
+    # Allow unused variables with underscore prefix
+    unused-argument
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length = 120
+
+# Allow the body of an if to be on the same line as the test if there is no else
+single-line-if-stmt = yes
+
+[BASIC]
+# Good variable names which should always be accepted
+good-names = i,j,k,ex,Run,_,id,pk,db,app,logger,e
+
+# Regular expression matching correct function names
+function-rgx = [a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct variable names
+variable-rgx = [a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct constant names
+const-rgx = (([A-Z_][A-Z0-9_]*)|(__.*__))$
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args = 10
+
+# Maximum number of locals for function / method body
+max-locals = 20
+
+# Maximum number of return / yield for function / method body
+max-returns = 6
+
+# Maximum number of branch for function / method body
+max-branches = 15
+
+# Maximum number of statements in function / method body
+max-statements = 50
+
+# Maximum number of parents for a class (see C0901)
+max-parents = 7
+
+# Maximum number of attributes for a class (see R0902)
+max-attributes = 10
+
+# Minimum number of public methods for a class (see R0903)
+min-public-methods = 1
+
+# Maximum number of public methods for a class (see R0904)
+max-public-methods = 25
+
+[IMPORTS]
+# Allow wildcard imports in __init__.py files
+allow-wildcard-with-all = yes

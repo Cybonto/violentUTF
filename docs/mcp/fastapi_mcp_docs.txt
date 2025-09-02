@@ -307,15 +307,15 @@ You also need to make sure to configure callback URLs properly in your OAuth pro
 
 Proxies solve several problems:
 
-1.  **Missing registration endpoints**:  
-    The MCP spec expects OAuth providers to support [dynamic client registration (RFC 7591)](https://datatracker.ietf.org/doc/html/rfc7591), but many don't.  
-    Furthermore, dynamic client registration is probably overkill for most use cases.  
+1.  **Missing registration endpoints**:
+    The MCP spec expects OAuth providers to support [dynamic client registration (RFC 7591)](https://datatracker.ietf.org/doc/html/rfc7591), but many don't.
+    Furthermore, dynamic client registration is probably overkill for most use cases.
     The `setup_fake_dynamic_registration` option (True by default) creates a compatible endpoint that just returns a static client ID and secret.
 
-2.  **Scope handling**:  
+2.  **Scope handling**:
     Some MCP clients don't properly request scopes, so our proxy adds the necessary scopes for you.
 
-3.  **Audience requirements**:  
+3.  **Audience requirements**:
     Some OAuth providers require an audience parameter that MCP clients don't always provide. The proxy adds this automatically.
 
 ### Add a fixed port to mcp-remote
@@ -589,7 +589,7 @@ FILE: docs/configurations/tool-naming.mdx
 ================================================
 ---
 title: Tool Naming
-icon: input-text    
+icon: input-text
 ---
 
 FastAPI-MCP uses the `operation_id` from your FastAPI routes as the MCP tool names. When you don't specify an `operation_id`, FastAPI auto-generates one, but these can be cryptic.
@@ -628,22 +628,22 @@ By following these best practices, you can build safer, more intuitive MCP tools
 
 ## Tool Selection
 
-- **Be selective:**  
+- **Be selective:**
   Avoid exposing every endpoint as a tool. LLM clients perform better with a limited number of well-defined tools, and providers often impose tool limits.
 
-- **Prioritize safety:**  
+- **Prioritize safety:**
   Do **not** expose `PUT` or `DELETE` endpoints unless absolutely necessary. LLMs are non-deterministic and could unintentionally alter or damage systems or databases.
 
-- **Focus on data retrieval:**  
+- **Focus on data retrieval:**
   Prefer `GET` endpoints that return data safely and predictably.
 
-- **Emphasize meaningful workflows:**  
+- **Emphasize meaningful workflows:**
   Expose endpoints that reflect clear, goal-oriented tasks. Tools with focused actions are easier for agents to understand and use effectively.
 
 ## Tool Naming
 
-- **Use short, descriptive names:**  
-  Helps LLMs select and use the right tool. Know that some MCP clients restrict tool name length. 
+- **Use short, descriptive names:**
+  Helps LLMs select and use the right tool. Know that some MCP clients restrict tool name length.
 
 - **Follow naming constraints:**
   - Must start with a letter
@@ -651,18 +651,18 @@ By following these best practices, you can build safer, more intuitive MCP tools
   - Avoid hyphens (e.g., AWS Nova does **not** support them)
   - Use either `camelCase` or `snake_case` consistently across all tools
 
-- **Ensure uniqueness:**  
+- **Ensure uniqueness:**
   Each tool name should be unique and clearly indicate its function.
 
 ## Documentation
 
-- **Describe every tool meaningfully:**  
+- **Describe every tool meaningfully:**
   Provide a clear and concise summary of what each tool does.
 
-- **Include usage examples and parameter descriptions:**  
+- **Include usage examples and parameter descriptions:**
   These help LLMs understand how to use the tool correctly.
 
-- **Standardize documentation across tools:**  
+- **Standardize documentation across tools:**
   Keep formatting and structure consistent to maintain quality and readability.
 
 
@@ -680,7 +680,7 @@ icon: question
 
 ## Usage
 ### How do I configure HTTP request timeouts?
-By default, HTTP requests timeout after 5 seconds. If you have API endpoints that take longer to respond, you can configure a custom timeout by injecting your own httpx client. 
+By default, HTTP requests timeout after 5 seconds. If you have API endpoints that take longer to respond, you can configure a custom timeout by injecting your own httpx client.
 
 For a working example, see [Configure HTTP Timeout Example](https://github.com/tadata-org/fastapi_mcp/blob/main/examples/07_configure_http_timeout_example.py).
 
@@ -795,7 +795,7 @@ For more usage examples, see [Examples](https://github.com/tadata-org/fastapi_mc
 
 ## Running the server
 
-By running your FastAPI, your MCP will run at `https://app.base.url/mcp`. 
+By running your FastAPI, your MCP will run at `https://app.base.url/mcp`.
 
 For example, by using uvicorn, add to your code:
 ```python {9-11}
@@ -815,7 +815,7 @@ and run the server using `python fastapi_mcp_server.py`, which will serve you th
 
 ## Connecting a client to the MCP server
 
-Once your FastAPI app with MCP integration is running, you would want to connect it to an MCP client. 
+Once your FastAPI app with MCP integration is running, you would want to connect it to an MCP client.
 
 ### Connecting to the MCP Server using SSE
 
@@ -900,6 +900,3 @@ That's it! Your auto-generated MCP server is now available at `https://app.base.
 ## Hosted Solution
 
 If you prefer a managed hosted solution check out [tadata.com](https://tadata.com).
-
-
-

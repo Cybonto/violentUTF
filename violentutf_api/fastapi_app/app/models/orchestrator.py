@@ -1,3 +1,11 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Orchestrator module."""
+
 import uuid
 from datetime import datetime
 
@@ -7,7 +15,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 
 class OrchestratorConfiguration(Base):
-    """Database model for orchestrator configurations"""
+    """Database model for orchestrator configurations."""
 
     __tablename__ = "orchestrator_configurations"
 
@@ -28,7 +36,7 @@ class OrchestratorConfiguration(Base):
 
 
 class OrchestratorExecution(Base):
-    """Database model for orchestrator executions"""
+    """Database model for orchestrator executions."""
 
     __tablename__ = "orchestrator_executions"
 

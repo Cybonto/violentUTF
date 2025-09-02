@@ -19,25 +19,25 @@ services:
     depends_on:
       - etcd
     ports:
-      - "9080:9080"   # HTTP port
-      - "9180:9180"   # Admin API port
-      - "9091:9091"   # Prometheus metrics port
+      - "9080:9080" # HTTP port
+      - "9180:9180" # Admin API port
+      - "9091:9091" # Prometheus metrics port
     volumes:
-      - './conf/config.yaml:/usr/local/apisix/conf/config.yaml'
+      - "./conf/config.yaml:/usr/local/apisix/conf/config.yaml"
     restart: always
     networks:
       - apisix_network
       - vutf-network
-    command: [ "apisix", "start" ]  # Ensure APISIX starts properly
+    command: ["apisix", "start"] # Ensure APISIX starts properly
 
   prometheus:
     image: prom/prometheus:latest
     volumes:
-      - './conf/prometheus.yml:/etc/prometheus/prometheus.yml:ro'
+      - "./conf/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
     depends_on:
       - apisix
     ports:
-      - "9090:9090"   # Prometheus Web UI
+      - "9090:9090" # Prometheus Web UI
     restart: always
     networks:
       - apisix_network
@@ -47,7 +47,7 @@ services:
     depends_on:
       - prometheus
     ports:
-      - "3000:3000"   # Grafana Web UI
+      - "3000:3000" # Grafana Web UI
     restart: always
     networks:
       - apisix_network
@@ -56,7 +56,7 @@ services:
     image: "apache/apisix-dashboard:latest"
     restart: on-failure
     volumes:
-      - './conf/dashboard.yaml:/usr/local/apisix-dashboard/conf/conf.yaml:ro'
+      - "./conf/dashboard.yaml:/usr/local/apisix-dashboard/conf/conf.yaml:ro"
     depends_on:
       - etcd
     ports:

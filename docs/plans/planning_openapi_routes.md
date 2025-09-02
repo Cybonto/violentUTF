@@ -9,7 +9,7 @@ This document outlines a comprehensive plan to integrate OpenAPI-compliant endpo
 ### Existing AI Provider Integration
 The current system follows a well-defined pattern for integrating AI providers:
 
-1. **Configuration Management**: 
+1. **Configuration Management**:
    - AI provider settings stored in `ai_tokens.env`
    - Providers can be enabled/disabled with boolean flags
    - API keys and endpoints are configurable per provider
@@ -62,7 +62,7 @@ OPENAPI_1_SPEC_PATH=/openapi.json
 OPENAPI_1_AUTH_TYPE=bearer
 OPENAPI_1_AUTH_TOKEN=sk-xxxxxx
 
-# OpenAPI Provider 2  
+# OpenAPI Provider 2
 OPENAPI_2_ID=internal-ai
 OPENAPI_2_NAME="Internal AI API"
 OPENAPI_2_BASE_URL=https://internal.company.com/ai/v1

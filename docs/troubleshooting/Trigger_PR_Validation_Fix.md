@@ -30,7 +30,7 @@ The workflow needs to use the appropriate reference based on the event type:
       } else {
         ref = context.ref;
       }
-      
+
       await github.rest.actions.createWorkflowDispatch({
         owner: context.repo.owner,
         repo: context.repo.repo,
@@ -48,10 +48,10 @@ Use the head SHA directly for pull requests:
   uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410
   with:
     script: |
-      const ref = context.eventName === 'pull_request' 
-        ? context.payload.pull_request.head.sha 
+      const ref = context.eventName === 'pull_request'
+        ? context.payload.pull_request.head.sha
         : context.ref;
-        
+
       await github.rest.actions.createWorkflowDispatch({
         owner: context.repo.owner,
         repo: context.repo.repo,
@@ -63,7 +63,7 @@ Use the head SHA directly for pull requests:
 
 ## Why This Happens
 1. PR #50 has failing checks (Code Quality, etc.)
-2. GitHub marks the PR as "UNSTABLE" 
+2. GitHub marks the PR as "UNSTABLE"
 3. GitHub doesn't create the `refs/pull/50/merge` reference for unstable PRs
 4. The workflow tries to use this non-existent reference and fails
 

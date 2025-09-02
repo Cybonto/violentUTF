@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
-"""
-Pre-commit check script to identify all potential CI failures before committing.
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Pre-commit check script to identify all potential CI failures before committing.
+
 Run this before every commit to ensure your code will pass GitHub Actions checks.
 """
+
+from __future__ import annotations
 
 import argparse
 import json
 import os
-import subprocess
+import subprocess  # nosec B404 - needed for code quality checks
 import sys
 from datetime import datetime
-from pathlib import Path
+from typing import Union
 
 # ANSI color codes
 GREEN = "\033[92m"
@@ -25,16 +33,19 @@ BOLD = "\033[1m"
 class PreCommitChecker:
     """Comprehensive pre-commit checker for ViolentUTF project."""
 
-    def __init__(self, fix=False, verbose=False):
+    def __init__(self: PreCommitChecker, fix: bool = False, verbose: bool = False) -> None:
+        """Initialize instance."""
         self.fix = fix
-        self.verbose = verbose
-        self.issues = []
-        self.fixed = []
-        self.warnings = []
 
-    def log(self, message, level="info"):
+        self.verbose = verbose
+        self.issues: list[tuple[str, str]] = []
+        self.fixed: list[str] = []
+        self.warnings: list[tuple[str, str]] = []
+
+    def log(self: PreCommitChecker, message: str, level: str = "info") -> None:
         """Log messages with color coding."""
         timestamp = datetime.now().strftime("%H:%M:%S")
+
         if level == "error":
             print(f"{RED}[{timestamp}] ✗ {message}{RESET}")
         elif level == "success":
@@ -48,13 +59,26 @@ class PreCommitChecker:
             print(f"{CYAN}{BOLD}{message}{RESET}")
             print(f"{CYAN}{BOLD}{'='*70}{RESET}")
 
-    def run_command(self, cmd, description, check_only=True):
+    def run_command(
+        self: PreCommitChecker,
+        cmd: Union[str, list[str]],
+        description: str,
+        check_only: bool = True,
+    ) -> tuple[bool, str]:
         """Run a command and capture output."""
         if self.verbose:
+
             self.log(f"Running: {cmd}", "info")
 
         try:
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
+            # Convert string command to list for safer execution without shell=True
+            if isinstance(cmd, str):
+                import shlex
+
+                cmd = shlex.split(cmd)
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=300, check=False
+            )  # nosec B603 - controlled input
 
             if result.returncode == 0:
                 return True, result.stdout
@@ -69,11 +93,11 @@ class PreCommitChecker:
             self.issues.append((description, str(e)))
             return False, str(e)
 
-    def check_black(self):
+    def check_black(self: PreCommitChecker) -> bool:
         """Check Python code formatting with Black."""
         self.log("Checking Python formatting with Black...", "header")
 
-        success, output = self.run_command("black --check --diff . 2>&1", "Black formatting")
+        success, _ = self.run_command("black --check --diff . 2>&1", "Black formatting")
 
         if not success and self.fix:
             self.log("Fixing Black formatting issues...", "warning")
@@ -83,11 +107,11 @@ class PreCommitChecker:
                 return True
         return success
 
-    def check_isort(self):
+    def check_isort(self: PreCommitChecker) -> bool:
         """Check import sorting with isort."""
         self.log("Checking import sorting with isort...", "header")
 
-        success, output = self.run_command("isort --check-only --diff . --profile black 2>&1", "Import sorting")
+        success, _ = self.run_command("isort --check-only --diff . --profile black 2>&1", "Import sorting")
 
         if not success and self.fix:
             self.log("Fixing import sorting issues...", "warning")
@@ -97,15 +121,16 @@ class PreCommitChecker:
                 return True
         return success
 
-    def check_flake8(self):
+    def check_flake8(self: PreCommitChecker) -> bool:
         """Check code quality with flake8."""
         self.log("Checking code quality with flake8...", "header")
 
         # Create a temporary flake8 config if .flake8 doesn't exist
         if not os.path.exists(".flake8"):
-            with open(".flake8", "w") as f:
+            with open(".flake8", "w", encoding="utf-8") as f:
                 f.write(
                     """[flake8]
+
 max-line-length = 120
 extend-ignore = E203, W503, E501
 exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
@@ -117,7 +142,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
         if not success:
             # Parse flake8 output for common issues
             lines = output.split("\n")
-            error_counts = {}
+            error_counts: dict[str, int] = {}
             for line in lines:
                 if ":" in line and len(line.split(":")) >= 4:
                     parts = line.split(":")
@@ -134,7 +159,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return success
 
-    def check_file_paths(self):
+    def check_file_paths(self: PreCommitChecker) -> bool:
         """Check for problematic file paths (spaces, special characters)."""
         self.log("Checking for problematic file paths...", "header")
 
@@ -154,7 +179,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             return False
         return True
 
-    def check_large_files(self):
+    def check_large_files(self: PreCommitChecker) -> bool:
         """Check for large files that shouldn't be committed."""
         self.log("Checking for large files...", "header")
 
@@ -178,8 +203,8 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def check_secrets(self):
-        """Basic check for potential secrets in code."""
+    def check_secrets(self: PreCommitChecker) -> bool:
+        """Check for potential secrets in code."""
         self.log("Checking for potential secrets...", "header")
 
         secret_patterns = [
@@ -212,12 +237,12 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def check_yaml_files(self):
+    def check_yaml_files(self: PreCommitChecker) -> bool:
         """Check YAML files for syntax errors."""
         self.log("Checking YAML files...", "header")
 
         yaml_files = []
-        for root, dirs, files in os.walk("."):
+        for root, _, files in os.walk("."):
             for file in files:
                 if file.endswith((".yml", ".yaml")):
                     yaml_files.append(os.path.join(root, file))
@@ -228,7 +253,7 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
                 for yaml_file in yaml_files:
                     try:
-                        with open(yaml_file, "r") as f:
+                        with open(yaml_file, "r", encoding="utf-8") as f:
                             yaml.safe_load(f)
                     except yaml.YAMLError as e:
                         self.issues.append((f"YAML syntax error in {yaml_file}", str(e)))
@@ -238,19 +263,19 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def check_json_files(self):
+    def check_json_files(self: PreCommitChecker) -> bool:
         """Check JSON files for syntax errors."""
         self.log("Checking JSON files...", "header")
 
         json_files = []
-        for root, dirs, files in os.walk("."):
+        for root, _, files in os.walk("."):
             for file in files:
                 if file.endswith(".json"):
                     json_files.append(os.path.join(root, file))
 
         for json_file in json_files:
             try:
-                with open(json_file, "r") as f:
+                with open(json_file, "r", encoding="utf-8") as f:
                     json.load(f)
             except json.JSONDecodeError as e:
                 self.issues.append((f"JSON syntax error in {json_file}", str(e)))
@@ -258,19 +283,19 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def check_dockerfile(self):
+    def check_dockerfile(self: PreCommitChecker) -> bool:
         """Check Dockerfile best practices."""
         self.log("Checking Dockerfiles...", "header")
 
         dockerfiles = []
-        for root, dirs, files in os.walk("."):
+        for root, _, files in os.walk("."):
             for file in files:
                 if file == "Dockerfile" or file.endswith(".dockerfile"):
                     dockerfiles.append(os.path.join(root, file))
 
         for dockerfile in dockerfiles:
             try:
-                with open(dockerfile, "r") as f:
+                with open(dockerfile, "r", encoding="utf-8") as f:
                     content = f.read()
                     # Basic checks
                     if "COPY . ." in content and "dockerignore" not in os.listdir(os.path.dirname(dockerfile)):
@@ -285,9 +310,10 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
 
         return True
 
-    def run_all_checks(self):
+    def run_all_checks(self: PreCommitChecker) -> int:
         """Run all pre-commit checks."""
         self.log("ViolentUTF Pre-Commit Checker", "header")
+
         self.log(f"Mode: {'FIX' if self.fix else 'CHECK ONLY'}", "info")
 
         checks = [
@@ -355,9 +381,10 @@ exclude = .git,__pycache__,.venv,venv,build,dist,*.egg-info
             return 1
 
 
-def main():
-    """Main entry point."""
+def main() -> int:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Pre-commit checker for ViolentUTF project")
+
     parser.add_argument(
         "--fix",
         action="store_true",

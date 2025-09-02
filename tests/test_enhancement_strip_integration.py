@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Integration Tests for Enhancement Strip with Real MCP Server
 ==========================================================
@@ -38,7 +44,9 @@ def create_test_jwt_token() -> str:
         "token_type": "access",
     }
 
-    return jwt.encode(payload, secret_key, algorithm="HS256")
+    token = jwt.encode(payload, secret_key, algorithm="HS256")
+    # Ensure we return a string (PyJWT may return str or bytes depending on version)
+    return str(token) if not isinstance(token, str) else token
 
 
 class TestEnhancementStripIntegration:
@@ -285,7 +293,12 @@ class TestEnhancementStripIntegration:
                     continue
 
             if variations:
-                workflow_results["variations"] = variations
+                # Ensure workflow_results["variations"] is initialized as a list or None
+                if workflow_results.get("variations") is None or isinstance(workflow_results.get("variations"), list):
+                    workflow_results["variations"] = variations
+                else:
+                    # Handle or assert for invalid type
+                    assert False, "workflow_results['variations'] should be a list or None"
                 print(f"✓ Generated {len(variations)} variations")
         except Exception as e:
             print(f"Variation generation failed: {e}")
@@ -299,6 +312,7 @@ class TestEnhancementStripIntegration:
 
     def test_performance_with_real_operations(self, mcp_client, test_prompt):
         """Test performance of enhancement operations with real MCP"""
+
         import time
 
         performance_results = []

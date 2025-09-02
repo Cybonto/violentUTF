@@ -1,7 +1,7 @@
 # PyRIT-Garak Alignment Analysis
 
-**Analysis Date:** December 3, 2025  
-**Purpose:** Comprehensive analysis of PyRIT and Garak API frameworks for AI red-teaming and security assessment  
+**Analysis Date:** December 3, 2025
+**Purpose:** Comprehensive analysis of PyRIT and Garak API frameworks for AI red-teaming and security assessment
 **Framework Versions:** PyRIT (Azure PyRIT API) & Garak (Latest API Documentation)
 
 ## Executive Summary

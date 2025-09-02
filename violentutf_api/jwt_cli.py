@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
-"""
-ViolentUTF JWT CLI Tool - Command line interface for JWT key management
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""ViolentUTF JWT CLI Tool - Command line interface for JWT key management
 
 Requirements:
     pip install click requests
@@ -10,7 +15,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional, cast
 
 import click
 import requests
@@ -25,30 +30,33 @@ AUTH_TIMEOUT = 10  # shorter for auth operations
 TOKEN_FILE = CONFIG_DIR / "token.json"
 
 
-def ensure_config_dir():
+def ensure_config_dir() -> None:
     """Ensure configuration directory exists"""
     CONFIG_DIR.mkdir(exist_ok=True)
 
 
-def save_token(token_data: dict):
+def save_token(token_data: dict) -> None:
     """Save token to local file"""
     ensure_config_dir()
-    with open(TOKEN_FILE, "w") as f:
+
+    with open(TOKEN_FILE, "w", encoding="utf-8") as f:
         json.dump(token_data, f, indent=2)
     os.chmod(TOKEN_FILE, 0o600)  # Restrict permissions
 
 
-def load_token() -> Optional[dict]:
+def load_token() -> Optional[Dict[str, Any]]:
     """Load token from local file"""
     if TOKEN_FILE.exists():
-        with open(TOKEN_FILE, "r") as f:
-            return json.load(f)
+
+        with open(TOKEN_FILE, "r", encoding="utf-8") as f:
+            return cast(Dict[str, Any], json.load(f))
     return None
 
 
 def get_auth_header() -> dict:
     """Get authorization header from saved token"""
     token_data = load_token()
+
     if not token_data:
         click.echo("No authentication token found. Please login first.", err=True)
         sys.exit(1)
@@ -56,17 +64,17 @@ def get_auth_header() -> dict:
 
 
 @click.group()
-def cli():
-    """ViolentUTF JWT CLI - Manage JWT tokens for API access"""
-    pass
+def cli() -> None:
+    """Manage JWT tokens for ViolentUTF API access."""
 
 
 @cli.command()
 @click.option("--username", "-u", prompt=True, help="Username")
 @click.option("--password", "-p", prompt=True, hide_input=True, help="Password")
-def login(username: str, password: str):
+def login(username: str, password: str) -> None:
     """Login to ViolentUTF and obtain JWT token"""
     try:
+
         response = requests.post(
             f"{API_BASE_URL}/api/v1/auth/token",
             data={"username": username, "password": password, "grant_type": "password"},
@@ -81,21 +89,28 @@ def login(username: str, password: str):
             click.echo(f"Successfully logged in as {username}")
             click.echo(f"Token saved to {TOKEN_FILE}")
         else:
-            click.echo(f"Login failed: {response.json().get('detail', 'Unknown error')}", err=True)
+            click.echo(
+                f"Login failed: {response.json().get('detail', 'Unknown error')}",
+                err=True,
+            )
             sys.exit(1)
 
     except requests.exceptions.ConnectionError:
         click.echo(f"Cannot connect to API at {API_BASE_URL}", err=True)
         sys.exit(1)
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
 @cli.command()
-def logout():
+def logout() -> None:
     """Logout and remove stored token"""
     if TOKEN_FILE.exists():
+
         TOKEN_FILE.unlink()
         click.echo("Successfully logged out")
     else:
@@ -103,9 +118,10 @@ def logout():
 
 
 @cli.command()
-def whoami():
+def whoami() -> None:
     """Show current user information"""
     try:
+
         response = requests.get(f"{API_BASE_URL}/api/v1/auth/me", headers=get_auth_header(), timeout=30)
 
         if response.status_code == 200:
@@ -116,15 +132,19 @@ def whoami():
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
 @cli.command()
-def get_token():
+def get_token() -> None:
     """Display current JWT token"""
     token_data = load_token()
+
     if token_data:
         click.echo(f"Token: {token_data['access_token']}")
         click.echo(f"Type: {token_data.get('token_type', 'bearer')}")
@@ -133,7 +153,7 @@ def get_token():
 
         # Check expiration
         if "expires_in" in token_data and "obtained_at" in token_data:
-            from datetime import datetime, timedelta
+            from datetime import timedelta
 
             obtained = datetime.fromisoformat(token_data["obtained_at"])
             expires = obtained + timedelta(seconds=token_data["expires_in"])
@@ -149,38 +169,55 @@ def get_token():
 
 
 @cli.command()
-def refresh():
+def refresh() -> None:
     """Refresh the current token"""
     try:
-        response = requests.post(f"{API_BASE_URL}/api/v1/auth/refresh", headers=get_auth_header(), timeout=AUTH_TIMEOUT)
+
+        response = requests.post(
+            f"{API_BASE_URL}/api/v1/auth/refresh",
+            headers=get_auth_header(),
+            timeout=AUTH_TIMEOUT,
+        )
 
         if response.status_code == 200:
             token_data = response.json()
             old_data = load_token()
-            token_data["username"] = old_data.get("username", "Unknown")
+            token_data["username"] = old_data.get("username", "Unknown") if old_data else "Unknown"
             token_data["obtained_at"] = datetime.utcnow().isoformat()
             save_token(token_data)
             click.echo("Token refreshed successfully")
         else:
-            click.echo(f"Refresh failed: {response.json().get('detail', 'Unknown error')}", err=True)
+            click.echo(
+                f"Refresh failed: {response.json().get('detail', 'Unknown error')}",
+                err=True,
+            )
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
 @cli.group()
-def keys():
+def api_keys() -> None:
     """Manage API keys"""
-    pass
 
 
-@keys.command("create")
+@api_keys.command("create")
 @click.option("--name", "-n", prompt=True, help="Name for the API key")
-@click.option("--permissions", "-p", multiple=True, default=["api:access"], help="Permissions for the key")
-def create_key(name: str, permissions: tuple):
+@click.option(
+    "--permissions",
+    "-p",
+    multiple=True,
+    default=["api:access"],
+    help="Permissions for the key",
+)
+def create_key(name: str, permissions: tuple) -> None:
     """Create a new API key"""
     try:
+
         response = requests.post(
             f"{API_BASE_URL}/api/v1/keys/create",
             headers=get_auth_header(),
@@ -199,49 +236,63 @@ def create_key(name: str, permissions: tuple):
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
-@keys.command("list")
-def list_keys():
+@api_keys.command("list")
+def list_keys() -> None:
     """List all API keys"""
     try:
-        response = requests.get(f"{API_BASE_URL}/api/v1/keys/list", headers=get_auth_header(), timeout=DEFAULT_TIMEOUT)
+
+        response = requests.get(
+            f"{API_BASE_URL}/api/v1/keys/list",
+            headers=get_auth_header(),
+            timeout=DEFAULT_TIMEOUT,
+        )
 
         if response.status_code == 200:
             keys_data = response.json()
-            keys = keys_data.get("keys", [])
+            api_keys_list = keys_data.get("keys", [])
 
-            if not keys:
+            if not api_keys_list:
                 click.echo("No API keys found")
                 return
 
-            click.echo(f"Found {len(keys)} API key(s):\n")
-            for key in keys:
-                click.echo(f"ID: {key['id']}")
-                click.echo(f"Name: {key['name']}")
-                click.echo(f"Created: {key['created_at']}")
-                click.echo(f"Expires: {key['expires_at']}")
-                click.echo(f"Active: {'Yes' if key['active'] else 'No'}")
-                click.echo(f"Permissions: {', '.join(key['permissions'])}")
+            click.echo(f"Found {len(api_keys_list)} API key(s):\n")
+            for key_item in api_keys_list:
+                click.echo(f"ID: {key_item['id']}")
+                click.echo(f"Name: {key_item['name']}")
+                click.echo(f"Created: {key_item['created_at']}")
+                click.echo(f"Expires: {key_item['expires_at']}")
+                click.echo(f"Active: {'Yes' if key_item['active'] else 'No'}")
+                click.echo(f"Permissions: {', '.join(key_item['permissions'])}")
                 click.echo("")
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
-@keys.command("revoke")
+@api_keys.command("revoke")
 @click.argument("key_id")
-def revoke_key(key_id: str):
+def revoke_key(key_id: str) -> None:
     """Revoke an API key"""
     try:
+
         response = requests.delete(
-            f"{API_BASE_URL}/api/v1/keys/{key_id}", headers=get_auth_header(), timeout=DEFAULT_TIMEOUT
+            f"{API_BASE_URL}/api/v1/keys/{key_id}",
+            headers=get_auth_header(),
+            timeout=DEFAULT_TIMEOUT,
         )
 
         if response.status_code == 200:
@@ -249,17 +300,23 @@ def revoke_key(key_id: str):
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 
-@keys.command("current")
-def get_current_key():
+@api_keys.command("current")
+def get_current_key() -> None:
     """Get current session as API key format"""
     try:
+
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/keys/current", headers=get_auth_header(), timeout=DEFAULT_TIMEOUT
+            f"{API_BASE_URL}/api/v1/keys/current",
+            headers=get_auth_header(),
+            timeout=DEFAULT_TIMEOUT,
         )
 
         if response.status_code == 200:
@@ -271,8 +328,11 @@ def get_current_key():
         else:
             click.echo(f"Error: {response.json().get('detail', 'Unknown error')}", err=True)
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
         click.echo(f"Error: {str(e)}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {str(e)}", err=True)
         sys.exit(1)
 
 

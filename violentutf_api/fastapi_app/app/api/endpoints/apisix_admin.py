@@ -1,10 +1,14 @@
-"""
-APISIX Admin API proxy endpoints with proper authentication and authorization.
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""APISIX Admin API proxy endpoints with proper authentication and authorization.
+
 This module provides secure access to APISIX admin functions for authorized users.
 """
-
 import logging
-import os
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -24,45 +28,50 @@ APISIX_ADMIN_KEY = settings.APISIX_ADMIN_KEY
 
 
 class PluginConfig(BaseModel):
-    """Model for plugin configuration"""
+    """Model for plugin configuration."""
 
     plugin_name: str
+
     config: Dict[str, Any]
 
 
 class RouteUpdate(BaseModel):
-    """Model for route update request"""
+    """Model for route update request."""
 
     route_id: str
+
     plugins: Dict[str, Dict[str, Any]]
 
 
 class AIPromptGuardConfig(BaseModel):
-    """Configuration for ai-prompt-guard plugin"""
+    """Configuration for ai-prompt-guard plugin."""
 
     deny_patterns: Optional[List[str]] = Field(default=[], description="Patterns to deny")
+
     allow_patterns: Optional[List[str]] = Field(default=[], description="Patterns to allow")
     deny_message: Optional[str] = Field(default="Request blocked by policy", description="Message when denied")
     case_insensitive: Optional[bool] = Field(default=True, description="Case insensitive matching")
 
 
 class AIPromptDecoratorConfig(BaseModel):
-    """Configuration for ai-prompt-decorator plugin"""
+    """Configuration for ai-prompt-decorator plugin."""
 
     prefix: Optional[str] = Field(default="", description="Text to prepend to prompts")
+
     suffix: Optional[str] = Field(default="", description="Text to append to prompts")
     system: Optional[str] = Field(default="", description="System prompt for chat models")
     template: Optional[str] = Field(default="", description="Template with {prompt} placeholder")
 
 
-def get_apisix_admin_key():
-    """Get APISIX admin key from settings"""
+def get_apisix_admin_key() -> Optional[str]:
+    """Get APISIX admin key from settings."""
     return APISIX_ADMIN_KEY if APISIX_ADMIN_KEY else None
 
 
 def check_admin_permission(user: User) -> bool:
-    """Check if user has admin permissions for APISIX management"""
+    """Check if user has admin permissions for APISIX management."""
     # Check for admin role or specific permission
+
     if hasattr(user, "roles"):
         return "admin" in user.roles or "apisix-admin" in user.roles
 
@@ -72,32 +81,42 @@ def check_admin_permission(user: User) -> bool:
 
 
 @router.get("/routes", response_model=Dict[str, Any])
-async def get_ai_routes(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
-    """
-    Get all AI-related routes from APISIX.
+async def get_ai_routes(
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Get all AI-related routes from APISIX.
+
     Only returns routes with ai-proxy plugin or /ai/ prefix.
     """
     if not check_admin_permission(current_user):
+
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions to access APISIX admin functions"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to access APISIX admin functions",
         )
 
     # Check admin key
     admin_key = get_apisix_admin_key()
     if not admin_key:
         logger.error("APISIX admin key not configured")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="APISIX admin key not configured")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="APISIX admin key not configured",
+        )
 
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{APISIX_ADMIN_URL}/apisix/admin/routes", headers={"X-API-KEY": admin_key}, timeout=10.0
+                f"{APISIX_ADMIN_URL}/apisix/admin/routes",
+                headers={"X-API-KEY": admin_key},
+                timeout=10.0,
             )
 
             if response.status_code != 200:
-                logger.error(f"Failed to get routes: {response.status_code}")
+                logger.error("Failed to get routes: %s", response.status_code)
                 raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to retrieve routes from APISIX"
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Failed to retrieve routes from APISIX",
                 )
 
             data = response.json()
@@ -114,64 +133,84 @@ async def get_ai_routes(current_user: User = Depends(get_current_user)) -> Dict[
 
             return {"list": ai_routes}
 
-    except httpx.TimeoutException:
+    except httpx.TimeoutException as exc:
         logger.error("Timeout connecting to APISIX admin API")
         raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Timeout connecting to APISIX admin API"
-        )
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Timeout connecting to APISIX admin API",
+        ) from exc
     except Exception as e:
-        logger.error(f"Error getting routes: {e}")
+        logger.error("Error getting routes: %s", e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving routes: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving routes: {str(e)}",
+        ) from e
 
 
 @router.get("/routes/{route_id}", response_model=Dict[str, Any])
 async def get_route(route_id: str, current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
     """Get specific route configuration from APISIX."""
     if not check_admin_permission(current_user):
+
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions to access APISIX admin functions"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to access APISIX admin functions",
         )
 
     admin_key = get_apisix_admin_key()
     if not admin_key:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="APISIX admin key not configured")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="APISIX admin key not configured",
+        )
 
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{APISIX_ADMIN_URL}/apisix/admin/routes/{route_id}", headers={"X-API-KEY": admin_key}, timeout=10.0
+                f"{APISIX_ADMIN_URL}/apisix/admin/routes/{route_id}",
+                headers={"X-API-KEY": admin_key},
+                timeout=10.0,
             )
 
             if response.status_code != 200:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Route {route_id} not found")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Route {route_id} not found",
+                )
 
             return response.json()
 
     except Exception as e:
-        logger.error(f"Error getting route {route_id}: {e}")
+        logger.error("Error getting route %s: %s", route_id, e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving route: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving route: {str(e)}",
+        ) from e
 
 
 @router.put("/routes/{route_id}/plugins", response_model=Dict[str, Any])
 async def update_route_plugins(
-    route_id: str, route_config: Dict[str, Any], current_user: User = Depends(get_current_user)
+    route_id: str,
+    route_config: Dict[str, Any],
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """
-    Update plugins configuration for a specific route.
+    """Update plugins configuration for a specific route.
+
     This endpoint allows updating the entire route configuration including plugins.
     """
     if not check_admin_permission(current_user):
+
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions to modify APISIX configurations"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to modify APISIX configurations",
         )
 
     admin_key = get_apisix_admin_key()
     if not admin_key:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="APISIX admin key not configured")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="APISIX admin key not configured",
+        )
 
     try:
         # Validate that we're only updating AI routes
@@ -196,29 +235,49 @@ async def update_route_plugins(
             )
 
             if response.status_code not in [200, 201]:
-                logger.error(f"Failed to update route: {response.status_code} - {response.text}")
-                raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to update route in APISIX")
+                logger.error(
+                    "Failed to update route: %s - %s",
+                    response.status_code,
+                    response.text,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Failed to update route in APISIX",
+                )
 
-            logger.info(f"Successfully updated route {route_id} by user {current_user.username}")
+            logger.info(
+                "Successfully updated route %s by user %s",
+                route_id,
+                current_user.username,
+            )
             return response.json()
 
-    except httpx.TimeoutException:
+    except httpx.TimeoutException as exc:
         logger.error("Timeout updating route in APISIX")
-        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Timeout updating route in APISIX")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Timeout updating route in APISIX",
+        ) from exc
     except Exception as e:
-        logger.error(f"Error updating route {route_id}: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error updating route: {str(e)}")
+        logger.error("Error updating route %s: %s", route_id, e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating route: {str(e)}",
+        ) from e
 
 
 @router.post("/routes/{route_id}/plugins/ai-prompt-guard", response_model=Dict[str, Any])
 async def configure_prompt_guard(
-    route_id: str, config: AIPromptGuardConfig, current_user: User = Depends(get_current_user)
+    route_id: str,
+    config: AIPromptGuardConfig,
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """
-    Configure ai-prompt-guard plugin for a specific route.
+    """Configure ai-prompt-guard plugin for a specific route.
+
     This is a convenience endpoint for updating just the prompt guard plugin.
     """
     if not check_admin_permission(current_user):
+
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
 
     # Get current route configuration
@@ -241,13 +300,16 @@ async def configure_prompt_guard(
 
 @router.post("/routes/{route_id}/plugins/ai-prompt-decorator", response_model=Dict[str, Any])
 async def configure_prompt_decorator(
-    route_id: str, config: AIPromptDecoratorConfig, current_user: User = Depends(get_current_user)
+    route_id: str,
+    config: AIPromptDecoratorConfig,
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """
-    Configure ai-prompt-decorator plugin for a specific route.
+    """Configure ai-prompt-decorator plugin for a specific route.
+
     This is a convenience endpoint for updating just the prompt decorator plugin.
     """
     if not check_admin_permission(current_user):
+
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
 
     # Get current route configuration
@@ -274,6 +336,7 @@ async def remove_plugin(
 ) -> Dict[str, Any]:
     """Remove a specific plugin from a route."""
     if not check_admin_permission(current_user):
+
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
 
     # Validate plugin name

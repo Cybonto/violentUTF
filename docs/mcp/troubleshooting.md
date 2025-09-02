@@ -72,7 +72,7 @@ docker exec violentutf-api ls -la /app/app_data/
    ```bash
    # Verify Docker network exists
    docker network ls | grep vutf-network
-   
+
    # Recreate network if needed
    docker network create vutf-network
    ```
@@ -166,7 +166,7 @@ curl "$KEYCLOAK_URL/auth/realms/$KEYCLOAK_REALM/.well-known/openid_configuration
    ```bash
    # Check Keycloak is running
    docker ps | grep keycloak
-   
+
    # Verify network connectivity
    docker exec violentutf-api nslookup keycloak
    ```
@@ -212,7 +212,7 @@ docker logs apisix-apisix-1
    ```bash
    # Run route configuration script
    cd apisix && ./configure_mcp_routes.sh
-   
+
    # Verify routes were created
    curl -H "X-API-KEY: $APISIX_ADMIN_KEY" \
         "$APISIX_ADMIN_URL/apisix/admin/routes" | jq '.list.list[] | .value'
@@ -276,7 +276,7 @@ curl http://violentutf-api:8000/health
    ```bash
    # Restart APISIX
    docker-compose restart apisix-apisix-1
-   
+
    # Check APISIX configuration
    docker exec apisix-apisix-1 apisix configtest
    ```
@@ -285,7 +285,7 @@ curl http://violentutf-api:8000/health
    ```bash
    # Verify ViolentUTF API is healthy
    docker exec violentutf-api curl localhost:8000/health
-   
+
    # Update upstream configuration
    curl -X PUT "$APISIX_ADMIN_URL/apisix/admin/upstreams/violentutf-api" \
      -H "X-API-KEY: $APISIX_ADMIN_KEY" \
@@ -418,12 +418,12 @@ curl -H "Authorization: Bearer test-token" \
    python -c "
    from app.mcp.auth import MCPAuthHandler
    import asyncio
-   
+
    async def test_auth():
        handler = MCPAuthHandler()
        headers = await handler.get_auth_headers()
        print('Auth headers:', headers)
-   
+
    asyncio.run(test_auth())
    "
    ```
@@ -432,7 +432,7 @@ curl -H "Authorization: Bearer test-token" \
    ```bash
    # Check ViolentUTF API health
    curl http://localhost:8000/health
-   
+
    # Verify API endpoints
    curl http://localhost:8000/api/v1/generators
    ```
@@ -644,7 +644,7 @@ curl "$KEYCLOAK_URL/auth/realms/$KEYCLOAK_REALM/.well-known/openid_configuration
    import hashlib
    import base64
    import secrets
-   
+
    code_verifier = secrets.token_urlsafe(32)
    code_challenge = base64.urlsafe_b64encode(
        hashlib.sha256(code_verifier.encode()).digest()
@@ -893,19 +893,19 @@ async def diagnose_mcp() -> Dict[str, Any]:
         "authentication": {},
         "connectivity": {}
     }
-    
+
     # Environment checks
     env_vars = [
         "MCP_SERVER_NAME", "JWT_SECRET_KEY", "KEYCLOAK_URL",
         "APISIX_BASE_URL", "VIOLENTUTF_API_URL"
     ]
-    
+
     for var in env_vars:
         results["environment"][var] = {
             "set": bool(os.getenv(var)),
             "value": os.getenv(var, "")[:20] + "..." if os.getenv(var) else None
         }
-    
+
     # Configuration checks
     try:
         from app.mcp.config import mcp_settings
@@ -919,55 +919,55 @@ async def diagnose_mcp() -> Dict[str, Any]:
     except Exception as e:
         results["configuration"]["valid"] = False
         results["configuration"]["error"] = str(e)
-    
+
     # Tool checks
     try:
         from app.mcp.tools import tool_registry
         await tool_registry.discover_tools()
         tools = await tool_registry.list_tools()
-        
+
         results["tools"]["discovered"] = True
         results["tools"]["count"] = len(tools)
         results["tools"]["sample_tools"] = [tool.name for tool in tools[:5]]
     except Exception as e:
         results["tools"]["discovered"] = False
         results["tools"]["error"] = str(e)
-    
+
     # Resource checks
     try:
         from app.mcp.resources import resource_registry
         await resource_registry.initialize()
         resources = await resource_registry.list_resources()
-        
+
         results["resources"]["accessible"] = True
         results["resources"]["count"] = len(resources)
         results["resources"]["cache_stats"] = resource_registry.get_cache_stats()
     except Exception as e:
         results["resources"]["accessible"] = False
         results["resources"]["error"] = str(e)
-    
+
     # Authentication checks
     try:
         from app.mcp.auth import MCPAuthHandler
         handler = MCPAuthHandler()
         headers = await handler.get_auth_headers()
-        
+
         results["authentication"]["working"] = True
         results["authentication"]["headers_count"] = len(headers)
     except Exception as e:
         results["authentication"]["working"] = False
         results["authentication"]["error"] = str(e)
-    
+
     return results
 
 def print_results(results: Dict[str, Any]):
     """Print diagnostic results in a readable format"""
     print("🔍 ViolentUTF MCP Diagnostic Report")
     print("=" * 50)
-    
+
     for category, data in results.items():
         print(f"\n📋 {category.upper()}:")
-        
+
         if isinstance(data, dict):
             for key, value in data.items():
                 if isinstance(value, bool):
@@ -982,21 +982,21 @@ if __name__ == "__main__":
     try:
         results = asyncio.run(diagnose_mcp())
         print_results(results)
-        
+
         # Determine overall health
         critical_issues = [
             not results["configuration"].get("valid", False),
             not results["tools"].get("discovered", False),
             not results["authentication"].get("working", False)
         ]
-        
+
         if any(critical_issues):
             print("\n❌ Critical issues detected")
             sys.exit(1)
         else:
             print("\n✅ System appears healthy")
             sys.exit(0)
-            
+
     except Exception as e:
         print(f"❌ Diagnostic failed: {e}")
         sys.exit(1)
@@ -1018,7 +1018,7 @@ from typing import Dict, List
 
 def analyze_mcp_logs(log_file: str) -> Dict:
     """Analyze MCP server logs for patterns and issues"""
-    
+
     analysis = {
         "total_lines": 0,
         "error_count": 0,
@@ -1029,17 +1029,17 @@ def analyze_mcp_logs(log_file: str) -> Dict:
         "performance_issues": [],
         "common_errors": Counter()
     }
-    
+
     with open(log_file, 'r') as f:
         for line in f:
             analysis["total_lines"] += 1
-            
+
             try:
                 # Try to parse as JSON log
                 log_entry = json.loads(line.strip())
                 level = log_entry.get("level", "").upper()
                 message = log_entry.get("message", "")
-                
+
             except json.JSONDecodeError:
                 # Fall back to text parsing
                 if "ERROR" in line:
@@ -1049,59 +1049,59 @@ def analyze_mcp_logs(log_file: str) -> Dict:
                 else:
                     level = "INFO"
                 message = line.strip()
-            
+
             # Count log levels
             if level == "ERROR":
                 analysis["error_count"] += 1
                 analysis["common_errors"][message[:100]] += 1
             elif level == "WARNING":
                 analysis["warning_count"] += 1
-            
+
             # Track tool executions
             if "Executing tool:" in message:
                 tool_match = re.search(r"Executing tool: (\w+)", message)
                 if tool_match:
                     analysis["tool_executions"][tool_match.group(1)] += 1
-            
+
             # Track resource accesses
             if "Reading resource:" in message:
                 resource_match = re.search(r"violentutf://(\w+)/", message)
                 if resource_match:
                     analysis["resource_accesses"][resource_match.group(1)] += 1
-            
+
             # Track authentication failures
             if "auth" in message.lower() and ("fail" in message.lower() or "error" in message.lower()):
                 analysis["auth_failures"] += 1
-            
+
             # Track performance issues
             if "timeout" in message.lower() or "slow" in message.lower():
                 analysis["performance_issues"].append(message[:200])
-    
+
     return analysis
 
 def print_analysis(analysis: Dict):
     """Print log analysis results"""
     print("📊 MCP Log Analysis Report")
     print("=" * 40)
-    
+
     print(f"Total log lines: {analysis['total_lines']}")
     print(f"Errors: {analysis['error_count']}")
     print(f"Warnings: {analysis['warning_count']}")
     print(f"Auth failures: {analysis['auth_failures']}")
-    
+
     print(f"\n🔧 Top Tool Executions:")
     for tool, count in analysis['tool_executions'].most_common(5):
         print(f"  {tool}: {count}")
-    
+
     print(f"\n📊 Resource Access Patterns:")
     for resource_type, count in analysis['resource_accesses'].most_common(5):
         print(f"  {resource_type}: {count}")
-    
+
     if analysis['common_errors']:
         print(f"\n❌ Common Errors:")
         for error, count in analysis['common_errors'].most_common(3):
             print(f"  {count}x: {error}")
-    
+
     if analysis['performance_issues']:
         print(f"\n⚠️  Performance Issues:")
         for issue in analysis['performance_issues'][:3]:
@@ -1109,11 +1109,11 @@ def print_analysis(analysis: Dict):
 
 if __name__ == "__main__":
     import sys
-    
+
     if len(sys.argv) != 2:
         print("Usage: python analyze-logs.py <log_file>")
         sys.exit(1)
-    
+
     log_file = sys.argv[1]
     try:
         analysis = analyze_mcp_logs(log_file)
@@ -1179,5 +1179,5 @@ When reporting issues, include:
 
 ---
 
-*For more configuration options, see [Configuration Guide](./configuration.md).*  
+*For more configuration options, see [Configuration Guide](./configuration.md).*
 *For API usage details, see [API Reference](./api-reference.md).*

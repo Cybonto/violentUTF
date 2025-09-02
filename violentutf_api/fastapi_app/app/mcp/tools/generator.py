@@ -1,7 +1,12 @@
-"""MCP Tool Generator - Converts FastAPI endpoints to MCP tools"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
+"""MCP Tool Generator - Converts FastAPI endpoints to MCP tools."""
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Self
 
 from mcp.types import Tool
 
@@ -9,13 +14,14 @@ logger = logging.getLogger(__name__)
 
 
 class MCPToolGenerator:
-    """Generates MCP tools from FastAPI endpoint information"""
+    """Generate MCP tools from FastAPI endpoint information."""
 
-    def __init__(self):
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         self.generated_tools: Dict[str, Tool] = {}
 
-    def generate_tools_from_endpoints(self, endpoints: List[Dict[str, Any]]) -> List[Tool]:
-        """Generate MCP tools from discovered endpoints"""
+    def generate_tools_from_endpoints(self: "Self", endpoints: List[Dict[str, Any]]) -> List[Tool]:
+        """Generate MCP tools from discovered endpoints."""
         tools = []
 
         for endpoint_info in endpoints:
@@ -24,15 +30,16 @@ class MCPToolGenerator:
                 if tool:
                     tools.append(tool)
                     self.generated_tools[tool.name] = tool
-            except Exception as e:
-                logger.error(f"Error generating tool for {endpoint_info.get('name', 'unknown')}: {e}")
+            except (AttributeError, ValueError, TypeError, KeyError) as e:
+                logger.error("Error generating tool for %s: %s", endpoint_info.get("name", "unknown"), e)
 
-        logger.info(f"Generated {len(tools)} MCP tools from endpoints")
+        logger.info("Generated %s MCP tools from endpoints", len(tools))
         return tools
 
-    def _create_tool_from_endpoint(self, endpoint_info: Dict[str, Any]) -> Optional[Tool]:
-        """Create a single MCP tool from endpoint information"""
+    def _create_tool_from_endpoint(self: "Self", endpoint_info: Dict[str, Any]) -> Optional[Tool]:
+        """Create a single MCP tool from endpoint information."""
         try:
+
             # Build tool description
             description = self._build_tool_description(endpoint_info)
 
@@ -40,16 +47,20 @@ class MCPToolGenerator:
             input_schema = self._build_input_schema(endpoint_info)
 
             # Create MCP Tool
-            tool = Tool(name=endpoint_info["name"], description=description, inputSchema=input_schema)
+            tool = Tool(
+                name=endpoint_info["name"],
+                description=description,
+                inputSchema=input_schema,
+            )
 
             return tool
 
-        except Exception as e:
-            logger.error(f"Error creating tool from endpoint {endpoint_info.get('name')}: {e}")
+        except (AttributeError, ValueError, TypeError, KeyError) as e:
+            logger.error("Error creating tool from endpoint %s: %s", endpoint_info.get("name"), e)
             return None
 
-    def _build_tool_description(self, endpoint_info: Dict[str, Any]) -> str:
-        """Build comprehensive tool description"""
+    def _build_tool_description(self: "Self", endpoint_info: Dict[str, Any]) -> str:
+        """Build comprehensive tool description."""
         parts = []
 
         # Add primary description
@@ -81,21 +92,27 @@ class MCPToolGenerator:
 
         return " | ".join(parts)
 
-    def _build_input_schema(self, endpoint_info: Dict[str, Any]) -> Dict[str, Any]:
-        """Build JSON schema for tool input parameters"""
-        schema = {"type": "object", "properties": {}, "required": []}
+    def _build_input_schema(self: "Self", endpoint_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Build JSON schema for tool input parameters."""
+        schema: Dict[str, Any] = {"type": "object", "properties": {}, "required": []}
 
         # Add path parameters
         path_params = endpoint_info.get("path_parameters", [])
         for param in path_params:
-            schema["properties"][param["name"]] = {"type": param["type"], "description": param["description"]}
+            schema["properties"][param["name"]] = {
+                "type": param["type"],
+                "description": param["description"],
+            }
             if param.get("required", True):
                 schema["required"].append(param["name"])
 
         # Add query parameters
         query_params = endpoint_info.get("query_parameters", [])
         for param in query_params:
-            schema["properties"][param["name"]] = {"type": param["type"], "description": param["description"]}
+            schema["properties"][param["name"]] = {
+                "type": param["type"],
+                "description": param["description"],
+            }
             if param.get("default") is not None:
                 schema["properties"][param["name"]]["default"] = param["default"]
             if param.get("required", False):
@@ -127,24 +144,28 @@ class MCPToolGenerator:
                     schema["required"].append("request_body")
             else:
                 # Generic JSON body
-                schema["properties"]["request_body"] = {"type": "object", "description": "Request body (JSON object)"}
+                schema["properties"]["request_body"] = {
+                    "type": "object",
+                    "description": "Request body (JSON object)",
+                }
 
         # Remove duplicates from required list
         schema["required"] = list(set(schema["required"]))
 
         return schema
 
-    def get_tool_by_name(self, name: str) -> Optional[Tool]:
-        """Get a generated tool by name"""
+    def get_tool_by_name(self: "Self", name: str) -> Optional[Tool]:
+        """Get a generated tool by name."""
         return self.generated_tools.get(name)
 
-    def list_all_tools(self) -> List[Tool]:
-        """List all generated tools"""
+    def list_all_tools(self: "Self") -> List[Tool]:
+        """List all generated tools."""
         return list(self.generated_tools.values())
 
-    def clear_tools(self):
-        """Clear all generated tools"""
+    def clear_tools(self: "Self") -> None:
+        """Clear all generated tools."""
         self.generated_tools.clear()
+
         logger.info("Cleared all generated MCP tools")
 
 

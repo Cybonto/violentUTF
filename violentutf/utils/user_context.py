@@ -1,11 +1,23 @@
-"""
-User Context Management for ViolentUTF
-Ensures consistent user identification across all pages
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""User Context module.
+
+Copyright (c) 2025 ViolentUTF Contributors.
+Licensed under the MIT License.
+
+This file is part of ViolentUTF - An AI Red Teaming Platform.
+See LICENSE file in the project root for license information.
 """
 
 import logging
 import os
+from typing import Any, Dict
 
+import jwt
 import streamlit as st
 
 logger = logging.getLogger(__name__)
@@ -31,12 +43,11 @@ def get_consistent_username() -> str:
     """
     # Check if we have a cached username in session state
     if "consistent_username" in st.session_state:
-        return st.session_state["consistent_username"]
+        return str(st.session_state["consistent_username"])
 
     # Try to get username from Keycloak token if available
     if "access_token" in st.session_state:
         try:
-            import jwt
 
             # Decode without verification to check the username
             payload = jwt.decode(st.session_state["access_token"], options={"verify_signature": False})
@@ -46,11 +57,11 @@ def get_consistent_username() -> str:
             if preferred_username:
                 # Cache it in session state
                 st.session_state["consistent_username"] = preferred_username
-                logger.info(f"Using Keycloak preferred_username: {preferred_username}")
-                return preferred_username
+                logger.info("Using Keycloak preferred_username: %s", preferred_username)
+                return str(preferred_username)
 
-        except Exception as e:
-            logger.warning(f"Failed to decode Keycloak token: {e}")
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            logger.warning("Failed to decode Keycloak token: %s", e)
 
     # Fallback to environment variable
     env_username = os.getenv("KEYCLOAK_USERNAME", "violentutf.web")
@@ -58,11 +69,11 @@ def get_consistent_username() -> str:
     # Cache it in session state
     st.session_state["consistent_username"] = env_username
 
-    logger.info(f"Using consistent username from environment: {env_username}")
+    logger.info("Using consistent username from environment: %s", env_username)
     return env_username
 
 
-def get_user_context_for_token() -> dict:
+def get_user_context() -> Dict[str, Any]:
     """
     Get consistent user context for JWT token creation.
 
@@ -83,15 +94,17 @@ def get_user_context_for_token() -> dict:
     }
 
 
-def verify_user_consistency():
+def verify_user_consistency() -> bool:
     """
     Verify that the current token matches the expected username.
 
     This can be used to detect and warn about inconsistent user contexts.
+
+    Returns:
+        bool: True if user context is consistent, False otherwise.
     """
     if "api_token" in st.session_state:
         try:
-            import jwt
 
             # Decode without verification to check the username
             payload = jwt.decode(st.session_state["api_token"], options={"verify_signature": False})
@@ -101,14 +114,16 @@ def verify_user_consistency():
 
             if token_username != expected_username:
                 logger.warning(
-                    f"User context mismatch: token has '{token_username}', " f"expected '{expected_username}'"
+                    "User context mismatch: token has '%s', expected '%s'",
+                    token_username,
+                    expected_username,
                 )
                 return False
 
             return True
 
-        except Exception as e:
-            logger.error(f"Failed to verify user consistency: {e}")
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            logger.error("Failed to verify user consistency: %s", e)
             return False
 
     return True

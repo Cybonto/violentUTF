@@ -1,9 +1,12 @@
-"""MCP Tool Executor - Executes MCP tools by calling FastAPI endpoints"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-import asyncio
-import json
+"""MCP Tool Executor - Executes MCP tools by calling FastAPI endpoints."""
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, Self
 from urllib.parse import urljoin
 
 import httpx
@@ -14,23 +17,32 @@ logger = logging.getLogger(__name__)
 
 
 class MCPToolExecutor:
-    """Executes MCP tools by making authenticated API calls"""
+    """Executes MCP tools by making authenticated API calls."""
 
-    def __init__(self):
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         self.base_url = settings.VIOLENTUTF_API_URL or "http://localhost:8000"
+
         # Use internal URL for direct API access from within container
         if self.base_url and "localhost:9080" in self.base_url:
             self.base_url = "http://violentutf-api:8000"
 
     async def execute_tool(
-        self, tool_name: str, arguments: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
+        self: "Self",
+        tool_name: str,
+        arguments: Dict[str, Any],
+        user_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Execute a tool with given arguments"""
+        """Execute a tool with given arguments."""
         try:
+
             # Get endpoint information for the tool
             endpoint_info = await self._get_endpoint_info(tool_name)
             if not endpoint_info:
-                return {"error": "tool_not_found", "message": f"Tool '{tool_name}' not found"}
+                return {
+                    "error": "tool_not_found",
+                    "message": f"Tool '{tool_name}' not found",
+                }
 
             # Build the API request
             request_info = self._build_api_request(endpoint_info, arguments)
@@ -45,13 +57,18 @@ class MCPToolExecutor:
                 "endpoint": f"{endpoint_info['method']} {endpoint_info['path']}",
             }
 
-        except Exception as e:
-            logger.error(f"Error executing tool {tool_name}: {e}")
-            return {"error": "execution_failed", "message": str(e), "tool_name": tool_name}
+        except (KeyError, ValueError, TypeError, OSError) as e:
+            logger.error("Error executing tool %s: %s", tool_name, e)
+            return {
+                "error": "execution_failed",
+                "message": str(e),
+                "tool_name": tool_name,
+            }
 
-    async def _get_endpoint_info(self, tool_name: str) -> Optional[Dict[str, Any]]:
-        """Get endpoint information for a tool name"""
+    async def _get_endpoint_info(self: "Self", tool_name: str) -> Optional[Dict[str, Any]]:
+        """Get endpoint information for a tool name."""
         introspector = get_introspector()
+
         if not introspector:
             logger.error("Endpoint introspector not initialized")
             return None
@@ -63,12 +80,13 @@ class MCPToolExecutor:
             if endpoint["name"] == tool_name:
                 return endpoint
 
-        logger.warning(f"No endpoint found for tool: {tool_name}")
+        logger.warning("No endpoint found for tool: %s", tool_name)
         return None
 
-    def _build_api_request(self, endpoint_info: Dict[str, Any], arguments: Dict[str, Any]) -> Dict[str, Any]:
-        """Build API request from endpoint info and arguments"""
+    def _build_api_request(self: "Self", endpoint_info: Dict[str, Any], arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Build API request from endpoint info and arguments."""
         method = endpoint_info["method"]
+
         path = endpoint_info["path"]
 
         # Separate different types of parameters
@@ -120,10 +138,15 @@ class MCPToolExecutor:
         }
 
     async def _execute_api_call(
-        self, request_info: Dict[str, Any], user_context: Optional[Dict[str, Any]] = None
-    ) -> Any:
-        """Execute the actual API call"""
-        headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP"}  # Identify requests from MCP
+        self: "Self",
+        request_info: Dict[str, Any],
+        user_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Execute the actual API call."""
+        headers = {
+            "Content-Type": "application/json",
+            "X-API-Gateway": "MCP",
+        }  # Identify requests from MCP
 
         # Add authentication if user context provided
         if user_context and "token" in user_context:
@@ -142,7 +165,9 @@ class MCPToolExecutor:
                 )
 
                 # Log the request for debugging
-                logger.info(f"MCP API call: {request_info['method']} {request_info['url']} -> {response.status_code}")
+                logger.info(
+                    "MCP API call: %s %s -> %d", request_info["method"], request_info["url"], response.status_code
+                )
 
                 # Handle response
                 if response.status_code >= 400:
@@ -150,7 +175,7 @@ class MCPToolExecutor:
                     try:
                         error_data = response.json()
                         error_detail = error_data.get("detail", str(error_data))
-                    except Exception:
+                    except (ValueError, KeyError, TypeError):
                         error_detail = response.text
 
                     return {
@@ -162,22 +187,29 @@ class MCPToolExecutor:
                 # Return successful response
                 try:
                     return response.json()
-                except Exception:
+                except (ValueError, KeyError, TypeError):
                     return {"message": "Success", "raw_response": response.text}
 
             except httpx.TimeoutException:
-                logger.error(f"Timeout executing API call: {request_info['url']}")
-                return {"error": "timeout", "message": "API call timed out after 30 seconds"}
+                logger.error("Timeout executing API call: %s", request_info["url"])
+                return {
+                    "error": "timeout",
+                    "message": "API call timed out after 30 seconds",
+                }
             except httpx.ConnectError:
-                logger.error(f"Connection error executing API call: {request_info['url']}")
-                return {"error": "connection_error", "message": "Could not connect to ViolentUTF API"}
-            except Exception as e:
-                logger.error(f"Unexpected error executing API call: {e}")
+                logger.error("Connection error executing API call: %s", request_info["url"])
+                return {
+                    "error": "connection_error",
+                    "message": "Could not connect to ViolentUTF API",
+                }
+            except (ValueError, TypeError, OSError) as e:
+                logger.error("Unexpected error executing API call: %s", e)
                 return {"error": "unexpected_error", "message": str(e)}
 
-    async def validate_tool_arguments(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate tool arguments against endpoint schema"""
+    async def validate_tool_arguments(self: "Self", tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate tool arguments against endpoint schema."""
         endpoint_info = await self._get_endpoint_info(tool_name)
+
         if not endpoint_info:
             return {"valid": False, "errors": [f"Tool '{tool_name}' not found"]}
 

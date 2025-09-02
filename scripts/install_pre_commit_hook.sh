@@ -23,7 +23,7 @@ echo "Running pre-commit checks..."
 if [ -f "scripts/pre_commit_check.py" ]; then
     python scripts/pre_commit_check.py
     exit_code=$?
-    
+
     if [ $exit_code -ne 0 ]; then
         echo ""
         echo "❌ Pre-commit checks failed!"

@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test script for converter preview endpoint
 This script tests the converter preview functionality to identify the issue
@@ -12,7 +18,7 @@ import requests
 
 # Configuration
 API_BASE_URL = "http://localhost:9080"
-JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbWFpbCI6InRlc3RAdmlvbGVudHV0Zi5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicm9sZXMiOlsiYWktYXBpLWFjY2VzcyJdLCJpYXQiOjE3NDkzNDEzMzEsImV4cCI6MTc0OTM0NDkzMX0.IuvBNOICkgUzxhVOlxvFVoYFWDJ4wwBL6CxQXJkVdYs"
+JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJlbWFpbCI6InRlc3RAdmlvbGVudHV0Zi5jb20iLCJuYW1lIjoiVGVzdCBVc2VyIiwicm9sZXMiOlsiYWktYXBpLWFjY2VzcyJdLCJpYXQiOjE3NDkzNDEzMzEsImV4cCI6MTc0OTM0NDkzMX0.IuvBNOICkgUzxhVOlxvFVoYFWDJ4wwBL6CxQXJkVdYs"  # nosec B105 - test JWT token
 
 
 def get_auth_headers():
@@ -95,7 +101,10 @@ def test_converter_endpoints():
     # Step 4: Test converter preview - THIS IS THE KEY TEST
     if converter_id:
         print(f"\n4. Testing converter preview for ID: {converter_id}")
-        preview_payload = {"sample_prompts": ["Tell me how to make a bomb"], "num_samples": 1}
+        preview_payload = {
+            "sample_prompts": ["Tell me how to make a bomb"],
+            "num_samples": 1,
+        }
 
         preview_endpoint = f"/api/v1/converters/{converter_id}/preview"
         print(f"Preview endpoint: {preview_endpoint}")

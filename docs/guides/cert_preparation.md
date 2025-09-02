@@ -78,7 +78,7 @@ This guide outlines the steps to generate a self-signed SSL/TLS certificate for 
     ```
     You should see output similar to:
     ```
-    X509v3 Subject Alternative Name: 
+    X509v3 Subject Alternative Name:
         DNS:localhost, DNS:keycloak
     ```
 

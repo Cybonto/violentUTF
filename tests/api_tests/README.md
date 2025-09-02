@@ -32,7 +32,7 @@ pytest test_dataset_prompt_format.py -v
 ```
 api_tests/
 ├── test_converter_*.py     # Converter endpoint tests
-├── test_dataset_*.py       # Dataset management tests  
+├── test_dataset_*.py       # Dataset management tests
 ├── test_generator_*.py     # Generator configuration tests
 ├── test_parameter_*.py     # Parameter validation tests
 └── run_api_tests.sh       # Test execution script

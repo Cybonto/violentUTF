@@ -1,47 +1,61 @@
-"""
-Dataset Resources for MCP
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Dataset Resources for MCP
+
 ========================
 
 This module provides access to ViolentUTF security datasets through the MCP protocol.
 Supports comprehensive dataset metadata, content access, and caching.
 """
-
 import hashlib
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Self, cast
 
 import httpx
 from app.core.config import settings
 from app.mcp.auth import MCPAuthHandler
-from app.mcp.resources.base import AdvancedResource, BaseResourceProvider, ResourceMetadata, advanced_resource_registry
+from app.mcp.resources.base import (
+    AdvancedResource,
+    BaseResourceProvider,
+    ResourceMetadata,
+    advanced_resource_registry,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class DatasetResourceProvider(BaseResourceProvider):
-    """Provides comprehensive access to security datasets"""
+    """Provide comprehensive access to security datasets."""
 
-    def __init__(self):
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         super().__init__("violentutf://datasets/{dataset_id}", "DatasetProvider")
+
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()
 
-    def _get_api_url(self) -> str:
-        """Get internal API URL for container communication"""
+    def _get_api_url(self: "Self") -> str:
+        """Get internal API URL for container communication."""
         api_url = getattr(settings, "VIOLENTUTF_API_URL", "http://localhost:8000")
+
         # Convert external gateway URL to internal service URL
         if "localhost:9080" in api_url or "apisix" in api_url:
             return "http://violentutf-api:8000"
         return api_url
 
-    async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
-        """Get specific dataset resource with full content"""
+    async def get_resource(self: "Self", uri: str, params: Dict[str, object]) -> Optional[AdvancedResource]:
+        """Get specific dataset resource with full content."""
         uri_params = self.extract_params(uri)
+
         dataset_id = uri_params.get("dataset_id")
 
         if not dataset_id:
-            logger.warning(f"No dataset_id found in URI: {uri}")
+            logger.warning("No dataset_id found in URI: %s", uri)
             return None
 
         try:
@@ -52,7 +66,11 @@ class DatasetResourceProvider(BaseResourceProvider):
                 dataset_response = await client.get(f"{self.base_url}/api/v1/datasets/{dataset_id}", headers=headers)
 
                 if dataset_response.status_code != 200:
-                    logger.warning(f"Failed to get dataset {dataset_id}: {dataset_response.status_code}")
+                    logger.warning(
+                        "Failed to get dataset %s: %s",
+                        dataset_id,
+                        dataset_response.status_code,
+                    )
                     return None
 
                 dataset = dataset_response.json()
@@ -72,7 +90,10 @@ class DatasetResourceProvider(BaseResourceProvider):
                         "description": dataset.get("description", ""),
                         "category": dataset.get("category", "unknown"),
                         "format": dataset.get("format", "json"),
-                        "size": dataset.get("size", len(content_data) if isinstance(content_data, list) else 0),
+                        "size": dataset.get(
+                            "size",
+                            len(content_data) if isinstance(content_data, list) else 0,
+                        ),
                         "created_at": dataset.get("created_at"),
                         "updated_at": dataset.get("updated_at"),
                         "tags": dataset.get("tags", []),
@@ -95,54 +116,72 @@ class DatasetResourceProvider(BaseResourceProvider):
                             else datetime.now()
                         ),
                         updated_at=datetime.fromisoformat(
-                            dataset.get("updated_at", dataset.get("created_at", datetime.now().isoformat()))
+                            dataset.get(
+                                "updated_at",
+                                dataset.get("created_at", datetime.now().isoformat()),
+                            )
                         ),
                         version=dataset.get("version", "1.0"),
                         author=dataset.get("author", "ViolentUTF"),
-                        tags=dataset.get("tags", ["dataset", "security", dataset.get("category", "unknown")]),
+                        tags=dataset.get(
+                            "tags",
+                            ["dataset", "security", dataset.get("category", "unknown")],
+                        ),
                         size=content_size,
                         checksum=content_hash,
                     ),
                 )
 
         except httpx.TimeoutException:
-            logger.error(f"Timeout getting dataset resource: {dataset_id}")
+            logger.error("Timeout getting dataset resource: %s", dataset_id)
             return None
         except httpx.ConnectError:
-            logger.error(f"Connection error getting dataset resource: {dataset_id}")
+            logger.error("Connection error getting dataset resource: %s", dataset_id)
             return None
         except Exception as e:
-            logger.error(f"Error getting dataset resource {dataset_id}: {e}")
+            logger.error("Error getting dataset resource %s: %s", dataset_id, e)
             return None
 
     async def _get_dataset_content(
-        self, client: httpx.AsyncClient, dataset_id: str, headers: Dict[str, str], params: Dict[str, Any]
-    ) -> Any:
-        """Get dataset content with pagination support"""
+        self: "Self",
+        client: httpx.AsyncClient,
+        dataset_id: str,
+        headers: Dict[str, str],
+        params: Dict[str, object],
+    ) -> object:
+        """Get dataset content with pagination support."""
         try:
+
             # Check if content endpoint exists
             content_response = await client.get(
                 f"{self.base_url}/api/v1/datasets/{dataset_id}/content",
                 headers=headers,
-                params={"limit": params.get("limit", 1000), "offset": params.get("offset", 0)},
+                params={
+                    "limit": int(params.get("limit", 1000)),
+                    "offset": int(params.get("offset", 0)),
+                },
             )
 
             if content_response.status_code == 200:
                 return content_response.json()
             else:
-                logger.debug(f"Content endpoint not available for dataset {dataset_id}, returning empty list")
+                logger.debug(
+                    "Content endpoint not available for dataset %s, returning empty list",
+                    dataset_id,
+                )
                 return []
 
         except Exception as e:
-            logger.debug(f"Could not fetch content for dataset {dataset_id}: {e}")
+            logger.debug("Could not fetch content for dataset %s: %s", dataset_id, e)
             return []
 
-    async def _get_dataset_statistics(self, content: Any) -> Dict[str, Any]:
-        """Generate statistics for dataset content"""
+    async def _get_dataset_statistics(self: "Self", content: object) -> Dict[str, object]:
+        """Generate statistics for dataset content."""
         if not content:
+
             return {"total_entries": 0}
 
-        stats = {"total_entries": 0}
+        stats: Dict[str, object] = {"total_entries": 0}
 
         if isinstance(content, list):
             stats["total_entries"] = len(content)
@@ -150,7 +189,7 @@ class DatasetResourceProvider(BaseResourceProvider):
             # Analyze content structure
             if content and isinstance(content[0], dict):
                 # Get field statistics
-                all_fields = set()
+                all_fields: set[str] = set()
                 for item in content[:100]:  # Sample first 100 items
                     if isinstance(item, dict):
                         all_fields.update(item.keys())
@@ -170,9 +209,9 @@ class DatasetResourceProvider(BaseResourceProvider):
 
         return stats
 
-    async def _infer_dataset_schema(self, content: Any) -> Dict[str, Any]:
-        """Infer schema from dataset content"""
-        schema = {"type": "unknown"}
+    async def _infer_dataset_schema(self: "Self", content: object) -> Dict[str, object]:
+        """Infer schema from dataset content."""
+        schema: Dict[str, object] = {"type": "unknown"}
 
         if isinstance(content, list) and content:
             schema["type"] = "array"
@@ -181,27 +220,29 @@ class DatasetResourceProvider(BaseResourceProvider):
             # Analyze first few items to infer schema
             sample_item = content[0]
             if isinstance(sample_item, dict):
-                schema["items"]["type"] = "object"
-                schema["items"]["properties"] = {}
+                items_schema = cast(Dict[str, object], schema["items"])
+                items_schema["type"] = "object"
+                items_schema["properties"] = {}
 
                 for key, value in sample_item.items():
+                    properties = cast(Dict[str, object], items_schema["properties"])
                     if isinstance(value, str):
-                        schema["items"]["properties"][key] = {"type": "string"}
+                        properties[key] = {"type": "string"}
                     elif isinstance(value, int):
-                        schema["items"]["properties"][key] = {"type": "integer"}
+                        properties[key] = {"type": "integer"}
                     elif isinstance(value, float):
-                        schema["items"]["properties"][key] = {"type": "number"}
+                        properties[key] = {"type": "number"}
                     elif isinstance(value, bool):
-                        schema["items"]["properties"][key] = {"type": "boolean"}
+                        properties[key] = {"type": "boolean"}
                     elif isinstance(value, list):
-                        schema["items"]["properties"][key] = {"type": "array"}
+                        properties[key] = {"type": "array"}
                     elif isinstance(value, dict):
-                        schema["items"]["properties"][key] = {"type": "object"}
+                        properties[key] = {"type": "object"}
 
         return schema
 
-    async def list_resources(self, params: Dict[str, Any]) -> List[AdvancedResource]:
-        """List all available datasets with metadata"""
+    async def list_resources(self: "Self", params: Dict[str, object]) -> List[AdvancedResource]:
+        """List all available datasets with metadata."""
         resources = []
 
         try:
@@ -212,7 +253,10 @@ class DatasetResourceProvider(BaseResourceProvider):
                 response = await client.get(
                     f"{self.base_url}/api/v1/datasets",
                     headers=headers,
-                    params={"category": params.get("category"), "limit": params.get("limit", 100)},
+                    params={
+                        "category": str(params.get("category")) if params.get("category") else None,
+                        "limit": int(params.get("limit", 100)),
+                    },
                 )
 
                 if response.status_code == 200:
@@ -248,7 +292,8 @@ class DatasetResourceProvider(BaseResourceProvider):
                                     uri=f"violentutf://datasets/{dataset_id}",
                                     name=f"Dataset: {dataset.get('name', 'Unknown')}",
                                     description=dataset.get(
-                                        "description", f"Security dataset: {dataset.get('name', 'Unknown')}"
+                                        "description",
+                                        f"Security dataset: {dataset.get('name', 'Unknown')}",
                                     ),
                                     mimeType="application/json",
                                     content=resource_content,
@@ -259,28 +304,39 @@ class DatasetResourceProvider(BaseResourceProvider):
                                             else datetime.now()
                                         ),
                                         updated_at=datetime.fromisoformat(
-                                            dataset.get(
-                                                "updated_at", dataset.get("created_at", datetime.now().isoformat())
+                                            str(
+                                                dataset.get(
+                                                    "updated_at",
+                                                    dataset.get(
+                                                        "created_at",
+                                                        datetime.now().isoformat(),
+                                                    ),
+                                                )
                                             )
                                         ),
                                         tags=dataset.get(
-                                            "tags", ["dataset", "security", dataset.get("category", "unknown")]
+                                            "tags",
+                                            [
+                                                "dataset",
+                                                "security",
+                                                dataset.get("category", "unknown"),
+                                            ],
                                         ),
                                         size=dataset.get("size", 0),
                                     ),
                                 )
                             )
                 else:
-                    logger.warning(f"Failed to list datasets: {response.status_code}")
+                    logger.warning("Failed to list datasets: %s", response.status_code)
 
         except Exception as e:
-            logger.error(f"Error listing dataset resources: {e}")
+            logger.error("Error listing dataset resources: %s", e)
 
-        logger.info(f"Listed {len(resources)} dataset resources")
+        logger.info("Listed %s dataset resources", len(resources))
         return resources
 
-    async def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
-        """Get API headers with authentication"""
+    async def _get_headers(self: "Self", params: Dict[str, object]) -> Dict[str, str]:
+        """Get API headers with authentication."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Dataset"}
 
         # Add authentication if available
@@ -295,23 +351,27 @@ class DatasetResourceProvider(BaseResourceProvider):
 
 
 class ResultsResourceProvider(BaseResourceProvider):
-    """Provides access to orchestrator execution results"""
+    """Provide access to orchestrator execution results."""
 
-    def __init__(self):
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         super().__init__("violentutf://results/{execution_id}", "ResultsProvider")
+
         self.auth_handler = MCPAuthHandler()
         self.base_url = self._get_api_url()
 
-    def _get_api_url(self) -> str:
-        """Get internal API URL for container communication"""
+    def _get_api_url(self: "Self") -> str:
+        """Get internal API URL for container communication."""
         api_url = getattr(settings, "VIOLENTUTF_API_URL", "http://localhost:8000")
+
         if "localhost:9080" in api_url or "apisix" in api_url:
             return "http://violentutf-api:8000"
         return api_url
 
-    async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
-        """Get specific execution results"""
+    async def get_resource(self: "Self", uri: str, params: Dict[str, object]) -> Optional[AdvancedResource]:
+        """Get specific execution results."""
         uri_params = self.extract_params(uri)
+
         execution_id = uri_params.get("execution_id")
 
         if not execution_id:
@@ -323,7 +383,8 @@ class ResultsResourceProvider(BaseResourceProvider):
             async with httpx.AsyncClient(timeout=30.0) as client:
                 # Get orchestrator results
                 response = await client.get(
-                    f"{self.base_url}/api/v1/orchestrators/{execution_id}/results", headers=headers
+                    f"{self.base_url}/api/v1/orchestrators/{execution_id}/results",
+                    headers=headers,
                 )
 
                 if response.status_code == 200:
@@ -331,7 +392,8 @@ class ResultsResourceProvider(BaseResourceProvider):
 
                     # Get orchestrator metadata
                     orch_response = await client.get(
-                        f"{self.base_url}/api/v1/orchestrators/{execution_id}", headers=headers
+                        f"{self.base_url}/api/v1/orchestrators/{execution_id}",
+                        headers=headers,
                     )
 
                     orchestrator = orch_response.json() if orch_response.status_code == 200 else {}
@@ -360,17 +422,21 @@ class ResultsResourceProvider(BaseResourceProvider):
                             updated_at=datetime.fromisoformat(
                                 orchestrator.get("updated_at", datetime.now().isoformat())
                             ),
-                            tags=["results", "execution", orchestrator.get("orchestrator_type", "unknown")],
+                            tags=[
+                                "results",
+                                "execution",
+                                orchestrator.get("orchestrator_type", "unknown"),
+                            ],
                         ),
                     )
 
         except Exception as e:
-            logger.error(f"Error getting results resource {execution_id}: {e}")
+            logger.error("Error getting results resource %s: %s", execution_id, e)
 
         return None
 
-    async def _generate_results_summary(self, results: Any) -> Dict[str, Any]:
-        """Generate summary statistics for results"""
+    async def _generate_results_summary(self: "Self", results: object) -> Dict[str, object]:
+        """Generate summary statistics for results."""
         summary = {"total_results": 0, "status": "unknown"}
 
         if isinstance(results, dict):
@@ -385,8 +451,8 @@ class ResultsResourceProvider(BaseResourceProvider):
 
         return summary
 
-    async def list_resources(self, params: Dict[str, Any]) -> List[AdvancedResource]:
-        """List available execution results"""
+    async def list_resources(self: "Self", params: Dict[str, object]) -> List[AdvancedResource]:
+        """List available execution results."""
         resources = []
 
         try:
@@ -395,7 +461,9 @@ class ResultsResourceProvider(BaseResourceProvider):
             async with httpx.AsyncClient(timeout=30.0) as client:
                 # Get orchestrators that have results
                 response = await client.get(
-                    f"{self.base_url}/api/v1/orchestrators", headers=headers, params={"status": "completed"}
+                    f"{self.base_url}/api/v1/orchestrators",
+                    headers=headers,
+                    params={"status": "completed"},
                 )
 
                 if response.status_code == 200:
@@ -414,7 +482,10 @@ class ResultsResourceProvider(BaseResourceProvider):
                                 AdvancedResource(
                                     uri=f"violentutf://results/{execution_id}",
                                     name=f"Results: {orchestrator.get('name', execution_id)}",
-                                    description=f"Execution results for {orchestrator.get('orchestrator_type', 'unknown')} orchestrator",
+                                    description=(
+                                        f"Execution results for "
+                                        f"{orchestrator.get('orchestrator_type', 'unknown')} orchestrator"
+                                    ),
                                     mimeType="application/json",
                                     content={"preview": "Use get_resource to access full results"},
                                     metadata=ResourceMetadata(
@@ -424,18 +495,22 @@ class ResultsResourceProvider(BaseResourceProvider):
                                         updated_at=datetime.fromisoformat(
                                             orchestrator.get("updated_at", datetime.now().isoformat())
                                         ),
-                                        tags=["results", "execution", orchestrator.get("orchestrator_type", "unknown")],
+                                        tags=[
+                                            "results",
+                                            "execution",
+                                            orchestrator.get("orchestrator_type", "unknown"),
+                                        ],
                                     ),
                                 )
                             )
 
         except Exception as e:
-            logger.error(f"Error listing results resources: {e}")
+            logger.error("Error listing results resources: %s", e)
 
         return resources
 
-    async def _get_headers(self, params: Dict[str, Any]) -> Dict[str, str]:
-        """Get API headers with authentication"""
+    async def _get_headers(self: "Self", params: Dict[str, object]) -> Dict[str, str]:
+        """Get API headers with authentication."""
         headers = {"Content-Type": "application/json", "X-API-Gateway": "MCP-Results"}
 
         auth_headers = await self.auth_handler.get_auth_headers()
@@ -448,9 +523,10 @@ class ResultsResourceProvider(BaseResourceProvider):
 
 
 # Register the new resource providers
-def register_dataset_providers():
-    """Register all dataset-related resource providers"""
+def register_dataset_providers() -> None:
+    """Register all dataset-related resource providers."""
     advanced_resource_registry.register(DatasetResourceProvider())
+
     advanced_resource_registry.register(ResultsResourceProvider())
     logger.info("Registered dataset and results resource providers")
 

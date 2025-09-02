@@ -5,7 +5,7 @@
 ### 1. ✅ Created .gitattributes File
 - Added comprehensive line ending configuration for cross-platform compatibility
 - Forces LF for Python, YAML, and script files
-- Forces CRLF for Windows batch files  
+- Forces CRLF for Windows batch files
 - Properly handles binary files
 - This prevents the "invalid path" errors on Windows
 

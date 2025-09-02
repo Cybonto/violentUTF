@@ -1,12 +1,14 @@
-"""
-Configuration management endpoints
-"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
 
-import json
+"""Configuration management endpoints."""
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 import yaml
 from app.core.auth import get_current_user
@@ -17,6 +19,7 @@ from app.schemas.config import (
     EnvironmentConfigResponse,
     EnvironmentSchemaResponse,
     EnvironmentValidationResponse,
+    ParameterFile,
     ParameterFilesListResponse,
     SaltGenerationResponse,
     UpdateConfigRequest,
@@ -30,48 +33,57 @@ DEFAULT_PARAMETERS_FILE = "parameters/default_parameters.yaml"
 
 
 def get_config_file_path() -> str:
-    """Get path to main configuration file"""
+    """Get path to main configuration file."""
     config_dir = os.getenv("CONFIG_DIR", "./app_data/config")
+
     os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, "global_parameters.yaml")
 
 
-def load_default_parameters() -> Dict[str, Any]:
-    """Load default parameters from file"""
+def load_default_parameters() -> Dict[str, object]:
+    """Load default parameters from file."""
     try:
+
         # First try to load from configured path
         if os.path.exists(DEFAULT_PARAMETERS_FILE):
-            with open(DEFAULT_PARAMETERS_FILE, "r") as f:
+            with open(DEFAULT_PARAMETERS_FILE, "r", encoding="utf-8") as f:
                 return yaml.safe_load(f) or {}
-    except Exception:
+    except Exception:  # nosec B110 - acceptable exception handling
+
         pass
-
     # Return minimal default configuration
-    return {"APP_DATA_DIR": os.getenv("APP_DATA_DIR", "./app_data/violentutf"), "version": "1.0", "initialized": True}
+    return {
+        "APP_DATA_DIR": os.getenv("APP_DATA_DIR", "./app_data/violentutf"),
+        "version": "1.0",
+        "initialized": True,
+    }
 
 
-def save_parameters(params: Dict[str, Any]) -> None:
-    """Save parameters to configuration file"""
+def save_parameters(params: Dict[str, object]) -> None:
+    """Save parameters to configuration file."""
     config_file = get_config_file_path()
+
     try:
-        with open(config_file, "w") as f:
+        with open(config_file, "w", encoding="utf-8") as f:
             yaml.dump(params, f, default_flow_style=False, indent=2)
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error saving configuration: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error saving configuration: {str(e)}",
+        ) from e
 
 
 @router.get("/parameters", response_model=ConfigParametersResponse)
-async def get_config_parameters(current_user: User = Depends(get_current_user)):
-    """
-    Get current global configuration parameters
-    """
+async def get_config_parameters(
+    current_user: User = Depends(get_current_user),
+) -> ConfigParametersResponse:
+    """Get current global configuration parameters."""
     try:
+
         config_file = get_config_file_path()
 
         if os.path.exists(config_file):
-            with open(config_file, "r") as f:
+            with open(config_file, "r", encoding="utf-8") as f:
                 parameters = yaml.safe_load(f) or {}
             loaded_from = config_file
         else:
@@ -90,21 +102,23 @@ async def get_config_parameters(current_user: User = Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error loading configuration: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error loading configuration: {str(e)}",
+        ) from e
 
 
 @router.put("/parameters", response_model=ConfigParametersResponse)
-async def update_config_parameters(request: UpdateConfigRequest, current_user: User = Depends(get_current_user)):
-    """
-    Update global configuration parameters
-    """
+async def update_config_parameters(
+    request: UpdateConfigRequest, current_user: User = Depends(get_current_user)
+) -> ConfigParametersResponse:
+    """Update global configuration parameters."""
     try:
+
         config_file = get_config_file_path()
 
         # Load existing parameters
         if os.path.exists(config_file):
-            with open(config_file, "r") as f:
+            with open(config_file, "r", encoding="utf-8") as f:
                 existing_params = yaml.safe_load(f) or {}
         else:
             existing_params = load_default_parameters()
@@ -131,20 +145,23 @@ async def update_config_parameters(request: UpdateConfigRequest, current_user: U
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error updating configuration: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating configuration: {str(e)}",
+        ) from e
 
 
 @router.post("/parameters/load", response_model=ConfigLoadResponse)
-async def load_config_from_file(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
-    """
-    Load configuration from uploaded YAML file
-    """
+async def load_config_from_file(
+    file: UploadFile = File(...), current_user: User = Depends(get_current_user)
+) -> ConfigLoadResponse:
+    """Load configuration from uploaded YAML file."""
     try:
+
         # Validate file type
-        if not file.filename.endswith((".yaml", ".yml")):
+        if not file.filename or not file.filename.endswith((".yaml", ".yml")):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="File must be a YAML file (.yaml or .yml)"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File must be a YAML file (.yaml or .yml)",
             )
 
         # Read and parse file
@@ -152,11 +169,15 @@ async def load_config_from_file(file: UploadFile = File(...), current_user: User
         try:
             parameters = yaml.safe_load(content.decode("utf-8"))
         except yaml.YAMLError as e:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid YAML format: {str(e)}",
+            ) from e
 
         if not isinstance(parameters, dict):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="YAML file must contain a dictionary (key-value pairs)"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="YAML file must contain a dictionary (key-value pairs)",
             )
 
         # Save loaded parameters
@@ -169,7 +190,7 @@ async def load_config_from_file(file: UploadFile = File(...), current_user: User
 
         return ConfigLoadResponse(
             parameters=parameters,
-            loaded_from=file.filename,
+            loaded_from=file.filename or "Unknown file",
             validation_results=validation_results,
             success=True,
             message=f"Successfully loaded {len(parameters)} parameters from {file.filename}",
@@ -179,16 +200,18 @@ async def load_config_from_file(file: UploadFile = File(...), current_user: User
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error loading configuration file: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error loading configuration file: {str(e)}",
+        ) from e
 
 
 @router.get("/parameters/files", response_model=ParameterFilesListResponse)
-async def list_parameter_files(current_user: User = Depends(get_current_user)):
-    """
-    List available parameter files in the system
-    """
+async def list_parameter_files(
+    current_user: User = Depends(get_current_user),
+) -> ParameterFilesListResponse:
+    """List available parameter files in the system."""
     try:
+
         parameter_files = []
 
         # Check default parameters directory
@@ -197,25 +220,25 @@ async def list_parameter_files(current_user: User = Depends(get_current_user)):
             for file_path in param_dir.glob("*.yaml"):
                 stat = file_path.stat()
                 parameter_files.append(
-                    {
-                        "filename": file_path.name,
-                        "path": str(file_path),
-                        "size_bytes": stat.st_size,
-                        "modified": datetime.fromtimestamp(stat.st_mtime),
-                        "type": "system",
-                    }
+                    ParameterFile(
+                        filename=file_path.name,
+                        path=str(file_path),
+                        size_bytes=stat.st_size,
+                        modified=datetime.fromtimestamp(stat.st_mtime),
+                        type="system",
+                    )
                 )
 
             for file_path in param_dir.glob("*.yml"):
                 stat = file_path.stat()
                 parameter_files.append(
-                    {
-                        "filename": file_path.name,
-                        "path": str(file_path),
-                        "size_bytes": stat.st_size,
-                        "modified": datetime.fromtimestamp(stat.st_mtime),
-                        "type": "system",
-                    }
+                    ParameterFile(
+                        filename=file_path.name,
+                        path=str(file_path),
+                        size_bytes=stat.st_size,
+                        modified=datetime.fromtimestamp(stat.st_mtime),
+                        type="system",
+                    )
                 )
 
         # Check user config directory
@@ -224,34 +247,36 @@ async def list_parameter_files(current_user: User = Depends(get_current_user)):
             for file_path in config_dir.glob("*.yaml"):
                 stat = file_path.stat()
                 parameter_files.append(
-                    {
-                        "filename": file_path.name,
-                        "path": str(file_path),
-                        "size_bytes": stat.st_size,
-                        "modified": datetime.fromtimestamp(stat.st_mtime),
-                        "type": "user",
-                    }
+                    ParameterFile(
+                        filename=file_path.name,
+                        path=str(file_path),
+                        size_bytes=stat.st_size,
+                        modified=datetime.fromtimestamp(stat.st_mtime),
+                        type="user",
+                    )
                 )
 
         return ParameterFilesListResponse(files=parameter_files, total_count=len(parameter_files))
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error listing parameter files: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error listing parameter files: {str(e)}",
+        ) from e
 
 
 # Environment Configuration Endpoints
 
 
 @router.get("/environment", response_model=EnvironmentConfigResponse)
-async def get_environment_config(current_user: User = Depends(get_current_user)):
-    """
-    Get current environment configuration including database salt, API keys, and system paths
-    """
+async def get_environment_config(
+    current_user: User = Depends(get_current_user),
+) -> EnvironmentConfigResponse:
+    """Get current environment configuration including database salt, API keys, and system paths."""
     try:
+
         # Get environment variables (mask sensitive ones)
-        env_vars = {}
+        env_vars: Dict[str, Optional[str]] = {}
         required_vars = [
             "PYRIT_DB_SALT",
             "VIOLENTUTF_API_KEY",
@@ -290,17 +315,17 @@ async def get_environment_config(current_user: User = Depends(get_current_user))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting environment configuration: {str(e)}",
-        )
+        ) from e
 
 
 @router.put("/environment", response_model=EnvironmentConfigResponse)
 async def update_environment_config(
-    request: UpdateEnvironmentConfigRequest, current_user: User = Depends(get_current_user)
-):
-    """
-    Update environment configuration variables
-    """
+    request: UpdateEnvironmentConfigRequest,
+    current_user: User = Depends(get_current_user),
+) -> object:
+    """Update environment configuration variables."""
     try:
+
         # In a real implementation, you would update environment variables
         # For now, we'll simulate the update
 
@@ -315,11 +340,12 @@ async def update_environment_config(
 
             if validation_errors:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail=f"Validation errors: {validation_errors}"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Validation errors: {validation_errors}",
                 )
 
         # Simulate update (in production, this would actually update environment)
-        updated_vars = {}
+        updated_vars: Dict[str, Optional[str]] = {}
         for key, value in request.environment_variables.items():
             # Mask sensitive values in response
             if "KEY" in key or "SECRET" in key or "SALT" in key:
@@ -340,15 +366,16 @@ async def update_environment_config(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating environment configuration: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/environment/validate", response_model=EnvironmentValidationResponse)
-async def validate_environment_config(current_user: User = Depends(get_current_user)):
-    """
-    Validate current environment configuration for completeness and correctness
-    """
+async def validate_environment_config(
+    current_user: User = Depends(get_current_user),
+) -> EnvironmentValidationResponse:
+    """Validate current environment configuration for completeness and correctness."""
     try:
+
         required_vars = [
             "PYRIT_DB_SALT",
             "VIOLENTUTF_API_KEY",
@@ -393,14 +420,12 @@ async def validate_environment_config(current_user: User = Depends(get_current_u
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error validating environment configuration: {str(e)}",
-        )
+        ) from e
 
 
 @router.get("/environment/schema", response_model=EnvironmentSchemaResponse)
-async def get_environment_schema():
-    """
-    Get the schema of required environment variables and their purposes
-    """
+async def get_environment_schema() -> EnvironmentSchemaResponse:
+    """Get the schema of required environment variables and their purposes."""
     schema = {
         "PYRIT_DB_SALT": {
             "type": "string",
@@ -455,11 +480,12 @@ async def get_environment_schema():
 
 
 @router.post("/environment/generate-salt", response_model=SaltGenerationResponse)
-async def generate_database_salt(current_user: User = Depends(get_current_user)):
-    """
-    Generate a new cryptographically secure database salt for PyRIT operations
-    """
+async def generate_database_salt(
+    current_user: User = Depends(get_current_user),
+) -> SaltGenerationResponse:
+    """Generate a new cryptographically secure database salt for PyRIT operations."""
     try:
+
         import secrets
         import string
 
@@ -477,5 +503,6 @@ async def generate_database_salt(current_user: User = Depends(get_current_user))
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error generating salt: {str(e)}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating salt: {str(e)}",
+        ) from e

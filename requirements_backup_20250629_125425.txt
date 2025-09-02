@@ -58,7 +58,7 @@ cymem==2.0.11
 datasets==3.6.0
 defusedxml==0.7.1
 Deprecated==1.2.18
-dill==0.4.0
+dill==0.3.8
 distro==1.9.0
 docling==2.30.0
 docling-core==2.28.0
@@ -77,7 +77,7 @@ execnet==2.1.1
 factory_boy==3.3.3
 Faker==37.3.0
 fastapi==0.115.12
-fastavro==1.12.0
+fastavro==1.10.0
 filelock==3.16.1
 filetype==1.2.0
 fitz==0.0.1.dev2
@@ -87,7 +87,7 @@ fpdf2==2.8.3
 freezegun==1.5.2
 frozenlist==1.6.0
 fsspec==2025.3.0
-garak==0.9.0.11.post1
+garak==0.9.0.4
 gitdb==4.0.12
 GitPython==3.1.44
 google-api-core==2.24.2
@@ -121,7 +121,7 @@ iniconfig==2.1.0
 isodate==0.6.1
 isort==6.0.1
 Jinja2==3.1.6
-jiter==0.10.0
+jiter==0.9.0
 jmespath==1.0.1
 joblib==1.5.0
 jsonlines==3.1.0
@@ -177,7 +177,7 @@ pathlib==1.0.1
 pathspec==0.12.1
 patsy==1.0.1
 pbr==6.1.1
-peft==0.17.0
+peft==0.15.2
 pillow==11.2.1
 pip-api==0.0.34
 pip-requirements-parser==32.0.1
@@ -185,7 +185,7 @@ pip_audit==2.9.0
 platformdirs==4.3.8
 plotly==6.0.1
 pluggy==1.5.0
-preshed==3.0.10
+preshed==3.0.9
 propcache==0.3.1
 proto-plus==1.26.1
 protobuf==6.30.2
@@ -210,7 +210,7 @@ pyflakes==3.4.0
 Pygments==2.19.1
 PyJWT==2.10.1
 pylatexenc==2.10
-PyMuPDF==1.26.3
+PyMuPDF==1.25.5
 pyodbc==5.2.0
 pyparsing==3.2.3
 pypdf==5.5.0

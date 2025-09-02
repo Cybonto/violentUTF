@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test script to verify rate limiting is working correctly
 SECURITY: Tests that authentication endpoints properly enforce rate limits
 """
+
 import asyncio
 import json
 import time
@@ -19,7 +26,11 @@ TEST_ENDPOINTS = {
         "expected_limit": 5,  # 5 per minute
         "content_type": "application/x-www-form-urlencoded",
     },
-    "/auth/token/info": {"method": "GET", "expected_limit": 30, "requires_auth": True},  # 30 per minute
+    "/auth/token/info": {
+        "method": "GET",
+        "expected_limit": 30,
+        "requires_auth": True,
+    },  # 30 per minute
 }
 
 
@@ -62,12 +73,20 @@ async def test_rate_limiting():
                     if method == "GET":
                         async with session.get(url, headers=headers) as response:
                             responses.append(
-                                {"status": response.status, "request_num": i + 1, "time": time.time() - start_time}
+                                {
+                                    "status": response.status,
+                                    "request_num": i + 1,
+                                    "time": time.time() - start_time,
+                                }
                             )
                     elif method == "POST":
                         async with session.post(url, headers=headers, data=data) as response:
                             responses.append(
-                                {"status": response.status, "request_num": i + 1, "time": time.time() - start_time}
+                                {
+                                    "status": response.status,
+                                    "request_num": i + 1,
+                                    "time": time.time() - start_time,
+                                }
                             )
 
                     # Small delay between requests to simulate realistic usage
@@ -75,7 +94,12 @@ async def test_rate_limiting():
 
                 except Exception as e:
                     responses.append(
-                        {"status": "ERROR", "error": str(e), "request_num": i + 1, "time": time.time() - start_time}
+                        {
+                            "status": "ERROR",
+                            "error": str(e),
+                            "request_num": i + 1,
+                            "time": time.time() - start_time,
+                        }
                     )
 
             # Analyze results

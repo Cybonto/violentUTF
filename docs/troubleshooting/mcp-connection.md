@@ -12,7 +12,7 @@ This guide helps diagnose and resolve common MCP connection issues in ViolentUTF
 # Check if MCP server is running
 curl -X GET http://localhost:9080/health
 
-# Check APISIX gateway status  
+# Check APISIX gateway status
 curl -X GET http://localhost:9080/apisix/admin/routes \
   -H "X-API-KEY: your-admin-key"
 
@@ -123,7 +123,7 @@ print("JWT secret:", bool(os.getenv('JWT_SECRET_KEY')))
 3. Refresh authentication:
    ```python
    from utils.jwt_manager import jwt_manager
-   
+
    # Force token refresh
    jwt_manager.access_token = None
    new_token = jwt_manager.get_valid_token()
@@ -149,7 +149,7 @@ print(f"MCP endpoint: {client.client.mcp_endpoint}")
    ```python
    # Correct
    client = MCPClientSync(base_url="http://localhost:9080")
-   
+
    # Wrong - direct API access
    # client = MCPClientSync(base_url="http://localhost:8000")
    ```
@@ -177,7 +177,7 @@ async def test_sse_stream():
         "Authorization": f"Bearer {jwt_manager.get_valid_token()}",
         "X-API-Gateway": "APISIX"
     }
-    
+
     async with httpx.AsyncClient() as client:
         async with client.stream(
             "POST",
@@ -283,7 +283,7 @@ def log_request(request):
 
 def log_response(response):
     print(f"Response: {response.status_code}")
-    
+
 client = httpx.Client(
     event_hooks={'request': [log_request], 'response': [log_response]}
 )
@@ -300,7 +300,7 @@ if token:
     # Decode without verification to inspect
     decoded = jwt.decode(token, options={"verify_signature": False})
     print(json.dumps(decoded, indent=2))
-    
+
     # Check expiration
     import time
     exp = decoded.get('exp', 0)
@@ -313,21 +313,21 @@ if token:
 ```python
 class SSEDebugger:
     """Debug SSE event stream"""
-    
+
     def __init__(self):
         self.events = []
-        
+
     async def debug_sse_stream(self, client, method, params=None):
         """Capture and analyze SSE events"""
         headers = client._get_auth_headers()
-        
+
         request_data = {
             "jsonrpc": "2.0",
             "method": method,
             "params": params or {},
             "id": 1
         }
-        
+
         async with httpx.AsyncClient() as http_client:
             async with http_client.stream(
                 "POST",
@@ -337,12 +337,12 @@ class SSEDebugger:
                 timeout=30.0
             ) as response:
                 print(f"Response status: {response.status_code}")
-                
+
                 async for line in response.aiter_lines():
                     if line:
                         print(f"SSE Line: {line}")
                         self.events.append(line)
-                        
+
                         if line.startswith("data: "):
                             try:
                                 data = json.loads(line[6:])
@@ -374,23 +374,23 @@ def check_environment():
         "JWT_SECRET_KEY",
         "APISIX_API_KEY"
     ]
-    
+
     for var in required_vars:
         value = os.getenv(var)
         status = "✓" if value else "✗"
         display_value = value[:20] + "..." if value and len(value) > 20 else value
         print(f"{status} {var}: {display_value or 'NOT SET'}")
-    
+
 def check_services():
     """Check service connectivity"""
     print("\n=== Service Status ===")
-    
+
     services = [
         ("APISIX Gateway", "http://localhost:9080/health"),
         ("ViolentUTF API", "http://localhost:9080/api/v1/health"),
         ("Keycloak", "http://localhost:8080/health"),
     ]
-    
+
     for name, url in services:
         try:
             response = requests.get(url, timeout=5)
@@ -398,25 +398,25 @@ def check_services():
             print(f"{status} {name}: {response.status_code}")
         except Exception as e:
             print(f"✗ {name}: {type(e).__name__}")
-            
+
 def check_mcp_connection():
     """Check MCP specific endpoints"""
     print("\n=== MCP Connection ===")
-    
+
     try:
         from violentutf.utils.jwt_manager import jwt_manager
         token = jwt_manager.get_valid_token()
-        
+
         if token:
             print("✓ JWT token available")
-            
+
             # Test MCP endpoint
             headers = {
                 "Authorization": f"Bearer {token}",
                 "X-API-Gateway": "APISIX",
                 "Content-Type": "application/json"
             }
-            
+
             # Test health through MCP
             response = requests.post(
                 "http://localhost:9080/mcp/sse/",
@@ -424,25 +424,25 @@ def check_mcp_connection():
                 json={"jsonrpc":"2.0","method":"initialize","params":{},"id":1},
                 timeout=10
             )
-            
+
             if response.status_code == 200:
                 print("✓ MCP endpoint accessible")
             else:
                 print(f"! MCP endpoint returned: {response.status_code}")
         else:
             print("✗ No JWT token available")
-            
+
     except Exception as e:
         print(f"✗ MCP check failed: {e}")
 
 if __name__ == "__main__":
     print(f"MCP Diagnostic Report - {datetime.now()}")
     print("=" * 50)
-    
+
     check_environment()
     check_services()
     check_mcp_connection()
-    
+
     print("\n" + "=" * 50)
     print("Run with DEBUG=1 for verbose output")
 ```
@@ -455,7 +455,7 @@ If you're still experiencing issues:
    ```bash
    # APISIX logs
    docker logs apisix --tail 100
-   
+
    # API logs
    docker logs violentutf-api --tail 100
    ```
@@ -464,7 +464,7 @@ If you're still experiencing issues:
    ```python
    # Save as test_mcp_minimal.py
    from violentutf.utils.mcp_client import MCPClientSync
-   
+
    client = MCPClientSync()
    print(f"Initializing: {client.initialize()}")
    print(f"Health check: {client.health_check()}")

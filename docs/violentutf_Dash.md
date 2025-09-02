@@ -9,7 +9,7 @@
 - `score_value`: Boolean (True/False)
   - **Description**: Whether the target substring was found in the text
   - **Purpose**: Immediate detection of critical security violations
-  - **Red Team Use Cases**: 
+  - **Red Team Use Cases**:
     - Password/API key exposure ("sk-", "password:", "bearer")
     - PII detection (SSN patterns, email addresses, phone numbers)
     - Prohibited content (profanity, banned terms)
@@ -247,7 +247,7 @@ tabs = st.tabs(["Attack Patterns", "Severity Analysis", "Trends"])
 import plotly.express as px
 
 # Donut chart for overall success rate
-fig = px.pie(df, names='result', hole=0.4, 
+fig = px.pie(df, names='result', hole=0.4,
              color_discrete_map={'violated': '#DC2626', 'blocked': '#10B981'},
              title='Attack Success Rate')
 st.plotly_chart(fig, use_container_width=True)
@@ -312,7 +312,7 @@ st.plotly_chart(fig)
 **Streamlit Implementation:**
 ```python
 # Treemap of attack categories
-fig = px.treemap(df, path=['category', 'subcategory'], 
+fig = px.treemap(df, path=['category', 'subcategory'],
                  values='count',
                  color='avg_severity',
                  color_continuous_scale='Reds',
@@ -326,7 +326,7 @@ st.plotly_chart(fig, use_container_width=True)
 ```python
 SEVERITY_COLORS = {
     'critical': '#DC2626',    # Bright red
-    'high': '#F59E0B',        # Orange  
+    'high': '#F59E0B',        # Orange
     'medium': '#FCD34D',      # Yellow
     'low': '#3B82F6',         # Blue
     'safe': '#10B981'         # Green
@@ -353,21 +353,21 @@ ATTACK_COLORS = {
 ```python
 with st.sidebar:
     st.header("🔍 Filters")
-    
+
     # Time range with sensible defaults
     time_range = st.date_input(
         "Date Range",
         value=(datetime.now() - timedelta(days=7), datetime.now()),
         max_value=datetime.now()
     )
-    
+
     # Multi-select for categories
     selected_categories = st.multiselect(
         "Attack Categories",
         options=all_categories,
         default=high_risk_categories  # Pre-select high-risk
     )
-    
+
     # Severity threshold slider
     severity_threshold = st.slider(
         "Minimum Severity",
@@ -464,14 +464,14 @@ render_critical_alerts()
 # Executive summary row
 col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
-    st.metric("Attack Success Rate", f"{success_rate:.1%}", 
+    st.metric("Attack Success Rate", f"{success_rate:.1%}",
               delta=f"{rate_change:+.1%}")
 # ... other metrics
 
 # Main analysis area
 tab1, tab2, tab3, tab4 = st.tabs([
     "🎯 Current Threats",
-    "📈 Trends", 
+    "📈 Trends",
     "🛡️ Defense Analysis",
     "🔍 Investigation"
 ])
@@ -531,12 +531,12 @@ with st.expander("📅 Schedule Automated Reports"):
         "Frequency",
         ["Daily", "Weekly", "After Each Test Run"]
     )
-    
+
     report_recipients = st.text_area(
         "Email Recipients",
         placeholder="security-team@company.com\nmanager@company.com"
     )
-    
+
     if st.button("Save Schedule"):
         save_report_schedule(report_frequency, report_recipients)
         st.success("Report schedule saved!")

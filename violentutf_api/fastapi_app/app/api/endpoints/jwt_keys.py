@@ -1,12 +1,14 @@
-"""
-JWT API Key management endpoints
-SECURITY: Rate limiting applied to prevent API key enumeration attacks
-"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Jwt Keys module."""
 
 import hashlib
 import secrets
 from datetime import datetime
-from typing import List
 
 from app.core.auth import get_current_user
 from app.core.rate_limiting import auth_rate_limit
@@ -14,7 +16,7 @@ from app.core.security import create_api_key_token
 from app.db.database import get_session
 from app.models.api_key import APIKey as APIKeyModel
 from app.models.auth import User
-from app.schemas.auth import APIKey, APIKeyCreate, APIKeyList, APIKeyResponse, UserInfo
+from app.schemas.auth import APIKey, APIKeyCreate, APIKeyList, APIKeyResponse
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,13 +31,15 @@ async def create_api_key(
     request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-):
-    """
-    Create a new API key for the authenticated user
-    """
+) -> object:
+    """Create a new API key for the authenticated user"""
     # Check if user has ai-api-access role
+
     if "ai-api-access" not in current_user.roles:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User does not have ai-api-access role")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User does not have ai-api-access role",
+        )
 
     # Generate a unique key ID
     key_id = secrets.token_urlsafe(16)
@@ -77,14 +81,18 @@ async def create_api_key(
 @router.get("/list", response_model=APIKeyList)
 @auth_rate_limit("auth_token")
 async def list_api_keys(
-    request: Request, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)
-):
-    """
-    List all API keys for the authenticated user
-    """
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
+) -> object:
+    """List all API keys for the authenticated user"""
     # Query database for user's API keys
+
     result = await db.execute(
-        select(APIKeyModel).where(APIKeyModel.user_id == current_user.username, APIKeyModel.is_active is True)
+        select(APIKeyModel).where(
+            APIKeyModel.user_id == current_user.username,
+            APIKeyModel.is_active == True,  # noqa: E712
+        )
     )
     db_keys = result.scalars().all()
 
@@ -92,13 +100,13 @@ async def list_api_keys(
     for db_key in db_keys:
         keys.append(
             APIKey(
-                id=db_key.id,
-                name=db_key.name,
+                id=str(db_key.id),
+                name=str(db_key.name),
                 created_at=db_key.created_at.isoformat(),
-                expires_at=db_key.expires_at.isoformat() if db_key.expires_at else None,
-                last_used=db_key.last_used_at.isoformat() if db_key.last_used_at else None,
-                permissions=db_key.permissions,
-                active=db_key.is_active,
+                expires_at=db_key.expires_at.isoformat() if db_key.expires_at else "",
+                last_used=(db_key.last_used_at.isoformat() if db_key.last_used_at else None),
+                permissions=list(db_key.permissions) if db_key.permissions else [],
+                active=bool(db_key.is_active),
             )
         )
 
@@ -112,11 +120,10 @@ async def revoke_api_key(
     request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-):
-    """
-    Revoke an API key
-    """
+) -> object:
+    """Revoke an API key"""
     # Find the API key
+
     result = await db.execute(
         select(APIKeyModel).where(APIKeyModel.id == key_id, APIKeyModel.user_id == current_user.username)
     )
@@ -126,7 +133,7 @@ async def revoke_api_key(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
 
     # Mark as inactive
-    api_key.is_active = False
+    setattr(api_key, "is_active", False)
     await db.commit()
 
     return {"message": "API key revoked successfully", "key_id": key_id}
@@ -134,18 +141,17 @@ async def revoke_api_key(
 
 @router.get("/current", response_model=APIKeyResponse)
 @auth_rate_limit("auth_token")
-async def get_current_token(request: Request, current_user: User = Depends(get_current_user)):
-    """
-    Get the current user's JWT token (from their session)
-    This is useful for displaying the token in the UI
+async def get_current_token(current_user: User = Depends(get_current_user)) -> object:
+    """Get the current user's JWT token (from their session).
+
+    This is useful for displaying the token in the UI.
     """
     # Create a session-based API key that expires with the current session
-    from datetime import timedelta
 
     key_data = create_api_key_token(
         user_id=current_user.username,
         key_name="Session Token",
-        permissions=["api:access", "ai:access"] if "ai-api-access" in current_user.roles else ["api:access"],
+        permissions=(["api:access", "ai:access"] if "ai-api-access" in current_user.roles else ["api:access"]),
     )
 
     # Return the current session token info

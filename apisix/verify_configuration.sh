@@ -49,7 +49,7 @@ for i in "${!route_ids[@]}"; do
     route_id="${route_ids[$i]}"
     route_path="${route_paths[$i]}"
     route_response=$(curl -s -H "X-API-KEY: $ADMIN_KEY" "$APISIX_ADMIN_URL/apisix/admin/routes/$route_id")
-    
+
     # Escape special characters in route_path for grep
     escaped_path=$(echo "$route_path" | sed 's/\*/\\*/g')
     if echo "$route_response" | grep -q "\"uri\":\"$escaped_path\""; then

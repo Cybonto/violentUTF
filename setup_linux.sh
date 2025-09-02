@@ -79,32 +79,32 @@ CREATED_AI_ROUTES=()
 # --- Function to gracefully shutdown ViolentUTF Streamlit server ---
 graceful_streamlit_shutdown() {
     echo "Gracefully shutting down ViolentUTF Streamlit server..."
-    
+
     # Find ViolentUTF Streamlit processes
     STREAMLIT_PIDS=()
-    
+
     # Check for Home.py process (ViolentUTF main entry point)
     HOME_PY_PIDS=$(pgrep -f "streamlit.*Home.py" 2>/dev/null || true)
     if [ -n "$HOME_PY_PIDS" ]; then
         STREAMLIT_PIDS+=($HOME_PY_PIDS)
     fi
-    
+
     # Check for violentutf directory processes
     VIOLENTUTF_PIDS=$(pgrep -f "streamlit.*violentutf" 2>/dev/null || true)
     if [ -n "$VIOLENTUTF_PIDS" ]; then
         STREAMLIT_PIDS+=($VIOLENTUTF_PIDS)
     fi
-    
+
     # Remove duplicates and process shutdown
     UNIQUE_PIDS=($(printf "%s\n" "${STREAMLIT_PIDS[@]}" | sort -u))
-    
+
     if [ ${#UNIQUE_PIDS[@]} -eq 0 ]; then
         echo "No ViolentUTF Streamlit processes found running."
         return 0
     fi
-    
+
     echo "Found ${#UNIQUE_PIDS[@]} ViolentUTF Streamlit process(es) to shutdown: ${UNIQUE_PIDS[*]}"
-    
+
     # Graceful shutdown sequence
     for pid in "${UNIQUE_PIDS[@]}"; do
         if kill -0 "$pid" 2>/dev/null; then
@@ -112,7 +112,7 @@ graceful_streamlit_shutdown() {
             kill -TERM "$pid" 2>/dev/null || true
         fi
     done
-    
+
     # Wait up to 10 seconds for graceful shutdown
     echo "Waiting for graceful shutdown (up to 10 seconds)..."
     for i in {1..10}; do
@@ -122,15 +122,15 @@ graceful_streamlit_shutdown() {
                 REMAINING_PIDS+=("$pid")
             fi
         done
-        
+
         if [ ${#REMAINING_PIDS[@]} -eq 0 ]; then
             echo "All ViolentUTF Streamlit processes shutdown gracefully."
             break
         fi
-        
+
         sleep 1
     done
-    
+
     # If processes still running, try SIGINT
     if [ ${#REMAINING_PIDS[@]} -gt 0 ]; then
         echo "Some processes still running. Sending SIGINT..."
@@ -140,10 +140,10 @@ graceful_streamlit_shutdown() {
                 kill -INT "$pid" 2>/dev/null || true
             fi
         done
-        
+
         # Wait another 5 seconds
         sleep 5
-        
+
         # Check remaining processes
         FINAL_REMAINING=()
         for pid in "${REMAINING_PIDS[@]}"; do
@@ -151,7 +151,7 @@ graceful_streamlit_shutdown() {
                 FINAL_REMAINING+=("$pid")
             fi
         done
-        
+
         # Force kill if necessary
         if [ ${#FINAL_REMAINING[@]} -gt 0 ]; then
             echo "Force killing remaining processes: ${FINAL_REMAINING[*]}"
@@ -160,7 +160,7 @@ graceful_streamlit_shutdown() {
             done
         fi
     fi
-    
+
     # Clean up port 8501 if it's still in use
     echo "Checking port 8501 for cleanup..."
     PORT_PID=$(lsof -ti:8501 2>/dev/null || true)
@@ -172,7 +172,7 @@ graceful_streamlit_shutdown() {
             kill -KILL "$PORT_PID" 2>/dev/null || true
         fi
     fi
-    
+
     echo "ViolentUTF Streamlit shutdown completed."
 }
 
@@ -180,20 +180,20 @@ graceful_streamlit_shutdown() {
 backup_user_configs() {
     echo "Backing up user configurations..."
     mkdir -p .backup_temp 2>/dev/null || true
-    
+
     # Backup AI tokens file
     if [ -f "$AI_TOKENS_FILE" ]; then
         cp "$AI_TOKENS_FILE" .backup_temp/ 2>/dev/null || true
         echo "Backed up AI tokens configuration"
     fi
-    
+
     # Backup custom APISIX routes
     if [ -f "apisix/conf/custom_routes.yml" ]; then
         cp "apisix/conf/custom_routes.yml" .backup_temp/ 2>/dev/null || true
         echo "Backed up custom APISIX routes"
     fi
-    
-    # Backup application data 
+
+    # Backup application data
     if [ -d "violentutf/app_data" ]; then
         tar -czf .backup_temp/app_data_backup.tar.gz -C violentutf app_data 2>/dev/null || true
         echo "Backed up application data"
@@ -203,32 +203,32 @@ backup_user_configs() {
 # --- Function to restore user configurations ---
 restore_user_configs() {
     echo "Restoring user configurations..."
-    
+
     if [ ! -d ".backup_temp" ]; then
         echo "No backup found, skipping restoration."
         return 0
     fi
-    
+
     # Restore AI tokens file
     if [ -f ".backup_temp/$AI_TOKENS_FILE" ]; then
         cp ".backup_temp/$AI_TOKENS_FILE" . 2>/dev/null || true
         echo "Restored AI tokens configuration"
     fi
-    
+
     # Restore custom APISIX routes
     if [ -f ".backup_temp/custom_routes.yml" ]; then
         mkdir -p apisix/conf 2>/dev/null || true
         cp ".backup_temp/custom_routes.yml" apisix/conf/ 2>/dev/null || true
         echo "Restored custom APISIX routes"
     fi
-    
+
     # Restore application data
     if [ -f ".backup_temp/app_data_backup.tar.gz" ]; then
         mkdir -p violentutf 2>/dev/null || true
         tar -xzf ".backup_temp/app_data_backup.tar.gz" -C violentutf 2>/dev/null || true
         echo "Restored application data"
     fi
-    
+
     # Clean up backup
     rm -rf .backup_temp 2>/dev/null || true
     echo "Backup cleanup completed."
@@ -239,7 +239,7 @@ perform_deep_cleanup() {
     echo "Starting DEEP cleanup process..."
     echo "This will remove ALL Docker containers, images, volumes, networks, and cache!"
     echo ""
-    
+
     # Warning prompt
     echo "⚠️  WARNING: This will completely clean your Docker environment!"
     echo "   - All Docker containers will be stopped and removed"
@@ -250,26 +250,26 @@ perform_deep_cleanup() {
     echo "   - All Docker system cache will be pruned"
     echo ""
     read -p "Are you absolutely sure you want to continue? (type 'YES' to confirm): " confirm
-    
+
     if [ "$confirm" != "YES" ]; then
         echo "Deep cleanup cancelled."
         exit 0
     fi
-    
+
     echo ""
     echo "Proceeding with deep cleanup..."
-    
+
     # First backup user configs and graceful shutdown
     echo "1. Backing up user configurations..."
     backup_user_configs
-    
+
     echo "2. Gracefully shutting down ViolentUTF Streamlit..."
     graceful_streamlit_shutdown
-    
+
     # Then perform regular cleanup
     echo "3. Performing standard cleanup..."
     perform_cleanup_internal
-    
+
     # Stop ALL Docker containers
     echo ""
     echo "4. Stopping ALL Docker containers..."
@@ -283,7 +283,7 @@ perform_deep_cleanup() {
     else
         echo "No running containers found."
     fi
-    
+
     # Remove ALL Docker images
     echo ""
     echo "5. Removing ALL Docker images..."
@@ -295,7 +295,7 @@ perform_deep_cleanup() {
     else
         echo "No Docker images found."
     fi
-    
+
     # Remove ALL Docker volumes
     echo ""
     echo "6. Removing ALL Docker volumes..."
@@ -307,7 +307,7 @@ perform_deep_cleanup() {
     else
         echo "No Docker volumes found."
     fi
-    
+
     # Remove ALL Docker networks (except default ones)
     echo ""
     echo "7. Removing ALL Docker networks (except defaults)..."
@@ -319,19 +319,19 @@ perform_deep_cleanup() {
     else
         echo "No custom Docker networks found."
     fi
-    
+
     # Prune Docker build cache
     echo ""
     echo "8. Pruning Docker build cache..."
     docker builder prune -af
     echo "Docker build cache pruned."
-    
+
     # Prune Docker system (everything)
     echo ""
     echo "9. Pruning Docker system cache..."
     docker system prune -af --volumes
     echo "Docker system cache pruned."
-    
+
     # Clean up any remaining Docker artifacts
     echo ""
     echo "10. Final Docker cleanup..."
@@ -340,7 +340,7 @@ perform_deep_cleanup() {
     docker volume prune -f
     docker network prune -f
     echo "Final Docker cleanup completed."
-    
+
     # Show final Docker status
     echo ""
     echo "9. Final Docker status:"
@@ -348,12 +348,12 @@ perform_deep_cleanup() {
     echo "Images: $(docker images -aq | wc -l)"
     echo "Volumes: $(docker volume ls -q | wc -l)"
     echo "Networks: $(docker network ls -q | wc -l)"
-    
+
     # Show disk space reclaimed
     echo ""
     echo "10. Docker system disk usage:"
     docker system df
-    
+
     echo ""
     echo "🧹 DEEP CLEANUP COMPLETED SUCCESSFULLY!"
     echo "✅ All Docker containers, images, volumes, networks, and cache have been removed"
@@ -399,7 +399,7 @@ perform_cleanup_internal() {
     echo "Removing Docker volumes related to ViolentUTF..."
     docker volume ls -q | grep -E "(keycloak|apisix|violentutf|fastapi)" | xargs -r docker volume rm
     echo "Docker volumes cleaned up."
-    
+
     # 5. Clean PyRIT orchestrator memory databases but preserve user application data
     echo "Cleaning PyRIT orchestrator memory databases..."
     if [ -d "violentutf/app_data/violentutf/api_memory" ]; then
@@ -414,12 +414,12 @@ perform_cleanup_internal() {
         rm "keycloak/.env"
         echo "Removed keycloak/.env"
     fi
-    
+
     if [ -f "violentutf_api/fastapi_app/.env" ]; then
         rm "violentutf_api/fastapi_app/.env"
         echo "Removed violentutf_api/fastapi_app/.env"
     fi
-    
+
     # Only remove template files in apisix/conf directory
     if [ -d "apisix/conf" ]; then
         for file in apisix/conf/*.yaml apisix/conf/*.yml apisix/conf/*.conf; do
@@ -428,16 +428,16 @@ perform_cleanup_internal() {
                 echo "Removed $file"
             fi
         done
-        
+
         echo "Restored only template files in apisix/conf directory"
     fi
-    
+
     # ViolentUTF files
     if [ -f "violentutf/.env" ]; then
         rm "violentutf/.env"
         echo "Removed violentutf/.env"
     fi
-    
+
     if [ -f "violentutf/.streamlit/secrets.toml" ]; then
         rm "violentutf/.streamlit/secrets.toml"
         echo "Removed violentutf/.streamlit/secrets.toml"
@@ -448,10 +448,10 @@ perform_cleanup_internal() {
 # --- Cleanup function ---
 perform_cleanup() {
     echo "Starting cleanup process..."
-    
+
     # 1. Backup user configurations before cleanup
     backup_user_configs
-    
+
     # 2. Gracefully shutdown ViolentUTF Streamlit before cleanup
     graceful_streamlit_shutdown
 
@@ -965,19 +965,19 @@ create_apisix_consumer() {
 }
 EOF
 )
-    
+
     echo "Creating APISIX consumer with API key authentication..."
     local response
     local http_code
-    
+
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/consumers/violentutf_user" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${consumer_config}" 2>&1)
-    
+
     http_code="${response: -3}"
     response_body="${response%???}"
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created API key consumer"
         echo "   API Key: $VIOLENTUTF_API_KEY"
@@ -1130,9 +1130,9 @@ create_bedrock_route() {
     local access_key="$4"
     local secret_key="$5"
     local session_token="$6"
-    
+
     local route_id="bedrock-$(echo "$model" | tr '.' '-' | tr '[:upper:]' '[:lower:]' | sed 's/anthropic-//g' | sed 's/meta-//g' | sed 's/amazon-//g')"
-    
+
     # Create route config with ai-proxy plugin for Bedrock (using openai-compatible + custom endpoint)
     local route_config='{
         "id": "'$route_id'",
@@ -1158,19 +1158,19 @@ create_bedrock_route() {
             }
         }
     }'
-    
+
     echo "Creating AWS Bedrock route for model $model at $uri..."
     local response
     local http_code
-    
+
     response=$(curl -w "%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
       -H "Content-Type: application/json" \
       -d "${route_config}" 2>&1)
-    
+
     http_code="${response: -3}"
     response_body="${response%???}"
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created AWS Bedrock route: $uri -> $model"
         CREATED_AI_ROUTES+=("AWS Bedrock: $uri -> $model")
@@ -1188,32 +1188,32 @@ setup_bedrock_routes() {
         echo "AWS Bedrock provider disabled. Skipping setup."
         return 0
     fi
-    
+
     echo "⚠️  AWS Bedrock integration is currently not supported by APISIX ai-proxy plugin."
     echo "   The ai-proxy plugin does not support native AWS SigV4 authentication required for Bedrock."
     echo "   Bedrock endpoints are configured in TokenManager for future implementation."
     echo "   Use the standalone Bedrock provider in Simple Chat for now."
     return 0
-    
+
     # Future implementation when AWS SigV4 support is added to APISIX
     if [ -z "$AWS_ACCESS_KEY_ID" ] || [ "$AWS_ACCESS_KEY_ID" = "your_aws_access_key_id_here" ]; then
         echo "⚠️  AWS Bedrock enabled but Access Key ID not configured. Skipping Bedrock setup."
         return 0
     fi
-    
+
     if [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ "$AWS_SECRET_ACCESS_KEY" = "your_aws_secret_access_key_here" ]; then
         echo "⚠️  AWS Bedrock enabled but Secret Access Key not configured. Skipping Bedrock setup."
         return 0
     fi
-    
+
     echo "Setting up AWS Bedrock routes..."
-    
+
     local region="${BEDROCK_REGION:-us-east-1}"
-    
+
     # Priority Bedrock models for AI Gateway
     local models=("anthropic.claude-opus-4-20250514-v1:0" "anthropic.claude-sonnet-4-20250514-v1:0" "anthropic.claude-3-5-sonnet-20241022-v2:0" "anthropic.claude-3-5-haiku-20241022-v1:0" "meta.llama3-3-70b-instruct-v1:0" "amazon.nova-pro-v1:0" "amazon.nova-lite-v1:0")
     local uris=("/ai/bedrock/claude-opus-4" "/ai/bedrock/claude-sonnet-4" "/ai/bedrock/claude-35-sonnet" "/ai/bedrock/claude-35-haiku" "/ai/bedrock/llama3-3-70b" "/ai/bedrock/nova-pro" "/ai/bedrock/nova-lite")
-    
+
     local setup_success=true
     for i in "${!models[@]}"; do
         local model="${models[$i]}"
@@ -1223,7 +1223,7 @@ setup_bedrock_routes() {
             setup_success=false
         fi
     done
-    
+
     if [ "$setup_success" = true ]; then
         return 0
     else
@@ -1327,7 +1327,7 @@ setup_ai_providers_enhanced() {
     if ! setup_open_webui_routes; then
         setup_errors=$((setup_errors + 1))
     fi
-    
+
     echo "Setting up AWS Bedrock routes..."
     if ! setup_bedrock_routes; then
         setup_errors=$((setup_errors + 1))
@@ -1378,7 +1378,7 @@ test_ai_routes() {
         run_test "AI Anthropic route accessibility (/ai/anthropic/opus)" \
                  "curl -s -o /dev/null -w '%{http_code}' ${APISIX_URL}/ai/anthropic/opus -X POST -H 'Content-Type: application/json' -d '$test_payload' | grep -qE '$expected_anthropic_code'"
     fi
-    
+
     if [ "$BEDROCK_ENABLED" = "true" ]; then
         run_test "AI Bedrock route accessibility (/ai/bedrock/claude-opus-4)" \
                  "curl -s -o /dev/null -w '%{http_code}' ${APISIX_URL}/ai/bedrock/claude-opus-4 -X POST -H 'Content-Type: application/json' -d '$test_payload' | grep -E '(200|401|422|400|404)'"
@@ -1440,7 +1440,7 @@ show_ai_summary() {
             fi
             any_provider_listed=true
         fi
-        
+
         if [ "$BEDROCK_ENABLED" = "true" ]; then
             echo "  🟠 AWS Bedrock"
             if grep -q "AWS Bedrock:" <<< "${CREATED_AI_ROUTES[@]}"; then
@@ -2093,72 +2093,72 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
 
     # Update client to use our pre-generated secret
     echo "Updating client secret for '${VUTF_CLIENT_ID_TO_CONFIGURE}' to use pre-generated value..."
-    
+
     # Get current client configuration
     make_api_call "GET" "/realms/${VUTF_REALM_NAME}/clients/${KC_CLIENT_UUID}"
     if [ "$API_CALL_STATUS" -ne 200 ]; then
         echo "Error: Failed to get client configuration. Status: $API_CALL_STATUS"
         exit 1
     fi
-    
+
     # Update the client configuration with our pre-generated secret
     CLIENT_CONFIG=$(echo "$API_CALL_RESPONSE" | jq --arg secret "$VIOLENTUTF_CLIENT_SECRET" '.secret = $secret')
-    
+
     # Save to temp file for the PUT request
     echo "$CLIENT_CONFIG" > /tmp/client-update.json
-    
+
     # Update the client
     make_api_call "PUT" "/realms/${VUTF_REALM_NAME}/clients/${KC_CLIENT_UUID}" "/tmp/client-update.json"
     if [ "$API_CALL_STATUS" -ne 204 ]; then
         echo "Error: Failed to update client secret. Status: $API_CALL_STATUS"
         exit 1
     fi
-    
+
     echo "Successfully updated client '${VUTF_CLIENT_ID_TO_CONFIGURE}' with pre-generated secret."
     rm -f /tmp/client-update.json
 
     # Update APISIX client secret
     echo "Updating APISIX client secret..."
-    
+
     # Find APISIX client UUID
     make_api_call "GET" "/realms/${VUTF_REALM_NAME}/clients?clientId=apisix"
     if [ "$API_CALL_STATUS" -ne 200 ]; then
         echo "Error: Failed to find APISIX client. Status: $API_CALL_STATUS, Response: $API_CALL_RESPONSE"
         exit 1
     fi
-    
+
     APISIX_CLIENT_UUID=$(echo "$API_CALL_RESPONSE" | jq -r '.[0].id')
     if [ -z "$APISIX_CLIENT_UUID" ] || [ "$APISIX_CLIENT_UUID" == "null" ]; then
         echo "Error: APISIX client not found in realm."
         exit 1
     fi
-    
+
     # Update APISIX client to use our pre-generated secret
     echo "Updating APISIX client to use pre-generated secret..."
-    
+
     # Get current client configuration
     make_api_call "GET" "/realms/${VUTF_REALM_NAME}/clients/${APISIX_CLIENT_UUID}"
     if [ "$API_CALL_STATUS" -ne 200 ]; then
         echo "Error: Failed to get APISIX client configuration. Status: $API_CALL_STATUS"
         exit 1
     fi
-    
+
     # Update the client configuration with our pre-generated secret
     CLIENT_CONFIG=$(echo "$API_CALL_RESPONSE" | jq --arg secret "$APISIX_CLIENT_SECRET" '.secret = $secret')
-    
+
     # Save to temp file for the PUT request
     echo "$CLIENT_CONFIG" > /tmp/apisix-client-update.json
-    
+
     # Update the client
     make_api_call "PUT" "/realms/${VUTF_REALM_NAME}/clients/${APISIX_CLIENT_UUID}" "/tmp/apisix-client-update.json"
     if [ "$API_CALL_STATUS" -ne 204 ]; then
         echo "Error: Failed to update APISIX client secret. Status: $API_CALL_STATUS"
         exit 1
     fi
-    
+
     echo "Successfully updated APISIX client with pre-generated secret."
     rm -f /tmp/apisix-client-update.json
-    
+
     # Export for use in route creation
     export KEYCLOAK_APISIX_SECRET=$APISIX_CLIENT_SECRET
 
@@ -2229,7 +2229,7 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
         exit 1
     fi
     echo "Password for user '${KEYCLOAK_APP_USERNAME}' has been set via API."
-    
+
     # Store reference to the password for later use
     NEW_USER_PASSWORD=$VIOLENTUTF_USER_PASSWORD
 
@@ -2483,18 +2483,18 @@ EOF
     fi
 
     echo "APISIX setup complete."
-    
+
     # Copy Zscaler/CA certificates to APISIX if they exist
     echo ""
     echo "Checking for Zscaler/CA certificates to install in APISIX..."
     CERTS_INSTALLED=false
-    
+
     # Check for certificates in multiple locations
     for cert_file in "zscaler.crt" "CA.crt" "violentutf_api/fastapi_app/zscaler.crt" "violentutf_api/fastapi_app/CA.crt"; do
         if [ -f "$cert_file" ]; then
             cert_name=$(basename "$cert_file")
             echo "Found certificate: $cert_file"
-            
+
             # Copy to APISIX container
             APISIX_CONTAINER=$(docker ps --filter "name=apisix-apisix-1" --format "{{.Names}}" | head -n 1)
             if [ -n "$APISIX_CONTAINER" ]; then
@@ -2508,7 +2508,7 @@ EOF
             fi
         fi
     done
-    
+
     # Update CA certificates in APISIX if any were installed
     if [ "$CERTS_INSTALLED" = true ]; then
         echo "Updating CA certificates in APISIX container..."
@@ -2648,7 +2648,7 @@ create_keycloak_client() {
     local client_id="$1"
     local client_secret="$2"
     local redirect_uri="$3"
-    
+
     cat > /tmp/fastapi-client.json <<EOF
 {
     "clientId": "${client_id}",
@@ -2698,10 +2698,10 @@ create_keycloak_client() {
     "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
 }
 EOF
-    
+
     # Create the client
     make_api_call "POST" "/realms/${VUTF_REALM_NAME}/clients" "/tmp/fastapi-client.json"
-    
+
     if [ "$API_CALL_STATUS" = "201" ] || [ "$API_CALL_STATUS" = "409" ]; then
         echo "FastAPI client created/exists in Keycloak."
         rm -f /tmp/fastapi-client.json
@@ -2731,19 +2731,19 @@ wait_for_apisix() {
     echo "Waiting for APISIX to be ready..."
     local max_attempts=30
     local attempt=0
-    
+
     while [ $attempt -lt $max_attempts ]; do
         if curl -s -o /dev/null -w "%{http_code}" "${APISIX_ADMIN_URL}/apisix/admin/routes" \
            -H "X-API-KEY: ${APISIX_ADMIN_KEY}" | grep -q "200"; then
             echo "APISIX is ready."
             return 0
         fi
-        
+
         echo "Waiting for APISIX... (attempt $((attempt+1))/$max_attempts)"
         sleep 2
         attempt=$((attempt+1))
     done
-    
+
     echo "Warning: APISIX may not be fully ready after $max_attempts attempts."
     return 1
 }
@@ -2751,11 +2751,11 @@ wait_for_apisix() {
 # Function to create FastAPI route
 create_fastapi_route() {
     echo "Creating route for FastAPI service in APISIX..."
-    
+
     local route_name="violentutf-fastapi"
     local route_uri="/api/*"
     local upstream_url="http://violentutf_api:8000"
-    
+
     # Create route configuration
     cat > /tmp/fastapi-route.json <<EOF
 {
@@ -2792,23 +2792,23 @@ create_fastapi_route() {
     }
 }
 EOF
-    
+
     # Use PUT to create or update the route
     local response=$(curl -s -w "\n%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_name}" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
         -H "Content-Type: application/json" \
         -d @/tmp/fastapi-route.json)
-    
+
     local http_code=$(echo "$response" | tail -n1)
     local body=$(echo "$response" | head -n-1)
-    
+
     rm -f /tmp/fastapi-route.json
-    
+
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ FastAPI route successfully created/updated in APISIX."
         echo "Route ID: ${route_name}"
         echo "Route URI: ${route_uri} -> ${upstream_url}"
-        
+
         # Add route to tracking array
         CREATED_AI_ROUTES+=("FastAPI: ${route_uri} -> ${upstream_url}")
         return 0
@@ -2823,7 +2823,7 @@ EOF
 # Function to create FastAPI documentation routes
 create_fastapi_docs_routes() {
     echo "Creating FastAPI documentation routes..."
-    
+
     # Create /api/docs route
     cat > /tmp/fastapi-docs-route.json <<EOF
 {
@@ -2848,20 +2848,20 @@ create_fastapi_docs_routes() {
     }
 }
 EOF
-    
+
     # Create docs route
     local response=$(curl -s -w "\n%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/violentutf-docs" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
         -H "Content-Type: application/json" \
         -d @/tmp/fastapi-docs-route.json)
-    
+
     local status_code=$(echo "$response" | tail -n1)
     if [ "$status_code" = "200" ] || [ "$status_code" = "201" ]; then
         echo "✅ FastAPI docs route created successfully."
     else
         echo "⚠️  Warning: Failed to create FastAPI docs route. Status: $status_code"
     fi
-    
+
     # Create /api/redoc route
     cat > /tmp/fastapi-redoc-route.json <<EOF
 {
@@ -2886,30 +2886,30 @@ EOF
     }
 }
 EOF
-    
+
     # Create redoc route
     local response=$(curl -s -w "\n%{http_code}" -X PUT "${APISIX_ADMIN_URL}/apisix/admin/routes/violentutf-redoc" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" \
         -H "Content-Type: application/json" \
         -d @/tmp/fastapi-redoc-route.json)
-    
+
     local status_code=$(echo "$response" | tail -n1)
     if [ "$status_code" = "200" ] || [ "$status_code" = "201" ]; then
         echo "✅ FastAPI redoc route created successfully."
     else
         echo "⚠️  Warning: Failed to create FastAPI redoc route. Status: $status_code"
     fi
-    
+
     # Clean up temp files
     rm -f /tmp/fastapi-docs-route.json /tmp/fastapi-redoc-route.json
-    
+
     echo "FastAPI documentation routes configured."
 }
 
 # Wait for APISIX to be ready
 if wait_for_apisix; then
     echo "APISIX is ready. Configuring all routes..."
-    
+
     # Use the comprehensive configure_routes.sh script instead of manual route creation
     if [ -f "apisix/configure_routes.sh" ]; then
         echo "Running comprehensive route configuration script..."
@@ -3197,25 +3197,25 @@ run_test "APISIX to Keycloak network connectivity (service: apisix, target: keyc
 # Additional network diagnostics if the connectivity test fails
 if [ $? -ne 0 ]; then
     echo "Performing additional network diagnostics..."
-    
+
     # Show all networks and their containers
     echo "Docker Networks:"
     docker network ls
-    
+
     # Check containers on the shared network
     echo "Containers on $SHARED_NETWORK_NAME:"
     docker network inspect $SHARED_NETWORK_NAME
-    
+
     # Check if services can be resolved by DNS from host
     echo "DNS resolution of Keycloak from host:"
     docker run --rm --network=$SHARED_NETWORK_NAME alpine nslookup keycloak 2>/dev/null || echo "Failed to resolve keycloak"
-    
+
     # Check if APISIX container is properly connected to network
     APISIX_CONTAINER=$(docker ps --filter "name=apisix" --format "{{.ID}}" | head -n 1)
     if [ -n "$APISIX_CONTAINER" ]; then
         echo "Checking APISIX container network connections..."
         docker inspect --format="{{range \$net,\$v := .NetworkSettings.Networks}}{{\$net}} {{end}}" $APISIX_CONTAINER
-        
+
         # Check if APISIX is connected to shared network
         APISIX_NETWORKS=$(docker inspect --format="{{.NetworkSettings.Networks.$SHARED_NETWORK_NAME}}" $APISIX_CONTAINER)
         if [ "$APISIX_NETWORKS" = "<no value>" ] || [ "$APISIX_NETWORKS" = "null" ]; then
@@ -3224,7 +3224,7 @@ if [ $? -ne 0 ]; then
             docker network disconnect $SHARED_NETWORK_NAME $APISIX_CONTAINER 2>/dev/null || true
             if docker network connect $SHARED_NETWORK_NAME $APISIX_CONTAINER; then
                 echo "✅ Reconnected APISIX container to $SHARED_NETWORK_NAME"
-                
+
                 # Try connectivity test one more time
                 echo "Retrying connectivity test after network reconnection..."
                 test_network_connectivity apisix keycloak 8080
@@ -3312,7 +3312,7 @@ if [ $TEST_FAILURES -gt 0 ]; then
     echo "⚠️  WARNING: Some tests failed. The application may not function correctly."
     echo "Please check the test results above and fix any issues before proceeding."
     echo ""
-    
+
     # Ask user if they want to continue despite test failures
     read -p "Do you want to continue and launch the Streamlit app anyway? (y/n): " continue_choice
     if [[ ! $continue_choice =~ ^[Yy]$ ]]; then
@@ -3328,24 +3328,8 @@ echo ""
 
 
 # ---------------------------------------------------------------
-# 12. Validate PyRIT Orchestrator Integration
+# 12-15. Functions moved to end after definitions
 # ---------------------------------------------------------------
-validate_pyrit_orchestrator_integration
-
-# ---------------------------------------------------------------
-# 13. Restore User Configurations
-# ---------------------------------------------------------------
-restore_user_configs
-
-# ---------------------------------------------------------------
-# 14. Verify Configuration Integrity
-# ---------------------------------------------------------------
-verify_configuration_integrity
-
-# ---------------------------------------------------------------
-# 15. Verify System State
-# ---------------------------------------------------------------
-verify_system_state
 
 # ---------------------------------------------------------------
 # 16. Display AI Configuration Summary
@@ -3449,22 +3433,22 @@ echo "Step 15: Preparing to launch the Streamlit application..."
 launch_streamlit_background() {
     local app_path="$1"
     local app_dir="$2"
-    
+
     echo "Launching ViolentUTF in background..."
-    
+
     # Ensure log directory exists
     mkdir -p violentutf_logs
-    
+
     # Launch in background with proper directory handling
     if [ "$app_dir" = "violentutf" ]; then
         (cd violentutf && nohup streamlit run Home.py > ../violentutf_logs/streamlit.log 2>&1 &)
     else
         nohup streamlit run "$app_path" > violentutf_logs/streamlit.log 2>&1 &
     fi
-    
+
     STREAMLIT_PID=$!
     sleep 2
-    
+
     # Check if process started successfully
     if kill -0 $STREAMLIT_PID 2>/dev/null; then
         echo "✅ ViolentUTF launched in background (PID: $STREAMLIT_PID)"
@@ -3479,13 +3463,13 @@ launch_streamlit_background() {
 # --- Network Configuration Validation ---
 validate_network_configuration() {
     echo "Validating Docker network configuration..."
-    
+
     # Check if shared network exists
     if ! docker network inspect "$SHARED_NETWORK_NAME" >/dev/null 2>&1; then
         echo "❌ Shared network '$SHARED_NETWORK_NAME' not found"
         return 1
     fi
-    
+
     echo "✅ Docker network configuration validated"
     return 0
 }
@@ -3493,16 +3477,16 @@ validate_network_configuration() {
 # --- Python Dependencies Verification ---
 verify_python_dependencies() {
     echo "Verifying Python dependencies..."
-    
+
     # Check if virtual environment exists
     if [ ! -d ".vitutf" ]; then
         echo "Creating Python virtual environment..."
         python3 -m venv .vitutf
     fi
-    
+
     # Activate virtual environment and install requirements
     source .vitutf/bin/activate
-    
+
     if [ -f "violentutf/requirements.txt" ]; then
         echo "Installing/updating Python dependencies..."
         pip install -r violentutf/requirements.txt >/dev/null 2>&1
@@ -3510,7 +3494,7 @@ verify_python_dependencies() {
     else
         echo "⚠️ Requirements file not found"
     fi
-    
+
     deactivate
     return 0
 }
@@ -3518,7 +3502,7 @@ verify_python_dependencies() {
 # --- JWT Secret Consistency Check ---
 check_jwt_consistency() {
     echo "Checking JWT secret consistency..."
-    
+
     # This is a placeholder for JWT secret consistency checks
     # In a real implementation, this would compare JWT secrets across services
     echo "✅ JWT secret consistency verified"
@@ -3528,9 +3512,9 @@ check_jwt_consistency() {
 # --- Service Health Validation ---
 validate_all_services() {
     echo "Validating all services health..."
-    
+
     local services_healthy=true
-    
+
     # Check APISIX health
     echo "Checking APISIX Gateway health..."
     if curl -s -f "http://localhost:9080/apisix/status" >/dev/null 2>&1; then
@@ -3539,7 +3523,7 @@ validate_all_services() {
         echo "❌ APISIX Gateway: Unhealthy"
         services_healthy=false
     fi
-    
+
     # Check Keycloak health
     echo "Checking Keycloak health..."
     if curl -s -f "http://localhost:8080/auth/realms/ViolentUTF" >/dev/null 2>&1 || \
@@ -3549,7 +3533,7 @@ validate_all_services() {
         echo "❌ Keycloak: Unhealthy"
         services_healthy=false
     fi
-    
+
     # Check ViolentUTF API health
     echo "Checking ViolentUTF API health..."
     if curl -s -f "http://localhost:9080/api/v1/health" >/dev/null 2>&1; then
@@ -3558,7 +3542,7 @@ validate_all_services() {
         echo "❌ ViolentUTF API: Unhealthy"
         services_healthy=false
     fi
-    
+
     if [ "$services_healthy" = true ]; then
         echo "✅ All services health validation passed"
         return 0
@@ -3571,9 +3555,9 @@ validate_all_services() {
 # --- System State Verification ---
 verify_system_state() {
     echo "Verifying system state..."
-    
+
     local verification_passed=true
-    
+
     # Check required configuration files
     local required_configs=(
         "keycloak/.env"
@@ -3581,7 +3565,7 @@ verify_system_state() {
         "violentutf/.env"
         "violentutf/.streamlit/secrets.toml"
     )
-    
+
     echo "Checking required configuration files..."
     for config in "${required_configs[@]}"; do
         if [ -f "$config" ]; then
@@ -3591,7 +3575,7 @@ verify_system_state() {
             verification_passed=false
         fi
     done
-    
+
     # Validate service health
     if validate_all_services; then
         echo "✅ Service health verification passed"
@@ -3599,7 +3583,7 @@ verify_system_state() {
         echo "❌ Service health verification failed"
         verification_passed=false
     fi
-    
+
     if [ "$verification_passed" = true ]; then
         echo "✅ System state verification completed successfully"
         return 0
@@ -3615,9 +3599,9 @@ verify_configuration_integrity() {
     echo "=========================================="
     echo "CONFIGURATION INTEGRITY VERIFICATION"
     echo "=========================================="
-    
+
     local integrity_passed=true
-    
+
     # 1. JWT Secret Consistency
     echo "1. Checking JWT secret consistency..."
     if check_jwt_consistency; then
@@ -3626,7 +3610,7 @@ verify_configuration_integrity() {
         echo "❌ JWT secret inconsistency detected"
         integrity_passed=false
     fi
-    
+
     # 2. Network Connectivity Testing
     echo ""
     echo "2. Testing Docker network connectivity..."
@@ -3636,14 +3620,14 @@ verify_configuration_integrity() {
         echo "❌ Network configuration issues detected"
         integrity_passed=false
     fi
-    
+
     # 3. Environment Variable Consistency
     echo ""
     echo "3. Validating environment variables..."
-    
+
     # Check for required environment variables in key services
     local env_vars_valid=true
-    
+
     # Check if JWT_SECRET_KEY is set in API
     if [ -f "violentutf_api/fastapi_app/.env" ]; then
         if grep -q "JWT_SECRET_KEY=" "violentutf_api/fastapi_app/.env"; then
@@ -3653,7 +3637,7 @@ verify_configuration_integrity() {
             env_vars_valid=false
         fi
     fi
-    
+
     # Check if Keycloak credentials are set
     if [ -f "keycloak/.env" ]; then
         if grep -q "KEYCLOAK_ADMIN=" "keycloak/.env"; then
@@ -3663,22 +3647,22 @@ verify_configuration_integrity() {
             env_vars_valid=false
         fi
     fi
-    
+
     if [ "$env_vars_valid" = true ]; then
         echo "✅ Environment variables are properly configured"
     else
         echo "❌ Environment variable configuration issues detected"
         integrity_passed=false
     fi
-    
+
     # 4. Container Health Verification
     echo ""
     echo "4. Verifying container health..."
-    
+
     # Check if containers are running
     local containers_healthy=true
     local required_containers=("apisix" "keycloak" "postgres")
-    
+
     for container in "${required_containers[@]}"; do
         if docker ps --format "{{.Names}}" | grep -q "$container"; then
             echo "✅ Container running: $container"
@@ -3687,14 +3671,14 @@ verify_configuration_integrity() {
             containers_healthy=false
         fi
     done
-    
+
     if [ "$containers_healthy" = true ]; then
         echo "✅ All required containers are running"
     else
         echo "❌ Some required containers are not running"
         integrity_passed=false
     fi
-    
+
     # Summary
     echo ""
     echo "Configuration Integrity Summary:"
@@ -3707,14 +3691,14 @@ verify_configuration_integrity() {
         echo "   Please review and fix the issues above before proceeding"
         echo "   The system may not function correctly with these issues"
     fi
-    
+
     return $([ "$integrity_passed" = true ] && echo 0 || echo 1)
 }
 
 # --- PyRIT Parameter Validation ---
 validate_pyrit_parameters() {
     echo "Validating PyRIT PromptSendingOrchestrator parameters..."
-    
+
     # Test PyRIT parameter compatibility in Docker container
     local validation_result
     validation_result=$(docker exec violentutf_api python3 -c "
@@ -3723,11 +3707,11 @@ try:
     from pyrit.orchestrator import PromptSendingOrchestrator
     from pyrit.models import AttackStrategy
     import inspect
-    
+
     # Check if PromptSendingOrchestrator constructor accepts 'scorers' parameter
     sig = inspect.signature(PromptSendingOrchestrator.__init__)
     params = list(sig.parameters.keys())
-    
+
     if 'scorers' in params:
         print('SUCCESS: scorers parameter supported')
         sys.exit(0)
@@ -3737,15 +3721,15 @@ try:
     else:
         print('ERROR: Neither scorers nor auxiliary_scorers parameter found')
         sys.exit(2)
-        
+
 except Exception as e:
     print(f'ERROR: {e}')
     sys.exit(3)
 " 2>&1)
-    
+
     local exit_code=$?
     echo "$validation_result"
-    
+
     if [ $exit_code -eq 0 ]; then
         echo "✅ PyRIT parameter validation passed"
         return 0
@@ -3758,7 +3742,7 @@ except Exception as e:
 # --- PyRIT Memory Validation ---
 validate_pyrit_memory() {
     echo "Validating PyRIT memory database initialization..."
-    
+
     # Test PyRIT memory initialization in Docker container
     local validation_result
     validation_result=$(docker exec violentutf_api python3 -c "
@@ -3766,32 +3750,32 @@ import sys
 import os
 try:
     from pyrit.memory import DuckDBMemory
-    
+
     # Test memory initialization with a temporary database
     test_db_path = '/tmp/test_pyrit_memory.db'
-    
+
     # Clean up any existing test database
     if os.path.exists(test_db_path):
         os.remove(test_db_path)
-    
+
     # Initialize memory instance
     memory = DuckDBMemory(db_path=test_db_path)
-    
+
     # Clean up test database
     if os.path.exists(test_db_path):
         os.remove(test_db_path)
-    
+
     print('SUCCESS: PyRIT memory initialization working')
     sys.exit(0)
-    
+
 except Exception as e:
     print(f'ERROR: {e}')
     sys.exit(1)
 " 2>&1)
-    
+
     local exit_code=$?
     echo "$validation_result"
-    
+
     if [ $exit_code -eq 0 ]; then
         echo "✅ PyRIT memory validation passed"
         return 0
@@ -3804,7 +3788,7 @@ except Exception as e:
 # --- Scorer Wrapper Validation ---
 validate_scorer_wrapper() {
     echo "Validating ConfiguredScorerWrapper integration..."
-    
+
     # Test scorer wrapper functionality in Docker container
     local validation_result
     validation_result=$(docker exec violentutf_api python3 -c "
@@ -3813,18 +3797,18 @@ try:
     from pyrit.score.scorer_wrapper import ConfiguredScorerWrapper
     from pyrit.score import SelfAskTrueFalseScorer
     from pyrit.models import PromptRequestPiece
-    
+
     # Test ConfiguredScorerWrapper creation
     base_scorer = SelfAskTrueFalseScorer(
         true_false_question='Is this message appropriate?'
     )
-    
+
     wrapper = ConfiguredScorerWrapper(
         scorer=base_scorer,
         name='test_scorer',
         description='Test scorer for validation'
     )
-    
+
     # Test wrapper inheritance
     if hasattr(wrapper, 'score_async') and hasattr(wrapper, 'name'):
         print('SUCCESS: ConfiguredScorerWrapper validation passed')
@@ -3832,15 +3816,15 @@ try:
     else:
         print('ERROR: ConfiguredScorerWrapper missing required methods')
         sys.exit(1)
-        
+
 except Exception as e:
     print(f'ERROR: {e}')
     sys.exit(1)
 " 2>&1)
-    
+
     local exit_code=$?
     echo "$validation_result"
-    
+
     if [ $exit_code -eq 0 ]; then
         echo "✅ Scorer wrapper validation passed"
         return 0
@@ -3853,14 +3837,14 @@ except Exception as e:
 # --- Orchestrator Service Validation ---
 validate_orchestrator_service() {
     echo "Validating PyRIT orchestrator service initialization..."
-    
+
     # Test orchestrator service startup in Docker container
     local validation_result
     validation_result=$(docker exec violentutf_api python3 -c "
 import sys
 try:
     from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
-    
+
     # Test service initialization
     if hasattr(pyrit_orchestrator_service, 'get_orchestrator_types'):
         orchestrator_types = pyrit_orchestrator_service.get_orchestrator_types()
@@ -3873,15 +3857,15 @@ try:
     else:
         print('ERROR: Orchestrator service missing required methods')
         sys.exit(1)
-        
+
 except Exception as e:
     print(f'ERROR: {e}')
     sys.exit(1)
 " 2>&1)
-    
+
     local exit_code=$?
     echo "$validation_result"
-    
+
     if [ $exit_code -eq 0 ]; then
         echo "✅ Orchestrator service validation passed"
         return 0
@@ -3894,24 +3878,24 @@ except Exception as e:
 # --- Orchestrator Endpoints Validation ---
 validate_orchestrator_endpoints() {
     echo "Validating orchestrator API endpoints..."
-    
+
     # Test orchestrator endpoints through APISIX gateway
     local endpoint_tests=(
         "GET|/api/v1/orchestrators/types|Orchestrator types endpoint"
         "GET|/api/v1/orchestrators|Orchestrator list endpoint"
     )
-    
+
     local all_passed=true
-    
+
     for test in "${endpoint_tests[@]}"; do
         IFS='|' read -r method endpoint description <<< "$test"
         echo "Testing: $description"
-        
+
         local response_code
         response_code=$(curl -s -o /dev/null -w "%{http_code}" -X "$method" "http://localhost:9080$endpoint" \
             -H "Content-Type: application/json" \
             -H "X-API-Gateway: APISIX" 2>/dev/null || echo "000")
-        
+
         if [ "$response_code" = "200" ] || [ "$response_code" = "401" ]; then
             echo "✅ $description: Endpoint accessible (HTTP $response_code)"
         else
@@ -3919,7 +3903,7 @@ validate_orchestrator_endpoints() {
             all_passed=false
         fi
     done
-    
+
     if [ "$all_passed" = true ]; then
         echo "✅ Orchestrator endpoints validation passed"
         return 0
@@ -3935,9 +3919,9 @@ validate_pyrit_orchestrator_integration() {
     echo "=========================================="
     echo "PYRIT ORCHESTRATOR INTEGRATION VALIDATION"
     echo "=========================================="
-    
+
     local validation_errors=0
-    
+
     # 1. PyRIT Parameter Validation
     echo "1. PyRIT Parameter Validation:"
     echo "------------------------------"
@@ -3947,9 +3931,9 @@ validate_pyrit_orchestrator_integration() {
         echo "❌ PyRIT parameters validation failed"
         ((validation_errors++))
     fi
-    
+
     echo ""
-    
+
     # 2. PyRIT Memory Validation
     echo "2. PyRIT Memory Validation:"
     echo "---------------------------"
@@ -3959,9 +3943,9 @@ validate_pyrit_orchestrator_integration() {
         echo "❌ PyRIT memory validation failed"
         ((validation_errors++))
     fi
-    
+
     echo ""
-    
+
     # 3. Scorer Wrapper Validation
     echo "3. Scorer Wrapper Validation:"
     echo "-----------------------------"
@@ -3971,9 +3955,9 @@ validate_pyrit_orchestrator_integration() {
         echo "❌ Scorer wrapper validation failed"
         ((validation_errors++))
     fi
-    
+
     echo ""
-    
+
     # 4. Orchestrator Service Validation
     echo "4. Orchestrator Service Validation:"
     echo "-----------------------------------"
@@ -3983,9 +3967,9 @@ validate_pyrit_orchestrator_integration() {
         echo "❌ Orchestrator service validation failed"
         ((validation_errors++))
     fi
-    
+
     echo ""
-    
+
     # 5. Orchestrator Endpoints Validation
     echo "5. Orchestrator Endpoints Validation:"
     echo "-------------------------------------"
@@ -3995,7 +3979,7 @@ validate_pyrit_orchestrator_integration() {
         echo "❌ Orchestrator endpoints validation failed"
         ((validation_errors++))
     fi
-    
+
     echo ""
     echo "PyRIT Orchestrator Integration Summary:"
     echo "======================================="
@@ -4013,7 +3997,7 @@ validate_pyrit_orchestrator_integration() {
         echo "   Please review the failed validations above"
         echo "   Some orchestrator features may not work correctly"
     fi
-    
+
     return $validation_errors
 }
 
@@ -4048,6 +4032,12 @@ echo ""
 echo "=========================================="
 echo "SETUP COMPLETED SUCCESSFULLY!"
 echo "=========================================="
+# Execute validation functions now that they're defined
+validate_pyrit_orchestrator_integration
+restore_user_configs
+verify_configuration_integrity
+verify_system_state
+
 echo "Your ViolentUTF platform with Keycloak SSO, APISIX Gateway, AI Proxy, and PyRIT Orchestrator is now ready!"
 echo ""
 echo "💡 Next Steps:"

@@ -6,7 +6,7 @@ services:
       - .env
     networks:
       - postgres-network
-      - vutf-network    # Add this line
+      - vutf-network # Add this line
     environment:
       # --- Admin Credentials ---
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
@@ -28,10 +28,10 @@ services:
 
       # --- Proxy Configuration ---
       # This tells Keycloak to trust proxy headers
-      KC_PROXY: edge              # Trust edge proxy headers
+      KC_PROXY: edge # Trust edge proxy headers
       KC_PROXY_HEADERS: xforwarded
-      KC_HOSTNAME_STRICT: false   # Allow flexible hostname validation
-      KC_HOSTNAME_STRICT_HTTPS: false  # Allow HTTP when behind proxy
+      KC_HOSTNAME_STRICT: false # Allow flexible hostname validation
+      KC_HOSTNAME_STRICT_HTTPS: false # Allow HTTP when behind proxy
 
       # --- Optional: Health and Metrics ---
       KC_HEALTH_ENABLED: true

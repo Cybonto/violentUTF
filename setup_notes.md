@@ -53,7 +53,7 @@ The script creates `ai-tokens.env` with the following structure:
 OPENAI_ENABLED=false
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Anthropic Configuration  
+# Anthropic Configuration
 ANTHROPIC_ENABLED=false
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
@@ -251,7 +251,7 @@ View container logs:
 # Keycloak logs
 cd keycloak && docker-compose logs
 
-# APISIX logs  
+# APISIX logs
 cd apisix && docker-compose logs
 ```
 
@@ -288,7 +288,7 @@ For production use, consider:
 
 **Previous Version**: Used OpenID Connect (OIDC) for AI Gateway authentication
 - ❌ Complex JWT token flow
-- ❌ Network connectivity issues between APISIX and Keycloak  
+- ❌ Network connectivity issues between APISIX and Keycloak
 - ❌ Bearer token management complexity
 
 **Current Version**: Uses API key authentication
@@ -347,7 +347,7 @@ plugins:
 ## Support
 For issues specific to:
 - **Keycloak**: Check Keycloak documentation
-- **APISIX**: Check APISIX documentation  
+- **APISIX**: Check APISIX documentation
 - **AI Gateway Authentication**: Follow troubleshooting guide above
 - **AI Provider Integration**: Verify API keys in `ai-tokens.env`
 - **ViolentUTF**: Check Python dependencies and Streamlit logs

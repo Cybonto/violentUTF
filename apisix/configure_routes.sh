@@ -73,21 +73,21 @@ create_route() {
     local methods=$3
     local desc=$4
     local priority=${5:-0}  # Optional priority parameter, default 0
-    
+
     echo "🛣️  Creating route: $desc"
-    
+
     # Build the JSON with priority if specified
     local route_json="{
         \"uri\": \"$route_path\",
         \"methods\": $methods,
         \"upstream_id\": \"violentutf-api\","
-    
+
     # Add priority if greater than 0
     if [ "$priority" -gt 0 ]; then
         route_json="${route_json}
         \"priority\": $priority,"
     fi
-    
+
     route_json="${route_json}
         \"plugins\": {
             \"cors\": {
@@ -108,7 +108,7 @@ create_route() {
         },
         \"desc\": \"$desc\"
     }"
-    
+
     curl -H "X-API-KEY: $ADMIN_KEY" -X PUT -d "$route_json" "$APISIX_ADMIN_URL/apisix/admin/routes/$route_id"
     echo
 }

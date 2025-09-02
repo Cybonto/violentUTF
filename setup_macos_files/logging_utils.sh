@@ -29,7 +29,7 @@ set_verbosity() {
         normal|1) VUTF_VERBOSITY=1 ;;
         verbose|2) VUTF_VERBOSITY=2 ;;
         debug|3) VUTF_VERBOSITY=3 ;;
-        *) 
+        *)
             echo "Invalid verbosity level: $level. Using normal." >&2
             VUTF_VERBOSITY=1
             ;;
@@ -60,7 +60,7 @@ _log() {
     local color="$2"
     local prefix="$3"
     local message="$4"
-    
+
     if should_log "$level"; then
         echo -e "${color}${prefix}${message}${LOG_NC}"
     fi
@@ -118,9 +118,9 @@ log_debug() {
 log_command() {
     local description="$1"
     local command="$2"
-    
+
     log_detail "Executing: $description"
-    
+
     if should_log 3; then
         log_debug "Command: $command"
         eval "$command"
@@ -137,9 +137,9 @@ log_command() {
 log_docker() {
     local description="$1"
     local docker_command="$2"
-    
+
     log_detail "Docker: $description"
-    
+
     if should_log 3; then
         log_debug "Docker command: $docker_command"
         eval "$docker_command"
@@ -156,7 +156,7 @@ log_docker() {
 log_wait() {
     local message="$1"
     local duration="${2:-5}"
-    
+
     if should_log 1; then
         echo -ne "${LOG_YELLOW}⏳ $message"
         for i in $(seq 1 "$duration"); do
@@ -173,7 +173,7 @@ log_wait() {
 log_spinner() {
     local message="$1"
     local command="$2"
-    
+
     if should_log 1; then
         echo -ne "${LOG_BLUE}$message "
         local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
@@ -215,7 +215,7 @@ log_vars() {
 log_echo() {
     local level="$1"
     local message="$2"
-    
+
     if should_log "$level"; then
         echo -e "$message"
     fi
@@ -225,10 +225,10 @@ log_echo() {
 init_logging() {
     # Set verbosity from environment or default
     VUTF_VERBOSITY=${VUTF_VERBOSITY:-1}
-    
+
     # Export for child processes
     export VUTF_VERBOSITY
-    
+
     # Show initial verbosity level
     log_debug "Logging initialized at verbosity level: $(get_verbosity)"
 }

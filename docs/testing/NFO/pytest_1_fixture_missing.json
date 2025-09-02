@@ -1,0 +1,28 @@
+{
+  "status": "fixed",
+  "tool_name": "pytest",
+  "exit_code": 1,
+  "test_file_name": "test_contract_validation.py",
+  "failure_type": "FIXTURE_ERROR",
+  "failure_subtype": "Fixture Not Found",
+  "file_path": "",
+  "file_path_log": ["tests/api_tests/test_contract_validation.py"],
+  "issue": "",
+  "issue_log": ["Missing fixtures 'test_app' and 'openapi_schema' required by contract validation tests"],
+  "line_range": "19, 34",
+  "severity": "HIGH",
+  "message": "fixture 'test_app' not found",
+  "offending_code_snippet": "def test_openapi_schema_generation(self, test_app, openapi_schema):",
+  "structured_details": {
+    "missing_fixtures": ["test_app", "openapi_schema"],
+    "affected_tests": 8,
+    "available_fixtures": ["api_headers", "mock_headers", "authenticated_headers"],
+    "requires_contract_testing_environment": true
+  },
+  "solution": [
+    "Enable contract testing environment by setting CONTRACT_TESTING=true",
+    "Fix import dependencies in contract testing fixtures",
+    "Ensure FastAPI app can be imported for test_app fixture",
+    "Generate OpenAPI schema from running FastAPI application"
+  ]
+}

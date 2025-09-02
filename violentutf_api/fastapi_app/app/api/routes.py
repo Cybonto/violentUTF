@@ -1,6 +1,10 @@
-"""
-Main API router that includes all sub-routers
-"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Main API router that includes all sub-routers."""
 
 from app.api.endpoints import (
     apisix_admin,

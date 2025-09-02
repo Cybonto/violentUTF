@@ -97,11 +97,11 @@ if [ "$http_code" = "200" ]; then
     # Count OpenAPI routes
     openapi_count=$(echo "$body" | grep -o '"id":"openapi-' | wc -l)
     echo "   Found $openapi_count OpenAPI routes"
-    
+
     # Look for GSAI routes specifically
     gsai_count=$(echo "$body" | grep -o '"id":"openapi-gsai-api-1-' | wc -l)
     echo "   Found $gsai_count GSAI routes"
-    
+
     if [ "$gsai_count" -gt 0 ]; then
         echo "   GSAI route IDs:"
         echo "$body" | grep -o '"id":"openapi-gsai-api-1-[^"]*"' | cut -d'"' -f4
@@ -137,7 +137,7 @@ if [ "$apisix_networks" != "FAILED" ] && [ "$fastapi_networks" != "FAILED" ]; th
             break
         fi
     done
-    
+
     if [ -n "$shared_network" ]; then
         echo "✅ Containers share network: $shared_network"
     else
@@ -158,7 +158,7 @@ if [ -n "$VIOLENTUTF_API_KEY" ]; then
     response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X GET "$test_url" \
         -H "apikey: $VIOLENTUTF_API_KEY" 2>&1)
     http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
-    
+
     if [ "$http_code" = "200" ]; then
         echo "✅ API gateway is working"
     else

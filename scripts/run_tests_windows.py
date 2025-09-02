@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-"""
-Cross-platform test runner for ViolentUTF.
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Cross-platform test runner for ViolentUTF.
+
 Specifically designed to work on Windows, macOS, and Linux.
 """
-
 import argparse
-import glob
-import json
 import os
-import subprocess
+import subprocess  # nosec B404 - needed for test execution
 import sys
 from pathlib import Path
 
 
-def find_requirements_files():
+def find_requirements_files() -> list[str]:
     """Find all requirements*.txt files in the project."""
     req_files = []
-    for root, dirs, files in os.walk("."):
+
+    for root, _, files in os.walk("."):
         # Skip virtual environment directories
         if "venv" in root or ".venv" in root or "env" in root:
             continue
@@ -28,25 +32,29 @@ def find_requirements_files():
     return req_files
 
 
-def install_dependencies(req_files):
+def install_dependencies(req_files: list[str]) -> None:
     """Install dependencies from requirements files."""
     print("Installing test dependencies...")
 
     # Install core test dependencies first
     core_deps = ["pytest", "pytest-cov", "pytest-timeout", "pytest-xdist"]
     for dep in core_deps:
-        subprocess.run([sys.executable, "-m", "pip", "install", dep], check=False)
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", dep], check=False
+        )  # nosec B603 - controlled pip install
 
     # Install from each requirements file
     for req_file in req_files:
         print(f"Installing from {req_file}")
         try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_file], check=False)
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-r", req_file], check=False
+            )  # nosec B603 - controlled pip install
         except Exception as e:
             print(f"Warning: Failed to install from {req_file}: {e}")
 
 
-def find_test_files(test_dir="tests/unit"):
+def find_test_files(test_dir: str = "tests/unit") -> list[str]:
     """Find Python test files in the specified directory."""
     test_files = []
 
@@ -65,7 +73,7 @@ def find_test_files(test_dir="tests/unit"):
     return test_files
 
 
-def run_tests(test_dir="tests/unit", coverage=True, parallel=True):
+def run_tests(test_dir: str = "tests/unit", coverage: bool = True, parallel: bool = True) -> int:
     """Run pytest with coverage reporting."""
     test_files = find_test_files(test_dir)
 
@@ -80,7 +88,14 @@ def run_tests(test_dir="tests/unit", coverage=True, parallel=True):
     cmd = [sys.executable, "-m", "pytest", test_dir, "-v"]
 
     if coverage:
-        cmd.extend(["--cov=violentutf", "--cov=violentutf_api", "--cov-report=xml", "--cov-report=term-missing"])
+        cmd.extend(
+            [
+                "--cov=violentutf",
+                "--cov=violentutf_api",
+                "--cov-report=xml",
+                "--cov-report=term-missing",
+            ]
+        )
 
     cmd.extend(["--timeout=300"])
 
@@ -94,12 +109,12 @@ def run_tests(test_dir="tests/unit", coverage=True, parallel=True):
     print(f"Running command: {' '.join(cmd)}")
 
     # Run tests
-    result = subprocess.run(cmd)
+    result = subprocess.run(cmd, check=False)  # nosec B603 - controlled pytest command
 
     return result.returncode
 
 
-def create_empty_results():
+def create_empty_results() -> None:
     """Create empty test result files for CI compatibility."""
     print("Creating empty test results...")
 
@@ -111,28 +126,35 @@ def create_empty_results():
             <skipped message="No test files found"/>
         </testcase>
     </testsuite>
-</testsuites>"""
-
+</testsuites>
+"""
     with open("junit.xml", "w", encoding="utf-8") as f:
+
         f.write(junit_xml)
 
     # Create minimal coverage XML
     coverage_xml = """<?xml version="1.0" encoding="utf-8"?>
 <coverage version="1">
     <packages/>
-</coverage>"""
-
+</coverage>
+"""
     with open("coverage.xml", "w", encoding="utf-8") as f:
+
         f.write(coverage_xml)
 
 
-def main():
-    """Main entry point."""
+def main() -> None:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Cross-platform test runner for ViolentUTF")
+
     parser.add_argument("--test-dir", default="tests/unit", help="Directory containing tests")
     parser.add_argument("--no-coverage", action="store_true", help="Disable coverage reporting")
     parser.add_argument("--no-parallel", action="store_true", help="Disable parallel test execution")
-    parser.add_argument("--install-deps", action="store_true", help="Install dependencies before running tests")
+    parser.add_argument(
+        "--install-deps",
+        action="store_true",
+        help="Install dependencies before running tests",
+    )
 
     args = parser.parse_args()
 
@@ -149,7 +171,11 @@ def main():
             print("No requirements files found")
 
     # Run tests
-    exit_code = run_tests(test_dir=args.test_dir, coverage=not args.no_coverage, parallel=not args.no_parallel)
+    exit_code = run_tests(
+        test_dir=args.test_dir,
+        coverage=not args.no_coverage,
+        parallel=not args.no_parallel,
+    )
 
     sys.exit(exit_code)
 

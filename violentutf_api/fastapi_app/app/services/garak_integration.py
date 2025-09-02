@@ -1,50 +1,57 @@
-"""
-Garak Integration Service
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+"""Garak Integration Service
+
 Provides NVIDIA Garak LLM vulnerability scanning functionality for ViolentUTF platform
 """
-
-import asyncio
-import json
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Self
 
 logger = logging.getLogger(__name__)
 
 
 class GarakService:
-    """Service class for Garak integration"""
+    """Service class for Garak integration."""
 
-    def __init__(self):
+    def __init__(self: "Self") -> None:
+        """Initialize instance."""
         self.available = False
+
         self._initialize_garak()
 
-    def _initialize_garak(self):
-        """Initialize Garak scanner and core components"""
+    def _initialize_garak(self: "Self") -> None:
+        """Initialize Garak scanner and core components."""
         try:
-            import garak
-            from garak import _plugins
-            from garak.evaluators import Evaluator
-            from garak.generators import Generator
+
+            import garak  # noqa: F401  # pylint: disable=unused-import
+            from garak import _plugins  # noqa: F401
+            from garak.evaluators import Evaluator  # noqa: F401  # pylint: disable=unused-import
+            from garak.generators import Generator  # noqa: F401  # pylint: disable=unused-import
 
             self.available = True
             logger.info("✅ Garak initialized successfully")
 
         except ImportError as e:
-            logger.error(f"❌ Garak not available: {e}")
+            logger.error("❌ Garak not available: %s", e)
             self.available = False
         except Exception as e:
-            logger.error(f"❌ Failed to initialize Garak: {e}")
+            logger.error("❌ Failed to initialize Garak: %s", e)
             self.available = False
 
-    def is_available(self) -> bool:
-        """Check if Garak is properly initialized"""
+    def is_available(self: "Self") -> bool:
+        """Check if Garak is properly initialized."""
         return self.available
 
-    def list_available_probes(self) -> List[Dict[str, Any]]:
-        """List all available Garak vulnerability probes"""
+    def list_available_probes(self: "Self") -> List[Dict[str, Any]]:
+        """List all available Garak vulnerability probes."""
         if not self.is_available():
+
             return []
 
         try:
@@ -56,13 +63,12 @@ class GarakService:
 
             for module_name in probe_modules:
                 try:
-                    module = garak._plugins.load_plugin(f"probes.{module_name}")
+                    module = garak._plugins.load_plugin(f"probes.{module_name}")  # pylint: disable=protected-access
 
                     # Get probe classes from module
                     for attr_name in dir(module):
                         attr = getattr(module, attr_name)
                         if isinstance(attr, type) and hasattr(attr, "probe") and attr_name != "Probe":
-
                             probe_info = {
                                 "module": module_name,
                                 "name": attr_name,
@@ -73,19 +79,20 @@ class GarakService:
                             probes.append(probe_info)
 
                 except Exception as e:
-                    logger.warning(f"Failed to load probe module {module_name}: {e}")
+                    logger.warning("Failed to load probe module %s: %s", module_name, e)
                     continue
 
-            logger.info(f"Found {len(probes)} Garak probes")
+            logger.info("Found %s Garak probes", len(probes))
             return probes
 
         except Exception as e:
-            logger.error(f"Failed to list Garak probes: {e}")
+            logger.error("Failed to list Garak probes: %s", e)
             return []
 
-    def list_available_generators(self) -> List[Dict[str, Any]]:
-        """List all available Garak generators"""
+    def list_available_generators(self: "Self") -> List[Dict[str, Any]]:
+        """List all available Garak generators."""
         if not self.is_available():
+
             return []
 
         try:
@@ -97,13 +104,12 @@ class GarakService:
 
             for module_name in generator_modules:
                 try:
-                    module = garak._plugins.load_plugin(f"generators.{module_name}")
+                    module = garak._plugins.load_plugin(f"generators.{module_name}")  # pylint: disable=protected-access
 
                     # Get generator classes from module
                     for attr_name in dir(module):
                         attr = getattr(module, attr_name)
                         if isinstance(attr, type) and hasattr(attr, "generate") and attr_name != "Generator":
-
                             generator_info = {
                                 "module": module_name,
                                 "name": attr_name,
@@ -114,31 +120,33 @@ class GarakService:
                             generators.append(generator_info)
 
                 except Exception as e:
-                    logger.warning(f"Failed to load generator module {module_name}: {e}")
+                    logger.warning("Failed to load generator module %s: %s", module_name, e)
                     continue
 
-            logger.info(f"Found {len(generators)} Garak generators")
+            logger.info("Found %s Garak generators", len(generators))
             return generators
 
         except Exception as e:
-            logger.error(f"Failed to list Garak generators: {e}")
+            logger.error("Failed to list Garak generators: %s", e)
             return []
 
     async def run_vulnerability_scan(
-        self, target_config: Dict[str, Any], probe_config: Dict[str, Any], scan_id: Optional[str] = None
+        self: "Self",
+        target_config: Dict[str, Any],
+        probe_config: Dict[str, Any],
+        scan_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Run Garak vulnerability scan against a target
-        """
+        """Run Garak vulnerability scan against a target"""
         if not self.is_available():
+
             raise RuntimeError("Garak is not available")
 
         scan_id = scan_id or str(uuid.uuid4())
 
         try:
-            import garak.cli
+            import garak.cli  # noqa: F401  # pylint: disable=unused-import
             from garak._plugins import load_plugin
-            from garak.generators import Generator
+            from garak.generators import Generator  # noqa: F401  # pylint: disable=unused-import
 
             # Create generator based on target configuration
             generator = await self._create_garak_generator(target_config)
@@ -151,7 +159,12 @@ class GarakService:
             probe_instance = getattr(probe_class, probe_name)()
 
             # Run the scan
-            logger.info(f"Starting Garak scan {scan_id} with probe {probe_module}.{probe_name}")
+            logger.info(
+                "Starting Garak scan %s with probe %s.%s",
+                scan_id,
+                probe_module,
+                probe_name,
+            )
 
             # This is a simplified version - in production, you'd use Garak's full CLI
             # Generate test prompts
@@ -176,13 +189,15 @@ class GarakService:
             }
 
             logger.info(
-                f"Garak scan {scan_id} completed with {scan_result['summary']['vulnerabilities_found']} vulnerabilities found"
+                "Garak scan %s completed with %s vulnerabilities found",
+                scan_id,
+                scan_result["summary"]["vulnerabilities_found"],
             )
 
             return scan_result
 
         except Exception as e:
-            logger.error(f"Garak scan failed: {e}")
+            logger.error("Garak scan failed: %s", e)
             return {
                 "scan_id": scan_id,
                 "timestamp": datetime.utcnow().isoformat(),
@@ -192,16 +207,17 @@ class GarakService:
                 "error": str(e),
             }
 
-    async def _create_garak_generator(self, target_config: Dict[str, Any]):
-        """Create Garak generator from target configuration"""
+    async def _create_garak_generator(self: "Self", target_config: Dict[str, Any]) -> object:
+        """Create Garak generator from target configuration."""
         try:
+
             import garak._plugins
 
             target_type = target_config.get("type", "rest")
 
             if target_type == "AI Gateway":
                 # Map to REST generator for APISIX
-                generator_class = garak._plugins.load_plugin("generators.rest")
+                generator_class = garak._plugins.load_plugin("generators.rest")  # pylint: disable=protected-access
 
                 # Get APISIX endpoint
                 from app.api.endpoints.generators import get_apisix_endpoint_for_model
@@ -223,22 +239,24 @@ class GarakService:
 
             else:
                 # Use default OpenAI generator as fallback
-                generator_class = garak._plugins.load_plugin("generators.openai")
+                generator_class = garak._plugins.load_plugin("generators.openai")  # pylint: disable=protected-access
                 return generator_class.OpenAIGenerator()
 
         except Exception as e:
-            logger.error(f"Failed to create Garak generator: {e}")
+            logger.error("Failed to create Garak generator: %s", e)
             raise
 
-    def get_scan_results(self, scan_id: str) -> Optional[Dict[str, Any]]:
-        """Get results for a specific scan"""
+    def get_scan_results(self: "Self", scan_id: str) -> Optional[Dict[str, Any]]:
+        """Get results for a specific scan."""
         # In a real implementation, this would query a database or file system
+
         # For now, return None
         return None
 
-    def list_scan_history(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """List recent scan history"""
+    def list_scan_history(self: "Self", limit: int = 50) -> List[Dict[str, Any]]:
+        """List recent scan history."""
         # In a real implementation, this would query stored scan results
+
         # For now, return empty list
         return []
 

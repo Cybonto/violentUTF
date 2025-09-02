@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """
 Test script to verify scorer timeout fixes
 """
@@ -10,11 +16,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import time
 from datetime import datetime
+from typing import Any, Dict, List
 
 import requests
 
 
-def test_batch_execution_performance():
+def test_batch_execution_performance() -> None:
     """Test that batch execution completes within timeout"""
 
     print("Testing scorer batch execution performance...")

@@ -30,7 +30,7 @@ print_status() {
 check_service() {
     local service_url=$1
     local service_name=$2
-    
+
     if curl -s "$service_url" > /dev/null 2>&1; then
         print_status $GREEN "✅ $service_name is running"
         return 0
@@ -43,7 +43,7 @@ check_service() {
 # Function to check Keycloak authentication
 test_keycloak_auth() {
     print_status $BLUE "🔐 Testing Keycloak authentication..."
-    
+
     # Run the Keycloak auth test
     if python3 utils/keycloak_auth.py; then
         print_status $GREEN "✅ Keycloak authentication working"
@@ -167,7 +167,7 @@ echo "-----------------------------------"
 
 if [ "$APISIX_RUNNING" = true ] && [ "$KEYCLOAK_RUNNING" = true ] && [ "$FASTAPI_RUNNING" = true ]; then
     print_status $BLUE "Running end-to-end workflow test..."
-    
+
     # Test the complete workflow: Keycloak auth -> JWT creation -> API calls -> Generator testing
     cd api_tests
     if python3 -m pytest test_enhanced_generator_functionality.py::TestEnhancedGeneratorFunctionality::test_keycloak_authentication_flow \
@@ -194,7 +194,7 @@ echo "------------------------------------------"
 
 if [ "$KEYCLOAK_RUNNING" = true ] && [ "$APISIX_RUNNING" = true ]; then
     print_status $BLUE "Running authentication performance test..."
-    
+
     # Test multiple rapid authentication requests
     python3 -c "
 import time
@@ -225,7 +225,7 @@ else:
     print('❌ Performance test failed')
     exit(1)
 "
-    
+
     if [ $? -eq 0 ]; then
         print_status $GREEN "✅ Authentication performance test passed"
         PERF_PASSED=true
@@ -306,19 +306,19 @@ echo
 # Next steps
 if [ "$KEYCLOAK_RUNNING" = false ] || [ "$FASTAPI_RUNNING" = false ] || [ "$APISIX_RUNNING" = false ]; then
     echo "🛠️  Next Steps for Full Testing:"
-    
+
     if [ "$KEYCLOAK_RUNNING" = false ]; then
         echo "   1. Start Keycloak: cd ../keycloak && docker compose up -d"
     fi
-    
+
     if [ "$APISIX_RUNNING" = false ]; then
         echo "   2. Start APISIX: cd ../apisix && docker compose up -d"
     fi
-    
+
     if [ "$FASTAPI_RUNNING" = false ]; then
         echo "   3. Start FastAPI: cd ../violentutf_api && docker compose up -d"
     fi
-    
+
     echo "   4. Configure routes: cd ../apisix && ./configure_routes.sh"
     echo "   5. Re-run enhanced tests: ./run_enhanced_tests.sh"
 else

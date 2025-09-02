@@ -93,8 +93,8 @@ curl -X POST http://localhost:9080/mcp/sse/ \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
-    "jsonrpc": "2.0", 
-    "method": "tools/call", 
+    "jsonrpc": "2.0",
+    "method": "tools/call",
     "params": {
       "name": "list_generators",
       "arguments": {"provider_type": "openai"}
@@ -109,8 +109,8 @@ curl -X POST http://localhost:9080/mcp/sse/ \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
-    "jsonrpc": "2.0", 
-    "method": "prompts/get", 
+    "jsonrpc": "2.0",
+    "method": "prompts/get",
     "params": {
       "name": "jailbreak_test",
       "arguments": {"scenario": "dan_attack", "complexity_level": "advanced"}
@@ -125,8 +125,8 @@ curl -X POST http://localhost:9080/mcp/sse/ \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
-    "jsonrpc": "2.0", 
-    "method": "resources/read", 
+    "jsonrpc": "2.0",
+    "method": "resources/read",
     "params": {
       "uri": "violentutf://config/system/info"
     },
