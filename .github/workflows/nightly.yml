@@ -81,7 +81,7 @@ jobs:
                   --json -o semgrep-full-report.json || true
 
           # Bandit with all plugins
-          bandit -r . -ll -i -f json -o bandit-full-report.json || true
+          bandit -r . -ll -i -f json -o bandit-full-report.json 2>/dev/null || true
 
       - name: License compliance check
         run: |
