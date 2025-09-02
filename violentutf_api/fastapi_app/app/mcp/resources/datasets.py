@@ -157,8 +157,8 @@ class DatasetResourceProvider(BaseResourceProvider):
                 f"{self.base_url}/api/v1/datasets/{dataset_id}/content",
                 headers=headers,
                 params={
-                    "limit": params.get("limit", 1000),
-                    "offset": params.get("offset", 0),
+                    "limit": int(params.get("limit", 1000)),
+                    "offset": int(params.get("offset", 0)),
                 },
             )
 
@@ -254,8 +254,8 @@ class DatasetResourceProvider(BaseResourceProvider):
                     f"{self.base_url}/api/v1/datasets",
                     headers=headers,
                     params={
-                        "category": params.get("category"),
-                        "limit": params.get("limit", 100),
+                        "category": str(params.get("category")) if params.get("category") else None,
+                        "limit": int(params.get("limit", 100)),
                     },
                 )
 

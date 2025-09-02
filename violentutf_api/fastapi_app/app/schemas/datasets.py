@@ -281,8 +281,9 @@ class DatasetCreateRequest(BaseModel):
 
     @field_validator("dataset_type")
     @classmethod
-    def validate_native_dataset(cls: Type["DatasetCreateRequest"], v: object, values: Dict[str, object]) -> str:
+    def validate_native_dataset(cls: type, v: object, info) -> str:  # noqa: ANN001
         """Validate native dataset."""
+        values = info.data if info else {}
         if values.get("source_type") == DatasetSourceType.NATIVE and not v:
 
             raise ValueError("dataset_type is required for native datasets")
@@ -290,8 +291,9 @@ class DatasetCreateRequest(BaseModel):
 
     @field_validator("url")
     @classmethod
-    def validate_online_dataset(cls: Type["DatasetCreateRequest"], v: object, values: Dict[str, object]) -> str:
+    def validate_online_dataset(cls: type, v: object, info) -> str:  # noqa: ANN001
         """Validate online dataset."""
+        values = info.data if info else {}
         if values.get("source_type") == DatasetSourceType.ONLINE and not v:
 
             raise ValueError("url is required for online datasets")

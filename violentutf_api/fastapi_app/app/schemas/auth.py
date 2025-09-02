@@ -216,8 +216,9 @@ class LoginRequest(BaseModel):
 
     @field_validator("password")
     @classmethod
-    def validate_password_field(cls: Type["LoginRequest"], v: str, values: dict) -> str:
+    def validate_password_field(cls: type, v: str, info) -> str:  # noqa: ANN001
         """Validate password strength and security requirements."""
+        values = info.data if info else {}
         username = values.get("username")
 
         # Comprehensive password strength validation

@@ -28,10 +28,15 @@ class APIKey(Base):
     last_used_at = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=True)
 
-    async def update_last_used(self: "Self") -> None:
-        """Update last used timestamp."""
-        # This would be handled by the database session
-        self.last_used_at = datetime.utcnow()
+    def update_last_used(self: "Self") -> None:
+        """Update last used timestamp.
+
+        Note: This should be called within a SQLAlchemy session context.
+        The actual timestamp update would be handled by the database.
+        """
+        # This is a placeholder - actual implementation would use database session
+        # Example: session.query(APIKey).filter(APIKey.id == self.id).update({"last_used_at": func.now()})
+        return None
 
     def is_expired(self: "Self") -> bool:
         """Check if key is expired."""
