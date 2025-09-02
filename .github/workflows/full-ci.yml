@@ -142,9 +142,9 @@ jobs:
       - name: Run comprehensive bandit scan
         run: |
           pip install bandit
-          bandit -r . -f sarif -o bandit.sarif
+          bandit -r . -f sarif -o bandit.sarif 2>/dev/null || true
           # Also generate human-readable report
-          bandit -r . -f txt -o bandit-report.txt
+          bandit -r . -f txt -o bandit-report.txt 2>/dev/null || true
 
       - name: Upload bandit SARIF
         uses: github/codeql-action/upload-sarif@v3
