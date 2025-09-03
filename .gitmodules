@@ -1,3 +1,0 @@
-[submodule "agent_orchestrator"]
-	path = agent_orchestrator
-	url = https://github.com/Cybonto/agent_orchestrator.git
