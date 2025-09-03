@@ -11,8 +11,6 @@ import hashlib
 import json
 import os
 import sys
-from datetime import datetime
-from pathlib import Path
 
 import jwt
 import requests
@@ -109,7 +107,7 @@ def check_database_file():
         print(f"  Expected DB path: {db_path}")
 
         if os.path.exists(db_path):
-            print_success(f"Database file exists")
+            print_success("Database file exists")
             file_size = os.path.getsize(db_path) / 1024  # KB
             print(f"  File size: {file_size:.2f} KB")
             db_files_found[streamlit_normalized] = db_path
@@ -177,7 +175,7 @@ def test_jwt_token_creation():
         print(f"\nTesting context: {context['preferred_username']}")
 
         # Get canonical username
-        canonical = UserContextManager.get_canonical_username(context)
+        canonical = UserContextManager.normalize_username(context["preferred_username"])
         print(f"  Canonical username: '{canonical}'")
 
         # Create token

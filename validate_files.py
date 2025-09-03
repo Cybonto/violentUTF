@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 """Comprehensive validation script for code quality and implementation completeness."""
 
 import ast
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, cast
 
 
 class CodeValidator:
     """Advanced code validator for production readiness."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the validator with validation rules."""
         self.validation_rules = {
             "mock_implementations": self._check_mock_implementations,
@@ -229,7 +235,7 @@ class CodeValidator:
         import_pattern = r"^\s*(?:from\s+\S+\s+)?import\s+(.+)$"
         imported_names = set()
 
-        for i, line in enumerate(lines, 1):
+        for _, line in enumerate(lines, 1):
             match = re.match(import_pattern, line)
             if match:
                 imports = match.group(1)
@@ -349,7 +355,7 @@ def check_file(file_path: Path) -> List[str]:
     """Legacy function for backward compatibility."""
     validator = CodeValidator()
     result = validator.validate_file(file_path)
-    return result["all_issues"]  # type: ignore[no-any-return]
+    return cast(List[str], result["all_issues"])
 
 
 def generate_report(results: Dict[str, Any], output_file: Optional[Path] = None) -> str:
@@ -400,8 +406,8 @@ def generate_report(results: Dict[str, Any], output_file: Optional[Path] = None)
     return report_content
 
 
-def main():
-    """Main entry point for the validation script."""
+def main() -> None:
+    """Run validation script on codebase."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Validate Python code for production readiness")

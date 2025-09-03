@@ -1,9 +1,21 @@
+"""Judge implementations for benchmarking and evaluation.
+
+This module contains various judge classes for comparing model responses.
+"""
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
+
+from transformers import AutoTokenizer
 
 import utils.models as models
 import utils.prompts as prompts
@@ -16,22 +28,24 @@ import utils.prompts as prompts
 
 
 class Judge(ABC):
+    """Abstract base class for all judges."""
+
     @abstractmethod
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
-        pass
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+        """Get judgment comparing two answers."""
 
 
 class ArenaHard(Judge):
     # Implementation follows
     # https://github.com/lmarena/arena-hard-auto/blob/4ce0f0087776158a4461162cbef1d9bb5464bb57/gen_judgment.py
 
-    def __init__(self: "TokenManager", model_name: str):
+    def __init__(self, model_name: str):
         """Initialize the class."""
         self.model_name = model_name
         self.api = models.get_chat_api_from_model(model_name)
         self.number_of_judgment_attempts = 2
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         system_message = prompts.render_template("arena_hard_judge_system")
         user_message = prompts.render_template(
             "arena_hard_judge_prompt", prompt=question, answer_a=answer_A, answer_b=answer_B
@@ -60,6 +74,7 @@ class ArenaHard(Judge):
             "decision": score.replace(">>", ">").strip() if score else None,
         }
 
+    @classmethod
     def get_score(cls, judgment: str, pattern: str, pairwise: bool = True) -> Tuple[Union[int, str], Optional[bool]]:
         matches = pattern.findall(judgment)
         matches = [m for m in matches if m != ""]
@@ -74,20 +89,20 @@ class ArenaHard(Judge):
 
 
 class Vanilla(Judge):
-    def __init__(self: "TokenManager", model_name) -> None:
+    def __init__(self, model_name) -> None:
         """Initialize the class."""
         self.model_name = model_name
         self.api = models.get_chat_api_from_model(model_name)
 
-    def extract_pairwise_result(self: "TokenManager", raw_output: str):
+    def extract_pairwise_result(self, raw_output: str):
         print("raw:", raw_output)
         if raw_output == "Output (a)":
             return "A>B"
         elif raw_output == "Output (b)":
             return "B>A"
-        raise Exception("Cannot parse output:", raw_output)
+        raise ValueError("Cannot parse output:", raw_output)
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         prompt = prompts.render_template("vanilla_prompt", question=question, answer_a=answer_A, answer_b=answer_B)
         print("prompt:", prompt)
         output = await self.api.chat(
@@ -110,9 +125,8 @@ class Vanilla(Judge):
 
 
 class PandaLM(Judge):
-    def __init__(self: "TokenManager", model_name) -> None:
+    def __init__(self, model_name) -> None:
         """Initialize the class."""
-        from transformers import AutoTokenizer
 
         self.model_name = model_name
         self.api = models.get_chat_api_from_model(model_name)
@@ -122,7 +136,7 @@ class PandaLM(Judge):
         self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path=model_name, use_fast=False)
 
     def truncate_responses(
-        self: "TokenManager", question, answer_A, answer_B, context_limit, max_new_tokens, truncation_side
+        self, question, answer_A, answer_B, context_limit, max_new_tokens, truncation_side
     ):
         template_with_question = prompts.render_template("pandalm_prompt", instruction=question, resp1="", resp2="")
         len_template = len(self.tokenizer(template_with_question).input_ids)  # includes special BOS token <s>
@@ -162,13 +176,13 @@ class PandaLM(Judge):
 
         return answer_A_truncated, answer_B_truncated
 
-    def build_pandalm_prompt(self: "TokenManager", instruction, resp1, resp2):
+    def build_pandalm_prompt(self, instruction, resp1, resp2):
         resp1 = self.pattern.sub("", resp1.strip()).strip()
         resp2 = self.pattern.sub("", resp2.strip()).strip()
         input_sequence = prompts.render_template("pandalm_prompt", instruction=instruction, resp1=resp1, resp2=resp2)
         return input_sequence + "\n"  # why does jinja strip the training new line?
 
-    def parse_pandalm_response(self: "TokenManager", text: str):
+    def parse_pandalm_response(self, text: str):
         sp = text.strip().split("\n")
         if sp[0] in ["1", "2"]:
             return int(sp[0])
@@ -177,12 +191,12 @@ class PandaLM(Judge):
         else:
             return 0
 
-    def postprocess_output(self: "TokenManager", text: str):
+    def postprocess_output(self, text: str):
         text = text.strip()
         self.pattern.sub("", text.strip()).strip()
         return text
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         answer_A, answer_B = self.truncate_responses(
             question,
             answer_A,
@@ -231,16 +245,14 @@ class PandaLM(Judge):
 
 
 class JudgeLM(Judge):
-    from transformers import AutoTokenizer
-
-    def __init__(self: "TokenManager", model_name) -> None:
+    def __init__(self, model_name) -> None:
         """Initialize the class."""
         self.model_name = model_name
         self.api = models.get_chat_api_from_model(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path=model_name, use_fast=False)
 
     def truncate_responses(
-        self: "TokenManager", question, answer_A, answer_B, context_limit, max_new_tokens, truncation_side
+        self, question, answer_A, answer_B, context_limit, max_new_tokens, truncation_side
     ):
         template_with_question = prompts.render_template("judgelm_prompt", question=question, answer_1="", answer_2="")
         len_template = len(self.tokenizer(template_with_question).input_ids)  # includes special BOS token <s>
@@ -280,7 +292,7 @@ class JudgeLM(Judge):
 
         return answer_A_truncated, answer_B_truncated
 
-    def parse_score(self: "TokenManager", review: str):
+    def parse_score(self, review: str):
         try:
             score_pair = review.split("\n")[0]
             score_pair = score_pair.replace(",", " ")
@@ -288,11 +300,11 @@ class JudgeLM(Judge):
             if len(sp) == 2:
                 return [float(sp[0]), float(sp[1])]
             else:
-                raise Exception()
+                raise RuntimeError("Failed to process judgment")
         except Exception:
             return [-1, -1]
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         answer_A, answer_B = self.truncate_responses(
             question, answer_A, answer_B, context_limit=2048, max_new_tokens=16, truncation_side="right"
         )
@@ -325,12 +337,12 @@ class JudgeLM(Judge):
 
 
 class AutoJ(Judge):
-    def __init__(self: "TokenManager", model_name) -> None:
+    def __init__(self, model_name) -> None:
         """Initialize the class."""
         self.model_name = model_name
         self.api = models.get_chat_api_from_model(model_name)
 
-    def extract_pariwise_result(self: "TokenManager", raw_output: str):
+    def extract_pariwise_result(self, raw_output: str):
         raw_output = raw_output.strip()
         pos = raw_output.rfind("final decision is ")
         pred_label = None
@@ -344,7 +356,7 @@ class AutoJ(Judge):
                 pred_label = "A=B"
         return pred_label
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         prompt = prompts.render_template(
             "autoj_prompt", question=question, response=answer_A, response_another=answer_B
         )
@@ -369,14 +381,14 @@ class AutoJ(Judge):
 
 
 class Prometheus2(Judge):
-    def __init__(self: "TokenManager", model_name) -> None:
+    def __init__(self, model_name) -> None:
         """Initialize the class."""
         self.model_name = model_name
         self.api = models.get_chat_api_from_model(model_name)
         self.rubric = "[Are the model's responses factually correct and well-supported by evidence?]"  # https://github.com/prometheus-eval/prometheus-eval/blob/main/libs/prometheus-eval/prometheus_eval/prompts.py
         self.REL_SYSTEM_PROMPT = "You are a fair judge assistant assigned to deliver insightful feedback that compares individual performances, highlighting how each stands relative to others within the same cohort."
 
-    def _parse_output_relative(self: "TokenManager", output: str):
+    def _parse_output_relative(self, output: str):
         explicit_pattern = r"""
             (?:                                # Start of non-capturing group
                 \[RESULT\]|\[RESULT:\s*|        # Match [RESULT] or [RESULT:
@@ -395,12 +407,11 @@ class Prometheus2(Judge):
 
         if match:
             result = match.group(1).upper()
-            feedback = output[: match.start()].strip()
             return output, result
 
         return None, None
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         prompt = prompts.render_template(
             "prometheus2_prompt",
             instruction=question,
@@ -436,12 +447,12 @@ class Prometheus2(Judge):
 
 
 class SkyworkCritic(Judge):
-    def __init__(self: "TokenManager", model_name) -> None:
+    def __init__(self, model_name) -> None:
         """Initialize the class."""
         self.model_name = model_name
         self.api = models.get_chat_api_from_model(model_name)
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         prompt = prompts.render_template(
             "skywork_critic_prompt",
             input=question,
@@ -475,10 +486,10 @@ class SkyworkCritic(Judge):
 
 
 class InternLM2Reward(Judge):
-    def __init__(self: "TokenManager", model_name="internlm/internlm2-20b-reward", device="cuda:0"):
+    def __init__(self, model_name="internlm/internlm2-20b-reward", device="cuda:0"):
         """Initialize the class."""
         import torch
-        from transformers import AutoModel, AutoTokenizer
+        from transformers import AutoModel
 
         self.model_name = model_name
         self.device = device
@@ -489,7 +500,7 @@ class InternLM2Reward(Judge):
         ).to(self.device)
         self.rm_tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         conv1 = [{"role": "user", "content": question}, {"role": "assistant", "content": answer_A}]
         conv2 = [{"role": "user", "content": question}, {"role": "assistant", "content": answer_B}]
 
@@ -502,10 +513,10 @@ class InternLM2Reward(Judge):
 
 
 class GRMReward(Judge):
-    def __init__(self: "TokenManager", model_name="Ray2333/GRM-Gemma-2B-rewardmodel-ft", device="cuda:0"):
+    def __init__(self, model_name="Ray2333/GRM-Gemma-2B-rewardmodel-ft", device="cuda:0"):
         """Initialize the class."""
         import torch
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer
+        from transformers import AutoModelForSequenceClassification
 
         self.model_name = model_name
         self.device = device
@@ -515,7 +526,7 @@ class GRMReward(Judge):
             torch_dtype=torch.float16,
         ).to(self.device)
 
-    def get_reward(self: "TokenManager", message: str):
+    def get_reward(self, message: str):
         import torch
 
         message_template = self.tokenizer.apply_chat_template(message, tokenize=False)
@@ -532,7 +543,7 @@ class GRMReward(Judge):
 
         return reward
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         message_A = [{"role": "user", "content": question}, {"role": "assistant", "content": answer_A}]
         message_B = [{"role": "user", "content": question}, {"role": "assistant", "content": answer_B}]
 
@@ -545,10 +556,10 @@ class GRMReward(Judge):
 
 
 class SkyworkReward(Judge):
-    def __init__(self: "TokenManager", model_name, device="cuda:0"):
+    def __init__(self, model_name, device="cuda:0"):
         """Initialize the class."""
         import torch
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer
+        from transformers import AutoModelForSequenceClassification
 
         self.model_name = model_name
         self.device = device
@@ -559,7 +570,7 @@ class SkyworkReward(Judge):
         ).to(self.device)
         self.rm_tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         import torch
 
         conv1 = [{"role": "user", "content": question}, {"role": "assistant", "content": answer_A}]
@@ -581,11 +592,12 @@ class SkyworkReward(Judge):
 
 
 class CompassJudger(Judge):
-    def __init__(self: "TokenManager", model_name) -> None:
+    def __init__(self, model_name) -> None:
         """Initialize the class."""
         self.model_name = model_name
         self.api = models.get_chat_api_from_model(model_name)
 
+    @classmethod
     def get_score(cls, judgment: str, pattern: str, pairwise: bool = True) -> Tuple[Union[int, str], Optional[bool]]:
         matches = pattern.findall(judgment)
         matches = [m for m in matches if m != ""]
@@ -598,7 +610,7 @@ class CompassJudger(Judge):
         else:
             return None, False
 
-    async def get_judgment(self: "TokenManager", question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
+    async def get_judgment(self, question: str, answer_A: str, answer_B: str) -> Dict[str, Any]:
         system_message = prompts.render_template("arena_hard_judge_system")
         user_message = prompts.render_template(
             "arena_hard_judge_prompt", prompt=question, answer_a=answer_A, answer_b=answer_B

@@ -1,19 +1,24 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-COB Report PDF Generation Service
+"""COB Report PDF Generation Service
+
 Secure PDF generation with HTML sanitization and existing security patterns
 """
 
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List
 
 import bleach
 import markdown
-from weasyprint import CSS, HTML
+from weasyprint import HTML
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +178,8 @@ blockquote {
 class COBPDFGenerator:
     """Secure PDF generator for COB reports using existing security patterns"""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize SecurePDFGenerator."""
         self.logger = logging.getLogger(__name__)
 
     async def generate_pdf(self, report_data: Dict[str, Any], template_config: Dict[str, Any]) -> bytes:
@@ -192,7 +198,7 @@ class COBPDFGenerator:
             RuntimeError: If PDF generation fails
         """
         try:
-            self.logger.info(f"Starting PDF generation for report: {report_data.get('report_name', 'Unknown')}")
+            self.logger.info("Starting PDF generation for report: %s", report_data.get("report_name", "Unknown"))
 
             # Generate markdown content from template and data
             markdown_content = self._generate_markdown_content(report_data, template_config)
@@ -211,12 +217,12 @@ class COBPDFGenerator:
             # Generate PDF with secure CSS
             pdf_bytes = self._generate_pdf_bytes(full_html)
 
-            self.logger.info(f"PDF generated successfully: {len(pdf_bytes)} bytes")
+            self.logger.info("PDF generated successfully: %s bytes", len(pdf_bytes))
             return pdf_bytes
 
         except Exception as e:
-            self.logger.error(f"PDF generation failed: {e}")
-            raise RuntimeError(f"Failed to generate PDF: {str(e)}")
+            self.logger.error("PDF generation failed: %s", e)
+            raise RuntimeError(f"Failed to generate PDF: {str(e)}") from e
 
     def _generate_markdown_content(self, report_data: Dict[str, Any], template_config: Dict[str, Any]) -> str:
         """Generate markdown content from template blocks and report data"""
@@ -229,7 +235,8 @@ class COBPDFGenerator:
         markdown_parts.append(f"# {report_name}")
         markdown_parts.append(f"**Generated:** {generation_date}")
         markdown_parts.append(
-            f"**Period:** {report_data.get('report_period_start', 'N/A')} to {report_data.get('report_period_end', 'N/A')}"
+            f"**Period:** {report_data.get('report_period_start', 'N/A')} "
+            f"to {report_data.get('report_period_end', 'N/A')}"
         )
         markdown_parts.append("---\n")
 
@@ -325,8 +332,8 @@ class COBPDFGenerator:
             return safe_html
 
         except Exception as e:
-            self.logger.error(f"HTML sanitization failed: {e}")
-            raise ValueError(f"Failed to sanitize HTML: {str(e)}")
+            self.logger.error("HTML sanitization failed: %s", e)
+            raise ValueError(f"Failed to sanitize HTML: {str(e)}") from e
 
     def _wrap_html_document(self, body_html: str, report_data: Dict[str, Any]) -> str:
         """Wrap sanitized HTML in complete document structure"""
@@ -361,8 +368,8 @@ class COBPDFGenerator:
             return pdf_bytes
 
         except Exception as e:
-            self.logger.error(f"WeasyPrint PDF generation failed: {e}")
-            raise RuntimeError(f"PDF generation failed: {str(e)}")
+            self.logger.error("WeasyPrint PDF generation failed: %s", e)
+            raise RuntimeError(f"PDF generation failed: {str(e)}") from e
 
 
 # Export service instance for use in endpoints

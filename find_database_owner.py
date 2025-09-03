@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Find which username was used to create the existing PyRIT database
-"""
+"""Find which username was used to create the existing PyRIT database."""
 
 import hashlib
 import os
@@ -50,9 +54,9 @@ try:
                     try:
                         sample = conn.execute(f"SELECT DISTINCT {col} FROM {table_name} LIMIT 5").fetchall()
                         print(f"  {col} values: {[s[0] for s in sample if s[0]]}")
-                    except:
+                    except Exception:
                         pass
-        except:
+        except Exception:
             pass
 
     conn.close()

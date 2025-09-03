@@ -1,9 +1,13 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Dashboard and Report schemas for API requests/responses
-"""
+"""Dashboard and Report schemas for API requests/responses"""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -44,6 +48,8 @@ class DataBrowseRequest(BaseModel):
     sort_order: Optional[str] = Field("desc", description="Sort order (asc, desc)", pattern="^(asc|desc)$")
 
     class Config:
+        """Pydantic model configuration."""
+
         schema_extra = {
             "example": {
                 "start_date": "2024-01-01T00:00:00Z",
@@ -97,6 +103,8 @@ class ScanDataSummary(BaseModel):
     tags: Optional[List[str]] = Field(None, description="Execution tags")
 
     class Config:
+        """Pydantic model configuration."""
+
         schema_extra = {
             "example": {
                 "execution_id": "123e4567-e89b-12d3-a456-426614174000",
@@ -139,6 +147,8 @@ class DataBrowseResponse(BaseModel):
     )
 
     class Config:
+        """Pydantic model configuration."""
+
         schema_extra = {
             "example": {
                 "results": [ScanDataSummary.Config.schema_extra["example"]],

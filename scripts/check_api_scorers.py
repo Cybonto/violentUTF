@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Check what the API actually returns for scorers
-"""
+"""Check what the API actually returns for scorers."""
 
-import json
-import subprocess
+import subprocess  # nosec B404 # needed for controlled docker command execution
 
 import requests
 
 
-def check_api_scorers():
-    """
-    Check what the API returns for scorers list
-    """
+def check_api_scorers() -> None:
+    """Check what the API returns for scorers list."""
     print("\n" + "=" * 80)
     print("🔍 API Scorer Check")
     print("=" * 80)
 
     # Get a token from the running Streamlit app or generate one
     # For now, let's check directly through APISIX
-    api_url = "http://localhost:9080/api/v1/scorers"
 
     # Try to get scorers through APISIX
     try:
@@ -37,7 +37,9 @@ def check_api_scorers():
     # Check what database the API is using
     print("\n📁 Checking FastAPI database...")
     try:
-        result = subprocess.run(["docker", "logs", "violentutf_api", "--tail", "20"], capture_output=True, text=True)
+        result = subprocess.run(
+            ["docker", "logs", "violentutf_api", "--tail", "20"], capture_output=True, text=True, check=False
+        )  # nosec B603 B607 # controlled docker command execution
         logs = result.stdout
 
         # Look for database initialization logs
@@ -56,7 +58,7 @@ def check_api_scorers():
         import duckdb
 
         # Get the expected database path
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603 B607 # controlled docker command execution
             ["docker", "exec", "violentutf_api", "printenv", "PYRIT_DB_SALT"],
             capture_output=True,
             text=True,
@@ -111,7 +113,7 @@ def check_api_scorers():
                             print(f"     - {scorer[1]} (ID: {scorer[0][:8]}...)")
                 break
         else:
-            print(f"   ❌ Database file not found!")
+            print("   ❌ Database file not found!")
 
     except Exception as e:
         print(f"   Error checking database: {e}")
@@ -134,8 +136,11 @@ for db in db_path:
         print(f"  Error: {e}")
 """
 
-        result = subprocess.run(
-            ["docker", "exec", "violentutf_api", "python", "-c", check_script], capture_output=True, text=True
+        result = subprocess.run(  # nosec B603 B607 # controlled docker command execution
+            ["docker", "exec", "violentutf_api", "python", "-c", check_script],
+            capture_output=True,
+            text=True,
+            check=False,
         )
         print(result.stdout)
         if result.stderr:

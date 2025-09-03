@@ -1,30 +1,31 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Enhanced API endpoints for Advanced Dashboard Report Setup
-"""
+"""Enhanced API endpoints for Advanced Dashboard Report Setup"""
 
 import logging
+import tempfile
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from app.core.auth import get_current_user
 from app.db.database import get_session
+from app.models.auth import User
 from app.models.cob_models import COBReport, COBSchedule, COBScheduleExecution, COBTemplate
 from app.models.report_system.report_models import COBBlockDefinition, COBReportVariable, COBScanDataCache
 
 # Import schedule and export related schemas from COB system
 from app.schemas import (
-    COBExportRequest,
-    COBExportResponse,
     COBScheduleCreate,
-    COBScheduleExecutionListResponse,
-    COBScheduleExecutionResponse,
     COBScheduleListResponse,
     COBScheduleResponse,
-    COBScheduleUpdate,
     COBSystemStatusResponse,
 )
 
@@ -38,7 +39,6 @@ from app.schemas.report_system.report_schemas import (
     COBTemplateUpdate,
     DataBrowseRequest,
     DataBrowseResponse,
-    OutputFormat,
     PreviewRequest,
     PreviewResponse,
     ReportGenerationRequest,
@@ -52,13 +52,12 @@ from app.schemas.report_system.report_schemas import (
     TemplateVersionResponse,
     TestingCategory,
 )
-from app.services.cob_pdf_service import cob_pdf_generator
 from app.services.report_system.block_base import block_registry
 from app.services.report_system.report_engine import ReportGenerationEngine
 from app.services.report_system.template_service import TemplateService, get_initial_templates
-from app.services.storage_service import get_storage_service
+from app.services.storage_service import StorageService, get_storage_service
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Path, Query
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -73,15 +72,15 @@ router = APIRouter(tags=["reports"])
 
 @router.post("/templates", response_model=COBTemplateResponse)
 async def create_template(
-    template: COBTemplateCreate, current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    template: COBTemplateCreate, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> COBTemplateResponse:
     """Create a new report template"""
     try:
         service = TemplateService(db)
         return await service.create_template(template, current_user.id)
     except Exception as e:
-        logger.error(f"Error creating template: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error("Error creating template: %s", str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/templates", response_model=Dict[str, Any])
@@ -95,7 +94,7 @@ async def list_templates(
     complexity_level: Optional[str] = Query(None),
     sort_by: str = Query("created_at", regex="^(created_at|updated_at|name|usage_count)$"),
     sort_order: str = Query("desc", regex="^(asc|desc)$"),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ) -> Dict[str, Any]:
     """List templates with filtering and pagination"""
@@ -103,9 +102,15 @@ async def list_templates(
         service = TemplateService(db)
 
         logger.info(
-            f"List templates called with params: skip={skip}, limit={limit}, is_active={is_active}, "
-            f"testing_category={testing_category}, attack_category={attack_category}, "
-            f"scanner_type={scanner_type}, complexity_level={complexity_level}"
+            "List templates called with params: skip=%s, limit=%s, is_active=%s, "
+            "testing_category=%s, attack_category=%s, scanner_type=%s, complexity_level=%s",
+            skip,
+            limit,
+            is_active,
+            testing_category,
+            attack_category,
+            scanner_type,
+            complexity_level,
         )
 
         # Build filters
@@ -125,7 +130,7 @@ async def list_templates(
             skip=skip, limit=limit, filters=filters, sort_by=sort_by, sort_order=sort_order
         )
 
-        logger.info(f"Found {total} templates, returning {len(templates)} templates")
+        logger.info("Found %d templates, returning %d templates", total, len(templates))
 
         return {
             "templates": templates,
@@ -134,28 +139,30 @@ async def list_templates(
             "pages": (total + limit - 1) // limit,
         }
     except Exception as e:
-        logger.error(f"Error listing templates: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error listing templates: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/templates/search", response_model=List[COBTemplateResponse])
 async def search_templates(
-    q: str = Query(..., min_length=2), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    q: str = Query(..., min_length=2),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> List[COBTemplateResponse]:
     """Search templates by name, description, or metadata"""
     try:
         service = TemplateService(db)
         return await service.search_templates(q)
     except Exception as e:
-        logger.error(f"Error searching templates: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error searching templates: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/templates/recommend", response_model=List[TemplateRecommendation])
 async def recommend_templates(
     scan_data: Dict[str, Any] = Body(...),
     limit: int = Query(5, ge=1, le=10),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ) -> List[TemplateRecommendation]:
     """Get template recommendations based on scan data"""
@@ -163,13 +170,15 @@ async def recommend_templates(
         service = TemplateService(db)
         return await service.recommend_templates(scan_data, limit)
     except Exception as e:
-        logger.error(f"Error recommending templates: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error recommending templates: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/templates/{template_id}", response_model=COBTemplateResponse)
 async def get_template(
-    template_id: str = Path(...), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    template_id: str = Path(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> COBTemplateResponse:
     """Get a specific template"""
     try:
@@ -177,9 +186,9 @@ async def get_template(
         return await service.get_template(template_id)
     except Exception as e:
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        logger.error(f"Error getting template: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        logger.error("Error getting template: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.put("/templates/{template_id}", response_model=COBTemplateResponse)
@@ -187,7 +196,7 @@ async def update_template(
     template_id: str = Path(...),
     template_update: COBTemplateUpdate = Body(...),
     create_version: bool = Query(True),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ) -> COBTemplateResponse:
     """Update a template"""
@@ -196,14 +205,16 @@ async def update_template(
         return await service.update_template(template_id, template_update, current_user.id, create_version)
     except Exception as e:
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        logger.error(f"Error updating template: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        logger.error("Error updating template: %s", str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete("/templates/{template_id}")
 async def delete_template(
-    template_id: str = Path(...), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    template_id: str = Path(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> Dict[str, str]:
     """Soft delete a template"""
     try:
@@ -212,9 +223,9 @@ async def delete_template(
         return {"message": "Template deleted successfully"}
     except Exception as e:
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        logger.error(f"Error deleting template: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        logger.error("Error deleting template: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 # Template Version Management
@@ -224,7 +235,7 @@ async def delete_template(
 async def create_template_version(
     template_id: str = Path(...),
     version_data: TemplateVersionCreate = Body(...),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ) -> TemplateVersionResponse:
     """Create a new version of a template"""
@@ -233,16 +244,16 @@ async def create_template_version(
         return await service.create_template_version(template_id, version_data, current_user.id)
     except Exception as e:
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        logger.error(f"Error creating template version: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        logger.error("Error creating template version: %s", str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/templates/{template_id}/versions", response_model=List[TemplateVersionResponse])
 async def get_template_versions(
     template_id: str = Path(...),
     limit: int = Query(10, ge=1, le=50),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ) -> List[TemplateVersionResponse]:
     """Get version history for a template"""
@@ -250,15 +261,15 @@ async def get_template_versions(
         service = TemplateService(db)
         return await service.get_template_versions(template_id, limit)
     except Exception as e:
-        logger.error(f"Error getting template versions: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error getting template versions: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.post("/templates/{template_id}/versions/{version_id}/restore", response_model=COBTemplateResponse)
 async def restore_template_version(
     template_id: str = Path(...),
     version_id: str = Path(...),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ) -> COBTemplateResponse:
     """Restore a template to a previous version"""
@@ -267,9 +278,9 @@ async def restore_template_version(
         return await service.restore_template_version(template_id, version_id, current_user.id)
     except Exception as e:
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        logger.error(f"Error restoring template version: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        logger.error("Error restoring template version: %s", str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # Template Validation
@@ -277,7 +288,9 @@ async def restore_template_version(
 
 @router.post("/templates/{template_id}/validate")
 async def validate_template(
-    template_id: str = Path(...), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    template_id: str = Path(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> Dict[str, Any]:
     """Validate all blocks in a template"""
     try:
@@ -285,14 +298,16 @@ async def validate_template(
         return await service.validate_template_blocks(template_id)
     except Exception as e:
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        logger.error(f"Error validating template: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        logger.error("Error validating template: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/templates/{template_id}/variables", response_model=List[str])
 async def get_template_variables(
-    template_id: str = Path(...), current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    template_id: str = Path(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ) -> List[str]:
     """Get all variables required by a template"""
     try:
@@ -300,9 +315,9 @@ async def get_template_variables(
         return await service.get_template_variables(template_id)
     except Exception as e:
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        logger.error(f"Error getting template variables: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        logger.error("Error getting template variables: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 # Scan Data Browsing
@@ -310,7 +325,7 @@ async def get_template_variables(
 
 @router.post("/scan-data/browse", response_model=DataBrowseResponse)
 async def browse_scan_data(
-    request: DataBrowseRequest, current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    request: DataBrowseRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> DataBrowseResponse:
     """Browse available scan data with filtering"""
     try:
@@ -420,8 +435,8 @@ async def browse_scan_data(
         )
 
     except Exception as e:
-        logger.error(f"Error browsing scan data: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error browsing scan data: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 # Report Generation
@@ -431,9 +446,9 @@ async def browse_scan_data(
 async def generate_report(
     request: ReportGenerationRequest,
     background_tasks: BackgroundTasks,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-    storage_service=Depends(get_storage_service),
+    storage_service: StorageService = Depends(get_storage_service),
 ) -> ReportGenerationResponse:
     """Generate a report from template and scan data"""
     try:
@@ -446,32 +461,32 @@ async def generate_report(
 
         return response
     except Exception as e:
-        logger.error(f"Error generating report: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error("Error generating report: %s", str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/preview", response_model=PreviewResponse)
 async def preview_template(
     request: PreviewRequest,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-    storage_service=Depends(get_storage_service),
+    storage_service: StorageService = Depends(get_storage_service),
 ) -> PreviewResponse:
     """Generate a preview of template with sample data"""
     try:
         engine = ReportGenerationEngine(db, storage_service)
         return await engine.generate_preview(request, current_user.id)
     except Exception as e:
-        logger.error(f"Error generating preview: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error("Error generating preview: %s", str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/status/{report_id}", response_model=ReportStatus)
 async def get_report_status(
     report_id: str = Path(...),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-    storage_service=Depends(get_storage_service),
+    storage_service: StorageService = Depends(get_storage_service),
 ) -> ReportStatus:
     """Get the status of a report generation"""
     try:
@@ -479,23 +494,22 @@ async def get_report_status(
         return await engine.get_report_status(report_id)
     except Exception as e:
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        logger.error(f"Error getting report status: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        logger.error("Error getting report status: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/download/{report_id}/{format}")
 async def download_report(
     report_id: str = Path(...),
-    format: str = Path(..., regex="^(pdf|json|markdown|html)$"),
-    current_user=Depends(get_current_user),
+    file_format: str = Path(..., regex="^(pdf|json|markdown|html)$", alias="format"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-    storage_service=Depends(get_storage_service),
-):
+    storage_service: StorageService = Depends(get_storage_service),
+) -> FileResponse:
     """Download a generated report in specified format"""
     try:
         # Check if report exists and user has access
-        from app.models.cob_models import COBReport
 
         report = db.query(COBReport).filter(COBReport.id == report_id).first()
 
@@ -507,17 +521,18 @@ async def download_report(
 
         # Check if format was generated
         output_formats = report.config.get("output_formats", [])
-        if format.upper() not in [f.upper() for f in output_formats]:
-            raise HTTPException(status_code=400, detail=f"Report was not generated in {format} format")
+        if file_format.upper() not in [f.upper() for f in output_formats]:
+            raise HTTPException(status_code=400, detail=f"Report was not generated in {file_format} format")
 
         # Get file from storage
-        file_key = f"reports/{report_id}/{report_id}.{format.lower()}"
+        file_key = f"reports/{report_id}/{report_id}.{file_format.lower()}"
 
         if not storage_service.file_exists(file_key):
-            raise HTTPException(status_code=404, detail=f"Report file not found in {format} format")
+            raise HTTPException(status_code=404, detail=f"Report file not found in {file_format} format")
 
         # Download from storage
-        file_path = await storage_service.download_file_async(file_key, f"/tmp/{report_id}.{format}")
+        temp_dir = tempfile.gettempdir()
+        file_path = await storage_service.download_file_async(file_key, f"{temp_dir}/{report_id}.{file_format}")
 
         # Return file response
         media_type_map = {
@@ -529,29 +544,28 @@ async def download_report(
 
         return FileResponse(
             path=file_path,
-            media_type=media_type_map.get(format, "application/octet-stream"),
-            filename=f"{report.name}.{format}",
-            headers={"Content-Disposition": f'attachment; filename="{report.name}.{format}"'},
+            media_type=media_type_map.get(file_format, "application/octet-stream"),
+            filename=f"{report.name}.{file_format}",
+            headers={"Content-Disposition": f'attachment; filename="{report.name}.{file_format}"'},
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error downloading report: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error downloading report: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/download/{report_id}")
 async def get_download_links(
     report_id: str = Path(...),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-    storage_service=Depends(get_storage_service),
+    storage_service: StorageService = Depends(get_storage_service),
 ) -> Dict[str, Any]:
     """Get download links for all available formats of a report"""
     try:
         # Check if report exists
-        from app.models.cob_models import COBReport
 
         report = db.query(COBReport).filter(COBReport.id == report_id).first()
 
@@ -586,17 +600,17 @@ async def get_download_links(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting download links: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error getting download links: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.post("/generate/batch")
 async def generate_batch_reports(
     request: BatchReportRequest,
     background_tasks: BackgroundTasks,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-    storage_service=Depends(get_storage_service),
+    storage_service: StorageService = Depends(get_storage_service),
 ) -> Dict[str, Any]:
     """Generate multiple reports in batch"""
     try:
@@ -628,8 +642,8 @@ async def generate_batch_reports(
         }
 
     except Exception as e:
-        logger.error(f"Error generating batch reports: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error("Error generating batch reports: %s", str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # Block and Variable Management
@@ -639,7 +653,7 @@ async def generate_batch_reports(
 async def list_block_definitions(
     category: Optional[str] = Query(None),
     is_active: bool = Query(True),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ) -> List[BlockDefinitionResponse]:
     """List available block definitions"""
@@ -653,18 +667,18 @@ async def list_block_definitions(
 
         return [BlockDefinitionResponse.from_orm(block) for block in blocks]
     except Exception as e:
-        logger.error(f"Error listing block definitions: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error listing block definitions: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/blocks/registry")
-async def get_block_registry(current_user=Depends(get_current_user)) -> Dict[str, Any]:
+async def get_block_registry(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
     """Get the current block registry"""
     try:
         return block_registry.export_registry()
     except Exception as e:
-        logger.error(f"Error getting block registry: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error getting block registry: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/variables", response_model=List[ReportVariableResponse])
@@ -672,7 +686,7 @@ async def list_report_variables(
     category: Optional[str] = Query(None),
     source: Optional[str] = Query(None),
     is_active: bool = Query(True),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ) -> List[ReportVariableResponse]:
     """List available report variables"""
@@ -689,21 +703,21 @@ async def list_report_variables(
 
         return [ReportVariableResponse.from_orm(var) for var in variables]
     except Exception as e:
-        logger.error(f"Error listing report variables: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error listing report variables: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/variables/categories")
 async def get_variable_categories(
-    current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> List[str]:
     """Get all variable categories"""
     try:
         categories = db.query(COBReportVariable.category).distinct().all()
         return [cat[0] for cat in categories if cat[0]]
     except Exception as e:
-        logger.error(f"Error getting variable categories: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error getting variable categories: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 # Template Initialization
@@ -711,7 +725,7 @@ async def get_variable_categories(
 
 @router.post("/templates/initialize")
 async def initialize_default_templates(
-    current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_session)
 ) -> Dict[str, Any]:
     """Initialize default report templates"""
     try:
@@ -721,28 +735,28 @@ async def initialize_default_templates(
         created_count = 0
         errors = []
 
-        logger.info(f"Initializing {len(initial_templates)} default templates")
+        logger.info("Initializing %d default templates", len(initial_templates))
 
         for template_data in initial_templates:
             try:
                 # Check if template already exists
                 existing = await service.search_templates(template_data["name"])
                 if not existing:
-                    logger.info(f"Creating template: {template_data['name']}")
+                    logger.info("Creating template: %s", template_data["name"])
                     template_create = COBTemplateCreate(**template_data)
                     await service.create_template(template_create, current_user.username)
                     created_count += 1
-                    logger.info(f"Successfully created template: {template_data['name']}")
+                    logger.info("Successfully created template: %s", template_data["name"])
                 else:
-                    logger.info(f"Template already exists: {template_data['name']}")
+                    logger.info("Template already exists: %s", template_data["name"])
             except Exception as e:
-                error_msg = f"Error creating template '{template_data['name']}': {str(e)}"
+                error_msg = f"Error creating template '{template_data["name"]}': {str(e)}"
                 logger.error(error_msg, exc_info=True)
                 errors.append(error_msg)
 
         # Commit all changes
         await db.commit()
-        logger.info(f"Database commit complete. Created {created_count} templates")
+        logger.info("Database commit complete. Created %d templates", created_count)
 
         return {
             "message": "Template initialization complete",
@@ -752,8 +766,8 @@ async def initialize_default_templates(
         }
 
     except Exception as e:
-        logger.error(f"Error initializing templates: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error("Error initializing templates: %s", str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 # Schedule Management Endpoints (migrated from COB system)
@@ -761,18 +775,18 @@ async def initialize_default_templates(
 
 @router.get("/schedules", response_model=COBScheduleListResponse, summary="List report schedules")
 async def list_schedules(
-    skip: int = Query(0, ge=0),
+    skip: int = Query(0, ge=1),
     limit: int = Query(50, ge=1, le=100),
     active_only: bool = Query(True),
     template_id: Optional[str] = Query(None),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-):
+) -> COBScheduleListResponse:
     """List report schedules with pagination"""
     try:
         query = select(COBSchedule)
         if active_only:
-            query = query.where(COBSchedule.is_active == True)
+            query = query.where(COBSchedule.is_active is True)
         if template_id:
             query = query.where(COBSchedule.template_id == uuid.UUID(template_id))
         query = query.offset(skip).limit(limit)
@@ -783,7 +797,7 @@ async def list_schedules(
         # Get total count
         count_query = select(func.count(COBSchedule.id))
         if active_only:
-            count_query = count_query.where(COBSchedule.is_active == True)
+            count_query = count_query.where(COBSchedule.is_active is True)
         if template_id:
             count_query = count_query.where(COBSchedule.template_id == uuid.UUID(template_id))
         total_result = await db.execute(count_query)
@@ -809,16 +823,16 @@ async def list_schedules(
         )
 
     except Exception as e:
-        logger.error(f"Error listing schedules: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to list schedules: {str(e)}")
+        logger.error("Error listing schedules: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to list schedules: {str(e)}") from e
 
 
 @router.post("/schedules", response_model=COBScheduleResponse, summary="Create report schedule")
 async def create_schedule(
     schedule_data: COBScheduleCreate,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-):
+) -> COBScheduleResponse:
     """Create a new report schedule"""
     try:
         # Verify template exists
@@ -842,7 +856,6 @@ async def create_schedule(
         )
 
         # Set next run time based on frequency
-        from datetime import timedelta
 
         now = datetime.now(timezone.utc)
         if schedule.frequency == "daily":
@@ -864,23 +877,23 @@ async def create_schedule(
             "template": f"/api/v1/reports/templates/{schedule.template_id}",
         }
 
-        logger.info(f"Schedule created: {schedule.id} by {current_user.username}")
+        logger.info("Schedule created: %s by %s", schedule.id, current_user.username)
         return COBScheduleResponse(**schedule_dict)
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error creating schedule: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to create schedule: {str(e)}")
+        logger.error("Error creating schedule: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to create schedule: {str(e)}") from e
 
 
 @router.post("/internal/check-schedules", summary="Check scheduled reports (Internal)")
-async def check_scheduled_reports(db: AsyncSession = Depends(get_session)):
-    """Internal endpoint for checking and executing scheduled reports"""
+async def check_scheduled_reports(db: AsyncSession = Depends(get_session)) -> Dict[str, Any]:
+    """Check and execute scheduled reports"""
     try:
         # Get all active schedules that are due
         now = datetime.now(timezone.utc)
-        query = select(COBSchedule).where(COBSchedule.is_active == True, COBSchedule.next_run_at <= now)
+        query = select(COBSchedule).where(COBSchedule.is_active is True, COBSchedule.next_run_at <= now)
         result = await db.execute(query)
         due_schedules = result.scalars().all()
 
@@ -891,7 +904,7 @@ async def check_scheduled_reports(db: AsyncSession = Depends(get_session)):
                 await _execute_scheduled_report(schedule.id, db)
                 executed.append(str(schedule.id))
             except Exception as e:
-                logger.error(f"Failed to execute schedule {schedule.id}: {e}")
+                logger.error("Failed to execute schedule %s: %s", schedule.id, e)
 
         return {
             "checked_at": now.isoformat(),
@@ -901,11 +914,11 @@ async def check_scheduled_reports(db: AsyncSession = Depends(get_session)):
         }
 
     except Exception as e:
-        logger.error(f"Error checking schedules: {e}")
+        logger.error("Error checking schedules: %s", e)
         return {"error": str(e), "checked_at": datetime.now(timezone.utc).isoformat()}
 
 
-async def _execute_scheduled_report(schedule_id: uuid.UUID, db: AsyncSession):
+async def _execute_scheduled_report(schedule_id: uuid.UUID, db: AsyncSession) -> None:
     """Execute a scheduled report generation"""
     try:
         # Get the schedule
@@ -976,7 +989,7 @@ async def _execute_scheduled_report(schedule_id: uuid.UUID, db: AsyncSession):
                 schedule.next_run_at = schedule.last_run_at + timedelta(days=30)
 
             await db.commit()
-            logger.info(f"Scheduled report executed: {schedule_id}")
+            logger.info("Scheduled report executed: %s", schedule_id)
 
         except Exception as e:
             execution.execution_status = "failed"
@@ -985,7 +998,7 @@ async def _execute_scheduled_report(schedule_id: uuid.UUID, db: AsyncSession):
             raise
 
     except Exception as e:
-        logger.error(f"Error executing scheduled report {schedule_id}: {e}")
+        logger.error("Error executing scheduled report %s: %s", schedule_id, e)
         raise
 
 
@@ -994,17 +1007,17 @@ async def _execute_scheduled_report(schedule_id: uuid.UUID, db: AsyncSession):
 
 @router.get("/system/status", response_model=COBSystemStatusResponse, summary="Get report system status")
 async def get_system_status(
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
-):
+) -> COBSystemStatusResponse:
     """Get overall report system status"""
     try:
         # Count active templates
-        templates_result = await db.execute(select(func.count(COBTemplate.id)).where(COBTemplate.is_active == True))
+        templates_result = await db.execute(select(func.count(COBTemplate.id)).where(COBTemplate.is_active is True))
         active_templates = templates_result.scalar()
 
         # Count active schedules
-        schedules_result = await db.execute(select(func.count(COBSchedule.id)).where(COBSchedule.is_active == True))
+        schedules_result = await db.execute(select(func.count(COBSchedule.id)).where(COBSchedule.is_active is True))
         active_schedules = schedules_result.scalar()
 
         # Count pending executions
@@ -1025,7 +1038,7 @@ async def get_system_status(
         # Get next scheduled execution
         next_execution_result = await db.execute(
             select(COBSchedule.next_run_at)
-            .where(COBSchedule.is_active == True, COBSchedule.next_run_at.isnot(None))
+            .where(COBSchedule.is_active is True, COBSchedule.next_run_at.isnot(None))
             .order_by(COBSchedule.next_run_at.asc())
             .limit(1)
         )
@@ -1053,8 +1066,8 @@ async def get_system_status(
         )
 
     except Exception as e:
-        logger.error(f"Error getting system status: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get system status: {str(e)}")
+        logger.error("Error getting system status: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to get system status: {str(e)}") from e
 
 
 # Export the router

@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -12,8 +18,7 @@ import argparse
 import os
 import sys
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
 import duckdb
 from rich.console import Console
@@ -27,7 +32,7 @@ console = Console()
 class ScorerResultCleaner:
     """Handles cleanup of scorer results from PyRIT memory."""
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: Optional[str] = None) -> None:
         """Initialize the cleaner with database connection."""
         if not db_path:
             # Default PyRIT memory location
@@ -36,7 +41,7 @@ class ScorerResultCleaner:
         self.db_path = db_path
         self.conn = None
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect to the DuckDB database."""
         try:
             self.conn = duckdb.connect(self.db_path)
@@ -45,7 +50,7 @@ class ScorerResultCleaner:
             console.print(f"[red]Failed to connect to database: {e}[/red]")
             raise
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Close database connection."""
         if self.conn:
             self.conn.close()
@@ -129,7 +134,7 @@ class ScorerResultCleaner:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         # Get count first
-        count_query = f"SELECT COUNT(*) FROM scores WHERE {where_clause}"
+        count_query = f"SELECT COUNT(*) FROM scores WHERE {where_clause}"  # nosec B608 # controlled parameterized query
         result = self.conn.execute(count_query, params).fetchone()
         count = result[0] if result else 0
 
@@ -141,12 +146,10 @@ class ScorerResultCleaner:
         console.print(f"\n[bold]Found {count} scorer results to delete:[/bold]")
 
         # Get sample
-        sample_query = f"""
-            SELECT id, scorer_name, score_value, timestamp
-            FROM scores
-            WHERE {where_clause}
-            LIMIT 10
-        """
+        sample_query = (
+            f"SELECT id, scorer_name, score_value, timestamp FROM scores "  # nosec B608
+            f"WHERE {where_clause} LIMIT 10"
+        )
 
         samples = self.conn.execute(sample_query, params).fetchall()
         if samples:
@@ -186,7 +189,7 @@ class ScorerResultCleaner:
             ) as progress:
                 task = progress.add_task("Deleting scorer results...", total=None)
 
-                delete_query = f"DELETE FROM scores WHERE {where_clause}"
+                delete_query = f"DELETE FROM scores WHERE {where_clause}"  # nosec B608 # controlled parameterized query
                 self.conn.execute(delete_query, params)
 
                 self.conn.execute("COMMIT")
@@ -200,7 +203,7 @@ class ScorerResultCleaner:
             console.print(f"[red]Error during cleanup: {e}[/red]")
             raise
 
-    def vacuum_database(self):
+    def vacuum_database(self) -> None:
         """Vacuum the database to reclaim space."""
         try:
             console.print("\n[bold]Running database maintenance...[/bold]")
@@ -222,7 +225,7 @@ class ScorerResultCleaner:
             size_after = os.path.getsize(self.db_path) / (1024 * 1024)  # MB
             space_saved = size_before - size_after
 
-            console.print(f"[green]Database maintenance completed.[/green]")
+            console.print("[green]Database maintenance completed.[/green]")
             console.print(f"Size before: {size_before:.2f} MB")
             console.print(f"Size after: {size_after:.2f} MB")
             if space_saved > 0:
@@ -232,8 +235,8 @@ class ScorerResultCleaner:
             console.print(f"[yellow]Warning: Could not vacuum database: {e}[/yellow]")
 
 
-def main():
-    """Main entry point for the cleanup script."""
+def main() -> None:
+    """Run cleanup script for scorer results."""
     parser = argparse.ArgumentParser(description="Clean up scorer results from ViolentUTF PyRIT memory")
 
     # Cleanup options

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -22,10 +28,11 @@ logger = logging.getLogger(__name__)
 class StorageService:
     """Service for managing file storage operations"""
 
-    def __init__(self, base_path: str = "/app/app_data/violentutf/reports"):
+    def __init__(self, base_path: str = "/app/app_data/violentutf/reports") -> None:
+        """Initialize StorageService."""
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Initialized storage service with base path: {self.base_path}")
+        logger.info("Initialized storage service with base path: %s", self.base_path)
 
     def _get_file_path(self, file_key: str) -> Path:
         """Get the full file path from a storage key"""
@@ -39,7 +46,7 @@ class StorageService:
             file_path = self._get_file_path(file_key)
             return file_path.exists() and file_path.is_file()
         except Exception as e:
-            logger.error(f"Error checking file existence for {file_key}: {str(e)}")
+            logger.error("Error checking file existence for %s: %s", file_key, str(e))
             return False
 
     def get_file_size(self, file_key: str) -> int:
@@ -50,7 +57,7 @@ class StorageService:
                 return file_path.stat().st_size
             return 0
         except Exception as e:
-            logger.error(f"Error getting file size for {file_key}: {str(e)}")
+            logger.error("Error getting file size for %s: %s", file_key, str(e))
             return 0
 
     async def upload_file_async(self, source_path: str, file_key: str) -> bool:
@@ -58,7 +65,7 @@ class StorageService:
         try:
             source = Path(source_path)
             if not source.exists():
-                logger.error(f"Source file does not exist: {source_path}")
+                logger.error("Source file does not exist: %s", source_path)
                 return False
 
             target_path = self._get_file_path(file_key)
@@ -70,11 +77,11 @@ class StorageService:
                     while chunk := await src.read(8192):  # 8KB chunks
                         await dst.write(chunk)
 
-            logger.info(f"File uploaded successfully: {file_key}")
+            logger.info("File uploaded successfully: %s", file_key)
             return True
 
         except Exception as e:
-            logger.error(f"Error uploading file {file_key}: {str(e)}")
+            logger.error("Error uploading file %s: %s", file_key, str(e))
             return False
 
     def upload_file(self, source_path: str, file_key: str) -> bool:
@@ -82,18 +89,18 @@ class StorageService:
         try:
             source = Path(source_path)
             if not source.exists():
-                logger.error(f"Source file does not exist: {source_path}")
+                logger.error("Source file does not exist: %s", source_path)
                 return False
 
             target_path = self._get_file_path(file_key)
             target_path.parent.mkdir(parents=True, exist_ok=True)
 
             shutil.copy2(source, target_path)
-            logger.info(f"File uploaded successfully: {file_key}")
+            logger.info("File uploaded successfully: %s", file_key)
             return True
 
         except Exception as e:
-            logger.error(f"Error uploading file {file_key}: {str(e)}")
+            logger.error("Error uploading file %s: %s", file_key, str(e))
             return False
 
     async def download_file_async(self, file_key: str, target_path: str) -> Optional[str]:
@@ -101,7 +108,7 @@ class StorageService:
         try:
             source_path = self._get_file_path(file_key)
             if not source_path.exists():
-                logger.error(f"File not found in storage: {file_key}")
+                logger.error("File not found in storage: %s", file_key)
                 return None
 
             target = Path(target_path)
@@ -113,11 +120,11 @@ class StorageService:
                     while chunk := await src.read(8192):  # 8KB chunks
                         await dst.write(chunk)
 
-            logger.info(f"File downloaded successfully: {file_key} -> {target_path}")
+            logger.info("File downloaded successfully: %s -> %s", file_key, target_path)
             return str(target)
 
         except Exception as e:
-            logger.error(f"Error downloading file {file_key}: {str(e)}")
+            logger.error("Error downloading file %s: %s", file_key, str(e))
             return None
 
     def download_file(self, file_key: str, target_path: str) -> Optional[str]:
@@ -125,18 +132,18 @@ class StorageService:
         try:
             source_path = self._get_file_path(file_key)
             if not source_path.exists():
-                logger.error(f"File not found in storage: {file_key}")
+                logger.error("File not found in storage: %s", file_key)
                 return None
 
             target = Path(target_path)
             target.parent.mkdir(parents=True, exist_ok=True)
 
             shutil.copy2(source_path, target)
-            logger.info(f"File downloaded successfully: {file_key} -> {target_path}")
+            logger.info("File downloaded successfully: %s -> %s", file_key, target_path)
             return str(target)
 
         except Exception as e:
-            logger.error(f"Error downloading file {file_key}: {str(e)}")
+            logger.error("Error downloading file %s: %s", file_key, str(e))
             return None
 
     def get_download_url(self, file_key: str) -> Optional[str]:
@@ -153,14 +160,14 @@ class StorageService:
             file_path = self._get_file_path(file_key)
             if file_path.exists():
                 file_path.unlink()
-                logger.info(f"File deleted successfully: {file_key}")
+                logger.info("File deleted successfully: %s", file_key)
                 return True
             else:
-                logger.warning(f"File not found for deletion: {file_key}")
+                logger.warning("File not found for deletion: %s", file_key)
                 return False
 
         except Exception as e:
-            logger.error(f"Error deleting file {file_key}: {str(e)}")
+            logger.error("Error deleting file %s: %s", file_key, str(e))
             return False
 
     def list_files(self, prefix: str = "") -> list[str]:
@@ -185,7 +192,7 @@ class StorageService:
             return sorted(files)
 
         except Exception as e:
-            logger.error(f"Error listing files with prefix {prefix}: {str(e)}")
+            logger.error("Error listing files with prefix %s: %s", prefix, str(e))
             return []
 
     def cleanup_expired_files(self, max_age_hours: int = 24) -> int:
@@ -205,13 +212,13 @@ class StorageService:
                             file_path.unlink()
                             deleted_count += 1
                         except Exception as e:
-                            logger.error(f"Error deleting expired file {file_path}: {str(e)}")
+                            logger.error("Error deleting expired file %s: %s", file_path, str(e))
 
-            logger.info(f"Cleaned up {deleted_count} expired files")
+            logger.info("Cleaned up %s expired files", deleted_count)
             return deleted_count
 
         except Exception as e:
-            logger.error(f"Error during cleanup: {str(e)}")
+            logger.error("Error during cleanup: %s", str(e))
             return 0
 
 
@@ -221,7 +228,7 @@ _storage_service = None
 
 def get_storage_service() -> StorageService:
     """Get the global storage service instance"""
-    global _storage_service
+    global _storage_service  # pylint: disable=global-statement
     if _storage_service is None:
         base_path = os.getenv("STORAGE_BASE_PATH", "/app/app_data/violentutf/reports")
         _storage_service = StorageService(base_path)

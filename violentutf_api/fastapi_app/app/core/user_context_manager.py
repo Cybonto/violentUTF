@@ -1,22 +1,26 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-User Context Manager for FastAPI
+"""User Context Manager for FastAPI
+
 Provides standardized user identification to match Streamlit's UserContextManager
 """
 
 import logging
 import re
-from typing import Dict, Optional
+from typing import Dict, Type
 
 logger = logging.getLogger(__name__)
 
 
 class FastAPIUserContextManager:
-    """
-    FastAPI-specific user context manager that mirrors Streamlit's normalization rules
-    """
+    """FastAPI-specific user context manager that mirrors Streamlit's normalization rules"""
 
     # Same normalization rules as Streamlit
     NORMALIZATION_RULES = {
@@ -29,7 +33,7 @@ class FastAPIUserContextManager:
     DEFAULT_USER = "violentutf.web"
 
     @classmethod
-    def normalize_username(cls, username: str) -> str:
+    def normalize_username(cls: Type["FastAPIUserContextManager"], username: str) -> str:
         """
         Normalize a username to a canonical format (mirrors Streamlit logic)
 
@@ -48,7 +52,7 @@ class FastAPIUserContextManager:
         # Check direct mapping first
         if username in cls.NORMALIZATION_RULES:
             normalized = cls.NORMALIZATION_RULES[username]
-            logger.debug(f"Normalized '{username}' -> '{normalized}' (direct mapping)")
+            logger.debug("Normalized '%s' -> '%s' (direct mapping)", username, normalized)
             return normalized
 
         # Email format - extract local part
@@ -56,22 +60,22 @@ class FastAPIUserContextManager:
             local_part = username.split("@")[0]
             # Clean up the local part
             normalized = re.sub(r"[^a-zA-Z0-9._-]", ".", local_part).lower()
-            logger.debug(f"Normalized '{username}' -> '{normalized}' (email format)")
+            logger.debug("Normalized '%s' -> '%s' (email format)", username, normalized)
             return normalized
 
         # Names with spaces - convert to dot notation
         if " " in username:
             normalized = username.lower().replace(" ", ".")
-            logger.debug(f"Normalized '{username}' -> '{normalized}' (space format)")
+            logger.debug("Normalized '%s' -> '%s' (space format)", username, normalized)
             return normalized
 
         # Already in good format - just lowercase
         normalized = username.lower()
-        logger.debug(f"Normalized '{username}' -> '{normalized}' (lowercase)")
+        logger.debug("Normalized '%s' -> '%s' (lowercase)", username, normalized)
         return normalized
 
     @classmethod
-    def extract_canonical_username(cls, jwt_payload: Dict) -> str:
+    def extract_canonical_username(cls: Type["FastAPIUserContextManager"], jwt_payload: Dict) -> str:
         """
         Extract and normalize username from JWT payload
 
@@ -91,19 +95,19 @@ class FastAPIUserContextManager:
         # Log deprecation warnings for old fields
         if "name" in jwt_payload and jwt_payload["name"] != raw_username:
             logger.warning(
-                f"JWT contains deprecated 'name' field: {jwt_payload.get('name')}, " f"using sub: {raw_username}"
+                "JWT contains deprecated 'name' field: %s, using sub: %s", jwt_payload.get("name"), raw_username
             )
 
         # Normalize the username
         canonical_username = cls.normalize_username(raw_username)
 
         if canonical_username != raw_username:
-            logger.info(f"Normalized username: '{raw_username}' -> '{canonical_username}'")
+            logger.info("Normalized username: '%s' -> '%s'", raw_username, canonical_username)
 
         return canonical_username
 
     @classmethod
-    def create_user_context(cls, jwt_payload: Dict) -> Dict:
+    def create_user_context(cls: Type["FastAPIUserContextManager"], jwt_payload: Dict) -> Dict:
         """
         Create standardized user context from JWT payload
 

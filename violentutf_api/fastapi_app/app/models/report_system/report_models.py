@@ -1,14 +1,19 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Extended database models for advanced report features
-"""
+"""Extended database models for advanced report features"""
 
 import uuid
+from typing import Any, Dict
 
 from app.db.database import Base
-from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -33,7 +38,8 @@ class COBTemplateVersion(Base):
     template = relationship("COBTemplate", back_populates="versions")
 
 
-# Note: COBSchedule extensions (data_selection, notification_config) should be added directly to COBSchedule model if needed
+# Note: COBSchedule extensions (data_selection, notification_config) should be added
+# directly to COBSchedule model if needed
 
 
 class COBScanDataCache(Base):
@@ -52,7 +58,7 @@ class COBScanDataCache(Base):
     created_at = Column(DateTime, server_default=func.now())
     expires_at = Column(DateTime, index=True)  # For cache cleanup
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
         return {
             "id": self.id,
@@ -81,7 +87,7 @@ class COBReportVariable(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
         return {
             "id": self.id,
@@ -111,7 +117,7 @@ class COBBlockDefinition(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
         return {
             "id": self.id,
@@ -126,4 +132,5 @@ class COBBlockDefinition(Base):
         }
 
 
-# Note: COBReport extensions (progress, generation_metadata, error_message) should be added directly to COBReport model if needed
+# Note: COBReport extensions (progress, generation_metadata, error_message) should be added
+# directly to COBReport model if needed

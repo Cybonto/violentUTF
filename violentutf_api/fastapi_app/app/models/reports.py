@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -5,7 +11,6 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from app.db.database import Base
 from sqlalchemy import JSON, Boolean, Column, DateTime, String, Text
@@ -35,7 +40,8 @@ class ReportTemplate(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     created_by = Column(String(255), nullable=True)  # Username for custom templates
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of ReportTemplate."""
         return f"<ReportTemplate(id={self.id}, name='{self.name}', category='{self.category}')>"
 
 
@@ -65,5 +71,6 @@ class GeneratedReport(Base):
     completed_at = Column(DateTime, nullable=True)
     created_by = Column(String(255), nullable=False)  # Username who generated
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of GeneratedReport."""
         return f"<GeneratedReport(id={self.id}, status='{self.status}', format='{self.output_format}')>"

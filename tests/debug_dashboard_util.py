@@ -1,16 +1,9 @@
-from typing import Any
-
 #!/usr/bin/env python3
-<<<<<<<< HEAD:tests/scripts/debug_dashboard_api.py
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
-========
 # Copyright (c) 2025 ViolentUTF Contributors.
 # Licensed under the MIT License.
 #
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
->>>>>>>> dev_nightly:tests/debug_dashboard_util.py
 
 """
 Debug script to trace exactly what the dashboard API calls are doing.
@@ -22,6 +15,7 @@ import json
 import os
 import sys
 from datetime import datetime, timedelta
+from typing import Any
 
 import requests
 from dotenv import load_dotenv

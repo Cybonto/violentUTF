@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Script to verify how the Streamlit Configure Scorers page is making API calls
-and to check for any issues in the request/response chain.
+"""Script to verify how the Streamlit Configure Scorers page is making API calls.
+
+This script checks for any issues in the request/response chain.
 """
 
-import json
 import os
 import sys
 import time
-from datetime import datetime
 
 import requests
 
@@ -27,25 +31,29 @@ BLUE = "\033[94m"
 RESET = "\033[0m"
 
 
-def print_success(msg):
+def print_success(msg: str) -> None:
+    """Print success message with green formatting."""
     print(f"{GREEN}✅ {msg}{RESET}")
 
 
-def print_error(msg):
+def print_error(msg: str) -> None:
+    """Print error message with red formatting."""
     print(f"{RED}❌ {msg}{RESET}")
 
 
-def print_warning(msg):
+def print_warning(msg: str) -> None:
+    """Print warning message with yellow formatting."""
     print(f"{YELLOW}⚠️  {msg}{RESET}")
 
 
-def print_info(msg):
+def print_info(msg: str) -> None:
+    """Print info message with info icon."""
     print(f"ℹ️  {msg}")
 
 
-def intercept_streamlit_api_calls():
-    """
-    This function shows what API calls the Streamlit page should be making.
+def intercept_streamlit_api_calls() -> None:
+    """Show what API calls the Streamlit page should be making.
+
     Run this to understand the expected behavior.
     """
     print(f"\n{BLUE}STREAMLIT API CALL SEQUENCE{RESET}")
@@ -68,7 +76,7 @@ def intercept_streamlit_api_calls():
     print("   - apikey: <APISIX_API_KEY> (if configured)")
 
 
-def test_direct_api_access():
+def test_direct_api_access() -> None:
     """Test direct access to the API without going through Streamlit"""
     print(f"\n{BLUE}DIRECT API ACCESS TEST{RESET}")
     print("=" * 60)
@@ -135,7 +143,7 @@ def test_direct_api_access():
                 error_data = response.json()
                 if "detail" in error_data:
                     print(f"Error detail: {error_data['detail']}")
-            except:
+            except Exception:
                 pass
 
     except requests.exceptions.Timeout:
@@ -148,7 +156,7 @@ def test_direct_api_access():
     return None
 
 
-def check_streamlit_session_state():
+def check_streamlit_session_state() -> None:
     """Check what should be in Streamlit session state"""
     print(f"\n{BLUE}STREAMLIT SESSION STATE CHECK{RESET}")
     print("=" * 60)
@@ -172,7 +180,7 @@ def check_streamlit_session_state():
     )
 
 
-def test_scorer_creation():
+def test_scorer_creation() -> None:
     """Test creating a scorer through the API"""
     print(f"\n{BLUE}SCORER CREATION TEST{RESET}")
     print("=" * 60)
@@ -233,7 +241,7 @@ def test_scorer_creation():
         print_error(f"Error creating scorer: {e}")
 
 
-def check_common_issues():
+def check_common_issues() -> None:
     """Check for common issues that prevent scorers from showing"""
     print(f"\n{BLUE}COMMON ISSUES CHECK{RESET}")
     print("=" * 60)
@@ -260,7 +268,7 @@ def check_common_issues():
         response = requests.get(f"{API_BASE_URL}/", timeout=5)
         if response.status_code != 200:
             issues_found.append(f"APISIX gateway not responding properly (status: {response.status_code})")
-    except:
+    except Exception:
         issues_found.append("Cannot connect to APISIX gateway")
 
     if issues_found:
@@ -273,7 +281,7 @@ def check_common_issues():
     return issues_found
 
 
-def provide_troubleshooting_steps():
+def provide_troubleshooting_steps() -> None:
     """Provide step-by-step troubleshooting"""
     print(f"\n{BLUE}TROUBLESHOOTING STEPS{RESET}")
     print("=" * 60)
@@ -311,8 +319,8 @@ def provide_troubleshooting_steps():
     print("   - APISIX logs: docker logs apisix")
 
 
-def main():
-    """Main execution"""
+def main() -> None:
+    """Execute streamlit scorer API verification."""
     print(f"{GREEN}ViolentUTF Streamlit Scorer API Verification{RESET}")
     print("This script verifies the Streamlit -> API communication for scorers")
 
@@ -329,7 +337,7 @@ def main():
     test_scorer_creation()
 
     # Check common issues
-    issues = check_common_issues()
+    _ = check_common_issues()
 
     # Provide troubleshooting steps
     provide_troubleshooting_steps()

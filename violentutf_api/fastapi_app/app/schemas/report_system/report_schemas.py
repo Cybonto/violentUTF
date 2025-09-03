@@ -1,20 +1,26 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Enhanced Pydantic schemas for Advanced Dashboard Report Setup
-"""
+"""Enhanced Pydantic schemas for Advanced Dashboard Report Setup"""
 
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Type
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 
 # Enums for constrained values
 class TestingCategory(str, Enum):
+    """Categories for AI testing types."""
+
     SECURITY = "Security"
     SAFETY = "Safety"
     RELIABILITY = "Reliability"
@@ -23,6 +29,8 @@ class TestingCategory(str, Enum):
 
 
 class AttackCategory(str, Enum):
+    """Categories for attack types in AI security testing."""
+
     PROMPT_INJECTION = "Prompt Injection"
     JAILBREAK = "Jailbreak"
     DATA_LEAKAGE = "Data Leakage"
@@ -35,6 +43,8 @@ class AttackCategory(str, Enum):
 
 
 class SeverityLevel(str, Enum):
+    """Severity levels for vulnerability classification."""
+
     CRITICAL = "Critical"
     HIGH = "High"
     MEDIUM = "Medium"
@@ -43,18 +53,24 @@ class SeverityLevel(str, Enum):
 
 
 class ComplexityLevel(str, Enum):
+    """Complexity levels for template configuration."""
+
     BASIC = "Basic"
     INTERMEDIATE = "Intermediate"
     ADVANCED = "Advanced"
 
 
 class ScannerType(str, Enum):
+    """Scanner types for AI security testing."""
+
     PYRIT = "pyrit"
     GARAK = "garak"
     BOTH = "both"
 
 
 class OutputFormat(str, Enum):
+    """Output formats for report generation."""
+
     PDF = "PDF"
     JSON = "JSON"
     MARKDOWN = "Markdown"
@@ -98,7 +114,8 @@ class DateRange(BaseModel):
 
     @field_validator("end")
     @classmethod
-    def end_after_start(cls, v, info):
+    def end_after_start(cls: Type["DateRange"], v: Any, info: ValidationInfo) -> Any:  # noqa: ANN401
+        """Validate that end date is after start date."""
         if info.data.get("start") and v < info.data["start"]:
             raise ValueError("End date must be after start date")
         return v
@@ -116,7 +133,8 @@ class DataSelectionFilter(BaseModel):
     scanner_types: Optional[List[ScannerType]] = None
 
     @model_validator(mode="after")
-    def validate_severity_range(self):
+    def validate_severity_range(self) -> "DataSelectionFilter":
+        """Validate that min_severity is less than max_severity."""
         if self.min_severity is not None and self.max_severity is not None and self.min_severity > self.max_severity:
             raise ValueError("min_severity must be less than max_severity")
         return self
@@ -143,7 +161,8 @@ class EmailNotification(BaseModel):
 
     @field_validator("recipients")
     @classmethod
-    def validate_email(cls, v):
+    def validate_email(cls: Type["NotificationConfig"], v: Any) -> str:  # noqa: ANN401
+        """Validate email address format."""
         if not v:
             return v
         validated = []
@@ -166,7 +185,8 @@ class WebhookNotification(BaseModel):
 
     @field_validator("url")
     @classmethod
-    def validate_url(cls, v):
+    def validate_url(cls: Type["NotificationConfig"], v: Any) -> str:  # noqa: ANN401
+        """Validate URL format."""
         if v and not v.startswith(("http://", "https://")):
             raise ValueError("URL must start with http:// or https://")
         return v
@@ -231,6 +251,8 @@ class COBTemplateResponse(COBTemplateBase):
     created_by: Optional[str]
 
     class Config:
+        """Pydantic model configuration."""
+
         orm_mode = True
 
 
@@ -254,6 +276,8 @@ class TemplateVersionResponse(BaseModel):
     created_at: datetime
 
     class Config:
+        """Pydantic model configuration."""
+
         orm_mode = True
 
 
@@ -298,6 +322,8 @@ class ScanDataCache(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
     class Config:
+        """Pydantic model configuration."""
+
         orm_mode = True
 
 
@@ -328,6 +354,8 @@ class ReportVariableResponse(BaseModel):
     is_active: bool = True
 
     class Config:
+        """Pydantic model configuration."""
+
         orm_mode = True
 
 
@@ -345,6 +373,8 @@ class BlockDefinitionResponse(BaseModel):
     is_active: bool = True
 
     class Config:
+        """Pydantic model configuration."""
+
         orm_mode = True
 
 
@@ -443,6 +473,8 @@ class ReportStatus(BaseModel):
     completed_at: Optional[datetime] = None
 
     class Config:
+        """Pydantic model configuration."""
+
         orm_mode = True
 
 

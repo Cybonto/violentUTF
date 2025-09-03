@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
 """
 Script to check for authentication and token issues that might affect scorer retrieval.
+
 Focuses on the token lifecycle and user context consistency.
 """
 
 import hashlib
-import json
 import os
 import sys
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 
 import duckdb
 import jwt
@@ -30,26 +35,30 @@ BLUE = "\033[94m"
 RESET = "\033[0m"
 
 
-def print_section(title):
+def print_section(title: str) -> None:
+    """Print a section header with formatting."""
     print(f"\n{BLUE}{'='*60}{RESET}")
     print(f"{BLUE}{title}{RESET}")
     print(f"{BLUE}{'='*60}{RESET}")
 
 
-def print_success(msg):
+def print_success(msg: str) -> None:
+    """Print a success message with formatting."""
     print(f"{GREEN}✅ {msg}{RESET}")
 
 
-def print_error(msg):
+def print_error(msg: str) -> None:
+    """Print an error message with formatting."""
     print(f"{RED}❌ {msg}{RESET}")
 
 
-def print_warning(msg):
+def print_warning(msg: str) -> None:
+    """Print a warning message with formatting."""
     print(f"{YELLOW}⚠️  {msg}{RESET}")
 
 
-def check_environment_setup():
-    """Check if environment is properly configured"""
+def check_environment_setup() -> None:
+    """Check if environment is properly configured."""
     print_section("ENVIRONMENT CONFIGURATION CHECK")
 
     required_vars = {
@@ -91,8 +100,8 @@ def check_environment_setup():
     return len(missing_required) == 0
 
 
-def analyze_token_lifecycle():
-    """Analyze the complete token lifecycle"""
+def analyze_token_lifecycle() -> None:
+    """Analyze the complete token lifecycle."""
     print_section("TOKEN LIFECYCLE ANALYSIS")
 
     try:
@@ -136,7 +145,7 @@ def analyze_token_lifecycle():
         context = test_case["context"]
 
         # Get canonical username
-        canonical = UserContextManager.get_canonical_username(context)
+        canonical = UserContextManager.get_canonical_username()
         print(f"  Input username: {context['preferred_username']}")
         print(f"  Canonical username: {canonical}")
 
@@ -178,14 +187,14 @@ def analyze_token_lifecycle():
     return tokens_created
 
 
-def check_database_access_pattern(tokens_created):
-    """Check how databases are accessed with different tokens"""
+def check_database_access_pattern(tokens_created: list) -> None:
+    """Check how databases are accessed with different tokens."""
     print_section("DATABASE ACCESS PATTERN CHECK")
 
     salt = os.getenv("PYRIT_DB_SALT", "default_salt_2025")
     app_data_dir = os.getenv("APP_DATA_DIR", "./app_data/violentutf")
 
-    print(f"Database configuration:")
+    print("Database configuration:")
     print(f"  Salt: {salt}")
     print(f"  Data directory: {app_data_dir}")
 
@@ -253,8 +262,8 @@ def check_database_access_pattern(tokens_created):
     return db_access_map
 
 
-def test_api_with_different_users():
-    """Test API access with different user contexts"""
+def test_api_with_different_users() -> None:
+    """Test API access with different user contexts."""
     print_section("API ACCESS WITH DIFFERENT USERS")
 
     import requests
@@ -264,7 +273,6 @@ def test_api_with_different_users():
 
     try:
         from violentutf.utils.jwt_manager import JWTManager
-        from violentutf.utils.user_context_manager import UserContextManager
     except ImportError as e:
         print_error(f"Failed to import modules: {e}")
         return
@@ -323,8 +331,8 @@ def test_api_with_different_users():
             print_error(f"API request failed: {e}")
 
 
-def suggest_fixes():
-    """Suggest fixes based on findings"""
+def suggest_fixes() -> None:
+    """Suggest fixes based on findings."""
     print_section("SUGGESTED FIXES")
 
     print("\n1. IMMEDIATE FIX - Ensure consistent user context:")
@@ -360,8 +368,8 @@ def suggest_fixes():
     print("   - Navigate to Configure Scorers page")
 
 
-def main():
-    """Main execution"""
+def main() -> None:
+    """Execute the main authentication check."""
     print(f"{GREEN}ViolentUTF Scorer Authentication Issues Check{RESET}")
     print("This script checks for authentication and token issues affecting scorers")
 

@@ -216,7 +216,7 @@ for error in errors:
 # Find slow operations
 slow_operations = []
 for log in logs:
-    if (log.get('operation_time_seconds', 0) > 30 and 
+    if (log.get('operation_time_seconds', 0) > 30 and
         'operation_time_seconds' in log):
         slow_operations.append(log)
 
@@ -289,7 +289,7 @@ for event in security_events:
     print(f"Time: {event['timestamp']}")
     print(f"User: {event.get('user_id', 'Unknown')}")
     print(f"Details: {event.get('details', {})}")
-    
+
     # Get related events by correlation ID
     if corr_id := event.get('correlation_id'):
         related = analyzer.get_operation_trace(corr_id)
@@ -323,21 +323,21 @@ for event in security_events:
 def monitor_dataset_operations():
     analyzer = get_log_analyzer()
     last_hour = datetime.now() - timedelta(hours=1)
-    
+
     # Check creation times
     creation_times = analyzer.analyze_performance_trends(
-        "dataset_creation_time", 
+        "dataset_creation_time",
         hours=1
     )
-    
+
     if creation_times.get('avg_value', 0) > 30:
         alert(f"Average creation time exceeded: {creation_times['avg_value']}s")
-    
+
     # Check error rates
     logs = analyzer.read_logs(start_time=last_hour)
     errors = analyzer.find_errors(logs)
     error_rate = len(errors) / len(logs) if logs else 0
-    
+
     if error_rate > 0.1:  # 10% error rate threshold
         alert(f"High error rate detected: {error_rate:.2%}")
 ```
@@ -350,13 +350,13 @@ def get_dashboard_metrics(hours=24):
     analyzer = get_log_analyzer()
     start_time = datetime.now() - timedelta(hours=hours)
     logs = analyzer.read_logs(start_time=start_time)
-    
+
     metrics = analyzer.analyze_performance(logs)
-    
+
     return {
         'total_operations': metrics['total_operations'],
-        'success_rate': (metrics['successful_operations'] / 
-                        metrics['total_operations'] * 100 
+        'success_rate': (metrics['successful_operations'] /
+                        metrics['total_operations'] * 100
                         if metrics['total_operations'] > 0 else 0),
         'avg_processing_time': metrics['avg_processing_time'],
         'memory_peak': metrics['memory_usage']['peak'],
@@ -372,26 +372,26 @@ def get_dashboard_metrics(hours=24):
 # Generate audit report for compliance
 def generate_audit_report(start_date, end_date):
     analyzer = get_log_analyzer()
-    
+
     # Get all audit events
     logs = analyzer.read_logs(
         start_time=start_date,
         end_time=end_date
     )
-    
+
     # Filter audit events
     audit_events = [
-        log for log in logs 
+        log for log in logs
         if log.get('event_type') in ['user_action', 'data_access']
     ]
-    
+
     # Group by user
     user_actions = defaultdict(list)
     for event in audit_events:
         user_id = event.get('user_id')
         if user_id:
             user_actions[user_id].append(event)
-    
+
     return {
         'period': f"{start_date} to {end_date}",
         'total_events': len(audit_events),
@@ -407,12 +407,12 @@ def generate_audit_report(start_date, end_date):
 def check_compliance():
     analyzer = get_log_analyzer()
     violations = analyzer.find_compliance_violations()
-    
+
     critical_violations = [
-        v for v in violations 
+        v for v in violations
         if v.get('severity') in ['high', 'critical']
     ]
-    
+
     if critical_violations:
         return {
             'status': 'CRITICAL',
@@ -444,7 +444,7 @@ def check_compliance():
 ```python
 # Analyze memory usage patterns
 memory_logs = [
-    log for log in logs 
+    log for log in logs
     if 'memory_mb' in log and log['memory_mb'] > 500
 ]
 
@@ -472,8 +472,8 @@ for log in memory_logs:
 ```python
 # Find conversion bottlenecks
 slow_conversions = [
-    log for log in logs 
-    if (log.get('operation') == 'dataset_conversion' and 
+    log for log in logs
+    if (log.get('operation') == 'dataset_conversion' and
         log.get('processing_time_seconds', 0) > 30)
 ]
 
@@ -501,9 +501,9 @@ for log in slow_conversions:
 ```python
 # Find authentication issues
 auth_failures = [
-    log for log in logs 
-    if (log.get('level') == 'ERROR' and 
-        any(keyword in log.get('message', '').lower() 
+    log for log in logs
+    if (log.get('level') == 'ERROR' and
+        any(keyword in log.get('message', '').lower()
             for keyword in ['auth', 'unauthorized', 'forbidden']))
 ]
 
@@ -531,18 +531,18 @@ from app.core.dataset_logging import monitor_performance
 def analyze_slow_operation(dataset_id):
     """Analyze a specific slow operation"""
     analyzer = get_log_analyzer()
-    
+
     # Get all logs for this dataset
     dataset_logs = analyzer.read_logs(dataset_id=dataset_id)
-    
+
     # Analyze performance
     performance = analyzer.analyze_performance(dataset_logs)
-    
+
     return {
         'dataset_id': dataset_id,
         'total_operations': performance['total_operations'],
         'avg_time': performance['avg_processing_time'],
-        'success_rate': (performance['successful_operations'] / 
+        'success_rate': (performance['successful_operations'] /
                         performance['total_operations']),
         'bottlenecks': identify_bottlenecks(dataset_logs)
     }
@@ -550,7 +550,7 @@ def analyze_slow_operation(dataset_id):
 def identify_bottlenecks(logs):
     """Identify performance bottlenecks"""
     bottlenecks = []
-    
+
     # Check for memory issues
     high_memory = [l for l in logs if l.get('memory_mb', 0) > 800]
     if high_memory:
@@ -559,7 +559,7 @@ def identify_bottlenecks(logs):
             'severity': 'high' if len(high_memory) > 10 else 'medium',
             'count': len(high_memory)
         })
-    
+
     # Check for slow operations
     slow_ops = [l for l in logs if l.get('operation_time_seconds', 0) > 30]
     if slow_ops:
@@ -568,7 +568,7 @@ def identify_bottlenecks(logs):
             'severity': 'high' if len(slow_ops) > 5 else 'medium',
             'count': len(slow_ops)
         })
-    
+
     return bottlenecks
 ```
 
@@ -641,7 +641,7 @@ def collect_custom_metrics():
     logs = analyzer.read_logs(
         start_time=datetime.now() - timedelta(days=1)
     )
-    
+
     metrics = {
         'datasets_created_24h': 0,
         'unique_users_24h': set(),
@@ -649,31 +649,31 @@ def collect_custom_metrics():
         'avg_dataset_size': 0,
         'top_dataset_types': defaultdict(int)
     }
-    
+
     dataset_sizes = []
     conversions = {'success': 0, 'total': 0}
-    
+
     for log in logs:
         # Count dataset creations
         if log.get('operation') == 'dataset_import':
             metrics['datasets_created_24h'] += 1
             if size := log.get('prompt_count'):
                 dataset_sizes.append(size)
-        
+
         # Track unique users
         if user_id := log.get('user_id'):
             metrics['unique_users_24h'].add(user_id)
-        
+
         # Track conversions
         if log.get('operation') == 'dataset_conversion':
             conversions['total'] += 1
             if log.get('level') != 'ERROR':
                 conversions['success'] += 1
-        
+
         # Count dataset types
         if dataset_type := log.get('dataset_type'):
             metrics['top_dataset_types'][dataset_type] += 1
-    
+
     # Calculate derived metrics
     metrics['unique_users_24h'] = len(metrics['unique_users_24h'])
     if conversions['total'] > 0:
@@ -682,7 +682,7 @@ def collect_custom_metrics():
         )
     if dataset_sizes:
         metrics['avg_dataset_size'] = sum(dataset_sizes) / len(dataset_sizes)
-    
+
     return metrics
 ```
 
@@ -692,7 +692,7 @@ def collect_custom_metrics():
 def detect_anomalies():
     """Detect anomalies in dataset operations"""
     analyzer = get_log_analyzer()
-    
+
     # Get baseline metrics (last 7 days)
     baseline_start = datetime.now() - timedelta(days=7)
     baseline_end = datetime.now() - timedelta(days=1)
@@ -700,17 +700,17 @@ def detect_anomalies():
         start_time=baseline_start,
         end_time=baseline_end
     )
-    
+
     # Get current metrics (last 24 hours)
     current_start = datetime.now() - timedelta(days=1)
     current_logs = analyzer.read_logs(start_time=current_start)
-    
+
     # Calculate baseline averages
     baseline_metrics = analyzer.analyze_performance(baseline_logs)
     current_metrics = analyzer.analyze_performance(current_logs)
-    
+
     anomalies = []
-    
+
     # Check for significant deviations
     if current_metrics['avg_processing_time'] > baseline_metrics['avg_processing_time'] * 2:
         anomalies.append({
@@ -719,7 +719,7 @@ def detect_anomalies():
             'current': current_metrics['avg_processing_time'],
             'baseline': baseline_metrics['avg_processing_time']
         })
-    
+
     if current_metrics['failed_operations'] > baseline_metrics['failed_operations'] * 3:
         anomalies.append({
             'type': 'error_spike',
@@ -727,7 +727,7 @@ def detect_anomalies():
             'current': current_metrics['failed_operations'],
             'baseline': baseline_metrics['failed_operations']
         })
-    
+
     return anomalies
 ```
 

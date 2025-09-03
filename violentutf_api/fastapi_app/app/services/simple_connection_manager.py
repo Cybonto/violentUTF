@@ -1,15 +1,21 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Simple Connection Manager for Database Access
+"""Simple Connection Manager for Database Access
+
 Provides basic connection pooling to prevent database lock conflicts
 """
 
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Optional
+from typing import Any, AsyncGenerator, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +30,8 @@ class SimpleConnectionManager:
     - Proper cleanup on errors
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize DatabaseConnectionManager."""
         self._connections: Dict[str, Any] = {}
         self._locks: Dict[str, asyncio.Lock] = {}
         self._global_lock = asyncio.Lock()
@@ -37,7 +44,7 @@ class SimpleConnectionManager:
             return self._locks[db_path]
 
     @asynccontextmanager
-    async def get_connection(self, db_path: str):
+    async def get_connection(self, db_path: str) -> AsyncGenerator[Any, None]:
         """
         Get a database connection with proper locking
 
@@ -57,18 +64,18 @@ class SimpleConnectionManager:
                     from pyrit.memory import DuckDBMemory
 
                     self._connections[db_path] = DuckDBMemory(db_path=db_path)
-                    logger.debug(f"Created new database connection for {db_path}")
+                    logger.debug("Created new database connection for %s", db_path)
 
                 yield self._connections[db_path]
 
             except Exception as e:
-                logger.error(f"Database connection error for {db_path}: {e}")
+                logger.error("Database connection error for %s: %s", db_path, e)
                 # Remove the failed connection so it can be recreated
                 if db_path in self._connections:
                     del self._connections[db_path]
                 raise
 
-    def get_connection_sync(self, db_path: str):
+    def get_connection_sync(self, db_path: str) -> Any:  # noqa: ANN401
         """
         Get a database connection synchronously (for legacy code)
 
@@ -83,17 +90,17 @@ class SimpleConnectionManager:
                 from pyrit.memory import DuckDBMemory
 
                 self._connections[db_path] = DuckDBMemory(db_path=db_path)
-                logger.debug(f"Created new sync database connection for {db_path}")
+                logger.debug("Created new sync database connection for %s", db_path)
 
             return self._connections[db_path]
         except Exception as e:
-            logger.error(f"Sync database connection error for {db_path}: {e}")
+            logger.error("Sync database connection error for %s: %s", db_path, e)
             # Remove the failed connection so it can be recreated
             if db_path in self._connections:
                 del self._connections[db_path]
             raise
 
-    def close_connection(self, db_path: str):
+    def close_connection(self, db_path: str) -> None:
         """
         Close a specific database connection
 
@@ -105,13 +112,13 @@ class SimpleConnectionManager:
                 connection = self._connections[db_path]
                 if hasattr(connection, "dispose_engine"):
                     connection.dispose_engine()
-                logger.debug(f"Closed database connection for {db_path}")
+                logger.debug("Closed database connection for %s", db_path)
             except Exception as e:
-                logger.error(f"Error closing connection for {db_path}: {e}")
+                logger.error("Error closing connection for %s: %s", db_path, e)
             finally:
                 del self._connections[db_path]
 
-    def close_all_connections(self):
+    def close_all_connections(self) -> None:
         """Close all database connections"""
         for db_path in list(self._connections.keys()):
             self.close_connection(db_path)
@@ -133,7 +140,7 @@ class SimpleConnectionManager:
             "connection_paths": list(self._connections.keys()),
         }
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Cleanup on object destruction"""
         try:
             self.close_all_connections()

@@ -1,8 +1,14 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Documentation Resources for MCP
+"""Documentation Resources for MCP
+
 ==============================
 
 This module provides access to ViolentUTF documentation through the MCP protocol
@@ -15,10 +21,8 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-import httpx
-from app.core.config import settings
 from app.mcp.resources.base import AdvancedResource, BaseResourceProvider, ResourceMetadata, advanced_resource_registry
 
 logger = logging.getLogger(__name__)
@@ -27,7 +31,8 @@ logger = logging.getLogger(__name__)
 class DocumentMetadata:
     """Enhanced metadata for documentation files"""
 
-    def __init__(self, file_path: Path):
+    def __init__(self, file_path: Path) -> None:
+        """Initialize DocumentMetadata with file path."""
         self.file_path = file_path
         self.title = ""
         self.category = ""
@@ -41,11 +46,11 @@ class DocumentMetadata:
         self.size = 0
         self.extract_metadata()
 
-    def extract_metadata(self):
+    def extract_metadata(self) -> None:
         """Extract metadata from the documentation file"""
         try:
             if not self.file_path.exists():
-                logger.warning(f"Documentation file not found: {self.file_path}")
+                logger.warning("Documentation file not found: %s", self.file_path)
                 return
 
             # Get file stats
@@ -91,7 +96,7 @@ class DocumentMetadata:
             self.author = self._extract_author(content)
 
         except Exception as e:
-            logger.error(f"Error extracting metadata from {self.file_path}: {e}")
+            logger.error("Error extracting metadata from %s: %s", self.file_path, e)
 
     def _extract_tags(self, content: str) -> List[str]:
         """Extract tags from document content"""
@@ -166,14 +171,15 @@ class DocumentMetadata:
 class DocumentIndex:
     """In-memory index for fast document searching"""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize DocumentIndex."""
         self.documents: Dict[str, Dict[str, Any]] = {}
         self.word_index: Dict[str, Set[str]] = {}
         self.category_index: Dict[str, Set[str]] = {}
         self.tag_index: Dict[str, Set[str]] = {}
         self.title_index: Dict[str, str] = {}
 
-    def add_document(self, doc_id: str, metadata: DocumentMetadata, content: str):
+    def add_document(self, doc_id: str, metadata: DocumentMetadata, content: str) -> None:
         """Add a document to the index"""
         try:
             # Store document
@@ -205,10 +211,10 @@ class DocumentIndex:
                     self.word_index[word] = set()
                 self.word_index[word].add(doc_id)
 
-            logger.debug(f"Indexed document: {doc_id} ({len(words)} unique words)")
+            logger.debug("Indexed document: %s (%s unique words)", doc_id, len(words))
 
         except Exception as e:
-            logger.error(f"Error indexing document {doc_id}: {e}")
+            logger.error("Error indexing document %s: %s", doc_id, e)
 
     def _extract_searchable_words(self, content: str) -> Set[str]:
         """Extract words for search indexing"""
@@ -358,7 +364,8 @@ class DocumentIndex:
 class DocumentationResourceProvider(BaseResourceProvider):
     """Provides searchable access to ViolentUTF documentation"""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize AdvancedDocumentationProvider."""
         super().__init__(
             uri_pattern="violentutf://docs/{category}/{document_id}", provider_name="DocumentationProvider"
         )
@@ -368,7 +375,7 @@ class DocumentationResourceProvider(BaseResourceProvider):
         self.index = DocumentIndex()
         self._indexed = False
 
-        logger.info(f"DocumentationResourceProvider initialized with docs root: {self.docs_root}")
+        logger.info("DocumentationResourceProvider initialized with docs root: %s", self.docs_root)
 
     def _find_docs_root(self) -> Path:
         """Find the ViolentUTF docs directory"""
@@ -381,16 +388,16 @@ class DocumentationResourceProvider(BaseResourceProvider):
 
         for path in possible_paths:
             if path.exists() and path.is_dir():
-                logger.info(f"Found docs directory: {path}")
+                logger.info("Found docs directory: %s", path)
                 return path
 
         # Fallback: create empty directory
         fallback = Path("/tmp/violentutf_docs")
         fallback.mkdir(exist_ok=True)
-        logger.warning(f"No docs directory found, using fallback: {fallback}")
+        logger.warning("No docs directory found, using fallback: %s", fallback)
         return fallback
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize the documentation index"""
         if self._indexed:
             return
@@ -401,7 +408,7 @@ class DocumentationResourceProvider(BaseResourceProvider):
         try:
             # Find all markdown files
             md_files = list(self.docs_root.rglob("*.md"))
-            logger.info(f"Found {len(md_files)} documentation files")
+            logger.info("Found %s documentation files", len(md_files))
 
             indexed_count = 0
             for md_file in md_files:
@@ -421,14 +428,14 @@ class DocumentationResourceProvider(BaseResourceProvider):
                     indexed_count += 1
 
                 except Exception as e:
-                    logger.error(f"Error processing {md_file}: {e}")
+                    logger.error("Error processing %s: %s", md_file, e)
 
             elapsed = (datetime.now() - start_time).total_seconds()
-            logger.info(f"Documentation index built: {indexed_count} documents in {elapsed:.2f}s")
+            logger.info("Documentation index built: %s documents in %.2fs", indexed_count, elapsed)
             self._indexed = True
 
         except Exception as e:
-            logger.error(f"Error building documentation index: {e}")
+            logger.error("Error building documentation index: %s", e)
             raise
 
     async def list_resources(self, params: Dict[str, Any] = None) -> List[AdvancedResource]:
@@ -483,7 +490,7 @@ class DocumentationResourceProvider(BaseResourceProvider):
                 )
                 doc_count += 1
 
-        logger.debug(f"Listed {len(resources)} documentation resources")
+        logger.debug("Listed %s documentation resources", len(resources))
         return resources
 
     async def get_resource(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
@@ -496,7 +503,7 @@ class DocumentationResourceProvider(BaseResourceProvider):
         document_id = uri_params.get("document_id")
 
         if not category or not document_id:
-            logger.warning(f"Invalid documentation URI: {uri}")
+            logger.warning("Invalid documentation URI: %s", uri)
             return None
 
         try:
@@ -512,7 +519,7 @@ class DocumentationResourceProvider(BaseResourceProvider):
             return await self._handle_document_request(category, document_id, params)
 
         except Exception as e:
-            logger.error(f"Error getting documentation resource {uri}: {e}")
+            logger.error("Error getting documentation resource %s: %s", uri, e)
             return None
 
     async def _handle_search_query(self, uri: str, params: Dict[str, Any]) -> Optional[AdvancedResource]:
@@ -594,7 +601,6 @@ class DocumentationResourceProvider(BaseResourceProvider):
     def _extract_snippet(self, content: str, query: str, max_length: int = 200) -> str:
         """Extract a relevant snippet from document content"""
         query_words = query.lower().split()
-        content_lower = content.lower()
 
         # Find the best position to extract snippet
         best_pos = 0
@@ -758,6 +764,5 @@ try:
     else:
         logger.info("Documentation resource provider registration skipped (testing mode)")
 except Exception as e:
-    logger.warning(f"Failed to register documentation resource provider: {e}")
+    logger.warning("Failed to register documentation resource provider: %s", e)
     # Don't fail startup if documentation provider fails
-    pass

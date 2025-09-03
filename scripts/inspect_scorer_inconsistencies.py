@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# mypy: disable-error-code=name-defined
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -12,12 +19,10 @@ stages of the data pipeline: PyRIT execution → Orchestrator storage → Dashbo
 import argparse
 import json
 import sqlite3
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import duckdb
-import pandas as pd
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
@@ -29,7 +34,9 @@ console = Console()
 class ScorerInconsistencyInspector:
     """Main inspector class for identifying scorer result inconsistencies."""
 
-    def __init__(self, pyrit_db_path: Optional[str] = None, sqlite_db_path: Optional[str] = None, docker: bool = False):
+    def __init__(
+        self, pyrit_db_path: Optional[str] = None, sqlite_db_path: Optional[str] = None, docker: bool = False
+    ) -> None:
         """Initialize the inspector with database paths."""
         self.docker = docker
 
@@ -78,7 +85,8 @@ class ScorerInconsistencyInspector:
 
             if "score" in table_names:
                 # Get total scores
-                total = conn.execute("SELECT COUNT(*) FROM score").fetchone()[0]
+                total_result = conn.execute("SELECT COUNT(*) FROM score").fetchone()
+                total = total_result[0] if total_result else 0
                 results["total_scores"] = total
 
                 # Get score types distribution
@@ -121,11 +129,13 @@ class ScorerInconsistencyInspector:
 
             # Get conversation and prompt counts
             if "conversation" in table_names:
-                conv_count = conn.execute("SELECT COUNT(DISTINCT id) FROM conversation").fetchone()[0]
+                conv_count_result = conn.execute("SELECT COUNT(DISTINCT id) FROM conversation").fetchone()
+                conv_count = conv_count_result[0] if conv_count_result else 0
                 results["conversations"] = conv_count
 
             if "prompt_request_response" in table_names:
-                prompt_count = conn.execute("SELECT COUNT(*) FROM prompt_request_response").fetchone()[0]
+                prompt_count_result = conn.execute("SELECT COUNT(*) FROM prompt_request_response").fetchone()
+                prompt_count = prompt_count_result[0] if prompt_count_result else 0
                 results["prompts"] = prompt_count
 
             conn.close()
@@ -148,7 +158,7 @@ class ScorerInconsistencyInspector:
         try:
             if self.docker:
                 # Use docker exec to query
-                import subprocess
+                import subprocess  # nosec B404 # needed for controlled docker command execution
 
                 # Get execution counts
                 cmd = f"""docker exec violentutf_api python3 -c "
@@ -184,8 +194,10 @@ print(json.dumps({{
     'total_responses': total_responses
 }}))
 "
-"""
-                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+"""  # nosec B608 # controlled parameterized query in docker exec
+                result = subprocess.run(
+                    cmd, shell=True, capture_output=True, text=True, check=False
+                )  # nosec B602 B608 # controlled pre-commit command execution
                 if result.returncode == 0:
                     data = json.loads(result.stdout)
                     results.update(data)
@@ -208,7 +220,7 @@ print(json.dumps({{
                         data = json.loads(row[0])
                         results["total_stored_scores"] += len(data.get("scores", []))
                         results["total_stored_responses"] += len(data.get("prompt_request_responses", []))
-                    except:
+                    except Exception:
                         pass
 
                 # Get recent executions
@@ -263,7 +275,7 @@ print(json.dumps({{
             )
 
         # Check score type distribution
-        all_pyrit_types = {}
+        all_pyrit_types: Dict[str, int] = {}
         for result in pyrit_results:
             for scorer_type, count in result.get("score_types", {}).items():
                 all_pyrit_types[scorer_type] = all_pyrit_types.get(scorer_type, 0) + count
@@ -274,7 +286,8 @@ print(json.dumps({{
 
     def check_interpretation_consistency(self, sqlite_results: Dict) -> Dict[str, Any]:
         """Check for interpretation and aggregation inconsistencies."""
-        issues = {
+        # pylint: disable=undefined-variable
+        issues: Dict[str, Any] = {
             "boolean_interpretations": [],
             "scale_inconsistencies": [],
             "aggregation_errors": [],
@@ -284,8 +297,10 @@ print(json.dumps({{
         try:
             if self.docker:
                 # Check boolean interpretations via docker
-                import subprocess
+                import subprocess  # nosec B404 # needed for controlled docker command execution
 
+                # pylint: disable-next=undefined-variable
+                # mypy: disable-error-code="name-defined"
                 cmd = f"""docker exec violentutf_api python3 -c "
 import sqlite3
 import json
@@ -297,33 +312,34 @@ for row in cursor.fetchall():
     data = json.loads(row[0])
     for score in data.get('scores', []):
         if 'TrueFalse' in score.get('scorer_class_name', ''):
-            val = score.get('score_value')
-            boolean_values.add(f'{val} ({type(val).__name__})')
+            score_val = score.get('score_value')
+            boolean_values.add(str(score_val) + ' (' + type(score_val).__name__ + ')')
 print('Boolean value types found:', list(boolean_values))
 "
-"""
-                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+"""  # nosec B608 # controlled parameterized query in docker exec
+                result = subprocess.run(
+                    cmd, shell=True, capture_output=True, text=True, check=False
+                )  # nosec B602 B608 # controlled pre-commit command execution
                 if result.returncode == 0 and result.stdout:
                     console.print(f"[yellow]Boolean interpretations: {result.stdout.strip()}[/yellow]")
 
         except Exception as e:
-            issues["error"] = str(e)
+            issues["error"] = [str(e)]
 
         return issues
 
-    def generate_report(self):
+    def generate_report(self) -> None:
         """Generate a comprehensive inconsistency report."""
         console.print(Panel.fit("🔍 ViolentUTF Scorer Inconsistency Report", style="bold blue"))
 
         # Step 1: Inspect PyRIT databases
         console.print("\n[bold]1. Inspecting PyRIT Memory Databases[/bold]")
         pyrit_dbs = self.find_pyrit_databases()
+        pyrit_results: List[Dict[str, Any]] = []
 
         if not pyrit_dbs:
             console.print("[yellow]No PyRIT memory databases found[/yellow]")
-            pyrit_results = []
         else:
-            pyrit_results = []
             for db in pyrit_dbs:
                 console.print(f"  Checking: {db.name}")
                 result = self.inspect_pyrit_memory(db)
@@ -403,8 +419,8 @@ print('Boolean value types found:', list(boolean_values))
         console.print("  • Review transformation logic if discrepancies found")
 
 
-def main():
-    """Main entry point for the inconsistency inspector."""
+def main() -> None:
+    """Run scorer inconsistency inspection."""
     parser = argparse.ArgumentParser(description="Inspect scorer result inconsistencies in ViolentUTF")
 
     parser.add_argument("--docker", action="store_true", help="Run inspection against Docker containers")
@@ -427,7 +443,7 @@ def main():
 
     # Export if requested
     if args.export:
-        console.print(f"\n[yellow]Export functionality not yet implemented[/yellow]")
+        console.print("\n[yellow]Export functionality not yet implemented[/yellow]")
 
 
 if __name__ == "__main__":
