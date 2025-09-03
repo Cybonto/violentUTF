@@ -262,10 +262,14 @@ class DatasetImportConfig:
 def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
     """Validate dataset-specific configuration."""
     if not isinstance(config, dict):
-
         raise ValueError("Configuration must be a dictionary")
 
-    # Define required/optional parameters for each dataset type
+    # Check if this is a ViolentUTF dataset
+    if _is_violentutf_dataset(dataset_type):
+        _validate_violentutf_dataset_config(dataset_type, config)
+        return
+
+    # Define required/optional parameters for each PyRIT dataset type
     dataset_requirements: Dict[str, Dict[str, List[str]]] = {
         "harmbench": {"optional": ["source", "source_type", "cache", "data_home"]},
         "many_shot_jailbreaking": {"optional": []},
@@ -340,6 +344,78 @@ def validate_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
                 raise ValueError(f"Parameter '{param}' must be a list")
 
     logger.debug("Configuration validation passed for %s", dataset_type)
+
+
+def _is_violentutf_dataset(dataset_type: str) -> bool:
+    """Check if dataset is a ViolentUTF native dataset."""
+    violentutf_datasets = [
+        "ollegen1_cognitive",
+        "garak_redteaming",
+        "legalbench_reasoning",
+        "docmath_evaluation",
+        "confaide_privacy",
+        "graphwalk_reasoning",
+        "judgebench_evaluation",
+        "acpbench_reasoning",
+    ]
+    return dataset_type in violentutf_datasets
+
+
+def _validate_violentutf_dataset_config(dataset_type: str, config: Dict[str, Any]) -> None:
+    """Validate ViolentUTF dataset-specific configuration."""
+    # Define configuration requirements for ViolentUTF datasets
+    violentutf_requirements: Dict[str, Dict[str, List[str]]] = {
+        "ollegen1_cognitive": {"optional": ["question_types", "scenario_limit"]},
+        "garak_redteaming": {"optional": ["attack_types", "severity_levels"]},
+        "legalbench_reasoning": {"optional": ["task_types", "complexity_levels"]},
+        "docmath_evaluation": {"optional": ["difficulty_levels", "problem_count"]},
+        "confaide_privacy": {"optional": ["privacy_types", "test_scenarios"]},
+        "graphwalk_reasoning": {"optional": ["complexity_levels", "graph_count"]},
+        "judgebench_evaluation": {"optional": ["evaluation_types", "judge_models"]},
+        "acpbench_reasoning": {"optional": ["planning_domains", "problem_count"]},
+    }
+
+    if dataset_type not in violentutf_requirements:
+        logger.warning("ViolentUTF dataset type '%s' has no specific validation rules", dataset_type)
+        return
+
+    requirements = violentutf_requirements[dataset_type]
+
+    # Check for unknown parameters
+    allowed_params = set(requirements.get("required", []) + requirements.get("optional", []))
+    unknown_params = set(config.keys()) - allowed_params
+
+    if unknown_params:
+        logger.warning("Unknown parameters for ViolentUTF dataset %s: %s", dataset_type, unknown_params)
+
+    # Validate parameter types and values for ViolentUTF datasets
+    for param, value in config.items():
+        if param in [
+            "question_types",
+            "attack_types",
+            "severity_levels",
+            "task_types",
+            "complexity_levels",
+            "difficulty_levels",
+            "privacy_types",
+            "test_scenarios",
+            "evaluation_types",
+            "judge_models",
+            "planning_domains",
+        ]:
+            if not isinstance(value, list):
+                raise ValueError(f"Parameter '{param}' must be a list for ViolentUTF dataset {dataset_type}")
+            # Validate list elements are strings
+            for item in value:
+                if not isinstance(item, str):
+                    raise ValueError(f"All items in '{param}' must be strings for {dataset_type}")
+        elif param in ["scenario_limit", "problem_count", "graph_count"]:
+            if not isinstance(value, (int, str)):
+                raise ValueError(f"Parameter '{param}' must be an integer or 'all' for {dataset_type}")
+            if isinstance(value, str) and value != "all":
+                raise ValueError(f"String parameter '{param}' must be 'all' for {dataset_type}")
+
+    logger.debug("ViolentUTF configuration validation passed for %s", dataset_type)
 
 
 # Environment configuration helper
