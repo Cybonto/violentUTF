@@ -58,7 +58,8 @@ docker-compose up --build
 ### **Step 3: Monitor Build Progress**
 The build should now complete successfully through all stages:
 - ✅ Corporate certificate installation
-- ✅ Rust toolchain installation with SSL bypass
+- ✅ Rust toolchain installation with SSL bypass (now with proper PATH configuration)
+- ✅ Rust verification commands (rustc --version && cargo --version)
 - ✅ Python package installation with trusted hosts
 - ✅ PyRIT verification with SSL bypass
 - ✅ Application startup

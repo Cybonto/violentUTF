@@ -52,6 +52,7 @@ ENV RUSTUP_INIT_SKIP_PATH_CHECK=yes
 
 # Corporate environment: Skip Rust installer entirely and download toolchain directly
 # This bypasses all SSL certificate issues with rustup's internal downloads
+# hadolint ignore=DL3003
 RUN set -e && \
     # Detect architecture
     ARCH=$(uname -m) && \
@@ -71,21 +72,25 @@ RUN set -e && \
     curl --insecure -sSfL "$RUST_URL" -o /tmp/rust.tar.gz && \
     \
     # Extract and install Rust
-    WORKDIR /tmp && \
+    cd /tmp && \
     tar -xzf rust.tar.gz && \
-    WORKDIR "rust-\${RUST_VERSION}-\${RUST_ARCH}" && \
+    cd "rust-${RUST_VERSION}-${RUST_ARCH}" && \
     ./install.sh --prefix=/usr/local && \
     \
-    # Cleanup
-    WORKDIR / && \
-    rm -rf /tmp/rust* && \
+    # Test installation in same RUN context
+    export PATH="/usr/local/bin:$PATH" && \
+    /usr/local/bin/rustc --version && \
+    /usr/local/bin/cargo --version && \
     \
-    # Set up environment
-    echo "export PATH=\"/usr/local/bin:\$PATH\"" >> /etc/profile && \
-    chmod -R a+w /usr/local/lib/rustlib || true
+    # Cleanup
+    cd / && \
+    rm -rf /tmp/rust*
 
-# Verify Rust installation
-RUN rustc --version && cargo --version
+# Set PATH for subsequent Docker layers
+ENV PATH="/usr/local/bin:$PATH"
+
+# Verify Rust installation is accessible in new layer
+RUN which rustc && which cargo && rustc --version && cargo --version
 
 # Copy and install requirements
 # Copy and install requirements with corporate SSL bypass
@@ -111,6 +116,9 @@ ENV HF_DATASETS_OFFLINE=0
 ENV TORCH_HOME=/tmp/torch_cache
 ENV TRANSFORMERS_CACHE=/tmp/transformers_cache
 ENV HF_HOME=/tmp/hf_cache
+
+# Ensure Rust binaries are in PATH for runtime stage
+ENV PATH="/usr/local/bin:$PATH"
 
 # Set shell for pipefail support
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -150,6 +158,7 @@ ENV RUSTUP_INIT_SKIP_PATH_CHECK=yes
 
 # Corporate environment: Skip Rust installer entirely and download toolchain directly (runtime)
 # This bypasses all SSL certificate issues with rustup's internal downloads
+# hadolint ignore=DL3003
 RUN set -e && \
     # Detect architecture
     ARCH=$(uname -m) && \
@@ -169,18 +178,19 @@ RUN set -e && \
     curl --insecure -sSfL "$RUST_URL" -o /tmp/rust.tar.gz && \
     \
     # Extract and install Rust
-    WORKDIR /tmp && \
+    cd /tmp && \
     tar -xzf rust.tar.gz && \
-    WORKDIR "rust-\${RUST_VERSION}-\${RUST_ARCH}" && \
+    cd "rust-${RUST_VERSION}-${RUST_ARCH}" && \
     ./install.sh --prefix=/usr/local && \
     \
-    # Cleanup
-    WORKDIR / && \
-    rm -rf /tmp/rust* && \
+    # Test installation in same RUN context
+    export PATH="/usr/local/bin:$PATH" && \
+    /usr/local/bin/rustc --version && \
+    /usr/local/bin/cargo --version && \
     \
-    # Set up environment
-    echo "export PATH=\"/usr/local/bin:\$PATH\"" >> /etc/profile && \
-    chmod -R a+w /usr/local/lib/rustlib || true
+    # Cleanup
+    cd / && \
+    rm -rf /tmp/rust*
 
 # Copy wheels and install
 COPY --from=builder /build/wheels /wheels
