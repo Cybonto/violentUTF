@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -11,9 +17,8 @@ It follows the same patterns as the Dashboard page for consistency.
 import json
 import os
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, cast
 
-import pandas as pd
 import requests
 import streamlit as st
 from dotenv import load_dotenv
@@ -27,7 +32,7 @@ from utils.logging import get_logger
 try:
     import pytz
 except ImportError:
-    pytz = None
+    pytz = cast(Any, None)
 
 load_dotenv()
 logger = get_logger(__name__)
@@ -85,7 +90,7 @@ def get_auth_headers() -> Dict[str, str]:
         return {}
 
 
-def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
+def api_request(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, Any]]:  # noqa: ANN401
     """Make an authenticated API request through APISIX Gateway"""
     headers = get_auth_headers()
     if not headers.get("Authorization"):
@@ -98,26 +103,26 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
         logger.debug(f"Headers: {headers}")
         logger.debug(f"Params: {kwargs.get('params', {})}")
 
-        response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+        api_response = requests.request(method, url, headers=headers, timeout=30, **cast(Any, kwargs))
 
-        logger.debug(f"Response status: {response.status_code}")
-        logger.debug(f"Response headers: {dict(response.headers)}")
+        logger.debug(f"Response status: {api_response.status_code}")
+        logger.debug(f"Response headers: {dict(api_response.headers)}")
 
-        if response.status_code in [200, 201]:
-            return response.json()
+        if api_response.status_code in [200, 201]:
+            return api_response.json()
         else:
-            logger.error(f"API Error {response.status_code}: {url} - {response.text}")
+            logger.error(f"API Error {api_response.status_code}: {url} - {api_response.text}")
 
             # User-friendly error messages
-            if response.status_code == 401:
+            if api_response.status_code == 401:
                 st.error("🔐 Authentication expired. Please refresh the page.")
-            elif response.status_code == 403:
+            elif api_response.status_code == 403:
                 st.error("🚫 Access denied to this resource.")
-            elif response.status_code == 404:
+            elif api_response.status_code == 404:
                 st.error(f"❌ Resource not found: {url}")
                 st.info("Debug: Check if the API service is running and routes are configured.")
             else:
-                st.error(f"❌ API Error: {response.status_code}")
+                st.error(f"❌ API Error: {api_response.status_code}")
 
             return None
     except requests.exceptions.RequestException as e:
@@ -128,13 +133,13 @@ def api_request(method: str, url: str, **kwargs) -> Optional[Dict[str, Any]]:
 
 # --- Helper function to ensure templates exist ---
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def ensure_templates_initialized():
+def ensure_templates_initialized() -> bool:
     """Ensure default templates are initialized"""
     try:
         # Try to initialize templates
-        init_response = api_request("POST", API_ENDPOINTS["report_templates_init"])
-        if init_response:
-            logger.info(f"Template initialization: {init_response.get('message', 'Unknown')}")
+        template_init_response = api_request("POST", API_ENDPOINTS["report_templates_init"])
+        if template_init_response:
+            logger.info(f"Template initialization: {template_init_response.get('message', 'Unknown')}")
         return True
     except Exception as e:
         logger.warning(f"Template initialization check failed: {e}")
@@ -281,9 +286,13 @@ with tabs[0]:
     if search_clicked or "scan_data" not in st.session_state:
         with st.spinner("Searching for scan data..."):
             # Build request with basic filters
-            request_data = {
-                "start_date": date_range[0].isoformat() if isinstance(date_range, tuple) else None,
-                "end_date": date_range[1].isoformat() if isinstance(date_range, tuple) else None,
+            request_data: Dict[str, Any] = {
+                "start_date": (
+                    date_range[0].isoformat() if isinstance(date_range, tuple) and len(date_range) > 0 else None
+                ),
+                "end_date": (
+                    date_range[1].isoformat() if isinstance(date_range, tuple) and len(date_range) > 1 else None
+                ),
                 "include_test": include_test,
                 "sort_by": sort_by,
                 "sort_order": sort_order,
@@ -360,7 +369,7 @@ with tabs[0]:
                         with col2:
                             st.text(f"📅 {scan['started_at'][:10]}")
                             duration = scan.get("duration_seconds", 0)
-                            st.text(f"⏱️ Duration: {duration//60}m {duration%60}s")
+                            st.text(f"⏱️ Duration: {duration//60}m {duration % 60}s")
                         with col3:
                             st.text(f"🧪 Tests: {scan['total_tests']}")
                             categories = ", ".join(scan.get("score_categories", [])[:3])
@@ -575,9 +584,11 @@ with tabs[1]:
 
             # Display results count
             if templates:
-                st.info(
-                    f"Found {len(templates)} templates{f' (showing {len(templates)} of {total_count})' if total_count > len(templates) else ''}"
-                )
+                # Display template count with optional pagination info
+                count_msg = f"Found {len(templates)} templates"
+                if total_count > len(templates):
+                    count_msg += f" (showing {len(templates)} of {total_count})"
+                st.info(count_msg)
 
             if templates:
                 # Get view mode
@@ -600,23 +611,23 @@ with tabs[1]:
                                     with st.container():
                                         # Card styling with custom CSS
                                         st.markdown(
-                                            f"""
+                                            """
                                             <style>
-                                            .template-card {{
+                                            .template-card {
                                                 border: 1px solid #ddd;
                                                 border-radius: 8px;
                                                 padding: 16px;
                                                 margin-bottom: 16px;
                                                 transition: all 0.3s ease;
-                                            }}
-                                            .template-card:hover {{
+                                            }
+                                            .template-card:hover {
                                                 border-color: #1f77b4;
                                                 box-shadow: 0 2px 8px rgba(31, 119, 180, 0.2);
-                                            }}
-                                            .template-selected {{
+                                            }
+                                            .template-selected {
                                                 border-color: #1f77b4;
                                                 background-color: rgba(31, 119, 180, 0.05);
-                                            }}
+                                            }
                                             </style>
                                             """,
                                             unsafe_allow_html=True,
@@ -667,7 +678,7 @@ with tabs[1]:
                                                     else:
                                                         updated_date = updated
                                                     st.text(f"📅 {updated_date.strftime('%Y-%m-%d')}")
-                                                except:
+                                                except Exception:
                                                     st.text("📅 Recently updated")
 
                                             # Tags from metadata
@@ -1100,7 +1111,8 @@ with tabs[2]:
                                                         max_val = prop_schema.get("maximum", 100)
                                                         default_val = prop_schema.get("default", min_val)
 
-                                                        # Determine if we should use int or float based on schema and values
+                                                        # Determine if we should use int or float
+                                                        # based on schema and values
                                                         # If any value has a decimal part, use float for all
                                                         values_to_check = [
                                                             min_val,
@@ -1177,12 +1189,16 @@ with tabs[2]:
                                                                     prop_name.replace("_", " ").title(),
                                                                     options=generator_names,
                                                                     index=generator_names.index(current_value),
-                                                                    help=f"{prop_desc} (Available generators from your configuration)",
+                                                                    help=(
+                                                                        f"{prop_desc} "
+                                                                        "(Available generators from your configuration)"
+                                                                    ),
                                                                     key=f"block_{idx}_{prop_name}",
                                                                 )
                                                             else:
                                                                 st.warning(
-                                                                    "No generators configured. Please configure generators first."
+                                                                    "No generators configured. "
+                                                                    "Please configure generators first."
                                                                 )
                                                                 block_config[prop_name] = st.text_input(
                                                                     prop_name.replace("_", " ").title(),

@@ -1,8 +1,14 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Database utility functions for consistent database path management
+"""Database utility functions for consistent database path management
+
 Fixes the database switching issue by ensuring all services use the same user-specific paths
 """
 
@@ -52,7 +58,7 @@ def get_user_memory_path(user_id: str, salt: Optional[str] = None) -> str:
     db_filename = f"pyrit_memory_{user_hash}.db"
     db_path = os.path.join(memory_dir, db_filename)
 
-    logger.debug(f"Generated database path for user '{user_id}': {db_path}")
+    logger.debug("Generated database path for user '%s': %s", user_id, db_path)
     return db_path
 
 
@@ -103,7 +109,7 @@ def list_user_database_files(memory_dir: Optional[str] = None) -> list:
                 files.append(os.path.join(memory_dir, filename))
         return files
     except OSError as e:
-        logger.error(f"Error listing database files in {memory_dir}: {e}")
+        logger.error("Error listing database files in %s: %s", memory_dir, e)
         return []
 
 
@@ -131,10 +137,10 @@ def cleanup_orphaned_orchestrator_databases(memory_dir: Optional[str] = None) ->
                 try:
                     os.remove(file_path)
                     cleaned_count += 1
-                    logger.info(f"Cleaned up orphaned orchestrator database: {filename}")
+                    logger.info("Cleaned up orphaned orchestrator database: %s", filename)
                 except OSError as e:
-                    logger.error(f"Failed to remove {filename}: {e}")
+                    logger.error("Failed to remove %s: %s", filename, e)
     except OSError as e:
-        logger.error(f"Error accessing memory directory {memory_dir}: {e}")
+        logger.error("Error accessing memory directory %s: %s", memory_dir, e)
 
     return cleaned_count

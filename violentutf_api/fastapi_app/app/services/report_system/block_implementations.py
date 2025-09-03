@@ -1,11 +1,14 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Concrete block implementations for the report system
-"""
+"""Concrete block implementations for the report system"""
 
-import json
 import logging
 import os
 import statistics
@@ -13,9 +16,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import pandas as pd
-
-from .block_base import BaseReportBlock, BlockDefinition, BlockRenderError, BlockValidationError
+from .block_base import BaseReportBlock, BlockDefinition, ReportBlockRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ class ExecutiveSummaryBlock(BaseReportBlock):
         )
 
     def _custom_validation(self) -> List[str]:
-        """Custom validation logic"""
+        """Validate block configuration."""
         errors = []
 
         components = self.configuration.get("components", [])
@@ -224,7 +225,8 @@ class ExecutiveSummaryBlock(BaseReportBlock):
             for comp_key, comp_data in processed_data["components"].items():
                 if comp_key == "risk_score":
                     md_parts.append(
-                        f"**Overall Risk Score:** {self._format_number(comp_data['value'], 1)}/10 ({comp_data['severity']})  "
+                        f"**Overall Risk Score:** {self._format_number(comp_data['value'], 1)}/10 "
+                        f"({comp_data['severity']})  "
                     )
                     md_parts.append(f"*Trend: {comp_data['trend']}*\n")
 
@@ -339,7 +341,6 @@ class AIAnalysisBlock(BaseReportBlock):
     def process_data(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process data for AI analysis - Updated to fetch real data from API"""
         import asyncio
-        import os
 
         # Initialize context with basic data
         context = {
@@ -378,7 +379,7 @@ class AIAnalysisBlock(BaseReportBlock):
                         }
                     )
             except Exception as e:
-                logger.warning(f"Failed to fetch execution details: {e}")
+                logger.warning("Failed to fetch execution details: %s", e)
 
         # Extract relevant data based on analysis focus
         focus_areas = self.configuration.get("analysis_focus", [])
@@ -400,7 +401,7 @@ class AIAnalysisBlock(BaseReportBlock):
 
         try:
             # Import the generator service and helper
-            from app.services.generator_integration_service import execute_generator_prompt, get_generator_by_name
+            from app.services.generator_integration_service import execute_generator_prompt
 
             # Map AI model to a configured generator name
             generator_name = self._get_generator_name_for_model(ai_model)
@@ -418,15 +419,15 @@ class AIAnalysisBlock(BaseReportBlock):
                     analysis_results = self._parse_ai_response(ai_response, focus_areas)
                 else:
                     # Fall back to placeholder if generation failed
-                    logger.warning(f"AI generation failed: {result.get('error', 'Unknown error')}")
+                    logger.warning("AI generation failed: %s", result.get("error", "Unknown error"))
                     analysis_results = self._generate_placeholder_analysis(context, focus_areas)
             else:
                 # No configured generator for this model
-                logger.info(f"No generator configured for model {ai_model}, using placeholder analysis")
+                logger.info("No generator configured for model %s, using placeholder analysis", ai_model)
                 analysis_results = self._generate_placeholder_analysis(context, focus_areas)
 
         except Exception as e:
-            logger.error(f"Error executing AI analysis: {e}")
+            logger.error("Error executing AI analysis: %s", e)
             # Fall back to placeholder analysis
             analysis_results = self._generate_placeholder_analysis(context, focus_areas)
 
@@ -638,7 +639,8 @@ class AIAnalysisBlock(BaseReportBlock):
 The scan identified {len(context.get('vulnerabilities', []))} distinct vulnerability types in the target model.
 
 **Key Findings:**
-- The model shows susceptibility to prompt injection attacks with a {context['summary_stats']['failure_rate']}% failure rate
+- The model shows susceptibility to prompt injection attacks with a \\
+{context['summary_stats']['failure_rate']}% failure rate
 - Critical vulnerabilities were found in input validation and output filtering
 - The overall risk score of {context['summary_stats']['risk_score']}/10 indicates significant security concerns
 
@@ -678,7 +680,8 @@ Analysis of {context['summary_stats']['total_tests']} tests reveals distinct att
 - Role confusion attacks: 31% success rate
 
 **Emerging Patterns:**
-Recent tests show attackers increasingly combining multiple techniques, particularly pairing prompt injection with context manipulation for higher success rates.
+Recent tests show attackers increasingly combining multiple techniques, particularly \\
+pairing prompt injection with context manipulation for higher success rates.
 """,
             }
 
@@ -705,11 +708,11 @@ Recent tests show attackers increasingly combining multiple techniques, particul
             if response.status_code == 200:
                 return response.json()
             else:
-                logger.warning(f"Failed to fetch execution details: {response.status_code}")
+                logger.warning("Failed to fetch execution details: %s", response.status_code)
                 return None
 
         except Exception as e:
-            logger.error(f"Error fetching execution details: {e}")
+            logger.error("Error fetching execution details: %s", e)
             return None
 
     def _process_execution_scores(self, execution_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -967,6 +970,11 @@ class SecurityMetricsBlock(BaseReportBlock):
             html_parts.append('<div class="metric-cards-container">')
             for card in viz_data["metric_cards"]:
                 color = self._get_metric_color(card["value"], card.get("threshold", {}))
+                benchmark_div = (
+                    f'<div class="metric-benchmark">Benchmark: {card["benchmark"]}</div>'
+                    if card.get("benchmark")
+                    else ""
+                )
                 html_parts.append(
                     f"""
                 <div class="metric-card">
@@ -975,7 +983,7 @@ class SecurityMetricsBlock(BaseReportBlock):
                         {card['formatted_value']}
                     </div>
                     <div class="metric-description">{card.get('description', '')}</div>
-                    {f'<div class="metric-benchmark">Benchmark: {card["benchmark"]}</div>' if card.get('benchmark') else ''}
+                    {benchmark_div}
                 </div>
                 """
                 )
@@ -1611,7 +1619,7 @@ class ToxicityHeatmapBlock(BaseReportBlock):
             (0.8, 1.0, "Severe", "#f44336"),
         ]
 
-        for min_val, max_val, label, color in levels:
+        for _, _, label, color in levels:
             html += f'<span class="legend-item" style="background-color: {color};">{label}</span>'
 
         if thresholds:
@@ -1653,7 +1661,7 @@ class CustomContentBlock(BaseReportBlock):
         )
 
     def _custom_validation(self) -> List[str]:
-        """Custom validation"""
+        """Validate block configuration."""
         errors = []
 
         content = self.configuration.get("content", "")
@@ -1751,7 +1759,7 @@ class CustomContentBlock(BaseReportBlock):
 
 
 # Register all block types
-def register_all_blocks(registry):
+def register_all_blocks(registry: ReportBlockRegistry) -> None:
     """Register all available block types"""
     registry.register(ExecutiveSummaryBlock)
     registry.register(AIAnalysisBlock)

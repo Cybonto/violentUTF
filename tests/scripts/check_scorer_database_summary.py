@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
-<<<<<<<< HEAD:tests/scripts/check_scorer_database_summary.py
-# # Copyright (c) 2024 ViolentUTF Project
-# # Licensed under MIT License
-========
 # Copyright (c) 2025 ViolentUTF Contributors.
 # Licensed under the MIT License.
 #
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
->>>>>>>> dev_nightly:tests/check_scorer_database_util.py
 
 """
 Summary script to check scorer executions in the database.

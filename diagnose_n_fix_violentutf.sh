@@ -27,7 +27,7 @@ GSAI_AUTH_FORMAT_ISSUE=false
 print_color() {
     local color=$1
     shift
-    echo -e "${color}$@${NC}"
+    echo -e "${color}$*${NC}"
 }
 
 # Function to print section headers

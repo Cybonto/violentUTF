@@ -36,17 +36,17 @@ def health_check():
         'issues': [],
         'warnings': []
     }
-    
+
     # 1. Check logging configuration
     config = dataset_logger.config
     if not config.enable_file_logging:
         results['warnings'].append("File logging is disabled")
-    
+
     # 2. Check log directory
     if not config.log_dir.exists():
         results['issues'].append(f"Log directory missing: {config.log_dir}")
         results['status'] = 'ERROR'
-    
+
     # 3. Check log file permissions
     try:
         test_file = config.log_dir / "test_write.tmp"
@@ -55,7 +55,7 @@ def health_check():
     except Exception as e:
         results['issues'].append(f"Cannot write to log directory: {e}")
         results['status'] = 'ERROR'
-    
+
     # 4. Check recent log activity
     try:
         analyzer = get_log_analyzer()
@@ -67,13 +67,13 @@ def health_check():
     except Exception as e:
         results['issues'].append(f"Cannot read logs: {e}")
         results['status'] = 'ERROR'
-    
+
     # 5. Check system resources
     try:
         import psutil
         memory_percent = psutil.virtual_memory().percent
         disk_percent = psutil.disk_usage(str(config.log_dir)).percent
-        
+
         if memory_percent > 90:
             results['warnings'].append(f"High memory usage: {memory_percent}%")
         if disk_percent > 90:
@@ -82,17 +82,17 @@ def health_check():
         results['warnings'].append("psutil not available for system monitoring")
     except Exception as e:
         results['warnings'].append(f"Cannot check system resources: {e}")
-    
+
     # 6. Test logging functionality
     try:
         dataset_logger.info("Health check test message")
     except Exception as e:
         results['issues'].append(f"Cannot write log messages: {e}")
         results['status'] = 'ERROR'
-    
+
     if results['warnings'] and results['status'] == 'HEALTHY':
         results['status'] = 'WARNING'
-    
+
     return results
 
 if __name__ == "__main__":
@@ -545,14 +545,14 @@ def check_env_vars():
         'DATASET_ASYNC_LOGGING': bool,
         'DATASET_PERFORMANCE_SAMPLING_RATE': float,
     }
-    
+
     print("Environment Variable Check:")
     print("-" * 40)
-    
+
     for var_name, var_type in expected_vars.items():
         value = os.getenv(var_name)
         print(f"{var_name}: {value}")
-        
+
         if value is not None:
             try:
                 if var_type == bool:
@@ -568,7 +568,7 @@ def check_env_vars():
                 print(f"  ✗ Conversion error: {e}")
         else:
             print(f"  - Not set (will use default)")
-    
+
     print("\nTesting LogConfig creation:")
     try:
         config = LogConfig.from_environment()
@@ -682,7 +682,7 @@ def check_json_validity(log_file):
     """Check JSON validity of log entries"""
     valid_lines = 0
     invalid_lines = 0
-    
+
     with open(log_file, 'r') as f:
         for line_num, line in enumerate(f, 1):
             line = line.strip()
@@ -696,7 +696,7 @@ def check_json_validity(log_file):
                 if invalid_lines <= 5:  # Show first 5 errors
                     print(f"Line {line_num}: {e}")
                     print(f"Content: {line[:100]}...")
-    
+
     print(f"Valid JSON lines: {valid_lines}")
     print(f"Invalid JSON lines: {invalid_lines}")
 
@@ -727,7 +727,7 @@ def clean_log_file(log_file):
     """Remove invalid JSON lines from log file"""
     backup_file = log_file.with_suffix('.log.backup')
     shutil.copy2(log_file, backup_file)
-    
+
     valid_lines = []
     with open(log_file, 'r') as f:
         for line in f:
@@ -739,11 +739,11 @@ def clean_log_file(log_file):
                 valid_lines.append(line)
             except json.JSONDecodeError:
                 continue  # Skip invalid lines
-    
+
     with open(log_file, 'w') as f:
         for line in valid_lines:
             f.write(line + '\n')
-    
+
     print(f"Cleaned {log_file.name}: kept {len(valid_lines)} valid lines")
 
 # Clean all log files
@@ -864,12 +864,12 @@ def debug_logging_system():
         'functionality': {},
         'errors': []
     }
-    
+
     # 1. Environment variables
     env_vars = [k for k in os.environ.keys() if k.startswith('DATASET_')]
     for var in env_vars:
         debug_info['environment_variables'][var] = os.environ[var]
-    
+
     # 2. Configuration testing
     try:
         from app.core.dataset_logging import LogConfig, DatasetLogger
@@ -887,7 +887,7 @@ def debug_logging_system():
     except Exception as e:
         debug_info['errors'].append(f"Configuration error: {e}")
         debug_info['errors'].append(traceback.format_exc())
-    
+
     # 3. File system checks
     try:
         log_dir = Path(debug_info['configuration'].get('log_dir', 'logs/datasets'))
@@ -899,29 +899,29 @@ def debug_logging_system():
         }
     except Exception as e:
         debug_info['errors'].append(f"File system error: {e}")
-    
+
     # 4. Functionality testing
     try:
         logger = DatasetLogger("debug_test")
-        
+
         # Test basic logging
         logger.info("Debug test message")
-        
+
         # Test structured logging
         logger.info("Structured test", test_field="test_value", test_number=123)
-        
+
         # Test operation context
         with logger.operation_context("debug_operation", dataset_id="debug_dataset"):
             logger.info("Context test message")
-        
+
         debug_info['functionality']['basic_logging'] = True
         debug_info['functionality']['structured_logging'] = True
         debug_info['functionality']['operation_context'] = True
-        
+
     except Exception as e:
         debug_info['errors'].append(f"Functionality error: {e}")
         debug_info['errors'].append(traceback.format_exc())
-    
+
     # 5. Log analysis testing
     try:
         from app.core.dataset_logging import get_log_analyzer
@@ -933,14 +933,14 @@ def debug_logging_system():
         debug_info['functionality']['recent_logs_count'] = len(recent_logs)
     except Exception as e:
         debug_info['errors'].append(f"Log analysis error: {e}")
-    
+
     return debug_info
 
 if __name__ == "__main__":
     print("=== DATASET LOGGING DEBUG REPORT ===")
     debug_result = debug_logging_system()
     print(json.dumps(debug_result, indent=2, default=str))
-    
+
     if debug_result['errors']:
         print(f"\n⚠️  {len(debug_result['errors'])} errors found!")
         sys.exit(1)
@@ -974,36 +974,36 @@ def validate_log_files(log_dir):
         'issues': [],
         'statistics': defaultdict(int)
     }
-    
+
     for log_file in log_dir.glob('*.log*'):
         results['total_files'] += 1
         file_valid = True
-        
+
         try:
             # Open file (handle gzipped files)
             if log_file.suffix == '.gz':
                 f = gzip.open(log_file, 'rt')
             else:
                 f = open(log_file, 'r')
-            
+
             with f:
                 for line_num, line in enumerate(f, 1):
                     line = line.strip()
                     if not line:
                         continue
-                    
+
                     results['total_entries'] += 1
-                    
+
                     try:
                         entry = json.loads(line)
                         results['valid_entries'] += 1
-                        
+
                         # Collect statistics
                         if 'level' in entry:
                             results['statistics'][f"level_{entry['level']}"] += 1
                         if 'operation' in entry:
                             results['statistics'][f"operation_{entry['operation']}"] += 1
-                        
+
                         # Validate required fields
                         required_fields = ['timestamp', 'level', 'message']
                         missing_fields = [f for f in required_fields if f not in entry]
@@ -1011,7 +1011,7 @@ def validate_log_files(log_dir):
                             results['issues'].append(
                                 f"{log_file.name}:{line_num} - Missing fields: {missing_fields}"
                             )
-                        
+
                         # Validate timestamp format
                         if 'timestamp' in entry:
                             try:
@@ -1020,43 +1020,43 @@ def validate_log_files(log_dir):
                                 results['issues'].append(
                                     f"{log_file.name}:{line_num} - Invalid timestamp: {entry['timestamp']}"
                                 )
-                        
+
                     except json.JSONDecodeError as e:
                         results['invalid_entries'] += 1
                         file_valid = False
                         results['issues'].append(
                             f"{log_file.name}:{line_num} - JSON error: {e}"
                         )
-        
+
         except Exception as e:
             file_valid = False
             results['issues'].append(f"{log_file.name} - File error: {e}")
-        
+
         if file_valid:
             results['valid_files'] += 1
         else:
             results['invalid_files'] += 1
-    
+
     return results
 
 if __name__ == "__main__":
     import sys
     log_dir = sys.argv[1] if len(sys.argv) > 1 else "logs/datasets"
-    
+
     print(f"Validating log files in: {log_dir}")
     results = validate_log_files(log_dir)
-    
+
     print(f"\nValidation Results:")
     print(f"Files: {results['valid_files']}/{results['total_files']} valid")
     print(f"Entries: {results['valid_entries']}/{results['total_entries']} valid")
-    
+
     if results['issues']:
         print(f"\nIssues found ({len(results['issues'])}):")
         for issue in results['issues'][:10]:  # Show first 10
             print(f"  - {issue}")
         if len(results['issues']) > 10:
             print(f"  ... and {len(results['issues']) - 10} more")
-    
+
     print(f"\nStatistics:")
     for key, count in sorted(results['statistics'].items()):
         print(f"  {key}: {count}")

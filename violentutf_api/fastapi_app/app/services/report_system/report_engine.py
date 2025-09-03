@@ -1,9 +1,13 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Report generation engine for creating reports from templates
-"""
+"""Report generation engine for creating reports from templates"""
 
 import asyncio
 import json
@@ -12,12 +16,9 @@ import os
 import tempfile
 import uuid
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import aiofiles
-import markdown
-from app.db.database import get_session
 from app.models.cob_models import COBReport, COBTemplate
 from app.models.orchestrator import OrchestratorExecution
 
@@ -33,7 +34,7 @@ from app.schemas.report_system.report_schemas import (
 )
 from app.services.storage_service import StorageService
 from fastapi import HTTPException
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, select_autoescape
 from sqlalchemy.ext.asyncio import AsyncSession
 from weasyprint import CSS, HTML
 from weasyprint.text.fonts import FontConfiguration
@@ -51,7 +52,8 @@ register_all_blocks(block_registry)
 class ReportGenerationEngine:
     """Engine for generating reports from templates"""
 
-    def __init__(self, db: AsyncSession, storage_service: StorageService):
+    def __init__(self, db: AsyncSession, storage_service: StorageService) -> None:
+        """Initialize ReportEngine."""
         self.db = db
         self.storage = storage_service
         self.template_service = TemplateService(db)
@@ -63,7 +65,7 @@ class ReportGenerationEngine:
         self._active_generations = {}
 
     def _setup_jinja_env(self) -> Environment:
-        """Setup Jinja2 environment"""
+        """Set up Jinja2 environment"""
         # In production, templates would be in a proper directory
         env = Environment(autoescape=select_autoescape(["html", "xml"]))
 
@@ -133,7 +135,7 @@ class ReportGenerationEngine:
             )
 
         except Exception as e:
-            logger.error(f"Error initiating report generation: {str(e)}")
+            logger.error("Error initiating report generation: %s", str(e))
             raise
 
     async def generate_preview(self, request: PreviewRequest, user_id: str) -> PreviewResponse:
@@ -168,7 +170,7 @@ class ReportGenerationEngine:
                     rendered_blocks.append(content)
 
                 except Exception as e:
-                    logger.warning(f"Error rendering block {block_config.get('id')}: {str(e)}")
+                    logger.warning("Error rendering block %s: %s", block_config.get("id"), str(e))
                     warnings.append(f"Block '{block_config.get('id')}' rendering error: {str(e)}")
 
             # Combine rendered content
@@ -190,7 +192,7 @@ class ReportGenerationEngine:
             )
 
         except Exception as e:
-            logger.error(f"Error generating preview: {str(e)}")
+            logger.error("Error generating preview: %s", str(e))
             raise
 
     async def get_report_status(self, report_id: str) -> ReportStatus:
@@ -276,7 +278,7 @@ class ReportGenerationEngine:
             self._update_template_usage(template["id"])
 
         except Exception as e:
-            logger.error(f"Error processing report {report_id}: {str(e)}")
+            logger.error("Error processing report %s: %s", report_id, str(e))
             self._update_report_status(report_id, "failed", 0, f"Generation failed: {str(e)}")
             raise
         finally:
@@ -317,7 +319,7 @@ class ReportGenerationEngine:
         )
 
         # Store order for sorting
-        block._order = block_config.get("order", 999)
+        block.set_order(block_config.get("order", 999))
 
         return block
 
@@ -342,11 +344,11 @@ class ReportGenerationEngine:
             elif output_format == OutputFormat.HTML:
                 return await self._generate_html(report_id, blocks, data, template, temp_dir)
             else:
-                logger.warning(f"Unsupported format: {output_format}")
+                logger.warning("Unsupported format: %s", output_format)
                 return None
 
         except Exception as e:
-            logger.error(f"Error generating {output_format} for report {report_id}: {str(e)}")
+            logger.error("Error generating %s for report %s: %s", output_format, report_id, str(e))
             raise
 
     async def _generate_pdf(
@@ -419,7 +421,7 @@ class ReportGenerationEngine:
                 content = block.render("HTML", data)
                 html_parts.append(f'<div class="report-block">{content}</div>')
             except Exception as e:
-                logger.error(f"Error rendering block {block.block_id}: {str(e)}")
+                logger.error("Error rendering block %s: %s", block.block_id, str(e))
                 html_parts.append(
                     f"""
                 <div class="report-block error">
@@ -459,7 +461,7 @@ class ReportGenerationEngine:
                 md_parts.append(content)
                 md_parts.append("\n---\n")
             except Exception as e:
-                logger.error(f"Error rendering block {block.block_id}: {str(e)}")
+                logger.error("Error rendering block %s: %s", block.block_id, str(e))
                 md_parts.append(f"### Error: {block.title or block.block_id}\n")
                 md_parts.append("An error occurred while generating this section.\n")
 
@@ -495,7 +497,7 @@ class ReportGenerationEngine:
                 block_data = block.render("JSON", data)
                 report_data["blocks"].append(block_data)
             except Exception as e:
-                logger.error(f"Error rendering block {block.block_id}: {str(e)}")
+                logger.error("Error rendering block %s: %s", block.block_id, str(e))
                 report_data["blocks"].append({"block_id": block.block_id, "error": str(e)})
 
         output_path = os.path.join(temp_dir, f"{report_id}.json")
@@ -538,7 +540,7 @@ class ReportGenerationEngine:
                         # Cache for future use
                         self._cache_execution_data(execution, processed_data)
                 else:
-                    logger.warning(f"Scan data not found: {scan_id}")
+                    logger.warning("Scan data not found: %s", scan_id)
 
         return scan_data
 
@@ -652,7 +654,7 @@ class ReportGenerationEngine:
             template.metadata = metadata
             self.db.commit()
 
-    def _estimate_generation_time(self, template: Any, scan_data: List[Dict]) -> int:
+    def _estimate_generation_time(self, template: COBTemplate, scan_data: List[Dict]) -> int:
         """Estimate report generation time in seconds"""
         base_time = 10  # Base processing time
 
@@ -935,14 +937,14 @@ class ReportGenerationEngine:
         }
         """
 
-    async def start_processing_queue(self):
+    async def start_processing_queue(self) -> None:
         """Start processing the report generation queue"""
         while True:
             try:
                 task = await self._generation_queue.get()
                 asyncio.create_task(self._process_report_generation(task))
             except Exception as e:
-                logger.error(f"Error in queue processor: {str(e)}")
+                logger.error("Error in queue processor: %s", str(e))
                 await asyncio.sleep(5)  # Wait before retrying
 
     def _process_execution_results(self, execution: OrchestratorExecution) -> Optional[Dict[str, Any]]:
@@ -1023,7 +1025,7 @@ class ReportGenerationEngine:
             return processed_data
 
         except Exception as e:
-            logger.error(f"Error processing execution results: {str(e)}")
+            logger.error("Error processing execution results: %s", str(e))
             return None
 
     def _cache_execution_data(self, execution: OrchestratorExecution, processed_data: Dict[str, Any]) -> None:
@@ -1049,7 +1051,7 @@ class ReportGenerationEngine:
             self.db.commit()
 
         except Exception as e:
-            logger.error(f"Error caching execution data: {str(e)}")
+            logger.error("Error caching execution data: %s", str(e))
             self.db.rollback()
 
     def _determine_severity(self, score: Dict[str, Any]) -> str:

@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -6,23 +12,20 @@
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 from app.core.auth import get_current_user
 from app.db.database import get_session
+from app.models.auth import User
 from app.models.orchestrator import OrchestratorConfiguration, OrchestratorExecution
-from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
+from app.schemas.dashboard import DataBrowseRequest, DataBrowseResponse, ScanDataSummary
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-# Import schemas
-from app.schemas.dashboard import DataBrowseRequest, DataBrowseResponse, ScanDataSummary
 
 
 @router.get("/summary", summary="Get dashboard summary data")
@@ -30,8 +33,8 @@ async def get_dashboard_summary(
     days_back: int = Query(30, description="Number of days to look back"),
     include_test: bool = Query(True, description="Include test executions"),
     db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
-):
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
     """Get aggregated dashboard data efficiently in a single query"""
     try:
         # Calculate time range
@@ -104,12 +107,12 @@ async def get_dashboard_summary(
             "executions": executions,
         }
 
-        logger.info(f"Dashboard summary: {summary['total_executions']} executions, {summary['total_scores']} scores")
+        logger.info("Dashboard summary: %s executions, %s scores", summary["total_executions"], summary["total_scores"])
         return summary
 
     except Exception as e:
-        logger.error(f"Error generating dashboard summary: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate dashboard summary: {str(e)}")
+        logger.error("Error generating dashboard summary: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate dashboard summary: {str(e)}") from e
 
 
 @router.get("/scores", summary="Get paginated score results")
@@ -121,8 +124,8 @@ async def get_dashboard_scores(
     include_test: bool = Query(True, description="Include test executions"),
     include_responses: bool = Query(False, description="Include prompt/response data"),
     db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
-):
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
     """Get paginated score results for dashboard display"""
     try:
         # Calculate pagination
@@ -174,7 +177,7 @@ async def get_dashboard_scores(
                 if isinstance(score_metadata, str):
                     try:
                         score_metadata = json.loads(score_metadata)
-                    except:
+                    except Exception:
                         score_metadata = {}
 
                 # Create complete score data with all required fields
@@ -282,8 +285,8 @@ async def get_dashboard_scores(
         }
 
     except Exception as e:
-        logger.error(f"Error fetching dashboard scores: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch scores: {str(e)}")
+        logger.error("Error fetching dashboard scores: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch scores: {str(e)}") from e
 
 
 def analyze_response_insights(response_text: str) -> Dict[str, Any]:
@@ -351,8 +354,8 @@ def analyze_response_insights(response_text: str) -> Dict[str, Any]:
 async def browse_scan_data(
     request: DataBrowseRequest,
     db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
-):
+    current_user: User = Depends(get_current_user),
+) -> DataBrowseResponse:
     """Browse scan data with enhanced filtering for report generation"""
     try:
         # Build base query with LEFT JOIN to handle missing orchestrator configs
@@ -489,7 +492,7 @@ async def browse_scan_data(
                     if isinstance(score_metadata, str):
                         try:
                             score_metadata = json.loads(score_metadata)
-                        except:
+                        except Exception:
                             score_metadata = {}
                     generator_name = score_metadata.get("generator_name")
                     if generator_name:
@@ -529,7 +532,7 @@ async def browse_scan_data(
                 if isinstance(first_score_metadata, str):
                     try:
                         first_score_metadata = json.loads(first_score_metadata)
-                    except:
+                    except Exception:
                         first_score_metadata = {}
                 primary_generator = first_score_metadata.get("generator_name", "Unknown")
 
@@ -594,5 +597,5 @@ async def browse_scan_data(
         return response
 
     except Exception as e:
-        logger.error(f"Error browsing scan data: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to browse scan data: {str(e)}")
+        logger.error("Error browsing scan data: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to browse scan data: {str(e)}") from e

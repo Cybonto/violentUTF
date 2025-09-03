@@ -151,7 +151,6 @@ class PerformanceMonitor:
         """Start background system monitoring."""
 
         async def monitor_loop() -> None:
-
             while True:
                 try:
                     system_metrics = SystemMetrics.collect_current()

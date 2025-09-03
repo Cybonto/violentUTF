@@ -1,3 +1,9 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -96,6 +102,8 @@ class ReportTemplate(ReportTemplateBase):
     created_by: Optional[str] = Field(None, description="Username who created the template")
 
     class Config:
+        """Pydantic model configuration."""
+
         orm_mode = True
 
 

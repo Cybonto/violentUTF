@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -30,15 +36,15 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm
 from rich.table import Table
 
+from violentutf.utils.logging import get_logger
+
 # Add parent directory to path to import utils
 sys.path.append(str(Path(__file__).parent.parent))
-
-from violentutf.utils.logging import get_logger
 
 # Load environment variables
 try:
     load_dotenv()
-except Exception as e:
+except Exception:
     # Continue without environment variables
     pass
 
@@ -49,7 +55,7 @@ console = Console()
 class ScorerResultCleaner:
     """Handles cleanup of scorer results from PyRIT memory."""
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: Optional[str] = None) -> None:
         """Initialize the cleaner with database connection."""
         if not db_path:
             # Default PyRIT memory location
@@ -58,16 +64,16 @@ class ScorerResultCleaner:
         self.db_path = db_path
         self.conn = None
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect to the DuckDB database."""
         try:
             self.conn = duckdb.connect(self.db_path)
-            logger.info(f"Connected to database: {self.db_path}")
+            logger.info("Connected to database: %s", self.db_path)
         except Exception as e:
-            logger.error(f"Failed to connect to database: {e}")
+            logger.error("Failed to connect to database: %s", e)
             raise
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Close database connection."""
         if self.conn:
             self.conn.close()
@@ -162,33 +168,21 @@ class ScorerResultCleaner:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         # Get count and sample of records to be deleted
-        query = f"""
-            SELECT COUNT(*) as count,
-                   MIN(s.timestamp) as oldest,
-                   MAX(s.timestamp) as newest
-            FROM ScoreEntries s
-            LEFT JOIN PromptRequestResponses p
-            ON s.prompt_request_response_id = p.id
-            WHERE {where_clause}
-        """
+        query = (
+            f"SELECT COUNT(*) as count, MIN(s.timestamp) as oldest, MAX(s.timestamp) as newest "
+            f"FROM ScoreEntries s LEFT JOIN PromptRequestResponses p ON s.prompt_request_response_id = p.id "
+            f"WHERE {where_clause}"  # nosec B608 # controlled parameterized query
+        )
 
         result = self.conn.execute(query, params).fetchone()
         count = result[0] if result else 0
 
         # Get sample of records
-        sample_query = f"""
-            SELECT s.id,
-                   s.score_type,
-                   s.score_category,
-                   s.score_value,
-                   s.timestamp,
-                   s.score_type
-            FROM ScoreEntries s
-            LEFT JOIN PromptRequestResponses p
-            ON s.prompt_request_response_id = p.id
-            WHERE {where_clause}
-            LIMIT 10
-        """
+        sample_query = (
+            f"SELECT s.id, s.score_type, s.score_category, s.score_value, s.timestamp "
+            f"FROM ScoreEntries s LEFT JOIN PromptRequestResponses p ON s.prompt_request_response_id = p.id "
+            f"WHERE {where_clause} LIMIT 10"  # nosec B608 # controlled parameterized query
+        )
 
         samples = []
         for row in self.conn.execute(sample_query, params).fetchall():
@@ -329,7 +323,9 @@ class ScorerResultCleaner:
                 task = progress.add_task("Deleting scorer results...", total=None)
 
                 # Delete from ScoreEntries
-                delete_query = f"DELETE FROM ScoreEntries WHERE {where_clause}"
+                delete_query = (
+                    f"DELETE FROM ScoreEntries WHERE {where_clause}"  # nosec B608 # controlled parameterized query
+                )
                 self.conn.execute(delete_query, params)
 
                 # Check for any orphaned orchestrator_results
@@ -355,12 +351,12 @@ class ScorerResultCleaner:
         except Exception as e:
             # Rollback on error
             self.conn.execute("ROLLBACK")
-            logger.error(f"Error during cleanup, transaction rolled back: {e}")
+            logger.error("Error during cleanup, transaction rolled back: %s", e)
             console.print(f"[red]Error during cleanup: {e}[/red]")
             console.print("[yellow]Transaction rolled back - no data was deleted.[/yellow]")
             raise
 
-    def _verify_database_consistency(self):
+    def _verify_database_consistency(self) -> None:
         """Verify database consistency after cleanup operations."""
         try:
             # Check for orphaned orchestrator_results
@@ -375,7 +371,7 @@ class ScorerResultCleaner:
             ).fetchone()[0]
 
             if orphaned > 0:
-                logger.warning(f"Found {orphaned} orphaned orchestrator_results entries")
+                logger.warning("Found %s orphaned orchestrator_results entries", orphaned)
                 console.print(f"[yellow]Warning: {orphaned} orphaned orchestrator_results found[/yellow]")
 
             # Check for broken references in ScoreEntries
@@ -391,19 +387,19 @@ class ScorerResultCleaner:
             ).fetchone()[0]
 
             if broken_refs > 0:
-                logger.warning(f"Found {broken_refs} ScoreEntries with broken prompt references")
+                logger.warning("Found %s ScoreEntries with broken prompt references", broken_refs)
                 console.print(f"[yellow]Warning: {broken_refs} ScoreEntries with broken prompt references[/yellow]")
 
             # Run PRAGMA integrity_check for DuckDB
             integrity = self.conn.execute("PRAGMA integrity_check").fetchall()
             if integrity and integrity[0][0] != "ok":
-                logger.error(f"Database integrity check failed: {integrity}")
+                logger.error("Database integrity check failed: %s", integrity)
                 console.print("[red]Database integrity check failed![/red]")
             else:
                 logger.info("Database integrity check passed")
 
         except Exception as e:
-            logger.error(f"Error verifying database consistency: {e}")
+            logger.error("Error verifying database consistency: %s", e)
             console.print(f"[yellow]Warning: Could not verify database consistency: {e}[/yellow]")
 
     def archive_ScoreEntries(self, older_than_days: int, archive_path: str, delete_after_archive: bool = False) -> int:
@@ -449,7 +445,7 @@ class ScorerResultCleaner:
 
         return count
 
-    def vacuum_database(self):
+    def vacuum_database(self) -> None:
         """Vacuum the database to reclaim space and update statistics."""
         try:
             console.print("\n[bold]Running database maintenance...[/bold]")
@@ -474,19 +470,19 @@ class ScorerResultCleaner:
             size_after = os.path.getsize(self.db_path) / (1024 * 1024)  # MB
             space_saved = size_before - size_after
 
-            console.print(f"[green]Database maintenance completed.[/green]")
+            console.print("[green]Database maintenance completed.[/green]")
             console.print(f"Size before: {size_before:.2f} MB")
             console.print(f"Size after: {size_after:.2f} MB")
             if space_saved > 0:
                 console.print(f"[green]Space saved: {space_saved:.2f} MB[/green]")
 
         except Exception as e:
-            logger.error(f"Error during database vacuum: {e}")
+            logger.error("Error during database vacuum: %s", e)
             console.print(f"[yellow]Warning: Could not vacuum database: {e}[/yellow]")
 
 
-def main():
-    """Main entry point for the cleanup script."""
+def main() -> None:
+    """Entry point for the cleanup script."""
     parser = argparse.ArgumentParser(
         description="Clean up scorer results from ViolentUTF",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -618,7 +614,7 @@ Examples:
 
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
-        logger.error(f"Cleanup failed: {e}", exc_info=True)
+        logger.error("Cleanup failed: %s", e, exc_info=True)
         sys.exit(1)
     finally:
         cleaner.disconnect()

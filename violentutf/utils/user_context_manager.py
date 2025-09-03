@@ -1,8 +1,14 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Unified User Context Manager for ViolentUTF
+"""Unified User Context Manager for ViolentUTF
+
 Standardizes user identification across all operations to prevent data fragmentation
 """
 
@@ -10,7 +16,7 @@ import hashlib
 import logging
 import os
 import re
-from typing import Dict, Optional
+from typing import Any, Dict, Optional, Type
 
 import streamlit as st
 
@@ -18,9 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class UserContextManager:
-    """
-    Centralized manager for user context standardization
-    """
+    """Centralized manager for user context standardization"""
 
     # Define the standardization rules
     NORMALIZATION_RULES = {
@@ -35,7 +39,7 @@ class UserContextManager:
     DEFAULT_USER = "violentutf.web"
 
     @classmethod
-    def normalize_username(cls, username: str) -> str:
+    def normalize_username(cls: Type["UserContextManager"], username: str) -> str:
         """
         Normalize a username to a canonical format
 
@@ -54,7 +58,7 @@ class UserContextManager:
         # Check direct mapping first
         if username in cls.NORMALIZATION_RULES:
             normalized = cls.NORMALIZATION_RULES[username]
-            logger.debug(f"Normalized '{username}' -> '{normalized}' (direct mapping)")
+            logger.debug("Normalized '%s' -> '%s' (direct mapping)", username, normalized)
             return normalized
 
         # Email format - extract local part
@@ -62,22 +66,22 @@ class UserContextManager:
             local_part = username.split("@")[0]
             # Clean up the local part
             normalized = re.sub(r"[^a-zA-Z0-9._-]", ".", local_part).lower()
-            logger.debug(f"Normalized '{username}' -> '{normalized}' (email format)")
+            logger.debug("Normalized '%s' -> '%s' (email format)", username, normalized)
             return normalized
 
         # Names with spaces - convert to dot notation
         if " " in username:
             normalized = username.lower().replace(" ", ".")
-            logger.debug(f"Normalized '{username}' -> '{normalized}' (space format)")
+            logger.debug("Normalized '%s' -> '%s' (space format)", username, normalized)
             return normalized
 
         # Already in good format - just lowercase
         normalized = username.lower()
-        logger.debug(f"Normalized '{username}' -> '{normalized}' (lowercase)")
+        logger.debug("Normalized '%s' -> '%s' (lowercase)", username, normalized)
         return normalized
 
     @classmethod
-    def get_canonical_username(cls) -> str:
+    def get_canonical_username(cls: Type["UserContextManager"]) -> str:
         """
         Get the canonical username for the current session
 
@@ -101,7 +105,7 @@ class UserContextManager:
                 raw_username = payload.get("preferred_username") or payload.get("sub")
                 source = "keycloak_token"
             except Exception as e:
-                logger.warning(f"Failed to extract username from Keycloak token: {e}")
+                logger.warning("Failed to extract username from Keycloak token: %s", e)
 
         # 2. Try existing session state
         if not raw_username and "consistent_username" in st.session_state:
@@ -124,12 +128,12 @@ class UserContextManager:
         # Cache it
         st.session_state["canonical_username"] = canonical_username
 
-        logger.info(f"Determined canonical username: '{canonical_username}' from {source} (raw: '{raw_username}')")
+        logger.info("Determined canonical username: '%s' from %s (raw: '%s')", canonical_username, source, raw_username)
 
         return canonical_username
 
     @classmethod
-    def get_user_context_for_token(cls) -> Dict[str, str]:
+    def get_user_context_for_token(cls: Type["UserContextManager"]) -> Dict[str, Any]:
         """
         Get standardized user context for JWT token creation
 
@@ -147,7 +151,7 @@ class UserContextManager:
         }
 
     @classmethod
-    def verify_token_consistency(cls) -> bool:
+    def verify_token_consistency(cls: Type["UserContextManager"]) -> bool:
         """
         Verify that existing tokens use the canonical username
 
@@ -167,19 +171,20 @@ class UserContextManager:
 
             if token_username != canonical_username:
                 logger.warning(
-                    f"Token inconsistency detected: token has '{token_username}', "
-                    f"canonical is '{canonical_username}'"
+                    "Token inconsistency detected: token has '%s', canonical is '%s'",
+                    token_username,
+                    canonical_username,
                 )
                 return False
 
             return True
 
         except Exception as e:
-            logger.error(f"Failed to verify token consistency: {e}")
+            logger.error("Failed to verify token consistency: %s", e)
             return False
 
     @classmethod
-    def refresh_token_if_needed(cls) -> bool:
+    def refresh_token_if_needed(cls: Type["UserContextManager"]) -> bool:
         """
         Refresh API token if it doesn't match the canonical username
 
@@ -211,11 +216,11 @@ class UserContextManager:
                 return False
 
         except Exception as e:
-            logger.error(f"Failed to refresh token: {e}")
+            logger.error("Failed to refresh token: %s", e)
             return False
 
     @classmethod
-    def get_database_hash_for_user(cls, username: Optional[str] = None) -> str:
+    def get_database_hash_for_user(cls: Type["UserContextManager"], username: Optional[str] = None) -> str:
         """
         Get the database hash for a user (for DuckDB file naming)
 
@@ -232,10 +237,8 @@ class UserContextManager:
         return hashlib.sha256(username.encode()).hexdigest()
 
     @classmethod
-    def reset_user_context(cls):
-        """
-        Reset cached user context (useful for testing or logout)
-        """
+    def reset_user_context(cls: Type["UserContextManager"]) -> None:
+        """Reset cached user context (useful for testing or logout)"""
         keys_to_remove = ["canonical_username", "consistent_username", "api_token"]
 
         for key in keys_to_remove:

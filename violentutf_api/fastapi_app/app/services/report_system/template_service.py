@@ -1,11 +1,14 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Template management service for report system
-"""
+"""Template management service for report system"""
 
-import json
 import logging
 import uuid
 from datetime import datetime
@@ -18,10 +21,9 @@ from app.schemas.report_system.report_schemas import (
     COBTemplateResponse,
     COBTemplateUpdate,
     TemplateRecommendation,
-    TemplateVersionCreate,
     TemplateVersionResponse,
 )
-from sqlalchemy import and_, func, or_
+from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -31,7 +33,8 @@ logger = logging.getLogger(__name__)
 class TemplateService:
     """Service for managing report templates"""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession) -> None:
+        """Initialize TemplateService."""
         self.db = db
 
     def _template_to_response(self, template: COBTemplate) -> COBTemplateResponse:
@@ -100,8 +103,8 @@ class TemplateService:
         # Convert string ID to UUID
         try:
             template_uuid = uuid.UUID(template_id) if isinstance(template_id, str) else template_id
-        except ValueError:
-            raise ValueError(f"Invalid template ID format: {template_id}")
+        except ValueError as exc:
+            raise ValueError(f"Invalid template ID format: {template_id}") from exc
 
         stmt = select(COBTemplate).where(COBTemplate.id == template_uuid)
         result = await self.db.execute(stmt)
@@ -139,7 +142,7 @@ class TemplateService:
         result = await self.db.execute(stmt)
         all_templates = result.scalars().all()
 
-        logger.info(f"Query returned {len(all_templates)} templates from database")
+        logger.info("Query returned %s templates from database", len(all_templates))
 
         # Apply JSON metadata filters in Python
         filtered_templates = []
@@ -187,8 +190,8 @@ class TemplateService:
         # Convert string ID to UUID
         try:
             template_uuid = uuid.UUID(template_id) if isinstance(template_id, str) else template_id
-        except ValueError:
-            raise ValueError(f"Invalid template ID format: {template_id}")
+        except ValueError as exc:
+            raise ValueError(f"Invalid template ID format: {template_id}") from exc
 
         stmt = select(COBTemplate).where(COBTemplate.id == template_uuid)
         result = await self.db.execute(stmt)
@@ -196,9 +199,6 @@ class TemplateService:
 
         if not template:
             raise ValueError(f"Template {template_id} not found")
-
-        # Save current config for versioning
-        old_config = template.template_config.copy() if create_version else None
 
         # Update fields
         update_data = template_update.model_dump(exclude_unset=True)
@@ -223,13 +223,13 @@ class TemplateService:
 
         return self._template_to_response(template)
 
-    async def delete_template(self, template_id: str):
+    async def delete_template(self, template_id: str) -> None:
         """Soft delete a template"""
         # Convert string ID to UUID
         try:
             template_uuid = uuid.UUID(template_id) if isinstance(template_id, str) else template_id
-        except ValueError:
-            raise ValueError(f"Invalid template ID format: {template_id}")
+        except ValueError as exc:
+            raise ValueError(f"Invalid template ID format: {template_id}") from exc
 
         stmt = select(COBTemplate).where(COBTemplate.id == template_uuid)
         result = await self.db.execute(stmt)
@@ -265,7 +265,7 @@ class TemplateService:
         recommendations = []
 
         # Get all active templates
-        stmt = select(COBTemplate).where(COBTemplate.is_active == True)
+        stmt = select(COBTemplate).where(COBTemplate.is_active is True)
         result = await self.db.execute(stmt)
         templates = result.scalars().all()
 
@@ -348,7 +348,7 @@ class TemplateService:
         config: Dict[str, Any],
         change_summary: str,
         user_id: str,
-    ):
+    ) -> None:
         """Create a template version record"""
         # Convert string ID to UUID if needed
         template_uuid = uuid.UUID(template_id) if isinstance(template_id, str) else template_id
@@ -378,6 +378,10 @@ class TemplateService:
 
         return [TemplateVersionResponse.model_validate(v) for v in versions]
 
+    async def create_template_version(self, template_id: str, version_data: Dict[str, Any], user_id: str) -> None:
+        """Create a new version of a template - placeholder implementation"""
+        raise NotImplementedError("Template versioning functionality not yet implemented")
+
     async def restore_template_version(self, template_id: str, version_id: str, user_id: str) -> COBTemplateResponse:
         """Restore a template to a previous version"""
         # Get the version
@@ -392,8 +396,8 @@ class TemplateService:
         # Convert string ID to UUID
         try:
             template_uuid = uuid.UUID(template_id) if isinstance(template_id, str) else template_id
-        except ValueError:
-            raise ValueError(f"Invalid template ID format: {template_id}")
+        except ValueError as exc:
+            raise ValueError(f"Invalid template ID format: {template_id}") from exc
 
         template_stmt = select(COBTemplate).where(COBTemplate.id == template_uuid)
         template_result = await self.db.execute(template_stmt)
@@ -436,7 +440,7 @@ class TemplateService:
             # Check if block type exists
             from .block_base import block_registry
 
-            block_instance = block_registry.get_block(block_id)
+            block_instance = block_registry.get_block_class(block_id)
 
             if not block_instance:
                 validation_results["errors"].append(f"Block type '{block_id}' not found")
@@ -464,7 +468,7 @@ class TemplateService:
             if block_id:
                 from .block_base import block_registry
 
-                block_instance = block_registry.get_block(block_id)
+                block_instance = block_registry.get_block_class(block_id)
 
                 if block_instance:
                     all_variables.update(block_instance.required_variables)

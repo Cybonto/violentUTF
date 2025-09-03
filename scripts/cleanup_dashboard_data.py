@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
@@ -28,7 +34,7 @@ console = Console()
 class DashboardDataCleaner:
     """Handles cleanup of Dashboard data from ViolentUTF API database."""
 
-    def __init__(self, db_path: str = None, in_docker: bool = False):
+    def __init__(self, db_path: str = None, in_docker: bool = False) -> None:
         """Initialize the cleaner with database connection."""
         self.in_docker = in_docker
 
@@ -42,30 +48,38 @@ class DashboardDataCleaner:
 
         self.conn = None
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect to the SQLite database."""
         try:
             if self.in_docker:
                 console.print(
-                    f"[yellow]Note: This will operate on the database inside Docker container '{self.container_name}'[/yellow]"
+                    f"[yellow]Note: This will operate on the database inside Docker "
+                    f"container '{self.container_name}'[/yellow]"
                 )
                 # For Docker, we'll execute commands via docker exec
                 # Check if container exists
-                result = os.system(f"docker ps -q -f name={self.container_name} > /dev/null 2>&1")
-                if result != 0:
-                    raise Exception(f"Docker container '{self.container_name}' not found or not running")
+                import subprocess  # nosec B404 # needed for controlled docker container management
+
+                result = subprocess.run(  # nosec B603 B607 # controlled docker command execution
+                    ["docker", "ps", "-q", "-f", f"name={self.container_name}"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if result.returncode != 0 or not result.stdout.strip():
+                    raise RuntimeError(f"Docker container '{self.container_name}' not found or not running")
                 console.print(f"[green]Docker container '{self.container_name}' is accessible[/green]")
             else:
                 # Direct SQLite connection
                 if not os.path.exists(self.db_path):
-                    raise Exception(f"Database not found at {self.db_path}")
+                    raise FileNotFoundError(f"Database not found at {self.db_path}")
                 self.conn = sqlite3.connect(self.db_path)
                 console.print(f"[green]Connected to database: {self.db_path}[/green]")
         except Exception as e:
             console.print(f"[red]Failed to connect to database: {e}[/red]")
             raise
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Close database connection."""
         if self.conn:
             self.conn.close()
@@ -74,8 +88,7 @@ class DashboardDataCleaner:
         """Execute a query, handling both local and Docker scenarios."""
         if self.in_docker:
             # Execute via docker exec
-            import subprocess
-            import tempfile
+            import subprocess  # nosec B404 # needed for controlled docker command execution
 
             # Create a Python script to execute in the container
             script = f"""
@@ -88,15 +101,16 @@ results = cursor.fetchall()
 print(json.dumps(results))
 conn.close()
 """
-            # Execute directly via docker exec with escaped script
-            escaped_script = script.replace('"', '\\"').replace("$", "\\$")
-
-            result = subprocess.run(
-                ["docker", "exec", self.container_name, "python3", "-c", script], capture_output=True, text=True
+            # Execute directly via docker exec
+            result = subprocess.run(  # nosec B603 B607 # controlled docker command execution
+                ["docker", "exec", self.container_name, "python3", "-c", script],
+                capture_output=True,
+                text=True,
+                check=False,
             )
 
             if result.returncode != 0:
-                raise Exception(f"Query failed: {result.stderr}")
+                raise RuntimeError(f"Query failed: {result.stderr}")
 
             # Parse JSON results
             return json.loads(result.stdout) if result.stdout.strip() else []
@@ -110,8 +124,7 @@ conn.close()
         """Execute an update/delete query."""
         if self.in_docker:
             # Execute via docker exec
-            import subprocess
-            import tempfile
+            import subprocess  # nosec B404 # needed for controlled docker command execution
 
             script = f"""
 import sqlite3
@@ -124,12 +137,15 @@ conn.close()
 print(affected)
 """
             # Execute directly via docker exec
-            result = subprocess.run(
-                ["docker", "exec", self.container_name, "python3", "-c", script], capture_output=True, text=True
+            result = subprocess.run(  # nosec B603 B607 # controlled docker command execution
+                ["docker", "exec", self.container_name, "python3", "-c", script],
+                capture_output=True,
+                text=True,
+                check=False,
             )
 
             if result.returncode != 0:
-                raise Exception(f"Update failed: {result.stderr}")
+                raise RuntimeError(f"Update failed: {result.stderr}")
 
             return int(result.stdout.strip()) if result.stdout.strip() else 0
         else:
@@ -197,7 +213,7 @@ print(affected)
                     results = json.loads(row[0]) if row[0] else {}
                     total_scores += len(results.get("scores", []))
                     total_responses += len(results.get("prompt_request_responses", []))
-                except:
+                except Exception:
                     pass
 
             stats["total_scores"] = total_scores
@@ -245,7 +261,7 @@ print(affected)
         where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         # Get count and sample first
-        count_query = f"SELECT COUNT(*) FROM orchestrator_executions WHERE {where_clause}"
+        count_query = f"SELECT COUNT(*) FROM orchestrator_executions WHERE {where_clause}"  # nosec B608
         result = self._execute_query(count_query, params)
         count = result[0][0] if result else 0
 
@@ -259,18 +275,11 @@ print(affected)
         # Get sample
         if orchestrator_name:
             # Use subquery to avoid ambiguous column names
-            sample_query = f"""
-                SELECT
-                    id,
-                    execution_name,
-                    status,
-                    started_at,
-                    orchestrator_id
-                FROM orchestrator_executions
-                WHERE {where_clause}
-                ORDER BY started_at DESC
-                LIMIT 10
-            """
+            sample_query = (
+                f"SELECT id, execution_name, status, started_at, orchestrator_id "
+                f"FROM orchestrator_executions WHERE {where_clause} "
+                f"ORDER BY started_at DESC LIMIT 10"  # nosec B608 # controlled parameterized query
+            )
         else:
             # Need to rewrite where clause with table prefix for JOIN query
             prefixed_conditions = []
@@ -284,19 +293,13 @@ print(affected)
 
             prefixed_where = " AND ".join(prefixed_conditions) if prefixed_conditions else "1=1"
 
-            sample_query = f"""
-                SELECT
-                    oe.id,
-                    oe.execution_name,
-                    oe.status,
-                    oe.started_at,
-                    oc.name as orchestrator_name
-                FROM orchestrator_executions oe
-                LEFT JOIN orchestrator_configurations oc ON oe.orchestrator_id = oc.id
-                WHERE {prefixed_where}
-                ORDER BY oe.started_at DESC
-                LIMIT 10
-            """
+            sample_query = (
+                f"SELECT oe.id, oe.execution_name, oe.status, oe.started_at, "
+                f"oc.name as orchestrator_name FROM orchestrator_executions oe "
+                f"LEFT JOIN orchestrator_configurations oc ON oe.orchestrator_id = oc.id "
+                # nosec B608 # controlled parameterized query
+                f"WHERE {prefixed_where} ORDER BY oe.started_at DESC LIMIT 10"
+            )
 
         samples = self._execute_query(sample_query, params)
 
@@ -348,7 +351,7 @@ print(affected)
             ) as progress:
                 task = progress.add_task("Deleting executions...", total=None)
 
-                delete_query = f"DELETE FROM orchestrator_executions WHERE {where_clause}"
+                delete_query = f"DELETE FROM orchestrator_executions WHERE {where_clause}"  # nosec B608
                 deleted = self._execute_update(delete_query, params)
 
                 progress.update(task, completed=True)
@@ -360,7 +363,7 @@ print(affected)
             console.print(f"[red]Error during cleanup: {e}[/red]")
             raise
 
-    def vacuum_database(self):
+    def vacuum_database(self) -> None:
         """Vacuum the database to reclaim space (local only)."""
         if self.in_docker:
             console.print("[yellow]Vacuum operation not available for Docker databases[/yellow]")
@@ -385,7 +388,7 @@ print(affected)
             size_after = os.path.getsize(self.db_path) / (1024 * 1024)  # MB
             space_saved = size_before - size_after
 
-            console.print(f"[green]Database maintenance completed.[/green]")
+            console.print("[green]Database maintenance completed.[/green]")
             console.print(f"Size before: {size_before:.2f} MB")
             console.print(f"Size after: {size_after:.2f} MB")
             if space_saved > 0:
@@ -395,8 +398,8 @@ print(affected)
             console.print(f"[yellow]Warning: Could not vacuum database: {e}[/yellow]")
 
 
-def main():
-    """Main entry point for the cleanup script."""
+def main() -> None:
+    """Entry point for the cleanup script."""
     parser = argparse.ArgumentParser(
         description="Clean up Dashboard data from ViolentUTF API database",
         epilog="""

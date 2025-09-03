@@ -29,8 +29,8 @@ class SecurityEventType(Enum):
     AUTH_SUCCESS = "auth_success"
     AUTH_FAILURE = "auth_failure"
     AUTH_LOCKOUT = "auth_lockout"
-    TOKEN_CREATED = "token_created"
-    TOKEN_VALIDATED = "token_validated"
+    TOKEN_CREATED = "token_created"  # nosec B105 # OAuth2 token type constant, not a password
+    TOKEN_VALIDATED = "token_validated"  # nosec B105 # OAuth2 token type constant, not a password
     TOKEN_EXPIRED = "token_expired"
     TOKEN_INVALID = "token_invalid"
 

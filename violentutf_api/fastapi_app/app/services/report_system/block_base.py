@@ -1,14 +1,16 @@
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
 # # Copyright (c) 2024 ViolentUTF Project
 # # Licensed under MIT License
 
-"""
-Base classes for the enhanced block system
-"""
+"""Base classes for the enhanced block system"""
 
-import json
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import markdown
@@ -20,13 +22,9 @@ logger = logging.getLogger(__name__)
 class BlockValidationError(Exception):
     """Block validation error"""
 
-    pass
-
 
 class BlockRenderError(Exception):
     """Block rendering error"""
-
-    pass
 
 
 class BlockDefinition:
@@ -40,9 +38,10 @@ class BlockDefinition:
         category: str,
         configuration_schema: Dict,
         default_config: Dict,
-        supported_formats: List[str] = None,
-        required_variables: List[str] = None,
-    ):
+        supported_formats: Optional[List[str]] = None,
+        required_variables: Optional[List[str]] = None,
+    ) -> None:
+        """Initialize BlockDefinition with metadata."""
         self.block_type = block_type
         self.display_name = display_name
         self.description = description
@@ -69,17 +68,22 @@ class BlockDefinition:
 class BaseReportBlock(ABC):
     """Abstract base class for all report blocks"""
 
-    def __init__(self, block_id: str, title: str, configuration: Dict):
+    def __init__(self, block_id: str, title: str, configuration: Dict) -> None:
+        """Initialize BaseReportBlock."""
         self.block_id = block_id
         self.title = title
         self.configuration = configuration
-        self.rendered_content = {}
-        self._jinja_env = Environment()
+        self.rendered_content: Dict[str, Any] = {}
+        self._jinja_env = Environment(autoescape=True)
+        self._order = 0
+
+    def set_order(self, order: int) -> None:
+        """Set the display order for this block"""
+        self._order = order
 
     @abstractmethod
     def get_definition(self) -> BlockDefinition:
         """Get block definition metadata"""
-        pass
 
     def validate_configuration(self) -> List[str]:
         """Validate block configuration against schema"""
@@ -125,55 +129,52 @@ class BaseReportBlock(ABC):
     @abstractmethod
     def process_data(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process input data and return processed results"""
-        pass
 
-    def render(self, format: str, data: Dict[str, Any]) -> Any:
-        """Main render method that delegates to format-specific methods"""
+    def render(self, output_format: str, data: Dict[str, Any]) -> Union[str, Dict]:
+        """Render content in the specified format"""
         # Validate format
         definition = self.get_definition()
-        if format not in definition.supported_formats:
-            raise BlockRenderError(f"Format '{format}' not supported by block type '{definition.block_type}'")
+        if output_format not in definition.supported_formats:
+            raise BlockRenderError(f"Format '{output_format}' not supported by block type '{definition.block_type}'")
 
         # Process data
         try:
             processed_data = self.process_data(data)
         except Exception as e:
-            logger.error(f"Error processing data for block {self.block_id}: {str(e)}")
-            raise BlockRenderError(f"Data processing failed: {str(e)}")
+            logger.error("Error processing data for block %s: %s", self.block_id, str(e))
+            raise BlockRenderError(f"Data processing failed: {str(e)}") from e
 
         # Render based on format
         try:
-            if format in ["HTML", "PDF"]:
+            content: Union[str, Dict[str, Any]]
+            if output_format in ["HTML", "PDF"]:
                 content = self.render_html(processed_data)
-            elif format == "Markdown":
+            elif output_format == "Markdown":
                 content = self.render_markdown(processed_data)
-            elif format == "JSON":
+            elif output_format == "JSON":
                 content = self.render_json(processed_data)
             else:
-                raise BlockRenderError(f"Unsupported format: {format}")
+                raise BlockRenderError(f"Unsupported format: {output_format}")
 
             # Store rendered content
-            self.rendered_content[format] = content
+            self.rendered_content[output_format] = content
             return content
 
         except Exception as e:
-            logger.error(f"Error rendering block {self.block_id} as {format}: {str(e)}")
-            raise BlockRenderError(f"Rendering failed: {str(e)}")
+            logger.error("Error rendering block %s as %s: %s", self.block_id, output_format, str(e))
+            raise BlockRenderError(f"Rendering failed: {str(e)}") from e
 
     @abstractmethod
     def render_html(self, processed_data: Dict[str, Any]) -> str:
         """Render block as HTML"""
-        pass
 
     @abstractmethod
     def render_markdown(self, processed_data: Dict[str, Any]) -> str:
         """Render block as Markdown"""
-        pass
 
     @abstractmethod
     def render_json(self, processed_data: Dict[str, Any]) -> Dict:
         """Render block as JSON"""
-        pass
 
     def get_required_variables(self) -> List[str]:
         """Get list of required variables for this block"""
@@ -192,7 +193,7 @@ class BaseReportBlock(ABC):
         variables = set()
 
         # Check configuration for template strings
-        for key, value in self.configuration.items():
+        for _, value in self.configuration.items():
             if isinstance(value, str) and "{{" in value:
                 try:
                     ast = self._jinja_env.parse(value)
@@ -208,7 +209,7 @@ class BaseReportBlock(ABC):
             template = Template(template_string)
             return template.render(**context)
         except Exception as e:
-            logger.warning(f"Template rendering error in block {self.block_id}: {str(e)}")
+            logger.warning("Template rendering error in block %s: %s", self.block_id, str(e))
             return template_string
 
     def _markdown_to_html(self, markdown_text: str) -> str:
@@ -247,21 +248,22 @@ class BaseReportBlock(ABC):
 class BlockRegistry:
     """Registry for managing available block types"""
 
-    def __init__(self):
-        self._blocks = {}
-        self._categories = set()
+    def __init__(self) -> None:
+        """Initialize ReportBlockRegistry."""
+        self._blocks: Dict[str, type] = {}
+        self._categories: set[str] = set()
 
-    def register(self, block_class: type, force: bool = False):
+    def register(self, block_class: type, force: bool = False) -> None:
         """Register a new block type"""
         if not issubclass(block_class, BaseReportBlock):
-            raise ValueError(f"Block class must inherit from BaseReportBlock")
+            raise ValueError("Block class must inherit from BaseReportBlock")
 
         # Create temporary instance to get definition
         try:
             temp_instance = block_class("temp", "temp", {})
             definition = temp_instance.get_definition()
         except Exception as e:
-            raise ValueError(f"Failed to get block definition: {str(e)}")
+            raise ValueError(f"Failed to get block definition: {str(e)}") from e
 
         # Check if already registered
         if definition.block_type in self._blocks and not force:
@@ -273,13 +275,13 @@ class BlockRegistry:
         # Track category
         self._categories.add(definition.category)
 
-        logger.info(f"Registered block type: {definition.block_type}")
+        logger.info("Registered block type: %s", definition.block_type)
 
-    def unregister(self, block_type: str):
+    def unregister(self, block_type: str) -> None:
         """Unregister a block type"""
         if block_type in self._blocks:
             del self._blocks[block_type]
-            logger.info(f"Unregistered block type: {block_type}")
+            logger.info("Unregistered block type: %s", block_type)
 
     def get_block_class(self, block_type: str) -> type:
         """Get block class by type"""
@@ -345,8 +347,6 @@ block_registry = BlockRegistry()
 def validate_block_config(block_type: str, configuration: Dict) -> List[str]:
     """Validate block configuration without creating instance"""
     try:
-        definition = block_registry.get_definition(block_type)
-
         # Create temporary instance for validation
         block_class = block_registry.get_block_class(block_type)
         temp_instance = block_class("temp", "temp", configuration)
