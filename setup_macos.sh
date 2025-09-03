@@ -1435,9 +1435,10 @@ parse_openapi_endpoints() {
 
     # Create Python script with proper parameter passing and error capture
     local parse_error_file="${cache_dir}/${provider_id}_parse_error.log"
-    if ! python3 - "$spec_file" "$provider_id" > "$endpoints_file" 2> "$parse_error_file" << 'EOF'
+    python3 - "$spec_file" "$provider_id" > "$endpoints_file" 2> "$parse_error_file" << 'EOF'
 import json
 import sys
+import os
 
 try:
     spec_file = sys.argv[1]
@@ -1511,15 +1512,26 @@ except Exception as e:
     sys.stderr.write(traceback.format_exc())
     sys.exit(1)
 EOF
-    then
-        local endpoint_count=$(python3 -c "import json; print(len(json.load(open('$endpoints_file'))['endpoints']))")
-        echo "✅ Found $endpoint_count endpoints"
-        return 0
+    local python_exit_code=$?
+
+    if [ $python_exit_code -eq 0 ] && [ -f "$endpoints_file" ] && [ -s "$endpoints_file" ]; then
+        local endpoint_count=$(python3 -c "import json; print(len(json.load(open('$endpoints_file'))['endpoints']))" 2>/dev/null)
+        if [ -n "$endpoint_count" ] && [ "$endpoint_count" -gt 0 ]; then
+            echo "✅ Found $endpoint_count endpoints"
+            return 0
+        else
+            echo "❌ No endpoints found in parsed file"
+            return 1
+        fi
     else
         echo "❌ Failed to parse endpoints"
+        echo "Python exit code: $python_exit_code"
         if [ -f "$parse_error_file" ] && [ -s "$parse_error_file" ]; then
             echo "Python error details:"
             cat "$parse_error_file"
+        fi
+        if [ ! -f "$endpoints_file" ] || [ ! -s "$endpoints_file" ]; then
+            echo "Endpoints file was not created or is empty"
         fi
         echo "Debug: Spec file content preview:"
         head -20 "$spec_file" 2>/dev/null || echo "Could not read spec file"
