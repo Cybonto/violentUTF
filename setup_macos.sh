@@ -1552,22 +1552,54 @@ create_openapi_route() {
             ;;
     esac
 
-    # Create route configuration
+    # Extract host from base_url for upstream configuration
+    local host=$(echo "$base_url" | sed -E 's#https?://([^/]+).*#\1#')
+    local scheme=$(echo "$base_url" | sed -E 's#(https?)://.*#\1#')
+    local port=443
+    if [ "$scheme" = "http" ]; then
+        port=80
+    fi
+
+    # Build auth headers for proxy-rewrite
+    local auth_headers=""
+    case "$auth_type" in
+        "bearer")
+            auth_headers='"Authorization": "Bearer '"$auth_config"'"'
+            ;;
+        "api_key")
+            # auth_config format: "header:value"
+            local header=$(echo "$auth_config" | cut -d: -f1)
+            local value=$(echo "$auth_config" | cut -d: -f2-)
+            auth_headers='"'"$header"'": "'"$value"'"'
+            ;;
+        "basic")
+            # auth_config format: "username:password"
+            local basic_auth=$(echo -n "$auth_config" | base64)
+            auth_headers='"Authorization": "Basic '"$basic_auth"'"'
+            ;;
+    esac
+
+    # Create route configuration with proxy-rewrite for OpenAPI routes
     local route_config='{
         "id": "'"$route_id"'",
         "uri": "'"$uri"'",
         "methods": ["'"$method"'"],
         "desc": "'"$provider_name: $operation_id"'",
+        "upstream": {
+            "type": "roundrobin",
+            "nodes": {
+                "'"$host:$port"'": 1
+            },
+            "scheme": "'"$scheme"'"
+        },
         "plugins": {
             "key-auth": {},
-            "ai-proxy": {
-                "provider": "openai-compatible",
-                '"$auth_section"'
-                "options": {
-                    "model": "'"$operation_id"'"
-                },
-                "override": {
-                    "endpoint": "'"${base_url}/${endpoint_path}"'"
+            "proxy-rewrite": {
+                "regex_uri": ["^/ai/openapi/'"$provider_id"'/(.*)", "/$1"],
+                "headers": {
+                    "set": {
+                        '"$auth_headers"'
+                    }
                 }
             }
         }
@@ -1580,6 +1612,13 @@ create_openapi_route() {
     if echo "$existing_route" | grep -q '"id"'; then
         echo "⚠️  Route already exists for $operation_id, skipping"
         return 0
+    fi
+
+    # Debug: show route config if debug mode is enabled
+    if [ "${OPENAPI_DEBUG:-false}" = "true" ]; then
+        echo "Debug: Route configuration for $operation_id:"
+        echo "$route_config" | python3 -m json.tool 2>/dev/null || echo "$route_config"
+        echo ""
     fi
 
     # Create the route in APISIX
@@ -1601,6 +1640,9 @@ create_openapi_route() {
         echo "❌ Failed to create route for $operation_id"
         echo "   HTTP Code: $http_code"
         echo "   Route ID: $route_id"
+        echo "   URI: $uri"
+        echo "   Response: $response_body"
+        echo "   Route config: $route_config"
         return 1
     fi
 }
@@ -1613,6 +1655,14 @@ setup_openapi_routes() {
     fi
 
     echo "Setting up OpenAPI provider routes..."
+
+    # Check if APISIX is accessible before proceeding
+    if ! curl -s -f -H "X-API-KEY: ${APISIX_ADMIN_KEY}" "${APISIX_ADMIN_URL}/apisix/admin/routes" >/dev/null 2>&1; then
+        echo "❌ APISIX admin API not accessible at ${APISIX_ADMIN_URL}"
+        echo "   Please ensure APISIX is running and APISIX_ADMIN_KEY is correct"
+        return 1
+    fi
+    echo "✅ APISIX admin API is accessible"
 
     local cache_dir="/tmp/violentutf_openapi_cache"
     mkdir -p "$cache_dir"
@@ -1677,13 +1727,16 @@ setup_openapi_routes() {
             # Fetch OpenAPI spec
             local spec_file="$cache_dir/${provider_id}_spec.json"
             if fetch_openapi_spec "$base_url" "$spec_path" "$auth_type" "$auth_value" "$auth_header" "$custom_headers" "$spec_file"; then
+                echo "✅ OpenAPI spec fetched successfully"
 
                 # Validate spec
                 if validate_openapi_spec "$spec_file"; then
+                    echo "✅ OpenAPI spec validation passed"
 
                     # Parse endpoints
                     local endpoints_file="$cache_dir/${provider_id}_endpoints.json"
                     if parse_openapi_endpoints "$spec_file" "$provider_id" "$endpoints_file"; then
+                        echo "✅ OpenAPI endpoints parsed successfully"
 
                         # Process endpoints - save to temp file to avoid subshell issues
                         local temp_endpoints="$cache_dir/${provider_id}_temp_endpoints.txt"
@@ -1709,8 +1762,17 @@ with open('$endpoints_file', 'r') as f:
                                 total_failed=$((total_failed + 1))
                             fi
                         done < "$temp_endpoints"
+                    else
+                        echo "❌ Failed to parse OpenAPI endpoints for $provider_name"
+                        total_failed=$((total_failed + 1))
                     fi
+                else
+                    echo "❌ OpenAPI spec validation failed for $provider_name"
+                    total_failed=$((total_failed + 1))
                 fi
+            else
+                echo "❌ Failed to fetch OpenAPI spec for $provider_name from ${base_url}${spec_path}"
+                total_failed=$((total_failed + 1))
             fi
         fi
     done
