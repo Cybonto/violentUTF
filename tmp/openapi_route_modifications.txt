@@ -1,0 +1,92 @@
+# Modifications needed for create_openapi_provider_routes function
+
+## Current Issues:
+1. Hardcoded scheme detection logic
+2. SSL verification logic is basic and doesn't use our config variables
+3. GSAi is hardcoded to HTTP
+4. No support for custom CA certificates
+
+## Required Changes:
+
+### 1. Replace URL parsing section (lines 102-108):
+OLD:
+```bash
+# Parse base URL to extract host and port
+local scheme=$(echo "$base_url" | grep -o '^https\?')
+local host_port=$(echo "$base_url" | sed -E 's|^https?://||' | sed -E 's|/.*||')
+local default_port="443"
+if [ "$scheme" = "http" ]; then
+    default_port="80"
+fi
+```
+
+NEW:
+```bash
+# Source utilities for URL parsing if not already loaded
+if ! command -v parse_url &> /dev/null; then
+    source "$SETUP_MODULES_DIR/utils.sh"
+fi
+
+# Get HTTPS configuration for this provider
+local https_config=$(get_https_config "$provider_num")
+local scheme=$(echo "$https_config" | grep "^scheme=" | cut -d= -f2)
+local ssl_verify=$(echo "$https_config" | grep "^ssl_verify=" | cut -d= -f2)
+local ca_cert_path=$(echo "$https_config" | grep "^ca_cert_path=" | cut -d= -f2)
+
+# Parse base URL to extract host and port
+local host_port=$(parse_url "$base_url" host_port)
+```
+
+### 2. Replace SSL configuration section (lines 186-195):
+OLD:
+```bash
+# Determine SSL configuration - GSAi uses HTTP, others may use HTTPS
+local ssl_verify="false"
+if [[ "$scheme" == "https" ]] && [[ "$base_url" == "https://localhost"* ]] && [[ "$provider_id" != *"gsai"* ]]; then
+    # For local HTTPS providers (excluding GSAi), enable SSL verification
+    ssl_verify="true"
+elif [[ "$provider_id" == *"gsai"* ]]; then
+    # GSAi uses HTTP, ensure scheme is set correctly
+    scheme="http"
+    ssl_verify="false"
+fi
+```
+
+NEW:
+```bash
+# SSL configuration is already determined by get_https_config
+# Log the configuration for debugging
+log_debug "Provider $provider_id HTTPS config: scheme=$scheme, ssl_verify=$ssl_verify, ca_cert=$ca_cert_path"
+```
+
+### 3. Update upstream configuration for HTTPS with CA cert support
+
+For the proxy-rewrite routes, update the upstream TLS configuration to support custom CA certificates.
+
+OLD:
+```json
+"tls": {
+    "verify": true
+}
+```
+
+NEW:
+```json
+"tls": {
+    "verify": $ssl_verify
+}
+```
+
+### 4. Update ai-proxy plugin for proper HTTPS support
+
+In the ai-proxy section (line 227), update:
+
+OLD:
+```json
+"ssl_verify": false
+```
+
+NEW:
+```json
+"ssl_verify": $ssl_verify
+```

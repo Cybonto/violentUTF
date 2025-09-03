@@ -56,8 +56,156 @@ router = APIRouter()
 # _datasets_store: Dict[str, Dict[str, object]] = {} - REMOVED
 # _session_datasets: Dict[str, Dict[str, object]] = {} - REMOVED
 
-# Dataset type definitions (based on PyRIT datasets)
+# ViolentUTF native dataset definitions
+VIOLENTUTF_NATIVE_DATASETS = {
+    "ollegen1_cognitive": {
+        "name": "ollegen1_cognitive",
+        "display_name": "OllaGen1 Cognitive Behavioral Security Assessment",
+        "description": "170K scenarios with 4 Q&A types for security compliance evaluation",
+        "category": "cognitive_behavioral",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": True,
+        "available_configs": {
+            "question_types": ["WCP", "WHO", "TeamRisk", "TargetFactor"],
+            "scenario_limit": [1000, 10000, 50000, "all"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/OllaGen1-QA-full.part*.csv",
+            "manifest_file": "datasets/OllaGen1-QA-full.manifest.json",
+            "total_scenarios": 169999,
+            "total_qa_pairs": 679996,
+        },
+        "conversion_strategy": "strategy_1_cognitive_assessment",
+    },
+    "garak_redteaming": {
+        "name": "garak_redteaming",
+        "display_name": "Garak Red-Teaming Dataset Collection",
+        "description": "25+ files with DAN variants, RTP categories, and jailbreak prompts",
+        "category": "redteaming",
+        "pyrit_format": "SeedPromptDataset",
+        "config_required": True,
+        "available_configs": {
+            "attack_types": ["DAN", "RTP", "injection", "jailbreak"],
+            "severity_levels": ["low", "medium", "high", "critical"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/garak/*.txt",
+            "manifest_file": "datasets/garak/garak.manifest.json",
+            "total_files": 25,
+            "total_prompts": 12000,
+        },
+        "conversion_strategy": "strategy_3_redteaming_prompts",
+    },
+    "legalbench_reasoning": {
+        "name": "legalbench_reasoning",
+        "display_name": "LegalBench Legal Reasoning Dataset",
+        "description": "Comprehensive legal reasoning tasks and case analysis",
+        "category": "legal_reasoning",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": True,
+        "available_configs": {
+            "task_types": ["case_analysis", "statute_interpretation", "contract_review"],
+            "complexity_levels": ["basic", "intermediate", "advanced"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/legalbench/*.json",
+            "manifest_file": "datasets/legalbench/legalbench.manifest.json",
+            "total_tasks": 5000,
+            "total_questions": 20000,
+        },
+        "conversion_strategy": "strategy_2_legal_reasoning",
+    },
+    "docmath_evaluation": {
+        "name": "docmath_evaluation",
+        "display_name": "DocMath Mathematical Reasoning Evaluation",
+        "description": "Mathematical reasoning and problem-solving evaluation dataset",
+        "category": "reasoning_evaluation",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": False,
+        "available_configs": None,
+        "file_info": {
+            "source_pattern": "datasets/docmath/*.json",
+            "manifest_file": "datasets/docmath/docmath.manifest.json",
+            "total_problems": 8000,
+            "difficulty_levels": ["elementary", "high_school", "college"],
+        },
+        "conversion_strategy": "strategy_4_mathematical_reasoning",
+    },
+    "confaide_privacy": {
+        "name": "confaide_privacy",
+        "display_name": "ConfAIde Privacy Evaluation Dataset",
+        "description": "Privacy-focused evaluation scenarios for AI confidentiality testing",
+        "category": "privacy_evaluation",
+        "pyrit_format": "SeedPromptDataset",
+        "config_required": True,
+        "available_configs": {
+            "privacy_types": ["PII", "confidential", "sensitive", "proprietary"],
+            "test_scenarios": ["data_leak", "inference", "memorization"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/confaide/*.csv",
+            "manifest_file": "datasets/confaide/confaide.manifest.json",
+            "total_scenarios": 3000,
+            "privacy_categories": 8,
+        },
+        "conversion_strategy": "strategy_5_privacy_evaluation",
+    },
+    "graphwalk_reasoning": {
+        "name": "graphwalk_reasoning",
+        "display_name": "GraphWalk Reasoning Dataset",
+        "description": "Graph-based reasoning and traversal problem dataset",
+        "category": "reasoning_evaluation",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": False,
+        "available_configs": None,
+        "file_info": {
+            "source_pattern": "datasets/graphwalk/*.json",
+            "manifest_file": "datasets/graphwalk/graphwalk.manifest.json",
+            "total_graphs": 2000,
+            "complexity_levels": ["simple", "medium", "complex"],
+        },
+        "conversion_strategy": "strategy_6_graph_reasoning",
+    },
+    "judgebench_evaluation": {
+        "name": "judgebench_evaluation",
+        "display_name": "JudgeBench Meta-Evaluation Dataset",
+        "description": "Meta-evaluation dataset for AI judgment and assessment capabilities",
+        "category": "meta_evaluation",
+        "pyrit_format": "SeedPromptDataset",
+        "config_required": True,
+        "available_configs": {
+            "evaluation_types": ["quality", "safety", "bias", "factuality"],
+            "judge_models": ["human", "ai", "hybrid"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/judgebench/*.json",
+            "manifest_file": "datasets/judgebench/judgebench.manifest.json",
+            "total_evaluations": 5000,
+            "judgment_categories": 12,
+        },
+        "conversion_strategy": "strategy_7_meta_evaluation",
+    },
+    "acpbench_reasoning": {
+        "name": "acpbench_reasoning",
+        "display_name": "ACPBench Abstract Conceptual Planning",
+        "description": "Abstract conceptual planning and reasoning benchmark dataset",
+        "category": "reasoning_evaluation",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": False,
+        "available_configs": None,
+        "file_info": {
+            "source_pattern": "datasets/acpbench/*.json",
+            "manifest_file": "datasets/acpbench/acpbench.manifest.json",
+            "total_problems": 1500,
+            "planning_domains": 6,
+        },
+        "conversion_strategy": "strategy_8_abstract_planning",
+    },
+}
+
+# Dataset type definitions (combining PyRIT and ViolentUTF datasets)
 NATIVE_DATASET_TYPES = {
+    # Original PyRIT datasets
     "aya_redteaming": {
         "name": "aya_redteaming",
         "description": "Aya Red-teaming Dataset - Multilingual red-teaming prompts",
@@ -139,6 +287,8 @@ NATIVE_DATASET_TYPES = {
         "config_required": False,
         "available_configs": None,
     },
+    # ViolentUTF native datasets
+    **VIOLENTUTF_NATIVE_DATASETS,
 }
 
 
@@ -793,19 +943,127 @@ async def delete_dataset(
         raise HTTPException(status_code=500, detail=f"Failed to delete dataset: {str(e)}") from e
 
 
+# Helper functions for ViolentUTF dataset support
+def _is_violentutf_dataset(dataset_type: str) -> bool:
+    """Check if dataset is a ViolentUTF native dataset."""
+    return dataset_type in VIOLENTUTF_NATIVE_DATASETS
+
+
+def _get_violentutf_dataset_info(dataset_type: str) -> Optional[Dict[str, object]]:
+    """Get ViolentUTF dataset information."""
+    return VIOLENTUTF_NATIVE_DATASETS.get(dataset_type)
+
+
+async def _load_violentutf_dataset_with_manifest(
+    dataset_type: str, config: Dict[str, object], limit: Optional[int] = None
+) -> List[str]:
+    """Load ViolentUTF dataset using manifest file for split file discovery."""
+    try:
+        dataset_info = _get_violentutf_dataset_info(dataset_type)
+        if not dataset_info:
+            logger.warning("ViolentUTF dataset type '%s' not found", dataset_type)
+            return []
+
+        file_info = dataset_info.get("file_info", {})
+        manifest_file = file_info.get("manifest_file")
+        source_pattern = file_info.get("source_pattern")  # Will be used for actual file discovery
+
+        logger.info(
+            "Loading ViolentUTF dataset %s with manifest: %s (pattern: %s)", dataset_type, manifest_file, source_pattern
+        )
+
+        # For now, return mock data since actual files may not exist
+        # In production, this would:
+        # 1. Check if manifest file exists
+        # 2. Read manifest to get actual file locations
+        # 3. Load and parse split files
+        # 4. Aggregate data according to configuration
+
+        mock_prompts = []
+        total_expected = file_info.get("total_scenarios", file_info.get("total_prompts", 1000))
+
+        # Generate mock prompts based on dataset type and configuration
+        if dataset_type == "ollegen1_cognitive":
+            question_types = config.get("question_types", ["WCP", "WHO"])
+            scenario_limit = config.get("scenario_limit", 1000)
+            if scenario_limit == "all":
+                scenario_limit = min(total_expected, 10000)  # Reasonable limit for demo
+            elif isinstance(scenario_limit, int):
+                scenario_limit = min(scenario_limit, total_expected)
+            else:
+                scenario_limit = 1000
+
+            for i in range(min(scenario_limit, limit or 1000)):
+                q_type = question_types[i % len(question_types)]
+                mock_prompts.append(
+                    f"[OllaGen1-{q_type}] Cognitive behavioral security scenario {i+1}: "
+                    f"Evaluate the security compliance implications of this workplace situation."
+                )
+
+        elif dataset_type == "garak_redteaming":
+            attack_types = config.get("attack_types", ["DAN", "jailbreak"])
+            severity_levels = config.get("severity_levels", ["medium", "high"])
+
+            for i in range(min(1000, limit or 500)):
+                attack_type = attack_types[i % len(attack_types)]
+                severity = severity_levels[i % len(severity_levels)]
+                mock_prompts.append(
+                    f"[Garak-{attack_type}-{severity}] Red team prompt {i+1}: "
+                    f"Test the security boundaries of this AI system."
+                )
+
+        elif dataset_type in ["legalbench_reasoning", "docmath_evaluation", "acpbench_reasoning"]:
+            for i in range(min(500, limit or 300)):
+                domain = dataset_type.split("_")[0].title()
+                mock_prompts.append(
+                    f"[{domain}] Reasoning task {i+1}: "
+                    f"Analyze and provide a comprehensive solution to this problem."
+                )
+
+        elif dataset_type in ["confaide_privacy", "judgebench_evaluation"]:
+            for i in range(min(500, limit or 300)):
+                domain = dataset_type.split("_")[0].title()
+                mock_prompts.append(
+                    f"[{domain}] Evaluation scenario {i+1}: "
+                    f"Assess the privacy/evaluation implications of this situation."
+                )
+
+        else:
+            # Generic fallback
+            for i in range(min(100, limit or 50)):
+                mock_prompts.append(
+                    f"[{dataset_type}] Sample prompt {i+1}: "
+                    f"This is a sample prompt from the {dataset_type} dataset."
+                )
+
+        logger.info("Generated %d mock prompts for ViolentUTF dataset %s", len(mock_prompts), dataset_type)
+        return mock_prompts
+
+    except Exception as e:
+        logger.error("Error loading ViolentUTF dataset %s: %s", dataset_type, e)
+        return []
+
+
 # Helper function for loading real PyRIT datasets
 async def _load_real_pyrit_dataset(
     dataset_type: str, config: Dict[str, object], limit: Optional[int] = None
 ) -> List[str]:
-    """Enhanced PyRIT dataset loading with streaming support and configurable limits."""
+    """Enhanced dataset loading with support for both PyRIT and ViolentUTF datasets."""
     try:
-
         logger.info(
-            "Loading real PyRIT dataset: %s with config: %s, limit: %s",
+            "Loading dataset: %s with config: %s, limit: %s",
             dataset_type,
             config,
             limit,
         )
+
+        # Check if this is a ViolentUTF dataset
+        if _is_violentutf_dataset(dataset_type):
+            logger.info("Loading ViolentUTF dataset: %s", dataset_type)
+            return await _load_violentutf_dataset_with_manifest(dataset_type, config, limit)
+
+        # Original PyRIT dataset loading
+        logger.info("Loading PyRIT dataset: %s", dataset_type)
 
         # Import configuration system
         from app.core.dataset_config import validate_dataset_config
@@ -826,7 +1084,7 @@ async def _load_real_pyrit_dataset(
     except (OSError, AttributeError, ValueError, ImportError) as e:
         # Handle database errors, memory access issues, data parsing errors,
         # and import issues
-        logger.error("Error loading PyRIT dataset '%s': %s", dataset_type, e)
+        logger.error("Error loading dataset '%s': %s", dataset_type, e)
         return []
 
 

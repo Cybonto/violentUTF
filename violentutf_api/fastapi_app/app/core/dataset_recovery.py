@@ -239,7 +239,7 @@ class PartialImportRecovery:
                     cast(Optional[Dict[str, object]], chunk_info.get("metadata", {})),
                 )
 
-                recovery_results["recovered_chunks"] = int(recovery_results["recovered_chunks"]) + 1
+                recovery_results["recovered_chunks"] = cast(int, recovery_results["recovered_chunks"]) + 1
 
             except Exception as e:
                 dataset_logger.warning(
@@ -247,7 +247,7 @@ class PartialImportRecovery:
                     chunk_index=chunk_info["chunk_index"],
                     error=str(e),
                 )
-                recovery_results["still_failed_chunks"] = int(recovery_results["still_failed_chunks"]) + 1
+                recovery_results["still_failed_chunks"] = cast(int, recovery_results["still_failed_chunks"]) + 1
 
         dataset_logger.info("Recovery attempt completed", **recovery_results)
 
