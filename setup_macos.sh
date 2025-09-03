@@ -1429,26 +1429,28 @@ parse_openapi_endpoints() {
     local spec_file="$1"
     local provider_id="$2"
     local endpoints_file="$3"
+    local cache_dir="$4"
 
     echo "Parsing OpenAPI endpoints..."
 
-    # Create Python script with proper parameter passing
-    if ! python3 - "$spec_file" "$provider_id" > "$endpoints_file" << 'EOF'
+    # Create Python script with proper parameter passing and error capture
+    local parse_error_file="${cache_dir}/${provider_id}_parse_error.log"
+    if ! python3 - "$spec_file" "$provider_id" > "$endpoints_file" 2> "$parse_error_file" << 'EOF'
 import json
-import yaml
 import sys
 
 try:
     spec_file = sys.argv[1]
     provider_id = sys.argv[2]
 
-    # Load the spec
+    # Debug: Print arguments
+    sys.stderr.write(f"Debug: spec_file={spec_file}, provider_id={provider_id}\n")
+
+    # Load the spec (we know it's JSON from validation step)
     with open(spec_file, 'r') as f:
-        content = f.read()
-        try:
-            spec = json.loads(content)
-        except:
-            spec = yaml.safe_load(content)
+        spec = json.load(f)
+
+    sys.stderr.write(f"Debug: Loaded spec with {len(spec.get('paths', {}))} paths\n")
 
     # Extract base information
     servers = spec.get('servers', [])
@@ -1457,6 +1459,8 @@ try:
     # Extract paths and operations
     paths = spec.get('paths', {})
     endpoints = []
+
+    sys.stderr.write(f"Debug: Processing {len(paths)} paths\n")
 
     for path, path_item in paths.items():
         # Skip if path item is a reference
@@ -1497,7 +1501,9 @@ try:
         'security_schemes': spec.get('components', {}).get('securitySchemes', {})
     }
 
+    sys.stderr.write(f"Debug: Found {len(endpoints)} total endpoints\n")
     print(json.dumps(result, indent=2))
+    sys.stderr.write("Debug: Successfully completed parsing\n")
 
 except Exception as e:
     import traceback
@@ -1511,6 +1517,12 @@ EOF
         return 0
     else
         echo "❌ Failed to parse endpoints"
+        if [ -f "$parse_error_file" ] && [ -s "$parse_error_file" ]; then
+            echo "Python error details:"
+            cat "$parse_error_file"
+        fi
+        echo "Debug: Spec file content preview:"
+        head -20 "$spec_file" 2>/dev/null || echo "Could not read spec file"
         return 1
     fi
 }
@@ -1779,7 +1791,7 @@ setup_openapi_routes() {
 
                     # Parse endpoints
                     local endpoints_file="$cache_dir/${provider_id}_endpoints.json"
-                    if parse_openapi_endpoints "$spec_file" "$provider_id" "$endpoints_file"; then
+                    if parse_openapi_endpoints "$spec_file" "$provider_id" "$endpoints_file" "$cache_dir"; then
                         echo "✅ OpenAPI endpoints parsed successfully"
 
                         # Process endpoints - save to temp file to avoid subshell issues
