@@ -23,6 +23,7 @@ from app.api.endpoints import (
     redteam,
     scorers,
     sessions,
+    validation,
 )
 from fastapi import APIRouter
 
@@ -61,3 +62,6 @@ api_router.include_router(orchestrators.router, prefix="/orchestrators", tags=["
 
 # APISIX admin endpoints for IronUTF plugin management
 api_router.include_router(apisix_admin.router)
+
+# Dataset validation endpoints (Issue #120)
+api_router.include_router(validation.router, prefix="/validation", tags=["validation"])
