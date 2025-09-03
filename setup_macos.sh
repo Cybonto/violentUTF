@@ -1723,14 +1723,16 @@ setup_openapi_routes() {
         APISIX_ADMIN_URL="http://localhost:9180"
     fi
 
-    # Check if APISIX is accessible before proceeding
-    if ! curl -s -f -H "X-API-KEY: ${APISIX_ADMIN_KEY}" "${APISIX_ADMIN_URL}/apisix/admin/routes" >/dev/null 2>&1; then
-        echo "❌ APISIX admin API not accessible at ${APISIX_ADMIN_URL}"
-        echo "   Please ensure APISIX is running and APISIX_ADMIN_KEY is correct"
-        echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:0:10}...${APISIX_ADMIN_KEY: -4}"
-        return 1
+    # Only check APISIX accessibility if called standalone (not during main setup)
+    if [ "${SKIP_APISIX_CHECK:-false}" != "true" ]; then
+        if ! curl -s -f -H "X-API-KEY: ${APISIX_ADMIN_KEY}" "${APISIX_ADMIN_URL}/apisix/admin/routes" >/dev/null 2>&1; then
+            echo "❌ APISIX admin API not accessible at ${APISIX_ADMIN_URL}"
+            echo "   Please ensure APISIX is running and APISIX_ADMIN_KEY is correct"
+            echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:0:10}...${APISIX_ADMIN_KEY: -4}"
+            return 1
+        fi
+        echo "✅ APISIX admin API is accessible"
     fi
-    echo "✅ APISIX admin API is accessible"
 
     local cache_dir="/tmp/violentutf_openapi_cache"
     mkdir -p "$cache_dir"
@@ -1954,7 +1956,7 @@ setup_ai_providers_enhanced() {
     fi
 
     echo "Setting up OpenAPI routes..."
-    if ! setup_openapi_routes; then
+    if ! SKIP_APISIX_CHECK=true setup_openapi_routes; then
         setup_errors=$((setup_errors + 1))
     fi
 
