@@ -79,7 +79,9 @@ SENSITIVE_VALUES=()
 SHARED_NETWORK_NAME="vutf-network"
 
 # --- AI Configuration via .env file ---
-AI_TOKENS_FILE="ai-tokens.env"
+# Get script directory to ensure we always look in repo root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+AI_TOKENS_FILE="$SCRIPT_DIR/ai-tokens.env"
 
 # --- Array to track created AI routes ---
 CREATED_AI_ROUTES=()
@@ -730,12 +732,17 @@ EOF
 
 # Function to load AI tokens from .env file
 load_ai_tokens() {
+    echo "Looking for AI tokens file at: $AI_TOKENS_FILE"
+
     if [ ! -f "$AI_TOKENS_FILE" ]; then
         echo "❌ $AI_TOKENS_FILE not found"
+        echo "Current working directory: $(pwd)"
+        echo "Available files in repo root:"
+        ls -la "$SCRIPT_DIR/" | grep -E "\.(env|ENV)$" || echo "No .env files found"
         return 1
     fi
 
-    echo "Loading AI configuration from $AI_TOKENS_FILE..."
+    echo "✅ Found AI tokens file, loading configuration..."
 
     # Load the .env file
     set -a  # automatically export all variables
@@ -743,6 +750,21 @@ load_ai_tokens() {
     set +a  # stop automatically exporting
 
     echo "✅ AI configuration loaded"
+
+    # Debug: Show OpenAPI configuration status
+    echo "OpenAPI configuration status:"
+    echo "  OPENAPI_ENABLED: ${OPENAPI_ENABLED:-not set}"
+    for i in {1..3}; do  # Check first 3 providers for brevity
+        local enabled_var="OPENAPI_${i}_ENABLED"
+        local id_var="OPENAPI_${i}_ID"
+        local base_url_var="OPENAPI_${i}_BASE_URL"
+        echo "  ${enabled_var}: ${!enabled_var:-not set}"
+        if [ "${!enabled_var}" = "true" ]; then
+            echo "    ${id_var}: ${!id_var:-not set}"
+            echo "    ${base_url_var}: ${!base_url_var:-not set}"
+        fi
+    done
+
     return 0
 }
 
@@ -1520,37 +1542,7 @@ create_openapi_route() {
 
     echo "Creating route: $uri -> ${base_url}/${endpoint_path}"
 
-    # Build auth configuration for ai-proxy
-    local auth_section=""
-    case "$auth_type" in
-        "bearer")
-            auth_section='"auth": {
-                "header": {
-                    "Authorization": "Bearer '"$auth_config"'"
-                }
-            },'
-            ;;
-        "api_key")
-            # auth_config format: "header:value"
-            # Use echo and pipe for compatibility
-            header=$(echo "$auth_config" | cut -d: -f1)
-            value=$(echo "$auth_config" | cut -d: -f2-)
-            auth_section='"auth": {
-                "header": {
-                    "'"$header"'": "'"$value"'"
-                }
-            },'
-            ;;
-        "basic")
-            # auth_config format: "username:password"
-            local basic_auth=$(echo -n "$auth_config" | base64)
-            auth_section='"auth": {
-                "header": {
-                    "Authorization": "Basic '"$basic_auth"'"
-                }
-            },'
-            ;;
-    esac
+    # Remove unused ai-proxy auth section - we use proxy-rewrite instead
 
     # Extract host from base_url for upstream configuration
     local host=$(echo "$base_url" | sed -E 's#https?://([^/]+).*#\1#')
@@ -1560,50 +1552,83 @@ create_openapi_route() {
         port=80
     fi
 
-    # Build auth headers for proxy-rewrite
+    # Build auth headers for proxy-rewrite - ensure valid JSON
     local auth_headers=""
     case "$auth_type" in
         "bearer")
-            auth_headers='"Authorization": "Bearer '"$auth_config"'"'
+            if [ -n "$auth_config" ]; then
+                auth_headers='"Authorization": "Bearer '"$auth_config"'"'
+            fi
             ;;
         "api_key")
             # auth_config format: "header:value"
             local header=$(echo "$auth_config" | cut -d: -f1)
             local value=$(echo "$auth_config" | cut -d: -f2-)
-            auth_headers='"'"$header"'": "'"$value"'"'
+            if [ -n "$header" ] && [ -n "$value" ]; then
+                auth_headers='"'"$header"'": "'"$value"'"'
+            fi
             ;;
         "basic")
             # auth_config format: "username:password"
-            local basic_auth=$(echo -n "$auth_config" | base64)
-            auth_headers='"Authorization": "Basic '"$basic_auth"'"'
+            if [ -n "$auth_config" ]; then
+                local basic_auth=$(echo -n "$auth_config" | base64)
+                auth_headers='"Authorization": "Basic '"$basic_auth"'"'
+            fi
+            ;;
+        *)
+            echo "⚠️  Unknown auth_type: $auth_type, skipping authentication headers"
             ;;
     esac
 
-    # Create route configuration with proxy-rewrite for OpenAPI routes
-    local route_config='{
-        "id": "'"$route_id"'",
-        "uri": "'"$uri"'",
-        "methods": ["'"$method"'"],
-        "desc": "'"$provider_name: $operation_id"'",
-        "upstream": {
-            "type": "roundrobin",
-            "nodes": {
-                "'"$host:$port"'": 1
+    # Create route configuration with conditional auth headers
+    if [ -n "$auth_headers" ]; then
+        # With authentication headers
+        local route_config='{
+            "id": "'"$route_id"'",
+            "uri": "'"$uri"'",
+            "methods": ["'"$method"'"],
+            "desc": "'"$provider_name: $operation_id"'",
+            "upstream": {
+                "type": "roundrobin",
+                "nodes": {
+                    "'"$host:$port"'": 1
+                },
+                "scheme": "'"$scheme"'"
             },
-            "scheme": "'"$scheme"'"
-        },
-        "plugins": {
-            "key-auth": {},
-            "proxy-rewrite": {
-                "regex_uri": ["^/ai/openapi/'"$provider_id"'/(.*)", "/$1"],
-                "headers": {
-                    "set": {
-                        '"$auth_headers"'
+            "plugins": {
+                "key-auth": {},
+                "proxy-rewrite": {
+                    "regex_uri": ["^/ai/openapi/'"$provider_id"'/(.*)", "/$1"],
+                    "headers": {
+                        "set": {
+                            '"$auth_headers"'
+                        }
                     }
                 }
             }
-        }
-    }'
+        }'
+    else
+        # Without authentication headers (for testing)
+        local route_config='{
+            "id": "'"$route_id"'",
+            "uri": "'"$uri"'",
+            "methods": ["'"$method"'"],
+            "desc": "'"$provider_name: $operation_id"'",
+            "upstream": {
+                "type": "roundrobin",
+                "nodes": {
+                    "'"$host:$port"'": 1
+                },
+                "scheme": "'"$scheme"'"
+            },
+            "plugins": {
+                "key-auth": {},
+                "proxy-rewrite": {
+                    "regex_uri": ["^/ai/openapi/'"$provider_id"'/(.*)", "/$1"]
+                }
+            }
+        }'
+    fi
 
     # Check if route already exists
     local existing_route=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
@@ -1656,10 +1681,29 @@ setup_openapi_routes() {
 
     echo "Setting up OpenAPI provider routes..."
 
+    # Load APISIX admin key from apisix/.env if not already set
+    if [ -z "$APISIX_ADMIN_KEY" ] && [ -f "$SCRIPT_DIR/apisix/.env" ]; then
+        echo "Loading APISIX configuration from apisix/.env..."
+        source "$SCRIPT_DIR/apisix/.env"
+    fi
+
+    # Validate required APISIX configuration
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ APISIX_ADMIN_KEY not found"
+        echo "   Please ensure APISIX setup has completed and apisix/.env exists"
+        return 1
+    fi
+
+    if [ -z "$APISIX_ADMIN_URL" ]; then
+        echo "Using default APISIX admin URL: http://localhost:9180"
+        APISIX_ADMIN_URL="http://localhost:9180"
+    fi
+
     # Check if APISIX is accessible before proceeding
     if ! curl -s -f -H "X-API-KEY: ${APISIX_ADMIN_KEY}" "${APISIX_ADMIN_URL}/apisix/admin/routes" >/dev/null 2>&1; then
         echo "❌ APISIX admin API not accessible at ${APISIX_ADMIN_URL}"
         echo "   Please ensure APISIX is running and APISIX_ADMIN_KEY is correct"
+        echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:0:10}...${APISIX_ADMIN_KEY: -4}"
         return 1
     fi
     echo "✅ APISIX admin API is accessible"
