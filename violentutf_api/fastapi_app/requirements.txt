@@ -10,7 +10,7 @@ duckdb>=1.1.0
 email-validator>=2.1.0
 # Core FastAPI dependencies - updated for PyRIT compatibility
 fastapi>=0.109.0
-garak
+# garak  # Disabled for startup - can be installed manually if needed
 google-cloud-aiplatform>=1.111.0
 httpx>=0.27.2
 huggingface-hub

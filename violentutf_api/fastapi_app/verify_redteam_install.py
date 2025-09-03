@@ -53,7 +53,7 @@ def main() -> None:
     # List of critical packages for FastAPI red teaming service
     packages_to_verify = [
         ("pyrit", "pyrit"),
-        ("garak", "garak"),
+        # ("garak", "garak"),  # Disabled for startup - can be installed manually if needed
         ("requests", "requests"),
         ("pydantic", "pydantic"),
         ("fastapi", "fastapi"),

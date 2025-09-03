@@ -18,6 +18,9 @@ This document provides solutions for Docker build failures in corporate environm
 **Root Cause:**
 Corporate firewalls like Zscaler intercept HTTPS traffic and present their own certificates. Docker containers don't trust these corporate certificates by default, causing SSL verification failures during build processes.
 
+**Enhanced Understanding:**
+The Rust installer (`rustup`) not only downloads the initial script but also makes additional HTTPS calls to download components like toolchains and libraries. These internal downloads also fail SSL verification in corporate environments, requiring comprehensive SSL bypass configuration.
+
 ## Solution Implementation
 
 The following solution has been implemented in `violentutf_api/fastapi_app/Dockerfile` to handle corporate SSL certificate issues:
@@ -35,24 +38,28 @@ ENV REQUESTS_CA_BUNDLE=""
 ENV SSL_VERIFY=false
 ```
 
-### 2. Rust Installation with SSL Fallback
+### 2. Comprehensive Rust Installation with SSL Bypass
 
-Enhanced Rust installation to try secure connection first, then fallback to insecure if needed:
+Enhanced Rust installation that handles both the installer script and internal component downloads with SSL bypass:
 
 ```dockerfile
-# Install Rust with corporate firewall/Zscaler support
+# Install Rust with comprehensive corporate firewall/Zscaler support
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
 
-# Corporate environment SSL handling for Rust installation
-# Try with certificates first, fallback to insecure if needed
-RUN set +e && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable; \
-    if [ $? -ne 0 ]; then \
-        echo "Standard SSL failed, trying with insecure connection (corporate environment)..."; \
-        curl --proto '=https' --tlsv1.2 -sSf -k https://sh.rustup.rs | \
-        sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable; \
-    fi && \
+# Corporate environment: Configure curl to ignore SSL for Rust installer
+# Create curl config that tells rustup to ignore SSL certificates
+RUN mkdir -p ~/.config && \
+    echo "insecure" > /etc/curl_config && \
+    echo "capath=" >> /etc/curl_config
+
+# Set environment variables for Rust installer SSL bypass
+ENV CURL_HOME=/etc
+ENV RUSTUP_USE_CURL=1
+ENV RUSTUP_CURL_OPTIONS="--insecure"
+
+# Install Rust with corporate SSL bypass
+RUN curl --insecure --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    RUSTUP_USE_CURL=1 sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
     chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 ```
 
@@ -66,6 +73,30 @@ RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted
         --no-cache-dir -r requirements.txt && \
     pip wheel --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org \
         --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
+```
+
+### 4. Machine Learning Package SSL Bypass
+
+Added environment variables for ML packages that download models during runtime:
+
+```dockerfile
+# Hugging Face and ML model download SSL bypass for corporate environments
+ENV HF_HUB_DISABLE_SSL=1
+ENV TRANSFORMERS_OFFLINE=0
+ENV HF_DATASETS_OFFLINE=0
+ENV TORCH_HOME=/tmp/torch_cache
+ENV TRANSFORMERS_CACHE=/tmp/transformers_cache
+ENV HF_HOME=/tmp/hf_cache
+```
+
+### 5. Package Verification with SSL Bypass
+
+Enhanced verification step to handle SSL issues during package imports:
+
+```dockerfile
+# Verify PyRIT and other packages installation with SSL bypass
+RUN PYTHONHTTPSVERIFY=0 SSL_VERIFY=false python verify_redteam_install.py && \
+    echo "✅ Package verification completed successfully"
 ```
 
 ## Alternative Solutions
