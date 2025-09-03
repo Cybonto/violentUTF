@@ -38,29 +38,44 @@ ENV REQUESTS_CA_BUNDLE=""
 ENV SSL_VERIFY=false
 ```
 
-### 2. Comprehensive Rust Installation with SSL Bypass
+### 2. Advanced Rust Installation - Complete Rustup Bypass
 
-Enhanced Rust installation that handles both the installer script and internal component downloads with SSL bypass:
+**NEW APPROACH:** Completely bypasses the rustup installer to avoid all SSL certificate issues:
 
 ```dockerfile
-# Install Rust with comprehensive corporate firewall/Zscaler support
-ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
-
-# Corporate environment: Configure curl to ignore SSL for Rust installer
-# Create curl config that tells rustup to ignore SSL certificates
-RUN mkdir -p ~/.config && \
-    echo "insecure" > /etc/curl_config && \
-    echo "capath=" >> /etc/curl_config
-
-# Set environment variables for Rust installer SSL bypass
-ENV CURL_HOME=/etc
-ENV RUSTUP_USE_CURL=1
-ENV RUSTUP_CURL_OPTIONS="--insecure"
-
-# Install Rust with corporate SSL bypass
-RUN curl --insecure --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    RUSTUP_USE_CURL=1 sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+# Corporate environment: Skip Rust installer entirely and download toolchain directly
+# This bypasses all SSL certificate issues with rustup's internal downloads
+RUN set -e && \
+    # Detect architecture
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        RUST_ARCH="x86_64-unknown-linux-gnu"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        RUST_ARCH="aarch64-unknown-linux-gnu"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    echo "Installing Rust for architecture: $RUST_ARCH" && \
+    \
+    # Download Rust toolchain directly without rustup installer
+    RUST_VERSION="1.70.0" && \
+    RUST_URL="https://static.rust-lang.org/dist/rust-${RUST_VERSION}-${RUST_ARCH}.tar.gz" && \
+    echo "Downloading Rust from: $RUST_URL" && \
+    curl --insecure -sSfL "$RUST_URL" -o /tmp/rust.tar.gz && \
+    \
+    # Extract and install Rust
+    cd /tmp && \
+    tar -xzf rust.tar.gz && \
+    cd "rust-${RUST_VERSION}-${RUST_ARCH}" && \
+    ./install.sh --prefix=/usr/local && \
+    \
+    # Cleanup
+    cd / && \
+    rm -rf /tmp/rust* && \
+    \
+    # Set up environment
+    echo 'export PATH="/usr/local/bin:$PATH"' >> /etc/profile && \
+    chmod -R a+w /usr/local/lib/rustlib || true
 ```
 
 ### 3. pip Installation with Trusted Hosts
@@ -101,7 +116,37 @@ RUN PYTHONHTTPSVERIFY=0 SSL_VERIFY=false python verify_redteam_install.py && \
 
 ## Alternative Solutions
 
-### Option 1: Certificate Injection (More Secure)
+### Option 1: Certificate Extraction and Injection (Recommended)
+
+Based on existing ViolentUTF documentation, extract and inject your corporate certificates:
+
+**Automatic Certificate Extraction:**
+```bash
+# Run the certificate extraction helper
+cd violentutf_api/fastapi_app
+./extract_corporate_certificates.sh
+```
+
+**Manual Certificate Extraction (macOS):**
+```bash
+# Extract Zscaler certificates from Keychain (from docs/guides/zscaler-setup.md)
+security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain > zscaler.pem
+security find-certificate -a -p /Library/Keychains/System.keychain | grep -A 20 -B 5 "Zscaler" > zscaler.crt
+
+# Copy to FastAPI directory
+cp zscaler.crt violentutf_api/fastapi_app/
+cp zscaler.pem violentutf_api/fastapi_app/
+```
+
+**Manual Certificate Extraction (from running services):**
+```bash
+# Extract from HTTPS endpoint (from docs/troubleshooting/https_ssl_quick_fixes.md)
+openssl s_client -connect your-gateway:443 -showcerts < /dev/null | \
+  sed -n '/BEGIN/,/END/p' > enterprise-ca.crt
+cp enterprise-ca.crt violentutf_api/fastapi_app/
+```
+
+### Option 2: Certificate Injection (More Secure)
 
 If you have access to your corporate root certificates, you can inject them into the Docker build:
 

@@ -13,6 +13,12 @@ show_help() {
     echo "                   networks, and cache (complete Docker environment reset)"
     echo "  --help, -h       Show this help message"
     echo ""
+    echo "Corporate Environment Support:"
+    echo "  The setup script automatically detects and handles corporate environments (Zscaler, enterprise proxies):"
+    echo "  • Extracts SSL certificates from macOS Keychain for Docker builds"
+    echo "  • Configures comprehensive SSL bypass for package installations"
+    echo "  • Provides troubleshooting guidance for certificate-related build failures"
+    echo ""
     echo "Note:"
     echo "  Cleanup operations gracefully shutdown only ViolentUTF-specific Streamlit processes (Home.py, violentutf directory)"
     echo "  Other Streamlit applications will not be affected. Graceful shutdown allows proper session cleanup."
@@ -32,6 +38,7 @@ show_help() {
     echo "  - PyRIT and Garak AI security frameworks"
     echo "  - PyRIT Orchestrator API for dataset testing and automation"
     echo "  - PyRIT Orchestrator integration validation for scorer testing"
+    echo "  - Corporate SSL certificate handling for Zscaler/enterprise environments"
     echo ""
     echo "Warning:"
     echo "  --deepcleanup will remove ALL Docker data on your system!"
@@ -2686,6 +2693,64 @@ echo "All configuration files created successfully!"
 echo ""
 
 # ---------------------------------------------------------------
+# PRE-SETUP: CORPORATE SSL CERTIFICATE HANDLING
+# ---------------------------------------------------------------
+echo "PRE-SETUP: CORPORATE SSL CERTIFICATE PREPARATION"
+echo "Checking for corporate environment and preparing SSL certificates..."
+
+# Detect corporate environment indicators
+CORPORATE_ENV_DETECTED=false
+if command -v security >/dev/null 2>&1; then
+    # Check for Zscaler or corporate certificates on macOS
+    if security find-certificate -a -p /Library/Keychains/System.keychain 2>/dev/null | grep -qi "zscaler\|corporate\|enterprise"; then
+        CORPORATE_ENV_DETECTED=true
+        echo "🏢 Corporate environment detected (Zscaler/Enterprise certificates found)"
+    fi
+fi
+
+# Check for common corporate proxy environment variables
+if [ -n "$https_proxy" ] || [ -n "$HTTPS_PROXY" ] || [ -n "$http_proxy" ] || [ -n "$HTTP_PROXY" ]; then
+    CORPORATE_ENV_DETECTED=true
+    echo "🏢 Corporate environment detected (Proxy environment variables found)"
+fi
+
+# Extract certificates for all future Docker builds
+FASTAPI_CERT_SCRIPT="violentutf_api/fastapi_app/extract_corporate_certificates.sh"
+if [ "$CORPORATE_ENV_DETECTED" = true ] || [ -f "$FASTAPI_CERT_SCRIPT" ]; then
+    echo "🔐 Extracting corporate certificates for Docker builds..."
+    echo "ℹ️  This ensures all Docker builds work properly in corporate environments"
+    echo ""
+
+    if [ -f "$FASTAPI_CERT_SCRIPT" ]; then
+        # Store current directory
+        ORIGINAL_DIR_CERT=$(pwd)
+
+        # Change to FastAPI app directory and run extraction
+        cd "violentutf_api/fastapi_app" || { echo "Warning: Could not access FastAPI directory"; }
+
+        if ./extract_corporate_certificates.sh; then
+            echo "✅ Corporate certificate extraction completed successfully"
+            echo "   Certificates are now available for Docker builds"
+        else
+            echo "⚠️  Certificate extraction encountered issues"
+            echo "   Docker builds will continue with comprehensive SSL bypass"
+        fi
+
+        # Return to original directory
+        cd "$ORIGINAL_DIR_CERT" || { echo "Warning: Could not return to original directory"; }
+    else
+        echo "ℹ️  Certificate extraction script not found"
+        echo "   Docker builds will rely on built-in SSL bypass mechanisms"
+    fi
+else
+    echo "ℹ️  No corporate environment detected, proceeding with standard setup"
+fi
+
+echo ""
+echo "SSL certificate preparation completed!"
+echo ""
+
+# ---------------------------------------------------------------
 # SECTION A: KEYCLOAK SETUP
 # ---------------------------------------------------------------
 echo "SECTION A: SETTING UP KEYCLOAK"
@@ -3126,7 +3191,64 @@ EOF
     echo "Ensuring APISIX docker-compose.yml has proper network configuration..."
     ensure_network_in_compose "docker-compose.yml" "apisix"
 
+    # ---------------------------------------------------------------
+    # B2.1. Corporate Environment SSL Certificate Handling
+    # ---------------------------------------------------------------
+    echo "Step B2.1: Checking for corporate SSL certificate requirements..."
+
+    # Detect corporate environment indicators
+    CORPORATE_ENV_DETECTED=false
+    if command -v security >/dev/null 2>&1; then
+        # Check for Zscaler or corporate certificates on macOS
+        if security find-certificate -a -p /Library/Keychains/System.keychain 2>/dev/null | grep -qi "zscaler\|corporate\|enterprise"; then
+            CORPORATE_ENV_DETECTED=true
+            echo "🏢 Corporate environment detected (Zscaler/Enterprise certificates found)"
+        fi
+    fi
+
+    # Check for common corporate proxy environment variables
+    if [ -n "$https_proxy" ] || [ -n "$HTTPS_PROXY" ] || [ -n "$http_proxy" ] || [ -n "$HTTP_PROXY" ]; then
+        CORPORATE_ENV_DETECTED=true
+        echo "🏢 Corporate environment detected (Proxy environment variables found)"
+    fi
+
+    # Extract certificates for Docker build if corporate environment detected
+    if [ "$CORPORATE_ENV_DETECTED" = true ] || [ -f "../violentutf_api/fastapi_app/extract_corporate_certificates.sh" ]; then
+        echo "🔐 Extracting corporate certificates for Docker build..."
+        echo "ℹ️  Corporate SSL fixes are enabled in Docker build:"
+        echo "   • Comprehensive SSL certificate bypass for Rust installation"
+        echo "   • Trusted host configuration for Python package installation"
+        echo "   • Corporate certificate integration for Zscaler/enterprise environments"
+        echo "   • Global curl SSL bypass configuration"
+
+        # Change to FastAPI app directory
+        FASTAPI_DIR="../violentutf_api/fastapi_app"
+        if [ -d "$FASTAPI_DIR" ] && [ -f "$FASTAPI_DIR/extract_corporate_certificates.sh" ]; then
+            echo "Running certificate extraction script..."
+            cd "$FASTAPI_DIR" || { echo "Warning: Could not access FastAPI directory"; }
+
+            # Run certificate extraction
+            if ./extract_corporate_certificates.sh; then
+                echo "✅ Certificate extraction completed successfully"
+            else
+                echo "⚠️  Certificate extraction encountered issues (build will continue with SSL bypass)"
+            fi
+
+            # Return to APISIX directory
+            cd - >/dev/null || cd "$ORIGINAL_DIR/apisix" || { echo "Failed to return to apisix directory"; exit 1; }
+        else
+            echo "ℹ️  Certificate extraction script not found, relying on Docker SSL bypass"
+        fi
+    else
+        echo "ℹ️  No corporate environment detected, proceeding with standard setup"
+    fi
+
     echo "Launching Docker Compose for APISIX..."
+    echo "ℹ️  Note: If Docker build fails with SSL certificate errors, this is expected in corporate environments"
+    echo "   The comprehensive SSL bypass in the Dockerfile should handle these issues automatically"
+    echo ""
+
+    # Attempt Docker build with enhanced error handling
     if ${DOCKER_COMPOSE_CMD} up -d; then
         echo "APISIX stack started successfully."
         echo "Waiting for APISIX to be fully operational (this might take a minute)..."
@@ -3156,9 +3278,49 @@ EOF
             exit 1
         fi
     else
-        echo "Failed to start APISIX stack. Check Docker Compose logs."
-        ${DOCKER_COMPOSE_CMD} logs
+        echo "❌ Failed to start APISIX stack. Analyzing failure..."
+
+        # Check for SSL certificate errors in logs
+        BUILD_LOGS=$(${DOCKER_COMPOSE_CMD} logs 2>&1)
+        if echo "$BUILD_LOGS" | grep -qi "ssl certificate\|unable to get local issuer certificate\|certificate problem\|self-signed certificate\|certificate verify failed\|curl.*60\|rustup.*ssl\|downloader.*https.*failed"; then
+            echo ""
+            echo "🔍 SSL Certificate Error Detected in Corporate Environment"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "This is a known issue in corporate environments with Zscaler or similar proxies."
+            echo ""
+            echo "📋 Troubleshooting Steps:"
+            echo "1. ✅ SSL bypass is already enabled in the Docker build"
+            echo "2. 🔐 Corporate certificate extraction was attempted"
+            echo "3. 🌐 The Docker build includes comprehensive SSL bypass configuration"
+            echo ""
+            echo "💡 Manual Resolution Options:"
+            echo "a) The Dockerfile has been updated with a new Rust installation approach that"
+            echo "   bypasses rustup entirely. Retry the build with no cache:"
+            echo "   cd apisix && ${DOCKER_COMPOSE_CMD} build --no-cache && ${DOCKER_COMPOSE_CMD} up -d"
+            echo ""
+            echo "b) Wait and retry - Sometimes corporate proxy issues are temporary:"
+            echo "   cd apisix && ${DOCKER_COMPOSE_CMD} up -d --build"
+            echo ""
+            echo "c) Check corporate certificate extraction:"
+            echo "   cd violentutf_api/fastapi_app && ./extract_corporate_certificates.sh"
+            echo ""
+            echo "d) Verify proxy settings (if applicable):"
+            echo "   echo \$https_proxy \$http_proxy"
+            echo ""
+            echo "e) Contact IT support if the issue persists"
+            echo ""
+            echo "📊 Build logs (last 50 lines):"
+            echo "$BUILD_LOGS" | tail -50
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        else
+            echo "❌ Docker build failed for unknown reasons. Check Docker Compose logs:"
+            ${DOCKER_COMPOSE_CMD} logs
+        fi
+
         cd "$ORIGINAL_DIR"
+        echo ""
+        echo "⚠️  Setup paused due to Docker build failure."
+        echo "   Please resolve the issue above and re-run the setup script."
         exit 1
     fi
     cd "$ORIGINAL_DIR" # Return to the original directory

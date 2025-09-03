@@ -25,9 +25,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install Zscaler certificates if they exist
-# Using a more Docker-friendly approach
-COPY zscaler.cr[t] CA.cr[t] /usr/local/share/ca-certificates/
+# Copy corporate certificates if they exist (Zscaler, enterprise CA, etc.)
+# Support multiple certificate file formats and names based on existing docs
+COPY zscaler.cr[t] CA.cr[t] zscaler.pe[m] enterprise-ca.cr[t] corporate.cr[t] /usr/local/share/ca-certificates/
 RUN update-ca-certificates || true
 
 # Set environment to use system certificates
@@ -38,21 +38,51 @@ ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 # Install Rust with comprehensive corporate firewall/Zscaler support
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
 
-# Corporate environment: Configure curl to ignore SSL for Rust installer
-# Create curl config that tells rustup to ignore SSL certificates
-RUN mkdir -p ~/.config && \
-    echo "insecure" > /etc/curl_config && \
-    echo "capath=" >> /etc/curl_config
+# Corporate environment: Global SSL bypass for all curl operations
+# Create system-wide curl configuration
+RUN echo "insecure" > ~/.curlrc && \
+    echo "insecure" > /etc/curlrc && \
+    mkdir -p /root/.config && \
+    echo "insecure" > /root/.config/curlrc
 
-# Set environment variables for Rust installer SSL bypass
-ENV CURL_HOME=/etc
+# Set comprehensive environment variables for SSL bypass
+ENV CURL_CA_BUNDLE=""
 ENV RUSTUP_USE_CURL=1
-ENV RUSTUP_CURL_OPTIONS="--insecure"
+ENV RUSTUP_INIT_SKIP_PATH_CHECK=yes
 
-# Install Rust with corporate SSL bypass
-RUN curl --insecure --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    RUSTUP_USE_CURL=1 sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+# Corporate environment: Skip Rust installer entirely and download toolchain directly
+# This bypasses all SSL certificate issues with rustup's internal downloads
+RUN set -e && \
+    # Detect architecture
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        RUST_ARCH="x86_64-unknown-linux-gnu"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        RUST_ARCH="aarch64-unknown-linux-gnu"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    echo "Installing Rust for architecture: $RUST_ARCH" && \
+    \
+    # Download Rust toolchain directly without rustup installer
+    RUST_VERSION="1.70.0" && \
+    RUST_URL="https://static.rust-lang.org/dist/rust-${RUST_VERSION}-${RUST_ARCH}.tar.gz" && \
+    echo "Downloading Rust from: $RUST_URL" && \
+    curl --insecure -sSfL "$RUST_URL" -o /tmp/rust.tar.gz && \
+    \
+    # Extract and install Rust
+    WORKDIR /tmp && \
+    tar -xzf rust.tar.gz && \
+    WORKDIR "rust-\${RUST_VERSION}-\${RUST_ARCH}" && \
+    ./install.sh --prefix=/usr/local && \
+    \
+    # Cleanup
+    WORKDIR / && \
+    rm -rf /tmp/rust* && \
+    \
+    # Set up environment
+    echo "export PATH=\"/usr/local/bin:\$PATH\"" >> /etc/profile && \
+    chmod -R a+w /usr/local/lib/rustlib || true
 
 # Verify Rust installation
 RUN rustc --version && cargo --version
@@ -107,20 +137,50 @@ ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 # Install Rust for runtime with comprehensive corporate firewall support
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
 
-# Corporate environment: Configure curl to ignore SSL for Rust installer (runtime)
-RUN mkdir -p ~/.config && \
-    echo "insecure" > /etc/curl_config && \
-    echo "capath=" >> /etc/curl_config
+# Corporate environment: Global SSL bypass for all curl operations (runtime)
+RUN echo "insecure" > ~/.curlrc && \
+    echo "insecure" > /etc/curlrc && \
+    mkdir -p /root/.config && \
+    echo "insecure" > /root/.config/curlrc
 
-# Set environment variables for Rust installer SSL bypass (runtime)
-ENV CURL_HOME=/etc
+# Set comprehensive environment variables for SSL bypass (runtime)
+ENV CURL_CA_BUNDLE=""
 ENV RUSTUP_USE_CURL=1
-ENV RUSTUP_CURL_OPTIONS="--insecure"
+ENV RUSTUP_INIT_SKIP_PATH_CHECK=yes
 
-# Install Rust with corporate SSL bypass (runtime)
-RUN curl --insecure --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    RUSTUP_USE_CURL=1 sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+# Corporate environment: Skip Rust installer entirely and download toolchain directly (runtime)
+# This bypasses all SSL certificate issues with rustup's internal downloads
+RUN set -e && \
+    # Detect architecture
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        RUST_ARCH="x86_64-unknown-linux-gnu"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        RUST_ARCH="aarch64-unknown-linux-gnu"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    echo "Installing Rust for architecture: $RUST_ARCH" && \
+    \
+    # Download Rust toolchain directly without rustup installer
+    RUST_VERSION="1.70.0" && \
+    RUST_URL="https://static.rust-lang.org/dist/rust-${RUST_VERSION}-${RUST_ARCH}.tar.gz" && \
+    echo "Downloading Rust from: $RUST_URL" && \
+    curl --insecure -sSfL "$RUST_URL" -o /tmp/rust.tar.gz && \
+    \
+    # Extract and install Rust
+    WORKDIR /tmp && \
+    tar -xzf rust.tar.gz && \
+    WORKDIR "rust-\${RUST_VERSION}-\${RUST_ARCH}" && \
+    ./install.sh --prefix=/usr/local && \
+    \
+    # Cleanup
+    WORKDIR / && \
+    rm -rf /tmp/rust* && \
+    \
+    # Set up environment
+    echo "export PATH=\"/usr/local/bin:\$PATH\"" >> /etc/profile && \
+    chmod -R a+w /usr/local/lib/rustlib || true
 
 # Copy wheels and install
 COPY --from=builder /build/wheels /wheels
