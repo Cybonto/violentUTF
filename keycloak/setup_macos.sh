@@ -2019,93 +2019,22 @@ replace_in_file() {
 # Function to obtain Keycloak admin access token
 get_keycloak_admin_token() {
     echo "Attempting to obtain Keycloak admin access token..."
-    local max_retries=3
-    local retry_count=0
     local token_response
+    token_response=$(curl -s -X POST "${KEYCLOAK_SERVER_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "username=${ADMIN_USER}" \
+      -d "password=${ADMIN_PASS}" \
+      -d "grant_type=password" \
+      -d "client_id=${ADMIN_CLIENT_ID}")
 
-    while [ $retry_count -lt $max_retries ]; do
-        if [ $retry_count -gt 0 ]; then
-            echo "Retrying admin token acquisition (attempt $((retry_count + 1))/$max_retries)..."
-            sleep 5
-        fi
+    ACCESS_TOKEN=$(echo "${token_response}" | jq -r .access_token)
 
-        token_response=$(curl -s -X POST "${KEYCLOAK_SERVER_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" \
-          -H "Content-Type: application/x-www-form-urlencoded" \
-          -d "username=${ADMIN_USER}" \
-          -d "password=${ADMIN_PASS}" \
-          -d "grant_type=password" \
-          -d "client_id=${ADMIN_CLIENT_ID}")
-
-        ACCESS_TOKEN=$(echo "${token_response}" | jq -r .access_token)
-
-        if [ -n "$ACCESS_TOKEN" ] && [ "$ACCESS_TOKEN" != "null" ]; then
-            echo "Successfully obtained Keycloak admin access token."
-            return 0
-        fi
-
-        retry_count=$((retry_count + 1))
-    done
-
-    # If we get here, all retries failed
-    echo "Error: Could not obtain Keycloak admin access token after $max_retries attempts."
-    echo "Response: ${token_response}"
-
-    # Check for specific HTTPS requirement error
-    if echo "${token_response}" | grep -q "HTTPS required"; then
-        echo ""
-        echo "🔧 TROUBLESHOOTING: HTTPS Required Error"
-        echo "This error occurs when Keycloak's master realm SSL requirement doesn't respect proxy configuration."
-        echo ""
-        echo "Applying master realm SSL fix..."
-
-        # Try to disable SSL requirement for master realm using kcadm
-        if docker exec keycloak-keycloak-1 bash -c '
-            export KC_PROXY=edge
-            /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin --client admin-cli
-            if [ $? -eq 0 ]; then
-                /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
-                echo "Master realm SSL requirement disabled for development"
-                exit 0
-            else
-                echo "Failed to configure master realm SSL"
-                exit 1
-            fi
-        ' 2>/dev/null; then
-            echo "✅ Master realm SSL configuration updated"
-            echo "Retrying admin token acquisition..."
-
-            # Try one more time after the fix
-            token_response=$(curl -s -X POST "${KEYCLOAK_SERVER_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" \
-              -H "Content-Type: application/x-www-form-urlencoded" \
-              -d "username=${ADMIN_USER}" \
-              -d "password=${ADMIN_PASS}" \
-              -d "grant_type=password" \
-              -d "client_id=${ADMIN_CLIENT_ID}")
-
-            ACCESS_TOKEN=$(echo "${token_response}" | jq -r .access_token)
-
-            if [ -n "$ACCESS_TOKEN" ] && [ "$ACCESS_TOKEN" != "null" ]; then
-                echo "Successfully obtained Keycloak admin access token after SSL fix."
-                return 0
-            fi
-        fi
-
-        echo ""
-        echo "Checking Keycloak proxy configuration..."
-        docker exec keycloak-keycloak-1 printenv | grep KC_PROXY || echo "KC_PROXY not set"
-        docker exec keycloak-keycloak-1 printenv | grep KC_HOSTNAME_STRICT || echo "KC_HOSTNAME_STRICT not set"
-        echo ""
-        echo "Current docker-compose.yml proxy settings:"
-        grep -A 5 "KC_PROXY" keycloak/docker-compose.yml || echo "Proxy settings not found in docker-compose.yml"
-        echo ""
-        echo "🔄 ALTERNATIVE SOLUTION: Restart the setup script:"
-        echo "  ./setup_macos.sh --cleanup"
-        echo "  ./setup_macos.sh"
-        echo ""
-        echo "📖 See docs/troubleshooting/keycloak_https_required_fix.md for detailed solution."
+    if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
+        echo "Error: Could not obtain Keycloak admin access token."
+        echo "Response: ${token_response}"
+        exit 1
     fi
-
-    exit 1
+    echo "Successfully obtained Keycloak admin access token."
 }
 
 # Function to make an authenticated API call to Keycloak
@@ -2783,11 +2712,6 @@ fi
 
 
 if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
-    # Wait a bit for Keycloak proxy configuration to be fully active
-    echo "Waiting for Keycloak proxy configuration to be fully active..."
-    sleep 5
-
-    # Retry admin token acquisition with better error handling
     get_keycloak_admin_token # Obtain admin token for subsequent API calls
 
     # ---------------------------------------------------------------
@@ -3042,25 +2966,8 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
     echo "Step 7: Secrets already configured."
 
     echo "Keycloak client and user configuration complete via API."
-
-    # ---------------------------------------------------------------
-    # 8. Apply SSL fixes for development environment
-    # ---------------------------------------------------------------
-    echo "Step 8: Applying development SSL configuration..."
-
-    # Apply SSL fix for master realm (already done by enhanced get_keycloak_admin_token)
-    # but ensure ViolentUTF realm also has proper SSL configuration
-    echo "Ensuring both realms have proper SSL configuration for development..."
-    docker exec keycloak-keycloak-1 /opt/keycloak/bin/kcadm.sh update realms/ViolentUTF -s sslRequired=none 2>/dev/null || echo "ViolentUTF realm SSL already configured"
-
-    echo "✅ SSL configuration applied for development environment"
 else
     echo "Skipped Keycloak setup steps 4-7 as stack was already running."
-
-    # Even if setup was skipped, ensure SSL configuration is correct
-    echo "Ensuring SSL configuration is correct for existing setup..."
-    get_keycloak_admin_token 2>/dev/null || echo "Admin token already available"
-    docker exec keycloak-keycloak-1 /opt/keycloak/bin/kcadm.sh update realms/ViolentUTF -s sslRequired=none 2>/dev/null || echo "SSL configuration already correct"
 fi # End of KEYCLOAK_SETUP_NEEDED conditional block
 
 # ---------------------------------------------------------------

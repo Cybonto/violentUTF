@@ -161,3 +161,4 @@ mypy_sample.txt
 _backup
 /node_modules
 bandit-report.json
+.vitutf

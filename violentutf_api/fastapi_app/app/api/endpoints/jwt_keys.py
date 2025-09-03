@@ -141,7 +141,7 @@ async def revoke_api_key(
 
 @router.get("/current", response_model=APIKeyResponse)
 @auth_rate_limit("auth_token")
-async def get_current_token(current_user: User = Depends(get_current_user)) -> object:
+async def get_current_token(request: Request, current_user: User = Depends(get_current_user)) -> object:
     """Get the current user's JWT token (from their session).
 
     This is useful for displaying the token in the UI.

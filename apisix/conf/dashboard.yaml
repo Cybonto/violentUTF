@@ -5,10 +5,10 @@ conf:
     host: 0.0.0.0
     port: 9000
   etcd:
-    endpoints: # Changed from 'host' to 'endpoints'
+    endpoints:           # Changed from 'host' to 'endpoints'
       - "http://etcd:2379"
-    prefix: "/apisix" # Add this to explicitly set the prefix
-    timeout: 30 # Add explicit timeout
+    prefix: "/apisix"     # Add this to explicitly set the prefix
+    timeout: 30           # Add explicit timeout
   log:
     error_log:
       level: warn
@@ -17,8 +17,8 @@ conf:
       file_path: "logs/access.log"
 
 authentication:
-  secret: Ng0W6xtXyPTUeV285UOtSSrUzTyWaXuN
+  secret: NAZszAHlueipQI9yRGQJy68y4H0nLUxn
   expire_time: 3600
   users:
     - username: admin
-      password: qNCFAxuWuYBJnxkXetHoaB1zV9q6cATH
+      password: w41mKQSOZyaz7FkeXyt2lLtJjvYSrhtC
