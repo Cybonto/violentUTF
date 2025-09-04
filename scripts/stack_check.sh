@@ -977,16 +977,46 @@ except:
                                 echo -e "  ${YELLOW}Debug: Expected prefix: $route_uri${NC}"
                             fi
 
-                            # Test 4: Direct test from container to upstream
-                            echo -e "${BOLD}Test 5.4:${NC} Container to upstream connectivity"
-                            local upstream_test_url="${upstream_scheme:-https}://$upstream_host/api/v1/models"
-                            echo -e "  Testing: $upstream_test_url"
+                            # Test 4: Check if Authorization header is configured in proxy-rewrite
+                            echo -e "${BOLD}Test 5.4:${NC} Authorization header configuration"
+                            local auth_header=$(echo "$route_config" | grep -o '"Authorization":"[^"]*"' | cut -d'"' -f4)
+                            if [ -n "$auth_header" ]; then
+                                echo -e "  ${GREEN}✓${NC} Authorization header is configured in proxy-rewrite"
+                                echo -e "  Header value: ${auth_header:0:30}..."
 
-                            local container_response=$(docker exec apisix-apisix sh -c \
-                                "wget --spider --timeout=3 -S '$upstream_test_url' 2>&1" 2>/dev/null | head -20)
+                                # Extract the token for display
+                                local bearer_token="${auth_header#Bearer }"
 
-                            if echo "$container_response" | grep -q "200 OK\|401\|403"; then
-                                echo -e "  ${GREEN}✓${NC} Upstream is reachable from container"
+                                # Test from debuq container if available
+                                if docker ps --format "{{.Names}}" | grep -q "violentutf-debuq"; then
+                                    echo -e "  Testing upstream with configured token from debuq container..."
+                                    local upstream_test_url="${upstream_scheme:-https}://$upstream_host/api/v1/models"
+
+                                    local container_response=$(docker exec violentutf-debuq sh -c \
+                                        "curl -s -o /dev/null -w '%{http_code}' --connect-timeout 3 \
+                                        -H 'Authorization: $auth_header' \
+                                        '$upstream_test_url'" 2>/dev/null)
+
+                                    if [ "$container_response" = "200" ]; then
+                                        echo -e "  ${GREEN}✓${NC} Upstream accepts the configured token (HTTP 200)"
+                                    elif [ "$container_response" = "401" ]; then
+                                        echo -e "  ${RED}✗${NC} Token is rejected by upstream (HTTP 401)"
+                                        ROOT_CAUSE="The API token in proxy-rewrite is invalid or expired"
+                                    elif [ "$container_response" = "000" ] || [ -z "$container_response" ]; then
+                                        echo -e "  ${RED}✗${NC} Cannot reach upstream from container network"
+                                        ROOT_CAUSE="Network connectivity issue from Docker network to upstream"
+                                    else
+                                        echo -e "  ${YELLOW}⚠${NC} Upstream returned HTTP $container_response"
+                                    fi
+                                else
+                                    echo -e "  ${CYAN}ℹ${NC} Debuq container not running - cannot test upstream directly"
+                                    echo -e "  ${CYAN}  Run: docker-compose -f docker-compose.debuq.standalone.yml up -d${NC}"
+                                fi
+                            else
+                                echo -e "  ${RED}✗${NC} No Authorization header in proxy-rewrite!"
+                                echo -e "  ${YELLOW}Run fix_staging_openapi_routes.sh with correct API key${NC}"
+                                ROOT_CAUSE="Missing Authorization header in proxy-rewrite plugin"
+                            fi
 
                                 # Test 5: Check proxy-rewrite configuration details
                                 echo -e "${BOLD}Test 5.5:${NC} Proxy-rewrite plugin details"
@@ -1040,7 +1070,6 @@ except:
                                 echo "$container_response" | grep -E "failed|error|refused|timeout" | head -5
                                 ROOT_CAUSE="Network connectivity issue from APISIX to upstream"
                             fi
-                            fi  # End of "if route is enabled" check
                             ;;
                         502|503)
                             echo -e "  ${YELLOW}⚠ WARN${NC}: Gateway error (HTTP $test_response)"
