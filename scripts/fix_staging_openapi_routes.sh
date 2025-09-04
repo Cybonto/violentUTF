@@ -153,30 +153,45 @@ update_route() {
     local api_port=""
     local api_host=""
 
-    # First check existing working routes to see what's being used
-    echo "    Checking existing routes for upstream configuration..."
-    local existing_upstream=$(curl -s "${APISIX_ADMIN_URL}/apisix/admin/routes" \
+    # First check if we're in dev environment with special OpenAPI proxy
+    echo "    Checking for OpenAPI proxy configuration..."
+
+    # Check if there's a working OpenAPI route we can copy from
+    local existing_openapi_upstream=$(curl -s "${APISIX_ADMIN_URL}/apisix/admin/routes" \
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null | \
         python3 -c "
 import sys, json
 try:
     data = json.load(sys.stdin)
-    # Look for any route pointing to violentutf or port 8000/8081
+    # Look specifically for existing OpenAPI routes that work
+    for item in data.get('list', []):
+        key = item.get('key', '')
+        if 'openapi' in key.lower():
+            route = item.get('value', {})
+            nodes = route.get('upstream', {}).get('nodes', {})
+            for node in nodes:
+                # Prefer routes using port 8081 (OpenAPI proxy)
+                if ':8081' in node:
+                    print(node)
+                    sys.exit(0)
+    # Fallback to any route with violentutf
     for item in data.get('list', []):
         route = item.get('value', {})
         nodes = route.get('upstream', {}).get('nodes', {})
         for node in nodes:
-            if 'violentutf' in node.lower() or ':8000' in node or ':8081' in node:
+            if 'violentutf' in node.lower() or ':8000' in node:
                 print(node)
                 sys.exit(0)
 except:
     pass
 " 2>/dev/null | head -1)
 
+    local existing_upstream="$existing_openapi_upstream"
+
     if [ -n "$existing_upstream" ]; then
         api_host=$(echo "$existing_upstream" | cut -d':' -f1)
         api_port=$(echo "$existing_upstream" | cut -d':' -f2)
-        echo "    Found existing route using: ${api_host}:${api_port}"
+        echo "    Found existing OpenAPI route using: ${api_host}:${api_port}"
     else
         # Check if container is running and get port from logs (non-blocking)
         echo "    Checking FastAPI container logs..."
@@ -209,8 +224,8 @@ except:
     else
         echo -e "    ${YELLOW}⚠ Could not verify connectivity (may still work)${NC}"
 
-        # If primary port fails, try common alternatives
-        for alt_port in 8000 8001 8081 8080; do
+        # If primary port fails, try common alternatives (8081 is OpenAPI proxy)
+        for alt_port in 8081 8000 8001 8080; do
             if [ "$alt_port" != "$api_port" ]; then
                 if timeout 1 docker exec apisix-apisix sh -c "echo > /dev/tcp/${api_host}/${alt_port}" 2>/dev/null; then
                     api_port="$alt_port"
