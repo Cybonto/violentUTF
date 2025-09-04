@@ -1550,10 +1550,11 @@ create_openapi_route() {
     local auth_type="$7"
     local auth_config="$8"
 
-    # Generate route ID with path hash for uniqueness
+    # Generate shorter, safer route ID
     local path_hash=$(echo -n "${method}:${endpoint_path}" | md5sum | cut -c1-8)
-    local safe_operation_id=$(echo "$operation_id" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
-    local route_id="openapi-${provider_id}-${safe_operation_id}-${path_hash}"
+    # Create a short identifier from the endpoint path
+    local endpoint_short=$(echo "$endpoint_path" | sed 's/.*\///g' | sed 's/[^a-zA-Z0-9]//g' | tr '[:upper:]' '[:lower:]')
+    local route_id="openapi-${provider_id}-${endpoint_short}-${path_hash}"
 
     # Convert OpenAPI path parameters to APISIX wildcards
     # {id} -> *, {userId} -> *, etc.
@@ -1568,12 +1569,17 @@ create_openapi_route() {
 
     # Remove unused ai-proxy auth section - we use proxy-rewrite instead
 
-    # Extract host from base_url for upstream configuration
-    local host=$(echo "$base_url" | sed -E 's#https?://([^/]+).*#\1#')
+    # Extract host and port from base_url for upstream configuration
     local scheme=$(echo "$base_url" | sed -E 's#(https?)://.*#\1#')
-    local port=443
-    if [ "$scheme" = "http" ]; then
-        port=80
+    local host_port=$(echo "$base_url" | sed -E 's#https?://([^/]+).*#\1#')
+
+    # Check if port is specified in URL
+    if [[ "$host_port" == *":"* ]]; then
+        local host=$(echo "$host_port" | cut -d: -f1)
+        local port=$(echo "$host_port" | cut -d: -f2)
+    else
+        local host="$host_port"
+        local port=$([ "$scheme" = "https" ] && echo "443" || echo "80")
     fi
 
     # Build auth headers for proxy-rewrite - ensure valid JSON
@@ -1679,8 +1685,16 @@ create_openapi_route() {
       -H "Content-Type: application/json" \
       -d "${route_config}" 2>&1)
 
-    http_code="${response: -3}"
-    local response_body="${response:0:-3}"
+    # Extract HTTP code and response body safely
+    local response_length=${#response}
+    if [ $response_length -ge 3 ]; then
+        http_code="${response: -3}"
+        local body_length=$((response_length - 3))
+        local response_body="${response:0:$body_length}"
+    else
+        http_code=""
+        local response_body="$response"
+    fi
 
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
         echo "✅ Successfully created route for $operation_id"
@@ -2768,7 +2782,24 @@ GENERATOR_TYPE_MAPPING=AI Gateway:apisix_ai_gateway
 SERVICE_NAME=ViolentUTF API
 SERVICE_VERSION=1.0.0
 DEBUG=false
+
 EOF
+
+# Add AI Provider Configuration from ai-tokens.env if it exists
+if [ -f "ai-tokens.env" ]; then
+    echo "Adding AI provider configuration from ai-tokens.env..."
+    cat >> violentutf_api/fastapi_app/.env <<EOF
+
+# AI Provider Configuration (from ai-tokens.env)
+# These enable/disable providers in the UI
+EOF
+    # Read and append all relevant variables from ai-tokens.env
+    grep -E "^(OPENAI_ENABLED|ANTHROPIC_ENABLED|OLLAMA_ENABLED|OPEN_WEBUI_ENABLED|OPENAPI_ENABLED)" ai-tokens.env >> violentutf_api/fastapi_app/.env 2>/dev/null || true
+    grep -E "^OPENAPI_[0-9]+_" ai-tokens.env >> violentutf_api/fastapi_app/.env 2>/dev/null || true
+    echo "✅ Added AI provider settings from ai-tokens.env"
+else
+    echo "⚠️  ai-tokens.env not found - AI provider configuration will use defaults from FastAPI config.py"
+fi
 echo "✅ Created violentutf_api/fastapi_app/.env"
 
 # Synchronize environment variables between services
