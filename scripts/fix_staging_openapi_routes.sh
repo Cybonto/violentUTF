@@ -72,7 +72,7 @@ update_route() {
 
     # Generate route ID with suffix
     local suffix=$(generate_suffix)
-    local route_id="${route_base}${suffix}"
+    local route_id="${route_base}-${suffix}"
 
     echo -e "${BLUE}Updating: $description${NC}"
     echo "  Route ID: $route_id"
@@ -88,9 +88,9 @@ update_route() {
         "upstream": {
             "type": "roundrobin",
             "nodes": {
-                "api.dev.gsai.mcaas.fcs.gsa.gov:443": 1
+                "violentutf_api:8081": 1
             },
-            "scheme": "https",
+            "scheme": "http",
             "pass_host": "pass"
         },
         "plugins": {
