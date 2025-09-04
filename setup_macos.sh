@@ -684,41 +684,9 @@ AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key_here
 AWS_SESSION_TOKEN=your_aws_session_token_here_if_using_temp_credentials
 
 # OpenAPI Provider Configuration
-# Support for generic OpenAPI-compliant endpoints
-OPENAPI_ENABLED=false
-
-# OpenAPI Provider 1
-OPENAPI_1_ENABLED=false
-OPENAPI_1_ID=custom-api-1
-OPENAPI_1_NAME="Custom API Provider 1"
-OPENAPI_1_BASE_URL=https://api.example.com
-OPENAPI_1_SPEC_PATH=/openapi.json
-OPENAPI_1_AUTH_TYPE=bearer
-OPENAPI_1_AUTH_TOKEN=your_bearer_token_here
-# Optional: Custom headers (comma-separated key:value pairs)
-OPENAPI_1_CUSTOM_HEADERS=""
-
-# OpenAPI Provider 2 (API Key example)
-OPENAPI_2_ENABLED=false
-OPENAPI_2_ID=internal-api
-OPENAPI_2_NAME="Internal AI Service"
-OPENAPI_2_BASE_URL=https://internal.company.com/ai/v1
-OPENAPI_2_SPEC_PATH=/swagger.json
-OPENAPI_2_AUTH_TYPE=api_key
-OPENAPI_2_API_KEY=your_api_key_here
-OPENAPI_2_API_KEY_HEADER=X-API-Key
-OPENAPI_2_CUSTOM_HEADERS=""
-
-# OpenAPI Provider 3 (Basic Auth example)
-OPENAPI_3_ENABLED=false
-OPENAPI_3_ID=legacy-api
-OPENAPI_3_NAME="Legacy API System"
-OPENAPI_3_BASE_URL=https://legacy.system.com
-OPENAPI_3_SPEC_PATH=/api-docs/openapi.yaml
-OPENAPI_3_AUTH_TYPE=basic
-OPENAPI_3_BASIC_USERNAME=username
-OPENAPI_3_BASIC_PASSWORD=password
-OPENAPI_3_CUSTOM_HEADERS=""
+# These defaults will be overridden by ai-tokens.env if it exists
+# Keeping minimal defaults to prevent undefined variable errors
+OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
 
 # Add more providers as needed following the same pattern
 # Maximum supported: 10 providers (OPENAPI_1 through OPENAPI_10)
