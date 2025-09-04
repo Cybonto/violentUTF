@@ -15,7 +15,10 @@ services:
       - apisix_network
 
   apisix:
-    image: apache/apisix:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.apisix
+    image: apisix-with-tools:latest
     depends_on:
       - etcd
     ports:

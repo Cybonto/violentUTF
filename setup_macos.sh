@@ -3378,6 +3378,22 @@ EOF
         echo "ℹ️  No corporate environment detected, proceeding with standard setup"
     fi
 
+    echo "Building custom APISIX image with network tools..."
+    echo "ℹ️  This adds network debugging tools (curl, wget, ping, etc.) to APISIX container"
+
+    # Build the custom APISIX image if Dockerfile exists
+    if [ -f "Dockerfile.apisix" ]; then
+        echo "Building apisix-with-tools image..."
+        if ${DOCKER_COMPOSE_CMD} build apisix; then
+            echo "✅ Custom APISIX image built successfully"
+        else
+            echo "⚠️  Failed to build custom APISIX image, falling back to standard image"
+        fi
+    else
+        echo "⚠️  Dockerfile.apisix not found, using standard APISIX image"
+    fi
+
+    echo ""
     echo "Launching Docker Compose for APISIX..."
     echo "ℹ️  Note: If Docker build fails with SSL certificate errors, this is expected in corporate environments"
     echo "   The comprehensive SSL bypass in the Dockerfile should handle these issues automatically"

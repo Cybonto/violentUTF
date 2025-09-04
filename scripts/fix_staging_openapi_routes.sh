@@ -236,7 +236,45 @@ except:
         done
     fi
 
-    echo "  Final upstream configuration: ${api_host}:${api_port}"
+    # For staging, always use GSAi directly (not violentutf_api)
+    # Check if we're in dev (ai-gov-api present) or staging
+    local final_scheme="https"
+
+    if docker ps | grep -q "ai-gov-api"; then
+        echo "  Dev environment detected (ai-gov-api present)"
+        # In dev, use the ai-gov-api service
+        # First try to get the IP address of ai-gov-api
+        local ai_gov_ip=$(docker inspect ai-gov-api-app-1 2>/dev/null | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    for net in data[0]['NetworkSettings']['Networks'].values():
+        if net['IPAddress']:
+            print(net['IPAddress'])
+            break
+except:
+    pass
+" 2>/dev/null)
+
+        if [ -n "$ai_gov_ip" ]; then
+            api_host="$ai_gov_ip"
+            api_port="8081"
+        else
+            # Fallback to known dev IP
+            api_host="192.168.131.5"
+            api_port="8081"
+        fi
+        final_scheme="http"
+        echo "    Using ai-gov-api at ${api_host}:${api_port}"
+    else
+        echo "  Staging/Production environment - using GSAi directly"
+        # Override to use GSAi endpoint directly
+        api_host="api.dev.gsai.mcaas.fcs.gsa.gov"
+        api_port="443"
+        final_scheme="https"
+    fi
+
+    echo "  Final upstream configuration: ${final_scheme}://${api_host}:${api_port}"
 
     # Create the complete route configuration
     local route_config='{
@@ -249,7 +287,7 @@ except:
             "nodes": {
                 "'"${api_host}:${api_port}"'": 1
             },
-            "scheme": "http",
+            "scheme": "'"${final_scheme}"'",
             "pass_host": "pass"
         },
         "plugins": {
