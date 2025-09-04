@@ -16,5 +16,4 @@ services:
 
 networks:
   default:
-    name: violentutf_default
-    external: true
+    driver: bridge
