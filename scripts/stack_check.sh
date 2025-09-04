@@ -764,7 +764,7 @@ comprehensive_openapi_debug() {
             echo -e "${BOLD}Testing:${NC} Checking route configuration"
 
             # Check for regex_uri
-            local models_route_id="openapi-${OPENAPI_ID}-models-"
+            local models_route_id="openapi-${OPENAPI_ID}-models"
             local route_id=$(echo "$route_list" | grep -o "\"id\":\"${models_route_id}[^\"]*\"" | head -1 | cut -d'"' -f4)
 
             if [ -n "$route_id" ]; then
