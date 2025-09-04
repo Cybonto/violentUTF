@@ -15,7 +15,8 @@ print_error() { echo -e "${RED}❌ $1${NC}"; }
 print_warning() { echo -e "${YELLOW}⚠️ $1${NC}"; }
 print_info() { echo -e "${BLUE}ℹ️ $1${NC}"; }
 
-# Get inputs
+# Get inputs - use provided token or prompt
+FASTAPI_TOKEN="${FASTAPI_TOKEN:-4mHVvoZralWPYJvo5W5KgWyob4gOEow2}"
 if [ -z "$FASTAPI_TOKEN" ]; then
     echo -n "Enter your FastAPI Bearer token: "
     read -s FASTAPI_TOKEN

@@ -34,11 +34,11 @@ else
     echo "❌ Failed to call AI Gateway params API"
 fi
 
-# Test 2: Find OpenAPI routes
+# Test 2: Find OpenAPI routes (fixed JSON parsing)
 echo -e "\n2️⃣ Finding OpenAPI routes..."
 routes=$(curl -s "$APISIX_ADMIN_URL/apisix/admin/routes" \
     -H "X-API-KEY: $APISIX_ADMIN_KEY" | \
-    jq -r '.list.list[] | select(.uri | contains("openapi")) | .uri' 2>/dev/null)
+    jq -r '.. | .uri? // empty' 2>/dev/null | grep -i openapi || echo "")
 
 if [ -n "$routes" ]; then
     echo "✅ Found OpenAPI routes:"
@@ -78,7 +78,7 @@ orch_response=$(curl -s -w "\nSTATUS:%{http_code}" \
             }
         }
     }' \
-    "$FASTAPI_BASE_URL/api/v1/orchestrator/create")
+    "$FASTAPI_BASE_URL/api/v1/orchestrators/create")
 
 status=$(echo "$orch_response" | grep "STATUS:" | cut -d: -f2)
 if [ "$status" = "200" ] || [ "$status" = "201" ]; then
