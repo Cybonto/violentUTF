@@ -158,8 +158,7 @@ nginx_config:
   max_running_timers: 4096
   stream:
     access_log: logs/access_stream.log
-    access_log_format: $remote_addr [$time_local] $protocol $status $bytes_sent $bytes_received
-      $session_time
+    access_log_format: $remote_addr [$time_local] $protocol $status $bytes_sent $bytes_received $session_time
     access_log_format_escape: default
     lua_shared_dict:
       plugin-limit-conn-stream: 10m

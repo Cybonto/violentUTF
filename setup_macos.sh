@@ -3378,6 +3378,58 @@ EOF
         echo "ℹ️  No corporate environment detected, proceeding with standard setup"
     fi
 
+    # Validate YAML configuration files before starting
+    echo "Validating APISIX configuration files..."
+    YAML_VALID=true
+
+    # Check config.yaml
+    if [ -f "conf/config.yaml" ]; then
+        if python3 -c "import yaml; yaml.safe_load(open('conf/config.yaml'))" 2>/dev/null; then
+            echo "  ✅ config.yaml is valid"
+        else
+            echo "  ❌ config.yaml has YAML syntax errors!"
+            echo "     Please fix the following issues:"
+            python3 -c "
+import yaml, sys
+try:
+    yaml.safe_load(open('conf/config.yaml'))
+except yaml.YAMLError as e:
+    print(f'     {e}')
+" 2>&1
+            YAML_VALID=false
+        fi
+    fi
+
+    # Check dashboard.yaml if it exists
+    if [ -f "conf/dashboard.yaml" ]; then
+        if python3 -c "import yaml; yaml.safe_load(open('conf/dashboard.yaml'))" 2>/dev/null; then
+            echo "  ✅ dashboard.yaml is valid"
+        else
+            echo "  ❌ dashboard.yaml has YAML syntax errors!"
+            echo "     Please fix the following issues:"
+            python3 -c "
+import yaml, sys
+try:
+    yaml.safe_load(open('conf/dashboard.yaml'))
+except yaml.YAMLError as e:
+    print(f'     {e}')
+" 2>&1
+            YAML_VALID=false
+        fi
+    fi
+
+    if [ "$YAML_VALID" = false ]; then
+        echo ""
+        echo "❌ Configuration files have errors. Please fix them before continuing."
+        echo "   Common issues:"
+        echo "   • Check indentation (use spaces, not tabs)"
+        echo "   • Ensure multiline strings are properly formatted"
+        echo "   • Look for missing or extra colons"
+        cd "$ORIGINAL_DIR"
+        exit 1
+    fi
+
+    echo ""
     echo "Building custom APISIX image with network tools..."
     echo "ℹ️  This adds network debugging tools (curl, wget, ping, etc.) to APISIX container"
 
