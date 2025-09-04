@@ -787,6 +787,30 @@ comprehensive_openapi_debug() {
                     echo -e "\n${CYAN}  ── Level 4: Endpoint Functionality Test ──${NC}"
                     echo -e "${BOLD}Testing:${NC} Can we reach the models endpoint?"
 
+                    # If no API key provided, try to discover one first
+                    if [ -z "$APISIX_API_KEY" ] || [ "$APISIX_API_KEY" = " " ]; then
+                        echo "  No API key provided, discovering..."
+                        local temp_consumers=$(curl -s "$APISIX_ADMIN_URL/apisix/admin/consumers" \
+                            -H "X-API-KEY: $APISIX_ADMIN_KEY" 2>/dev/null)
+
+                        APISIX_API_KEY=$(echo "$temp_consumers" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    for item in data.get('list', []):
+        plugins = item.get('value', {}).get('plugins', {})
+        if 'key-auth' in plugins:
+            print(plugins['key-auth'].get('key', ''))
+            break
+except:
+    pass
+" 2>/dev/null)
+
+                        if [ -n "$APISIX_API_KEY" ]; then
+                            echo "  Discovered key: ${APISIX_API_KEY:0:10}..."
+                        fi
+                    fi
+
                     local test_url="$APISIX_URL/ai/openapi/$OPENAPI_ID/api/v1/models"
                     local test_response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
                         "$test_url" \
@@ -802,7 +826,112 @@ comprehensive_openapi_debug() {
                             echo -e "  ${RED}✗ FAIL${NC}: Authentication failed (HTTP $test_response)"
                             ((failed++))
                             echo -e "  ${YELLOW}Debug: API key used: ${APISIX_API_KEY:0:10}...${NC}"
-                            ROOT_CAUSE="API key authentication issue"
+
+                            # Try to discover correct consumer key
+                            echo -e "\n${YELLOW}    ∙ Level 5: Authentication Investigation${NC}"
+                            echo -e "${BOLD}Test 5.1:${NC} Discovering available consumer keys"
+                            echo "  Fetching consumers from: $APISIX_ADMIN_URL"
+
+                            local consumers=$(curl -s "$APISIX_ADMIN_URL/apisix/admin/consumers" \
+                                -H "X-API-KEY: $APISIX_ADMIN_KEY" 2>/dev/null)
+
+                            # Debug: Check if consumers were fetched
+                            if [ -z "$consumers" ]; then
+                                echo -e "  ${RED}✗${NC} No consumers data received"
+                                ROOT_CAUSE="Cannot fetch consumers - check APISIX Admin Key"
+                            elif echo "$consumers" | grep -q "error"; then
+                                echo -e "  ${RED}✗${NC} Error fetching consumers"
+                                echo "  Response: $(echo "$consumers" | head -1)"
+                                ROOT_CAUSE="Error accessing consumer configuration"
+                            else
+                                # Get consumer keys more reliably
+                                local consumer_keys=$(echo "$consumers" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    for item in data.get('list', []):
+        plugins = item.get('value', {}).get('plugins', {})
+        if 'key-auth' in plugins:
+            print(plugins['key-auth'].get('key', ''))
+except:
+    pass
+" 2>/dev/null)
+
+                            if [ -n "$consumer_keys" ]; then
+                                echo -e "  ${GREEN}✓${NC} Found consumer keys:"
+                                echo "$consumer_keys" | while read -r key; do
+                                    if [ -n "$key" ]; then
+                                        echo "    - ${key:0:10}..."
+                                    fi
+                                done
+
+                                # Test with first valid discovered key
+                                local first_key=$(echo "$consumer_keys" | grep -v "^$" | head -1)
+                                echo -e "\n${BOLD}Test 5.2:${NC} Testing with discovered key"
+                                echo "  Using key: ${first_key:0:10}..."
+
+                                local retry_response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
+                                    "$test_url" \
+                                    -H "apikey: $first_key" 2>/dev/null)
+
+                                if [ "$retry_response" = "200" ]; then
+                                    echo -e "  ${GREEN}✓${NC} Success with discovered key!"
+                                    echo -e "  ${YELLOW}Automatically updating API key for this session${NC}"
+                                    # Update the global variable with the working key
+                                    APISIX_API_KEY="$first_key"
+                                    ROOT_CAUSE="System fully operational (key updated)"
+                                else
+                                    echo -e "  ${RED}✗${NC} Still failing with discovered key (HTTP $retry_response)"
+
+                                    # Check route's authentication configuration
+                                    echo -e "\n${BOLD}Test 5.3:${NC} Checking route authentication plugins"
+
+                                    if echo "$route_config" | grep -q '"key-auth"'; then
+                                        echo -e "  ${GREEN}✓${NC} Route has key-auth plugin"
+
+                                        # Check if consumer exists and has proper configuration
+                                        echo -e "\n${BOLD}Test 5.4:${NC} Checking consumer configuration"
+                                        local consumer_list=$(echo "$consumers" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    for item in data.get('list', []):
+        consumer = item.get('value', {})
+        username = consumer.get('username', 'unknown')
+        plugins = consumer.get('plugins', {})
+        if 'key-auth' in plugins:
+            key = plugins['key-auth'].get('key', '')
+            print(f'{username}: {key[:10]}...')
+except:
+    pass
+" 2>/dev/null)
+
+                                        if [ -n "$consumer_list" ]; then
+                                            echo -e "  Consumers with key-auth:"
+                                            echo "$consumer_list" | sed 's/^/    /'
+                                        fi
+
+                                        # Test if it's actually the proxy-rewrite overriding auth
+                                        echo -e "\n${BOLD}Test 5.5:${NC} Checking proxy-rewrite headers"
+                                        local proxy_headers=$(echo "$route_config" | grep -o '"headers":{[^}]*}')
+                                        if echo "$proxy_headers" | grep -q "Authorization"; then
+                                            echo -e "  ${YELLOW}⚠${NC} Route is overriding Authorization header"
+                                            echo -e "  This may conflict with API key authentication"
+                                            ROOT_CAUSE="Route proxy-rewrite is overriding Authorization header"
+                                        else
+                                            ROOT_CAUSE="API key authentication issue - consumer lacks permissions or route misconfigured"
+                                        fi
+                                    else
+                                        echo -e "  ${RED}✗${NC} Route does NOT have key-auth plugin!"
+                                        echo -e "  Available plugins: $(echo "$route_plugins" | grep -o '"[^"]*":' | tr -d '":' | tr '\n' ' ')"
+                                        ROOT_CAUSE="Route is missing key-auth plugin"
+                                    fi
+                                fi
+                            else
+                                echo -e "  ${RED}✗${NC} No consumer keys found"
+                                ROOT_CAUSE="No consumers configured with key-auth"
+                            fi
+                            fi  # End of consumers check
                             ;;
                         404)
                             echo -e "  ${RED}✗ FAIL${NC}: Route not found (HTTP 404)"
