@@ -1034,35 +1034,51 @@ except:
 
                                 # Test 6: Check methods allowed
                                 echo -e "${BOLD}Test 5.6:${NC} HTTP methods configuration"
-                                local methods=$(echo "$route_config" | grep -o '"methods":\[[^\]]*\]')
-                                echo -e "  Allowed methods: $methods"
-
-                                # Test 7: Try direct APISIX internal test
-                                echo -e "${BOLD}Test 5.7:${NC} APISIX internal route test"
-                                local internal_test=$(docker exec apisix-apisix sh -c \
-                                    "curl -s -o /dev/null -w '%{http_code}' -H 'Host: localhost' \
-                                    -H 'apikey: $APISIX_API_KEY' \
-                                    'http://127.0.0.1:9080/ai/openapi/$OPENAPI_ID/api/v1/models'" 2>/dev/null)
-                                echo -e "  Internal test response: HTTP $internal_test"
-
-                                if [ "$internal_test" = "404" ]; then
-                                    echo -e "  ${RED}✗${NC} Route not matching internally"
-
-                                    # Test 8: Check for route ID suffix issue
-                                    echo -e "${BOLD}Test 5.8:${NC} Route ID suffix analysis"
-                                    echo -e "  Current route ID: $route_id"
-                                    if [[ "$route_id" == *"-" ]]; then
-                                        echo -e "  ${YELLOW}⚠ Route ID ends with dash only (no suffix)${NC}"
-                                        echo -e "  ${YELLOW}  This might indicate incomplete route creation${NC}"
+                                local methods=$(echo "$route_config" | grep -o '"methods":\[[^\]]*\]' | sed 's/"methods"://')
+                                if [ -n "$methods" ] && [ "$methods" != "[]" ]; then
+                                    echo -e "  Allowed methods: $methods"
+                                    # Check if GET is included for models endpoint
+                                    if [[ "$route_id" == *"models"* ]] && ! echo "$methods" | grep -q "GET"; then
+                                        echo -e "  ${RED}✗${NC} GET method missing for models endpoint!"
+                                        ROOT_CAUSE="Models endpoint requires GET method but it's not configured"
+                                    else
+                                        echo -e "  ${GREEN}✓${NC} Methods configured correctly"
                                     fi
-
-                                    ROOT_CAUSE="Route exists but not matching requests - possible URI or ID pattern issue"
-                                elif [ "$internal_test" = "502" ] || [ "$internal_test" = "503" ]; then
-                                    echo -e "  ${YELLOW}⚠${NC} Gateway error from upstream"
-                                    ROOT_CAUSE="Upstream service returning errors"
                                 else
-                                    echo -e "  ${GREEN}✓${NC} Route works internally"
-                                    ROOT_CAUSE="External routing issue - check load balancer or proxy"
+                                    echo -e "  ${RED}✗${NC} No HTTP methods configured!"
+                                    echo -e "  ${YELLOW}This route will not match any requests${NC}"
+                                    ROOT_CAUSE="Route has no HTTP methods configured - will never match"
+                                fi
+
+                                # Test 7: Route configuration completeness
+                                echo -e "${BOLD}Test 5.7:${NC} Route configuration completeness check"
+
+                                # Check if route has all required components
+                                local has_upstream=$(echo "$route_config" | grep -q '"upstream"' && echo "yes" || echo "no")
+                                local has_methods=$(echo "$route_config" | grep -q '"methods":\[' && echo "yes" || echo "no")
+                                local has_uri=$(echo "$route_config" | grep -q '"uri"' && echo "yes" || echo "no")
+                                local has_plugins=$(echo "$route_config" | grep -q '"plugins"' && echo "yes" || echo "no")
+
+                                echo -e "  Has upstream: $([ "$has_upstream" = "yes" ] && echo "${GREEN}✓${NC}" || echo "${RED}✗${NC}")"
+                                echo -e "  Has methods: $([ "$has_methods" = "yes" ] && echo "${GREEN}✓${NC}" || echo "${RED}✗${NC}")"
+                                echo -e "  Has URI: $([ "$has_uri" = "yes" ] && echo "${GREEN}✓${NC}" || echo "${RED}✗${NC}")"
+                                echo -e "  Has plugins: $([ "$has_plugins" = "yes" ] && echo "${GREEN}✓${NC}" || echo "${RED}✗${NC}")"
+
+                                if [ "$has_upstream" = "no" ] || [ "$has_methods" = "no" ] || [ "$has_uri" = "no" ]; then
+                                    ROOT_CAUSE="Route configuration is incomplete - missing required components"
+                                fi
+
+                                # Test 8: Check for route ID suffix issue
+                                echo -e "${BOLD}Test 5.8:${NC} Route ID suffix analysis"
+                                echo -e "  Current route ID: $route_id"
+                                if [[ "$route_id" == *"-" ]]; then
+                                    echo -e "  ${YELLOW}⚠ Route ID ends with dash only (no suffix)${NC}"
+                                    echo -e "  ${YELLOW}  This might indicate incomplete route creation${NC}"
+                                    if [ -z "$ROOT_CAUSE" ]; then
+                                        ROOT_CAUSE="Route ID format issue - missing suffix after dash"
+                                    fi
+                                else
+                                    echo -e "  ${GREEN}✓${NC} Route ID has proper suffix"
                                 fi
                             else
                                 echo -e "  ${RED}✗${NC} Cannot reach upstream from container"
