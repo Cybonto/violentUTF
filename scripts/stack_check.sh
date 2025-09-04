@@ -697,6 +697,17 @@ try:
                 print(f'  Plugins: {list(plugins.keys())}')
                 if 'key-auth' in plugins:
                     print('    ✓ Authentication required (key-auth)')
+                if 'proxy-rewrite' in plugins:
+                    rewrite = plugins.get('proxy-rewrite', {})
+                    print('  Proxy-rewrite configuration:')
+                    if 'uri' in rewrite:
+                        print(f'    URI rewrite: {rewrite[\"uri\"]}')
+                    if 'scheme' in rewrite:
+                        print(f'    Scheme: {rewrite[\"scheme\"]}')
+                    if 'host' in rewrite:
+                        print(f'    Host: {rewrite[\"host\"]}')
+                    if 'headers' in rewrite:
+                        print(f'    Headers: {rewrite[\"headers\"]}')
 
             # Check if route is disabled
             if r.get('status', 1) == 0:
@@ -741,11 +752,65 @@ except Exception as e:
         fi
     fi
 
+    echo -e "\n${BOLD}Testing Direct Upstream Connectivity:${NC}"
+
+    # Test if we can reach the upstream directly
+    if [ -n "$OPENAPI_URL" ]; then
+        echo -n "  Testing direct connection to $OPENAPI_URL: "
+
+        # Extract just the hostname from the URL
+        upstream_host=$(echo "$OPENAPI_URL" | sed 's|https\?://||' | sed 's|/.*||' | cut -d':' -f1)
+        upstream_port=$(echo "$OPENAPI_URL" | sed 's|https\?://||' | sed 's|/.*||' | grep ':' | cut -d':' -f2 || echo "443")
+
+        # Test connectivity
+        if timeout 3 bash -c "echo > /dev/tcp/$upstream_host/$upstream_port" 2>/dev/null; then
+            print_success "Reachable"
+        else
+            print_error "Not reachable from this host"
+        fi
+
+        # Test SSL certificate if HTTPS
+        if [[ "$OPENAPI_URL" == https://* ]]; then
+            echo -n "  Testing SSL certificate: "
+            cert_check=$(echo | openssl s_client -connect "$upstream_host:$upstream_port" -servername "$upstream_host" 2>/dev/null | openssl x509 -noout 2>&1)
+            if [ $? -eq 0 ]; then
+                print_success "Valid SSL certificate"
+            else
+                print_warning "SSL certificate issue (may need CA cert)"
+            fi
+        fi
+    fi
+
+    echo -e "\n${BOLD}Checking APISIX Proxy Configuration:${NC}"
+
+    # Check if proxy-rewrite might be causing issues
+    if echo "$route_details" | grep -q "proxy-rewrite"; then
+        echo "  ⚠️ Routes use proxy-rewrite plugin"
+        echo "  This can modify the request path/headers"
+
+        # Check for common proxy-rewrite issues
+        if echo "$route_details" | grep -q "URI rewrite:"; then
+            echo "  URI is being rewritten - verify the target path is correct"
+        fi
+
+        if echo "$route_details" | grep -q "Scheme: http" && [[ "$OPENAPI_URL" == https://* ]]; then
+            print_error "MISMATCH: Route uses HTTP but upstream needs HTTPS!"
+            echo "  This is likely causing the 404 errors"
+        fi
+    fi
+
     echo -e "\n${BOLD}Recommended Actions:${NC}"
     echo "1. Verify OPENAPI_1_ID in ai-tokens.env matches: $OPENAPI_ID"
     echo "2. Check OPENAPI_1_BASE_URL is correct: $OPENAPI_URL"
     echo "3. Re-run setup script for your environment"
     echo "4. If using staging/production, ensure proper network access to GSAi"
+
+    # Additional recommendations based on findings
+    if echo "$route_details" | grep -q "Scheme: http" && [[ "$OPENAPI_URL" == https://* ]]; then
+        echo -e "\n${BOLD}${RED}CRITICAL FIX NEEDED:${NC}"
+        echo "  The routes are configured for HTTP but GSAi requires HTTPS"
+        echo "  Update route configuration to use scheme: https"
+    fi
 }
 
 # Generate summary report
