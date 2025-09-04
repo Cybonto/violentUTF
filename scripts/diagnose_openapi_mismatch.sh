@@ -42,7 +42,20 @@ else
     APISIX_ADMIN_URL="http://localhost:9180"
 fi
 
-APISIX_ADMIN_KEY=${APISIX_ADMIN_KEY:-"Ds1fynPj1Zqv9hrucePsCZ35wEF4Its4"}
+# Ask for APISIX admin key if not provided
+if [ -z "$APISIX_ADMIN_KEY" ]; then
+    echo -n "Enter APISIX admin key (or press Enter for default): "
+    read -r input_key
+    if [ -z "$input_key" ]; then
+        APISIX_ADMIN_KEY="Ds1fynPj1Zqv9hrucePsCZ35wEF4Its4"
+        echo "Using default admin key"
+    else
+        APISIX_ADMIN_KEY="$input_key"
+        echo "Using provided admin key"
+    fi
+else
+    echo "Using admin key from environment variable"
+fi
 
 # Query APISIX routes
 echo "Querying APISIX routes..."
