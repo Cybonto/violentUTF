@@ -1287,6 +1287,11 @@ fetch_openapi_spec() {
 
     echo "Fetching OpenAPI spec from ${base_url}${spec_path}..."
 
+    # Test connectivity first
+    echo "  Testing connectivity to ${base_url}..."
+    local test_response=$(curl -s -o /dev/null -w "%{http_code}" "${base_url}" 2>/dev/null || echo "000")
+    echo "  Base URL connectivity test: HTTP $test_response"
+
     # Use array for curl command to avoid eval
     local curl_args=(-s -f)
 
@@ -1321,12 +1326,31 @@ fetch_openapi_spec() {
     # Normalize URL to prevent double slashes
     local full_url="${base_url%/}/${spec_path#/}"
 
-    # Execute curl with array expansion
-    if curl "${curl_args[@]}" "$full_url" -o "$output_file"; then
+    # Execute curl with array expansion and capture detailed error
+    echo "   Attempting to fetch from: $full_url"
+
+    # First test connectivity
+    if ! curl -s -o /dev/null -w "%{http_code}" "$full_url" >/dev/null 2>&1; then
+        echo "   ⚠️  Cannot reach $full_url - checking network connectivity..."
+        # Try without auth to see if it's an auth issue
+        local test_code=$(curl -s -o /dev/null -w "%{http_code}" "${base_url%/}/")
+        echo "   Base URL test returned: HTTP $test_code"
+    fi
+
+    if curl "${curl_args[@]}" "$full_url" -o "$output_file" 2>/tmp/curl_error.log; then
         echo "✅ Successfully fetched OpenAPI spec"
         return 0
     else
+        local curl_exit=$?
         echo "❌ Failed to fetch OpenAPI spec from $full_url"
+        echo "   Curl exit code: $curl_exit"
+        if [ -f /tmp/curl_error.log ]; then
+            echo "   Error details: $(cat /tmp/curl_error.log)"
+        fi
+        # Show first few lines of response if any
+        if [ -f "$output_file" ]; then
+            echo "   Response preview: $(head -3 "$output_file")"
+        fi
         return 1
     fi
 }
@@ -1691,6 +1715,16 @@ setup_openapi_routes() {
 
     echo "Setting up OpenAPI provider routes..."
 
+    # Detect environment to determine correct upstream
+    local env_type="dev"
+    if ! docker ps 2>/dev/null | grep -q "ai-gov-api"; then
+        echo "  Staging/Production environment detected - will route directly to GSAi"
+        env_type="staging"
+    else
+        echo "  Development environment detected - will route through ai-gov-api"
+        env_type="dev"
+    fi
+
     # Load APISIX admin key from apisix/.env if not already set
     if [ -z "$APISIX_ADMIN_KEY" ] && [ -f "$SCRIPT_DIR/apisix/.env" ]; then
         echo "Loading APISIX configuration from apisix/.env..."
@@ -1749,6 +1783,14 @@ setup_openapi_routes() {
             if [ -z "$provider_id" ] || [ -z "$base_url" ] || [ -z "$spec_path" ]; then
                 echo "⚠️  Skipping OpenAPI provider $i: missing required configuration"
                 continue
+            fi
+
+            # Override base_url for staging/production environment to use GSAi directly
+            if [ "$env_type" = "staging" ] && [ "$provider_id" = "gsai-api-1" ]; then
+                local original_base_url="$base_url"
+                base_url="https://api.dev.gsai.mcaas.fcs.gsa.gov"
+                echo "  Environment override: Using GSAi API directly at $base_url"
+                echo "  (Original config: $original_base_url)"
             fi
 
             echo ""
@@ -1897,14 +1939,32 @@ setup_ai_providers_enhanced() {
 
     # Debug APISIX setup first
     if ! debug_ai_proxy_setup; then
-        echo "❌ AI Proxy setup prerequisites not met"
-        SKIP_AI_SETUP=true
-        return 1
+        echo "⚠️ Some AI Proxy prerequisites not fully met, but continuing with available features"
+        # Don't skip entirely - OpenAPI routes can still work
     fi
 
-    # Wait for APISIX to be fully ready
-    echo "Waiting for APISIX to be fully ready..."
-    sleep 10
+    # Wait for APISIX to be fully ready and etcd to sync
+    echo "Waiting for APISIX to be fully ready and etcd to sync..."
+    echo "This may take up to 30 seconds for all services to stabilize..."
+    sleep 20
+
+    # Additional check to ensure APISIX admin API is responsive
+    local apisix_ready=false
+    for i in {1..15}; do
+        if curl -s -f -H "X-API-KEY: ${APISIX_ADMIN_KEY}" "${APISIX_ADMIN_URL}/apisix/admin/routes" >/dev/null 2>&1; then
+            echo "✅ APISIX Admin API confirmed responsive (attempt $i)"
+            apisix_ready=true
+            break
+        else
+            echo "   Waiting for APISIX Admin API to respond (attempt $i/15)..."
+            sleep 3
+        fi
+    done
+
+    if [ "$apisix_ready" != "true" ]; then
+        echo "⚠️  APISIX Admin API not fully responsive after extended wait"
+        echo "   Routes may fail to create properly"
+    fi
 
     local setup_errors=0
 
@@ -2608,15 +2668,22 @@ if [ -f "apisix/conf/nginx.conf.template" ]; then
     echo "✅ Created apisix/conf/nginx.conf"
 fi
 
-# If APISIX containers are already running, restart them to pick up new configs
-echo "Checking if APISIX is already running..."
-if docker ps | grep -q "apisix"; then
-    echo "APISIX containers detected. Restarting to load new configuration..."
-    # Try different possible container names
-    docker restart apisix-apisix 2>/dev/null || docker restart apisix_apisix 2>/dev/null || docker restart apisix 2>/dev/null || true
-    echo "Waiting for APISIX to restart with new configuration..."
-    sleep 15
-    echo "✅ APISIX restarted with updated configuration"
+# Always check if configs were generated and APISIX needs restart
+echo "Checking if APISIX configuration was generated..."
+if [ -f "apisix/conf/config.yaml" ]; then
+    # Check if APISIX is running and needs restart for new configs
+    if docker ps | grep -q "apisix"; then
+        echo "APISIX is running. Restarting to load new configuration..."
+        # Try different possible container names
+        docker restart apisix-apisix 2>/dev/null || docker restart apisix_apisix 2>/dev/null || docker restart apisix 2>/dev/null || true
+        echo "Waiting for APISIX to restart with new configuration..."
+        sleep 15
+        echo "✅ APISIX restarted with updated configuration"
+    else
+        echo "APISIX not yet running, configs will be loaded on first start"
+    fi
+else
+    echo "No APISIX config files found to load"
 fi
 
 # Create APISIX .env file for configure_routes.sh script
@@ -3649,6 +3716,18 @@ validate_docker_network_config() {
 
     echo "APISIX setup complete."
 
+    # CRITICAL: Restart APISIX if configs were recently generated to ensure they're loaded
+    if [ -f "apisix/conf/config.yaml" ]; then
+        config_age=$(find apisix/conf/config.yaml -mmin -10 2>/dev/null | wc -l)
+        if [ "$config_age" -gt 0 ]; then
+            echo "Configuration files were recently generated. Restarting APISIX to ensure they're loaded..."
+            docker restart ${APISIX_SERVICE_NAME_IN_COMPOSE} 2>/dev/null || true
+            echo "Waiting for APISIX to be ready after configuration reload..."
+            sleep 20
+            echo "✅ APISIX reloaded with latest configuration"
+        fi
+    fi
+
     # Configure all routes immediately after APISIX is ready
     echo ""
     echo "Configuring API routes now that APISIX is ready..."
@@ -3764,11 +3843,13 @@ if [ "$SKIP_AI_SETUP" != true ]; then
 
     # Check if ai-proxy plugin is available
     if ! check_ai_proxy_plugin; then
-        echo "Cannot proceed with AI proxy setup - plugin not available"
-        SKIP_AI_SETUP=true
-    else
-        setup_ai_providers_enhanced
+        echo "⚠️ ai-proxy plugin not available - OpenAPI routes will use proxy-rewrite instead"
+        # Don't skip AI setup entirely - OpenAPI routes can still work with proxy-rewrite
+        echo "Proceeding with AI provider setup using alternative routing method..."
     fi
+
+    # Always attempt to setup AI providers, regardless of ai-proxy plugin availability
+    setup_ai_providers_enhanced
 else
     echo "Skipping AI provider routes setup due to configuration issues."
 fi

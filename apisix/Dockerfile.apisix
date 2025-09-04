@@ -1,5 +1,5 @@
 # Custom APISIX image with network debugging tools
-FROM apache/apisix:3.9.1-debian
+FROM apache/apisix:3.10.0-debian
 
 # Switch to root to install packages
 USER root
