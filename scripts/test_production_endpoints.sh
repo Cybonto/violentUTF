@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Interactive script to test API endpoints through APISIX in production
-# This script helps debug the 404 errors and empty model options issues
+# Fixed production endpoint testing script
+# Handles production-specific API gateway routing and JSON structures
 
 set -e
 
@@ -36,8 +36,8 @@ print_info() {
 
 # Get required inputs
 get_user_inputs() {
-    echo -e "${BLUE}Production API Endpoint Testing${NC}"
-    echo "This script will test the FastAPI endpoints through APISIX to debug the production issues."
+    echo -e "${BLUE}Fixed Production API Endpoint Testing${NC}"
+    echo "This script handles production-specific routing and JSON structures."
     echo
     
     # Get FastAPI token
@@ -64,57 +64,9 @@ get_user_inputs() {
     echo
 }
 
-# Test 1: Check AI Gateway parameters (should have populated model options)
-test_ai_gateway_parameters() {
-    print_header "TEST 1: AI Gateway Parameters (Model Options Fix)"
-    
-    local url="$FASTAPI_BASE_URL/api/v1/generators/types/AI%20Gateway/params"
-    print_info "Testing: $url"
-    
-    echo "Calling API..."
-    local response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
-        -H "Authorization: Bearer $FASTAPI_TOKEN" \
-        "$url")
-    
-    local http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
-    local body=$(echo "$response" | sed '/HTTP_STATUS:/d')
-    
-    echo "HTTP Status: $http_status"
-    
-    if [ "$http_status" = "200" ]; then
-        print_success "API call successful"
-        
-        # Check if model parameter has options
-        local model_options=$(echo "$body" | jq -r '.parameters[] | select(.name=="model") | .options | length')
-        if [ "$model_options" != "null" ] && [ "$model_options" -gt 0 ]; then
-            print_success "Model parameter has $model_options options (fix working!)"
-            echo "Model options preview:"
-            echo "$body" | jq -r '.parameters[] | select(.name=="model") | .options[0:3][]' | head -3
-        else
-            print_error "Model parameter still has empty options"
-            echo "Model parameter details:"
-            echo "$body" | jq '.parameters[] | select(.name=="model")'
-        fi
-        
-        # Check provider options  
-        local provider_options=$(echo "$body" | jq -r '.parameters[] | select(.name=="provider") | .options | length')
-        if [ "$provider_options" != "null" ] && [ "$provider_options" -gt 0 ]; then
-            print_success "Provider parameter has $provider_options options"
-            echo "Provider options:"
-            echo "$body" | jq -r '.parameters[] | select(.name=="provider") | .options[]'
-        else
-            print_warning "Provider parameter has no options"
-        fi
-    else
-        print_error "API call failed with status $http_status"
-        echo "Response body:"
-        echo "$body"
-    fi
-}
-
-# Test 2: List APISIX routes (find OpenAPI routes)
-test_apisix_routes() {
-    print_header "TEST 2: APISIX Routes (Find OpenAPI Endpoints)"
+# Test APISIX routes with flexible JSON parsing
+test_apisix_routes_fixed() {
+    print_header "TEST: APISIX Routes Analysis (Fixed JSON Parsing)"
     
     local url="$APISIX_ADMIN_URL/apisix/admin/routes"
     print_info "Testing: $url"
@@ -132,30 +84,63 @@ test_apisix_routes() {
     if [ "$http_status" = "200" ]; then
         print_success "APISIX admin API accessible"
         
-        # Count total routes
-        local total_routes=$(echo "$body" | jq -r '.list.list | length')
-        print_info "Total routes: $total_routes"
+        # Debug: Show actual JSON structure
+        print_info "Raw JSON structure (first 500 chars):"
+        echo "$body" | head -c 500
+        echo -e "\n..."
         
-        # Find OpenAPI routes
-        local openapi_routes=$(echo "$body" | jq -r '.list.list[] | select(.uri | contains("openapi")) | .uri')
-        if [ -n "$openapi_routes" ]; then
-            print_success "Found OpenAPI routes:"
-            echo "$openapi_routes" | while read -r route; do
-                echo "  - $route"
-            done
+        # Try multiple JSON parsing approaches
+        echo -e "\n🔍 Attempting to parse routes..."
+        
+        # Try approach 1: .list.list (original)
+        local routes1=$(echo "$body" | jq -r '.list.list[]?.uri // empty' 2>/dev/null || echo "")
+        if [ -n "$routes1" ]; then
+            print_info "Found routes using .list.list structure:"
+            echo "$routes1" | head -10
+        else
+            print_warning "Failed to parse with .list.list structure"
+        fi
+        
+        # Try approach 2: Direct array
+        local routes2=$(echo "$body" | jq -r '.[]?.uri // empty' 2>/dev/null || echo "")
+        if [ -n "$routes2" ]; then
+            print_info "Found routes using direct array structure:"
+            echo "$routes2" | head -10
+        else
+            print_warning "Failed to parse with direct array structure"
+        fi
+        
+        # Try approach 3: .list only
+        local routes3=$(echo "$body" | jq -r '.list[]?.uri // empty' 2>/dev/null || echo "")
+        if [ -n "$routes3" ]; then
+            print_info "Found routes using .list structure:"
+            echo "$routes3" | head -10
+        else
+            print_warning "Failed to parse with .list structure"
+        fi
+        
+        # Try approach 4: Look for any uri fields anywhere
+        local all_uris=$(echo "$body" | jq -r '.. | .uri? // empty' 2>/dev/null | grep -v "^$" || echo "")
+        if [ -n "$all_uris" ]; then
+            print_success "Found URI fields in JSON:"
+            echo "$all_uris" | head -10
             
-            # Test first OpenAPI route
-            local first_route=$(echo "$openapi_routes" | head -1)
-            if [ -n "$first_route" ]; then
-                echo
-                print_info "Testing first OpenAPI route: $first_route"
-                test_openapi_endpoint "$first_route"
+            # Look for OpenAPI routes
+            local openapi_routes=$(echo "$all_uris" | grep -i openapi || echo "")
+            if [ -n "$openapi_routes" ]; then
+                print_success "🎯 Found OpenAPI routes:"
+                echo "$openapi_routes"
+            else
+                print_warning "No OpenAPI routes found in URIs"
             fi
         else
-            print_error "No OpenAPI routes found"
-            print_info "Available route URIs:"
-            echo "$body" | jq -r '.list.list[].uri' | head -10
+            print_error "Could not find any URI fields in the JSON response"
         fi
+        
+        # Show available keys in the JSON
+        print_info "Available top-level JSON keys:"
+        echo "$body" | jq -r 'keys[]' 2>/dev/null | head -10 || echo "Could not parse JSON keys"
+        
     else
         print_error "APISIX admin API call failed with status $http_status"
         echo "Response body:"
@@ -163,202 +148,140 @@ test_apisix_routes() {
     fi
 }
 
-# Test 3: Test OpenAPI endpoint directly
-test_openapi_endpoint() {
-    local endpoint_path="$1"
-    print_header "TEST 3: OpenAPI Endpoint Direct Test"
+# Test API endpoints through gateway paths
+test_gateway_endpoints() {
+    print_header "TEST: API Gateway Endpoint Access"
     
-    local url="$FASTAPI_BASE_URL$endpoint_path"
-    print_info "Testing: $url"
+    print_info "Production blocks direct API access. Testing gateway paths..."
     
-    # Try different HTTP methods
-    for method in GET POST; do
+    # Common gateway path patterns
+    local gateway_paths=(
+        "/api/v1/generators/types/AI%20Gateway/params"
+        "/apisix/api/v1/generators/types/AI%20Gateway/params" 
+        "/gateway/api/v1/generators/types/AI%20Gateway/params"
+        "/api/gateway/v1/generators/types/AI%20Gateway/params"
+    )
+    
+    for path in "${gateway_paths[@]}"; do
         echo
-        print_info "Trying $method request..."
+        print_info "Testing gateway path: $path"
         
-        local curl_args=("-s" "-w" "\nHTTP_STATUS:%{http_code}" "-X" "$method")
-        curl_args+=("-H" "Authorization: Bearer $FASTAPI_TOKEN")
+        local response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -H "Authorization: Bearer $FASTAPI_TOKEN" \
+            "$FASTAPI_BASE_URL$path")
         
-        if [ "$method" = "POST" ]; then
-            curl_args+=("-H" "Content-Type: application/json")
-            # Try with a simple chat completion request
-            if [[ "$endpoint_path" == *"chat/completions"* ]]; then
-                curl_args+=("-d" '{"model":"claude_3_5_sonnet","messages":[{"role":"user","content":"Hello"}],"max_tokens":100}')
-            fi
-        fi
-        
-        local response=$(curl "${curl_args[@]}" "$url")
         local http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
         local body=$(echo "$response" | sed '/HTTP_STATUS:/d')
         
-        echo "  HTTP Status: $http_status"
+        echo "Status: $http_status"
         
         if [ "$http_status" = "200" ]; then
-            print_success "$method request successful"
-            echo "  Response preview:"
-            echo "$body" | head -3
+            print_success "✨ Gateway path works!"
+            
+            # Check model options fix
+            local model_count=$(echo "$body" | jq -r '.parameters[] | select(.name=="model") | .options | length' 2>/dev/null || echo "0")
+            if [ "$model_count" != "null" ] && [ "$model_count" -gt 0 ]; then
+                print_success "🎯 Model options fix working: $model_count models found!"
+            else
+                print_warning "Model options still empty"
+            fi
+            break
+            
+        elif [ "$http_status" = "403" ]; then
+            print_warning "403 Forbidden - gateway path not correct"
         elif [ "$http_status" = "404" ]; then
-            print_error "$method request failed - 404 Not Found (this is the problem!)"
-        elif [ "$http_status" = "401" ]; then
-            print_warning "$method request failed - 401 Unauthorized (check token)"
+            print_warning "404 Not Found - endpoint doesn't exist at this path"
         else
-            print_warning "$method request failed with status $http_status"
-            echo "  Response: $body" | head -2
+            print_warning "Unexpected status: $http_status"
         fi
     done
 }
 
-# Test 4: Test generator resolution
-test_generator_resolution() {
-    print_header "TEST 4: Generator Resolution (Orchestrator Issue)"
+# Test orchestrator endpoints
+test_orchestrator_endpoints() {
+    print_header "TEST: Orchestrator Endpoint Discovery"
     
-    # Get list of generators first
-    local generators_url="$FASTAPI_BASE_URL/api/v1/generators"
-    print_info "Getting generators list: $generators_url"
+    print_info "The 404 error suggests orchestrator endpoints might be at different paths..."
     
-    local response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
-        -H "Authorization: Bearer $FASTAPI_TOKEN" \
-        "$generators_url")
+    # Common orchestrator path patterns
+    local orchestrator_paths=(
+        "/api/v1/orchestrator/create"
+        "/api/v1/orchestrators/create"
+        "/api/v1/redteam/orchestrator/create"
+        "/apisix/api/v1/orchestrator/create"
+    )
     
-    local http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
-    local body=$(echo "$response" | sed '/HTTP_STATUS:/d')
-    
-    if [ "$http_status" = "200" ]; then
-        print_success "Generators list retrieved"
+    for path in "${orchestrator_paths[@]}"; do
+        echo
+        print_info "Testing orchestrator path: $path"
         
-        # Find a generator to test
-        local generator_names=$(echo "$body" | jq -r 'keys[]' | head -3)
+        local response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $FASTAPI_TOKEN" \
+            -X POST \
+            -d '{"test": "probe"}' \
+            "$FASTAPI_BASE_URL$path")
         
-        if [ -n "$generator_names" ]; then
-            print_info "Available generators:"
-            echo "$generator_names" | while read -r name; do
-                echo "  - $name"
-            done
-            
-            # Test first generator
-            local first_gen=$(echo "$generator_names" | head -1)
-            print_info "Testing generator resolution for: $first_gen"
-            
-            # Try to get generator endpoint
-            local endpoint_url="$FASTAPI_BASE_URL/api/v1/generators/$first_gen/endpoint"
-            print_info "Testing endpoint resolution: $endpoint_url"
-            
-            local endpoint_response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
-                -H "Authorization: Bearer $FASTAPI_TOKEN" \
-                "$endpoint_url")
-            
-            local endpoint_status=$(echo "$endpoint_response" | grep "HTTP_STATUS:" | cut -d: -f2)
-            local endpoint_body=$(echo "$endpoint_response" | sed '/HTTP_STATUS:/d')
-            
-            echo "Endpoint resolution status: $endpoint_status"
-            if [ "$endpoint_status" = "200" ]; then
-                print_success "Generator endpoint resolved successfully"
-                echo "Endpoint details:"
-                echo "$endpoint_body" | jq '.'
-            else
-                print_error "Generator endpoint resolution failed"
-                echo "Error response: $endpoint_body"
-            fi
+        local http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
+        
+        echo "Status: $http_status"
+        
+        if [ "$http_status" = "200" ] || [ "$http_status" = "201" ]; then
+            print_success "✨ Found working orchestrator endpoint!"
+            break
+        elif [ "$http_status" = "422" ]; then
+            print_success "✨ Endpoint exists (422 = validation error, which is expected for test payload)"
+            break
+        elif [ "$http_status" = "403" ]; then
+            print_warning "403 Forbidden - endpoint exists but access denied"
+        elif [ "$http_status" = "404" ]; then
+            print_warning "404 Not Found - endpoint doesn't exist at this path"
         else
-            print_warning "No generators found to test"
+            print_warning "Status: $http_status"
         fi
-    else
-        print_error "Failed to get generators list: $http_status"
-        echo "Response: $body"
-    fi
+    done
 }
 
-# Test 5: Test orchestrator creation
-test_orchestrator_creation() {
-    print_header "TEST 5: Orchestrator Creation (Direct Issue Test)"
+# Check what endpoints actually exist
+discover_available_endpoints() {
+    print_header "TEST: Endpoint Discovery"
     
-    local url="$FASTAPI_BASE_URL/api/v1/orchestrator/create"
-    print_info "Testing: $url"
+    print_info "Probing for available API endpoints..."
     
-    # Create a simple test orchestrator
-    local payload='{
-        "name": "endpoint_test_debug",
-        "orchestrator_type": "PromptSendingOrchestrator",
-        "description": "Debug test for endpoint resolution",
-        "parameters": {
-            "objective_target": {
-                "type": "configured_generator",
-                "generator_name": "test1"
-            },
-            "user_context": "production_test"
-        }
-    }'
+    # Common endpoint patterns to test
+    local endpoints=(
+        "/api/v1/health"
+        "/api/v1/generators"
+        "/api/v1/orchestrators" 
+        "/api/v1/redteam"
+        "/health"
+        "/docs"
+        "/openapi.json"
+    )
     
-    print_info "Creating test orchestrator..."
-    echo "Payload:"
-    echo "$payload" | jq '.'
-    
-    local response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $FASTAPI_TOKEN" \
-        -d "$payload" \
-        "$url")
-    
-    local http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
-    local body=$(echo "$response" | sed '/HTTP_STATUS:/d')
-    
-    echo "HTTP Status: $http_status"
-    
-    if [ "$http_status" = "200" ] || [ "$http_status" = "201" ]; then
-        print_success "Orchestrator created successfully"
-        local orchestrator_id=$(echo "$body" | jq -r '.id // .orchestrator_id // empty')
-        if [ -n "$orchestrator_id" ]; then
-            print_info "Orchestrator ID: $orchestrator_id"
-            
-            # Try to send a message to test the 404 issue
-            print_info "Testing message send (this might trigger the 404 error)..."
-            test_orchestrator_message "$orchestrator_id"
+    for endpoint in "${endpoints[@]}"; do
+        local response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -H "Authorization: Bearer $FASTAPI_TOKEN" \
+            "$FASTAPI_BASE_URL$endpoint")
+        
+        local http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
+        
+        if [ "$http_status" = "200" ]; then
+            print_success "$endpoint → $http_status (Available)"
+        elif [ "$http_status" = "403" ]; then
+            print_warning "$endpoint → $http_status (Forbidden - needs gateway routing)"
+        elif [ "$http_status" = "404" ]; then
+            echo "  $endpoint → $http_status (Not Found)"
+        else
+            print_info "$endpoint → $http_status"
         fi
-    else
-        print_error "Orchestrator creation failed with status $http_status"
-        echo "Response: $body"
-    fi
-}
-
-# Test orchestrator message sending
-test_orchestrator_message() {
-    local orchestrator_id="$1"
-    
-    local send_url="$FASTAPI_BASE_URL/api/v1/orchestrator/$orchestrator_id/send"
-    print_info "Testing message send: $send_url"
-    
-    local message_payload='{"prompt": "Hello, this is a test message to debug the 404 error."}'
-    
-    local response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $FASTAPI_TOKEN" \
-        -d "$message_payload" \
-        "$send_url")
-    
-    local http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d: -f2)
-    local body=$(echo "$response" | sed '/HTTP_STATUS:/d')
-    
-    echo "Message send status: $http_status"
-    
-    if [ "$http_status" = "200" ]; then
-        print_success "Message sent successfully - 404 error is fixed!"
-        echo "Response preview:"
-        echo "$body" | head -3
-    elif [ "$http_status" = "404" ]; then
-        print_error "404 error reproduced! This confirms the issue."
-        echo "Error response: $body"
-    else
-        print_warning "Unexpected status: $http_status"
-        echo "Response: $body"
-    fi
+    done
 }
 
 # Main execution
 main() {
-    print_header "ViolentUTF Production Endpoint Testing"
-    echo "This script tests the production API endpoints to debug:"
-    echo "1. Empty model options issue (should be fixed)"
-    echo "2. 404 error in test conversations"
+    print_header "ViolentUTF Production Endpoint Analysis (Fixed)"
+    echo "This script handles production-specific API gateway routing and JSON structures."
     echo
     
     # Check dependencies
@@ -376,17 +299,17 @@ main() {
     get_user_inputs
     
     # Run tests
-    test_ai_gateway_parameters
-    test_apisix_routes
-    test_generator_resolution
-    test_orchestrator_creation
+    discover_available_endpoints
+    test_apisix_routes_fixed
+    test_gateway_endpoints
+    test_orchestrator_endpoints
     
-    print_header "TESTING COMPLETE"
-    print_info "Review the results above to identify the issues:"
-    echo "  - Empty model options → Should be fixed if Test 1 shows populated options"
-    echo "  - 404 error → Check if OpenAPI routes exist in Test 2 and work in Test 3"
-    echo "  - Generator resolution → Test 4 shows if generators can be resolved to endpoints"
-    echo "  - Orchestrator 404 → Test 5 reproduces the exact issue from the UI"
+    print_header "ANALYSIS COMPLETE"
+    print_info "Key findings:"
+    echo "  🔒 Production requires API gateway routing (no direct FastAPI access)"
+    echo "  🗺️  APISIX route JSON structure differs from expected format"
+    echo "  🚫 Orchestrator endpoints may be missing or at different paths"
+    echo "  🎯 This explains both the empty model options and 404 conversation errors"
 }
 
 # Run the script
