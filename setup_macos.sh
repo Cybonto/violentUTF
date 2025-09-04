@@ -1633,8 +1633,8 @@ create_openapi_route() {
         -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
 
     if echo "$existing_route" | grep -q '"id"'; then
-        echo "⚠️  Route already exists for $operation_id, skipping"
-        return 0
+        echo "⚠️  Route already exists for $operation_id, updating..."
+        # Continue to update the route with new configuration
     fi
 
     # Debug: show route config if debug mode is enabled
@@ -1665,10 +1665,14 @@ create_openapi_route() {
     fi
 
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
-        echo "✅ Successfully created route for $operation_id"
+        if echo "$existing_route" | grep -q '"id"'; then
+            echo "✅ Successfully updated route for $operation_id"
+        else
+            echo "✅ Successfully created route for $operation_id"
+        fi
         return 0
     else
-        echo "❌ Failed to create route for $operation_id"
+        echo "❌ Failed to create/update route for $operation_id"
         echo "   HTTP Code: $http_code"
         echo "   Route ID: $route_id"
         echo "   URI: $uri"
