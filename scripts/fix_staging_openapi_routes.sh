@@ -79,6 +79,93 @@ update_route() {
     echo "  URI: $uri"
     echo "  Method: $method"
 
+    # Auto-detect the correct upstream configuration
+    echo "  Detecting correct upstream configuration..."
+
+    local api_port=""
+    local api_host=""
+
+    # First, check what ports the FastAPI container is actually listening on
+    echo "    Checking FastAPI container ports..."
+
+    # Get the actual listening port from the container
+    if docker ps --format "{{.Names}}" | grep -q "violentutf_api"; then
+        # Check what port uvicorn is actually listening on inside the container
+        local listening_port=$(docker exec violentutf_api sh -c "netstat -tln 2>/dev/null | grep LISTEN | grep -E ':(8000|8081)' | head -1" 2>/dev/null | grep -o ':[0-9]\+' | grep -o '[0-9]\+' | head -1)
+
+        if [ -z "$listening_port" ]; then
+            # Try with ss if netstat not available
+            listening_port=$(docker exec violentutf_api sh -c "ss -tln 2>/dev/null | grep LISTEN | grep -E ':(8000|8081)' | head -1" 2>/dev/null | grep -o ':[0-9]\+' | grep -o '[0-9]\+' | head -1)
+        fi
+
+        if [ -z "$listening_port" ]; then
+            # Last resort - check logs
+            listening_port=$(docker logs violentutf_api 2>&1 | grep "Uvicorn running" | tail -1 | grep -o ':[0-9]\+' | grep -o '[0-9]\+')
+        fi
+
+        if [ -n "$listening_port" ]; then
+            api_port="$listening_port"
+            api_host="violentutf_api"
+            echo "    FastAPI is listening on port ${api_port}"
+
+            # Test connectivity from APISIX container to FastAPI
+            echo "    Testing connectivity from APISIX to ${api_host}:${api_port}..."
+            local test_result=$(docker exec apisix-apisix sh -c "nc -zv ${api_host} ${api_port} 2>&1" 2>/dev/null || echo "failed")
+
+            if echo "$test_result" | grep -q "succeeded\|open"; then
+                echo -e "    ${GREEN}✓ Connectivity verified${NC}"
+            else
+                echo -e "    ${YELLOW}⚠ Could not verify connectivity, but will proceed${NC}"
+
+                # Try alternative ports if main port fails
+                for alt_port in 8000 8001 8080 8081; do
+                    if [ "$alt_port" != "$api_port" ]; then
+                        echo "    Trying alternative port ${alt_port}..."
+                        test_result=$(docker exec apisix-apisix sh -c "nc -zv ${api_host} ${alt_port} 2>&1" 2>/dev/null || echo "failed")
+                        if echo "$test_result" | grep -q "succeeded\|open"; then
+                            api_port="$alt_port"
+                            echo -e "    ${GREEN}✓ Found working port: ${alt_port}${NC}"
+                            break
+                        fi
+                    fi
+                done
+            fi
+        else
+            echo -e "    ${YELLOW}⚠ Could not detect listening port, using default 8000${NC}"
+            api_port="8000"
+            api_host="violentutf_api"
+        fi
+    else
+        # Container not running, check existing working routes
+        echo "    FastAPI container not found, checking existing routes for reference..."
+        local existing_upstream=$(curl -s "${APISIX_ADMIN_URL}/apisix/admin/routes" \
+            -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null | \
+            python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for item in data.get('list', []):
+    route = item.get('value', {})
+    nodes = route.get('upstream', {}).get('nodes', {})
+    for node in nodes:
+        if 'violentutf' in node.lower() or ':800' in node:
+            print(node)
+            break
+" 2>/dev/null | head -1)
+
+        if [ -n "$existing_upstream" ]; then
+            api_host=$(echo "$existing_upstream" | cut -d':' -f1)
+            api_port=$(echo "$existing_upstream" | cut -d':' -f2)
+            echo "    Using upstream from existing routes: ${api_host}:${api_port}"
+        else
+            # Default fallback
+            api_host="violentutf_api"
+            api_port="8000"
+            echo -e "    ${YELLOW}⚠ Using default: ${api_host}:${api_port}${NC}"
+        fi
+    fi
+
+    echo "  Final upstream configuration: ${api_host}:${api_port}"
+
     # Create the complete route configuration
     local route_config='{
         "uri": "'"$uri"'",
@@ -88,7 +175,7 @@ update_route() {
         "upstream": {
             "type": "roundrobin",
             "nodes": {
-                "violentutf_api:8081": 1
+                "'"${api_host}:${api_port}"'": 1
             },
             "scheme": "http",
             "pass_host": "pass"
