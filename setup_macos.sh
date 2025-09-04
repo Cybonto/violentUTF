@@ -2608,6 +2608,17 @@ if [ -f "apisix/conf/nginx.conf.template" ]; then
     echo "✅ Created apisix/conf/nginx.conf"
 fi
 
+# If APISIX containers are already running, restart them to pick up new configs
+echo "Checking if APISIX is already running..."
+if docker ps | grep -q "apisix"; then
+    echo "APISIX containers detected. Restarting to load new configuration..."
+    # Try different possible container names
+    docker restart apisix-apisix 2>/dev/null || docker restart apisix_apisix 2>/dev/null || docker restart apisix 2>/dev/null || true
+    echo "Waiting for APISIX to restart with new configuration..."
+    sleep 15
+    echo "✅ APISIX restarted with updated configuration"
+fi
+
 # Create APISIX .env file for configure_routes.sh script
 echo "Creating APISIX .env file..."
 cat > apisix/.env <<EOF
