@@ -50,14 +50,28 @@ ROUTES=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
     -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
 
 if [ $? -eq 0 ]; then
-    # Count OpenAPI routes
-    OPENAPI_ROUTES=$(echo "$ROUTES" | grep -o '"/ai/openapi/[^"]*"' | sort -u)
+    # Parse JSON properly to find OpenAPI routes
+    # Using python for reliable JSON parsing
+    OPENAPI_ROUTES=$(echo "$ROUTES" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    routes = []
+    for item in data.get('list', []):
+        uri = item.get('value', {}).get('uri', '')
+        if '/ai/openapi/' in uri:
+            routes.append(uri)
+    for route in sorted(set(routes)):
+        print(route)
+except:
+    pass
+" 2>/dev/null)
 
     if [ -n "$OPENAPI_ROUTES" ]; then
         echo "Found OpenAPI routes:"
         echo "$OPENAPI_ROUTES" | while read -r route; do
             # Extract provider ID from route
-            provider_id=$(echo "$route" | sed 's|"/ai/openapi/\([^/]*\)/.*"|\1|')
+            provider_id=$(echo "$route" | sed 's|/ai/openapi/\([^/]*\)/.*|\1|')
             echo "  - Provider ID: $provider_id (Route: $route)"
         done
     else
@@ -65,7 +79,18 @@ if [ $? -eq 0 ]; then
     fi
 
     # Check for GSAi-specific routes
-    GSAI_ROUTES=$(echo "$ROUTES" | grep -o '"/ai/gsai[^"]*"' | sort -u)
+    GSAI_ROUTES=$(echo "$ROUTES" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    for item in data.get('list', []):
+        uri = item.get('value', {}).get('uri', '')
+        if '/ai/gsai' in uri:
+            print(uri)
+except:
+    pass
+" 2>/dev/null | sort -u)
+
     if [ -n "$GSAI_ROUTES" ]; then
         echo ""
         echo "Found GSAi-specific routes:"
