@@ -3,7 +3,9 @@
 # Script to fix OpenAPI routes in staging with proper methods and route IDs
 # Version 2: Ensures methods are included and route IDs have proper suffixes
 
+# Exit on real errors, but handle grep failures properly
 set -e
+set -o pipefail
 
 # Colors
 RED='\033[0;31m'
@@ -35,10 +37,11 @@ echo
 
 # Clean up ALL old OpenAPI routes first
 echo -e "${YELLOW}Cleaning up all existing OpenAPI routes...${NC}"
+# Use grep || true because not finding routes is OK (they might not exist)
 all_openapi_routes=$(curl -s "${APISIX_ADMIN_URL}/apisix/admin/routes" \
-    -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null | \
-    grep -o "\"key\":\"/apisix/routes/openapi-gsai-api-1[^\"]*\"" | \
-    cut -d'"' -f4 | cut -d'/' -f4 || true)
+    -H "X-API-KEY: ${APISIX_ADMIN_KEY}" | \
+    { grep -o "\"key\":\"/apisix/routes/openapi-gsai-api-1[^\"]*\"" || true; } | \
+    cut -d'"' -f4 | cut -d'/' -f4)
 
 if [ -n "$all_openapi_routes" ]; then
     echo "Found existing routes to clean:"
@@ -107,10 +110,11 @@ update_route() {
     echo "  Removing old routes with pattern: ${route_base}*"
 
     # Get list of all routes and delete matching ones
+    # Use grep || true because not finding routes is OK
     existing_routes=$(curl -s "${APISIX_ADMIN_URL}/apisix/admin/routes" \
-        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null | \
-        grep -o "\"key\":\"/apisix/routes/${route_base}[^\"]*\"" | \
-        cut -d'"' -f4 | cut -d'/' -f4 || true)
+        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" | \
+        { grep -o "\"key\":\"/apisix/routes/${route_base}[^\"]*\"" || true; } | \
+        cut -d'"' -f4 | cut -d'/' -f4)
 
     if [ -n "$existing_routes" ]; then
         echo "$existing_routes" | while read -r old_route_id; do
@@ -145,19 +149,26 @@ update_route() {
         updated_route=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
             -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
 
-        # Check for methods
-        if echo "$updated_route" | grep -q '"methods"'; then
-            methods=$(echo "$updated_route" | grep -o '"methods":\[[^\]]*\]')
-            echo -e "  ${GREEN}✅ Methods confirmed: $methods${NC}"
+        # Check if we got a valid response
+        if [ -z "$updated_route" ]; then
+            echo -e "  ${YELLOW}⚠ Warning: Could not verify route - APISIX might be slow to update${NC}"
         else
-            echo -e "  ${RED}❌ Warning: methods not found after update${NC}"
-        fi
+            # Check for methods - grep returns 1 if not found, which is expected behavior
+            if echo "$updated_route" | grep -q '"methods"'; then
+                methods=$(echo "$updated_route" | grep -o '"methods":\[[^\]]*\]' || echo "not found")
+                echo -e "  ${GREEN}✅ Methods confirmed: $methods${NC}"
+            else
+                echo -e "  ${RED}❌ Warning: methods not found in route configuration${NC}"
+                echo -e "  ${YELLOW}  Response received: ${updated_route:0:100}...${NC}"
+            fi
 
-        # Check for regex_uri
-        if echo "$updated_route" | grep -q "regex_uri"; then
-            echo -e "  ${GREEN}✅ regex_uri confirmed in route${NC}"
-        else
-            echo -e "  ${RED}❌ Warning: regex_uri not found after update${NC}"
+            # Check for regex_uri - grep returns 1 if not found, which is expected behavior
+            if echo "$updated_route" | grep -q "regex_uri"; then
+                echo -e "  ${GREEN}✅ regex_uri confirmed in route${NC}"
+            else
+                echo -e "  ${RED}❌ Warning: regex_uri not found in route configuration${NC}"
+                echo -e "  ${YELLOW}  This means path rewriting won't work${NC}"
+            fi
         fi
     else
         echo -e "  ${RED}❌ Failed to update (HTTP $http_code)${NC}"
