@@ -18,6 +18,60 @@ echo -e "${BLUE}=== Fix for Staging OpenAPI Routes v2 ===${NC}"
 echo -e "${YELLOW}This version ensures HTTP methods are properly configured${NC}"
 echo
 
+# Cache file for credentials (session-based)
+CACHE_DIR="/tmp/.violentutf_cache_$$"
+CACHE_FILE="${CACHE_DIR}/credentials.json"
+
+# Create cache directory if it doesn't exist
+mkdir -p "$CACHE_DIR" 2>/dev/null
+
+# Function to load cached credentials
+load_cached_credentials() {
+    if [ -f "$CACHE_FILE" ]; then
+        # Check if cache is less than 1 hour old
+        if [ $(($(date +%s) - $(stat -f %m "$CACHE_FILE" 2>/dev/null || stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0))) -lt 3600 ]; then
+            if [ -z "$APISIX_ADMIN_KEY" ]; then
+                APISIX_ADMIN_KEY=$(python3 -c "import json; data=json.load(open('$CACHE_FILE')); print(data.get('apisix_admin_key', ''))" 2>/dev/null || echo "")
+                if [ -n "$APISIX_ADMIN_KEY" ]; then
+                    echo "Using cached APISIX Admin Key"
+                fi
+            fi
+            if [ -z "$GSAI_API_KEY" ]; then
+                GSAI_API_KEY=$(python3 -c "import json; data=json.load(open('$CACHE_FILE')); print(data.get('gsai_api_key', ''))" 2>/dev/null || echo "")
+                if [ -n "$GSAI_API_KEY" ]; then
+                    echo "Using cached GSAi API Key"
+                fi
+            fi
+        else
+            echo "Cache expired, please re-enter credentials"
+            rm -f "$CACHE_FILE"
+        fi
+    fi
+}
+
+# Function to save credentials to cache
+save_credentials_to_cache() {
+    if [ -n "$APISIX_ADMIN_KEY" ] && [ -n "$GSAI_API_KEY" ]; then
+        python3 -c "
+import json
+data = {
+    'apisix_admin_key': '$APISIX_ADMIN_KEY',
+    'gsai_api_key': '$GSAI_API_KEY',
+    'timestamp': $(date +%s)
+}
+with open('$CACHE_FILE', 'w') as f:
+    json.dump(data, f)
+" 2>/dev/null
+        chmod 600 "$CACHE_FILE" 2>/dev/null
+    fi
+}
+
+# Clean up on exit
+trap "rm -rf $CACHE_DIR" EXIT
+
+# Load cached credentials first
+load_cached_credentials
+
 # Get APISIX admin key
 if [ -z "$APISIX_ADMIN_KEY" ]; then
     echo -n "Enter APISIX Admin Key: "
@@ -26,9 +80,23 @@ if [ -z "$APISIX_ADMIN_KEY" ]; then
 fi
 
 # Get GSAi API key
-echo -n "Enter GSAi API Key (Bearer token for GSAi): "
-read -s GSAI_API_KEY
-echo
+if [ -z "$GSAI_API_KEY" ]; then
+    echo -n "Enter GSAi API Key (Bearer token for GSAi): "
+    read -s GSAI_API_KEY
+    echo
+fi
+
+# Ask to save credentials
+if [ -f "$CACHE_FILE" ]; then
+    echo "Credentials already cached for this session"
+else
+    echo -n "Save credentials for this session? (y/n): "
+    read save_creds
+    if [ "$save_creds" = "y" ] || [ "$save_creds" = "Y" ]; then
+        save_credentials_to_cache
+        echo -e "${GREEN}✅ Credentials saved to cache (valid for 1 hour)${NC}"
+    fi
+fi
 
 APISIX_ADMIN_URL="${APISIX_ADMIN_URL:-http://localhost:9180}"
 
@@ -85,83 +153,72 @@ update_route() {
     local api_port=""
     local api_host=""
 
-    # First, check what ports the FastAPI container is actually listening on
-    echo "    Checking FastAPI container ports..."
-
-    # Get the actual listening port from the container
-    if docker ps --format "{{.Names}}" | grep -q "violentutf_api"; then
-        # Check what port uvicorn is actually listening on inside the container
-        local listening_port=$(docker exec violentutf_api sh -c "netstat -tln 2>/dev/null | grep LISTEN | grep -E ':(8000|8081)' | head -1" 2>/dev/null | grep -o ':[0-9]\+' | grep -o '[0-9]\+' | head -1)
-
-        if [ -z "$listening_port" ]; then
-            # Try with ss if netstat not available
-            listening_port=$(docker exec violentutf_api sh -c "ss -tln 2>/dev/null | grep LISTEN | grep -E ':(8000|8081)' | head -1" 2>/dev/null | grep -o ':[0-9]\+' | grep -o '[0-9]\+' | head -1)
-        fi
-
-        if [ -z "$listening_port" ]; then
-            # Last resort - check logs
-            listening_port=$(docker logs violentutf_api 2>&1 | grep "Uvicorn running" | tail -1 | grep -o ':[0-9]\+' | grep -o '[0-9]\+')
-        fi
-
-        if [ -n "$listening_port" ]; then
-            api_port="$listening_port"
-            api_host="violentutf_api"
-            echo "    FastAPI is listening on port ${api_port}"
-
-            # Test connectivity from APISIX container to FastAPI
-            echo "    Testing connectivity from APISIX to ${api_host}:${api_port}..."
-            local test_result=$(docker exec apisix-apisix sh -c "nc -zv ${api_host} ${api_port} 2>&1" 2>/dev/null || echo "failed")
-
-            if echo "$test_result" | grep -q "succeeded\|open"; then
-                echo -e "    ${GREEN}✓ Connectivity verified${NC}"
-            else
-                echo -e "    ${YELLOW}⚠ Could not verify connectivity, but will proceed${NC}"
-
-                # Try alternative ports if main port fails
-                for alt_port in 8000 8001 8080 8081; do
-                    if [ "$alt_port" != "$api_port" ]; then
-                        echo "    Trying alternative port ${alt_port}..."
-                        test_result=$(docker exec apisix-apisix sh -c "nc -zv ${api_host} ${alt_port} 2>&1" 2>/dev/null || echo "failed")
-                        if echo "$test_result" | grep -q "succeeded\|open"; then
-                            api_port="$alt_port"
-                            echo -e "    ${GREEN}✓ Found working port: ${alt_port}${NC}"
-                            break
-                        fi
-                    fi
-                done
-            fi
-        else
-            echo -e "    ${YELLOW}⚠ Could not detect listening port, using default 8000${NC}"
-            api_port="8000"
-            api_host="violentutf_api"
-        fi
-    else
-        # Container not running, check existing working routes
-        echo "    FastAPI container not found, checking existing routes for reference..."
-        local existing_upstream=$(curl -s "${APISIX_ADMIN_URL}/apisix/admin/routes" \
-            -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null | \
-            python3 -c "
+    # First check existing working routes to see what's being used
+    echo "    Checking existing routes for upstream configuration..."
+    local existing_upstream=$(curl -s "${APISIX_ADMIN_URL}/apisix/admin/routes" \
+        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null | \
+        python3 -c "
 import sys, json
-data = json.load(sys.stdin)
-for item in data.get('list', []):
-    route = item.get('value', {})
-    nodes = route.get('upstream', {}).get('nodes', {})
-    for node in nodes:
-        if 'violentutf' in node.lower() or ':800' in node:
-            print(node)
-            break
+try:
+    data = json.load(sys.stdin)
+    # Look for any route pointing to violentutf or port 8000/8081
+    for item in data.get('list', []):
+        route = item.get('value', {})
+        nodes = route.get('upstream', {}).get('nodes', {})
+        for node in nodes:
+            if 'violentutf' in node.lower() or ':8000' in node or ':8081' in node:
+                print(node)
+                sys.exit(0)
+except:
+    pass
 " 2>/dev/null | head -1)
 
-        if [ -n "$existing_upstream" ]; then
-            api_host=$(echo "$existing_upstream" | cut -d':' -f1)
-            api_port=$(echo "$existing_upstream" | cut -d':' -f2)
-            echo "    Using upstream from existing routes: ${api_host}:${api_port}"
+    if [ -n "$existing_upstream" ]; then
+        api_host=$(echo "$existing_upstream" | cut -d':' -f1)
+        api_port=$(echo "$existing_upstream" | cut -d':' -f2)
+        echo "    Found existing route using: ${api_host}:${api_port}"
+    else
+        # Check if container is running and get port from logs (non-blocking)
+        echo "    Checking FastAPI container logs..."
+        if docker ps --format "{{.Names}}" | grep -q "violentutf_api"; then
+            # Quick check of logs with timeout
+            local listening_port=$(timeout 2 docker logs violentutf_api 2>&1 | grep "Uvicorn running" | tail -1 | grep -o ':[0-9]\+' | grep -o '[0-9]\+' || echo "")
+
+            if [ -n "$listening_port" ]; then
+                api_port="$listening_port"
+                api_host="violentutf_api"
+                echo "    FastAPI container found, listening on port ${api_port}"
+            else
+                # Default to common port
+                api_port="8000"
+                api_host="violentutf_api"
+                echo "    FastAPI container found, assuming default port ${api_port}"
+            fi
         else
             # Default fallback
             api_host="violentutf_api"
             api_port="8000"
-            echo -e "    ${YELLOW}⚠ Using default: ${api_host}:${api_port}${NC}"
+            echo -e "    ${YELLOW}⚠ Container not found, using default: ${api_host}:${api_port}${NC}"
         fi
+    fi
+
+    # Quick connectivity test with timeout
+    echo "    Testing connectivity to ${api_host}:${api_port}..."
+    if timeout 2 docker exec apisix-apisix sh -c "echo > /dev/tcp/${api_host}/${api_port}" 2>/dev/null; then
+        echo -e "    ${GREEN}✓ Upstream is reachable${NC}"
+    else
+        echo -e "    ${YELLOW}⚠ Could not verify connectivity (may still work)${NC}"
+
+        # If primary port fails, try common alternatives
+        for alt_port in 8000 8001 8081 8080; do
+            if [ "$alt_port" != "$api_port" ]; then
+                if timeout 1 docker exec apisix-apisix sh -c "echo > /dev/tcp/${api_host}/${alt_port}" 2>/dev/null; then
+                    api_port="$alt_port"
+                    echo -e "    ${GREEN}✓ Found working port: ${alt_port}${NC}"
+                    break
+                fi
+            fi
+        done
     fi
 
     echo "  Final upstream configuration: ${api_host}:${api_port}"
