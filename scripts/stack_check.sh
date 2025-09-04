@@ -648,11 +648,232 @@ print(int((end - start) * 1000))
     fi
 }
 
-# Troubleshoot OpenAPI 404 errors
+# Helper functions for diagnostic tree
+diag_print_level() {
+    local level=$1
+    local msg=$2
+    case $level in
+        1) echo -e "\n${BOLD}${BLUE}═══ LEVEL $level: $msg ═══${NC}" ;;
+        2) echo -e "\n${CYAN}  ── Level $level: $msg ──${NC}" ;;
+        3) echo -e "\n${YELLOW}    ∙ Level $level: $msg${NC}" ;;
+    esac
+}
+
+diag_print_test() {
+    echo -e "${BOLD}Testing:${NC} $1"
+}
+
+# Comprehensive OpenAPI debugging with diagnostic decision tree
+comprehensive_openapi_debug() {
+    echo -e "${BOLD}${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BOLD}${BLUE}║         OPENAPI DIAGNOSTIC DECISION TREE                  ║${NC}"
+    echo -e "${BOLD}${BLUE}║                  Environment: $ENVIRONMENT                ║${NC}"
+    echo -e "${BOLD}${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
+
+    # Simple counters for results
+    local passed=0
+    local failed=0
+    local warned=0
+    local ROOT_CAUSE=""
+
+    echo -e "\n${BOLD}${BLUE}═══ LEVEL 1: APISIX Accessibility ═══${NC}"
+    echo -e "${BOLD}Testing:${NC} Can we connect to APISIX Admin API?"
+
+    local admin_response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
+        "$APISIX_ADMIN_URL/apisix/admin/routes" \
+        -H "X-API-KEY: $APISIX_ADMIN_KEY" 2>/dev/null)
+
+    if [ "$admin_response" != "200" ]; then
+        echo -e "  ${RED}✗ FAIL${NC}: Cannot reach APISIX Admin API (HTTP $admin_response)"
+        ((failed++))
+
+        echo -e "\n${CYAN}  ── Level 2: Investigating APISIX connectivity ──${NC}"
+        echo -e "${BOLD}Testing:${NC} Is APISIX container running?"
+
+        if docker ps | grep -q "apisix-apisix"; then
+            echo -e "  ${GREEN}✓ PASS${NC}: APISIX container is running"
+            ((passed++))
+
+            echo -e "\n${YELLOW}    ∙ Level 3: Network configuration check${NC}"
+            echo -e "${BOLD}Testing:${NC} Is port 9180 exposed?"
+
+            if docker port apisix-apisix | grep -q "9180"; then
+                echo -e "  ${GREEN}✓ PASS${NC}: Port 9180 is exposed"
+                ((passed++))
+                echo -e "  ${YELLOW}Debug: Admin URL: $APISIX_ADMIN_URL${NC}"
+                echo -e "  ${YELLOW}Debug: Check Admin Key correctness${NC}"
+                ROOT_CAUSE="APISIX Admin API key might be incorrect"
+            else
+                echo -e "  ${RED}✗ FAIL${NC}: Port 9180 not exposed"
+                ((failed++))
+                echo -e "  ${YELLOW}Debug: Port mapping issue detected${NC}"
+                ROOT_CAUSE="APISIX Admin port not properly exposed"
+            fi
+        else
+            echo -e "  ${RED}✗ FAIL${NC}: APISIX container not running"
+            ((failed++))
+            echo -e "  ${YELLOW}Debug: Container status:${NC}"
+            docker ps -a | grep apisix | head -3
+            ROOT_CAUSE="APISIX container is down - restart required"
+        fi
+    else
+        echo -e "  ${GREEN}✓ PASS${NC}: APISIX Admin API is accessible"
+        ((passed++))
+
+        echo -e "\n${CYAN}  ── Level 2: Route Existence Check ──${NC}"
+
+        # Load OpenAPI configuration
+        if [ -f "$REPO_ROOT/ai-tokens.env" ]; then
+            OPENAPI_ID=$(grep "^OPENAPI_1_ID=" "$REPO_ROOT/ai-tokens.env" | cut -d'=' -f2 | cut -d'#' -f1 | tr -d ' ')
+            OPENAPI_URL=$(grep "^OPENAPI_1_BASE_URL=" "$REPO_ROOT/ai-tokens.env" | cut -d'=' -f2 | cut -d'#' -f1 | tr -d ' ')
+            echo "  Configuration loaded: ID=$OPENAPI_ID"
+        else
+            echo -e "  ${YELLOW}⚠ Warning: ai-tokens.env not found at $REPO_ROOT${NC}"
+            OPENAPI_ID=""
+        fi
+
+        echo -e "${BOLD}Testing:${NC} Looking for OpenAPI routes with ID: ${OPENAPI_ID:-[NOT SET]}"
+
+        local route_list=$(curl -s "$APISIX_ADMIN_URL/apisix/admin/routes" \
+            -H "X-API-KEY: $APISIX_ADMIN_KEY" 2>/dev/null)
+
+        local route_count=0
+        if [ -n "$OPENAPI_ID" ]; then
+            route_count=$(echo "$route_list" | grep -o "\"id\":\"[^\"]*${OPENAPI_ID}[^\"]*\"" | wc -l | tr -d ' ')
+        fi
+
+        echo "  Found $route_count routes"
+
+        if [ "${route_count:-0}" -eq 0 ]; then
+            echo -e "  ${RED}✗ FAIL${NC}: No OpenAPI routes found"
+            ((failed++))
+
+            if [ -z "$OPENAPI_ID" ]; then
+                echo -e "  ${YELLOW}Debug: OPENAPI_ID is not configured${NC}"
+                ROOT_CAUSE="OpenAPI provider not configured in ai-tokens.env"
+            else
+                echo -e "  ${YELLOW}Debug: Expected routes with ID pattern: openapi-${OPENAPI_ID}-*${NC}"
+                echo -e "  ${YELLOW}Debug: Total routes in APISIX: $(echo "$route_list" | grep -c '"id"')${NC}"
+                ROOT_CAUSE="OpenAPI routes not configured - setup required"
+            fi
+        else
+            echo -e "  ${GREEN}✓ PASS${NC}: Found $route_count OpenAPI routes"
+            ((passed++))
+
+            echo -e "\n${CYAN}  ── Level 3: Route Configuration Analysis ──${NC}"
+            echo -e "${BOLD}Testing:${NC} Checking route configuration"
+
+            # Check for regex_uri
+            local models_route_id="openapi-${OPENAPI_ID}-models-"
+            local route_id=$(echo "$route_list" | grep -o "\"id\":\"${models_route_id}[^\"]*\"" | head -1 | cut -d'"' -f4)
+
+            if [ -n "$route_id" ]; then
+                echo "  Route ID found: $route_id"
+                local route_config=$(curl -s "$APISIX_ADMIN_URL/apisix/admin/routes/$route_id" \
+                    -H "X-API-KEY: $APISIX_ADMIN_KEY" 2>/dev/null)
+
+                if echo "$route_config" | grep -q "regex_uri"; then
+                    echo -e "  ${GREEN}✓ PASS${NC}: Path rewriting configured"
+                    ((passed++))
+                    ROOT_CAUSE="System configured correctly"
+
+                    # Show the actual regex_uri configuration for verification
+                    local regex_pattern=$(echo "$route_config" | grep -o '"regex_uri":\[[^]]*\]' | head -1)
+                    if [ -n "$regex_pattern" ]; then
+                        echo -e "  ${CYAN}Debug: $regex_pattern${NC}"
+                    fi
+                else
+                    echo -e "  ${RED}✗ FAIL${NC}: Path rewriting not configured"
+                    ((failed++))
+
+                    # Check if route has upstream configured
+                    if echo "$route_config" | grep -q '"nodes"'; then
+                        echo -e "  ${YELLOW}Debug: Upstream is configured but regex_uri is missing${NC}"
+                        ROOT_CAUSE="Routes missing regex_uri configuration for path rewriting"
+                    else
+                        echo -e "  ${YELLOW}Debug: Route has no upstream configuration${NC}"
+                        ROOT_CAUSE="Route is incomplete - missing both upstream and rewrite"
+                    fi
+                fi
+            else
+                echo -e "  ${RED}✗ FAIL${NC}: Cannot find models route"
+                ((failed++))
+                echo -e "  ${YELLOW}Debug: Looking for pattern: ${models_route_id}*${NC}"
+                echo -e "  ${YELLOW}Debug: Available route IDs:${NC}"
+                echo "$route_list" | grep -o '"id":"[^"]*"' | head -5 | sed 's/^/    /'
+                ROOT_CAUSE="Route IDs don't match expected pattern"
+            fi
+        fi
+    fi
+
+    # Summary
+    echo -e "\n${BOLD}${BLUE}════════════════════════════════════════════════════════${NC}"
+    echo -e "${BOLD}DIAGNOSTIC COMPLETE${NC}"
+    echo -e "${BOLD}${BLUE}════════════════════════════════════════════════════════${NC}"
+
+    echo -e "\n${BOLD}Test Results:${NC}"
+    echo -e "  ${GREEN}✓ Passed: $passed${NC}"
+    echo -e "  ${YELLOW}⚠ Warnings: $warned${NC}"
+    echo -e "  ${RED}✗ Failed: $failed${NC}"
+
+    echo -e "\n${BOLD}Root Cause:${NC}"
+    if [[ "$ROOT_CAUSE" == *"correctly"* ]]; then
+        echo -e "  ${GREEN}$ROOT_CAUSE${NC}"
+    else
+        echo -e "  ${RED}$ROOT_CAUSE${NC}"
+    fi
+
+    # Provide recommended action based on root cause
+    echo -e "\n${BOLD}Recommended Action:${NC}"
+    case "$ROOT_CAUSE" in
+        *"restart required"*)
+            echo "  Run: docker-compose restart apisix"
+            ;;
+        *"setup required"*)
+            echo "  Run: ./setup_macos.sh --openapi-setup"
+            ;;
+        *"regex_uri"*|*"path rewriting"*)
+            echo "  Run: ./scripts/fix_staging_openapi_routes.sh"
+            ;;
+        *"API key"*)
+            echo "  1. Check APISIX Admin Key in docker-compose.yml"
+            echo "  2. Verify: grep admin_key docker-compose.yml"
+            ;;
+        *"port not properly exposed"*)
+            echo "  Check docker-compose.yml port mappings for 9180"
+            ;;
+        *"ai-tokens.env"*)
+            echo "  Configure OpenAPI provider in ai-tokens.env:"
+            echo "    OPENAPI_1_ID=gsai-api-1"
+            echo "    OPENAPI_1_ENABLED=true"
+            echo "    OPENAPI_1_BASE_URL=<provider_url>"
+            echo "    OPENAPI_1_API_KEY=<api_key>"
+            ;;
+        *"correctly"*)
+            echo -e "  ${GREEN}No action needed - system operational${NC}"
+            ;;
+        *)
+            echo "  Review APISIX logs: docker logs apisix-apisix"
+            ;;
+    esac
+}
+
+# Keep old function name for compatibility
 troubleshoot_openapi_404() {
     print_subheader "🔍 Troubleshooting OpenAPI 404 Errors"
 
+    # Load OpenAPI configuration if not already loaded
+    if [ -z "$OPENAPI_ID" ] && [ -f "$REPO_ROOT/ai-tokens.env" ]; then
+        OPENAPI_ID=$(grep "^OPENAPI_1_ID=" "$REPO_ROOT/ai-tokens.env" | cut -d'=' -f2 | cut -d'#' -f1 | tr -d ' ')
+        OPENAPI_ENABLED=$(grep "^OPENAPI_1_ENABLED=" "$REPO_ROOT/ai-tokens.env" | cut -d'=' -f2 | cut -d'#' -f1 | tr -d ' ')
+        OPENAPI_URL=$(grep "^OPENAPI_1_BASE_URL=" "$REPO_ROOT/ai-tokens.env" | cut -d'=' -f2 | cut -d'#' -f1 | tr -d ' ')
+    fi
+
     echo "Analyzing why OpenAPI routes return 404..."
+    echo "  Configuration loaded:"
+    echo "    Provider ID: ${OPENAPI_ID:-not set}"
+    echo "    Base URL: ${OPENAPI_URL:-not set}"
+    echo
 
     # Get detailed route info
     route_details=$(curl -s "$APISIX_ADMIN_URL/apisix/admin/routes" \
@@ -771,8 +992,15 @@ except Exception as e:
 
         # Test connectivity from APISIX container
         echo -n "  Testing from APISIX container: "
-        container_test=$(docker exec apisix-apisix sh -c "curl -s -I --max-time 3 https://$upstream_host/api/v1/models 2>/dev/null | head -1" 2>/dev/null)
-        if echo "$container_test" | grep -q "HTTP"; then
+        # Determine protocol based on URL
+        if [[ "$OPENAPI_URL" == https://* ]]; then
+            container_url="https://$upstream_host/api/v1/models"
+        else
+            container_url="http://$upstream_host/api/v1/models"
+        fi
+
+        container_test=$(docker exec apisix-apisix sh -c "curl -s -I --max-time 3 '$container_url' 2>/dev/null | head -1" 2>/dev/null)
+        if [ -n "$container_test" ] && echo "$container_test" | grep -q "HTTP"; then
             http_status=$(echo "$container_test" | grep -oE "[0-9]{3}")
             print_success "Reachable (HTTP $http_status)"
         else
@@ -928,7 +1156,7 @@ show_menu() {
                 check_docker_services
                 ;;
             7)
-                troubleshoot_openapi_404
+                comprehensive_openapi_debug
                 ;;
             8)
                 APISIX_ADMIN_KEY=""
