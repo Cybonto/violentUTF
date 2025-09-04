@@ -2795,7 +2795,7 @@ if [ -f "ai-tokens.env" ]; then
 EOF
     # Read and append all relevant variables from ai-tokens.env
     grep -E "^(OPENAI_ENABLED|ANTHROPIC_ENABLED|OLLAMA_ENABLED|OPEN_WEBUI_ENABLED|OPENAPI_ENABLED)" ai-tokens.env >> violentutf_api/fastapi_app/.env 2>/dev/null || true
-    grep -E "^OPENAPI_[0-9]+_" ai-tokens.env >> violentutf_api/fastapi_app/.env 2>/dev/null || true
+    grep -E "^OPENAPI_(1[0]?|[2-9])_" ai-tokens.env >> violentutf_api/fastapi_app/.env 2>/dev/null || true
     echo "✅ Added AI provider settings from ai-tokens.env"
 else
     echo "⚠️  ai-tokens.env not found - AI provider configuration will use defaults from FastAPI config.py"
