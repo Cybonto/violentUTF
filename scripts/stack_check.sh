@@ -648,6 +648,106 @@ print(int((end - start) * 1000))
     fi
 }
 
+# Troubleshoot OpenAPI 404 errors
+troubleshoot_openapi_404() {
+    print_subheader "🔍 Troubleshooting OpenAPI 404 Errors"
+
+    echo "Analyzing why OpenAPI routes return 404..."
+
+    # Get detailed route info
+    route_details=$(curl -s "$APISIX_ADMIN_URL/apisix/admin/routes" \
+        -H "X-API-KEY: $APISIX_ADMIN_KEY" 2>/dev/null | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    found_routes = []
+    for item in data.get('list', []):
+        route = item.get('value', {})
+        uri = route.get('uri', '')
+        if '$OPENAPI_ID' in uri:
+            found_routes.append(route)
+
+    if found_routes:
+        print('\\nFound OpenAPI routes in APISIX:')
+        for r in found_routes:
+            print(f\"\\n  Route URI: {r.get('uri', 'unknown')}\")
+            print(f\"  Route ID: {r.get('id', 'unknown')}\")
+            print(f\"  Status: {'ENABLED' if r.get('status', 1) == 1 else 'DISABLED'}\")
+
+            # Check upstream configuration
+            upstream = r.get('upstream', {})
+            if not upstream:
+                print('  ❌ PROBLEM: No upstream configured!')
+                print('     This route has no backend target defined.')
+            elif 'nodes' not in upstream or not upstream.get('nodes'):
+                print('  ❌ PROBLEM: No upstream nodes defined!')
+                print('     The upstream exists but has no target servers.')
+            else:
+                nodes = upstream.get('nodes', {})
+                if nodes:
+                    print('  Upstream targets:')
+                    for node, weight in nodes.items():
+                        print(f'    - {node} (weight: {weight})')
+                else:
+                    print('  ❌ PROBLEM: Empty upstream nodes!')
+
+            # Check plugins
+            plugins = r.get('plugins', {})
+            if plugins:
+                print(f'  Plugins: {list(plugins.keys())}')
+                if 'key-auth' in plugins:
+                    print('    ✓ Authentication required (key-auth)')
+
+            # Check if route is disabled
+            if r.get('status', 1) == 0:
+                print('  ❌ PROBLEM: Route is DISABLED!')
+    else:
+        print('\\n❌ No routes found for provider ID: $OPENAPI_ID')
+        print('   This explains the 404 errors - routes need to be created.')
+except Exception as e:
+    print(f'Error analyzing routes: {e}')
+" 2>/dev/null)
+
+    if [ -n "$route_details" ]; then
+        echo "$route_details"
+    fi
+
+    echo -e "\n${BOLD}Diagnosis Summary:${NC}"
+
+    # Check if routes exist
+    routes_exist=$(echo "$route_details" | grep -c "Route URI:" || echo "0")
+
+    if [ "$routes_exist" = "0" ]; then
+        print_error "No OpenAPI routes found in APISIX"
+        echo "  Solution: Run setup script to create routes"
+    else
+        # Check for common issues
+        if echo "$route_details" | grep -q "No upstream configured"; then
+            print_error "Routes exist but have no upstream configuration"
+            echo "  Solution: Routes need to be configured with upstream targets"
+            echo "  Run: ./setup_macos.sh to reconfigure"
+        elif echo "$route_details" | grep -q "DISABLED"; then
+            print_error "Routes exist but are disabled"
+            echo "  Solution: Enable the routes in APISIX configuration"
+        elif echo "$route_details" | grep -q "Empty upstream nodes"; then
+            print_error "Routes have upstream but no target nodes"
+            echo "  Solution: Configure upstream nodes in route configuration"
+        else
+            print_warning "Routes appear configured but still return 404"
+            echo "  Possible causes:"
+            echo "  - Network connectivity to upstream target"
+            echo "  - Upstream service not running"
+            echo "  - Incorrect upstream URL in configuration"
+        fi
+    fi
+
+    echo -e "\n${BOLD}Recommended Actions:${NC}"
+    echo "1. Verify OPENAPI_1_ID in ai-tokens.env matches: $OPENAPI_ID"
+    echo "2. Check OPENAPI_1_BASE_URL is correct: $OPENAPI_URL"
+    echo "3. Re-run setup script for your environment"
+    echo "4. If using staging/production, ensure proper network access to GSAi"
+}
+
 # Generate summary report
 generate_report() {
     print_header "📊 Stack Health Summary"
@@ -683,11 +783,12 @@ show_menu() {
         echo "4) API Endpoints"
         echo "5) OpenAPI Provider"
         echo "6) Docker Services"
-        echo "7) Update Credentials"
-        echo "8) Clear Cache"
-        echo "9) Exit"
+        echo "7) Troubleshoot OpenAPI 404"
+        echo "8) Update Credentials"
+        echo "9) Clear Cache"
+        echo "10) Exit"
 
-        echo -n -e "\n${BOLD}Enter choice [1-9]:${NC} "
+        echo -n -e "\n${BOLD}Enter choice [1-10]:${NC} "
         read -r choice
 
         case $choice in
@@ -717,17 +818,20 @@ show_menu() {
                 check_docker_services
                 ;;
             7)
+                troubleshoot_openapi_404
+                ;;
+            8)
                 APISIX_ADMIN_KEY=""
                 APISIX_API_KEY=""
                 AUTH_USERNAME=""
                 AUTH_PASSWORD=""
                 get_credentials
                 ;;
-            8)
+            9)
                 rm -f "$CACHE_FILE"
                 print_success "Cache cleared"
                 ;;
-            9)
+            10)
                 echo "Goodbye!"
                 exit 0
                 ;;
