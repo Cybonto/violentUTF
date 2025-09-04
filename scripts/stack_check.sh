@@ -782,6 +782,148 @@ comprehensive_openapi_debug() {
                     if [ -n "$regex_pattern" ]; then
                         echo -e "  ${CYAN}Debug: $regex_pattern${NC}"
                     fi
+
+                    # LEVEL 4: Test actual endpoint functionality
+                    echo -e "\n${CYAN}  ── Level 4: Endpoint Functionality Test ──${NC}"
+                    echo -e "${BOLD}Testing:${NC} Can we reach the models endpoint?"
+
+                    local test_url="$APISIX_URL/ai/openapi/$OPENAPI_ID/api/v1/models"
+                    local test_response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
+                        "$test_url" \
+                        -H "apikey: $APISIX_API_KEY" 2>/dev/null)
+
+                    case $test_response in
+                        200)
+                            echo -e "  ${GREEN}✓ PASS${NC}: Endpoint is working (HTTP 200)"
+                            ((passed++))
+                            ROOT_CAUSE="System fully operational"
+                            ;;
+                        401|403)
+                            echo -e "  ${RED}✗ FAIL${NC}: Authentication failed (HTTP $test_response)"
+                            ((failed++))
+                            echo -e "  ${YELLOW}Debug: API key used: ${APISIX_API_KEY:0:10}...${NC}"
+                            ROOT_CAUSE="API key authentication issue"
+                            ;;
+                        404)
+                            echo -e "  ${RED}✗ FAIL${NC}: Route not found (HTTP 404)"
+                            ((failed++))
+                            echo -e "  ${YELLOW}Debug: Testing URL: $test_url${NC}"
+                            echo -e "  ${YELLOW}Debug: API Key: ${APISIX_API_KEY:0:10}...${NC}"
+
+                            # LEVEL 5: Deep dive into 404 issue
+                            echo -e "\n${YELLOW}    ∙ Level 5: Deep 404 Investigation${NC}"
+
+                            # Test 1: Check if route is actually registered in APISIX
+                            echo -e "${BOLD}Test 5.1:${NC} Is route registered and enabled?"
+                            local route_status=$(echo "$route_config" | grep -o '"status":[0-9]*' | cut -d':' -f2)
+                            if [ "$route_status" = "1" ] || [ -z "$route_status" ]; then
+                                echo -e "  ${GREEN}✓${NC} Route is enabled (status: ${route_status:-1})"
+                            else
+                                echo -e "  ${RED}✗${NC} Route is DISABLED (status: $route_status)"
+                                ROOT_CAUSE="Route is disabled in APISIX"
+                            fi
+
+                            # Only continue if route is enabled
+                            if [ "$route_status" != "0" ]; then
+
+                            # Test 2: Verify upstream configuration
+                            echo -e "${BOLD}Test 5.2:${NC} Checking upstream configuration"
+                            local upstream_host=$(echo "$route_config" | grep -o '"nodes":{"[^"]*"' | cut -d'"' -f4 | cut -d':' -f1)
+                            local upstream_scheme=$(echo "$route_config" | grep -o '"scheme":"[^"]*"' | cut -d'"' -f4)
+                            echo -e "  Upstream: ${upstream_scheme:-https}://$upstream_host"
+                            echo -e "  Nodes in config: $(echo "$route_config" | grep -o '"nodes":{[^}]*}' | head -1)"
+
+                            # Test 3: Check exact URI pattern matching
+                            echo -e "${BOLD}Test 5.3:${NC} URI pattern analysis"
+                            local route_uri=$(echo "$route_config" | grep -o '"uri":"[^"]*"' | cut -d'"' -f4)
+                            echo -e "  Route URI pattern: $route_uri"
+                            echo -e "  Request path: /ai/openapi/$OPENAPI_ID/api/v1/models"
+                            echo -e "  Regex rewrite: $(echo "$regex_pattern")"
+
+                            # Test if the URI matches
+                            if [[ "/ai/openapi/$OPENAPI_ID/api/v1/models" == $route_uri* ]]; then
+                                echo -e "  ${GREEN}✓${NC} URI pattern matches"
+                            else
+                                echo -e "  ${RED}✗${NC} URI pattern mismatch!"
+                                echo -e "  ${YELLOW}Debug: Expected prefix: $route_uri${NC}"
+                            fi
+
+                            # Test 4: Direct test from container to upstream
+                            echo -e "${BOLD}Test 5.4:${NC} Container to upstream connectivity"
+                            local upstream_test_url="${upstream_scheme:-https}://$upstream_host/api/v1/models"
+                            echo -e "  Testing: $upstream_test_url"
+
+                            local container_response=$(docker exec apisix-apisix sh -c \
+                                "wget --spider --timeout=3 -S '$upstream_test_url' 2>&1" 2>/dev/null | head -20)
+
+                            if echo "$container_response" | grep -q "200 OK\|401\|403"; then
+                                echo -e "  ${GREEN}✓${NC} Upstream is reachable from container"
+
+                                # Test 5: Check proxy-rewrite configuration details
+                                echo -e "${BOLD}Test 5.5:${NC} Proxy-rewrite plugin details"
+                                local proxy_rewrite=$(echo "$route_config" | grep -o '"proxy-rewrite":{[^}]*}')
+                                echo -e "  Plugin config: $proxy_rewrite"
+
+                                # Check if headers are being set
+                                if echo "$proxy_rewrite" | grep -q '"headers"'; then
+                                    echo -e "  ${GREEN}✓${NC} Headers are being modified"
+                                    local auth_header=$(echo "$route_config" | grep -o '"Authorization":"[^"]*"' | cut -d'"' -f4)
+                                    if [ -n "$auth_header" ]; then
+                                        echo -e "  ${GREEN}✓${NC} Authorization header is set: ${auth_header:0:20}..."
+                                    fi
+                                fi
+
+                                # Test 6: Check methods allowed
+                                echo -e "${BOLD}Test 5.6:${NC} HTTP methods configuration"
+                                local methods=$(echo "$route_config" | grep -o '"methods":\[[^\]]*\]')
+                                echo -e "  Allowed methods: $methods"
+
+                                # Test 7: Try direct APISIX internal test
+                                echo -e "${BOLD}Test 5.7:${NC} APISIX internal route test"
+                                local internal_test=$(docker exec apisix-apisix sh -c \
+                                    "curl -s -o /dev/null -w '%{http_code}' -H 'Host: localhost' \
+                                    -H 'apikey: $APISIX_API_KEY' \
+                                    'http://127.0.0.1:9080/ai/openapi/$OPENAPI_ID/api/v1/models'" 2>/dev/null)
+                                echo -e "  Internal test response: HTTP $internal_test"
+
+                                if [ "$internal_test" = "404" ]; then
+                                    echo -e "  ${RED}✗${NC} Route not matching internally"
+
+                                    # Test 8: Check for route ID suffix issue
+                                    echo -e "${BOLD}Test 5.8:${NC} Route ID suffix analysis"
+                                    echo -e "  Current route ID: $route_id"
+                                    if [[ "$route_id" == *"-" ]]; then
+                                        echo -e "  ${YELLOW}⚠ Route ID ends with dash only (no suffix)${NC}"
+                                        echo -e "  ${YELLOW}  This might indicate incomplete route creation${NC}"
+                                    fi
+
+                                    ROOT_CAUSE="Route exists but not matching requests - possible URI or ID pattern issue"
+                                elif [ "$internal_test" = "502" ] || [ "$internal_test" = "503" ]; then
+                                    echo -e "  ${YELLOW}⚠${NC} Gateway error from upstream"
+                                    ROOT_CAUSE="Upstream service returning errors"
+                                else
+                                    echo -e "  ${GREEN}✓${NC} Route works internally"
+                                    ROOT_CAUSE="External routing issue - check load balancer or proxy"
+                                fi
+                            else
+                                echo -e "  ${RED}✗${NC} Cannot reach upstream from container"
+                                echo -e "  ${YELLOW}Debug: Response:${NC}"
+                                echo "$container_response" | grep -E "failed|error|refused|timeout" | head -5
+                                ROOT_CAUSE="Network connectivity issue from APISIX to upstream"
+                            fi
+                            fi  # End of "if route is enabled" check
+                            ;;
+                        502|503)
+                            echo -e "  ${YELLOW}⚠ WARN${NC}: Gateway error (HTTP $test_response)"
+                            ((warned++))
+                            ROOT_CAUSE="Upstream service is down or unreachable"
+                            ;;
+                        *)
+                            echo -e "  ${YELLOW}⚠ WARN${NC}: Unexpected response (HTTP $test_response)"
+                            ((warned++))
+                            ROOT_CAUSE="Unknown issue - check APISIX logs"
+                            ;;
+                    esac
                 else
                     echo -e "  ${RED}✗ FAIL${NC}: Path rewriting not configured"
                     ((failed++))
@@ -835,9 +977,31 @@ comprehensive_openapi_debug() {
         *"regex_uri"*|*"path rewriting"*)
             echo "  Run: ./scripts/fix_staging_openapi_routes.sh"
             ;;
+        *"URI or ID pattern issue"*)
+            echo "  1. Check route IDs: curl -s $APISIX_ADMIN_URL/apisix/admin/routes -H 'X-API-KEY: $APISIX_ADMIN_KEY' | jq '.list[].value.id'"
+            echo "  2. Verify route URIs match exactly with request paths"
+            echo "  3. Re-run setup with: ./setup_macos.sh --cleanup && ./setup_macos.sh"
+            ;;
+        *"Network connectivity"*)
+            echo "  1. Check container network: docker exec apisix-apisix ping -c 1 api.dev.gsai.mcaas.fcs.gsa.gov"
+            echo "  2. Verify SSL certificates: docker exec apisix-apisix wget --spider -S https://api.dev.gsai.mcaas.fcs.gsa.gov"
+            echo "  3. Check Docker DNS: docker exec apisix-apisix nslookup api.dev.gsai.mcaas.fcs.gsa.gov"
+            ;;
+        *"External routing issue"*)
+            echo "  1. Test from inside container: docker exec -it apisix-apisix sh"
+            echo "  2. Run: curl -H 'apikey: YOUR_KEY' http://127.0.0.1:9080/ai/openapi/gsai-api-1/api/v1/models"
+            echo "  3. Check external URL configuration in environment"
+            ;;
+        *"Route is disabled"*)
+            echo "  Enable the route:"
+            echo "    curl -X PATCH $APISIX_ADMIN_URL/apisix/admin/routes/$route_id \\"
+            echo "      -H 'X-API-KEY: $APISIX_ADMIN_KEY' \\"
+            echo "      -d '{\"status\": 1}'"
+            ;;
         *"API key"*)
             echo "  1. Check APISIX Admin Key in docker-compose.yml"
             echo "  2. Verify: grep admin_key docker-compose.yml"
+            echo "  3. Get consumer keys: curl -s $APISIX_ADMIN_URL/apisix/admin/consumers -H 'X-API-KEY: ADMIN_KEY'"
             ;;
         *"port not properly exposed"*)
             echo "  Check docker-compose.yml port mappings for 9180"
@@ -849,11 +1013,12 @@ comprehensive_openapi_debug() {
             echo "    OPENAPI_1_BASE_URL=<provider_url>"
             echo "    OPENAPI_1_API_KEY=<api_key>"
             ;;
-        *"correctly"*)
+        *"operational"*|*"correctly"*)
             echo -e "  ${GREEN}No action needed - system operational${NC}"
             ;;
         *)
-            echo "  Review APISIX logs: docker logs apisix-apisix"
+            echo "  Review APISIX logs: docker logs apisix-apisix --tail 50"
+            echo "  Check route details: curl -s $APISIX_ADMIN_URL/apisix/admin/routes/$route_id -H 'X-API-KEY: $APISIX_ADMIN_KEY' | jq"
             ;;
     esac
 }
