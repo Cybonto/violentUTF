@@ -762,21 +762,31 @@ except Exception as e:
         upstream_host=$(echo "$OPENAPI_URL" | sed 's|https\?://||' | sed 's|/.*||' | cut -d':' -f1)
         upstream_port=$(echo "$OPENAPI_URL" | sed 's|https\?://||' | sed 's|/.*||' | grep ':' | cut -d':' -f2 || echo "443")
 
-        # Test connectivity
+        # Test connectivity from host
         if timeout 3 bash -c "echo > /dev/tcp/$upstream_host/$upstream_port" 2>/dev/null; then
-            print_success "Reachable"
+            print_success "Reachable from host"
         else
-            print_error "Not reachable from this host"
+            print_error "Not reachable from host"
+        fi
+
+        # Test connectivity from APISIX container
+        echo -n "  Testing from APISIX container: "
+        container_test=$(docker exec apisix-apisix sh -c "curl -s -I --max-time 3 https://$upstream_host/api/v1/models 2>/dev/null | head -1" 2>/dev/null)
+        if echo "$container_test" | grep -q "HTTP"; then
+            http_status=$(echo "$container_test" | grep -oE "[0-9]{3}")
+            print_success "Reachable (HTTP $http_status)"
+        else
+            print_error "Not reachable from container"
         fi
 
         # Test SSL certificate if HTTPS
         if [[ "$OPENAPI_URL" == https://* ]]; then
             echo -n "  Testing SSL certificate: "
-            cert_check=$(echo | openssl s_client -connect "$upstream_host:$upstream_port" -servername "$upstream_host" 2>/dev/null | openssl x509 -noout 2>&1)
+            cert_check=$(timeout 3 openssl s_client -connect "$upstream_host:$upstream_port" -servername "$upstream_host" </dev/null 2>/dev/null | openssl x509 -noout 2>&1)
             if [ $? -eq 0 ]; then
                 print_success "Valid SSL certificate"
             else
-                print_warning "SSL certificate issue (may need CA cert)"
+                print_warning "SSL certificate issue or unreachable"
             fi
         fi
     fi
@@ -797,6 +807,41 @@ except Exception as e:
             print_error "MISMATCH: Route uses HTTP but upstream needs HTTPS!"
             echo "  This is likely causing the 404 errors"
         fi
+    fi
+
+    echo -e "\n${BOLD}Checking Raw Route Configuration:${NC}"
+
+    # Get one route's complete configuration to check for regex_uri
+    sample_route_id="openapi-${OPENAPI_ID}-models-"
+    echo "  Fetching raw config for route: $sample_route_id"
+
+    raw_route=$(curl -s "${APISIX_ADMIN_URL}/apisix/admin/routes/${sample_route_id}" \
+        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+
+    if echo "$raw_route" | grep -q '"id"'; then
+        echo "  Raw proxy-rewrite configuration:"
+        echo "$raw_route" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    route = data.get('value', {})
+    plugins = route.get('plugins', {})
+    proxy_rewrite = plugins.get('proxy-rewrite', {})
+
+    print('    Full proxy-rewrite config:')
+    for key, value in proxy_rewrite.items():
+        if key == 'regex_uri':
+            print(f'      ✓ {key}: {value}')
+        else:
+            print(f'      {key}: {value}')
+
+    if 'regex_uri' not in proxy_rewrite:
+        print('      ❌ regex_uri: NOT FOUND')
+except Exception as e:
+    print(f'    Error parsing: {e}')
+" 2>/dev/null
+    else
+        print_error "Could not fetch route configuration"
     fi
 
     echo -e "\n${BOLD}Recommended Actions:${NC}"
