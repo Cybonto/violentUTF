@@ -1034,7 +1034,7 @@ except:
 
                                 # Test 6: Check methods allowed
                                 echo -e "${BOLD}Test 5.6:${NC} HTTP methods configuration"
-                                local methods=$(echo "$route_config" | grep -o '"methods":\[[^\]]*\]' | sed 's/"methods"://')
+                                local methods=$(echo "$route_config" | grep -o '"methods":\[[^]]*\]' | sed 's/"methods"://')
                                 if [ -n "$methods" ] && [ "$methods" != "[]" ]; then
                                     echo -e "  Allowed methods: $methods"
                                     # Check if GET is included for models endpoint

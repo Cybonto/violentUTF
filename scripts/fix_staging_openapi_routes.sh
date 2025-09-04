@@ -155,7 +155,7 @@ update_route() {
         else
             # Check for methods - grep returns 1 if not found, which is expected behavior
             if echo "$updated_route" | grep -q '"methods"'; then
-                methods=$(echo "$updated_route" | grep -o '"methods":\[[^\]]*\]' || echo "not found")
+                methods=$(echo "$updated_route" | grep -o '"methods":\[[^]]*\]' || echo "not found")
                 echo -e "  ${GREEN}✅ Methods confirmed: $methods${NC}"
             else
                 echo -e "  ${RED}❌ Warning: methods not found in route configuration${NC}"
