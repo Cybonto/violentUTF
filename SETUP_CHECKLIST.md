@@ -89,6 +89,40 @@ docker exec ai-gov-api-app-1 alembic upgrade head
 **Cause**: Docker containers can't reach external IPs directly
 **Fix**: Routes now use Docker service names (e.g., `ai-gov-api-app-1:8080`)
 
+## Zscaler/Corporate Proxy Support (Staging)
+
+### Automatic Detection and Configuration
+The setup script now automatically:
+1. Detects Zscaler/corporate proxy SSL issues
+2. Checks for Zscaler certificates in `violentutf_api/fastapi_app/`
+3. Updates `docker-compose.yml` to use `Dockerfile.zscaler` when certificates are present
+4. Reverts to standard `Dockerfile` when no proxy is detected
+
+### Required Certificate Files
+Place these in `violentutf_api/fastapi_app/`:
+- `zscaler.crt` - Zscaler root certificate
+- `zscaler.pem` - Zscaler certificate in PEM format (optional)
+- `CA.crt` - Corporate CA certificate
+
+### How It Works
+1. **Phase 1**: SSL detection runs before services start
+2. If Zscaler detected: `docker-compose.yml` updated to use `Dockerfile.zscaler`
+3. **Phase 5**: Services built with proper certificate handling
+4. `Dockerfile.zscaler` includes:
+   - Certificate installation before package downloads
+   - Environment variables for curl/pip certificate handling
+   - Proper certificate bundle configuration for Rust installation
+
+### Manual Override
+If automatic detection fails:
+```bash
+# Force use of Dockerfile.zscaler
+sed -i 's|dockerfile: Dockerfile|dockerfile: Dockerfile.zscaler|g' apisix/docker-compose.yml
+
+# Then run setup
+./setup_macos_new.sh
+```
+
 ## Environment-Specific Configuration
 
 ### Development (Current)
