@@ -119,18 +119,17 @@ Place these in `violentutf_api/fastapi_app/`:
 
 ### Usage Options for Staging
 
-#### Option 1: Automatic with Certificate Generation
+#### Option 1: Use --zscaler Flag (RECOMMENDED)
+```bash
+# Automatically enables Zscaler support and certificate generation
+./setup_macos_new.sh --zscaler
+```
+
+#### Option 2: Environment Variables
 ```bash
 # Enable automatic certificate generation (macOS only)
 export FORCE_ZSCALER=true
 export AUTO_GENERATE_CERTS=true
-./setup_macos_new.sh
-```
-
-#### Option 2: Force Zscaler Mode
-```bash
-# Force Zscaler mode (requires certificates to be in place)
-export FORCE_ZSCALER=true
 ./setup_macos_new.sh
 ```
 
