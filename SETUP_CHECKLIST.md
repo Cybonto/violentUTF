@@ -92,11 +92,15 @@ docker exec ai-gov-api-app-1 alembic upgrade head
 ## Zscaler/Corporate Proxy Support (Staging)
 
 ### Automatic Detection and Configuration
-The setup script now automatically:
-1. Detects Zscaler/corporate proxy SSL issues
-2. Checks for Zscaler certificates in `violentutf_api/fastapi_app/`
-3. Updates `docker-compose.yml` to use `Dockerfile.zscaler` when certificates are present
-4. Reverts to standard `Dockerfile` when no proxy is detected
+The setup script now automatically detects Zscaler via multiple methods:
+1. **Force Flag**: Set `FORCE_ZSCALER=true` or use `--force-zscaler` flag
+2. **SSL Test**: Detects if curl fails to reach `https://sh.rustup.rs`
+3. **Certificate Files**: Checks for Zscaler certificates in `violentutf_api/fastapi_app/`
+4. **Environment Variables**: Checks for `ZSCALER_ENABLED` or `CORPORATE_PROXY`
+
+When detected:
+- Updates `docker-compose.yml` to use `Dockerfile.zscaler`
+- Reverts to standard `Dockerfile` when no proxy is detected
 
 ### Required Certificate Files
 Place these in `violentutf_api/fastapi_app/`:
@@ -113,8 +117,31 @@ Place these in `violentutf_api/fastapi_app/`:
    - Environment variables for curl/pip certificate handling
    - Proper certificate bundle configuration for Rust installation
 
-### Manual Override
-If automatic detection fails:
+### Usage Options for Staging
+
+#### Option 1: Automatic with Certificate Generation
+```bash
+# Enable automatic certificate generation (macOS only)
+export FORCE_ZSCALER=true
+export AUTO_GENERATE_CERTS=true
+./setup_macos_new.sh
+```
+
+#### Option 2: Force Zscaler Mode
+```bash
+# Force Zscaler mode (requires certificates to be in place)
+export FORCE_ZSCALER=true
+./setup_macos_new.sh
+```
+
+#### Option 3: Use Simplified Dockerfile (bypasses SSL)
+```bash
+# Creates a Dockerfile with curl -k flag
+./fix-zscaler-build.sh
+./setup_macos_new.sh
+```
+
+#### Option 4: Manual Override
 ```bash
 # Force use of Dockerfile.zscaler
 sed -i 's|dockerfile: Dockerfile|dockerfile: Dockerfile.zscaler|g' apisix/docker-compose.yml
