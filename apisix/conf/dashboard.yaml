@@ -17,8 +17,8 @@ conf:
       file_path: "logs/access.log"
 
 authentication:
-  secret: obBMXMr861rXAPIMT2NpaPmqqliAoNf3
+  secret: NGSOyXOXJPtH2Ogt6pOTi7IchrZ4S6A3
   expire_time: 3600
   users:
     - username: admin
-      password: yaCCysiL8TQbVepjcKmf8PKj7zatAyXE
+      password: Jab53e9XPNSSwsivPg7y32COD5GUPVID
