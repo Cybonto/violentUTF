@@ -490,9 +490,31 @@ create_openapi_provider_routes() {
     return 0
 }
 
+# Function to initialize OpenAPI provider databases if needed
+initialize_openapi_provider_databases() {
+    echo "Checking OpenAPI provider databases..."
+    
+    # Check for any containers that might need database migrations
+    # This is generic and will work for any provider using alembic
+    for container in $(docker ps --format "{{.Names}}" | grep -E "api-app|api_app|gov-api|openapi"); do
+        # Check if container has alembic
+        if docker exec "$container" which alembic >/dev/null 2>&1; then
+            echo "Running database migrations for $container..."
+            if docker exec "$container" alembic upgrade head 2>&1 | grep -q "Running upgrade"; then
+                echo "✅ Database migrations completed for $container"
+            else
+                echo "✅ Database for $container is already up to date"
+            fi
+        fi
+    done
+}
+
 # Function to setup OpenAPI provider routes (including GSAi)
 setup_openapi_routes() {
     echo "Setting up OpenAPI provider routes..."
+    
+    # Initialize any OpenAPI provider databases
+    initialize_openapi_provider_databases
 
     # Wait for APISIX to be ready before creating routes
     echo "Ensuring APISIX is ready for OpenAPI route creation..."
