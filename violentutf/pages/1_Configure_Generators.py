@@ -931,18 +931,8 @@ def handle_ai_gateway_provider_selection() -> None:
                 st.code(traceback.format_exc(), language="python")
 
             # Additional debug: Check backend configuration
-            st.write("**Backend Configuration Debug:**")
-            try:
-                # Check if there's a debug endpoint we can call
-                debug_url = f"{API_BASE_URL}/api/v1/generators/apisix/debug-openapi"
-                debug_data = api_request("GET", debug_url)
-                if debug_data:
-                    st.write("✅ Backend debug info:")
-                    st.json(debug_data)
-                else:
-                    st.warning("⚠️ Backend debug endpoint not available or returned no data")
-            except Exception as debug_e:
-                st.warning(f"⚠️ Backend debug call failed: {debug_e}")
+            # NOTE: debug-openapi endpoint removed as it's not needed
+            # The debug information can be obtained from the generator params endpoint below
 
             # Check the generator params endpoint directly
             st.write("**Generator Params Endpoint Debug:**")

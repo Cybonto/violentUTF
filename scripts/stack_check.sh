@@ -648,6 +648,203 @@ print(int((end - start) * 1000))
     fi
 }
 
+# Advanced OpenAPI diagnostics for 500 errors
+test_openapi_advanced_diagnostics() {
+    print_header "🔬 Advanced OpenAPI Diagnostics for 500 Error"
+
+    local PROVIDER_ID="${1:-gsai-api-1}"
+    local OPENAPI_ROUTE_PREFIX="/ai/openapi"
+
+    echo -e "\n${BOLD}Phase 1: Route Configuration Analysis${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # 1. Get route configuration from APISIX Admin API
+    echo -e "\n${CYAN}1.1 Fetching OpenAPI route configurations:${NC}"
+    local routes_response=$(curl -s -X GET "http://localhost:9180/apisix/admin/routes" \
+        -H "X-API-KEY: $APISIX_ADMIN_KEY" 2>/dev/null)
+
+    if [ $? -eq 0 ]; then
+        echo "$routes_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+routes = data.get('list', [])
+openapi_routes = [r['value'] for r in routes if r['value']['id'].startswith('openapi-$PROVIDER_ID')]
+print(f'  Found {len(openapi_routes)} OpenAPI routes for $PROVIDER_ID')
+for route in openapi_routes:
+    print(f'  • Route ID: {route[\"id\"]}')
+    print(f'    URI: {route.get(\"uri\", \"N/A\")}')
+    upstream = route.get('upstream', {})
+    nodes = upstream.get('nodes', {})
+    for node in nodes:
+        print(f'    Upstream: {node}')
+    # Check for TLS configuration
+    tls_config = upstream.get('tls', {})
+    if tls_config:
+        print(f'    TLS Verify: {tls_config.get(\"verify\", \"default\")}')
+    else:
+        print('    TLS Config: Not configured ⚠️')
+    # Check proxy-rewrite
+    plugins = route.get('plugins', {})
+    if 'proxy-rewrite' in plugins:
+        rewrite = plugins['proxy-rewrite']
+        if 'regex_uri' in rewrite:
+            print(f'    Regex URI: {rewrite[\"regex_uri\"]}')
+        headers = rewrite.get('headers', {}).get('set', {})
+        if 'Host' in headers:
+            print(f'    Host Header: {headers[\"Host\"][:30]}...')
+        else:
+            print('    Host Header: Not set ⚠️')
+" 2>/dev/null || echo "  Error parsing routes"
+    else
+        echo "  ❌ Failed to fetch routes from APISIX Admin API"
+    fi
+
+    echo -e "\n${BOLD}Phase 2: SSL/TLS Connectivity Test${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # 2. Test direct connectivity from APISIX container to upstream
+    echo -e "\n${CYAN}2.1 Testing direct HTTPS connection from APISIX container:${NC}"
+
+    # Get the actual upstream URL and auth token
+    local UPSTREAM_URL="https://api.dev.gsai.mcaas.fcs.gsa.gov"
+    local AUTH_TOKEN="${OPENAPI_1_AUTH_TOKEN:-$OPENAPI_AUTH_TOKEN}"
+
+    echo "  Testing: $UPSTREAM_URL/api/v1/models"
+
+    # Test with curl from inside APISIX container
+    docker exec apisix-apisix-1 sh -c "
+        echo '  2.1.1 DNS Resolution:'
+        nslookup api.dev.gsai.mcaas.fcs.gsa.gov 2>/dev/null | grep -A1 'Name:' | tail -1 | sed 's/^/    /'
+
+        echo '  2.1.2 Basic connectivity (without auth):'
+        curl -s -o /dev/null -w '    HTTP Status: %{http_code}, Time: %{time_total}s\n' \
+            -k --connect-timeout 5 \
+            'https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models' 2>/dev/null || echo '    ❌ Connection failed'
+
+        echo '  2.1.3 With Bearer token:'
+        if [ -n \"$AUTH_TOKEN\" ]; then
+            curl -s -o /dev/null -w '    HTTP Status: %{http_code}, Time: %{time_total}s\n' \
+                -k --connect-timeout 5 \
+                -H \"Authorization: Bearer $AUTH_TOKEN\" \
+                'https://api.dev.gsai.mcaas.fcs.gsa.gov/api/v1/models' 2>/dev/null || echo '    ❌ Connection failed'
+        else
+            echo '    ⚠️ No auth token configured'
+        fi
+
+        echo '  2.1.4 SSL Certificate details:'
+        echo | openssl s_client -connect api.dev.gsai.mcaas.fcs.gsa.gov:443 2>/dev/null | \
+            grep -E '(subject=|issuer=|Verify return code)' | head -3 | sed 's/^/    /'
+    " 2>/dev/null || echo "  ❌ Failed to execute tests in APISIX container"
+
+    echo -e "\n${BOLD}Phase 3: Request Flow Analysis${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # 3. Test the full request flow with detailed debugging
+    echo -e "\n${CYAN}3.1 Testing full request flow through APISIX:${NC}"
+
+    # Create a test request with tracking headers
+    local REQUEST_ID="test-$(date +%s)"
+
+    echo "  Request ID: $REQUEST_ID"
+    echo "  Testing: GET $APISIX_URL${OPENAPI_ROUTE_PREFIX}/$PROVIDER_ID/v1/models"
+
+    # Make request with verbose output
+    local full_response=$(curl -v -s \
+        -X GET "$APISIX_URL${OPENAPI_ROUTE_PREFIX}/$PROVIDER_ID/v1/models" \
+        -H "apikey: $APISIX_API_KEY" \
+        -H "X-Request-ID: $REQUEST_ID" \
+        -w "\n===METRICS===\nHTTP_CODE:%{http_code}\nTIME_TOTAL:%{time_total}\nTIME_CONNECT:%{time_connect}\nTIME_STARTTRANSFER:%{time_starttransfer}\n" \
+        2>&1)
+
+    # Parse response
+    local http_code=$(echo "$full_response" | grep "HTTP_CODE:" | cut -d: -f2)
+    local time_total=$(echo "$full_response" | grep "TIME_TOTAL:" | cut -d: -f2)
+
+    echo "  Response:"
+    echo "    HTTP Status: $http_code"
+    echo "    Total Time: ${time_total}s"
+
+    if [ "$http_code" = "500" ]; then
+        echo -e "\n  ${RED}500 Error Details:${NC}"
+        # Extract error body
+        echo "$full_response" | grep -A10 "500 Internal Server Error" | head -15 | sed 's/^/    /'
+
+        # Check APISIX error logs
+        echo -e "\n  ${CYAN}3.2 APISIX Error Logs (last 10 lines):${NC}"
+        docker logs apisix-apisix-1 2>&1 | grep -E "(error|ERROR|failed|Failed)" | tail -10 | sed 's/^/    /'
+    fi
+
+    echo -e "\n${BOLD}Phase 4: Authentication Token Validation${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # 4. Validate authentication token configuration
+    echo -e "\n${CYAN}4.1 Checking authentication configuration:${NC}"
+
+    # Check if token is configured in route
+    echo "$routes_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+routes = data.get('list', [])
+for r in routes:
+    route = r['value']
+    if route['id'].startswith('openapi-$PROVIDER_ID'):
+        plugins = route.get('plugins', {})
+        if 'proxy-rewrite' in plugins:
+            headers = plugins['proxy-rewrite'].get('headers', {}).get('set', {})
+            if 'Authorization' in headers:
+                auth_value = headers['Authorization']
+                if '\${' in auth_value:
+                    print(f'  Route {route[\"id\"]}: Uses variable substitution')
+                elif 'Bearer' in auth_value:
+                    print(f'  Route {route[\"id\"]}: Has Bearer token (first 20 chars): {auth_value[:20]}...')
+                else:
+                    print(f'  Route {route[\"id\"]}: Unknown auth format')
+            else:
+                print(f'  Route {route[\"id\"]}: ⚠️ No Authorization header configured')
+" 2>/dev/null
+
+    # Check environment variables
+    echo -e "\n  ${CYAN}4.2 Environment variables:${NC}"
+    if [ -n "$OPENAPI_1_AUTH_TOKEN" ]; then
+        echo "    OPENAPI_1_AUTH_TOKEN: Set (${#OPENAPI_1_AUTH_TOKEN} chars)"
+    else
+        echo "    OPENAPI_1_AUTH_TOKEN: ⚠️ Not set"
+    fi
+
+    echo -e "\n${BOLD}Phase 5: Summary and Recommendations${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    echo -e "\n${CYAN}Diagnosis Summary:${NC}"
+
+    # Analyze results and provide recommendations
+    if [ "$http_code" = "500" ]; then
+        echo "  ${RED}Primary Issue: 500 Internal Server Error${NC}"
+        echo ""
+        echo "  Possible causes:"
+        echo "    1. SSL/TLS handshake failure with upstream"
+        echo "    2. Missing or invalid authentication token"
+        echo "    3. Incorrect Host header for SNI"
+        echo "    4. Request transformation error"
+        echo ""
+        echo "  ${YELLOW}Recommended actions:${NC}"
+        echo "    1. Run setup_macos.sh to recreate routes with SSL fixes"
+        echo "    2. Verify OPENAPI_1_AUTH_TOKEN is set correctly"
+        echo "    3. Check APISIX error logs for detailed error messages"
+        echo "    4. Ensure routes have 'tls.verify: false' for corporate certs"
+    elif [ "$http_code" = "404" ]; then
+        echo "  ${RED}Primary Issue: 404 Not Found${NC}"
+        echo ""
+        echo "  The route is not matching. Check:"
+        echo "    1. Route URI patterns in APISIX"
+        echo "    2. Path prefix configuration"
+        echo "    3. Route priority conflicts"
+    elif [ "$http_code" = "200" ]; then
+        echo "  ${GREEN}✅ OpenAPI routes are working correctly${NC}"
+    else
+        echo "  ${YELLOW}Unexpected status: $http_code${NC}"
+    fi
+}
+
 # Helper functions for diagnostic tree
 diag_print_level() {
     local level=$1
@@ -1461,11 +1658,12 @@ show_menu() {
         echo "5) OpenAPI Provider"
         echo "6) Docker Services"
         echo "7) Troubleshoot OpenAPI 404"
-        echo "8) Update Credentials"
-        echo "9) Clear Cache"
-        echo "10) Exit"
+        echo "8) Advanced OpenAPI Diagnostics (500 Error)"
+        echo "9) Update Credentials"
+        echo "10) Clear Cache"
+        echo "11) Exit"
 
-        echo -n -e "\n${BOLD}Enter choice [1-10]:${NC} "
+        echo -n -e "\n${BOLD}Enter choice [1-11]:${NC} "
         read -r choice
 
         case $choice in
@@ -1498,17 +1696,20 @@ show_menu() {
                 comprehensive_openapi_debug
                 ;;
             8)
+                test_openapi_advanced_diagnostics
+                ;;
+            9)
                 APISIX_ADMIN_KEY=""
                 APISIX_API_KEY=""
                 AUTH_USERNAME=""
                 AUTH_PASSWORD=""
                 get_credentials
                 ;;
-            9)
+            10)
                 rm -f "$CACHE_FILE"
                 print_success "Cache cleared"
                 ;;
-            10)
+            11)
                 echo "Goodbye!"
                 exit 0
                 ;;

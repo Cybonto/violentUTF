@@ -1208,6 +1208,13 @@ class ConfiguredGeneratorTarget(PromptTarget):
                 "error": "No user prompt found",
             }
         else:
+            # Log the user piece content for debugging
+            logger.info(
+                "ConfiguredGeneratorTarget: Found user piece with role='%s', original_value='%s'",
+                user_piece.role,
+                user_piece.original_value[:100] if user_piece.original_value else "EMPTY",
+            )
+
             # Execute prompt through generator using the already - loaded configuration
             # This avoids the need to re - lookup the generator and potential user context issues
             try:
