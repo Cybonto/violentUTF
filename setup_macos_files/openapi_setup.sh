@@ -112,25 +112,16 @@ create_openapi_provider_routes() {
         host_port="${host_port}:${default_port}"
     fi
 
-    # For Docker containers, convert localhost to custom OpenAPI container name or bridge IP
-    # This allows APISIX running in Docker to access services on the host machine or other Docker stacks
+    # For Docker containers, convert localhost to bridge IP for access from containers
+    # This allows APISIX running in Docker to access services on the host machine
     if [[ "$host_port" == "localhost:"* ]]; then
-        # Check if this is a GSAi provider and containers are on the same network
-        if [[ "$provider_id" == *"gsai"* ]] && docker network inspect vutf-network 2>/dev/null | grep -q "ai-gov-api-app-1"; then
-            # Use GSAi app container name for direct network access (HTTP on port 8080)
-            host_port="ai-gov-api-app-1:8080"
-            echo "   🔄 Converting localhost to ai-gov-api-app-1:8080 for direct Docker network access"
-        elif docker network inspect vutf-network 2>/dev/null | grep -q "apisix-apisix-1"; then
-            # Check for other custom API containers on vutf-network
+        # Check if there are API containers on vutf-network
+        if docker network inspect vutf-network 2>/dev/null | grep -q "apisix-apisix-1"; then
+            # Check for custom API containers on vutf-network
             local custom_container=$(docker network inspect vutf-network 2>/dev/null | jq -r '.[] | .Containers | to_entries[] | select(.value.Name | contains("app") or contains("api")) | .value.Name' | head -1)
             if [ -n "$custom_container" ] && [ "$custom_container" != "null" ]; then
                 local custom_port=$(echo "$host_port" | cut -d':' -f2)
-                # For GSAi, always use port 8080 internally
-                if [[ "$custom_container" == *"ai-gov-api"* ]]; then
-                    host_port="${custom_container}:8080"
-                else
-                    host_port="${custom_container}:${custom_port}"
-                fi
+                host_port="${custom_container}:${custom_port}"
                 echo "   🔄 Converting localhost to ${host_port} for direct Docker network access"
             else
                 # Get Docker bridge gateway IP - fallback for other services
@@ -183,20 +174,22 @@ create_openapi_provider_routes() {
             ;;
     esac
 
-    # Determine SSL configuration - GSAi uses HTTP, others may use HTTPS
+    # Determine SSL configuration based on scheme and Zscaler flag
     local ssl_verify="false"
-    if [[ "$scheme" == "https" ]] && [[ "$base_url" == "https://localhost"* ]] && [[ "$provider_id" != *"gsai"* ]]; then
-        # For local HTTPS providers (excluding GSAi), enable SSL verification
+    if [[ "$FORCE_ZSCALER" == "true" ]]; then
+        # Zscaler intercepts SSL, so disable verification
+        ssl_verify="false"
+    elif [[ "$scheme" == "https" ]]; then
+        # For HTTPS endpoints without Zscaler, enable SSL verification
         ssl_verify="true"
-    elif [[ "$provider_id" == *"gsai"* ]]; then
-        # GSAi uses HTTP, ensure scheme is set correctly
-        scheme="http"
+    else
+        # HTTP endpoints don't need SSL verification
         ssl_verify="false"
     fi
 
-    # Create chat completions route - use ai-proxy for GSAi, proxy-rewrite for others
-    if [[ "$provider_id" == *"gsai"* ]]; then
-        # Use ai-proxy plugin for GSAi following OpenAI/Anthropic pattern
+    # Create chat completions route - use ai-proxy for all OpenAPI providers
+    if [[ "$auth_type" == "bearer" ]] || [[ "$auth_type" == "header" ]]; then
+        # Use ai-proxy plugin for OpenAPI providers with bearer/header auth
         local auth_token="$auth_token"
 
         local chat_route_json=$(jq -n \
@@ -205,6 +198,7 @@ create_openapi_provider_routes() {
           --arg scheme "$scheme" \
           --arg host_port "$host_port" \
           --arg auth_token "$auth_token" \
+          --arg ssl_verify "$ssl_verify" \
           '{
             "id": $route_id,
             "uri": ("/ai/" + $provider_id + "/chat/completions"),
@@ -224,7 +218,7 @@ create_openapi_provider_routes() {
                 "timeout": 30000,
                 "keepalive": true,
                 "keepalive_pool": 30,
-                "ssl_verify": false
+                "ssl_verify": ($ssl_verify == "false" | not)
               },
               "cors": {
                 "allow_origins": "http://localhost:8501,http://localhost:3000",
@@ -333,8 +327,8 @@ create_openapi_provider_routes() {
     fi
 
     # Create models route - use proxy-rewrite for all providers (ai-proxy has issues with GET)
-    if [[ "$provider_id" == *"gsai"* ]]; then
-        # GSAi models route with proxy-rewrite (hardcoded auth works better for GET)
+    if [[ "$auth_type" == "bearer" ]] || [[ "$auth_type" == "header" ]]; then
+        # Models route with proxy-rewrite for OpenAPI providers
         local models_route_json=$(jq -n \
           --arg route_id "$models_route_id" \
           --arg provider_id "$provider_id" \
