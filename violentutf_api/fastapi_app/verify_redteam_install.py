@@ -51,13 +51,13 @@ def main() -> None:
     print("🔍 Verifying Red Team Package Installation...")
 
     # List of critical packages for red teaming
+    # Note: Streamlit is not needed in the FastAPI container - it runs separately
     packages_to_verify = [
         ("pyrit", "pyrit"),
         ("garak", "garak"),
         ("requests", "requests"),
         ("pydantic", "pydantic"),
         ("fastapi", "fastapi"),
-        ("streamlit", "streamlit"),
     ]
 
     all_good = True

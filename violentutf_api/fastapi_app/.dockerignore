@@ -52,6 +52,6 @@ dist/
 *.egg-info/
 
 # Docker
-Dockerfile*
+# Note: Dockerfile should NOT be in dockerignore as it needs to be in build context
 docker-compose*.yml
 .dockerignore
