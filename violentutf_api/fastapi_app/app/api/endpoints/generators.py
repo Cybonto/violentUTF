@@ -810,7 +810,8 @@ async def get_generator_type_params(
                             openapi_providers = get_openapi_providers()
                             for provider in openapi_providers:
                                 try:
-                                    models = discover_apisix_models(provider)
+                                    # Use enhanced discovery to get real models from API
+                                    models = await discover_apisix_models_enhanced(provider)
                                     if models:
                                         all_models.extend(models)
                                         logger.info("Added %d models for OpenAPI provider %s", len(models), provider)

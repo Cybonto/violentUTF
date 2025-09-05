@@ -1542,11 +1542,30 @@ create_openapi_route() {
     local auth_type="$7"
     local auth_config="$8"
 
-    # Generate shorter, safer route ID
-    local path_hash=$(echo -n "${method}:${endpoint_path}" | md5sum | cut -c1-8)
+    # Generate shorter, safer route ID with error handling
+    local path_hash=""
+    if command -v md5sum >/dev/null 2>&1; then
+        path_hash=$(echo -n "${method}:${endpoint_path}" | md5sum | cut -c1-8)
+    elif command -v md5 >/dev/null 2>&1; then
+        # macOS fallback
+        path_hash=$(echo -n "${method}:${endpoint_path}" | md5 | cut -c1-8)
+    else
+        # Last resort: use timestamp-based hash
+        path_hash=$(date +%s | tail -c 9 | head -c 8)
+        echo "Warning: Using timestamp for route ID hash (md5sum/md5 not found)"
+    fi
+
+    # Verify hash was generated
+    if [ -z "$path_hash" ]; then
+        path_hash="00000000"
+        echo "Warning: Failed to generate hash for route ID, using default"
+    fi
+
     # Create a short identifier from the endpoint path
     local endpoint_short=$(echo "$endpoint_path" | sed 's/.*\///g' | sed 's/[^a-zA-Z0-9]//g' | tr '[:upper:]' '[:lower:]')
     local route_id="openapi-${provider_id}-${endpoint_short}-${path_hash}"
+
+    echo "  Generated route ID: $route_id"
 
     # Convert OpenAPI path parameters to APISIX wildcards
     # {id} -> *, {userId} -> *, etc.
@@ -1615,7 +1634,10 @@ create_openapi_route() {
                 "nodes": {
                     "'"$host:$port"'": 1
                 },
-                "scheme": "'"$scheme"'"
+                "scheme": "'"$scheme"'",
+                "tls": {
+                    "verify": false
+                }
             },
             "plugins": {
                 "key-auth": {},
@@ -1623,7 +1645,8 @@ create_openapi_route() {
                     "regex_uri": ["^/ai/openapi/'"$provider_id"'/(.*)", "/$1"],
                     "headers": {
                         "set": {
-                            '"$auth_headers"'
+                            '"$auth_headers"',
+                            "Host": "'"$host"'"
                         }
                     }
                 }
@@ -1641,12 +1664,20 @@ create_openapi_route() {
                 "nodes": {
                     "'"$host:$port"'": 1
                 },
-                "scheme": "'"$scheme"'"
+                "scheme": "'"$scheme"'",
+                "tls": {
+                    "verify": false
+                }
             },
             "plugins": {
                 "key-auth": {},
                 "proxy-rewrite": {
-                    "regex_uri": ["^/ai/openapi/'"$provider_id"'/(.*)", "/$1"]
+                    "regex_uri": ["^/ai/openapi/'"$provider_id"'/(.*)", "/$1"],
+                    "headers": {
+                        "set": {
+                            "Host": "'"$host"'"
+                        }
+                    }
                 }
             }
         }'
