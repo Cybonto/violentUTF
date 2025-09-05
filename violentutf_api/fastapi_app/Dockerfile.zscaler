@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy and install Zscaler certificates
 # These files are expected to exist when using --zscaler flag
 COPY zscaler.crt /usr/local/share/ca-certificates/
-COPY zscaler.pem /usr/local/share/ca-certificates/
 COPY CA.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
 
