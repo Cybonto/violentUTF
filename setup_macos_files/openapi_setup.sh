@@ -112,29 +112,22 @@ create_openapi_provider_routes() {
         host_port="${host_port}:${default_port}"
     fi
 
-    # For Docker containers, convert localhost to bridge IP for access from containers
-    # This allows APISIX running in Docker to access services on the host machine
-    if [[ "$host_port" == "localhost:"* ]]; then
-        # Check if there are API containers on vutf-network
-        if docker network inspect vutf-network 2>/dev/null | grep -q "apisix-apisix-1"; then
-            # Check for custom API containers on vutf-network
-            local custom_container=$(docker network inspect vutf-network 2>/dev/null | jq -r '.[] | .Containers | to_entries[] | select(.value.Name | contains("app") or contains("api")) | .value.Name' | head -1)
-            if [ -n "$custom_container" ] && [ "$custom_container" != "null" ]; then
-                local custom_port=$(echo "$host_port" | cut -d':' -f2)
-                host_port="${custom_container}:${custom_port}"
-                echo "   🔄 Converting localhost to ${host_port} for direct Docker network access"
-            else
-                # Get Docker bridge gateway IP - fallback for other services
-                local bridge_ip=$(docker network inspect vutf-network 2>/dev/null | jq -r '.[0].IPAM.Config[0].Gateway' 2>/dev/null || echo "172.18.0.1")
-                host_port=$(echo "$host_port" | sed "s/^localhost:/${bridge_ip}:/")
-                echo "   🔄 Converting localhost to ${bridge_ip} for Docker-to-host access"
-            fi
-        else
-            # Get Docker bridge gateway IP - fallback for other services
-            local bridge_ip=$(docker network inspect vutf-network 2>/dev/null | jq -r '.[0].IPAM.Config[0].Gateway' 2>/dev/null || echo "172.18.0.1")
-            host_port=$(echo "$host_port" | sed "s/^localhost:/${bridge_ip}:/")
-            echo "   🔄 Converting localhost to ${bridge_ip} for Docker-to-host access"
-        fi
+    # Check for explicit Docker instance configuration first
+    local dockerinstance_var="OPENAPI_${provider_num}_DOCKERINSTANCE_NAME"
+    local dockerinstance_name="${!dockerinstance_var}"
+    
+    if [ -n "$dockerinstance_name" ]; then
+        # Docker container explicitly specified - use it directly
+        host_port="$dockerinstance_name"
+        echo "   🐳 Using Docker container: ${host_port}"
+    elif [[ "$base_url" == "https://"* ]] && [[ "$base_url" != *"localhost"* ]] && [[ "$base_url" != *"127.0.0.1"* ]]; then
+        # External HTTPS service - use as-is (no localhost conversion needed)
+        echo "   🌐 External service: ${host_port}"
+    elif [[ "$host_port" == "localhost:"* ]] || [[ "$host_port" == "127.0.0.1:"* ]]; then
+        # Host service (localhost) - convert to Docker bridge IP for container access
+        local bridge_ip=$(docker network inspect vutf-network 2>/dev/null | jq -r '.[0].IPAM.Config[0].Gateway' 2>/dev/null || echo "172.18.0.1")
+        host_port=$(echo "$host_port" | sed -e "s/^localhost:/${bridge_ip}:/" -e "s/^127.0.0.1:/${bridge_ip}:/")
+        echo "   🔄 Converting localhost to ${bridge_ip} for Docker-to-host access"
     fi
 
     # Calculate unique route IDs
