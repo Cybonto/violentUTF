@@ -115,7 +115,7 @@ create_openapi_provider_routes() {
     # Check for explicit Docker instance configuration first
     local dockerinstance_var="OPENAPI_${provider_num}_DOCKERINSTANCE_NAME"
     local dockerinstance_name="${!dockerinstance_var}"
-    
+
     if [ -n "$dockerinstance_name" ]; then
         # Docker container explicitly specified - use it directly
         host_port="$dockerinstance_name"
@@ -480,7 +480,7 @@ create_openapi_provider_routes() {
 # Function to initialize OpenAPI provider databases if needed
 initialize_openapi_provider_databases() {
     echo "Checking OpenAPI provider databases..."
-    
+
     # Check for any containers that might need database migrations
     # This is generic and will work for any provider using alembic
     for container in $(docker ps --format "{{.Names}}" | grep -E "api-app|api_app|gov-api|openapi"); do
@@ -499,7 +499,7 @@ initialize_openapi_provider_databases() {
 # Function to setup OpenAPI provider routes (including GSAi)
 setup_openapi_routes() {
     echo "Setting up OpenAPI provider routes..."
-    
+
     # Initialize any OpenAPI provider databases
     initialize_openapi_provider_databases
 
