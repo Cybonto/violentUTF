@@ -12,6 +12,7 @@ Comprehensive guides for using ViolentUTF's AI red-teaming and security testing 
 - **[PyRIT Scorers](Guide_Scorers.md)** - AI response evaluation and scoring systems
 - **[Simple Chat Enhancement](Guide_SimpleChat_enhancementStrip.md)** - MCP-powered prompt enhancement tools
 - **[Simple Chat MCP Workflows](Guide_SimpleChat_mcp-workflows.md)** - Natural language workflow configuration
+- **[OllaGen1 Data Splitter](Guide_OllaGen1_Data_Splitter.md)** - Split large cognitive assessment datasets for GitHub compatibility
 
 ### 🗄️ Maintenance & Operations
 - **[Database Cleanup Guide](Guide_Database_Cleanup.md)** - Managing Dashboard and PyRIT memory data
@@ -27,6 +28,7 @@ Comprehensive guides for using ViolentUTF's AI red-teaming and security testing 
 1. Learn **[Simple Chat MCP Workflows](Guide_SimpleChat_mcp-workflows.md)** for automation
 2. Use **[Simple Chat Enhancement](Guide_SimpleChat_enhancementStrip.md)** for prompt engineering
 3. Reference **[PyRIT Scorers](Guide_Scorers.md)** for evaluation integration
+4. Use **[OllaGen1 Data Splitter](Guide_OllaGen1_Data_Splitter.md)** for large dataset management
 
 ### For System Administrators
 1. Deploy **[IronUTF Defense](Guide_IronUTF.md)** for endpoint protection
@@ -44,6 +46,7 @@ Comprehensive guides for using ViolentUTF's AI red-teaming and security testing 
 - **Simple Chat**: Interactive testing with MCP integration
 - **Enhancement Tools**: Prompt engineering and optimization
 - **Workflow Automation**: Natural language configuration
+- **Data Management**: Large dataset splitting and file management
 
 ### 🏗️ **Implementation Guides**
 - **IronUTF Setup**: Gateway-level AI protection
@@ -63,6 +66,7 @@ Comprehensive guides for using ViolentUTF's AI red-teaming and security testing 
 | **Interactive Testing** | [Simple Chat MCP](Guide_SimpleChat_mcp-workflows.md) | [Enhancement Strip](Guide_SimpleChat_enhancementStrip.md) |
 | **Response Evaluation** | [PyRIT Scorers](Guide_Scorers.md) | [Red Teaming GenAI](Guide_RedTeaming_GenAIsystems.md) |
 | **Prompt Engineering** | [Enhancement Strip](Guide_SimpleChat_enhancementStrip.md) | [Simple Chat MCP](Guide_SimpleChat_mcp-workflows.md) |
+| **Large Dataset Management** | [OllaGen1 Data Splitter](Guide_OllaGen1_Data_Splitter.md) | [Database Cleanup](Guide_Database_Cleanup.md) |
 
 ## 🔗 Related Documentation
 

@@ -8,6 +8,7 @@ This section allows users to create, load, and manage datasets with enhanced PyR
 - **Load from PyRIT Memory** for accessing saved datasets across sessions
 - **Dual storage options** (session state + persistent memory)
 - **Advanced memory statistics** and dataset management
+- **OllaGen1 Data Splitter** for handling large cognitive assessment datasets with GitHub compatibility
 
 ## 3a. Choose Dataset Source
 
@@ -45,6 +46,7 @@ The flows below are displayed dynamically in the right column according to the s
 **Display:**
 - Dropdown list of PyRIT-supported datasets loaded via `data_loaders.get_pyrit_datasets()`
 - Default "-- Select --" option to prevent premature loading
+- **Special support for OllaGen1 Cognitive Assessment** dataset with automatic splitting for large files
 
 **Action:**
 - User selects a dataset from the dropdown
@@ -60,6 +62,10 @@ The flows below are displayed dynamically in the right column according to the s
 **Display:**
 - Dataset-specific configuration options (e.g., language selection for `aya_redteaming`)
 - Configuration appears only when a valid dataset is selected
+- **OllaGen1 Special Options**:
+  - Question type selection: WCP, WHO, TeamRisk, TargetFactor
+  - Scenario limit: 1000, 10000, 50000, or all (169,999)
+  - Automatic file splitting for GitHub compatibility when file exceeds limits
 
 **Action:**
 - User configures dataset-specific parameters as needed
@@ -440,3 +446,38 @@ Configure Dataset → Finalize → Save Options →
 - **Secure storage** of dataset collections
 
 This enhanced dataset configuration provides a comprehensive, persistent, and user-friendly interface for managing datasets across the entire red-teaming workflow with seamless PyRIT memory integration.
+
+## 🧠 Special Feature: OllaGen1 Cognitive Assessment Dataset
+
+### Overview
+The **OllaGen1 Cognitive Behavioral Security Assessment** dataset is a specialized native dataset containing 169,999 cognitive security scenarios with comprehensive behavioral analysis data.
+
+### Dataset Specifications
+- **Total Scenarios**: 169,999 cognitive behavioral security scenarios
+- **Q&A Pairs**: 679,996 total questions and answers (4 per scenario)
+- **Question Types**: WCP, WHO, TeamRisk, TargetFactor
+- **File Size**: ~25MB (requires splitting for GitHub compatibility)
+- **Schema**: 22-column structured format with person profiles and risk scores
+
+### Automatic Data Splitting
+When the OllaGen1 dataset is selected and the source file exceeds GitHub's size limits:
+
+1. **Automatic Detection**: System detects file size and triggers splitting
+2. **GitHub Compatibility**: Splits into ~10MB chunks suitable for version control
+3. **Data Integrity**: Maintains scenario relationships and validates all splits
+4. **Manifest Generation**: Creates reconstruction metadata for seamless merging
+5. **Zero Data Loss**: SHA-256 checksums ensure complete data preservation
+
+### Configuration Options
+- **Question Type Filter**: Select specific question types (WCP, WHO, TeamRisk, TargetFactor)
+- **Scenario Limit**: Choose from 1,000, 10,000, 50,000, or all 169,999 scenarios
+- **Cognitive Framework**: Preserves behavioral constructs and person profiles
+- **Performance Optimization**: Memory-efficient processing for large datasets
+
+### Usage Scenarios
+- **Security Compliance Testing**: Evaluate AI systems against cognitive behavioral frameworks
+- **Large-Scale Assessment**: Process comprehensive security scenarios at scale
+- **GitHub Repository Management**: Store and version control large assessment datasets
+- **Distributed Processing**: Split datasets for parallel processing workflows
+
+For detailed information on using the OllaGen1 Data Splitter, see the **[OllaGen1 Data Splitter Guide](../guides/Guide_OllaGen1_Data_Splitter.md)**.

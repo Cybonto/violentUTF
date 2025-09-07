@@ -60,7 +60,7 @@ for model_route in "openai-gpt-3-5-turbo" "openai-gpt-4" "openai-gpt-4-turbo" "o
     remove_route "$model_route" "OpenAI $model_route"
 done
 
-# Remove Anthropic routes  
+# Remove Anthropic routes
 for model_route in "anthropic-claude-3-opus-20240229" "anthropic-claude-3-sonnet-20240229" "anthropic-claude-3-haiku-20240307" "anthropic-claude-3-5-sonnet-20241022" "anthropic-claude-3-5-haiku-20241022"; do
     remove_route "$model_route" "Anthropic $model_route"
 done

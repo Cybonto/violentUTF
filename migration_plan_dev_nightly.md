@@ -90,7 +90,7 @@ In `setup_macos_new.sh`:
 dev_nightly has MANY more features (280 files changed, 76093 insertions vs 1692 deletions):
 - New Report Setup functionality
 - COB (Close of Business) reports
-- Enhanced dashboard features  
+- Enhanced dashboard features
 - Documentation improvements
 - Linux setup support
 - Many new test files
@@ -134,7 +134,7 @@ git checkout -b dev_nightly_migration_backup
 
 #### A. Fix openapi_setup.sh
 1. Lines 115-147: Replace GSAi-specific Docker logic with generic logic
-2. Lines 186-197: Replace provider-specific SSL with FORCE_ZSCALER logic  
+2. Lines 186-197: Replace provider-specific SSL with FORCE_ZSCALER logic
 3. Lines 199-201: Change condition from GSAi-specific to auth-type based
 4. Lines 336-338: Change from GSAi-specific to auth-type based
 
@@ -187,7 +187,7 @@ Ensure that:
 
 1. Create backup branch
 2. Apply openapi_setup.sh changes
-3. Apply apisix_setup.sh changes  
+3. Apply apisix_setup.sh changes
 4. Apply env_management.sh changes
 5. Test basic setup
 6. Test with various providers
@@ -217,7 +217,7 @@ git add -A
 git commit -m "Apply provider-agnostic fixes from dev_backup
 
 - Remove all GSAi-specific hardcoding
-- Make setup respect URL schemes from ai-tokens.env  
+- Make setup respect URL schemes from ai-tokens.env
 - Add proper SSL verification based on --zscaler flag
 - Align with fixes from commits 16762be through 4369a38"
 
