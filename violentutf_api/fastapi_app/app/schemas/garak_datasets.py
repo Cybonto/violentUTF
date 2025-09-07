@@ -38,6 +38,13 @@ class GarakFileType(str, Enum):
 class AttackType(str, Enum):
     """Attack types for prompt classification."""
 
+    # Legacy naming for compatibility with tests
+    DAN = "dan_variant"
+    RTP = "rtp_category"
+    INJECTION = "injection_attack"
+    JAILBREAK = "jailbreak_prompt"
+
+    # Detailed attack types
     ROLE_PLAYING = "role_playing"
     AUTHORITY_IMPERSONATION = "authority_impersonation"
     EMOTIONAL_MANIPULATION = "emotional_manipulation"
@@ -51,6 +58,10 @@ class AttackType(str, Enum):
 class HarmCategory(str, Enum):
     """Harm categories for prompt classification."""
 
+    # Legacy naming for compatibility with tests
+    JAILBREAK = "jailbreak"
+
+    # Detailed harm categories
     MANIPULATION = "manipulation"
     DECEPTION = "deception"
     UNAUTHORIZED_ACCESS = "unauthorized_access"
