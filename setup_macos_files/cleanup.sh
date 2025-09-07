@@ -145,7 +145,7 @@ cleanup_apisix_service() {
 
     if [ -d "apisix" ]; then
         cd "apisix" || return 1
-        
+
         # First try to remove routes if APISIX is still running
         if [ -f ".env" ]; then
             echo "Removing APISIX routes..."
@@ -155,7 +155,7 @@ cleanup_apisix_service() {
                 ./remove_routes.sh 2>/dev/null || echo "Warning: Could not remove routes (APISIX may not be running)"
             fi
         fi
-        
+
         ${DOCKER_COMPOSE_CMD:-docker-compose} down -v 2>/dev/null || true
         rm -f .env
 

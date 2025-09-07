@@ -1,0 +1,98 @@
+{
+  "dataset_name": "OllaGen1_CognitiveBehavioralAssessment",
+  "version": "1.0",
+  "total_scenarios": 169999,
+  "expected_qa_entries": 679996,
+  "split_files": [
+    {
+      "file_name": "ollegen1_part_001.csv",
+      "start_scenario": 1,
+      "end_scenario": 10000,
+      "row_count": 10000,
+      "file_size_mb": 45.2,
+      "checksum": "sha256:a1b2c3d4e5f6..."
+    },
+    {
+      "file_name": "ollegen1_part_002.csv", 
+      "start_scenario": 10001,
+      "end_scenario": 20000,
+      "row_count": 10000,
+      "file_size_mb": 44.8,
+      "checksum": "sha256:f6e5d4c3b2a1..."
+    },
+    {
+      "file_name": "ollegen1_part_003.csv",
+      "start_scenario": 20001,
+      "end_scenario": 30000,
+      "row_count": 10000,
+      "file_size_mb": 45.1,
+      "checksum": "sha256:1a2b3c4d5e6f..."
+    }
+  ],
+  "schema": {
+    "required_columns": [
+      "ID", "P1_name", "P1_cogpath", "P1_profile", "P1_risk_score", "P1_risk_profile",
+      "P2_name", "P2_cogpath", "P2_profile", "P2_risk_score", "P2_risk_profile", 
+      "shared_risk_factor", "targetted_factor", "combined_risk_score",
+      "WCP_Question", "WCP_Answer", "WHO_Question", "WHO_Answer",
+      "TeamRisk_Question", "TeamRisk_Answer", "TargetFactor_Question", "TargetFactor_Answer"
+    ],
+    "column_count": 22,
+    "data_types": {
+      "ID": "string",
+      "P1_risk_score": "float",
+      "P2_risk_score": "float", 
+      "combined_risk_score": "float"
+    }
+  },
+  "question_types": {
+    "WCP": {
+      "name": "Which Cognitive Path", 
+      "category": "cognitive_assessment",
+      "description": "Evaluate understanding of cognitive behavioral patterns",
+      "expected_format": "multiple_choice_4_options"
+    },
+    "WHO": {
+      "name": "Compliance Comparison",
+      "category": "risk_evaluation", 
+      "description": "Test compliance framework understanding",
+      "expected_format": "multiple_choice_4_options"
+    },
+    "TeamRisk": {
+      "name": "Team Dynamics",
+      "category": "team_assessment",
+      "description": "Assess team-based security risk factors", 
+      "expected_format": "multiple_choice_4_options"
+    },
+    "TargetFactor": {
+      "name": "Intervention",
+      "category": "intervention_assessment",
+      "description": "Evaluate remediation and mitigation approaches",
+      "expected_format": "multiple_choice_4_options"
+    }
+  },
+  "conversion_requirements": {
+    "performance": {
+      "max_conversion_time_seconds": 600,
+      "min_throughput_scenarios_per_second": 300,
+      "max_memory_usage_gb": 2
+    },
+    "quality": {
+      "min_choice_extraction_accuracy": 0.95,
+      "min_answer_mapping_accuracy": 0.98,
+      "required_metadata_preservation": 1.0
+    },
+    "output_format": {
+      "answer_type": "int",
+      "choices_per_question": 4,
+      "qa_entries_per_scenario": 4
+    }
+  },
+  "metadata": {
+    "created_date": "2025-01-07T00:00:00Z",
+    "description": "Cognitive behavioral assessment scenarios for AI security testing",
+    "source": "OllaGen1 Cognitive Framework",
+    "license": "MIT",
+    "research_purpose": "Defensive AI security testing only"
+  }
+}
