@@ -1,8 +1,8 @@
 global:
   scrape_interval: 15s
-  evaluation_interval: 15s
 
 scrape_configs:
   - job_name: 'apisix'
     static_configs:
-      - targets: ['apisix:9091']
+      - targets: ['apisix-apisix-1:9091']
+    metrics_path: /apisix/prometheus/metrics

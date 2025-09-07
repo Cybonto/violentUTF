@@ -15,10 +15,7 @@ services:
       - apisix_network
 
   apisix:
-    build:
-      context: .
-      dockerfile: Dockerfile.apisix
-    image: apisix-with-tools:latest
+    image: apache/apisix:latest
     depends_on:
       - etcd
     ports:
@@ -86,7 +83,6 @@ services:
       - fastapi_data:/app/app_data
       - fastapi_config:/app/config
       - ../violentutf/app_data/violentutf:/app/app_data/violentutf
-      - ../docs:/app/docs:ro
     networks:
       - apisix_network
       - vutf-network
