@@ -26,7 +26,7 @@ requests>=2.31.0
 requests==2.31.0
 slowapi==0.1.9
 sqlalchemy[asyncio]==2.0.43
-uvicorn[standard]==0.25.0
+uvicorn[standard]==0.35.0
 
 # Note: PyRIT and Garak excluded due to Rust compilation requirements
 # Install manually if needed: pip install pyrit garak
