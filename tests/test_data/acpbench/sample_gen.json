@@ -1,0 +1,16 @@
+[
+    {
+        "id": "planning_gen_1",
+        "group": "general_planning",
+        "context": "In a planning scenario with multiple agents, agent1 can move and pick objects, agent2 can only move. There are 3 objects at different locations that need to be collected at a central location.",
+        "question": "Generate the complete action sequence for both agents.",
+        "expected_response": "Step 1: agent1 moves to object1 location, picks object1. Step 2: agent2 moves to help position. Step 3: agent1 moves to object2, picks object2. Step 4: agent1 moves to central location, drops objects. Step 5: agent1 moves to object3, picks object3. Step 6: agent1 returns to central location, drops object3."
+    },
+    {
+        "id": "scheduling_gen_1", 
+        "group": "scheduling",
+        "context": "A project has 4 tasks with dependencies: TaskA (2 days), TaskB depends on TaskA (3 days), TaskC can run parallel to TaskA (1 day), TaskD depends on both TaskB and TaskC (2 days). Total project deadline is 6 days.",
+        "question": "Generate the optimal task scheduling sequence.",
+        "expected_response": "Day 1-2: Start TaskA and TaskC in parallel. Day 3-5: Start TaskB (depends on TaskA). TaskC completes on Day 2. Day 6-7: Start TaskD (depends on TaskB and TaskC completion). Project completes in 7 days, exceeding 6-day deadline - requires optimization."
+    }
+]
