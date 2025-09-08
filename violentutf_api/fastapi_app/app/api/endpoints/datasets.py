@@ -8,6 +8,7 @@
 
 Implements API backend for 2_Configure_Datasets.py page
 """
+import os
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, cast
@@ -34,6 +35,11 @@ from app.schemas.datasets import (
     MemoryDatasetsResponse,
     SeedPromptInfo,
 )
+from app.schemas.graphwalk_datasets import (
+    GraphWalkConvertRequest,
+    GraphWalkConvertResponse,
+    GraphWalkJobStatusResponse,
+)
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pyrit.memory import CentralMemory
 
@@ -47,6 +53,7 @@ import logging
 
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
+from app.services.graphwalk_service import graphwalk_service
 
 logger = logging.getLogger(__name__)
 
@@ -174,19 +181,34 @@ VIOLENTUTF_NATIVE_DATASETS = {
     },
     "graphwalk_reasoning": {
         "name": "graphwalk_reasoning",
-        "display_name": "GraphWalk Reasoning Dataset",
-        "description": "Graph-based reasoning and traversal problem dataset",
+        "display_name": "GraphWalk Spatial Reasoning Dataset with Massive File Handling",
+        "description": "Graph traversal and spatial reasoning tasks with specialized handling for massive 480MB files",
         "category": "reasoning_evaluation",
         "pyrit_format": "QuestionAnsweringDataset",
-        "config_required": False,
-        "available_configs": None,
+        "config_required": True,
+        "available_configs": {
+            "processing_modes": ["standard", "streaming", "advanced_splitting"],
+            "memory_limits": ["1GB", "2GB", "4GB"],
+            "complexity_filters": ["simple", "medium", "complex", "all"],
+            "chunk_sizes": ["5MB", "15MB", "25MB", "50MB"],
+        },
         "file_info": {
             "source_pattern": "datasets/graphwalk/*.json",
             "manifest_file": "datasets/graphwalk/graphwalk.manifest.json",
-            "total_graphs": 2000,
+            "total_graphs": 100000,
             "complexity_levels": ["simple", "medium", "complex"],
+            "large_files": ["train.json (480MB)", "test.json (120MB)"],
+            "max_file_size_mb": 480,
         },
-        "conversion_strategy": "strategy_6_graph_reasoning",
+        "conversion_strategy": "strategy_2_reasoning_benchmarks",
+        "converter_available": True,
+        "converter_endpoint": "/api/v1/datasets/convert/graphwalk",
+        "performance_targets": {
+            "max_conversion_time_seconds": 1800,
+            "max_memory_usage_gb": 2,
+            "min_throughput_objects_per_minute": 3000,
+            "supports_massive_files": True,
+        },
     },
     "judgebench_evaluation": {
         "name": "judgebench_evaluation",
@@ -1296,7 +1318,6 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
     """Get real PyRIT memory datasets instead of mock data."""
     try:
 
-        import os
         import sqlite3
 
         # CentralMemory already imported at top
@@ -1647,3 +1668,170 @@ async def update_dataset(
         # and database errors
         logger.error("Error updating dataset %s: %s", dataset_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to update dataset: {str(e)}") from e
+
+
+# --- GraphWalk Converter Endpoints (Issue #128) ---
+
+
+@router.post(
+    "/convert/graphwalk",
+    response_model=GraphWalkConvertResponse,
+    summary="Convert GraphWalk dataset with massive file handling",
+)
+async def convert_graphwalk_dataset(
+    request: GraphWalkConvertRequest,
+    current_user: User = Depends(get_current_user),
+) -> GraphWalkConvertResponse:
+    """Convert GraphWalk dataset with support for massive 480MB files.
+
+    Supports both synchronous and asynchronous conversion modes:
+    - Async mode (default): Returns job ID for progress tracking
+    - Sync mode: Returns conversion result directly (for smaller files)
+    """
+    try:
+        user_id = current_user.username
+        logger.info(
+            "User %s converting GraphWalk dataset: %s (async: %s)", user_id, request.file_path, request.async_conversion
+        )
+
+        # Validate file exists
+        if not os.path.exists(request.file_path):
+            raise HTTPException(status_code=400, detail=f"GraphWalk dataset file not found: {request.file_path}")
+
+        # Get file analysis for response
+        from app.core.converters.graphwalk_converter import GraphWalkConverter
+
+        converter = GraphWalkConverter(request.config)
+        file_info = converter.analyze_massive_file(request.file_path)
+
+        if request.async_conversion:
+            # Start async conversion job
+            job_id = await graphwalk_service.convert_dataset_async(file_path=request.file_path, config=request.config)
+
+            return GraphWalkConvertResponse(
+                success=True,
+                job_id=job_id,
+                result=None,
+                message=f"GraphWalk conversion job {job_id} started successfully",
+                file_info=file_info,
+            )
+        else:
+            # Synchronous conversion (for smaller files)
+            if file_info.size_mb > 100:  # Limit sync conversion to 100MB
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"File too large for synchronous conversion ({file_info.size_mb:.1f}MB). "
+                    f"Use async_conversion=true for files larger than 100MB.",
+                )
+
+            # Run conversion synchronously
+            result = converter.convert(request.file_path)
+
+            return GraphWalkConvertResponse(
+                success=True,
+                job_id=None,
+                result=result,
+                message=f"GraphWalk conversion completed - {len(result.questions)} questions converted",
+                file_info=file_info,
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error converting GraphWalk dataset %s: %s", request.file_path, e)
+        raise HTTPException(status_code=500, detail=f"Failed to convert GraphWalk dataset: {str(e)}") from e
+
+
+@router.get(
+    "/convert/graphwalk/jobs/{job_id}",
+    response_model=GraphWalkJobStatusResponse,
+    summary="Get GraphWalk conversion job status",
+)
+async def get_graphwalk_job_status(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+) -> GraphWalkJobStatusResponse:
+    """Get status and progress of a GraphWalk conversion job."""
+    try:
+        user_id = current_user.username
+        logger.info("User %s checking GraphWalk job status: %s", user_id, job_id)
+
+        job_status = graphwalk_service.get_job_status(job_id)
+        if not job_status:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+
+        # Convert timestamps for response
+        created_at = None
+        updated_at = None
+
+        if "created_at" in job_status and job_status["created_at"]:
+            created_at = datetime.fromtimestamp(job_status["created_at"])
+
+        if "updated_at" in job_status and job_status["updated_at"]:
+            updated_at = datetime.fromtimestamp(job_status["updated_at"])
+
+        return GraphWalkJobStatusResponse(
+            job_id=job_id,
+            status=job_status.get("status", "unknown"),
+            progress=job_status.get("progress", 0.0),
+            file_path=job_status.get("file_path"),
+            result=job_status.get("result"),
+            error=job_status.get("error"),
+            created_at=created_at,
+            updated_at=updated_at,
+            processing_stats=None,  # Could be added from job metadata
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error getting GraphWalk job status %s: %s", job_id, e)
+        raise HTTPException(status_code=500, detail=f"Failed to get job status: {str(e)}") from e
+
+
+@router.delete(
+    "/convert/graphwalk/jobs/{job_id}",
+    summary="Cancel GraphWalk conversion job",
+)
+async def cancel_graphwalk_job(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Cancel a running GraphWalk conversion job."""
+    try:
+        user_id = current_user.username
+        logger.info("User %s cancelling GraphWalk job: %s", user_id, job_id)
+
+        cancelled = graphwalk_service.cancel_job(job_id)
+        if not cancelled:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found or not cancellable")
+
+        return {"success": True, "message": f"Job {job_id} cancelled successfully", "cancelled_at": datetime.utcnow()}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error cancelling GraphWalk job %s: %s", job_id, e)
+        raise HTTPException(status_code=500, detail=f"Failed to cancel job: {str(e)}") from e
+
+
+@router.get(
+    "/convert/graphwalk/jobs",
+    summary="List active GraphWalk conversion jobs",
+)
+async def list_graphwalk_jobs(
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """List all active GraphWalk conversion jobs for monitoring."""
+    try:
+        user_id = current_user.username
+        logger.info("User %s listing GraphWalk jobs", user_id)
+
+        active_jobs = graphwalk_service.list_active_jobs()
+        statistics = graphwalk_service.get_processing_statistics()
+
+        return {"active_jobs": active_jobs, "statistics": statistics, "total_jobs": len(active_jobs)}
+
+    except Exception as e:
+        logger.error("Error listing GraphWalk jobs: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to list jobs: {str(e)}") from e

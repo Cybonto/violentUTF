@@ -4,8 +4,8 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""Splitter modules for various dataset formats."""
+"""File splitters for massive dataset processing."""
 
-from .ollegen1_splitter import OllaGen1Manifest, OllaGen1Merger, OllaGen1Splitter
+from .massive_json_splitter import MassiveJSONSplitter
 
-__all__ = ["OllaGen1Splitter", "OllaGen1Manifest", "OllaGen1Merger"]
+__all__ = ["MassiveJSONSplitter"]
