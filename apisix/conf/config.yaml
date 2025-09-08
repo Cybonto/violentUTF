@@ -87,6 +87,8 @@ plugin_attr:
       connect: 60s
       send: 60s
       read: 60s
+      ip: 127.0.0.1
+    metric_prefix: apisix_
   dubbo-proxy:
     upstream_multiplex_count: 32
 plugins:
