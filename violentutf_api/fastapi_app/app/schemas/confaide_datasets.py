@@ -234,6 +234,48 @@ class PrivacyScorerConfig(BaseModel):
         return validated
 
 
+class ConfAIdeConversionConfig(BaseModel):
+    """Configuration for ConfAIde privacy dataset conversion."""
+
+    input_file: str = Field(..., description="Path to input ConfAIde dataset file")
+    output_dir: str = Field(..., description="Output directory for converted dataset")
+    privacy_tiers: List[str] = Field(default=["tier1", "tier2", "tier3"], description="Privacy tiers to process")
+    context_types: List[str] = Field(
+        default=["personal", "professional", "commercial"], description="Context types to include"
+    )
+    enable_contextual_integrity_validation: bool = Field(
+        default=True, description="Enable Contextual Integrity Theory validation"
+    )
+    privacy_framework: PrivacyFramework = Field(
+        default=PrivacyFramework.CONTEXTUAL_INTEGRITY, description="Privacy framework to use"
+    )
+    max_processing_time_seconds: int = Field(default=180, description="Maximum processing time in seconds")
+    batch_size: int = Field(default=50, description="Batch size for processing privacy scenarios")
+    performance_logging: bool = Field(default=True, description="Enable performance logging")
+
+    @field_validator("input_file", "output_dir")
+    @classmethod
+    def validate_paths(cls: type, v: str) -> str:
+        """Validate file and directory paths."""
+        v = sanitize_string(v)
+        if len(v) > SecurityLimits.MAX_PATH_LENGTH:
+            raise ValueError("Path too long")
+        return v
+
+    @field_validator("privacy_tiers", "context_types")
+    @classmethod
+    def validate_lists(cls: type, v: List[str]) -> List[str]:
+        """Validate list fields."""
+        if len(v) > 20:  # Maximum 20 items
+            raise ValueError("Too many items in list")
+        return [sanitize_string(item) for item in v]
+
+    class Config:
+        """Pydantic configuration."""
+
+        use_enum_values = True
+
+
 # --- Conversion Result Models ---
 
 
@@ -406,3 +448,7 @@ class ConfAIdeConversionResponse(BaseModel):
         if len(v) > SecurityLimits.MAX_STRING_LENGTH:
             raise ValueError("Message too long")
         return v
+
+
+# --- Aliases for backwards compatibility and testing ---
+ContextualIntegrityContext = ContextualFactors
