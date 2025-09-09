@@ -48,6 +48,42 @@ class EvaluationDifficulty(str, Enum):
     HIGH = "high"
 
 
+class JudgeBenchConversionConfig(BaseModel):
+    """Configuration for JudgeBench meta-evaluation dataset conversion."""
+
+    input_file: str = Field(..., description="Path to input JudgeBench dataset file (JSONL format)")
+    output_dir: str = Field(..., description="Output directory for converted dataset")
+    judge_types: List[str] = Field(default=["arena_hard", "reward_model"], description="Judge types to process")
+    evaluation_criteria: List[str] = Field(
+        default=["quality", "accuracy"], description="Evaluation criteria to include"
+    )
+    enable_meta_evaluation: bool = Field(default=True, description="Enable meta-evaluation analysis")
+    max_processing_time_seconds: int = Field(default=300, description="Maximum processing time in seconds")
+    batch_size: int = Field(default=100, description="Batch size for processing evaluations")
+    performance_logging: bool = Field(default=True, description="Enable performance logging")
+
+    @field_validator("input_file", "output_dir")
+    @classmethod
+    def validate_paths(cls: Type["JudgeBenchConversionConfig"], v: str) -> str:
+        """Validate file and directory paths."""
+        if len(v) > 500:  # Max path length
+            raise ValueError("Path too long")
+        return v
+
+    @field_validator("judge_types", "evaluation_criteria")
+    @classmethod
+    def validate_lists(cls: Type["JudgeBenchConversionConfig"], v: List[str]) -> List[str]:
+        """Validate list fields."""
+        if len(v) > 20:  # Maximum 20 items
+            raise ValueError("Too many items in list")
+        return v
+
+    class Config:
+        """Pydantic configuration."""
+
+        use_enum_values = True
+
+
 @dataclass
 class JudgeFileInfo:
     """Information extracted from judge output filename patterns."""
@@ -367,3 +403,7 @@ JUDGE_FILE_PATTERNS = {
         "evaluation_focus": "rubric_adherence_evaluation",
     },
 }
+
+
+# --- Aliases for backwards compatibility and testing ---
+EvaluationCriteria = MetaEvaluationCriteria
