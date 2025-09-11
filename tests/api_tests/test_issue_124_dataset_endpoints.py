@@ -16,6 +16,7 @@ SECURITY: All test data is for defensive security research only.
 import asyncio
 import json
 import os
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -25,6 +26,9 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import requests
 from fastapi.testclient import TestClient
+
+# Add violentutf_api/fastapi_app to path BEFORE imports
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "violentutf_api", "fastapi_app"))
 
 from app.schemas.garak_datasets import (
     GarakConversionRequest,

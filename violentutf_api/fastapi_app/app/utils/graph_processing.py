@@ -20,6 +20,7 @@ from contextlib import contextmanager
 from typing import Any, Dict, Generator, Optional
 
 import psutil
+
 from app.schemas.graphwalk_datasets import MemoryUsageInfo, ProcessingCheckpoint
 
 

@@ -24,9 +24,10 @@ import logging
 import os
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import psutil
+
 from app.core.validation import sanitize_string
 from app.schemas.ollegen1_datasets import (
     OllaGen1BatchConversionResult,
@@ -69,13 +70,13 @@ class OllaGen1DatasetConverter:
         self.metadata_validator = MetadataValidator()
 
         # Performance tracking
-        self._conversion_stats = {
+        self._conversion_stats: Dict[str, Any] = {
             "total_processed": 0,
             "successful_conversions": 0,
             "failed_conversions": 0,
             "total_qa_entries": 0,
             "start_time": None,
-            "peak_memory_mb": 0,
+            "peak_memory_mb": 0.0,
         }
 
     def load_manifest(self, manifest_path: str) -> OllaGen1ManifestInfo:
@@ -300,14 +301,18 @@ class OllaGen1DatasetConverter:
             try:
                 qa_entries = self.convert_csv_row_to_qa_entries(row)
                 all_qa_entries.extend(qa_entries)
-                self._conversion_stats["successful_conversions"] += 1
-                self._conversion_stats["total_qa_entries"] += len(qa_entries)
+                self._conversion_stats["successful_conversions"] = (
+                    self._conversion_stats["successful_conversions"] or 0
+                ) + 1
+                self._conversion_stats["total_qa_entries"] = (self._conversion_stats["total_qa_entries"] or 0) + len(
+                    qa_entries
+                )
             except Exception as e:
-                self._conversion_stats["failed_conversions"] += 1
+                self._conversion_stats["failed_conversions"] = (self._conversion_stats["failed_conversions"] or 0) + 1
                 logging.warning("Failed to convert row %s: %s", row.get("ID", "unknown"), e)
                 continue
 
-            self._conversion_stats["total_processed"] += 1
+            self._conversion_stats["total_processed"] = (self._conversion_stats["total_processed"] or 0) + 1
 
         return all_qa_entries
 
@@ -353,7 +358,7 @@ class OllaGen1DatasetConverter:
         return await loop.run_in_executor(None, self.batch_convert_rows, batch)
 
     async def async_batch_convert_with_progress(
-        self, rows: List[Dict[str, str]], progress_callback: Optional[callable] = None
+        self, rows: List[Dict[str, str]], progress_callback: Optional[Callable[[int, int, float], None]] = None
     ) -> List[QuestionAnsweringEntry]:
         """Convert with real-time progress tracking.
 
@@ -465,6 +470,7 @@ class OllaGen1DatasetConverter:
         # Track memory usage
         process = psutil.Process()
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+        self._conversion_stats["peak_memory_mb"] = 0.0
 
         successful_conversions = 0
         failed_conversions = 0
@@ -479,9 +485,11 @@ class OllaGen1DatasetConverter:
 
                 # Track peak memory
                 current_memory = process.memory_info().rss / 1024 / 1024
-                self._conversion_stats["peak_memory_mb"] = max(
-                    self._conversion_stats["peak_memory_mb"], current_memory - initial_memory
-                )
+                peak_memory = self._conversion_stats.get("peak_memory_mb", 0.0)
+                if isinstance(peak_memory, (int, float)):
+                    self._conversion_stats["peak_memory_mb"] = max(peak_memory, current_memory - initial_memory)
+                else:
+                    self._conversion_stats["peak_memory_mb"] = current_memory - initial_memory
 
             except Exception as e:
                 failed_conversions += 1
@@ -497,12 +505,12 @@ class OllaGen1DatasetConverter:
             total_qa_entries_generated=total_qa_entries,
             batch_conversion_time_seconds=total_time,
             average_scenarios_per_second=len(rows) / total_time if total_time > 0 else 0,
-            memory_peak_mb=self._conversion_stats["peak_memory_mb"],
+            memory_peak_mb=float(self._conversion_stats.get("peak_memory_mb") or 0.0),
             quality_summary={
                 "success_rate": successful_conversions / len(rows) if rows else 0,
                 "error_count": len(error_reports),
             },
-            error_summary={"conversion_errors": [report["error"] for report in error_reports]},
+            error_summary={"conversion_errors": [str(report["error"]) for report in error_reports]},
         )
 
     def get_validator(self) -> QAValidator:
@@ -571,30 +579,26 @@ class OllaGen1DatasetConverter:
             ConversionResult with success status and converted dataset
         """
         try:
+            # Read the CSV file first
+            rows = []
+            with open(file_path, "r", encoding="utf-8", newline="") as csvfile:
+                # Detect CSV dialect
+                sample = csvfile.read(1024)
+                csvfile.seek(0)
+                sniffer = csv.Sniffer()
+                dialect = sniffer.sniff(sample)
+
+                reader = csv.DictReader(csvfile, dialect=dialect)
+                for row in reader:
+                    rows.append(row)
+
             # Use existing async batch convert method
-            result = await self.async_batch_convert_with_progress(file_path, progress_callback=None)
+            qa_entries = await self.async_batch_convert_with_progress(rows, progress_callback=None)
 
-            # Wrap result in test-compatible format
-            class ConversionResult:
-                def __init__(self, success: bool, dataset: Optional[Any] = None, error: Optional[str] = None) -> None:
-                    self.success = success
-                    self.dataset = dataset
-                    self.error = error
-
-            if result.success:
-                return ConversionResult(success=True, dataset=result.dataset)
-            else:
-                return ConversionResult(success=False, error=result.error_message)
+            return {"success": True, "dataset": qa_entries, "error": None}
 
         except Exception as e:
-
-            class ConversionResult:
-                def __init__(self, success: bool, dataset: Optional[Any] = None, error: Optional[str] = None) -> None:
-                    self.success = success
-                    self.dataset = dataset
-                    self.error = error
-
-            return ConversionResult(success=False, error=str(e))
+            return {"success": False, "dataset": None, "error": str(e)}
 
     def extract_multiple_choices(self, question: str) -> List[str]:
         """Extract multiple choices from a question for test compatibility.
@@ -661,23 +665,16 @@ class OllaGen1DatasetConverter:
         Returns:
             RecoveryResult with recovery status
         """
-
-        class RecoveryResult:
-            def __init__(self, success: bool, processed_count: int = 0, error: Optional[str] = None) -> None:
-                self.success = success
-                self.processed_count = processed_count
-                self.error = error
-
         try:
             if not self.can_recover_from_checkpoint(checkpoint_file):
-                return RecoveryResult(success=False, error="Invalid checkpoint file")
+                return {"success": False, "processed_count": 0, "error": "Invalid checkpoint file"}
 
             with open(checkpoint_file, "r", encoding="utf-8") as f:
                 checkpoint_data = json.load(f)
 
-            return RecoveryResult(success=True, processed_count=checkpoint_data.get("processed_scenarios", 0))
+            return {"success": True, "processed_count": checkpoint_data.get("processed_scenarios", 0), "error": None}
         except Exception as e:
-            return RecoveryResult(success=False, error=str(e))
+            return {"success": False, "processed_count": 0, "error": str(e)}
 
 
 class AccuracyTester:

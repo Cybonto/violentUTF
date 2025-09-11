@@ -38,7 +38,7 @@ repos:
         args: ["--fix=lf"]
       - id: name-tests-test
         args: ["--pytest-test-first"]
-        exclude: "_helper\\.py$|_util\\.py$|_utils\\.py$|keycloak_auth_helper\\.py$|contract_test_helper\\.py$|contract_test_utils\\.py$|profile_memory\\.py$|debug_dashboard_api\\.py$|generate_openapi_schema\\.py$|validate_openapi_schemas\\.py$|check_scorer_database_summary\\.py$"
+        exclude: "_helper\\.py$|_util\\.py$|_utils\\.py$|_fixtures\\.py$|keycloak_auth\\.py$|mcp_client\\.py$|mcp_integration\\.py$|keycloak_auth_helper\\.py$|contract_test_helper\\.py$|contract_test_utils\\.py$|profile_memory\\.py$|debug_dashboard_api\\.py$|generate_openapi_schema\\.py$|validate_openapi_schemas\\.py$|check_scorer_database_summary\\.py$"
       - id: requirements-txt-fixer
       - id: trailing-whitespace
         exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'

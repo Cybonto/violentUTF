@@ -12,11 +12,12 @@
 import uuid
 from typing import Any, Dict
 
-from app.db.database import Base
 from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
+from app.db.database import Base
 
 # Note: COBTemplate extensions (metadata, version fields) should be added directly to COBTemplate model if needed
 

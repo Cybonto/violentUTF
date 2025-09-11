@@ -19,8 +19,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Type
 
-from app.core.validation import sanitize_string, validate_json_data
 from pydantic import BaseModel, Field, field_validator
+
+from app.core.validation import sanitize_string, validate_json_data
 
 
 class JudgeType(str, Enum):

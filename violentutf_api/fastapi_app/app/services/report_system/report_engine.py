@@ -19,6 +19,12 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import aiofiles
+from fastapi import HTTPException
+from jinja2 import Environment, select_autoescape
+from sqlalchemy.ext.asyncio import AsyncSession
+from weasyprint import CSS, HTML
+from weasyprint.text.fonts import FontConfiguration
+
 from app.models.cob_models import COBReport, COBTemplate
 from app.models.orchestrator import OrchestratorExecution
 
@@ -33,11 +39,6 @@ from app.schemas.report_system.report_schemas import (
     ReportStatus,
 )
 from app.services.storage_service import StorageService
-from fastapi import HTTPException
-from jinja2 import Environment, select_autoescape
-from sqlalchemy.ext.asyncio import AsyncSession
-from weasyprint import CSS, HTML
-from weasyprint.text.fonts import FontConfiguration
 
 from .block_base import BaseReportBlock, block_registry
 from .block_implementations import register_all_blocks

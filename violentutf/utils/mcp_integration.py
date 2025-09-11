@@ -45,6 +45,7 @@ class MCPCommandType(Enum):
     RESOURCES = "resources"
     PROMPT = "prompt"
     LIST = "list"
+    DOCUMENTATION = "documentation"
     UNKNOWN = "unknown"
 
 

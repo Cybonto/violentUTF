@@ -12,11 +12,12 @@ from typing import Dict, Optional, Self
 from urllib.parse import urlencode
 
 import httpx
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import JSONResponse, RedirectResponse
+
 from app.core.config import settings
 from app.core.security import create_access_token
 from app.services.keycloak_verification import keycloak_verifier
-from fastapi import APIRouter, Query, Request
-from fastapi.responses import JSONResponse, RedirectResponse
 
 logger = logging.getLogger(__name__)
 

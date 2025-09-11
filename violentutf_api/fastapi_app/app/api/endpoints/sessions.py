@@ -12,6 +12,8 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
 from app.models.auth import User
@@ -20,7 +22,6 @@ from app.schemas.sessions import (
     SessionStateResponse,
     UpdateSessionRequest,
 )
-from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

@@ -22,14 +22,15 @@ Authentication and authorization middleware.
 import logging
 from typing import Optional, Self
 
+from fastapi import HTTPException, Request, Security, status
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
+from jwt import InvalidTokenError as JWTError
+
 from app.core.config import settings
 from app.core.security import decode_token
 from app.db.database import get_db_session
 from app.models.api_key import APIKey
 from app.models.auth import User
-from fastapi import HTTPException, Request, Security, status
-from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
-from jwt import InvalidTokenError as JWTError
 
 logger = logging.getLogger(__name__)
 

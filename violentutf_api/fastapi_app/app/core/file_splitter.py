@@ -9,6 +9,7 @@
 import csv
 import hashlib
 import json
+import logging
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
@@ -32,6 +33,7 @@ class FileSplitter(ABC):
         """
         self.file_path = file_path
         self.chunk_size = chunk_size
+        self.logger = logging.getLogger(__name__)
 
         if not Path(file_path).exists():
             raise FileNotFoundError(f"File not found: {file_path}")
@@ -461,6 +463,7 @@ class FileMerger:
             self.manifest = json.load(f)
 
         self.output_dir = Path(manifest_path).parent
+        self.logger = logging.getLogger(__name__)
 
     def calculate_checksum(self, file_path: str) -> str:
         """
@@ -488,12 +491,12 @@ class FileMerger:
         for part in self.manifest["parts"]:
             part_path = self.output_dir / part["filename"]
             if not part_path.exists():
-                print(f"Missing part: {part['filename']}")
+                self.logger.error("Missing part: %s", part["filename"])
                 return False
 
             actual_checksum = self.calculate_checksum(str(part_path))
             if actual_checksum != part["checksum"]:
-                print(f"Checksum mismatch for {part['filename']}")
+                self.logger.error("Checksum mismatch for %s", part["filename"])
                 return False
 
         return True

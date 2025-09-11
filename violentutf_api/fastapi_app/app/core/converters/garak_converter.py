@@ -389,7 +389,7 @@ class AttackTypeClassifier:
 
     def __init__(self) -> None:
         """Initialize the attack type classifier with patterns."""
-        self._attack_patterns = {
+        self._attack_patterns: Dict[AttackType, Dict[str, Any]] = {
             AttackType.DAN: {
                 "patterns": [
                     r"DAN\s+which stands for",
@@ -531,19 +531,28 @@ class AttackTypeClassifier:
             matches = 0
             matched_patterns = []
 
-            for pattern in config["patterns"]:
+            # Get patterns safely (config is guaranteed to be Dict[str, Any])
+            patterns = config.get("patterns", [])
+            if not isinstance(patterns, list):
+                patterns = []
+
+            for pattern in patterns:
                 if re.search(pattern, prompt, re.IGNORECASE):
                     matches += 1
                     matched_patterns.append(pattern)
 
             # Calculate confidence with bonus for multiple matches
             if matches > 0:
-                base_confidence = matches / len(config["patterns"])
-                # Give significant bonus for multiple pattern matches
-                if matches >= 2:
-                    confidence = min(1.0, base_confidence + 0.5)  # Strong bonus for 2+ matches
+                patterns_count = len(patterns)
+                if patterns_count > 0:
+                    base_confidence = matches / patterns_count
+                    # Give significant bonus for multiple pattern matches
+                    if matches >= 2:
+                        confidence = min(1.0, base_confidence + 0.5)  # Strong bonus for 2+ matches
+                    else:
+                        confidence = base_confidence
                 else:
-                    confidence = base_confidence
+                    confidence = 0.0
             else:
                 confidence = 0.0
 
@@ -553,14 +562,17 @@ class AttackTypeClassifier:
                 detection_patterns = matched_patterns
 
         # Default to unknown if no strong match (lowered threshold for pattern-based detection)
-        if highest_confidence < 0.1:
+        if highest_confidence < 0.1 or best_match is None:
             attack_type = AttackType.UNKNOWN
-            harm_categories = []
+            harm_categories: List[HarmCategory] = []
             severity_level = 1
             confidence_score = highest_confidence
         else:
             attack_type = best_match
-            harm_categories = self._attack_patterns[attack_type]["harm_categories"]
+            attack_config = self._attack_patterns.get(attack_type, {})
+            harm_categories_raw = attack_config.get("harm_categories", [])
+            # Ensure we have a proper list of HarmCategory
+            harm_categories = harm_categories_raw if isinstance(harm_categories_raw, list) else []
             severity_level = self._calculate_severity_level(prompt, attack_type)
             confidence_score = highest_confidence
 
@@ -573,7 +585,9 @@ class AttackTypeClassifier:
             classification_metadata={
                 "classification_timestamp": datetime.now(timezone.utc).isoformat(),
                 "prompt_length": len(prompt),
-                "total_patterns_checked": sum(len(config["patterns"]) for config in self._attack_patterns.values()),
+                "total_patterns_checked": sum(
+                    len(config.get("patterns", [])) for config in self._attack_patterns.values()
+                ),
             },
         )
 
@@ -722,10 +736,8 @@ class GarakDatasetConverter:
             )
 
             # Add dataset object for test compatibility
-            # Monkey patch to add dataset object access
-            original_dataset = result.dataset
-            result.dataset = dataset  # Override with object for tests
-            result._dataset_dict = original_dataset  # Keep dict for serialization  # pylint: disable=protected-access
+            # For test compatibility - keep both formats
+            result.dataset = dataset.to_dict()  # Use dict format for schema compliance
 
             return result
 
@@ -763,7 +775,7 @@ class GarakDatasetConverter:
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Handle any exceptions that occurred
-        final_results = []
+        final_results: List[SingleFileConversionResult] = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 # Create error result
@@ -784,7 +796,7 @@ class GarakDatasetConverter:
                     error_message=str(result),
                 )
                 final_results.append(error_result)
-            else:
+            elif isinstance(result, SingleFileConversionResult):
                 final_results.append(result)
 
         return final_results
@@ -811,7 +823,11 @@ class GarakDatasetConverter:
             converted_prompts = [prompt.value for prompt in converted_dataset.prompts]
         else:
             # Handle dictionary format for backward compatibility
-            converted_prompts = [prompt["value"] for prompt in converted_dataset.get("prompts", [])]
+            prompts_data = getattr(converted_dataset, "prompts", [])
+            if isinstance(prompts_data, list):
+                converted_prompts = [prompt["value"] for prompt in prompts_data if isinstance(prompt, dict)]
+            else:
+                converted_prompts = []
 
         # Check data integrity
         preserved_count = 0
@@ -1019,17 +1035,17 @@ class GarakDatasetConverter:
         dataset = SeedPromptDataset(prompts=seed_prompts, metadata=dataset_metadata)
 
         # Create a result object with all expected attributes
-        class ConversionResult:
-            def __init__(self) -> None:
-                self.success = True
-                self.dataset = dataset
-                self.file_analysis = file_analysis
-                self.template_info = template_info
-                self.attack_classifications = attack_classifications
-                self.prompts = prompts
-                self.seed_prompts = seed_prompts  # Expected by test
+        result_data = {
+            "success": True,
+            "dataset": dataset,
+            "file_analysis": file_analysis,
+            "template_info": template_info,
+            "attack_classifications": attack_classifications,
+            "prompts": prompts,
+            "seed_prompts": seed_prompts,  # Expected by test
+        }
 
-        return ConversionResult()
+        return result_data
 
     def classify_attack_type(self, content: str, filename: str = "") -> AttackType:
         """Classify the primary attack type for file content.
@@ -1172,9 +1188,9 @@ class GarakDatasetConverter:
                 "file_path": file_path,
                 "filename": filename,
                 "content": content,
-                "metadata": conversion_result.file_analysis,
-                "template_info": conversion_result.template_info,
-                "attack_classifications": conversion_result.attack_classifications,
+                "metadata": getattr(conversion_result, "file_analysis", None),
+                "template_info": getattr(conversion_result, "template_info", None),
+                "attack_classifications": getattr(conversion_result, "attack_classifications", []),
                 "conversion_result": conversion_result,
             }
 

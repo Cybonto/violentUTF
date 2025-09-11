@@ -13,6 +13,8 @@ import uuid
 from datetime import datetime
 from typing import Dict, List
 
+from fastapi import APIRouter, Depends, HTTPException
+
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
 from app.models.auth import User
@@ -32,7 +34,6 @@ from app.schemas.scorers import (
     ScorerValidationRequest,
     ScorerValidationResponse,
 )
-from fastapi import APIRouter, Depends, HTTPException
 
 logger = logging.getLogger(__name__)
 

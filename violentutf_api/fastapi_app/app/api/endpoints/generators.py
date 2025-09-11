@@ -16,6 +16,8 @@ from typing import Any, Dict, List, Optional, cast
 
 import httpx
 import requests
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.error_handling import safe_error_response, validation_error
@@ -32,7 +34,6 @@ from app.schemas.generators import (
     GeneratorTypesResponse,
     GeneratorUpdateRequest,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
 
 logger = logging.getLogger(__name__)
 

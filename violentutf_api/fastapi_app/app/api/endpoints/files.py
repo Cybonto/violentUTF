@@ -11,6 +11,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
+
 from app.core.auth import get_current_user
 from app.models.auth import User
 from app.schemas.files import (
@@ -19,8 +22,6 @@ from app.schemas.files import (
     FileMetadataResponse,
     FileUploadResponse,
 )
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-from fastapi.responses import FileResponse
 
 router = APIRouter()
 
