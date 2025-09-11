@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import yaml
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+
 from app.core.auth import get_current_user
 from app.models.auth import User
 from app.schemas.config import (
@@ -25,7 +27,6 @@ from app.schemas.config import (
     UpdateConfigRequest,
     UpdateEnvironmentConfigRequest,
 )
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 router = APIRouter()
 

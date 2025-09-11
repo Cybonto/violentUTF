@@ -48,7 +48,17 @@ class SpatialReasoningType(str, Enum):
     """Spatial reasoning question types."""
 
     SPATIAL_TRAVERSAL = "spatial_traversal"
+
+
+class ReasoningType(str, Enum):
+    """General reasoning types for graph problems."""
+
+    SPATIAL = "spatial"
+    LOGICAL = "logical"
     PATH_FINDING = "path_finding"
+    GRAPH_TRAVERSAL = "graph_traversal"
+    OPTIMIZATION = "optimization"
+    CONNECTIVITY = "connectivity"
     DISTANCE_CALCULATION = "distance_calculation"
     NAVIGATION_PLANNING = "navigation_planning"
     SPATIAL_RELATIONSHIP = "spatial_relationship"

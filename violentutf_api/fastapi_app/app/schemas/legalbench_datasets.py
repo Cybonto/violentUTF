@@ -16,12 +16,13 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Type
 
+from pydantic import BaseModel, Field, field_validator
+
 from app.core.validation import (
     SecurityLimits,
     sanitize_string,
     validate_json_data,
 )
-from pydantic import BaseModel, Field, field_validator
 
 
 class LegalCategory(str, Enum):
@@ -36,6 +37,18 @@ class LegalCategory(str, Enum):
     CORPORATE = "corporate"
     INTELLECTUAL_PROPERTY = "intellectual_property"
     GENERAL = "general"
+
+
+class LegalTaskType(str, Enum):
+    """Legal task type categories for specialized scoring."""
+
+    REASONING = "reasoning"
+    CLASSIFICATION = "classification"
+    ANALYSIS = "analysis"
+    INTERPRETATION = "interpretation"
+    APPLICATION = "application"
+    SYNTHESIS = "synthesis"
+    EVALUATION = "evaluation"
 
 
 class LegalComplexity(str, Enum):

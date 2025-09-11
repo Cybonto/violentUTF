@@ -21,11 +21,12 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 import httpx
+from mcp.types import Resource
+from pydantic import AnyUrl
+
 from app.core.config import settings
 from app.mcp.auth import MCPAuthHandler
 from app.mcp.resources.base import advanced_resource_registry
-from mcp.types import Resource
-from pydantic import AnyUrl
 
 # Copyright (c) 2025 ViolentUTF Contributors.
 # Licensed under the MIT License.

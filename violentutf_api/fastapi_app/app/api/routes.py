@@ -6,6 +6,8 @@
 
 """Main API router that includes all sub-routers."""
 
+from fastapi import APIRouter
+
 from app.api.endpoints import (
     apisix_admin,
     auth,
@@ -25,7 +27,6 @@ from app.api.endpoints import (
     sessions,
     validation,
 )
-from fastapi import APIRouter
 
 api_router = APIRouter()
 

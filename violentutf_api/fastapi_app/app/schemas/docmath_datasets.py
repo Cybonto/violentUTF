@@ -28,6 +28,10 @@ class DocMathComplexityTier(Enum):
     COMPLONG = "complong"
 
 
+# Alias for backward compatibility
+ComplexityTier = DocMathComplexityTier
+
+
 class MathematicalAnswerType(Enum):
     """Enum for mathematical answer types."""
 

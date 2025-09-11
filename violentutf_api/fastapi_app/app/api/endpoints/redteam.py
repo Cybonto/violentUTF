@@ -8,12 +8,13 @@
 import logging
 from typing import Any, Dict, List, Optional, cast
 
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
 from app.core.auth import get_current_user
 from app.models.auth import User
 from app.services.garak_integration import garak_service
 from app.services.pyrit_integration import pyrit_service, run_red_team_orchestrator
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 

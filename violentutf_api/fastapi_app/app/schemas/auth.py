@@ -13,6 +13,8 @@ import re
 from datetime import datetime
 from typing import List, Optional, Type
 
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
 from app.core.password_policy import validate_password_strength
 from app.core.validation import (
     ValidationPatterns,
@@ -20,7 +22,6 @@ from app.core.validation import (
     validate_role_list,
     validate_username,
 )
-from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class Token(BaseModel):

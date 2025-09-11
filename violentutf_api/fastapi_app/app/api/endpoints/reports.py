@@ -15,6 +15,11 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Path, Query
+from fastapi.responses import FileResponse
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.auth import get_current_user
 from app.db.database import get_session
 from app.models.auth import User
@@ -56,10 +61,6 @@ from app.services.report_system.block_base import block_registry
 from app.services.report_system.report_engine import ReportGenerationEngine
 from app.services.report_system.template_service import TemplateService, get_initial_templates
 from app.services.storage_service import StorageService, get_storage_service
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Path, Query
-from fastapi.responses import FileResponse
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 

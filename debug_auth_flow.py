@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.join(project_root, "violentutf_api", "fastapi_app"))
 
 try:
     import requests
+
     from app.api.endpoints.generators import get_openapi_provider_config
 except ImportError:
     # print(f"Import error: {e}")  # Debug print removed

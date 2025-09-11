@@ -11,9 +11,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
 
-from app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
+
+from app.core.config import settings
 
 # Use SQLite for simplicity (can be changed to PostgreSQL later)
 DATABASE_URL = settings.DATABASE_URL or f"sqlite+aiosqlite:///{settings.APP_DATA_DIR}/violentutf_api.db"

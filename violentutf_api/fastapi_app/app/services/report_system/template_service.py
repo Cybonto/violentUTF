@@ -14,6 +14,10 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from sqlalchemy import or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.models.cob_models import COBTemplate
 from app.models.report_system.report_models import COBTemplateVersion
 from app.schemas.report_system.report_schemas import (
@@ -23,9 +27,6 @@ from app.schemas.report_system.report_schemas import (
     TemplateRecommendation,
     TemplateVersionResponse,
 )
-from sqlalchemy import or_
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 logger = logging.getLogger(__name__)
 
@@ -82,9 +83,11 @@ class TemplateService:
             description=template_data.description,
             template_config=template_config,
             export_formats=["markdown", "pdf", "json"],  # Default formats
-            tags=template_data.metadata.tags
-            if hasattr(template_data, "metadata") and hasattr(template_data.metadata, "tags")
-            else [],
+            tags=(
+                template_data.metadata.tags
+                if hasattr(template_data, "metadata") and hasattr(template_data.metadata, "tags")
+                else []
+            ),
             ai_prompts={},  # Empty for now
             created_by=user_id,
         )

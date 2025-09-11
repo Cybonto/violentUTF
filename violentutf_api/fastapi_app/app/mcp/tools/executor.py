@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, Self
 from urllib.parse import urljoin
 
 import httpx
+
 from app.core.config import settings
 from app.mcp.tools.introspection import get_introspector
 

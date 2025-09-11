@@ -25,9 +25,10 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import psutil
+
 from app.core.validation import sanitize_string
 from app.schemas.legalbench_datasets import (
     LegalBenchBatchConversionResult,
@@ -356,14 +357,14 @@ class LegalBenchDatasetConverter:
         self.tsv_processor = TSVProcessor()
         self.logger = logging.getLogger(__name__)
 
-        # Performance tracking
-        self._conversion_stats = {
+        # Performance tracking with explicit types
+        self._conversion_stats: Dict[str, Union[int, float, Dict[str, int], None]] = {
             "total_processed": 0,
             "successful_conversions": 0,
             "failed_conversions": 0,
             "total_qa_entries": 0,
             "start_time": None,
-            "peak_memory_mb": 0,
+            "peak_memory_mb": 0.0,
             "directories_found": 0,
             "legal_categories": {},
         }
@@ -393,8 +394,8 @@ class LegalBenchDatasetConverter:
         conversion_results = self._process_task_directories(dataset_root, task_directories)
 
         # Aggregate all questions from successful conversions
-        all_questions = []
-        legal_category_summary = {}
+        all_questions: List[QuestionAnsweringEntry] = []
+        legal_category_summary: Dict[LegalCategory, int] = {}
 
         for result in conversion_results:
             if result.success:
@@ -427,10 +428,19 @@ class LegalBenchDatasetConverter:
         dataset = self._create_dataset(all_questions, conversion_results)
 
         # Calculate final statistics
-        total_time = int((time.time() - self._conversion_stats["start_time"]) * 1000)
-        success_rate = self._conversion_stats["successful_conversions"] / max(
-            self._conversion_stats["total_processed"], 1
-        )
+        start_time = self._conversion_stats["start_time"]
+        if start_time is not None and isinstance(start_time, (int, float)):
+            total_time = int((time.time() - start_time) * 1000)
+        else:
+            total_time = 0
+
+        successful_conversions = self._conversion_stats["successful_conversions"]
+        total_processed = self._conversion_stats["total_processed"]
+
+        if isinstance(successful_conversions, int) and isinstance(total_processed, int):
+            success_rate = successful_conversions / max(total_processed, 1)
+        else:
+            success_rate = 0.0
 
         return LegalBenchBatchConversionResult(
             dataset=dataset,
@@ -528,7 +538,7 @@ class LegalBenchDatasetConverter:
         Returns:
             List of conversion results
         """
-        conversion_results = []
+        conversion_results: List[LegalBenchConversionResult] = []
 
         for task_dir in task_directories:
             if self.config.enable_progress_tracking and len(conversion_results) % 10 == 0:
@@ -541,9 +551,17 @@ class LegalBenchDatasetConverter:
                 conversion_results.append(result)
 
                 if result.success:
-                    self._conversion_stats["successful_conversions"] += 1
+                    successful_conversions = self._conversion_stats["successful_conversions"]
+                    if isinstance(successful_conversions, int):
+                        self._conversion_stats["successful_conversions"] = successful_conversions + 1
+                    else:
+                        self._conversion_stats["successful_conversions"] = 1
                 else:
-                    self._conversion_stats["failed_conversions"] += 1
+                    failed_conversions = self._conversion_stats["failed_conversions"]
+                    if isinstance(failed_conversions, int):
+                        self._conversion_stats["failed_conversions"] = failed_conversions + 1
+                    else:
+                        self._conversion_stats["failed_conversions"] = 1
 
             except Exception as e:
                 self.logger.error("Failed to process directory %s: %s", task_dir, e)
@@ -558,13 +576,25 @@ class LegalBenchDatasetConverter:
                         error_message=str(e),
                     )
                 )
-                self._conversion_stats["failed_conversions"] += 1
+                failed_conversions = self._conversion_stats["failed_conversions"]
+                if isinstance(failed_conversions, int):
+                    self._conversion_stats["failed_conversions"] = failed_conversions + 1
+                else:
+                    self._conversion_stats["failed_conversions"] = 1
 
-            self._conversion_stats["total_processed"] += 1
+            total_processed = self._conversion_stats["total_processed"]
+            if isinstance(total_processed, int):
+                self._conversion_stats["total_processed"] = total_processed + 1
+            else:
+                self._conversion_stats["total_processed"] = 1
 
             # Update peak memory usage
             current_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
-            self._conversion_stats["peak_memory_mb"] = max(self._conversion_stats["peak_memory_mb"], current_memory)
+            peak_memory = self._conversion_stats["peak_memory_mb"]
+            if isinstance(peak_memory, (int, float)):
+                self._conversion_stats["peak_memory_mb"] = max(peak_memory, current_memory)
+            else:
+                self._conversion_stats["peak_memory_mb"] = current_memory
 
         return conversion_results
 
@@ -598,9 +628,17 @@ class LegalBenchDatasetConverter:
                     conversion_results.append(result)
 
                     if result.success:
-                        self._conversion_stats["successful_conversions"] += 1
+                        successful_conversions = self._conversion_stats["successful_conversions"]
+                        if isinstance(successful_conversions, int):
+                            self._conversion_stats["successful_conversions"] = successful_conversions + 1
+                        else:
+                            self._conversion_stats["successful_conversions"] = 1
                     else:
-                        self._conversion_stats["failed_conversions"] += 1
+                        failed_conversions = self._conversion_stats["failed_conversions"]
+                        if isinstance(failed_conversions, int):
+                            self._conversion_stats["failed_conversions"] = failed_conversions + 1
+                        else:
+                            self._conversion_stats["failed_conversions"] = 1
 
                 except Exception as e:
                     self.logger.error("Failed to process directory %s: %s", task_dir, e)
@@ -615,11 +653,24 @@ class LegalBenchDatasetConverter:
                             error_message=str(e),
                         )
                     )
-                    self._conversion_stats["failed_conversions"] += 1
+                    failed_conversions = self._conversion_stats["failed_conversions"]
+                    if isinstance(failed_conversions, int):
+                        self._conversion_stats["failed_conversions"] = failed_conversions + 1
+                    else:
+                        self._conversion_stats["failed_conversions"] = 1
 
-                self._conversion_stats["total_processed"] += 1
+                total_processed = self._conversion_stats["total_processed"]
+                if isinstance(total_processed, int):
+                    self._conversion_stats["total_processed"] = total_processed + 1
+                else:
+                    self._conversion_stats["total_processed"] = 1
 
-                if self.config.enable_progress_tracking and self._conversion_stats["total_processed"] % 20 == 0:
+                total_processed = self._conversion_stats["total_processed"]
+                if (
+                    self.config.enable_progress_tracking
+                    and isinstance(total_processed, int)
+                    and total_processed % 20 == 0
+                ):
                     self.logger.info(
                         "Processed %d/%d directories", self._conversion_stats["total_processed"], len(task_directories)
                     )
@@ -651,7 +702,11 @@ class LegalBenchDatasetConverter:
             processing_time = int((time.time() - start_time) * 1000)
 
             # Update statistics
-            self._conversion_stats["total_qa_entries"] += total_questions
+            total_qa_entries = self._conversion_stats["total_qa_entries"]
+            if isinstance(total_qa_entries, int):
+                self._conversion_stats["total_qa_entries"] = total_qa_entries + total_questions
+            else:
+                self._conversion_stats["total_qa_entries"] = total_questions
             self._update_category_stats(legal_classification.primary_category)
 
             return LegalBenchConversionResult(
@@ -773,7 +828,7 @@ class LegalBenchDatasetConverter:
         failed_tasks = [r for r in conversion_results if not r.success]
 
         # Aggregate legal categories
-        category_counts = {}
+        category_counts: Dict[str, int] = {}
         for result in successful_tasks:
             category = result.legal_category.value
             category_counts[category] = category_counts.get(category, 0) + 1
@@ -820,9 +875,9 @@ class LegalBenchDatasetConverter:
     def _update_category_stats(self, category: LegalCategory) -> None:
         """Update internal category statistics."""
         cat_name = category.value
-        self._conversion_stats["legal_categories"][cat_name] = (
-            self._conversion_stats["legal_categories"].get(cat_name, 0) + 1
-        )
+        legal_categories = self._conversion_stats["legal_categories"]
+        if isinstance(legal_categories, dict):
+            legal_categories[cat_name] = legal_categories.get(cat_name, 0) + 1
 
     def get_conversion_statistics(self) -> Dict[str, Any]:
         """Get current conversion statistics.
@@ -832,15 +887,21 @@ class LegalBenchDatasetConverter:
         """
         stats = self._conversion_stats.copy()
 
-        if stats["start_time"]:
-            stats["elapsed_time_seconds"] = time.time() - stats["start_time"]
+        start_time = stats["start_time"]
+        if start_time is not None and isinstance(start_time, (int, float)):
+            stats["elapsed_time_seconds"] = time.time() - start_time
 
-        if stats["total_processed"] > 0:
-            stats["success_rate"] = stats["successful_conversions"] / stats["total_processed"]
-            stats["questions_per_task_avg"] = (
-                stats["total_qa_entries"] / stats["successful_conversions"]
-                if stats["successful_conversions"] > 0
-                else 0
-            )
+        total_processed = stats["total_processed"]
+        if isinstance(total_processed, int) and total_processed > 0:
+            successful_conversions = stats["successful_conversions"]
+            total_qa_entries = stats["total_qa_entries"]
+
+            if isinstance(successful_conversions, int):
+                stats["success_rate"] = successful_conversions / total_processed
+
+                if isinstance(total_qa_entries, int) and successful_conversions > 0:
+                    stats["questions_per_task_avg"] = total_qa_entries / successful_conversions
+                else:
+                    stats["questions_per_task_avg"] = 0
 
         return stats

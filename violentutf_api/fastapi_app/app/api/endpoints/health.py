@@ -9,9 +9,10 @@
 from datetime import datetime
 from typing import Any
 
+from fastapi import APIRouter
+
 from app.core.config import settings
 from app.core.security_logging import security_metrics
-from fastapi import APIRouter
 
 router = APIRouter()
 

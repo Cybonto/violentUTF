@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Self, cast
 
 import httpx
+
 from app.core.config import settings
 from app.mcp.auth import MCPAuthHandler
 from app.mcp.resources.base import (

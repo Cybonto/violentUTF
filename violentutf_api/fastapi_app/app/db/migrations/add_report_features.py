@@ -27,7 +27,6 @@ depends_on = None
 
 def upgrade():
     """Add advanced report features to database"""
-
     # Add metadata and version columns to cob_templates
     op.add_column("cob_templates", sa.Column("metadata", sa.JSON(), nullable=True, server_default="{}"))
     op.add_column("cob_templates", sa.Column("version", sa.String(20), nullable=True, server_default="1.0.0"))
@@ -297,7 +296,6 @@ def upgrade():
 
 def downgrade():
     """Remove advanced report features"""
-
     # Drop indexes
     op.drop_index("idx_blocks_category")
     op.drop_index("idx_variables_category")

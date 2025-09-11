@@ -14,11 +14,12 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable, Dict, List, Optional, cast
 
-from app.mcp.auth import MCPAuthHandler
-from app.mcp.config import mcp_settings
 from fastapi import FastAPI, HTTPException
 from mcp.server import Server
 from mcp.types import CreateMessageRequest, Prompt, Resource, ServerCapabilities, Tool
+
+from app.mcp.auth import MCPAuthHandler
+from app.mcp.config import mcp_settings
 
 # Copyright (c) 2025 ViolentUTF Contributors.
 # Licensed under the MIT License.

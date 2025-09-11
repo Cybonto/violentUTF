@@ -301,9 +301,10 @@ class PyRITOrchestratorService:
 
             from uuid import UUID
 
+            from sqlalchemy import select
+
             from app.db.database import get_session
             from app.models.orchestrator import OrchestratorConfiguration
-            from sqlalchemy import select
 
             # Get database session
             async for db in get_session():

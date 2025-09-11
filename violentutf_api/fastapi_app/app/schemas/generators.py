@@ -14,12 +14,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
 if TYPE_CHECKING:
     pass
 
+from pydantic import BaseModel, Field, field_validator
+
 from app.core.validation import (
     ValidationPatterns,
     sanitize_string,
     validate_generator_parameters,
 )
-from pydantic import BaseModel, Field, field_validator
 
 
 class GeneratorType(BaseModel):
