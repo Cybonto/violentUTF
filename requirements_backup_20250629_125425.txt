@@ -166,7 +166,7 @@ nltk==3.9.1
 numdifftools==0.9.41
 numpy==2.2.5
 ollama==0.5.3
-openai==1.78.0
+openai==1.107.2
 opencv-python-headless==4.11.0.86
 openpyxl==3.1.5
 packageurl-python==0.17.1
