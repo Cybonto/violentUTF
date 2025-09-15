@@ -834,11 +834,11 @@ def flow_native_datasets() -> None:
     """Handle native dataset selection and creation with enhanced UI"""
     # Import the new components
     try:
-        from components.dataset_configuration import SpecializedConfigurationInterface
-        from components.dataset_preview import DatasetPreviewComponent
-        from components.dataset_selector import NativeDatasetSelector
-        from utils.dataset_ui_components import LargeDatasetUIOptimization
-        from utils.specialized_workflows import UserGuidanceSystem
+        from violentutf.components.dataset_configuration import SpecializedConfigurationInterface
+        from violentutf.components.dataset_preview import DatasetPreviewComponent
+        from violentutf.components.dataset_selector import NativeDatasetSelector
+        from violentutf.utils.dataset_ui_components import LargeDatasetUIOptimization
+        from violentutf.utils.specialized_workflows import UserGuidanceSystem
 
         # Initialize components
         dataset_selector = NativeDatasetSelector()
