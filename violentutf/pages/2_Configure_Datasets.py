@@ -48,6 +48,7 @@ API_ENDPOINTS = {
     # Dataset endpoints
     "datasets": f"{API_BASE_URL}/api/v1/datasets",
     "dataset_types": f"{API_BASE_URL}/api/v1/datasets/types",
+    "dataset_categories": f"{API_BASE_URL}/api/v1/datasets/categories",
     "dataset_preview": f"{API_BASE_URL}/api/v1/datasets/preview",
     "dataset_memory": f"{API_BASE_URL}/api/v1/datasets/memory",
     "dataset_field_mapping": f"{API_BASE_URL}/api/v1/datasets/field-mapping",
@@ -71,6 +72,8 @@ if "api_datasets" not in st.session_state:
     st.session_state.api_datasets = {}
 if "api_dataset_types" not in st.session_state:
     st.session_state.api_dataset_types = []
+if "api_dataset_categories" not in st.session_state:
+    st.session_state.api_dataset_categories = {}
 if "api_token" not in st.session_state:
     st.session_state.api_token = None
 if "api_user_info" not in st.session_state:
@@ -204,13 +207,22 @@ def create_compatible_api_token() -> Optional[str]:
 # --- API Backend Functions ---
 
 
-def load_dataset_types_from_api() -> List[str]:
+def load_dataset_types_from_api() -> List[Dict[str, Any]]:
     """Load available dataset types from API"""
     data = api_request("GET", API_ENDPOINTS["dataset_types"])
     if data:
         st.session_state.api_dataset_types = data.get("dataset_types", [])
-        return cast(List[str], data.get("dataset_types", []))
+        return cast(List[Dict[str, Any]], data.get("dataset_types", []))
     return []
+
+
+def load_dataset_categories_from_api() -> Dict[str, Any]:
+    """Load available dataset categories from API"""
+    data = api_request("GET", API_ENDPOINTS["dataset_categories"])
+    if data:
+        st.session_state.api_dataset_categories = data.get("categories", {})
+        return cast(Dict[str, Any], data.get("categories", {}))
+    return {}
 
 
 def load_datasets_from_api() -> List[Dict[str, Any]]:
@@ -831,66 +843,91 @@ def handle_dataset_source_flow() -> None:
 
 
 def flow_native_datasets() -> None:
-    """Handle native dataset selection and creation"""
-    st.subheader("Select Native Dataset")
+    """Handle native dataset category and type selection"""
+    st.subheader("Select Native Dataset by Category")
 
-    # Load dataset types if not already loaded
-    if not st.session_state.api_dataset_types:
-        with st.spinner("Loading dataset types..."):
-            types = load_dataset_types_from_api()
-            if not types:
-                st.error("❌ Failed to load dataset types")
+    # Load dataset categories if not available
+    if not st.session_state.api_dataset_categories:
+        with st.spinner("Loading dataset categories..."):
+            categories = load_dataset_categories_from_api()
+            if not categories:
+                st.error("❌ Failed to load dataset categories")
                 return
 
-    dataset_types = st.session_state.api_dataset_types
-    type_names = [dt["name"] for dt in dataset_types]
+    dataset_categories = st.session_state.api_dataset_categories
 
-    if not type_names:
-        st.warning("No native dataset types available.")
+    if not dataset_categories:
+        st.warning("No dataset categories available.")
         return
 
-    # Dataset type selection
-    selected_type = st.selectbox(
-        "Select a native dataset type", ["-- Select --"] + type_names, key="native_dataset_select"
+    # Category selection
+    category_names = [(cat_id, cat_info["name"]) for cat_id, cat_info in dataset_categories.items()]
+    category_options = ["-- Select Category --"] + [name for _, name in category_names]
+
+    selected_category_name = st.selectbox(
+        "Select a native dataset category", category_options, key="native_category_select"
     )
 
-    if selected_type != "-- Select --":
-        # Find dataset type info
-        type_info = next((dt for dt in dataset_types if dt["name"] == selected_type), None)
-        if type_info:
-            st.info(f"**{type_info['name']}**\n\n{type_info['description']}")
+    if selected_category_name != "-- Select Category --":
+        # Find the category ID from the name
+        selected_category_id = next((cat_id for cat_id, name in category_names if name == selected_category_name), None)
 
-            # Configuration if required
-            config = {}
-            if type_info.get("config_required"):
-                st.write("**Configuration Required:**")
-                available_configs = type_info.get("available_configs", {})
+        if selected_category_id:
+            category_info = dataset_categories[selected_category_id]
+            st.info(f"**{category_info['name']}**\n\n{category_info['description']}")
 
-                for config_key, options in available_configs.items():
-                    if options:
-                        selected_option = st.selectbox(
-                            f"Select {config_key}", options, key=f"native_config_{config_key}"
-                        )
-                        config[config_key] = selected_option
+            # Dataset selection within category
+            datasets_in_category = category_info.get("datasets", [])
+            if not datasets_in_category:
+                st.warning("No datasets available in this category.")
+                return
 
-            # Dataset name
-            dataset_name = st.text_input("Dataset Name*", value=f"{selected_type}_dataset", key="native_dataset_name")
+            dataset_names = [ds["name"] for ds in datasets_in_category]
+            selected_dataset = st.selectbox(
+                "Select a dataset within this category",
+                ["-- Select Dataset --"] + dataset_names,
+                key="native_dataset_select",
+            )
 
-            # Create button
-            if st.button("Create Dataset", key="create_native_dataset"):
-                if dataset_name:
-                    create_config = {"dataset_type": selected_type, **config}
+            if selected_dataset != "-- Select Dataset --":
+                # Find dataset info
+                dataset_info = next((ds for ds in datasets_in_category if ds["name"] == selected_dataset), None)
+                if dataset_info:
+                    st.info(f"**{dataset_info['name']}**\n\n{dataset_info['description']}")
 
-                    with st.spinner(f"Creating {selected_type} dataset..."):
-                        success = create_dataset_via_api(dataset_name, "native", create_config)
+                    # Configuration if required
+                    config = {}
+                    if dataset_info.get("config_required"):
+                        st.write("**Configuration Required:**")
+                        available_configs = dataset_info.get("available_configs", {})
 
-                    if success:
-                        st.success(f"✅ Dataset '{dataset_name}' created successfully!")
-                        st.rerun()
-                    else:
-                        st.error("❌ Failed to create dataset")
-                else:
-                    st.warning("Please enter a dataset name.")
+                        for config_key, options in available_configs.items():
+                            if options:
+                                selected_option = st.selectbox(
+                                    f"Select {config_key}", options, key=f"native_config_{config_key}"
+                                )
+                                config[config_key] = selected_option
+
+                    # Dataset name
+                    dataset_name = st.text_input(
+                        "Dataset Name*", value=f"{selected_dataset}_dataset", key="native_dataset_name"
+                    )
+
+                    # Create button
+                    if st.button("Create Dataset", key="create_native_dataset"):
+                        if dataset_name:
+                            create_config = {"dataset_type": selected_dataset, **config}
+
+                            with st.spinner(f"Creating {selected_dataset} dataset..."):
+                                success = create_dataset_via_api(dataset_name, "native", create_config)
+
+                            if success:
+                                st.success(f"✅ Dataset '{dataset_name}' created successfully!")
+                                st.rerun()
+                            else:
+                                st.error("❌ Failed to create dataset")
+                        else:
+                            st.warning("Please enter a dataset name.")
 
 
 def flow_upload_local_dataset() -> None:
