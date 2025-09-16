@@ -23,6 +23,9 @@ perform_cleanup() {
         echo "Removed keycloak/.env"
     fi
 
+    # Clean up APISIX (including routes)
+    cleanup_apisix_service
+
     # APISIX files - remove all non-template configurations
     if [ -d "apisix/conf" ]; then
         # Move only template files to a temp directory
@@ -142,6 +145,17 @@ cleanup_apisix_service() {
 
     if [ -d "apisix" ]; then
         cd "apisix" || return 1
+
+        # First try to remove routes if APISIX is still running
+        if [ -f ".env" ]; then
+            echo "Removing APISIX routes..."
+            source .env 2>/dev/null || true
+            if [ -n "$APISIX_ADMIN_KEY" ]; then
+                export APISIX_ADMIN_KEY
+                ./remove_routes.sh 2>/dev/null || echo "Warning: Could not remove routes (APISIX may not be running)"
+            fi
+        fi
+
         ${DOCKER_COMPOSE_CMD:-docker-compose} down -v 2>/dev/null || true
         rm -f .env
 

@@ -13,12 +13,12 @@ repos:
     hooks:
       - id: check-added-large-files
         args: ["--maxkb=5000"]
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
       - id: check-ast
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
       - id: check-case-conflict
       - id: check-docstring-first
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
       - id: check-executables-have-shebangs
       - id: check-json
       - id: check-merge-conflict
@@ -29,19 +29,19 @@ repos:
       - id: check-yaml
         args: ["--allow-multiple-documents"]
       - id: debug-statements
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
       - id: detect-private-key
       - id: end-of-file-fixer
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
       - id: fix-byte-order-marker
       - id: mixed-line-ending
         args: ["--fix=lf"]
       - id: name-tests-test
         args: ["--pytest-test-first"]
-        exclude: "_helper\\.py$|_util\\.py$|keycloak_auth_helper\\.py$|contract_test_helper\\.py$"
+        exclude: "_helper\\.py$|_util\\.py$|_utils\\.py$|_fixtures\\.py$|keycloak_auth\\.py$|mcp_client\\.py$|mcp_integration\\.py$|keycloak_auth_helper\\.py$|contract_test_helper\\.py$|contract_test_utils\\.py$|profile_memory\\.py$|debug_dashboard_api\\.py$|generate_openapi_schema\\.py$|validate_openapi_schemas\\.py$|check_scorer_database_summary\\.py$"
       - id: requirements-txt-fixer
       - id: trailing-whitespace
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
 
   # Python code formatting - Match GitHub PR validation exactly
   - repo: https://github.com/psf/black
@@ -52,7 +52,7 @@ repos:
         args: ["--check", "--diff", ".", "--verbose"]
         # Uses pyproject.toml configuration for exclusions and line-length
         pass_filenames: false
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
 
   # Import sorting - Match GitHub PR validation exactly
   - repo: https://github.com/pycqa/isort
@@ -62,7 +62,7 @@ repos:
         args: ["--check-only", "--diff", "."]
         # Uses pyproject.toml configuration
         pass_filenames: false
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
 
   # Linting - Match GitHub PR validation exactly
   - repo: https://github.com/pycqa/flake8
@@ -71,7 +71,7 @@ repos:
       - id: flake8
         args: ["--count", "--statistics", "--show-source", "--config=.flake8"]
         additional_dependencies: ["flake8-docstrings", "flake8-annotations"]
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
 
   # Security checks - Match GitHub PR validation exactly
   - repo: https://github.com/pycqa/bandit
@@ -91,7 +91,7 @@ repos:
           ]
         # Uses pyproject.toml configuration for exclusions
         pass_filenames: false
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
 
   # Type checking - Match GitHub PR validation exactly
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -108,7 +108,7 @@ repos:
         additional_dependencies: ["types-requests", "types-PyYAML"]
         # Uses pyproject.toml configuration for exclusions
         pass_filenames: false
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
 
   # PyLint - Match GitHub PR validation exactly
   - repo: https://github.com/pycqa/pylint
@@ -178,7 +178,7 @@ repos:
         entry: python scripts/check_regex_patterns.py
         language: python
         files: '\.py$'
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
         pass_filenames: true
         description: "Prevent corruption of regex patterns by auto-formatting"
 
@@ -187,7 +187,7 @@ repos:
         entry: '(?<!def )print\('
         language: pygrep
         types: [python]
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|setup.py|scripts/|debug_auth_flow.py|debug_openapi_auth.py|apisix/configure_gateway_auth.py|diagnose_user_context.py|app/core/security_check.py|app/services/pyrit_orchestrator_service.py|safe_comprehensive_fix.py|violentutf/utils/logging.py|violentutf_api/fastapi_app/diagnose_user_context.py|violentutf_api/fastapi_app/app/core/security_check\.py|violentutf_api/fastapi_app/verify_redteam_install\.py|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|setup.py|scripts/|debug_auth_flow.py|debug_openapi_auth.py|apisix/configure_gateway_auth.py|diagnose_user_context.py|app/core/security_check.py|app/services/pyrit_orchestrator_service.py|safe_comprehensive_fix.py|violentutf/utils/logging.py|violentutf_api/fastapi_app/diagnose_user_context.py|violentutf_api/fastapi_app/app/core/security_check\.py|violentutf_api/fastapi_app/verify_redteam_install\.py|violentutf_api/fastapi_app/app/cli/file_splitter_cli\.py|violentutf_api/fastapi_app/app/core/file_splitter\.py|verify_dataset_logging\.py|find_database_owner\.py|validate_files\.py|violentutf/app_data/violentutf/datasets/reasoning/judgebench-iclr25/utils/judges\.py|verify_streamlit_scorer_api\.py|check_scorer_auth_issues\.py|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|app_data/|violentutf_logs/|migrations/)'
 
       - id: no-hardcoded-secrets
         name: Check for hardcoded secrets

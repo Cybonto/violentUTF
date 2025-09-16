@@ -9,9 +9,10 @@
 import uuid
 from datetime import datetime
 
-from app.db.database import Base
 from sqlalchemy import JSON, Boolean, Column, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+
+from app.db.database import Base
 
 
 class OrchestratorConfiguration(Base):

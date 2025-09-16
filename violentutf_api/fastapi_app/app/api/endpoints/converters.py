@@ -13,6 +13,8 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+
 from app.core.auth import get_current_user
 from app.db.duckdb_manager import get_duckdb_manager
 from app.models.auth import User
@@ -32,7 +34,6 @@ from app.schemas.converters import (
     ConverterTypesResponse,
     ConverterUpdateRequest,
 )
-from fastapi import APIRouter, Depends, HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,7 @@ CONVERTER_CATEGORIES = {
     "Language": ["TranslationConverter"],
     "Transform": ["SearchReplaceConverter", "VariationConverter"],
     "Target": ["TargetConverter"],
+    "Dataset": ["GraphWalkConverter"],
 }
 
 # WARNING: These converter parameter definitions are MOCK DATA and do not accurately
@@ -224,6 +226,58 @@ CONVERTER_PARAMETERS = {
             "literal_choices": None,
             "skip_in_ui": True,
         }
+    ],
+    "GraphWalkConverter": [
+        {
+            "name": "file_path",
+            "type_str": "str",
+            "primary_type": "str",
+            "required": True,
+            "default": "",
+            "description": "Path to GraphWalk dataset file",
+            "literal_choices": None,
+            "skip_in_ui": False,
+        },
+        {
+            "name": "max_memory_usage_gb",
+            "type_str": "float",
+            "primary_type": "float",
+            "required": False,
+            "default": 2.0,
+            "description": "Maximum memory usage in GB for processing",
+            "literal_choices": None,
+            "skip_in_ui": False,
+        },
+        {
+            "name": "chunk_size_mb",
+            "type_str": "int",
+            "primary_type": "int",
+            "required": False,
+            "default": 15,
+            "description": "Chunk size in MB for massive file splitting",
+            "literal_choices": [5, 15, 25, 50],
+            "skip_in_ui": False,
+        },
+        {
+            "name": "performance_mode",
+            "type_str": "str",
+            "primary_type": "str",
+            "required": False,
+            "default": "balanced",
+            "description": "Performance optimization mode",
+            "literal_choices": ["speed", "balanced", "memory_optimized"],
+            "skip_in_ui": False,
+        },
+        {
+            "name": "async_conversion",
+            "type_str": "bool",
+            "primary_type": "bool",
+            "required": False,
+            "default": True,
+            "description": "Run conversion asynchronously for large files",
+            "literal_choices": None,
+            "skip_in_ui": False,
+        },
     ],
 }
 

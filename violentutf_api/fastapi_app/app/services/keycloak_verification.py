@@ -14,10 +14,11 @@ from typing import Any, Dict, List, Optional, Self
 
 import httpx
 import jwt
-from app.core.config import settings
-from app.core.security_logging import log_authentication_failure, log_security_error
 from fastapi import HTTPException, status
 from jwt import PyJWKClient
+
+from app.core.config import settings
+from app.core.security_logging import log_authentication_failure, log_security_error
 
 logger = logging.getLogger(__name__)
 

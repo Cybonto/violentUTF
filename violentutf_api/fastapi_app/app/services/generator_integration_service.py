@@ -57,6 +57,13 @@ async def _execute_apisix_generator(
 ) -> Dict[str, Any]:
     """Execute prompt through APISIX AI Gateway."""
     try:
+        # Log the received prompt for debugging
+        logger.info(
+            "APISIX generator received prompt: '%s' (length: %d)",
+            prompt[:100] if prompt else "EMPTY",
+            len(prompt) if prompt else 0,
+        )
+
         # Get APISIX endpoint for generator
         provider = generator_config["parameters"]["provider"]
         model = generator_config["parameters"]["model"]

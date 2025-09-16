@@ -2,15 +2,13 @@
 # apisix_setup.sh - APISIX gateway configuration and route setup
 
 # Function to integrate Custom OpenAPI SSL certificates with APISIX
-# Note: This function is deprecated since GSAi now uses HTTP instead of HTTPS
 integrate_custom_openapi_certificates() {
     echo "🔐 Integrating Custom OpenAPI SSL certificates with APISIX..."
-    echo "   ⚠️  Note: GSAi now uses HTTP, certificate integration may not be needed"
 
     # Look for related containers that might have certificates
     local cert_containers=()
 
-    # Check for ai-gov-api stack (GSAi)
+    # Check for ai-gov-api stack
     if docker ps --format "table {{.Names}}" | grep -q "ai-gov-api-caddy"; then
         cert_containers+=("ai-gov-api-caddy-1")
     fi
@@ -254,14 +252,17 @@ setup_apisix() {
 
     cd "$original_dir"
 
-    # Note: Certificate integration disabled since GSAi now uses HTTP
-    # integrate_custom_openapi_certificates
+    # Integrate SSL certificates if needed for HTTPS providers
+    if [[ "$FORCE_ZSCALER" == "true" ]]; then
+        echo "   🔒 Zscaler mode: SSL certificate integration may be needed"
+    fi
+    # integrate_custom_openapi_certificates  # Uncomment if certificates are needed
 
     # Wait for APISIX to be ready
     if wait_for_apisix_ready; then
         echo "✅ APISIX is ready"
 
-        # Register API key consumer (critical for GSAi and other key-auth routes)
+        # Register API key consumer (critical for key-auth routes)
         register_api_key_consumer
 
         return 0
@@ -393,7 +394,7 @@ verify_apisix_config() {
 }
 
 # Function to register API key consumer
-# Critical for GSAi and other routes using key-auth plugin
+# Critical for routes using key-auth plugin
 register_api_key_consumer() {
     echo "🔑 Registering API key consumer for APISIX..."
 
@@ -455,7 +456,7 @@ register_api_key_consumer() {
 
     if echo "$consumer_response" | grep -q "\"username\":\"${consumer_name}\""; then
         echo "✅ Created API key consumer '${consumer_name}' successfully"
-        echo "   This enables X-API-Key authentication for GSAi and other routes"
+        echo "   This enables X-API-Key authentication for API routes"
         return 0
     else
         echo "❌ Failed to create API key consumer"

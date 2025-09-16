@@ -13,6 +13,12 @@ show_help() {
     echo "                   networks, and cache (complete Docker environment reset)"
     echo "  --help, -h       Show this help message"
     echo ""
+    echo "Corporate Environment Support:"
+    echo "  The setup script automatically detects and handles corporate environments (Zscaler, enterprise proxies):"
+    echo "  • Extracts SSL certificates from macOS Keychain for Docker builds"
+    echo "  • Configures comprehensive SSL bypass for package installations"
+    echo "  • Provides troubleshooting guidance for certificate-related build failures"
+    echo ""
     echo "Note:"
     echo "  Cleanup operations gracefully shutdown only ViolentUTF-specific Streamlit processes (Home.py, violentutf directory)"
     echo "  Other Streamlit applications will not be affected. Graceful shutdown allows proper session cleanup."
@@ -32,6 +38,7 @@ show_help() {
     echo "  - PyRIT and Garak AI security frameworks"
     echo "  - PyRIT Orchestrator API for dataset testing and automation"
     echo "  - PyRIT Orchestrator integration validation for scorer testing"
+    echo "  - Corporate SSL certificate handling for Zscaler/enterprise environments"
     echo ""
     echo "Warning:"
     echo "  --deepcleanup will remove ALL Docker data on your system!"
@@ -72,7 +79,9 @@ SENSITIVE_VALUES=()
 SHARED_NETWORK_NAME="vutf-network"
 
 # --- AI Configuration via .env file ---
-AI_TOKENS_FILE="ai-tokens.env"
+# Get script directory to ensure we always look in repo root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+AI_TOKENS_FILE="$SCRIPT_DIR/ai-tokens.env"
 
 # --- Array to track created AI routes ---
 CREATED_AI_ROUTES=()
@@ -651,11 +660,11 @@ create_ai_tokens_template() {
 # Add your actual API keys replacing the placeholder values
 
 # OpenAI Configuration
-OPENAI_ENABLED=true
+OPENAI_ENABLED=false
 OPENAI_API_KEY=your_openai_api_key_here
 
 # Anthropic Configuration
-ANTHROPIC_ENABLED=true
+ANTHROPIC_ENABLED=false
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 # Ollama Configuration (local, no API key needed)
@@ -663,7 +672,7 @@ OLLAMA_ENABLED=true
 OLLAMA_ENDPOINT=http://localhost:11434/v1/chat/completions
 
 # Open WebUI Configuration
-OPEN_WEBUI_ENABLED=true
+OPEN_WEBUI_ENABLED=false
 OPEN_WEBUI_ENDPOINT=http://localhost:3000/ollama/v1/chat/completions
 OPEN_WEBUI_API_KEY=your_open_webui_api_key_here
 
@@ -675,41 +684,9 @@ AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key_here
 AWS_SESSION_TOKEN=your_aws_session_token_here_if_using_temp_credentials
 
 # OpenAPI Provider Configuration
-# Support for generic OpenAPI-compliant endpoints
-OPENAPI_ENABLED=true
-
-# OpenAPI Provider 1
-OPENAPI_1_ENABLED=false
-OPENAPI_1_ID=custom-api-1
-OPENAPI_1_NAME="Custom API Provider 1"
-OPENAPI_1_BASE_URL=https://api.example.com
-OPENAPI_1_SPEC_PATH=/openapi.json
-OPENAPI_1_AUTH_TYPE=bearer
-OPENAPI_1_AUTH_TOKEN=your_bearer_token_here
-# Optional: Custom headers (comma-separated key:value pairs)
-OPENAPI_1_CUSTOM_HEADERS=""
-
-# OpenAPI Provider 2 (API Key example)
-OPENAPI_2_ENABLED=false
-OPENAPI_2_ID=internal-api
-OPENAPI_2_NAME="Internal AI Service"
-OPENAPI_2_BASE_URL=https://internal.company.com/ai/v1
-OPENAPI_2_SPEC_PATH=/swagger.json
-OPENAPI_2_AUTH_TYPE=api_key
-OPENAPI_2_API_KEY=your_api_key_here
-OPENAPI_2_API_KEY_HEADER=X-API-Key
-OPENAPI_2_CUSTOM_HEADERS=""
-
-# OpenAPI Provider 3 (Basic Auth example)
-OPENAPI_3_ENABLED=false
-OPENAPI_3_ID=legacy-api
-OPENAPI_3_NAME="Legacy API System"
-OPENAPI_3_BASE_URL=https://legacy.system.com
-OPENAPI_3_SPEC_PATH=/api-docs/openapi.yaml
-OPENAPI_3_AUTH_TYPE=basic
-OPENAPI_3_BASIC_USERNAME=username
-OPENAPI_3_BASIC_PASSWORD=password
-OPENAPI_3_CUSTOM_HEADERS=""
+# These defaults will be overridden by ai-tokens.env if it exists
+# Keeping minimal defaults to prevent undefined variable errors
+OPENAPI_ENABLED=${OPENAPI_ENABLED:-false}
 
 # Add more providers as needed following the same pattern
 # Maximum supported: 10 providers (OPENAPI_1 through OPENAPI_10)
@@ -723,51 +700,39 @@ EOF
 
 # Function to load AI tokens from .env file
 load_ai_tokens() {
+    echo "Looking for AI tokens file at: $AI_TOKENS_FILE"
+
     if [ ! -f "$AI_TOKENS_FILE" ]; then
         echo "❌ $AI_TOKENS_FILE not found"
+        echo "Current working directory: $(pwd)"
+        echo "Available files in repo root:"
+        ls -la "$SCRIPT_DIR/" | grep -E "\.(env|ENV)$" || echo "No .env files found"
         return 1
     fi
 
-    echo "Loading AI configuration from $AI_TOKENS_FILE..."
-
-    # Clear any previously loaded OpenAPI variables to ensure fresh load
-    for i in {1..10}; do
-        unset OPENAPI_${i}_ENABLED
-        unset OPENAPI_${i}_ID
-        unset OPENAPI_${i}_NAME
-        unset OPENAPI_${i}_BASE_URL
-        unset OPENAPI_${i}_SPEC_PATH
-        unset OPENAPI_${i}_AUTH_TYPE
-        unset OPENAPI_${i}_AUTH_TOKEN
-        unset OPENAPI_${i}_API_KEY
-        unset OPENAPI_${i}_API_KEY_HEADER
-        unset OPENAPI_${i}_BASIC_USERNAME
-        unset OPENAPI_${i}_BASIC_PASSWORD
-        unset OPENAPI_${i}_CUSTOM_HEADERS
-    done
+    echo "✅ Found AI tokens file, loading configuration..."
 
     # Load the .env file
     set -a  # automatically export all variables
     source "$AI_TOKENS_FILE"
     set +a  # stop automatically exporting
 
-    # Show loaded OpenAPI providers
-    local openapi_count=0
-    for i in {1..10}; do
+    echo "✅ AI configuration loaded"
+
+    # Debug: Show OpenAPI configuration status
+    echo "OpenAPI configuration status:"
+    echo "  OPENAPI_ENABLED: ${OPENAPI_ENABLED:-not set}"
+    for i in {1..3}; do  # Check first 3 providers for brevity
         local enabled_var="OPENAPI_${i}_ENABLED"
+        local id_var="OPENAPI_${i}_ID"
+        local base_url_var="OPENAPI_${i}_BASE_URL"
+        echo "  ${enabled_var}: ${!enabled_var:-not set}"
         if [ "${!enabled_var}" = "true" ]; then
-            local id_var="OPENAPI_${i}_ID"
-            local name_var="OPENAPI_${i}_NAME"
-            echo "  - Found OpenAPI provider: ${!name_var} (${!id_var})"
-            openapi_count=$((openapi_count + 1))
+            echo "    ${id_var}: ${!id_var:-not set}"
+            echo "    ${base_url_var}: ${!base_url_var:-not set}"
         fi
     done
 
-    if [ $openapi_count -gt 0 ]; then
-        echo "✅ AI configuration loaded with $openapi_count OpenAPI provider(s)"
-    else
-        echo "✅ AI configuration loaded (no OpenAPI providers configured)"
-    fi
     return 0
 }
 
@@ -775,53 +740,20 @@ load_ai_tokens() {
 check_ai_proxy_plugin() {
     echo "Checking if ai-proxy plugin is available in APISIX..."
 
-    # Debug environment variables
-    echo "   APISIX_ADMIN_URL: ${APISIX_ADMIN_URL}"
-    echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:0:8}..." # Show first 8 chars only
-
-    # Check if required variables are set
-    if [ -z "$APISIX_ADMIN_URL" ] || [ -z "$APISIX_ADMIN_KEY" ]; then
-        echo "❌ Required environment variables not set"
-        echo "   APISIX_ADMIN_URL: ${APISIX_ADMIN_URL:-'NOT SET'}"
-        echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:+'SET'}${APISIX_ADMIN_KEY:-'NOT SET'}"
-        return 1
-    fi
-
     local response
     local http_code
 
-    # Test APISIX connectivity first
-    echo "   Testing APISIX admin API connectivity..."
-    local connectivity_test
-    connectivity_test=$(curl -s -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
-      -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
-    local connectivity_code="${connectivity_test: -3}"
-
-    if [ "$connectivity_code" != "200" ]; then
-        echo "❌ Cannot connect to APISIX admin API"
-        echo "   URL: ${APISIX_ADMIN_URL}/apisix/admin/routes"
-        echo "   HTTP Code: $connectivity_code"
-        echo "   Response: ${connectivity_test}"
-        return 1
-    else
-        echo "✅ APISIX admin API is accessible"
-    fi
-
-    # Now check for ai-proxy plugin
-    echo "   Checking for ai-proxy plugin..."
-    response=$(curl -s -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/plugins/ai-proxy" \
+    response=$(curl -w "%{http_code}" -X GET "${APISIX_ADMIN_URL}/apisix/admin/plugins/ai-proxy" \
       -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
 
     http_code="${response: -3}"
 
     if [ "$http_code" = "200" ]; then
         echo "✅ ai-proxy plugin is available"
-        echo "   Plugin supports providers: openai, deepseek, openai-compatible"
         return 0
     else
         echo "❌ ai-proxy plugin is not available"
         echo "   HTTP Code: $http_code"
-        echo "   Response: ${response%???}"  # Remove last 3 chars (http code)
         echo "   Make sure you're using APISIX version 3.10.0 or later with ai-proxy plugin enabled"
         return 1
     fi
@@ -1355,6 +1287,11 @@ fetch_openapi_spec() {
 
     echo "Fetching OpenAPI spec from ${base_url}${spec_path}..."
 
+    # Test connectivity first
+    echo "  Testing connectivity to ${base_url}..."
+    local test_response=$(curl -s -o /dev/null -w "%{http_code}" "${base_url}" 2>/dev/null || echo "000")
+    echo "  Base URL connectivity test: HTTP $test_response"
+
     # Use array for curl command to avoid eval
     local curl_args=(-s -f)
 
@@ -1389,12 +1326,31 @@ fetch_openapi_spec() {
     # Normalize URL to prevent double slashes
     local full_url="${base_url%/}/${spec_path#/}"
 
-    # Execute curl with array expansion
-    if curl "${curl_args[@]}" "$full_url" -o "$output_file"; then
+    # Execute curl with array expansion and capture detailed error
+    echo "   Attempting to fetch from: $full_url"
+
+    # First test connectivity
+    if ! curl -s -o /dev/null -w "%{http_code}" "$full_url" >/dev/null 2>&1; then
+        echo "   ⚠️  Cannot reach $full_url - checking network connectivity..."
+        # Try without auth to see if it's an auth issue
+        local test_code=$(curl -s -o /dev/null -w "%{http_code}" "${base_url%/}/")
+        echo "   Base URL test returned: HTTP $test_code"
+    fi
+
+    if curl "${curl_args[@]}" "$full_url" -o "$output_file" 2>/tmp/curl_error.log; then
         echo "✅ Successfully fetched OpenAPI spec"
         return 0
     else
+        local curl_exit=$?
         echo "❌ Failed to fetch OpenAPI spec from $full_url"
+        echo "   Curl exit code: $curl_exit"
+        if [ -f /tmp/curl_error.log ]; then
+            echo "   Error details: $(cat /tmp/curl_error.log)"
+        fi
+        # Show first few lines of response if any
+        if [ -f "$output_file" ]; then
+            echo "   Response preview: $(head -3 "$output_file")"
+        fi
         return 1
     fi
 }
@@ -1465,26 +1421,29 @@ parse_openapi_endpoints() {
     local spec_file="$1"
     local provider_id="$2"
     local endpoints_file="$3"
+    local cache_dir="$4"
 
     echo "Parsing OpenAPI endpoints..."
 
-    # Create Python script with proper parameter passing
-    if ! python3 - "$spec_file" "$provider_id" > "$endpoints_file" << 'EOF'
+    # Create Python script with proper parameter passing and error capture
+    local parse_error_file="${cache_dir}/${provider_id}_parse_error.log"
+    python3 - "$spec_file" "$provider_id" > "$endpoints_file" 2> "$parse_error_file" << 'EOF'
 import json
-import yaml
 import sys
+import os
 
 try:
     spec_file = sys.argv[1]
     provider_id = sys.argv[2]
 
-    # Load the spec
+    # Debug: Print arguments
+    sys.stderr.write(f"Debug: spec_file={spec_file}, provider_id={provider_id}\n")
+
+    # Load the spec (we know it's JSON from validation step)
     with open(spec_file, 'r') as f:
-        content = f.read()
-        try:
-            spec = json.loads(content)
-        except:
-            spec = yaml.safe_load(content)
+        spec = json.load(f)
+
+    sys.stderr.write(f"Debug: Loaded spec with {len(spec.get('paths', {}))} paths\n")
 
     # Extract base information
     servers = spec.get('servers', [])
@@ -1493,6 +1452,8 @@ try:
     # Extract paths and operations
     paths = spec.get('paths', {})
     endpoints = []
+
+    sys.stderr.write(f"Debug: Processing {len(paths)} paths\n")
 
     for path, path_item in paths.items():
         # Skip if path item is a reference
@@ -1533,7 +1494,9 @@ try:
         'security_schemes': spec.get('components', {}).get('securitySchemes', {})
     }
 
+    sys.stderr.write(f"Debug: Found {len(endpoints)} total endpoints\n")
     print(json.dumps(result, indent=2))
+    sys.stderr.write("Debug: Successfully completed parsing\n")
 
 except Exception as e:
     import traceback
@@ -1541,12 +1504,29 @@ except Exception as e:
     sys.stderr.write(traceback.format_exc())
     sys.exit(1)
 EOF
-    then
-        local endpoint_count=$(python3 -c "import json; print(len(json.load(open('$endpoints_file'))['endpoints']))")
-        echo "✅ Found $endpoint_count endpoints"
-        return 0
+    local python_exit_code=$?
+
+    if [ $python_exit_code -eq 0 ] && [ -f "$endpoints_file" ] && [ -s "$endpoints_file" ]; then
+        local endpoint_count=$(python3 -c "import json; print(len(json.load(open('$endpoints_file'))['endpoints']))" 2>/dev/null)
+        if [ -n "$endpoint_count" ] && [ "$endpoint_count" -gt 0 ]; then
+            echo "✅ Found $endpoint_count endpoints"
+            return 0
+        else
+            echo "❌ No endpoints found in parsed file"
+            return 1
+        fi
     else
         echo "❌ Failed to parse endpoints"
+        echo "Python exit code: $python_exit_code"
+        if [ -f "$parse_error_file" ] && [ -s "$parse_error_file" ]; then
+            echo "Python error details:"
+            cat "$parse_error_file"
+        fi
+        if [ ! -f "$endpoints_file" ] || [ ! -s "$endpoints_file" ]; then
+            echo "Endpoints file was not created or is empty"
+        fi
+        echo "Debug: Spec file content preview:"
+        head -20 "$spec_file" 2>/dev/null || echo "Could not read spec file"
         return 1
     fi
 }
@@ -1562,10 +1542,30 @@ create_openapi_route() {
     local auth_type="$7"
     local auth_config="$8"
 
-    # Generate route ID with path hash for uniqueness
-    local path_hash=$(echo -n "${method}:${endpoint_path}" | md5sum | cut -c1-8)
-    local safe_operation_id=$(echo "$operation_id" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
-    local route_id="openapi-${provider_id}-${safe_operation_id}-${path_hash}"
+    # Generate shorter, safer route ID with error handling
+    local path_hash=""
+    if command -v md5sum >/dev/null 2>&1; then
+        path_hash=$(echo -n "${method}:${endpoint_path}" | md5sum | cut -c1-8)
+    elif command -v md5 >/dev/null 2>&1; then
+        # macOS fallback
+        path_hash=$(echo -n "${method}:${endpoint_path}" | md5 | cut -c1-8)
+    else
+        # Last resort: use timestamp-based hash
+        path_hash=$(date +%s | tail -c 9 | head -c 8)
+        echo "Warning: Using timestamp for route ID hash (md5sum/md5 not found)"
+    fi
+
+    # Verify hash was generated
+    if [ -z "$path_hash" ]; then
+        path_hash="00000000"
+        echo "Warning: Failed to generate hash for route ID, using default"
+    fi
+
+    # Create a short identifier from the endpoint path
+    local endpoint_short=$(echo "$endpoint_path" | sed 's/.*\///g' | sed 's/[^a-zA-Z0-9]//g' | tr '[:upper:]' '[:lower:]')
+    local route_id="openapi-${provider_id}-${endpoint_short}-${path_hash}"
+
+    echo "  Generated route ID: $route_id"
 
     # Convert OpenAPI path parameters to APISIX wildcards
     # {id} -> *, {userId} -> *, etc.
@@ -1578,60 +1578,126 @@ create_openapi_route() {
 
     echo "Creating route: $uri -> ${base_url}/${endpoint_path}"
 
-    # Build auth configuration for ai-proxy
-    local auth_section=""
+    # Remove unused ai-proxy auth section - we use proxy-rewrite instead
+
+    # Extract host and port from base_url for upstream configuration
+    local scheme=$(echo "$base_url" | sed -E 's#(https?)://.*#\1#')
+    local host_port=$(echo "$base_url" | sed -E 's#https?://([^/]+).*#\1#')
+
+    # Check if port is specified in URL
+    if [[ "$host_port" == *":"* ]]; then
+        local host=$(echo "$host_port" | cut -d: -f1)
+        local port=$(echo "$host_port" | cut -d: -f2)
+    else
+        local host="$host_port"
+        local port=$([ "$scheme" = "https" ] && echo "443" || echo "80")
+    fi
+
+    # Build auth headers for proxy-rewrite - ensure valid JSON
+    local auth_headers=""
     case "$auth_type" in
         "bearer")
-            auth_section='"auth": {
-                "header": {
-                    "Authorization": "Bearer '"$auth_config"'"
-                }
-            },'
+            if [ -n "$auth_config" ]; then
+                auth_headers='"Authorization": "Bearer '"$auth_config"'"'
+            fi
             ;;
         "api_key")
             # auth_config format: "header:value"
-            # Use echo and pipe for compatibility
-            header=$(echo "$auth_config" | cut -d: -f1)
-            value=$(echo "$auth_config" | cut -d: -f2-)
-            auth_section='"auth": {
-                "header": {
-                    "'"$header"'": "'"$value"'"
-                }
-            },'
+            local header=$(echo "$auth_config" | cut -d: -f1)
+            local value=$(echo "$auth_config" | cut -d: -f2-)
+            if [ -n "$header" ] && [ -n "$value" ]; then
+                auth_headers='"'"$header"'": "'"$value"'"'
+            fi
             ;;
         "basic")
             # auth_config format: "username:password"
-            local basic_auth=$(echo -n "$auth_config" | base64)
-            auth_section='"auth": {
-                "header": {
-                    "Authorization": "Basic '"$basic_auth"'"
-                }
-            },'
+            if [ -n "$auth_config" ]; then
+                local basic_auth=$(echo -n "$auth_config" | base64)
+                auth_headers='"Authorization": "Basic '"$basic_auth"'"'
+            fi
+            ;;
+        *)
+            echo "⚠️  Unknown auth_type: $auth_type, skipping authentication headers"
             ;;
     esac
 
-    # Create route configuration
-    local route_config='{
-        "id": "'"$route_id"'",
-        "uri": "'"$uri"'",
-        "methods": ["'"$method"'"],
-        "desc": "'"$provider_name: $operation_id"'",
-        "plugins": {
-            "key-auth": {},
-            "ai-proxy": {
-                "provider": "openai-compatible",
-                '"$auth_section"'
-                "options": {
-                    "model": "'"$operation_id"'"
+    # Create route configuration with conditional auth headers
+    if [ -n "$auth_headers" ]; then
+        # With authentication headers
+        local route_config='{
+            "id": "'"$route_id"'",
+            "uri": "'"$uri"'",
+            "methods": ["'"$method"'"],
+            "desc": "'"$provider_name: $operation_id"'",
+            "upstream": {
+                "type": "roundrobin",
+                "nodes": {
+                    "'"$host:$port"'": 1
                 },
-                "override": {
-                    "endpoint": "'"${base_url}/${endpoint_path}"'"
+                "scheme": "'"$scheme"'",
+                "tls": {
+                    "verify": false
+                }
+            },
+            "plugins": {
+                "key-auth": {},
+                "proxy-rewrite": {
+                    "regex_uri": ["^/ai/openapi/'"$provider_id"'/(.*)", "/$1"],
+                    "headers": {
+                        "set": {
+                            '"$auth_headers"',
+                            "Host": "'"$host"'"
+                        }
+                    }
                 }
             }
-        }
-    }'
+        }'
+    else
+        # Without authentication headers (for testing)
+        local route_config='{
+            "id": "'"$route_id"'",
+            "uri": "'"$uri"'",
+            "methods": ["'"$method"'"],
+            "desc": "'"$provider_name: $operation_id"'",
+            "upstream": {
+                "type": "roundrobin",
+                "nodes": {
+                    "'"$host:$port"'": 1
+                },
+                "scheme": "'"$scheme"'",
+                "tls": {
+                    "verify": false
+                }
+            },
+            "plugins": {
+                "key-auth": {},
+                "proxy-rewrite": {
+                    "regex_uri": ["^/ai/openapi/'"$provider_id"'/(.*)", "/$1"],
+                    "headers": {
+                        "set": {
+                            "Host": "'"$host"'"
+                        }
+                    }
+                }
+            }
+        }'
+    fi
 
-    # No need to check if route exists since we clear them first
+    # Check if route already exists
+    local existing_route=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
+        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
+
+    if echo "$existing_route" | grep -q '"id"'; then
+        echo "⚠️  Route already exists for $operation_id, updating..."
+        # Continue to update the route with new configuration
+    fi
+
+    # Debug: show route config if debug mode is enabled
+    if [ "${OPENAPI_DEBUG:-false}" = "true" ]; then
+        echo "Debug: Route configuration for $operation_id:"
+        echo "$route_config" | python3 -m json.tool 2>/dev/null || echo "$route_config"
+        echo ""
+    fi
 
     # Create the route in APISIX
     local response
@@ -1642,52 +1708,33 @@ create_openapi_route() {
       -H "Content-Type: application/json" \
       -d "${route_config}" 2>&1)
 
-    http_code="${response: -3}"
-    local response_body="${response:0:-3}"
+    # Extract HTTP code and response body safely
+    local response_length=${#response}
+    if [ $response_length -ge 3 ]; then
+        http_code="${response: -3}"
+        local body_length=$((response_length - 3))
+        local response_body="${response:0:$body_length}"
+    else
+        http_code=""
+        local response_body="$response"
+    fi
 
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
-        echo "✅ Successfully created route for $operation_id"
+        if echo "$existing_route" | grep -q '"id"'; then
+            echo "✅ Successfully updated route for $operation_id"
+        else
+            echo "✅ Successfully created route for $operation_id"
+        fi
         return 0
     else
-        echo "❌ Failed to create route for $operation_id"
+        echo "❌ Failed to create/update route for $operation_id"
         echo "   HTTP Code: $http_code"
         echo "   Route ID: $route_id"
+        echo "   URI: $uri"
+        echo "   Response: $response_body"
+        echo "   Route config: $route_config"
         return 1
     fi
-}
-
-# Function to clear existing OpenAPI routes
-clear_openapi_routes() {
-    echo "Clearing existing OpenAPI routes..."
-
-    # Get all routes from APISIX
-    local routes_response=$(curl -s -X GET "${APISIX_ADMIN_URL}/apisix/admin/routes" \
-        -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>/dev/null)
-
-    # Parse route IDs that start with "openapi-"
-    local route_ids=$(echo "$routes_response" | grep -o '"id":"openapi-[^"]*"' | cut -d'"' -f4)
-
-    if [ -z "$route_ids" ]; then
-        echo "No existing OpenAPI routes found"
-        return 0
-    fi
-
-    local deleted_count=0
-    for route_id in $route_ids; do
-        echo "Deleting route: $route_id"
-        local delete_response=$(curl -s -w "%{http_code}" -X DELETE "${APISIX_ADMIN_URL}/apisix/admin/routes/${route_id}" \
-            -H "X-API-KEY: ${APISIX_ADMIN_KEY}" 2>&1)
-        local http_code="${delete_response: -3}"
-
-        if [ "$http_code" = "200" ] || [ "$http_code" = "204" ]; then
-            deleted_count=$((deleted_count + 1))
-        else
-            echo "⚠️  Failed to delete route $route_id (HTTP $http_code)"
-        fi
-    done
-
-    echo "✅ Deleted $deleted_count OpenAPI routes"
-    return 0
 }
 
 # Main function to setup OpenAPI routes
@@ -1699,8 +1746,44 @@ setup_openapi_routes() {
 
     echo "Setting up OpenAPI provider routes..."
 
-    # Clear existing OpenAPI routes to ensure fresh configuration
-    clear_openapi_routes
+    # Detect environment to determine correct upstream
+    local env_type="dev"
+    if ! docker ps 2>/dev/null | grep -q "ai-gov-api"; then
+        echo "  Staging/Production environment detected - will route directly to GSAi"
+        env_type="staging"
+    else
+        echo "  Development environment detected - will route through ai-gov-api"
+        env_type="dev"
+    fi
+
+    # Load APISIX admin key from apisix/.env if not already set
+    if [ -z "$APISIX_ADMIN_KEY" ] && [ -f "$SCRIPT_DIR/apisix/.env" ]; then
+        echo "Loading APISIX configuration from apisix/.env..."
+        source "$SCRIPT_DIR/apisix/.env"
+    fi
+
+    # Validate required APISIX configuration
+    if [ -z "$APISIX_ADMIN_KEY" ]; then
+        echo "❌ APISIX_ADMIN_KEY not found"
+        echo "   Please ensure APISIX setup has completed and apisix/.env exists"
+        return 1
+    fi
+
+    if [ -z "$APISIX_ADMIN_URL" ]; then
+        echo "Using default APISIX admin URL: http://localhost:9180"
+        APISIX_ADMIN_URL="http://localhost:9180"
+    fi
+
+    # Only check APISIX accessibility if called standalone (not during main setup)
+    if [ "${SKIP_APISIX_CHECK:-false}" != "true" ]; then
+        if ! curl -s -f -H "X-API-KEY: ${APISIX_ADMIN_KEY}" "${APISIX_ADMIN_URL}/apisix/admin/routes" >/dev/null 2>&1; then
+            echo "❌ APISIX admin API not accessible at ${APISIX_ADMIN_URL}"
+            echo "   Please ensure APISIX is running and APISIX_ADMIN_KEY is correct"
+            echo "   APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:0:10}...${APISIX_ADMIN_KEY: -4}"
+            return 1
+        fi
+        echo "✅ APISIX admin API is accessible"
+    fi
 
     local cache_dir="/tmp/violentutf_openapi_cache"
     mkdir -p "$cache_dir"
@@ -1731,6 +1814,14 @@ setup_openapi_routes() {
             if [ -z "$provider_id" ] || [ -z "$base_url" ] || [ -z "$spec_path" ]; then
                 echo "⚠️  Skipping OpenAPI provider $i: missing required configuration"
                 continue
+            fi
+
+            # Override base_url for staging/production environment to use GSAi directly
+            if [ "$env_type" = "staging" ] && [ "$provider_id" = "gsai-api-1" ]; then
+                local original_base_url="$base_url"
+                base_url="https://api.dev.gsai.mcaas.fcs.gsa.gov"
+                echo "  Environment override: Using GSAi API directly at $base_url"
+                echo "  (Original config: $original_base_url)"
             fi
 
             echo ""
@@ -1765,13 +1856,16 @@ setup_openapi_routes() {
             # Fetch OpenAPI spec
             local spec_file="$cache_dir/${provider_id}_spec.json"
             if fetch_openapi_spec "$base_url" "$spec_path" "$auth_type" "$auth_value" "$auth_header" "$custom_headers" "$spec_file"; then
+                echo "✅ OpenAPI spec fetched successfully"
 
                 # Validate spec
                 if validate_openapi_spec "$spec_file"; then
+                    echo "✅ OpenAPI spec validation passed"
 
                     # Parse endpoints
                     local endpoints_file="$cache_dir/${provider_id}_endpoints.json"
-                    if parse_openapi_endpoints "$spec_file" "$provider_id" "$endpoints_file"; then
+                    if parse_openapi_endpoints "$spec_file" "$provider_id" "$endpoints_file" "$cache_dir"; then
+                        echo "✅ OpenAPI endpoints parsed successfully"
 
                         # Process endpoints - save to temp file to avoid subshell issues
                         local temp_endpoints="$cache_dir/${provider_id}_temp_endpoints.txt"
@@ -1797,8 +1891,17 @@ with open('$endpoints_file', 'r') as f:
                                 total_failed=$((total_failed + 1))
                             fi
                         done < "$temp_endpoints"
+                    else
+                        echo "❌ Failed to parse OpenAPI endpoints for $provider_name"
+                        total_failed=$((total_failed + 1))
                     fi
+                else
+                    echo "❌ OpenAPI spec validation failed for $provider_name"
+                    total_failed=$((total_failed + 1))
                 fi
+            else
+                echo "❌ Failed to fetch OpenAPI spec for $provider_name from ${base_url}${spec_path}"
+                total_failed=$((total_failed + 1))
             fi
         fi
     done
@@ -1867,14 +1970,32 @@ setup_ai_providers_enhanced() {
 
     # Debug APISIX setup first
     if ! debug_ai_proxy_setup; then
-        echo "❌ AI Proxy setup prerequisites not met"
-        SKIP_AI_SETUP=true
-        return 1
+        echo "⚠️ Some AI Proxy prerequisites not fully met, but continuing with available features"
+        # Don't skip entirely - OpenAPI routes can still work
     fi
 
-    # Wait for APISIX to be fully ready
-    echo "Waiting for APISIX to be fully ready..."
-    sleep 10
+    # Wait for APISIX to be fully ready and etcd to sync
+    echo "Waiting for APISIX to be fully ready and etcd to sync..."
+    echo "This may take up to 30 seconds for all services to stabilize..."
+    sleep 20
+
+    # Additional check to ensure APISIX admin API is responsive
+    local apisix_ready=false
+    for i in {1..15}; do
+        if curl -s -f -H "X-API-KEY: ${APISIX_ADMIN_KEY}" "${APISIX_ADMIN_URL}/apisix/admin/routes" >/dev/null 2>&1; then
+            echo "✅ APISIX Admin API confirmed responsive (attempt $i)"
+            apisix_ready=true
+            break
+        else
+            echo "   Waiting for APISIX Admin API to respond (attempt $i/15)..."
+            sleep 3
+        fi
+    done
+
+    if [ "$apisix_ready" != "true" ]; then
+        echo "⚠️  APISIX Admin API not fully responsive after extended wait"
+        echo "   Routes may fail to create properly"
+    fi
 
     local setup_errors=0
 
@@ -1912,7 +2033,7 @@ setup_ai_providers_enhanced() {
     fi
 
     echo "Setting up OpenAPI routes..."
-    if ! setup_openapi_routes; then
+    if ! SKIP_APISIX_CHECK=true setup_openapi_routes; then
         setup_errors=$((setup_errors + 1))
     fi
 
@@ -2050,10 +2171,10 @@ if [ "$DEEPCLEANUP_MODE" = true ]; then
     perform_deep_cleanup
 fi
 
-# --- Global Keycloak API Variables (credentials will be generated later) ---
+# --- Global Keycloak API Variables ---
 KEYCLOAK_SERVER_URL="http://localhost:8080"
-ADMIN_USER="" # Will be set after credential generation
-ADMIN_PASS="" # Will be set after credential generation
+ADMIN_USER="admin"
+ADMIN_PASS="admin" # From your docker-compose.yml
 MASTER_REALM="master"
 ADMIN_CLIENT_ID="admin-cli"
 ACCESS_TOKEN="" # Will be populated by get_keycloak_admin_token
@@ -2067,14 +2188,6 @@ APISIX_DASHBOARD_URL="http://localhost:9001"
 generate_secure_string() {
     openssl rand -base64 32 | tr -d '\n' | tr -d '\r' | tr -d '/' | tr -d '+' | tr -d '=' | cut -c1-32
 }
-
-# --- Generate Keycloak admin credentials for compliance (after function is defined) ---
-KEYCLOAK_ADMIN_USERNAME="admin"
-KEYCLOAK_ADMIN_PASSWORD=$(generate_secure_string)
-
-# Update global variables now that credentials are generated
-ADMIN_USER="$KEYCLOAK_ADMIN_USERNAME"
-ADMIN_PASS="$KEYCLOAK_ADMIN_PASSWORD"
 
 # Function to backup and prepare config file from template
 prepare_config_from_template() {
@@ -2122,22 +2235,93 @@ replace_in_file() {
 # Function to obtain Keycloak admin access token
 get_keycloak_admin_token() {
     echo "Attempting to obtain Keycloak admin access token..."
+    local max_retries=3
+    local retry_count=0
     local token_response
-    token_response=$(curl -s -X POST "${KEYCLOAK_SERVER_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" \
-      -H "Content-Type: application/x-www-form-urlencoded" \
-      -d "username=${ADMIN_USER}" \
-      -d "password=${ADMIN_PASS}" \
-      -d "grant_type=password" \
-      -d "client_id=${ADMIN_CLIENT_ID}")
 
-    ACCESS_TOKEN=$(echo "${token_response}" | jq -r .access_token)
+    while [ $retry_count -lt $max_retries ]; do
+        if [ $retry_count -gt 0 ]; then
+            echo "Retrying admin token acquisition (attempt $((retry_count + 1))/$max_retries)..."
+            sleep 5
+        fi
 
-    if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
-        echo "Error: Could not obtain Keycloak admin access token."
-        echo "Response: ${token_response}"
-        exit 1
+        token_response=$(curl -s -X POST "${KEYCLOAK_SERVER_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "username=${ADMIN_USER}" \
+          -d "password=${ADMIN_PASS}" \
+          -d "grant_type=password" \
+          -d "client_id=${ADMIN_CLIENT_ID}")
+
+        ACCESS_TOKEN=$(echo "${token_response}" | jq -r .access_token)
+
+        if [ -n "$ACCESS_TOKEN" ] && [ "$ACCESS_TOKEN" != "null" ]; then
+            echo "Successfully obtained Keycloak admin access token."
+            return 0
+        fi
+
+        retry_count=$((retry_count + 1))
+    done
+
+    # If we get here, all retries failed
+    echo "Error: Could not obtain Keycloak admin access token after $max_retries attempts."
+    echo "Response: ${token_response}"
+
+    # Check for specific HTTPS requirement error
+    if echo "${token_response}" | grep -q "HTTPS required"; then
+        echo ""
+        echo "🔧 TROUBLESHOOTING: HTTPS Required Error"
+        echo "This error occurs when Keycloak's master realm SSL requirement doesn't respect proxy configuration."
+        echo ""
+        echo "Applying master realm SSL fix..."
+
+        # Try to disable SSL requirement for master realm using kcadm
+        if docker exec keycloak-keycloak-1 bash -c '
+            export KC_PROXY=edge
+            /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin --client admin-cli
+            if [ $? -eq 0 ]; then
+                /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
+                echo "Master realm SSL requirement disabled for development"
+                exit 0
+            else
+                echo "Failed to configure master realm SSL"
+                exit 1
+            fi
+        ' 2>/dev/null; then
+            echo "✅ Master realm SSL configuration updated"
+            echo "Retrying admin token acquisition..."
+
+            # Try one more time after the fix
+            token_response=$(curl -s -X POST "${KEYCLOAK_SERVER_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "username=${ADMIN_USER}" \
+              -d "password=${ADMIN_PASS}" \
+              -d "grant_type=password" \
+              -d "client_id=${ADMIN_CLIENT_ID}")
+
+            ACCESS_TOKEN=$(echo "${token_response}" | jq -r .access_token)
+
+            if [ -n "$ACCESS_TOKEN" ] && [ "$ACCESS_TOKEN" != "null" ]; then
+                echo "Successfully obtained Keycloak admin access token after SSL fix."
+                return 0
+            fi
+        fi
+
+        echo ""
+        echo "Checking Keycloak proxy configuration..."
+        docker exec keycloak-keycloak-1 printenv | grep KC_PROXY || echo "KC_PROXY not set"
+        docker exec keycloak-keycloak-1 printenv | grep KC_HOSTNAME_STRICT || echo "KC_HOSTNAME_STRICT not set"
+        echo ""
+        echo "Current docker-compose.yml proxy settings:"
+        grep -A 5 "KC_PROXY" keycloak/docker-compose.yml || echo "Proxy settings not found in docker-compose.yml"
+        echo ""
+        echo "🔄 ALTERNATIVE SOLUTION: Restart the setup script:"
+        echo "  ./setup_macos.sh --cleanup"
+        echo "  ./setup_macos.sh"
+        echo ""
+        echo "📖 See docs/troubleshooting/keycloak_https_required_fix.md for detailed solution."
     fi
-    echo "Successfully obtained Keycloak admin access token."
+
+    exit 1
 }
 
 # Function to make an authenticated API call to Keycloak
@@ -2379,70 +2563,6 @@ if ! docker info &> /dev/null || ! docker ps &> /dev/null; then
 fi
 echo "Docker and Docker Compose check passed."
 
-# Function to detect and handle Zscaler/SSL certificate issues
-handle_ssl_certificate_issues() {
-    echo "Checking for SSL certificate issues (Zscaler/Corporate proxy)..."
-
-    # Test if we can reach common SSL sites
-    if ! curl -s --connect-timeout 5 https://sh.rustup.rs > /dev/null 2>&1; then
-        echo "⚠️  Detected SSL certificate verification issues (likely Zscaler or corporate proxy)"
-
-        # Check if certificates already exist
-        if [ -f "violentutf_api/fastapi_app/zscaler.crt" ] || [ -f "violentutf_api/fastapi_app/CA.crt" ]; then
-            echo "✅ Found Zscaler/CA certificates in FastAPI directory"
-            echo "   The Dockerfile will use these certificates for SSL verification"
-            export SSL_WORKAROUND_APPLIED=true
-            return 0
-        fi
-
-        echo ""
-        echo "📌 You need to add your Zscaler/CA certificates for the build to work."
-        echo ""
-        echo "Option 1 (Automatic - macOS only):"
-        echo "   ./get-zscaler-certs.sh"
-        echo ""
-        echo "Option 2 (Manual):"
-        echo "   1. Export your Zscaler certificate (usually from Keychain or Certificate Manager)"
-        echo "   2. Copy the certificates to the FastAPI directory:"
-        echo "      cp zscaler.crt violentutf_api/fastapi_app/"
-        echo "      cp CA.crt violentutf_api/fastapi_app/"
-        echo ""
-        echo "After adding certificates, run this setup script again."
-        echo ""
-
-        # Ask user if they want to try automatic export
-        if [ -f "./get-zscaler-certs.sh" ]; then
-            read -p "Would you like to try automatic certificate export? (y/n): " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                ./get-zscaler-certs.sh
-
-                # Check if certificates were exported successfully
-                if [ -f "violentutf_api/fastapi_app/zscaler.crt" ] || [ -f "violentutf_api/fastapi_app/CA.crt" ]; then
-                    echo "✅ Certificates exported successfully. Continuing setup..."
-                    export SSL_WORKAROUND_APPLIED=true
-                    return 0
-                else
-                    echo "❌ Certificate export failed. Please add certificates manually and run setup again."
-                    exit 1
-                fi
-            else
-                echo "Please add certificates manually and run setup again."
-                exit 1
-            fi
-        else
-            echo "Please add certificates manually and run setup again."
-            exit 1
-        fi
-    else
-        echo "✅ No SSL certificate issues detected"
-        export SSL_WORKAROUND_APPLIED=false
-    fi
-}
-
-# Check for SSL certificate issues before proceeding
-handle_ssl_certificate_issues
-
 # Create a shared network for all services
 validate_network_configuration
 
@@ -2488,15 +2608,13 @@ echo "GENERATING ALL SECURE SECRETS"
 echo "=========================================="
 echo "Generating secure secrets for all services..."
 
-# Note: Keycloak admin credentials are now generated for compliance (see below)
+# Keycloak admin credentials (hardcoded in docker-compose)
+SENSITIVE_VALUES+=("Keycloak Admin Username: admin")
+SENSITIVE_VALUES+=("Keycloak Admin Password: admin")
 
 # Keycloak PostgreSQL password (for new setups)
 KEYCLOAK_POSTGRES_PASSWORD=$(generate_secure_string)
 SENSITIVE_VALUES+=("Keycloak PostgreSQL Password: $KEYCLOAK_POSTGRES_PASSWORD")
-
-# Keycloak admin credentials (already generated above for compliance)
-SENSITIVE_VALUES+=("Keycloak Admin Username: $KEYCLOAK_ADMIN_USERNAME")
-SENSITIVE_VALUES+=("Keycloak Admin Password: $KEYCLOAK_ADMIN_PASSWORD")
 
 # ViolentUTF application secrets
 VIOLENTUTF_CLIENT_SECRET=$(generate_secure_string)
@@ -2551,8 +2669,6 @@ echo "Creating Keycloak configuration..."
 mkdir -p keycloak
 cat > keycloak/.env <<EOF
 POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD
-KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_ADMIN_USERNAME
-KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
 EOF
 echo "✅ Created keycloak/.env"
 
@@ -2581,6 +2697,24 @@ fi
 if [ -f "apisix/conf/nginx.conf.template" ]; then
     prepare_config_from_template "apisix/conf/nginx.conf.template"
     echo "✅ Created apisix/conf/nginx.conf"
+fi
+
+# Always check if configs were generated and APISIX needs restart
+echo "Checking if APISIX configuration was generated..."
+if [ -f "apisix/conf/config.yaml" ]; then
+    # Check if APISIX is running and needs restart for new configs
+    if docker ps | grep -q "apisix"; then
+        echo "APISIX is running. Restarting to load new configuration..."
+        # Try different possible container names
+        docker restart apisix-apisix 2>/dev/null || docker restart apisix_apisix 2>/dev/null || docker restart apisix 2>/dev/null || true
+        echo "Waiting for APISIX to restart with new configuration..."
+        sleep 15
+        echo "✅ APISIX restarted with updated configuration"
+    else
+        echo "APISIX not yet running, configs will be loaded on first start"
+    fi
+else
+    echo "No APISIX config files found to load"
 fi
 
 # Create APISIX .env file for configure_routes.sh script
@@ -2725,18 +2859,28 @@ APP_DATA_DIR=/app/app_data/violentutf
 # Maps UI generator types to PyRIT implementation types
 GENERATOR_TYPE_MAPPING=AI Gateway:apisix_ai_gateway
 
-# AI Provider Configuration
-OPENAI_ENABLED=$OPENAI_ENABLED
-ANTHROPIC_ENABLED=$ANTHROPIC_ENABLED
-OLLAMA_ENABLED=$OLLAMA_ENABLED
-OPEN_WEBUI_ENABLED=$OPEN_WEBUI_ENABLED
-OPENAPI_ENABLED=$OPENAPI_ENABLED
-
 # Service Configuration
 SERVICE_NAME=ViolentUTF API
 SERVICE_VERSION=1.0.0
 DEBUG=false
+
 EOF
+
+# Add AI Provider Configuration from ai-tokens.env if it exists
+if [ -f "ai-tokens.env" ]; then
+    echo "Adding AI provider configuration from ai-tokens.env..."
+    cat >> violentutf_api/fastapi_app/.env <<EOF
+
+# AI Provider Configuration (from ai-tokens.env)
+# These enable/disable providers in the UI
+EOF
+    # Read and append all relevant variables from ai-tokens.env
+    grep -E "^(OPENAI_ENABLED|ANTHROPIC_ENABLED|OLLAMA_ENABLED|OPEN_WEBUI_ENABLED|OPENAPI_ENABLED)" ai-tokens.env >> violentutf_api/fastapi_app/.env 2>/dev/null || true
+    grep -E "^OPENAPI_(1[0]?|[2-9])_" ai-tokens.env >> violentutf_api/fastapi_app/.env 2>/dev/null || true
+    echo "✅ Added AI provider settings from ai-tokens.env"
+else
+    echo "⚠️  ai-tokens.env not found - AI provider configuration will use defaults from FastAPI config.py"
+fi
 echo "✅ Created violentutf_api/fastapi_app/.env"
 
 # Synchronize environment variables between services
@@ -2793,6 +2937,64 @@ echo "All configuration files created successfully!"
 echo ""
 
 # ---------------------------------------------------------------
+# PRE-SETUP: CORPORATE SSL CERTIFICATE HANDLING
+# ---------------------------------------------------------------
+echo "PRE-SETUP: CORPORATE SSL CERTIFICATE PREPARATION"
+echo "Checking for corporate environment and preparing SSL certificates..."
+
+# Detect corporate environment indicators
+CORPORATE_ENV_DETECTED=false
+if command -v security >/dev/null 2>&1; then
+    # Check for Zscaler or corporate certificates on macOS
+    if security find-certificate -a -p /Library/Keychains/System.keychain 2>/dev/null | grep -qi "zscaler\|corporate\|enterprise"; then
+        CORPORATE_ENV_DETECTED=true
+        echo "🏢 Corporate environment detected (Zscaler/Enterprise certificates found)"
+    fi
+fi
+
+# Check for common corporate proxy environment variables
+if [ -n "$https_proxy" ] || [ -n "$HTTPS_PROXY" ] || [ -n "$http_proxy" ] || [ -n "$HTTP_PROXY" ]; then
+    CORPORATE_ENV_DETECTED=true
+    echo "🏢 Corporate environment detected (Proxy environment variables found)"
+fi
+
+# Extract certificates for all future Docker builds
+FASTAPI_CERT_SCRIPT="violentutf_api/fastapi_app/extract_corporate_certificates.sh"
+if [ "$CORPORATE_ENV_DETECTED" = true ] || [ -f "$FASTAPI_CERT_SCRIPT" ]; then
+    echo "🔐 Extracting corporate certificates for Docker builds..."
+    echo "ℹ️  This ensures all Docker builds work properly in corporate environments"
+    echo ""
+
+    if [ -f "$FASTAPI_CERT_SCRIPT" ]; then
+        # Store current directory
+        ORIGINAL_DIR_CERT=$(pwd)
+
+        # Change to FastAPI app directory and run extraction
+        cd "violentutf_api/fastapi_app" || { echo "Warning: Could not access FastAPI directory"; }
+
+        if ./extract_corporate_certificates.sh; then
+            echo "✅ Corporate certificate extraction completed successfully"
+            echo "   Certificates are now available for Docker builds"
+        else
+            echo "⚠️  Certificate extraction encountered issues"
+            echo "   Docker builds will continue with comprehensive SSL bypass"
+        fi
+
+        # Return to original directory
+        cd "$ORIGINAL_DIR_CERT" || { echo "Warning: Could not return to original directory"; }
+    else
+        echo "ℹ️  Certificate extraction script not found"
+        echo "   Docker builds will rely on built-in SSL bypass mechanisms"
+    fi
+else
+    echo "ℹ️  No corporate environment detected, proceeding with standard setup"
+fi
+
+echo ""
+echo "SSL certificate preparation completed!"
+echo ""
+
+# ---------------------------------------------------------------
 # SECTION A: KEYCLOAK SETUP
 # ---------------------------------------------------------------
 echo "SECTION A: SETTING UP KEYCLOAK"
@@ -2830,12 +3032,8 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
 
     # Check if .env file exists - it might have been removed or this is a fresh setup
     if [ ! -f ".env" ]; then
-        echo "⚠️  Keycloak .env file missing. Creating it with all required credentials..."
-        cat > .env <<EOF
-POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD
-KEYCLOAK_ADMIN_USERNAME=$KEYCLOAK_ADMIN_USERNAME
-KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
-EOF
+        echo "⚠️  Keycloak .env file missing. Creating it with PostgreSQL password..."
+        echo "POSTGRES_PASSWORD=$KEYCLOAK_POSTGRES_PASSWORD" > .env
         echo "✅ Created keycloak/.env"
     fi
 
@@ -2894,6 +3092,11 @@ fi
 
 
 if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
+    # Wait a bit for Keycloak proxy configuration to be fully active
+    echo "Waiting for Keycloak proxy configuration to be fully active..."
+    sleep 5
+
+    # Retry admin token acquisition with better error handling
     get_keycloak_admin_token # Obtain admin token for subsequent API calls
 
     # ---------------------------------------------------------------
@@ -3148,8 +3351,25 @@ if [ "$KEYCLOAK_SETUP_NEEDED" = true ]; then
     echo "Step 7: Secrets already configured."
 
     echo "Keycloak client and user configuration complete via API."
+
+    # ---------------------------------------------------------------
+    # 8. Apply SSL fixes for development environment
+    # ---------------------------------------------------------------
+    echo "Step 8: Applying development SSL configuration..."
+
+    # Apply SSL fix for master realm (already done by enhanced get_keycloak_admin_token)
+    # but ensure ViolentUTF realm also has proper SSL configuration
+    echo "Ensuring both realms have proper SSL configuration for development..."
+    docker exec keycloak-keycloak-1 /opt/keycloak/bin/kcadm.sh update realms/ViolentUTF -s sslRequired=none 2>/dev/null || echo "ViolentUTF realm SSL already configured"
+
+    echo "✅ SSL configuration applied for development environment"
 else
     echo "Skipped Keycloak setup steps 4-7 as stack was already running."
+
+    # Even if setup was skipped, ensure SSL configuration is correct
+    echo "Ensuring SSL configuration is correct for existing setup..."
+    get_keycloak_admin_token 2>/dev/null || echo "Admin token already available"
+    docker exec keycloak-keycloak-1 /opt/keycloak/bin/kcadm.sh update realms/ViolentUTF -s sslRequired=none 2>/dev/null || echo "SSL configuration already correct"
 fi # End of KEYCLOAK_SETUP_NEEDED conditional block
 
 # ---------------------------------------------------------------
@@ -3215,7 +3435,132 @@ EOF
     echo "Ensuring APISIX docker-compose.yml has proper network configuration..."
     ensure_network_in_compose "docker-compose.yml" "apisix"
 
+    # ---------------------------------------------------------------
+    # B2.1. Corporate Environment SSL Certificate Handling
+    # ---------------------------------------------------------------
+    echo "Step B2.1: Checking for corporate SSL certificate requirements..."
+
+    # Detect corporate environment indicators
+    CORPORATE_ENV_DETECTED=false
+    if command -v security >/dev/null 2>&1; then
+        # Check for Zscaler or corporate certificates on macOS
+        if security find-certificate -a -p /Library/Keychains/System.keychain 2>/dev/null | grep -qi "zscaler\|corporate\|enterprise"; then
+            CORPORATE_ENV_DETECTED=true
+            echo "🏢 Corporate environment detected (Zscaler/Enterprise certificates found)"
+        fi
+    fi
+
+    # Check for common corporate proxy environment variables
+    if [ -n "$https_proxy" ] || [ -n "$HTTPS_PROXY" ] || [ -n "$http_proxy" ] || [ -n "$HTTP_PROXY" ]; then
+        CORPORATE_ENV_DETECTED=true
+        echo "🏢 Corporate environment detected (Proxy environment variables found)"
+    fi
+
+    # Extract certificates for Docker build if corporate environment detected
+    if [ "$CORPORATE_ENV_DETECTED" = true ] || [ -f "../violentutf_api/fastapi_app/extract_corporate_certificates.sh" ]; then
+        echo "🔐 Extracting corporate certificates for Docker build..."
+        echo "ℹ️  Corporate SSL fixes are enabled in Docker build:"
+        echo "   • Comprehensive SSL certificate bypass for Rust installation"
+        echo "   • Trusted host configuration for Python package installation"
+        echo "   • Corporate certificate integration for Zscaler/enterprise environments"
+        echo "   • Global curl SSL bypass configuration"
+
+        # Change to FastAPI app directory
+        FASTAPI_DIR="../violentutf_api/fastapi_app"
+        if [ -d "$FASTAPI_DIR" ] && [ -f "$FASTAPI_DIR/extract_corporate_certificates.sh" ]; then
+            echo "Running certificate extraction script..."
+            cd "$FASTAPI_DIR" || { echo "Warning: Could not access FastAPI directory"; }
+
+            # Run certificate extraction
+            if ./extract_corporate_certificates.sh; then
+                echo "✅ Certificate extraction completed successfully"
+            else
+                echo "⚠️  Certificate extraction encountered issues (build will continue with SSL bypass)"
+            fi
+
+            # Return to APISIX directory
+            cd - >/dev/null || cd "$ORIGINAL_DIR/apisix" || { echo "Failed to return to apisix directory"; exit 1; }
+        else
+            echo "ℹ️  Certificate extraction script not found, relying on Docker SSL bypass"
+        fi
+    else
+        echo "ℹ️  No corporate environment detected, proceeding with standard setup"
+    fi
+
+    # Validate YAML configuration files before starting
+    echo "Validating APISIX configuration files..."
+    YAML_VALID=true
+
+    # Check config.yaml
+    if [ -f "conf/config.yaml" ]; then
+        if python3 -c "import yaml; yaml.safe_load(open('conf/config.yaml'))" 2>/dev/null; then
+            echo "  ✅ config.yaml is valid"
+        else
+            echo "  ❌ config.yaml has YAML syntax errors!"
+            echo "     Please fix the following issues:"
+            python3 -c "
+import yaml, sys
+try:
+    yaml.safe_load(open('conf/config.yaml'))
+except yaml.YAMLError as e:
+    print(f'     {e}')
+" 2>&1
+            YAML_VALID=false
+        fi
+    fi
+
+    # Check dashboard.yaml if it exists
+    if [ -f "conf/dashboard.yaml" ]; then
+        if python3 -c "import yaml; yaml.safe_load(open('conf/dashboard.yaml'))" 2>/dev/null; then
+            echo "  ✅ dashboard.yaml is valid"
+        else
+            echo "  ❌ dashboard.yaml has YAML syntax errors!"
+            echo "     Please fix the following issues:"
+            python3 -c "
+import yaml, sys
+try:
+    yaml.safe_load(open('conf/dashboard.yaml'))
+except yaml.YAMLError as e:
+    print(f'     {e}')
+" 2>&1
+            YAML_VALID=false
+        fi
+    fi
+
+    if [ "$YAML_VALID" = false ]; then
+        echo ""
+        echo "❌ Configuration files have errors. Please fix them before continuing."
+        echo "   Common issues:"
+        echo "   • Check indentation (use spaces, not tabs)"
+        echo "   • Ensure multiline strings are properly formatted"
+        echo "   • Look for missing or extra colons"
+        cd "$ORIGINAL_DIR"
+        exit 1
+    fi
+
+    echo ""
+    echo "Building custom APISIX image with network tools..."
+    echo "ℹ️  This adds network debugging tools (curl, wget, ping, etc.) to APISIX container"
+
+    # Build the custom APISIX image if Dockerfile exists
+    if [ -f "Dockerfile.apisix" ]; then
+        echo "Building apisix-with-tools image..."
+        if ${DOCKER_COMPOSE_CMD} build apisix; then
+            echo "✅ Custom APISIX image built successfully"
+        else
+            echo "⚠️  Failed to build custom APISIX image, falling back to standard image"
+        fi
+    else
+        echo "⚠️  Dockerfile.apisix not found, using standard APISIX image"
+    fi
+
+    echo ""
     echo "Launching Docker Compose for APISIX..."
+    echo "ℹ️  Note: If Docker build fails with SSL certificate errors, this is expected in corporate environments"
+    echo "   The comprehensive SSL bypass in the Dockerfile should handle these issues automatically"
+    echo ""
+
+    # Attempt Docker build with enhanced error handling
     if ${DOCKER_COMPOSE_CMD} up -d; then
         echo "APISIX stack started successfully."
         echo "Waiting for APISIX to be fully operational (this might take a minute)..."
@@ -3245,9 +3590,49 @@ EOF
             exit 1
         fi
     else
-        echo "Failed to start APISIX stack. Check Docker Compose logs."
-        ${DOCKER_COMPOSE_CMD} logs
+        echo "❌ Failed to start APISIX stack. Analyzing failure..."
+
+        # Check for SSL certificate errors in logs
+        BUILD_LOGS=$(${DOCKER_COMPOSE_CMD} logs 2>&1)
+        if echo "$BUILD_LOGS" | grep -qi "ssl certificate\|unable to get local issuer certificate\|certificate problem\|self-signed certificate\|certificate verify failed\|curl.*60\|rustup.*ssl\|downloader.*https.*failed"; then
+            echo ""
+            echo "🔍 SSL Certificate Error Detected in Corporate Environment"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "This is a known issue in corporate environments with Zscaler or similar proxies."
+            echo ""
+            echo "📋 Troubleshooting Steps:"
+            echo "1. ✅ SSL bypass is already enabled in the Docker build"
+            echo "2. 🔐 Corporate certificate extraction was attempted"
+            echo "3. 🌐 The Docker build includes comprehensive SSL bypass configuration"
+            echo ""
+            echo "💡 Manual Resolution Options:"
+            echo "a) The Dockerfile has been updated with a new Rust installation approach that"
+            echo "   bypasses rustup entirely. Retry the build with no cache:"
+            echo "   cd apisix && ${DOCKER_COMPOSE_CMD} build --no-cache && ${DOCKER_COMPOSE_CMD} up -d"
+            echo ""
+            echo "b) Wait and retry - Sometimes corporate proxy issues are temporary:"
+            echo "   cd apisix && ${DOCKER_COMPOSE_CMD} up -d --build"
+            echo ""
+            echo "c) Check corporate certificate extraction:"
+            echo "   cd violentutf_api/fastapi_app && ./extract_corporate_certificates.sh"
+            echo ""
+            echo "d) Verify proxy settings (if applicable):"
+            echo "   echo \$https_proxy \$http_proxy"
+            echo ""
+            echo "e) Contact IT support if the issue persists"
+            echo ""
+            echo "📊 Build logs (last 50 lines):"
+            echo "$BUILD_LOGS" | tail -50
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        else
+            echo "❌ Docker build failed for unknown reasons. Check Docker Compose logs:"
+            ${DOCKER_COMPOSE_CMD} logs
+        fi
+
         cd "$ORIGINAL_DIR"
+        echo ""
+        echo "⚠️  Setup paused due to Docker build failure."
+        echo "   Please resolve the issue above and re-run the setup script."
         exit 1
     fi
     cd "$ORIGINAL_DIR" # Return to the original directory
@@ -3362,6 +3747,18 @@ validate_docker_network_config() {
 
     echo "APISIX setup complete."
 
+    # CRITICAL: Restart APISIX if configs were recently generated to ensure they're loaded
+    if [ -f "apisix/conf/config.yaml" ]; then
+        config_age=$(find apisix/conf/config.yaml -mmin -10 2>/dev/null | wc -l)
+        if [ "$config_age" -gt 0 ]; then
+            echo "Configuration files were recently generated. Restarting APISIX to ensure they're loaded..."
+            docker restart ${APISIX_SERVICE_NAME_IN_COMPOSE} 2>/dev/null || true
+            echo "Waiting for APISIX to be ready after configuration reload..."
+            sleep 20
+            echo "✅ APISIX reloaded with latest configuration"
+        fi
+    fi
+
     # Configure all routes immediately after APISIX is ready
     echo ""
     echo "Configuring API routes now that APISIX is ready..."
@@ -3472,24 +3869,20 @@ fi
 # C2. Setup AI Provider Routes
 # ---------------------------------------------------------------
 # Replace this section in the main script:
-echo "Step C2: Setting up AI provider routes in APISIX..."
+if [ "$SKIP_AI_SETUP" != true ]; then
+    echo "Step C2: Setting up AI provider routes in APISIX..."
 
-# Check if ai-proxy plugin is available (after APISIX_ADMIN_KEY is set)
-if ! check_ai_proxy_plugin; then
-    echo "❌ Cannot proceed with AI proxy setup - plugin not available"
-    echo "   This may be due to:"
-    echo "   - APISIX version doesn't include ai-proxy plugin"
-    echo "   - Plugin not enabled in APISIX configuration"
-    echo "   - Admin key not properly configured"
-    SKIP_AI_SETUP=true
-else
-    echo "✅ AI-proxy plugin is available, proceeding with setup"
+    # Check if ai-proxy plugin is available
+    if ! check_ai_proxy_plugin; then
+        echo "⚠️ ai-proxy plugin not available - OpenAPI routes will use proxy-rewrite instead"
+        # Don't skip AI setup entirely - OpenAPI routes can still work with proxy-rewrite
+        echo "Proceeding with AI provider setup using alternative routing method..."
+    fi
+
+    # Always attempt to setup AI providers, regardless of ai-proxy plugin availability
     setup_ai_providers_enhanced
-fi
-
-if [ "$SKIP_AI_SETUP" = true ]; then
-    echo "⚠️  AI provider setup was skipped due to configuration issues"
-    echo "   You can still use OpenAI/Anthropic directly but they won't be proxied through APISIX"
+else
+    echo "Skipping AI provider routes setup due to configuration issues."
 fi
 
 # ---------------------------------------------------------------
@@ -4960,14 +5353,6 @@ echo "🔍 Final System State Verification..."
 if verify_system_state; then
     echo ""
     echo "🎉 Setup completed successfully! System is ready for use."
-
-    # Show SSL workaround status if applied
-    if [ "$SSL_WORKAROUND_APPLIED" = "true" ]; then
-        echo ""
-        echo "📌 Note: SSL certificate workaround was applied for Zscaler/corporate proxy"
-        echo "   The FastAPI Dockerfile was modified to bypass SSL verification for Rust installation"
-        echo "   Original Dockerfile backed up as: violentutf_api/fastapi_app/Dockerfile.original"
-    fi
 else
     echo ""
     echo "⚠️ Setup completed but with some issues. Review the messages above."

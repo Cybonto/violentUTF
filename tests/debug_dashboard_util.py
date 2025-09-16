@@ -6,7 +6,8 @@
 # See LICENSE file in the project root for license information.
 
 """
-Debug script to trace exactly what the dashboard API calls are doing
+Debug script to trace exactly what the dashboard API calls are doing.
+
 and why they can't find scorer execution results.
 """
 
@@ -14,6 +15,7 @@ import json
 import os
 import sys
 from datetime import datetime, timedelta
+from typing import Any
 
 import requests
 from dotenv import load_dotenv
@@ -42,8 +44,8 @@ logger = get_logger(__name__)
 API_BASE_URL = "http://localhost:9080"
 
 
-def get_auth_headers():
-    """Get authentication headers exactly like the dashboards do"""
+def get_auth_headers() -> Any:
+    """Get authentication headers exactly like the dashboards do."""
     try:
         # Get consistent user context (same as Configure Scorers)
         user_context = get_user_context_for_token()
@@ -76,8 +78,8 @@ def get_auth_headers():
         return {}
 
 
-def api_request(method, url, **kwargs):
-    """Make API request exactly like the dashboards do"""
+def api_request(method, url, **kwargs) -> None:
+    """Make API request exactly like the dashboards do."""
     headers = get_auth_headers()
     if not headers.get("Authorization"):
         print("❌ No authorization token available")
@@ -86,7 +88,6 @@ def api_request(method, url, **kwargs):
     try:
         print(f"📡 Making {method} request to {url}")
         response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
-
         print(f"📊 Response status: {response.status_code}")
 
         if response.status_code in [200, 201]:
@@ -101,8 +102,8 @@ def api_request(method, url, **kwargs):
         return None
 
 
-def debug_orchestrator_flow():
-    """Debug the exact flow that Dashboard_2 uses"""
+def debug_orchestrator_flow() -> None:
+    """Debug the exact flow that Dashboard_2 uses."""
     print("\n" + "=" * 60)
     print("🔍 DEBUGGING DASHBOARD ORCHESTRATOR FLOW")
     print("=" * 60)

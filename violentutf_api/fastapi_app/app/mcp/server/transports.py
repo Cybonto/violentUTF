@@ -9,12 +9,13 @@ import json
 import logging
 from typing import Any, AsyncIterator, Dict, cast
 
-from app.core.auth import get_current_user
-from app.mcp.auth import MCPAuthHandler
-from app.models.auth import User
 from fastapi import Depends, FastAPI, HTTPException, Request
 from mcp.server import Server
 from sse_starlette.sse import EventSourceResponse
+
+from app.core.auth import get_current_user
+from app.mcp.auth import MCPAuthHandler
+from app.models.auth import User
 
 logger = logging.getLogger(__name__)
 

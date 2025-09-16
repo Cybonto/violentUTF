@@ -131,7 +131,7 @@ def api_request(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, Any]
 
     try:
         logger.debug(f"Making {method} request to {url} through APISIX Gateway")
-        response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+        response = requests.request(method, url, headers=headers, timeout=30, **cast(Any, kwargs))
 
         # Debug: always log the response for troubleshooting
         logger.info(f"API Request: {method} {url} -> {response.status_code}")

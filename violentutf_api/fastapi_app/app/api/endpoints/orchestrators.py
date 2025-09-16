@@ -18,6 +18,10 @@ from datetime import datetime
 from typing import Dict, List, Optional, cast
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.auth import get_current_user
 from app.db.database import get_session
 from app.models.auth import User
@@ -35,9 +39,6 @@ from app.schemas.orchestrator import (  # Keep for backward compatibility in RES
     OrchestratorTypeInfo,
 )
 from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

@@ -120,12 +120,24 @@ def api_request(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, obje
 
     try:
         logger.debug("Making %s request to %s through APISIX Gateway", method, url)
-        response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+        response = requests.request(method, url, headers=headers, timeout=30, **cast(Any, kwargs))
 
         if response.status_code == 200:
-            return dict(response.json())
+            json_data = response.json()
+            # Handle both dict and list responses
+            if isinstance(json_data, dict):
+                return json_data
+            else:
+                # For list responses (like OpenAPI providers), return as-is
+                return json_data
         elif response.status_code == 201:
-            return dict(response.json())
+            json_data = response.json()
+            # Handle both dict and list responses
+            if isinstance(json_data, dict):
+                return json_data
+            else:
+                # For list responses, return as-is
+                return json_data
         elif response.status_code == 400:
             logger.error("400 Bad Request: %s", response.text)
             try:
@@ -847,18 +859,32 @@ def handle_ai_gateway_provider_selection() -> None:
         with st.expander("🔍 Debug Info", expanded=False):
             st.write("**API Response Debug:**")
             st.write(f"Total parameters found: {len(param_defs)}")
+            st.write("**Raw param_defs structure:**")
+            st.json(param_defs)
+
             if provider_param:
-                provider_dict = provider_param
-                st.write(f"Provider options: {provider_dict['options']}")
-                st.write(f"Total providers: {len(cast(List[str], provider_dict['options']))}")
-                # Highlight OpenAPI providers
-                openapi_providers = [
-                    str(p) for p in cast(List[str], provider_dict["options"]) if str(p).startswith("openapi-")
-                ]
-                if openapi_providers:
-                    st.success(f"✅ OpenAPI providers found: {openapi_providers}")
-                else:
-                    st.warning("⚠️ No OpenAPI providers found in options")
+                st.write("**Provider parameter details:**")
+                st.write(f"Type: {type(provider_param)}")
+                st.json(provider_param)
+
+                try:
+                    provider_dict = provider_param
+                    if "options" in provider_dict:
+                        st.write(f"Provider options: {provider_dict['options']}")
+                        st.write(f"Options type: {type(provider_dict['options'])}")
+                        st.write(f"Total providers: {len(cast(List[str], provider_dict['options']))}")
+                        # Highlight OpenAPI providers
+                        openapi_providers = [
+                            str(p) for p in cast(List[str], provider_dict["options"]) if str(p).startswith("openapi-")
+                        ]
+                        if openapi_providers:
+                            st.success(f"✅ OpenAPI providers found: {openapi_providers}")
+                        else:
+                            st.warning("⚠️ No OpenAPI providers found in options")
+                    else:
+                        st.error("❌ No 'options' key found in provider parameter")
+                except Exception as debug_error:
+                    st.error(f"❌ Error processing provider parameter: {debug_error}")
             else:
                 st.error("❌ No provider parameter found")
 
@@ -866,28 +892,64 @@ def handle_ai_gateway_provider_selection() -> None:
             st.write("**Direct OpenAPI Providers Test:**")
             try:
                 openapi_data = api_request("GET", API_ENDPOINTS["openapi_providers"])
+                st.write(f"Raw API response type: {type(openapi_data)}")
+                st.write(f"Raw API response: {openapi_data}")
+
                 if openapi_data:
-                    st.write(f"Direct API call result: {openapi_data}")
-                    # Extract list data or convert to list for consistent handling
-                    # Handle both list and dict response types using simple approach
+                    # The OpenAPI providers endpoint returns List[str] directly
                     data_as_list: List[object] = []
-                    try:
-                        if hasattr(openapi_data, "__len__"):  # Has length (list or dict)
-                            if hasattr(openapi_data, "get"):  # It's a dict
-                                providers_data = cast(List[Any], openapi_data.get("providers", []))
-                                data_as_list = list(providers_data)
-                            else:  # It's a list
-                                data_as_list = list(openapi_data)
-                    except Exception:
-                        data_as_list = []
-                    if len(data_as_list) > 0:
-                        st.success(f"✅ Direct API call found {len(data_as_list)} OpenAPI providers")
+                    if isinstance(openapi_data, list):
+                        # It's a list of provider strings
+                        data_as_list = openapi_data
+                        st.success(f"✅ Direct API call found {len(data_as_list)} OpenAPI providers: {data_as_list}")
+                    elif isinstance(openapi_data, dict):
+                        # If it's a dict, it might be an error response or wrapped data
+                        if "providers" in openapi_data:
+                            providers_data = openapi_data["providers"]
+                            data_as_list = providers_data if isinstance(providers_data, list) else []
+                            st.success(f"✅ Found providers in dict: {data_as_list}")
+                        elif "error" in openapi_data:
+                            st.error(f"❌ API Error: {openapi_data.get('message', 'Unknown error')}")
+                            data_as_list = []
+                        else:
+                            # Unknown dict format, show all keys for debugging
+                            st.warning(f"⚠️ Unknown dict format with keys: {list(openapi_data.keys())}")
+                            data_as_list = []
                     else:
+                        # Unknown format, show what we got
+                        st.warning(f"⚠️ Unknown response format: {type(openapi_data)} - {repr(openapi_data)}")
+                        data_as_list = []
+
+                    if len(data_as_list) == 0:
                         st.warning("⚠️ Direct API call returned empty list")
                 else:
-                    st.error("❌ Direct API call failed")
+                    st.error("❌ Direct API call failed - no data returned")
             except Exception as e:
                 st.error(f"❌ Direct API call error: {e}")
+                import traceback
+
+                st.code(traceback.format_exc(), language="python")
+
+            # Additional debug: Check backend configuration
+            # NOTE: debug-openapi endpoint removed as it's not needed
+            # The debug information can be obtained from the generator params endpoint below
+
+            # Check the generator params endpoint directly
+            st.write("**Generator Params Endpoint Debug:**")
+            try:
+                params_url = API_ENDPOINTS["generator_params"].format(generator_type="AI Gateway")
+                st.write(f"Calling: {params_url}")
+                raw_params = api_request("GET", params_url)
+                if raw_params:
+                    st.write("✅ Raw generator params response:")
+                    st.json(raw_params)
+                else:
+                    st.error("❌ Generator params endpoint returned no data")
+            except Exception as params_e:
+                st.error(f"❌ Generator params debug error: {params_e}")
+                import traceback
+
+                st.code(traceback.format_exc(), language="python")
 
         if provider_param:
             st.markdown("**🔧 AI Gateway Configuration**")

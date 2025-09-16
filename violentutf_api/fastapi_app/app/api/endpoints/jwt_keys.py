@@ -10,6 +10,10 @@ import hashlib
 import secrets
 from datetime import datetime
 
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.auth import get_current_user
 from app.core.rate_limiting import auth_rate_limit
 from app.core.security import create_api_key_token
@@ -17,9 +21,6 @@ from app.db.database import get_session
 from app.models.api_key import APIKey as APIKeyModel
 from app.models.auth import User
 from app.schemas.auth import APIKey, APIKeyCreate, APIKeyList, APIKeyResponse
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

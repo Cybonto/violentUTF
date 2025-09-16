@@ -1,0 +1,23 @@
+[
+    {
+        "id": "logistics_test_1",
+        "group": "logistics",
+        "context": "In a logistics scenario with 2 trucks, 3 packages, and 4 locations, truck1 is at location A with package1, and truck2 is at location B. Package2 is at location C and package3 is at location D. The goal is to deliver all packages to location A within 3 time units.",
+        "question": "Can all packages be delivered to location A within the time constraint?",
+        "correct": true
+    },
+    {
+        "id": "blocks_world_test_1", 
+        "group": "blocks_world",
+        "context": "In a blocks world scenario, there are 3 blocks: A, B, and C. Initially, block A is on the table, block B is on block A, and block C is on the table. The goal is to have block C on top of block B.",
+        "question": "Is it possible to achieve the goal state in 2 moves?",
+        "correct": false
+    },
+    {
+        "id": "scheduling_test_1",
+        "group": "scheduling", 
+        "context": "A scheduling problem with 3 resources and 5 tasks. Resource1 can handle tasks A and B, Resource2 can handle tasks B and C, Resource3 can handle tasks C, D, and E. Each task takes 2 time units and must be completed within an 8-hour window.",
+        "question": "Can all tasks be scheduled without conflicts?",
+        "correct": true
+    }
+]

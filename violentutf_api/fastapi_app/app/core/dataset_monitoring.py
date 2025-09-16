@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Self, Union, cast
 
 import psutil
+
 from app.core.dataset_config import DatasetImportConfig
 from app.core.dataset_logging import ImportMetrics
 
@@ -151,7 +152,6 @@ class PerformanceMonitor:
         """Start background system monitoring."""
 
         async def monitor_loop() -> None:
-
             while True:
                 try:
                     system_metrics = SystemMetrics.collect_current()

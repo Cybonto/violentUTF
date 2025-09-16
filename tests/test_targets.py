@@ -13,14 +13,17 @@ import os
 import sys
 
 import pytest
-from api.v1.endpoints.targets import router as targets_router
-from core.security import get_current_user
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
+# Add violentutf_api/fastapi_app to path BEFORE imports
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "violentutf_api", "fastapi_app"))
+
+# Now we can import from the API modules
+from app.api.v1.endpoints.targets import router as targets_router
+from app.core.security import get_current_user
 
 from keycloak import KeycloakOpenID
 
