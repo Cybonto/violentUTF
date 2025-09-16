@@ -41,23 +41,45 @@ The flows below are displayed dynamically in the right column according to the s
 
 ### 3b.A Flow for "Select Natively Supported Datasets"
 
-#### 3b.A.1 Display Natively Supported Datasets
+#### 3b.A.1 Display Dataset Categories
 
 **Display:**
-- Dropdown list of PyRIT-supported datasets loaded via `data_loaders.get_pyrit_datasets()`
-- Default "-- Select --" option to prevent premature loading
-- **Special support for OllaGen1 Cognitive Assessment** dataset with automatic splitting for large files
+- Dropdown list of dataset categories organized by purpose and functionality:
+  - **AI Safety & Harm Evaluation** - General AI safety, harmful behavior detection, and security vulnerabilities
+  - **Bias & Fairness Testing** - Detecting demographic bias, stereotyping, and fairness issues
+  - **Jailbreaking & Attack Resistance** - Testing model robustness against sophisticated prompt attacks
+  - **Privacy & Contextual Integrity** - Privacy sensitivity, contextual awareness, and data protection
+  - **Cognitive & Behavioral Assessment** - Cognitive abilities, behavioral patterns, and compliance evaluation
+  - **Domain-Specific Reasoning** - Specialized knowledge domains and professional reasoning
+  - **Specialized Security & Compliance** - Specialized security testing and regulatory compliance
+- Default "-- Select Category --" option to prevent premature loading
 
 **Action:**
-- User selects a dataset from the dropdown
+- User selects a dataset category from the dropdown
+- System displays category description and available datasets within that category
+
+**Backend:**
+- Retrieve available dataset categories from API (`/api/v1/datasets/categories`)
+- Handle category loading errors gracefully
+- Store selected category in session state
+
+#### 3b.A.2 Display Datasets Within Category
+
+**Display:**
+- Dropdown list of datasets within the selected category
+- Dataset descriptions and configuration requirements
+- Default "-- Select Dataset --" option
+
+**Action:**
+- User selects a specific dataset from within the chosen category
 - System loads dataset metadata and configuration options
 
 **Backend:**
-- Retrieve available PyRIT datasets dynamically
-- Handle dataset loading errors gracefully
+- Filter datasets by selected category
+- Retrieve dataset-specific configuration options
 - Store selected dataset in session state
 
-#### 3b.A.2 Configure Dataset Parameters
+#### 3b.A.3 Configure Dataset Parameters
 
 **Display:**
 - Dataset-specific configuration options (e.g., language selection for `aya_redteaming`)
@@ -76,7 +98,7 @@ The flows below are displayed dynamically in the right column according to the s
 - Validate parameter combinations
 - Prepare for dataset loading
 
-#### 3b.A.3 Load Dataset
+#### 3b.A.4 Load Dataset
 
 **Display:**
 - Loading spinner during dataset fetch
