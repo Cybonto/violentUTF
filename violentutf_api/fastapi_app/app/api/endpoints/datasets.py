@@ -60,10 +60,63 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+def _convert_configs_to_strings(configs: Optional[Dict[str, Any]]) -> Optional[Dict[str, List[str]]]:
+    """Convert configuration values to strings to ensure Pydantic validation passes."""
+    if not isinstance(configs, dict):
+        return None
+
+    result = {}
+    for key, value in configs.items():
+        if isinstance(value, list):
+            # Convert all list items to strings
+            result[key] = [str(item) for item in value]
+        elif value is not None:
+            # Convert single values to list of strings
+            result[key] = [str(value)]
+        else:
+            result[key] = []
+
+    return result
+
+
 # DuckDB storage replaces in - memory storage
 # _datasets_store: Dict[str, Dict[str, object]] = {} - REMOVED
 # _session_datasets: Dict[str, Dict[str, object]] = {} - REMOVED
 
+# Dataset categories mapping (based on purpose and functionality)
+DATASET_CATEGORIES = {
+    "ai_safety_harm": {
+        "name": "AI Safety & Harm Evaluation",
+        "description": "General AI safety, harmful behavior detection, and security vulnerabilities",
+    },
+    "bias_fairness": {
+        "name": "Bias & Fairness Testing",
+        "description": "Detecting demographic bias, stereotyping, and fairness issues",
+    },
+    "jailbreaking_attacks": {
+        "name": "Jailbreaking & Attack Resistance",
+        "description": "Testing model robustness against sophisticated prompt attacks",
+    },
+    "privacy_contextual": {
+        "name": "Privacy & Contextual Integrity",
+        "description": "Privacy sensitivity, contextual awareness, and data protection",
+    },
+    "cognitive_behavioral": {
+        "name": "Cognitive & Behavioral Assessment",
+        "description": "Cognitive abilities, behavioral patterns, and compliance evaluation",
+    },
+    "domain_reasoning": {
+        "name": "Domain-Specific Reasoning",
+        "description": "Specialized knowledge domains and professional reasoning",
+    },
+    "security_compliance": {
+        "name": "Specialized Security & Compliance",
+        "description": "Specialized security testing and regulatory compliance",
+    },
+}
+
+# Dataset type definitions (based on PyRIT datasets)
 # ViolentUTF native dataset definitions
 VIOLENTUTF_NATIVE_DATASETS = {
     "ollegen1_cognitive": {
@@ -253,8 +306,8 @@ NATIVE_DATASET_TYPES = {
     # Original PyRIT datasets
     "aya_redteaming": {
         "name": "aya_redteaming",
-        "description": "Aya Red-teaming Dataset - Multilingual red-teaming prompts",
-        "category": "redteaming",
+        "description": "Aya Red-teaming Dataset - Multilingual bias and harm evaluation",
+        "category": "bias_fairness",
         "config_required": True,
         "available_configs": {
             "language": [
@@ -271,70 +324,197 @@ NATIVE_DATASET_TYPES = {
     },
     "harmbench": {
         "name": "harmbench",
-        "description": ("HarmBench Dataset - Standardized evaluation of automated red teaming"),
-        "category": "safety",
+        "description": ("HarmBench Dataset - Standardized harmful behavior evaluation benchmark"),
+        "category": "ai_safety_harm",
         "config_required": False,
         "available_configs": None,
     },
     "adv_bench": {
         "name": "adv_bench",
-        "description": "AdvBench Dataset - Adversarial benchmark for language models",
-        "category": "adversarial",
+        "description": "AdvBench Dataset - Adversarial attack evaluation (jailbreak resistance)",
+        "category": "ai_safety_harm",
         "config_required": False,
         "available_configs": None,
     },
     "many_shot_jailbreaking": {
         "name": "many_shot_jailbreaking",
-        "description": ("Many - shot Jailbreaking Dataset - Context length exploitation prompts"),
-        "category": "jailbreaking",
+        "description": ("Many-shot Jailbreaking Dataset - Multi-shot jailbreaking attack patterns"),
+        "category": "jailbreaking_attacks",
         "config_required": False,
         "available_configs": None,
     },
     "decoding_trust_stereotypes": {
         "name": "decoding_trust_stereotypes",
-        "description": "Decoding Trust Stereotypes Dataset - Bias evaluation prompts",
-        "category": "bias",
+        "description": "Decoding Trust Stereotypes Dataset - Stereotype detection and bias evaluation",
+        "category": "bias_fairness",
         "config_required": False,
         "available_configs": None,
     },
     "xstest": {
         "name": "xstest",
-        "description": "XSTest Dataset - Cross - domain safety testing",
-        "category": "safety",
+        "description": "XSTest Dataset - Exaggerated safety testing and over-refusal detection",
+        "category": "jailbreaking_attacks",
         "config_required": False,
         "available_configs": None,
     },
     "pku_safe_rlhf": {
         "name": "pku_safe_rlhf",
-        "description": ("PKU - SafeRLHF Dataset - Safe reinforcement learning from human feedback"),
-        "category": "safety",
+        "description": ("PKU-SafeRLHF Dataset - Safety-oriented reinforcement learning evaluation"),
+        "category": "ai_safety_harm",
         "config_required": False,
         "available_configs": None,
     },
     "wmdp": {
         "name": "wmdp",
-        "description": "WMDP Dataset - Weapons of mass destruction prompts",
-        "category": "dangerous",
+        "description": "WMDP Dataset - Weapons of mass destruction knowledge evaluation (cyber/bio/chem)",
+        "category": "domain_reasoning",
         "config_required": False,
         "available_configs": None,
     },
     "forbidden_questions": {
         "name": "forbidden_questions",
-        "description": ("Forbidden Questions Dataset - Questions models should refuse to answer"),
-        "category": "safety",
+        "description": ("Forbidden Questions Dataset - Testing responses to prohibited queries"),
+        "category": "ai_safety_harm",
         "config_required": False,
         "available_configs": None,
     },
     "seclists_bias_testing": {
         "name": "seclists_bias_testing",
-        "description": ("SecLists Bias Testing Dataset - Security - focused bias evaluation"),
-        "category": "bias",
+        "description": ("SecLists Bias Testing Dataset - Systematic bias testing with demographic variations"),
+        "category": "bias_fairness",
         "config_required": False,
         "available_configs": None,
     },
+    # ViolentUTF Specialized Datasets (8 total)
+    "legalbench_professional": {
+        "name": "legalbench_professional",
+        "description": "LegalBench Professional Dataset - Legal reasoning and regulatory compliance evaluation",
+        "category": "security_compliance",
+        "config_required": True,
+        "available_configs": {
+            "complexity": ["basic", "intermediate", "advanced"],
+            "domain": ["corporate", "criminal", "civil", "constitutional"],
+        },
+    },
+    "docmath_mathematical": {
+        "name": "docmath_mathematical",
+        "description": "DocMath Mathematical Dataset - Document-based mathematical reasoning and problem solving",
+        "category": "domain_reasoning",
+        "config_required": True,
+        "available_configs": {
+            "difficulty": ["elementary", "intermediate", "advanced"],
+            "topic": ["algebra", "geometry", "calculus", "statistics"],
+        },
+    },
+    "graphwalk_spatial": {
+        "name": "graphwalk_spatial",
+        "description": "GraphWalk Spatial Dataset - Spatial reasoning and graph traversal evaluation",
+        "category": "spatial",
+        "config_required": True,
+        "available_configs": {
+            "complexity": ["simple", "medium", "complex"],
+            "graph_type": ["tree", "directed", "undirected", "weighted"],
+        },
+    },
+    "acpbench_planning": {
+        "name": "acpbench_planning",
+        "description": "ACPBench Planning Dataset - Automated planning and meta-evaluation capabilities",
+        "category": "domain_reasoning",
+        "config_required": True,
+        "available_configs": {
+            "scenario_type": ["logistics", "blocks_world", "transportation", "scheduling"],
+            "difficulty": ["easy", "medium", "hard"],
+        },
+    },
+    "ollgen1_cognitive": {
+        "name": "ollgen1_cognitive",
+        "description": "OllaGen1 Cognitive Dataset - Cognitive and behavioral assessment scenarios",
+        "category": "cognitive_behavioral",
+        "config_required": True,
+        "available_configs": {
+            "assessment_type": ["reasoning", "memory", "attention", "problem_solving"],
+            "complexity": ["basic", "intermediate", "advanced"],
+        },
+    },
+    "confaide_privacy": {
+        "name": "confaide_privacy",
+        "description": "ConfAIde Privacy Dataset - Privacy evaluation using Contextual Integrity Theory",
+        "category": "privacy_contextual",
+        "config_required": True,
+        "available_configs": {
+            "tier": ["basic", "contextual", "nuanced", "advanced"],
+            "privacy_type": ["personal", "sensitive", "protected", "confidential"],
+        },
+    },
+    "judgelm_evaluation": {
+        "name": "judgelm_evaluation",
+        "description": "JudgeLM Evaluation Dataset - Meta-evaluation and judgment assessment capabilities",
+        "category": "cognitive_behavioral",
+        "config_required": True,
+        "available_configs": {
+            "judgment_type": ["quality", "safety", "helpfulness", "accuracy"],
+            "domain": ["general", "specialized", "technical", "creative"],
+        },
+    },
+    "mathbench_reasoning": {
+        "name": "mathbench_reasoning",
+        "description": "MathBench Reasoning Dataset - Advanced mathematical reasoning and proof validation",
+        "category": "domain_reasoning",
+        "config_required": True,
+        "available_configs": {
+            "proof_type": ["algebraic", "geometric", "logical", "computational"],
+            "difficulty": ["undergraduate", "graduate", "research"],
+        },
+    },
+}
+
+# Name mapping system for backward compatibility (Issue #239)
+DATASET_NAME_MAPPINGS = {
+    "legalbench_reasoning": "legalbench_professional",
+    "docmath_evaluation": "docmath_mathematical",
+    "graphwalk_reasoning": "graphwalk_spatial",
+    "acpbench_reasoning": "acpbench_planning",
     # ViolentUTF native datasets
     **VIOLENTUTF_NATIVE_DATASETS,
 }
+
+
+def _get_dataset_with_mapping(dataset_name: str) -> Optional[Dict[str, Any]]:
+    """Get dataset info, checking both original and mapped names."""
+    # First try the original name
+    if dataset_name in NATIVE_DATASET_TYPES:
+        return NATIVE_DATASET_TYPES[dataset_name]
+
+    # Then try the mapped name
+    mapped_name = DATASET_NAME_MAPPINGS.get(dataset_name)
+    if mapped_name and mapped_name in NATIVE_DATASET_TYPES:
+        # Return a copy with the requested name for backward compatibility
+        dataset_info = NATIVE_DATASET_TYPES[mapped_name].copy()
+        dataset_info["name"] = dataset_name  # Use the old name in response
+        dataset_info["mapped_to"] = mapped_name  # Indicate mapping
+        return dataset_info
+
+    return None
+
+
+def _get_all_datasets_with_mappings() -> List[Dict[str, Any]]:
+    """Get all datasets including both original and mapped names."""
+    all_datasets = []
+
+    # Add all original datasets
+    for dataset_info in NATIVE_DATASET_TYPES.values():
+        all_datasets.append(dataset_info)
+
+    # Add mapped names as aliases
+    for old_name, new_name in DATASET_NAME_MAPPINGS.items():
+        if new_name in NATIVE_DATASET_TYPES:
+            mapped_dataset = NATIVE_DATASET_TYPES[new_name].copy()
+            mapped_dataset["name"] = old_name
+            mapped_dataset["mapped_to"] = new_name
+            mapped_dataset["is_alias"] = True
+            all_datasets.append(mapped_dataset)
+
+    return all_datasets
 
 
 @router.get(
@@ -351,18 +531,17 @@ async def get_dataset_types(
         logger.info("User %s requested dataset types", current_user.username)
 
         dataset_types = []
-        for name, info in NATIVE_DATASET_TYPES.items():
+        # Get all datasets including name mappings for backward compatibility
+        all_datasets = _get_all_datasets_with_mappings()
+
+        for info in all_datasets:
             # Safely construct DatasetType with valid schema fields only
             dataset_type = DatasetType(
-                name=str(info.get("name", name)),
+                name=str(info.get("name", "")),
                 description=str(info.get("description", "")),
                 category=str(info.get("category", "unknown")),
                 config_required=bool(info.get("config_required", False)),
-                available_configs=(
-                    cast(Optional[Dict[str, List[str]]], info.get("available_configs"))
-                    if isinstance(info.get("available_configs"), dict)
-                    else None
-                ),
+                available_configs=_convert_configs_to_strings(info.get("available_configs")),
             )
             dataset_types.append(dataset_type)
 
@@ -1522,6 +1701,56 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
         # and import issues
         logger.error("Error getting real memory datasets: %s", e)
         return []
+
+
+@router.get(
+    "/categories",
+    summary="Get available dataset categories",
+)
+async def get_dataset_categories(
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Get list of available dataset categories with their datasets."""
+    try:
+        logger.info("User %s requested dataset categories", current_user.username)
+
+        # Group datasets by category
+        categories_with_datasets = {}
+        all_datasets = _get_all_datasets_with_mappings()
+
+        # Initialize all categories
+        for category_id, category_info in DATASET_CATEGORIES.items():
+            categories_with_datasets[category_id] = {
+                "name": category_info["name"],
+                "description": category_info["description"],
+                "datasets": [],
+            }
+
+        # Add datasets to their respective categories
+        for dataset_info in all_datasets:
+            category_id = dataset_info.get("category", "unknown")
+            if category_id not in categories_with_datasets:
+                # Handle unknown categories
+                categories_with_datasets[category_id] = {
+                    "name": category_id.title().replace("_", " "),
+                    "description": f"Datasets in the {category_id} category",
+                    "datasets": [],
+                }
+
+            categories_with_datasets[category_id]["datasets"].append(
+                {
+                    "name": dataset_info["name"],
+                    "description": dataset_info["description"],
+                    "config_required": dataset_info.get("config_required", False),
+                    "available_configs": dataset_info.get("available_configs"),
+                }
+            )
+
+        return {"categories": categories_with_datasets, "total_categories": len(categories_with_datasets)}
+
+    except Exception as e:
+        logger.error("Error getting dataset categories: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to get dataset categories: {str(e)}") from e
 
 
 @router.get("/{dataset_id}", response_model=DatasetInfo, summary="Get dataset details")

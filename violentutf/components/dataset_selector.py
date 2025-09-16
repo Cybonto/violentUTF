@@ -11,10 +11,27 @@ This module provides the NativeDatasetSelector class for managing the selection
 and organization of native datasets across different evaluation domains.
 """
 
+import asyncio
 import logging
 from typing import Any, Dict, Optional
 
 import streamlit as st
+
+# Import API client for dataset integration
+try:
+    from violentutf.utils.dataset_api_client import APIError, DatasetAPIClient, map_dataset_name
+
+    _DatasetAPIClient: Optional[type] = DatasetAPIClient
+    _APIError: type = APIError
+    _map_dataset_name = map_dataset_name
+except ImportError:
+    # Fallback if API client not available
+    _DatasetAPIClient = None
+    _APIError = Exception
+
+    def _map_dataset_name(original_name: str) -> str:
+        return original_name
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +40,68 @@ class NativeDatasetSelector:
     """Enhanced dataset selector supporting native dataset integration with categories"""
 
     def __init__(self) -> None:
-        """Initialize the native dataset selector with predefined categories"""
-        self.dataset_categories = {
+        """Initialize the native dataset selector with API-driven categories"""
+        # Initialize API client
+        self.api_client = None
+        if _DatasetAPIClient:
+            try:
+                self.api_client = _DatasetAPIClient()
+                logger.info("Initialized dataset API client")
+            except Exception as e:
+                logger.warning("Failed to initialize API client: %s", e)
+
+        # Load categories (API-driven with fallback)
+        self.dataset_categories = self._load_dataset_categories()
+
+        # Initialize session state for dataset selection
+        if "selected_dataset_category" not in st.session_state:
+            st.session_state.selected_dataset_category = None
+        if "selected_native_dataset" not in st.session_state:
+            st.session_state.selected_native_dataset = None
+
+    def _load_dataset_categories(self) -> Dict[str, Any]:
+        """Load dataset categories from API with fallback to hardcoded"""
+        # Try to load from API first
+        if self.api_client:
+            try:
+                logger.info("Loading dataset categories from API")
+                # Use asyncio to run async method
+                loop = None
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+
+                api_categories = loop.run_until_complete(self.api_client.get_dataset_categories())
+
+                # Convert API categories to component format
+                categories = {}
+                for category_key, category_info in api_categories.items():
+                    categories[category_key] = {
+                        "name": category_info.name,
+                        "datasets": category_info.datasets,
+                        "description": category_info.description,
+                        "icon": category_info.icon,
+                    }
+
+                logger.info(
+                    "Successfully loaded %d categories from API with %d total datasets",
+                    len(categories),
+                    sum(len(cat["datasets"]) for cat in categories.values()),
+                )
+                return categories
+
+            except Exception as e:
+                logger.warning("Failed to load categories from API, using fallback: %s", e)
+
+        # Fallback to enhanced hardcoded categories
+        logger.info("Using fallback hardcoded categories")
+        return self._get_fallback_categories()
+
+    def _get_fallback_categories(self) -> Dict[str, Any]:
+        """Get fallback hardcoded categories with enhanced dataset list"""
+        return {
             "cognitive_behavioral": {
                 "name": "Cognitive & Behavioral Assessment",
                 "datasets": ["ollegen1_cognitive"],
@@ -33,25 +110,35 @@ class NativeDatasetSelector:
             },
             "redteaming": {
                 "name": "AI Red-Teaming & Security",
-                "datasets": ["garak_redteaming"],
-                "description": "Red-teaming and adversarial prompt datasets",
+                "datasets": [
+                    "garak_redteaming",
+                    "aya_redteaming",
+                    "harmbench",
+                    "adv_bench",
+                    "many_shot_jailbreaking",
+                    "xstest",
+                    "pku_safe_rlhf",
+                    "wmdp",
+                    "forbidden_questions",
+                ],
+                "description": "Red-teaming, adversarial testing, and security assessment datasets",
                 "icon": "🔴",
             },
             "legal_reasoning": {
                 "name": "Legal & Regulatory Reasoning",
-                "datasets": ["legalbench_professional"],
+                "datasets": ["legalbench_professional", "legalbench_reasoning"],
                 "description": "Professional-validated legal reasoning datasets",
                 "icon": "⚖️",
             },
             "mathematical_reasoning": {
                 "name": "Mathematical & Document Reasoning",
-                "datasets": ["docmath_mathematical", "acpbench_planning"],
+                "datasets": ["docmath_mathematical", "docmath_evaluation", "acpbench_planning", "acpbench_reasoning"],
                 "description": "Mathematical and planning reasoning datasets",
                 "icon": "🔢",
             },
             "spatial_reasoning": {
                 "name": "Spatial & Graph Reasoning",
-                "datasets": ["graphwalk_spatial"],
+                "datasets": ["graphwalk_spatial", "graphwalk_reasoning"],
                 "description": "Spatial navigation and graph reasoning datasets",
                 "icon": "🗺️",
             },
@@ -63,17 +150,29 @@ class NativeDatasetSelector:
             },
             "meta_evaluation": {
                 "name": "Meta-Evaluation & Judge Assessment",
-                "datasets": ["judgebench_meta"],
+                "datasets": ["judgebench_meta", "judgebench_evaluation"],
                 "description": "Meta-evaluation and judge-the-judge assessment",
                 "icon": "👨‍⚖️",
             },
+            "bias_evaluation": {
+                "name": "Bias & Fairness Testing",
+                "datasets": ["decoding_trust_stereotypes", "seclists_bias_testing"],
+                "description": "Bias detection and fairness evaluation datasets",
+                "icon": "⚖️",
+            },
         }
 
-        # Initialize session state for dataset selection
-        if "selected_dataset_category" not in st.session_state:
-            st.session_state.selected_dataset_category = None
-        if "selected_native_dataset" not in st.session_state:
-            st.session_state.selected_native_dataset = None
+    def refresh_categories(self) -> None:
+        """Refresh dataset categories from API"""
+        if self.api_client:
+            try:
+                self.api_client.invalidate_cache()
+                self.dataset_categories = self._load_dataset_categories()
+                logger.info("Successfully refreshed dataset categories")
+            except Exception as e:
+                logger.error("Failed to refresh categories: %s", e)
+        else:
+            logger.warning("Cannot refresh categories - API client not available")
 
     def render_dataset_selection_interface(self) -> None:
         """Render the enhanced dataset selection interface with categories"""
@@ -135,7 +234,12 @@ class NativeDatasetSelector:
                 self._show_configuration_options(dataset_name, category_key)
 
     def get_dataset_metadata(self, dataset_name: str) -> Dict[str, Any]:
-        """Get metadata for a specific dataset"""
+        """Get metadata for a specific dataset with name mapping support"""
+        # Apply name mapping for backward compatibility
+        mapped_name = _map_dataset_name(dataset_name)
+        if mapped_name != dataset_name:
+            logger.debug("Mapped dataset name %s -> %s", dataset_name, mapped_name)
+            dataset_name = mapped_name
         # Default metadata - in real implementation, this would fetch from API
         default_metadata = {
             "total_entries": 1000,

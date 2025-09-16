@@ -1,0 +1,51 @@
+# Default configuration for ViolentUTF template system
+# This file defines the standard settings for report generation
+
+reporting:
+  generate_report: true
+  report_format: "HTML"
+  include_sections:
+    - executive_summary
+    - methodology
+    - detailed_results
+    - analysis_and_discussion
+    - recommendations
+    - appendix
+  report_template: "base.html"
+  output_directory: "reports/"
+  include_company_branding: true
+  anonymize_sensitive_information: false
+
+  # PyRIT-specific options
+  pyrit_options:
+    include_interactive_visualizations: true
+    include_conversation_analytics: true
+
+  # Garak-specific options
+  garak_options:
+    include_avid_output: true
+    include_failure_rate_statistics: true
+    include_detailed_attempt_logs: false
+
+styling:
+  color_scheme: "professional"
+  font_family: "Arial, sans-serif"
+  include_charts: true
+  chart_style: "plotly"
+
+branding:
+  company_name: ""
+  company_logo: ""
+  report_title_prefix: "ViolentUTF Security Assessment"
+  classification_marking: ""
+
+security:
+  sanitize_input: true
+  escape_html: true
+  validate_templates: true
+  secure_mode: true
+
+performance:
+  response_time_p95_ms: 3000
+  concurrent_attacks: 10
+  max_payload_size_mb: 25
