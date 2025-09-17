@@ -474,8 +474,8 @@ DATASET_NAME_MAPPINGS = {
     "docmath_evaluation": "docmath_mathematical",
     "graphwalk_reasoning": "graphwalk_spatial",
     "acpbench_reasoning": "acpbench_planning",
-    # ViolentUTF native datasets
-    **VIOLENTUTF_NATIVE_DATASETS,
+    # ViolentUTF native datasets - create name mappings only (not full definitions)
+    # These map old names to current names for backward compatibility
 }
 
 
@@ -497,22 +497,118 @@ def _get_dataset_with_mapping(dataset_name: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _create_safe_dataset_copy(
+    dataset_info: Dict[str, Any], additional_fields: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """Create a safe copy of dataset info that avoids unhashable type errors."""
+    safe_dataset = {}
+    # Essential fields that we need to preserve
+    essential_fields = ["name", "description", "category", "config_required"]
+
+    # Copy essential fields safely
+    for field in essential_fields:
+        if field in dataset_info:
+            value = dataset_info[field]
+            # Ensure strings are properly handled
+            if isinstance(value, str):
+                safe_dataset[field] = value
+            elif value is not None:
+                safe_dataset[field] = str(value)
+            else:
+                safe_dataset[field] = dataset_info.get(field, "")
+
+    # Handle available_configs with special care
+    if "available_configs" in dataset_info:
+        configs = dataset_info["available_configs"]
+        try:
+            # Try to serialize it to test for unhashable types
+            import json
+
+            json.dumps(configs)
+            safe_dataset["available_configs"] = configs
+        except (TypeError, ValueError):
+            # If it can't be serialized, simplify it
+            logger.warning(
+                "Simplifying non-serializable available_configs for dataset %s", dataset_info.get("name", "unknown")
+            )
+            if isinstance(configs, dict):
+                # Create a simplified version with only string/number values
+                simplified_configs = {}
+                for key, value in configs.items():
+                    try:
+                        json.dumps(value)
+                        simplified_configs[str(key)] = value
+                    except (TypeError, ValueError):
+                        simplified_configs[str(key)] = str(value) if value is not None else None
+                safe_dataset["available_configs"] = simplified_configs
+            else:
+                safe_dataset["available_configs"] = None
+
+    # Add any additional fields
+    if additional_fields:
+        for key, value in additional_fields.items():
+            safe_dataset[key] = value
+
+    return safe_dataset
+
+
 def _get_all_datasets_with_mappings() -> List[Dict[str, Any]]:
     """Get all datasets including both original and mapped names."""
     all_datasets = []
 
-    # Add all original datasets
-    for dataset_info in NATIVE_DATASET_TYPES.values():
-        all_datasets.append(dataset_info)
+    try:
+        # Add all original datasets
+        try:
+            for dataset_name, dataset_info in NATIVE_DATASET_TYPES.items():
+                # Ensure we're working with a proper dictionary
+                if isinstance(dataset_info, dict):
+                    try:
+                        safe_dataset = _create_safe_dataset_copy(dataset_info)
+                        all_datasets.append(safe_dataset)
+                    except Exception as dataset_error:
+                        logger.warning("Failed to process dataset %s: %s", dataset_name, dataset_error)
+                        # Create minimal fallback entry
+                        fallback_dataset = {
+                            "name": dataset_name,
+                            "description": "Dataset processing error",
+                            "category": "unknown",
+                            "config_required": False,
+                            "available_configs": None,
+                        }
+                        all_datasets.append(fallback_dataset)
+                else:
+                    logger.warning("Skipping non-dict dataset_info for %s: %s", dataset_name, type(dataset_info))
+        except Exception as iteration_error:
+            logger.error("Error iterating over NATIVE_DATASET_TYPES: %s", iteration_error)
 
-    # Add mapped names as aliases
-    for old_name, new_name in DATASET_NAME_MAPPINGS.items():
-        if new_name in NATIVE_DATASET_TYPES:
-            mapped_dataset = NATIVE_DATASET_TYPES[new_name].copy()
-            mapped_dataset["name"] = old_name
-            mapped_dataset["mapped_to"] = new_name
-            mapped_dataset["is_alias"] = True
-            all_datasets.append(mapped_dataset)
+        # Add mapped names as aliases
+        try:
+            for old_name, new_name in DATASET_NAME_MAPPINGS.items():
+                if new_name in NATIVE_DATASET_TYPES:
+                    original_dataset = NATIVE_DATASET_TYPES[new_name]
+                    if isinstance(original_dataset, dict):
+                        try:
+                            additional_fields = {"name": old_name, "mapped_to": new_name, "is_alias": True}
+                            mapped_dataset = _create_safe_dataset_copy(original_dataset, additional_fields)
+                            all_datasets.append(mapped_dataset)
+                        except Exception as mapping_error:
+                            logger.warning(
+                                "Failed to process mapped dataset %s->%s: %s", old_name, new_name, mapping_error
+                            )
+                    else:
+                        logger.warning(
+                            "Skipping non-dict original_dataset for mapping %s->%s: %s",
+                            old_name,
+                            new_name,
+                            type(original_dataset),
+                        )
+        except Exception as mapping_iteration_error:
+            logger.error("Error iterating over DATASET_NAME_MAPPINGS: %s", mapping_iteration_error)
+
+    except Exception as e:
+        logger.error("Error in _get_all_datasets_with_mappings: %s", e)
+        # Return a minimal fallback list to prevent complete failure
+        all_datasets = []
 
     return all_datasets
 
@@ -1728,23 +1824,62 @@ async def get_dataset_categories(
 
         # Add datasets to their respective categories
         for dataset_info in all_datasets:
-            category_id = dataset_info.get("category", "unknown")
-            if category_id not in categories_with_datasets:
-                # Handle unknown categories
-                categories_with_datasets[category_id] = {
-                    "name": category_id.title().replace("_", " "),
-                    "description": f"Datasets in the {category_id} category",
-                    "datasets": [],
-                }
+            try:
+                # Ensure dataset_info is a proper dictionary
+                if not isinstance(dataset_info, dict):
+                    logger.warning("Skipping non-dict dataset_info in categories: %s", type(dataset_info))
+                    continue
 
-            categories_with_datasets[category_id]["datasets"].append(
-                {
-                    "name": dataset_info["name"],
-                    "description": dataset_info["description"],
-                    "config_required": dataset_info.get("config_required", False),
-                    "available_configs": dataset_info.get("available_configs"),
-                }
-            )
+                category_id = dataset_info.get("category", "unknown")
+
+                # Ensure category_id is a string (hashable)
+                if not isinstance(category_id, str):
+                    logger.warning("Invalid category_id type: %s, converting to string", type(category_id))
+                    category_id = str(category_id)
+
+                if category_id not in categories_with_datasets:
+                    # Handle unknown categories
+                    categories_with_datasets[category_id] = {
+                        "name": category_id.title().replace("_", " "),
+                        "description": f"Datasets in the {category_id} category",
+                        "datasets": [],
+                    }
+
+                # Safely extract dataset information
+                dataset_name = dataset_info.get("name", "Unknown Dataset")
+                if not isinstance(dataset_name, str):
+                    dataset_name = str(dataset_name) if dataset_name is not None else "Unknown Dataset"
+
+                dataset_desc = dataset_info.get("description", "No description available")
+                if not isinstance(dataset_desc, str):
+                    dataset_desc = str(dataset_desc) if dataset_desc is not None else "No description available"
+
+                # Handle available_configs safely to avoid unhashable type errors
+                available_configs = dataset_info.get("available_configs")
+                # Ensure available_configs is JSON-serializable (no dict keys that are unhashable)
+                if available_configs is not None:
+                    try:
+                        # Test if it's JSON serializable
+                        import json
+
+                        json.dumps(available_configs)
+                    except (TypeError, ValueError) as json_error:
+                        logger.warning(
+                            "Non-serializable available_configs for dataset %s: %s", dataset_name, json_error
+                        )
+                        available_configs = None
+
+                categories_with_datasets[category_id]["datasets"].append(
+                    {
+                        "name": dataset_name,
+                        "description": dataset_desc,
+                        "config_required": bool(dataset_info.get("config_required", False)),
+                        "available_configs": available_configs,
+                    }
+                )
+            except Exception as e:
+                logger.error("Error processing dataset_info in categories: %s, dataset: %s", e, dataset_info)
+                continue
 
         return {"categories": categories_with_datasets, "total_categories": len(categories_with_datasets)}
 

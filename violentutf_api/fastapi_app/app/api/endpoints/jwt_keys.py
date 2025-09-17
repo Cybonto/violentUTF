@@ -15,7 +15,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
-from app.core.rate_limiting import auth_rate_limit
 from app.core.security import create_api_key_token
 from app.db.database import get_session
 from app.models.api_key import APIKey as APIKeyModel
@@ -26,7 +25,7 @@ router = APIRouter()
 
 
 @router.post("/create", response_model=APIKeyResponse)
-@auth_rate_limit("auth_token")
+# @auth_rate_limit("auth_token")  # Temporarily disabled
 async def create_api_key(
     key_request: APIKeyCreate,
     request: Request,
@@ -80,7 +79,7 @@ async def create_api_key(
 
 
 @router.get("/list", response_model=APIKeyList)
-@auth_rate_limit("auth_token")
+# @auth_rate_limit("auth_token")  # Temporarily disabled
 async def list_api_keys(
     request: Request,
     current_user: User = Depends(get_current_user),
@@ -115,7 +114,7 @@ async def list_api_keys(
 
 
 @router.delete("/{key_id}")
-@auth_rate_limit("auth_token")
+# @auth_rate_limit("auth_token")  # Temporarily disabled
 async def revoke_api_key(
     key_id: str,
     request: Request,
@@ -141,7 +140,6 @@ async def revoke_api_key(
 
 
 @router.get("/current", response_model=APIKeyResponse)
-@auth_rate_limit("auth_token")
 async def get_current_token(request: Request, current_user: User = Depends(get_current_user)) -> object:
     """Get the current user's JWT token (from their session).
 

@@ -34,8 +34,11 @@ try:
     import importlib.util
 
     spec = importlib.util.spec_from_file_location("dashboard_5", os.path.join(dashboard_path, "5_Dashboard.py"))
-    dashboard_5 = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(dashboard_5)
+    if spec and spec.loader:
+        dashboard_5 = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(dashboard_5)
+    else:
+        dashboard_5 = None
 
 except Exception:
     dashboard_5 = None
@@ -203,8 +206,8 @@ class ReportGenerator:
                 except ImportError:
                     # Fallback for older versions
                     class MarkupFallback(str):
-                        def __new__(cls: type, value: str) -> str:
-                            return str.__new__(cls, value)
+                        def __new__(cls, value: str) -> "MarkupFallback":
+                            return str.__new__(cls, value)  # type: ignore
 
                     Markup = MarkupFallback
 

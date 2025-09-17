@@ -846,12 +846,38 @@ def flow_native_datasets() -> None:
     """Handle native dataset category and type selection"""
     st.subheader("Select Native Dataset by Category")
 
+    # Check authentication status
+    headers = get_auth_headers()
+    if not headers.get("Authorization"):
+        st.warning("⚠️ Please authenticate first to access dataset categories.")
+        st.info("📝 Go to the main page and complete the authentication process.")
+
+        # Provide retry button for when auth is completed
+        if st.button("🔄 Retry After Authentication", key="retry_auth_datasets"):
+            # Clear cached data and retry
+            st.session_state.api_dataset_categories = {}
+            st.rerun()
+        return
+
     # Load dataset categories if not available
     if not st.session_state.api_dataset_categories:
         with st.spinner("Loading dataset categories..."):
             categories = load_dataset_categories_from_api()
             if not categories:
                 st.error("❌ Failed to load dataset categories")
+
+                # Show more detailed error information
+                st.info("🔍 Troubleshooting tips:")
+                st.markdown(
+                    """- Ensure the FastAPI backend is running on port 9080
+- Check that APISIX gateway is configured correctly
+- Verify your authentication token is valid
+- Try refreshing the page"""
+                )
+
+                if st.button("🔄 Retry Loading", key="retry_categories"):
+                    st.session_state.api_dataset_categories = {}
+                    st.rerun()
                 return
 
     dataset_categories = st.session_state.api_dataset_categories
@@ -900,6 +926,13 @@ def flow_native_datasets() -> None:
                     if dataset_info.get("config_required"):
                         st.write("**Configuration Required:**")
                         available_configs = dataset_info.get("available_configs", {})
+
+                        # Handle case where available_configs might be None due to serialization issues
+                        if available_configs is None:
+                            available_configs = {}
+                            st.warning(
+                                "⚠️ Configuration options unavailable for this dataset due to data format issues."
+                            )
 
                         for config_key, options in available_configs.items():
                             if options:

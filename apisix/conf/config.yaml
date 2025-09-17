@@ -35,7 +35,7 @@ deployment:
     - 0.0.0.0/0
     admin_key:
     - role: admin
-      key: jDMc3GP5swJGfKraRZ9Ab1tx6dy7NLDp
+      key: LPE39efAwhUhSnunR7wNwv978bCAshxB
       name: admin
     admin_listen:
       port: 9180
@@ -222,8 +222,8 @@ apisix:
   data_encryption:
     enable_encrypt_fields: true
     keyring:
-    - nCvq8llRuEOXNHSi
-    - m0WiSxJdJsYfy5Z9
+    - t2uHdeGGkKTXXcAO
+    - POTKhkinZgUF8CgA
   enable_resolv_search_opt: true
   disable_sync_configuration_during_start: false
   node_listen:

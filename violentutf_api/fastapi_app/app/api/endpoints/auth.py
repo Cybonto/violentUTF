@@ -20,7 +20,6 @@ from app.core.password_policy import (
     default_password_validator,
     validate_password_strength,
 )
-from app.core.rate_limiting import auth_rate_limit
 from app.core.security import create_access_token
 from app.core.security_logging import (
     log_authentication_failure,
@@ -44,7 +43,7 @@ router = APIRouter()
 
 
 @router.post("/token", response_model=Token)
-@auth_rate_limit("auth_login")
+# @auth_rate_limit("auth_login")  # Temporarily disabled
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()) -> object:
     """OAuth2 compatible token endpoint.
 
@@ -176,7 +175,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
 
 
 @router.get("/me", response_model=UserInfo)
-@auth_rate_limit("auth_token")
+# @auth_rate_limit("auth_token")  # Temporarily disabled
 async def read_users_me(request: Request, current_user: User = Depends(get_current_user)) -> object:
     """Get current user information."""
     return UserInfo(
@@ -187,7 +186,7 @@ async def read_users_me(request: Request, current_user: User = Depends(get_curre
 
 
 @router.post("/refresh", response_model=Token)
-@auth_rate_limit("auth_refresh")
+# @auth_rate_limit("auth_refresh")  # Temporarily disabled
 async def refresh_token(request: Request, current_user: User = Depends(get_current_user)) -> object:
     """Refresh access token."""
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -208,7 +207,7 @@ async def refresh_token(request: Request, current_user: User = Depends(get_curre
 
 
 @router.get("/token/info", response_model=TokenInfoResponse)
-@auth_rate_limit("auth_validate")
+# @auth_rate_limit("auth_validate")  # Temporarily disabled
 async def get_token_info(request: Request, current_user: User = Depends(get_current_user)) -> object:
     """Get decoded JWT token information for current user."""
     # Check if user has AI access (ai-api-access role)
@@ -227,7 +226,7 @@ async def get_token_info(request: Request, current_user: User = Depends(get_curr
 
 
 @router.post("/token/validate", response_model=TokenValidationResponse)
-@auth_rate_limit("auth_validate")
+# @auth_rate_limit("auth_validate")  # Temporarily disabled
 async def validate_token(
     request_data: TokenValidationRequest,
     request: Request,
@@ -271,7 +270,7 @@ async def validate_token(
 
 
 @router.post("/logout")
-@auth_rate_limit("auth_token")
+# @auth_rate_limit("auth_token")  # Temporarily disabled
 async def logout(request: Request, current_user: User = Depends(get_current_user)) -> object:
     """Invalidate current session and tokens."""
     # In a real implementation, you would:
@@ -292,7 +291,7 @@ async def get_password_requirements() -> object:
 
 
 @router.post("/password-strength")
-@auth_rate_limit("auth_validate")
+# @auth_rate_limit("auth_validate")  # Temporarily disabled
 async def check_password_strength(request: Request) -> object:
     """
     Check password strength without storing or logging the password

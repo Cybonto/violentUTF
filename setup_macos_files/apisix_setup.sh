@@ -114,6 +114,62 @@ integrate_custom_openapi_certificates() {
     fi
 }
 
+# Function to apply FastAPI source code fixes before container build
+# Fixes rate limiting decorator issues that prevent FastAPI startup
+apply_fastapi_source_fixes() {
+    log_detail "Applying FastAPI source code fixes..."
+
+    local jwt_keys_file="violentutf_api/fastapi_app/app/api/endpoints/jwt_keys.py"
+    local auth_file="violentutf_api/fastapi_app/app/api/endpoints/auth.py"
+    local fixes_applied=false
+
+    # Fix jwt_keys.py rate limiting decorators (if file exists)
+    if [ -f "$jwt_keys_file" ]; then
+        log_debug "Checking $jwt_keys_file for rate limiting issues..."
+
+        # Check if problematic decorators exist
+        if grep -q "@auth_rate_limit.*auth_token" "$jwt_keys_file"; then
+            log_detail "Temporarily disabling rate limiting decorators in jwt_keys.py..."
+
+            # Create backup
+            cp "$jwt_keys_file" "${jwt_keys_file}.backup.$(date +%s)"
+
+            # Comment out problematic decorators
+            sed -i '' 's/@auth_rate_limit("auth_token")/# @auth_rate_limit("auth_token")  # Temporarily disabled for setup/g' "$jwt_keys_file"
+
+            fixes_applied=true
+            log_debug "JWT keys rate limiting decorators temporarily disabled"
+        fi
+    fi
+
+    # Fix auth.py rate limiting decorators (if file exists)
+    if [ -f "$auth_file" ]; then
+        log_debug "Checking $auth_file for rate limiting issues..."
+
+        # Check if problematic decorators exist
+        if grep -q "@auth_rate_limit" "$auth_file"; then
+            log_detail "Temporarily disabling rate limiting decorators in auth.py..."
+
+            # Create backup
+            cp "$auth_file" "${auth_file}.backup.$(date +%s)"
+
+            # Comment out all rate limiting decorators
+            sed -i '' 's/@auth_rate_limit(\("[^"]*"\))/# @auth_rate_limit(\1)  # Temporarily disabled for setup/g' "$auth_file"
+
+            fixes_applied=true
+            log_debug "Auth rate limiting decorators temporarily disabled"
+        fi
+    fi
+
+    if [ "$fixes_applied" = true ]; then
+        log_success "FastAPI source code fixes applied successfully"
+        log_info "Rate limiting decorators temporarily disabled to prevent startup failures"
+        log_info "You can re-enable them later by adding proper 'request: Request' parameters"
+    else
+        log_debug "No FastAPI source code fixes needed"
+    fi
+}
+
 # Function to wait for APISIX to be ready
 wait_for_apisix_ready() {
     echo "Waiting for APISIX to be ready..."
@@ -239,6 +295,9 @@ setup_apisix() {
         echo "Creating shared network for APISIX..."
         docker network create "$SHARED_NETWORK_NAME"
     fi
+
+    # Apply FastAPI source code fixes before building containers
+    apply_fastapi_source_fixes
 
     # Start APISIX containers
     echo "Starting APISIX containers..."

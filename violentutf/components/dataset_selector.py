@@ -48,10 +48,12 @@ class NativeDatasetSelector:
                 self.api_client = _DatasetAPIClient()
                 logger.info("Initialized dataset API client")
             except Exception as e:
-                logger.warning("Failed to initialize API client: %s", e)
+                logger.error("Failed to initialize API client: %s", e, exc_info=True)
+                self.api_client = None
 
-        # Load categories (API-driven with fallback)
-        self.dataset_categories = self._load_dataset_categories()
+        # Initialize categories as None - will load when needed
+        self.dataset_categories: Optional[Dict[str, Any]] = None
+        self._categories_loaded = False
 
         # Initialize session state for dataset selection
         if "selected_dataset_category" not in st.session_state:
@@ -59,12 +61,19 @@ class NativeDatasetSelector:
         if "selected_native_dataset" not in st.session_state:
             st.session_state.selected_native_dataset = None
 
-    def _load_dataset_categories(self) -> Dict[str, Any]:
+    def _load_dataset_categories(self) -> Optional[Dict[str, Any]]:
         """Load dataset categories from API with fallback to hardcoded"""
         # Try to load from API first
         if self.api_client:
             try:
                 logger.info("Loading dataset categories from API")
+
+                # Check if we have authentication
+                if hasattr(st, "session_state"):
+                    has_jwt = "jwt_token" in st.session_state
+                    has_api = "api_token" in st.session_state
+                    logger.info("Auth check: jwt_token=%s, api_token=%s", has_jwt, has_api)
+
                 # Use asyncio to run async method
                 loop = None
                 try:
@@ -93,11 +102,15 @@ class NativeDatasetSelector:
                 return categories
 
             except Exception as e:
-                logger.warning("Failed to load categories from API, using fallback: %s", e)
+                logger.error("Failed to load categories from API, using fallback: %s", e, exc_info=True)
 
         # Fallback to enhanced hardcoded categories
         logger.info("Using fallback hardcoded categories")
-        return self._get_fallback_categories()
+        try:
+            return self._get_fallback_categories()
+        except Exception as e:
+            logger.error("Failed to load fallback categories: %s", e, exc_info=True)
+            return None
 
     def _get_fallback_categories(self) -> Dict[str, Any]:
         """Get fallback hardcoded categories with enhanced dataset list"""
@@ -178,6 +191,35 @@ class NativeDatasetSelector:
         """Render the enhanced dataset selection interface with categories"""
         st.title("🗂️ Configure Native Datasets")
         st.markdown("Select and configure datasets for your AI security evaluation")
+
+        # Load categories when actually needed (and when user might be authenticated)
+        if not self._categories_loaded:
+            with st.spinner("Loading dataset categories..."):
+                self.dataset_categories = self._load_dataset_categories()
+                self._categories_loaded = True
+
+        # Check if categories loaded successfully
+        if not self.dataset_categories:
+            st.error("❌ Failed to load dataset categories. Please check authentication and try again.")
+
+            # Show current auth status for debugging
+            if hasattr(st, "session_state"):
+                has_jwt = "jwt_token" in st.session_state
+                has_api = "api_token" in st.session_state
+                st.info(f"🔍 Auth status: JWT token: {has_jwt}, API token: {has_api}")
+
+            if st.button("🔄 Retry Loading Categories"):
+                # Reinitialize API client in case auth is now available
+                if _DatasetAPIClient:
+                    try:
+                        self.api_client = _DatasetAPIClient()
+                        logger.info("Reinitialized dataset API client for retry")
+                    except Exception as e:
+                        logger.error("Failed to reinitialize API client: %s", e)
+
+                self._categories_loaded = False
+                st.rerun()
+            return
 
         # Dataset category tabs
         category_names = [cat["name"] for cat in self.dataset_categories.values()]
