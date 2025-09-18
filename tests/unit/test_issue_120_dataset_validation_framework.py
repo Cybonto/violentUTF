@@ -31,18 +31,18 @@ import pytest
 # Import the modules we'll be testing (they don't exist yet, but we'll create them)
 try:
     from app.core.dataset_validation import (
+        ValidationDetail,
         ValidationFramework,
         ValidationLevel,
         ValidationResult,
         ValidationStatus,
-        ValidationDetail,
     )
-    from app.services.validation_service import ValidationService
     from app.schemas.validation import (
+        PerformanceMetrics,
         ValidationRequest,
         ValidationResponse,
-        PerformanceMetrics,
     )
+    from app.services.validation_service import ValidationService
 except ImportError:
     # These modules don't exist yet - we'll create them during implementation
     pass
@@ -124,7 +124,7 @@ class TestDatasetValidationFramework:
         """Test CSV format compliance validation."""
         import csv
         import io
-        
+
         # Test valid CSV format
         reader = csv.DictReader(io.StringIO(sample_csv_data))
         rows = list(reader)
@@ -159,7 +159,7 @@ class TestDatasetValidationFramework:
         """Test data preservation during conversion."""
         import csv
         import io
-        
+
         # Parse original CSV
         reader = csv.DictReader(io.StringIO(sample_csv_data))
         original_rows = list(reader)
@@ -214,7 +214,7 @@ class TestDatasetValidationFramework:
         
         import csv
         import io
-        
+
         # The corrupted CSV actually doesn't raise an exception in this case
         # Let's test with truly invalid CSV
         reader = csv.DictReader(io.StringIO(corrupted_csv))

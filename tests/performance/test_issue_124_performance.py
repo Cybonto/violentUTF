@@ -18,27 +18,23 @@ import concurrent.futures
 import gc
 import json
 import os
-import psutil
 import random
 import tempfile
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, List, Optional, Callable, Any
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from typing import Any, Callable, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pandas as pd
+import psutil
 import pytest
 
 from app.core.converters.garak_converter import GarakDatasetConverter
 from app.core.converters.ollegen1_converter import OllaGen1DatasetConverter
 from tests.fixtures.test_data_manager import TestDataManager
-from tests.utils.test_services import (
-    TestServiceManager,
-    PerformanceMonitor,
-    ResourceManager
-)
+from tests.utils.test_services import PerformanceMonitor, ResourceManager, TestServiceManager
 
 
 class TestPerformanceBenchmarks:
@@ -743,6 +739,7 @@ class TestStressScenarios:
     def test_cpu_intensive_operations(self):
         """Test CPU-intensive processing scenarios."""
         import threading
+
         import psutil
         
         cpu_usage_samples = []

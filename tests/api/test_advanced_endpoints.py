@@ -29,40 +29,38 @@ SECURITY: All test data is synthetic for security compliance.
 import asyncio
 import json
 import os
+
+# Add the violentutf_api directory to the path for testing
+import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import Mock, patch
-import threading
 
-import pytest
 import httpx
 import psutil
+import pytest
 
-# Add the violentutf_api directory to the path for testing
-import sys
 violentutf_api_path = Path(__file__).parent.parent.parent / "violentutf_api" / "fastapi_app"
 sys.path.insert(0, str(violentutf_api_path))
 
 try:
     # Import FastAPI components for testing
     from fastapi.testclient import TestClient
-    from app.main import app
+
     from app.core.config import Settings
-    
+    from app.main import app
+
     # Import API schemas
-    from app.schemas.dataset_schemas import (
-        DatasetCreationRequest, 
-        DatasetPreviewRequest,
-        DatasetConfigurationRequest
-    )
-    
+    from app.schemas.dataset_schemas import DatasetConfigurationRequest, DatasetCreationRequest, DatasetPreviewRequest
+
     # Import API services if available
     try:
+        from app.api.v1.endpoints.datasets import router as dataset_router
         from app.services.dataset_service import DatasetService
         from app.services.upload_service import UploadService
-        from app.api.v1.endpoints.datasets import router as dataset_router
     except ImportError:
         DatasetService = None
         UploadService = None

@@ -20,7 +20,7 @@ import tempfile
 import time
 from pathlib import Path
 from typing import Dict, List, Optional
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pandas as pd
 import pytest
@@ -28,10 +28,7 @@ import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 from tests.fixtures.test_data_manager import TestDataManager
-from tests.utils.test_services import (
-    TestServiceManager,
-    PerformanceMonitor
-)
+from tests.utils.test_services import PerformanceMonitor, TestServiceManager
 
 
 class TestStreamlitIntegration:

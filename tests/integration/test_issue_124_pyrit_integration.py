@@ -19,18 +19,18 @@ import os
 import tempfile
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
 # Mock PyRIT imports since they may not be available in test environment
 try:
+    from pyrit.memory import DuckDBMemory
+    from pyrit.models import QuestionAnsweringEntry, SeedPrompt
     from pyrit.orchestrators import PromptSendingOrchestrator
     from pyrit.prompt_target import PromptTarget
-    from pyrit.score import SelfAskTrueFalseScorer, Scorer
-    from pyrit.models import SeedPrompt, QuestionAnsweringEntry
-    from pyrit.memory import DuckDBMemory
+    from pyrit.score import Scorer, SelfAskTrueFalseScorer
     PYRIT_AVAILABLE = True
 except ImportError:
     # Create mock classes if PyRIT not available
@@ -61,12 +61,8 @@ from app.core.converters.garak_converter import GarakDatasetConverter
 from app.core.converters.ollegen1_converter import OllaGen1DatasetConverter
 from app.schemas.garak_datasets import AttackType, HarmCategory
 from app.schemas.ollegen1_datasets import QuestionType
-
 from tests.fixtures.test_data_manager import TestDataManager
-from tests.utils.test_services import (
-    TestServiceManager,
-    PerformanceMonitor
-)
+from tests.utils.test_services import PerformanceMonitor, TestServiceManager
 
 
 class TestPyRITIntegration:

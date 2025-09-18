@@ -15,13 +15,14 @@ SECURITY: All test data is for defensive security research only.
 
 import json
 import os
+
+# Add the violentutf_api directory to the path for testing
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from typing import Dict, List
 
-# Add the violentutf_api directory to the path for testing
-import sys
 violentutf_api_path = Path(__file__).parent.parent / "violentutf_api" / "fastapi_app"
 sys.path.insert(0, str(violentutf_api_path))
 

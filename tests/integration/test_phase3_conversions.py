@@ -29,6 +29,9 @@ import asyncio
 import gc
 import json
 import os
+
+# Add the violentutf_api directory to the path for testing
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -38,30 +41,28 @@ from unittest.mock import Mock, patch
 import psutil
 import pytest
 
-# Add the violentutf_api directory to the path for testing
-import sys
 violentutf_api_path = Path(__file__).parent.parent.parent / "violentutf_api" / "fastapi_app"
 sys.path.insert(0, str(violentutf_api_path))
 
 try:
     # Import all Phase 3 converters
     from app.core.converters.acpbench_converter import ACPBenchConverter
-    from app.core.converters.legalbench_converter import LegalBenchDatasetConverter as LegalBenchConverter
-    from app.core.converters.docmath_converter import DocMathConverter
-    from app.core.converters.graphwalk_converter import GraphWalkConverter
-    from app.core.converters.confaide_converter import ConfAIdeConverter
-    from app.core.converters.judgebench_converter import JudgeBenchConverter
-    
-    # Import schemas for validation
-    from app.schemas.acpbench_datasets import ACPBenchConversionConfig
-    from app.schemas.legalbench_datasets import LegalBenchConversionConfig
-    from app.schemas.docmath_datasets import DocMathConversionConfig
-    from app.schemas.graphwalk_datasets import GraphWalkConversionConfig
-    from app.schemas.confaide_datasets import ConfAIdeConversionConfig
-    from app.schemas.judgebench_datasets import JudgeBenchConversionConfig
-    
+
     # Import base converter for interface validation
     from app.core.converters.base_converter import BaseConverter
+    from app.core.converters.confaide_converter import ConfAIdeConverter
+    from app.core.converters.docmath_converter import DocMathConverter
+    from app.core.converters.graphwalk_converter import GraphWalkConverter
+    from app.core.converters.judgebench_converter import JudgeBenchConverter
+    from app.core.converters.legalbench_converter import LegalBenchDatasetConverter as LegalBenchConverter
+
+    # Import schemas for validation
+    from app.schemas.acpbench_datasets import ACPBenchConversionConfig
+    from app.schemas.confaide_datasets import ConfAIdeConversionConfig
+    from app.schemas.docmath_datasets import DocMathConversionConfig
+    from app.schemas.graphwalk_datasets import GraphWalkConversionConfig
+    from app.schemas.judgebench_datasets import JudgeBenchConversionConfig
+    from app.schemas.legalbench_datasets import LegalBenchConversionConfig
     
 except ImportError as e:
     print(f"Import error: {e}")

@@ -6,10 +6,12 @@ This test suite validates the native dataset selection interface components,
 preview functionality, and specialized configuration interfaces.
 """
 
+from typing import Any, Dict, List
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 import streamlit as st
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, List, Any
+
 
 # Test fixtures for dataset categories and types
 @pytest.fixture
@@ -441,8 +443,9 @@ class TestPerformanceBenchmarks:
         """Test that dataset list loads within 3 seconds"""
         # This test will fail until optimization is implemented
         with pytest.raises(ImportError):
-            from violentutf.components.dataset_selector import NativeDatasetSelector
             import time
+
+            from violentutf.components.dataset_selector import NativeDatasetSelector
             
             selector = NativeDatasetSelector()
             start_time = time.time()
@@ -454,8 +457,9 @@ class TestPerformanceBenchmarks:
     def test_large_dataset_preview_time(self):
         """Test that large dataset preview loads within 10 seconds"""
         with pytest.raises(ImportError):
-            from violentutf.components.dataset_preview import DatasetPreviewComponent
             import time
+
+            from violentutf.components.dataset_preview import DatasetPreviewComponent
             
             preview = DatasetPreviewComponent()
             large_metadata = {

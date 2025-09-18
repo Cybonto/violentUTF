@@ -23,22 +23,18 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-# Import schemas and converters to be implemented
-from app.schemas.judgebench_datasets import (
-    JudgeAnalysis, 
-    JudgeEvaluationEntry,
-    JudgeFileInfo
-)
 from app.core.converters.judgebench_converter import (
     JudgeBenchConverter,
     JudgePerformanceAnalyzer,
     MetaEvaluationPromptGenerator,
     SeedPrompt,
-    SeedPromptDataset
+    SeedPromptDataset,
 )
-from app.utils.judge_analysis import JudgeAnalysisUtils
-from app.services.meta_evaluation_service import MetaEvaluationService
 
+# Import schemas and converters to be implemented
+from app.schemas.judgebench_datasets import JudgeAnalysis, JudgeEvaluationEntry, JudgeFileInfo
+from app.services.meta_evaluation_service import MetaEvaluationService
+from app.utils.judge_analysis import JudgeAnalysisUtils
 
 # Test data constants
 MOCK_ARENA_HARD_EVALUATION = {
@@ -676,7 +672,7 @@ class TestValidationAndErrorHandling:
     def test_validation_framework_integration(self):
         """Test integration with validation framework (Issue #120 dependency)."""
         from app.core.validation import sanitize_string, validate_json_data
-        
+
         # Test input sanitization (current implementation removes control chars but not HTML)
         malicious_input = "<script>alert('xss')</script>Test content"
         sanitized = sanitize_string(malicious_input)

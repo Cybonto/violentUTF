@@ -12,13 +12,14 @@ Test Categories:
 - Error handling and fallback behavior
 """
 
-import sys
 import os
-import pytest
-import tempfile
 import shutil
-from unittest.mock import patch, MagicMock
+import sys
+import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Add repository root to Python path for testing
 repo_root = Path(__file__).parent.parent
@@ -125,7 +126,7 @@ class TestComponentInstantiation:
         """Test NativeDatasetSelector can be instantiated."""
         try:
             from violentutf.components.dataset_selector import NativeDatasetSelector
-            
+
             # Component should be instantiated successfully
             selector = NativeDatasetSelector()
             assert selector is not None
@@ -138,7 +139,7 @@ class TestComponentInstantiation:
         """Test DatasetPreviewComponent can be instantiated."""
         try:
             from violentutf.components.dataset_preview import DatasetPreviewComponent
-            
+
             # Component should be instantiated successfully
             preview = DatasetPreviewComponent()
             assert preview is not None
@@ -151,7 +152,7 @@ class TestComponentInstantiation:
         """Test SpecializedConfigurationInterface can be instantiated."""
         try:
             from violentutf.components.dataset_configuration import SpecializedConfigurationInterface
-            
+
             # Component should be instantiated successfully
             config = SpecializedConfigurationInterface()
             assert config is not None
@@ -164,7 +165,7 @@ class TestComponentInstantiation:
         """Test UserGuidanceSystem can be instantiated."""
         try:
             from violentutf.utils.specialized_workflows import UserGuidanceSystem
-            
+
             # Component should be instantiated successfully
             guidance = UserGuidanceSystem()
             assert guidance is not None
@@ -177,7 +178,7 @@ class TestComponentInstantiation:
         """Test LargeDatasetUIOptimization can be instantiated."""
         try:
             from violentutf.utils.dataset_ui_components import LargeDatasetUIOptimization
-            
+
             # Component should be instantiated successfully
             optimizer = LargeDatasetUIOptimization()
             assert optimizer is not None
@@ -259,7 +260,7 @@ class TestErrorHandling:
     def test_component_initialization_error_handling(self):
         """Test handling of component initialization errors."""
         from violentutf.components.dataset_selector import NativeDatasetSelector
-        
+
         # Mock Streamlit session state access to raise an error during initialization  
         with patch('streamlit.session_state') as mock_session:
             mock_session.__contains__ = lambda key: False

@@ -22,6 +22,9 @@ from typing import Self
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from fastapi import FastAPI  # pylint: disable=unused-import
+from mcp.types import Prompt, Resource
+
 from app.mcp.prompts import prompts_manager
 from app.mcp.prompts.base import prompt_registry
 
@@ -35,8 +38,6 @@ from app.mcp.resources.configuration import ConfigurationResourceProvider
 from app.mcp.resources.datasets import DatasetResourceProvider
 from app.mcp.resources.manager import resource_manager
 from app.mcp.server.base import ViolentUTFMCPServer
-from fastapi import FastAPI  # pylint: disable=unused-import
-from mcp.types import Prompt, Resource
 
 logger = logging.getLogger(__name__)
 

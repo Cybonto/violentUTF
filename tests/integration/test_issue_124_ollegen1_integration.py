@@ -33,10 +33,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'violentu
 try:
     from app.core.converters.ollegen1_converter import OllaGen1DatasetConverter
     from app.schemas.ollegen1_datasets import (
-        OllaGen1ConversionRequest,
-        QuestionType,
-        AssessmentCategory  # Use existing class instead of CognitivePath/RiskProfile
+        AssessmentCategory,  # Use existing class instead of CognitivePath/RiskProfile
     )
+    from app.schemas.ollegen1_datasets import OllaGen1ConversionRequest, QuestionType
+
     # Create aliases for test compatibility
     CognitivePath = AssessmentCategory  # Alias for backward compatibility
     RiskProfile = AssessmentCategory    # Alias for backward compatibility
@@ -49,10 +49,7 @@ except ImportError as e:
     CognitivePath = Mock
     RiskProfile = Mock
 from tests.fixtures.test_data_manager import TestDataManager
-from tests.utils.test_services import (
-    TestServiceManager,
-    PerformanceMonitor
-)
+from tests.utils.test_services import PerformanceMonitor, TestServiceManager
 
 
 class TestOllaGen1Integration:
@@ -395,9 +392,10 @@ class TestOllaGen1Integration:
     
     def test_memory_usage_monitoring(self):
         """Validate memory usage stays within bounds during conversion."""
-        import psutil
         import gc
-        
+
+        import psutil
+
         # Get baseline memory
         gc.collect()  # Force garbage collection
         process = psutil.Process()

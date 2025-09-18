@@ -15,10 +15,9 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Tuple, Union
 
-from transformers import AutoTokenizer
-
 import utils.models as models
 import utils.prompts as prompts
+from transformers import AutoTokenizer
 
 # run judge on pairs
 # judges should take a question and two responses, and return a decision (e.g., A>B or B>A)

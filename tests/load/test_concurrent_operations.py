@@ -32,28 +32,29 @@ import concurrent.futures
 import json
 import os
 import tempfile
-import time
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from unittest.mock import AsyncMock, MagicMock, patch
-import psutil
 
+import psutil
 import pytest
 import requests
 from httpx import AsyncClient
 
+from tests.fixtures.load_test_fixtures import create_load_test_data
+
 # Test framework imports
 from tests.utils.keycloak_auth import KeycloakTestAuth
-from tests.fixtures.load_test_fixtures import create_load_test_data
 
 # Import expected classes (these will initially fail - part of TDD RED phase)
 try:
     from violentutf_api.fastapi_app.app.testing.load_testing import (
+        ConcurrencyValidationError,
         ConcurrentOperationManager,
         LoadTestExecutor,
-        ConcurrencyValidationError,
     )
 except ImportError:
     # RED Phase: These imports will fail initially
@@ -63,9 +64,9 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.monitoring.resource_monitor import (
+        ConcurrencyMetrics,
         ResourceUtilizationMonitor,
         SystemResourceTracker,
-        ConcurrencyMetrics,
     )
 except ImportError:
     # RED Phase: Resource monitoring imports will fail initially
@@ -75,9 +76,9 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.schemas.load_testing import (
+        ConcurrentOperationStatus,
         LoadTestRequest,
         LoadTestResult,
-        ConcurrentOperationStatus,
         ResourceUtilizationMetrics,
     )
 except ImportError:

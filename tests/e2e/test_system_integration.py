@@ -31,29 +31,30 @@ TDD Implementation:
 import asyncio
 import json
 import os
+import sqlite3
 import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
-import sqlite3
-import duckdb
 
+import duckdb
 import pytest
 import requests
 from httpx import AsyncClient
 
+from tests.fixtures.integration_fixtures import create_integration_test_data
+
 # Test framework imports
 from tests.utils.keycloak_auth import KeycloakTestAuth
-from tests.fixtures.integration_fixtures import create_integration_test_data
 
 # Import expected classes (these will initially fail - part of TDD RED phase)
 try:
     from violentutf_api.fastapi_app.app.core.integration.system_integration_manager import (
-        SystemIntegrationManager,
         IntegrationValidationError,
         ServiceIntegrationError,
+        SystemIntegrationManager,
     )
 except ImportError:
     # RED Phase: These imports will fail initially
@@ -63,8 +64,8 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.services.integration_validation_service import (
-        IntegrationValidationService,
         ComponentIntegrationTester,
+        IntegrationValidationService,
     )
 except ImportError:
     # RED Phase: Integration service imports will fail initially
@@ -73,9 +74,9 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.schemas.system_integration import (
+        ComponentIntegrationStatus,
         IntegrationTestRequest,
         IntegrationTestResult,
-        ComponentIntegrationStatus,
         ServiceHealthMetrics,
     )
 except ImportError:

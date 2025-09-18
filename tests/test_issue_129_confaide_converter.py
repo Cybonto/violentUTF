@@ -31,15 +31,15 @@ import pytest
 
 from violentutf_api.fastapi_app.app.core.converters.confaide_converter import (
     ConfAIdeConverter,
-    TierProcessor,
     PrivacyAnalyzer,
+    TierProcessor,
 )
 from violentutf_api.fastapi_app.app.schemas.confaide_datasets import (
-    PrivacyTier,
-    PrivacyAnalysis,
-    PrivacySensitivity,
     ConfAIdeConversionResult,
+    PrivacyAnalysis,
     PrivacyFramework,
+    PrivacySensitivity,
+    PrivacyTier,
 )
 from violentutf_api.fastapi_app.app.services.privacy_service import PrivacyService
 from violentutf_api.fastapi_app.app.utils.privacy_analysis import (

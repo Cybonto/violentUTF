@@ -5,12 +5,14 @@ This test suite validates integration with ViolentUTF API, PyRIT memory system,
 authentication flows, and end-to-end data flow validation.
 """
 
+import json
+from typing import Any, Dict, List, Optional
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 import requests
-import json
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, List, Any, Optional
 import streamlit as st
+
 
 # Test fixtures for API integration
 @pytest.fixture
@@ -148,7 +150,7 @@ class TestViolentUTFAPIIntegration:
     def test_load_dataset_types_integration(self, mock_api_responses):
         """Test loading dataset types from API"""
         with pytest.raises(ImportError):
-            from violentutf.pages.2_Configure_Datasets import load_dataset_types_from_api, api_request
+            from violentutf.pages.2_Configure_Datasets import api_request, load_dataset_types_from_api
             
             with patch('violentutf.pages.2_Configure_Datasets.api_request') as mock_request:
                 mock_request.return_value = mock_api_responses["dataset_types"]
@@ -301,7 +303,7 @@ class TestAuthenticationFlowIntegration:
     def test_apisix_gateway_integration(self):
         """Test APISIX gateway authentication and routing"""
         with pytest.raises(ImportError):
-            from violentutf.pages.2_Configure_Datasets import get_auth_headers, API_ENDPOINTS
+            from violentutf.pages.2_Configure_Datasets import API_ENDPOINTS, get_auth_headers
             
             headers = get_auth_headers()
             
@@ -322,9 +324,9 @@ class TestEndToEndDataFlow:
             # Step 1: Load dataset types
             with pytest.raises(ImportError):
                 from violentutf.pages.2_Configure_Datasets import (
-                    load_dataset_types_from_api,
                     create_dataset_via_api,
-                    flow_native_datasets
+                    flow_native_datasets,
+                    load_dataset_types_from_api,
                 )
                 
                 with patch('violentutf.pages.2_Configure_Datasets.api_request') as mock_request:
@@ -356,7 +358,7 @@ class TestEndToEndDataFlow:
         with pytest.raises(ImportError):
             from violentutf.components.dataset_preview import DatasetPreviewComponent
             from violentutf.components.evaluation_workflows import EvaluationWorkflowInterface
-            
+
             # Step 1: Preview dataset
             preview = DatasetPreviewComponent()
             
@@ -380,7 +382,7 @@ class TestEndToEndDataFlow:
         with pytest.raises(ImportError):
             from violentutf.components.dataset_configuration import SpecializedConfigurationInterface
             from violentutf.pages.2_Configure_Datasets import run_orchestrator_dataset_test
-            
+
             # Step 1: Configure dataset
             config = SpecializedConfigurationInterface()
             

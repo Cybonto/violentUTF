@@ -24,7 +24,6 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "violen
 # Now we can import from the API modules
 from app.api.v1.endpoints.targets import router as targets_router
 from app.core.security import get_current_user
-
 from keycloak import KeycloakOpenID
 
 # Add project root to sys.path

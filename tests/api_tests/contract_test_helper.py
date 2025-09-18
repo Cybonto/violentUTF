@@ -3,11 +3,6 @@
 Provides common utilities for contract validation and testing.
 """
 from __future__ import annotations
-# Copyright (c) 2025 ViolentUTF Contributors.
-# Licensed under the MIT License.
-#
-# This file is part of ViolentUTF - An AI Red Teaming Platform.
-# See LICENSE file in the project root for license information.
 
 import json
 import logging
@@ -21,6 +16,14 @@ import pytest
 import requests
 from fastapi.testclient import TestClient
 from openapi_spec_validator import validate_spec
+
+# Copyright (c) 2025 ViolentUTF Contributors.
+# Licensed under the MIT License.
+#
+# This file is part of ViolentUTF - An AI Red Teaming Platform.
+# See LICENSE file in the project root for license information.
+
+
 
 logger = logging.getLogger(__name__)
 
