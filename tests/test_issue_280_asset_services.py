@@ -6,6 +6,8 @@ This module contains comprehensive unit tests for the asset management service l
 following Test-Driven Development (TDD) principles.
 """
 
+import os
+import sys
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -14,8 +16,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import sys
-import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'violentutf_api', 'fastapi_app'))
 
 from app.models.asset_inventory import (

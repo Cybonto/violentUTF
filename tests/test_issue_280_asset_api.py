@@ -6,6 +6,8 @@ This module contains comprehensive integration tests for the asset management AP
 following Test-Driven Development (TDD) principles.
 """
 
+import os
+import sys
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List
@@ -16,9 +18,9 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import sys
-import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'violentutf_api', 'fastapi_app'))
+
+from main import app
 
 from app.models.asset_inventory import (
     AssetType,
@@ -28,7 +30,6 @@ from app.models.asset_inventory import (
     SecurityClassification,
     ValidationStatus,
 )
-from main import app
 
 
 class TestAssetCRUDAPI:
@@ -787,7 +788,7 @@ class TestAPIPerformance:
     ) -> None:
         """Test that API responses are under 500ms."""
         import time
-        
+
         # Test GET /assets/ endpoint
         start_time = time.time()
         response = await async_client.get(
@@ -809,7 +810,7 @@ class TestAPIPerformance:
     ) -> None:
         """Test API handling of concurrent requests."""
         import asyncio
-        
+
         # Create multiple concurrent requests
         tasks = []
         for i in range(10):
@@ -834,7 +835,7 @@ class TestAPIPerformance:
     ) -> None:
         """Test pagination performance with large datasets."""
         import time
-        
+
         # Test large limit (simulating large dataset pagination)
         start_time = time.time()
         response = await async_client.get(

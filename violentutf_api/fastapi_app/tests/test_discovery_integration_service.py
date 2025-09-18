@@ -12,29 +12,24 @@ covering integration with Issue #279 discovery system, data mapping, and validat
 
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.asset_inventory import (
-    DatabaseAsset,
-    AssetType,
-    SecurityClassification,
-    CriticalityLevel,
-    Environment
-)
+from app.models.asset_inventory import AssetType, CriticalityLevel, DatabaseAsset, Environment, SecurityClassification
 from app.schemas.asset_schemas import AssetCreate
-from app.services.asset_management.discovery_integration_service import (
-    DiscoveryIntegrationService,
-    DiscoveryReport,
-    DiscoveredAsset,
-    ImportResult,
-    DiscoveryMetadata
-)
 from app.services.asset_management.asset_service import AssetService
-from app.services.asset_management.validation_service import ValidationService, ValidationResult
 from app.services.asset_management.audit_service import AuditService
+from app.services.asset_management.discovery_integration_service import (
+    DiscoveredAsset,
+    DiscoveryIntegrationService,
+    DiscoveryMetadata,
+    DiscoveryReport,
+    ImportResult,
+)
+from app.services.asset_management.validation_service import ValidationResult, ValidationService
 
 
 class TestDiscoveryIntegrationService:
@@ -218,7 +213,7 @@ class TestDiscoveryIntegrationService:
         """Test processing discovery report with validation errors."""
         # Arrange
         from app.services.asset_management.validation_service import ValidationError
-        
+
         # First asset has validation errors, second is valid
         validation_results = [
             ValidationResult(
@@ -411,7 +406,7 @@ class TestDiscoveryIntegrationService:
         """Test processing discovery report with mixed results (new, updated, errors)."""
         # Arrange
         from app.services.asset_management.validation_service import ValidationError
-        
+
         # Create discovery report with 4 assets
         discovered_assets = [
             DiscoveredAsset(  # Will be created (new)

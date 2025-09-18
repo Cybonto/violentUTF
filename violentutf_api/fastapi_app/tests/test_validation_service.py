@@ -10,21 +10,17 @@ This module provides comprehensive unit tests for the ValidationService class,
 covering all validation rules, business logic, and edge cases.
 """
 
-import pytest
 from typing import List
 
-from app.models.asset_inventory import (
-    AssetType,
-    SecurityClassification,
-    CriticalityLevel,
-    Environment
-)
+import pytest
+
+from app.models.asset_inventory import AssetType, CriticalityLevel, Environment, SecurityClassification
 from app.schemas.asset_schemas import AssetCreate
 from app.services.asset_management.validation_service import (
-    ValidationService,
-    ValidationResult,
     ValidationError,
-    ValidationWarning
+    ValidationResult,
+    ValidationService,
+    ValidationWarning,
 )
 
 

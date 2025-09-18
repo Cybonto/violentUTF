@@ -35,7 +35,10 @@ try:
     from app.schemas.ollegen1_datasets import (
         AssessmentCategory,  # Use existing class instead of CognitivePath/RiskProfile
     )
-    from app.schemas.ollegen1_datasets import OllaGen1ConversionRequest, QuestionType
+    from app.schemas.ollegen1_datasets import (
+        OllaGen1ConversionRequest,
+        QuestionType,
+    )
 
     # Create aliases for test compatibility
     CognitivePath = AssessmentCategory  # Alias for backward compatibility

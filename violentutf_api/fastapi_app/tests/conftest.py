@@ -13,37 +13,37 @@ utilities for testing the asset management system with high test coverage.
 import asyncio
 import uuid
 from datetime import datetime, timezone
-from typing import AsyncGenerator, Dict, Generator, List, Union, Any, Optional
+from typing import Any, AsyncGenerator, Dict, Generator, List, Optional, Union
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, MagicMock
-from sqlalchemy import create_engine, StaticPool
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
+from sqlalchemy import StaticPool, create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
-from app.main import app
 from app.db.database import Base, get_session
+from app.main import app
 from app.models.asset_inventory import (
-    DatabaseAsset, 
-    AssetRelationship, 
     AssetAuditLog,
+    AssetRelationship,
     AssetType,
-    SecurityClassification,
+    ChangeType,
     CriticalityLevel,
+    DatabaseAsset,
     Environment,
-    ValidationStatus,
-    RelationshipType,
     RelationshipStrength,
-    ChangeType
+    RelationshipType,
+    SecurityClassification,
+    ValidationStatus,
 )
 from app.schemas.asset_schemas import AssetCreate, AssetUpdate
 from app.services.asset_management.asset_service import AssetService
 from app.services.asset_management.audit_service import AuditService
-from app.services.asset_management.validation_service import ValidationService
 from app.services.asset_management.conflict_resolution_service import ConflictResolutionService
-
+from app.services.asset_management.validation_service import ValidationService
 
 # Test database configuration
 SQLITE_TEST_URL = "sqlite+aiosqlite:///./test_asset_management.db"

@@ -10,22 +10,17 @@ This module provides comprehensive integration tests for all 11 API endpoints,
 including authentication, request/response validation, and error handling.
 """
 
-import uuid
 import json
+import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Any, Dict
+from unittest.mock import patch
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from unittest.mock import patch
 
-from app.models.asset_inventory import (
-    DatabaseAsset,
-    AssetType,
-    SecurityClassification,
-    CriticalityLevel,
-    Environment
-)
+from app.models.asset_inventory import AssetType, CriticalityLevel, DatabaseAsset, Environment, SecurityClassification
 
 
 class TestAssetAPIIntegration:
@@ -778,7 +773,7 @@ class TestAssetAPIIntegration:
     ):
         """Test that API endpoints meet performance requirements (<500ms)."""
         import time
-        
+
         # Act - Test list assets endpoint
         start_time = time.time()
         response = await async_client.get(

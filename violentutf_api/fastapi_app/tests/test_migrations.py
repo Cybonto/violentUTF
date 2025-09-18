@@ -10,17 +10,18 @@ This module provides comprehensive tests for database migrations,
 including up/down migration functionality, schema validation, and data integrity.
 """
 
-import pytest
 import asyncio
-from typing import List, Dict, Any
-from sqlalchemy import create_engine, text, inspect, MetaData
-from sqlalchemy.ext.asyncio import create_async_engine
-from alembic.config import Config
-from alembic import command
-from alembic.script import ScriptDirectory
-from alembic.runtime.migration import MigrationContext
-import tempfile
 import os
+import tempfile
+from typing import Any, Dict, List
+
+import pytest
+from alembic import command
+from alembic.config import Config
+from alembic.runtime.migration import MigrationContext
+from alembic.script import ScriptDirectory
+from sqlalchemy import MetaData, create_engine, inspect, text
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.db.database import Base
 
@@ -376,7 +377,7 @@ file_template = %%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d_%%(rev)
     def test_migration_performance(self, alembic_config, sync_engine):
         """Test that migration completes within reasonable time."""
         import time
-        
+
         # Measure migration time
         start_time = time.time()
         

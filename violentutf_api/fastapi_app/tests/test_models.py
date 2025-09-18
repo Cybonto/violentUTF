@@ -12,22 +12,23 @@ including DatabaseAsset, AssetRelationship, and AssetAuditLog.
 
 import uuid
 from datetime import datetime, timezone
+
 import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.asset_inventory import (
-    DatabaseAsset,
-    AssetRelationship,
     AssetAuditLog,
+    AssetRelationship,
     AssetType,
-    SecurityClassification,
+    ChangeType,
     CriticalityLevel,
+    DatabaseAsset,
     Environment,
-    ValidationStatus,
-    RelationshipType,
     RelationshipStrength,
-    ChangeType
+    RelationshipType,
+    SecurityClassification,
+    ValidationStatus,
 )
 
 
@@ -799,9 +800,9 @@ class TestModelRelationships:
         await async_session.refresh(relationship)
         
         # Test relationship navigation
-        from sqlalchemy.orm import selectinload
         from sqlalchemy import select
-        
+        from sqlalchemy.orm import selectinload
+
         # Load source asset with relationships
         result = await async_session.execute(
             select(DatabaseAsset)
@@ -851,8 +852,8 @@ class TestModelRelationships:
         await async_session.commit()
         
         # Test audit log navigation
-        from sqlalchemy.orm import selectinload
         from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
         
         result = await async_session.execute(
             select(DatabaseAsset)

@@ -12,23 +12,18 @@ covering duplicate detection algorithms, confidence scoring, and resolution stra
 
 import uuid
 from datetime import datetime, timezone
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.asset_inventory import (
-    DatabaseAsset,
-    AssetType,
-    SecurityClassification,
-    CriticalityLevel,
-    Environment
-)
+from app.models.asset_inventory import AssetType, CriticalityLevel, DatabaseAsset, Environment, SecurityClassification
 from app.schemas.asset_schemas import AssetCreate
 from app.services.asset_management.conflict_resolution_service import (
-    ConflictResolutionService,
     ConflictCandidate,
-    ConflictType,
     ConflictResolution,
-    ResolutionAction
+    ConflictResolutionService,
+    ConflictType,
+    ResolutionAction,
 )
 
 
