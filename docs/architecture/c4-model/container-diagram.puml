@@ -1,0 +1,77 @@
+@startuml ViolentUTF Container Diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+
+!include DEVICONS/python.puml
+!include DEVICONS/postgresql.puml
+!include DEVICONS/docker.puml
+!include FONTAWESOME/users.puml
+!include FONTAWESOME/shield_alt.puml
+!include FONTAWESOME/database.puml
+
+LAYOUT_WITH_LEGEND()
+
+title ViolentUTF Container Diagram
+
+Person(security_researcher, "Security Researcher", "AI security testing professional", $sprite="users")
+Person(developer, "Developer", "Application developer using MCP")
+Person(admin, "System Administrator", "Platform administrator", $sprite="shield_alt")
+
+System_Boundary(violentutf_boundary, "ViolentUTF Platform") {
+    Container(streamlit_app, "Streamlit Dashboard", "Python/Streamlit", "Web-based security testing interface", $sprite="python")
+    Container(apisix_gateway, "APISIX Gateway", "OpenResty/Lua", "API Gateway with authentication, rate limiting, and AI proxy", $sprite="shield_alt")
+    Container(fastapi_backend, "FastAPI Backend", "Python/FastAPI", "REST API for security testing operations", $sprite="python")
+    Container(mcp_server, "MCP Server", "Python/JSON-RPC", "Model Context Protocol server with 23+ tools", $sprite="python")
+    Container(keycloak_sso, "Keycloak SSO", "Java/Keycloak", "Identity and access management", $sprite="shield_alt")
+
+    ContainerDb(postgres_db, "PostgreSQL Database", "PostgreSQL 15", "Keycloak identity data", $sprite="postgresql")
+    ContainerDb(sqlite_db, "SQLite Database", "SQLite", "FastAPI application data", $sprite="database")
+    ContainerDb(duckdb_stores, "DuckDB Stores", "DuckDB", "PyRIT memory and configuration data", $sprite="database")
+
+    Container(pyrit_framework, "PyRIT Framework", "Python", "Microsoft's Risk Identification Toolkit")
+    Container(garak_scanner, "Garak Scanner", "Python", "LLM vulnerability scanner")
+    Container(ironutf_defense, "IronUTF Defense", "Python", "AI endpoint protection")
+}
+
+System_Ext(ai_providers, "AI Providers", "OpenAI, Anthropic, Ollama")
+System_Ext(external_idp, "External Identity Provider", "Corporate SSO/LDAP")
+System_Ext(mcp_clients, "MCP Clients", "Claude Desktop, VS Code")
+
+' User interactions
+Rel(security_researcher, apisix_gateway, "Uses dashboard", "HTTPS")
+Rel(developer, apisix_gateway, "API requests", "HTTPS/REST")
+Rel(admin, keycloak_sso, "Manages identity", "HTTPS")
+
+' MCP interactions
+Rel(mcp_clients, apisix_gateway, "MCP protocol", "JSON-RPC 2.0/SSE")
+
+' Internal container relationships
+Rel(apisix_gateway, streamlit_app, "Routes requests", "HTTP")
+Rel(apisix_gateway, fastapi_backend, "Routes API", "HTTP")
+Rel(apisix_gateway, mcp_server, "Routes MCP", "HTTP")
+Rel(apisix_gateway, keycloak_sso, "Auth validation", "HTTP")
+
+Rel(streamlit_app, fastapi_backend, "API calls", "HTTP/REST")
+Rel(mcp_server, fastapi_backend, "Service calls", "HTTP/REST")
+
+Rel(fastapi_backend, pyrit_framework, "Orchestrates tests", "Python API")
+Rel(fastapi_backend, garak_scanner, "Runs scans", "Python API")
+Rel(fastapi_backend, ironutf_defense, "Applies protection", "Python API")
+
+' Database relationships
+Rel(keycloak_sso, postgres_db, "Stores identity data", "JDBC")
+Rel(fastapi_backend, sqlite_db, "Stores app data", "SQLAlchemy")
+Rel(fastapi_backend, duckdb_stores, "Manages config", "DuckDB Python")
+Rel(pyrit_framework, duckdb_stores, "Memory storage", "DuckDB Python")
+
+' External integrations
+Rel(keycloak_sso, external_idp, "Federated auth", "SAML/OIDC")
+Rel(fastapi_backend, ai_providers, "AI model access", "HTTPS/REST")
+Rel(pyrit_framework, ai_providers, "Security testing", "HTTPS/REST")
+Rel(garak_scanner, ai_providers, "Vulnerability scans", "HTTPS/REST")
+
+SHOW_LEGEND()
+
+@enduml

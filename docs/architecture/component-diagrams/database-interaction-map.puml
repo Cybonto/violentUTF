@@ -1,0 +1,171 @@
+@startuml Database Interaction Map
+!theme cerulean-outline
+skinparam backgroundColor white
+skinparam databaseBackgroundColor lightblue
+skinparam componentBackgroundColor lightgreen
+skinparam actorBackgroundColor lightyellow
+
+title ViolentUTF Database Interaction Map
+
+' Define actors and external systems
+actor "User" as User
+actor "Admin" as Admin
+actor "MCP Client" as MCPClient
+
+' Define main application components
+component "Streamlit Dashboard" as Streamlit {
+    [Authentication UI]
+    [Configuration UI]
+    [Dashboard UI]
+    [Results UI]
+}
+
+component "APISIX Gateway" as APISIX {
+    [Route Handler]
+    [Auth Validator]
+    [Rate Limiter]
+    [Proxy Handler]
+}
+
+component "FastAPI Backend" as FastAPI {
+    [API Endpoints]
+    [Business Services]
+    [Auth Service]
+    [Database Manager]
+    [DuckDB Manager]
+    [File Manager]
+}
+
+component "MCP Server" as MCP {
+    [Tool Registry]
+    [Resource Manager]
+    [Session Manager]
+    [OAuth Handler]
+}
+
+component "Keycloak SSO" as Keycloak {
+    [Identity Provider]
+    [User Management]
+    [Token Service]
+    [Admin Console]
+}
+
+component "PyRIT Framework" as PyRIT {
+    [Memory Manager]
+    [Orchestrator Engine]
+    [Scorer Engine]
+    [Conversation Store]
+}
+
+component "Garak Scanner" as Garak {
+    [Probe Engine]
+    [Result Analyzer]
+    [Report Generator]
+}
+
+' Define databases
+database "PostgreSQL" as PostgresDB {
+    folder "Keycloak Schema" {
+        [users]
+        [roles]
+        [permissions]
+        [sessions]
+        [realm_config]
+    }
+}
+
+database "SQLite" as SQLiteDB {
+    folder "Application Schema" {
+        [api_keys]
+        [user_sessions]
+        [audit_logs]
+        [system_config]
+        [rate_limits]
+    }
+}
+
+database "DuckDB Stores" as DuckDBStores {
+    folder "User-Specific DBs" {
+        [generators]
+        [datasets]
+        [dataset_prompts]
+        [scorers]
+        [converters]
+        [user_sessions]
+    }
+    folder "PyRIT Memory DBs" {
+        [conversations]
+        [prompt_request_responses]
+        [embeddings]
+        [memory_labels]
+    }
+}
+
+database "File System" as FileSystem {
+    folder "Configuration" {
+        [YAML configs]
+        [JSON parameters]
+        [Template files]
+    }
+    folder "Datasets" {
+        [Garak datasets]
+        [Custom prompts]
+        [Test scenarios]
+    }
+    folder "Results" {
+        [Test reports]
+        [Scan outputs]
+        [Log files]
+    }
+}
+
+' User interactions
+User --> Streamlit : "Web Interface"
+MCPClient --> APISIX : "MCP Protocol"
+Admin --> Keycloak : "Identity Management"
+
+' Application flow
+Streamlit --> APISIX : "API Calls"
+APISIX --> FastAPI : "Authenticated Requests"
+APISIX --> MCP : "MCP Requests"
+APISIX --> Keycloak : "Auth Validation"
+MCP --> FastAPI : "Service Calls"
+FastAPI --> PyRIT : "Orchestration"
+FastAPI --> Garak : "Scanning"
+
+' Database connections with interaction details
+Keycloak --> PostgresDB : "JDBC\n• User authentication\n• Role management\n• Session storage\n• Realm configuration"
+
+FastAPI --> SQLiteDB : "SQLAlchemy\n• API key management\n• User session tracking\n• Audit logging\n• System configuration\n• Rate limit tracking"
+
+FastAPI --> DuckDBStores : "DuckDB Python\n• Generator configuration\n• Dataset management\n• Scorer settings\n• User preferences\n• Session data"
+
+PyRIT --> DuckDBStores : "PyRIT Memory API\n• Conversation history\n• Prompt/response pairs\n• Embedding storage\n• Test results\n• Memory labels"
+
+MCP --> DuckDBStores : "Direct Access\n• Tool configuration\n• Resource metadata\n• Session state\n• User context"
+
+FastAPI --> FileSystem : "File I/O\n• Configuration files\n• Dataset loading\n• Report generation\n• Log management"
+
+Garak --> FileSystem : "File I/O\n• Dataset loading\n• Report output\n• Probe definitions\n• Result storage"
+
+MCP --> FileSystem : "Resource Access\n• Config file access\n• Dataset browsing\n• Log file reading\n• Report retrieval"
+
+' Database interaction patterns
+note bottom of PostgresDB : **PostgreSQL Usage:**\n• Keycloak identity data\n• Multi-user isolation\n• ACID transactions\n• Backup & recovery
+
+note bottom of SQLiteDB : **SQLite Usage:**\n• Lightweight app data\n• Session management\n• Single-file portability\n• Simple deployment
+
+note bottom of DuckDBStores : **DuckDB Usage:**\n• User-specific databases\n• Analytics workloads\n• PyRIT integration\n• Configuration storage\n• Hash-based user isolation
+
+note bottom of FileSystem : **File System Usage:**\n• Configuration files\n• Dataset storage\n• Report outputs\n• Logging\n• Template files
+
+' Data flow annotations
+note right of APISIX : Gateway validates all\ndatabase access through\nJWT authentication
+
+note right of FastAPI : Central orchestrator for\nall database operations\nwith user context
+
+note right of PyRIT : Direct DuckDB access\nfor memory management\nand conversation storage
+
+note left of MCP : Resource-based access\nto configurations and\ntest data via tools
+
+@enduml
