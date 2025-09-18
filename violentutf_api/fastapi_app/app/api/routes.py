@@ -27,6 +27,7 @@ from app.api.endpoints import (
     sessions,
     validation,
 )
+from app.api.v1 import assets
 
 api_router = APIRouter()
 
@@ -66,3 +67,6 @@ api_router.include_router(apisix_admin.router)
 
 # Dataset validation endpoints (Issue #120)
 api_router.include_router(validation.router, prefix="/validation", tags=["validation"])
+
+# Asset management endpoints (Issue #280)
+api_router.include_router(assets.router, prefix="/assets", tags=["asset-management"])
