@@ -11,14 +11,15 @@ analytics data to final HTML report output.
 """
 
 import os
-import tempfile
 import shutil
-import pytest
+import tempfile
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+import pytest
 
 # Import the report generator (will be implemented)
-from violentutf.utils.report_generator import ReportGenerator, ReportGenerationError
+from violentutf.utils.report_generator import ReportGenerationError, ReportGenerator
 from violentutf.utils.template_engine import TemplateEngine
 
 

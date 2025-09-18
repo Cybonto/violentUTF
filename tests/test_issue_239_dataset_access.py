@@ -25,11 +25,12 @@ Test coverage follows TDD methodology:
 
 import asyncio
 import json
-import pytest
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent
@@ -315,7 +316,7 @@ class TestIssue239DatasetAccessRegression:
         GREEN PHASE: Should pass with proper caching implementation
         """
         import time
-        
+
         # Test initialization time
         start_time = time.time()
         selector = NativeDatasetSelector()
@@ -417,8 +418,9 @@ class TestIssue239Integration:
         
         Tests that loading all datasets doesn't exceed memory limits
         """
-        import psutil
         import os
+
+        import psutil
         
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB

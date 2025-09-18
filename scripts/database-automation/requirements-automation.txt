@@ -1,0 +1,64 @@
+# ViolentUTF Database Discovery Automation - Additional Requirements
+# Issue #279: Automated Discovery Scripts Development
+#
+# These are optional dependencies for enhanced discovery functionality.
+# The core discovery system works without these, but full functionality requires them.
+#
+# Installation: pip install -r requirements-automation.txt
+# Test dependencies: python3 test_requirements.py
+#
+# Core functionality (no dependencies): python3 test_discovery_basic.py
+# Full functionality (with dependencies): python3 run_discovery.py run
+
+
+# Enhanced Code Analysis
+astroid>=3.3.5                   # Enhanced AST analysis with better inference
+bandit>=1.8.0                    # Security analysis of code patterns
+click>=8.1.7                     # Command-line interface framework
+coverage>=7.6.1                  # Test coverage analysis
+
+# Security Integration (some may already be installed)
+detect-secrets>=1.5.0            # Credential detection and scanning
+docker>=7.1.0                    # Official Docker SDK for Python (alternative/fallback)
+fuzzywuzzy>=0.18.0               # Fuzzy string matching for asset comparison
+libcst>=1.4.0                    # Concrete Syntax Tree for preserving formatting
+netifaces>=0.11.0                # Network interface enumeration
+parso>=0.8.4                     # Advanced Python parser for complex code analysis
+psutil>=6.0.0                    # System and network interface discovery
+
+# Testing and Development (optional)
+pytest>=8.3.3                    # Testing framework
+pytest-docker>=3.1.1             # Docker container testing
+pytest-mock>=3.14.0              # Mocking for isolated testing
+
+# Configuration and Data Processing
+python-dotenv>=1.0.1             # Environment file parsing (.env files)
+python-Levenshtein>=0.25.1       # Fast string distance calculations (optional speedup for fuzzywuzzy)
+
+# Network-Based Discovery
+python-nmap>=0.7.1               # Network scanning and service detection
+# Container-Based Discovery
+python-on-whales>=0.72.0         # Primary Docker API interface for container inspection
+PyYAML>=6.0.2                    # YAML configuration file analysis
+
+# Enhanced CLI and Output
+rich>=13.9.2                     # Enhanced console output and progress indication
+safety>=3.2.7                    # Vulnerability scanning of dependencies
+
+# Performance and Utilities
+send2trash>=1.8.3                # Safe file operations
+sqlparse>=0.5.1                  # SQL connection string parsing
+tabulate>=0.9.0                  # Table formatting for reports
+toml>=0.10.2                     # TOML configuration parsing
+
+# Network Security (optional advanced features)
+# scapy>=2.5.0                   # Advanced network packet analysis (uncomment if needed)
+
+# Database Drivers (if not already installed by ViolentUTF)
+# aiosqlite>=0.20.0              # Async SQLite support
+# psycopg2-binary>=2.9.9         # PostgreSQL driver
+# duckdb>=1.1.0                  # DuckDB driver for legacy file analysis
+
+# Note: Core dependencies (logging, pathlib, os, sys, json, etc.) are Python built-ins
+# Note: Some packages may already be installed by ViolentUTF main requirements
+# Note: Uncomment optional packages as needed for specific environments

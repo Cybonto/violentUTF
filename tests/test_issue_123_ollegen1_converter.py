@@ -30,7 +30,7 @@ try:
     from app.core.converters.ollegen1_converter import OllaGen1DatasetConverter
     from app.schemas.ollegen1_datasets import (
         OllaGen1ConversionResult,
-        OllaGen1ValidationResult, 
+        OllaGen1ValidationResult,
         PersonProfile,
         QuestionAnsweringEntry,
         QuestionType,

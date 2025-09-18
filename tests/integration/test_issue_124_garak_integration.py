@@ -20,21 +20,16 @@ import tempfile
 import time
 from pathlib import Path
 from typing import Dict, List
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
 
 # Add the FastAPI app path to sys.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'violentutf_api', 'fastapi_app'))
 
 try:
     from app.core.converters.garak_converter import GarakDatasetConverter
-    from app.schemas.garak_datasets import (
-        AttackType,
-        GarakConversionRequest,
-        HarmCategory,
-        TemplateInfo
-    )
+    from app.schemas.garak_datasets import AttackType, GarakConversionRequest, HarmCategory, TemplateInfo
 except ImportError as e:
     # For testing when modules not available, create mock classes
     GarakDatasetConverter = Mock
@@ -43,10 +38,7 @@ except ImportError as e:
     HarmCategory = Mock
     TemplateInfo = Mock
 from tests.fixtures.test_data_manager import TestDataManager
-from tests.utils.test_services import (
-    TestServiceManager,
-    PerformanceMonitor
-)
+from tests.utils.test_services import PerformanceMonitor, TestServiceManager
 
 
 class TestGarakIntegration:

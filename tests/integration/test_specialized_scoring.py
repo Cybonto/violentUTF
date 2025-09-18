@@ -32,6 +32,9 @@ SECURITY: All test data is synthetic for security compliance.
 
 import json
 import os
+
+# Add the violentutf_api directory to the path for testing
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -40,40 +43,30 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-# Add the violentutf_api directory to the path for testing
-import sys
 violentutf_api_path = Path(__file__).parent.parent.parent / "violentutf_api" / "fastapi_app"
 sys.path.insert(0, str(violentutf_api_path))
 
 try:
     # Import specialized converters
-    from app.core.converters.confaide_converter import ConfAIdeConverter
-    from app.core.converters.judgebench_converter import JudgeBenchConverter
     from app.core.converters.acpbench_converter import ACPBenchConverter
-    from app.core.converters.legalbench_converter import LegalBenchDatasetConverter
+    from app.core.converters.confaide_converter import ConfAIdeConverter
     from app.core.converters.docmath_converter import DocMathConverter
     from app.core.converters.graphwalk_converter import GraphWalkConverter
-    
+    from app.core.converters.judgebench_converter import JudgeBenchConverter
+    from app.core.converters.legalbench_converter import LegalBenchDatasetConverter
+    from app.schemas.acpbench_datasets import PlanningComplexity, PlanningDomain
+
     # Import specialized schemas
-    from app.schemas.confaide_datasets import (
-        ConfAIdeConversionConfig, 
-        PrivacyTier, 
-        ContextualIntegrityContext
-    )
-    from app.schemas.judgebench_datasets import (
-        JudgeBenchConversionConfig,
-        JudgeType,
-        EvaluationCriteria
-    )
-    from app.schemas.acpbench_datasets import PlanningDomain, PlanningComplexity
-    from app.schemas.legalbench_datasets import LegalCategory, LegalTaskType
+    from app.schemas.confaide_datasets import ConfAIdeConversionConfig, ContextualIntegrityContext, PrivacyTier
     from app.schemas.docmath_datasets import ComplexityTier
     from app.schemas.graphwalk_datasets import GraphType, ReasoningType
-    
+    from app.schemas.judgebench_datasets import EvaluationCriteria, JudgeBenchConversionConfig, JudgeType
+    from app.schemas.legalbench_datasets import LegalCategory, LegalTaskType
+
     # Import scoring services if available
     try:
-        from app.services.privacy_scoring_service import PrivacyScoringService
         from app.services.meta_evaluation_service import MetaEvaluationService
+        from app.services.privacy_scoring_service import PrivacyScoringService
         from app.services.reasoning_scoring_service import ReasoningScoringService
     except ImportError:
         PrivacyScoringService = None

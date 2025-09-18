@@ -1,0 +1,1194 @@
+{
+  "report_id": "discovery_20250918_110323",
+  "generated_at": "2025-09-18T15:03:23.446320",
+  "execution_time_seconds": 1.0035629272460938,
+  "databases": [
+    {
+      "database_id": "8cfa01176e7aba6e",
+      "database_type": "sqlite",
+      "name": "Code: sqlite (6 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 5 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "file://.db",
+      "discovered_at": "2025-09-18T15:03:22.492972",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/run_discovery.py",
+          "line_number": 350,
+          "code_snippet": "[\".db\", \".sqlite\", \".sqlite3\", \".duckdb\"]),",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.db",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/run_discovery.py",
+          "line_number": 393,
+          "code_snippet": "file_extensions=[\".db\", \".sqlite\", \".sqlite3\", \".duckdb\"],",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.db",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/models.py",
+          "line_number": 248,
+          "code_snippet": "file_extensions: List[str] = field(default_factory=lambda: [\".db\", \".sqlite\", \".sqlite3\", \".duckdb\"])",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.db",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/code_discovery.py",
+          "line_number": 275,
+          "code_snippet": "if path_lower.endswith('.db') or path_lower.endswith('.sqlite') or path_lower.endswith('.sqlite3'):",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.db",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/filesystem_discovery.py",
+          "line_number": 569,
+          "code_snippet": "if value.endswith(('.db', '.sqlite', '.sqlite3', '.duckdb')):",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.db",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 119,
+          "code_snippet": "if extension in ['.db', '.sqlite', '.sqlite3']:",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.db",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "sqlite",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 6,
+        "file_count": 5,
+        "has_credentials": false,
+        "reference_types": [
+          "file_path"
+        ]
+      }
+    },
+    {
+      "database_id": "863159fa7ea5b72f",
+      "database_type": "sqlite",
+      "name": "Code: sqlite (6 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 5 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "file://.sqlite",
+      "discovered_at": "2025-09-18T15:03:22.493218",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/run_discovery.py",
+          "line_number": 350,
+          "code_snippet": "[\".db\", \".sqlite\", \".sqlite3\", \".duckdb\"]),",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.sqlite",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/run_discovery.py",
+          "line_number": 393,
+          "code_snippet": "file_extensions=[\".db\", \".sqlite\", \".sqlite3\", \".duckdb\"],",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.sqlite",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/models.py",
+          "line_number": 248,
+          "code_snippet": "file_extensions: List[str] = field(default_factory=lambda: [\".db\", \".sqlite\", \".sqlite3\", \".duckdb\"])",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.sqlite",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/code_discovery.py",
+          "line_number": 275,
+          "code_snippet": "if path_lower.endswith('.db') or path_lower.endswith('.sqlite') or path_lower.endswith('.sqlite3'):",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.sqlite",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/filesystem_discovery.py",
+          "line_number": 569,
+          "code_snippet": "if value.endswith(('.db', '.sqlite', '.sqlite3', '.duckdb')):",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.sqlite",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 119,
+          "code_snippet": "if extension in ['.db', '.sqlite', '.sqlite3']:",
+          "reference_type": "file_path",
+          "database_type": "sqlite",
+          "connection_string": "file://.sqlite",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "sqlite",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 6,
+        "file_count": 5,
+        "has_credentials": false,
+        "reference_types": [
+          "file_path"
+        ]
+      }
+    },
+    {
+      "database_id": "af99a6905eea1ed6",
+      "database_type": "duckdb",
+      "name": "Code: duckdb (6 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 5 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "file://.duckdb",
+      "discovered_at": "2025-09-18T15:03:22.493230",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/run_discovery.py",
+          "line_number": 350,
+          "code_snippet": "[\".db\", \".sqlite\", \".sqlite3\", \".duckdb\"]),",
+          "reference_type": "file_path",
+          "database_type": "duckdb",
+          "connection_string": "file://.duckdb",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/run_discovery.py",
+          "line_number": 393,
+          "code_snippet": "file_extensions=[\".db\", \".sqlite\", \".sqlite3\", \".duckdb\"],",
+          "reference_type": "file_path",
+          "database_type": "duckdb",
+          "connection_string": "file://.duckdb",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/models.py",
+          "line_number": 248,
+          "code_snippet": "file_extensions: List[str] = field(default_factory=lambda: [\".db\", \".sqlite\", \".sqlite3\", \".duckdb\"])",
+          "reference_type": "file_path",
+          "database_type": "duckdb",
+          "connection_string": "file://.duckdb",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/code_discovery.py",
+          "line_number": 277,
+          "code_snippet": "elif path_lower.endswith('.duckdb'):",
+          "reference_type": "file_path",
+          "database_type": "duckdb",
+          "connection_string": "file://.duckdb",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/filesystem_discovery.py",
+          "line_number": 569,
+          "code_snippet": "if value.endswith(('.db', '.sqlite', '.sqlite3', '.duckdb')):",
+          "reference_type": "file_path",
+          "database_type": "duckdb",
+          "connection_string": "file://.duckdb",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 121,
+          "code_snippet": "elif extension == '.duckdb':",
+          "reference_type": "file_path",
+          "database_type": "duckdb",
+          "connection_string": "file://.duckdb",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "duckdb",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 6,
+        "file_count": 5,
+        "has_credentials": false,
+        "reference_types": [
+          "file_path"
+        ]
+      }
+    },
+    {
+      "database_id": "9b82f06489ff0260",
+      "database_type": "postgresql",
+      "name": "Code: postgresql (2 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.6000000000000001,
+      "description": "Database discovered through code analysis in 2 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "postgresql://",
+      "discovered_at": "2025-09-18T15:03:22.493238",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/code_discovery.py",
+          "line_number": 63,
+          "code_snippet": "r'postgresql://': DatabaseType.POSTGRESQL,",
+          "reference_type": "connection_string",
+          "database_type": "postgresql",
+          "connection_string": "postgresql://",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 196,
+          "code_snippet": "if connection_string.startswith('postgresql://'):",
+          "reference_type": "connection_string",
+          "database_type": "postgresql",
+          "connection_string": "postgresql://",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "postgresql",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 2,
+        "file_count": 2,
+        "has_credentials": false,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    },
+    {
+      "database_id": "008bfa4c30a3d9ba",
+      "database_type": "postgresql",
+      "name": "Code: postgresql (1 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 1 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "postgres://",
+      "discovered_at": "2025-09-18T15:03:22.493244",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/code_discovery.py",
+          "line_number": 64,
+          "code_snippet": "r'postgres://': DatabaseType.POSTGRESQL,",
+          "reference_type": "connection_string",
+          "database_type": "postgresql",
+          "connection_string": "postgres://",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "postgresql",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 1,
+        "file_count": 1,
+        "has_credentials": false,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    },
+    {
+      "database_id": "731db41b074e647e",
+      "database_type": "sqlite",
+      "name": "Code: sqlite (4 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.6000000000000001,
+      "description": "Database discovered through code analysis in 2 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "sqlite:///",
+      "discovered_at": "2025-09-18T15:03:22.493251",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/code_discovery.py",
+          "line_number": 65,
+          "code_snippet": "r'sqlite:///': DatabaseType.SQLITE,",
+          "reference_type": "connection_string",
+          "database_type": "sqlite",
+          "connection_string": "sqlite:///",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/code_discovery.py",
+          "line_number": 65,
+          "code_snippet": "r'sqlite:///': DatabaseType.SQLITE,",
+          "reference_type": "connection_string",
+          "database_type": "sqlite",
+          "connection_string": "sqlite:///",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 213,
+          "code_snippet": "elif connection_string.startswith('sqlite:///'):",
+          "reference_type": "connection_string",
+          "database_type": "sqlite",
+          "connection_string": "sqlite:///",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 213,
+          "code_snippet": "elif connection_string.startswith('sqlite:///'):",
+          "reference_type": "connection_string",
+          "database_type": "sqlite",
+          "connection_string": "sqlite:///",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "sqlite",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 4,
+        "file_count": 2,
+        "has_credentials": false,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    },
+    {
+      "database_id": "d95c93dce8d9cf55",
+      "database_type": "sqlite",
+      "name": "Code: sqlite (1 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 1 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "sqlite://",
+      "discovered_at": "2025-09-18T15:03:22.493256",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/code_discovery.py",
+          "line_number": 66,
+          "code_snippet": "r'sqlite://': DatabaseType.SQLITE,",
+          "reference_type": "connection_string",
+          "database_type": "sqlite",
+          "connection_string": "sqlite://",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "sqlite",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 1,
+        "file_count": 1,
+        "has_credentials": false,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    },
+    {
+      "database_id": "318f919e31fcc56a",
+      "database_type": "duckdb",
+      "name": "Code: duckdb (1 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 1 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "duckdb://",
+      "discovered_at": "2025-09-18T15:03:22.493261",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/code_discovery.py",
+          "line_number": 67,
+          "code_snippet": "r'duckdb://': DatabaseType.DUCKDB,",
+          "reference_type": "connection_string",
+          "database_type": "duckdb",
+          "connection_string": "duckdb://",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "duckdb",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 1,
+        "file_count": 1,
+        "has_credentials": false,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    },
+    {
+      "database_id": "5768744a1d6ef1a0",
+      "database_type": "sqlite",
+      "name": "Code: sqlite (3 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "medium",
+      "confidence_score": 0.7,
+      "description": "Database discovered through code analysis in 2 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": null,
+      "discovered_at": "2025-09-18T15:03:22.493267",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/filesystem_discovery.py",
+          "line_number": 9,
+          "code_snippet": "Line 9",
+          "reference_type": "import",
+          "database_type": "sqlite",
+          "connection_string": null,
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 8,
+          "code_snippet": "Line 8",
+          "reference_type": "import",
+          "database_type": "sqlite",
+          "connection_string": null,
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 162,
+          "code_snippet": "Line 162",
+          "reference_type": "function_call",
+          "database_type": "sqlite",
+          "connection_string": null,
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": false,
+      "validation_errors": [
+        "No connection information available"
+      ],
+      "tags": [
+        "code-analysis",
+        "sqlite",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 3,
+        "file_count": 2,
+        "has_credentials": false,
+        "reference_types": [
+          "import",
+          "function_call"
+        ]
+      }
+    },
+    {
+      "database_id": "80017257ce807ba0",
+      "database_type": "postgresql",
+      "name": "Code: postgresql (1 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 1 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "postgresql://\\S+",
+      "discovered_at": "2025-09-18T15:03:22.493273",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/filesystem_discovery.py",
+          "line_number": 474,
+          "code_snippet": "r'postgresql://\\S+',",
+          "reference_type": "connection_string",
+          "database_type": "postgresql",
+          "connection_string": "postgresql://\\S+",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "postgresql",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 1,
+        "file_count": 1,
+        "has_credentials": false,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    },
+    {
+      "database_id": "9ccf93d761f31895",
+      "database_type": "sqlite",
+      "name": "Code: sqlite (2 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 1 files",
+      "host": null,
+      "port": null,
+      "file_path": "\\S+",
+      "connection_string": "sqlite:///\\S+",
+      "discovered_at": "2025-09-18T15:03:22.493278",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": false,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/filesystem_discovery.py",
+          "line_number": 475,
+          "code_snippet": "r'sqlite:///\\S+',",
+          "reference_type": "connection_string",
+          "database_type": "sqlite",
+          "connection_string": "sqlite:///\\S+",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/filesystem_discovery.py",
+          "line_number": 475,
+          "code_snippet": "r'sqlite:///\\S+',",
+          "reference_type": "connection_string",
+          "database_type": "sqlite",
+          "connection_string": "sqlite:///\\S+",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": false,
+      "validation_errors": [
+        "Database file not found: \\S+"
+      ],
+      "tags": [
+        "code-analysis",
+        "sqlite",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 2,
+        "file_count": 1,
+        "has_credentials": false,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    },
+    {
+      "database_id": "93ee71bd92e36f94",
+      "database_type": "postgresql",
+      "name": "Code: postgresql (1 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 1 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "postgresql://[^:]+:[^@]+@[^/]+/\\w+",
+      "discovered_at": "2025-09-18T15:03:22.493284",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/security_scanner.py",
+          "line_number": 32,
+          "code_snippet": "'postgresql_url': r'postgresql://[^:]+:[^@]+@[^/]+/\\w+',",
+          "reference_type": "connection_string",
+          "database_type": "postgresql",
+          "connection_string": "postgresql://[^:]+:[^@]+@[^/]+/\\w+",
+          "is_credential": true
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "unknown",
+          "line_number": null,
+          "finding_type": "credential",
+          "severity": "high",
+          "description": "Hardcoded password in connection string",
+          "recommendation": "Use environment variables for database passwords",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/security_scanner.py",
+          "line_number": 32,
+          "finding_type": "credential",
+          "severity": "medium",
+          "description": "Database credentials found in source code",
+          "recommendation": "Move database credentials to environment variables or secure configuration",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "postgresql",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 1,
+        "file_count": 1,
+        "has_credentials": true,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    },
+    {
+      "database_id": "456b5aeb7ad19eb4",
+      "database_type": "postgresql",
+      "name": "Code: postgresql (1 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 1 files",
+      "host": null,
+      "port": null,
+      "file_path": null,
+      "connection_string": "postgres://[^:]+:[^@]+@[^/]+/\\w+",
+      "discovered_at": "2025-09-18T15:03:22.493289",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": true,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/security_scanner.py",
+          "line_number": 33,
+          "code_snippet": "'postgres_url': r'postgres://[^:]+:[^@]+@[^/]+/\\w+',",
+          "reference_type": "connection_string",
+          "database_type": "postgresql",
+          "connection_string": "postgres://[^:]+:[^@]+@[^/]+/\\w+",
+          "is_credential": true
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "unknown",
+          "line_number": null,
+          "finding_type": "credential",
+          "severity": "high",
+          "description": "Hardcoded password in connection string",
+          "recommendation": "Use environment variables for database passwords",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/security_scanner.py",
+          "line_number": 33,
+          "finding_type": "credential",
+          "severity": "medium",
+          "description": "Database credentials found in source code",
+          "recommendation": "Move database credentials to environment variables or secure configuration",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": true,
+      "validation_errors": [],
+      "tags": [
+        "code-analysis",
+        "postgresql",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 1,
+        "file_count": 1,
+        "has_credentials": true,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    },
+    {
+      "database_id": "38e938b3eb13ba5a",
+      "database_type": "sqlite",
+      "name": "Code: sqlite (2 references)",
+      "discovery_method": "code_analysis",
+      "confidence_level": "low",
+      "confidence_score": 0.5,
+      "description": "Database discovered through code analysis in 1 files",
+      "host": null,
+      "port": null,
+      "file_path": "path/to/database.db",
+      "connection_string": "sqlite:///path/to/database.db",
+      "discovered_at": "2025-09-18T15:03:22.493368",
+      "version": null,
+      "size_mb": null,
+      "is_active": true,
+      "is_accessible": false,
+      "container_info": null,
+      "network_service": null,
+      "database_files": [],
+      "code_references": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 212,
+          "code_snippet": "# SQLite format: sqlite:///path/to/database.db",
+          "reference_type": "connection_string",
+          "database_type": "sqlite",
+          "connection_string": "sqlite:///path/to/database.db",
+          "is_credential": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 212,
+          "code_snippet": "# SQLite format: sqlite:///path/to/database.db",
+          "reference_type": "connection_string",
+          "database_type": "sqlite",
+          "connection_string": "sqlite:///path/to/database.db",
+          "is_credential": false
+        }
+      ],
+      "security_findings": [
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "/Users/tamnguyen/Documents/GitHub/violentUTF/scripts/database-automation/discovery/utils.py",
+          "line_number": 304,
+          "finding_type": "vulnerability",
+          "severity": "medium",
+          "description": "Possible binding to all interfaces.",
+          "recommendation": "Avoid binding to all interfaces (0.0.0.0) in production",
+          "is_false_positive": false
+        },
+        {
+          "file_path": "general",
+          "line_number": null,
+          "finding_type": "insecure_pattern",
+          "severity": "low",
+          "description": "No environment variable usage detected for database configuration",
+          "recommendation": "Consider using environment variables for database configuration",
+          "is_false_positive": false
+        }
+      ],
+      "is_validated": false,
+      "validation_errors": [
+        "Database file not found: path/to/database.db"
+      ],
+      "tags": [
+        "code-analysis",
+        "sqlite",
+        "violentutf"
+      ],
+      "custom_properties": {
+        "reference_count": 2,
+        "file_count": 1,
+        "has_credentials": false,
+        "reference_types": [
+          "connection_string"
+        ]
+      }
+    }
+  ],
+  "total_discoveries": 14,
+  "type_counts": {
+    "sqlite": 7,
+    "duckdb": 2,
+    "postgresql": 5
+  },
+  "method_counts": {
+    "code_analysis": 14
+  },
+  "confidence_distribution": {
+    "low": 13,
+    "medium": 1
+  },
+  "scan_targets": {
+    "paths_scanned": 5,
+    "containers_checked": 6,
+    "ports_scanned": 8,
+    "file_extensions": 4
+  },
+  "processing_stats": {
+    "container": 0.0010178089141845703,
+    "code": 0.0516352653503418,
+    "filesystem": 0.05314302444458008
+  },
+  "security_findings_count": 27,
+  "credential_exposures": 4,
+  "high_severity_findings": 2,
+  "validated_discoveries": 11,
+  "validation_errors": 3,
+  "discovery_scope": [
+    "Container discovery: enabled",
+    "Network discovery: disabled",
+    "Filesystem discovery: enabled",
+    "Code discovery: enabled",
+    "Security scanning: enabled"
+  ],
+  "excluded_paths": [],
+  "configuration": {
+    "parallel_processing": true,
+    "security_scanning": true,
+    "max_workers": 4,
+    "timeout_seconds": 30
+  },
+  "execution_time": 1.0036289691925049
+}

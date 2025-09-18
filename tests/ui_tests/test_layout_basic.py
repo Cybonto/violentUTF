@@ -12,9 +12,9 @@ requiring full module imports, focusing on file existence, code structure,
 and layout improvement verification.
 """
 
+import re
 import unittest
 from pathlib import Path
-import re
 from typing import List
 
 

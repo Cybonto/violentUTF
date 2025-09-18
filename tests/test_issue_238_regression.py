@@ -14,9 +14,10 @@ Test Categories:
 """
 
 import sys
-import pytest
-from unittest.mock import patch, MagicMock
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Add repository root to Python path for testing
 repo_root = Path(__file__).parent.parent
@@ -71,7 +72,7 @@ class TestDatasetSourceRegression:
             
             # Import and test the function
             from violentutf.pages import configure_datasets_page
-            
+
             # This should work without the enhanced components
             result = mock_load()
             assert result is not None
@@ -295,7 +296,7 @@ class TestBackwardCompatibility:
         """Test that existing function signatures are not changed."""
         # Import the page module to verify function signatures
         import importlib.util
-        
+
         # Load the module
         spec = importlib.util.spec_from_file_location(
             "configure_datasets", 

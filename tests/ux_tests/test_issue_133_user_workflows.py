@@ -5,11 +5,13 @@ This test suite validates complete user workflows, accessibility compliance,
 error scenarios, and user experience requirements.
 """
 
-import pytest
 import time
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 import streamlit as st
+
 
 # Test fixtures for user experience testing
 @pytest.fixture
@@ -67,8 +69,8 @@ class TestNewUserWorkflow:
     def test_guided_dataset_discovery(self, new_user_persona):
         """Test guided dataset discovery for new users"""
         with pytest.raises(ImportError):
-            from violentutf.utils.specialized_workflows import UserGuidanceSystem
             from violentutf.components.dataset_selector import NativeDatasetSelector
+            from violentutf.utils.specialized_workflows import UserGuidanceSystem
             
             guidance = UserGuidanceSystem()
             selector = NativeDatasetSelector()
@@ -124,9 +126,9 @@ class TestNewUserWorkflow:
         ]
         
         with pytest.raises(ImportError):
-            from violentutf.components.dataset_selector import NativeDatasetSelector
             from violentutf.components.dataset_configuration import SpecializedConfigurationInterface
             from violentutf.components.dataset_preview import DatasetPreviewComponent
+            from violentutf.components.dataset_selector import NativeDatasetSelector
             
             selector = NativeDatasetSelector()
             config = SpecializedConfigurationInterface()

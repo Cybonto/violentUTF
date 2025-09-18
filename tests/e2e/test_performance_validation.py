@@ -31,22 +31,23 @@ import asyncio
 import json
 import os
 import tempfile
+import threading
 import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from unittest.mock import AsyncMock, MagicMock, patch
-import psutil
-import threading
 
+import psutil
 import pytest
 import requests
 from httpx import AsyncClient
 
+from tests.fixtures.performance_fixtures import create_performance_test_data
+
 # Test framework imports
 from tests.utils.keycloak_auth import KeycloakTestAuth
-from tests.fixtures.performance_fixtures import create_performance_test_data
 
 # Import expected classes (these will initially fail - part of TDD RED phase)
 try:
@@ -65,9 +66,9 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.monitoring.memory_monitor import (
+        MemoryCleanupManager,
         MemoryMonitor,
         MemoryUsageTracker,
-        MemoryCleanupManager,
     )
 except ImportError:
     # RED Phase: Memory monitoring imports will fail initially

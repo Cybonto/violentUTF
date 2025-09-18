@@ -38,16 +38,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from tests.fixtures.regression_fixtures import create_regression_test_data
+
 # Test framework imports
 from tests.utils.keycloak_auth import KeycloakTestAuth
-from tests.fixtures.regression_fixtures import create_regression_test_data
 
 # Import expected classes (these will initially fail - part of TDD RED phase)
 try:
     from violentutf_api.fastapi_app.app.testing.regression_testing import (
+        BaselineComparisonError,
         RegressionTestManager,
         RegressionValidationError,
-        BaselineComparisonError,
     )
 except ImportError:
     # RED Phase: These imports will fail initially
@@ -57,8 +58,8 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.services.regression_validation_service import (
-        RegressionValidationService,
         BaselineStorageService,
+        RegressionValidationService,
     )
 except ImportError:
     # RED Phase: Service imports will fail initially
@@ -67,10 +68,10 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.schemas.regression_testing import (
-        RegressionTestRequest,
-        RegressionTestResult,
         BaselineMetrics,
         RegressionReport,
+        RegressionTestRequest,
+        RegressionTestResult,
     )
 except ImportError:
     # RED Phase: Schema imports will fail initially

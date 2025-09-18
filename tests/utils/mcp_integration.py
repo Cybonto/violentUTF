@@ -25,7 +25,7 @@ try:
         MCPCommandType,
         NaturalLanguageParser,
     )
-    
+
     # Re-export for tests
     __all__ = [
         "ConfigurationIntentDetector",

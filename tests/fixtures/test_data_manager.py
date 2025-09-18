@@ -15,11 +15,11 @@ SECURITY: All test data is for defensive security research only.
 
 import json
 import os
-import tempfile
 import shutil
+import tempfile
 from contextlib import contextmanager
-from typing import Dict, List, Optional, Any
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 

@@ -5,13 +5,15 @@ This test suite validates UI performance requirements including loading times,
 memory usage, and responsiveness with large datasets (679K+ entries).
 """
 
-import pytest
-import time
-import psutil
 import threading
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, List, Any
+import time
+from typing import Any, Dict, List
+from unittest.mock import MagicMock, Mock, patch
+
 import numpy as np
+import psutil
+import pytest
+
 
 # Performance benchmarking decorator
 def benchmark_time(max_seconds: float):
@@ -220,8 +222,8 @@ class TestUIResponsivenessPerformance:
     def test_concurrent_user_interactions(self, large_dataset_sample):
         """Test UI performance with concurrent user interactions"""
         with pytest.raises(ImportError):
-            from violentutf.components.dataset_selector import NativeDatasetSelector
             from violentutf.components.dataset_preview import DatasetPreviewComponent
+            from violentutf.components.dataset_selector import NativeDatasetSelector
             
             selector = NativeDatasetSelector()
             preview = DatasetPreviewComponent()
@@ -382,10 +384,10 @@ class TestRealWorldPerformanceScenarios:
         workflow_start = time.time()
         
         with pytest.raises(ImportError):
-            from violentutf.components.dataset_selector import NativeDatasetSelector
             from violentutf.components.dataset_configuration import SpecializedConfigurationInterface
             from violentutf.components.dataset_preview import DatasetPreviewComponent
-            
+            from violentutf.components.dataset_selector import NativeDatasetSelector
+
             # Step 1: Browse categories (target: <1s)
             step1_start = time.time()
             selector = NativeDatasetSelector()

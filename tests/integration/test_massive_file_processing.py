@@ -27,31 +27,32 @@ import gc
 import hashlib
 import json
 import os
+import subprocess
+
+# Add the violentutf_api directory to the path for testing
+import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from unittest.mock import Mock, patch
-import threading
-import subprocess
 
 import psutil
 import pytest
 
-# Add the violentutf_api directory to the path for testing
-import sys
 violentutf_api_path = Path(__file__).parent.parent.parent / "violentutf_api" / "fastapi_app"
 sys.path.insert(0, str(violentutf_api_path))
 
 try:
-    from app.core.converters.graphwalk_converter import GraphWalkConverter
     from app.core.converters.docmath_converter import DocMathConverter
-    from app.schemas.graphwalk_datasets import GraphWalkConversionConfig
+    from app.core.converters.graphwalk_converter import GraphWalkConverter
     from app.schemas.docmath_datasets import DocMathConversionConfig
-    
+    from app.schemas.graphwalk_datasets import GraphWalkConversionConfig
+
     # Import file splitting utilities if available
     try:
-        from app.utils.file_splitter import FileSplitter, FileReconstructor
+        from app.utils.file_splitter import FileReconstructor, FileSplitter
     except ImportError:
         FileSplitter = None
         FileReconstructor = None

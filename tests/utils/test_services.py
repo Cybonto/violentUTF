@@ -15,17 +15,18 @@ SECURITY: All utilities are for defensive security testing only.
 
 import asyncio
 import os
-import psutil
-import requests
 import subprocess
 import time
 from typing import Dict, List, Optional, Set
 from unittest.mock import Mock
 
-import docker
+import psutil
 import pytest
+import requests
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
+
+import docker
 
 
 class TestServiceManager:
@@ -339,8 +340,9 @@ class AuthTestManager:
     def generate_test_token(self) -> str:
         """Generate a test JWT token."""
         # Mock implementation for testing
-        import jwt
         import datetime
+
+        import jwt
         
         payload = {
             'sub': 'test_user',
@@ -374,9 +376,9 @@ class ConverterIntegrationManager:
     
     def initialize_garak_converter(self):
         """Initialize Garak converter for testing."""
-        import sys
         import os
-        
+        import sys
+
         # Add the FastAPI app path to sys.path
         base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         fastapi_path = os.path.join(base_path, 'violentutf_api', 'fastapi_app')
@@ -397,9 +399,9 @@ class ConverterIntegrationManager:
     
     def initialize_ollegen1_converter(self):
         """Initialize OllaGen1 converter for testing."""
-        import sys
         import os
-        
+        import sys
+
         # Add the FastAPI app path to sys.path
         base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         fastapi_path = os.path.join(base_path, 'violentutf_api', 'fastapi_app')

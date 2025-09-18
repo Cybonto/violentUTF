@@ -30,21 +30,10 @@ from fastapi.testclient import TestClient
 # Add violentutf_api/fastapi_app to path BEFORE imports
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "violentutf_api", "fastapi_app"))
 
-from app.schemas.garak_datasets import (
-    GarakConversionRequest,
-    AttackType,
-    HarmCategory
-)
-from app.schemas.ollegen1_datasets import (
-    OllaGen1ConversionRequest,
-    QuestionType
-)
+from app.schemas.garak_datasets import AttackType, GarakConversionRequest, HarmCategory
+from app.schemas.ollegen1_datasets import OllaGen1ConversionRequest, QuestionType
 from tests.fixtures.test_data_manager import TestDataManager
-from tests.utils.test_services import (
-    TestServiceManager,
-    AuthTestManager,
-    PerformanceMonitor
-)
+from tests.utils.test_services import AuthTestManager, PerformanceMonitor, TestServiceManager
 
 
 class TestDatasetAPIIntegration:

@@ -20,8 +20,8 @@ import random
 import tempfile
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from typing import Any, Callable, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pandas as pd
 import pytest
@@ -30,10 +30,7 @@ import requests
 from app.core.converters.garak_converter import GarakDatasetConverter
 from app.core.converters.ollegen1_converter import OllaGen1DatasetConverter
 from tests.fixtures.test_data_manager import TestDataManager
-from tests.utils.test_services import (
-    TestServiceManager,
-    PerformanceMonitor
-)
+from tests.utils.test_services import PerformanceMonitor, TestServiceManager
 
 
 class TestErrorScenarios:
@@ -179,7 +176,7 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
     def test_memory_exhaustion_recovery(self):
         """Test graceful handling of memory constraints."""
         import psutil
-        
+
         # Test memory exhaustion simulation
         memory_stress_file = Path(self.test_dir) / "memory_stress.txt"
         

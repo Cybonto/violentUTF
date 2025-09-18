@@ -45,7 +45,7 @@ def test_classes_are_available():
         from violentutf.components.dataset_selector import NativeDatasetSelector
         from violentutf.utils.dataset_ui_components import LargeDatasetUIOptimization
         from violentutf.utils.specialized_workflows import UserGuidanceSystem
-        
+
         # Verify classes exist and are callable
         classes = [
             SpecializedConfigurationInterface,

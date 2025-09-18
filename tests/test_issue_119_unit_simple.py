@@ -10,8 +10,8 @@ Simple unit test for ViolentUTF dataset registry extension
 Tests the dataset definitions without external dependencies
 """
 
-import sys
 import os
+import sys
 
 # Test the ViolentUTF dataset definitions directly
 VIOLENTUTF_NATIVE_DATASETS = {

@@ -38,16 +38,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from tests.fixtures.acceptance_fixtures import create_acceptance_test_data
+
 # Test framework imports
 from tests.utils.keycloak_auth import KeycloakTestAuth
-from tests.fixtures.acceptance_fixtures import create_acceptance_test_data
 
 # Import expected classes (these will initially fail - part of TDD RED phase)
 try:
     from violentutf_api.fastapi_app.app.testing.user_acceptance import (
-        UserAcceptanceTestManager,
         AcceptanceValidationError,
         UsabilityTestingError,
+        UserAcceptanceTestManager,
     )
 except ImportError:
     # RED Phase: These imports will fail initially
@@ -57,8 +58,8 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.services.user_experience_service import (
-        UserExperienceService,
         UsabilityTestingService,
+        UserExperienceService,
     )
 except ImportError:
     # RED Phase: Service imports will fail initially
@@ -67,9 +68,9 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.schemas.user_acceptance import (
-        UserAcceptanceTestRequest,
-        UserAcceptanceResult,
         UsabilityMetrics,
+        UserAcceptanceResult,
+        UserAcceptanceTestRequest,
         UserSatisfactionScore,
     )
 except ImportError:

@@ -14,7 +14,7 @@ without requiring API server or authentication.
 
 import os
 import sys
-from typing import Dict, Any
+from typing import Any, Dict
 
 import pytest
 

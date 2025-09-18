@@ -30,16 +30,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from violentutf_api.fastapi_app.app.core.converters.garak_converter import (
+    AttackTypeClassifier,
     GarakDatasetConverter,
     GarakFileAnalyzer,
     TemplateVariableExtractor,
-    AttackTypeClassifier,
 )
 from violentutf_api.fastapi_app.app.schemas.garak_datasets import (
-    GarakFileType,
+    AttackMetadata,
     GarakConversionRequest,
     GarakConversionResult,
-    AttackMetadata,
+    GarakFileType,
     TemplateInfo,
     ValidationResult,
 )

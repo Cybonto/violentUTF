@@ -9,7 +9,7 @@ in the Streamlit execution environment.
 
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 # Add repository root to Python path for testing
 repo_root = Path(__file__).parent.parent

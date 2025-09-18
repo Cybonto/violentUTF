@@ -36,7 +36,7 @@ try:
     # Mock streamlit to avoid environment dependencies
     import sys
     from unittest.mock import MagicMock
-    
+
     # Create a mock streamlit module
     mock_st = MagicMock()
     mock_st.session_state = {}
@@ -56,7 +56,7 @@ try:
     sys.modules['requests'] = mock_requests
     
     import importlib.util
-    
+
     # Import modules with numeric prefixes using importlib
     option1_path = project_root / "violentutf" / "pages" / "2_Configure_Datasets_option1_fullwidth.py"
     option2_path = project_root / "violentutf" / "pages" / "2_Configure_Datasets_option2_tabs.py"

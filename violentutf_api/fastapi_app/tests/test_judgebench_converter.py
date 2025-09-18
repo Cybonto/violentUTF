@@ -13,24 +13,25 @@ All tests use real converter components and validate both functionality and perf
 import json
 import os
 import tempfile
-import pytest
 from pathlib import Path
-from typing import Dict, Any, List
-from unittest.mock import patch, mock_open
+from typing import Any, Dict, List
+from unittest.mock import mock_open, patch
+
+import pytest
 
 # Import the converter components
 from app.core.converters.judgebench_converter import (
     JudgeBenchConverter,
-    MetaEvaluationPromptGenerator,
     JudgePerformanceAnalyzer,
+    MetaEvaluationPromptGenerator,
     SeedPrompt,
-    SeedPromptDataset
+    SeedPromptDataset,
 )
 from app.schemas.judgebench_datasets import (
-    JudgeFileInfo,
-    JudgeAnalysis,
+    BASE_META_EVALUATION_CRITERIA,
     JUDGE_CONFIGURATIONS,
-    BASE_META_EVALUATION_CRITERIA
+    JudgeAnalysis,
+    JudgeFileInfo,
 )
 
 

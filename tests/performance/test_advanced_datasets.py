@@ -30,39 +30,40 @@ import asyncio
 import gc
 import json
 import os
+import resource
+import statistics
+
+# Add the violentutf_api directory to the path for testing
+import sys
 import tempfile
-import time
 import threading
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from unittest.mock import Mock, patch
-import statistics
-import resource
 
 import psutil
 import pytest
 
-# Add the violentutf_api directory to the path for testing
-import sys
 violentutf_api_path = Path(__file__).parent.parent.parent / "violentutf_api" / "fastapi_app"
 sys.path.insert(0, str(violentutf_api_path))
 
 try:
     # Import all Phase 3 converters
     from app.core.converters.acpbench_converter import ACPBenchConverter
-    from app.core.converters.legalbench_converter import LegalBenchDatasetConverter
+    from app.core.converters.confaide_converter import ConfAIdeConverter
     from app.core.converters.docmath_converter import DocMathConverter
     from app.core.converters.graphwalk_converter import GraphWalkConverter
-    from app.core.converters.confaide_converter import ConfAIdeConverter
     from app.core.converters.judgebench_converter import JudgeBenchConverter
-    
+    from app.core.converters.legalbench_converter import LegalBenchDatasetConverter
+
     # Import configurations
     from app.schemas.acpbench_datasets import ACPBenchConversionConfig
-    from app.schemas.legalbench_datasets import LegalBenchConversionConfig
+    from app.schemas.confaide_datasets import ConfAIdeConversionConfig
     from app.schemas.docmath_datasets import DocMathConversionConfig
     from app.schemas.graphwalk_datasets import GraphWalkConversionConfig
-    from app.schemas.confaide_datasets import ConfAIdeConversionConfig
     from app.schemas.judgebench_datasets import JudgeBenchConversionConfig
+    from app.schemas.legalbench_datasets import LegalBenchConversionConfig
     
 except ImportError as e:
     print(f"Import error: {e}")
@@ -1111,6 +1112,7 @@ class TestAdvancedDatasetPerformance:
         # Clear any module-level caches if they exist
         try:
             import sys
+
             # Clear internal string cache if possible
             if hasattr(sys, 'intern') and hasattr(sys.intern, 'clear'):
                 sys.intern.clear()

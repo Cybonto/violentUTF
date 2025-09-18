@@ -11,23 +11,23 @@ from unittest.mock import MagicMock, patch
 
 # These imports will fail initially (RED phase of TDD)
 from violentutf_api.fastapi_app.app.core.splitters.ollegen1_splitter import (
-    OllaGen1Splitter,
     OllaGen1Manifest,
     OllaGen1Merger,
+    OllaGen1Splitter,
+)
+from violentutf_api.fastapi_app.app.schemas.split_manifest import (
+    CognitiveFrameworkMetadata,
+    ColumnSchema,
+    OllaGen1ManifestSchema,
+    PartInfo,
+    PerformanceMetadata,
+    ReconstructionInfo,
+    ScenarioRangeInfo,
 )
 from violentutf_api.fastapi_app.app.utils.csv_utils import (
     OllaGen1CSVAnalyzer,
-    validate_ollegen1_schema,
     calculate_scenario_boundaries,
-)
-from violentutf_api.fastapi_app.app.schemas.split_manifest import (
-    OllaGen1ManifestSchema,
-    CognitiveFrameworkMetadata,
-    ScenarioRangeInfo,
-    ColumnSchema,
-    PartInfo,
-    ReconstructionInfo,
-    PerformanceMetadata,
+    validate_ollegen1_schema,
 )
 
 

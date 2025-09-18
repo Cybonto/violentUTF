@@ -41,16 +41,17 @@ import pytest
 import requests
 from httpx import AsyncClient
 
+from tests.fixtures.user_persona_fixtures import create_user_personas
+
 # Test framework imports
 from tests.utils.keycloak_auth import KeycloakTestAuth
-from tests.fixtures.user_persona_fixtures import create_user_personas
 
 # Import expected classes (these will initially fail - part of TDD RED phase)
 try:
     from violentutf_api.fastapi_app.app.core.user_experience.scenario_manager import (
-        UserScenarioManager,
         ScenarioExecutionError,
         UserExperienceValidationError,
+        UserScenarioManager,
     )
 except ImportError:
     # RED Phase: These imports will fail initially
@@ -60,8 +61,8 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.services.user_workflow_service import (
-        UserWorkflowService,
         UserExperienceService,
+        UserWorkflowService,
     )
 except ImportError:
     # RED Phase: Service imports will fail initially
@@ -70,10 +71,10 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.schemas.user_scenarios import (
+        ScenarioExecutionStatus,
+        UserPersonaProfile,
         UserScenarioRequest,
         UserScenarioResult,
-        UserPersonaProfile,
-        ScenarioExecutionStatus,
     )
 except ImportError:
     # RED Phase: Schema imports will fail initially

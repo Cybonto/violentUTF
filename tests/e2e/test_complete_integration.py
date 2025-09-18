@@ -44,9 +44,10 @@ import pytest
 import requests
 from httpx import AsyncClient
 
+from tests.fixtures.dataset_fixtures import create_test_datasets
+
 # Test framework imports
 from tests.utils.keycloak_auth import KeycloakTestAuth
-from tests.fixtures.dataset_fixtures import create_test_datasets
 
 # Import expected classes (these will initially fail - part of TDD RED phase)
 try:
@@ -73,10 +74,10 @@ except ImportError:
 
 try:
     from violentutf_api.fastapi_app.app.schemas.e2e_integration import (
+        DatasetProcessingMetrics,
         E2EWorkflowRequest,
         E2EWorkflowResult,
         WorkflowExecutionStatus,
-        DatasetProcessingMetrics,
     )
 except ImportError:
     # RED Phase: Schema imports will fail initially

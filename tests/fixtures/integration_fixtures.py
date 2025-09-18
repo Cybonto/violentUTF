@@ -13,7 +13,7 @@ end-to-end testing framework.
 SECURITY: All test data is for defensive security research only.
 """
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 
 def create_integration_test_data() -> Dict[str, Any]:
