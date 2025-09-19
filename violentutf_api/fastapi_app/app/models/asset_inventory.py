@@ -27,10 +27,12 @@ class AssetType(str, Enum):
     """Asset type enumeration."""
 
     POSTGRESQL = "POSTGRESQL"
+    MYSQL = "MYSQL"
     SQLITE = "SQLITE"
     DUCKDB = "DUCKDB"
     FILE_STORAGE = "FILE_STORAGE"
     CONFIGURATION = "CONFIGURATION"
+    OTHER = "OTHER"
 
 
 class SecurityClassification(str, Enum):
