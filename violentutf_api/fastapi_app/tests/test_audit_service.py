@@ -11,20 +11,21 @@ covering audit logging, compliance tracking, and change history management.
 """
 
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List
+
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.asset_inventory import (
-    DatabaseAsset,
     AssetAuditLog,
     AssetType,
-    SecurityClassification,
+    ChangeType,
     CriticalityLevel,
+    DatabaseAsset,
     Environment,
-    ChangeType
+    SecurityClassification,
 )
 from app.services.asset_management.audit_service import AuditService
 

@@ -6,6 +6,8 @@ This module contains comprehensive unit tests for the asset management database 
 following Test-Driven Development (TDD) principles.
 """
 
+import os
+import sys
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -16,8 +18,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-import sys
-import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'violentutf_api', 'fastapi_app'))
 
 from app.db.database import Base

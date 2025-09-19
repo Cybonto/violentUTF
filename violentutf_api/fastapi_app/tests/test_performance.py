@@ -12,22 +12,17 @@ concurrent load efficiently.
 """
 
 import asyncio
+import statistics
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-import statistics
 
-from app.models.asset_inventory import (
-    DatabaseAsset,
-    AssetType,
-    SecurityClassification,
-    CriticalityLevel,
-    Environment
-)
+from app.models.asset_inventory import AssetType, CriticalityLevel, DatabaseAsset, Environment, SecurityClassification
 from app.schemas.asset_schemas import AssetCreate
 from app.services.asset_management.asset_service import AssetService
 from app.services.asset_management.audit_service import AuditService
@@ -394,8 +389,8 @@ class TestAssetManagementPerformance:
     @pytest.mark.asyncio
     async def test_database_query_performance(self, async_session: AsyncSession, performance_test_assets: List[DatabaseAsset]):
         """Test raw database query performance."""
-        from sqlalchemy import select, func
-        
+        from sqlalchemy import func, select
+
         # Test simple select performance
         start_time = time.time()
         
@@ -488,9 +483,10 @@ class TestAssetManagementPerformance:
         performance_auth_headers: Dict[str, str]
     ):
         """Test memory usage doesn't grow excessively under load."""
-        import psutil
         import os
-        
+
+        import psutil
+
         # Get initial memory usage
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB

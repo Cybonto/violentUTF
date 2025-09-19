@@ -13,19 +13,20 @@ covering all CRUD operations, business logic, and error handling scenarios.
 import uuid
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.asset_inventory import (
-    DatabaseAsset,
     AssetType,
-    SecurityClassification,
     CriticalityLevel,
+    DatabaseAsset,
     Environment,
-    ValidationStatus
+    SecurityClassification,
+    ValidationStatus,
 )
 from app.schemas.asset_schemas import AssetCreate, AssetUpdate
-from app.services.asset_management.asset_service import AssetService, AssetNotFoundError, DuplicateAssetError
+from app.services.asset_management.asset_service import AssetNotFoundError, AssetService, DuplicateAssetError
 from app.services.asset_management.audit_service import AuditService
 
 
@@ -532,6 +533,7 @@ class TestAssetService:
         
         # Verify audit log was created
         from sqlalchemy import select
+
         from app.models.asset_inventory import AssetAuditLog, ChangeType
         
         result = await async_session.execute(

@@ -11,9 +11,9 @@ This script runs the comprehensive test suite for the asset management system
 and generates coverage reports to verify the 90% minimum coverage requirement.
 """
 
-import sys
-import subprocess
 import os
+import subprocess
+import sys
 from pathlib import Path
 
 
