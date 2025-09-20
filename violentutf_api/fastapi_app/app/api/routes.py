@@ -27,7 +27,7 @@ from app.api.endpoints import (
     sessions,
     validation,
 )
-from app.api.v1 import assets, risk
+from app.api.v1 import assets, dashboard, risk
 
 api_router = APIRouter()
 
@@ -73,3 +73,6 @@ api_router.include_router(assets.router, prefix="/assets", tags=["asset-manageme
 
 # Risk assessment endpoints (Issue #282)
 api_router.include_router(risk.router, prefix="/risk", tags=["risk-assessment"])
+
+# Dashboard endpoints (Issue #284)
+api_router.include_router(dashboard.router, prefix="/api/v1", tags=["dashboard"])
