@@ -19,10 +19,12 @@ from typing import Any, Dict, List
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.asset import AssetModel, CriticalityLevel
+from app.models.asset_inventory import CriticalityLevel
+from app.models.asset_inventory import DatabaseAsset as AssetModel
 from app.models.compliance import ComplianceStatusModel
 from app.models.risk_assessment import RiskAssessmentModel, RiskLevel
 from app.services.asset_management.asset_service import AssetService
+from app.services.asset_management.audit_service import AuditService
 from app.services.compliance_monitoring_service import ComplianceMonitoringService
 from app.services.risk_assessment_service import RiskAssessmentService
 
@@ -35,7 +37,8 @@ class DashboardMetricsService:
     def __init__(self, db: AsyncSession) -> None:
         """Initialize dashboard metrics service"""
         self.db = db
-        self.asset_service = AssetService(db)
+        self.audit_service = AuditService(db)
+        self.asset_service = AssetService(db, self.audit_service)
         self.risk_service = RiskAssessmentService(db)
         self.compliance_service = ComplianceMonitoringService(db)
 

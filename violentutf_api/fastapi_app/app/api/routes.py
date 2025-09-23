@@ -16,6 +16,7 @@ from app.api.endpoints import (
     database,
     datasets,
     debug_jwt,
+    dependencies,
     echo,
     files,
     generators,
@@ -27,7 +28,9 @@ from app.api.endpoints import (
     sessions,
     validation,
 )
-from app.api.v1 import assets, dashboard, risk
+from app.api.v1 import assets, risk
+
+# from app.api.v1 import dashboard  # Disabled due to missing dependencies
 
 api_router = APIRouter()
 
@@ -74,5 +77,8 @@ api_router.include_router(assets.router, prefix="/assets", tags=["asset-manageme
 # Risk assessment endpoints (Issue #282)
 api_router.include_router(risk.router, prefix="/risk", tags=["risk-assessment"])
 
-# Dashboard endpoints (Issue #284)
-api_router.include_router(dashboard.router, prefix="/api/v1", tags=["dashboard"])
+# Dashboard endpoints (Issue #284) - Disabled due to missing dependencies
+# api_router.include_router(dashboard.router, prefix="/api/v1", tags=["dashboard"])
+
+# Dependency mapping endpoints (Issue #264)
+api_router.include_router(dependencies.router, prefix="/dependencies", tags=["dependencies"])
