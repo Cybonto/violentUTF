@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.db.database import Base, get_session
-from app.main import app
+from main import app
 from app.models.asset_inventory import (
     AssetAuditLog,
     AssetRelationship,

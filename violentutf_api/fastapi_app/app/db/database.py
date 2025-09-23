@@ -31,8 +31,10 @@ Base = declarative_base()
 
 async def init_db() -> None:
     """Initialize database tables"""
-    # Ensure the database directory exists
+    # Import all models to ensure they are registered with SQLAlchemy
+    from app import models  # noqa: F401  # pylint: disable=unused-import
 
+    # Ensure the database directory exists
     if "sqlite" in DATABASE_URL:
         db_path = DATABASE_URL.split("///")[1]
         db_dir = os.path.dirname(db_path)
