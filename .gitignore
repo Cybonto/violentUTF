@@ -133,6 +133,10 @@ temp/
 *.backup*
 *backup*
 *_backup*
+!scripts/backup_management/
+!tests/test_issue_267_*backup*.py
+!docs/development/issue_267/
+!**/ISSUE_267_development_report.md
 *.bak*
 *bak*
 .DS_Store
