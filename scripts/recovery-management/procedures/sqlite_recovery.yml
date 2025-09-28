@@ -1,0 +1,35 @@
+detection_commands:
+- command: sqlite3 violentutf_api/fastapi_app/app_database.db "PRAGMA integrity_check"
+  expected_result: ok
+  name: database_integrity
+- command: curl -f http://localhost:9080/health
+  expected_result: HTTP 200
+  name: api_health
+recovery_steps:
+- commands:
+  - docker-compose -f violentutf_api/docker-compose.yml down
+  estimated_time: 1
+  step: 1
+  title: Stop FastAPI service
+- commands:
+  - cp backups/sqlite/latest.db violentutf_api/fastapi_app/app_database.db
+  estimated_time: 1
+  step: 2
+  title: Restore SQLite database
+- commands:
+  - docker-compose -f violentutf_api/docker-compose.yml up -d
+  estimated_time: 3
+  step: 3
+  title: Restart FastAPI service
+rollback_procedures:
+- commands:
+  - cp backups/sqlite/previous.db violentutf_api/fastapi_app/app_database.db
+  step: 1
+  title: Restore from previous SQLite backup
+validation_commands:
+- command: sqlite3 violentutf_api/fastapi_app/app_database.db "PRAGMA integrity_check"
+  expected_result: ok
+  name: database_integrity
+- command: curl -f http://localhost:9080/health
+  expected_result: HTTP 200
+  name: api_health

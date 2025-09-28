@@ -1,0 +1,27 @@
+{
+  "title": "Complete System Failure Recovery",
+  "scope": "system_wide",
+  "rto_target": 45,
+  "severity": "critical",
+  "last_updated": "2025-09-25T12:25:39.753336",
+  "recovery_sequence": [
+    "Infrastructure assessment",
+    "PostgreSQL recovery",
+    "SQLite recovery",
+    "User data recovery",
+    "Service validation",
+    "User notification"
+  ],
+  "parallel_operations": {
+    "infrastructure": "Docker and network setup",
+    "database_prep": "Prepare backup restoration",
+    "communication": "User and stakeholder notification"
+  },
+  "success_criteria": {
+    "authentication_functional": true,
+    "api_endpoints_responsive": true,
+    "user_data_accessible": true,
+    "rto_met": true,
+    "data_loss_minimized": true
+  }
+}

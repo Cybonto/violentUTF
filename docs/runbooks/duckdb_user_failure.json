@@ -1,0 +1,75 @@
+{
+  "title": "DuckDB User Database Recovery",
+  "database_type": "duckdb",
+  "service": "user_data",
+  "rto_target": 30,
+  "rpo_target": 1440,
+  "severity": "medium",
+  "last_updated": "2025-09-25T11:20:49.621300",
+  "user_impact_assessment": {
+    "identify_affected_users": "ls -la ./app_data/violentutf/pyrit_memory_*.db",
+    "assess_criticality": "Check user activity and data importance",
+    "prioritize_recovery": "Critical users first, then by data volume"
+  },
+  "pyrit_data_recovery": {
+    "extract_generators": "SELECT * FROM generators",
+    "extract_datasets": "SELECT * FROM datasets",
+    "extract_scorers": "SELECT * FROM scorers",
+    "validate_schema": "Check table structure integrity"
+  },
+  "user_notification": {
+    "template": "User database recovery in progress",
+    "channels": [
+      "Email",
+      "In-app notification",
+      "Recovery status page"
+    ],
+    "updates": "Progress updates every 10 minutes"
+  },
+  "recovery_steps": [
+    {
+      "step_number": 1,
+      "title": "Identify affected user databases",
+      "description": "List all user DuckDB files and assess status",
+      "commands": [
+        "ls -la ./app_data/violentutf/pyrit_memory_*.db",
+        "python3 -c \"import duckdb; [print(f'{f}: {duckdb.connect(f).execute(\"SELECT COUNT(*) FROM information_schema.tables\").fetchone()[0]} tables') for f in glob.glob('./app_data/violentutf/pyrit_memory_*.db')]\""
+      ],
+      "expected_result": "List of user databases and their status",
+      "estimated_time_minutes": 5
+    },
+    {
+      "step_number": 2,
+      "title": "Backup corrupted databases",
+      "description": "Create backups before attempting recovery",
+      "commands": [
+        "mkdir -p backups/duckdb/corrupted/$(date +%Y%m%d_%H%M%S)",
+        "cp ./app_data/violentutf/pyrit_memory_*.db backups/duckdb/corrupted/$(date +%Y%m%d_%H%M%S)/"
+      ],
+      "expected_result": "Corrupted databases backed up",
+      "estimated_time_minutes": 5
+    },
+    {
+      "step_number": 3,
+      "title": "Attempt data extraction from corrupted databases",
+      "description": "Extract recoverable data before recreation",
+      "commands": [
+        "python3 scripts/recovery-management/extract_duckdb_data.py --all-users",
+        "python3 scripts/recovery-management/validate_extracted_data.py"
+      ],
+      "expected_result": "Recoverable data extracted and validated",
+      "estimated_time_minutes": 15
+    },
+    {
+      "step_number": 4,
+      "title": "Recreate user databases with clean schema",
+      "description": "Create new databases with proper PyRIT schema",
+      "commands": [
+        "python3 scripts/recovery-management/recreate_user_databases.py --all",
+        "python3 scripts/recovery-management/restore_extracted_data.py"
+      ],
+      "expected_result": "Clean user databases created",
+      "estimated_time_minutes": 10
+    }
+  ]
+}

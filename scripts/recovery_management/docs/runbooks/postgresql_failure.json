@@ -1,0 +1,218 @@
+{
+  "title": "PostgreSQL (Keycloak) Failure Recovery",
+  "database_type": "postgresql",
+  "service": "keycloak",
+  "rto_target": 15,
+  "rpo_target": 60,
+  "severity": "critical",
+  "last_updated": "2025-09-25T12:25:39.753317",
+  "detection": {
+    "symptoms": [
+      "Users cannot authenticate",
+      "Keycloak admin console inaccessible",
+      "HTTP 503 errors from authentication endpoints",
+      "PostgreSQL connection errors in logs"
+    ],
+    "monitoring_commands": [
+      {
+        "command": "curl -f http://localhost:8080/auth/realms/violentutf/protocol/openid_connect/certs",
+        "expected_result": "HTTP 200 with JSON response",
+        "failure_indication": "HTTP error or timeout"
+      },
+      {
+        "command": "docker ps | grep keycloak",
+        "expected_result": "Container running and healthy",
+        "failure_indication": "Container stopped or restarting"
+      },
+      {
+        "command": "pg_isready -h localhost -p 5432 -U keycloak",
+        "expected_result": "accepting connections",
+        "failure_indication": "no response or rejection"
+      }
+    ],
+    "health_check_endpoints": [
+      "http://localhost:8080/auth/realms/violentutf",
+      "http://localhost:8080/auth/admin"
+    ],
+    "log_locations": [
+      "keycloak/logs/keycloak.log",
+      "docker logs keycloak-postgres"
+    ]
+  },
+  "immediate_response": {
+    "alert_team": "Database and Security teams",
+    "escalation_trigger": "RTO > 10 minutes",
+    "initial_actions": [
+      {
+        "action": "Activate incident response",
+        "command": "python3 scripts/recovery-management/incident_response.py --database postgresql --severity critical",
+        "timeout": "2 minutes"
+      },
+      {
+        "action": "Enable cached authentication mode",
+        "command": "python3 violentutf/utils/auth_utils_keycloak.py --enable-cached-mode",
+        "timeout": "1 minute"
+      },
+      {
+        "action": "Notify users of degraded service",
+        "command": "python3 scripts/recovery-management/notify_users.py --service keycloak --status degraded",
+        "timeout": "2 minutes"
+      }
+    ]
+  },
+  "recovery_steps": [
+    {
+      "step_number": 1,
+      "title": "Assess PostgreSQL container status",
+      "description": "Determine if PostgreSQL container is running and accessible",
+      "commands": [
+        "docker ps | grep postgres",
+        "docker logs keycloak-postgres | tail -20",
+        "pg_isready -h localhost -p 5432 -U keycloak"
+      ],
+      "expected_result": "Container status and PostgreSQL availability determined",
+      "estimated_time_minutes": 2,
+      "troubleshooting": {
+        "container_stopped": "docker start keycloak-postgres",
+        "container_crashed": "docker-compose -f keycloak/docker-compose.yml up -d postgres",
+        "connection_refused": "Check PostgreSQL configuration and logs"
+      }
+    },
+    {
+      "step_number": 2,
+      "title": "Stop dependent services",
+      "description": "Stop Keycloak and dependent services to prevent data corruption",
+      "commands": [
+        "docker-compose -f keycloak/docker-compose.yml down",
+        "docker ps | grep -E \"(keycloak|violentutf)\""
+      ],
+      "expected_result": "All Keycloak services stopped cleanly",
+      "estimated_time_minutes": 2,
+      "troubleshooting": {
+        "containers_not_stopping": "docker kill $(docker ps -q --filter name=keycloak)",
+        "services_still_running": "Check for external connections and force stop if needed"
+      }
+    },
+    {
+      "step_number": 3,
+      "title": "Create current database backup",
+      "description": "Backup current state before recovery attempts",
+      "commands": [
+        "mkdir -p backups/emergency/$(date +%Y%m%d_%H%M%S)",
+        "docker exec keycloak-postgres pg_dump -U keycloak keycloak > backups/emergency/$(date +%Y%m%d_%H%M%S)/pre_recovery.sql || echo \"Backup failed - database may be corrupted\""
+      ],
+      "expected_result": "Current state backed up or corruption confirmed",
+      "estimated_time_minutes": 3,
+      "troubleshooting": {
+        "backup_fails": "Database likely corrupted - proceed with restore from known good backup",
+        "insufficient_disk": "Clean up old backups or use alternative storage"
+      }
+    },
+    {
+      "step_number": 4,
+      "title": "Restore from latest backup",
+      "description": "Restore PostgreSQL from most recent known-good backup",
+      "commands": [
+        "LATEST_BACKUP=$(ls -t backups/postgresql/*.sql | head -1)",
+        "echo \"Restoring from: $LATEST_BACKUP\"",
+        "docker exec keycloak-postgres dropdb -U keycloak keycloak --if-exists",
+        "docker exec keycloak-postgres createdb -U keycloak keycloak",
+        "docker exec -i keycloak-postgres psql -U keycloak -d keycloak < \"$LATEST_BACKUP\""
+      ],
+      "expected_result": "Database restored from backup",
+      "estimated_time_minutes": 8,
+      "troubleshooting": {
+        "no_backup_found": "Check alternative backup locations: scripts/backup_management/backups/",
+        "restore_fails": "Try older backup or initiate manual database reconstruction",
+        "permission_errors": "Verify Docker container permissions and volume mounts"
+      }
+    },
+    {
+      "step_number": 5,
+      "title": "Restart PostgreSQL and Keycloak",
+      "description": "Start services in correct order",
+      "commands": [
+        "docker-compose -f keycloak/docker-compose.yml up -d postgres",
+        "sleep 10",
+        "docker-compose -f keycloak/docker-compose.yml up -d keycloak",
+        "sleep 15"
+      ],
+      "expected_result": "Services started and initializing",
+      "estimated_time_minutes": 2,
+      "troubleshooting": {
+        "postgres_wont_start": "Check database corruption, disk space, and configuration",
+        "keycloak_startup_fails": "Check logs for database connection errors"
+      }
+    }
+  ],
+  "validation": {
+    "health_checks": [
+      {
+        "check": "PostgreSQL connection",
+        "command": "pg_isready -h localhost -p 5432 -U keycloak",
+        "expected": "accepting connections"
+      },
+      {
+        "check": "Keycloak authentication endpoint",
+        "command": "curl -f http://localhost:8080/auth/realms/violentutf/protocol/openid_connect/certs",
+        "expected": "HTTP 200 with valid JSON"
+      },
+      {
+        "check": "Admin console access",
+        "command": "curl -f http://localhost:8080/auth/admin/",
+        "expected": "HTTP 200"
+      },
+      {
+        "check": "User count validation",
+        "command": "docker exec keycloak-postgres psql -U keycloak -d keycloak -c \"SELECT COUNT(*) FROM user_entity\"",
+        "expected": "Non-zero user count"
+      }
+    ],
+    "functional_tests": [
+      "Authenticate test user",
+      "Create new user session",
+      "Validate JWT token generation",
+      "Test PyRIT integration authentication"
+    ],
+    "performance_validation": {
+      "rto_check": "Verify total recovery time <= 15 minutes",
+      "response_time": "Authentication endpoints respond within 2 seconds",
+      "throughput": "Handle normal authentication load"
+    }
+  },
+  "escalation": {
+    "rto_breach_15min": "Contact Database Administrator and Infrastructure Team",
+    "multiple_restore_failures": "Engage vendor support and consider disaster recovery site",
+    "data_corruption_detected": "Contact Security team and preserve forensic evidence",
+    "complete_failure": "Activate business continuity plan"
+  },
+  "rollback_procedures": [
+    {
+      "trigger": "Restored backup causes authentication failures",
+      "steps": [
+        "Stop Keycloak services",
+        "Restore from previous known-good backup",
+        "Restart services",
+        "Validate functionality"
+      ]
+    },
+    {
+      "trigger": "Service degradation after recovery",
+      "steps": [
+        "Revert to cached authentication mode",
+        "Investigate root cause",
+        "Plan maintenance window for proper fix"
+      ]
+    }
+  ],
+  "communication_templates": {
+    "initial_alert": {
+      "subject": "CRITICAL: Authentication services unavailable",
+      "body": "Keycloak authentication system is currently unavailable. Users cannot log in. Recovery in progress. ETA: 15 minutes."
+    },
+    "recovery_complete": {
+      "subject": "RESOLVED: Authentication services restored",
+      "body": "Keycloak authentication system has been restored. All services operational. Recovery time: {duration} minutes."
+    }
+  }
+}

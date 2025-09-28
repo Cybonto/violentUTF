@@ -1,0 +1,10 @@
+database_type: postgresql
+rpo_target: 60
+rto_target: 15
+test_environment: isolated
+test_frequency: daily
+test_scenarios:
+- complete_failure_recovery
+- partial_corruption_recovery
+- backup_restoration_test
+- performance_validation

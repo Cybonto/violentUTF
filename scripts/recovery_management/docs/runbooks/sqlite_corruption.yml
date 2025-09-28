@@ -1,0 +1,78 @@
+backup_restoration:
+  find_latest: ls -t backups/sqlite/*.db | head -1
+  restore_command: cp "$LATEST_BACKUP" violentutf_api/fastapi_app/app_database.db
+  service_restart: docker-compose -f violentutf_api/docker-compose.yml restart
+corruption_detection:
+  integrity_check: sqlite3 database.db "PRAGMA integrity_check"
+  record_count: sqlite3 database.db "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
+  table_validation: sqlite3 database.db ".tables"
+data_reconstruction:
+  rebuild_script: python3 scripts/recovery-management/rebuild_sqlite.py
+  sources:
+  - DuckDB user databases
+  - Log files
+  - Configuration files
+database_type: sqlite
+detection:
+  monitoring_commands:
+  - command: curl -f http://localhost:9080/health
+    expected_result: HTTP 200 with healthy status
+    failure_indication: HTTP error or database connection failure
+  - command: sqlite3 violentutf_api/fastapi_app/app_database.db "PRAGMA integrity_check"
+    expected_result: ok
+    failure_indication: corruption errors or exceptions
+  symptoms:
+  - API endpoints returning HTTP 500 errors
+  - Database corruption errors in FastAPI logs
+  - SQLite integrity check failures
+  - Application data inconsistencies
+last_updated: '2025-09-25T12:25:39.753326'
+recovery_steps:
+- commands:
+  - docker-compose -f violentutf_api/docker-compose.yml down
+  description: Prevent further corruption by stopping the service
+  estimated_time_minutes: 1
+  expected_result: FastAPI container stopped
+  step_number: 1
+  title: Stop FastAPI service
+- commands:
+  - sqlite3 violentutf_api/fastapi_app/app_database.db "PRAGMA integrity_check"
+  - sqlite3 violentutf_api/fastapi_app/app_database.db ".tables"
+  description: Determine extent of corruption and recovery method
+  estimated_time_minutes: 1
+  expected_result: Corruption extent determined
+  step_number: 2
+  title: Assess database corruption level
+- commands:
+  - sqlite3 violentutf_api/fastapi_app/app_database.db ".recover" > recovered.sql
+  - sqlite3 violentutf_api/fastapi_app/app_database_repaired.db < recovered.sql
+  - sqlite3 violentutf_api/fastapi_app/app_database_repaired.db "PRAGMA integrity_check"
+  description: Try to repair using SQLite recover command
+  estimated_time_minutes: 2
+  expected_result: Repaired database or repair failure confirmed
+  step_number: 3
+  title: Attempt database repair
+- commands:
+  - LATEST_BACKUP=$(ls -t backups/sqlite/*.db | head -1)
+  - cp "$LATEST_BACKUP" violentutf_api/fastapi_app/app_database.db
+  description: Use latest backup if repair was unsuccessful
+  estimated_time_minutes: 1
+  expected_result: Database restored from backup
+  step_number: 4
+  title: Restore from backup if repair fails
+repair_procedures:
+  integrity_check: sqlite3 database.db "PRAGMA integrity_check"
+  sqlite_recover_command: sqlite3 corrupted.db ".recover" | sqlite3 repaired.db
+  validation_queries:
+  - SELECT COUNT(*) FROM executions
+  - SELECT COUNT(*) FROM sessions
+  - PRAGMA foreign_key_check
+rpo_target: 30
+rto_target: 5
+service: fastapi
+severity: high
+title: SQLite (FastAPI) Corruption Recovery
+validation:
+  api_health_check: curl -f http://localhost:9080/health
+  functional_test: curl -f http://localhost:9080/api/v1/status
+  integrity_validation: sqlite3 database.db "PRAGMA integrity_check"

@@ -1,0 +1,21 @@
+compensating_transactions:
+  orphaned_records: Clean up orphaned data
+  session_inconsistency: Rebuild sessions from authoritative source
+  user_data_mismatch: Sync user data across all databases
+consistency_validation:
+  data_integrity_check: Cross-reference critical data
+  session_sync_check: Validate session consistency
+  user_count_check: Compare user counts across databases
+dependency_analysis:
+  data_dependencies:
+    authentication_flow: "PostgreSQL \u2192 API calls \u2192 User data"
+    user_sessions: "Keycloak \u2192 SQLite \u2192 DuckDB"
+  service_dependencies:
+    fastapi: Depends on Keycloak
+    keycloak: No dependencies
+    user_services: Depends on Keycloak and FastAPI
+last_updated: '2025-09-25T11:20:49.621302'
+rto_target: 20
+scope: multi_database
+severity: high
+title: Cross-Database Consistency Recovery
