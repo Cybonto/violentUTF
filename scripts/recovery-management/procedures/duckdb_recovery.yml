@@ -1,0 +1,31 @@
+detection_commands:
+- command: python3 -c "import duckdb; conn = duckdb.connect('./app_data/violentutf/pyrit_memory_test.db');
+    print('OK')"
+  expected_result: OK
+  name: user_database_check
+recovery_steps:
+- commands:
+  - ls -la ./app_data/violentutf/pyrit_memory_*.db
+  estimated_time: 1
+  step: 1
+  title: Identify affected user databases
+- commands:
+  - python3 scripts/recovery-management/restore_user_duckdb.py --all
+  estimated_time: 20
+  step: 2
+  title: Restore user databases from backups
+- commands:
+  - python3 scripts/recovery-management/notify_users.py --recovery-complete
+  estimated_time: 5
+  step: 3
+  title: Notify affected users
+rollback_procedures:
+- commands:
+  - python3 scripts/recovery-management/recreate_user_databases.py --clean
+  step: 1
+  title: Recreate clean user databases
+validation_commands:
+- command: python3 -c "import duckdb; conn = duckdb.connect('./app_data/violentutf/pyrit_memory_test.db');
+    print('OK')"
+  expected_result: OK
+  name: user_database_check
