@@ -1,0 +1,44 @@
+================================================================================
+COMPREHENSIVE MIGRATION VALIDATION REPORT
+================================================================================
+
+Validation Timestamp: 2025-10-05T19:28:20.863656
+App Data Directory:   app_data/violentutf
+
+================================================================================
+VALIDATION SUMMARY
+================================================================================
+Total Validations: 3
+Passed:            1
+Failed:            1
+Warnings:          1
+
+================================================================================
+DETAILED RESULTS
+================================================================================
+
+Validation: config_migration
+  Status: FAIL
+  return_code: 2
+
+Validation: pyrit_memory
+  Status: WARNING
+  message: No SQLite migration files found
+  total_db_files: 15
+  sqlite_files: 0
+
+Validation: data_integrity
+  Status: PASS
+  lock_files: 0
+  orphaned_files: 5
+
+================================================================================
+OVERALL VALIDATION STATUS
+================================================================================
+
+✗ VALIDATION FAILED
+
+Migration validation FAILED.
+Please review the errors above and re-run migration.
+
+================================================================================
