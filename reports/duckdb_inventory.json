@@ -1,0 +1,2033 @@
+{
+  "scan_timestamp": "2025-10-05T14:19:26.269697",
+  "base_path": "/Users/tamnguyen/Documents/GitHub/violentUTF",
+  "comprehensive_analysis": true,
+  "total_files": 15,
+  "total_size_bytes": 3330048,
+  "total_size_mb": 3.18,
+  "files": [
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_user_0.db",
+      "filename": "pyrit_memory_user_0.db",
+      "size_bytes": 12288,
+      "modified_date": "2025-09-25T09:24:31.002643",
+      "permissions": "644",
+      "user_hash": null,
+      "schema": {
+        "tables": [],
+        "row_counts": {},
+        "columns": {},
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_user_4.db",
+      "filename": "pyrit_memory_user_4.db",
+      "size_bytes": 12288,
+      "modified_date": "2025-09-25T09:24:31.118153",
+      "permissions": "644",
+      "user_hash": null,
+      "schema": {
+        "tables": [],
+        "row_counts": {},
+        "columns": {},
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_32a1ddee5ff4c1ddd93473e7c743ae73a9d5d1ce0821804d07f8350a4615fa6b.db",
+      "filename": "pyrit_memory_32a1ddee5ff4c1ddd93473e7c743ae73a9d5d1ce0821804d07f8350a4615fa6b.db",
+      "size_bytes": 274432,
+      "modified_date": "2025-09-25T09:24:31.055070",
+      "permissions": "644",
+      "user_hash": "32a1ddee5ff4c1ddd93473e7c743ae73a9d5d1ce0821804d07f8350a4615fa6b",
+      "schema": {
+        "tables": [
+          "converters",
+          "datasets",
+          "dataset_prompts",
+          "generators",
+          "scorers",
+          "user_sessions"
+        ],
+        "row_counts": {
+          "converters": 0,
+          "datasets": 0,
+          "dataset_prompts": 0,
+          "generators": 0,
+          "scorers": 0,
+          "user_sessions": 0
+        },
+        "columns": {
+          "converters": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "datasets": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "source_type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "configuration",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            }
+          ],
+          "dataset_prompts": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "dataset_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_text",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_index",
+              "type": "INTEGER"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            }
+          ],
+          "generators": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "scorers": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "user_sessions": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_key",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_data",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "expires_at",
+              "type": "TIMESTAMP"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_user_1.db",
+      "filename": "pyrit_memory_user_1.db",
+      "size_bytes": 12288,
+      "modified_date": "2025-09-25T09:24:31.032870",
+      "permissions": "644",
+      "user_hash": null,
+      "schema": {
+        "tables": [],
+        "row_counts": {},
+        "columns": {},
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_4b86a6816c3792498f7c91fa9d26440f46c35a46e7d7c1ea5e7e3e979ca77508.db",
+      "filename": "pyrit_memory_4b86a6816c3792498f7c91fa9d26440f46c35a46e7d7c1ea5e7e3e979ca77508.db",
+      "size_bytes": 274432,
+      "modified_date": "2025-09-24T23:45:25.028971",
+      "permissions": "644",
+      "user_hash": "4b86a6816c3792498f7c91fa9d26440f46c35a46e7d7c1ea5e7e3e979ca77508",
+      "schema": {
+        "tables": [
+          "converters",
+          "datasets",
+          "dataset_prompts",
+          "generators",
+          "scorers",
+          "user_sessions"
+        ],
+        "row_counts": {
+          "converters": 0,
+          "datasets": 0,
+          "dataset_prompts": 0,
+          "generators": 0,
+          "scorers": 0,
+          "user_sessions": 0
+        },
+        "columns": {
+          "converters": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "datasets": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "source_type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "configuration",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            }
+          ],
+          "dataset_prompts": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "dataset_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_text",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_index",
+              "type": "INTEGER"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            }
+          ],
+          "generators": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "scorers": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "user_sessions": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_key",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_data",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "expires_at",
+              "type": "TIMESTAMP"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_02eb5dc8eed38312221ccc5538addb496ed572b5061964240c91cad400104741.db",
+      "filename": "pyrit_memory_02eb5dc8eed38312221ccc5538addb496ed572b5061964240c91cad400104741.db",
+      "size_bytes": 274432,
+      "modified_date": "2025-09-25T09:24:31.139605",
+      "permissions": "644",
+      "user_hash": "02eb5dc8eed38312221ccc5538addb496ed572b5061964240c91cad400104741",
+      "schema": {
+        "tables": [
+          "converters",
+          "datasets",
+          "dataset_prompts",
+          "generators",
+          "scorers",
+          "user_sessions"
+        ],
+        "row_counts": {
+          "converters": 0,
+          "datasets": 0,
+          "dataset_prompts": 0,
+          "generators": 0,
+          "scorers": 0,
+          "user_sessions": 0
+        },
+        "columns": {
+          "converters": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "datasets": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "source_type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "configuration",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            }
+          ],
+          "dataset_prompts": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "dataset_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_text",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_index",
+              "type": "INTEGER"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            }
+          ],
+          "generators": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "scorers": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "user_sessions": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_key",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_data",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "expires_at",
+              "type": "TIMESTAMP"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_afd9462a6d15de425f995c945bb34c9b69e69bd4df8c97abc882688cd7733631.db",
+      "filename": "pyrit_memory_afd9462a6d15de425f995c945bb34c9b69e69bd4df8c97abc882688cd7733631.db",
+      "size_bytes": 274432,
+      "modified_date": "2025-09-25T09:24:31.111986",
+      "permissions": "644",
+      "user_hash": "afd9462a6d15de425f995c945bb34c9b69e69bd4df8c97abc882688cd7733631",
+      "schema": {
+        "tables": [
+          "converters",
+          "datasets",
+          "dataset_prompts",
+          "generators",
+          "scorers",
+          "user_sessions"
+        ],
+        "row_counts": {
+          "converters": 0,
+          "datasets": 0,
+          "dataset_prompts": 0,
+          "generators": 0,
+          "scorers": 0,
+          "user_sessions": 0
+        },
+        "columns": {
+          "converters": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "datasets": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "source_type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "configuration",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            }
+          ],
+          "dataset_prompts": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "dataset_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_text",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_index",
+              "type": "INTEGER"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            }
+          ],
+          "generators": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "scorers": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "user_sessions": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_key",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_data",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "expires_at",
+              "type": "TIMESTAMP"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_test_user.db",
+      "filename": "pyrit_memory_test_user.db",
+      "size_bytes": 12288,
+      "modified_date": "2025-09-25T11:20:24.684664",
+      "permissions": "644",
+      "user_hash": null,
+      "schema": {
+        "tables": [],
+        "row_counts": {},
+        "columns": {},
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_validation_test_user.db",
+      "filename": "pyrit_memory_validation_test_user.db",
+      "size_bytes": 12288,
+      "modified_date": "2025-09-24T23:45:50.210989",
+      "permissions": "644",
+      "user_hash": null,
+      "schema": {
+        "tables": [],
+        "row_counts": {},
+        "columns": {},
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_7138db03e4d80761606f3b04a9cb3fdaacf1a28663667f4d880f318a808df9e1.db",
+      "filename": "pyrit_memory_7138db03e4d80761606f3b04a9cb3fdaacf1a28663667f4d880f318a808df9e1.db",
+      "size_bytes": 274432,
+      "modified_date": "2025-09-24T23:45:50.264793",
+      "permissions": "644",
+      "user_hash": "7138db03e4d80761606f3b04a9cb3fdaacf1a28663667f4d880f318a808df9e1",
+      "schema": {
+        "tables": [
+          "converters",
+          "datasets",
+          "dataset_prompts",
+          "generators",
+          "scorers",
+          "user_sessions"
+        ],
+        "row_counts": {
+          "converters": 0,
+          "datasets": 0,
+          "dataset_prompts": 0,
+          "generators": 0,
+          "scorers": 0,
+          "user_sessions": 0
+        },
+        "columns": {
+          "converters": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "datasets": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "source_type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "configuration",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            }
+          ],
+          "dataset_prompts": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "dataset_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_text",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_index",
+              "type": "INTEGER"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            }
+          ],
+          "generators": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "scorers": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "user_sessions": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_key",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_data",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "expires_at",
+              "type": "TIMESTAMP"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_52b3abd05f12fac326db7986bf74655495bd7de517723090b734494eb76dc568.db",
+      "filename": "pyrit_memory_52b3abd05f12fac326db7986bf74655495bd7de517723090b734494eb76dc568.db",
+      "size_bytes": 274432,
+      "modified_date": "2025-09-25T09:24:31.083828",
+      "permissions": "644",
+      "user_hash": "52b3abd05f12fac326db7986bf74655495bd7de517723090b734494eb76dc568",
+      "schema": {
+        "tables": [
+          "converters",
+          "datasets",
+          "dataset_prompts",
+          "generators",
+          "scorers",
+          "user_sessions"
+        ],
+        "row_counts": {
+          "converters": 0,
+          "datasets": 0,
+          "dataset_prompts": 0,
+          "generators": 0,
+          "scorers": 0,
+          "user_sessions": 0
+        },
+        "columns": {
+          "converters": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "datasets": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "source_type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "configuration",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            }
+          ],
+          "dataset_prompts": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "dataset_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_text",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_index",
+              "type": "INTEGER"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            }
+          ],
+          "generators": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "scorers": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "user_sessions": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_key",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_data",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "expires_at",
+              "type": "TIMESTAMP"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_7328ec2b0390c13f2a9c2c0070cf85da835bbff3c59dadb472d03f5238aaf745.db",
+      "filename": "pyrit_memory_7328ec2b0390c13f2a9c2c0070cf85da835bbff3c59dadb472d03f5238aaf745.db",
+      "size_bytes": 274432,
+      "modified_date": "2025-09-25T09:24:31.025599",
+      "permissions": "644",
+      "user_hash": "7328ec2b0390c13f2a9c2c0070cf85da835bbff3c59dadb472d03f5238aaf745",
+      "schema": {
+        "tables": [
+          "converters",
+          "datasets",
+          "dataset_prompts",
+          "generators",
+          "scorers",
+          "user_sessions"
+        ],
+        "row_counts": {
+          "converters": 0,
+          "datasets": 0,
+          "dataset_prompts": 0,
+          "generators": 0,
+          "scorers": 0,
+          "user_sessions": 0
+        },
+        "columns": {
+          "converters": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "datasets": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "source_type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "configuration",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            }
+          ],
+          "dataset_prompts": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "dataset_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_text",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_index",
+              "type": "INTEGER"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            }
+          ],
+          "generators": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "scorers": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "user_sessions": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_key",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_data",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "expires_at",
+              "type": "TIMESTAMP"
+            }
+          ]
+        },
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_user_2.db",
+      "filename": "pyrit_memory_user_2.db",
+      "size_bytes": 12288,
+      "modified_date": "2025-09-25T09:24:31.061183",
+      "permissions": "644",
+      "user_hash": null,
+      "schema": {
+        "tables": [],
+        "row_counts": {},
+        "columns": {},
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/app_data/violentutf/pyrit_memory_user_3.db",
+      "filename": "pyrit_memory_user_3.db",
+      "size_bytes": 12288,
+      "modified_date": "2025-09-25T09:24:31.090215",
+      "permissions": "644",
+      "user_hash": null,
+      "schema": {
+        "tables": [],
+        "row_counts": {},
+        "columns": {},
+        "error": null
+      }
+    },
+    {
+      "path": "/Users/tamnguyen/Documents/GitHub/violentUTF/violentutf/app_data/violentutf/pyrit_memory_ffb7bf7b42c725c17f1e2b1c6ebc9df67678d75552527bddc4eb02188b89505d.db",
+      "filename": "pyrit_memory_ffb7bf7b42c725c17f1e2b1c6ebc9df67678d75552527bddc4eb02188b89505d.db",
+      "size_bytes": 1323008,
+      "modified_date": "2025-09-17T09:44:50.511911",
+      "permissions": "644",
+      "user_hash": "ffb7bf7b42c725c17f1e2b1c6ebc9df67678d75552527bddc4eb02188b89505d",
+      "schema": {
+        "tables": [
+          "converters",
+          "datasets",
+          "dataset_prompts",
+          "generators",
+          "scorers",
+          "user_sessions"
+        ],
+        "row_counts": {
+          "converters": 0,
+          "datasets": 0,
+          "dataset_prompts": 0,
+          "generators": 1,
+          "scorers": 0,
+          "user_sessions": 0
+        },
+        "columns": {
+          "converters": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "datasets": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "source_type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "configuration",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            }
+          ],
+          "dataset_prompts": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "dataset_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_text",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "prompt_index",
+              "type": "INTEGER"
+            },
+            {
+              "name": "metadata",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            }
+          ],
+          "generators": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "scorers": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "type",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "parameters",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "test_results",
+              "type": "VARCHAR"
+            }
+          ],
+          "user_sessions": [
+            {
+              "name": "id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "user_id",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_key",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "session_data",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "updated_at",
+              "type": "TIMESTAMP"
+            },
+            {
+              "name": "expires_at",
+              "type": "TIMESTAMP"
+            }
+          ]
+        },
+        "error": null
+      }
+    }
+  ],
+  "directory_summary": {
+    "app_data/violentutf/": {
+      "count": 14,
+      "size_bytes": 2007040,
+      "files": [
+        "pyrit_memory_user_0.db",
+        "pyrit_memory_user_4.db",
+        "pyrit_memory_32a1ddee5ff4c1ddd93473e7c743ae73a9d5d1ce0821804d07f8350a4615fa6b.db",
+        "pyrit_memory_user_1.db",
+        "pyrit_memory_4b86a6816c3792498f7c91fa9d26440f46c35a46e7d7c1ea5e7e3e979ca77508.db",
+        "pyrit_memory_02eb5dc8eed38312221ccc5538addb496ed572b5061964240c91cad400104741.db",
+        "pyrit_memory_afd9462a6d15de425f995c945bb34c9b69e69bd4df8c97abc882688cd7733631.db",
+        "pyrit_memory_test_user.db",
+        "pyrit_memory_validation_test_user.db",
+        "pyrit_memory_7138db03e4d80761606f3b04a9cb3fdaacf1a28663667f4d880f318a808df9e1.db",
+        "pyrit_memory_52b3abd05f12fac326db7986bf74655495bd7de517723090b734494eb76dc568.db",
+        "pyrit_memory_7328ec2b0390c13f2a9c2c0070cf85da835bbff3c59dadb472d03f5238aaf745.db",
+        "pyrit_memory_user_2.db",
+        "pyrit_memory_user_3.db"
+      ]
+    },
+    "violentutf/app_data/violentutf/": {
+      "count": 1,
+      "size_bytes": 1323008,
+      "files": [
+        "pyrit_memory_ffb7bf7b42c725c17f1e2b1c6ebc9df67678d75552527bddc4eb02188b89505d.db"
+      ]
+    }
+  }
+}
