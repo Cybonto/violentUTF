@@ -167,3 +167,4 @@ _backup
 bandit-report.json
 .vitutf
 /docs/course
+/.venv_pyrit_test
