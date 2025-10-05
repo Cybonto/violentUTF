@@ -31,7 +31,7 @@ PyJWT>=2.8.0
 PyJWT[crypto]>=2.8.0
 
 # AI Red-teaming frameworks (following official docs)
-pyrit
+pyrit>=0.10.0rc0
 python-dotenv>=1.0.0
 python-multipart>=0.0.6
 PyYAML>=6.0.2

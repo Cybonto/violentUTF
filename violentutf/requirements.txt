@@ -45,7 +45,7 @@ PyJWT>=2.8.0
 PyJWT[crypto]>=2.8.0
 
 # Red Teaming tools - Requires Python 3.10-3.12
-pyrit>=0.4.0                      # Microsoft PyRIT framework
+pyrit>=0.10.0rc0                  # Microsoft PyRIT framework
 pytest
 python-dateutil>=2.8.0
 

@@ -15,7 +15,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.auth import get_current_user
-from app.db.duckdb_manager import get_duckdb_manager
+from app.db.sqlite_manager import get_sqlite_manager
 from app.models.auth import User
 from app.schemas.sessions import (
     SessionSchemaResponse,
@@ -85,7 +85,7 @@ async def get_session_state(
     try:
 
         # Get session data from DuckDB
-        db_manager = get_duckdb_manager(current_user.username)
+        db_manager = get_sqlite_manager(current_user.username)
         session_result = db_manager.get_session("main_session")
 
         if session_result:
@@ -126,7 +126,7 @@ async def update_session_state(
     try:
 
         # Get DuckDB manager and load existing session data
-        db_manager = get_duckdb_manager(current_user.username)
+        db_manager = get_sqlite_manager(current_user.username)
         session_result = db_manager.get_session("main_session")
 
         if session_result:
@@ -200,7 +200,7 @@ async def reset_session_state(
         }
 
         # Save reset session data to DuckDB
-        db_manager = get_duckdb_manager(current_user.username)
+        db_manager = get_sqlite_manager(current_user.username)
         db_manager.save_session("main_session", session_data)
 
         return SessionStateResponse(

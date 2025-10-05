@@ -21,7 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.error_handling import safe_error_response, validation_error
-from app.db.duckdb_manager import get_duckdb_manager
+from app.db.sqlite_manager import get_sqlite_manager
 from app.models.auth import User
 from app.schemas.generators import (
     APIXModelsResponse,
@@ -850,7 +850,7 @@ async def get_generators(
         logger.info("User %s requested generators list", user_id)
 
         # Get generators from DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         generators_data = db_manager.list_generators()
 
         generators = []
@@ -904,7 +904,7 @@ async def create_generator(
         logger.info("User %s creating generator: %s", user_id, request.name)
 
         # Get DuckDB manager
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
 
         # Check if generator name already exists for this user
         existing_generator = db_manager.get_generator_by_name(request.name)
@@ -966,7 +966,7 @@ async def delete_generator(
         logger.info("User %s deleting generator: %s", user_id, generator_id)
 
         # Get DuckDB manager and find generator
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         generator_data = db_manager.get_generator(generator_id)
 
         if not generator_data:
@@ -1042,7 +1042,7 @@ async def update_generator(
         logger.info("User %s updating generator: %s", user_id, generator_id)
 
         # Get DuckDB manager and find generator
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         generator_data = db_manager.get_generator(generator_id)
 
         if not generator_data:

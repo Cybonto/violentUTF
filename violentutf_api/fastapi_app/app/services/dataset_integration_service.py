@@ -96,13 +96,13 @@ async def _get_dataset_by_id(dataset_id: str, user_context: Optional[str] = None
     """Get dataset configuration by ID from backend service."""
     try:
 
-        # Get datasets directly from DuckDB without authentication context
+        # Get datasets directly from SQLite without authentication context
         # This is safe for internal service - to - service calls
-        from app.db.duckdb_manager import get_duckdb_manager
+        from app.db.sqlite_manager import get_sqlite_manager
 
         # Use the provided user context or fall back to web interface user
         username = user_context or "violentutf.web"
-        db_manager = get_duckdb_manager(username)
+        db_manager = get_sqlite_manager(username)
 
         # Handle memory dataset IDs (memory_0, memory_1, etc.)
         if dataset_id.startswith("memory_"):
