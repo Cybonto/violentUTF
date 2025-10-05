@@ -1,0 +1,314 @@
+{
+  "timestamp": "2025-10-05T18:54:27.949711+00:00",
+  "pyrit_version": "0.10.0rc0",
+  "analysis": {
+    "sqlite_api": {
+      "class_name": "SQLiteMemory",
+      "constructor": "(self, *, db_path: Union[pathlib.Path, str, NoneType] = None, verbose: bool = False)",
+      "methods": {
+        "DEFAULT_DB_FILE_NAME": {
+          "type": "attribute"
+        },
+        "add_attack_results_to_memory": {
+          "signature": "(self, *, attack_results: Sequence[pyrit.models.attack_result.AttackResult]) -> None",
+          "is_async": false,
+          "type": "method"
+        },
+        "add_request_pieces_to_memory": {
+          "signature": "(self, *, request_pieces: Sequence[pyrit.models.prompt_request_piece.PromptRequestPiece]) -> None",
+          "is_async": false,
+          "type": "method"
+        },
+        "add_request_response_to_memory": {
+          "signature": "(self, *, request: pyrit.models.prompt_request_response.PromptRequestResponse) -> None",
+          "is_async": false,
+          "type": "method"
+        },
+        "add_scores_to_memory": {
+          "signature": "(self, *, scores: Sequence[pyrit.models.score.Score]) -> None",
+          "is_async": false,
+          "type": "method"
+        },
+        "add_seed_prompt_groups_to_memory": {
+          "signature": "(self, *, prompt_groups: Sequence[pyrit.models.seed_prompt_group.SeedPromptGroup], added_by: Optional[str] = None) -> None",
+          "is_async": true,
+          "type": "method"
+        },
+        "add_seed_prompts_to_memory_async": {
+          "signature": "(self, *, prompts: Sequence[pyrit.models.seed_prompt.SeedPrompt], added_by: Optional[str] = None) -> None",
+          "is_async": true,
+          "type": "method"
+        },
+        "cleanup": {
+          "signature": "(self)",
+          "is_async": false,
+          "type": "method"
+        },
+        "disable_embedding": {
+          "signature": "(self)",
+          "is_async": false,
+          "type": "method"
+        },
+        "dispose_engine": {
+          "signature": "(self) -> None",
+          "is_async": false,
+          "type": "method"
+        },
+        "duplicate_conversation": {
+          "signature": "(self, *, conversation_id: str, new_orchestrator_id: Optional[str] = None) -> str",
+          "is_async": false,
+          "type": "method"
+        },
+        "duplicate_conversation_excluding_last_turn": {
+          "signature": "(self, *, conversation_id: str, new_orchestrator_id: Optional[str] = None) -> str",
+          "is_async": false,
+          "type": "method"
+        },
+        "enable_embedding": {
+          "signature": "(self, embedding_model=None)",
+          "is_async": false,
+          "type": "method"
+        },
+        "engine": {
+          "type": "attribute"
+        },
+        "export_all_tables": {
+          "signature": "(self, *, export_type: str = 'json')",
+          "is_async": false,
+          "type": "method"
+        },
+        "export_conversations": {
+          "signature": "(self, *, orchestrator_id: Union[str, uuid.UUID, NoneType] = None, conversation_id: Union[str, uuid.UUID, NoneType] = None, prompt_ids: Union[Sequence[str], Sequence[uuid.UUID], NoneType] = None, labels: Optional[dict[str, str]] = None, sent_after: Optional[datetime.datetime] = None, sent_before: Optional[datetime.datetime] = None, original_values: Optional[Sequence[str]] = None, converted_values: Optional[Sequence[str]] = None, data_type: Optional[str] = None, not_data_type: Optional[str] = None, converted_value_sha256: Optional[Sequence[str]] = None, file_path: Optional[pathlib.Path] = None, export_type: str = 'json') -> pathlib.Path",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_all_embeddings": {
+          "signature": "(self) -> Sequence[pyrit.memory.memory_models.EmbeddingDataEntry]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_all_table_models": {
+          "signature": "(self) -> list[type[pyrit.memory.memory_models.Base]]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_attack_results": {
+          "signature": "(self, *, attack_result_ids: Optional[Sequence[str]] = None, conversation_id: Optional[str] = None, objective: Optional[str] = None, objective_sha256: Optional[Sequence[str]] = None, outcome: Optional[str] = None) -> Sequence[pyrit.models.attack_result.AttackResult]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_chat_messages_with_conversation_id": {
+          "signature": "(self, *, conversation_id: str) -> Sequence[pyrit.models.chat_message.ChatMessage]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_conversation": {
+          "signature": "(self, *, conversation_id: str) -> MutableSequence[pyrit.models.prompt_request_response.PromptRequestResponse]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_prompt_request_pieces": {
+          "signature": "(self, *, orchestrator_id: Union[str, uuid.UUID, NoneType] = None, role: Optional[str] = None, conversation_id: Union[str, uuid.UUID, NoneType] = None, prompt_ids: Optional[Sequence[str | uuid.UUID]] = None, labels: Optional[dict[str, str]] = None, prompt_metadata: Optional[dict[str, Union[str, int]]] = None, sent_after: Optional[datetime.datetime] = None, sent_before: Optional[datetime.datetime] = None, original_values: Optional[Sequence[str]] = None, converted_values: Optional[Sequence[str]] = None, data_type: Optional[str] = None, not_data_type: Optional[str] = None, converted_value_sha256: Optional[Sequence[str]] = None) -> Sequence[pyrit.models.prompt_request_piece.PromptRequestPiece]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_prompt_scores": {
+          "signature": "(self, *, orchestrator_id: Union[str, uuid.UUID, NoneType] = None, role: Optional[str] = None, conversation_id: Union[str, uuid.UUID, NoneType] = None, prompt_ids: Optional[Sequence[str | uuid.UUID]] = None, labels: Optional[dict[str, str]] = None, prompt_metadata: Optional[dict[str, Union[str, int]]] = None, sent_after: Optional[datetime.datetime] = None, sent_before: Optional[datetime.datetime] = None, original_values: Optional[Sequence[str]] = None, converted_values: Optional[Sequence[str]] = None, data_type: Optional[str] = None, not_data_type: Optional[str] = None, converted_value_sha256: Optional[Sequence[str]] = None) -> Sequence[pyrit.models.score.Score]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_scores": {
+          "signature": "(self, *, score_ids: Optional[Sequence[str]] = None, score_type: Optional[str] = None, score_category: Optional[str] = None, sent_after: Optional[datetime.datetime] = None, sent_before: Optional[datetime.datetime] = None) -> Sequence[pyrit.models.score.Score]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_seed_prompt_dataset_names": {
+          "signature": "(self) -> Sequence[str]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_seed_prompt_groups": {
+          "signature": "(self, *, value_sha256: Optional[Sequence[str]] = None, dataset_name: Optional[str] = None, data_types: Optional[Sequence[str]] = None, harm_categories: Optional[Sequence[str]] = None, added_by: Optional[str] = None, authors: Optional[Sequence[str]] = None, groups: Optional[Sequence[str]] = None, source: Optional[str] = None) -> Sequence[pyrit.models.seed_prompt_group.SeedPromptGroup]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_seed_prompts": {
+          "signature": "(self, *, value: Optional[str] = None, value_sha256: Optional[Sequence[str]] = None, dataset_name: Optional[str] = None, data_types: Optional[Sequence[str]] = None, harm_categories: Optional[Sequence[str]] = None, added_by: Optional[str] = None, authors: Optional[Sequence[str]] = None, groups: Optional[Sequence[str]] = None, source: Optional[str] = None, parameters: Optional[Sequence[str]] = None, metadata: Optional[dict[str, Union[str, int]]] = None) -> Sequence[pyrit.models.seed_prompt.SeedPrompt]",
+          "is_async": false,
+          "type": "method"
+        },
+        "get_session": {
+          "signature": "(self) -> sqlalchemy.orm.session.Session",
+          "is_async": false,
+          "type": "method"
+        },
+        "memory_embedding": {
+          "type": "attribute"
+        },
+        "print_schema": {
+          "signature": "(self)",
+          "is_async": false,
+          "type": "method"
+        },
+        "reset_database": {
+          "signature": "(self) -> None",
+          "is_async": false,
+          "type": "method"
+        },
+        "results_path": {
+          "type": "attribute"
+        },
+        "results_storage_io": {
+          "type": "attribute"
+        },
+        "update_labels_by_conversation_id": {
+          "signature": "(self, *, conversation_id: str, labels: dict) -> bool",
+          "is_async": false,
+          "type": "method"
+        },
+        "update_prompt_entries_by_conversation_id": {
+          "signature": "(self, *, conversation_id: str, update_fields: dict) -> bool",
+          "is_async": false,
+          "type": "method"
+        },
+        "update_prompt_metadata_by_conversation_id": {
+          "signature": "(self, *, conversation_id: str, prompt_metadata: dict[str, typing.Union[str, int]]) -> bool",
+          "is_async": false,
+          "type": "method"
+        }
+      },
+      "module": "pyrit.memory"
+    },
+    "duckdb_api_reference": {
+      "class_name": "DuckDBMemory",
+      "constructor": "(db_path: str)",
+      "methods": {
+        "add_seed_prompts_to_memory_async": {
+          "signature": "(prompts: List[SeedPrompt], added_by: str = None) -> None",
+          "is_async": true,
+          "type": "method",
+          "usage": "Store seed prompts to memory",
+          "note": "DuckDB version may not require added_by parameter"
+        },
+        "get_prompt_request_pieces": {
+          "signature": "(labels: List[str] = None, offset: int = 0, limit: int = None) -> List[PromptRequestPiece]",
+          "is_async": false,
+          "type": "method",
+          "usage": "Retrieve prompt pieces with filtering"
+        },
+        "dispose_engine": {
+          "signature": "() -> None",
+          "is_async": false,
+          "type": "method",
+          "usage": "Close database connection"
+        }
+      },
+      "module": "pyrit.memory"
+    },
+    "comparison": {
+      "constructor_compatible": true,
+      "method_compatibility": {
+        "add_seed_prompts_to_memory_async": {
+          "compatible": true,
+          "duckdb_signature": "(prompts: List[SeedPrompt], added_by: str = None) -> None",
+          "sqlite_signature": "(self, *, prompts: Sequence[pyrit.models.seed_prompt.SeedPrompt], added_by: Optional[str] = None) -> None",
+          "notes": "Method exists in both APIs"
+        },
+        "get_prompt_request_pieces": {
+          "compatible": true,
+          "duckdb_signature": "(labels: List[str] = None, offset: int = 0, limit: int = None) -> List[PromptRequestPiece]",
+          "sqlite_signature": "(self, *, orchestrator_id: Union[str, uuid.UUID, NoneType] = None, role: Optional[str] = None, conversation_id: Union[str, uuid.UUID, NoneType] = None, prompt_ids: Optional[Sequence[str | uuid.UUID]] = None, labels: Optional[dict[str, str]] = None, prompt_metadata: Optional[dict[str, Union[str, int]]] = None, sent_after: Optional[datetime.datetime] = None, sent_before: Optional[datetime.datetime] = None, original_values: Optional[Sequence[str]] = None, converted_values: Optional[Sequence[str]] = None, data_type: Optional[str] = None, not_data_type: Optional[str] = None, converted_value_sha256: Optional[Sequence[str]] = None) -> Sequence[pyrit.models.prompt_request_piece.PromptRequestPiece]",
+          "notes": "Method exists in both APIs"
+        },
+        "dispose_engine": {
+          "compatible": true,
+          "duckdb_signature": "() -> None",
+          "sqlite_signature": "(self) -> None",
+          "notes": "Method exists in both APIs"
+        }
+      },
+      "breaking_changes": [],
+      "new_methods": [
+        "add_attack_results_to_memory",
+        "add_seed_prompt_groups_to_memory",
+        "cleanup",
+        "update_prompt_metadata_by_conversation_id",
+        "export_all_tables",
+        "get_all_table_models",
+        "get_chat_messages_with_conversation_id",
+        "get_conversation",
+        "reset_database",
+        "update_prompt_entries_by_conversation_id",
+        "disable_embedding",
+        "print_schema",
+        "duplicate_conversation",
+        "get_session",
+        "enable_embedding",
+        "get_seed_prompt_dataset_names",
+        "get_scores",
+        "get_all_embeddings",
+        "get_seed_prompt_groups",
+        "add_request_response_to_memory",
+        "export_conversations",
+        "get_attack_results",
+        "update_labels_by_conversation_id",
+        "get_prompt_scores",
+        "add_request_pieces_to_memory",
+        "duplicate_conversation_excluding_last_turn",
+        "add_scores_to_memory",
+        "get_seed_prompts"
+      ],
+      "deprecated_methods": [],
+      "signature_changes": []
+    },
+    "bridge_usage": {
+      "critical_methods": [
+        "add_seed_prompts_to_memory_async",
+        "get_prompt_request_pieces",
+        "dispose_engine"
+      ],
+      "usage_patterns": {
+        "add_seed_prompts_to_memory_async": {
+          "description": "Store prompts in batches with metadata and labels",
+          "parameters_used": [
+            "prompts"
+          ],
+          "critical": true
+        },
+        "get_prompt_request_pieces": {
+          "description": "Retrieve prompts with label filtering",
+          "parameters_used": [
+            "labels",
+            "offset",
+            "limit"
+          ],
+          "critical": true
+        },
+        "dispose_engine": {
+          "description": "Clean up database connections",
+          "parameters_used": [],
+          "critical": true
+        }
+      },
+      "migration_considerations": [
+        "User-specific database paths must be supported",
+        "Batch operations with metadata must work",
+        "Label-based filtering is essential",
+        "Pagination support required",
+        "Connection cleanup must be reliable"
+      ]
+    }
+  },
+  "summary": {
+    "constructor_compatible": true,
+    "critical_methods_compatible": true,
+    "breaking_changes_count": 0,
+    "new_methods_count": 28,
+    "deprecated_methods_count": 0
+  },
+  "recommendations": [
+    "\u2705 All critical methods are compatible - migration is feasible",
+    "\u2705 No breaking changes detected for current usage",
+    "\u2139\ufe0f 28 new methods available for potential enhancements"
+  ]
+}

@@ -52,7 +52,7 @@ repos:
         args: ["--check", "--diff", ".", "--verbose"]
         # Uses pyproject.toml configuration for exclusions and line-length
         pass_filenames: false
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|\.venv_pyrit_test/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
 
   # Import sorting - Match GitHub PR validation exactly
   - repo: https://github.com/pycqa/isort
@@ -62,7 +62,7 @@ repos:
         args: ["--check-only", "--diff", "."]
         # Uses pyproject.toml configuration
         pass_filenames: false
-        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
+        exclude: '^(tests/|test/|.*tests.*|.*test.*|test_.*|.*_test\.py$|venv/|\.venv/|\.venv_pyrit_test/|env/|\.env/|ENV/|\.vitutf/|\.virtualenv/|\.conda/|__pycache__/|\.pytest_cache/|\.mypy_cache/|\.ruff_cache/|\.tox/|\.nox/|\.cache/|build/|dist/|\.eggs/|node_modules/|tmp/|temp/|\.tmp/|\.temp/|.*app_data/|violentutf_logs/|.*migrations/)'
 
   # Linting - Match GitHub PR validation exactly
   - repo: https://github.com/pycqa/flake8

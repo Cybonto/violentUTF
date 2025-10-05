@@ -35,7 +35,7 @@ deployment:
     - 0.0.0.0/0
     admin_key:
     - role: admin
-      key: LPE39efAwhUhSnunR7wNwv978bCAshxB
+      key: iwRswTuGEtJCm28xKoQGXRzQuljwrq09
       name: admin
     admin_listen:
       port: 9180
@@ -87,8 +87,6 @@ plugin_attr:
       connect: 60s
       send: 60s
       read: 60s
-      ip: 127.0.0.1
-    metric_prefix: apisix_
   dubbo-proxy:
     upstream_multiplex_count: 32
 plugins:
@@ -222,8 +220,8 @@ apisix:
   data_encryption:
     enable_encrypt_fields: true
     keyring:
-    - t2uHdeGGkKTXXcAO
-    - POTKhkinZgUF8CgA
+    - kWAqi4NKoeQujL6r
+    - rdtM2blcvLWOzRfQ
   enable_resolv_search_opt: true
   disable_sync_configuration_during_start: false
   node_listen:

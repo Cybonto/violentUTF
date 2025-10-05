@@ -23,6 +23,7 @@ extend-exclude = '''
   | \.nox
   | \.cache
   | \.venv
+  | \.venv_pyrit_test
   | \.env
   | venv
   | env
@@ -95,6 +96,7 @@ skip = [
     ".nox",
     ".cache",
     ".venv",
+    ".venv_pyrit_test",
     ".env",
     "venv",
     "env",
@@ -270,6 +272,7 @@ exclude_dirs = [
     "build",
     "venv",
     ".venv",
+    ".venv_pyrit_test",
     "app_data",
     "violentutf_logs",
     "tmp",
