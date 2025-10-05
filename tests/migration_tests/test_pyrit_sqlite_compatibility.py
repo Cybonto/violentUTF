@@ -17,6 +17,7 @@ from typing import List
 
 import pytest
 import pytest_asyncio
+from pyrit.common.singleton import Singleton
 from pyrit.memory import SQLiteMemory
 from pyrit.models import SeedPrompt
 
@@ -24,13 +25,28 @@ from pyrit.models import SeedPrompt
 class TestSQLiteMemoryBasicOperations:
     """Test basic CRUD operations with SQLiteMemory."""
 
-    @pytest.fixture
-    def temp_db_path(self):
-        """Create a temporary database path."""
+    @pytest.fixture(scope="function")
+    def memory(self):
+        """Create a SQLiteMemory instance with temp database."""
+        # Clear singleton from any previous test
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
+
+        # Create temp database path
         fd, path = tempfile.mkstemp(suffix=".db")
         os.close(fd)
-        yield path
+        # Remove the empty file to let SQLiteMemory create it
+        os.remove(path)
+
+        # Create memory instance
+        mem = SQLiteMemory(db_path=path)
+        yield mem
+
         # Cleanup
+        mem.dispose_engine()
+        # Clear singleton to allow new instances in subsequent tests
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
         if os.path.exists(path):
             os.remove(path)
         for suffix in ["-wal", "-shm", "-journal"]:
@@ -38,18 +54,18 @@ class TestSQLiteMemoryBasicOperations:
             if os.path.exists(journal_path):
                 os.remove(journal_path)
 
-    @pytest.fixture
-    def memory(self, temp_db_path):
-        """Create a SQLiteMemory instance."""
-        mem = SQLiteMemory(db_path=temp_db_path)
-        yield mem
-        mem.dispose_engine()
-
-    def test_memory_initialization_with_path(self, temp_db_path):
+    def test_memory_initialization_with_path(self):
         """Test SQLiteMemory initialization with custom path."""
-        memory = SQLiteMemory(db_path=temp_db_path)
-        assert memory is not None
-        memory.dispose_engine()
+        fd, path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        os.remove(path)
+        try:
+            memory = SQLiteMemory(db_path=path)
+            assert memory is not None
+            memory.dispose_engine()
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
 
     def test_memory_initialization_default(self):
         """Test SQLiteMemory initialization with default path."""
@@ -123,26 +139,30 @@ class TestSQLiteMemoryBasicOperations:
 class TestSQLiteMemoryQueryOperations:
     """Test query and filtering operations."""
 
-    @pytest.fixture
-    def temp_db_path(self):
-        """Create a temporary database path."""
+    @pytest.fixture(scope="function")
+    def memory(self):
+        """Create a SQLiteMemory instance with temp database."""
+        # Clear singleton from any previous test
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
+
         fd, path = tempfile.mkstemp(suffix=".db")
         os.close(fd)
-        yield path
-        # Cleanup
+        os.remove(path)
+
+        mem = SQLiteMemory(db_path=path)
+        yield mem
+
+        mem.dispose_engine()
+        # Clear singleton to allow new instances in subsequent tests
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
         if os.path.exists(path):
             os.remove(path)
         for suffix in ["-wal", "-shm", "-journal"]:
             journal_path = path + suffix
             if os.path.exists(journal_path):
                 os.remove(journal_path)
-
-    @pytest.fixture
-    def memory(self, temp_db_path):
-        """Create a SQLiteMemory instance."""
-        mem = SQLiteMemory(db_path=temp_db_path)
-        yield mem
-        mem.dispose_engine()
 
     async def _populate_memory(self, memory):
         """Helper to populate memory with test data."""
@@ -209,79 +229,108 @@ class TestSQLiteMemoryQueryOperations:
 class TestSQLiteMemoryConnectionManagement:
     """Test connection management and cleanup."""
 
-    @pytest.fixture
-    def temp_db_path(self):
-        """Create a temporary database path."""
+    def test_dispose_engine(self):
+        """Test proper engine disposal."""
+        # Clear singleton from any previous test
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
+
         fd, path = tempfile.mkstemp(suffix=".db")
         os.close(fd)
-        yield path
-        # Cleanup
-        if os.path.exists(path):
-            os.remove(path)
-        for suffix in ["-wal", "-shm", "-journal"]:
-            journal_path = path + suffix
-            if os.path.exists(journal_path):
-                os.remove(journal_path)
+        os.remove(path)
+        try:
+            memory = SQLiteMemory(db_path=path)
+            memory.dispose_engine()
+            # Should not raise an error
+        finally:
+            # Clear singleton to allow new instances in subsequent tests
+            if SQLiteMemory in Singleton._instances:
+                del Singleton._instances[SQLiteMemory]
+            if os.path.exists(path):
+                os.remove(path)
 
-    def test_dispose_engine(self, temp_db_path):
-        """Test proper engine disposal."""
-        memory = SQLiteMemory(db_path=temp_db_path)
-        memory.dispose_engine()
-        # Should not raise an error
-
-    def test_multiple_dispose_calls(self, temp_db_path):
+    def test_multiple_dispose_calls(self):
         """Test that multiple dispose calls don't cause errors."""
-        memory = SQLiteMemory(db_path=temp_db_path)
-        memory.dispose_engine()
-        memory.dispose_engine()  # Should not raise
+        # Clear singleton from any previous test
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
+
+        fd, path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        os.remove(path)
+        try:
+            memory = SQLiteMemory(db_path=path)
+            memory.dispose_engine()
+            memory.dispose_engine()  # Should not raise
+        finally:
+            # Clear singleton to allow new instances in subsequent tests
+            if SQLiteMemory in Singleton._instances:
+                del Singleton._instances[SQLiteMemory]
+            if os.path.exists(path):
+                os.remove(path)
 
     @pytest.mark.asyncio
-    async def test_reopen_database(self, temp_db_path):
+    async def test_reopen_database(self):
         """Test reopening an existing database."""
-        # Create and populate database
-        memory1 = SQLiteMemory(db_path=temp_db_path)
-        prompts = [
-            SeedPrompt(
-                value="Test prompt",
-                data_type="text",
-                metadata={"test": "value"},
-                added_by="test_user",
-            )
-        ]
-        await memory1.add_seed_prompts_to_memory_async(prompts=prompts, added_by="test_user")
-        memory1.dispose_engine()
+        fd, temp_db_path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        os.remove(temp_db_path)
 
-        # Reopen and verify data persisted
-        memory2 = SQLiteMemory(db_path=temp_db_path)
-        retrieved = memory2.get_seed_prompts()
-        assert len(retrieved) >= 1
-        assert any(p.value == "Test prompt" for p in retrieved)
-        memory2.dispose_engine()
+        try:
+            # Create and populate database
+            memory1 = SQLiteMemory(db_path=temp_db_path)
+            prompts = [
+                SeedPrompt(
+                    value="Test prompt",
+                    data_type="text",
+                    metadata={"test": "value"},
+                    added_by="test_user",
+                )
+            ]
+            await memory1.add_seed_prompts_to_memory_async(prompts=prompts, added_by="test_user")
+            memory1.dispose_engine()
+            # Clear singleton to create new instance
+            if SQLiteMemory in Singleton._instances:
+                del Singleton._instances[SQLiteMemory]
+
+            # Reopen and verify data persisted
+            memory2 = SQLiteMemory(db_path=temp_db_path)
+            retrieved = memory2.get_seed_prompts()
+            assert len(retrieved) >= 1
+            assert any(p.value == "Test prompt" for p in retrieved)
+            memory2.dispose_engine()
+        finally:
+            if os.path.exists(temp_db_path):
+                os.remove(temp_db_path)
 
 
 class TestSQLiteMemoryPyRITBridgeCompatibility:
     """Test compatibility with pyrit_memory_bridge.py usage patterns."""
 
-    @pytest.fixture
-    def temp_db_path(self):
-        """Create a temporary database path."""
+    @pytest.fixture(scope="function")
+    def memory(self):
+        """Create a SQLiteMemory instance with temp database."""
+        # Clear singleton from any previous test
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
+
         fd, path = tempfile.mkstemp(suffix=".db")
         os.close(fd)
-        yield path
-        # Cleanup
+        os.remove(path)
+
+        mem = SQLiteMemory(db_path=path)
+        yield mem
+
+        mem.dispose_engine()
+        # Clear singleton to allow new instances in subsequent tests
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
         if os.path.exists(path):
             os.remove(path)
         for suffix in ["-wal", "-shm", "-journal"]:
             journal_path = path + suffix
             if os.path.exists(journal_path):
                 os.remove(journal_path)
-
-    @pytest.fixture
-    def memory(self, temp_db_path):
-        """Create a SQLiteMemory instance."""
-        mem = SQLiteMemory(db_path=temp_db_path)
-        yield mem
-        mem.dispose_engine()
 
     @pytest.mark.asyncio
     async def test_bridge_add_prompts_pattern(self, memory):
@@ -364,26 +413,30 @@ class TestSQLiteMemoryPyRITBridgeCompatibility:
 class TestSQLiteMemoryErrorHandling:
     """Test error handling and edge cases."""
 
-    @pytest.fixture
-    def temp_db_path(self):
-        """Create a temporary database path."""
+    @pytest.fixture(scope="function")
+    def memory(self):
+        """Create a SQLiteMemory instance with temp database."""
+        # Clear singleton from any previous test
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
+
         fd, path = tempfile.mkstemp(suffix=".db")
         os.close(fd)
-        yield path
-        # Cleanup
+        os.remove(path)
+
+        mem = SQLiteMemory(db_path=path)
+        yield mem
+
+        mem.dispose_engine()
+        # Clear singleton to allow new instances in subsequent tests
+        if SQLiteMemory in Singleton._instances:
+            del Singleton._instances[SQLiteMemory]
         if os.path.exists(path):
             os.remove(path)
         for suffix in ["-wal", "-shm", "-journal"]:
             journal_path = path + suffix
             if os.path.exists(journal_path):
                 os.remove(journal_path)
-
-    @pytest.fixture
-    def memory(self, temp_db_path):
-        """Create a SQLiteMemory instance."""
-        mem = SQLiteMemory(db_path=temp_db_path)
-        yield mem
-        mem.dispose_engine()
 
     @pytest.mark.asyncio
     async def test_empty_prompts_list(self, memory):
