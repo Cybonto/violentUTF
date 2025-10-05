@@ -53,7 +53,7 @@ except ImportError:
 import logging
 
 from app.core.auth import get_current_user
-from app.db.duckdb_manager import get_duckdb_manager
+from app.db.sqlite_manager import get_sqlite_manager
 from app.services.graphwalk_service import graphwalk_service
 
 logger = logging.getLogger(__name__)
@@ -663,7 +663,7 @@ async def get_datasets(
         memory_count = 0
 
         # Get datasets from DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         datasets_data = db_manager.list_datasets()
 
         for dataset_data in datasets_data:
@@ -937,7 +937,7 @@ async def create_dataset(
         }
 
         # Create dataset in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         prompts_text = [p.value for p in prompts]
 
         # Create dataset and get the actual ID from DuckDB
@@ -1009,7 +1009,7 @@ async def transform_dataset(
         logger.info("User %s transforming dataset: %s", user_id, dataset_id)
 
         # Find original dataset in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         original_dataset = db_manager.get_dataset(dataset_id)
 
         if not original_dataset:
@@ -1222,7 +1222,7 @@ async def delete_dataset(
 
         # Delete from DuckDB storage
         if delete_from_session:
-            db_manager = get_duckdb_manager(user_id)
+            db_manager = get_sqlite_manager(user_id)
             if db_manager.get_dataset(dataset_id):
                 db_manager.delete_dataset(dataset_id)
                 deleted_from_session = True
@@ -1897,7 +1897,7 @@ async def get_dataset(dataset_id: str, current_user: User = Depends(get_current_
         logger.info("User %s requested dataset details: %s", user_id, dataset_id)
 
         # Find dataset in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         dataset_data = db_manager.get_dataset(dataset_id)
         if dataset_data:
             # Convert prompts from DuckDB format to API format
@@ -1954,7 +1954,7 @@ async def update_dataset(
         logger.info("User %s updating dataset: %s", user_id, dataset_id)
 
         # Find dataset in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         dataset_data = db_manager.get_dataset(dataset_id)
 
         if not dataset_data:

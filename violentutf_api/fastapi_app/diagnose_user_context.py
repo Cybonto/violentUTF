@@ -9,7 +9,7 @@
 import sys
 from pathlib import Path
 
-from app.db.duckdb_manager import DuckDBManager  # noqa: E402
+from app.db.sqlite_manager import get_sqlite_manager  # noqa: E402
 
 # Add app directory to path
 
@@ -39,7 +39,7 @@ def diagnose_user_context() -> None:
         print("-" * 30)
 
         try:
-            db = DuckDBManager(user_context)
+            db = get_sqlite_manager(user_context)
 
             # Check generators
             generators = db.list_generators()
