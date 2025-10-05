@@ -4,7 +4,7 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
-"""PyRIT Memory Bridge Service
+"""PyRIT Memory Bridge Service.
 
 This module provides a bridge between ViolentUTF and PyRIT memory systems,
 handling user context, memory management, and data synchronization.
@@ -15,7 +15,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Self, Tuple, Union
 
-from pyrit.memory import DuckDBMemory
+from pyrit.memory import SQLiteMemory  # pylint: disable=no-name-in-module
 from pyrit.models import SeedPrompt
 
 logger = logging.getLogger(__name__)
@@ -48,11 +48,11 @@ class PyRITMemoryBridge:
 
     def __init__(self: "Self") -> None:
         """Initialize instance."""
-        self.memory_cache: Dict[str, DuckDBMemory] = {}
+        self.memory_cache: Dict[str, SQLiteMemory] = {}
 
         self.user_context_manager = UserContextManager()
 
-    async def get_or_create_user_memory(self: "Self", user_id: str) -> DuckDBMemory:
+    async def get_or_create_user_memory(self: "Self", user_id: str) -> SQLiteMemory:
         """Get or create user-specific PyRIT memory instance."""
         if user_id not in self.memory_cache:
 
@@ -61,7 +61,7 @@ class PyRITMemoryBridge:
                 memory_path = self.user_context_manager.get_user_memory_path(user_id)
 
                 # Create memory instance
-                memory = DuckDBMemory(db_path=memory_path)
+                memory = SQLiteMemory(db_path=memory_path)
                 self.memory_cache[user_id] = memory
 
                 logger.info(
