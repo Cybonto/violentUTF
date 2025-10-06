@@ -212,8 +212,8 @@ graph TB
     end
 
     subgraph "Data Storage"
-        DUCK[(DuckDB<br/>PyRIT Memory)]
-        SQLITE[(SQLite<br/>API Data)]
+        SQLITE[(SQLite<br/>PyRIT Memory & API Data)]
+        SQLITE_USER[(SQLite<br/>User-Specific DBs)]
     end
 
     C1 -->|HTTP/WebSocket| AG
@@ -235,7 +235,8 @@ graph TB
     MCP --> API
     ST --> API
 
-    PYRIT --> DUCK
+    PYRIT --> SQLITE_USER
+    API --> SQLITE
 
     classDef gateway fill:#ff9999
     classDef auth fill:#99ccff
