@@ -2,24 +2,26 @@
 
 ## Executive Summary
 
-ViolentUTF employs a multi-database architecture designed to optimize performance, security, and scalability for AI red-teaming operations. The system uses PostgreSQL for identity management, SQLite for application data, DuckDB for user-specific configurations and PyRIT memory storage, and file-based storage for configurations and datasets.
+ViolentUTF employs a multi-database architecture designed to optimize performance, security, and scalability for AI red-teaming operations. The system uses PostgreSQL for identity management, SQLite for application data and PyRIT memory storage, and file-based storage for configurations and datasets.
+
+**Migration Update (Oct 2025)**: As of PyRIT v0.10.0+, ViolentUTF has migrated from DuckDB to SQLite for PyRIT memory storage, aligning with upstream PyRIT architectural changes. See [ADR-003](../adr/003-sqlite-alignment-strategy.md) for details.
 
 ## Database Architecture Design Principles
 
 ### 1. **Separation of Concerns**
 - **Identity Data**: PostgreSQL handles all authentication and authorization data
 - **Application Data**: SQLite manages shared application state and system configuration
-- **User Data**: DuckDB provides isolated, user-specific storage for configurations and test data
+- **PyRIT Memory**: SQLite provides isolated, user-specific storage for conversation history and embeddings
 - **File Storage**: File system handles static configurations, datasets, and reports
 
 ### 2. **Security by Design**
-- User isolation through separate DuckDB instances per user
+- User isolation through separate SQLite database files per user
 - Hash-based database naming to prevent enumeration attacks
 - JWT-based authentication for all database access
 - No direct database access from external clients
 
 ### 3. **Performance Optimization**
-- DuckDB for analytics workloads and large dataset processing
+- SQLite for conversational workloads and PyRIT memory operations
 - SQLite for lightweight, transactional operations
 - PostgreSQL for complex identity relationships
 - File system for static content delivery

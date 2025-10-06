@@ -1,7 +1,11 @@
 # ADR-002: DuckDB Deprecation Strategy for User Data Storage
 
 ## Status
-**Proposed** - Under evaluation for implementation in Q2 2025
+**Superseded** - Replaced by ADR-003 SQLite Alignment Strategy (Issue #269)
+
+**Superseded on**: 2025-10-06
+
+**Reason**: PyRIT v0.10.0rc0 migrated from DuckDB to SQLite for memory storage, making the planned PostgreSQL migration unnecessary. ViolentUTF aligned with PyRIT's architectural decision to adopt SQLite, superseding this ADR's proposed PostgreSQL migration strategy.
 
 ## Context
 
