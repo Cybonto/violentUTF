@@ -509,9 +509,177 @@ pytest tests/test_issue_270_performance.py -v --performance
 - Check for impact on other tests
 - Re-run entire test suite after updates
 
+## 13. Infrastructure Setup Tests (Sprint 5-6)
+
+### 13.1 Setup Performance Monitoring Script Tests
+
+**Test File**: `tests/test_issue_270_infrastructure_setup.py`
+
+#### Test Suite: Setup Script Validation
+1. **test_setup_script_creates_required_directories**
+   - Verifies directories: configs/monitoring/, dashboards/, scripts/monitoring-setup/
+2. **test_setup_script_validates_prerequisites**
+   - Validates Docker, Python, and service availability
+3. **test_setup_script_generates_prometheus_config**
+   - Creates valid prometheus.yml with database scrape configs
+4. **test_setup_script_generates_alertmanager_config**
+   - Creates valid alertmanager.yml with routing rules
+5. **test_setup_script_validates_existing_deployment**
+   - Checks all monitoring components are healthy
+6. **test_setup_script_rollback_on_failure**
+   - Rolls back on deployment failure
+7. **test_setup_script_dry_run_mode**
+   - Shows planned actions without making changes
+
+### 13.2 Configure Dashboards Script Tests
+
+#### Test Suite: Dashboard Configuration
+8. **test_configure_dashboards_creates_dashboard_json**
+   - Generates valid Grafana dashboard JSON files
+9. **test_configure_dashboards_postgresql_dashboard**
+   - PostgreSQL dashboard includes required panels
+10. **test_configure_dashboards_sqlite_dashboard**
+    - SQLite dashboard includes required panels
+11. **test_configure_dashboards_overview_dashboard**
+    - Overview dashboard includes multi-database health
+12. **test_configure_dashboards_grafana_api_provisioning**
+    - Successfully provisions dashboards via API
+13. **test_configure_dashboards_update_existing**
+    - Updates existing dashboards without duplicates
+14. **test_configure_dashboards_validation**
+    - Validates JSON against Grafana schema
+
+### 13.3 Establish Baselines Script Tests
+
+#### Test Suite: Baseline Establishment
+15. **test_establish_baselines_analyzes_historical_data**
+    - Calculates baselines from 7+ days of data
+16. **test_establish_baselines_insufficient_data_warning**
+    - Warns when insufficient samples (< 100)
+17. **test_establish_baselines_stores_results**
+    - Stores baselines via MonitoringService API
+18. **test_establish_baselines_generates_report**
+    - Creates baseline_report.md documentation
+19. **test_establish_baselines_schedules_recalculation**
+    - Creates periodic recalculation schedule
+20. **test_establish_baselines_database_filter**
+    - Filters baselines by database type
+21. **test_establish_baselines_metric_filter**
+    - Filters baselines by metric types
+
+### 13.4 Docker Compose Monitoring Stack Tests
+
+**Test File**: `tests/test_issue_270_infrastructure_config.py`
+
+#### Test Suite: Docker Compose Validation
+22. **test_docker_compose_monitoring_valid_yaml**
+    - Validates YAML structure
+23. **test_docker_compose_monitoring_includes_prometheus**
+    - Includes Prometheus service with proper config
+24. **test_docker_compose_monitoring_includes_grafana**
+    - Includes Grafana service with admin credentials
+25. **test_docker_compose_monitoring_includes_alertmanager**
+    - Includes AlertManager service
+26. **test_docker_compose_monitoring_network_integration**
+    - Uses existing violentutf network
+27. **test_docker_compose_monitoring_volume_persistence**
+    - Defines persistent volumes for data
+28. **test_docker_compose_monitoring_health_checks**
+    - All services have health checks
+
+### 13.5 Prometheus Configuration Tests
+
+#### Test Suite: Prometheus Config Validation
+29. **test_prometheus_config_valid_yaml**
+    - Validates Prometheus configuration format
+30. **test_prometheus_config_scrape_interval**
+    - Scrape interval set to 10s
+31. **test_prometheus_config_fastapi_scrape_job**
+    - Includes FastAPI /metrics endpoint
+32. **test_prometheus_config_postgres_exporter_job**
+    - Includes PostgreSQL exporter (optional)
+33. **test_prometheus_config_retention_policy**
+    - Retention set to 90 days
+34. **test_prometheus_config_alert_rules_path**
+    - Points to configs/monitoring/alert_rules.yaml
+
+### 13.6 Grafana Dashboard Definition Tests
+
+#### Test Suite: Dashboard JSON Validation
+35. **test_grafana_dashboard_postgresql_valid_json**
+    - Validates PostgreSQL dashboard JSON
+36. **test_grafana_dashboard_postgresql_panels**
+    - Includes connection pool, query latency, cache hit panels
+37. **test_grafana_dashboard_sqlite_valid_json**
+    - Validates SQLite dashboard JSON
+38. **test_grafana_dashboard_sqlite_panels**
+    - Includes file size, query time, lock contention panels
+39. **test_grafana_dashboard_overview_valid_json**
+    - Validates overview dashboard JSON
+40. **test_grafana_dashboard_overview_panels**
+    - Includes multi-database health and alerts
+41. **test_grafana_dashboard_datasource_configuration**
+    - All dashboards reference Prometheus correctly
+
+### 13.7 AlertManager Configuration Tests
+
+#### Test Suite: AlertManager Config Validation
+42. **test_alertmanager_config_valid_yaml**
+    - Validates AlertManager configuration
+43. **test_alertmanager_config_routing_tree**
+    - Routes by severity (critical, warning, info)
+44. **test_alertmanager_config_webhook_receiver**
+    - Includes webhook receiver for FastAPI
+45. **test_alertmanager_config_grouping**
+    - Groups alerts by database and metric type
+46. **test_alertmanager_config_inhibition_rules**
+    - Suppresses lower-severity alerts correctly
+
+### 13.8 Service Health Check Integration Tests
+
+**Test File**: `tests/test_issue_270_integration_validation.py`
+
+#### Test Suite: Health Check Integration
+47. **test_check_services_validates_prometheus**
+    - Verifies Prometheus running and healthy
+48. **test_check_services_validates_grafana**
+    - Verifies Grafana accessible
+49. **test_check_services_validates_alertmanager**
+    - Verifies AlertManager operational
+50. **test_check_services_validates_metrics_collection**
+    - Verifies recent metrics in Prometheus
+
+### 13.9 End-to-End Monitoring Workflow Tests
+
+#### Test Suite: Full Stack Integration
+51. **test_e2e_metric_collection_to_prometheus**
+    - Metrics flow from collection to Prometheus
+52. **test_e2e_grafana_dashboard_displays_metrics**
+    - Dashboards display real-time data
+53. **test_e2e_alert_triggers_on_threshold**
+    - Alerts trigger and route correctly
+54. **test_e2e_alert_notification_webhook**
+    - Webhooks delivered to FastAPI
+55. **test_e2e_baseline_recalculation_workflow**
+    - Scheduled baseline recalculation works
+
+### 13.10 Performance and Reliability Tests
+
+#### Test Suite: Infrastructure Performance
+56. **test_monitoring_stack_startup_time**
+    - All services healthy within 60 seconds
+57. **test_monitoring_stack_resource_usage**
+    - CPU <5%, memory <1GB total
+58. **test_prometheus_query_performance**
+    - Complex queries complete in <500ms
+59. **test_grafana_dashboard_load_time**
+    - Dashboards render in <2 seconds
+60. **test_alertmanager_notification_latency**
+    - Notifications delivered in <10 seconds
+
 ---
 
-**Document Version**: 1.0
+**Document Version**: 1.1
 **Created**: 2025-10-06
-**Last Updated**: 2025-10-06
-**Status**: Active - Ready for Implementation
+**Last Updated**: 2025-10-07
+**Status**: Active - Infrastructure Tests Added

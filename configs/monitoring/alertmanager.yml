@@ -1,0 +1,134 @@
+# AlertManager Configuration for ViolentUTF Database Performance Monitoring
+# Issue #270 - Alert routing and notification management
+
+global:
+  resolve_timeout: 5m
+  http_config:
+    follow_redirects: true
+
+# Routing tree for alerts
+route:
+  receiver: 'default'
+  group_by: ['alertname', 'db_type', 'metric_type', 'severity']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 0s
+      repeat_interval: 1h
+      continue: true
+
+    # Warning alerts - grouped notification
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 30s
+      repeat_interval: 4h
+      continue: true
+
+    # Info alerts - summary notification
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+      group_wait: 5m
+      repeat_interval: 24h
+
+    # Database-specific routing
+    - match:
+        db_type: postgresql
+      receiver: 'postgres-alerts'
+      continue: false
+
+    - match:
+        db_type: sqlite
+      receiver: 'sqlite-alerts'
+      continue: false
+
+# Notification receivers
+receivers:
+  - name: 'default'
+    webhook_configs:
+      - url: 'http://violentutf-api:8000/api/v1/monitoring/alerts/webhook'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+  - name: 'critical-alerts'
+    webhook_configs:
+      - url: 'http://violentutf-api:8000/api/v1/monitoring/alerts/webhook'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+    # Add email notification for critical alerts (optional)
+    # email_configs:
+    #   - to: 'ops-team@example.com'
+    #     from: 'alertmanager@violentutf.local'
+    #     smarthost: 'smtp.example.com:587'
+    #     auth_username: 'alertmanager'
+    #     auth_password: '${SMTP_PASSWORD}'
+    #     headers:
+    #       Subject: '[CRITICAL] ViolentUTF Database Alert: {{ .GroupLabels.alertname }}'
+
+  - name: 'warning-alerts'
+    webhook_configs:
+      - url: 'http://violentutf-api:8000/api/v1/monitoring/alerts/webhook'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+  - name: 'info-alerts'
+    webhook_configs:
+      - url: 'http://violentutf-api:8000/api/v1/monitoring/alerts/webhook'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+  - name: 'postgres-alerts'
+    webhook_configs:
+      - url: 'http://violentutf-api:8000/api/v1/monitoring/alerts/webhook?db_type=postgresql'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+  - name: 'sqlite-alerts'
+    webhook_configs:
+      - url: 'http://violentutf-api:8000/api/v1/monitoring/alerts/webhook?db_type=sqlite'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+# Inhibition rules - suppress lower-severity alerts when critical alert active
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'db_type', 'instance']
+
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'db_type', 'instance']
+
+  - source_match:
+      severity: 'warning'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'db_type', 'instance']
+
+  # Suppress specific alerts when database is down
+  - source_match:
+      alertname: 'DatabaseDown'
+    target_match_re:
+      alertname: '(HighLatency|ConnectionPoolExhaustion|CacheHitRatioLow)'
+    equal: ['db_type', 'instance']
+
+# Templates for alert messages (optional)
+# templates:
+#   - '/etc/alertmanager/templates/*.tmpl'

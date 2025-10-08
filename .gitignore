@@ -168,22 +168,4 @@ bandit-report.json
 .vitutf
 /docs/course
 /.venv_pyrit_test
-*.test_database at 0x1055a8160>
-*.test_database at 0x1055a83a0>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055a84c0>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055a85e0>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055a8700>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055a8820>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055a8940>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055a8ca0>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055a9240>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055a9ea0>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055aa200>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x1055aa320>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x10bf38820>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x10bf38ca0>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x10bf39000>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x10bf396c0>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x10bf39b40>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x10bf3a320>
-<async_generator object TestSQLiteMetricsCollector.test_database at 0x10bf3a8c0>
+*.test_database at 0x1055a84c0>

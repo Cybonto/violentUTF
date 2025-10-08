@@ -25,7 +25,7 @@ def run_command(cmd: list, description: str) -> bool:
     print(f"{'='*60}")
     
     try:
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)  # nosec B603
         print(result.stdout)
         if result.stderr:
             print("STDERR:", result.stderr)

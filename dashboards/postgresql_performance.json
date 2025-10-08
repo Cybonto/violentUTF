@@ -1,0 +1,104 @@
+{
+  "title": "PostgreSQL Performance - Keycloak",
+  "uid": "violentutf-postgresql",
+  "version": 1,
+  "editable": true,
+  "tags": ["violentutf", "postgresql", "keycloak"],
+  "timezone": "",
+  "schemaVersion": 38,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Connection Pool Usage",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "violentutf_db_connection_pool_usage{db_type=\"postgresql\"}",
+          "legendFormat": "Connection Pool Usage %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 70},
+              {"color": "red", "value": 80}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Query Latency",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "violentutf_db_avg_query_latency_ms{db_type=\"postgresql\"}",
+          "legendFormat": "Avg Query Latency"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 100},
+              {"color": "red", "value": 500}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Cache Hit Ratio",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "violentutf_db_cache_hit_ratio{db_type=\"postgresql\"}",
+          "legendFormat": "Cache Hit Ratio"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 0.80},
+              {"color": "green", "value": 0.95}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Transaction Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 16, "x": 8, "y": 8},
+      "targets": [
+        {
+          "expr": "rate(violentutf_db_transaction_count{db_type=\"postgresql\"}[1m])",
+          "legendFormat": "Transactions/sec"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "tps"
+        }
+      }
+    }
+  ]
+}

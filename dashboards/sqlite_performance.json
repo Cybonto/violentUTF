@@ -1,0 +1,104 @@
+{
+  "title": "SQLite Performance - FastAPI",
+  "uid": "violentutf-sqlite",
+  "version": 1,
+  "editable": true,
+  "tags": ["violentutf", "sqlite", "fastapi"],
+  "timezone": "",
+  "schemaVersion": 38,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Database File Size",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "violentutf_db_size_bytes{db_type=\"sqlite\"}",
+          "legendFormat": "Database Size"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 524288000},
+              {"color": "red", "value": 1073741824}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Query Execution Time",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "violentutf_db_avg_query_latency_ms{db_type=\"sqlite\"}",
+          "legendFormat": "Avg Query Time"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 50},
+              {"color": "red", "value": 100}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "WAL Size",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "violentutf_db_wal_size_bytes{db_type=\"sqlite\"}",
+          "legendFormat": "WAL Size"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 10485760},
+              {"color": "red", "value": 52428800}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Lock Contention Events",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 16, "x": 8, "y": 8},
+      "targets": [
+        {
+          "expr": "increase(violentutf_db_lock_timeout_count{db_type=\"sqlite\"}[5m])",
+          "legendFormat": "Lock Timeouts (5m)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      }
+    }
+  ]
+}
