@@ -1,5 +1,6 @@
 """
 Testing framework modules for ViolentUTF testing infrastructure.
+
 Provides comprehensive testing utilities for performance validation,
 UI testing, workflow usability, and error UX validation.
 """
@@ -11,6 +12,6 @@ from . import error_ux, ui_performance, workflow_usability
 
 __all__ = [
     "ui_performance",
-    "workflow_usability", 
+    "workflow_usability",
     "error_ux",
 ]
