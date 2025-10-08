@@ -99,20 +99,20 @@ jobs:
 
         SECURITY_ISSUES=0
 
-        # Check for hardcoded secrets
-        if grep -r "password.*=" . --include="*.yml" --include="*.yaml" --exclude-dir=".git" | grep -v "\${" | grep -v "replace_key"; then
+        # Check for hardcoded secrets (exclude pre-commit config patterns and workflow patterns)
+        if grep -r "password.*=" . --include="*.yml" --include="*.yaml" --exclude-dir=".git" --exclude=".pre-commit-config*.yaml" --exclude="config-validation.yml" | grep -v "\${" | grep -v "replace_key" | grep -v "entry:" | grep -v "grep -r"; then
           echo "❌ Found potential hardcoded passwords"
           SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
         fi
 
-        # Check for default/weak secrets
-        if grep -r "admin.*admin" . --include="*.yml" --include="*.yaml" --exclude-dir=".git"; then
+        # Check for default/weak secrets (exclude workflow patterns)
+        if grep -r "admin.*admin" . --include="*.yml" --include="*.yaml" --exclude-dir=".git" --exclude="config-validation.yml" | grep -v "grep -r" | grep -v "if grep -r"; then
           echo "⚠️  Found default admin credentials"
           SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
         fi
 
-        # Check for exposed admin interfaces
-        if grep -r "0.0.0.0.*admin" . --include="*.yml" --include="*.yaml" --exclude-dir=".git"; then
+        # Check for exposed admin interfaces (exclude workflow patterns)
+        if grep -r "0.0.0.0.*admin" . --include="*.yml" --include="*.yaml" --exclude-dir=".git" --exclude="config-validation.yml" | grep -v "grep -r" | grep -v "if grep -r"; then
           echo "⚠️  Found admin interface exposed on all IPs"
         fi
 
