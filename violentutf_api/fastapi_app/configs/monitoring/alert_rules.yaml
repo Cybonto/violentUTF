@@ -1,0 +1,247 @@
+# Alert Rules Configuration for Database Performance Monitoring
+# Issue #270 - Phase 5.1: Database Performance Monitoring Implementation
+---
+version: "1.0"
+last_updated: "2025-10-06"
+
+# PostgreSQL Alert Rules
+postgresql_alerts:
+  connection_pool_exhaustion:
+    metric: connection_pool_usage
+    threshold: 80
+    operator: greater_than
+    severity: critical
+    message: "PostgreSQL connection pool usage above 80%"
+    description: "Connection pool nearing capacity, may cause connection timeouts"
+    recommended_action: "Consider increasing max_connections or investigating connection leaks"
+    consecutive_violations: 2
+    enabled: true
+
+  connection_pool_warning:
+    metric: connection_pool_usage
+    threshold: 70
+    operator: greater_than
+    severity: warning
+    message: "PostgreSQL connection pool usage above 70%"
+    description: "Connection pool usage elevated, monitor for further increases"
+    recommended_action: "Review application connection management"
+    consecutive_violations: 3
+    enabled: true
+
+  query_latency_high:
+    metric: avg_query_latency_ms
+    threshold: 500
+    operator: greater_than
+    severity: warning
+    message: "PostgreSQL query latency exceeds 500ms"
+    description: "Average query execution time significantly elevated"
+    recommended_action: "Review slow queries, check for missing indexes or lock contention"
+    consecutive_violations: 2
+    enabled: true
+
+  query_latency_critical:
+    metric: avg_query_latency_ms
+    threshold: 1000
+    operator: greater_than
+    severity: critical
+    message: "PostgreSQL query latency exceeds 1000ms"
+    description: "Critical query performance degradation detected"
+    recommended_action: "Immediate investigation required, check for blocking queries"
+    consecutive_violations: 1
+    enabled: true
+
+  database_size_critical:
+    metric: database_size_mb
+    threshold: 5000  # 5GB
+    operator: greater_than
+    severity: warning
+    message: "PostgreSQL database size exceeds 5GB"
+    description: "Database growing large, may impact performance"
+    recommended_action: "Review data retention policies, consider archival"
+    consecutive_violations: 1
+    enabled: true
+
+  cache_hit_ratio_low:
+    metric: cache_hit_ratio
+    threshold: 0.90
+    operator: less_than
+    severity: warning
+    message: "PostgreSQL cache hit ratio below 90%"
+    description: "Low cache efficiency, may indicate insufficient shared_buffers"
+    recommended_action: "Consider increasing shared_buffers or investigating query patterns"
+    consecutive_violations: 5
+    enabled: true
+
+  replication_lag_high:
+    metric: replication_lag_bytes
+    threshold: 10485760  # 10MB
+    operator: greater_than
+    severity: warning
+    message: "PostgreSQL replication lag exceeds 10MB"
+    description: "Replication falling behind primary"
+    recommended_action: "Check network connectivity and replica performance"
+    consecutive_violations: 3
+    enabled: true
+
+# SQLite Alert Rules
+sqlite_alerts:
+  file_size_critical:
+    metric: database_file_size_mb
+    threshold: 1000  # 1GB
+    operator: greater_than
+    severity: critical
+    message: "SQLite database size exceeds 1GB"
+    description: "Database file growing very large, performance may degrade"
+    recommended_action: "Consider implementing data archival or migration to PostgreSQL"
+    consecutive_violations: 1
+    enabled: true
+
+  file_size_warning:
+    metric: database_file_size_mb
+    threshold: 500  # 500MB
+    operator: greater_than
+    severity: warning
+    message: "SQLite database size exceeds 500MB"
+    description: "Database file size elevated, monitor growth rate"
+    recommended_action: "Review data retention and cleanup policies"
+    consecutive_violations: 2
+    enabled: true
+
+  query_timeout:
+    metric: lock_timeout_count
+    threshold: 1
+    operator: greater_than
+    severity: warning
+    message: "SQLite lock timeout detected"
+    description: "Database locked, queries timing out due to contention"
+    recommended_action: "Review concurrent access patterns, consider WAL mode"
+    consecutive_violations: 1
+    enabled: true
+
+  query_latency_high:
+    metric: avg_query_time_ms
+    threshold: 100
+    operator: greater_than
+    severity: warning
+    message: "SQLite query latency exceeds 100ms"
+    description: "Query performance degraded"
+    recommended_action: "Check for missing indexes, optimize queries"
+    consecutive_violations: 3
+    enabled: true
+
+  wal_size_high:
+    metric: wal_size_mb
+    threshold: 100
+    operator: greater_than
+    severity: warning
+    message: "SQLite WAL size exceeds 100MB"
+    description: "WAL file growing large, checkpoints may be delayed"
+    recommended_action: "Force checkpoint or review checkpoint configuration"
+    consecutive_violations: 2
+    enabled: true
+
+  growth_rate_high:
+    metric: growth_rate_mb_per_hour
+    threshold: 50
+    operator: greater_than
+    severity: warning
+    message: "SQLite database growing rapidly (>50MB/hour)"
+    description: "Unusually fast database growth detected"
+    recommended_action: "Investigate data insertion patterns and cleanup jobs"
+    consecutive_violations: 2
+    enabled: true
+
+# Storage Alert Rules
+storage_alerts:
+  disk_usage_critical:
+    metric: disk_usage_percent
+    threshold: 90
+    operator: greater_than
+    severity: critical
+    message: "Disk usage exceeds 90%"
+    description: "Storage critically low, service disruption imminent"
+    recommended_action: "Immediate cleanup required, expand storage capacity"
+    consecutive_violations: 1
+    enabled: true
+
+  disk_usage_warning:
+    metric: disk_usage_percent
+    threshold: 80
+    operator: greater_than
+    severity: warning
+    message: "Disk usage exceeds 80%"
+    description: "Storage capacity approaching limits"
+    recommended_action: "Plan storage expansion, review data retention"
+    consecutive_violations: 2
+    enabled: true
+
+  io_latency_high:
+    metric: io_latency_ms
+    threshold: 50
+    operator: greater_than
+    severity: warning
+    message: "Storage I/O latency exceeds 50ms"
+    description: "Slow disk I/O detected, may impact database performance"
+    recommended_action: "Check disk health, consider performance optimization"
+    consecutive_violations: 5
+    enabled: true
+
+# Service Availability Alerts
+availability_alerts:
+  postgres_unavailable:
+    metric: postgres_connection_status
+    threshold: 0
+    operator: equals
+    severity: critical
+    message: "PostgreSQL database unavailable"
+    description: "Cannot connect to PostgreSQL server"
+    recommended_action: "Check PostgreSQL service status and network connectivity"
+    consecutive_violations: 1
+    enabled: true
+
+  sqlite_unavailable:
+    metric: sqlite_file_accessible
+    threshold: 0
+    operator: equals
+    severity: critical
+    message: "SQLite database file inaccessible"
+    description: "Cannot access SQLite database file"
+    recommended_action: "Check file permissions and disk health"
+    consecutive_violations: 1
+    enabled: true
+
+# Alert Configuration Settings
+alert_settings:
+  # How often to evaluate alert rules (seconds)
+  evaluation_interval: 10
+
+  # Default number of consecutive violations before alerting
+  default_consecutive_threshold: 1
+
+  # Alert cooldown period to prevent alert storms (seconds)
+  cooldown_period: 300  # 5 minutes
+
+  # Auto-resolve alerts when condition clears
+  auto_resolve: true
+
+  # Alert notification channels (to be implemented)
+  notification_channels:
+    - type: log
+      enabled: true
+      min_severity: info
+
+    - type: database
+      enabled: true
+      min_severity: warning
+
+  # Alert retention (days)
+  alert_retention_days: 90
+
+# Baseline-based anomaly detection settings
+anomaly_detection:
+  enabled: true
+  sensitivity: medium  # low, medium, high
+  z_score_threshold: 3.0
+  consecutive_threshold: 2
+  require_baseline: true
+  baseline_validity_hours: 24
