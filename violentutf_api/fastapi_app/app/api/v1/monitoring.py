@@ -21,6 +21,12 @@ from app.api.deps import get_current_user, get_db
 from app.schemas.monitoring_schemas import (
     AlertAcknowledgment,
     AlertResolution,
+    BaselineRecalculationRequest,
+    BaselineRecalculationResponse,
+    DatabaseBaselinesResponse,
+    DatabaseHealthStatus,
+    DatabaseMetricsResponse,
+    DatabaseOverviewResponse,
     MonitoringAlertResponse,
     MonitoringDashboardData,
     MonitoringEventResponse,
@@ -469,4 +475,199 @@ async def get_monitoring_statistics(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving monitoring statistics: {str(e)}",
+        ) from e
+
+
+@router.get("/database/overview", response_model=DatabaseOverviewResponse)
+async def get_database_overview(
+    db: AsyncSession = Depends(get_db),
+    current_user: Any = Depends(get_current_user),  # noqa: ANN401
+) -> DatabaseOverviewResponse:
+    """Get database health overview for all monitored databases.
+
+    Returns health status and key metrics for PostgreSQL and SQLite databases.
+    """
+    from app.monitoring.database import PostgresMetricsCollector, SQLiteMetricsCollector
+
+    try:
+        databases = []
+        overall_healthy = True
+
+        # Collect PostgreSQL metrics
+        try:
+            # Default PostgreSQL connection for Keycloak
+            connection_string = "postgresql://keycloak:password@localhost:5432/keycloak"
+            postgres_collector = PostgresMetricsCollector(connection_string)
+            postgres_metrics = await postgres_collector.collect_all_metrics()
+
+            postgres_status = DatabaseHealthStatus(
+                db_id="postgres-keycloak",
+                db_type="postgresql",
+                status="healthy",
+                key_metrics={
+                    "connection_pool_usage": postgres_metrics.connection_pool_usage,
+                    "avg_query_latency_ms": postgres_metrics.avg_query_latency_ms,
+                    "cache_hit_ratio": postgres_metrics.cache_hit_ratio,
+                },
+                last_updated=postgres_metrics.timestamp,
+            )
+            databases.append(postgres_status)
+        except Exception:
+            overall_healthy = False
+            databases.append(
+                DatabaseHealthStatus(
+                    db_id="postgres-keycloak",
+                    db_type="postgresql",
+                    status="critical",
+                    key_metrics={},
+                    last_updated=datetime.now(timezone.utc),
+                )
+            )
+
+        # Collect SQLite metrics
+        try:
+            # Default SQLite database path for FastAPI
+            database_path = "/tmp/fastapi.db"  # Placeholder path
+            sqlite_collector = SQLiteMetricsCollector(database_path)
+            sqlite_metrics = await sqlite_collector.collect_all_metrics()
+
+            sqlite_status = DatabaseHealthStatus(
+                db_id="sqlite-fastapi",
+                db_type="sqlite",
+                status="healthy",
+                key_metrics={
+                    "database_size_mb": sqlite_metrics.database_size_mb,
+                    "avg_query_time_ms": sqlite_metrics.avg_query_time_ms or 0.0,
+                    "wal_size_mb": sqlite_metrics.wal_size_mb or 0.0,
+                },
+                last_updated=sqlite_metrics.timestamp,
+            )
+            databases.append(sqlite_status)
+        except Exception:
+            overall_healthy = False
+            databases.append(
+                DatabaseHealthStatus(
+                    db_id="sqlite-fastapi",
+                    db_type="sqlite",
+                    status="critical",
+                    key_metrics={},
+                    last_updated=datetime.now(timezone.utc),
+                )
+            )
+
+        return DatabaseOverviewResponse(
+            databases=databases,
+            overall_status="healthy" if overall_healthy else "degraded",
+            timestamp=datetime.now(timezone.utc),
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving database overview: {str(e)}",
+        ) from e
+
+
+@router.get("/database/{db_type}/metrics", response_model=DatabaseMetricsResponse)
+async def get_database_metrics(
+    db_type: str,
+    hours_back: int = Query(24, ge=1, le=168, description="Hours of historical data"),
+    metric_types: Optional[str] = Query(None, description="Comma-separated metric types"),
+    db: AsyncSession = Depends(get_db),
+    current_user: Any = Depends(get_current_user),  # noqa: ANN401
+) -> DatabaseMetricsResponse:
+    """Get detailed metrics for a specific database type.
+
+    Returns time-series metrics data for the specified database.
+    """
+    # Validate database type
+    valid_db_types = ["postgresql", "sqlite"]
+    if db_type not in valid_db_types:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unknown database type: {db_type}. Valid types: {valid_db_types}",
+        )
+
+    monitoring_service = MonitoringService(db)
+
+    try:
+        # Parse metric types if provided
+        metric_type_list = None
+        if metric_types:
+            metric_type_list = [mt.strip() for mt in metric_types.split(",")]
+
+        # Retrieve metrics from storage
+        metrics = await monitoring_service.get_database_metrics(
+            db_type=db_type, hours_back=hours_back, metric_types=metric_type_list
+        )
+
+        return DatabaseMetricsResponse(
+            db_type=db_type, metrics=metrics, count=len(metrics), time_range_hours=hours_back
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving database metrics: {str(e)}",
+        ) from e
+
+
+@router.get("/database/baselines", response_model=DatabaseBaselinesResponse)
+async def get_database_baselines(
+    db_type: Optional[str] = Query(None, description="Filter by database type"),
+    metric_types: Optional[str] = Query(None, description="Comma-separated metric types"),
+    db: AsyncSession = Depends(get_db),
+    current_user: Any = Depends(get_current_user),  # noqa: ANN401
+) -> DatabaseBaselinesResponse:
+    """Get performance baselines for database metrics.
+
+    Returns calculated performance baselines with normal operating ranges.
+    """
+    monitoring_service = MonitoringService(db)
+
+    try:
+        # Parse metric types if provided
+        metric_type_list = None
+        if metric_types:
+            metric_type_list = [mt.strip() for mt in metric_types.split(",")]
+
+        # Retrieve baselines from storage
+        baselines = await monitoring_service.get_database_baselines(db_type=db_type, metric_types=metric_type_list)
+
+        return DatabaseBaselinesResponse(baselines=baselines)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving database baselines: {str(e)}",
+        ) from e
+
+
+@router.post("/database/baselines/recalculate", response_model=BaselineRecalculationResponse)
+async def recalculate_database_baselines(
+    request: BaselineRecalculationRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: Any = Depends(get_current_user),  # noqa: ANN401
+) -> BaselineRecalculationResponse:
+    """Trigger recalculation of database performance baselines.
+
+    Initiates an async job to recalculate baselines from historical data.
+    """
+    monitoring_service = MonitoringService(db)
+
+    try:
+        # Trigger baseline recalculation
+        job_info = await monitoring_service.recalculate_baselines(db_type=request.db_type)
+
+        return BaselineRecalculationResponse(
+            job_id=job_info["job_id"],
+            status=job_info["status"],
+            message=job_info["message"],
+            started_at=job_info["started_at"],
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error triggering baseline recalculation: {str(e)}",
         ) from e

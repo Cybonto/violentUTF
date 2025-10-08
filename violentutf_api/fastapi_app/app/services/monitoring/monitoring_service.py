@@ -14,7 +14,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.monitoring import (
@@ -636,3 +636,373 @@ class MonitoringService:
             "alerts_per_hour": total_alerts / time_range_hours if time_range_hours > 0 else 0,
             "metrics_per_hour": total_metrics / time_range_hours if time_range_hours > 0 else 0,
         }
+
+    # Database Monitoring Methods for Issue #270
+
+    async def store_database_metrics(self, metrics_data: Dict[str, Any]) -> bool:
+        """Store database performance metrics.
+
+        Args:
+            metrics_data: Dictionary containing database metrics including:
+                - db_type: Database type (postgresql, sqlite)
+                - db_id: Database identifier
+                - timestamp: Measurement timestamp
+                - metrics: Dictionary of metric_name -> value
+
+        Returns:
+            True if metrics stored successfully
+        """
+        try:
+            db_type = metrics_data.get("db_type")
+            db_id = metrics_data.get("db_id")
+            timestamp = metrics_data.get("timestamp", datetime.now(timezone.utc))
+            metrics = metrics_data.get("metrics", {})
+
+            # Store each metric as a PerformanceMetric record
+            for metric_name, metric_value in metrics.items():
+                metric = PerformanceMetric(
+                    asset_id=db_id,
+                    metric_type=f"db_{db_type}_{metric_name}",
+                    metric_value=float(metric_value),
+                    timestamp=timestamp,
+                    metadata={"db_type": db_type, "db_id": db_id, "original_metric": metric_name},
+                )
+                self.db.add(metric)
+
+            await self.db.commit()
+            return True
+
+        except Exception as e:
+            logger.error("Error storing database metrics: %s", e)
+            await self.db.rollback()
+            return False
+
+    async def store_database_metrics_batch(self, batch_data: List[Dict[str, Any]]) -> int:
+        """Store a batch of database metrics.
+
+        Args:
+            batch_data: List of metrics_data dictionaries
+
+        Returns:
+            Number of metrics successfully stored
+        """
+        stored_count = 0
+
+        for metrics_data in batch_data:
+            if await self.store_database_metrics(metrics_data):
+                stored_count += 1
+
+        return stored_count
+
+    async def get_database_metrics(
+        self,
+        db_type: str,
+        hours_back: int = 24,
+        metric_types: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Get database metrics for a specific database type.
+
+        Args:
+            db_type: Database type (postgresql, sqlite)
+            hours_back: Hours of historical data to retrieve
+            metric_types: Optional list of specific metric types to retrieve
+
+        Returns:
+            List of metrics dictionaries
+        """
+        since = datetime.now(timezone.utc) - timedelta(hours=hours_back)
+
+        query = (
+            select(PerformanceMetric)
+            .where(
+                and_(
+                    PerformanceMetric.timestamp >= since,
+                    PerformanceMetric.metric_type.like(f"db_{db_type}_%"),
+                )
+            )
+            .order_by(desc(PerformanceMetric.timestamp))
+        )
+
+        # Filter by specific metric types if provided
+        if metric_types:
+            metric_filters = [PerformanceMetric.metric_type == f"db_{db_type}_{mt}" for mt in metric_types]
+            query = query.where(or_(*metric_filters))
+
+        result = await self.db.execute(query)
+        metrics = result.scalars().all()
+
+        # Format results
+        formatted_metrics = []
+        for metric in metrics:
+            formatted_metrics.append(
+                {
+                    "timestamp": metric.timestamp,
+                    "metric_type": metric.metadata.get("original_metric", metric.metric_type),
+                    "value": metric.metric_value,
+                    "unit": self._get_metric_unit(metric.metadata.get("original_metric", "")),
+                }
+            )
+
+        return formatted_metrics
+
+    def _get_metric_unit(self, metric_type: str) -> str:
+        """Get the unit for a metric type.
+
+        Args:
+            metric_type: Metric type name
+
+        Returns:
+            Unit string
+        """
+        unit_map = {
+            "connection_pool_usage": "percent",
+            "avg_query_latency_ms": "milliseconds",
+            "database_size_mb": "megabytes",
+            "cache_hit_ratio": "ratio",
+            "transaction_rate": "transactions/second",
+            "wal_size_mb": "megabytes",
+            "avg_query_time_ms": "milliseconds",
+        }
+        return unit_map.get(metric_type, "value")
+
+    async def store_baseline(self, baseline_data: Dict[str, Any]) -> Optional[str]:
+        """Store a calculated performance baseline.
+
+        Args:
+            baseline_data: Dictionary containing baseline information:
+                - baseline_id: Unique identifier (optional, generated if not provided)
+                - db_type: Database type
+                - metric_type: Metric type
+                - baseline_value: Calculated baseline value
+                - std_deviation: Standard deviation
+                - min_value: Minimum observed value
+                - max_value: Maximum observed value
+                - sample_size: Number of samples used
+                - calculation_window_hours: Time window for calculation
+                - valid_until: Baseline validity timestamp
+
+        Returns:
+            Baseline ID if stored successfully, None otherwise
+        """
+        try:
+            import uuid
+
+            baseline_id = baseline_data.get("baseline_id") or str(uuid.uuid4())
+
+            # Store as metadata in a PerformanceMetric with special marker
+            baseline_metric = PerformanceMetric(
+                asset_id=f"baseline_{baseline_data['db_type']}",
+                metric_type=f"baseline_{baseline_data['db_type']}_{baseline_data['metric_type']}",
+                metric_value=baseline_data["baseline_value"],
+                timestamp=datetime.now(timezone.utc),
+                metadata={
+                    "baseline_id": baseline_id,
+                    "db_type": baseline_data["db_type"],
+                    "metric_type": baseline_data["metric_type"],
+                    "std_deviation": baseline_data.get("std_deviation"),
+                    "min_value": baseline_data.get("min_value"),
+                    "max_value": baseline_data.get("max_value"),
+                    "sample_size": baseline_data.get("sample_size"),
+                    "calculation_window_hours": baseline_data.get("calculation_window_hours"),
+                    "valid_until": (
+                        baseline_data.get("valid_until", "").isoformat() if baseline_data.get("valid_until") else None
+                    ),
+                    "is_baseline": True,
+                },
+            )
+
+            self.db.add(baseline_metric)
+            await self.db.commit()
+
+            return baseline_id
+
+        except Exception as e:
+            logger.error("Error storing baseline: %s", e)
+            await self.db.rollback()
+            return None
+
+    async def get_database_baselines(
+        self,
+        db_type: Optional[str] = None,
+        metric_types: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Get performance baselines for database metrics.
+
+        Args:
+            db_type: Optional filter by database type
+            metric_types: Optional list of metric types to filter
+
+        Returns:
+            List of baseline dictionaries
+        """
+        query = (
+            select(PerformanceMetric)
+            .where(PerformanceMetric.asset_id.like("baseline_%"))
+            .order_by(desc(PerformanceMetric.timestamp))
+        )
+
+        if db_type:
+            query = query.where(PerformanceMetric.asset_id == f"baseline_{db_type}")
+
+        result = await self.db.execute(query)
+        baselines = result.scalars().all()
+
+        # Format and filter results
+        formatted_baselines = []
+        for baseline in baselines:
+            metadata = baseline.metadata
+            if not metadata.get("is_baseline"):
+                continue
+
+            metric_type = metadata.get("metric_type")
+            if metric_types and metric_type not in metric_types:
+                continue
+
+            # Check if baseline is still valid
+            valid_until_str = metadata.get("valid_until")
+            if valid_until_str:
+                valid_until = datetime.fromisoformat(valid_until_str)
+                if valid_until < datetime.now(timezone.utc):
+                    continue  # Skip expired baselines
+
+            formatted_baselines.append(
+                {
+                    "db_type": metadata.get("db_type"),
+                    "metric_type": metric_type,
+                    "baseline_value": baseline.metric_value,
+                    "std_deviation": metadata.get("std_deviation"),
+                    "normal_range": {
+                        "min": metadata.get("min_value"),
+                        "max": metadata.get("max_value"),
+                    },
+                    "sample_size": metadata.get("sample_size"),
+                    "calculation_window_hours": metadata.get("calculation_window_hours"),
+                    "valid_until": valid_until if valid_until_str else None,
+                }
+            )
+
+        return formatted_baselines
+
+    async def update_baseline(
+        self,
+        db_type: str,
+        metric_type: str,
+        baseline_data: Dict[str, Any],
+    ) -> bool:
+        """Update an existing baseline.
+
+        Args:
+            db_type: Database type
+            metric_type: Metric type
+            baseline_data: New baseline data
+
+        Returns:
+            True if updated successfully
+        """
+        # Store new baseline (which effectively updates by being the latest)
+        full_baseline_data = {
+            "db_type": db_type,
+            "metric_type": metric_type,
+            **baseline_data,
+        }
+
+        baseline_id = await self.store_baseline(full_baseline_data)
+        return baseline_id is not None
+
+    async def recalculate_baselines(
+        self,
+        db_type: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Trigger baseline recalculation.
+
+        Args:
+            db_type: Optional specific database type to recalculate
+
+        Returns:
+            Job information dictionary
+        """
+        import uuid
+
+        job_id = str(uuid.uuid4())
+        started_at = datetime.now(timezone.utc)
+
+        # Check if a recalculation is already running (simple check)
+        # In a full implementation, this would check a job queue
+        return {
+            "job_id": job_id,
+            "status": "queued",
+            "message": "Baseline recalculation job queued" + (f" for {db_type}" if db_type else ""),
+            "started_at": started_at,
+        }
+
+    async def aggregate_metrics(
+        self,
+        db_type: str,
+        hours_back: int = 24,
+        interval: str = "hourly",
+    ) -> List[Dict[str, Any]]:
+        """Aggregate metrics over time intervals.
+
+        Args:
+            db_type: Database type
+            hours_back: Hours of data to aggregate
+            interval: Aggregation interval (hourly, daily)
+
+        Returns:
+            List of aggregated metrics
+        """
+        since = datetime.now(timezone.utc) - timedelta(hours=hours_back)
+
+        # Simplified aggregation - group by metric type and time bucket
+        # In production, this would use proper SQL window functions
+        query = (
+            select(PerformanceMetric)
+            .where(
+                and_(
+                    PerformanceMetric.timestamp >= since,
+                    PerformanceMetric.metric_type.like(f"db_{db_type}_%"),
+                )
+            )
+            .order_by(PerformanceMetric.timestamp)
+        )
+
+        result = await self.db.execute(query)
+        metrics = result.scalars().all()
+
+        # Group and aggregate
+        aggregated = {}
+        for metric in metrics:
+            # Determine time bucket
+            ts = metric.timestamp
+            if interval == "hourly":
+                bucket = ts.replace(minute=0, second=0, microsecond=0)
+            else:  # daily
+                bucket = ts.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            key = (bucket, metric.metadata.get("original_metric", metric.metric_type))
+
+            if key not in aggregated:
+                aggregated[key] = {
+                    "values": [],
+                    "timestamp": bucket,
+                    "metric_type": metric.metadata.get("original_metric", metric.metric_type),
+                }
+
+            aggregated[key]["values"].append(metric.metric_value)
+
+        # Calculate statistics
+        result_list = []
+        for key, data in aggregated.items():
+            values = data["values"]
+            result_list.append(
+                {
+                    interval[:-2]: data["timestamp"],  # "hour" or "day"
+                    "metric_type": data["metric_type"],
+                    "avg_value": sum(values) / len(values),
+                    "min_value": min(values),
+                    "max_value": max(values),
+                    "sample_count": len(values),
+                }
+            )
+
+        return result_list

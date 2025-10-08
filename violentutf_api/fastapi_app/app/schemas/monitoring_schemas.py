@@ -426,3 +426,117 @@ class TrendAnalysisResponse(BaseModel):
         """Pydantic configuration."""
 
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class DatabaseMetricData(BaseModel):
+    """Schema for database metric data."""
+
+    timestamp: datetime = Field(..., description="Metric timestamp")
+    metric_type: str = Field(..., description="Type of metric")
+    value: float = Field(..., description="Metric value")
+    unit: str = Field(..., description="Metric unit")
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class DatabaseHealthStatus(BaseModel):
+    """Schema for database health status."""
+
+    db_id: str = Field(..., description="Database identifier")
+    db_type: str = Field(..., description="Database type (postgresql, sqlite)")
+    status: str = Field(..., description="Health status (healthy, warning, critical)")
+    key_metrics: Dict[str, float] = Field(..., description="Key performance metrics")
+    last_updated: datetime = Field(..., description="Last update timestamp")
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class DatabaseOverviewResponse(BaseModel):
+    """Schema for database overview endpoint response."""
+
+    databases: List[DatabaseHealthStatus] = Field(..., description="Database health statuses")
+    overall_status: str = Field(..., description="Overall system status")
+    timestamp: datetime = Field(..., description="Response timestamp")
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class DatabaseMetricsResponse(BaseModel):
+    """Schema for database metrics endpoint response."""
+
+    db_type: str = Field(..., description="Database type")
+    metrics: List[DatabaseMetricData] = Field(..., description="Metric data points")
+    count: int = Field(..., description="Number of metrics returned")
+    time_range_hours: int = Field(..., description="Time range in hours")
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class BaselineNormalRange(BaseModel):
+    """Schema for baseline normal range."""
+
+    min: float = Field(..., description="Minimum normal value")
+    max: float = Field(..., description="Maximum normal value")
+
+
+class DatabaseBaselineResponse(BaseModel):
+    """Schema for database baseline data."""
+
+    db_type: str = Field(..., description="Database type")
+    metric_type: str = Field(..., description="Metric type")
+    baseline_value: float = Field(..., description="Baseline value")
+    std_deviation: float = Field(..., description="Standard deviation")
+    normal_range: BaselineNormalRange = Field(..., description="Normal operating range")
+    sample_size: int = Field(..., description="Number of samples")
+    calculation_window_hours: int = Field(..., description="Calculation window in hours")
+    valid_until: datetime = Field(..., description="Baseline validity timestamp")
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class DatabaseBaselinesResponse(BaseModel):
+    """Schema for baselines endpoint response."""
+
+    baselines: List[DatabaseBaselineResponse] = Field(..., description="Baseline data")
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class BaselineRecalculationRequest(BaseModel):
+    """Schema for baseline recalculation request."""
+
+    db_type: Optional[str] = Field(None, description="Database type to recalculate")
+    metric_types: Optional[List[str]] = Field(None, description="Specific metrics to recalculate")
+    force: bool = Field(False, description="Force recalculation even if recent")
+
+
+class BaselineRecalculationResponse(BaseModel):
+    """Schema for baseline recalculation response."""
+
+    job_id: str = Field(..., description="Job identifier for async operation")
+    status: str = Field(..., description="Job status")
+    message: str = Field(..., description="Status message")
+    started_at: datetime = Field(..., description="Job start timestamp")
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}

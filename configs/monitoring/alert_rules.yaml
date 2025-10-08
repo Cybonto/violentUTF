@@ -1,0 +1,193 @@
+# Database Performance Monitoring Alert Rules for Issue #270
+# Configuration for alert thresholds and rules for database performance monitoring
+
+postgresql_alerts:
+  connection_pool_exhaustion:
+    metric: connection_pool_usage_percent
+    threshold: 80.0
+    operator: greater_than
+    severity: critical
+    message: "PostgreSQL connection pool usage above 80%"
+    description: "Connection pool is approaching capacity, may cause connection rejections"
+    enabled: true
+
+  query_latency_high:
+    metric: avg_query_latency_ms
+    threshold: 500.0
+    operator: greater_than
+    severity: warning
+    message: "PostgreSQL query latency exceeds 500ms"
+    description: "Average query execution time is degraded"
+    enabled: true
+
+  query_latency_critical:
+    metric: avg_query_latency_ms
+    threshold: 1000.0
+    operator: greater_than
+    severity: critical
+    message: "PostgreSQL query latency exceeds 1000ms"
+    description: "Severe query performance degradation detected"
+    enabled: true
+
+  cache_hit_ratio_low:
+    metric: cache_hit_ratio
+    threshold: 0.85
+    operator: less_than
+    severity: warning
+    message: "PostgreSQL cache hit ratio below 85%"
+    description: "Low cache efficiency may indicate memory pressure"
+    enabled: true
+
+  transaction_rate_high:
+    metric: transactions_per_second
+    threshold: 1500.0
+    operator: greater_than
+    severity: warning
+    message: "PostgreSQL transaction rate exceeds 1500 TPS"
+    description: "High transaction volume may impact performance"
+    enabled: true
+
+  replication_lag_high:
+    metric: replication_lag_seconds
+    threshold: 10.0
+    operator: greater_than
+    severity: critical
+    message: "PostgreSQL replication lag exceeds 10 seconds"
+    description: "Replication falling behind, data inconsistency risk"
+    enabled: true
+
+sqlite_alerts:
+  file_size_warning:
+    metric: database_size_mb
+    threshold: 500.0
+    operator: greater_than
+    severity: warning
+    message: "SQLite database size exceeds 500MB"
+    description: "Database approaching size warning threshold"
+    enabled: true
+
+  file_size_critical:
+    metric: database_size_mb
+    threshold: 1000.0
+    operator: greater_than
+    severity: critical
+    message: "SQLite database size exceeds 1GB"
+    description: "Database size exceeds recommended maximum"
+    enabled: true
+
+  query_timeout:
+    metric: lock_timeout_count
+    threshold: 1.0
+    operator: greater_than
+    severity: warning
+    message: "SQLite lock timeout detected"
+    description: "Database contention causing lock timeouts"
+    enabled: true
+
+  query_latency_high:
+    metric: avg_query_time_ms
+    threshold: 100.0
+    operator: greater_than
+    severity: warning
+    message: "SQLite query latency exceeds 100ms"
+    description: "Query performance degradation detected"
+    enabled: true
+
+  wal_size_high:
+    metric: wal_size_mb
+    threshold: 10.0
+    operator: greater_than
+    severity: warning
+    message: "SQLite WAL file size exceeds 10MB"
+    description: "Large WAL file may indicate checkpoint issues"
+    enabled: true
+
+  concurrent_connections_high:
+    metric: concurrent_connections
+    threshold: 50.0
+    operator: greater_than
+    severity: warning
+    message: "SQLite concurrent connections exceed 50"
+    description: "High concurrent access may cause performance issues"
+    enabled: true
+
+  io_latency_high:
+    metric: io_latency_ms
+    threshold: 50.0
+    operator: greater_than
+    severity: warning
+    message: "SQLite I/O latency exceeds 50ms"
+    description: "Disk I/O performance degradation detected"
+    enabled: true
+
+storage_alerts:
+  disk_usage_warning:
+    metric: disk_usage_percent
+    threshold: 80.0
+    operator: greater_than
+    severity: warning
+    message: "Disk usage exceeds 80%"
+    description: "Storage capacity approaching limits"
+    enabled: true
+
+  disk_usage_critical:
+    metric: disk_usage_percent
+    threshold: 90.0
+    operator: greater_than
+    severity: critical
+    message: "Disk usage exceeds 90%"
+    description: "Critical storage capacity - immediate action required"
+    enabled: true
+
+  io_latency_high:
+    metric: disk_io_latency_ms
+    threshold: 50.0
+    operator: greater_than
+    severity: warning
+    message: "Disk I/O latency exceeds 50ms"
+    description: "Storage performance degradation detected"
+    enabled: true
+
+service_availability_alerts:
+  postgres_connection_failure:
+    metric: postgres_connection_success
+    threshold: 0.0
+    operator: equals
+    severity: critical
+    message: "Unable to connect to PostgreSQL"
+    description: "PostgreSQL database is unreachable"
+    enabled: true
+
+  sqlite_connection_failure:
+    metric: sqlite_connection_success
+    threshold: 0.0
+    operator: equals
+    severity: critical
+    message: "Unable to access SQLite database"
+    description: "SQLite database file is inaccessible"
+    enabled: true
+
+# Alert configuration settings
+alert_settings:
+  # Require N consecutive violations before triggering alert
+  consecutive_violations_required: 2
+
+  # Minimum time between repeat alerts for same issue (seconds)
+  alert_cooldown_seconds: 300
+
+  # Maximum alerts per hour to prevent alert storms
+  max_alerts_per_hour: 20
+
+  # Enable anomaly-based alerting in addition to threshold alerts
+  enable_anomaly_detection: true
+
+  # Anomaly detection sensitivity (low, medium, high)
+  anomaly_sensitivity: medium
+
+  # Send notifications for these severity levels
+  notification_severities:
+    - critical
+    - warning
+
+  # Auto-resolve alerts if metric returns to normal for N consecutive checks
+  auto_resolve_after_checks: 3
