@@ -751,7 +751,7 @@ async def initialize_default_templates(
                 else:
                     logger.info("Template already exists: %s", template_data["name"])
             except Exception as e:
-                error_msg = f"Error creating template '{template_data["name"]}': {str(e)}"
+                error_msg = f"Error creating template '{template_data['name']}': {str(e)}"
                 logger.error(error_msg, exc_info=True)
                 errors.append(error_msg)
 
