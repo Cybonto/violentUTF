@@ -4,29 +4,30 @@ Test suite for Issue #284: Database Asset Management Dashboard API endpoints
 Tests comprehensive asset management, risk assessment, and compliance APIs
 """
 
-import pytest
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Any
-from unittest.mock import Mock, patch, AsyncMock
 import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-# Import application components
-from violentutf_api.fastapi_app.main import app
-from violentutf_api.fastapi_app.app.models.asset import AssetModel, AssetType, AssetEnvironment
-from violentutf_api.fastapi_app.app.models.risk_assessment import RiskAssessmentModel, RiskLevel
-from violentutf_api.fastapi_app.app.models.compliance import ComplianceFramework, ComplianceStatusModel
-from violentutf_api.fastapi_app.app.schemas.asset import AssetCreate, AssetUpdate, AssetResponse
-from violentutf_api.fastapi_app.app.schemas.risk_assessment import RiskAssessmentCreate, RiskAssessmentResponse
-from violentutf_api.fastapi_app.app.schemas.compliance import ComplianceStatusCreate, ComplianceStatusResponse
-from violentutf_api.fastapi_app.app.services.asset_management_service import AssetManagementService
-from violentutf_api.fastapi_app.app.services.risk_assessment_service import RiskAssessmentService
-from violentutf_api.fastapi_app.app.services.compliance_monitoring_service import ComplianceMonitoringService
 from violentutf_api.fastapi_app.app.core.auth import get_current_user
 from violentutf_api.fastapi_app.app.db.database import get_db
+from violentutf_api.fastapi_app.app.models.asset import AssetEnvironment, AssetModel, AssetType
+from violentutf_api.fastapi_app.app.models.compliance import ComplianceFramework, ComplianceStatusModel
+from violentutf_api.fastapi_app.app.models.risk_assessment import RiskAssessmentModel, RiskLevel
+from violentutf_api.fastapi_app.app.schemas.asset import AssetCreate, AssetResponse, AssetUpdate
+from violentutf_api.fastapi_app.app.schemas.compliance import ComplianceStatusCreate, ComplianceStatusResponse
+from violentutf_api.fastapi_app.app.schemas.risk_assessment import RiskAssessmentCreate, RiskAssessmentResponse
+from violentutf_api.fastapi_app.app.services.asset_management_service import AssetManagementService
+from violentutf_api.fastapi_app.app.services.compliance_monitoring_service import ComplianceMonitoringService
+from violentutf_api.fastapi_app.app.services.risk_assessment_service import RiskAssessmentService
+
+# Import application components
+from violentutf_api.fastapi_app.main import app
 
 
 class TestAssetManagementAPI:
@@ -636,7 +637,7 @@ class TestDashboardPerformance:
     async def test_dashboard_response_time_requirements(self):
         """Test that dashboard endpoints meet performance requirements"""
         import time
-        
+
         # Mock fast service responses
         with patch('violentutf_api.fastapi_app.app.services.dashboard_metrics_service.DashboardMetricsService.get_asset_inventory_metrics') as mock_metrics:
             mock_metrics.return_value = {"total_assets": 100}
@@ -655,7 +656,7 @@ class TestDashboardPerformance:
     async def test_bulk_operations_performance(self):
         """Test performance of bulk operations"""
         import time
-        
+
         # Test bulk risk assessment performance
         asset_ids = [f"asset-{i}" for i in range(50)]  # Test with 50 assets
         

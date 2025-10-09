@@ -6,12 +6,13 @@
 
 """Tests for impact analysis service."""
 
-import pytest
 import uuid
 from unittest.mock import AsyncMock, patch
 
-from violentutf_api.fastapi_app.app.services.impact_analysis import ImpactAnalysisService
+import pytest
+
 from violentutf_api.fastapi_app.app.schemas.dependency import ChangeRequest, ImpactAnalysisResult
+from violentutf_api.fastapi_app.app.services.impact_analysis import ImpactAnalysisService
 
 
 class TestImpactAnalysisService:

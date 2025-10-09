@@ -4,14 +4,16 @@ Test suite for Issue #284: Database Asset Management Dashboard Components
 Tests Streamlit dashboard components, visualization, and user interactions
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-import pandas as pd
-import plotly.graph_objects as go
-import streamlit as st
-from datetime import datetime, timedelta
 import asyncio
 import json
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pandas as pd
+import plotly.graph_objects as go
+import pytest
+import streamlit as st
+
 
 # Mock Streamlit for testing
 class MockStreamlit:
@@ -165,7 +167,7 @@ class TestAssetInventoryDashboard:
         # Import the module with mocked streamlit
         with patch.dict('sys.modules', {'streamlit': mock_st}):
             from violentutf.pages import Database_Asset_Management
-            
+
             # Test page config
             assert 'page_config' in mock_st.components
             config = mock_st.components['page_config']
@@ -394,7 +396,7 @@ class TestComplianceDashboardComponents:
     def test_compliance_trend_tracking(self):
         """Test compliance trend tracking"""
         from violentutf.utils.visualization_utils import create_compliance_trend_chart
-        
+
         # Add temporal data
         trend_data = [
             {'date': '2024-01-01', 'compliance_score': 80.0},
@@ -536,7 +538,7 @@ class TestOperationalDashboardComponents:
     def test_real_time_monitoring_updates(self):
         """Test real-time monitoring update mechanism"""
         from violentutf.utils.dashboard_utils import process_monitoring_updates
-        
+
         # Simulate real-time data update
         new_data = {'api_response_time': 160, 'error_rate': 0.03}
         
@@ -584,7 +586,7 @@ class TestDashboardInteractivity:
     def test_responsive_design_components(self):
         """Test responsive design for mobile compatibility"""
         from violentutf.utils.dashboard_utils import apply_responsive_layout
-        
+
         # Test different screen sizes
         layouts = {
             'mobile': apply_responsive_layout('mobile'),
@@ -599,7 +601,7 @@ class TestDashboardInteractivity:
     def test_role_based_access_control(self):
         """Test role-based access control for dashboard features"""
         from violentutf.utils.auth_utils import check_dashboard_permissions
-        
+
         # Test different user roles
         admin_user = {'roles': ['admin', 'dashboard_viewer']}
         viewer_user = {'roles': ['dashboard_viewer']}
@@ -618,6 +620,7 @@ class TestDashboardPerformance:
     def test_page_load_performance(self):
         """Test page load time meets requirements (< 3 seconds)"""
         import time
+
         from violentutf.utils.performance_utils import measure_page_load_time
         
         start_time = time.time()
@@ -635,8 +638,9 @@ class TestDashboardPerformance:
     def test_dashboard_refresh_performance(self):
         """Test dashboard refresh time meets requirements (< 5 seconds)"""
         import time
+
         from violentutf.utils.performance_utils import measure_refresh_time
-        
+
         # Simulate dashboard refresh
         with patch('violentutf.utils.api_client.AssetManagementAPI.get_assets') as mock_get_assets:
             mock_get_assets.return_value = []
@@ -649,7 +653,7 @@ class TestDashboardPerformance:
     def test_mobile_response_performance(self):
         """Test mobile response time meets requirements (< 2 seconds)"""
         from violentutf.utils.performance_utils import measure_mobile_response_time
-        
+
         # Simulate mobile interaction
         mobile_response_time = measure_mobile_response_time()
         

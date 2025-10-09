@@ -6,15 +6,16 @@
 
 """Tests for Configuration Drift Detection functionality - Issue #265."""
 
-import pytest
 from datetime import datetime
 from typing import Any, Dict, List
 
+import pytest
+
 # These imports will fail initially (RED phase of TDD)
 from violentutf_api.fastapi_app.app.services.config_monitoring import (
+    DriftChange,
     DriftDetector,
     DriftResult,
-    DriftChange,
 )
 
 

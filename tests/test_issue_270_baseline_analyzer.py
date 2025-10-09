@@ -11,10 +11,11 @@ Tests the baseline analyzer functionality including statistical baseline
 calculation, rolling window analysis, and normal range determination.
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Any
 import statistics
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List
+
+import pytest
 
 from violentutf_api.fastapi_app.app.monitoring.database.baseline_analyzer import (
     BaselineAnalyzer,

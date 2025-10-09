@@ -4,17 +4,19 @@ Integration tests for Issue #266: Environment Configuration Consistency Review
 Tests end-to-end workflows and service integration.
 """
 
-import pytest
-import tempfile
 import json
-import yaml
 import os
+import subprocess
+import tempfile
 import time
 from pathlib import Path
+from typing import Any, Dict, List
 from unittest.mock import Mock, patch
-import subprocess
+
+import pytest
+import yaml
+
 import docker
-from typing import Dict, List, Any
 
 
 @pytest.fixture

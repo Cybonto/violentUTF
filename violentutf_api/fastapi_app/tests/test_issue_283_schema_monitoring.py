@@ -23,6 +23,7 @@ from app.services.monitoring.schema_monitor import (
     SchemaValidator,
 )
 
+
 # Create mock for DatabaseSchemaMonitor since it doesn't exist in the actual code
 class DatabaseSchemaMonitor:
     """Mock for DatabaseSchemaMonitor that doesn't exist in actual implementation."""

@@ -37,7 +37,6 @@ except ImportError:
 
 from violentutf_api.fastapi_app.app.db.sqlite_manager import SQLiteManager
 
-
 # Performance thresholds (10% tolerance)
 PERFORMANCE_TOLERANCE = 0.10  # 10% degradation allowed
 
@@ -410,8 +409,9 @@ class TestMemoryUsage:
 
     def test_large_dataset_memory_usage_sqlite(self, temp_dir):
         """Test memory usage with large datasets in SQLite."""
-        import psutil
         import os as os_module
+
+        import psutil
 
         process = psutil.Process(os_module.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB

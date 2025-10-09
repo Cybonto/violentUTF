@@ -18,10 +18,8 @@ import pytest
 from app.schemas.monitoring_schemas import SchemaChange, SchemaChangeEvent, SchemaSnapshot
 
 # Import the schema monitoring service classes
-from app.services.monitoring.schema_monitor import (
-    SchemaChangeMonitor as ActualSchemaChangeMonitor,
-    SchemaValidator as ActualSchemaValidator,
-)
+from app.services.monitoring.schema_monitor import SchemaChangeMonitor as ActualSchemaChangeMonitor
+from app.services.monitoring.schema_monitor import SchemaValidator as ActualSchemaValidator
 
 # Create aliases to avoid redefinition warnings
 SchemaChangeMonitor = ActualSchemaChangeMonitor  # type: ignore[no-redef]

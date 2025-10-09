@@ -4,16 +4,17 @@
 """Database-specific recovery testing - Issue #268."""
 
 import asyncio
+import sqlite3
+import tempfile
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
+
+import duckdb
 import pytest
 import pytest_asyncio
-import tempfile
-import sqlite3
-import duckdb
-from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
 
 # These imports will fail initially (RED phase) - that's expected in TDD
-from scripts.recovery_management.database_recovery import PostgreSQLRecovery, SQLiteRecovery, DuckDBRecovery
+from scripts.recovery_management.database_recovery import DuckDBRecovery, PostgreSQLRecovery, SQLiteRecovery
 
 
 @pytest.mark.asyncio

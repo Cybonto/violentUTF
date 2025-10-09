@@ -11,13 +11,14 @@ Tests the anomaly detection functionality including z-score detection, IQR
 method, trend analysis, and alert generation.
 """
 
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List
+
 import pytest
-from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Any
 
 from violentutf_api.fastapi_app.app.monitoring.database.anomaly_detector import (
-    AnomalyDetector,
     Anomaly,
+    AnomalyDetector,
     AnomalyType,
 )
 from violentutf_api.fastapi_app.app.monitoring.database.baseline_analyzer import (

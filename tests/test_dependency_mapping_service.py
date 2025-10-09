@@ -6,19 +6,20 @@
 
 """Tests for dependency mapping service."""
 
-import pytest
 import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
-from violentutf_api.fastapi_app.app.services.dependency_mapping import DependencyMappingService
+import pytest
+
 from violentutf_api.fastapi_app.app.models.dependency import (
-    DependencyType,
     CriticalityLevel,
+    DependencyType,
+    DiscoveryMethod,
     HealthStatus,
-    DiscoveryMethod
 )
 from violentutf_api.fastapi_app.app.schemas.dependency import DependencyDiscoveryConfig
+from violentutf_api.fastapi_app.app.services.dependency_mapping import DependencyMappingService
 
 
 class TestDependencyMappingService:

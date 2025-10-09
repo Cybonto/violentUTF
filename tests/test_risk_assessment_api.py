@@ -25,28 +25,34 @@ Test Coverage:
 import asyncio
 import json
 import os
-import pytest
 import sys
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
-import pytest_asyncio
 
 # Add the FastAPI app to the path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'violentutf_api', 'fastapi_app'))
 
 # Import the FastAPI app and dependencies
 from main import app
+
 from app.api.v1.risk import router
-from app.schemas.risk_schemas import (
-    RiskAssessmentRequest, RiskAssessmentResponse, VulnerabilityScanRequest,
-    BulkRiskAssessmentRequest, RiskLevel, AssessmentMethod, AlertLevel
-)
 from app.core.risk_engine import NISTRMFRiskEngine, RiskAssessmentResult
+from app.schemas.risk_schemas import (
+    AlertLevel,
+    AssessmentMethod,
+    BulkRiskAssessmentRequest,
+    RiskAssessmentRequest,
+    RiskAssessmentResponse,
+    RiskLevel,
+    VulnerabilityScanRequest,
+)
 from app.services.risk_assessment.vulnerability_service import VulnerabilityAssessmentService
 
 

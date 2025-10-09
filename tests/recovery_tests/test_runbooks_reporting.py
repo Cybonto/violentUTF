@@ -3,16 +3,17 @@
 
 """Tests for emergency runbooks and recovery reporting - Issue #268."""
 
-import pytest
-import tempfile
 import json
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pytest
+
 # These imports will fail initially (RED phase) - that's expected in TDD
-from scripts.recovery_management.generate_runbooks import RunbookGenerator, EmergencyResponseCoordinator
-from scripts.recovery_management.recovery_reporting import RecoveryReporter, ComplianceTracker
+from scripts.recovery_management.generate_runbooks import EmergencyResponseCoordinator, RunbookGenerator
+from scripts.recovery_management.recovery_reporting import ComplianceTracker, RecoveryReporter
 
 
 class TestRunbookGeneration:

@@ -11,18 +11,19 @@ Tests the SQLite metrics collection functionality including file size,
 query performance, lock contention, and WAL mode statistics.
 """
 
-import pytest
-import pytest_asyncio
-import aiosqlite
 import os
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiosqlite
+import pytest
+import pytest_asyncio
+
 from violentutf_api.fastapi_app.app.monitoring.database.sqlite_metrics import (
-    SQLiteMetricsCollector,
     SQLiteMetrics,
+    SQLiteMetricsCollector,
 )
 
 

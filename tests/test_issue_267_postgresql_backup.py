@@ -6,29 +6,31 @@
 
 """Tests for PostgreSQL Backup functionality - Issue #267."""
 
-import pytest
-import tempfile
-import os
 import asyncio
+import os
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, patch, mock_open
+from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+
+import pytest
+
+from scripts.backup_management.backup_system import (
+    BackupArchive,
+    BackupMetadata,
+    BackupTier,
+)
 
 # These imports will fail initially (RED phase of TDD)
 from scripts.backup_management.postgresql_backup import (
-    PostgreSQLBackupManager,
-    PostgreSQLBackupConfig,
-    PostgreSQLRestoreManager,
-    PgDumpExecutor,
-    PostgreSQLConnectionManager,
     BackupExecutionResult,
     ConnectionTestResult,
-)
-from scripts.backup_management.backup_system import (
-    BackupTier,
-    BackupMetadata,
-    BackupArchive,
+    PgDumpExecutor,
+    PostgreSQLBackupConfig,
+    PostgreSQLBackupManager,
+    PostgreSQLConnectionManager,
+    PostgreSQLRestoreManager,
 )
 
 

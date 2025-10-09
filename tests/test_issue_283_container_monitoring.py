@@ -19,11 +19,9 @@ import pytest
 from app.schemas.monitoring_schemas import ContainerInfo, EndpointStatus
 
 # Import the container monitoring service classes
-from app.services.monitoring.container_monitor import (
-    ContainerEventHandler as ActualContainerEventHandler,
-    ContainerLifecycleMonitor as ActualContainerLifecycleMonitor,
-    NetworkMonitor as ActualNetworkMonitor,
-)
+from app.services.monitoring.container_monitor import ContainerEventHandler as ActualContainerEventHandler
+from app.services.monitoring.container_monitor import ContainerLifecycleMonitor as ActualContainerLifecycleMonitor
+from app.services.monitoring.container_monitor import NetworkMonitor as ActualNetworkMonitor
 
 # Create aliases to avoid redefinition warnings
 ContainerEventHandler = ActualContainerEventHandler  # type: ignore[no-redef]

@@ -6,15 +6,16 @@
 
 """Tests for Enhanced Configuration Change Tracking and Audit Trails - Issue #265."""
 
-import pytest
 from datetime import datetime
 from typing import Any, Dict, List
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 # These imports will fail initially (RED phase of TDD)
 from violentutf_api.fastapi_app.app.services.config_monitoring import (
-    AuditTrail,
     AuditEntry,
+    AuditTrail,
     ChangeTracker,
     ConfigurationAuditor,
 )

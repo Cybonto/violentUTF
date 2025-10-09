@@ -6,19 +6,20 @@
 
 """Tests for dependency mapping models."""
 
-import pytest
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+
+import pytest
 
 from violentutf_api.fastapi_app.app.models.dependency import (
-    DependencyRelationship,
-    ServiceHealth,
-    ImpactAnalysisRecord,
-    DependencyMatrix,
-    DependencyType,
     CriticalityLevel,
+    DependencyMatrix,
+    DependencyRelationship,
+    DependencyType,
+    DiscoveryMethod,
     HealthStatus,
-    DiscoveryMethod
+    ImpactAnalysisRecord,
+    ServiceHealth,
 )
 
 

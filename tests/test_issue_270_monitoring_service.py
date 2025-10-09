@@ -136,11 +136,11 @@ class TestContinuousMonitoringService:
     @pytest.mark.asyncio
     async def test_service_stores_collected_metrics(self) -> None:
         """Test service stores metrics after collection."""
-        from violentutf_api.fastapi_app.app.monitoring.database.monitoring_service import (
-            ContinuousMonitoringService,
-        )
         from violentutf_api.fastapi_app.app.monitoring.database import (
             PostgreSQLMetrics,
+        )
+        from violentutf_api.fastapi_app.app.monitoring.database.monitoring_service import (
+            ContinuousMonitoringService,
         )
 
         config = {
@@ -331,11 +331,11 @@ class TestBaselineCalculationJob:
     @pytest.mark.asyncio
     async def test_job_calculates_all_metrics(self) -> None:
         """Test job calculates baselines for all metric types."""
-        from violentutf_api.fastapi_app.app.monitoring.database.baseline_job import (
-            BaselineCalculationJob,
-        )
         from violentutf_api.fastapi_app.app.monitoring.database.baseline_analyzer import (
             PerformanceBaseline,
+        )
+        from violentutf_api.fastapi_app.app.monitoring.database.baseline_job import (
+            BaselineCalculationJob,
         )
 
         mock_db = AsyncMock()
@@ -452,11 +452,11 @@ class TestBaselineCalculationJob:
     @pytest.mark.asyncio
     async def test_job_stores_results(self) -> None:
         """Test job stores calculated baselines."""
-        from violentutf_api.fastapi_app.app.monitoring.database.baseline_job import (
-            BaselineCalculationJob,
-        )
         from violentutf_api.fastapi_app.app.monitoring.database.baseline_analyzer import (
             PerformanceBaseline,
+        )
+        from violentutf_api.fastapi_app.app.monitoring.database.baseline_job import (
+            BaselineCalculationJob,
         )
 
         mock_db = AsyncMock()

@@ -11,7 +11,9 @@ import argparse
 import asyncio
 import json
 import logging
+import shutil
 import sys
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List
@@ -321,8 +323,8 @@ async def main() -> None:
     )
     parser.add_argument(
         "--backup-dir",
-        default="/tmp/violentutf_backups",
-        help="Root backup directory"
+        default=None,
+        help="Root backup directory (default: creates secure temp directory)"
     )
     parser.add_argument(
         "--dry-run",
@@ -336,8 +338,8 @@ async def main() -> None:
     )
     parser.add_argument(
         "--output-dir",
-        default="/tmp/retention_reports",
-        help="Directory to save reports and configurations"
+        default=None,
+        help="Directory to save reports and configurations (default: creates secure temp directory)"
     )
     parser.add_argument(
         "--verbose",
@@ -349,6 +351,20 @@ async def main() -> None:
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    # Create secure temporary directories if not specified
+    temp_backup_dir = None
+    temp_output_dir = None
+
+    if args.backup_dir is None:
+        temp_backup_dir = tempfile.mkdtemp(prefix="violentutf_backups_")
+        args.backup_dir = temp_backup_dir
+        logger.info("Created secure temporary backup directory: %s", args.backup_dir)
+
+    if args.output_dir is None:
+        temp_output_dir = tempfile.mkdtemp(prefix="retention_reports_")
+        args.output_dir = temp_output_dir
+        logger.info("Created secure temporary output directory: %s", args.output_dir)
 
     try:
         # Initialize retention policy manager
@@ -423,6 +439,21 @@ async def main() -> None:
     except Exception as e:
         logger.error("Retention policy configuration failed: %s", e)
         sys.exit(1)
+    finally:
+        # Clean up temporary directories
+        if temp_backup_dir and Path(temp_backup_dir).exists():
+            try:
+                shutil.rmtree(temp_backup_dir)
+                logger.debug("Cleaned up temporary backup directory: %s", temp_backup_dir)
+            except Exception as e:
+                logger.warning("Failed to clean up temporary backup directory: %s", e)
+
+        if temp_output_dir and Path(temp_output_dir).exists():
+            try:
+                shutil.rmtree(temp_output_dir)
+                logger.debug("Cleaned up temporary output directory: %s", temp_output_dir)
+            except Exception as e:
+                logger.warning("Failed to clean up temporary output directory: %s", e)
 
 
 if __name__ == "__main__":

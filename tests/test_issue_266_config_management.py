@@ -4,15 +4,16 @@ Test suite for Issue #266: Environment Configuration Consistency Review
 Tests for configuration discovery, comparison, and validation functionality.
 """
 
-import pytest
-import tempfile
 import json
-import yaml
 import os
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
 import sqlite3
-from typing import Dict, List, Any
+import tempfile
+from pathlib import Path
+from typing import Any, Dict, List
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+import yaml
 
 
 @pytest.fixture

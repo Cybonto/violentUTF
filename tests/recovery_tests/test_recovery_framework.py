@@ -4,17 +4,19 @@
 """Tests for the comprehensive recovery framework - Issue #268."""
 
 import asyncio
-import pytest
 import tempfile
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+
+from scripts.recovery_management.generate_runbooks import RunbookGenerator
 
 # These imports will fail initially (RED phase) - that's expected in TDD
 from scripts.recovery_management.setup_recovery_framework import RecoveryFramework
 from scripts.recovery_management.test_recovery_procedures import RecoveryTester
-from scripts.recovery_management.generate_runbooks import RunbookGenerator
 from scripts.recovery_management.validate_recovery_capability import RecoveryValidator
 
 

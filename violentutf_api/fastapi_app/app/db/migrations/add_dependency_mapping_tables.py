@@ -10,10 +10,11 @@ This migration creates the tables needed for the dependency mapping and impact
 analysis system as specified in Issue #264.
 """
 
+import os
+import sys
+
 from sqlalchemy.sql import text
 
-import sys
-import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from db.database import get_db_session

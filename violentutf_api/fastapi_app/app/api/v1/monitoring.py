@@ -526,8 +526,10 @@ async def get_database_overview(
 
         # Collect SQLite metrics
         try:
-            # Default SQLite database path for FastAPI
-            database_path = "/tmp/fastapi.db"  # Placeholder path
+            # Get SQLite database path from environment or use a secure default
+            import os
+
+            database_path = os.getenv("SQLITE_DB_PATH", "/app/app_data/violentutf_api.db")
             sqlite_collector = SQLiteMetricsCollector(database_path)
             sqlite_metrics = await sqlite_collector.collect_all_metrics()
 

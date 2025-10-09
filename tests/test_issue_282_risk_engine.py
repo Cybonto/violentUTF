@@ -12,44 +12,45 @@ Tests are designed to follow Test-Driven Development (TDD) principles and valida
 - Data validation and error handling
 """
 
-import pytest
 import asyncio
 import time
-from unittest.mock import Mock, AsyncMock, patch
-from uuid import uuid4
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+from uuid import uuid4
+
+import pytest
 
 # Import the modules we'll be testing (these don't exist yet - TDD approach)
 try:
     from violentutf_api.fastapi_app.app.core.risk_engine import (
-        NISTRMFRiskEngine,
-        LikelihoodCalculator,
-        ImpactCalculator,
-        RiskLevel,
-        RiskFactors,
-        RiskAssessmentResult,
-        SystemCategorization,
         ControlAssessment,
+        ImpactCalculator,
+        LikelihoodCalculator,
+        NISTRMFRiskEngine,
+        RiskAssessmentResult,
+        RiskFactors,
+        RiskLevel,
+        SystemCategorization,
     )
     from violentutf_api.fastapi_app.app.models.risk_assessment import (
-        DatabaseAsset,
         AssetType,
-        SecurityClassification,
-        CriticalityLevel,
-        Vulnerability,
-        SecurityControl,
         ControlResult,
+        CriticalityLevel,
+        DatabaseAsset,
+        SecurityClassification,
+        SecurityControl,
+        Vulnerability,
     )
-    from violentutf_api.fastapi_app.app.services.risk_assessment.vulnerability_service import (
-        VulnerabilityAssessmentService,
+    from violentutf_api.fastapi_app.app.services.risk_assessment.control_assessor import (
+        SecurityControlAssessor,
     )
     from violentutf_api.fastapi_app.app.services.risk_assessment.threat_service import (
         ThreatIntelligenceService,
     )
-    from violentutf_api.fastapi_app.app.services.risk_assessment.control_assessor import (
-        SecurityControlAssessor,
+    from violentutf_api.fastapi_app.app.services.risk_assessment.vulnerability_service import (
+        VulnerabilityAssessmentService,
     )
 except ImportError:
     # TDD: These modules don't exist yet, so we'll create mock classes for testing

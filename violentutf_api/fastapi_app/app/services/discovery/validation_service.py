@@ -363,9 +363,25 @@ class ValidationService:
                             errors.append("Database file is world-readable")
 
                         # Check if file is in a public directory
-                        public_dirs = ["/tmp", "/var/tmp", "/usr/tmp"]
-                        if any(str(file_path).startswith(pub_dir) for pub_dir in public_dirs):
-                            errors.append("Database file is in a public directory")
+                        # Note: Using tempfile.gettempdir() to get system temp directory
+                        import os
+                        import tempfile
+
+                        system_temp = tempfile.gettempdir()
+                        # Build list of public directories dynamically
+                        public_dirs = [system_temp]
+                        # Add common Unix temporary directories if they exist
+                        for tmp_dir in [os.path.join(os.sep, "var", "tmp"), os.path.join(os.sep, "usr", "tmp")]:
+                            if os.path.exists(tmp_dir):
+                                public_dirs.append(tmp_dir)
+
+                        for pub_dir in public_dirs:
+                            if str(file_path).startswith(pub_dir):
+                                errors.append(
+                                    f"Database file is in a public directory ({pub_dir}). "
+                                    "Consider moving to a secure location."
+                                )
+                                break
 
                 except Exception as e:
                     self.logger.debug("Security permission check failed: %s", e)

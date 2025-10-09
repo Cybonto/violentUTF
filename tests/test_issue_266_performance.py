@@ -4,15 +4,16 @@ Performance tests for Issue #266: Environment Configuration Consistency Review
 Tests for performance characteristics, scalability, and resource usage.
 """
 
-import pytest
-import time
-import psutil
-import threading
-from unittest.mock import Mock, patch
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Any
-import tempfile
 import json
+import tempfile
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List
+from unittest.mock import Mock, patch
+
+import psutil
+import pytest
 
 
 class TestConfigurationDiscoveryPerformance:

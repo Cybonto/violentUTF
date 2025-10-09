@@ -6,18 +6,19 @@
 
 """Tests for Alerting and Notification System functionality - Issue #265."""
 
-import pytest
 from datetime import datetime
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 # These imports will fail initially (RED phase of TDD)
 from violentutf_api.fastapi_app.app.services.config_monitoring import (
+    AlertChannel,
     AlertManager,
     AlertRule,
-    AlertChannel,
-    NotificationResult,
     DriftAlert,
+    NotificationResult,
 )
 
 
@@ -56,7 +57,7 @@ class TestAlertRule:
         )
         
         # WHEN: Checking drift with critical severity
-        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
         drift_result = DriftResult(
             has_drift=True,
             changes=[
@@ -80,7 +81,7 @@ class TestAlertRule:
         )
         
         # WHEN: Checking drift with high severity (below threshold)
-        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
         drift_result = DriftResult(
             has_drift=True,
             changes=[
@@ -104,7 +105,7 @@ class TestAlertRule:
         )
         
         # WHEN: Checking drift for different services
-        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
         drift_result = DriftResult(
             has_drift=True,
             changes=[
@@ -129,7 +130,7 @@ class TestAlertRule:
         )
         
         # WHEN: Checking any drift
-        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
         drift_result = DriftResult(
             has_drift=True,
             changes=[
@@ -212,7 +213,7 @@ class TestDriftAlert:
     def test_create_drift_alert(self):
         """Test creating drift alert."""
         # GIVEN: Drift alert parameters
-        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
         drift_result = DriftResult(
             has_drift=True,
             changes=[
@@ -240,7 +241,7 @@ class TestDriftAlert:
     def test_drift_alert_generate_title(self):
         """Test drift alert title generation."""
         # GIVEN: Drift alert
-        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
         drift_result = DriftResult(
             has_drift=True,
             changes=[
@@ -268,7 +269,7 @@ class TestDriftAlert:
     def test_drift_alert_generate_message(self):
         """Test drift alert message generation."""
         # GIVEN: Drift alert
-        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
         drift_result = DriftResult(
             has_drift=True,
             changes=[
@@ -418,7 +419,7 @@ class TestAlertManager:
             )
             
             # WHEN: Processing critical drift
-            from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+            from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
             drift_result = DriftResult(
                 has_drift=True,
                 changes=[
@@ -453,7 +454,7 @@ class TestAlertManager:
         await manager.add_rule(rule)
         
         # WHEN: Processing low severity drift
-        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
         drift_result = DriftResult(
             has_drift=True,
             changes=[
@@ -486,7 +487,7 @@ class TestAlertManager:
         await manager.add_rule(rule)
         
         # WHEN: Processing any drift
-        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+        from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
         drift_result = DriftResult(
             has_drift=True,
             changes=[
@@ -528,7 +529,7 @@ class TestAlertManager:
             mock_smtp.return_value.__enter__.return_value = mock_server
             
             # WHEN: Sending email notification
-            from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+            from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
             drift_result = DriftResult(
                 has_drift=True,
                 changes=[
@@ -576,7 +577,7 @@ class TestAlertManager:
             mock_post.return_value.__aenter__.return_value = mock_response
             
             # WHEN: Sending Slack notification
-            from violentutf_api.fastapi_app.app.services.config_monitoring import DriftResult, DriftChange
+            from violentutf_api.fastapi_app.app.services.config_monitoring import DriftChange, DriftResult
             drift_result = DriftResult(
                 has_drift=True,
                 changes=[

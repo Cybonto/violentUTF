@@ -20,12 +20,12 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
+from main import app
 from sqlalchemy import StaticPool, create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.db.database import Base, get_session
-from main import app
 from app.models.asset_inventory import (
     AssetAuditLog,
     AssetRelationship,

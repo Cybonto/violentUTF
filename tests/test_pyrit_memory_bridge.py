@@ -27,8 +27,8 @@ import pytest
 
 # Check if SQLiteMemory is available (PyRIT v0.10.0rc0+)
 try:
-    from pyrit.memory import SQLiteMemory
     from pyrit.common.singleton import Singleton
+    from pyrit.memory import SQLiteMemory
 
     SQLITE_MEMORY_AVAILABLE = True
 except ImportError:

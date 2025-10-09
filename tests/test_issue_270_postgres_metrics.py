@@ -11,10 +11,11 @@ Tests the PostgreSQL metrics collection functionality including connection pool
 metrics, query performance, database size, and cache statistics.
 """
 
-import pytest
 from datetime import datetime, timezone
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any
+
+import pytest
 
 # Import the class we'll implement
 from violentutf_api.fastapi_app.app.monitoring.database.postgres_metrics import (

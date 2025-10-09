@@ -6,31 +6,33 @@
 
 """Tests for SQLite Backup functionality - Issue #267."""
 
-import pytest
-import tempfile
 import os
-import sqlite3
 import shutil
+import sqlite3
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from scripts.backup_management.backup_system import (
+    BackupArchive,
+    BackupMetadata,
+    BackupTier,
+)
+
 # These imports will fail initially (RED phase of TDD)  
 from scripts.backup_management.sqlite_backup import (
-    SQLiteBackupManager,
-    SQLiteBackupConfig,
-    SQLiteRestoreManager,
-    SQLiteFileManager,
-    SQLiteIntegrityChecker,
-    WALModeBackupHandler,
     FileCopyResult,
     IntegrityCheckResult,
-)
-from scripts.backup_management.backup_system import (
-    BackupTier,
-    BackupMetadata,
-    BackupArchive,
+    SQLiteBackupConfig,
+    SQLiteBackupManager,
+    SQLiteFileManager,
+    SQLiteIntegrityChecker,
+    SQLiteRestoreManager,
+    WALModeBackupHandler,
 )
 
 

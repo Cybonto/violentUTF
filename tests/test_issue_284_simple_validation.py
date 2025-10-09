@@ -4,9 +4,10 @@ Simple validation test for Issue #284 implementation
 Tests basic functionality without complex dependencies
 """
 
-import pytest
-import sys
 import os
+import sys
+
+import pytest
 
 # Add the violentutf directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'violentutf'))
@@ -47,7 +48,7 @@ def test_dashboard_components_import():
 def test_calculate_asset_metrics():
     """Test asset metrics calculation"""
     from violentutf.utils.dashboard_utils import calculate_asset_metrics
-    
+
     # Test with sample data
     sample_assets = [
         {'criticality_level': 'CRITICAL', 'risk_score': 20, 'compliance_score': 85},

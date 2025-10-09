@@ -23,23 +23,30 @@ Test Coverage:
 
 import asyncio
 import os
-import pytest
 import sys
 import time
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 # Add the FastAPI app to the path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'violentutf_api', 'fastapi_app'))
 
 from app.core.risk_engine import (
-    NISTRMFRiskEngine, LikelihoodCalculator, ImpactCalculator, SystemCategorizer,
-    RiskLevel, ImpactLevel, RiskFactors, SystemCategorization, SecurityControl,
-    ControlAssessment, RiskAssessmentResult
+    ControlAssessment,
+    ImpactCalculator,
+    ImpactLevel,
+    LikelihoodCalculator,
+    NISTRMFRiskEngine,
+    RiskAssessmentResult,
+    RiskFactors,
+    RiskLevel,
+    SecurityControl,
+    SystemCategorization,
+    SystemCategorizer,
 )
-from app.models.risk_assessment import (
-    DatabaseAsset, AssetType, SecurityClassification, CriticalityLevel
-)
+from app.models.risk_assessment import AssetType, CriticalityLevel, DatabaseAsset, SecurityClassification
 
 
 class TestNISTRMFRiskEngine:

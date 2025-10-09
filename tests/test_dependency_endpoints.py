@@ -6,21 +6,19 @@
 
 """Tests for dependency API endpoints."""
 
-import pytest
-import sys
 import os
-from fastapi.testclient import TestClient
+import sys
 from unittest.mock import AsyncMock, patch
+
+import pytest
+from fastapi.testclient import TestClient
 
 # Add the FastAPI app directory to Python path for relative imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'violentutf_api', 'fastapi_app'))
 
 from main import app
-from app.schemas.dependency import (
-    ChangeRequest,
-    DependencyDiscoveryConfig,
-    DiscoveryMethod
-)
+
+from app.schemas.dependency import ChangeRequest, DependencyDiscoveryConfig, DiscoveryMethod
 
 
 class TestDependencyEndpoints:

@@ -83,10 +83,12 @@ class ContinuousMonitoringService:
 
     async def _collect_sqlite_metrics(self) -> None:
         """Collect SQLite metrics."""
+        import os
+
         from violentutf_api.fastapi_app.app.monitoring.database import SQLiteMetricsCollector
 
-        # Default SQLite database path
-        database_path = "/tmp/test.db"  # Placeholder path
+        # Get SQLite database path from environment or use a secure default
+        database_path = os.getenv("SQLITE_DB_PATH", "/app/app_data/violentutf_api.db")
         collector = SQLiteMetricsCollector(database_path)
         metrics = await collector.collect_all_metrics()
 

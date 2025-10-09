@@ -5,31 +5,32 @@ Simple test for Issue #282 Risk Engine Implementation (TDD Phase)
 Testing only the core components that are currently implemented.
 """
 
-import pytest
 import asyncio
 import time
-from unittest.mock import Mock, AsyncMock
-from uuid import uuid4
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock
+from uuid import uuid4
+
+import pytest
 
 # Test only what we've implemented so far
 try:
     from violentutf_api.fastapi_app.app.core.risk_engine import (
-        NISTRMFRiskEngine,
-        LikelihoodCalculator,
-        ImpactCalculator,
-        RiskLevel,
-        RiskFactors,
-        RiskAssessmentResult,
-        SystemCategorization,
         ControlAssessment,
+        ImpactCalculator,
         ImpactLevel,
+        LikelihoodCalculator,
+        NISTRMFRiskEngine,
+        RiskAssessmentResult,
+        RiskFactors,
+        RiskLevel,
+        SystemCategorization,
     )
     from violentutf_api.fastapi_app.app.models.risk_assessment import (
-        DatabaseAsset,
         AssetType,
-        SecurityClassification,
         CriticalityLevel,
+        DatabaseAsset,
+        SecurityClassification,
     )
 
     IMPORTS_AVAILABLE = True

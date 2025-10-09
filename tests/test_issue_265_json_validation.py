@@ -6,15 +6,16 @@
 
 """Tests for JSON Validation Schema functionality - Issue #265."""
 
-import pytest
-from typing import Any, Dict, List
 import json
+from typing import Any, Dict, List
+
+import pytest
 
 # These imports will fail initially (RED phase of TDD)
 from violentutf_api.fastapi_app.app.services.config_monitoring import (
     ConfigurationValidator,
-    ValidationResult,
     ValidationError,
+    ValidationResult,
 )
 
 

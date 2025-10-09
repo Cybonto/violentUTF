@@ -4,17 +4,18 @@ Security tests for Issue #266: Environment Configuration Consistency Review
 Tests for secrets handling, access control, and audit trail functionality.
 """
 
-import pytest
-import tempfile
+import base64
+import hashlib
 import json
 import os
-from pathlib import Path
-from unittest.mock import Mock, patch
-import hashlib
-import base64
+import tempfile
 import time
+from pathlib import Path
+from typing import Any, Dict, List
+from unittest.mock import Mock, patch
+
+import pytest
 from cryptography.fernet import Fernet
-from typing import Dict, List, Any
 
 
 @pytest.fixture

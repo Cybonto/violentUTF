@@ -6,25 +6,26 @@
 
 """Tests for Backup System Core functionality - Issue #267."""
 
-import pytest
-import tempfile
-import os
-import json
 import hashlib
+import json
+import os
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 # These imports will fail initially (RED phase of TDD)
 from scripts.backup_management.backup_system import (
-    BackupTier,
-    BackupMetadata,
     BackupArchive,
-    BackupManager,
-    BackupIntegrityValidator,
     BackupCompressor,
+    BackupIntegrityValidator,
+    BackupManager,
+    BackupMetadata,
     BackupRetentionManager,
+    BackupTier,
 )
 
 

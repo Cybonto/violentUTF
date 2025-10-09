@@ -19,6 +19,7 @@ import hashlib
 import logging
 import os
 import re
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -64,8 +65,8 @@ class DocumentMetadata:
             self.line_count = len(content.splitlines())
             self.word_count = len(content.split())
 
-            # Calculate checksum
-            self.checksum = hashlib.md5(content.encode("utf-8")).hexdigest()
+            # Calculate checksum (MD5 is acceptable for non-security checksums)
+            self.checksum = hashlib.md5(content.encode("utf-8"), usedforsecurity=False).hexdigest()
 
             # Extract title from first heading or filename
             lines = content.splitlines()
@@ -383,18 +384,21 @@ class DocumentationResourceProvider(BaseResourceProvider):
         possible_paths = [
             Path("/app/docs"),  # Docker container (primary)
             Path(__file__).parents[3] / "docs",  # From fastapi_app root (parents[3] = /app)
-            Path(os.getenv("VIOLENTUTF_DOCS_PATH", "/tmp")),  # Environment variable
         ]
+
+        # Add environment variable path if specified
+        env_path = os.getenv("VIOLENTUTF_DOCS_PATH")
+        if env_path:
+            possible_paths.append(Path(env_path))
 
         for path in possible_paths:
             if path.exists() and path.is_dir():
                 logger.info("Found docs directory: %s", path)
                 return path
 
-        # Fallback: create empty directory
-        fallback = Path("/tmp/violentutf_docs")
-        fallback.mkdir(exist_ok=True)
-        logger.warning("No docs directory found, using fallback: %s", fallback)
+        # Fallback: create secure temporary directory
+        fallback = Path(tempfile.mkdtemp(prefix="violentutf_docs_"))
+        logger.warning("No docs directory found, using secure temporary fallback: %s", fallback)
         return fallback
 
     async def initialize(self) -> None:
