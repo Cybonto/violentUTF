@@ -46,25 +46,25 @@ async def migrate_up():
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """))
-        
+
         # Create index for source_service lookups
         await session.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_dependency_source_service 
+            CREATE INDEX IF NOT EXISTS idx_dependency_source_service
             ON dependency_relationships(source_service)
         """))
-        
+
         # Create index for target_service lookups
         await session.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_dependency_target_service 
+            CREATE INDEX IF NOT EXISTS idx_dependency_target_service
             ON dependency_relationships(target_service)
         """))
-        
+
         # Create index for target_database lookups
         await session.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_dependency_target_database 
+            CREATE INDEX IF NOT EXISTS idx_dependency_target_database
             ON dependency_relationships(target_database)
         """))
-        
+
         # Create service_health table
         await session.execute(text("""
             CREATE TABLE IF NOT EXISTS service_health (
@@ -82,13 +82,13 @@ async def migrate_up():
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """))
-        
+
         # Create index for service_name lookups
         await session.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_service_health_name 
+            CREATE INDEX IF NOT EXISTS idx_service_health_name
             ON service_health(service_name)
         """))
-        
+
         # Create impact_analyses table
         await session.execute(text("""
             CREATE TABLE IF NOT EXISTS impact_analyses (
@@ -107,19 +107,19 @@ async def migrate_up():
                 implementation_notes TEXT NULL
             )
         """))
-        
+
         # Create index for created_by lookups
         await session.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_impact_analyses_created_by 
+            CREATE INDEX IF NOT EXISTS idx_impact_analyses_created_by
             ON impact_analyses(created_by)
         """))
-        
+
         # Create index for implementation status
         await session.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_impact_analyses_implemented 
+            CREATE INDEX IF NOT EXISTS idx_impact_analyses_implemented
             ON impact_analyses(implemented)
         """))
-        
+
         # Create dependency_matrices table
         await session.execute(text("""
             CREATE TABLE IF NOT EXISTS dependency_matrices (
@@ -134,19 +134,19 @@ async def migrate_up():
                 is_current BOOLEAN DEFAULT FALSE
             )
         """))
-        
+
         # Create index for matrix version lookups
         await session.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_dependency_matrices_version 
+            CREATE INDEX IF NOT EXISTS idx_dependency_matrices_version
             ON dependency_matrices(matrix_version)
         """))
-        
+
         # Create index for current matrix
         await session.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_dependency_matrices_current 
+            CREATE INDEX IF NOT EXISTS idx_dependency_matrices_current
             ON dependency_matrices(is_current)
         """))
-        
+
         await session.commit()
 
 
@@ -158,7 +158,7 @@ async def migrate_down():
         await session.execute(text("DROP TABLE IF EXISTS impact_analyses"))
         await session.execute(text("DROP TABLE IF EXISTS service_health"))
         await session.execute(text("DROP TABLE IF EXISTS dependency_relationships"))
-        
+
         await session.commit()
 
 
@@ -168,7 +168,7 @@ async def check_migration_needed():
         try:
             # Check if dependency_relationships table exists
             result = await session.execute(text("""
-                SELECT name FROM sqlite_master 
+                SELECT name FROM sqlite_master
                 WHERE type='table' AND name='dependency_relationships'
             """))
             return result.fetchone() is None
@@ -179,10 +179,10 @@ async def check_migration_needed():
 if __name__ == "__main__":
     import asyncio
     import logging
-    
+
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
-    
+
     async def main():
         """Run the migration."""
         if await check_migration_needed():
@@ -191,5 +191,5 @@ if __name__ == "__main__":
             logger.info("Migration completed successfully")
         else:
             logger.info("Migration already applied - dependency mapping tables exist")
-    
+
     asyncio.run(main())
