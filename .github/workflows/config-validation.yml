@@ -45,7 +45,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyyaml sqlalchemy asyncio
+        pip install pyyaml sqlalchemy asyncio pytest
         # Install FastAPI app dependencies for configuration monitoring
         cd violentutf_api/fastapi_app
         pip install -r requirements.txt || pip install pydantic sqlalchemy || true
@@ -293,7 +293,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyyaml sqlalchemy asyncio
+        pip install pyyaml sqlalchemy asyncio pytest
         cd violentutf_api/fastapi_app
         pip install -r requirements.txt || pip install pydantic sqlalchemy || true
 
