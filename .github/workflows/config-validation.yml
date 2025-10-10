@@ -29,6 +29,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Free disk space
+      run: |
+        echo "Disk usage before cleanup:"
+        df -h
+        # Remove unnecessary software to free disk space
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
+        sudo apt-get clean || true
+        docker system prune -af || true
+        echo "Disk usage after cleanup:"
+        df -h
+
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -287,6 +298,17 @@ jobs:
     needs: config-validation
 
     steps:
+    - name: Free disk space
+      run: |
+        echo "Disk usage before cleanup:"
+        df -h
+        # Remove unnecessary software to free disk space
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
+        sudo apt-get clean || true
+        docker system prune -af || true
+        echo "Disk usage after cleanup:"
+        df -h
+
     - name: Checkout code
       uses: actions/checkout@v4
 
