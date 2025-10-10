@@ -13,7 +13,7 @@ databases, generates access control matrices, and identifies privilege violation
 
 Usage:
     python3 review_access_controls.py --validate-privileges
-    python3 review_access_controls.py --service-accounts
+    python3 review_access_controls.py --system-accounts
     python3 review_access_controls.py --generate-matrix --report-format json
 """
 
@@ -61,7 +61,7 @@ class AccessControlReport:
     scan_timestamp: str
     databases_reviewed: List[str] = field(default_factory=list)
     access_matrix: AccessMatrix = field(default_factory=AccessMatrix)
-    service_accounts: List[Dict[str, Any]] = field(default_factory=list)
+    system_accounts: List[Dict[str, Any]] = field(default_factory=list)
     isolation_assessment: Dict[str, Any] = field(default_factory=dict)
     summary: Dict[str, int] = field(default_factory=dict)
     scan_duration_seconds: float = 0.0
@@ -151,7 +151,7 @@ class AccessControlReviewer:
             },
             {
                 "username": "api_service",
-                "type": "service_account",
+                "type": "system_account",
                 "database_access": ["sqlite"],
                 "privileges": ["SELECT", "INSERT", "UPDATE"],
             },
@@ -159,13 +159,13 @@ class AccessControlReviewer:
 
         matrix.roles = [
             {"role": "application", "privileges": ["CRUD"], "member_count": 1},
-            {"role": "service_account", "privileges": ["READ", "WRITE"], "member_count": 1},
+            {"role": "system_account", "privileges": ["READ", "WRITE"], "member_count": 1},
         ]
 
         # Check for privilege violations
         for user in matrix.users:
             if "DELETE" in user.get("privileges", []):
-                if user["type"] == "service_account":
+                if user["type"] == "system_account":
                     matrix.violations.append(
                         PrivilegeViolation(
                             user=user["username"],
@@ -213,11 +213,11 @@ class AccessControlReviewer:
 
         return violations
 
-    def review_service_accounts(self) -> List[Dict[str, Any]]:
-        """Review service account credentials and privileges."""
-        service_accounts = []
+    def review_system_accounts(self) -> List[Dict[str, Any]]:
+        """Review system account credentials and privileges."""
+        system_accounts = []
 
-        # In production, this would query actual service accounts
+        # In production, this would query actual system accounts
         # For this implementation, we provide expected structure
         accounts = [
             {
@@ -252,9 +252,9 @@ class AccessControlReviewer:
                         }
                     )
 
-            service_accounts.append(analysis)
+            system_accounts.append(analysis)
 
-        return service_accounts
+        return system_accounts
 
     def assess_isolation(self, db_paths: List[Path]) -> Dict[str, Any]:
         """Assess user data isolation in databases."""
@@ -296,9 +296,9 @@ def main() -> None:
         help="Validate all privilege assignments",
     )
     parser.add_argument(
-        "--service-accounts",
+        "--system-accounts",
         action="store_true",
-        help="Review service account credentials and access",
+        help="Review system account credentials and access",
     )
     parser.add_argument(
         "--generate-matrix",
@@ -347,7 +347,7 @@ def main() -> None:
     if not any(
         [
             args.validate_privileges,
-            args.service_accounts,
+            args.system_accounts,
             args.generate_matrix,
             args.check_isolation,
         ]
@@ -369,11 +369,11 @@ def main() -> None:
         violations = reviewer.validate_least_privilege(report.access_matrix)
         print(f"  Least privilege violations: {len(violations)}")
 
-    # Review service accounts
-    if args.service_accounts:
-        print("\nReviewing service accounts...")
-        report.service_accounts = reviewer.review_service_accounts()
-        print(f"  Service accounts reviewed: {len(report.service_accounts)}")
+    # Review system accounts
+    if args.system_accounts:
+        print("\nReviewing system accounts...")
+        report.system_accounts = reviewer.review_system_accounts()
+        print(f"  System accounts reviewed: {len(report.system_accounts)}")
 
     # Check isolation
     if args.check_isolation:
@@ -390,7 +390,7 @@ def main() -> None:
     report.summary = {
         "total_users": len(report.access_matrix.users),
         "total_violations": len(report.access_matrix.violations),
-        "service_accounts": len(report.service_accounts),
+        "system_accounts": len(report.system_accounts),
         "isolation_violations": len(report.isolation_assessment.get("violations", [])),
     }
 
@@ -409,7 +409,7 @@ def main() -> None:
             "privileges": report.access_matrix.privileges,
             "violations": [asdict(v) for v in report.access_matrix.violations],
         },
-        "service_accounts": report.service_accounts,
+        "system_accounts": report.system_accounts,
         "isolation_assessment": report.isolation_assessment,
         "summary": report.summary,
         "scan_duration_seconds": report.scan_duration_seconds,
@@ -428,7 +428,7 @@ def main() -> None:
     print("\n📊 Summary:")
     print(f"   Total users: {report.summary['total_users']}")
     print(f"   Privilege violations: {report.summary['total_violations']}")
-    print(f"   Service accounts: {report.summary['service_accounts']}")
+    print(f"   System accounts: {report.summary['system_accounts']}")
 
 
 if __name__ == "__main__":

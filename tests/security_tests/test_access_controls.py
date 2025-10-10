@@ -41,7 +41,7 @@ class TestAccessControlReview:
         # Test should detect excessive privileges
         assert test_postgres_config["user"] != "postgres"
 
-    def test_service_account_review(self, test_postgres_config: Dict[str, Any]) -> None:
+    def test_system_account_review(self, test_postgres_config: Dict[str, Any]) -> None:
         """Verify service account credential review."""
         # GIVEN: Service accounts with database access
         # WHEN: Service account reviewer checks credentials
@@ -99,7 +99,7 @@ class TestAccessControlCLI:
         assert test_config_dir.exists()
         # CLI should complete without errors
 
-    def test_service_accounts_flag(self, test_config_dir: Path) -> None:
+    def test_system_accounts_flag(self, test_config_dir: Path) -> None:
         """Test --service-accounts CLI flag."""
         # GIVEN: review_access_controls.py CLI
         # WHEN: --service-accounts flag is used
@@ -165,7 +165,7 @@ class TestAccessControlReporting:
         # Should include all required fields
         assert len(expected_fields) == 5
 
-    def test_service_account_report_structure(self) -> None:
+    def test_system_account_report_structure(self) -> None:
         """Verify service account report structure."""
         # GIVEN: Service account review results
         # WHEN: Report is generated
