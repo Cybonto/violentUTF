@@ -1,0 +1,222 @@
+# Security Standards and Baselines for ViolentUTF Database Security Audit
+# Version: 1.0
+# Last Updated: 2025-10-10
+
+---
+postgresql:
+  authentication:
+    allowed_methods:
+      - "scram-sha-256"
+      - "md5"
+    disallowed_methods:
+      - "trust"
+      - "password"  # plaintext
+    require_ssl: true
+
+  encryption:
+    ssl_enabled: true
+    tls_version_min: "1.2"
+    cipher_suites:
+      - "ECDHE-RSA-AES256-GCM-SHA384"
+      - "ECDHE-RSA-AES128-GCM-SHA256"
+
+  logging:
+    log_connections: true
+    log_disconnections: true
+    log_statement: "ddl"  # Log all DDL changes
+    log_duration: true
+    log_line_prefix: "%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h"
+
+  network:
+    listen_addresses: "localhost,postgres-network"
+    external_exposure: false
+    port: 5432
+    max_connections: 100
+
+  passwords:
+    min_length: 16
+    require_uppercase: true
+    require_lowercase: true
+    require_numbers: true
+    require_special: true
+    password_encryption: "scram-sha-256"
+
+  privileges:
+    superuser_accounts_max: 1
+    least_privilege_required: true
+    role_based_access: true
+
+sqlite:
+  file_security:
+    permissions: "0600"  # Owner read/write only
+    directory_permissions: "0700"
+    owner_user: "app"  # Container application user
+
+  access_control:
+    connection_pooling: true
+    max_connections: 10
+    timeout: 30
+
+  encryption:
+    file_encryption_recommended: true
+    backup_encryption_required: true
+
+  backup:
+    automated_backup: true
+    backup_retention_days: 30
+    backup_verification: true
+    backup_permissions: "0600"
+
+  transaction:
+    isolation_level: "SERIALIZABLE"
+    journal_mode: "WAL"  # Write-Ahead Logging
+
+file_storage:
+  environment_files:
+    pattern: "\\.env(\\..*)?$"
+    required_permissions: "0600"
+    version_control: false
+    secret_scanning: true
+
+  configuration_files:
+    yaml_permissions: "0644"
+    json_permissions: "0644"
+    no_secrets_allowed: true
+
+  log_files:
+    permissions: "0640"
+    rotation_enabled: true
+    retention_days: 30
+    max_size_mb: 100
+
+  certificates:
+    permissions: "0600"
+    expiry_warning_days: 30
+    min_key_size: 2048
+    allowed_algorithms:
+      - "RSA"
+      - "ECDSA"
+
+  backup_files:
+    encryption_required: true
+    permissions: "0600"
+    integrity_validation: true
+
+docker:
+  container_security:
+    run_as_non_root: true
+    read_only_filesystem: false  # Some containers need write access
+    no_new_privileges: true
+
+  network_security:
+    network_mode: "custom"  # Not host or bridge
+    port_exposure_minimal: true
+    internal_networks_only: true
+
+  volume_security:
+    named_volumes_only: true
+    volume_permissions: "0700"
+    sensitive_data_volumes:
+      - "postgres_data"
+      - "fastapi_data"
+
+  secrets_management:
+    docker_secrets_preferred: true
+    env_vars_for_non_secrets: true
+    no_hardcoded_secrets: true
+
+network:
+  ssl_tls:
+    min_tls_version: "1.2"
+    certificate_validation: true
+    cipher_strength: "HIGH"
+
+  firewall:
+    default_deny: true
+    whitelist_only: true
+
+  monitoring:
+    intrusion_detection: true
+    traffic_logging: true
+
+encryption:
+  at_rest:
+    database_encryption: true
+    file_encryption: true
+    key_management: "vault"
+
+  in_transit:
+    ssl_tls_required: true
+    certificate_pinning: false
+
+  algorithms:
+    symmetric:
+      allowed:
+        - "AES-256-GCM"
+        - "AES-256-CBC"
+      disallowed:
+        - "DES"
+        - "3DES"
+        - "RC4"
+    asymmetric:
+      min_key_size:
+        rsa: 2048
+        ecdsa: 256
+      allowed:
+        - "RSA"
+        - "ECDSA"
+    hashing:
+      allowed:
+        - "SHA-256"
+        - "SHA-384"
+        - "SHA-512"
+        - "bcrypt"
+        - "scrypt"
+      disallowed:
+        - "MD5"
+        - "SHA-1"
+
+risk_scoring:
+  severity_levels:
+    critical:
+      score_min: 90
+      response_time_hours: 4
+      description: "Immediate risk to system security or data"
+    high:
+      score_min: 70
+      response_time_hours: 24
+      description: "Significant security risk requiring urgent attention"
+    medium:
+      score_min: 40
+      response_time_hours: 168  # 7 days
+      description: "Moderate security risk requiring attention"
+    low:
+      score_min: 1
+      response_time_hours: 720  # 30 days
+      description: "Minor security issue or best practice deviation"
+
+  risk_calculation:
+    formula: "likelihood * impact * exploitability"
+    likelihood_range: [1, 5]
+    impact_range: [1, 5]
+    exploitability_range: [1, 5]
+    max_score: 125
+
+audit:
+  frequency:
+    comprehensive_audit_days: 90
+    quick_scan_days: 7
+    vulnerability_scan_days: 30
+
+  reporting:
+    formats:
+      - "json"
+      - "yaml"
+      - "html"
+      - "pdf"
+    retention_years: 7
+
+  performance:
+    max_execution_seconds: 600
+    max_database_impact_percent: 10
+    report_generation_max_seconds: 60

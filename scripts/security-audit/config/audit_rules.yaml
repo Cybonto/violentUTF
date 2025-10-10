@@ -1,0 +1,334 @@
+# Security Audit Rules and Configuration
+# Version: 1.0
+# Last Updated: 2025-10-10
+
+---
+audit_scope:
+  databases:
+    postgresql:
+      enabled: true
+      container_name: "postgres"
+      database_name: "keycloak"
+      port: 5432
+      network: "postgres-network"
+
+    sqlite:
+      enabled: true
+      container_name: "violentutf_api"
+      database_path: "/app/app_data/violentutf_api.db"
+      backup_pattern: "*.db.backup"
+
+    duckdb:
+      enabled: false  # Deprecated per issue #269
+      reason: "PyRIT migrated to SQLite"
+
+  file_storage:
+    enabled: true
+    paths:
+      - "/Users/tamnguyen/Documents/GitHub/violentUTF/violentutf/parameters"
+      - "/Users/tamnguyen/Documents/GitHub/violentUTF/violentutf_logs"
+      - "/Users/tamnguyen/Documents/GitHub/violentUTF/violentutf/app_data"
+      - "/Users/tamnguyen/Documents/GitHub/violentUTF/violentutf_api/fastapi_app/app_data"
+
+    env_files:
+      - "keycloak/.env"
+      - "apisix/.env"
+      - "violentutf_api/.env"
+      - "ai-tokens.env"
+
+  docker:
+    enabled: true
+    services:
+      - "postgres"
+      - "keycloak"
+      - "violentutf_api"
+      - "apisix"
+
+  network:
+    enabled: true
+    networks:
+      - "postgres-network"
+      - "apisix_network"
+      - "vutf-network"
+
+vulnerability_checks:
+  authentication:
+    default_credentials:
+      severity: "CRITICAL"
+      checks:
+        - name: "PostgreSQL default admin password"
+          pattern: "password|admin|postgres"
+          context: "database_credentials"
+
+        - name: "Keycloak default admin password"
+          pattern: "admin:admin"
+          context: "keycloak_config"
+
+    weak_passwords:
+      severity: "HIGH"
+      checks:
+        - name: "Password length < 16 characters"
+          validation: "length_check"
+
+        - name: "Missing complexity requirements"
+          validation: "complexity_check"
+
+    authentication_bypass:
+      severity: "CRITICAL"
+      checks:
+        - name: "Trust authentication enabled"
+          pattern: "host.*trust"
+          context: "pg_hba.conf"
+
+  encryption:
+    weak_algorithms:
+      severity: "HIGH"
+      checks:
+        - name: "MD5 hashing detected"
+          pattern: "md5|MD5"
+          context: "code_and_config"
+
+        - name: "DES encryption detected"
+          pattern: "DES|3DES|RC4"
+          context: "code_and_config"
+
+    missing_encryption:
+      severity: "HIGH"
+      checks:
+        - name: "SSL/TLS not enforced"
+          validation: "ssl_configuration_check"
+
+        - name: "Unencrypted database connections"
+          validation: "connection_encryption_check"
+
+  access_control:
+    excessive_privileges:
+      severity: "HIGH"
+      checks:
+        - name: "Superuser privileges on non-admin accounts"
+          validation: "privilege_check"
+
+        - name: "Public schema write access"
+          validation: "schema_permission_check"
+
+    missing_access_controls:
+      severity: "MEDIUM"
+      checks:
+        - name: "File permissions too permissive"
+          validation: "file_permission_check"
+
+        - name: "Database roles without password"
+          validation: "role_password_check"
+
+  injection:
+    sql_injection:
+      severity: "CRITICAL"
+      checks:
+        - name: "Unsanitized SQL queries"
+          pattern: "execute\\(.*\\+.*\\)"
+          context: "python_code"
+
+        - name: "String concatenation in SQL"
+          pattern: "f\".*SELECT.*\\{.*\\}\""
+          context: "python_code"
+
+  data_exposure:
+    sensitive_data_in_logs:
+      severity: "HIGH"
+      checks:
+        - name: "Passwords in log files"
+          pattern: "password[\"']?\\s*[:=]"
+          context: "log_files"
+
+        - name: "API keys in log files"
+          pattern: "api[_-]?key[\"']?\\s*[:=]"
+          context: "log_files"
+
+    secrets_in_code:
+      severity: "CRITICAL"
+      checks:
+        - name: "Hardcoded passwords"
+          pattern: "password\\s*=\\s*[\"'][^\"']{8,}[\"']"
+          context: "source_code"
+
+        - name: "Hardcoded API keys"
+          pattern: "api[_-]?key\\s*=\\s*[\"'][^\"']+[\"']"
+          context: "source_code"
+
+  network:
+    external_exposure:
+      severity: "CRITICAL"
+      checks:
+        - name: "Database exposed to external network"
+          validation: "network_exposure_check"
+
+        - name: "Unnecessary port exposure"
+          validation: "port_exposure_check"
+
+    insecure_protocols:
+      severity: "HIGH"
+      checks:
+        - name: "HTTP instead of HTTPS"
+          pattern: "http://(?!localhost|127\\.0\\.0\\.1)"
+          context: "configuration"
+
+access_control_rules:
+  postgresql:
+    superuser:
+      max_count: 1
+      allowed_users:
+        - "postgres"
+
+    roles:
+      least_privilege: true
+      review_frequency_days: 90
+
+    privileges:
+      disallowed_combinations:
+        - ["SUPERUSER", "LOGIN"]  # Service accounts shouldn't be superuser
+        - ["CREATEDB", "CREATEROLE"]  # Too powerful combination
+
+  sqlite:
+    file_permissions:
+      database_file: "0600"
+      backup_files: "0600"
+      directory: "0700"
+
+    access:
+      owner_only: true
+      group_access: false
+      world_access: false
+
+  file_storage:
+    env_files:
+      permissions: "0600"
+      version_control: false
+      secret_scanning: true
+
+    log_files:
+      permissions: "0640"
+      rotation: true
+      retention_days: 30
+
+    config_files:
+      permissions: "0644"
+      no_secrets: true
+
+compliance_validation:
+  gdpr:
+    data_retention:
+      check_enabled: true
+      user_data_max_years: 2
+      audit_log_min_years: 7
+
+    encryption:
+      at_rest_required: true
+      in_transit_required: true
+
+    data_subject_rights:
+      access_implemented: true
+      deletion_implemented: true
+      portability_implemented: true
+
+  soc2:
+    access_controls:
+      rbac_implemented: true
+      mfa_for_privileged: true
+      access_review_frequency_days: 90
+
+    monitoring:
+      security_event_logging: true
+      log_retention_years: 7
+      alerting_enabled: true
+
+    change_management:
+      approval_required: true
+      testing_required: true
+      rollback_documented: true
+
+report_configuration:
+  output:
+    formats:
+      - "json"
+      - "yaml"
+      - "html"
+
+    directory: "/Users/tamnguyen/Documents/GitHub/violentUTF/docs/development/issue_272"
+
+  severity_thresholds:
+    critical: 90
+    high: 70
+    medium: 40
+    low: 1
+
+  sections:
+    executive_summary: true
+    detailed_findings: true
+    access_control_matrix: true
+    compliance_assessment: true
+    remediation_plan: true
+
+  charts:
+    severity_distribution: true
+    compliance_score: true
+    risk_timeline: true
+
+performance:
+  timeouts:
+    database_connection_seconds: 30
+    query_execution_seconds: 60
+    total_audit_seconds: 600
+
+  limits:
+    max_database_impact_percent: 10
+    max_concurrent_scans: 5
+    report_generation_max_seconds: 60
+
+  optimization:
+    use_connection_pooling: true
+    cache_results: true
+    parallel_scanning: true
+
+exclusions:
+  paths:
+    - "*/venv/*"
+    - "*/.venv/*"
+    - "*/.vitutf/*"
+    - "*/__pycache__/*"
+    - "*/.mypy_cache/*"
+    - "*/.pytest_cache/*"
+    - "*/node_modules/*"
+    - "*/.git/*"
+
+  files:
+    - "*.pyc"
+    - "*.pyo"
+    - "*.pyd"
+    - ".DS_Store"
+    - "*.swp"
+    - "*.swo"
+
+  patterns:
+    - "test_*"  # Exclude test files from security scanning
+    - "*_test.py"
+    - "conftest.py"
+
+notifications:
+  critical_findings:
+    enabled: true
+    method: "console"  # or "email", "slack"
+
+  summary:
+    enabled: true
+    method: "console"
+
+  detailed_report:
+    enabled: true
+    method: "file"
+
+logging:
+  level: "INFO"
+  file: "/Users/tamnguyen/Documents/GitHub/violentUTF/docs/development/issue_272/audit.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  max_size_mb: 10
+  backup_count: 5
