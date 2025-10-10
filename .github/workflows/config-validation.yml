@@ -19,6 +19,11 @@ on:
       - 'apisix/**'
       - 'scripts/config-management/**'
 
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
 jobs:
   config-validation:
     runs-on: ubuntu-latest
