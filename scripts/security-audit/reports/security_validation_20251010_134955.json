@@ -1,0 +1,82 @@
+{
+  "scan_timestamp": "2025-10-10 13:49:55",
+  "authentication_tests": [
+    {
+      "control_name": "Password Policy",
+      "test_type": "authentication",
+      "passed": true,
+      "effectiveness_score": 100,
+      "findings": [
+        "Minimum password length configured: 16 characters"
+      ],
+      "recommendations": []
+    },
+    {
+      "control_name": "SSL/TLS Encryption",
+      "test_type": "authentication",
+      "passed": true,
+      "effectiveness_score": 100,
+      "findings": [
+        "SSL enabled: True",
+        "TLS version: 1.2"
+      ],
+      "recommendations": []
+    }
+  ],
+  "authorization_tests": [
+    {
+      "control_name": "Role-Based Access Control",
+      "test_type": "authorization",
+      "passed": true,
+      "effectiveness_score": 100,
+      "findings": [
+        "RBAC enabled: True",
+        "Least privilege required: True"
+      ],
+      "recommendations": []
+    },
+    {
+      "control_name": "Privilege Escalation Prevention",
+      "test_type": "penetration",
+      "passed": true,
+      "effectiveness_score": 85,
+      "findings": [
+        "No privilege escalation paths detected in configuration",
+        "Service accounts have restricted privileges"
+      ],
+      "recommendations": [
+        "Regularly audit user privileges",
+        "Implement privilege access management (PAM)"
+      ]
+    }
+  ],
+  "encryption_tests": [
+    {
+      "control_name": "Data-at-Rest Encryption",
+      "test_type": "encryption",
+      "passed": true,
+      "effectiveness_score": 90,
+      "findings": [
+        "File encryption recommended: True",
+        "Backup encryption required: True"
+      ],
+      "recommendations": []
+    },
+    {
+      "control_name": "Data-in-Transit Encryption",
+      "test_type": "encryption",
+      "passed": true,
+      "effectiveness_score": 100,
+      "findings": [
+        "SSL/TLS enabled: True",
+        "Minimum TLS version: 1.2"
+      ],
+      "recommendations": []
+    }
+  ],
+  "remediation_validations": [],
+  "overall_effectiveness_score": 95.83333333333333,
+  "improvements_validated": 0,
+  "remaining_issues": 0,
+  "scan_duration_seconds": 7.915496826171875e-05
+}

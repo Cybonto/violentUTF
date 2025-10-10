@@ -1,0 +1,61 @@
+{
+  "scan_timestamp": "2025-10-10 12:51:33",
+  "databases_reviewed": [],
+  "access_matrix": {
+    "users": [
+      {
+        "username": "keycloak",
+        "type": "application",
+        "database_access": [
+          "postgres"
+        ],
+        "privileges": [
+          "SELECT",
+          "INSERT",
+          "UPDATE",
+          "DELETE"
+        ]
+      },
+      {
+        "username": "api_service",
+        "type": "service_account",
+        "database_access": [
+          "sqlite"
+        ],
+        "privileges": [
+          "SELECT",
+          "INSERT",
+          "UPDATE"
+        ]
+      }
+    ],
+    "roles": [
+      {
+        "role": "application",
+        "privileges": [
+          "CRUD"
+        ],
+        "member_count": 1
+      },
+      {
+        "role": "service_account",
+        "privileges": [
+          "READ",
+          "WRITE"
+        ],
+        "member_count": 1
+      }
+    ],
+    "privileges": {},
+    "violations": []
+  },
+  "service_accounts": [],
+  "isolation_assessment": {},
+  "summary": {
+    "total_users": 2,
+    "total_violations": 0,
+    "service_accounts": 0,
+    "isolation_violations": 0
+  },
+  "scan_duration_seconds": 1.8835067749023438e-05
+}

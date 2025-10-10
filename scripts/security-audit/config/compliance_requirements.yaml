@@ -1,0 +1,414 @@
+# Compliance Requirements for ViolentUTF Database Security
+# Version: 1.0
+# Last Updated: 2025-10-10
+# Standards: GDPR, SOC 2 Type II
+
+---
+gdpr:
+  article_32:
+    name: "Security of Processing"
+    description: "Technical and organizational measures to ensure security"
+    requirements:
+      pseudonymization:
+        required: true
+        description: "Pseudonymization and encryption of personal data"
+        implementation:
+          - "User identifiers hashed or tokenized"
+          - "Personal data encrypted at rest"
+          - "Encryption keys managed securely"
+        validation_method: "encryption_validation"
+
+      confidentiality:
+        required: true
+        description: "Ensure ongoing confidentiality of processing systems"
+        implementation:
+          - "Access controls implemented"
+          - "Authentication required for all access"
+          - "Authorization based on least privilege"
+        validation_method: "access_control_validation"
+
+      integrity:
+        required: true
+        description: "Ensure ongoing integrity of processing systems"
+        implementation:
+          - "Data integrity validation"
+          - "Transaction isolation"
+          - "Backup integrity verification"
+        validation_method: "integrity_validation"
+
+      availability:
+        required: true
+        description: "Ensure ongoing availability of processing systems"
+        implementation:
+          - "Backup and recovery procedures"
+          - "High availability configuration"
+          - "Disaster recovery plan"
+        validation_method: "availability_validation"
+
+      resilience:
+        required: true
+        description: "Ability to restore availability after incident"
+        implementation:
+          - "Automated backups"
+          - "Recovery time objective (RTO) < 30 minutes"
+          - "Recovery point objective (RPO) < 1 hour"
+        validation_method: "resilience_validation"
+
+      testing:
+        required: true
+        description: "Regular testing and evaluation of measures"
+        implementation:
+          - "Quarterly security audits"
+          - "Monthly vulnerability scans"
+          - "Annual penetration testing"
+        validation_method: "testing_validation"
+
+  data_retention:
+    max_retention_years: 2
+    description: "Personal data shall not be kept longer than necessary"
+    requirements:
+      user_data:
+        retention_period_years: 2
+        deletion_after_period: true
+        anonymization_option: true
+
+      audit_logs:
+        retention_period_years: 7
+        deletion_after_period: false  # Legal requirement
+        anonymization_option: false
+
+      security_testing_data:
+        retention_period_months: 6
+        deletion_after_period: true
+        anonymization_option: true
+
+  consent_tracking:
+    required: true
+    description: "Track user consent for data processing"
+    requirements:
+      consent_recording:
+        timestamp_required: true
+        purpose_documented: true
+        revocation_supported: true
+
+      consent_validation:
+        periodic_revalidation: true
+        revalidation_period_months: 12
+
+  data_subject_rights:
+    right_to_access:
+      required: true
+      response_time_days: 30
+      format: "machine_readable"
+
+    right_to_deletion:
+      required: true
+      response_time_days: 30
+      implementation: "hard_delete_or_anonymize"
+
+    right_to_portability:
+      required: true
+      response_time_days: 30
+      format: "JSON"
+
+    right_to_rectification:
+      required: true
+      response_time_days: 30
+
+  breach_notification:
+    authority_notification_hours: 72
+    user_notification_required: true
+    documentation_required: true
+
+soc2:
+  common_criteria:
+    CC6_1:
+      name: "Logical and Physical Access Controls - User Identification and Authentication"
+      description: "System authenticates users and credentials"
+      requirements:
+        - "Unique user identification"
+        - "Multi-factor authentication for privileged users"
+        - "Password complexity requirements"
+        - "Account lockout after failed attempts"
+      validation_method: "authentication_validation"
+
+    CC6_2:
+      name: "Logical and Physical Access Controls - Authorization"
+      description: "System authorizes users based on role"
+      requirements:
+        - "Role-based access control (RBAC)"
+        - "Least privilege principle"
+        - "Access reviews performed quarterly"
+        - "Segregation of duties"
+      validation_method: "authorization_validation"
+
+    CC6_3:
+      name: "Logical and Physical Access Controls - Access Revocation"
+      description: "System removes access when no longer required"
+      requirements:
+        - "Immediate revocation upon termination"
+        - "Periodic access reviews"
+        - "Unused account deactivation (90 days)"
+      validation_method: "access_revocation_validation"
+
+    CC6_6:
+      name: "Logical and Physical Access Controls - Logical Access"
+      description: "Logical access is restricted"
+      requirements:
+        - "Network segmentation"
+        - "Firewall rules enforced"
+        - "Database access restricted to application layer"
+        - "Administrative access logged"
+      validation_method: "logical_access_validation"
+
+    CC6_7:
+      name: "Logical and Physical Access Controls - Access Requests"
+      description: "Access is granted based on approved requests"
+      requirements:
+        - "Access request and approval workflow"
+        - "Documentation of access grants"
+        - "Manager approval required"
+      validation_method: "access_request_validation"
+
+    CC7_2:
+      name: "System Monitoring - Security Events"
+      description: "System monitors for security events"
+      requirements:
+        - "Security event logging enabled"
+        - "Real-time monitoring and alerting"
+        - "Log analysis and correlation"
+        - "Incident response procedures"
+      validation_method: "monitoring_validation"
+
+    CC8_1:
+      name: "Change Management - Changes"
+      description: "Changes are authorized and documented"
+      requirements:
+        - "Change request and approval process"
+        - "Testing in non-production environment"
+        - "Rollback procedures documented"
+        - "Change log maintained"
+      validation_method: "change_management_validation"
+
+  availability:
+    A1_1:
+      name: "Availability - System Capacity"
+      description: "System capacity is monitored and managed"
+      requirements:
+        - "Capacity monitoring enabled"
+        - "Capacity planning performed quarterly"
+        - "Scaling procedures documented"
+      validation_method: "capacity_validation"
+
+    A1_2:
+      name: "Availability - Monitoring Tools and Activities"
+      description: "Monitoring tools detect capacity issues"
+      requirements:
+        - "Monitoring tools deployed"
+        - "Alerting thresholds configured"
+        - "Alert response procedures"
+      validation_method: "monitoring_tools_validation"
+
+    A1_3:
+      name: "Availability - Incident Response"
+      description: "Incidents affecting availability are managed"
+      requirements:
+        - "Incident response plan documented"
+        - "Incident classification and prioritization"
+        - "Post-incident review process"
+      validation_method: "incident_response_validation"
+
+  confidentiality:
+    C1_1:
+      name: "Confidentiality - Data Classification"
+      description: "Confidential information is identified and classified"
+      requirements:
+        - "Data classification policy"
+        - "RESTRICTED, CONFIDENTIAL, INTERNAL labels"
+        - "Handling procedures per classification"
+      validation_method: "data_classification_validation"
+
+    C1_2:
+      name: "Confidentiality - Encryption"
+      description: "Confidential information is encrypted"
+      requirements:
+        - "Encryption at rest for RESTRICTED data"
+        - "Encryption in transit for all data"
+        - "Key management procedures"
+      validation_method: "encryption_validation"
+
+audit_logging:
+  retention:
+    years: 7
+    description: "SOC 2 requires 7-year audit log retention"
+
+  log_types:
+    authentication:
+      events:
+        - "login_success"
+        - "login_failure"
+        - "logout"
+        - "password_change"
+        - "mfa_challenge"
+      retention_years: 7
+
+    authorization:
+      events:
+        - "access_granted"
+        - "access_denied"
+        - "privilege_escalation"
+        - "role_change"
+      retention_years: 7
+
+    data_access:
+      events:
+        - "read_sensitive_data"
+        - "write_sensitive_data"
+        - "delete_sensitive_data"
+        - "export_data"
+      retention_years: 7
+
+    administrative:
+      events:
+        - "configuration_change"
+        - "user_creation"
+        - "user_deletion"
+        - "permission_grant"
+        - "permission_revoke"
+      retention_years: 7
+
+    security:
+      events:
+        - "security_alert"
+        - "vulnerability_detected"
+        - "intrusion_attempt"
+        - "malware_detected"
+      retention_years: 7
+
+  log_integrity:
+    tamper_protection: true
+    cryptographic_hashing: true
+    centralized_logging: true
+
+access_reviews:
+  frequency_days: 90
+  description: "Quarterly access reviews required by SOC 2"
+  scope:
+    - "User access rights"
+    - "Service account privileges"
+    - "Administrative access"
+    - "Database permissions"
+
+  documentation:
+    review_date: true
+    reviewer_name: true
+    findings_documented: true
+    remediation_actions: true
+
+password_policy:
+  min_length: 16
+  complexity:
+    uppercase: true
+    lowercase: true
+    numbers: true
+    special_characters: true
+
+  expiration_days: 90
+  history_count: 10
+  lockout_threshold: 5
+  lockout_duration_minutes: 30
+
+network_security:
+  segmentation:
+    required: true
+    database_network: "internal_only"
+    application_network: "application_tier"
+
+  encryption:
+    tls_required: true
+    min_tls_version: "1.2"
+
+  firewall:
+    default_deny: true
+    rule_review_frequency_days: 90
+
+incident_response:
+  plan_required: true
+  roles_defined: true
+  contact_list_maintained: true
+
+  incident_classification:
+    critical:
+      response_time_hours: 1
+      escalation_required: true
+
+    high:
+      response_time_hours: 4
+      escalation_required: false
+
+    medium:
+      response_time_hours: 24
+      escalation_required: false
+
+    low:
+      response_time_hours: 72
+      escalation_required: false
+
+  post_incident:
+    root_cause_analysis: true
+    lessons_learned: true
+    remediation_plan: true
+    executive_report: true
+
+vulnerability_management:
+  scanning_frequency_days: 30
+  critical_patch_time_days: 7
+  high_patch_time_days: 30
+  medium_patch_time_days: 90
+
+  scan_coverage:
+    - "Database systems"
+    - "Application code"
+    - "Container images"
+    - "Dependencies"
+
+data_classification:
+  levels:
+    RESTRICTED:
+      description: "Highly sensitive data requiring maximum protection"
+      examples:
+        - "User passwords and credentials"
+        - "Authentication tokens"
+        - "Encryption keys"
+      encryption_required: true
+      access_logging_required: true
+      retention_review_required: true
+
+    CONFIDENTIAL:
+      description: "Sensitive business data requiring protection"
+      examples:
+        - "User personal data"
+        - "Security testing results"
+        - "Audit logs"
+      encryption_recommended: true
+      access_logging_required: true
+      retention_policy_required: true
+
+    INTERNAL:
+      description: "Internal business data"
+      examples:
+        - "Configuration files (non-secret)"
+        - "Application logs"
+        - "System metrics"
+      encryption_recommended: false
+      access_logging_required: false
+      retention_policy_required: true
+
+    PUBLIC:
+      description: "Publicly available data"
+      examples:
+        - "Public documentation"
+        - "Marketing materials"
+      encryption_required: false
+      access_logging_required: false
+      retention_policy_required: false

@@ -1,0 +1,55 @@
+{
+  "audit_timestamp": "2025-10-10 11:57:16",
+  "audit_duration_seconds": 0.0,
+  "databases_scanned": 2,
+  "total_findings": 3,
+  "filtered_findings": 2,
+  "severity_threshold": "LOW",
+  "findings_by_severity": {
+    "CRITICAL": 0,
+    "HIGH": 1,
+    "MEDIUM": 1,
+    "LOW": 0
+  },
+  "findings_by_category": {
+    "File Security": 2,
+    "Scanner Status": 1
+  },
+  "top_risks": [
+    {
+      "severity": "HIGH",
+      "category": "File Security",
+      "finding": "Insecure file permissions: 0o644",
+      "risk_score": 80,
+      "affected_system": "SQLite: violentutf_api.db"
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "File Security",
+      "finding": "Directory permissions too permissive: 0o755",
+      "risk_score": 27,
+      "affected_system": "Directory: /Users/tamnguyen/Documents/GitHub/violentUTF/violentutf_api/fastapi_app/app_data"
+    },
+    {
+      "severity": "INFO",
+      "category": "Scanner Status",
+      "finding": "PostgreSQL scanner requires psycopg2 library",
+      "risk_score": 1,
+      "affected_system": "PostgreSQL Scanner"
+    }
+  ],
+  "scan_results": [
+    {
+      "database": "/Users/tamnguyen/Documents/GitHub/violentUTF/violentutf_api/fastapi_app/app_data/violentutf_api.db",
+      "type": "sqlite",
+      "findings_count": 2,
+      "duration": 0.00036716461181640625
+    },
+    {
+      "database": "keycloak",
+      "type": "postgresql",
+      "findings_count": 1,
+      "duration": 5.245208740234375e-06
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "scan_timestamp": "2025-10-10 12:35:34",
+  "gdpr_compliance": {
+    "article_32_compliance_score": 100.0,
+    "pseudonymization_implemented": true,
+    "encryption_at_rest": true,
+    "encryption_in_transit": true,
+    "data_retention_compliant": true,
+    "retention_policy_years": 2,
+    "audit_logging_enabled": true,
+    "audit_log_retention_years": 7,
+    "consent_tracking": false,
+    "subject_rights_implemented": [
+      "access",
+      "portability"
+    ],
+    "findings": [
+      "Pseudonymization requirement validated - implementation recommended",
+      "Encryption controls implemented for confidentiality",
+      "Data retention policy: 2 years (GDPR compliant)",
+      "Audit log retention: 7 years"
+    ]
+  },
+  "soc2_compliance": {
+    "security_controls_score": 0.0,
+    "access_controls_implemented": false,
+    "rbac_enabled": false,
+    "mfa_for_privileged": false,
+    "monitoring_enabled": false,
+    "audit_logging_compliant": false,
+    "log_retention_years": 0,
+    "change_management_documented": false,
+    "incident_response_plan": false,
+    "findings": []
+  },
+  "gaps": [],
+  "overall_compliance_score": 50.0,
+  "scan_duration_seconds": 3.0994415283203125e-05
+}
