@@ -8,9 +8,10 @@
 import logging
 from typing import Any, Dict, Optional, Self
 
+from fastapi import HTTPException, Request, status
+
 from app.core.security import create_access_token, decode_token
 from app.services.keycloak_verification import keycloak_verifier
-from fastapi import HTTPException, Request, status
 
 logger = logging.getLogger(__name__)
 

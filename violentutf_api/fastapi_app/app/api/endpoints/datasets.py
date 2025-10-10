@@ -8,9 +8,13 @@
 
 Implements API backend for 2_Configure_Datasets.py page
 """
+import os
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, cast
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pyrit.memory import CentralMemory
 
 from app.models.auth import User
 from app.schemas.datasets import (
@@ -34,8 +38,11 @@ from app.schemas.datasets import (
     MemoryDatasetsResponse,
     SeedPromptInfo,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pyrit.memory import CentralMemory
+from app.schemas.graphwalk_datasets import (
+    GraphWalkConvertRequest,
+    GraphWalkConvertResponse,
+    GraphWalkJobStatusResponse,
+)
 
 # PyRIT imports for memory access
 try:
@@ -46,22 +53,261 @@ except ImportError:
 import logging
 
 from app.core.auth import get_current_user
-from app.db.duckdb_manager import get_duckdb_manager
+from app.db.sqlite_manager import get_sqlite_manager
+from app.services.graphwalk_service import graphwalk_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+def _convert_configs_to_strings(configs: Optional[Dict[str, Any]]) -> Optional[Dict[str, List[str]]]:
+    """Convert configuration values to strings to ensure Pydantic validation passes."""
+    if not isinstance(configs, dict):
+        return None
+
+    result = {}
+    for key, value in configs.items():
+        if isinstance(value, list):
+            # Convert all list items to strings
+            result[key] = [str(item) for item in value]
+        elif value is not None:
+            # Convert single values to list of strings
+            result[key] = [str(value)]
+        else:
+            result[key] = []
+
+    return result
+
+
 # DuckDB storage replaces in - memory storage
 # _datasets_store: Dict[str, Dict[str, object]] = {} - REMOVED
 # _session_datasets: Dict[str, Dict[str, object]] = {} - REMOVED
 
+# Dataset categories mapping (based on purpose and functionality)
+DATASET_CATEGORIES = {
+    "ai_safety_harm": {
+        "name": "AI Safety & Harm Evaluation",
+        "description": "General AI safety, harmful behavior detection, and security vulnerabilities",
+    },
+    "bias_fairness": {
+        "name": "Bias & Fairness Testing",
+        "description": "Detecting demographic bias, stereotyping, and fairness issues",
+    },
+    "jailbreaking_attacks": {
+        "name": "Jailbreaking & Attack Resistance",
+        "description": "Testing model robustness against sophisticated prompt attacks",
+    },
+    "privacy_contextual": {
+        "name": "Privacy & Contextual Integrity",
+        "description": "Privacy sensitivity, contextual awareness, and data protection",
+    },
+    "cognitive_behavioral": {
+        "name": "Cognitive & Behavioral Assessment",
+        "description": "Cognitive abilities, behavioral patterns, and compliance evaluation",
+    },
+    "domain_reasoning": {
+        "name": "Domain-Specific Reasoning",
+        "description": "Specialized knowledge domains and professional reasoning",
+    },
+    "security_compliance": {
+        "name": "Specialized Security & Compliance",
+        "description": "Specialized security testing and regulatory compliance",
+    },
+}
+
 # Dataset type definitions (based on PyRIT datasets)
+# ViolentUTF native dataset definitions
+VIOLENTUTF_NATIVE_DATASETS = {
+    "ollegen1_cognitive": {
+        "name": "ollegen1_cognitive",
+        "display_name": "OllaGen1 Cognitive Behavioral Security Assessment",
+        "description": "170K scenarios with 4 Q&A types for security compliance evaluation",
+        "category": "cognitive_behavioral",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": True,
+        "available_configs": {
+            "question_types": ["WCP", "WHO", "TeamRisk", "TargetFactor"],
+            "scenario_limit": [1000, 10000, 50000, "all"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/OllaGen1-QA-full.part*.csv",
+            "manifest_file": "datasets/OllaGen1-QA-full.manifest.json",
+            "total_scenarios": 169999,
+            "total_qa_pairs": 679996,
+        },
+        "conversion_strategy": "strategy_1_cognitive_assessment",
+    },
+    "garak_redteaming": {
+        "name": "garak_redteaming",
+        "display_name": "Garak Red-Teaming Dataset Collection",
+        "description": "25+ files with DAN variants, RTP categories, and jailbreak prompts",
+        "category": "redteaming",
+        "pyrit_format": "SeedPromptDataset",
+        "config_required": True,
+        "available_configs": {
+            "attack_types": ["DAN", "RTP", "injection", "jailbreak"],
+            "severity_levels": ["low", "medium", "high", "critical"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/garak/*.txt",
+            "manifest_file": "datasets/garak/garak.manifest.json",
+            "total_files": 25,
+            "total_prompts": 12000,
+        },
+        "conversion_strategy": "strategy_3_redteaming_prompts",
+    },
+    "legalbench_reasoning": {
+        "name": "legalbench_reasoning",
+        "display_name": "LegalBench Legal Reasoning Dataset",
+        "description": "Comprehensive legal reasoning tasks and case analysis",
+        "category": "legal_reasoning",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": True,
+        "available_configs": {
+            "task_types": ["case_analysis", "statute_interpretation", "contract_review"],
+            "complexity_levels": ["basic", "intermediate", "advanced"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/legalbench/*.json",
+            "manifest_file": "datasets/legalbench/legalbench.manifest.json",
+            "total_tasks": 5000,
+            "total_questions": 20000,
+        },
+        "conversion_strategy": "strategy_2_legal_reasoning",
+    },
+    "docmath_evaluation": {
+        "name": "docmath_evaluation",
+        "display_name": "DocMath Mathematical Reasoning Dataset with Large File Handling",
+        "description": "Mathematical reasoning over specialized documents with large file processing (220MB+)",
+        "category": "reasoning_evaluation",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": True,
+        "available_configs": {
+            "complexity_tiers": ["simpshort", "simplong", "compshort", "complong"],
+            "processing_modes": ["standard", "streaming", "splitting_with_streaming"],
+            "mathematical_domains": [
+                "arithmetic",
+                "algebra",
+                "geometry",
+                "statistics",
+                "calculus",
+                "financial",
+                "measurement",
+                "word_problems",
+            ],
+            "memory_limits": ["1GB", "2GB", "4GB"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/docmath/*_{test,testmini}.json",
+            "manifest_file": "datasets/docmath/docmath.manifest.json",
+            "total_problems": 8000,
+            "complexity_tiers": 4,
+            "large_files": ["complong_test.json (220MB)", "complong_testmini.json (53MB)"],
+            "max_file_size_mb": 220,
+        },
+        "conversion_strategy": "strategy_2_reasoning_benchmarks",
+        "performance_targets": {
+            "max_conversion_time_seconds": 1800,
+            "max_memory_usage_gb": 2,
+            "min_mathematical_classification_accuracy": 0.85,
+            "supports_large_files": True,
+        },
+    },
+    "confaide_privacy": {
+        "name": "confaide_privacy",
+        "display_name": "ConfAIde Privacy Evaluation Dataset",
+        "description": "Privacy-focused evaluation scenarios for AI confidentiality testing",
+        "category": "privacy_evaluation",
+        "pyrit_format": "SeedPromptDataset",
+        "config_required": True,
+        "available_configs": {
+            "privacy_types": ["PII", "confidential", "sensitive", "proprietary"],
+            "test_scenarios": ["data_leak", "inference", "memorization"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/confaide/*.csv",
+            "manifest_file": "datasets/confaide/confaide.manifest.json",
+            "total_scenarios": 3000,
+            "privacy_categories": 8,
+        },
+        "conversion_strategy": "strategy_5_privacy_evaluation",
+    },
+    "graphwalk_reasoning": {
+        "name": "graphwalk_reasoning",
+        "display_name": "GraphWalk Spatial Reasoning Dataset with Massive File Handling",
+        "description": "Graph traversal and spatial reasoning tasks with specialized handling for massive 480MB files",
+        "category": "reasoning_evaluation",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": True,
+        "available_configs": {
+            "processing_modes": ["standard", "streaming", "advanced_splitting"],
+            "memory_limits": ["1GB", "2GB", "4GB"],
+            "complexity_filters": ["simple", "medium", "complex", "all"],
+            "chunk_sizes": ["5MB", "15MB", "25MB", "50MB"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/graphwalk/*.json",
+            "manifest_file": "datasets/graphwalk/graphwalk.manifest.json",
+            "total_graphs": 100000,
+            "complexity_levels": ["simple", "medium", "complex"],
+            "large_files": ["train.json (480MB)", "test.json (120MB)"],
+            "max_file_size_mb": 480,
+        },
+        "conversion_strategy": "strategy_2_reasoning_benchmarks",
+        "converter_available": True,
+        "converter_endpoint": "/api/v1/datasets/convert/graphwalk",
+        "performance_targets": {
+            "max_conversion_time_seconds": 1800,
+            "max_memory_usage_gb": 2,
+            "min_throughput_objects_per_minute": 3000,
+            "supports_massive_files": True,
+        },
+    },
+    "judgebench_evaluation": {
+        "name": "judgebench_evaluation",
+        "display_name": "JudgeBench Meta-Evaluation Dataset",
+        "description": "Meta-evaluation dataset for AI judgment and assessment capabilities",
+        "category": "meta_evaluation",
+        "pyrit_format": "SeedPromptDataset",
+        "config_required": True,
+        "available_configs": {
+            "evaluation_types": ["quality", "safety", "bias", "factuality"],
+            "judge_models": ["human", "ai", "hybrid"],
+        },
+        "file_info": {
+            "source_pattern": "datasets/judgebench/*.json",
+            "manifest_file": "datasets/judgebench/judgebench.manifest.json",
+            "total_evaluations": 5000,
+            "judgment_categories": 12,
+        },
+        "conversion_strategy": "strategy_7_meta_evaluation",
+    },
+    "acpbench_reasoning": {
+        "name": "acpbench_reasoning",
+        "display_name": "ACPBench Abstract Conceptual Planning",
+        "description": "Abstract conceptual planning and reasoning benchmark dataset",
+        "category": "reasoning_evaluation",
+        "pyrit_format": "QuestionAnsweringDataset",
+        "config_required": False,
+        "available_configs": None,
+        "file_info": {
+            "source_pattern": "datasets/acpbench/*.json",
+            "manifest_file": "datasets/acpbench/acpbench.manifest.json",
+            "total_problems": 1500,
+            "planning_domains": 6,
+        },
+        "conversion_strategy": "strategy_8_abstract_planning",
+    },
+}
+
+# Dataset type definitions (combining PyRIT and ViolentUTF datasets)
 NATIVE_DATASET_TYPES = {
+    # Original PyRIT datasets
     "aya_redteaming": {
         "name": "aya_redteaming",
-        "description": "Aya Red-teaming Dataset - Multilingual red-teaming prompts",
-        "category": "redteaming",
+        "description": "Aya Red-teaming Dataset - Multilingual bias and harm evaluation",
+        "category": "bias_fairness",
         "config_required": True,
         "available_configs": {
             "language": [
@@ -78,68 +324,293 @@ NATIVE_DATASET_TYPES = {
     },
     "harmbench": {
         "name": "harmbench",
-        "description": ("HarmBench Dataset - Standardized evaluation of automated red teaming"),
-        "category": "safety",
+        "description": ("HarmBench Dataset - Standardized harmful behavior evaluation benchmark"),
+        "category": "ai_safety_harm",
         "config_required": False,
         "available_configs": None,
     },
     "adv_bench": {
         "name": "adv_bench",
-        "description": "AdvBench Dataset - Adversarial benchmark for language models",
-        "category": "adversarial",
+        "description": "AdvBench Dataset - Adversarial attack evaluation (jailbreak resistance)",
+        "category": "ai_safety_harm",
         "config_required": False,
         "available_configs": None,
     },
     "many_shot_jailbreaking": {
         "name": "many_shot_jailbreaking",
-        "description": ("Many - shot Jailbreaking Dataset - Context length exploitation prompts"),
-        "category": "jailbreaking",
+        "description": ("Many-shot Jailbreaking Dataset - Multi-shot jailbreaking attack patterns"),
+        "category": "jailbreaking_attacks",
         "config_required": False,
         "available_configs": None,
     },
     "decoding_trust_stereotypes": {
         "name": "decoding_trust_stereotypes",
-        "description": "Decoding Trust Stereotypes Dataset - Bias evaluation prompts",
-        "category": "bias",
+        "description": "Decoding Trust Stereotypes Dataset - Stereotype detection and bias evaluation",
+        "category": "bias_fairness",
         "config_required": False,
         "available_configs": None,
     },
     "xstest": {
         "name": "xstest",
-        "description": "XSTest Dataset - Cross - domain safety testing",
-        "category": "safety",
+        "description": "XSTest Dataset - Exaggerated safety testing and over-refusal detection",
+        "category": "jailbreaking_attacks",
         "config_required": False,
         "available_configs": None,
     },
     "pku_safe_rlhf": {
         "name": "pku_safe_rlhf",
-        "description": ("PKU - SafeRLHF Dataset - Safe reinforcement learning from human feedback"),
-        "category": "safety",
+        "description": ("PKU-SafeRLHF Dataset - Safety-oriented reinforcement learning evaluation"),
+        "category": "ai_safety_harm",
         "config_required": False,
         "available_configs": None,
     },
     "wmdp": {
         "name": "wmdp",
-        "description": "WMDP Dataset - Weapons of mass destruction prompts",
-        "category": "dangerous",
+        "description": "WMDP Dataset - Weapons of mass destruction knowledge evaluation (cyber/bio/chem)",
+        "category": "domain_reasoning",
         "config_required": False,
         "available_configs": None,
     },
     "forbidden_questions": {
         "name": "forbidden_questions",
-        "description": ("Forbidden Questions Dataset - Questions models should refuse to answer"),
-        "category": "safety",
+        "description": ("Forbidden Questions Dataset - Testing responses to prohibited queries"),
+        "category": "ai_safety_harm",
         "config_required": False,
         "available_configs": None,
     },
     "seclists_bias_testing": {
         "name": "seclists_bias_testing",
-        "description": ("SecLists Bias Testing Dataset - Security - focused bias evaluation"),
-        "category": "bias",
+        "description": ("SecLists Bias Testing Dataset - Systematic bias testing with demographic variations"),
+        "category": "bias_fairness",
         "config_required": False,
         "available_configs": None,
     },
+    # ViolentUTF Specialized Datasets (8 total)
+    "legalbench_professional": {
+        "name": "legalbench_professional",
+        "description": "LegalBench Professional Dataset - Legal reasoning and regulatory compliance evaluation",
+        "category": "security_compliance",
+        "config_required": True,
+        "available_configs": {
+            "complexity": ["basic", "intermediate", "advanced"],
+            "domain": ["corporate", "criminal", "civil", "constitutional"],
+        },
+    },
+    "docmath_mathematical": {
+        "name": "docmath_mathematical",
+        "description": "DocMath Mathematical Dataset - Document-based mathematical reasoning and problem solving",
+        "category": "domain_reasoning",
+        "config_required": True,
+        "available_configs": {
+            "difficulty": ["elementary", "intermediate", "advanced"],
+            "topic": ["algebra", "geometry", "calculus", "statistics"],
+        },
+    },
+    "graphwalk_spatial": {
+        "name": "graphwalk_spatial",
+        "description": "GraphWalk Spatial Dataset - Spatial reasoning and graph traversal evaluation",
+        "category": "spatial",
+        "config_required": True,
+        "available_configs": {
+            "complexity": ["simple", "medium", "complex"],
+            "graph_type": ["tree", "directed", "undirected", "weighted"],
+        },
+    },
+    "acpbench_planning": {
+        "name": "acpbench_planning",
+        "description": "ACPBench Planning Dataset - Automated planning and meta-evaluation capabilities",
+        "category": "domain_reasoning",
+        "config_required": True,
+        "available_configs": {
+            "scenario_type": ["logistics", "blocks_world", "transportation", "scheduling"],
+            "difficulty": ["easy", "medium", "hard"],
+        },
+    },
+    "ollgen1_cognitive": {
+        "name": "ollgen1_cognitive",
+        "description": "OllaGen1 Cognitive Dataset - Cognitive and behavioral assessment scenarios",
+        "category": "cognitive_behavioral",
+        "config_required": True,
+        "available_configs": {
+            "assessment_type": ["reasoning", "memory", "attention", "problem_solving"],
+            "complexity": ["basic", "intermediate", "advanced"],
+        },
+    },
+    "confaide_privacy": {
+        "name": "confaide_privacy",
+        "description": "ConfAIde Privacy Dataset - Privacy evaluation using Contextual Integrity Theory",
+        "category": "privacy_contextual",
+        "config_required": True,
+        "available_configs": {
+            "tier": ["basic", "contextual", "nuanced", "advanced"],
+            "privacy_type": ["personal", "sensitive", "protected", "confidential"],
+        },
+    },
+    "judgelm_evaluation": {
+        "name": "judgelm_evaluation",
+        "description": "JudgeLM Evaluation Dataset - Meta-evaluation and judgment assessment capabilities",
+        "category": "cognitive_behavioral",
+        "config_required": True,
+        "available_configs": {
+            "judgment_type": ["quality", "safety", "helpfulness", "accuracy"],
+            "domain": ["general", "specialized", "technical", "creative"],
+        },
+    },
+    "mathbench_reasoning": {
+        "name": "mathbench_reasoning",
+        "description": "MathBench Reasoning Dataset - Advanced mathematical reasoning and proof validation",
+        "category": "domain_reasoning",
+        "config_required": True,
+        "available_configs": {
+            "proof_type": ["algebraic", "geometric", "logical", "computational"],
+            "difficulty": ["undergraduate", "graduate", "research"],
+        },
+    },
 }
+
+# Name mapping system for backward compatibility (Issue #239)
+DATASET_NAME_MAPPINGS = {
+    "legalbench_reasoning": "legalbench_professional",
+    "docmath_evaluation": "docmath_mathematical",
+    "graphwalk_reasoning": "graphwalk_spatial",
+    "acpbench_reasoning": "acpbench_planning",
+    # ViolentUTF native datasets - create name mappings only (not full definitions)
+    # These map old names to current names for backward compatibility
+}
+
+
+def _get_dataset_with_mapping(dataset_name: str) -> Optional[Dict[str, Any]]:
+    """Get dataset info, checking both original and mapped names."""
+    # First try the original name
+    if dataset_name in NATIVE_DATASET_TYPES:
+        return NATIVE_DATASET_TYPES[dataset_name]
+
+    # Then try the mapped name
+    mapped_name = DATASET_NAME_MAPPINGS.get(dataset_name)
+    if mapped_name and mapped_name in NATIVE_DATASET_TYPES:
+        # Return a copy with the requested name for backward compatibility
+        dataset_info = NATIVE_DATASET_TYPES[mapped_name].copy()
+        dataset_info["name"] = dataset_name  # Use the old name in response
+        dataset_info["mapped_to"] = mapped_name  # Indicate mapping
+        return dataset_info
+
+    return None
+
+
+def _create_safe_dataset_copy(
+    dataset_info: Dict[str, Any], additional_fields: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """Create a safe copy of dataset info that avoids unhashable type errors."""
+    safe_dataset = {}
+    # Essential fields that we need to preserve
+    essential_fields = ["name", "description", "category", "config_required"]
+
+    # Copy essential fields safely
+    for field in essential_fields:
+        if field in dataset_info:
+            value = dataset_info[field]
+            # Ensure strings are properly handled
+            if isinstance(value, str):
+                safe_dataset[field] = value
+            elif value is not None:
+                safe_dataset[field] = str(value)
+            else:
+                safe_dataset[field] = dataset_info.get(field, "")
+
+    # Handle available_configs with special care
+    if "available_configs" in dataset_info:
+        configs = dataset_info["available_configs"]
+        try:
+            # Try to serialize it to test for unhashable types
+            import json
+
+            json.dumps(configs)
+            safe_dataset["available_configs"] = configs
+        except (TypeError, ValueError):
+            # If it can't be serialized, simplify it
+            logger.warning(
+                "Simplifying non-serializable available_configs for dataset %s", dataset_info.get("name", "unknown")
+            )
+            if isinstance(configs, dict):
+                # Create a simplified version with only string/number values
+                simplified_configs = {}
+                for key, value in configs.items():
+                    try:
+                        json.dumps(value)
+                        simplified_configs[str(key)] = value
+                    except (TypeError, ValueError):
+                        simplified_configs[str(key)] = str(value) if value is not None else None
+                safe_dataset["available_configs"] = simplified_configs
+            else:
+                safe_dataset["available_configs"] = None
+
+    # Add any additional fields
+    if additional_fields:
+        for key, value in additional_fields.items():
+            safe_dataset[key] = value
+
+    return safe_dataset
+
+
+def _get_all_datasets_with_mappings() -> List[Dict[str, Any]]:
+    """Get all datasets including both original and mapped names."""
+    all_datasets = []
+
+    try:
+        # Add all original datasets
+        try:
+            for dataset_name, dataset_info in NATIVE_DATASET_TYPES.items():
+                # Ensure we're working with a proper dictionary
+                if isinstance(dataset_info, dict):
+                    try:
+                        safe_dataset = _create_safe_dataset_copy(dataset_info)
+                        all_datasets.append(safe_dataset)
+                    except Exception as dataset_error:
+                        logger.warning("Failed to process dataset %s: %s", dataset_name, dataset_error)
+                        # Create minimal fallback entry
+                        fallback_dataset = {
+                            "name": dataset_name,
+                            "description": "Dataset processing error",
+                            "category": "unknown",
+                            "config_required": False,
+                            "available_configs": None,
+                        }
+                        all_datasets.append(fallback_dataset)
+                else:
+                    logger.warning("Skipping non-dict dataset_info for %s: %s", dataset_name, type(dataset_info))
+        except Exception as iteration_error:
+            logger.error("Error iterating over NATIVE_DATASET_TYPES: %s", iteration_error)
+
+        # Add mapped names as aliases
+        try:
+            for old_name, new_name in DATASET_NAME_MAPPINGS.items():
+                if new_name in NATIVE_DATASET_TYPES:
+                    original_dataset = NATIVE_DATASET_TYPES[new_name]
+                    if isinstance(original_dataset, dict):
+                        try:
+                            additional_fields = {"name": old_name, "mapped_to": new_name, "is_alias": True}
+                            mapped_dataset = _create_safe_dataset_copy(original_dataset, additional_fields)
+                            all_datasets.append(mapped_dataset)
+                        except Exception as mapping_error:
+                            logger.warning(
+                                "Failed to process mapped dataset %s->%s: %s", old_name, new_name, mapping_error
+                            )
+                    else:
+                        logger.warning(
+                            "Skipping non-dict original_dataset for mapping %s->%s: %s",
+                            old_name,
+                            new_name,
+                            type(original_dataset),
+                        )
+        except Exception as mapping_iteration_error:
+            logger.error("Error iterating over DATASET_NAME_MAPPINGS: %s", mapping_iteration_error)
+
+    except Exception as e:
+        logger.error("Error in _get_all_datasets_with_mappings: %s", e)
+        # Return a minimal fallback list to prevent complete failure
+        all_datasets = []
+
+    return all_datasets
 
 
 @router.get(
@@ -156,18 +627,17 @@ async def get_dataset_types(
         logger.info("User %s requested dataset types", current_user.username)
 
         dataset_types = []
-        for name, info in NATIVE_DATASET_TYPES.items():
+        # Get all datasets including name mappings for backward compatibility
+        all_datasets = _get_all_datasets_with_mappings()
+
+        for info in all_datasets:
             # Safely construct DatasetType with valid schema fields only
             dataset_type = DatasetType(
-                name=str(info.get("name", name)),
+                name=str(info.get("name", "")),
                 description=str(info.get("description", "")),
                 category=str(info.get("category", "unknown")),
                 config_required=bool(info.get("config_required", False)),
-                available_configs=(
-                    cast(Optional[Dict[str, List[str]]], info.get("available_configs"))
-                    if isinstance(info.get("available_configs"), dict)
-                    else None
-                ),
+                available_configs=_convert_configs_to_strings(info.get("available_configs")),
             )
             dataset_types.append(dataset_type)
 
@@ -193,7 +663,7 @@ async def get_datasets(
         memory_count = 0
 
         # Get datasets from DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         datasets_data = db_manager.list_datasets()
 
         for dataset_data in datasets_data:
@@ -467,7 +937,7 @@ async def create_dataset(
         }
 
         # Create dataset in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         prompts_text = [p.value for p in prompts]
 
         # Create dataset and get the actual ID from DuckDB
@@ -539,7 +1009,7 @@ async def transform_dataset(
         logger.info("User %s transforming dataset: %s", user_id, dataset_id)
 
         # Find original dataset in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         original_dataset = db_manager.get_dataset(dataset_id)
 
         if not original_dataset:
@@ -752,7 +1222,7 @@ async def delete_dataset(
 
         # Delete from DuckDB storage
         if delete_from_session:
-            db_manager = get_duckdb_manager(user_id)
+            db_manager = get_sqlite_manager(user_id)
             if db_manager.get_dataset(dataset_id):
                 db_manager.delete_dataset(dataset_id)
                 deleted_from_session = True
@@ -793,19 +1263,184 @@ async def delete_dataset(
         raise HTTPException(status_code=500, detail=f"Failed to delete dataset: {str(e)}") from e
 
 
+# Helper functions for ViolentUTF dataset support
+def _is_violentutf_dataset(dataset_type: str) -> bool:
+    """Check if dataset is a ViolentUTF native dataset."""
+    return dataset_type in VIOLENTUTF_NATIVE_DATASETS
+
+
+def _get_violentutf_dataset_info(dataset_type: str) -> Optional[Dict[str, object]]:
+    """Get ViolentUTF dataset information."""
+    return VIOLENTUTF_NATIVE_DATASETS.get(dataset_type)
+
+
+async def _load_violentutf_dataset_with_manifest(
+    dataset_type: str, config: Dict[str, object], limit: Optional[int] = None
+) -> List[str]:
+    """Load ViolentUTF dataset using manifest file for split file discovery."""
+    try:
+        dataset_info = _get_violentutf_dataset_info(dataset_type)
+        if not dataset_info:
+            logger.warning("ViolentUTF dataset type '%s' not found", dataset_type)
+            return []
+
+        file_info = dataset_info.get("file_info", {})
+        manifest_file = file_info.get("manifest_file")
+        source_pattern = file_info.get("source_pattern")  # Will be used for actual file discovery
+
+        logger.info(
+            "Loading ViolentUTF dataset %s with manifest: %s (pattern: %s)", dataset_type, manifest_file, source_pattern
+        )
+
+        # For now, return mock data since actual files may not exist
+        # In production, this would:
+        # 1. Check if manifest file exists
+        # 2. Read manifest to get actual file locations
+        # 3. Load and parse split files
+        # 4. Aggregate data according to configuration
+
+        mock_prompts = []
+        total_expected = file_info.get("total_scenarios", file_info.get("total_prompts", 1000))
+
+        # Generate mock prompts based on dataset type and configuration
+        if dataset_type == "ollegen1_cognitive":
+            question_types = config.get("question_types", ["WCP", "WHO"])
+            scenario_limit = config.get("scenario_limit", 1000)
+            if scenario_limit == "all":
+                scenario_limit = min(total_expected, 10000)  # Reasonable limit for demo
+            elif isinstance(scenario_limit, int):
+                scenario_limit = min(scenario_limit, total_expected)
+            else:
+                scenario_limit = 1000
+
+            for i in range(min(scenario_limit, limit or 1000)):
+                q_type = question_types[i % len(question_types)]
+                mock_prompts.append(
+                    f"[OllaGen1-{q_type}] Cognitive behavioral security scenario {i+1}: "
+                    f"Evaluate the security compliance implications of this workplace situation."
+                )
+
+        elif dataset_type == "garak_redteaming":
+            attack_types = config.get("attack_types", ["DAN", "jailbreak"])
+            severity_levels = config.get("severity_levels", ["medium", "high"])
+
+            for i in range(min(1000, limit or 500)):
+                attack_type = attack_types[i % len(attack_types)]
+                severity = severity_levels[i % len(severity_levels)]
+                mock_prompts.append(
+                    f"[Garak-{attack_type}-{severity}] Red team prompt {i+1}: "
+                    f"Test the security boundaries of this AI system."
+                )
+
+        elif dataset_type == "docmath_evaluation":
+            # Use actual DocMath converter integration
+            try:
+                from app.services.docmath_service import DocMathService
+
+                # DocMath service available for future use
+                DocMathService()
+
+                # Extract configuration parameters
+                complexity_tiers = config.get("complexity_tiers", ["simpshort", "simplong", "compshort", "complong"])
+
+                # For demo purposes, generate questions based on tiers
+                questions_per_tier = min((limit or 300) // len(complexity_tiers), 100)
+
+                for tier in complexity_tiers:
+                    for i in range(questions_per_tier):
+                        # Create mathematical reasoning questions based on tier
+                        if tier == "simpshort":
+                            question = "What is 15 + 27? Show your work."
+                        elif tier == "simplong":
+                            question = (
+                                "A store sells apples for $2.50 per pound. If Sarah buys 3.5 pounds "
+                                "of apples and pays with a $10 bill, how much change should she receive?"
+                            )
+                        elif tier == "compshort":
+                            question = "Solve the equation: 3x + 7 = 22. Show all steps."
+                        else:  # complong
+                            question = (
+                                "A rectangular swimming pool is 25 meters long and 15 meters wide. "
+                                "The pool has a depth of 1.5 meters at the shallow end and 3 meters "
+                                "at the deep end, with a linear slope between the two ends. "
+                                "Calculate the total volume of water the pool can hold."
+                            )
+
+                        mock_prompts.append(f"[DocMath-{tier}] Mathematical reasoning problem {i+1}: {question}")
+
+                        if len(mock_prompts) >= (limit or 300):
+                            break
+
+                    if len(mock_prompts) >= (limit or 300):
+                        break
+
+                logger.info(
+                    "Generated %d DocMath evaluation questions across %d complexity tiers",
+                    len(mock_prompts),
+                    len(complexity_tiers),
+                )
+
+            except ImportError as e:
+                logger.warning("DocMath service not available, falling back to generic questions: %s", e)
+                # Fallback to generic reasoning questions
+                for i in range(min(500, limit or 300)):
+                    mock_prompts.append(
+                        f"[DocMath] Mathematical reasoning task {i+1}: "
+                        f"Analyze and provide a comprehensive solution to this mathematical problem."
+                    )
+
+        elif dataset_type in ["legalbench_reasoning", "acpbench_reasoning"]:
+            for i in range(min(500, limit or 300)):
+                domain = dataset_type.split("_")[0].title()
+                mock_prompts.append(
+                    f"[{domain}] Reasoning task {i+1}: "
+                    f"Analyze and provide a comprehensive solution to this problem."
+                )
+
+        elif dataset_type in ["confaide_privacy", "judgebench_evaluation"]:
+            for i in range(min(500, limit or 300)):
+                domain = dataset_type.split("_")[0].title()
+                mock_prompts.append(
+                    f"[{domain}] Evaluation scenario {i+1}: "
+                    f"Assess the privacy/evaluation implications of this situation."
+                )
+
+        else:
+            # Generic fallback
+            for i in range(min(100, limit or 50)):
+                mock_prompts.append(
+                    f"[{dataset_type}] Sample prompt {i+1}: "
+                    f"This is a sample prompt from the {dataset_type} dataset."
+                )
+
+        logger.info("Generated %d mock prompts for ViolentUTF dataset %s", len(mock_prompts), dataset_type)
+        return mock_prompts
+
+    except Exception as e:
+        logger.error("Error loading ViolentUTF dataset %s: %s", dataset_type, e)
+        return []
+
+
 # Helper function for loading real PyRIT datasets
 async def _load_real_pyrit_dataset(
     dataset_type: str, config: Dict[str, object], limit: Optional[int] = None
 ) -> List[str]:
-    """Enhanced PyRIT dataset loading with streaming support and configurable limits."""
+    """Enhanced dataset loading with support for both PyRIT and ViolentUTF datasets."""
     try:
-
         logger.info(
-            "Loading real PyRIT dataset: %s with config: %s, limit: %s",
+            "Loading dataset: %s with config: %s, limit: %s",
             dataset_type,
             config,
             limit,
         )
+
+        # Check if this is a ViolentUTF dataset
+        if _is_violentutf_dataset(dataset_type):
+            logger.info("Loading ViolentUTF dataset: %s", dataset_type)
+            return await _load_violentutf_dataset_with_manifest(dataset_type, config, limit)
+
+        # Original PyRIT dataset loading
+        logger.info("Loading PyRIT dataset: %s", dataset_type)
 
         # Import configuration system
         from app.core.dataset_config import validate_dataset_config
@@ -826,7 +1461,7 @@ async def _load_real_pyrit_dataset(
     except (OSError, AttributeError, ValueError, ImportError) as e:
         # Handle database errors, memory access issues, data parsing errors,
         # and import issues
-        logger.error("Error loading PyRIT dataset '%s': %s", dataset_type, e)
+        logger.error("Error loading dataset '%s': %s", dataset_type, e)
         return []
 
 
@@ -959,7 +1594,6 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
     """Get real PyRIT memory datasets instead of mock data."""
     try:
 
-        import os
         import sqlite3
 
         # CentralMemory already imported at top
@@ -1165,6 +1799,95 @@ async def _get_real_memory_datasets(user_id: str) -> List[MemoryDatasetInfo]:
         return []
 
 
+@router.get(
+    "/categories",
+    summary="Get available dataset categories",
+)
+async def get_dataset_categories(
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Get list of available dataset categories with their datasets."""
+    try:
+        logger.info("User %s requested dataset categories", current_user.username)
+
+        # Group datasets by category
+        categories_with_datasets = {}
+        all_datasets = _get_all_datasets_with_mappings()
+
+        # Initialize all categories
+        for category_id, category_info in DATASET_CATEGORIES.items():
+            categories_with_datasets[category_id] = {
+                "name": category_info["name"],
+                "description": category_info["description"],
+                "datasets": [],
+            }
+
+        # Add datasets to their respective categories
+        for dataset_info in all_datasets:
+            try:
+                # Ensure dataset_info is a proper dictionary
+                if not isinstance(dataset_info, dict):
+                    logger.warning("Skipping non-dict dataset_info in categories: %s", type(dataset_info))
+                    continue
+
+                category_id = dataset_info.get("category", "unknown")
+
+                # Ensure category_id is a string (hashable)
+                if not isinstance(category_id, str):
+                    logger.warning("Invalid category_id type: %s, converting to string", type(category_id))
+                    category_id = str(category_id)
+
+                if category_id not in categories_with_datasets:
+                    # Handle unknown categories
+                    categories_with_datasets[category_id] = {
+                        "name": category_id.title().replace("_", " "),
+                        "description": f"Datasets in the {category_id} category",
+                        "datasets": [],
+                    }
+
+                # Safely extract dataset information
+                dataset_name = dataset_info.get("name", "Unknown Dataset")
+                if not isinstance(dataset_name, str):
+                    dataset_name = str(dataset_name) if dataset_name is not None else "Unknown Dataset"
+
+                dataset_desc = dataset_info.get("description", "No description available")
+                if not isinstance(dataset_desc, str):
+                    dataset_desc = str(dataset_desc) if dataset_desc is not None else "No description available"
+
+                # Handle available_configs safely to avoid unhashable type errors
+                available_configs = dataset_info.get("available_configs")
+                # Ensure available_configs is JSON-serializable (no dict keys that are unhashable)
+                if available_configs is not None:
+                    try:
+                        # Test if it's JSON serializable
+                        import json
+
+                        json.dumps(available_configs)
+                    except (TypeError, ValueError) as json_error:
+                        logger.warning(
+                            "Non-serializable available_configs for dataset %s: %s", dataset_name, json_error
+                        )
+                        available_configs = None
+
+                categories_with_datasets[category_id]["datasets"].append(
+                    {
+                        "name": dataset_name,
+                        "description": dataset_desc,
+                        "config_required": bool(dataset_info.get("config_required", False)),
+                        "available_configs": available_configs,
+                    }
+                )
+            except Exception as e:
+                logger.error("Error processing dataset_info in categories: %s, dataset: %s", e, dataset_info)
+                continue
+
+        return {"categories": categories_with_datasets, "total_categories": len(categories_with_datasets)}
+
+    except Exception as e:
+        logger.error("Error getting dataset categories: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to get dataset categories: {str(e)}") from e
+
+
 @router.get("/{dataset_id}", response_model=DatasetInfo, summary="Get dataset details")
 async def get_dataset(dataset_id: str, current_user: User = Depends(get_current_user)) -> DatasetInfo:
     """Get detailed information about a specific dataset."""
@@ -1174,7 +1897,7 @@ async def get_dataset(dataset_id: str, current_user: User = Depends(get_current_
         logger.info("User %s requested dataset details: %s", user_id, dataset_id)
 
         # Find dataset in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         dataset_data = db_manager.get_dataset(dataset_id)
         if dataset_data:
             # Convert prompts from DuckDB format to API format
@@ -1231,7 +1954,7 @@ async def update_dataset(
         logger.info("User %s updating dataset: %s", user_id, dataset_id)
 
         # Find dataset in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         dataset_data = db_manager.get_dataset(dataset_id)
 
         if not dataset_data:
@@ -1310,3 +2033,170 @@ async def update_dataset(
         # and database errors
         logger.error("Error updating dataset %s: %s", dataset_id, e)
         raise HTTPException(status_code=500, detail=f"Failed to update dataset: {str(e)}") from e
+
+
+# --- GraphWalk Converter Endpoints (Issue #128) ---
+
+
+@router.post(
+    "/convert/graphwalk",
+    response_model=GraphWalkConvertResponse,
+    summary="Convert GraphWalk dataset with massive file handling",
+)
+async def convert_graphwalk_dataset(
+    request: GraphWalkConvertRequest,
+    current_user: User = Depends(get_current_user),
+) -> GraphWalkConvertResponse:
+    """Convert GraphWalk dataset with support for massive 480MB files.
+
+    Supports both synchronous and asynchronous conversion modes:
+    - Async mode (default): Returns job ID for progress tracking
+    - Sync mode: Returns conversion result directly (for smaller files)
+    """
+    try:
+        user_id = current_user.username
+        logger.info(
+            "User %s converting GraphWalk dataset: %s (async: %s)", user_id, request.file_path, request.async_conversion
+        )
+
+        # Validate file exists
+        if not os.path.exists(request.file_path):
+            raise HTTPException(status_code=400, detail=f"GraphWalk dataset file not found: {request.file_path}")
+
+        # Get file analysis for response
+        from app.core.converters.graphwalk_converter import GraphWalkConverter
+
+        converter = GraphWalkConverter(request.config)
+        file_info = converter.analyze_massive_file(request.file_path)
+
+        if request.async_conversion:
+            # Start async conversion job
+            job_id = await graphwalk_service.convert_dataset_async(file_path=request.file_path, config=request.config)
+
+            return GraphWalkConvertResponse(
+                success=True,
+                job_id=job_id,
+                result=None,
+                message=f"GraphWalk conversion job {job_id} started successfully",
+                file_info=file_info,
+            )
+        else:
+            # Synchronous conversion (for smaller files)
+            if file_info.size_mb > 100:  # Limit sync conversion to 100MB
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"File too large for synchronous conversion ({file_info.size_mb:.1f}MB). "
+                    f"Use async_conversion=true for files larger than 100MB.",
+                )
+
+            # Run conversion synchronously
+            result = converter.convert(request.file_path)
+
+            return GraphWalkConvertResponse(
+                success=True,
+                job_id=None,
+                result=result,
+                message=f"GraphWalk conversion completed - {len(result.questions)} questions converted",
+                file_info=file_info,
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error converting GraphWalk dataset %s: %s", request.file_path, e)
+        raise HTTPException(status_code=500, detail=f"Failed to convert GraphWalk dataset: {str(e)}") from e
+
+
+@router.get(
+    "/convert/graphwalk/jobs/{job_id}",
+    response_model=GraphWalkJobStatusResponse,
+    summary="Get GraphWalk conversion job status",
+)
+async def get_graphwalk_job_status(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+) -> GraphWalkJobStatusResponse:
+    """Get status and progress of a GraphWalk conversion job."""
+    try:
+        user_id = current_user.username
+        logger.info("User %s checking GraphWalk job status: %s", user_id, job_id)
+
+        job_status = graphwalk_service.get_job_status(job_id)
+        if not job_status:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+
+        # Convert timestamps for response
+        created_at = None
+        updated_at = None
+
+        if "created_at" in job_status and job_status["created_at"]:
+            created_at = datetime.fromtimestamp(job_status["created_at"])
+
+        if "updated_at" in job_status and job_status["updated_at"]:
+            updated_at = datetime.fromtimestamp(job_status["updated_at"])
+
+        return GraphWalkJobStatusResponse(
+            job_id=job_id,
+            status=job_status.get("status", "unknown"),
+            progress=job_status.get("progress", 0.0),
+            file_path=job_status.get("file_path"),
+            result=job_status.get("result"),
+            error=job_status.get("error"),
+            created_at=created_at,
+            updated_at=updated_at,
+            processing_stats=None,  # Could be added from job metadata
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error getting GraphWalk job status %s: %s", job_id, e)
+        raise HTTPException(status_code=500, detail=f"Failed to get job status: {str(e)}") from e
+
+
+@router.delete(
+    "/convert/graphwalk/jobs/{job_id}",
+    summary="Cancel GraphWalk conversion job",
+)
+async def cancel_graphwalk_job(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Cancel a running GraphWalk conversion job."""
+    try:
+        user_id = current_user.username
+        logger.info("User %s cancelling GraphWalk job: %s", user_id, job_id)
+
+        cancelled = graphwalk_service.cancel_job(job_id)
+        if not cancelled:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found or not cancellable")
+
+        return {"success": True, "message": f"Job {job_id} cancelled successfully", "cancelled_at": datetime.utcnow()}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Error cancelling GraphWalk job %s: %s", job_id, e)
+        raise HTTPException(status_code=500, detail=f"Failed to cancel job: {str(e)}") from e
+
+
+@router.get(
+    "/convert/graphwalk/jobs",
+    summary="List active GraphWalk conversion jobs",
+)
+async def list_graphwalk_jobs(
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """List all active GraphWalk conversion jobs for monitoring."""
+    try:
+        user_id = current_user.username
+        logger.info("User %s listing GraphWalk jobs", user_id)
+
+        active_jobs = graphwalk_service.list_active_jobs()
+        statistics = graphwalk_service.get_processing_statistics()
+
+        return {"active_jobs": active_jobs, "statistics": statistics, "total_jobs": len(active_jobs)}
+
+    except Exception as e:
+        logger.error("Error listing GraphWalk jobs: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to list jobs: {str(e)}") from e

@@ -5,8 +5,10 @@
 # This file is part of ViolentUTF - An AI Red Teaming Platform.
 # See LICENSE file in the project root for license information.
 
+
 """
-Summary script to check scorer executions in the database
+Summary script to check scorer executions in the database.
+
 """
 
 import json
@@ -38,8 +40,8 @@ API_ENDPOINTS = {
 }
 
 
-def create_jwt_token():
-    """Create a JWT token directly"""
+def create_jwt_token() -> None:
+    """Create a JWT token directly."""
     if not JWT_SECRET_KEY:
         return None
 
@@ -62,8 +64,8 @@ def create_jwt_token():
         return None
 
 
-def get_auth_headers():
-    """Get authentication headers for API requests"""
+def get_auth_headers() -> None:
+    """Get authentication headers for API requests."""
     token = create_jwt_token()
     if not token:
         return None
@@ -81,8 +83,8 @@ def get_auth_headers():
     return headers
 
 
-def make_api_request(url, headers):
-    """Make API request with error handling"""
+def make_api_request(url, headers) -> None:
+    """Make API request with error handling."""
     try:
         response = requests.get(url, headers=headers, timeout=30)
         if response.status_code == 200:
@@ -92,8 +94,8 @@ def make_api_request(url, headers):
         return None
 
 
-def main():
-    """Main function to summarize scorer executions"""
+def main() -> None:
+    """Execute summarize scorer executions."""
     print("🚀 ViolentUTF Scorer Execution Database Summary")
     print("=" * 60)
 

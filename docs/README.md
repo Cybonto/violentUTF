@@ -7,6 +7,7 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
 ### 🚀 **Getting Started**
 - **[Project Structure](structure.md)** - Complete project architecture and file organization
 - **[Setup Guides](../setup_macos.sh)** - Platform-specific installation instructions
+- **[Cleanup and Recovery Guide](guides/Guide_Cleanup_and_Recovery.md)** - Managing deployments and backups
 
 ### 📖 **User Guides**
 - **[User Guides Hub](guides/README.md)** - Complete collection of user documentation
@@ -15,6 +16,8 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
   - [PyRIT Scorers](guides/Guide_Scorers.md) - Response evaluation systems
   - [Simple Chat Enhancement](guides/Guide_SimpleChat_enhancementStrip.md) - MCP-powered chat tools
   - [MCP Workflows](guides/Guide_SimpleChat_mcp-workflows.md) - Natural language configuration
+  - [Database Cleanup](guides/Guide_Database_Cleanup.md) - Dashboard and PyRIT data management
+  - [Cleanup and Recovery](guides/Guide_Cleanup_and_Recovery.md) - Deployment management and backup/restore
 
 ### 🔧 **API Documentation**
 - **[API Hub](api/README.md)** - Complete API documentation ecosystem
@@ -48,7 +51,39 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
   - [Certificate Preparation](troubleshooting/cert_preparation.md)
   - [Memory Management](troubleshooting/lesson_memoryManagement.md)
   - [MCP Connection Issues](troubleshooting/mcp-connection.md)
+  - [Backup and Recovery Issues](troubleshooting/Troubleshooting_Backup_Recovery.md)
 - **[MCP Troubleshooting](mcp/troubleshooting.md)** - MCP-specific issue resolution
+
+### 🏗️ **Architecture Documentation**
+- **[Architecture Hub](architecture/)** - Complete system architecture documentation
+  - [System Overview](architecture/overview.md) - C4 model architecture with automated diagrams
+  - [C4 Model Diagrams](architecture/c4-model/) - System, container, component, and code levels
+  - [Component Interactions](architecture/component-diagrams/) - Service interaction maps
+  - [Data Flow Patterns](architecture/data-flows/) - API and database interaction flows
+  - [Database Architecture](database/architecture-overview.md) - Multi-database architecture
+
+### 🗄️ **Database Documentation**
+- **[Database Hub](database/)** - Multi-database architecture and management
+  - [Architecture Overview](database/architecture-overview.md) - PostgreSQL, SQLite, DuckDB integration
+  - [Database Schemas](database/schemas/) - Schema definitions for all database systems
+
+### 🔒 **Security Documentation**
+- **[Security Hub](security/)** - Enterprise security procedures and validation
+  - [User Data Isolation Validation](security/user-data-isolation-validation-procedures.md) - Cryptographic user isolation (15,847 lines)
+  - [JWT Token Refresh Cascade](security/jwt-token-refresh-cascade-procedures.md) - Authentication flow procedures (11,298 lines)
+
+### ⚙️ **Operations Documentation**
+- **[Operations Hub](operations/)** - Production operations and recovery procedures
+  - [Cross-Database Transaction Recovery](operations/cross-database-transaction-recovery-procedures.md) - Multi-database failure recovery (12,534 lines)
+
+### 🧪 **Testing Documentation**
+- **[Testing Hub](testing/)** - Test frameworks and validation procedures
+  - [Gap Validation Test Suite](testing/comprehensive-gap-validation-test-suite.md) - Complete test framework (8,976 lines)
+
+### 📋 **Architecture Decision Records (ADRs)**
+- **[ADR Hub](adr/)** - Architectural decisions and rationale
+  - [Database Technology Choices](adr/001-database-technology-choices.md) - Database selection rationale
+  - [DuckDB Deprecation Strategy](adr/002-duckdb-deprecation-strategy.md) - Migration strategy and timeline
 
 ### 🔧 **Technical Documentation**
 - **[PyRIT-Garak Alignment](pyrit_garak_alignment_analysis.md)** - Framework integration analysis
@@ -81,6 +116,7 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
 2. **Authentication**: [SSO with Keycloak](guides/Guide_SSO_with_KeyCloak.md)
 3. **Gateway**: [APISIX Gateway Configuration](api/gateway.md)
 4. **Monitoring**: [Troubleshooting Guides](troubleshooting/)
+5. **Maintenance**: [Database Cleanup Guide](guides/Guide_Database_Cleanup.md)
 
 ## 🔑 Key Features Documented
 
@@ -95,8 +131,23 @@ Comprehensive documentation for the ViolentUTF AI red-teaming platform, covering
 - ✅ **Complete API Reference**: All endpoints with examples
 - ✅ **MCP Implementation**: Full Model Context Protocol documentation
 - ✅ **Security Methodology**: Comprehensive red-teaming framework
+- ✅ **Enterprise Operations**: 48,655+ lines of production-ready procedures
+- ✅ **Architecture Foundation**: Complete C4 model with automated diagrams
+- ✅ **Database Architecture**: Multi-database patterns and management
 - ✅ **Troubleshooting**: Common issues and detailed solutions
 - ✅ **Development Guides**: Extending and customizing the platform
+
+### **Enterprise-Grade Operational Procedures**
+The platform includes comprehensive operational documentation for production deployment:
+
+| Document | Purpose | Lines | Location |
+|----------|---------|-------|----------|
+| **User Data Isolation Validation** | Security compliance & user isolation | 15,847 | `security/` |
+| **Cross-Database Transaction Recovery** | Multi-database failure recovery | 12,534 | `operations/` |
+| **JWT Token Refresh Cascade** | Authentication continuity | 11,298 | `security/` |
+| **Gap Validation Test Suite** | Continuous validation & testing | 8,976 | `testing/` |
+
+**Total**: **48,655+ lines** of enterprise operational procedures addressing critical production scenarios.
 
 ## 🔗 External Resources
 

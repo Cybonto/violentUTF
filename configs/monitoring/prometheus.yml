@@ -1,0 +1,96 @@
+# Prometheus Configuration for ViolentUTF Database Performance Monitoring
+# Issue #270 - Comprehensive monitoring infrastructure
+
+global:
+  scrape_interval: 10s  # Match database metrics collection frequency
+  evaluation_interval: 10s
+  external_labels:
+    cluster: 'violentutf'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+      timeout: 10s
+
+# Load alert rules
+rule_files:
+  - '/etc/prometheus/alert_rules.yaml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Grafana monitoring
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+        labels:
+          service: 'grafana'
+
+  # AlertManager monitoring
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+        labels:
+          service: 'alertmanager'
+
+  # ViolentUTF FastAPI backend - database metrics endpoint
+  - job_name: 'violentutf-api'
+    static_configs:
+      - targets: ['violentutf-api:8000']
+        labels:
+          service: 'violentutf-api'
+          component: 'backend'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # PostgreSQL exporter (optional - requires postgres-exporter service)
+  - job_name: 'postgres-keycloak'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'postgresql'
+          database: 'keycloak'
+          db_type: 'postgresql'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # APISIX API Gateway metrics
+  - job_name: 'apisix'
+    static_configs:
+      - targets: ['apisix:9091']
+        labels:
+          service: 'apisix'
+          component: 'gateway'
+    scrape_interval: 15s
+    scrape_timeout: 5s
+
+# Storage configuration
+storage:
+  tsdb:
+    retention:
+      time: 90d  # Keep detailed metrics for 90 days
+      size: 10GB  # Limit storage to 10GB
+    out_of_order_time_window: 5m
+
+# Remote write (optional - for long-term storage)
+# remote_write:
+#   - url: "http://long-term-storage:9009/api/v1/push"
+#     queue_config:
+#       capacity: 10000
+#       max_shards: 5
+#       min_shards: 1
+#       max_samples_per_send: 1000
+#       batch_send_deadline: 5s
+#       min_backoff: 30ms
+#       max_backoff: 100ms

@@ -10,9 +10,10 @@ from typing import Any, Dict, List, Optional, Self
 from urllib.parse import urljoin
 
 import httpx
+from mcp.types import Tool
+
 from app.core.config import settings
 from app.mcp.auth import MCPAuthHandler
-from mcp.types import Tool
 
 logger = logging.getLogger(__name__)
 

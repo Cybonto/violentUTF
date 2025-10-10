@@ -176,6 +176,12 @@ create_route "2013" "/api/v1/orchestrators*" "[\"GET\", \"POST\", \"PUT\", \"DEL
 # APISIX admin endpoints for IronUTF
 create_route "2014" "/api/v1/apisix-admin*" "[\"GET\", \"POST\", \"PUT\", \"DELETE\"]" "APISIX admin endpoints for IronUTF"
 
+# Dashboard endpoints
+create_route "2016" "/api/v1/dashboard/*" "[\"GET\", \"POST\", \"PUT\", \"DELETE\"]" "Dashboard data endpoints"
+
+# Reports and template management endpoints
+create_route "2017" "/api/v1/reports/*" "[\"GET\", \"POST\", \"PUT\", \"DELETE\"]" "Reports and template management endpoints"
+
 # MCP (Model Context Protocol) endpoints
 create_route "3001" "/mcp/*" "[\"GET\", \"POST\", \"OPTIONS\"]" "MCP Server-Sent Events endpoint"
 
@@ -270,6 +276,8 @@ echo "  - Scorers: http://localhost:9080/api/v1/scorers*"
 echo "  - Red-teaming: http://localhost:9080/api/v1/redteam*"
 echo "  - Orchestrators: http://localhost:9080/api/v1/orchestrators*"
 echo "  - APISIX Admin: http://localhost:9080/api/v1/apisix-admin*"
+echo "  - Dashboard: http://localhost:9080/api/v1/dashboard/*"
+echo "  - Reports: http://localhost:9080/api/v1/reports/*"
 echo "  - MCP SSE: http://localhost:9080/mcp/*"
 echo "  - MCP OAuth: http://localhost:9080/mcp/oauth/*"
 echo

@@ -1,0 +1,230 @@
+{
+  "start_time": "2025-10-05T14:19:43.480742",
+  "backup_tested": "backups/duckdb_backup_20251005_140928",
+  "tests_passed": 5,
+  "tests_failed": 0,
+  "test_details": [
+    {
+      "test": "backup_structure",
+      "success": true,
+      "message": "Backup structure valid"
+    },
+    {
+      "test": "load_manifest",
+      "success": true,
+      "manifest": {
+        "backup_timestamp": "2025-10-05T18:09:30Z",
+        "source_directories": [
+          "app_data/violentutf",
+          "violentutf/app_data/violentutf"
+        ],
+        "files_backed_up": 15,
+        "total_size_bytes": 3330048,
+        "backup_location": "/Users/tamnguyen/Documents/GitHub/violentUTF/backups/duckdb_backup_20251005_140928",
+        "checksums_verified": true
+      }
+    },
+    {
+      "test": "verify_checksums",
+      "success": true,
+      "results": {
+        "total_files": 15,
+        "verified": 15,
+        "failed": 0,
+        "missing": 0,
+        "failures": []
+      }
+    },
+    {
+      "test": "full_restoration",
+      "success": true,
+      "results": {
+        "files_restored": 15,
+        "files_failed": 0,
+        "failures": []
+      }
+    },
+    {
+      "test": "database_accessibility",
+      "success": true,
+      "results": {
+        "total_databases": 15,
+        "accessible": 15,
+        "inaccessible": 0,
+        "test_details": [
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_user_0.db",
+            "readable": true,
+            "tables": [],
+            "query_success": false,
+            "error": null
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_user_4.db",
+            "readable": true,
+            "tables": [],
+            "query_success": false,
+            "error": null
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_32a1ddee5ff4c1ddd93473e7c743ae73a9d5d1ce0821804d07f8350a4615fa6b.db",
+            "readable": true,
+            "tables": [
+              "converters",
+              "datasets",
+              "dataset_prompts",
+              "generators",
+              "scorers",
+              "user_sessions"
+            ],
+            "query_success": true,
+            "error": null,
+            "sample_count": 0
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_user_1.db",
+            "readable": true,
+            "tables": [],
+            "query_success": false,
+            "error": null
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_4b86a6816c3792498f7c91fa9d26440f46c35a46e7d7c1ea5e7e3e979ca77508.db",
+            "readable": true,
+            "tables": [
+              "converters",
+              "datasets",
+              "dataset_prompts",
+              "generators",
+              "scorers",
+              "user_sessions"
+            ],
+            "query_success": true,
+            "error": null,
+            "sample_count": 0
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_02eb5dc8eed38312221ccc5538addb496ed572b5061964240c91cad400104741.db",
+            "readable": true,
+            "tables": [
+              "converters",
+              "datasets",
+              "dataset_prompts",
+              "generators",
+              "scorers",
+              "user_sessions"
+            ],
+            "query_success": true,
+            "error": null,
+            "sample_count": 0
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_afd9462a6d15de425f995c945bb34c9b69e69bd4df8c97abc882688cd7733631.db",
+            "readable": true,
+            "tables": [
+              "converters",
+              "datasets",
+              "dataset_prompts",
+              "generators",
+              "scorers",
+              "user_sessions"
+            ],
+            "query_success": true,
+            "error": null,
+            "sample_count": 0
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_test_user.db",
+            "readable": true,
+            "tables": [],
+            "query_success": false,
+            "error": null
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_validation_test_user.db",
+            "readable": true,
+            "tables": [],
+            "query_success": false,
+            "error": null
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_7138db03e4d80761606f3b04a9cb3fdaacf1a28663667f4d880f318a808df9e1.db",
+            "readable": true,
+            "tables": [
+              "converters",
+              "datasets",
+              "dataset_prompts",
+              "generators",
+              "scorers",
+              "user_sessions"
+            ],
+            "query_success": true,
+            "error": null,
+            "sample_count": 0
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_52b3abd05f12fac326db7986bf74655495bd7de517723090b734494eb76dc568.db",
+            "readable": true,
+            "tables": [
+              "converters",
+              "datasets",
+              "dataset_prompts",
+              "generators",
+              "scorers",
+              "user_sessions"
+            ],
+            "query_success": true,
+            "error": null,
+            "sample_count": 0
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_7328ec2b0390c13f2a9c2c0070cf85da835bbff3c59dadb472d03f5238aaf745.db",
+            "readable": true,
+            "tables": [
+              "converters",
+              "datasets",
+              "dataset_prompts",
+              "generators",
+              "scorers",
+              "user_sessions"
+            ],
+            "query_success": true,
+            "error": null,
+            "sample_count": 0
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_user_2.db",
+            "readable": true,
+            "tables": [],
+            "query_success": false,
+            "error": null
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/app_data/violentutf/pyrit_memory_user_3.db",
+            "readable": true,
+            "tables": [],
+            "query_success": false,
+            "error": null
+          },
+          {
+            "file": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/duckdb_restore_test_20251005_141943/violentutf/app_data/violentutf/pyrit_memory_ffb7bf7b42c725c17f1e2b1c6ebc9df67678d75552527bddc4eb02188b89505d.db",
+            "readable": true,
+            "tables": [
+              "converters",
+              "datasets",
+              "dataset_prompts",
+              "generators",
+              "scorers",
+              "user_sessions"
+            ],
+            "query_success": true,
+            "error": null,
+            "sample_count": 0
+          }
+        ]
+      }
+    }
+  ],
+  "end_time": "2025-10-05T14:19:43.606048",
+  "all_tests_passed": true
+}

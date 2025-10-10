@@ -1,0 +1,9 @@
+dataclasses
+# Configuration Management Tool Dependencies - Issue #266
+deepdiff>=7.0.0
+jinja2>=3.1.0
+jsonschema>=4.17.0
+pathlib
+PyYAML>=6.0.0
+sqlite3
+typing-extensions

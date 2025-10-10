@@ -1,0 +1,93 @@
+@startuml Authentication Flow
+!theme cerulean-outline
+skinparam backgroundColor white
+skinparam sequenceMessageAlign center
+
+title ViolentUTF Authentication and Authorization Flow
+
+actor "Security Researcher" as User
+participant "Streamlit\nDashboard" as Streamlit
+participant "APISIX\nGateway" as APISIX
+participant "Keycloak\nSSO" as Keycloak
+participant "PostgreSQL\nDB" as PostgresDB
+participant "FastAPI\nBackend" as FastAPI
+participant "SQLite\nDB" as SQLiteDB
+participant "DuckDB\nStores" as DuckDB
+
+== Initial Access ==
+User -> Streamlit: Access dashboard\n(http://localhost:8501)
+Streamlit -> Streamlit: Check local session
+alt No valid session
+    Streamlit -> User: Redirect to Keycloak SSO
+    User -> Keycloak: Login with credentials
+    Keycloak -> PostgresDB: Validate credentials
+    PostgresDB -> Keycloak: User data
+    Keycloak -> Keycloak: Generate access token
+    Keycloak -> User: Return JWT access token
+    User -> Streamlit: Return with token
+    Streamlit -> Streamlit: Store JWT in session
+    Streamlit -> Streamlit: Create API token from JWT
+end
+
+== API Request Authentication ==
+User -> Streamlit: Initiate security test
+Streamlit -> APISIX: API request with JWT\n(X-Auth-Token header)
+APISIX -> APISIX: Check route configuration
+APISIX -> APISIX: Apply rate limiting
+APISIX -> APISIX: Validate JWT format
+
+alt Valid JWT
+    APISIX -> FastAPI: Forward request\n(X-API-Gateway: APISIX)
+    FastAPI -> FastAPI: Extract JWT from headers
+    FastAPI -> FastAPI: Verify JWT signature
+    FastAPI -> FastAPI: Check token expiration
+
+    alt Token valid
+        FastAPI -> FastAPI: Extract user context
+        FastAPI -> SQLiteDB: Store/update user session
+        FastAPI -> DuckDB: Initialize user database
+        note right of DuckDB: User-specific DuckDB created\nbased on salted username hash
+        FastAPI -> FastAPI: Process business logic
+        FastAPI -> Streamlit: Success response
+    else Token invalid/expired
+        FastAPI -> Streamlit: 401 Unauthorized
+        Streamlit -> User: Redirect to re-authenticate
+    end
+else Invalid JWT
+    APISIX -> Streamlit: 401 Unauthorized
+    Streamlit -> User: Show authentication error
+end
+
+== MCP Client Authentication ==
+participant "MCP Client\n(Claude/VS Code)" as MCPClient
+participant "MCP Server" as MCPServer
+
+MCPClient -> APISIX: MCP request\n(JSON-RPC 2.0/SSE)
+APISIX -> MCPServer: Forward to /mcp/sse
+MCPServer -> MCPServer: OAuth 2.0 PKCE flow
+MCPServer -> Keycloak: Validate OAuth token
+Keycloak -> PostgresDB: Check user permissions
+PostgresDB -> Keycloak: User role data
+Keycloak -> MCPServer: Token validation result
+MCPServer -> FastAPI: Service call with user context
+FastAPI -> DuckDB: Access user-specific data
+DuckDB -> FastAPI: User configuration
+FastAPI -> MCPServer: Response data
+MCPServer -> MCPClient: MCP tool result
+
+== Token Refresh ==
+Streamlit -> Streamlit: Check token expiration
+alt Token near expiry
+    Streamlit -> Keycloak: Refresh token request
+    Keycloak -> PostgresDB: Validate refresh token
+    PostgresDB -> Keycloak: Token validity
+    Keycloak -> Streamlit: New access token
+    Streamlit -> Streamlit: Update stored token
+end
+
+== Database Access Patterns ==
+note over DuckDB: User-specific databases\nFilename: pyrit_memory_{salted_hash}.db
+note over SQLiteDB: Shared application data\nSession management, API keys
+note over PostgresDB: Keycloak identity data\nUsers, roles, permissions
+
+@enduml

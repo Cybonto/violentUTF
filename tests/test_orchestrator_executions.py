@@ -16,7 +16,16 @@ import requests
 # Load environment variables
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load from project root instead of system paths
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env_path = os.path.join(project_root, ".env")
+if os.path.exists(env_path):
+    load_dotenv(env_path)
+else:
+    # Try alternative paths
+    alt_env_path = os.path.join(project_root, "ai-tokens.env")
+    if os.path.exists(alt_env_path):
+        load_dotenv(alt_env_path)
 
 # Configuration
 API_BASE_URL = os.getenv("VIOLENTUTF_API_URL", "http://localhost:9080").rstrip("/api").rstrip("/")

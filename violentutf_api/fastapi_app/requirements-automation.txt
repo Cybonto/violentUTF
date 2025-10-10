@@ -1,0 +1,23 @@
+bandit>=1.7.5                 # Security analysis
+
+# Utilities
+click>=8.1.0                  # CLI interface
+
+# Security scanning
+detect-secrets>=1.4.0         # Credential detection
+jsonschema>=4.17.0            # JSON validation
+
+# Network-based discovery
+python-nmap>=0.7.1            # Network scanning
+# Automated Discovery Dependencies for ViolentUTF Issue #279
+# Container-based discovery
+python-on-whales>=0.65.0     # Docker container inspection
+rich>=13.0.0                  # Enhanced terminal output
+
+# Already included in main requirements.txt:
+# pyyaml>=6.0.2               # YAML parsing
+# sqlalchemy>=2.0.25          # Database ORM
+# pydantic>=2.0.0             # Data validation
+# alembic>=1.12.0             # Database migrations
+# pathlib (built-in)          # File system operations
+# ast (built-in)              # Code analysis

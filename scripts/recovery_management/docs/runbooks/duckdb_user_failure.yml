@@ -1,0 +1,57 @@
+database_type: duckdb
+last_updated: '2025-09-25T12:25:39.753331'
+pyrit_data_recovery:
+  extract_datasets: SELECT * FROM datasets
+  extract_generators: SELECT * FROM generators
+  extract_scorers: SELECT * FROM scorers
+  validate_schema: Check table structure integrity
+recovery_steps:
+- commands:
+  - ls -la ./app_data/violentutf/pyrit_memory_*.db
+  - 'python3 -c "import duckdb; [print(f''{f}: {duckdb.connect(f).execute("SELECT
+    COUNT(*) FROM information_schema.tables").fetchone()[0]} tables'') for f in glob.glob(''./app_data/violentutf/pyrit_memory_*.db'')]"'
+  description: List all user DuckDB files and assess status
+  estimated_time_minutes: 5
+  expected_result: List of user databases and their status
+  step_number: 1
+  title: Identify affected user databases
+- commands:
+  - mkdir -p backups/duckdb/corrupted/$(date +%Y%m%d_%H%M%S)
+  - cp ./app_data/violentutf/pyrit_memory_*.db backups/duckdb/corrupted/$(date +%Y%m%d_%H%M%S)/
+  description: Create backups before attempting recovery
+  estimated_time_minutes: 5
+  expected_result: Corrupted databases backed up
+  step_number: 2
+  title: Backup corrupted databases
+- commands:
+  - python3 scripts/recovery-management/extract_duckdb_data.py --all-users
+  - python3 scripts/recovery-management/validate_extracted_data.py
+  description: Extract recoverable data before recreation
+  estimated_time_minutes: 15
+  expected_result: Recoverable data extracted and validated
+  step_number: 3
+  title: Attempt data extraction from corrupted databases
+- commands:
+  - python3 scripts/recovery-management/recreate_user_databases.py --all
+  - python3 scripts/recovery-management/restore_extracted_data.py
+  description: Create new databases with proper PyRIT schema
+  estimated_time_minutes: 10
+  expected_result: Clean user databases created
+  step_number: 4
+  title: Recreate user databases with clean schema
+rpo_target: 1440
+rto_target: 30
+service: user_data
+severity: medium
+title: DuckDB User Database Recovery
+user_impact_assessment:
+  assess_criticality: Check user activity and data importance
+  identify_affected_users: ls -la ./app_data/violentutf/pyrit_memory_*.db
+  prioritize_recovery: Critical users first, then by data volume
+user_notification:
+  channels:
+  - Email
+  - In-app notification
+  - Recovery status page
+  template: User database recovery in progress
+  updates: Progress updates every 10 minutes

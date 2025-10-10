@@ -1,0 +1,134 @@
+@startuml API Data Flow
+!theme cerulean-outline
+skinparam backgroundColor white
+
+title ViolentUTF API Data Flow - Security Testing Operations
+
+actor "Security Researcher" as User
+participant "Streamlit\nDashboard" as Streamlit
+participant "APISIX\nGateway" as APISIX
+participant "FastAPI\nBackend" as FastAPI
+participant "PyRIT\nFramework" as PyRIT
+participant "Garak\nScanner" as Garak
+participant "DuckDB\nManager" as DuckDB
+participant "SQLite\nDB" as SQLite
+participant "File\nSystem" as FileSystem
+participant "AI Provider\n(OpenAI/Anthropic)" as AIProvider
+
+== Generator Configuration ==
+User -> Streamlit: Configure AI generator
+Streamlit -> APISIX: POST /api/v1/generators\n(JWT auth)
+APISIX -> FastAPI: Forward authenticated request
+FastAPI -> FastAPI: Validate generator parameters
+FastAPI -> DuckDB: Store generator config
+note right of DuckDB: Table: generators\nFields: id, name, type, parameters
+DuckDB -> FastAPI: Generator ID
+FastAPI -> SQLite: Log operation
+FastAPI -> APISIX: Generator created response
+APISIX -> Streamlit: Success with generator ID
+Streamlit -> User: Display generator status
+
+== Dataset Management ==
+User -> Streamlit: Load security dataset
+Streamlit -> APISIX: POST /api/v1/datasets
+APISIX -> FastAPI: Forward request
+FastAPI -> FileSystem: Read dataset file
+FileSystem -> FastAPI: Dataset content
+FastAPI -> DuckDB: Create dataset record
+note right of DuckDB: Table: datasets\nTable: dataset_prompts
+FastAPI -> DuckDB: Store prompts individually
+DuckDB -> FastAPI: Dataset ID
+FastAPI -> Streamlit: Dataset loaded confirmation
+
+== Scorer Configuration ==
+User -> Streamlit: Configure PyRIT scorer
+Streamlit -> APISIX: POST /api/v1/scorers
+APISIX -> FastAPI: Forward request
+FastAPI -> FastAPI: Validate scorer type
+FastAPI -> DuckDB: Store scorer config
+note right of DuckDB: Table: scorers\nFields: id, name, type, parameters
+FastAPI -> PyRIT: Initialize scorer instance
+PyRIT -> FastAPI: Scorer ready status
+FastAPI -> Streamlit: Scorer configured
+
+== Orchestrator Execution ==
+User -> Streamlit: Start security test
+Streamlit -> APISIX: POST /api/v1/orchestrators/execute
+APISIX -> FastAPI: Forward request
+FastAPI -> DuckDB: Load generator config
+FastAPI -> DuckDB: Load dataset prompts
+FastAPI -> DuckDB: Load scorer config
+FastAPI -> PyRIT: Create orchestrator instance
+
+PyRIT -> PyRIT: Initialize conversation memory
+note right of PyRIT: PyRIT creates internal\nDuckDB memory store
+
+loop For each test prompt
+    PyRIT -> DuckDB: Load next prompt
+    PyRIT -> AIProvider: Send test prompt
+    AIProvider -> PyRIT: AI response
+    PyRIT -> PyRIT: Apply scorers
+    PyRIT -> DuckDB: Store conversation turn
+    note right of DuckDB: PyRIT memory tables:\nconversations, prompt_request_responses
+    PyRIT -> FastAPI: Progress update
+    FastAPI -> Streamlit: Real-time progress
+end
+
+PyRIT -> PyRIT: Generate test results
+PyRIT -> DuckDB: Store final results
+FastAPI -> DuckDB: Update orchestrator status
+FastAPI -> SQLite: Log execution metrics
+FastAPI -> Streamlit: Test completion
+Streamlit -> User: Display results
+
+== Garak Vulnerability Scan ==
+User -> Streamlit: Run Garak scan
+Streamlit -> APISIX: POST /api/v1/garak/scan
+APISIX -> FastAPI: Forward request
+FastAPI -> FileSystem: Load Garak dataset
+FastAPI -> Garak: Initialize scanner
+Garak -> AIProvider: Execute vulnerability probes
+AIProvider -> Garak: Probe responses
+Garak -> Garak: Analyze vulnerabilities
+Garak -> FileSystem: Generate scan report
+Garak -> FastAPI: Scan results
+FastAPI -> DuckDB: Store scan metadata
+FastAPI -> Streamlit: Scan complete with report
+Streamlit -> User: Display vulnerability report
+
+== Database Interaction Patterns ==
+
+group DuckDB Operations (Per User)
+    note over DuckDB: User-specific database:\npyrit_memory_{user_hash}.db
+    note over DuckDB: Tables: generators, datasets,\nscorers, converters, user_sessions
+    note over DuckDB: PyRIT memory integration
+end
+
+group SQLite Operations (Shared)
+    note over SQLite: Application database:\nviolentutf_api.db
+    note over SQLite: Tables: api_keys, sessions,\naudit_logs, system_config
+end
+
+group File System Operations
+    note over FileSystem: Configuration files:\nYAML/JSON parameters
+    note over FileSystem: Dataset files:\nGarak datasets, custom prompts
+    note over FileSystem: Report outputs:\nTest results, scan reports
+end
+
+== Error Handling and Logging ==
+alt Database Error
+    DuckDB -> FastAPI: Connection/query error
+    FastAPI -> SQLite: Log error details
+    FastAPI -> Streamlit: Error response
+    Streamlit -> User: Display error message
+end
+
+alt AI Provider Error
+    AIProvider -> PyRIT: API error/timeout
+    PyRIT -> FastAPI: Execution error
+    FastAPI -> DuckDB: Update status to 'failed'
+    FastAPI -> SQLite: Log error
+    FastAPI -> Streamlit: Failure notification
+end
+
+@enduml

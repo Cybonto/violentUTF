@@ -133,6 +133,10 @@ temp/
 *.backup*
 *backup*
 *_backup*
+!scripts/backup_management/
+!tests/test_issue_267_*backup*.py
+!docs/development/issue_267/
+!**/ISSUE_267_development_report.md
 *.bak*
 *bak*
 .DS_Store
@@ -161,3 +165,7 @@ mypy_sample.txt
 _backup
 /node_modules
 bandit-report.json
+.vitutf
+/docs/course
+/.venv_pyrit_test
+*.test_database at 0x1055a84c0>

@@ -6,6 +6,8 @@
 
 """Main API router that includes all sub-routers."""
 
+from fastapi import APIRouter
+
 from app.api.endpoints import (
     apisix_admin,
     auth,
@@ -14,6 +16,7 @@ from app.api.endpoints import (
     database,
     datasets,
     debug_jwt,
+    dependencies,
     echo,
     files,
     generators,
@@ -23,8 +26,11 @@ from app.api.endpoints import (
     redteam,
     scorers,
     sessions,
+    validation,
 )
-from fastapi import APIRouter
+from app.api.v1 import assets, risk
+
+# from app.api.v1 import dashboard  # Disabled due to missing dependencies
 
 api_router = APIRouter()
 
@@ -61,3 +67,18 @@ api_router.include_router(orchestrators.router, prefix="/orchestrators", tags=["
 
 # APISIX admin endpoints for IronUTF plugin management
 api_router.include_router(apisix_admin.router)
+
+# Dataset validation endpoints (Issue #120)
+api_router.include_router(validation.router, prefix="/validation", tags=["validation"])
+
+# Asset management endpoints (Issue #280)
+api_router.include_router(assets.router, prefix="/assets", tags=["asset-management"])
+
+# Risk assessment endpoints (Issue #282)
+api_router.include_router(risk.router, prefix="/risk", tags=["risk-assessment"])
+
+# Dashboard endpoints (Issue #284) - Disabled due to missing dependencies
+# api_router.include_router(dashboard.router, prefix="/api/v1", tags=["dashboard"])
+
+# Dependency mapping endpoints (Issue #264)
+api_router.include_router(dependencies.router, prefix="/dependencies", tags=["dependencies"])

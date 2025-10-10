@@ -155,7 +155,7 @@ def api_request(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, obje
 
     try:
         logger.debug("Making %s request to %s through APISIX Gateway", method, url)
-        api_response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+        api_response = requests.request(method, url, headers=headers, timeout=30, **cast(Any, kwargs))
 
         if api_response.status_code == 200:
             return cast(Dict[str, object], api_response.json())
@@ -1216,6 +1216,7 @@ if quick_actions != "Select an action..." and user_input:
 
     if quick_actions in action_map:
         action_type, action_func = action_map[quick_actions]
+        action_func = cast(Any, action_func)  # Cast to make mypy understand it's callable
         with st.spinner(f"Running {quick_actions}..."):
             if "Test" in quick_actions:
                 result, error = action_func(user_input, action_type)

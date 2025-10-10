@@ -1,0 +1,84 @@
+name: Python Test Template
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to test'
+        required: true
+        type: string
+      os:
+        description: 'Operating system'
+        required: false
+        type: string
+        default: 'ubuntu-22.04'
+      test-path:
+        description: 'Path to tests'
+        required: false
+        type: string
+        default: 'tests/'
+
+jobs:
+  test:
+    name: Test Python ${{ inputs.python-version }} on ${{ inputs.os }}
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            violentutf/requirements.txt
+            violentutf_api/fastapi_app/requirements.txt
+
+      - name: Install system dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libpq-dev \
+            libssl-dev \
+            libffi-dev \
+            python3-dev
+
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install postgresql libpq
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install -r violentutf/requirements.txt
+          pip install -r violentutf_api/fastapi_app/requirements.txt
+          pip install pytest pytest-cov pytest-xdist pytest-timeout
+
+      - name: Run tests
+        run: |
+          pytest ${{ inputs.test-path }} -v --tb=short \
+            --cov=violentutf --cov=violentutf_api \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term \
+            --junit-xml=test-results.xml \
+            -n auto \
+            --timeout=300
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: test-results-${{ inputs.os }}-${{ inputs.python-version }}
+          path: |
+            test-results.xml
+            coverage.xml
+          retention-days: 7

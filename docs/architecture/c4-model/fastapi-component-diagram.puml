@@ -1,0 +1,111 @@
+@startuml FastAPI Backend Component Diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!include DEVICONS/python.puml
+
+LAYOUT_WITH_LEGEND()
+
+title FastAPI Backend - Component Diagram
+
+Container(apisix_gateway, "APISIX Gateway", "API Gateway", $sprite="python")
+Container(streamlit_app, "Streamlit App", "Web Interface", $sprite="python")
+Container(mcp_server, "MCP Server", "MCP Protocol", $sprite="python")
+
+System_Boundary(fastapi_boundary, "FastAPI Backend") {
+    Component(main_app, "FastAPI Main", "FastAPI", "Application entry point and middleware setup")
+
+    ComponentDb(api_router, "API Router", "FastAPI Router", "Routes all API endpoints")
+
+    ' API Endpoints
+    Component(auth_endpoint, "Auth Endpoints", "FastAPI Route", "Authentication and JWT management")
+    Component(generators_endpoint, "Generators Endpoints", "FastAPI Route", "Generator CRUD operations")
+    Component(orchestrators_endpoint, "Orchestrators Endpoints", "FastAPI Route", "Orchestrator management")
+    Component(datasets_endpoint, "Datasets Endpoints", "FastAPI Route", "Dataset configuration")
+    Component(scorers_endpoint, "Scorers Endpoints", "FastAPI Route", "Scorer management")
+    Component(health_endpoint, "Health Endpoints", "FastAPI Route", "Service health checks")
+    Component(database_endpoint, "Database Endpoints", "FastAPI Route", "Database operations")
+
+    ' Core Services
+    Component(auth_service, "Auth Service", "Python Module", "JWT validation and user context")
+    Component(config_service, "Config Service", "Python Module", "Application configuration")
+    Component(validation_service, "Validation Service", "Python Module", "Input validation and sanitization")
+    Component(error_handler, "Error Handler", "Python Module", "Global error handling")
+    Component(logging_service, "Logging Service", "Python Module", "Application logging")
+
+    ' Business Logic Services
+    Component(pyrit_service, "PyRIT Integration", "Python Service", "PyRIT orchestrator and scorer management")
+    Component(garak_service, "Garak Integration", "Python Service", "Garak scanner integration")
+    Component(generator_service, "Generator Service", "Python Service", "AI generator management")
+    Component(dataset_service, "Dataset Service", "Python Service", "Dataset management and loading")
+    Component(keycloak_service, "Keycloak Service", "Python Service", "Keycloak integration and verification")
+
+    ' Data Access Layer
+    Component(database_manager, "Database Manager", "SQLAlchemy", "SQLite database operations")
+    Component(duckdb_manager, "DuckDB Manager", "DuckDB Python", "Configuration and memory storage")
+    Component(file_manager, "File Manager", "Python Module", "File system operations")
+
+    ' Models and Schemas
+    Component(data_models, "Data Models", "SQLAlchemy", "Database entity models")
+    Component(api_schemas, "API Schemas", "Pydantic", "Request/response validation")
+}
+
+ContainerDb(sqlite_db, "SQLite Database", "Application data")
+ContainerDb(duckdb_stores, "DuckDB Stores", "PyRIT memory and config")
+Container(file_system, "File System", "Configuration files and logs")
+Container(pyrit_framework, "PyRIT Framework", "Security testing")
+Container(garak_scanner, "Garak Scanner", "Vulnerability scanning")
+Container(keycloak_sso, "Keycloak SSO", "Identity provider")
+
+' External requests
+Rel(apisix_gateway, main_app, "HTTP requests", "HTTP")
+Rel(streamlit_app, main_app, "API calls", "HTTP/REST")
+Rel(mcp_server, main_app, "Service calls", "HTTP/REST")
+
+' Main app flow
+Rel(main_app, api_router, "Routes requests")
+Rel(main_app, auth_service, "Authenticates")
+Rel(main_app, error_handler, "Handles errors")
+Rel(main_app, logging_service, "Logs events")
+
+' API routing
+Rel(api_router, auth_endpoint, "Routes /auth/*")
+Rel(api_router, generators_endpoint, "Routes /generators/*")
+Rel(api_router, orchestrators_endpoint, "Routes /orchestrators/*")
+Rel(api_router, datasets_endpoint, "Routes /datasets/*")
+Rel(api_router, scorers_endpoint, "Routes /scorers/*")
+Rel(api_router, health_endpoint, "Routes /health")
+Rel(api_router, database_endpoint, "Routes /database/*")
+
+' Endpoint dependencies
+Rel(auth_endpoint, auth_service, "Validates JWT")
+Rel(generators_endpoint, generator_service, "Manages generators")
+Rel(orchestrators_endpoint, pyrit_service, "Manages orchestrators")
+Rel(datasets_endpoint, dataset_service, "Manages datasets")
+Rel(scorers_endpoint, pyrit_service, "Manages scorers")
+Rel(database_endpoint, database_manager, "Database ops")
+
+' Service dependencies
+Rel(generator_service, duckdb_manager, "Stores config")
+Rel(dataset_service, duckdb_manager, "Stores datasets")
+Rel(pyrit_service, duckdb_manager, "Memory storage")
+Rel(auth_service, keycloak_service, "Verifies tokens")
+
+' Data access
+Rel(database_manager, sqlite_db, "CRUD operations", "SQLAlchemy")
+Rel(duckdb_manager, duckdb_stores, "Config storage", "DuckDB")
+Rel(file_manager, file_system, "File operations")
+
+' External integrations
+Rel(pyrit_service, pyrit_framework, "Orchestrates", "Python API")
+Rel(garak_service, garak_scanner, "Scans", "Python API")
+Rel(keycloak_service, keycloak_sso, "Validates", "HTTP/REST")
+
+' Cross-cutting concerns
+Rel(config_service, main_app, "Provides config")
+Rel(validation_service, api_schemas, "Validates input")
+Rel(data_models, database_manager, "Entity mapping")
+
+SHOW_LEGEND()
+
+@enduml

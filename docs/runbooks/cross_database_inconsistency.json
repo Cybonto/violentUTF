@@ -1,0 +1,28 @@
+{
+  "title": "Cross-Database Consistency Recovery",
+  "scope": "multi_database",
+  "rto_target": 20,
+  "severity": "high",
+  "last_updated": "2025-09-25T11:20:49.621302",
+  "dependency_analysis": {
+    "service_dependencies": {
+      "keycloak": "No dependencies",
+      "fastapi": "Depends on Keycloak",
+      "user_services": "Depends on Keycloak and FastAPI"
+    },
+    "data_dependencies": {
+      "user_sessions": "Keycloak \u2192 SQLite \u2192 DuckDB",
+      "authentication_flow": "PostgreSQL \u2192 API calls \u2192 User data"
+    }
+  },
+  "compensating_transactions": {
+    "user_data_mismatch": "Sync user data across all databases",
+    "session_inconsistency": "Rebuild sessions from authoritative source",
+    "orphaned_records": "Clean up orphaned data"
+  },
+  "consistency_validation": {
+    "user_count_check": "Compare user counts across databases",
+    "session_sync_check": "Validate session consistency",
+    "data_integrity_check": "Cross-reference critical data"
+  }
+}

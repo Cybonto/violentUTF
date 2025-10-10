@@ -117,7 +117,7 @@ def api_request(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, obje
 
     try:
         logger.debug("Making %s request to %s through APISIX Gateway", method, url)
-        response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+        response = requests.request(method, url, headers=headers, timeout=30, **kwargs)  # type: ignore[arg-type]
 
         if response.status_code == 200:
             return cast(Dict[str, object], response.json())
@@ -145,6 +145,7 @@ def api_request(method: str, url: str, **kwargs: Any) -> Optional[Dict[str, obje
                     fresh_headers = get_auth_headers()
                     if fresh_headers.get("Authorization"):
                         logger.info("Retrying request with refreshed token")
+                        # type: ignore[arg-type]
                         retry_response = requests.request(method, url, headers=fresh_headers, timeout=30, **kwargs)
                         if retry_response.status_code == 200:
                             st.success("🔄 Token refreshed successfully!")

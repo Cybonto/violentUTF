@@ -109,7 +109,7 @@ def api_request(method: str, url: str, **kwargs: object) -> Optional[Dict[str, o
 
     try:
         logger.debug("Making %s request to %s through APISIX Gateway", method, url)
-        response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+        response = requests.request(method, url, headers=headers, timeout=30, **kwargs)  # type: ignore[arg-type]
 
         if response.status_code in [200, 201]:
             return cast(Dict[str, object], response.json())

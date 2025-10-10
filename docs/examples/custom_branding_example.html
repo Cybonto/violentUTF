@@ -1,0 +1,1008 @@
+{% comment %}
+Custom Branding Template Example
+
+This template demonstrates comprehensive branding customization including:
+- Company logo integration and positioning
+- Custom color schemes and themes
+- Typography and font customization
+- Classification markings and security indicators
+- Corporate identity elements
+- Multi-brand support with theme switching
+
+Required Variables:
+- report_title (str): Title of the security report
+- company_name (str): Organization name
+- generation_date (str): ISO timestamp of report generation
+
+Branding Variables:
+- company_logo_url (str): URL or path to company logo
+- primary_color (str): Primary brand color (hex code)
+- secondary_color (str): Secondary brand color (hex code)
+- accent_color (str): Accent brand color (hex code)
+- brand_theme (str): Theme name: corporate, government, startup, enterprise
+- font_family (str): Custom font family
+- classification (str): Security classification level
+- watermark_text (str): Security watermark text
+- show_security_watermark (bool): Whether to show security watermark
+
+Advanced Branding:
+- brand_guidelines (dict): Comprehensive branding guidelines
+- corporate_colors (dict): Extended color palette
+- logo_variants (dict): Different logo variants for different contexts
+- typography_scale (dict): Custom typography hierarchy
+- layout_preferences (dict): Layout and spacing preferences
+
+Usage Example:
+```python
+from violentutf.utils.template_engine import TemplateEngine
+
+context = {
+    'report_title': 'Security Assessment Report',
+    'company_name': 'Acme Corporation',
+    'company_logo_url': '/assets/logos/acme-logo.png',
+    'primary_color': '#1e40af',
+    'secondary_color': '#3b82f6',
+    'accent_color': '#f59e0b',
+    'brand_theme': 'corporate',
+    'classification': 'CONFIDENTIAL',
+    'show_security_watermark': True,
+    'watermark_text': 'INTERNAL USE ONLY'
+}
+
+engine = TemplateEngine('violentutf/templates/')
+report = engine.render_template('custom_branding_example.html', context)
+```
+{% endcomment %}
+
+{% extends "base.html" %}
+
+{% block additional_css %}
+<style>
+    /* Dynamic CSS custom properties for branding */
+    :root {
+        /* Brand colors */
+        --brand-primary: {{ primary_color | default('#1e40af') }};
+        --brand-secondary: {{ secondary_color | default('#3b82f6') }};
+        --brand-accent: {{ accent_color | default('#f59e0b') }};
+        --brand-text: {{ text_color | default('#1f2937') }};
+        --brand-background: {{ background_color | default('#ffffff') }};
+
+        /* Theme-specific colors */
+        {% if brand_theme == 'government' %}
+            --brand-primary: #1e3a8a;
+            --brand-secondary: #3730a3;
+            --brand-accent: #dc2626;
+            --brand-gradient: linear-gradient(135deg, #1e3a8a, #3730a3);
+        {% elif brand_theme == 'startup' %}
+            --brand-primary: #7c3aed;
+            --brand-secondary: #a855f7;
+            --brand-accent: #06b6d4;
+            --brand-gradient: linear-gradient(135deg, #7c3aed, #a855f7);
+        {% elif brand_theme == 'enterprise' %}
+            --brand-primary: #374151;
+            --brand-secondary: #4b5563;
+            --brand-accent: #059669;
+            --brand-gradient: linear-gradient(135deg, #374151, #4b5563);
+        {% else %} {# corporate theme #}
+            --brand-primary: {{ primary_color | default('#1e40af') }};
+            --brand-secondary: {{ secondary_color | default('#3b82f6') }};
+            --brand-accent: {{ accent_color | default('#f59e0b') }};
+            --brand-gradient: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+        {% endif %}
+
+        /* Typography */
+        --brand-font-primary: {{ primary_font | default("'Inter', 'Segoe UI', system-ui, sans-serif") }};
+        --brand-font-secondary: {{ secondary_font | default("'Inter', 'Segoe UI', system-ui, sans-serif") }};
+        --brand-font-mono: {{ mono_font | default("'JetBrains Mono', 'Fira Code', monospace") }};
+
+        /* Layout spacing */
+        --brand-spacing-unit: {{ spacing_unit | default('8px') }};
+        --brand-border-radius: {{ border_radius | default('12px') }};
+        --brand-shadow: {{ shadow_style | default('0 4px 20px rgba(0,0,0,0.1)') }};
+    }
+
+    /* Custom branded report styling */
+    .branded-report {
+        font-family: var(--brand-font-primary);
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: var(--brand-background);
+        color: var(--brand-text);
+        line-height: 1.6;
+    }
+
+    /* Branded header with logo and company identity */
+    .branded-header {
+        background: var(--brand-gradient);
+        color: white;
+        padding: 40px;
+        border-radius: var(--brand-border-radius);
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--brand-shadow);
+    }
+
+    .branded-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="brand-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23brand-pattern)"/></svg>');
+        animation: float 20s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: rotate(0deg) translate(0, 0); }
+        50% { transform: rotate(180deg) translate(-20px, -20px); }
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 30px;
+        align-items: center;
+    }
+
+    .company-logo-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .company-logo {
+        max-height: 80px;
+        max-width: 200px;
+        object-fit: contain;
+        filter: brightness(0) invert(1);
+        transition: transform 0.3s ease;
+    }
+
+    .company-logo:hover {
+        transform: scale(1.05);
+    }
+
+    .logo-subtitle {
+        font-size: 0.9em;
+        opacity: 0.9;
+        text-align: center;
+        font-weight: 300;
+    }
+
+    .brand-header-text {
+        text-align: center;
+    }
+
+    .brand-title {
+        font-size: 3.2em;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        background: linear-gradient(45deg, #ffffff, #f0f9ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .brand-subtitle {
+        font-size: 1.4em;
+        font-weight: 300;
+        margin: 0 0 20px 0;
+        opacity: 0.95;
+    }
+
+    .brand-tagline {
+        font-size: 1em;
+        font-style: italic;
+        opacity: 0.8;
+        border-top: 1px solid rgba(255,255,255,0.3);
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+
+    .classification-section {
+        text-align: center;
+    }
+
+    .classification-badge {
+        background: rgba(255,255,255,0.2);
+        border: 2px solid rgba(255,255,255,0.4);
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 1.1em;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        backdrop-filter: blur(10px);
+        margin-bottom: 15px;
+        display: inline-block;
+    }
+
+    .classification-unclassified {
+        background: rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+        color: #f0fdf4;
+    }
+    .classification-internal {
+        background: rgba(251, 191, 36, 0.2);
+        border-color: rgba(251, 191, 36, 0.4);
+        color: #fffbeb;
+    }
+    .classification-confidential {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
+        color: #fef2f2;
+    }
+    .classification-secret {
+        background: rgba(147, 51, 234, 0.2);
+        border-color: rgba(147, 51, 234, 0.4);
+        color: #faf5ff;
+    }
+
+    .security-watermark {
+        position: absolute;
+        top: 50%;
+        right: -100px;
+        transform: translateY(-50%) rotate(-15deg);
+        font-size: 8em;
+        font-weight: 900;
+        opacity: 0.05;
+        color: white;
+        pointer-events: none;
+        user-select: none;
+        z-index: 1;
+    }
+
+    /* Report metadata with brand styling */
+    .branded-metadata {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border: 1px solid #e2e8f0;
+        border-radius: var(--brand-border-radius);
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: var(--brand-shadow);
+    }
+
+    .metadata-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .metadata-item {
+        background: white;
+        padding: 20px;
+        border-radius: calc(var(--brand-border-radius) / 1.5);
+        border-left: 4px solid var(--brand-primary);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .metadata-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .metadata-label {
+        font-size: 0.9em;
+        font-weight: 600;
+        color: var(--brand-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .metadata-value {
+        font-size: 1.1em;
+        font-weight: 500;
+        color: var(--brand-text);
+    }
+
+    /* Branded content sections */
+    .branded-section {
+        background: white;
+        border-radius: var(--brand-border-radius);
+        padding: 30px;
+        margin: 30px 0;
+        box-shadow: var(--brand-shadow);
+        border: 1px solid #e2e8f0;
+        position: relative;
+    }
+
+    .branded-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--brand-gradient);
+        border-radius: var(--brand-border-radius) var(--brand-border-radius) 0 0;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f5f9;
+    }
+
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--brand-gradient);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .section-title {
+        font-size: 2em;
+        font-weight: 700;
+        color: var(--brand-text);
+        margin: 0;
+        font-family: var(--brand-font-primary);
+    }
+
+    .section-subtitle {
+        font-size: 1.1em;
+        color: #64748b;
+        margin: 5px 0 0 0;
+        font-weight: 400;
+    }
+
+    /* Branded metrics cards */
+    .branded-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        margin: 25px 0;
+    }
+
+    .branded-metric-card {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: var(--brand-border-radius);
+        padding: 25px;
+        box-shadow: var(--brand-shadow);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .branded-metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--brand-gradient);
+    }
+
+    .branded-metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .metric-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .metric-card-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--brand-gradient);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .metric-card-title {
+        font-size: 1em;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+
+    .metric-card-value {
+        font-size: 3em;
+        font-weight: 800;
+        color: var(--brand-primary);
+        margin: 15px 0 10px 0;
+        line-height: 1;
+        font-family: var(--brand-font-mono);
+    }
+
+    .metric-card-description {
+        font-size: 0.95em;
+        color: #64748b;
+        line-height: 1.4;
+    }
+
+    /* Branded status indicators */
+    .branded-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: 2px solid;
+    }
+
+    .status-excellent {
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        color: #065f46;
+        border-color: #10b981;
+    }
+
+    .status-good {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        color: #14532d;
+        border-color: #22c55e;
+    }
+
+    .status-warning {
+        background: linear-gradient(135deg, #fffbeb, #fef3c7);
+        color: #92400e;
+        border-color: #f59e0b;
+    }
+
+    .status-critical {
+        background: linear-gradient(135deg, #fef2f2, #fecaca);
+        color: #991b1b;
+        border-color: #ef4444;
+    }
+
+    /* Branded tables */
+    .branded-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: var(--brand-border-radius);
+        overflow: hidden;
+        box-shadow: var(--brand-shadow);
+        border: 1px solid #e2e8f0;
+    }
+
+    .branded-table thead {
+        background: var(--brand-gradient);
+        color: white;
+    }
+
+    .branded-table th {
+        padding: 18px 20px;
+        font-weight: 600;
+        text-align: left;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .branded-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        color: var(--brand-text);
+    }
+
+    .branded-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .branded-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Branded footer */
+    .branded-footer {
+        background: var(--brand-gradient);
+        color: white;
+        padding: 40px;
+        border-radius: var(--brand-border-radius);
+        margin-top: 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .branded-footer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="footer-pattern" width="50" height="50" patternUnits="userSpaceOnUse"><polygon points="25,0 50,25 25,50 0,25" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23footer-pattern)"/></svg>');
+        pointer-events: none;
+    }
+
+    .footer-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .footer-logo {
+        max-height: 40px;
+        filter: brightness(0) invert(1);
+        margin-bottom: 15px;
+    }
+
+    .footer-title {
+        font-size: 1.5em;
+        font-weight: 600;
+        margin: 0 0 10px 0;
+    }
+
+    .footer-text {
+        opacity: 0.9;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .footer-meta {
+        font-size: 0.9em;
+        opacity: 0.8;
+        border-top: 1px solid rgba(255,255,255,0.2);
+        padding-top: 20px;
+        margin-top: 20px;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .branded-report {
+            padding: 10px;
+        }
+
+        .branded-header {
+            padding: 25px 20px;
+        }
+
+        .header-content {
+            grid-template-columns: 1fr;
+            text-align: center;
+            gap: 20px;
+        }
+
+        .brand-title {
+            font-size: 2.5em;
+        }
+
+        .branded-metrics-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .metadata-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Print styles */
+    @media print {
+        .branded-report {
+            max-width: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .branded-header,
+        .branded-footer {
+            background: none !important;
+            color: var(--brand-text) !important;
+            border: 2px solid var(--brand-primary) !important;
+        }
+
+        .security-watermark {
+            opacity: 0.1 !important;
+        }
+
+        .branded-section {
+            box-shadow: none !important;
+            border: 1px solid #e2e8f0 !important;
+            page-break-inside: avoid;
+        }
+    }
+
+    /* Theme variations */
+    .theme-dark {
+        --brand-background: #0f172a;
+        --brand-text: #f1f5f9;
+    }
+
+    .theme-light {
+        --brand-background: #ffffff;
+        --brand-text: #1f2937;
+    }
+
+    .theme-high-contrast {
+        --brand-primary: #000000;
+        --brand-secondary: #ffffff;
+        --brand-accent: #ffff00;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="branded-report {{ theme_class | default('theme-light') }}">
+    <!-- Branded Header with Company Identity -->
+    <header class="branded-header">
+        <div class="header-content">
+            <!-- Company Logo Section -->
+            <div class="company-logo-section">
+                {% if company_logo_url %}
+                <img src="{{ company_logo_url }}" alt="{{ company_name | default('Company') }} Logo" class="company-logo">
+                {% endif %}
+
+                {% if logo_subtitle %}
+                <div class="logo-subtitle">{{ logo_subtitle }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Brand Header Text -->
+            <div class="brand-header-text">
+                <h1 class="brand-title">{{ report_title | default("Security Assessment Report") }}</h1>
+
+                {% if company_name %}
+                <h2 class="brand-subtitle">{{ company_name }}</h2>
+                {% endif %}
+
+                {% if brand_tagline %}
+                <div class="brand-tagline">{{ brand_tagline }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Classification Section -->
+            <div class="classification-section">
+                {% if classification %}
+                <div class="classification-badge classification-{{ classification | lower | replace(' ', '') }}">
+                    {{ classification | upper }}
+                </div>
+                {% endif %}
+
+                {% if report_id %}
+                <div style="font-size: 0.9em; opacity: 0.8; margin-top: 10px;">
+                    <strong>Report ID:</strong> {{ report_id }}
+                </div>
+                {% endif %}
+
+                {% if generation_date %}
+                <div style="font-size: 0.9em; opacity: 0.8; margin-top: 5px;">
+                    {{ generation_date | format_timestamp }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Security Watermark -->
+        {% if show_security_watermark %}
+        <div class="security-watermark">{{ watermark_text | default('CONFIDENTIAL') }}</div>
+        {% endif %}
+    </header>
+
+    <!-- Report Metadata -->
+    <section class="branded-metadata">
+        <div class="metadata-grid">
+            <div class="metadata-item">
+                <div class="metadata-label">Assessment Scope</div>
+                <div class="metadata-value">{{ assessment_scope | default("Comprehensive Security Review") }}</div>
+            </div>
+
+            <div class="metadata-item">
+                <div class="metadata-label">Total Tests Executed</div>
+                <div class="metadata-value">{{ total_executions | default(0) | number_format }}</div>
+            </div>
+
+            <div class="metadata-item">
+                <div class="metadata-label">Assessment Period</div>
+                <div class="metadata-value">{{ assessment_period | default("Not specified") }}</div>
+            </div>
+
+            <div class="metadata-item">
+                <div class="metadata-label">Report Version</div>
+                <div class="metadata-value">{{ report_version | default("1.0") }}</div>
+            </div>
+
+            {% if assessor_name %}
+            <div class="metadata-item">
+                <div class="metadata-label">Lead Assessor</div>
+                <div class="metadata-value">{{ assessor_name }}</div>
+            </div>
+            {% endif %}
+
+            {% if next_assessment_date %}
+            <div class="metadata-item">
+                <div class="metadata-label">Next Assessment</div>
+                <div class="metadata-value">{{ next_assessment_date | format_timestamp }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Executive Summary -->
+    <section class="branded-section">
+        <div class="section-header">
+            <div class="section-icon">📊</div>
+            <div>
+                <h2 class="section-title">Executive Summary</h2>
+                <p class="section-subtitle">High-level overview of security assessment results</p>
+            </div>
+        </div>
+
+        <div class="branded-metrics-grid">
+            <div class="branded-metric-card">
+                <div class="metric-card-header">
+                    <div class="metric-card-icon">🔍</div>
+                    <h3 class="metric-card-title">Security Tests</h3>
+                </div>
+                <div class="metric-card-value">{{ total_executions | default(0) | number_format }}</div>
+                <p class="metric-card-description">Comprehensive security tests executed across all system components and attack vectors.</p>
+            </div>
+
+            <div class="branded-metric-card">
+                <div class="metric-card-header">
+                    <div class="metric-card-icon">⚠️</div>
+                    <h3 class="metric-card-title">Findings</h3>
+                </div>
+                <div class="metric-card-value">{{ total_violations | default(0) }}</div>
+                <p class="metric-card-description">Security violations and policy breaches identified during assessment.</p>
+            </div>
+
+            <div class="branded-metric-card">
+                <div class="metric-card-header">
+                    <div class="metric-card-icon">📈</div>
+                    <h3 class="metric-card-title">Success Rate</h3>
+                </div>
+                <div class="metric-card-value">{{ (100 - violation_rate) | round_float(1) }}%</div>
+                <p class="metric-card-description">Percentage of tests that passed without security violations.</p>
+            </div>
+
+            <div class="branded-metric-card">
+                <div class="metric-card-header">
+                    <div class="metric-card-icon">🛡️</div>
+                    <h3 class="metric-card-title">Risk Level</h3>
+                </div>
+                <div class="metric-card-value" style="font-size: 2.2em; text-transform: uppercase;">
+                    {{ overall_risk | default("Medium") }}
+                </div>
+                <p class="metric-card-description">Overall security risk assessment based on findings and system analysis.</p>
+            </div>
+        </div>
+
+        <!-- Risk Assessment Status -->
+        <div style="text-align: center; margin-top: 30px;">
+            {% set risk_level = overall_risk | default('medium') %}
+            {% if risk_level == 'critical' or risk_level == 'high' %}
+                <div class="branded-status status-critical">
+                    🚨 Immediate Action Required - {{ risk_level | title }} Risk Detected
+                </div>
+            {% elif risk_level == 'medium' %}
+                <div class="branded-status status-warning">
+                    ⚠️ Attention Needed - Medium Risk Level Identified
+                </div>
+            {% elif risk_level == 'low' or risk_level == 'minimal' %}
+                <div class="branded-status status-good">
+                    ✅ Good Security Posture - {{ risk_level | title }} Risk Level
+                </div>
+            {% else %}
+                <div class="branded-status status-warning">
+                    ❓ Assessment Incomplete - Risk Level Undetermined
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Security Findings -->
+    {% if security_findings and security_findings|length > 0 %}
+    <section class="branded-section">
+        <div class="section-header">
+            <div class="section-icon">🔍</div>
+            <div>
+                <h2 class="section-title">Security Findings</h2>
+                <p class="section-subtitle">{{ security_findings|length }} security issues identified and analyzed</p>
+            </div>
+        </div>
+
+        <table class="branded-table">
+            <thead>
+                <tr>
+                    <th>Security Finding</th>
+                    <th>Severity</th>
+                    <th>Occurrences</th>
+                    <th>Risk Score</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for finding in security_findings[:10] %}
+                <tr>
+                    <td>
+                        <strong style="color: var(--brand-primary);">{{ finding.name | default("Security Issue") }}</strong>
+                        {% if finding.description %}
+                        <br><small style="color: #64748b; line-height: 1.4;">{{ finding.description }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="branded-status status-{{ 'critical' if finding.severity == 'critical' else 'warning' if finding.severity in ['high', 'medium'] else 'good' }}">
+                            {{ finding.severity | default("Medium") | title }}
+                        </span>
+                    </td>
+                    <td><strong>{{ finding.count | default(1) }}</strong></td>
+                    <td>
+                        {% if finding.risk_score is defined %}
+                            <strong style="color: var(--brand-primary);">{{ finding.risk_score | round_float(1) }}/10</strong>
+                        {% else %}
+                            <span style="color: #64748b;">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if finding.remediated %}
+                            <span class="branded-status status-excellent">✅ Resolved</span>
+                        {% else %}
+                            <span class="branded-status status-warning">📋 Open</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% else %}
+    <section class="branded-section">
+        <div class="section-header">
+            <div class="section-icon">✅</div>
+            <div>
+                <h2 class="section-title">Security Status</h2>
+                <p class="section-subtitle">Comprehensive security assessment results</p>
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 5em; margin-bottom: 20px; color: var(--brand-accent);">🛡️</div>
+            <h3 style="color: var(--brand-primary); margin-bottom: 15px; font-size: 1.8em;">Excellent Security Posture</h3>
+            <p style="color: #64748b; font-size: 1.1em; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+                All {{ total_executions | default(0) | number_format }} security tests completed successfully without violations.
+                Your system demonstrates strong security controls and compliance with security policies.
+            </p>
+
+            <div style="margin-top: 30px;">
+                <div class="branded-status status-excellent">
+                    🏆 Zero Security Violations Detected
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Recommendations -->
+    {% if recommendations and recommendations|length > 0 %}
+    <section class="branded-section">
+        <div class="section-header">
+            <div class="section-icon">💡</div>
+            <div>
+                <h2 class="section-title">Strategic Recommendations</h2>
+                <p class="section-subtitle">{{ recommendations|length }} actionable recommendations to enhance security posture</p>
+            </div>
+        </div>
+
+        <div class="branded-metrics-grid">
+            {% for rec in recommendations %}
+            <div class="branded-metric-card">
+                <div class="metric-card-header">
+                    <div class="metric-card-icon">
+                        {% if rec.priority == 'critical' %}🚨
+                        {% elif rec.priority == 'high' %}⚠️
+                        {% elif rec.priority == 'medium' %}📋
+                        {% else %}💡
+                        {% endif %}
+                    </div>
+                    <h3 class="metric-card-title">{{ rec.priority | default("Medium") | title }} Priority</h3>
+                </div>
+
+                <h4 style="color: var(--brand-primary); margin: 0 0 15px 0; font-size: 1.3em;">{{ rec.title | default("Security Recommendation") }}</h4>
+
+                {% if rec.description %}
+                <p style="color: #64748b; margin-bottom: 20px; line-height: 1.5;">{{ rec.description }}</p>
+                {% endif %}
+
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; margin-top: auto;">
+                    {% if rec.timeline %}
+                    <div>
+                        <strong style="color: var(--brand-primary);">Timeline:</strong>
+                        <span style="color: #64748b;">{{ rec.timeline }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if rec.impact %}
+                    <div class="branded-status status-{{ rec.priority | default('warning') }}">
+                        {{ rec.impact[:25] }}{% if rec.impact|length > 25 %}...{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Branded Footer -->
+    <footer class="branded-footer">
+        <div class="footer-content">
+            {% if company_logo_url %}
+            <img src="{{ company_logo_url }}" alt="{{ company_name }} Logo" class="footer-logo">
+            {% endif %}
+
+            <h3 class="footer-title">{{ company_name | default("ViolentUTF") }} Security Assessment</h3>
+
+            <div class="footer-text">
+                <p>This comprehensive security assessment was conducted using advanced AI-powered testing methodologies
+                to evaluate system security posture, identify vulnerabilities, and provide actionable recommendations
+                for security enhancement.</p>
+
+                {% if custom_footer_text %}
+                <p>{{ custom_footer_text }}</p>
+                {% endif %}
+            </div>
+
+            <div class="footer-meta">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; text-align: left;">
+                    <div>
+                        <strong>Generated:</strong><br>
+                        {{ generation_date | format_timestamp | default("Unknown date") }}
+                    </div>
+
+                    {% if report_id %}
+                    <div>
+                        <strong>Report ID:</strong><br>
+                        {{ report_id }}
+                    </div>
+                    {% endif %}
+
+                    {% if classification %}
+                    <div>
+                        <strong>Classification:</strong><br>
+                        {{ classification | upper }}
+                    </div>
+                    {% endif %}
+
+                    <div>
+                        <strong>Platform:</strong><br>
+                        ViolentUTF AI Red Teaming
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); text-align: center;">
+                    <p style="margin: 0; font-size: 0.9em;">
+                        ⚠️ This report contains sensitive security information.
+                        Handle according to your organization's data classification and security policies.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+{% endblock %}

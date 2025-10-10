@@ -1,0 +1,113 @@
+@startuml MCP Server Component Diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!include DEVICONS/python.puml
+
+LAYOUT_WITH_LEGEND()
+
+title MCP Server - Component Diagram
+
+Container(apisix_gateway, "APISIX Gateway", "Routes MCP requests")
+Container(fastapi_backend, "FastAPI Backend", "Business logic services")
+Container(mcp_clients, "MCP Clients", "Claude Desktop, VS Code")
+
+System_Boundary(mcp_boundary, "MCP Server") {
+    Component(mcp_main, "MCP Main Server", "Python/asyncio", "Main MCP server entry point")
+
+    ' Transport Layer
+    Component(sse_transport, "SSE Transport", "Server-Sent Events", "JSON-RPC 2.0 over SSE transport")
+    Component(websocket_transport, "WebSocket Transport", "WebSocket", "Alternative transport (future)")
+
+    ' Protocol Layer
+    Component(jsonrpc_handler, "JSON-RPC Handler", "JSON-RPC 2.0", "Protocol message handling")
+    Component(message_router, "Message Router", "Python", "Routes messages to appropriate handlers")
+    Component(session_manager, "Session Manager", "Python", "Client session management")
+
+    ' Authentication & Authorization
+    Component(mcp_auth, "MCP Auth Handler", "Python", "JWT and OAuth 2.0 authentication")
+    Component(oauth_proxy, "OAuth 2.0 Proxy", "Python", "PKCE OAuth flow proxy")
+    Component(permission_manager, "Permission Manager", "Python", "Tool and resource access control")
+
+    ' Tool Interface (23+ tools)
+    Component(tool_registry, "Tool Registry", "Python", "Tool discovery and registration")
+    Component(tool_executor, "Tool Executor", "Python", "Tool execution and lifecycle management")
+    Component(generator_tools, "Generator Tools", "MCP Tools", "AI generator management tools")
+    Component(orchestrator_tools, "Orchestrator Tools", "MCP Tools", "PyRIT orchestrator tools")
+    Component(scorer_tools, "Scorer Tools", "MCP Tools", "Scoring and evaluation tools")
+    Component(dataset_tools, "Dataset Tools", "MCP Tools", "Dataset management tools")
+    Component(security_tools, "Security Tools", "MCP Tools", "Security testing and analysis tools")
+    Component(introspection_tools, "Introspection Tools", "MCP Tools", "System introspection tools")
+
+    ' Prompt Interface (12+ prompts)
+    Component(prompt_registry, "Prompt Registry", "Python", "Prompt template management")
+    Component(security_prompts, "Security Prompts", "MCP Prompts", "Security testing prompt templates")
+    Component(testing_prompts, "Testing Prompts", "MCP Prompts", "AI testing prompt templates")
+    Component(analysis_prompts, "Analysis Prompts", "MCP Prompts", "Result analysis prompts")
+
+    ' Resource Interface
+    Component(resource_manager, "Resource Manager", "Python", "Resource discovery and access")
+    Component(config_resources, "Config Resources", "MCP Resources", "Configuration file access")
+    Component(dataset_resources, "Dataset Resources", "MCP Resources", "Dataset file access")
+    Component(log_resources, "Log Resources", "MCP Resources", "Log file access")
+    Component(result_resources, "Result Resources", "MCP Resources", "Test result access")
+
+    ' Integration Layer
+    Component(fastapi_client, "FastAPI Client", "HTTP Client", "FastAPI backend integration")
+    Component(pyrit_adapter, "PyRIT Adapter", "Python", "Direct PyRIT framework integration")
+    Component(garak_adapter, "Garak Adapter", "Python", "Direct Garak scanner integration")
+}
+
+' External client connections
+Rel(mcp_clients, apisix_gateway, "MCP requests", "JSON-RPC 2.0/SSE")
+Rel(apisix_gateway, mcp_main, "Authenticated requests", "HTTP")
+
+' Transport layer
+Rel(mcp_main, sse_transport, "Default transport")
+Rel(mcp_main, websocket_transport, "Alternative transport")
+Rel(sse_transport, jsonrpc_handler, "JSON-RPC messages")
+Rel(websocket_transport, jsonrpc_handler, "JSON-RPC messages")
+
+' Protocol handling
+Rel(jsonrpc_handler, message_router, "Parsed messages")
+Rel(message_router, session_manager, "Session management")
+Rel(message_router, mcp_auth, "Authentication")
+
+' Authentication flow
+Rel(mcp_auth, oauth_proxy, "OAuth flows")
+Rel(mcp_auth, permission_manager, "Access control")
+
+' Tool management
+Rel(message_router, tool_registry, "Tool discovery")
+Rel(tool_registry, tool_executor, "Tool execution")
+Rel(tool_executor, generator_tools, "Generator ops")
+Rel(tool_executor, orchestrator_tools, "Orchestrator ops")
+Rel(tool_executor, scorer_tools, "Scorer ops")
+Rel(tool_executor, dataset_tools, "Dataset ops")
+Rel(tool_executor, security_tools, "Security ops")
+Rel(tool_executor, introspection_tools, "System ops")
+
+' Prompt management
+Rel(message_router, prompt_registry, "Prompt discovery")
+Rel(prompt_registry, security_prompts, "Security templates")
+Rel(prompt_registry, testing_prompts, "Testing templates")
+Rel(prompt_registry, analysis_prompts, "Analysis templates")
+
+' Resource management
+Rel(message_router, resource_manager, "Resource access")
+Rel(resource_manager, config_resources, "Config files")
+Rel(resource_manager, dataset_resources, "Dataset files")
+Rel(resource_manager, log_resources, "Log files")
+Rel(resource_manager, result_resources, "Result files")
+
+' Backend integration
+Rel(tool_executor, fastapi_client, "API calls", "HTTP/REST")
+Rel(fastapi_client, fastapi_backend, "Business logic")
+
+' Direct framework integration
+Rel(tool_executor, pyrit_adapter, "Direct PyRIT")
+Rel(tool_executor, garak_adapter, "Direct Garak")
+
+SHOW_LEGEND()
+
+@enduml

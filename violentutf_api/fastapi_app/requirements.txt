@@ -10,7 +10,7 @@ duckdb>=1.1.0
 email-validator>=2.1.0
 # Core FastAPI dependencies - updated for PyRIT compatibility
 fastapi>=0.109.0
-garak
+# garak  # Disabled for startup - can be installed manually if needed
 google-cloud-aiplatform>=1.111.0
 httpx>=0.27.2
 huggingface-hub
@@ -31,7 +31,7 @@ PyJWT>=2.8.0
 PyJWT[crypto]>=2.8.0
 
 # AI Red-teaming frameworks (following official docs)
-pyrit
+pyrit>=0.10.0rc0
 python-dotenv>=1.0.0
 python-multipart>=0.0.6
 PyYAML>=6.0.2

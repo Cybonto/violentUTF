@@ -158,8 +158,7 @@ nginx_config:
   max_running_timers: 4096
   stream:
     access_log: logs/access_stream.log
-    access_log_format: $remote_addr [$time_local] $protocol $status $bytes_sent $bytes_received
-      $session_time
+    access_log_format: $remote_addr [$time_local] $protocol $status $bytes_sent $bytes_received $session_time
     access_log_format_escape: default
     lua_shared_dict:
       plugin-limit-conn-stream: 10m
@@ -173,9 +172,7 @@ nginx_config:
       prometheus-metrics: 15m
   http:
     access_log: logs/access.log
-    access_log_format: $remote_addr - $remote_user [$time_local] $http_host "$request"
-      $status $body_bytes_sent $request_time "$http_referer" "$http_user_agent" $upstream_addr
-      $upstream_status $upstream_response_time "$upstream_scheme://$upstream_host$upstream_uri"
+    access_log_format: $remote_addr - $remote_user [$time_local] $http_host "$request" $status $body_bytes_sent $request_time "$http_referer" "$http_user_agent" $upstream_addr $upstream_status $upstream_response_time "$upstream_scheme://$upstream_host$upstream_uri"
     access_log_format_escape: default
     client_max_body_size: 0
     send_timeout: 10s

@@ -28,6 +28,17 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      - name: Free disk space
+        run: |
+          echo "Disk usage before cleanup:"
+          df -h
+          # Remove unnecessary software to free disk space
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
+          sudo apt-get clean || true
+          docker system prune -af || true
+          echo "Disk usage after cleanup:"
+          df -h
+
       - name: Checkout code
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v5.0.0
         with:

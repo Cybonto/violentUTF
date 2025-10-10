@@ -57,6 +57,13 @@ async def _execute_apisix_generator(
 ) -> Dict[str, Any]:
     """Execute prompt through APISIX AI Gateway."""
     try:
+        # Log the received prompt for debugging
+        logger.info(
+            "APISIX generator received prompt: '%s' (length: %d)",
+            prompt[:100] if prompt else "EMPTY",
+            len(prompt) if prompt else 0,
+        )
+
         # Get APISIX endpoint for generator
         provider = generator_config["parameters"]["provider"]
         model = generator_config["parameters"]["model"]
@@ -312,15 +319,15 @@ def _get_apisix_endpoint_for_model(provider: str, model: str) -> Optional[str]:
 async def get_generator_by_name(generator_name: str, user_context: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Get generator configuration by name from backend service."""
     try:
-        # Get generators from DuckDB using proper user context
-        from app.db.duckdb_manager import get_duckdb_manager
+        # Get generators from SQLite using proper user context
+        from app.db.sqlite_manager import get_sqlite_manager
 
         # Use provided user context or fallback to default
         # For orchestrator calls, the user context should be passed from the authenticated request
         user_id = user_context or "violentutf.api"  # Fallback for backward compatibility
         logger.info("Getting generator '%s' for user '%s'", generator_name, user_id)
 
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         generators_data = db_manager.list_generators()
 
         logger.info("Found %d generators for user '%s'", len(generators_data), user_id)

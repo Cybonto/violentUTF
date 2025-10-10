@@ -1,0 +1,142 @@
+version: '3.8'
+
+# ViolentUTF Database Performance Monitoring Stack
+# Issue #270 - Comprehensive monitoring infrastructure
+# Includes: Prometheus, Grafana, AlertManager
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: violentutf-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=90d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./configs/monitoring/alert_rules.yaml:/etc/prometheus/alert_rules.yaml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - violentutf_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      com.violentutf.service: "monitoring"
+      com.violentutf.component: "prometheus"
+
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: violentutf-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_INSTALL_PLUGINS=
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/database_overview.json
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./configs/monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./configs/monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+    networks:
+      - violentutf_network
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      com.violentutf.service: "monitoring"
+      com.violentutf.component: "grafana"
+
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: violentutf-alertmanager
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./configs/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    networks:
+      - violentutf_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      com.violentutf.service: "monitoring"
+      com.violentutf.component: "alertmanager"
+
+  # Optional: PostgreSQL Exporter for detailed PostgreSQL metrics
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.13.2
+    container_name: violentutf-postgres-exporter
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=${POSTGRES_KEYCLOAK_URL:-postgresql://keycloak:keycloak@postgres:5432/keycloak?sslmode=disable}
+    ports:
+      - "9187:9187"
+    networks:
+      - violentutf_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      com.violentutf.service: "monitoring"
+      com.violentutf.component: "postgres-exporter"
+    depends_on:
+      - prometheus
+    profiles:
+      - full-monitoring
+
+networks:
+  violentutf_network:
+    external: true
+    name: violentutf_network
+
+volumes:
+  prometheus_data:
+    driver: local
+    labels:
+      com.violentutf.volume: "monitoring"
+      com.violentutf.data-type: "time-series"
+
+  grafana_data:
+    driver: local
+    labels:
+      com.violentutf.volume: "monitoring"
+      com.violentutf.data-type: "dashboards"
+
+  alertmanager_data:
+    driver: local
+    labels:
+      com.violentutf.volume: "monitoring"
+      com.violentutf.data-type: "alerts"

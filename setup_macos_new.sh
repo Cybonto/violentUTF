@@ -27,6 +27,7 @@ show_help() {
     echo "  -d, --debug        Debug mode (full debugging output)"
     echo "  --cleanup          Clean up existing containers and volumes"
     echo "  --deepcleanup      Deep cleanup (remove all data and configurations)"
+    echo "  --zscaler          Force Zscaler/corporate proxy support"
     echo ""
     echo "Verbosity Levels:"
     echo "  quiet    - Errors, warnings, and minimal progress only"
@@ -40,6 +41,7 @@ show_help() {
     echo "  $0 --verbose       # Verbose setup with detailed output"
     echo "  $0 --debug         # Debug setup with full output"
     echo "  $0 --cleanup       # Clean up existing deployment"
+    echo "  $0 --zscaler       # Setup with Zscaler/corporate proxy support"
     echo ""
 }
 
@@ -69,6 +71,12 @@ process_arguments() {
                 ;;
             --deepcleanup)
                 DEEPCLEANUP_MODE=true
+                shift
+                ;;
+            --zscaler)
+                export FORCE_ZSCALER=true
+                export AUTO_GENERATE_CERTS=true
+                echo "🔐 Zscaler/corporate proxy support enabled"
                 shift
                 ;;
             *)

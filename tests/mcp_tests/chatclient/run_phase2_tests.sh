@@ -14,7 +14,7 @@ echo "Running MCP Enhancement UI Tests - Phase 2"
 echo "========================================="
 
 # Change to the script directory
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit
 
 # Ensure we're in the right venv
 if [ -n "$VIRTUAL_ENV" ]; then

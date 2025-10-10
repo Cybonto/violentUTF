@@ -20,7 +20,7 @@ import pytest
 from httpx import Response
 
 # Import from utils - conftest.py handles path setup
-from utils.mcp_client import MCPClient, MCPClientSync, MCPMethod, MCPResponse
+from violentutf.utils.mcp_client import MCPClient, MCPClientSync, MCPMethod, MCPResponse
 
 
 class TestMCPResponse:

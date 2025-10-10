@@ -13,8 +13,10 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+
 from app.core.auth import get_current_user
-from app.db.duckdb_manager import get_duckdb_manager
+from app.db.sqlite_manager import get_sqlite_manager
 from app.models.auth import User
 from app.schemas.converters import (
     ApplicationMode,
@@ -32,7 +34,6 @@ from app.schemas.converters import (
     ConverterTypesResponse,
     ConverterUpdateRequest,
 )
-from fastapi import APIRouter, Depends, HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,7 @@ CONVERTER_CATEGORIES = {
     "Language": ["TranslationConverter"],
     "Transform": ["SearchReplaceConverter", "VariationConverter"],
     "Target": ["TargetConverter"],
+    "Dataset": ["GraphWalkConverter"],
 }
 
 # WARNING: These converter parameter definitions are MOCK DATA and do not accurately
@@ -225,6 +227,58 @@ CONVERTER_PARAMETERS = {
             "skip_in_ui": True,
         }
     ],
+    "GraphWalkConverter": [
+        {
+            "name": "file_path",
+            "type_str": "str",
+            "primary_type": "str",
+            "required": True,
+            "default": "",
+            "description": "Path to GraphWalk dataset file",
+            "literal_choices": None,
+            "skip_in_ui": False,
+        },
+        {
+            "name": "max_memory_usage_gb",
+            "type_str": "float",
+            "primary_type": "float",
+            "required": False,
+            "default": 2.0,
+            "description": "Maximum memory usage in GB for processing",
+            "literal_choices": None,
+            "skip_in_ui": False,
+        },
+        {
+            "name": "chunk_size_mb",
+            "type_str": "int",
+            "primary_type": "int",
+            "required": False,
+            "default": 15,
+            "description": "Chunk size in MB for massive file splitting",
+            "literal_choices": [5, 15, 25, 50],
+            "skip_in_ui": False,
+        },
+        {
+            "name": "performance_mode",
+            "type_str": "str",
+            "primary_type": "str",
+            "required": False,
+            "default": "balanced",
+            "description": "Performance optimization mode",
+            "literal_choices": ["speed", "balanced", "memory_optimized"],
+            "skip_in_ui": False,
+        },
+        {
+            "name": "async_conversion",
+            "type_str": "bool",
+            "primary_type": "bool",
+            "required": False,
+            "default": True,
+            "description": "Run conversion asynchronously for large files",
+            "literal_choices": None,
+            "skip_in_ui": False,
+        },
+    ],
 }
 
 
@@ -315,7 +369,7 @@ async def get_converters(
         converters = []
 
         # Get converters from DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         converters_data = db_manager.list_converters()
 
         for converter_data in converters_data:
@@ -374,7 +428,7 @@ async def create_converter(
                     )
 
         # Store converter in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         converter_id = db_manager.create_converter(
             name=request.name,
             converter_type=request.converter_type,
@@ -429,7 +483,7 @@ async def preview_converter(
         logger.info("User %s previewing converter: %s", user_id, converter_id)
 
         # Find converter in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         converter_data = db_manager.get_converter(converter_id)
 
         if not converter_data:
@@ -532,7 +586,7 @@ async def apply_converter(
         )
 
         # Get DuckDB manager
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
 
         # Find converter in DuckDB
         converter_data = db_manager.get_converter(converter_id)
@@ -673,7 +727,7 @@ async def delete_converter(
         logger.info("User %s deleting converter: %s", user_id, converter_id)
 
         # Find and delete converter from DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         deleted = db_manager.delete_converter(converter_id)
 
         if deleted:
@@ -706,7 +760,7 @@ async def update_converter(
         logger.info("User %s updating converter: %s", user_id, converter_id)
 
         # Find converter in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         converter_data = db_manager.get_converter(converter_id)
 
         if not converter_data:
@@ -751,7 +805,7 @@ async def get_converter(converter_id: str, current_user: User = Depends(get_curr
         logger.info("User %s requested converter details: %s", user_id, converter_id)
 
         # Find converter in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         converter_data = db_manager.get_converter(converter_id)
         if converter_data:
             return {

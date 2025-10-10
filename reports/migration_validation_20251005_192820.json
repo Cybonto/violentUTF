@@ -1,0 +1,29 @@
+{
+  "timestamp": "2025-10-05T19:28:20.863656",
+  "app_data_dir": "app_data/violentutf",
+  "validations": {
+    "config_migration": {
+      "status": "FAIL",
+      "return_code": 2,
+      "stdout": "",
+      "stderr": "usage: validate_config_migration.py [-h] [--app-data-dir APP_DATA_DIR]\n                                    [--duckdb-file DUCKDB_FILE]\n                                    [--sqlite-file SQLITE_FILE]\nvalidate_config_migration.py: error: unrecognized arguments: --verbose\n"
+    },
+    "pyrit_memory": {
+      "status": "WARNING",
+      "message": "No SQLite migration files found",
+      "total_db_files": 15,
+      "sqlite_files": 0
+    },
+    "data_integrity": {
+      "status": "PASS",
+      "lock_files": 0,
+      "orphaned_files": 5
+    }
+  },
+  "summary": {
+    "total_validations": 3,
+    "passed": 1,
+    "failed": 1,
+    "warnings": 1
+  }
+}

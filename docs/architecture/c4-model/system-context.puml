@@ -1,0 +1,44 @@
+@startuml ViolentUTF System Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+
+!include DEVICONS/postgresql.puml
+!include FONTAWESOME/users.puml
+!include FONTAWESOME/desktop.puml
+!include FONTAWESOME/robot.puml
+!include FONTAWESOME/shield_alt.puml
+
+LAYOUT_WITH_LEGEND()
+
+title ViolentUTF System Context Diagram
+
+Person_Ext(security_researcher, "Security Researcher", "AI security testing professional", $sprite="users")
+Person_Ext(developer, "Developer", "Application developer using MCP", $sprite="desktop")
+Person_Ext(admin, "System Administrator", "Platform administrator", $sprite="shield_alt")
+
+System(violentutf, "ViolentUTF Platform", "Enterprise AI Red-Teaming Platform for comprehensive AI security testing", $sprite="robot")
+
+System_Ext(openai_api, "OpenAI API", "GPT-3.5/4 Language Models")
+System_Ext(anthropic_api, "Anthropic API", "Claude Language Models")
+System_Ext(ollama, "Ollama", "Local LLM Server")
+System_Ext(keycloak_external, "External Identity Provider", "Corporate SSO/LDAP")
+System_Ext(claude_desktop, "Claude Desktop", "MCP Client Application", $sprite="desktop")
+System_Ext(vscode, "VS Code", "IDE with MCP Extension", $sprite="desktop")
+
+Rel(security_researcher, violentutf, "Conducts AI security tests", "HTTPS/WebSocket")
+Rel(developer, violentutf, "Integrates via MCP", "JSON-RPC 2.0/SSE")
+Rel(admin, violentutf, "Manages platform", "HTTPS")
+
+Rel(violentutf, openai_api, "Tests AI models", "HTTPS/REST")
+Rel(violentutf, anthropic_api, "Tests AI models", "HTTPS/REST")
+Rel(violentutf, ollama, "Tests local models", "HTTP/REST")
+Rel(violentutf, keycloak_external, "Authenticates users", "SAML/OIDC")
+
+Rel(claude_desktop, violentutf, "Uses MCP tools", "JSON-RPC 2.0/SSE")
+Rel(vscode, violentutf, "Uses MCP tools", "JSON-RPC 2.0/SSE")
+
+SHOW_LEGEND()
+
+@enduml

@@ -35,6 +35,9 @@ class SecurityLimits:
     MAX_NESTED_DEPTH = 5
     MAX_JSON_SIZE = 10000  # bytes
 
+    # Special limits for file analysis
+    MAX_FILE_CONTENT_LENGTH = 50000  # 50KB for file content analysis
+
     # Username / identifier limits
     MIN_USERNAME_LENGTH = 3
     MAX_USERNAME_LENGTH = 50
@@ -45,6 +48,9 @@ class SecurityLimits:
     MIN_API_KEY_NAME_LENGTH = 3
     MAX_API_KEY_NAME_LENGTH = 100
     MAX_PERMISSIONS = 20
+
+    # Path limits for file operations
+    MAX_PATH_LENGTH = 500
 
 
 # Validation patterns
@@ -154,7 +160,22 @@ def sanitize_string(value: str) -> str:
         sanitized = sanitized[: SecurityLimits.MAX_STRING_LENGTH]
         logger.warning("String truncated to %s characters", SecurityLimits.MAX_STRING_LENGTH)
 
-    return sanitized.strip()
+    return sanitized
+
+
+def sanitize_file_content(value: str) -> str:
+    """Sanitize file content with larger limits for analysis."""
+    # Value is guaranteed to be str by type annotation
+
+    # Remove null bytes and control characters
+    sanitized = "".join(char for char in value if ord(char) >= 32 or char in ["\n", "\r", "\t"])
+
+    # Limit length with higher threshold for file content
+    if len(sanitized) > SecurityLimits.MAX_FILE_CONTENT_LENGTH:
+        sanitized = sanitized[: SecurityLimits.MAX_FILE_CONTENT_LENGTH]
+        logger.warning("File content truncated to %s characters", SecurityLimits.MAX_FILE_CONTENT_LENGTH)
+
+    return sanitized
 
 
 def validate_email(email: str) -> str:

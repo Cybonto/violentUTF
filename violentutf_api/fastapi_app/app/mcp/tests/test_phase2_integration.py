@@ -13,13 +13,14 @@ from typing import Self
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from mcp.types import Tool
+
 from app.mcp.resources import resource_registry
 from app.mcp.server.base import ViolentUTFMCPServer
 from app.mcp.tools import tool_registry
 from app.mcp.tools.generators import generator_tools
 from app.mcp.tools.introspection import initialize_introspector
 from app.mcp.tools.orchestrators import orchestrator_tools
-from mcp.types import Tool
 
 logger = logging.getLogger(__name__)
 

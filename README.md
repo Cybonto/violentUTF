@@ -165,7 +165,8 @@ After setup completion:
 - **PyRIT Orchestrators**: Automated multi-turn conversation testing
 - **Garak Probes**: 100+ vulnerability probes across multiple attack vectors
 - **Custom Scorers**: Specialized response evaluation for security contexts
-- **Dataset Management**: Pre-built and custom test datasets
+- **Dataset Management**: Pre-built and custom test datasets with OllaGen1 cognitive assessment integration
+- **Large File Support**: Automatic splitting for GitHub compatibility with data integrity preservation
 - **Report Generation**: Comprehensive security assessment reports
 
 ### **Enterprise Integration**
@@ -211,8 +212,8 @@ graph TB
     end
 
     subgraph "Data Storage"
-        DUCK[(DuckDB<br/>PyRIT Memory)]
-        SQLITE[(SQLite<br/>API Data)]
+        SQLITE[(SQLite<br/>PyRIT Memory & API Data)]
+        SQLITE_USER[(SQLite<br/>User-Specific DBs)]
     end
 
     C1 -->|HTTP/WebSocket| AG
@@ -234,7 +235,8 @@ graph TB
     MCP --> API
     ST --> API
 
-    PYRIT --> DUCK
+    PYRIT --> SQLITE_USER
+    API --> SQLITE
 
     classDef gateway fill:#ff9999
     classDef auth fill:#99ccff

@@ -28,17 +28,17 @@ OPEN_WEBUI_ENDPOINT=http://localhost:3000/ollama/v1/chat/completions
 OPEN_WEBUI_API_KEY=your_open_webui_api_key_here
 
 # OpenAPI Provider Configuration
-# Support for any OpenAPI-compliant API (including GSAi, custom APIs, etc.)
+# Support for any OpenAPI-compliant API
 OPENAPI_ENABLED=false
 
-# OpenAPI Provider 1 - Example: GSAi API (Local Development)
+# OpenAPI Provider 1 - Example: Local API
 OPENAPI_1_ENABLED=false
-OPENAPI_1_ID=gsai-api-local
-OPENAPI_1_NAME="GSAi API Local"
+OPENAPI_1_ID=openapi-local
+OPENAPI_1_NAME="OpenAPI Provider 1"
 OPENAPI_1_BASE_URL=https://localhost
 OPENAPI_1_SPEC_PATH=/openapi.json
 OPENAPI_1_AUTH_TYPE=bearer
-OPENAPI_1_AUTH_TOKEN=your_gsai_bearer_token_here
+OPENAPI_1_AUTH_TOKEN=your_bearer_token_here
 OPENAPI_1_CUSTOM_HEADERS=""
 
 # OpenAPI Provider 2 - Example: Custom API

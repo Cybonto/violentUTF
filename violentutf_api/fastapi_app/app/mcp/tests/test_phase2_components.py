@@ -28,6 +28,8 @@ with patch.dict(
     },
 ):
     try:
+        from mcp.types import Tool
+
         from app.mcp.config import mcp_settings
         from app.mcp.tools.generators import GeneratorConfigurationTools
         from app.mcp.tools.introspection import (
@@ -35,7 +37,6 @@ with patch.dict(
             ViolentUTFToolFilter,
         )
         from app.mcp.tools.orchestrators import OrchestratorManagementTools
-        from mcp.types import Tool
     except ImportError as e:
         # If imports fail, we'll skip the tests
         pytest.skip(f"Required modules not available: {e}")

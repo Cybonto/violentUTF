@@ -1,0 +1,11 @@
+alert_channels:
+- email
+- slack
+database_type: duckdb
+failure_threshold: 3
+health_check_interval: 60
+metrics:
+- connection_status
+- response_time
+- error_rate
+- backup_freshness

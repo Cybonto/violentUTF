@@ -1,0 +1,35 @@
+detection_commands:
+- command: pg_isready -h localhost -p 5432 -U keycloak
+  expected_result: accepting connections
+  name: connection_test
+- command: curl -f http://localhost:8080/auth/realms/violentutf/protocol/openid_connect/certs
+  expected_result: HTTP 200
+  name: service_health
+recovery_steps:
+- commands:
+  - docker-compose -f keycloak/docker-compose.yml down
+  estimated_time: 2
+  step: 1
+  title: Stop affected services
+- commands:
+  - docker exec keycloak-postgres pg_restore -U keycloak -d keycloak /backups/latest.sql
+  estimated_time: 10
+  step: 2
+  title: Restore database from backup
+- commands:
+  - docker-compose -f keycloak/docker-compose.yml up -d
+  estimated_time: 3
+  step: 3
+  title: Restart services
+rollback_procedures:
+- commands:
+  - docker exec keycloak-postgres pg_restore -U keycloak -d keycloak /backups/previous.sql
+  step: 1
+  title: Restore from previous backup
+validation_commands:
+- command: pg_isready -h localhost -p 5432 -U keycloak
+  expected_result: accepting connections
+  name: connection_test
+- command: curl -f http://localhost:8080/auth/realms/violentutf/protocol/openid_connect/certs
+  expected_result: HTTP 200
+  name: service_health

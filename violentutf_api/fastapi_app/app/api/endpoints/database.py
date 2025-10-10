@@ -13,6 +13,8 @@ import shutil
 from datetime import datetime
 
 import duckdb
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+
 from app.core.auth import get_current_user
 from app.models.auth import User
 from app.schemas.database import (
@@ -23,7 +25,6 @@ from app.schemas.database import (
     ResetDatabaseRequest,
     TableStats,
 )
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

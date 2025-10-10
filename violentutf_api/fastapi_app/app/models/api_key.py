@@ -8,9 +8,10 @@
 from datetime import datetime
 from typing import Self
 
-from app.db.database import Base
 from sqlalchemy import JSON, Boolean, Column, DateTime, String
 from sqlalchemy.sql import func
+
+from app.db.database import Base
 
 
 class APIKey(Base):

@@ -1,0 +1,4 @@
+usage: pre-commit [-h] [-V]
+                  {autoupdate,clean,gc,init-templatedir,install,install-hooks,migrate-config,run,sample-config,try-repo,uninstall,validate-config,validate-manifest,help,hook-impl}
+                  ...
+pre-commit: error: unrecognized arguments: mypy pylint

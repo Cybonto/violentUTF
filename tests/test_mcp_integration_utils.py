@@ -13,6 +13,7 @@ Tests for natural language parsing and command interpretation.
 
 import os
 import sys
+from typing import Any
 
 import pytest
 

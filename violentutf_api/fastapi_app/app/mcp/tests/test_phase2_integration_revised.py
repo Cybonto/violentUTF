@@ -22,6 +22,12 @@ from typing import Any, Dict, Self
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from fastapi import FastAPI
+from fastapi.routing import APIRoute
+
+# MCP and core imports
+from mcp.types import ServerCapabilities, Tool
+
 from app.mcp.auth import MCPAuthHandler
 from app.mcp.config import mcp_settings
 from app.mcp.resources import resource_registry
@@ -37,11 +43,6 @@ from app.mcp.tools.introspection import (
     initialize_introspector,
 )
 from app.mcp.tools.orchestrators import orchestrator_tools
-from fastapi import FastAPI
-from fastapi.routing import APIRoute
-
-# MCP and core imports
-from mcp.types import ServerCapabilities, Tool
 
 logger = logging.getLogger(__name__)
 

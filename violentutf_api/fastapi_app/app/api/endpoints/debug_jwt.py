@@ -12,10 +12,11 @@ Temporarily bypasses APISIX gateway check for troubleshooting.
 import logging
 from typing import Any, Dict, Optional
 
-from app.core.config import settings
-from app.core.security import decode_token
 from fastapi import APIRouter, Header
 from pydantic import BaseModel
+
+from app.core.config import settings
+from app.core.security import decode_token
 
 logger = logging.getLogger(__name__)
 

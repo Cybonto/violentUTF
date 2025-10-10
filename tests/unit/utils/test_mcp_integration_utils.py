@@ -13,9 +13,11 @@ Tests for natural language parsing and command interpretation.
 
 import os
 import sys
-# No typing imports needed for this test file
 
 import pytest
+
+# No typing imports needed for this test file
+
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

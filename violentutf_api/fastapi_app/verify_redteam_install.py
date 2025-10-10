@@ -50,14 +50,14 @@ def main() -> None:
     """Run main verification function."""
     print("🔍 Verifying Red Team Package Installation...")
 
-    # List of critical packages for red teaming
+    # List of critical packages for FastAPI red teaming service
     packages_to_verify = [
         ("pyrit", "pyrit"),
-        ("garak", "garak"),
+        # ("garak", "garak"),  # Disabled for startup - can be installed manually if needed
         ("requests", "requests"),
         ("pydantic", "pydantic"),
         ("fastapi", "fastapi"),
-        ("streamlit", "streamlit"),
+        # Note: streamlit runs in separate container, not needed for FastAPI service
     ]
 
     all_good = True

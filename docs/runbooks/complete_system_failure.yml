@@ -1,0 +1,22 @@
+last_updated: '2025-09-25T11:20:49.621303'
+parallel_operations:
+  communication: User and stakeholder notification
+  database_prep: Prepare backup restoration
+  infrastructure: Docker and network setup
+recovery_sequence:
+- Infrastructure assessment
+- PostgreSQL recovery
+- SQLite recovery
+- User data recovery
+- Service validation
+- User notification
+rto_target: 45
+scope: system_wide
+severity: critical
+success_criteria:
+  api_endpoints_responsive: true
+  authentication_functional: true
+  data_loss_minimized: true
+  rto_met: true
+  user_data_accessible: true
+title: Complete System Failure Recovery

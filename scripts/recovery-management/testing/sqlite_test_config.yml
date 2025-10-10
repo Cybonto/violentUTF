@@ -1,0 +1,10 @@
+database_type: sqlite
+rpo_target: 30
+rto_target: 5
+test_environment: isolated
+test_frequency: daily
+test_scenarios:
+- complete_failure_recovery
+- partial_corruption_recovery
+- backup_restoration_test
+- performance_validation

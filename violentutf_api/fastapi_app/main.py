@@ -20,6 +20,10 @@ from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Callable, Dict, cast
 
 import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
+
 from app.api.routes import api_router
 from app.core.config import settings
 from app.core.error_handling import setup_error_handlers
@@ -29,9 +33,6 @@ from app.core.security_headers import configure_cors_settings, setup_security_he
 from app.db.database import init_db
 from app.mcp import mcp_server as mcp_service
 from app.services.pyrit_orchestrator_service import pyrit_orchestrator_service
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from slowapi.errors import RateLimitExceeded
 
 # Constants to avoid bandit B104 hardcoded binding warnings
 WILDCARD_ADDRESS = "0.0.0.0"  # nosec B104

@@ -16,10 +16,12 @@ from typing import Any, Dict, List, Optional, cast
 
 import httpx
 import requests
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.error_handling import safe_error_response, validation_error
-from app.db.duckdb_manager import get_duckdb_manager
+from app.db.sqlite_manager import get_sqlite_manager
 from app.models.auth import User
 from app.schemas.generators import (
     APIXModelsResponse,
@@ -32,7 +34,6 @@ from app.schemas.generators import (
     GeneratorTypesResponse,
     GeneratorUpdateRequest,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
 
 logger = logging.getLogger(__name__)
 
@@ -790,6 +791,43 @@ async def get_generator_type_params(
                     )
                     break
 
+            # Populate model options for all enabled providers
+            for param in type_def["parameters"]:
+                if param["name"] == "model":
+                    all_models = []
+                    # Get models for all enabled providers
+                    if settings.OPENAI_ENABLED:
+                        all_models.extend(get_fallback_models("openai"))
+                    if settings.ANTHROPIC_ENABLED:
+                        all_models.extend(get_fallback_models("anthropic"))
+                    if settings.OLLAMA_ENABLED:
+                        all_models.extend(get_fallback_models("ollama"))
+                    if settings.OPEN_WEBUI_ENABLED:
+                        all_models.extend(get_fallback_models("webui"))
+
+                    # Add OpenAPI models if enabled
+                    if settings.OPENAPI_ENABLED:
+                        try:
+                            openapi_providers = get_openapi_providers()
+                            for provider in openapi_providers:
+                                try:
+                                    # Use enhanced discovery to get real models from API
+                                    models = await discover_apisix_models_enhanced(provider)
+                                    if models:
+                                        all_models.extend(models)
+                                        logger.info("Added %d models for OpenAPI provider %s", len(models), provider)
+                                except Exception as e:
+                                    logger.warning("Failed to get models for OpenAPI provider %s: %s", provider, e)
+                        except Exception as e:
+                            logger.error("Error getting OpenAPI providers for model discovery: %s", e)
+
+                    # Remove duplicates and sort
+                    unique_models = sorted(list(set(all_models)))
+                    param["options"] = unique_models
+                    model_preview = unique_models[:5] + (["..."] if len(unique_models) > 5 else [])
+                    logger.info("Populated model options with %d models: %s", len(unique_models), model_preview)
+                    break
+
         parameters = [GeneratorParameter(**param) for param in type_def["parameters"]]
 
         return GeneratorParametersResponse(generator_type=generator_type, parameters=parameters)
@@ -812,7 +850,7 @@ async def get_generators(
         logger.info("User %s requested generators list", user_id)
 
         # Get generators from DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         generators_data = db_manager.list_generators()
 
         generators = []
@@ -866,7 +904,7 @@ async def create_generator(
         logger.info("User %s creating generator: %s", user_id, request.name)
 
         # Get DuckDB manager
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
 
         # Check if generator name already exists for this user
         existing_generator = db_manager.get_generator_by_name(request.name)
@@ -928,7 +966,7 @@ async def delete_generator(
         logger.info("User %s deleting generator: %s", user_id, generator_id)
 
         # Get DuckDB manager and find generator
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         generator_data = db_manager.get_generator(generator_id)
 
         if not generator_data:
@@ -1004,7 +1042,7 @@ async def update_generator(
         logger.info("User %s updating generator: %s", user_id, generator_id)
 
         # Get DuckDB manager and find generator
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         generator_data = db_manager.get_generator(generator_id)
 
         if not generator_data:

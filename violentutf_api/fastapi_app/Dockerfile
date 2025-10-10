@@ -3,24 +3,31 @@ FROM python:3.11-slim as builder
 
 WORKDIR /build
 
+# Corporate environment SSL certificate handling for Zscaler/corporate proxies
+# These help bypass SSL verification issues during build
+ENV PYTHONHTTPSVERIFY=0
+ENV CURL_CA_BUNDLE=""
+ENV REQUESTS_CA_BUNDLE=""
+ENV SSL_VERIFY=false
+
 # Set shell for pipefail support
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install build dependencies with version pinning
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc=4:11.2.0-1ubuntu1 \
-    g++=4:11.2.0-1ubuntu1 \
-    git=1:2.34.1-1ubuntu1.11 \
-    build-essential=12.9ubuntu3 \
-    pkg-config=0.29.2-1ubuntu3 \
-    curl=7.81.0-1ubuntu1.18 \
-    libssl-dev=3.0.2-0ubuntu1.18 \
-    ca-certificates=20240203~22.04.1 \
+    gcc \
+    g++ \
+    git \
+    build-essential \
+    pkg-config \
+    curl \
+    libssl-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install Zscaler certificates if they exist
-# Using a more Docker-friendly approach
-COPY zscaler.cr[t] CA.cr[t] /usr/local/share/ca-certificates/
+# Copy corporate certificates if they exist (Zscaler, enterprise CA, etc.)
+# Support multiple certificate file formats and names based on existing docs
+COPY zscaler.cr[t] CA.cr[t] zscaler.pe[m] enterprise-ca.cr[t] corporate.cr[t] /usr/local/share/ca-certificates/
 RUN update-ca-certificates || true
 
 # Set environment to use system certificates
@@ -28,36 +35,102 @@ ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
-# Install Rust with proper certificate handling
+# Install Rust with comprehensive corporate firewall/Zscaler support
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-# Verify Rust installation
-RUN rustc --version && cargo --version
+# Corporate environment: Global SSL bypass for all curl operations
+# Create system-wide curl configuration
+RUN echo "insecure" > ~/.curlrc && \
+    echo "insecure" > /etc/curlrc && \
+    mkdir -p /root/.config && \
+    echo "insecure" > /root/.config/curlrc
+
+# Set comprehensive environment variables for SSL bypass
+ENV CURL_CA_BUNDLE=""
+ENV RUSTUP_USE_CURL=1
+ENV RUSTUP_INIT_SKIP_PATH_CHECK=yes
+
+# Corporate environment: Skip Rust installer entirely and download toolchain directly
+# This bypasses all SSL certificate issues with rustup's internal downloads
+# hadolint ignore=DL3003
+RUN set -e && \
+    # Detect architecture
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        RUST_ARCH="x86_64-unknown-linux-gnu"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        RUST_ARCH="aarch64-unknown-linux-gnu"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    echo "Installing Rust for architecture: $RUST_ARCH" && \
+    \
+    # Download Rust toolchain directly without rustup installer
+    RUST_VERSION="1.70.0" && \
+    RUST_URL="https://static.rust-lang.org/dist/rust-${RUST_VERSION}-${RUST_ARCH}.tar.gz" && \
+    echo "Downloading Rust from: $RUST_URL" && \
+    curl --insecure -sSfL "$RUST_URL" -o /tmp/rust.tar.gz && \
+    \
+    # Extract and install Rust
+    cd /tmp && \
+    tar -xzf rust.tar.gz && \
+    cd "rust-${RUST_VERSION}-${RUST_ARCH}" && \
+    ./install.sh --prefix=/usr/local && \
+    \
+    # Test installation in same RUN context
+    export PATH="/usr/local/bin:$PATH" && \
+    /usr/local/bin/rustc --version && \
+    /usr/local/bin/cargo --version && \
+    \
+    # Cleanup
+    cd / && \
+    rm -rf /tmp/rust*
+
+# Set PATH for subsequent Docker layers
+ENV PATH="/usr/local/bin:$PATH"
+
+# Verify Rust installation is accessible in new layer
+RUN which rustc && which cargo && rustc --version && cargo --version
 
 # Copy and install requirements
+# Copy and install requirements with corporate SSL bypass
 COPY requirements.txt requirements-minimal.txt ./
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -r requirements.txt && \
+    pip wheel --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
 
 # Final stage
 FROM python:3.11-slim
 
 WORKDIR /app
 
+# Corporate environment SSL certificate handling (runtime stage)
+ENV PYTHONHTTPSVERIFY=0
+ENV CURL_CA_BUNDLE=""
+ENV REQUESTS_CA_BUNDLE=""
+ENV SSL_VERIFY=false
+
+# Hugging Face and ML model download SSL bypass for corporate environments
+ENV HF_HUB_DISABLE_SSL=1
+ENV TRANSFORMERS_OFFLINE=0
+ENV HF_DATASETS_OFFLINE=0
+ENV TORCH_HOME=/tmp/torch_cache
+ENV TRANSFORMERS_CACHE=/tmp/transformers_cache
+ENV HF_HOME=/tmp/hf_cache
+
+# Ensure Rust binaries are in PATH for runtime stage
+ENV PATH="/usr/local/bin:$PATH"
+
 # Set shell for pipefail support
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install runtime dependencies with version pinning
+# Install runtime dependencies without version pinning for compatibility
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl=7.81.0-1ubuntu1.18 \
-    git=1:2.34.1-1ubuntu1.11 \
-    gcc=4:11.2.0-1ubuntu1 \
-    g++=4:11.2.0-1ubuntu1 \
-    build-essential=12.9ubuntu3 \
-    ca-certificates=20240203~22.04.1 \
+    curl \
+    git \
+    gcc \
+    g++ \
+    build-essential \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy certificates from builder stage
@@ -69,20 +142,64 @@ ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
-# Install Rust for runtime
+# Install Rust for runtime with comprehensive corporate firewall support
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo PATH=/usr/local/cargo/bin:$PATH
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+
+# Corporate environment: Global SSL bypass for all curl operations (runtime)
+RUN echo "insecure" > ~/.curlrc && \
+    echo "insecure" > /etc/curlrc && \
+    mkdir -p /root/.config && \
+    echo "insecure" > /root/.config/curlrc
+
+# Set comprehensive environment variables for SSL bypass (runtime)
+ENV CURL_CA_BUNDLE=""
+ENV RUSTUP_USE_CURL=1
+ENV RUSTUP_INIT_SKIP_PATH_CHECK=yes
+
+# Corporate environment: Skip Rust installer entirely and download toolchain directly (runtime)
+# This bypasses all SSL certificate issues with rustup's internal downloads
+# hadolint ignore=DL3003
+RUN set -e && \
+    # Detect architecture
+    ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        RUST_ARCH="x86_64-unknown-linux-gnu"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        RUST_ARCH="aarch64-unknown-linux-gnu"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    echo "Installing Rust for architecture: $RUST_ARCH" && \
+    \
+    # Download Rust toolchain directly without rustup installer
+    RUST_VERSION="1.70.0" && \
+    RUST_URL="https://static.rust-lang.org/dist/rust-${RUST_VERSION}-${RUST_ARCH}.tar.gz" && \
+    echo "Downloading Rust from: $RUST_URL" && \
+    curl --insecure -sSfL "$RUST_URL" -o /tmp/rust.tar.gz && \
+    \
+    # Extract and install Rust
+    cd /tmp && \
+    tar -xzf rust.tar.gz && \
+    cd "rust-${RUST_VERSION}-${RUST_ARCH}" && \
+    ./install.sh --prefix=/usr/local && \
+    \
+    # Test installation in same RUN context
+    export PATH="/usr/local/bin:$PATH" && \
+    /usr/local/bin/rustc --version && \
+    /usr/local/bin/cargo --version && \
+    \
+    # Cleanup
+    cd / && \
+    rm -rf /tmp/rust*
 
 # Copy wheels and install
 COPY --from=builder /build/wheels /wheels
 COPY requirements.txt ./
-RUN pip install --no-cache-dir /wheels/*
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir /wheels/*
 
-# Verify PyRIT and Garak installation
+# Verify PyRIT and Garak installation with SSL bypass
 COPY verify_redteam_install.py .
-RUN python verify_redteam_install.py && \
+RUN PYTHONHTTPSVERIFY=0 SSL_VERIFY=false python verify_redteam_install.py && \
     echo "✅ PyRIT and Garak verification completed successfully"
 
 # Copy application

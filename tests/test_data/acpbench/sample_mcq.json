@@ -1,0 +1,28 @@
+[
+    {
+        "id": "blocks_world_mcq_1",
+        "group": "blocks_world", 
+        "context": "Given blocks A, B, C where A is on table, B is on A, C is on table. Goal: C on B.",
+        "question": "What is the optimal action sequence?",
+        "choices": [
+            "A) Move C to B directly",
+            "B) Move B to table, then C to B", 
+            "C) Move A away, then B to table, then C to B",
+            "D) The goal cannot be achieved"
+        ],
+        "answer": "B) Move B to table, then C to B"
+    },
+    {
+        "id": "logistics_mcq_1",
+        "group": "logistics",
+        "context": "A truck needs to deliver 3 packages from warehouse to 3 different locations. The truck has capacity for 2 packages at once. Distance from warehouse to each location: A=5km, B=3km, C=4km.",
+        "question": "What is the most efficient delivery route?",
+        "choices": [
+            "A) Warehouse->B->C->Warehouse->A",
+            "B) Warehouse->A->B->Warehouse->C", 
+            "C) Warehouse->B->A->Warehouse->C",
+            "D) Warehouse->C->A->Warehouse->B"
+        ],
+        "answer": "A) Warehouse->B->C->Warehouse->A"
+    }
+]

@@ -13,8 +13,10 @@ import uuid
 from datetime import datetime
 from typing import Dict, List
 
+from fastapi import APIRouter, Depends, HTTPException
+
 from app.core.auth import get_current_user
-from app.db.duckdb_manager import get_duckdb_manager
+from app.db.sqlite_manager import get_sqlite_manager
 from app.models.auth import User
 from app.schemas.scorers import (
     ScorerCategoryInfo,
@@ -32,7 +34,6 @@ from app.schemas.scorers import (
     ScorerValidationRequest,
     ScorerValidationResponse,
 )
-from fastapi import APIRouter, Depends, HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -449,7 +450,7 @@ async def list_scorers(
         logger.info("Listing scorers for user: %s", user_id)
 
         # Get user's scorers from DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         scorers_data = db_manager.list_scorers()
 
         # Convert to dictionary format for compatibility
@@ -523,7 +524,7 @@ async def create_scorer(
             raise HTTPException(status_code=400, detail=f"Invalid scorer type: {request.scorer_type}")
 
         # Check for duplicate names in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         existing_scorers = db_manager.list_scorers()
         for scorer in existing_scorers:
             if scorer["name"] == request.name:
@@ -613,7 +614,7 @@ async def clone_scorer(
         )
 
         # Find original scorer in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         original_config = db_manager.get_scorer(scorer_id)
 
         if not original_config:
@@ -684,7 +685,7 @@ async def update_scorer(
         logger.info("Updating scorer %s for user %s", scorer_id, user_id)
 
         # Find scorer in DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         scorer_config = db_manager.get_scorer(scorer_id)
 
         if not scorer_config:
@@ -731,7 +732,7 @@ async def delete_scorer(scorer_id: str, current_user: User = Depends(get_current
         logger.info("Deleting scorer %s for user %s", scorer_id, user_id)
 
         # Find and delete scorer from DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         scorer_data = db_manager.get_scorer(scorer_id)
 
         if not scorer_data:
@@ -952,7 +953,7 @@ async def get_scorer_health(
         logger.info("Checking scorer health for user %s", user_id)
 
         # Count scorers from DuckDB
-        db_manager = get_duckdb_manager(user_id)
+        db_manager = get_sqlite_manager(user_id)
         scorers_data = db_manager.list_scorers()
         total_scorers = len(scorers_data)
 

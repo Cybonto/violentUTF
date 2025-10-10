@@ -14,12 +14,13 @@ import json
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Optional
 import types
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Optional
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
     import pytest
+
 from unittest.mock import MagicMock, Mock, patch
 
 import jwt

@@ -134,7 +134,7 @@ def api_request(
             url,
             timeout,
         )
-        response = requests.request(method, url, headers=headers, timeout=timeout, **kwargs)
+        response = requests.request(method, url, headers=headers, timeout=timeout, **cast(Any, kwargs))
 
         if response.status_code == 200:
             return response.json()

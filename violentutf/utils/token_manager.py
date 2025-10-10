@@ -538,9 +538,33 @@ class TokenManager:
             parts = uri.strip("/").split("/")
             if len(parts) >= 3 and parts[0] == "ai":
                 provider = parts[1]
+
+                # Handle OpenAPI routes like /ai/openapi/gsai-api-1/api/v1/chat/completions
+                if provider == "openapi" and len(parts) >= 4:
+                    # Extract actual provider from OpenAPI route
+                    openapi_provider = parts[2]  # gsai-api-1
+                    endpoint_path = "/".join(parts[3:])  # api/v1/chat/completions
+
+                    # Map openapi provider to simple provider name
+                    if openapi_provider.startswith("gsai-"):
+                        provider = "gsai"
+                        # For OpenAPI routes, create a model name from the endpoint
+                        model_name: Optional[str]
+                        if "chat/completions" in endpoint_path:
+                            model_name = "claude_3_5_sonnet"  # Default GSAi model
+                        elif "models" in endpoint_path:
+                            model_name = "models"  # Special endpoint for listing models
+                        elif "embeddings" in endpoint_path:
+                            model_name = "cohere_english_v3"  # Default embedding model
+                        else:
+                            model_name = endpoint_path.replace("/", "_")
+
+                        return provider, (model_name, uri)
+
+                # Standard provider/model pattern
                 model_endpoint = parts[2]
 
-                # Handle gsai-api-1 -> gsai mapping
+                # Handle gsai-api-1 -> gsai mapping for non-OpenAPI routes
                 if provider.startswith("gsai-"):
                     provider = "gsai"
 

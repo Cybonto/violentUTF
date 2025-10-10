@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Generator
 if TYPE_CHECKING:
     from fastapi import FastAPI
     import pytest
+
 from unittest.mock import MagicMock
 
 # Add parent directory to sys.path to access main conftest and utils
@@ -26,10 +27,10 @@ sys.path.insert(0, str(parent_dir))
 
 import pytest
 import requests
-from fastapi.testclient import TestClient
 
 # Import available fixtures from the main conftest
 from conftest import api_headers, authenticated_headers, mock_headers
+from fastapi.testclient import TestClient
 
 # Import the keycloak_auth utility
 from utils.keycloak_auth_helper import keycloak_auth

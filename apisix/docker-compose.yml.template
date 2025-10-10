@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  etcd:
+    image: bitnami/etcd:latest
+    container_name: apisix-etcd
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
+      ETCD_LISTEN_CLIENT_URLS: "http://0.0.0.0:2379"
+    restart: always
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    networks:
+      - apisix_network
+
+  apisix:
+    image: apache/apisix:latest
+    container_name: apisix
+    depends_on:
+      - etcd
+    ports:
+      - "9080:9080"   # HTTP port
+      - "9180:9180"   # Admin API port
+      - "9091:9091"   # Prometheus metrics port
+    volumes:
+      - './conf/config.yaml:/usr/local/apisix/conf/config.yaml'
+    restart: always
+    networks:
+      - apisix_network
+      - vutf-network    # Add the shared network
+    command: [ "apisix", "start" ]
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: apisix-prometheus
+    volumes:
+      - './conf/prometheus.yml:/etc/prometheus/prometheus.yml:ro'
+    depends_on:
+      - apisix
+    ports:
+      - "9090:9090"   # Prometheus Web UI
+    restart: always
+    networks:
+      - apisix_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: apisix-grafana
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"   # Grafana Web UI
+    restart: always
+    networks:
+      - apisix_network
+
+  dashboard:
+    image: "apache/apisix-dashboard:latest"
+    container_name: apisix-dashboard
+    restart: on-failure
+    volumes:
+      - './conf/dashboard.yaml:/usr/local/apisix-dashboard/conf/conf.yaml:ro'
+    depends_on:
+      - etcd
+    ports:
+      - "9001:9000/tcp"
+    networks:
+      - apisix_network
+
+networks:
+  apisix_network:
+    driver: bridge
+  vutf-network:
+    external: true    # This is the important part - use the external network

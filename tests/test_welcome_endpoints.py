@@ -17,9 +17,10 @@ from fastapi.testclient import TestClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "violentutf_api", "fastapi_app"))
 
+from main import app
+
 from app.core.auth import get_current_user
 from app.models.auth import User
-from main import app
 
 client = TestClient(app)
 

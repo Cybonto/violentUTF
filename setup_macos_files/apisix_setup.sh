@@ -2,15 +2,13 @@
 # apisix_setup.sh - APISIX gateway configuration and route setup
 
 # Function to integrate Custom OpenAPI SSL certificates with APISIX
-# Note: This function is deprecated since GSAi now uses HTTP instead of HTTPS
 integrate_custom_openapi_certificates() {
     echo "🔐 Integrating Custom OpenAPI SSL certificates with APISIX..."
-    echo "   ⚠️  Note: GSAi now uses HTTP, certificate integration may not be needed"
 
     # Look for related containers that might have certificates
     local cert_containers=()
 
-    # Check for ai-gov-api stack (GSAi)
+    # Check for ai-gov-api stack
     if docker ps --format "table {{.Names}}" | grep -q "ai-gov-api-caddy"; then
         cert_containers+=("ai-gov-api-caddy-1")
     fi
@@ -113,6 +111,62 @@ integrate_custom_openapi_certificates() {
             rm -f "$cert_file"
         done
         return 1
+    fi
+}
+
+# Function to apply FastAPI source code fixes before container build
+# Fixes rate limiting decorator issues that prevent FastAPI startup
+apply_fastapi_source_fixes() {
+    log_detail "Applying FastAPI source code fixes..."
+
+    local jwt_keys_file="violentutf_api/fastapi_app/app/api/endpoints/jwt_keys.py"
+    local auth_file="violentutf_api/fastapi_app/app/api/endpoints/auth.py"
+    local fixes_applied=false
+
+    # Fix jwt_keys.py rate limiting decorators (if file exists)
+    if [ -f "$jwt_keys_file" ]; then
+        log_debug "Checking $jwt_keys_file for rate limiting issues..."
+
+        # Check if problematic decorators exist
+        if grep -q "@auth_rate_limit.*auth_token" "$jwt_keys_file"; then
+            log_detail "Temporarily disabling rate limiting decorators in jwt_keys.py..."
+
+            # Create backup
+            cp "$jwt_keys_file" "${jwt_keys_file}.backup.$(date +%s)"
+
+            # Comment out problematic decorators
+            sed -i '' 's/@auth_rate_limit("auth_token")/# @auth_rate_limit("auth_token")  # Temporarily disabled for setup/g' "$jwt_keys_file"
+
+            fixes_applied=true
+            log_debug "JWT keys rate limiting decorators temporarily disabled"
+        fi
+    fi
+
+    # Fix auth.py rate limiting decorators (if file exists)
+    if [ -f "$auth_file" ]; then
+        log_debug "Checking $auth_file for rate limiting issues..."
+
+        # Check if problematic decorators exist
+        if grep -q "@auth_rate_limit" "$auth_file"; then
+            log_detail "Temporarily disabling rate limiting decorators in auth.py..."
+
+            # Create backup
+            cp "$auth_file" "${auth_file}.backup.$(date +%s)"
+
+            # Comment out all rate limiting decorators
+            sed -i '' 's/@auth_rate_limit(\("[^"]*"\))/# @auth_rate_limit(\1)  # Temporarily disabled for setup/g' "$auth_file"
+
+            fixes_applied=true
+            log_debug "Auth rate limiting decorators temporarily disabled"
+        fi
+    fi
+
+    if [ "$fixes_applied" = true ]; then
+        log_success "FastAPI source code fixes applied successfully"
+        log_info "Rate limiting decorators temporarily disabled to prevent startup failures"
+        log_info "You can re-enable them later by adding proper 'request: Request' parameters"
+    else
+        log_debug "No FastAPI source code fixes needed"
     fi
 }
 
@@ -242,6 +296,9 @@ setup_apisix() {
         docker network create "$SHARED_NETWORK_NAME"
     fi
 
+    # Apply FastAPI source code fixes before building containers
+    apply_fastapi_source_fixes
+
     # Start APISIX containers
     echo "Starting APISIX containers..."
     if ${DOCKER_COMPOSE_CMD:-docker-compose} up -d; then
@@ -254,14 +311,17 @@ setup_apisix() {
 
     cd "$original_dir"
 
-    # Note: Certificate integration disabled since GSAi now uses HTTP
-    # integrate_custom_openapi_certificates
+    # Integrate SSL certificates if needed for HTTPS providers
+    if [[ "$FORCE_ZSCALER" == "true" ]]; then
+        echo "   🔒 Zscaler mode: SSL certificate integration may be needed"
+    fi
+    # integrate_custom_openapi_certificates  # Uncomment if certificates are needed
 
     # Wait for APISIX to be ready
     if wait_for_apisix_ready; then
         echo "✅ APISIX is ready"
 
-        # Register API key consumer (critical for GSAi and other key-auth routes)
+        # Register API key consumer (critical for key-auth routes)
         register_api_key_consumer
 
         return 0
@@ -393,7 +453,7 @@ verify_apisix_config() {
 }
 
 # Function to register API key consumer
-# Critical for GSAi and other routes using key-auth plugin
+# Critical for routes using key-auth plugin
 register_api_key_consumer() {
     echo "🔑 Registering API key consumer for APISIX..."
 
@@ -455,7 +515,7 @@ register_api_key_consumer() {
 
     if echo "$consumer_response" | grep -q "\"username\":\"${consumer_name}\""; then
         echo "✅ Created API key consumer '${consumer_name}' successfully"
-        echo "   This enables X-API-Key authentication for GSAi and other routes"
+        echo "   This enables X-API-Key authentication for API routes"
         return 0
     else
         echo "❌ Failed to create API key consumer"

@@ -14,11 +14,12 @@ with enhanced features including advanced resource providers, caching, and metad
 import logging
 from typing import Any, Dict, List, Optional, Self, cast
 
+from mcp.types import Resource
+
 # Import resource providers to auto-register them
 from app.mcp.resources import configuration, datasets  # noqa: F401
 from app.mcp.resources.base import advanced_resource_registry
 from app.mcp.resources.manager import resource_manager
-from mcp.types import Resource
 
 logger = logging.getLogger(__name__)
 

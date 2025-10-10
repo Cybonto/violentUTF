@@ -8,6 +8,7 @@ This section allows users to create, load, and manage datasets with enhanced PyR
 - **Load from PyRIT Memory** for accessing saved datasets across sessions
 - **Dual storage options** (session state + persistent memory)
 - **Advanced memory statistics** and dataset management
+- **OllaGen1 Data Splitter** for handling large cognitive assessment datasets with GitHub compatibility
 
 ## 3a. Choose Dataset Source
 
@@ -40,26 +41,53 @@ The flows below are displayed dynamically in the right column according to the s
 
 ### 3b.A Flow for "Select Natively Supported Datasets"
 
-#### 3b.A.1 Display Natively Supported Datasets
+#### 3b.A.1 Display Dataset Categories
 
 **Display:**
-- Dropdown list of PyRIT-supported datasets loaded via `data_loaders.get_pyrit_datasets()`
-- Default "-- Select --" option to prevent premature loading
+- Dropdown list of dataset categories organized by purpose and functionality:
+  - **AI Safety & Harm Evaluation** - General AI safety, harmful behavior detection, and security vulnerabilities
+  - **Bias & Fairness Testing** - Detecting demographic bias, stereotyping, and fairness issues
+  - **Jailbreaking & Attack Resistance** - Testing model robustness against sophisticated prompt attacks
+  - **Privacy & Contextual Integrity** - Privacy sensitivity, contextual awareness, and data protection
+  - **Cognitive & Behavioral Assessment** - Cognitive abilities, behavioral patterns, and compliance evaluation
+  - **Domain-Specific Reasoning** - Specialized knowledge domains and professional reasoning
+  - **Specialized Security & Compliance** - Specialized security testing and regulatory compliance
+- Default "-- Select Category --" option to prevent premature loading
 
 **Action:**
-- User selects a dataset from the dropdown
+- User selects a dataset category from the dropdown
+- System displays category description and available datasets within that category
+
+**Backend:**
+- Retrieve available dataset categories from API (`/api/v1/datasets/categories`)
+- Handle category loading errors gracefully
+- Store selected category in session state
+
+#### 3b.A.2 Display Datasets Within Category
+
+**Display:**
+- Dropdown list of datasets within the selected category
+- Dataset descriptions and configuration requirements
+- Default "-- Select Dataset --" option
+
+**Action:**
+- User selects a specific dataset from within the chosen category
 - System loads dataset metadata and configuration options
 
 **Backend:**
-- Retrieve available PyRIT datasets dynamically
-- Handle dataset loading errors gracefully
+- Filter datasets by selected category
+- Retrieve dataset-specific configuration options
 - Store selected dataset in session state
 
-#### 3b.A.2 Configure Dataset Parameters
+#### 3b.A.3 Configure Dataset Parameters
 
 **Display:**
 - Dataset-specific configuration options (e.g., language selection for `aya_redteaming`)
 - Configuration appears only when a valid dataset is selected
+- **OllaGen1 Special Options**:
+  - Question type selection: WCP, WHO, TeamRisk, TargetFactor
+  - Scenario limit: 1000, 10000, 50000, or all (169,999)
+  - Automatic file splitting for GitHub compatibility when file exceeds limits
 
 **Action:**
 - User configures dataset-specific parameters as needed
@@ -70,7 +98,7 @@ The flows below are displayed dynamically in the right column according to the s
 - Validate parameter combinations
 - Prepare for dataset loading
 
-#### 3b.A.3 Load Dataset
+#### 3b.A.4 Load Dataset
 
 **Display:**
 - Loading spinner during dataset fetch
@@ -440,3 +468,38 @@ Configure Dataset → Finalize → Save Options →
 - **Secure storage** of dataset collections
 
 This enhanced dataset configuration provides a comprehensive, persistent, and user-friendly interface for managing datasets across the entire red-teaming workflow with seamless PyRIT memory integration.
+
+## 🧠 Special Feature: OllaGen1 Cognitive Assessment Dataset
+
+### Overview
+The **OllaGen1 Cognitive Behavioral Security Assessment** dataset is a specialized native dataset containing 169,999 cognitive security scenarios with comprehensive behavioral analysis data.
+
+### Dataset Specifications
+- **Total Scenarios**: 169,999 cognitive behavioral security scenarios
+- **Q&A Pairs**: 679,996 total questions and answers (4 per scenario)
+- **Question Types**: WCP, WHO, TeamRisk, TargetFactor
+- **File Size**: ~25MB (requires splitting for GitHub compatibility)
+- **Schema**: 22-column structured format with person profiles and risk scores
+
+### Automatic Data Splitting
+When the OllaGen1 dataset is selected and the source file exceeds GitHub's size limits:
+
+1. **Automatic Detection**: System detects file size and triggers splitting
+2. **GitHub Compatibility**: Splits into ~10MB chunks suitable for version control
+3. **Data Integrity**: Maintains scenario relationships and validates all splits
+4. **Manifest Generation**: Creates reconstruction metadata for seamless merging
+5. **Zero Data Loss**: SHA-256 checksums ensure complete data preservation
+
+### Configuration Options
+- **Question Type Filter**: Select specific question types (WCP, WHO, TeamRisk, TargetFactor)
+- **Scenario Limit**: Choose from 1,000, 10,000, 50,000, or all 169,999 scenarios
+- **Cognitive Framework**: Preserves behavioral constructs and person profiles
+- **Performance Optimization**: Memory-efficient processing for large datasets
+
+### Usage Scenarios
+- **Security Compliance Testing**: Evaluate AI systems against cognitive behavioral frameworks
+- **Large-Scale Assessment**: Process comprehensive security scenarios at scale
+- **GitHub Repository Management**: Store and version control large assessment datasets
+- **Distributed Processing**: Split datasets for parallel processing workflows
+
+For detailed information on using the OllaGen1 Data Splitter, see the **[OllaGen1 Data Splitter Guide](../guides/Guide_OllaGen1_Data_Splitter.md)**.

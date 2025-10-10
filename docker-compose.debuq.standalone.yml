@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  debuq:
+    build:
+      context: .
+      dockerfile: docker/debuq.dockerfile
+    image: violentutf-debuq:latest
+    container_name: violentutf-debuq
+    networks:
+      - default
+    restart: unless-stopped
+    labels:
+      - "com.violentutf.role=debuq"
+      - "com.violentutf.description=Minimal debuq container"
+
+networks:
+  default:
+    driver: bridge

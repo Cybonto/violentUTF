@@ -1,0 +1,155 @@
+@startuml MCP Integration Flow
+!theme cerulean-outline
+skinparam backgroundColor white
+
+title ViolentUTF MCP Integration Data Flow
+
+actor "Developer" as Dev
+participant "Claude Desktop" as Claude
+participant "APISIX\nGateway" as APISIX
+participant "MCP Server" as MCP
+participant "FastAPI\nBackend" as FastAPI
+participant "PyRIT\nFramework" as PyRIT
+participant "DuckDB\nStores" as DuckDB
+participant "File System" as FS
+participant "AI Provider" as AI
+
+== MCP Connection Establishment ==
+Dev -> Claude: Configure MCP server
+Claude -> APISIX: Connect to MCP endpoint\n(http://localhost:9080/mcp/sse)
+APISIX -> MCP: Route to MCP server
+MCP -> MCP: Initialize SSE transport
+MCP -> Claude: Connection established\n(JSON-RPC 2.0/SSE)
+
+== Authentication & Capability Exchange ==
+Claude -> MCP: Initialize request
+MCP -> MCP: Start OAuth 2.0 PKCE flow
+MCP -> Claude: Authentication challenge
+Claude -> Dev: OAuth consent flow
+Dev -> MCP: Authorization granted
+MCP -> MCP: Generate session token
+MCP -> Claude: Capabilities response\n(23+ tools, 12+ prompts, resources)
+
+== Tool Discovery and Invocation ==
+Claude -> MCP: List available tools
+MCP -> MCP: Query tool registry
+MCP -> Claude: Tool list\n(generators, orchestrators, scorers, etc.)
+
+Dev -> Claude: "Create a new AI generator for testing"
+Claude -> MCP: Call tool: create_generator
+note right of MCP: Tool: create_generator\nParameters: name, type, config
+
+MCP -> FastAPI: POST /api/v1/generators\n(with user context)
+FastAPI -> FastAPI: Validate generator config
+FastAPI -> DuckDB: Store generator
+note right of DuckDB: Table: generators\nUser-specific database
+DuckDB -> FastAPI: Generator ID
+FastAPI -> MCP: Generator created
+MCP -> Claude: Tool result
+Claude -> Dev: "Generator 'test-gpt4' created successfully"
+
+== Resource Access ==
+Dev -> Claude: "Show me the latest test results"
+Claude -> MCP: List resources: test_results
+MCP -> MCP: Query resource manager
+MCP -> DuckDB: Get recent test data
+DuckDB -> MCP: Test result files
+MCP -> FS: Read result files
+FS -> MCP: File contents
+MCP -> Claude: Resource content
+Claude -> Dev: Display formatted results
+
+== Prompt Template Usage ==
+Dev -> Claude: "Run a security test using the jailbreak template"
+Claude -> MCP: Get prompt: security_jailbreak_test
+MCP -> MCP: Query prompt registry
+MCP -> Claude: Prompt template with parameters
+
+Claude -> Claude: Inject user parameters
+Claude -> MCP: Call tool: execute_orchestrator
+note right of MCP: Tool: execute_orchestrator\nParameters: generator_id, dataset_id, scorer_id
+
+MCP -> FastAPI: POST /api/v1/orchestrators/execute
+FastAPI -> DuckDB: Load configuration
+FastAPI -> PyRIT: Create orchestrator
+PyRIT -> AI: Execute security test
+AI -> PyRIT: Test responses
+PyRIT -> PyRIT: Apply scoring
+PyRIT -> DuckDB: Store results
+FastAPI -> MCP: Execution status
+MCP -> Claude: Tool result with metrics
+Claude -> Dev: "Security test completed: 3/10 prompts flagged"
+
+== Real-time Updates ==
+MCP -> Claude: Progress notifications\n(SSE stream)
+note right of MCP: Streaming updates during\nlong-running operations
+
+== Advanced Workflow Example ==
+Dev -> Claude: "Analyze AI model vulnerabilities and generate a report"
+
+' Multi-tool workflow
+Claude -> MCP: Call: list_available_datasets
+MCP -> DuckDB: Query datasets
+MCP -> Claude: Dataset options
+
+Claude -> MCP: Call: create_vulnerability_scan
+MCP -> FastAPI: Configure Garak scan
+FastAPI -> FastAPI: Validate scan parameters
+
+Claude -> MCP: Call: execute_scan
+MCP -> FastAPI: Start scan execution
+FastAPI -> PyRIT: Load test prompts
+FastAPI -> AI: Execute vulnerability probes
+
+loop Scan Progress
+    MCP -> Claude: Progress update (SSE)
+    Claude -> Dev: "Scanning... 45% complete"
+end
+
+FastAPI -> FS: Generate report
+FastAPI -> MCP: Scan complete
+MCP -> Claude: Final results
+
+Claude -> MCP: Get resource: scan_report
+MCP -> FS: Read report file
+MCP -> Claude: Report content
+Claude -> Dev: Display vulnerability analysis
+
+== MCP Architecture Layers ==
+
+group Transport Layer
+    note over MCP, Claude: Server-Sent Events (SSE)\nJSON-RPC 2.0 protocol
+end
+
+group Authentication Layer
+    note over MCP: OAuth 2.0 with PKCE\nJWT session management
+end
+
+group Tool Interface (23+ tools)
+    note over MCP: Generator management\nOrchestrator execution\nScorer configuration\nDataset operations\nSecurity analysis
+end
+
+group Prompt Interface (12+ prompts)
+    note over MCP: Security testing templates\nJailbreak patterns\nBias detection prompts\nVulnerability probes
+end
+
+group Resource Interface
+    note over MCP: Configuration files\nTest results\nDataset files\nLog access
+end
+
+== Error Handling ==
+alt Tool Execution Error
+    MCP -> FastAPI: Tool call fails
+    FastAPI -> MCP: Error response
+    MCP -> Claude: Tool error\n(JSON-RPC error format)
+    Claude -> Dev: "Error: Invalid generator configuration"
+end
+
+alt Authentication Error
+    Claude -> MCP: Tool call with expired token
+    MCP -> MCP: Validate session
+    MCP -> Claude: Authentication required
+    Claude -> Dev: Re-authentication flow
+end
+
+@enduml

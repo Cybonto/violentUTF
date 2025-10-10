@@ -1,0 +1,63 @@
+{
+  "timestamp": "2025-10-05T18:43:59.134717+00:00",
+  "database_path": "/var/folders/dx/q9229th15tq2n0grk92tb_7r0000gn/T/pyrit_benchmark_fgplkjse/benchmark_test.db",
+  "benchmarks": {
+    "initialization": {
+      "cold_start_seconds": 0.0,
+      "warm_start_seconds": 0.0
+    },
+    "bulk_insert": {
+      "100_prompts": {
+        "elapsed_seconds": 0.025,
+        "prompts_per_second": 4003.48,
+        "avg_time_per_prompt_ms": 0.2498
+      },
+      "1000_prompts": {
+        "elapsed_seconds": 0.1806,
+        "prompts_per_second": 5537.13,
+        "avg_time_per_prompt_ms": 0.1806
+      },
+      "5000_prompts": {
+        "elapsed_seconds": 1.0426,
+        "prompts_per_second": 4795.49,
+        "avg_time_per_prompt_ms": 0.2085
+      }
+    },
+    "query_operations": {
+      "get_all_prompts": {
+        "elapsed_seconds": 0.4724,
+        "count": 5000
+      },
+      "get_filtered_prompts": {
+        "elapsed_seconds": 0.0684,
+        "count": 500
+      },
+      "get_search_prompts": {
+        "elapsed_seconds": 0.0014,
+        "count": 1
+      }
+    },
+    "concurrent_operations": {
+      "total_elapsed_seconds": 0.2425,
+      "batch_times": [
+        0.0405,
+        0.0401,
+        0.0399,
+        0.0399,
+        0.04
+      ],
+      "total_prompts": 500,
+      "prompts_per_second": 2061.86
+    }
+  },
+  "metrics": {
+    "summary": {
+      "initialization_time": "0.0s",
+      "insert_1000_prompts_time": "0.1806s",
+      "insert_throughput": "5537.13 prompts/s",
+      "query_all_time": "0.4724s",
+      "concurrent_throughput": "2061.86 prompts/s"
+    },
+    "performance_grade": "EXCELLENT"
+  }
+}

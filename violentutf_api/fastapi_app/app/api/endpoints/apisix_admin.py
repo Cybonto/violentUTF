@@ -12,11 +12,12 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import httpx
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.models.auth import User
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
