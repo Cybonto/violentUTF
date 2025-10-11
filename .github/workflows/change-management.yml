@@ -52,8 +52,7 @@ jobs:
 
       - name: Validate change management configuration
         run: |
-          cd scripts/change-management
-          python3 validate_change_procedures.py --test-workflows
+          PYTHONPATH=. python3 scripts/change-management/validate_change_procedures.py --test-workflows
 
       - name: Run change management tests
         run: |
@@ -61,13 +60,11 @@ jobs:
 
       - name: Validate rollback procedures
         run: |
-          cd scripts/change-management
-          python3 validate_change_procedures.py --validate-rollback --database-type sqlite
+          PYTHONPATH=. python3 scripts/change-management/validate_change_procedures.py --validate-rollback --database-type sqlite
 
       - name: Validate incident response runbooks
         run: |
-          cd scripts/change-management
-          python3 validate_change_procedures.py --validate-incident-response
+          PYTHONPATH=. python3 scripts/change-management/validate_change_procedures.py --validate-incident-response
 
   rollback-testing:
     name: Test Rollback Procedures
@@ -91,8 +88,7 @@ jobs:
 
       - name: Test SQLite rollback automation
         run: |
-          cd scripts/change-management
-          python3 implement_rollback_procedures.py \
+          PYTHONPATH=. python3 scripts/change-management/implement_rollback_procedures.py \
             --test-automation \
             --database-type sqlite \
             --dry-run
@@ -100,8 +96,7 @@ jobs:
       - name: Generate rollback test report
         if: always()
         run: |
-          cd scripts/change-management
-          python3 implement_rollback_procedures.py \
+          PYTHONPATH=. python3 scripts/change-management/implement_rollback_procedures.py \
             --test-automation \
             --database-type sqlite \
             --dry-run \
@@ -157,7 +152,7 @@ jobs:
 
       - name: Run security scan
         run: |
-          bandit -r scripts/change-management/ -ll -i
+          bandit -r scripts/change_management/ -ll -i
 
   approval-gate:
     name: Change Approval Gate
