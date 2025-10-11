@@ -1,0 +1,40 @@
+title: Cross-Service Database Incident Response
+database_type: multiple
+severity: critical
+rto_target: 30
+rpo_target: 60
+detection:
+  symptoms:
+  - Multiple services affected
+  - Cascading failures
+  - Service dependency issues
+  monitoring_commands:
+  - ./check_services.sh
+  - Review service dependencies
+  - Check database connections
+recovery_steps:
+- step_number: 1
+  title: Identify root cause
+  commands:
+  - Map service dependencies
+  - Identify failing component
+  estimated_time_minutes: 10
+- step_number: 2
+  title: Isolate failure
+  commands:
+  - Stop cascade
+  - Implement circuit breakers
+  estimated_time_minutes: 5
+- step_number: 3
+  title: Restore services sequentially
+  commands:
+  - Restore database layer first
+  - Then API layer
+  - Finally frontend
+  estimated_time_minutes: 20
+escalation:
+  immediate:
+  - oncall
+  - dba_team
+  - infrastructure_team
+  - management

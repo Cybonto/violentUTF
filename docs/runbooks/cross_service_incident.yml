@@ -1,0 +1,113 @@
+title: Cross-Service Database Incident Response
+service: multi_service
+database_type: multi
+severity: critical
+rto_target: 30
+rpo_target: 60
+last_updated: '2025-10-11T12:00:00.000000'
+
+detection:
+  symptoms:
+  - Multiple services experiencing issues simultaneously
+  - Cascade failures across service boundaries
+  - Database replication lag
+  - Inter-service communication failures
+  monitoring_commands:
+  - command: ./check_services.sh
+    expected_result: All services healthy
+    failure_indication: Multiple services down or degraded
+  log_locations:
+  - apisix/logs/
+  - keycloak/logs/
+  - violentutf_api/fastapi_app/logs/
+  - /var/log/postgresql/
+
+immediate_response:
+  alert_team: All engineering teams and operations
+  escalation_trigger: System-wide outage > 15 minutes
+  initial_actions:
+  - action: Assess service health across all systems
+    command: ./check_services.sh && python3 scripts/change-management/incident/health_matrix.py
+    timeout: 3 minutes
+  - action: Identify primary failure point
+    command: python3 scripts/change-management/incident/failure_analysis.py --cross-service
+    timeout: 5 minutes
+  - action: Coordinate response teams
+    command: python3 scripts/change-management/incident/coordinate_teams.py --all
+    timeout: 2 minutes
+
+recovery_steps:
+- step_number: 1
+  title: Map service dependency failure
+  description: Identify which service failure is causing cascade
+  estimated_time_minutes: 5
+  commands:
+  - python3 scripts/change-management/incident/dependency_mapper.py --analyze-failures
+  - docker ps --filter "health=unhealthy"
+  expected_result: Root cause service identified
+
+- step_number: 2
+  title: Restore primary service
+  description: Focus recovery on root cause service
+  estimated_time_minutes: 15
+  commands:
+  - python3 scripts/change-management/incident/targeted_recovery.py --service primary
+  - docker-compose restart {primary_service}
+  expected_result: Primary service restored
+
+- step_number: 3
+  title: Restore dependent services in order
+  description: Bring up services respecting dependency order
+  estimated_time_minutes: 10
+  commands:
+  - python3 scripts/change-management/incident/ordered_restart.py --dependency-aware
+  expected_result: All services operational
+
+- step_number: 4
+  title: Validate cross-service communication
+  description: Verify all services can communicate properly
+  estimated_time_minutes: 5
+  commands:
+  - python3 scripts/change-management/incident/integration_test.py --all-services
+  - ./check_services.sh
+  expected_result: All integration tests pass
+
+rollback_procedures:
+- trigger: Coordinated recovery fails
+  steps:
+  - Isolate failing service
+  - Restore remaining services independently
+  - Implement manual failover if available
+
+escalation:
+  complete_system_failure: Activate disaster recovery site
+  recovery_fails_30min: Escalate to CTO and activate business continuity
+  data_inconsistency_detected: Pause recovery, engage data integrity team
+
+communication_templates:
+  initial_alert:
+    subject: 'CRITICAL: System-wide service disruption'
+    body: 'Multiple services affected. Coordinated recovery in progress. ETA: 30 minutes. Status updates every 10 minutes.'
+  recovery_complete:
+    subject: 'RESOLVED: All services restored'
+    body: 'All services operational. Root cause: {cause}. Preventive measures: {measures}. Recovery time: {duration} minutes.'
+
+validation:
+  health_checks:
+  - check: All services running
+    command: ./check_services.sh
+    expected: All services healthy
+  - check: Database connectivity
+    command: python3 scripts/change-management/incident/connectivity_check.py
+    expected: All databases accessible
+  - check: Inter-service communication
+    command: python3 scripts/change-management/incident/integration_test.py
+    expected: All tests pass
+  functional_tests:
+  - End-to-end user authentication flow
+  - API request processing
+  - MCP tool execution
+  - Dashboard functionality
+  performance_validation:
+    response_time: All services within normal parameters
+    rto_check: Verify total recovery time <= 30 minutes

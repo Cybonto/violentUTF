@@ -1,0 +1,141 @@
+title: Data Integrity Incident Response
+service: database_integrity
+database_type: multi
+severity: high
+rto_target: 60
+rpo_target: 30
+last_updated: '2025-10-11T12:00:00.000000'
+
+detection:
+  symptoms:
+  - Data corruption detected
+  - Referential integrity violations
+  - Unexpected NULL values in required fields
+  - Foreign key constraint failures
+  - Checksum mismatches
+  monitoring_commands:
+  - command: sqlite3 db.db "PRAGMA integrity_check"
+    expected_result: ok
+    failure_indication: Corruption detected
+  - command: psql -c "SELECT * FROM pg_stat_database_conflicts"
+    expected_result: Zero or minimal conflicts
+    failure_indication: High conflict count
+  log_locations:
+  - violentutf_api/fastapi_app/logs/
+  - keycloak/logs/
+  - /var/log/postgresql/
+
+immediate_response:
+  alert_team: Database, Security, and Development teams
+  escalation_trigger: Data loss > 1000 records or > 1 hour
+  initial_actions:
+  - action: Stop all write operations
+    command: python3 scripts/change-management/incident/emergency_readonly.py --all-databases
+    timeout: 2 minutes
+  - action: Create emergency backups
+    command: python3 scripts/change-management/rollback/emergency_backup.py --all
+    timeout: 5 minutes
+  - action: Assess corruption scope
+    command: python3 scripts/change-management/incident/assess_corruption.py --full-scan
+    timeout: 10 minutes
+
+recovery_steps:
+- step_number: 1
+  title: Identify corruption source and extent
+  description: Determine what data is corrupted and identify root cause
+  estimated_time_minutes: 10
+  commands:
+  - sqlite3 database.db "PRAGMA integrity_check"
+  - python3 scripts/change-management/incident/corruption_analyzer.py --database all
+  expected_result: Corruption scope identified and isolated
+  troubleshooting:
+    widespread_corruption: Restore from backup immediately
+    isolated_corruption: Attempt surgical data repair
+
+- step_number: 2
+  title: Isolate affected tables/records
+  description: Quarantine corrupted data to prevent spread
+  estimated_time_minutes: 5
+  commands:
+  - python3 scripts/change-management/incident/quarantine_data.py --corrupted-tables
+  expected_result: Corrupted data isolated
+  troubleshooting:
+    cannot_isolate: Proceed with full database restore
+
+- step_number: 3
+  title: Attempt data recovery
+  description: Try to recover corrupted data from transaction logs or backups
+  estimated_time_minutes: 20
+  commands:
+  - python3 scripts/change-management/rollback/recover_from_wal.py --target corrupted_tables
+  - python3 scripts/change-management/rollback/partial_restore.py --tables corrupted_tables
+  expected_result: Data recovered or restore plan confirmed
+  troubleshooting:
+    recovery_fails: Proceed with full backup restore
+    partial_recovery: Document irrecoverable data
+
+- step_number: 4
+  title: Validate data integrity
+  description: Verify all data integrity constraints and relationships
+  estimated_time_minutes: 15
+  commands:
+  - python3 scripts/change-management/incident/validate_integrity.py --comprehensive
+  - sqlite3 database.db "PRAGMA foreign_key_check"
+  - psql -c "SELECT * FROM check_all_constraints()"
+  expected_result: All integrity checks pass
+  troubleshooting:
+    integrity_fails: Repeat recovery with older backup
+
+- step_number: 5
+  title: Root cause analysis
+  description: Identify and document root cause to prevent recurrence
+  estimated_time_minutes: 20
+  commands:
+  - python3 scripts/change-management/incident/root_cause_analysis.py
+  - tail -1000 /var/log/postgresql/postgresql.log | grep ERROR
+  expected_result: Root cause identified and documented
+  troubleshooting:
+    cause_unknown: Escalate to vendor support
+
+rollback_procedures:
+- trigger: Data recovery fails
+  steps:
+  - Restore from most recent known-good backup
+  - Re-apply transactions from WAL logs
+  - Validate integrity
+  - Resume normal operations
+
+escalation:
+  data_loss_irrecover able: Activate disaster recovery plan and notify management
+  corruption_from_security_breach: Engage security incident response team
+  vendor_bug_suspected: Contact vendor support with diagnostics
+  rto_breach_1hour: Escalate to CTO and activate business continuity
+
+communication_templates:
+  initial_alert:
+    subject: 'URGENT: Data integrity issue detected'
+    body: 'Data integrity violations detected. Write operations suspended. Investigation in progress. ETA: 30 minutes.'
+  recovery_complete:
+    subject: 'RESOLVED: Data integrity restored'
+    body: 'Data integrity has been restored. All validation checks passed. Root cause: {cause}. Prevention measures implemented.'
+
+validation:
+  health_checks:
+  - check: Database integrity
+    command: python3 scripts/change-management/incident/validate_integrity.py
+    expected: All checks pass
+  - check: Referential integrity
+    command: sqlite3 db.db "PRAGMA foreign_key_check"
+    expected: No violations
+  - check: Data consistency
+    command: python3 scripts/change-management/incident/consistency_check.py
+    expected: All data consistent
+  functional_tests:
+  - Verify CRUD operations on affected tables
+  - Validate foreign key relationships
+  - Test application data access
+  - Confirm backup integrity
+  performance_validation:
+    response_time: Database operations within normal parameters
+    rto_check: Verify total recovery time <= 60 minutes
+    data_loss_check: Confirm RPO <= 30 minutes

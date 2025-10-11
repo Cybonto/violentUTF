@@ -1,0 +1,46 @@
+title: Data Integrity Incident Response
+database_type: all
+severity: high
+rto_target: 60
+rpo_target: 120
+detection:
+  symptoms:
+  - Data corruption detected
+  - Referential integrity violations
+  - Unexpected NULL values in required fields
+  - Data inconsistency across related tables
+  monitoring_commands:
+  - SELECT COUNT(*) FROM table WHERE expected_field IS NULL
+  - PRAGMA integrity_check (SQLite)
+  - SELECT * FROM pg_stat_database (PostgreSQL)
+recovery_steps:
+- step_number: 1
+  title: Identify scope of corruption
+  commands:
+  - Run integrity checks
+  - Compare with backups
+  estimated_time_minutes: 10
+- step_number: 2
+  title: Isolate affected data
+  commands:
+  - Mark corrupted records
+  - Prevent further corruption
+  estimated_time_minutes: 5
+- step_number: 3
+  title: Restore from backup
+  commands:
+  - python3 implement_rollback_procedures.py --test-automation
+  estimated_time_minutes: 30
+- step_number: 4
+  title: Validate data integrity
+  commands:
+  - Run integrity checks
+  - Verify data consistency
+  estimated_time_minutes: 15
+escalation:
+  immediate:
+  - dba_team
+  - data_team
+  after_30_min:
+  - tech_lead
+  - management

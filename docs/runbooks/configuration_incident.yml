@@ -1,0 +1,74 @@
+title: Configuration Error Incident Response
+service: configuration_management
+database_type: multi
+severity: medium
+rto_target: 240
+rpo_target: 60
+last_updated: '2025-10-11T12:00:00.000000'
+
+detection:
+  symptoms:
+  - Service startup failures
+  - Configuration validation errors
+  - Unexpected behavior after config change
+  - Service degradation post-deployment
+  monitoring_commands:
+  - command: python3 scripts/config-management/validate_configs.py --all
+    expected_result: All configurations valid
+    failure_indication: Validation errors detected
+  log_locations:
+  - apisix/logs/
+  - keycloak/logs/
+  - violentutf_api/fastapi_app/logs/
+
+immediate_response:
+  alert_team: Operations and Development teams
+  escalation_trigger: Service outage > 2 hours
+  initial_actions:
+  - action: Identify changed configurations
+    command: python3 scripts/change-management/incident/config_diff.py
+    timeout: 2 minutes
+  - action: Validate current configs
+    command: python3 scripts/config-management/validate_configs.py --verbose
+    timeout: 3 minutes
+
+recovery_steps:
+- step_number: 1
+  title: Identify configuration changes
+  description: Determine which configurations changed and when
+  estimated_time_minutes: 5
+  commands:
+  - git log --since="24 hours ago" -- "**/config*"
+  - python3 scripts/change-management/incident/config_diff.py --detailed
+
+- step_number: 2
+  title: Rollback to known-good configuration
+  description: Restore previous working configuration
+  estimated_time_minutes: 10
+  commands:
+  - python3 scripts/change-management/rollback/config_rollback.py --auto
+  - python3 scripts/change-management/incident/restart_affected_services.py
+
+- step_number: 3
+  title: Validate configuration restore
+  description: Verify services operational with restored config
+  estimated_time_minutes: 5
+  commands:
+  - python3 scripts/config-management/validate_configs.py --all
+  - ./check_services.sh
+
+rollback_procedures:
+- trigger: Configuration rollback fails
+  steps:
+  - Restore from configuration backup
+  - Manually rebuild configuration
+  - Restart services in dependency order
+
+validation:
+  health_checks:
+  - check: All services running
+    command: ./check_services.sh
+    expected: All services healthy
+  - check: Configuration valid
+    command: python3 scripts/config-management/validate_configs.py
+    expected: All validations pass

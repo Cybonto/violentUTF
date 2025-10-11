@@ -1,0 +1,14 @@
+windows:
+- day_of_week: Sunday
+  duration_hours: 2
+  id: MW-WEEKLY
+  name: Weekly Maintenance Window
+  recurring: true
+  schedule: Sunday 02:00-04:00 UTC
+  start_hour: 2
+- duration_hours: 6
+  frequency: monthly
+  id: MW-MONTHLY
+  name: Monthly Major Maintenance
+  recurring: true
+  schedule: First Sunday 00:00-06:00 UTC
