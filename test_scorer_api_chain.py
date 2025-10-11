@@ -45,26 +45,26 @@ BLUE = "\033[94m"
 RESET = "\033[0m"
 
 
-def print_section(title):
+def print_section(title: str) -> None:
     """Print a formatted section header"""
     print(f"\n{BLUE}{'='*60}{RESET}")
     print(f"{BLUE}{title}{RESET}")
     print(f"{BLUE}{'='*60}{RESET}")
 
 
-def print_success(msg):
+def print_success(msg: str) -> None:
     print(f"{GREEN}✅ {msg}{RESET}")
 
 
-def print_error(msg):
+def print_error(msg: str) -> None:
     print(f"{RED}❌ {msg}{RESET}")
 
 
-def print_warning(msg):
+def print_warning(msg: str) -> None:
     print(f"{YELLOW}⚠️  {msg}{RESET}")
 
 
-def print_info(msg):
+def print_info(msg: str) -> None:
     print(f"ℹ️  {msg}")
 
 

@@ -31,7 +31,7 @@ class ErrorUXMetrics:
 
 class ErrorUXTester:
     """Error user experience testing framework"""
-    
+
     def __init__(self) -> None:
         """Initialize ErrorUXTester.
         
@@ -39,7 +39,7 @@ class ErrorUXTester:
         test results list for tracking error UX metrics.
         """
         self.test_results: List[ErrorUXMetrics] = []
-        
+
     def test_error_message_clarity(self, error_type: ErrorType) -> float:
         """
         Test error message clarity and understandability
@@ -54,7 +54,7 @@ class ErrorUXTester:
             "Error message clarity testing not implemented. "
             "Requires user comprehension testing and message analysis."
         )
-        
+
     def test_error_recovery_mechanisms(self, error_scenarios: List[str]) -> Dict[str, float]:
         """
         Test error recovery mechanisms effectiveness
@@ -69,7 +69,7 @@ class ErrorUXTester:
             "Error recovery mechanism testing not implemented. "
             "Requires error injection and recovery path validation."
         )
-        
+
     def analyze_user_error_experience(self, workflow: str) -> ErrorUXMetrics:
         """
         Analyze overall user error experience
@@ -84,7 +84,7 @@ class ErrorUXTester:
             "User error experience analysis not implemented. "
             "Requires user behavior tracking during error conditions."
         )
-        
+
     def test_error_prevention_mechanisms(self) -> Dict[str, Any]:
         """
         Test error prevention mechanisms
@@ -96,7 +96,7 @@ class ErrorUXTester:
             "Error prevention mechanism testing not implemented. "
             "Requires proactive error detection and prevention analysis."
         )
-        
+
     def validate_error_help_system(self, error_types: List[ErrorType]) -> Dict[ErrorType, float]:
         """
         Validate error help system effectiveness
@@ -111,7 +111,7 @@ class ErrorUXTester:
             "Error help system validation not implemented. "
             "Requires help content effectiveness measurement and user testing."
         )
-        
+
     def test_error_notification_timing(self) -> Dict[str, float]:
         """
         Test error notification timing and delivery

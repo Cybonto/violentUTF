@@ -29,7 +29,7 @@ class ScalabilityMetrics:
 
 class SystemScalabilityMonitor:
     """Monitor system scalability under different load levels"""
-    
+
     def __init__(self, session_id: str = None) -> None:
         """Initialize SystemScalabilityMonitor.
         
@@ -39,11 +39,11 @@ class SystemScalabilityMonitor:
         """
         self.session_id = session_id or f"scalability_{int(time.time())}"
         self.scalability_results: List[ScalabilityMetrics] = []
-        
+
     def test_load_scalability(self, load_levels: List[int]) -> Dict[str, Any]:
         """Test system scalability across different load levels"""
         results = {}
-        
+
         for load_level in load_levels:
             # Mock scalability testing
             metrics = ScalabilityMetrics(
@@ -58,7 +58,7 @@ class SystemScalabilityMonitor:
                 },
                 degradation_factor=max(1.0, load_level * 0.05)
             )
-            
+
             self.scalability_results.append(metrics)
             results[load_level] = {
                 "response_time_ms": metrics.response_time_ms,
@@ -67,44 +67,44 @@ class SystemScalabilityMonitor:
                 "resource_utilization": metrics.resource_utilization,
                 "degradation_factor": metrics.degradation_factor
             }
-        
+
         return {
             "load_test_results": results,
             "scalability_score": self._calculate_scalability_score(),
             "bottlenecks_detected": self._detect_bottlenecks(),
             "recommendations": self._generate_recommendations()
         }
-        
+
     def _calculate_scalability_score(self) -> float:
         """Calculate overall scalability score (0-100)"""
         if not self.scalability_results:
             return 0.0
-            
+
         # Score based on degradation factors
         avg_degradation = sum(m.degradation_factor for m in self.scalability_results) / len(self.scalability_results)
         score = max(0, 100 - (avg_degradation - 1) * 50)
-        
+
         return min(100, score)
-        
+
     def _detect_bottlenecks(self) -> List[str]:
         """Detect performance bottlenecks from results"""
         bottlenecks = []
-        
+
         if self.scalability_results:
             latest = self.scalability_results[-1]
             if latest.resource_utilization["cpu_percent"] > 80:
                 bottlenecks.append("CPU utilization high")
             if latest.resource_utilization["memory_percent"] > 80:
-                bottlenecks.append("Memory utilization high") 
+                bottlenecks.append("Memory utilization high")
             if latest.error_rate > 0.05:
                 bottlenecks.append("Error rate increasing")
-                
+
         return bottlenecks
-        
+
     def _generate_recommendations(self) -> List[str]:
         """Generate performance recommendations"""
         recommendations = []
-        
+
         bottlenecks = self._detect_bottlenecks()
         for bottleneck in bottlenecks:
             if "CPU" in bottleneck:
@@ -113,7 +113,7 @@ class SystemScalabilityMonitor:
                 recommendations.append("Increase memory allocation or optimize memory usage")
             elif "Error" in bottleneck:
                 recommendations.append("Investigate error causes and improve error handling")
-                
+
         return recommendations
 
 
@@ -124,16 +124,16 @@ def measure_system_scalability(load_levels: List[int]) -> Dict[str, Any]:
 
 
 def validate_scalability_requirements(
-    target_load: int, 
+    target_load: int,
     max_response_time_ms: float,
     min_throughput_rps: float
 ) -> Dict[str, Any]:
     """Validate if system meets scalability requirements"""
     monitor = SystemScalabilityMonitor()
     results = monitor.test_load_scalability([target_load])
-    
+
     metrics = results["load_test_results"][target_load]
-    
+
     return {
         "target_load": target_load,
         "requirements_met": (
