@@ -101,33 +101,33 @@ NATIVE_DATASET_TYPES = {**PYRIT_DATASETS, **VIOLENTUTF_NATIVE_DATASETS}
 def test_violentutf_datasets_added():
     """Test that ViolentUTF datasets are present in registry"""
     expected_violentutf = ["ollegen1_cognitive", "garak_redteaming", "legalbench_reasoning"]
-    
+
     for dataset_name in expected_violentutf:
         assert dataset_name in NATIVE_DATASET_TYPES, f"ViolentUTF dataset {dataset_name} should be in registry"
-    
+
     print(f"✅ All expected ViolentUTF datasets found in registry")
 
 
 def test_violentutf_dataset_structure():
     """Test that ViolentUTF datasets have proper structure"""
     required_fields = ["name", "description", "category", "config_required"]
-    
+
     for dataset_name, dataset_info in VIOLENTUTF_NATIVE_DATASETS.items():
         for field in required_fields:
             assert field in dataset_info, f"Dataset {dataset_name} missing required field: {field}"
-        
+
         # Check field types
         assert isinstance(dataset_info["name"], str)
         assert isinstance(dataset_info["description"], str)
         assert isinstance(dataset_info["category"], str)
         assert isinstance(dataset_info["config_required"], bool)
-        
+
         if dataset_info.get("available_configs"):
             assert isinstance(dataset_info["available_configs"], dict)
-        
+
         if dataset_info.get("file_info"):
             assert isinstance(dataset_info["file_info"], dict)
-        
+
         print(f"✅ Dataset {dataset_name} has valid structure")
 
 
@@ -135,10 +135,10 @@ def test_violentutf_dataset_categories():
     """Test that ViolentUTF datasets have appropriate categories"""
     expected_categories = {
         "ollegen1_cognitive": "cognitive_behavioral",
-        "garak_redteaming": "redteaming", 
+        "garak_redteaming": "redteaming",
         "legalbench_reasoning": "legal_reasoning"
     }
-    
+
     for dataset_name, expected_category in expected_categories.items():
         if dataset_name in VIOLENTUTF_NATIVE_DATASETS:
             actual_category = VIOLENTUTF_NATIVE_DATASETS[dataset_name]["category"]
@@ -149,10 +149,10 @@ def test_violentutf_dataset_categories():
 def test_backward_compatibility():
     """Test that PyRIT datasets are still present"""
     expected_pyrit = ["harmbench", "aya_redteaming"]
-    
+
     for dataset_name in expected_pyrit:
         assert dataset_name in NATIVE_DATASET_TYPES, f"PyRIT dataset {dataset_name} should still be in registry"
-    
+
     print(f"✅ PyRIT datasets maintained for backward compatibility")
 
 
@@ -161,10 +161,10 @@ def test_registry_expansion():
     total_datasets = len(NATIVE_DATASET_TYPES)
     pyrit_datasets = len(PYRIT_DATASETS)
     violentutf_datasets = len(VIOLENTUTF_NATIVE_DATASETS)
-    
+
     assert total_datasets == pyrit_datasets + violentutf_datasets, "Registry should combine both dataset types"
     assert violentutf_datasets >= 3, f"Should have at least 3 ViolentUTF datasets, has {violentutf_datasets}"
-    
+
     print(f"✅ Registry expanded: {pyrit_datasets} PyRIT + {violentutf_datasets} ViolentUTF = {total_datasets} total")
 
 
@@ -175,45 +175,45 @@ def test_configuration_support():
         ("garak_redteaming", ["attack_types", "severity_levels"]),
         ("legalbench_reasoning", ["task_types", "complexity_levels"])
     ]
-    
+
     for dataset_name, expected_config_keys in configurable_datasets:
         if dataset_name in VIOLENTUTF_NATIVE_DATASETS:
             dataset_info = VIOLENTUTF_NATIVE_DATASETS[dataset_name]
             assert dataset_info.get("config_required") is True, f"Dataset {dataset_name} should require configuration"
-            
+
             available_configs = dataset_info.get("available_configs")
             assert available_configs is not None, f"Dataset {dataset_name} should have available_configs"
-            
+
             for config_key in expected_config_keys:
                 assert config_key in available_configs, f"Dataset {dataset_name} should have config option: {config_key}"
-            
+
             print(f"✅ Dataset {dataset_name} has proper configuration support")
 
 
 def test_file_info_structure():
     """Test that datasets with split files have file_info"""
     datasets_with_files = ["ollegen1_cognitive", "garak_redteaming", "legalbench_reasoning"]
-    
+
     for dataset_name in datasets_with_files:
         if dataset_name in VIOLENTUTF_NATIVE_DATASETS:
             dataset_info = VIOLENTUTF_NATIVE_DATASETS[dataset_name]
             file_info = dataset_info.get("file_info")
-            
+
             assert file_info is not None, f"Dataset {dataset_name} should have file_info for split files"
             assert isinstance(file_info, dict), f"file_info should be dict for {dataset_name}"
-            
+
             # Check for expected file_info fields
             expected_fields = ["source_pattern", "manifest_file"]
             for field in expected_fields:
                 assert field in file_info, f"Dataset {dataset_name} file_info should have {field}"
-            
+
             print(f"✅ Dataset {dataset_name} has proper file_info structure")
 
 
 def main():
     """Run all unit tests"""
     print("\n🧪 Simple Unit Tests for ViolentUTF Dataset Registry Extension\n")
-    
+
     tests = [
         test_violentutf_datasets_added,
         test_violentutf_dataset_structure,
@@ -223,10 +223,10 @@ def main():
         test_configuration_support,
         test_file_info_structure,
     ]
-    
+
     passed = 0
     total = len(tests)
-    
+
     for test_func in tests:
         try:
             test_func()
@@ -237,9 +237,9 @@ def main():
         except Exception as e:
             print(f"❌ {test_func.__name__}: Unexpected error: {e}")
         print()
-    
+
     print(f"📊 Test Results: {passed}/{total} passed")
-    
+
     if passed == total:
         print("🎉 All tests passed! ViolentUTF dataset registry extension is working correctly!")
         return True

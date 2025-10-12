@@ -33,7 +33,7 @@ def mock_api_responses():
                     "estimated_size": "150MB"
                 },
                 {
-                    "name": "garak_redteaming", 
+                    "name": "garak_redteaming",
                     "description": "Garak AI Red-Teaming Dataset",
                     "config_required": False,
                     "total_entries": 1250,
@@ -41,7 +41,7 @@ def mock_api_responses():
                 },
                 {
                     "name": "legalbench_professional",
-                    "description": "LegalBench Professional Legal Reasoning Dataset", 
+                    "description": "LegalBench Professional Legal Reasoning Dataset",
                     "config_required": True,
                     "available_configs": {
                         "legal_domains": ["contract", "constitutional", "criminal", "tort"],
@@ -64,7 +64,7 @@ def mock_api_responses():
                     "created_at": "2024-01-15T10:30:00Z"
                 },
                 {
-                    "id": "ds_002", 
+                    "id": "ds_002",
                     "name": "test_redteaming_dataset",
                     "source_type": "native",
                     "dataset_type": "garak_redteaming",
@@ -93,7 +93,7 @@ def mock_api_responses():
                     "id": 2,
                     "question": "How should team dynamics be managed during a security crisis to ensure effective decision-making?",
                     "answer": "Effective crisis team management requires: 1) Clear role definition and authority, 2) Structured communication protocols, 3) Regular status updates and escalation paths, 4) Stress management and rotation schedules, 5) Post-incident team debriefing.",
-                    "category": "WHO", 
+                    "category": "WHO",
                     "difficulty": "high",
                     "metadata": {
                         "source": "team_dynamics",
@@ -115,12 +115,13 @@ def mock_api_responses():
         }
     }
 
+
 @pytest.fixture
 def mock_session_state():
     """Mock Streamlit session state for testing"""
     return {
         "access_token": "mock_jwt_token_12345",
-        "api_token": "mock_api_token_67890", 
+        "api_token": "mock_api_token_67890",
         "api_datasets": {},
         "api_dataset_types": [],
         "current_dataset": None,
@@ -128,9 +129,10 @@ def mock_session_state():
         "consistent_username": "violentutf.test"
     }
 
+
 class TestViolentUTFAPIIntegration:
     """Test suite for ViolentUTF API integration"""
-    
+
     def test_api_authentication_headers(self, mock_session_state):
         """Test that API authentication headers are properly configured"""
         with patch('streamlit.session_state', mock_session_state):

@@ -66,17 +66,17 @@ async def async_engine():
         poolclass=StaticPool,
         connect_args={"check_same_thread": False}
     )
-    
+
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield engine
-    
+
     # Drop all tables after test
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    
+
     await engine.dispose()
 
 
@@ -86,7 +86,7 @@ async def async_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
     async_session_maker = sessionmaker(
         async_engine, class_=AsyncSession, expire_on_commit=False
     )
-    
+
     async with async_session_maker() as session:
         yield session
 
@@ -100,15 +100,15 @@ def client() -> TestClient:
 @pytest_asyncio.fixture
 async def async_client(async_session) -> AsyncGenerator[AsyncClient, None]:
     """Create async test client with database session override."""
-    
+
     async def override_get_session():
         yield async_session
-    
+
     app.dependency_overrides[get_session] = override_get_session
-    
+
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    
+
     app.dependency_overrides.clear()
 
 
@@ -230,7 +230,7 @@ async def sample_database_asset(async_session: AsyncSession) -> DatabaseAsset:
         created_by="test_user",
         updated_by="test_user"
     )
-    
+
     async_session.add(asset)
     await async_session.commit()
     await async_session.refresh(asset)
@@ -258,11 +258,11 @@ async def sample_asset_relationship(
         created_by="test_user",
         updated_by="test_user"
     )
-    
+
     async_session.add(target_asset)
     await async_session.commit()
     await async_session.refresh(target_asset)
-    
+
     # Create relationship
     relationship = AssetRelationship(
         source_asset_id=sample_database_asset.id,
@@ -275,7 +275,7 @@ async def sample_asset_relationship(
         created_by="test_user",
         updated_by="test_user"
     )
-    
+
     async_session.add(relationship)
     await async_session.commit()
     await async_session.refresh(relationship)
@@ -299,7 +299,7 @@ async def sample_audit_log(
         compliance_relevant=True,
         timestamp=datetime.now(timezone.utc)
     )
-    
+
     async_session.add(audit_log)
     await async_session.commit()
     await async_session.refresh(audit_log)
@@ -397,7 +397,7 @@ def create_test_asset_dict(
     """Create a test asset dictionary for API testing."""
     if unique_id is None:
         unique_id = f"test-asset-{uuid.uuid4()}"
-    
+
     return {
         "name": name,
         "asset_type": asset_type,

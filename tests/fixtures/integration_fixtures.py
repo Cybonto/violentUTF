@@ -188,7 +188,7 @@ def create_mock_service_responses() -> Dict[str, Any]:
         "keycloak_mock_responses": {
             "token_endpoint_success": {
                 "access_token": "mock_access_token_12345",
-                "refresh_token": "mock_refresh_token_67890", 
+                "refresh_token": "mock_refresh_token_67890",
                 "token_type": "Bearer",
                 "expires_in": 3600
             },

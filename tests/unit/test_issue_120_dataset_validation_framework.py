@@ -116,7 +116,7 @@ class TestDatasetValidationFramework:
         # Test file exists and is readable
         assert os.path.exists(temp_file)
         assert os.path.getsize(temp_file) > 0
-        
+
         # Test file permissions
         assert os.access(temp_file, os.R_OK)
 
@@ -128,14 +128,14 @@ class TestDatasetValidationFramework:
         # Test valid CSV format
         reader = csv.DictReader(io.StringIO(sample_csv_data))
         rows = list(reader)
-        
+
         # Should have expected columns
         expected_columns = ['scenario_id', 'question', 'context', 'answer']
         assert reader.fieldnames == expected_columns
-        
+
         # Should have expected number of rows
         assert len(rows) == 3
-        
+
         # Each row should have all required fields
         for row in rows:
             for col in expected_columns:
@@ -148,7 +148,7 @@ class TestDatasetValidationFramework:
         assert isinstance(sample_json_data, dict)
         assert "questions" in sample_json_data
         assert isinstance(sample_json_data["questions"], list)
-        
+
         # Test each question has required fields
         for question in sample_json_data["questions"]:
             assert "id" in question
@@ -163,10 +163,10 @@ class TestDatasetValidationFramework:
         # Parse original CSV
         reader = csv.DictReader(io.StringIO(sample_csv_data))
         original_rows = list(reader)
-        
+
         # Check that converted data preserves original content
         assert len(sample_pyrit_dataset) == 2  # Sample has 2 items
-        
+
         # In actual implementation, we'd verify the conversion preserved data integrity
         for prompt in sample_pyrit_dataset:
             assert "value" in prompt
@@ -179,18 +179,18 @@ class TestDatasetValidationFramework:
         start_time = time.time()
         time.sleep(0.01)  # Simulate some processing
         end_time = time.time()
-        
+
         processing_time = end_time - start_time
-        
+
         # Test basic performance metrics
         assert processing_time >= 0.01
         assert processing_time < 1.0  # Should be fast for test data
-        
+
         # Test memory usage simulation
         import psutil
         process = psutil.Process()
         memory_usage = process.memory_info().rss
-        
+
         assert memory_usage > 0
         assert memory_usage < 1024 * 1024 * 1024  # Less than 1GB for test
 
@@ -198,7 +198,7 @@ class TestDatasetValidationFramework:
         """Test different validation levels (quick, full, deep)."""
         # This will guide our implementation of validation levels
         validation_levels = ['quick', 'full', 'deep']
-        
+
         for level in validation_levels:
             # Each level should have different validation rules
             assert level in validation_levels
@@ -208,10 +208,10 @@ class TestDatasetValidationFramework:
         # Test with invalid file path
         invalid_path = "/nonexistent/file.csv"
         assert not os.path.exists(invalid_path)
-        
+
         # Test with corrupted data
         corrupted_csv = "invalid,csv,data\nno,proper"  # Missing field
-        
+
         import csv
         import io
 
@@ -233,15 +233,15 @@ class TestSourceDataValidation:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
             f.write("test,data\n1,2")
             temp_file = f.name
-        
+
         try:
             # Test file existence
             assert os.path.exists(temp_file)
-            
+
             # Test file size
             file_size = os.path.getsize(temp_file)
             assert file_size > 0
-            
+
             # Test file readability
             with open(temp_file, 'r') as f:
                 content = f.read()
@@ -255,14 +255,14 @@ class TestSourceDataValidation:
         valid_csv = "col1,col2\nval1,val2"
         import csv
         import io
-        
+
         try:
             reader = csv.reader(io.StringIO(valid_csv))
             rows = list(reader)
             assert len(rows) == 2
         except Exception:
             pytest.fail("Valid CSV should not raise exception")
-        
+
         # JSON validation
         valid_json = '{"key": "value"}'
         try:
@@ -278,13 +278,13 @@ class TestSourceDataValidation:
             "answer": str,
             "context": str
         }
-        
+
         test_record = {
             "question": "Test question",
-            "answer": "Test answer", 
+            "answer": "Test answer",
             "context": "Test context"
         }
-        
+
         # Validate record matches schema
         for field, expected_type in expected_schema.items():
             assert field in test_record
@@ -299,13 +299,13 @@ class TestSourceDataValidation:
             "x" * 10000,  # Very long string - should be flagged
             "Normal length answer"
         ]
-        
+
         for test_string in test_strings:
             if len(test_string) == 0:
                 # Empty strings should be flagged
                 assert len(test_string) == 0
             elif len(test_string) > 5000:
-                # Very long strings should be flagged  
+                # Very long strings should be flagged
                 assert len(test_string) > 5000
             else:
                 # Normal strings should pass
@@ -321,15 +321,15 @@ class TestConversionResultValidation:
             {"question": "Q1", "answer": "A1"},
             {"question": "Q2", "answer": "A2"}
         ]
-        
+
         converted_data = [
             {"id": "1", "value": "Q1", "data_type": "text"},
             {"id": "2", "value": "Q2", "data_type": "text"}
         ]
-        
+
         # Should preserve the same number of records
         assert len(original_data) == len(converted_data)
-        
+
         # Should preserve content (in this simple test)
         for i, original in enumerate(original_data):
             converted = converted_data[i]
@@ -344,9 +344,9 @@ class TestConversionResultValidation:
             "source": "test",
             "format": "PyRIT"
         }
-        
+
         required_metadata = ["name", "version", "created_at", "source", "format"]
-        
+
         for field in required_metadata:
             assert field in dataset_with_metadata
 
@@ -358,7 +358,7 @@ class TestConversionResultValidation:
             {"id": "child_1", "parent_id": "parent_1", "name": "Child 1"},
             {"id": "child_2", "parent_id": "parent_1", "name": "Child 2"}
         ]
-        
+
         # All children should reference valid parent
         for child in child_datasets:
             assert child["parent_id"] == parent_dataset["id"]
@@ -375,7 +375,7 @@ class TestPerformanceValidation:
             {"dataset_type": "large_json", "max_time": 300, "actual_time": 250},
             {"dataset_type": "huge_dataset", "max_time": 1800, "actual_time": 2000}  # Should fail
         ]
-        
+
         for scenario in scenarios:
             if scenario["actual_time"] <= scenario["max_time"]:
                 # Should pass performance test
@@ -392,7 +392,7 @@ class TestPerformanceValidation:
             "medium_dataset": 1024 * 1024 * 1024,   # 1GB
             "large_dataset": 2 * 1024 * 1024 * 1024 # 2GB
         }
-        
+
         for dataset_type, limit in memory_limits.items():
             assert limit > 0
             # In actual implementation, we'd check actual memory usage against limits
@@ -405,7 +405,7 @@ class TestPerformanceValidation:
             "json_objects_per_second": 500,
             "prompts_per_second": 100
         }
-        
+
         for metric, benchmark in throughput_benchmarks.items():
             assert benchmark > 0
             # Actual implementation would measure real throughput
@@ -423,13 +423,13 @@ class TestValidationReporting:
             {"type": "performance", "status": "WARNING", "message": "Slower than expected"},
             {"type": "data_preservation", "status": "FAIL", "message": "Data corruption detected"}
         ]
-        
+
         # Count statuses
         status_counts = {}
         for result in results:
             status = result["status"]
             status_counts[status] = status_counts.get(status, 0) + 1
-        
+
         assert status_counts.get("PASS", 0) == 2
         assert status_counts.get("WARNING", 0) == 1
         assert status_counts.get("FAIL", 0) == 1
@@ -442,7 +442,7 @@ class TestValidationReporting:
                 "suggestion": "Check file path and permissions"
             },
             {
-                "error": "Invalid CSV format", 
+                "error": "Invalid CSV format",
                 "suggestion": "Ensure proper comma separation and headers"
             },
             {
@@ -450,7 +450,7 @@ class TestValidationReporting:
                 "suggestion": "Re-export source data and try again"
             }
         ]
-        
+
         for scenario in error_scenarios:
             assert "error" in scenario
             assert "suggestion" in scenario
@@ -471,11 +471,11 @@ class TestValidationReporting:
                 "performance": 25
             }
         }
-        
+
         # Validate dashboard metrics structure
-        required_fields = ["total_validations", "successful_validations", "failed_validations", 
+        required_fields = ["total_validations", "successful_validations", "failed_validations",
                           "warnings", "average_processing_time", "peak_memory_usage", "validation_types"]
-        
+
         for field in required_fields:
             assert field in dashboard_metrics
 
@@ -491,7 +491,7 @@ class TestValidationPipelineIntegration:
             "validation_enabled": True,
             "validation_level": "full"
         }
-        
+
         # Pre-conversion validation should run before conversion
         assert conversion_pipeline["validation_enabled"] is True
         assert conversion_pipeline["validation_level"] in ["quick", "full", "deep"]
@@ -505,7 +505,7 @@ class TestValidationPipelineIntegration:
             "record_count": 1000,
             "validation_required": True
         }
-        
+
         # Post-conversion validation should verify results
         assert conversion_result["status"] == "completed"
         assert conversion_result["validation_required"] is True
@@ -519,7 +519,7 @@ class TestValidationPipelineIntegration:
             "last_error": "Temporary network error",
             "retry_delay": 5
         }
-        
+
         # Should allow retries within limit
         assert retry_config["current_attempt"] <= retry_config["max_retries"]
         assert retry_config["retry_delay"] > 0
@@ -530,13 +530,13 @@ class TestValidationPipelineIntegration:
         validation_history = [
             {
                 "timestamp": datetime.now(),
-                "dataset_id": "dataset_1", 
+                "dataset_id": "dataset_1",
                 "validation_type": "full",
                 "status": "PASS",
                 "duration_seconds": 45
             }
         ]
-        
+
         for record in validation_history:
             assert "timestamp" in record
             assert "dataset_id" in record
@@ -556,7 +556,7 @@ class TestValidationServiceIntegration:
         assert hasattr(service, 'framework')
         assert service.framework is not None
 
-    @pytest.mark.asyncio  
+    @pytest.mark.asyncio
     async def test_validate_dataset_endpoint(self):
         """Test dataset validation API endpoint."""
         # Simulate API request
@@ -565,12 +565,12 @@ class TestValidationServiceIntegration:
             "validation_level": "full",
             "validation_types": ["source_data", "conversion_result", "performance"]
         }
-        
+
         # Validate request structure
         assert "dataset_id" in validation_request
         assert "validation_level" in validation_request
         assert "validation_types" in validation_request
-        
+
         # Validation types should be valid
         valid_types = ["source_data", "conversion_result", "performance", "integration"]
         for vtype in validation_request["validation_types"]:
@@ -582,7 +582,7 @@ class TestValidationServiceIntegration:
         # Expected API response structure
         expected_response = {
             "validation_id": "val_12345",
-            "dataset_id": "test_dataset_1", 
+            "dataset_id": "test_dataset_1",
             "status": "completed",
             "overall_result": "PASS",
             "validation_details": [
@@ -598,11 +598,11 @@ class TestValidationServiceIntegration:
             },
             "timestamp": datetime.now().isoformat()
         }
-        
+
         # Validate response structure
-        required_fields = ["validation_id", "dataset_id", "status", "overall_result", 
+        required_fields = ["validation_id", "dataset_id", "status", "overall_result",
                           "validation_details", "performance_metrics", "timestamp"]
-        
+
         for field in required_fields:
             assert field in expected_response
 
@@ -617,7 +617,7 @@ class TestDatasetValidationIntegration:
         # This test represents the full user journey and will guide implementation
         workflow_steps = [
             "initialize_validation_framework",
-            "load_source_dataset", 
+            "load_source_dataset",
             "run_pre_conversion_validation",
             "execute_dataset_conversion",
             "run_post_conversion_validation",
@@ -625,7 +625,7 @@ class TestDatasetValidationIntegration:
             "generate_validation_report",
             "store_validation_results"
         ]
-        
+
         for step in workflow_steps:
             # Each step should be implemented in the validation framework
             assert isinstance(step, str)
@@ -636,13 +636,13 @@ class TestDatasetValidationIntegration:
         # Performance benchmarks from issue requirements
         benchmarks = {
             "OllaGen1": {"max_time": 600, "max_memory": 2 * 1024**3},  # 10 min, 2GB
-            "Garak Collection": {"max_time": 60, "max_memory": 1024**3},  # 1 min, 1GB  
+            "Garak Collection": {"max_time": 60, "max_memory": 1024**3},  # 1 min, 1GB
             "DocMath": {"max_time": 900, "max_memory": 2 * 1024**3},  # 15 min, 2GB
             "GraphWalk": {"max_time": 1800, "max_memory": 2 * 1024**3},  # 30 min, 2GB
             "ConfAIde": {"max_time": 120, "max_memory": 512 * 1024**2},  # 2 min, 512MB
             "JudgeBench": {"max_time": 300, "max_memory": 1024**3}  # 5 min, 1GB
         }
-        
+
         for dataset_type, limits in benchmarks.items():
             assert limits["max_time"] > 0
             assert limits["max_memory"] > 0
@@ -652,10 +652,10 @@ class TestDatasetValidationIntegration:
         # Simulate conversion times and validation overhead
         test_scenarios = [
             {"conversion_time": 100, "validation_time": 4},  # 4% - should pass
-            {"conversion_time": 200, "validation_time": 8},  # 4% - should pass  
+            {"conversion_time": 200, "validation_time": 8},  # 4% - should pass
             {"conversion_time": 50, "validation_time": 5},   # 10% - should fail
         ]
-        
+
         for scenario in test_scenarios:
             overhead_percent = (scenario["validation_time"] / scenario["conversion_time"]) * 100
             if overhead_percent <= 5.0:

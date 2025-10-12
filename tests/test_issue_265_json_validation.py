@@ -35,13 +35,13 @@ class TestConfigurationValidator:
             "required": ["host", "port", "database", "username"],
             "additionalProperties": False
         }
-        
+
         # WHEN: Creating validator
         validator = ConfigurationValidator(
             schema_name="postgresql",
             schema=postgresql_schema
         )
-        
+
         # THEN: Validator should be created successfully
         assert validator.schema_name == "postgresql"
         assert validator.schema == postgresql_schema
@@ -60,19 +60,19 @@ class TestConfigurationValidator:
             "required": ["host", "port", "database", "username"],
             "additionalProperties": False
         }
-        
+
         valid_config = {
             "host": "postgres",
             "port": 5432,
             "database": "keycloak",
             "username": "keycloak"
         }
-        
+
         validator = ConfigurationValidator("postgresql", postgresql_schema)
-        
+
         # WHEN: Validating configuration
         result = validator.validate(valid_config)
-        
+
         # THEN: Validation should pass
         assert result.is_valid is True
         assert len(result.errors) == 0
@@ -92,18 +92,18 @@ class TestConfigurationValidator:
             "required": ["host", "port", "database", "username"],
             "additionalProperties": False
         }
-        
+
         invalid_config = {
             "host": "postgres",
             "port": 5432
             # Missing database and username
         }
-        
+
         validator = ConfigurationValidator("postgresql", postgresql_schema)
-        
+
         # WHEN: Validating configuration
         result = validator.validate(invalid_config)
-        
+
         # THEN: Validation should fail
         assert result.is_valid is False
         assert len(result.errors) >= 2  # Missing database and username
@@ -123,19 +123,19 @@ class TestConfigurationValidator:
             "required": ["host", "port", "database", "username"],
             "additionalProperties": False
         }
-        
+
         invalid_config = {
             "host": "postgres",
             "port": "not_a_number",  # Should be integer
             "database": 123,         # Should be string
             "username": "keycloak"
         }
-        
+
         validator = ConfigurationValidator("postgresql", postgresql_schema)
-        
+
         # WHEN: Validating configuration
         result = validator.validate(invalid_config)
-        
+
         # THEN: Validation should fail
         assert result.is_valid is False
         assert len(result.errors) >= 2  # Wrong type for port and database
@@ -158,19 +158,19 @@ class TestConfigurationValidator:
             "required": ["database_url"],
             "additionalProperties": True
         }
-        
+
         valid_config = {
             "database_url": "sqlite+aiosqlite:///./app_data/violentutf_api.db",
             "echo": True,
             "future": True,
             "pool_size": 20
         }
-        
+
         validator = ConfigurationValidator("sqlite", sqlite_schema)
-        
+
         # WHEN: Validating configuration
         result = validator.validate(valid_config)
-        
+
         # THEN: Validation should pass
         assert result.is_valid is True
         assert len(result.errors) == 0
@@ -191,18 +191,18 @@ class TestConfigurationValidator:
             "required": ["db_path", "salt"],
             "additionalProperties": True
         }
-        
+
         valid_config = {
             "db_path": "/app/app_data/violentutf/pyrit_memory_abc123.db",
             "salt": "default_salt_2025",
             "app_data_dir": "/app/app_data/violentutf"
         }
-        
+
         validator = ConfigurationValidator("duckdb", duckdb_schema)
-        
+
         # WHEN: Validating configuration
         result = validator.validate(valid_config)
-        
+
         # THEN: Validation should pass
         assert result.is_valid is True
         assert len(result.errors) == 0
@@ -229,19 +229,19 @@ class TestConfigurationValidator:
             "required": ["PROJECT_NAME", "ENVIRONMENT"],
             "additionalProperties": True
         }
-        
+
         valid_config = {
             "PROJECT_NAME": "ViolentUTF API",
             "ENVIRONMENT": "development",
             "DEBUG": True,
             "DATABASE_URL": None
         }
-        
+
         validator = ConfigurationValidator("application", app_schema)
-        
+
         # WHEN: Validating configuration
         result = validator.validate(valid_config)
-        
+
         # THEN: Validation should pass
         assert result.is_valid is True
         assert len(result.errors) == 0
@@ -275,7 +275,7 @@ class TestConfigurationValidator:
             },
             "additionalProperties": True
         }
-        
+
         # Valid security config (using environment variables)
         valid_security_config = {
             "passwords": {
@@ -285,7 +285,7 @@ class TestConfigurationValidator:
                 "JWT_SECRET_KEY": "${JWT_SECRET_KEY}"  # Environment variable
             }
         }
-        
+
         # Invalid security config
         invalid_security_config = {
             "passwords": {
@@ -295,22 +295,22 @@ class TestConfigurationValidator:
                 "JWT_SECRET_KEY": "short"  # Too short
             }
         }
-        
+
         validator = ConfigurationValidator("security", security_schema)
-        
+
         # WHEN: Validating valid security config
         valid_result = validator.validate(valid_security_config)
-        
+
         # Debug: Print errors if validation fails
         if not valid_result.is_valid:
             print(f"Validation errors: {[e.to_dict() for e in valid_result.errors]}")
-        
+
         # THEN: Should pass
         assert valid_result.is_valid is True
-        
+
         # WHEN: Validating invalid security config
         invalid_result = validator.validate(invalid_security_config)
-        
+
         # THEN: Should fail
         assert invalid_result.is_valid is False
         assert invalid_result.severity == "critical"
@@ -344,7 +344,7 @@ class TestConfigurationValidator:
             },
             "required": ["services"]
         }
-        
+
         valid_nested_config = {
             "services": {
                 "keycloak": {
@@ -355,12 +355,12 @@ class TestConfigurationValidator:
                 }
             }
         }
-        
+
         validator = ConfigurationValidator("nested", nested_schema)
-        
+
         # WHEN: Validating nested configuration
         result = validator.validate(valid_nested_config)
-        
+
         # THEN: Validation should pass
         assert result.is_valid is True
         assert len(result.errors) == 0
@@ -377,7 +377,7 @@ class TestValidationResult:
             errors=[],
             validated_at=None
         )
-        
+
         # THEN: Result should indicate success
         assert result.is_valid is True
         assert len(result.errors) == 0
@@ -401,13 +401,13 @@ class TestValidationResult:
                 severity="high"
             )
         ]
-        
+
         result = ValidationResult(
             is_valid=False,
             errors=errors,
             validated_at=None
         )
-        
+
         # THEN: Result should aggregate correctly
         assert result.is_valid is False
         assert len(result.errors) == 2
@@ -431,16 +431,16 @@ class TestValidationResult:
                 severity="medium"
             )
         ]
-        
+
         result = ValidationResult(
             is_valid=False,
             errors=errors,
             validated_at=None
         )
-        
+
         # WHEN: Generating summary
         summary = result.generate_summary()
-        
+
         # THEN: Summary should contain key information
         assert "2 validation errors" in summary
         assert "critical" in summary.lower()
@@ -460,7 +460,7 @@ class TestValidationError:
             message="Port must be between 1 and 65535",
             severity="high"
         )
-        
+
         # THEN: Error should be created correctly
         assert error.field_path == "database.port"
         assert error.error_type == "invalid_range"
@@ -476,10 +476,10 @@ class TestValidationError:
             message="SSL configuration is required in production",
             severity="critical"
         )
-        
+
         # WHEN: Serializing
         serialized = error.to_dict()
-        
+
         # THEN: Serialization should preserve all data
         assert serialized["field_path"] == "config.ssl.enabled"
         assert serialized["error_type"] == "missing_required"
@@ -493,11 +493,11 @@ class TestValidationError:
         high_error = ValidationError("field", "type", "message", "high")
         medium_error = ValidationError("field", "type", "message", "medium")
         low_error = ValidationError("field", "type", "message", "low")
-        
+
         # WHEN: Comparing severity priorities
         errors = [low_error, critical_error, medium_error, high_error]
         sorted_errors = sorted(errors, key=lambda x: x.severity_priority(), reverse=True)
-        
+
         # THEN: Critical errors should come first
         assert sorted_errors[0].severity == "critical"
         assert sorted_errors[1].severity == "high"
@@ -513,9 +513,9 @@ class TestConfigurationValidatorIntegration:
         """Test validator integration with configuration monitoring service."""
         # GIVEN: Configuration monitoring service with validator
         from violentutf_api.fastapi_app.app.services.config_monitoring import ConfigurationMonitoringService
-        
+
         monitoring_service = ConfigurationMonitoringService()
-        
+
         # Create a baseline with configuration that should be validated
         baseline_id = await monitoring_service.create_baseline(
             service_name="test_validation",
@@ -528,10 +528,10 @@ class TestConfigurationValidatorIntegration:
                 "username": "test"
             }
         )
-        
+
         # WHEN: Validating the baseline configuration
         baseline = await monitoring_service.get_baseline(baseline_id)
-        
+
         postgresql_schema = {
             "type": "object",
             "properties": {
@@ -543,10 +543,10 @@ class TestConfigurationValidatorIntegration:
             "required": ["host", "port", "database", "username"],
             "additionalProperties": False
         }
-        
+
         validator = ConfigurationValidator("postgresql", postgresql_schema)
         result = validator.validate(baseline.config_data)
-        
+
         # THEN: Validation should pass for valid baseline
         assert result.is_valid is True
         assert len(result.errors) == 0
@@ -555,9 +555,9 @@ class TestConfigurationValidatorIntegration:
         """Test validator with invalid baseline configuration."""
         # GIVEN: Configuration monitoring service
         from violentutf_api.fastapi_app.app.services.config_monitoring import ConfigurationMonitoringService
-        
+
         monitoring_service = ConfigurationMonitoringService()
-        
+
         # Create baseline with invalid configuration
         baseline_id = await monitoring_service.create_baseline(
             service_name="test_invalid",
@@ -568,10 +568,10 @@ class TestConfigurationValidatorIntegration:
                 # Missing required fields: port, database, username
             }
         )
-        
+
         # WHEN: Validating the invalid baseline
         baseline = await monitoring_service.get_baseline(baseline_id)
-        
+
         postgresql_schema = {
             "type": "object",
             "properties": {
@@ -583,10 +583,10 @@ class TestConfigurationValidatorIntegration:
             "required": ["host", "port", "database", "username"],
             "additionalProperties": False
         }
-        
+
         validator = ConfigurationValidator("postgresql", postgresql_schema)
         result = validator.validate(baseline.config_data)
-        
+
         # THEN: Validation should fail
         assert result.is_valid is False
         assert len(result.errors) >= 3  # Missing port, database, username

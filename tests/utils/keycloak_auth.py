@@ -29,7 +29,7 @@ class KeycloakTestAuth:
     for testing purposes. In the RED phase, this will provide basic
     functionality to support test execution.
     """
-    
+
     def __init__(self, keycloak_url: str = "http://localhost:8080"):
         self.keycloak_url = keycloak_url
         self.realm = "violentutf"
@@ -41,7 +41,7 @@ class KeycloakTestAuth:
                 "password": "test_password"
             },
             "test_compliance_officer": {
-                "role": "compliance_manager", 
+                "role": "compliance_manager",
                 "permissions": ["ollegen1", "compliance_datasets"],
                 "password": "test_password"
             },
@@ -51,7 +51,7 @@ class KeycloakTestAuth:
                 "password": "test_password"
             }
         }
-        
+
     def authenticate_user(self, username: str, password: str) -> Dict[str, str]:
         """
         Mock user authentication for testing.
@@ -72,7 +72,7 @@ class KeycloakTestAuth:
             return mock_token
         else:
             raise AuthenticationError(f"Authentication failed for user: {username}")
-    
+
     def validate_token(self, token: str) -> bool:
         """
         Mock token validation for testing.
@@ -82,7 +82,7 @@ class KeycloakTestAuth:
         """
         # Simple mock validation - check if token starts with mock prefix
         return token.startswith("mock_jwt_token_")
-    
+
     def get_user_permissions(self, token: str) -> list:
         """
         Mock user permission retrieval for testing.
@@ -96,7 +96,7 @@ class KeycloakTestAuth:
                 username = parts[3]  # Extract username part
                 if username in self.mock_users:
                     return self.mock_users[username]["permissions"]
-        
+
         return []
 
 

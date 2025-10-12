@@ -26,7 +26,7 @@ from app.services.asset_management.validation_service import (
 
 class TestValidationService:
     """Test cases for ValidationService class."""
-    
+
     def test_validate_asset_data_success(self, validation_service: ValidationService):
         """Test successful validation of valid asset data."""
         # Arrange
@@ -47,15 +47,15 @@ class TestValidationService:
             backup_configured=True,
             compliance_requirements={"gdpr": True, "soc2": True}
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(valid_asset)
-        
+
         # Assert
         assert result.is_valid is True
         assert len(result.errors) == 0
         assert len(result.warnings) == 0
-    
+
     def test_validate_asset_name_too_short(self, validation_service: ValidationService):
         """Test validation fails for asset name too short."""
         # Arrange
@@ -70,15 +70,15 @@ class TestValidationService:
             discovery_method="manual",
             confidence_score=95
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(invalid_asset)
-        
+
         # Assert
         assert result.is_valid is False
         assert len(result.errors) >= 1
         assert any("name must be at least 3 characters" in error.message for error in result.errors)
-    
+
     def test_validate_asset_name_empty(self, validation_service: ValidationService):
         """Test validation fails for empty asset name."""
         # Arrange
@@ -93,14 +93,14 @@ class TestValidationService:
             discovery_method="manual",
             confidence_score=85
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(invalid_asset)
-        
+
         # Assert
         assert result.is_valid is False
         assert any("name must be at least 3 characters" in error.message for error in result.errors)
-    
+
     def test_validate_asset_name_whitespace_only(self, validation_service: ValidationService):
         """Test validation fails for whitespace-only asset name."""
         # Arrange
@@ -115,14 +115,14 @@ class TestValidationService:
             discovery_method="automated",
             confidence_score=90
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(invalid_asset)
-        
+
         # Assert
         assert result.is_valid is False
         assert any("name must be at least 3 characters" in error.message for error in result.errors)
-    
+
     def test_validate_restricted_classification_requires_encryption(self, validation_service: ValidationService):
         """Test validation for restricted assets requiring encryption."""
         # Arrange
@@ -139,14 +139,14 @@ class TestValidationService:
             encryption_enabled=False,  # This should trigger error
             technical_contact="security@company.com"
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(invalid_asset)
-        
+
         # Assert
         assert result.is_valid is False
         assert any("Restricted assets must have encryption enabled" in error.message for error in result.errors)
-    
+
     def test_validate_restricted_classification_requires_technical_contact(self, validation_service: ValidationService):
         """Test validation for restricted assets requiring technical contact."""
         # Arrange
@@ -163,14 +163,14 @@ class TestValidationService:
             encryption_enabled=True,
             technical_contact=None  # This should trigger error
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(invalid_asset)
-        
+
         # Assert
         assert result.is_valid is False
         assert any("Restricted assets must have technical contact" in error.message for error in result.errors)
-    
+
     def test_validate_production_environment_public_classification_warning(self, validation_service: ValidationService):
         """Test warning for production assets with public classification."""
         # Arrange
@@ -186,15 +186,15 @@ class TestValidationService:
             confidence_score=90,
             backup_configured=True
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(warning_asset)
-        
+
         # Assert
         assert result.is_valid is True  # Valid but with warnings
         assert len(result.warnings) >= 1
         assert any("Production assets should not be classified as public" in warning.message for warning in result.warnings)
-    
+
     def test_validate_production_environment_requires_backup(self, validation_service: ValidationService):
         """Test validation for production assets requiring backup."""
         # Arrange
@@ -210,14 +210,14 @@ class TestValidationService:
             confidence_score=98,
             backup_configured=False  # This should trigger error
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(invalid_asset)
-        
+
         # Assert
         assert result.is_valid is False
         assert any("Production assets must have backup configured" in error.message for error in result.errors)
-    
+
     def test_validate_postgresql_connection_string_valid(self, validation_service: ValidationService):
         """Test validation of valid PostgreSQL connection string."""
         # Arrange
@@ -233,14 +233,14 @@ class TestValidationService:
             confidence_score=95,
             connection_string="postgresql://user:password@localhost:5432/dbname"
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(valid_asset)
-        
+
         # Assert
         assert result.is_valid is True
         assert not any("Invalid PostgreSQL connection string" in error.message for error in result.errors)
-    
+
     def test_validate_postgresql_connection_string_invalid(self, validation_service: ValidationService):
         """Test validation of invalid PostgreSQL connection string."""
         # Arrange
@@ -256,14 +256,14 @@ class TestValidationService:
             confidence_score=95,
             connection_string="invalid-connection-string"
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(invalid_asset)
-        
+
         # Assert
         assert result.is_valid is False
         assert any("Invalid PostgreSQL connection string format" in error.message for error in result.errors)
-    
+
     def test_validate_confidence_score_range(self, validation_service: ValidationService):
         """Test validation of confidence score range."""
         # Test confidence score too low
@@ -278,11 +278,11 @@ class TestValidationService:
             discovery_method="manual",
             confidence_score=0  # Invalid (too low)
         )
-        
+
         result = validation_service.validate_asset_data(low_confidence_asset)
         assert result.is_valid is False
         assert any("Confidence score must be between 1 and 100" in error.message for error in result.errors)
-        
+
         # Test confidence score too high
         high_confidence_asset = AssetCreate(
             name="High Confidence Asset",
@@ -295,11 +295,11 @@ class TestValidationService:
             discovery_method="manual",
             confidence_score=101  # Invalid (too high)
         )
-        
+
         result = validation_service.validate_asset_data(high_confidence_asset)
         assert result.is_valid is False
         assert any("Confidence score must be between 1 and 100" in error.message for error in result.errors)
-    
+
     def test_validate_email_format_valid(self, validation_service: ValidationService):
         """Test validation of valid email formats."""
         # Arrange
@@ -316,14 +316,14 @@ class TestValidationService:
             technical_contact="valid.email@company.com",
             business_contact="business-owner@company.com"
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(valid_asset)
-        
+
         # Assert
         assert result.is_valid is True
         assert not any("Invalid email format" in error.message for error in result.errors)
-    
+
     def test_validate_email_format_invalid(self, validation_service: ValidationService):
         """Test validation of invalid email formats."""
         # Arrange
@@ -340,15 +340,15 @@ class TestValidationService:
             technical_contact="invalid-email-format",  # Invalid email
             business_contact="another.invalid.email"   # Invalid email
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(invalid_asset)
-        
+
         # Assert
         assert result.is_valid is False
         assert any("Invalid email format for technical_contact" in error.message for error in result.errors)
         assert any("Invalid email format for business_contact" in error.message for error in result.errors)
-    
+
     def test_validate_file_path_consistency(self, validation_service: ValidationService):
         """Test validation of file path consistency for file-based assets."""
         # Valid file path for SQLite
@@ -364,10 +364,10 @@ class TestValidationService:
             discovery_method="manual",
             confidence_score=85
         )
-        
+
         result = validation_service.validate_asset_data(valid_sqlite)
         assert result.is_valid is True
-        
+
         # Inconsistent file path
         inconsistent_sqlite = AssetCreate(
             name="Inconsistent SQLite",
@@ -381,11 +381,11 @@ class TestValidationService:
             discovery_method="manual",
             confidence_score=85
         )
-        
+
         result = validation_service.validate_asset_data(inconsistent_sqlite)
         assert result.is_valid is False
         assert any("file_path should match location for file-based assets" in error.message for error in result.errors)
-    
+
     def test_validate_network_location_format(self, validation_service: ValidationService):
         """Test validation of network location format."""
         # Valid network location
@@ -401,10 +401,10 @@ class TestValidationService:
             discovery_method="automated",
             confidence_score=95
         )
-        
+
         result = validation_service.validate_asset_data(valid_asset)
         assert result.is_valid is True
-        
+
         # Invalid network location
         invalid_asset = AssetCreate(
             name="Invalid Network Asset",
@@ -418,22 +418,22 @@ class TestValidationService:
             discovery_method="automated",
             confidence_score=95
         )
-        
+
         result = validation_service.validate_asset_data(invalid_asset)
         assert result.is_valid is False
         assert any("Invalid network location format" in error.message for error in result.errors)
-    
+
     @pytest.mark.asyncio
     async def test_validate_batch_success(self, validation_service: ValidationService, sample_asset_data_list: List[AssetCreate]):
         """Test successful batch validation."""
         # Act
         result = await validation_service.validate_batch(sample_asset_data_list)
-        
+
         # Assert
         assert result["valid_count"] == 3  # All assets in sample_asset_data_list should be valid
         assert result["invalid_count"] == 0
         assert len(result["validation_errors"]) == 0
-    
+
     @pytest.mark.asyncio
     async def test_validate_batch_with_errors(self, validation_service: ValidationService):
         """Test batch validation with some invalid assets."""
@@ -477,15 +477,15 @@ class TestValidationService:
                 encryption_enabled=False  # Should trigger error
             )
         ]
-        
+
         # Act
         result = await validation_service.validate_batch(mixed_assets)
-        
+
         # Assert
         assert result["valid_count"] == 1
         assert result["invalid_count"] == 2
         assert len(result["validation_errors"]) == 2
-    
+
     def test_validate_compliance_requirements_format(self, validation_service: ValidationService):
         """Test validation of compliance requirements format."""
         # Valid compliance requirements
@@ -506,10 +506,10 @@ class TestValidationService:
                 "custom_policy": "internal-security-policy-v2"
             }
         )
-        
+
         result = validation_service.validate_asset_data(valid_asset)
         assert result.is_valid is True
-    
+
     def test_validation_result_aggregation(self, validation_service: ValidationService):
         """Test that validation results properly aggregate errors and warnings."""
         # Arrange - Asset with multiple validation issues
@@ -527,15 +527,15 @@ class TestValidationService:
             technical_contact="invalid-email",  # Invalid email (error)
             backup_configured=False  # Required for production (error)
         )
-        
+
         # Act
         result = validation_service.validate_asset_data(problematic_asset)
-        
+
         # Assert
         assert result.is_valid is False
         assert len(result.errors) >= 5  # Multiple errors
         assert len(result.warnings) >= 1  # At least the public classification warning
-        
+
         # Verify specific error messages are present
         error_messages = [error.message for error in result.errors]
         assert any("name must be at least 3 characters" in msg for msg in error_messages)
@@ -543,7 +543,7 @@ class TestValidationService:
         assert any("Invalid PostgreSQL connection string format" in msg for msg in error_messages)
         assert any("Invalid email format for technical_contact" in msg for msg in error_messages)
         assert any("Production assets must have backup configured" in msg for msg in error_messages)
-        
+
         # Verify warning message is present
         warning_messages = [warning.message for warning in result.warnings]
         assert any("Production assets should not be classified as public" in msg for msg in warning_messages)

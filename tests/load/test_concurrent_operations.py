@@ -96,19 +96,19 @@ class TestLoadAndScalability:
     These tests validate system scalability, resource management,
     and performance under realistic concurrent usage patterns.
     """
-    
+
     @pytest.fixture(autouse=True, scope="function")
     def setup_load_test_environment(self):
         """Setup test environment for load testing and scalability validation."""
         self.test_session = f"load_test_{int(time.time())}"
         self.auth_client = KeycloakTestAuth()
         self.load_test_data = create_load_test_data()
-        
+
         # Setup test directory
         self.test_dir = Path(tempfile.mkdtemp(prefix="load_test_"))
         self.load_results_dir = self.test_dir / "load_test_results"
         self.load_results_dir.mkdir(exist_ok=True)
-        
+
         # Initialize system resource baselines
         self.system_baselines = {
             "cpu_percent": psutil.cpu_percent(interval=1),
@@ -118,9 +118,9 @@ class TestLoadAndScalability:
             "network_io_sent": psutil.net_io_counters().bytes_sent,
             "network_io_recv": psutil.net_io_counters().bytes_recv
         }
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         if self.test_dir.exists():
@@ -145,7 +145,7 @@ class TestLoadAndScalability:
             "concurrent_scenarios": [
                 {
                     "scenario_name": "multi_garak_conversion",
-                    "dataset_type": "garak", 
+                    "dataset_type": "garak",
                     "concurrent_count": 5,
                     "dataset_size": "medium",
                     "expected_completion_time": 150  # seconds
@@ -154,7 +154,7 @@ class TestLoadAndScalability:
                     "scenario_name": "ollegen1_heavy_load",
                     "dataset_type": "ollegen1",
                     "concurrent_count": 3,
-                    "dataset_size": "large", 
+                    "dataset_size": "large",
                     "expected_completion_time": 1200  # seconds
                 },
                 {
@@ -174,7 +174,7 @@ class TestLoadAndScalability:
             ],
             "resource_limits": {
                 "max_cpu_utilization": 85,  # percentage
-                "max_memory_utilization": 80,  # percentage  
+                "max_memory_utilization": 80,  # percentage
                 "max_disk_io_mbps": 100,  # MB/s
                 "max_concurrent_operations": 10
             },
@@ -184,14 +184,14 @@ class TestLoadAndScalability:
                 "resource_recovery_time": 60  # seconds after operation completion
             }
         }
-        
+
         # RED Phase: This will fail because ConcurrentOperationManager is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if ConcurrentOperationManager is None:
                 raise ImportError("ConcurrentOperationManager not implemented")
-            
+
             concurrent_manager = ConcurrentOperationManager(session_id=self.test_session)
-            
+
             # Execute concurrent conversion scenarios
             for scenario in concurrent_conversion_config["concurrent_scenarios"]:
                 with pytest.subTest(scenario=scenario["scenario_name"]):
@@ -199,20 +199,20 @@ class TestLoadAndScalability:
                         scenario_config=scenario,
                         resource_limits=concurrent_conversion_config["resource_limits"]
                     )
-                    
+
                     # Validate concurrent operation performance
                     assert concurrent_result.completion_time <= scenario["expected_completion_time"]
                     assert concurrent_result.max_cpu_utilization <= concurrent_conversion_config["resource_limits"]["max_cpu_utilization"]
                     assert concurrent_result.max_memory_utilization <= concurrent_conversion_config["resource_limits"]["max_memory_utilization"]
                     assert concurrent_result.operation_success_rate >= 0.95  # 95% success rate
-        
+
         # Validate expected failure
         assert any([
             "ConcurrentOperationManager not implemented" in str(exc_info.value),
             "execute_concurrent_conversions" in str(exc_info.value),
             "concurrent operation" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_load_functionality("concurrent_conversion_operations", {
             "missing_classes": ["ConcurrentOperationManager", "ConversionQueueManager"],
             "missing_methods": ["execute_concurrent_conversions", "manage_conversion_queue"],
@@ -253,7 +253,7 @@ class TestLoadAndScalability:
                     "operations_per_user": 3
                 },
                 {
-                    "user_type": "compliance_officer", 
+                    "user_type": "compliance_officer",
                     "concurrent_users": 5,
                     "workflow_type": "ollegen1_compliance_assessment",
                     "session_duration": 1200,  # seconds
@@ -269,7 +269,7 @@ class TestLoadAndScalability:
                 {
                     "user_type": "mixed_personas",
                     "concurrent_users": 15,
-                    "workflow_type": "varied_evaluation_workflows", 
+                    "workflow_type": "varied_evaluation_workflows",
                     "session_duration": 900,  # seconds
                     "operations_per_user": 2
                 }
@@ -287,14 +287,14 @@ class TestLoadAndScalability:
                 "max_cross_user_interference": 0.02  # 2% performance degradation
             }
         }
-        
+
         # RED Phase: This will fail because multi-user concurrency is not handled
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if ConcurrentOperationManager is None:
                 raise ImportError("ConcurrentOperationManager not implemented")
-            
+
             concurrent_manager = ConcurrentOperationManager(session_id=self.test_session)
-            
+
             # Execute multi-user concurrent scenarios
             for user_scenario in multi_user_concurrency_config["user_scenarios"]:
                 with pytest.subTest(user_type=user_scenario["user_type"]):
@@ -302,19 +302,19 @@ class TestLoadAndScalability:
                         user_scenario_config=user_scenario,
                         capacity_limits=multi_user_concurrency_config["system_capacity_limits"]
                     )
-                    
+
                     # Validate multi-user performance
                     assert multi_user_result.session_start_time <= multi_user_concurrency_config["user_experience_requirements"]["max_session_start_time"]
                     assert multi_user_result.operation_success_rate >= multi_user_concurrency_config["user_experience_requirements"]["min_operation_success_rate"]
                     assert multi_user_result.cross_user_interference <= multi_user_concurrency_config["user_experience_requirements"]["max_cross_user_interference"]
-        
+
         # Validate expected failure
         assert any([
             "ConcurrentOperationManager not implemented" in str(exc_info.value),
             "execute_multi_user_workflows" in str(exc_info.value),
             "multi-user concurrency" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_load_functionality("multi_user_concurrent_workflows", {
             "missing_classes": ["ConcurrentOperationManager", "MultiUserSessionManager"],
             "missing_methods": ["execute_multi_user_workflows", "manage_concurrent_user_sessions"],
@@ -393,14 +393,14 @@ class TestLoadAndScalability:
                 "contention_resolution_time": 10  # seconds
             }
         }
-        
+
         # RED Phase: This will fail because resource management is not optimized
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if ResourceUtilizationMonitor is None:
                 raise ImportError("ResourceUtilizationMonitor not implemented")
-            
+
             resource_monitor = ResourceUtilizationMonitor(session_id=self.test_session)
-            
+
             # Execute resource management scenarios
             for load_scenario in resource_management_config["load_scenarios"]:
                 with pytest.subTest(scenario=load_scenario["scenario_name"]):
@@ -408,19 +408,19 @@ class TestLoadAndScalability:
                         load_scenario_config=load_scenario,
                         resource_limits=resource_management_config["resource_limits"]
                     )
-                    
+
                     # Validate resource management performance
                     assert resource_result.resource_efficiency >= resource_management_config["optimization_targets"]["resource_efficiency"]
                     assert resource_result.load_balancing_effectiveness >= resource_management_config["optimization_targets"]["load_balancing_effectiveness"]
                     assert resource_result.contention_resolution_time <= resource_management_config["optimization_targets"]["contention_resolution_time"]
-        
+
         # Validate expected failure
         assert any([
             "ResourceUtilizationMonitor not implemented" in str(exc_info.value),
             "test_resource_management" in str(exc_info.value),
             "resource management" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_load_functionality("resource_management_under_load", {
             "missing_classes": ["ResourceUtilizationMonitor", "ResourceAllocationManager"],
             "missing_methods": ["test_resource_management", "optimize_resource_allocation"],
@@ -494,13 +494,13 @@ class TestLoadAndScalability:
                 "database_memory_utilization": 75  # percentage
             }
         }
-        
+
         # RED Phase: This will fail because database scalability is not optimized
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.database_scalability import DatabaseScalabilityTester
-            
+
             db_scalability_tester = DatabaseScalabilityTester(session_id=self.test_session)
-            
+
             # Execute database scalability scenarios
             for scalability_scenario in database_scalability_config["scalability_scenarios"]:
                 with pytest.subTest(scenario=scalability_scenario["scenario_name"]):
@@ -508,20 +508,20 @@ class TestLoadAndScalability:
                         scenario_config=scalability_scenario,
                         performance_targets=database_scalability_config["database_performance_targets"]
                     )
-                    
+
                     # Validate database scalability performance
                     if "target_throughput_qps" in scalability_scenario:
                         assert db_result.queries_per_second >= scalability_scenario["target_throughput_qps"]
-                    
+
                     assert db_result.query_response_time_p95 <= database_scalability_config["database_performance_targets"]["query_response_time_p95"]
-        
+
         # Validate expected failure
         assert any([
             "DatabaseScalabilityTester" in str(exc_info.value),
             "test_database_scalability" in str(exc_info.value),
             "database scalability" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_load_functionality("database_scalability", {
             "missing_classes": ["DatabaseScalabilityTester", "DatabaseConnectionPoolManager"],
             "missing_methods": ["test_database_scalability", "optimize_database_performance"],
@@ -569,16 +569,16 @@ class TestLoadAndScalability:
                 "throughput_degradation_threshold": 0.2  # 20%
             }
         }
-        
+
         # RED Phase: This will fail because API stress testing is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.api_stress import APIStressTester
-            
+
             api_stress_tester = APIStressTester(session_id=self.test_session)
             stress_results = api_stress_tester.execute_stress_scenarios(api_stress_config)
-            
+
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_load_functionality("api_stress_testing", {
             "missing_classes": ["APIStressTester", "LoadGenerationManager"],
             "missing_methods": ["execute_stress_scenarios", "generate_api_load"],
@@ -618,12 +618,12 @@ class TestLoadAndScalability:
                 ]
             }
         }
-        
+
         # Write documentation to load results directory
         doc_file = self.load_results_dir / f"{load_area}_missing_functionality.json"
         with open(doc_file, "w") as f:
             json.dump(documentation, f, indent=2)
-        
+
         print(f"\n[TDD RED PHASE] Missing load testing functionality documented for {load_area}")
         print(f"Documentation saved to: {doc_file}")
         print(f"Key missing load features: {missing_info.get('required_concurrency_features', missing_info.get('required_resource_features', []))[:3]}")
@@ -633,7 +633,7 @@ class TestStressAndFailure:
     """
     Test system behavior under extreme stress and failure conditions.
     """
-    
+
     def test_memory_exhaustion_handling(self):
         """
         Test system behavior when approaching memory exhaustion
@@ -643,10 +643,10 @@ class TestStressAndFailure:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.stress_testing import MemoryExhaustionTester
-            
+
             memory_tester = MemoryExhaustionTester()
             exhaustion_result = memory_tester.test_memory_exhaustion_scenarios()
-            
+
         assert "not implemented" in str(exc_info.value).lower()
 
     def test_disk_space_exhaustion_handling(self):
@@ -658,10 +658,10 @@ class TestStressAndFailure:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.stress_testing import DiskSpaceExhaustionTester
-            
+
             disk_tester = DiskSpaceExhaustionTester()
             disk_result = disk_tester.test_disk_exhaustion_scenarios()
-            
+
         assert "not implemented" in str(exc_info.value).lower()
 
     def test_network_failure_resilience(self):
@@ -673,8 +673,8 @@ class TestStressAndFailure:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.resilience_testing import NetworkFailureResilienceTester
-            
+
             network_tester = NetworkFailureResilienceTester()
             resilience_result = network_tester.test_network_failure_scenarios()
-            
+
         assert "not implemented" in str(exc_info.value).lower()

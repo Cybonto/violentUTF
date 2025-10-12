@@ -22,14 +22,14 @@ try:
 
     # Re-export for tests
     __all__ = ["MCPClient", "MCPClientSync", "MCPMethod", "MCPResponse"]
-    
+
 except ImportError as e:
     # Fallback mock implementations for tests
     from dataclasses import dataclass
     from enum import Enum
     from typing import Any, Dict, Optional
-    
-    
+
+
     class MCPMethod(Enum):
         """MCP JSON-RPC methods"""
         INITIALIZE = "initialize"
@@ -39,8 +39,8 @@ except ImportError as e:
         CALL_TOOL = "tools/call"
         LIST_PROMPTS = "prompts/list"
         GET_PROMPT = "prompts/get"
-        
-    
+
+
     @dataclass
     class MCPResponse:
         """MCP response container"""
@@ -49,43 +49,43 @@ except ImportError as e:
         error: Optional[str] = None
         method: Optional[str] = None
         id: Optional[str] = None
-        
-        
+
+
     class MCPClient:
         """Mock async MCP client for tests"""
-        
+
         def __init__(self, base_url: str = "http://localhost:9080"):
             self.base_url = base_url
             self.session_id: Optional[str] = None
-            
+
         async def connect(self) -> bool:
             """Mock connect"""
             return True
-            
+
         async def disconnect(self) -> None:
             """Mock disconnect"""
             pass
-            
+
         async def call_method(self, method: MCPMethod, params: Dict[str, Any]) -> MCPResponse:
             """Mock method call"""
             return MCPResponse(success=True, data={"result": "mock"})
-            
-    
+
+
     class MCPClientSync:
         """Mock sync MCP client for tests"""
-        
+
         def __init__(self, base_url: str = "http://localhost:9080"):
             self.base_url = base_url
             self.session_id: Optional[str] = None
-            
+
         def connect(self) -> bool:
             """Mock connect"""
             return True
-            
+
         def disconnect(self) -> None:
             """Mock disconnect"""
             pass
-            
+
         def call_method(self, method: MCPMethod, params: Dict[str, Any]) -> MCPResponse:
             """Mock method call"""
             return MCPResponse(success=True, data={"result": "mock"})

@@ -74,7 +74,7 @@ class TestGapAnalysisAPIEndpoints:
             # Mock gap analyzer service
             with patch('app.api.v1.gaps.gap_analyzer') as mock_analyzer:
                 mock_analyzer.analyze_gaps.return_value = mock_gap_analysis_result
-                
+
                 # Make request
                 request_data = {
                     "include_orphaned_detection": True,
@@ -86,13 +86,13 @@ class TestGapAnalysisAPIEndpoints:
                         "criticality": ["critical", "high"]
                     }
                 }
-                
+
                 response = client.post(
                     "/api/v1/gaps/analyze",
                     json=request_data,
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 # Verify response
                 assert response.status_code == 200
                 data = response.json()
@@ -109,10 +109,10 @@ class TestGapAnalysisAPIEndpoints:
             "include_documentation_analysis": True,
             "include_compliance_assessment": True
         }
-        
+
         # Request without authentication
         response = client.post("/api/v1/gaps/analyze", json=request_data)
-        
+
         assert response.status_code == 401
         assert "not authenticated" in response.json()["detail"].lower()
 
@@ -125,13 +125,13 @@ class TestGapAnalysisAPIEndpoints:
                 "compliance_frameworks": ["INVALID_FRAMEWORK"],  # Invalid framework
                 "max_execution_time_seconds": -1  # Invalid timeout
             }
-            
+
             response = client.post(
                 "/api/v1/gaps/analyze",
                 json=request_data,
                 headers={"Authorization": "Bearer test_token"}
             )
-            
+
             assert response.status_code == 422  # Validation error
             assert "validation error" in response.json()["detail"][0]["type"]
 
@@ -141,18 +141,18 @@ class TestGapAnalysisAPIEndpoints:
             with patch('app.api.v1.gaps.gap_analyzer') as mock_analyzer:
                 # Mock service error
                 mock_analyzer.analyze_gaps.side_effect = Exception("Service unavailable")
-                
+
                 request_data = {
                     "include_orphaned_detection": True,
                     "include_documentation_analysis": True
                 }
-                
+
                 response = client.post(
                     "/api/v1/gaps/analyze",
                     json=request_data,
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 assert response.status_code == 500
                 assert "internal server error" in response.json()["detail"].lower()
 
@@ -163,18 +163,18 @@ class TestGapAnalysisAPIEndpoints:
                 # Mock timeout error
                 from app.services.asset_management.gap_analyzer import GapAnalysisError
                 mock_analyzer.analyze_gaps.side_effect = GapAnalysisError("Analysis timeout")
-                
+
                 request_data = {
                     "include_orphaned_detection": True,
                     "max_execution_time_seconds": 1  # Very short timeout
                 }
-                
+
                 response = client.post(
                     "/api/v1/gaps/analyze",
                     json=request_data,
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 assert response.status_code == 408  # Request timeout
                 assert "timeout" in response.json()["detail"].lower()
 
@@ -192,12 +192,12 @@ class TestGapAnalysisAPIEndpoints:
                     report_summary="Gap analysis summary"
                 )
                 mock_service.get_report.return_value = mock_report
-                
+
                 response = client.get(
                     "/api/v1/gaps/reports/report_001",
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 assert response.status_code == 200
                 data = response.json()
                 assert data["report_id"] == "report_001"
@@ -209,12 +209,12 @@ class TestGapAnalysisAPIEndpoints:
         with patch.object(gaps_router, 'get_current_user', return_value=mock_user):
             with patch('app.api.v1.gaps.gap_report_service') as mock_service:
                 mock_service.get_report.return_value = None
-                
+
                 response = client.get(
                     "/api/v1/gaps/reports/nonexistent_report",
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 assert response.status_code == 404
                 assert "not found" in response.json()["detail"].lower()
 
@@ -235,12 +235,12 @@ class TestGapAnalysisAPIEndpoints:
                     ]
                 )
                 mock_analyzer.analyze_trends.return_value = mock_trend
-                
+
                 response = client.get(
                     "/api/v1/gaps/trends?period_days=30",
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 assert response.status_code == 200
                 data = response.json()
                 assert data["trend_id"] == "trend_001"
@@ -257,7 +257,7 @@ class TestGapAnalysisAPIEndpoints:
                     status="submitted",
                     estimated_completion=datetime.now() + timedelta(days=7)
                 )
-                
+
                 request_data = {
                     "gap_id": "gap_001",
                     "action_type": "documentation_creation",
@@ -266,13 +266,13 @@ class TestGapAnalysisAPIEndpoints:
                     "description": "Create missing technical documentation",
                     "estimated_effort_hours": 16
                 }
-                
+
                 response = client.post(
                     "/api/v1/gaps/remediate",
                     json=request_data,
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 assert response.status_code == 201
                 data = response.json()
                 assert data["action_id"] == "action_001"
@@ -305,14 +305,14 @@ class TestGapAnalysisAPIEndpoints:
                     }
                 }
             ]
-            
+
             for request_data in invalid_requests:
                 response = client.post(
                     "/api/v1/gaps/analyze",
                     json=request_data,
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 assert response.status_code == 422
 
     def test_gap_analysis_response_schema(self, client, mock_user, mock_gap_analysis_result):
@@ -320,30 +320,30 @@ class TestGapAnalysisAPIEndpoints:
         with patch.object(gaps_router, 'get_current_user', return_value=mock_user):
             with patch('app.api.v1.gaps.gap_analyzer') as mock_analyzer:
                 mock_analyzer.analyze_gaps.return_value = mock_gap_analysis_result
-                
+
                 request_data = {
                     "include_orphaned_detection": True,
                     "include_documentation_analysis": True
                 }
-                
+
                 response = client.post(
                     "/api/v1/gaps/analyze",
                     json=request_data,
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 assert response.status_code == 200
                 data = response.json()
-                
+
                 # Verify required fields
                 required_fields = [
                     "analysis_id", "execution_time_seconds", "total_gaps_found",
                     "assets_analyzed", "gaps_by_type", "gaps_by_severity"
                 ]
-                
+
                 for field in required_fields:
                     assert field in data
-                
+
                 # Verify data types
                 assert isinstance(data["total_gaps_found"], int)
                 assert isinstance(data["execution_time_seconds"], (int, float))
@@ -362,22 +362,22 @@ class TestGapAnalysisAPIEndpoints:
                 )
                 for i in range(100)
             ]
-            
+
             large_result = Mock(
                 analysis_id="large_analysis",
                 total_gaps_found=100,
                 gaps=large_gaps
             )
-            
+
             with patch('app.api.v1.gaps.gap_analyzer') as mock_analyzer:
                 mock_analyzer.analyze_gaps.return_value = large_result
-                
+
                 # Request with pagination
                 response = client.get(
                     "/api/v1/gaps/results/large_analysis?page=1&limit=20",
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 assert response.status_code == 200
                 data = response.json()
                 assert len(data["gaps"]) <= 20  # Respects limit
@@ -394,7 +394,7 @@ class TestGapAnalysisAPIEndpoints:
                 "sort_by=priority_score&sort_order=desc",
                 headers={"Authorization": "Bearer test_token"}
             )
-            
+
             # Should apply filters and sorting
             assert response.status_code == 200
 
@@ -404,7 +404,7 @@ class TestGapAnalysisAPIEndpoints:
             request_data = {
                 "include_orphaned_detection": True
             }
-            
+
             # Make multiple rapid requests
             responses = []
             for _ in range(10):
@@ -414,7 +414,7 @@ class TestGapAnalysisAPIEndpoints:
                     headers={"Authorization": "Bearer test_token"}
                 )
                 responses.append(response)
-            
+
             # Should eventually hit rate limit
             rate_limited = any(r.status_code == 429 for r in responses)
             # This test depends on rate limiting configuration
@@ -427,7 +427,7 @@ class TestGapAnalysisAPIEndpoints:
                 "/api/v1/gaps/status",
                 headers={"Authorization": "Bearer test_token"}
             )
-            
+
             assert response_v1.status_code in [200, 404]  # Either works or not implemented yet
 
     def test_audit_logging_for_gap_analysis(self, client, mock_user):
@@ -438,13 +438,13 @@ class TestGapAnalysisAPIEndpoints:
                     "include_orphaned_detection": True,
                     "include_compliance_assessment": True
                 }
-                
+
                 response = client.post(
                     "/api/v1/gaps/analyze",
                     json=request_data,
                     headers={"Authorization": "Bearer test_token"}
                 )
-                
+
                 # Should log the gap analysis request
                 mock_logger.log_gap_analysis.assert_called_once()
 
@@ -452,11 +452,11 @@ class TestGapAnalysisAPIEndpoints:
         """Test handling of concurrent API requests."""
         import threading
         import time
-        
+
         with patch.object(gaps_router, 'get_current_user', return_value=mock_user):
             results = []
             errors = []
-            
+
             def make_request():
                 try:
                     response = client.post(
@@ -467,18 +467,18 @@ class TestGapAnalysisAPIEndpoints:
                     results.append(response.status_code)
                 except Exception as e:
                     errors.append(str(e))
-            
+
             # Create multiple threads
             threads = []
             for _ in range(5):
                 thread = threading.Thread(target=make_request)
                 threads.append(thread)
                 thread.start()
-            
+
             # Wait for all to complete
             for thread in threads:
                 thread.join()
-            
+
             # Should handle concurrent requests gracefully
             assert len(errors) == 0  # No threading errors
             assert len(results) == 5  # All requests completed
@@ -490,7 +490,7 @@ class TestGapAnalysisRequestSchema:
     def test_gap_analysis_request_default_values(self):
         """Test default values in gap analysis request."""
         request = GapAnalysisRequest()
-        
+
         assert request.include_orphaned_detection is True
         assert request.include_documentation_analysis is True
         assert request.include_compliance_assessment is True
@@ -505,7 +505,7 @@ class TestGapAnalysisRequestSchema:
             max_execution_time_seconds=300,
             asset_filters={"environment": ["production"]}
         )
-        
+
         assert request.include_orphaned_detection is False
         assert request.compliance_frameworks == ["GDPR"]
         assert request.max_execution_time_seconds == 300
@@ -516,11 +516,11 @@ class TestGapAnalysisRequestSchema:
         # Invalid timeout
         with pytest.raises(ValueError):
             GapAnalysisRequest(max_execution_time_seconds=-1)
-        
+
         # Invalid memory limit
         with pytest.raises(ValueError):
             GapAnalysisRequest(max_memory_usage_mb=0)
-        
+
         # Invalid compliance framework
         with pytest.raises(ValueError):
             GapAnalysisRequest(compliance_frameworks=["INVALID"])
@@ -539,7 +539,7 @@ class TestGapAnalysisResponseSchema:
             gaps_by_type={GapType.MISSING_DOCUMENTATION: 6, GapType.INSUFFICIENT_SECURITY_CONTROLS: 4},
             gaps_by_severity={GapSeverity.HIGH: 3, GapSeverity.MEDIUM: 4, GapSeverity.LOW: 3}
         )
-        
+
         assert response.analysis_id == "test_001"
         assert response.total_gaps_found == 10
         assert response.assets_analyzed == 5
@@ -554,7 +554,7 @@ class TestGapAnalysisResponseSchema:
             gaps_by_type={GapType.MISSING_DOCUMENTATION: 10},
             gaps_by_severity={GapSeverity.HIGH: 10}
         )
-        
+
         response_dict = response.dict()
         assert isinstance(response_dict, dict)
         assert response_dict["analysis_id"] == "test_001"
@@ -571,7 +571,7 @@ class TestErrorHandling:
             data="invalid json",
             headers={"Content-Type": "application/json"}
         )
-        
+
         assert response.status_code == 422
         error_data = response.json()
         assert "detail" in error_data
@@ -579,7 +579,7 @@ class TestErrorHandling:
     def test_authentication_error_response(self, client):
         """Test authentication error response format."""
         response = client.post("/api/v1/gaps/analyze", json={})
-        
+
         assert response.status_code == 401
         error_data = response.json()
         assert "detail" in error_data
@@ -593,14 +593,14 @@ class TestErrorHandling:
             username="limited_user",
             roles=["viewer"]  # No gap analysis permission
         )
-        
+
         with patch.object(gaps_router, 'get_current_user', return_value=limited_user):
             response = client.post(
                 "/api/v1/gaps/analyze",
                 json={"include_orphaned_detection": True},
                 headers={"Authorization": "Bearer test_token"}
             )
-            
+
             assert response.status_code == 403
             error_data = response.json()
             assert "permission" in error_data["detail"].lower()

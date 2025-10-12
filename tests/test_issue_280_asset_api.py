@@ -100,10 +100,10 @@ class TestAssetCRUDAPI:
             json=valid_asset_payload,
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
-        
+
         # Verify response structure
         assert "id" in data
         assert data["name"] == valid_asset_payload["name"]
@@ -128,13 +128,13 @@ class TestAssetCRUDAPI:
             "encryption_enabled": False,  # Should require encryption for restricted
             "confidence_score": 150  # Out of valid range
         }
-        
+
         response = await async_client.post(
             "/api/v1/assets/",
             json=invalid_payload,
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         error_data = response.json()
         assert "detail" in error_data
@@ -154,14 +154,14 @@ class TestAssetCRUDAPI:
             headers=auth_headers
         )
         assert response1.status_code == status.HTTP_201_CREATED
-        
+
         # Try to create second asset with same identifier
         response2 = await async_client.post(
             "/api/v1/assets/",
             json=valid_asset_payload,
             headers=auth_headers
         )
-        
+
         assert response2.status_code == status.HTTP_409_CONFLICT
         error_data = response2.json()
         assert "duplicate" in error_data["detail"].lower()
@@ -182,13 +182,13 @@ class TestAssetCRUDAPI:
         )
         assert create_response.status_code == status.HTTP_201_CREATED
         asset_id = create_response.json()["id"]
-        
+
         # Get asset by ID
         response = await async_client.get(
             f"/api/v1/assets/{asset_id}",
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["id"] == asset_id
@@ -202,12 +202,12 @@ class TestAssetCRUDAPI:
     ) -> None:
         """Test retrieving non-existent asset."""
         non_existent_id = str(uuid.uuid4())
-        
+
         response = await async_client.get(
             f"/api/v1/assets/{non_existent_id}",
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.asyncio
@@ -223,20 +223,20 @@ class TestAssetCRUDAPI:
             payload = valid_asset_payload.copy()
             payload["unique_identifier"] = f"test-asset-{i}"
             payload["name"] = f"Test Asset {i}"
-            
+
             response = await async_client.post(
                 "/api/v1/assets/",
                 json=payload,
                 headers=auth_headers
             )
             assert response.status_code == status.HTTP_201_CREATED
-        
+
         # List assets
         response = await async_client.get(
             "/api/v1/assets/?skip=0&limit=10",
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
@@ -254,20 +254,20 @@ class TestAssetCRUDAPI:
         postgres_payload = valid_asset_payload.copy()
         postgres_payload["unique_identifier"] = "postgres-asset"
         postgres_payload["asset_type"] = "POSTGRESQL"
-        
+
         sqlite_payload = valid_asset_payload.copy()
         sqlite_payload["unique_identifier"] = "sqlite-asset"
         sqlite_payload["asset_type"] = "SQLITE"
-        
+
         await async_client.post("/api/v1/assets/", json=postgres_payload, headers=auth_headers)
         await async_client.post("/api/v1/assets/", json=sqlite_payload, headers=auth_headers)
-        
+
         # Filter by asset type
         response = await async_client.get(
             "/api/v1/assets/?asset_type=POSTGRESQL",
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert all(asset["asset_type"] == "POSTGRESQL" for asset in data)
@@ -287,20 +287,20 @@ class TestAssetCRUDAPI:
             headers=auth_headers
         )
         asset_id = create_response.json()["id"]
-        
+
         # Update asset
         update_payload = {
             "name": "Updated Database Name",
             "confidence_score": 95,
             "technical_contact": "updated@company.com"
         }
-        
+
         response = await async_client.put(
             f"/api/v1/assets/{asset_id}",
             json=update_payload,
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["name"] == "Updated Database Name"
@@ -322,18 +322,18 @@ class TestAssetCRUDAPI:
             headers=auth_headers
         )
         asset_id = create_response.json()["id"]
-        
+
         # Patch asset (partial update)
         patch_payload = {
             "confidence_score": 85
         }
-        
+
         response = await async_client.patch(
             f"/api/v1/assets/{asset_id}",
             json=patch_payload,
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["confidence_score"] == 85
@@ -355,15 +355,15 @@ class TestAssetCRUDAPI:
             headers=auth_headers
         )
         asset_id = create_response.json()["id"]
-        
+
         # Delete asset
         response = await async_client.delete(
             f"/api/v1/assets/{asset_id}",
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        
+
         # Verify asset is not accessible after deletion
         get_response = await async_client.get(
             f"/api/v1/assets/{asset_id}",
@@ -383,7 +383,7 @@ class TestAssetCRUDAPI:
             "/api/v1/assets/",
             json=valid_asset_payload
         )
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.asyncio
@@ -397,13 +397,13 @@ class TestAssetCRUDAPI:
             "Authorization": "Bearer invalid_token",
             "Content-Type": "application/json"
         }
-        
+
         response = await async_client.post(
             "/api/v1/assets/",
             json=valid_asset_payload,
             headers=invalid_headers
         )
-        
+
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -462,10 +462,10 @@ class TestBulkOperationsAPI:
             json=bulk_import_payload,
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_202_ACCEPTED
         data = response.json()
-        
+
         # Verify response structure
         assert "job_id" in data
         assert data["status"] == "processing"
@@ -486,13 +486,13 @@ class TestBulkOperationsAPI:
             headers=auth_headers
         )
         job_id = import_response.json()["job_id"]
-        
+
         # Check job status
         status_response = await async_client.get(
             f"/api/v1/assets/import-status/{job_id}",
             headers=auth_headers
         )
-        
+
         assert status_response.status_code == status.HTTP_200_OK
         status_data = status_response.json()
         assert "job_id" in status_data
@@ -512,10 +512,10 @@ class TestBulkOperationsAPI:
             json=bulk_import_payload,
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        
+
         # Verify validation response
         assert "valid_count" in data
         assert "invalid_count" in data
@@ -542,14 +542,14 @@ class TestBulkOperationsAPI:
                 "discovery_method": "manual",
                 "confidence_score": 80
             }
-            
+
             response = await async_client.post(
                 "/api/v1/assets/",
                 json=create_payload,
                 headers=auth_headers
             )
             asset_ids.append(response.json()["id"])
-        
+
         # Bulk update
         bulk_update_payload = {
             "updates": [
@@ -569,13 +569,13 @@ class TestBulkOperationsAPI:
                 }
             ]
         }
-        
+
         response = await async_client.post(
             "/api/v1/assets/bulk-update",
             json=bulk_update_payload,
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_202_ACCEPTED
 
 
@@ -598,7 +598,7 @@ class TestRelationshipAPI:
     ) -> List[str]:
         """Create sample assets for relationship testing."""
         asset_ids = []
-        
+
         for i in range(2):
             payload = {
                 "name": f"Relationship Test Asset {i}",
@@ -611,14 +611,14 @@ class TestRelationshipAPI:
                 "discovery_method": "manual",
                 "confidence_score": 90
             }
-            
+
             response = await async_client.post(
                 "/api/v1/assets/",
                 json=payload,
                 headers=auth_headers
             )
             asset_ids.append(response.json()["id"])
-        
+
         return asset_ids
 
     @pytest.mark.asyncio
@@ -630,7 +630,7 @@ class TestRelationshipAPI:
     ) -> None:
         """Test creating an asset relationship."""
         source_id, target_id = sample_assets
-        
+
         relationship_payload = {
             "source_asset_id": source_id,
             "target_asset_id": target_id,
@@ -641,16 +641,16 @@ class TestRelationshipAPI:
             "discovered_method": "configuration_analysis",
             "confidence_score": 90
         }
-        
+
         response = await async_client.post(
             "/api/v1/relationships/",
             json=relationship_payload,
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
-        
+
         assert data["source_asset_id"] == source_id
         assert data["target_asset_id"] == target_id
         assert data["relationship_type"] == "DEPENDS_ON"
@@ -664,7 +664,7 @@ class TestRelationshipAPI:
     ) -> None:
         """Test retrieving relationships for a specific asset."""
         source_id, target_id = sample_assets
-        
+
         # Create relationship first
         relationship_payload = {
             "source_asset_id": source_id,
@@ -674,19 +674,19 @@ class TestRelationshipAPI:
             "discovered_method": "network_analysis",
             "confidence_score": 85
         }
-        
+
         await async_client.post(
             "/api/v1/relationships/",
             json=relationship_payload,
             headers=auth_headers
         )
-        
+
         # Get relationships for source asset
         response = await async_client.get(
             f"/api/v1/assets/{source_id}/relationships",
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
@@ -701,7 +701,7 @@ class TestRelationshipAPI:
     ) -> None:
         """Test retrieving relationship graph."""
         source_id, target_id = sample_assets
-        
+
         # Create relationship
         relationship_payload = {
             "source_asset_id": source_id,
@@ -711,22 +711,22 @@ class TestRelationshipAPI:
             "discovered_method": "data_flow_analysis",
             "confidence_score": 95
         }
-        
+
         await async_client.post(
             "/api/v1/relationships/",
             json=relationship_payload,
             headers=auth_headers
         )
-        
+
         # Get relationship graph
         response = await async_client.get(
             f"/api/v1/relationships/graph?asset_ids={source_id}&max_depth=2",
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        
+
         # Verify graph structure
         assert "nodes" in data
         assert "edges" in data
@@ -742,7 +742,7 @@ class TestRelationshipAPI:
     ) -> None:
         """Test deleting an asset relationship."""
         source_id, target_id = sample_assets
-        
+
         # Create relationship first
         relationship_payload = {
             "source_asset_id": source_id,
@@ -752,20 +752,20 @@ class TestRelationshipAPI:
             "discovered_method": "backup_configuration",
             "confidence_score": 75
         }
-        
+
         create_response = await async_client.post(
             "/api/v1/relationships/",
             json=relationship_payload,
             headers=auth_headers
         )
         relationship_id = create_response.json()["id"]
-        
+
         # Delete relationship
         response = await async_client.delete(
             f"/api/v1/relationships/{relationship_id}",
             headers=auth_headers
         )
-        
+
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
@@ -796,9 +796,9 @@ class TestAPIPerformance:
             headers=auth_headers
         )
         end_time = time.time()
-        
+
         response_time_ms = (end_time - start_time) * 1000
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response_time_ms < 500, f"Response time {response_time_ms}ms exceeds 500ms limit"
 
@@ -819,10 +819,10 @@ class TestAPIPerformance:
                 headers=auth_headers
             )
             tasks.append(task)
-        
+
         # Execute concurrently
         responses = await asyncio.gather(*tasks)
-        
+
         # Verify all requests succeeded
         for response in responses:
             assert response.status_code == status.HTTP_200_OK
@@ -843,9 +843,9 @@ class TestAPIPerformance:
             headers=auth_headers
         )
         end_time = time.time()
-        
+
         response_time_ms = (end_time - start_time) * 1000
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response_time_ms < 1000, f"Large pagination response time {response_time_ms}ms exceeds 1000ms limit"
 

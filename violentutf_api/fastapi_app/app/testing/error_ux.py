@@ -19,6 +19,7 @@ class ErrorType(Enum):
     SYSTEM_ERROR = "system_error"
     DATA_ERROR = "data_error"
 
+
 @dataclass
 class ErrorUXMetrics:
     """Error UX measurement results"""
@@ -29,24 +30,25 @@ class ErrorUXMetrics:
     average_recovery_time: float  # seconds
     help_effectiveness_score: float  # 0-10 scale
 
+
 class ErrorUXTester:
     """Error user experience testing framework"""
-    
+
     def __init__(self) -> None:
         """Initialize ErrorUXTester.
-        
+
         Sets up the error user experience testing framework with an empty
         test results list for tracking error UX metrics.
         """
         self.test_results: List[ErrorUXMetrics] = []
-        
+
     def test_error_message_clarity(self, error_type: ErrorType) -> float:
         """
         Test error message clarity and understandability
-        
+
         Args:
             error_type: Type of error to test
-            
+
         Returns:
             float: Clarity score (0-10)
         """
@@ -54,14 +56,14 @@ class ErrorUXTester:
             "Error message clarity testing not implemented. "
             "Requires user comprehension testing and message analysis."
         )
-        
+
     def test_error_recovery_mechanisms(self, error_scenarios: List[str]) -> Dict[str, float]:
         """
         Test error recovery mechanisms effectiveness
-        
+
         Args:
             error_scenarios: List of error scenarios to test
-            
+
         Returns:
             Dict[str, float]: Recovery success rates by scenario
         """
@@ -69,14 +71,14 @@ class ErrorUXTester:
             "Error recovery mechanism testing not implemented. "
             "Requires error injection and recovery path validation."
         )
-        
+
     def analyze_user_error_experience(self, workflow: str) -> ErrorUXMetrics:
         """
         Analyze overall user error experience
-        
+
         Args:
             workflow: Workflow to analyze for error experience
-            
+
         Returns:
             ErrorUXMetrics: Comprehensive error UX metrics
         """
@@ -84,11 +86,11 @@ class ErrorUXTester:
             "User error experience analysis not implemented. "
             "Requires user behavior tracking during error conditions."
         )
-        
+
     def test_error_prevention_mechanisms(self) -> Dict[str, Any]:
         """
         Test error prevention mechanisms
-        
+
         Returns:
             Dict[str, Any]: Prevention mechanism effectiveness metrics
         """
@@ -96,14 +98,14 @@ class ErrorUXTester:
             "Error prevention mechanism testing not implemented. "
             "Requires proactive error detection and prevention analysis."
         )
-        
+
     def validate_error_help_system(self, error_types: List[ErrorType]) -> Dict[ErrorType, float]:
         """
         Validate error help system effectiveness
-        
+
         Args:
             error_types: Error types to validate help for
-            
+
         Returns:
             Dict[ErrorType, float]: Help effectiveness scores
         """
@@ -111,11 +113,11 @@ class ErrorUXTester:
             "Error help system validation not implemented. "
             "Requires help content effectiveness measurement and user testing."
         )
-        
+
     def test_error_notification_timing(self) -> Dict[str, float]:
         """
         Test error notification timing and delivery
-        
+
         Returns:
             Dict[str, float]: Notification timing metrics
         """
@@ -125,6 +127,8 @@ class ErrorUXTester:
         )
 
 # Error UX testing utilities
+
+
 def get_error_ux_baseline_metrics() -> Dict[str, float]:
     """Get baseline error UX metrics"""
     return {
@@ -134,6 +138,7 @@ def get_error_ux_baseline_metrics() -> Dict[str, float]:
         "max_recovery_time": 60,         # 60 seconds maximum recovery time
         "min_help_effectiveness": 8.5,   # 8.5/10 minimum help effectiveness
     }
+
 
 def is_error_ux_framework_available() -> bool:
     """Check if error UX testing framework is available"""

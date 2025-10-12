@@ -48,7 +48,7 @@ class TestPostgreSQLBackupConfig:
             compression_level=6,
             parallel_jobs=2
         )
-        
+
         # THEN: Configuration should be created correctly
         assert config.host == "postgres"
         assert config.port == 5432
@@ -69,7 +69,7 @@ class TestPostgreSQLBackupConfig:
             username="test_user",
             password="test_pass"
         )
-        
+
         # THEN: Valid configuration should validate
         assert valid_config.is_valid()
         assert len(valid_config.validation_errors) == 0
@@ -84,7 +84,7 @@ class TestPostgreSQLBackupConfig:
             username="",  # Empty username
             password=""   # Empty password
         )
-        
+
         # THEN: Invalid configuration should not validate
         assert not invalid_config.is_valid()
         assert len(invalid_config.validation_errors) > 0
@@ -99,10 +99,10 @@ class TestPostgreSQLBackupConfig:
             username="keycloak",
             password="secret"
         )
-        
+
         # WHEN: Generating connection string
         conn_str = config.get_connection_string()
-        
+
         # THEN: Connection string should be formatted correctly
         expected = "postgresql://keycloak:secret@postgres:5432/keycloak"
         assert conn_str == expected
@@ -117,11 +117,11 @@ class TestPostgreSQLBackupConfig:
             "POSTGRES_USER": "keycloak",
             "POSTGRES_PASSWORD": "env_password"
         }
-        
+
         with patch.dict(os.environ, env_vars):
             # WHEN: Creating config from environment
             config = PostgreSQLBackupConfig.from_environment()
-            
+
             # THEN: Configuration should match environment
             assert config.host == "postgres"
             assert config.port == 5432
@@ -141,7 +141,7 @@ class TestPgDumpExecutor:
             username="keycloak", password="password"
         )
         executor = PgDumpExecutor(config)
-        
+
         # THEN: Executor should be initialized
         assert executor.config == config
         assert hasattr(executor, 'execute_backup')
@@ -156,11 +156,11 @@ class TestPgDumpExecutor:
             backup_format="custom", compression_level=6
         )
         executor = PgDumpExecutor(config)
-        
+
         # WHEN: Building command
         output_file = "/backups/keycloak_backup.custom"
         command = executor.build_pgdump_command(output_file)
-        
+
         # THEN: Command should be formatted correctly
         expected_parts = [
             "pg_dump",
@@ -173,7 +173,7 @@ class TestPgDumpExecutor:
             "-Z", "6",  # compression level
             "--verbose"
         ]
-        
+
         assert all(part in command for part in expected_parts)
 
     def test_build_pgdump_command_plain_format(self):
@@ -185,11 +185,11 @@ class TestPgDumpExecutor:
             backup_format="plain"
         )
         executor = PgDumpExecutor(config)
-        
+
         # WHEN: Building command
         output_file = "/backups/keycloak_backup.sql"
         command = executor.build_pgdump_command(output_file)
-        
+
         # THEN: Command should include plain format options
         assert "-F p" in " ".join(command) or "-Fp" in " ".join(command)
 
@@ -202,11 +202,11 @@ class TestPgDumpExecutor:
             parallel_jobs=4
         )
         executor = PgDumpExecutor(config)
-        
+
         # WHEN: Building command for directory format (required for parallel)
         output_dir = "/backups/keycloak_parallel"
         command = executor.build_pgdump_command(output_dir, use_parallel=True)
-        
+
         # THEN: Command should include parallel options
         assert "-F d" in " ".join(command) or "-Fd" in " ".join(command)  # Directory format
         assert "-j 4" in " ".join(command) or "-j4" in " ".join(command)  # Parallel jobs
@@ -220,15 +220,15 @@ class TestPgDumpExecutor:
             username="keycloak", password="password"
         )
         executor = PgDumpExecutor(config)
-        
+
         mock_process = AsyncMock()
         mock_process.returncode = 0
         mock_process.communicate.return_value = (b"Backup completed", b"")
-        
+
         with patch('asyncio.create_subprocess_exec', return_value=mock_process):
             # WHEN: Executing backup
             result = await executor.execute_backup("/backups/test.backup")
-            
+
             # THEN: Backup should succeed
             assert result.success is True
             assert result.output_file == "/backups/test.backup"
@@ -243,15 +243,15 @@ class TestPgDumpExecutor:
             username="keycloak", password="password"
         )
         executor = PgDumpExecutor(config)
-        
+
         mock_process = AsyncMock()
         mock_process.returncode = 1
         mock_process.communicate.return_value = (b"", b"Connection failed")
-        
+
         with patch('asyncio.create_subprocess_exec', return_value=mock_process):
             # WHEN: Executing backup
             result = await executor.execute_backup("/backups/test.backup")
-            
+
             # THEN: Backup should fail
             assert result.success is False
             assert "Connection failed" in result.error_message
@@ -264,10 +264,10 @@ class TestPgDumpExecutor:
             username="keycloak", password="secret_password"
         )
         executor = PgDumpExecutor(config)
-        
+
         # WHEN: Building environment
         env_vars = executor.build_environment()
-        
+
         # THEN: Environment should include password
         assert env_vars["PGPASSWORD"] == "secret_password"
         assert "PGPASSWORD" in env_vars
@@ -285,7 +285,7 @@ class TestPostgreSQLConnectionManager:
             username="keycloak", password="password"
         )
         manager = PostgreSQLConnectionManager(config)
-        
+
         # THEN: Manager should be initialized
         assert manager.config == config
         assert hasattr(manager, 'test_connection')
@@ -299,15 +299,15 @@ class TestPostgreSQLConnectionManager:
             username="keycloak", password="password"
         )
         manager = PostgreSQLConnectionManager(config)
-        
+
         with patch('asyncpg.connect') as mock_connect:
             mock_conn = AsyncMock()
             mock_connect.return_value.__aenter__.return_value = mock_conn
             mock_conn.fetchval.return_value = 1
-            
+
             # WHEN: Testing connection
             result = await manager.test_connection()
-            
+
             # THEN: Connection test should succeed
             assert result.success is True
             assert result.error_message is None
@@ -320,11 +320,11 @@ class TestPostgreSQLConnectionManager:
             username="keycloak", password="password"
         )
         manager = PostgreSQLConnectionManager(config)
-        
+
         with patch('asyncpg.connect', side_effect=Exception("Connection refused")):
             # WHEN: Testing connection
             result = await manager.test_connection()
-            
+
             # THEN: Connection test should fail
             assert result.success is False
             assert "Connection refused" in result.error_message
@@ -337,21 +337,21 @@ class TestPostgreSQLConnectionManager:
             username="keycloak", password="password"
         )
         manager = PostgreSQLConnectionManager(config)
-        
+
         with patch('asyncpg.connect') as mock_connect:
             mock_conn = AsyncMock()
             mock_connect.return_value.__aenter__.return_value = mock_conn
-            
+
             # Mock database info queries
             mock_conn.fetchval.side_effect = [
                 "15.4",  # PostgreSQL version
                 1024000,  # Database size
                 25       # Table count
             ]
-            
+
             # WHEN: Getting database info
             info = await manager.get_database_info()
-            
+
             # THEN: Database info should be collected
             assert info["postgresql_version"] == "15.4"
             assert info["database_size_bytes"] == 1024000
@@ -386,7 +386,7 @@ class TestPostgreSQLBackupManager:
             config=sample_config,
             backup_directory=temp_backup_dir
         )
-        
+
         # THEN: Manager should be initialized
         assert manager.config == sample_config
         assert str(manager.backup_directory) == temp_backup_dir
@@ -400,20 +400,20 @@ class TestPostgreSQLBackupManager:
             config=sample_config,
             backup_directory=temp_backup_dir
         )
-        
+
         # Mock successful pg_dump execution
         mock_result = MagicMock()
         mock_result.success = True
         mock_result.output_file = f"{temp_backup_dir}/keycloak_full_backup.custom"
         mock_result.backup_size_bytes = 1024000
-        
+
         with patch.object(manager.pg_dump_executor, 'execute_backup', return_value=mock_result):
             # WHEN: Creating full backup
             backup_result = await manager.create_full_backup(
                 backup_id="postgresql_full_001",
                 created_by="automated_system"
             )
-            
+
             # THEN: Backup should be created successfully
             assert backup_result.success is True
             assert backup_result.backup_metadata.backup_type == "full"
@@ -427,13 +427,13 @@ class TestPostgreSQLBackupManager:
             config=sample_config,
             backup_directory=temp_backup_dir
         )
-        
+
         # Mock successful pg_dump execution for incremental backup
         mock_result = MagicMock()
         mock_result.success = True
         mock_result.output_file = f"{temp_backup_dir}/keycloak_incremental_backup.custom"
         mock_result.backup_size_bytes = 256000
-        
+
         with patch.object(manager.pg_dump_executor, 'execute_backup', return_value=mock_result):
             with patch.object(manager, '_get_last_backup_lsn', return_value="ABC123"):
                 # WHEN: Creating incremental backup
@@ -442,7 +442,7 @@ class TestPostgreSQLBackupManager:
                     base_backup_id="postgresql_full_001",
                     created_by="automated_system"
                 )
-                
+
                 # THEN: Incremental backup should be created
                 assert backup_result.success is True
                 assert backup_result.backup_metadata.backup_type == "incremental"
@@ -455,14 +455,14 @@ class TestPostgreSQLBackupManager:
             config=sample_config,
             backup_directory=temp_backup_dir
         )
-        
+
         # Create mock backup file
         backup_file = Path(temp_backup_dir) / "test_backup.custom"
         backup_file.write_bytes(b"Mock PostgreSQL backup data")
-        
+
         # WHEN: Validating backup integrity
         validation_result = await manager.validate_backup_integrity(str(backup_file))
-        
+
         # THEN: Validation should complete
         assert validation_result is not None
         assert hasattr(validation_result, 'is_valid')
@@ -474,16 +474,16 @@ class TestPostgreSQLBackupManager:
             config=sample_config,
             backup_directory="/tmp"
         )
-        
+
         with patch.object(manager.connection_manager, 'get_database_info') as mock_info:
             mock_info.return_value = {
                 "database_size_bytes": 2048000,
                 "table_count": 30
             }
-            
+
             # WHEN: Estimating backup size
             estimated_size = await manager.estimate_backup_size("full")
-            
+
             # THEN: Size should be estimated
             assert estimated_size > 0
             assert isinstance(estimated_size, int)
@@ -496,12 +496,12 @@ class TestPostgreSQLBackupManager:
             backup_directory=temp_backup_dir,
             max_backups=3
         )
-        
+
         # Create multiple backups to test retention
         mock_result = MagicMock()
         mock_result.success = True
         mock_result.backup_size_bytes = 1024000
-        
+
         with patch.object(manager.pg_dump_executor, 'execute_backup', return_value=mock_result):
             backup_ids = []
             for i in range(5):  # Create more backups than retention limit
@@ -512,10 +512,10 @@ class TestPostgreSQLBackupManager:
                 )
                 if result.success:
                     backup_ids.append(result.backup_metadata.backup_id)
-            
+
             # WHEN: Checking retained backups
             retained_backups = await manager.list_backups()
-            
+
             # THEN: Should enforce retention policy
             assert len(retained_backups) <= 3
 
@@ -548,7 +548,7 @@ class TestPostgreSQLRestoreManager:
             config=sample_config,
             backup_directory=temp_backup_dir
         )
-        
+
         # THEN: Manager should be initialized
         assert manager.config == sample_config
         assert str(manager.backup_directory) == temp_backup_dir
@@ -562,25 +562,25 @@ class TestPostgreSQLRestoreManager:
             config=sample_config,
             backup_directory=temp_backup_dir
         )
-        
+
         # Create mock backup file
         backup_file = Path(temp_backup_dir) / "keycloak_backup.custom"
         backup_file.write_bytes(b"Mock backup data")
-        
+
         # Mock successful pg_restore execution
         with patch('asyncio.create_subprocess_exec') as mock_exec:
             mock_process = AsyncMock()
             mock_process.returncode = 0
             mock_process.communicate.return_value = (b"Restore completed", b"")
             mock_exec.return_value = mock_process
-            
+
             # WHEN: Restoring from backup
             restore_result = await manager.restore_from_backup(
                 backup_file_path=str(backup_file),
                 target_database="keycloak_restored",
                 restored_by="admin"
             )
-            
+
             # THEN: Restore should succeed
             assert restore_result.success is True
             assert restore_result.target_database == "keycloak_restored"
@@ -592,20 +592,20 @@ class TestPostgreSQLRestoreManager:
             config=sample_config,
             backup_directory=temp_backup_dir
         )
-        
+
         # Mock connection and validation queries
         with patch.object(manager.connection_manager, 'test_connection') as mock_conn:
             mock_conn.return_value.success = True
-            
+
             with patch.object(manager.connection_manager, 'get_database_info') as mock_info:
                 mock_info.return_value = {
                     "table_count": 25,
                     "database_size_bytes": 1024000
                 }
-                
+
                 # WHEN: Validating restore
                 validation_result = await manager.validate_restore("restored_db")
-                
+
                 # THEN: Validation should complete
                 assert validation_result is not None
                 assert hasattr(validation_result, 'is_valid')
@@ -618,30 +618,30 @@ class TestPostgreSQLRestoreManager:
             backup_directory=temp_backup_dir,
             wal_archive_directory=f"{temp_backup_dir}/wal_archives"
         )
-        
+
         # Create mock WAL archive directory
         wal_dir = Path(temp_backup_dir) / "wal_archives"
         wal_dir.mkdir()
-        
+
         # Mock base backup and WAL files
         base_backup = Path(temp_backup_dir) / "base_backup.tar"
         base_backup.write_bytes(b"Base backup data")
-        
+
         # WHEN: Performing point-in-time recovery
         target_time = datetime.now() - timedelta(hours=1)
-        
+
         with patch('asyncio.create_subprocess_exec') as mock_exec:
             mock_process = AsyncMock()
             mock_process.returncode = 0
             mock_exec.return_value = mock_process
-            
+
             recovery_result = await manager.point_in_time_recovery(
                 base_backup_path=str(base_backup),
                 target_time=target_time,
                 recovery_database="keycloak_pitr",
                 restored_by="admin"
             )
-            
+
             # THEN: Recovery should complete
             assert recovery_result is not None
             assert hasattr(recovery_result, 'success')

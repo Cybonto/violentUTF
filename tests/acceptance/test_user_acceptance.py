@@ -89,23 +89,23 @@ class TestUserAcceptance:
     and provides an intuitive, effective user experience across all
     dataset evaluation workflows.
     """
-    
+
     @pytest.fixture(autouse=True, scope="function")
     def setup_acceptance_test_environment(self):
         """Setup test environment for user acceptance testing."""
         self.test_session = f"acceptance_test_{int(time.time())}"
         self.auth_client = KeycloakTestAuth()
         self.acceptance_test_data = create_acceptance_test_data()
-        
+
         # Setup test directory
         self.test_dir = Path(tempfile.mkdtemp(prefix="acceptance_test_"))
         self.acceptance_results_dir = self.test_dir / "acceptance_results"
         self.usability_metrics_dir = self.test_dir / "usability_metrics"
         self.acceptance_results_dir.mkdir(exist_ok=True)
         self.usability_metrics_dir.mkdir(exist_ok=True)
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         if self.test_dir.exists():
@@ -165,30 +165,30 @@ class TestUserAcceptance:
                 "maximum_task_time_minutes": 5  # maximum time for dataset selection
             }
         }
-        
+
         # RED Phase: This will fail because UserAcceptanceTestManager is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserAcceptanceTestManager is None:
                 raise ImportError("UserAcceptanceTestManager not implemented")
-            
+
             acceptance_manager = UserAcceptanceTestManager(session_id=self.test_session)
             selection_result = acceptance_manager.test_dataset_selection_usability(
                 criteria=dataset_selection_criteria,
                 test_users=self.acceptance_test_data["test_user_personas"]
             )
-            
+
             # Validate acceptance criteria are met
             assert selection_result.task_completion_rate >= dataset_selection_criteria["acceptance_thresholds"]["task_completion_rate"]
             assert selection_result.average_satisfaction_score >= dataset_selection_criteria["acceptance_thresholds"]["average_satisfaction_score"]
             assert selection_result.average_task_time <= dataset_selection_criteria["acceptance_thresholds"]["maximum_task_time_minutes"] * 60
-        
+
         # Validate expected failure
         assert any([
             "UserAcceptanceTestManager not implemented" in str(exc_info.value),
             "test_dataset_selection_usability" in str(exc_info.value),
             "user acceptance" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_acceptance_functionality("dataset_selection_usability", {
             "missing_classes": ["UserAcceptanceTestManager", "DatasetSelectionUsabilityTester"],
             "missing_methods": ["test_dataset_selection_usability", "measure_selection_efficiency"],
@@ -265,30 +265,30 @@ class TestUserAcceptance:
                 "overall_workflow_satisfaction": 4.0  # out of 5.0
             }
         }
-        
+
         # RED Phase: This will fail because workflow usability testing is not automated
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserAcceptanceTestManager is None:
                 raise ImportError("UserAcceptanceTestManager not implemented")
-            
+
             acceptance_manager = UserAcceptanceTestManager(session_id=self.test_session)
             workflow_result = acceptance_manager.test_workflow_intuitiveness(
                 criteria=workflow_intuitiveness_criteria,
                 test_workflows=self.acceptance_test_data["evaluation_workflows"]
             )
-            
+
             # Validate workflow intuitiveness acceptance criteria
             assert workflow_result.completion_rate >= workflow_intuitiveness_criteria["acceptance_benchmarks"]["workflow_completion_rate"]
             assert workflow_result.step_prediction_accuracy >= workflow_intuitiveness_criteria["acceptance_benchmarks"]["step_prediction_accuracy"]
             assert workflow_result.overall_satisfaction >= workflow_intuitiveness_criteria["acceptance_benchmarks"]["overall_workflow_satisfaction"]
-        
+
         # Validate expected failure
         assert any([
             "UserAcceptanceTestManager not implemented" in str(exc_info.value),
             "test_workflow_intuitiveness" in str(exc_info.value),
             "workflow usability" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_acceptance_functionality("workflow_intuitiveness", {
             "missing_classes": ["UserAcceptanceTestManager", "WorkflowUsabilityTester"],
             "missing_methods": ["test_workflow_intuitiveness", "measure_workflow_usability"],
@@ -365,30 +365,30 @@ class TestUserAcceptance:
                 "results_satisfaction_score": 4.1             # out of 5.0
             }
         }
-        
+
         # RED Phase: This will fail because results presentation testing is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserAcceptanceTestManager is None:
                 raise ImportError("UserAcceptanceTestManager not implemented")
-            
+
             acceptance_manager = UserAcceptanceTestManager(session_id=self.test_session)
             results_clarity_result = acceptance_manager.test_results_interpretation_clarity(
                 criteria=results_clarity_criteria,
                 test_results=self.acceptance_test_data["sample_evaluation_results"]
             )
-            
+
             # Validate results clarity acceptance criteria
             assert results_clarity_result.key_findings_identification_rate >= results_clarity_criteria["clarity_benchmarks"]["key_findings_identification_rate"]
             assert results_clarity_result.visualization_accuracy >= results_clarity_criteria["clarity_benchmarks"]["visualization_interpretation_accuracy"]
             assert results_clarity_result.satisfaction_score >= results_clarity_criteria["clarity_benchmarks"]["results_satisfaction_score"]
-        
+
         # Validate expected failure
         assert any([
             "UserAcceptanceTestManager not implemented" in str(exc_info.value),
             "test_results_interpretation_clarity" in str(exc_info.value),
             "results presentation" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_acceptance_functionality("results_interpretation_clarity", {
             "missing_classes": ["UserAcceptanceTestManager", "ResultsPresentationTester"],
             "missing_methods": ["test_results_interpretation_clarity", "measure_results_usability"],
@@ -465,30 +465,30 @@ class TestUserAcceptance:
                 "error_handling_satisfaction": 3.5     # out of 5.0
             }
         }
-        
+
         # RED Phase: This will fail because error UX testing is not automated
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserAcceptanceTestManager is None:
                 raise ImportError("UserAcceptanceTestManager not implemented")
-            
+
             acceptance_manager = UserAcceptanceTestManager(session_id=self.test_session)
             error_ux_result = acceptance_manager.test_error_handling_user_experience(
                 criteria=error_handling_criteria,
                 error_scenarios=self.acceptance_test_data["error_test_scenarios"]
             )
-            
+
             # Validate error handling UX acceptance criteria
             assert error_ux_result.error_comprehension_rate >= error_handling_criteria["error_ux_benchmarks"]["error_comprehension_rate"]
             assert error_ux_result.recovery_success_rate >= error_handling_criteria["error_ux_benchmarks"]["recovery_success_rate"]
             assert error_ux_result.satisfaction_score >= error_handling_criteria["error_ux_benchmarks"]["error_handling_satisfaction"]
-        
+
         # Validate expected failure
         assert any([
             "UserAcceptanceTestManager not implemented" in str(exc_info.value),
             "test_error_handling_user_experience" in str(exc_info.value),
             "error ux testing" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_acceptance_functionality("error_handling_ux", {
             "missing_classes": ["UserAcceptanceTestManager", "ErrorHandlingUXTester"],
             "missing_methods": ["test_error_handling_user_experience", "measure_error_recovery_usability"],
@@ -531,20 +531,20 @@ class TestUserAcceptance:
                 }
             }
         }
-        
+
         # RED Phase: This will fail because performance satisfaction testing is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserAcceptanceTestManager is None:
                 raise ImportError("UserAcceptanceTestManager not implemented")
-            
+
             acceptance_manager = UserAcceptanceTestManager(session_id=self.test_session)
             performance_satisfaction_result = acceptance_manager.test_performance_user_satisfaction(
                 criteria=performance_satisfaction_criteria
             )
-        
+
         # Validate expected failure
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_acceptance_functionality("performance_user_satisfaction", {
             "missing_classes": ["UserAcceptanceTestManager", "PerformanceSatisfactionTester"],
             "missing_methods": ["test_performance_user_satisfaction", "measure_performance_ux"],
@@ -583,12 +583,12 @@ class TestUserAcceptance:
                 ]
             }
         }
-        
+
         # Write documentation to acceptance results directory
         doc_file = self.acceptance_results_dir / f"{acceptance_area}_missing_functionality.json"
         with open(doc_file, "w") as f:
             json.dump(documentation, f, indent=2)
-        
+
         print(f"\n[TDD RED PHASE] Missing acceptance functionality documented for {acceptance_area}")
         print(f"Documentation saved to: {doc_file}")
         print(f"Key missing acceptance features: {missing_info.get('required_acceptance_features', [])[:3]}")
@@ -598,7 +598,7 @@ class TestUsabilityMetrics:
     """
     Test usability metrics collection and analysis across the platform.
     """
-    
+
     def test_task_completion_rate_measurement(self):
         """
         Test automated task completion rate measurement
@@ -608,10 +608,10 @@ class TestUsabilityMetrics:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.services.usability_metrics import TaskCompletionTracker
-            
+
             completion_tracker = TaskCompletionTracker()
             completion_rates = completion_tracker.measure_task_completion_rates()
-            
+
         assert "not implemented" in str(exc_info.value).lower()
 
     def test_user_satisfaction_scoring(self):
@@ -623,8 +623,8 @@ class TestUsabilityMetrics:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.services.satisfaction_scoring import UserSatisfactionScorer
-            
+
             satisfaction_scorer = UserSatisfactionScorer()
             satisfaction_scores = satisfaction_scorer.collect_and_analyze_satisfaction()
-            
+
         assert "not implemented" in str(exc_info.value).lower()

@@ -31,7 +31,7 @@ from violentutf_api.fastapi_app.app.db.database import get_db
 
 class TestAssetManagementAPI:
     """Test suite for Asset Management API endpoints"""
-    
+
     def setup_method(self):
         """Setup test environment"""
         self.client = TestClient(app)
@@ -40,10 +40,10 @@ class TestAssetManagementAPI:
             "username": "test_admin",
             "roles": ["admin", "asset_manager"]
         }
-        
+
         # Mock authentication
         app.dependency_overrides[get_current_user] = lambda: self.test_user
-        
+
         # Sample test data
         self.sample_asset_data = {
             "name": "test-postgresql-db",
@@ -60,7 +60,7 @@ class TestAssetManagementAPI:
                 "backup_enabled": True
             }
         }
-        
+
         self.sample_risk_data = {
             "asset_id": "asset-123",
             "risk_score": 15.5,
@@ -75,7 +75,7 @@ class TestAssetManagementAPI:
                 "insufficient_monitoring"
             ]
         }
-        
+
         self.sample_compliance_data = {
             "asset_id": "asset-123",
             "framework": "SOC2",
@@ -90,27 +90,27 @@ class TestAssetManagementAPI:
                 }
             ]
         }
-    
+
     def teardown_method(self):
         """Cleanup test environment"""
         app.dependency_overrides.clear()
-    
+
     @pytest.mark.asyncio
     async def test_create_asset_success(self):
         """Test successful asset creation"""
         with patch('violentutf_api.fastapi_app.app.services.asset_management_service.AssetManagementService.create_asset') as mock_create:
             mock_asset = AssetModel(id="asset-123", **self.sample_asset_data)
             mock_create.return_value = mock_asset
-            
+
             response = self.client.post("/api/v1/assets/", json=self.sample_asset_data)
-            
+
             assert response.status_code == 201
             data = response.json()
             assert data["name"] == self.sample_asset_data["name"]
             assert data["asset_type"] == self.sample_asset_data["asset_type"]
             assert data["environment"] == self.sample_asset_data["environment"]
             mock_create.assert_called_once()
-    
+
     def test_create_asset_validation_error(self):
         """Test asset creation with invalid data"""
         invalid_data = {
@@ -118,10 +118,10 @@ class TestAssetManagementAPI:
             "asset_type": "INVALID_TYPE",
             "environment": "INVALID_ENV"
         }
-        
+
         response = self.client.post("/api/v1/assets/", json=invalid_data)
         assert response.status_code == 422
-    
+
     @pytest.mark.asyncio
     async def test_get_assets_with_filters(self):
         """Test retrieving assets with filtering parameters"""
@@ -129,41 +129,41 @@ class TestAssetManagementAPI:
             AssetModel(id="asset-1", name="db1", asset_type=AssetType.POSTGRESQL, environment=AssetEnvironment.PRODUCTION),
             AssetModel(id="asset-2", name="db2", asset_type=AssetType.SQLITE, environment=AssetEnvironment.DEVELOPMENT)
         ]
-        
+
         with patch('violentutf_api.fastapi_app.app.services.asset_management_service.AssetManagementService.get_assets') as mock_get:
             mock_get.return_value = mock_assets
-            
+
             # Test with filters
             response = self.client.get("/api/v1/assets/?asset_types=POSTGRESQL&environments=PRODUCTION")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 2
             mock_get.assert_called_once()
-    
+
     @pytest.mark.asyncio
     async def test_get_asset_by_id_success(self):
         """Test retrieving a specific asset by ID"""
         mock_asset = AssetModel(id="asset-123", **self.sample_asset_data)
-        
+
         with patch('violentutf_api.fastapi_app.app.services.asset_management_service.AssetManagementService.get_asset') as mock_get:
             mock_get.return_value = mock_asset
-            
+
             response = self.client.get("/api/v1/assets/asset-123")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["id"] == "asset-123"
             assert data["name"] == self.sample_asset_data["name"]
-    
+
     def test_get_asset_by_id_not_found(self):
         """Test retrieving non-existent asset"""
         with patch('violentutf_api.fastapi_app.app.services.asset_management_service.AssetManagementService.get_asset') as mock_get:
             mock_get.return_value = None
-            
+
             response = self.client.get("/api/v1/assets/non-existent-id")
             assert response.status_code == 404
-    
+
     @pytest.mark.asyncio
     async def test_update_asset_success(self):
         """Test successful asset update"""
@@ -172,28 +172,28 @@ class TestAssetManagementAPI:
             "criticality_level": "CRITICAL",
             "metadata": {"updated": True}
         }
-        
+
         mock_asset = AssetModel(id="asset-123", **{**self.sample_asset_data, **update_data})
-        
+
         with patch('violentutf_api.fastapi_app.app.services.asset_management_service.AssetManagementService.update_asset') as mock_update:
             mock_update.return_value = mock_asset
-            
+
             response = self.client.put("/api/v1/assets/asset-123", json=update_data)
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["name"] == update_data["name"]
             assert data["criticality_level"] == update_data["criticality_level"]
-    
+
     @pytest.mark.asyncio
     async def test_delete_asset_success(self):
         """Test successful asset deletion"""
         with patch('violentutf_api.fastapi_app.app.services.asset_management_service.AssetManagementService.delete_asset') as mock_delete:
             mock_delete.return_value = True
-            
+
             response = self.client.delete("/api/v1/assets/asset-123")
             assert response.status_code == 204
-    
+
     @pytest.mark.asyncio
     async def test_get_asset_relationships(self):
         """Test retrieving asset relationships"""
@@ -205,12 +205,12 @@ class TestAssetManagementAPI:
                 "relationship_strength": 0.8
             }
         ]
-        
+
         with patch('violentutf_api.fastapi_app.app.services.asset_management_service.AssetManagementService.get_asset_relationships') as mock_get_rel:
             mock_get_rel.return_value = mock_relationships
-            
+
             response = self.client.get("/api/v1/assets/asset-123/relationships")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 1
@@ -219,22 +219,22 @@ class TestAssetManagementAPI:
 
 class TestRiskAssessmentAPI:
     """Test suite for Risk Assessment API endpoints"""
-    
+
     def setup_method(self):
         """Setup test environment"""
         self.client = TestClient(app)
         self.test_user = {
             "id": "test-user-123",
-            "username": "test_admin", 
+            "username": "test_admin",
             "roles": ["admin", "risk_analyst"]
         }
-        
+
         app.dependency_overrides[get_current_user] = lambda: self.test_user
-    
+
     def teardown_method(self):
         """Cleanup test environment"""
         app.dependency_overrides.clear()
-    
+
     @pytest.mark.asyncio
     async def test_create_risk_assessment(self):
         """Test creating a new risk assessment"""
@@ -248,19 +248,19 @@ class TestRiskAssessmentAPI:
             "likelihood_score": 7.0,
             "risk_factors": ["outdated_components", "exposed_endpoints"]
         }
-        
+
         mock_assessment = RiskAssessmentModel(id="risk-123", **risk_data)
-        
+
         with patch('violentutf_api.fastapi_app.app.services.risk_assessment_service.RiskAssessmentService.create_assessment') as mock_create:
             mock_create.return_value = mock_assessment
-            
+
             response = self.client.post("/api/v1/risk-assessments/", json=risk_data)
-            
+
             assert response.status_code == 201
             data = response.json()
             assert data["risk_score"] == 15.5
             assert data["risk_level"] == "HIGH"
-    
+
     @pytest.mark.asyncio
     async def test_get_latest_risk_assessment(self):
         """Test retrieving latest risk assessment for an asset"""
@@ -271,17 +271,17 @@ class TestRiskAssessmentAPI:
             risk_level=RiskLevel.HIGH,
             vulnerability_count=3
         )
-        
+
         with patch('violentutf_api.fastapi_app.app.services.risk_assessment_service.RiskAssessmentService.get_latest_assessment') as mock_get:
             mock_get.return_value = mock_assessment
-            
+
             response = self.client.get("/api/v1/assets/asset-123/risk-assessment/latest")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["risk_score"] == 15.5
             assert data["asset_id"] == "asset-123"
-    
+
     @pytest.mark.asyncio
     async def test_get_risk_trend_data(self):
         """Test retrieving risk trend data for time series analysis"""
@@ -297,17 +297,17 @@ class TestRiskAssessmentAPI:
                 "vulnerability_count": 3
             }
         ]
-        
+
         with patch('violentutf_api.fastapi_app.app.services.risk_assessment_service.RiskAssessmentService.get_risk_trends') as mock_trends:
             mock_trends.return_value = mock_trend_data
-            
+
             response = self.client.get("/api/v1/assets/asset-123/risk-trends?days=30")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 2
             assert data[1]["risk_score"] == 15.5
-    
+
     @pytest.mark.asyncio
     async def test_get_risk_predictions(self):
         """Test retrieving risk predictions and forecasts"""
@@ -322,32 +322,32 @@ class TestRiskAssessmentAPI:
                 "Implement network segmentation"
             ]
         }
-        
+
         with patch('violentutf_api.fastapi_app.app.services.risk_assessment_service.RiskAssessmentService.get_risk_predictions') as mock_predict:
             mock_predict.return_value = mock_predictions
-            
+
             response = self.client.get("/api/v1/assets/asset-123/risk-predictions")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["predicted_risk_30_days"] == 18.2
             assert data["confidence"] == 0.85
-    
+
     @pytest.mark.asyncio
     async def test_bulk_risk_assessment(self):
         """Test bulk risk assessment for multiple assets"""
         asset_ids = ["asset-123", "asset-456", "asset-789"]
-        
+
         mock_assessments = [
-            {"asset_id": aid, "risk_score": 15.0 + i, "risk_level": "MEDIUM"} 
+            {"asset_id": aid, "risk_score": 15.0 + i, "risk_level": "MEDIUM"}
             for i, aid in enumerate(asset_ids)
         ]
-        
+
         with patch('violentutf_api.fastapi_app.app.services.risk_assessment_service.RiskAssessmentService.bulk_assess_risks') as mock_bulk:
             mock_bulk.return_value = mock_assessments
-            
+
             response = self.client.post("/api/v1/risk-assessments/bulk", json={"asset_ids": asset_ids})
-            
+
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 3
@@ -356,7 +356,7 @@ class TestRiskAssessmentAPI:
 
 class TestComplianceMonitoringAPI:
     """Test suite for Compliance Monitoring API endpoints"""
-    
+
     def setup_method(self):
         """Setup test environment"""
         self.client = TestClient(app)
@@ -365,13 +365,13 @@ class TestComplianceMonitoringAPI:
             "username": "test_admin",
             "roles": ["admin", "compliance_officer"]
         }
-        
+
         app.dependency_overrides[get_current_user] = lambda: self.test_user
-    
+
     def teardown_method(self):
         """Cleanup test environment"""
         app.dependency_overrides.clear()
-    
+
     @pytest.mark.asyncio
     async def test_get_compliance_status(self):
         """Test retrieving compliance status for an asset"""
@@ -382,17 +382,17 @@ class TestComplianceMonitoringAPI:
             overall_score=85.5,
             compliant=True
         )
-        
+
         with patch('violentutf_api.fastapi_app.app.services.compliance_monitoring_service.ComplianceMonitoringService.get_compliance_status') as mock_get:
             mock_get.return_value = mock_compliance
-            
+
             response = self.client.get("/api/v1/assets/asset-123/compliance/SOC2")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["overall_score"] == 85.5
             assert data["compliant"] is True
-    
+
     @pytest.mark.asyncio
     async def test_run_compliance_assessment(self):
         """Test running a new compliance assessment"""
@@ -401,7 +401,7 @@ class TestComplianceMonitoringAPI:
             "framework": "GDPR",
             "include_recommendations": True
         }
-        
+
         mock_result = {
             "assessment_id": "assessment-123",
             "asset_id": "asset-123",
@@ -417,17 +417,17 @@ class TestComplianceMonitoringAPI:
                 }
             ]
         }
-        
+
         with patch('violentutf_api.fastapi_app.app.services.compliance_monitoring_service.ComplianceMonitoringService.run_assessment') as mock_assess:
             mock_assess.return_value = mock_result
-            
+
             response = self.client.post("/api/v1/compliance-assessments/", json=assessment_request)
-            
+
             assert response.status_code == 201
             data = response.json()
             assert data["overall_score"] == 78.5
             assert len(data["gaps"]) == 1
-    
+
     @pytest.mark.asyncio
     async def test_get_compliance_gaps(self):
         """Test retrieving compliance gaps and remediation recommendations"""
@@ -446,18 +446,18 @@ class TestComplianceMonitoringAPI:
                 "estimated_effort": "2-4 weeks"
             }
         ]
-        
+
         with patch('violentutf_api.fastapi_app.app.services.compliance_monitoring_service.ComplianceMonitoringService.get_compliance_gaps') as mock_gaps_func:
             mock_gaps_func.return_value = mock_gaps
-            
+
             response = self.client.get("/api/v1/assets/asset-123/compliance-gaps")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 1
             assert data[0]["severity"] == "HIGH"
             assert len(data[0]["remediation_steps"]) == 3
-    
+
     @pytest.mark.asyncio
     async def test_get_compliance_dashboard_data(self):
         """Test retrieving dashboard-specific compliance data"""
@@ -476,12 +476,12 @@ class TestComplianceMonitoringAPI:
             "high_priority_gaps": 3,
             "total_assets_assessed": 15
         }
-        
+
         with patch('violentutf_api.fastapi_app.app.services.compliance_monitoring_service.ComplianceMonitoringService.get_dashboard_data') as mock_dashboard:
             mock_dashboard.return_value = mock_dashboard_data
-            
+
             response = self.client.get("/api/v1/compliance/dashboard")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["overall_compliance_score"] == 82.3
@@ -491,7 +491,7 @@ class TestComplianceMonitoringAPI:
 
 class TestDashboardMetricsAPI:
     """Test suite for Dashboard Metrics and KPI API endpoints"""
-    
+
     def setup_method(self):
         """Setup test environment"""
         self.client = TestClient(app)
@@ -500,13 +500,13 @@ class TestDashboardMetricsAPI:
             "username": "test_admin",
             "roles": ["admin", "dashboard_viewer"]
         }
-        
+
         app.dependency_overrides[get_current_user] = lambda: self.test_user
-    
+
     def teardown_method(self):
         """Cleanup test environment"""
         app.dependency_overrides.clear()
-    
+
     @pytest.mark.asyncio
     async def test_get_asset_inventory_metrics(self):
         """Test retrieving asset inventory dashboard metrics"""
@@ -528,18 +528,18 @@ class TestDashboardMetricsAPI:
             "compliance_score": 84.2,
             "monitoring_coverage": 92.0
         }
-        
+
         with patch('violentutf_api.fastapi_app.app.services.dashboard_metrics_service.DashboardMetricsService.get_asset_inventory_metrics') as mock_metrics_func:
             mock_metrics_func.return_value = mock_metrics
-            
+
             response = self.client.get("/api/v1/dashboard/asset-inventory-metrics")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["total_assets"] == 125
             assert data["critical_assets"] == 15
             assert data["compliance_score"] == 84.2
-    
+
     @pytest.mark.asyncio
     async def test_get_risk_dashboard_metrics(self):
         """Test retrieving risk dashboard metrics"""
@@ -559,18 +559,18 @@ class TestDashboardMetricsAPI:
                 {"asset_id": "asset-456", "asset_name": "api-server", "risk_score": 19.8}
             ]
         }
-        
+
         with patch('violentutf_api.fastapi_app.app.services.dashboard_metrics_service.DashboardMetricsService.get_risk_dashboard_metrics') as mock_risk_metrics_func:
             mock_risk_metrics_func.return_value = mock_risk_metrics
-            
+
             response = self.client.get("/api/v1/dashboard/risk-metrics")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["average_risk_score"] == 12.5
             assert data["risk_velocity"] == 0.05
             assert len(data["assets_requiring_attention"]) == 2
-    
+
     @pytest.mark.asyncio
     async def test_get_executive_report_data(self):
         """Test retrieving executive report data and KPIs"""
@@ -601,12 +601,12 @@ class TestDashboardMetricsAPI:
                 "roi_percentage": 1667
             }
         }
-        
+
         with patch('violentutf_api.fastapi_app.app.services.dashboard_metrics_service.DashboardMetricsService.get_executive_report_data') as mock_exec_data:
             mock_exec_data.return_value = mock_executive_data
-            
+
             response = self.client.get("/api/v1/dashboard/executive-report")
-            
+
             assert response.status_code == 200
             data = response.json()
             assert data["summary"]["total_assets"] == 125
@@ -616,7 +616,7 @@ class TestDashboardMetricsAPI:
 
 class TestDashboardPerformance:
     """Test suite for Dashboard Performance Requirements"""
-    
+
     def setup_method(self):
         """Setup test environment"""
         self.client = TestClient(app)
@@ -625,49 +625,49 @@ class TestDashboardPerformance:
             "username": "test_admin",
             "roles": ["admin"]
         }
-        
+
         app.dependency_overrides[get_current_user] = lambda: self.test_user
-    
+
     def teardown_method(self):
         """Cleanup test environment"""
         app.dependency_overrides.clear()
-    
+
     @pytest.mark.asyncio
     async def test_dashboard_response_time_requirements(self):
         """Test that dashboard endpoints meet performance requirements"""
         import time
-        
+
         # Mock fast service responses
         with patch('violentutf_api.fastapi_app.app.services.dashboard_metrics_service.DashboardMetricsService.get_asset_inventory_metrics') as mock_metrics:
             mock_metrics.return_value = {"total_assets": 100}
-            
+
             start_time = time.time()
             response = self.client.get("/api/v1/dashboard/asset-inventory-metrics")
             end_time = time.time()
-            
+
             response_time = end_time - start_time
-            
+
             assert response.status_code == 200
             # Dashboard refresh should be < 5 seconds (requirement)
             assert response_time < 5.0
-    
-    @pytest.mark.asyncio 
+
+    @pytest.mark.asyncio
     async def test_bulk_operations_performance(self):
         """Test performance of bulk operations"""
         import time
-        
+
         # Test bulk risk assessment performance
         asset_ids = [f"asset-{i}" for i in range(50)]  # Test with 50 assets
-        
+
         with patch('violentutf_api.fastapi_app.app.services.risk_assessment_service.RiskAssessmentService.bulk_assess_risks') as mock_bulk:
             mock_bulk.return_value = [{"asset_id": aid, "risk_score": 10.0} for aid in asset_ids]
-            
+
             start_time = time.time()
             response = self.client.post("/api/v1/risk-assessments/bulk", json={"asset_ids": asset_ids})
             end_time = time.time()
-            
+
             response_time = end_time - start_time
-            
+
             assert response.status_code == 200
             # Bulk operations should complete reasonably quickly
             assert response_time < 10.0

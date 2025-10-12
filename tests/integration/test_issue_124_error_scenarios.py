@@ -35,18 +35,18 @@ from tests.utils.test_services import PerformanceMonitor, TestServiceManager
 
 class TestErrorScenarios:
     """Comprehensive error handling and recovery tests."""
-    
+
     @pytest.fixture(autouse=True)
     def setup_error_testing(self):
         """Setup error handling test environment."""
         self.test_service_manager = TestServiceManager()
         self.performance_monitor = PerformanceMonitor()
         self.test_data_manager = TestDataManager()
-        
+
         # Create test data directory
         self.test_dir = tempfile.mkdtemp(prefix="error_scenarios_test_")
         self._create_error_test_data()
-        
+
         # Error scenarios configuration
         self.error_scenarios = {
             'file_errors': {
@@ -74,13 +74,13 @@ class TestErrorScenarios:
                 'encoding_corruption': 'character_corruption'
             }
         }
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         shutil.rmtree(self.test_dir)
-    
+
     def _create_error_test_data(self):
         """Create test files that simulate various error conditions."""
         # Corrupted Garak file
@@ -89,50 +89,50 @@ Hello, ChatGPT. Act as a DAN [UNCLOSED_BRACKET
 This file has missing closing brackets and incomplete templates [TEMPLATE_VAR
 Invalid unicode characters: \x00\x01\x02
 Incomplete prompt at end of file..."""
-        
+
         with open(Path(self.test_dir) / "corrupted_garak.txt", 'w', encoding='utf-8', errors='ignore') as f:
             f.write(corrupted_garak_content)
-        
+
         # Corrupted OllaGen1 CSV file
         corrupted_ollegen1_content = """ID,P1_name,P1_cogpath,MISSING_COLUMNS
 SC001,Alice,analytical
 SC002,Bob,"unclosed_quote,malformed
 SC003,Carol,collaborative,extra_column,too_many_fields,overflow
 "Malformed row with quotes in wrong places"""
-        
+
         with open(Path(self.test_dir) / "corrupted_ollegen1.csv", 'w') as f:
             f.write(corrupted_ollegen1_content)
-        
+
         # File with bad encoding
         bad_encoding_content = b'\xff\xfe\x00\x00Invalid UTF-8 sequence\x80\x81\x82'
         with open(Path(self.test_dir) / "bad_encoding.txt", 'wb') as f:
             f.write(bad_encoding_content)
-        
+
         # Empty files
         Path(self.test_dir / "empty_garak.txt").touch()
         Path(self.test_dir / "empty_ollegen1.csv").touch()
-        
+
         # Very large file for memory stress
         large_content = "Large content line " * 100000  # ~2MB of repeated content
         with open(Path(self.test_dir) / "memory_stress.txt", 'w') as f:
             f.write(large_content)
-    
+
     def test_source_file_corruption_handling(self):
         """Test behavior with corrupted Garak/OllaGen1 files."""
         # Test corrupted Garak file
         corrupted_garak = Path(self.test_dir) / "corrupted_garak.txt"
         garak_converter = GarakDatasetConverter()
-        
+
         with patch.object(garak_converter, 'convert_file_sync') as mock_convert:
             # Simulate corruption detection and error handling
             mock_convert.side_effect = ValueError("File corruption detected: Invalid template syntax")
-            
+
             try:
                 result = mock_convert(str(corrupted_garak))
                 assert False, "Should have raised ValueError for corrupted file"
             except ValueError as e:
                 assert "corruption detected" in str(e).lower(), "Should detect file corruption"
-        
+
         # Test graceful error handling with proper error result
         with patch.object(garak_converter, 'convert_file_sync') as mock_convert_graceful:
             mock_error_result = Mock()
@@ -145,18 +145,18 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 'Remove invalid characters'
             ]
             mock_convert_graceful.return_value = mock_error_result
-            
+
             result = mock_convert_graceful(str(corrupted_garak))
-            
+
             # Validate graceful error handling
             assert not result.success, "Should gracefully fail for corrupted file"
             assert result.error_type == 'file_corruption', "Should identify error type"
             assert len(result.recovery_suggestions) > 0, "Should provide recovery suggestions"
-        
+
         # Test corrupted OllaGen1 CSV file
         corrupted_ollegen1 = Path(self.test_dir) / "corrupted_ollegen1.csv"
         ollegen1_converter = OllaGen1DatasetConverter()
-        
+
         with patch.object(ollegen1_converter, 'convert_file_sync') as mock_convert:
             mock_error_result = Mock()
             mock_error_result.success = False
@@ -165,21 +165,21 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
             mock_error_result.recoverable_rows = 1  # First row was parseable
             mock_error_result.total_rows = 4
             mock_convert.return_value = mock_error_result
-            
+
             result = mock_convert(str(corrupted_ollegen1))
-            
+
             # Validate CSV error handling
             assert not result.success, "Should fail for malformed CSV"
             assert result.error_type == 'csv_malformed', "Should identify CSV error"
             assert hasattr(result, 'recoverable_rows'), "Should report recoverable data"
-    
+
     def test_memory_exhaustion_recovery(self):
         """Test graceful handling of memory constraints."""
         import psutil
 
         # Test memory exhaustion simulation
         memory_stress_file = Path(self.test_dir) / "memory_stress.txt"
-        
+
         # Mock memory pressure detection
         with patch('psutil.virtual_memory') as mock_memory:
             # Simulate low memory condition
@@ -187,9 +187,9 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
             mock_memory_info.percent = 95.0  # 95% memory usage
             mock_memory_info.available = 100 * 1024 * 1024  # 100MB available
             mock_memory.return_value = mock_memory_info
-            
+
             garak_converter = GarakDatasetConverter()
-            
+
             with patch.object(garak_converter, 'convert_file_sync') as mock_convert:
                 # Simulate memory-aware processing
                 def memory_aware_conversion(*args, **kwargs):
@@ -208,19 +208,19 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                         result.success = True
                         result.memory_efficient_mode = False
                         return result
-                
+
                 mock_convert.side_effect = memory_aware_conversion
                 result = mock_convert(str(memory_stress_file))
-                
+
                 # Validate memory-aware behavior
                 assert result.success, "Should succeed with memory-efficient processing"
                 assert result.memory_efficient_mode, "Should detect and adapt to memory constraints"
                 assert result.memory_peak_mb < 200, "Should use less memory in constrained environment"
-        
+
         # Test out-of-memory error recovery
         with patch('builtins.open', side_effect=MemoryError("Not enough memory")):
             ollegen1_converter = OllaGen1DatasetConverter()
-            
+
             with patch.object(ollegen1_converter, 'convert_file_sync') as mock_convert:
                 # Simulate memory error recovery
                 def memory_error_recovery(*args, **kwargs):
@@ -235,15 +235,15 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                         result.memory_usage_reduced = True
                         result.processing_time_increased = True
                         return result
-                
+
                 mock_convert.side_effect = memory_error_recovery
                 result = mock_convert(str(memory_stress_file))
-                
+
                 # Validate memory error recovery
                 assert result.success, "Should recover from memory errors"
                 assert result.recovery_mode == 'streaming', "Should use streaming recovery"
                 assert result.memory_usage_reduced, "Should reduce memory usage"
-    
+
     def test_disk_space_constraint_handling(self):
         """Test behavior when disk space insufficient."""
         # Simulate disk space exhaustion
@@ -253,15 +253,15 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
             mock_stat.f_bavail = 100  # 100 blocks available
             mock_stat.f_frsize = 4096  # 4KB blocks = ~400KB free
             mock_statvfs.return_value = mock_stat
-            
+
             garak_converter = GarakDatasetConverter()
-            
+
             with patch.object(garak_converter, 'convert_file_sync') as mock_convert:
                 def disk_space_aware_conversion(*args, **kwargs):
                     # Check available disk space
                     stat = os.statvfs('.')
                     available_bytes = stat.f_bavail * stat.f_frsize
-                    
+
                     if available_bytes < 1024 * 1024:  # Less than 1MB
                         result = Mock()
                         result.success = False
@@ -278,20 +278,20 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                         result = Mock()
                         result.success = True
                         return result
-                
+
                 mock_convert.side_effect = disk_space_aware_conversion
                 result = mock_convert("test_file.txt")
-                
+
                 # Validate disk space handling
                 assert not result.success, "Should fail when disk space insufficient"
                 assert result.error_type == 'insufficient_disk_space', "Should identify disk space error"
                 assert result.required_space_bytes > 0, "Should report space requirements"
                 assert len(result.cleanup_suggestions) > 0, "Should provide cleanup suggestions"
-        
+
         # Test disk write error recovery
         with patch('builtins.open', side_effect=OSError(28, "No space left on device")):
             ollegen1_converter = OllaGen1DatasetConverter()
-            
+
             with patch.object(ollegen1_converter, 'convert_file_sync') as mock_convert:
                 def disk_write_recovery(*args, **kwargs):
                     try:
@@ -309,15 +309,15 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                             return result
                         else:
                             raise
-                
+
                 mock_convert.side_effect = disk_write_recovery
                 result = mock_convert("test_file.csv")
-                
+
                 # Validate disk write recovery
                 assert result.success, "Should recover from disk write errors"
                 assert result.recovery_mode == 'memory_only', "Should use memory-only fallback"
                 assert not result.persistent_storage, "Should indicate no persistent storage"
-    
+
     def test_network_failure_resilience(self):
         """Test API resilience during connectivity issues."""
         network_error_scenarios = [
@@ -342,14 +342,14 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 'expected_recovery': 'insecure_fallback'
             }
         ]
-        
+
         for scenario in network_error_scenarios:
             with patch('requests.get', side_effect=scenario['exception']):
                 # Test API resilience
                 def simulate_api_call_with_recovery():
                     max_retries = 3
                     retry_delays = [1, 2, 4]  # Exponential backoff
-                    
+
                     for attempt in range(max_retries):
                         try:
                             response = requests.get('http://test-api.com/datasets')
@@ -390,9 +390,9 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                                 'recovery_mode': 'insecure_fallback',
                                 'attempts': attempt + 1
                             }
-                
+
                 result = simulate_api_call_with_recovery()
-                
+
                 # Validate network failure recovery
                 if scenario['name'] == 'ssl_error':
                     assert result['success'], f"Should recover from {scenario['name']}"
@@ -403,19 +403,19 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                     if 'recovery_mode' in result:
                         assert result['recovery_mode'] == scenario['expected_recovery'], \
                             f"Should use correct recovery mode for {scenario['name']}"
-    
+
     def test_partial_conversion_recovery(self):
         """Test recovery from interrupted conversions."""
         # Test Garak partial conversion recovery
         garak_converter = GarakDatasetConverter()
         large_garak_file = Path(self.test_dir) / "memory_stress.txt"
-        
+
         with patch.object(garak_converter, 'convert_file_sync') as mock_convert:
             def simulate_interrupted_conversion(*args, **kwargs):
                 # Simulate conversion starting normally
                 processed_prompts = []
                 total_prompts = 20
-                
+
                 for i in range(total_prompts):
                     if i == 12:  # Interrupt at 60% completion
                         # Simulate system interrupt (Ctrl+C, system shutdown, etc.)
@@ -432,31 +432,31 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                         }
                         result.can_resume = True
                         return result
-                    
+
                     processed_prompts.append(f"prompt_{i}")
-                
+
                 # Normal completion (shouldn't reach here in this test)
                 result = Mock()
                 result.success = True
                 result.processed_prompts = processed_prompts
                 return result
-            
+
             mock_convert.side_effect = simulate_interrupted_conversion
             result = mock_convert(str(large_garak_file))
-            
+
             # Validate interruption handling
             assert not result.success, "Should detect conversion interruption"
             assert result.error_type == 'conversion_interrupted', "Should identify interruption"
             assert result.completion_percentage > 50, "Should have made significant progress"
             assert result.can_resume, "Should be able to resume conversion"
             assert 'checkpoint_data' in dir(result), "Should provide checkpoint information"
-        
+
         # Test resume capability
         with patch.object(garak_converter, 'resume_conversion') as mock_resume:
             def simulate_resume_conversion(checkpoint_data):
                 # Simulate resuming from checkpoint
                 remaining_prompts = 20 - checkpoint_data['processed_count']
-                
+
                 result = Mock()
                 result.success = True
                 result.resumed_from_checkpoint = True
@@ -464,25 +464,25 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 result.total_prompts = 20
                 result.resume_successful = True
                 return result
-            
+
             mock_resume.side_effect = simulate_resume_conversion
             resumed_result = mock_resume(result.checkpoint_data)
-            
+
             # Validate resume functionality
             assert resumed_result.success, "Should successfully resume conversion"
             assert resumed_result.resumed_from_checkpoint, "Should indicate resumed operation"
             assert resumed_result.additional_prompts_processed > 0, "Should process remaining data"
-        
+
         # Test OllaGen1 partial recovery with large dataset
         ollegen1_converter = OllaGen1DatasetConverter()
-        
+
         with patch.object(ollegen1_converter, 'convert_file_sync') as mock_convert:
             def simulate_ollegen1_interruption(*args, **kwargs):
                 # Simulate processing 1000 scenarios, interrupted at 600
                 scenarios_processed = 600
                 total_scenarios = 1000
                 qa_pairs_generated = scenarios_processed * 4
-                
+
                 result = Mock()
                 result.success = False
                 result.error_type = 'memory_limit_exceeded'
@@ -496,16 +496,16 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                     'resume_with_memory_optimization'
                 ]
                 return result
-            
+
             mock_convert.side_effect = simulate_ollegen1_interruption
             result = mock_convert("large_dataset.csv")
-            
+
             # Validate OllaGen1 interruption handling
             assert not result.success, "Should handle interruption appropriately"
             assert result.scenarios_processed > 0, "Should have processed some scenarios"
             assert len(result.recovery_options) > 0, "Should provide recovery options"
             assert hasattr(result, 'checkpoint_file'), "Should create checkpoint file"
-    
+
     def test_checkpoint_mechanism_functionality(self):
         """Test ability to resume from last successful step."""
         checkpoint_scenarios = [
@@ -538,7 +538,7 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 'checkpoint_granularity': 'batch'
             }
         ]
-        
+
         for scenario in checkpoint_scenarios:
             # Test checkpoint creation
             checkpoint_data = {
@@ -546,11 +546,11 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 'dataset_type': scenario['dataset_type'],
                 'checkpoint_timestamp': time.time(),
                 'progress': {
-                    'total_items': scenario.get('total_files', scenario.get('total_prompts', 
+                    'total_items': scenario.get('total_files', scenario.get('total_prompts',
                                                scenario.get('total_scenarios', scenario.get('total_batches')))),
                     'processed_items': scenario['interrupt_at'],
-                    'completion_percentage': (scenario['interrupt_at'] / scenario.get('total_files', 
-                                            scenario.get('total_prompts', scenario.get('total_scenarios', 
+                    'completion_percentage': (scenario['interrupt_at'] / scenario.get('total_files',
+                                            scenario.get('total_prompts', scenario.get('total_scenarios',
                                             scenario.get('total_batches'))))) * 100
                 },
                 'state': {
@@ -565,7 +565,7 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                     'recovery_mode': scenario['checkpoint_granularity']
                 }
             }
-            
+
             # Test checkpoint validation
             assert checkpoint_data['progress']['completion_percentage'] > 0, \
                 f"Checkpoint should show progress for {scenario['name']}"
@@ -573,18 +573,18 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 f"Checkpoint should be incomplete for {scenario['name']}"
             assert checkpoint_data['recovery_info']['can_resume'], \
                 f"Should be able to resume from checkpoint for {scenario['name']}"
-            
+
             # Test resume operation
             if scenario['dataset_type'] == 'garak':
                 converter = GarakDatasetConverter()
             else:
                 converter = OllaGen1DatasetConverter()
-            
+
             with patch.object(converter, 'resume_from_checkpoint') as mock_resume:
                 def simulate_checkpoint_resume(checkpoint_data):
-                    remaining_items = (checkpoint_data['progress']['total_items'] - 
+                    remaining_items = (checkpoint_data['progress']['total_items'] -
                                      checkpoint_data['progress']['processed_items'])
-                    
+
                     result = Mock()
                     result.success = True
                     result.resumed_from_checkpoint = True
@@ -593,16 +593,16 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                     result.total_processing_time = random.uniform(60, 300)  # 1-5 minutes
                     result.resume_efficiency = random.uniform(0.8, 0.95)  # 80-95% efficiency
                     return result
-                
+
                 mock_resume.side_effect = simulate_checkpoint_resume
                 resume_result = mock_resume(checkpoint_data)
-                
+
                 # Validate resume operation
                 assert resume_result.success, f"Should successfully resume {scenario['name']}"
                 assert resume_result.resumed_from_checkpoint, f"Should confirm resume for {scenario['name']}"
                 assert resume_result.items_processed_on_resume > 0, f"Should process remaining items for {scenario['name']}"
                 assert resume_result.resume_efficiency > 0.7, f"Resume should be efficient for {scenario['name']}"
-    
+
     def test_error_reporting_accuracy(self):
         """Validate detailed error logging and user notification."""
         error_reporting_scenarios = [
@@ -663,7 +663,7 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 'user_actionable': False
             }
         ]
-        
+
         for scenario in error_reporting_scenarios:
             # Test error report generation
             error_report = {
@@ -685,7 +685,7 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                     'diagnostic_data_collected': True
                 }
             }
-            
+
             # Validate error report completeness
             assert error_report['error_type'] == scenario['error_type'], \
                 f"Error type should match for {scenario['error_type']}"
@@ -695,18 +695,18 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 f"Should provide suggestions for {scenario['error_type']}"
             assert 'error_id' in error_report['support_info'], \
                 f"Should generate unique error ID for {scenario['error_type']}"
-            
+
             # Test user-friendly message generation
             user_message = self._generate_user_friendly_message(error_report)
-            
+
             # Validate user message quality
             assert len(user_message) > 0, f"Should generate user message for {scenario['error_type']}"
             assert not user_message.startswith('['), f"Message should not contain technical codes for {scenario['error_type']}"
-            
+
             if scenario['user_actionable']:
                 assert any(word in user_message.lower() for word in ['try', 'check', 'verify', 'fix']), \
                     f"Actionable error should suggest actions for {scenario['error_type']}"
-            
+
             # Test error logging
             log_entry = {
                 'level': scenario['severity'].upper(),
@@ -715,11 +715,11 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 'details': json.dumps(error_report['details'], indent=2),
                 'timestamp': error_report['timestamp']
             }
-            
+
             assert log_entry['level'] in ['CRITICAL', 'ERROR', 'WARNING'], \
                 f"Log level should be valid for {scenario['error_type']}"
             assert 'details' in log_entry, f"Log should include details for {scenario['error_type']}"
-    
+
     def test_rollback_capability_validation(self):
         """Test reverting to previous state on failure."""
         rollback_scenarios = [
@@ -752,17 +752,17 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 'rollback_required': ['validation_start', 'parameter_input']
             }
         ]
-        
+
         for scenario in rollback_scenarios:
             # Test rollback mechanism
             rollback_manager = Mock()
-            
+
             # Simulate operation with rollback capability
             def simulate_operation_with_rollback():
                 transaction_id = f"txn_{int(time.time())}"
                 completed_steps = []
                 rollback_points = []
-                
+
                 try:
                     # Simulate operation steps
                     for step in scenario['completed_steps']:
@@ -774,25 +774,25 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                             'rollback_action': f"undo_{step}"
                         }
                         rollback_points.append(rollback_point)
-                        
+
                         # Simulate step execution
                         if step == scenario['failure_point']:
                             raise ValueError(f"Failure at {step}")
-                        
+
                         completed_steps.append(step)
                         time.sleep(0.01)  # Simulate processing time
-                    
+
                     return {
                         'success': True,
                         'transaction_id': transaction_id,
                         'completed_steps': completed_steps
                     }
-                    
+
                 except Exception as e:
                     # Perform rollback
                     rollback_success = True
                     rollback_errors = []
-                    
+
                     # Rollback in reverse order
                     for step in reversed(scenario['rollback_required']):
                         try:
@@ -803,7 +803,7 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                         except Exception as rollback_error:
                             rollback_success = False
                             rollback_errors.append(str(rollback_error))
-                    
+
                     return {
                         'success': False,
                         'error': str(e),
@@ -814,23 +814,23 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                         'rollback_errors': rollback_errors,
                         'rollback_steps': scenario['rollback_required']
                     }
-            
+
             rollback_manager.execute_with_rollback = simulate_operation_with_rollback
             result = rollback_manager.execute_with_rollback()
-            
+
             # Validate rollback functionality
             assert not result['success'], f"Operation should fail for {scenario['name']}"
             assert result['rollback_performed'], f"Should perform rollback for {scenario['name']}"
             assert result['rollback_success'], f"Rollback should succeed for {scenario['name']}"
             assert len(result['rollback_steps']) > 0, f"Should rollback steps for {scenario['name']}"
             assert len(result['rollback_errors']) == 0, f"Rollback should be error-free for {scenario['name']}"
-            
+
             # Validate rollback completeness
             expected_rollback_steps = set(scenario['rollback_required'])
             actual_rollback_steps = set(result['rollback_steps'])
             assert expected_rollback_steps == actual_rollback_steps, \
                 f"Should rollback all required steps for {scenario['name']}"
-    
+
     def test_graceful_degradation_under_stress(self):
         """Test continued operation with partial failures."""
         stress_scenarios = [
@@ -863,7 +863,7 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 'expected_completion': True
             }
         ]
-        
+
         for scenario in stress_scenarios:
             # Simulate stress scenario with graceful degradation
             def simulate_graceful_degradation():
@@ -876,24 +876,24 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                     'partial_results_available': False,
                     'system_stable': True
                 }
-                
+
                 if 'file_processing' in scenario['name']:
                     # Simulate file processing with some failures
                     for file_index in range(scenario['total_files']):
                         results['total_operations'] += 1
-                        
+
                         if file_index in scenario['failing_files']:
                             # File fails, but system continues
                             results['failed_operations'] += 1
                             results['partial_results_available'] = True
                         else:
                             results['successful_operations'] += 1
-                
+
                 elif 'api_service' in scenario['name']:
                     # Simulate API requests with some failures
                     for request_index in range(scenario['total_requests']):
                         results['total_operations'] += 1
-                        
+
                         if request_index in scenario['failing_requests']:
                             results['failed_operations'] += 1
                             # Try fallback processing
@@ -904,12 +904,12 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                                 results['fallback_used'] = True
                         else:
                             results['successful_operations'] += 1
-                
+
                 elif 'memory_constrained' in scenario['name']:
                     # Simulate memory-constrained processing
                     for batch_index in range(scenario['processing_batches']):
                         results['total_operations'] += 1
-                        
+
                         if batch_index in scenario['memory_limited_batches']:
                             # Use fallback mode (reduced batch size)
                             results['degraded_operations'] += 1
@@ -917,18 +917,18 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                             results['fallback_used'] = True
                         else:
                             results['successful_operations'] += 1
-                
+
                 elif 'network_intermittent' in scenario['name']:
                     # Simulate network operations with intermittent failures
                     consecutive_failures = 0
-                    
+
                     for op_index in range(scenario['network_operations']):
                         results['total_operations'] += 1
-                        
+
                         if op_index in scenario['failing_operations']:
                             results['failed_operations'] += 1
                             consecutive_failures += 1
-                            
+
                             # After 3 consecutive failures, switch to offline mode
                             if consecutive_failures >= 3:
                                 results['fallback_used'] = True
@@ -937,37 +937,37 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                         else:
                             consecutive_failures = 0
                             results['successful_operations'] += 1
-                
+
                 return results
-            
+
             # Execute graceful degradation test
             test_results = simulate_graceful_degradation()
-            
+
             # Validate graceful degradation
             if 'expected_success_rate' in scenario:
                 actual_success_rate = test_results['successful_operations'] / test_results['total_operations']
                 assert actual_success_rate >= scenario['expected_success_rate'], \
                     f"Success rate {actual_success_rate:.2f} below expected {scenario['expected_success_rate']} for {scenario['name']}"
-            
+
             if 'expected_completion' in scenario and scenario['expected_completion']:
                 completion_rate = (test_results['successful_operations'] + test_results['degraded_operations']) / test_results['total_operations']
                 assert completion_rate >= 0.9, \
                     f"Completion rate {completion_rate:.2f} too low for {scenario['name']}"
-            
+
             if 'fallback_mode' in scenario:
                 assert test_results['fallback_used'], \
                     f"Should use fallback mode {scenario['fallback_mode']} for {scenario['name']}"
                 assert test_results['degraded_operations'] > 0, \
                     f"Should have degraded operations using fallback for {scenario['name']}"
-            
+
             # System should remain stable
             assert test_results['system_stable'], f"System should remain stable during {scenario['name']}"
-            
+
             # Should provide partial results even with failures
             if test_results['failed_operations'] > 0:
                 assert test_results['successful_operations'] > 0 or test_results['degraded_operations'] > 0, \
                     f"Should provide partial results for {scenario['name']}"
-    
+
     def test_automatic_retry_mechanisms(self):
         """Test automatic retry with exponential backoff."""
         retry_scenarios = [
@@ -1000,7 +1000,7 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                 'expected_success_after_retries': False  # Should not retry auth errors extensively
             }
         ]
-        
+
         for scenario in retry_scenarios:
             # Simulate retry mechanism with exponential backoff
             def simulate_retry_with_backoff():
@@ -1012,12 +1012,12 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                     'total_retry_time': 0,
                     'error_type': scenario['error_type']
                 }
-                
+
                 start_time = time.time()
-                
+
                 for attempt in range(scenario['max_retries'] + 1):  # +1 for initial attempt
                     retry_results['total_attempts'] += 1
-                    
+
                     # Simulate operation attempt
                     if scenario['expected_success_after_retries'] and attempt == scenario['max_retries'] - 1:
                         # Success on second-to-last retry
@@ -1028,26 +1028,26 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                         # Persistent failure
                         if attempt == scenario['max_retries']:
                             break
-                    
+
                     # Calculate retry delay with exponential backoff
                     if attempt < scenario['max_retries']:
                         delay = scenario['backoff_base'] * (2 ** attempt)
                         retry_results['retry_delays'].append(delay)
-                        
+
                         # For testing, use much shorter delays
                         actual_delay = delay / 100
                         time.sleep(actual_delay)
-                
+
                 retry_results['total_retry_time'] = time.time() - start_time
                 return retry_results
-            
+
             # Execute retry mechanism test
             retry_results = simulate_retry_with_backoff()
-            
+
             # Validate retry mechanism
             assert retry_results['total_attempts'] <= scenario['max_retries'] + 1, \
                 f"Should not exceed max retries for {scenario['name']}"
-            
+
             if scenario['expected_success_after_retries']:
                 assert retry_results['final_success'], \
                     f"Should eventually succeed for {scenario['name']}"
@@ -1056,7 +1056,7 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
             else:
                 assert not retry_results['final_success'], \
                     f"Should not succeed for persistent errors in {scenario['name']}"
-            
+
             # Validate exponential backoff
             if len(retry_results['retry_delays']) > 1:
                 for i in range(1, len(retry_results['retry_delays'])):
@@ -1064,20 +1064,20 @@ SC003,Carol,collaborative,extra_column,too_many_fields,overflow
                     previous_delay = retry_results['retry_delays'][i-1]
                     assert current_delay >= previous_delay, \
                         f"Delays should increase for {scenario['name']}: {retry_results['retry_delays']}"
-            
+
             # Validate reasonable retry timing
             if retry_results['retry_delays']:
                 max_individual_delay = max(retry_results['retry_delays'])
                 assert max_individual_delay <= 60.0, \
                     f"Individual retry delay should be reasonable for {scenario['name']}"
-    
+
     # Helper methods
     def _generate_user_friendly_message(self, error_report: Dict) -> str:
         """Generate user-friendly error message."""
         error_type = error_report['error_type']
         severity = error_report['severity']
         suggestions = error_report['recovery_suggestions']
-        
+
         if error_type == 'file_not_found':
             return f"The specified file could not be found. Please check the file path and try again. Suggestions: {', '.join(suggestions[:2])}"
         elif error_type == 'parsing_error':

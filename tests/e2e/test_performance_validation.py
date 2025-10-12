@@ -96,19 +96,19 @@ class TestPerformanceValidation:
     These tests validate that all dataset conversion, evaluation, and
     processing operations meet established performance targets.
     """
-    
+
     @pytest.fixture(autouse=True, scope="function")
     def setup_performance_test_environment(self):
         """Setup test environment for performance validation."""
         self.test_session = f"performance_test_{int(time.time())}"
         self.auth_client = KeycloakTestAuth()
         self.performance_test_data = create_performance_test_data()
-        
+
         # Setup test directory
         self.test_dir = Path(tempfile.mkdtemp(prefix="performance_test_"))
         self.metrics_dir = self.test_dir / "metrics"
         self.metrics_dir.mkdir(exist_ok=True)
-        
+
         # Initialize system metrics baseline
         self.baseline_metrics = {
             "cpu_percent": psutil.cpu_percent(interval=1),
@@ -116,9 +116,9 @@ class TestPerformanceValidation:
             "disk_io": psutil.disk_io_counters(),
             "network_io": psutil.net_io_counters()
         }
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         if self.test_dir.exists():
@@ -192,14 +192,14 @@ class TestPerformanceValidation:
                 "description": "JudgeBench complete meta-evaluation dataset"
             }
         }
-        
+
         # RED Phase: This will fail because DatasetPerformanceMonitor is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if DatasetPerformanceMonitor is None:
                 raise ImportError("DatasetPerformanceMonitor not implemented")
-            
+
             performance_monitor = DatasetPerformanceMonitor(session_id=self.test_session)
-            
+
             # Test each dataset conversion against benchmarks
             for dataset_type, benchmark in performance_benchmarks.items():
                 # Measure conversion performance
@@ -207,26 +207,26 @@ class TestPerformanceValidation:
                     dataset_type=dataset_type,
                     benchmark=benchmark
                 )
-                
+
                 # Validate performance meets benchmarks
                 assert performance_result.processing_time <= benchmark["max_processing_time_seconds"]
                 assert performance_result.memory_usage_mb <= benchmark["max_memory_usage_mb"]
                 assert performance_result.cpu_utilization <= benchmark["max_cpu_utilization_percent"]
-        
+
         # Validate expected failure
         assert any([
             "DatasetPerformanceMonitor not implemented" in str(exc_info.value),
             "measure_conversion_performance" in str(exc_info.value),
             "performance monitoring" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_performance_functionality("conversion_performance_benchmarks", {
             "missing_classes": ["DatasetPerformanceMonitor", "PerformanceBenchmark"],
             "missing_methods": ["measure_conversion_performance", "validate_performance_benchmarks"],
             "required_features": [
                 "Dataset conversion time measurement",
                 "Memory usage tracking during conversion",
-                "CPU utilization monitoring", 
+                "CPU utilization monitoring",
                 "Performance benchmark validation",
                 "Real-time performance metrics collection",
                 "Performance regression detection",
@@ -278,14 +278,14 @@ class TestPerformanceValidation:
                 "concurrent_users": 5
             }
         }
-        
+
         # RED Phase: This will fail because APIPerformanceMonitor is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if APIPerformanceMonitor is None:
                 raise ImportError("APIPerformanceMonitor not implemented")
-            
+
             api_monitor = APIPerformanceMonitor(session_id=self.test_session)
-            
+
             # Test API response times
             for category, config in api_performance_targets.items():
                 response_time_results = api_monitor.measure_api_response_times(
@@ -293,18 +293,18 @@ class TestPerformanceValidation:
                     concurrent_users=config["concurrent_users"],
                     target_response_time=config["max_response_time_ms"]
                 )
-                
+
                 for endpoint_result in response_time_results:
                     assert endpoint_result.avg_response_time <= config["max_response_time_ms"]
                     assert endpoint_result.p95_response_time <= config["max_response_time_ms"] * 2
-        
+
         # Validate expected failure
         assert any([
             "APIPerformanceMonitor not implemented" in str(exc_info.value),
             "measure_api_response_times" in str(exc_info.value),
             "api performance" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_performance_functionality("api_response_time_validation", {
             "missing_classes": ["APIPerformanceMonitor", "ResponseTimeTracker"],
             "missing_methods": ["measure_api_response_times", "track_response_performance"],
@@ -352,30 +352,30 @@ class TestPerformanceValidation:
                 "interactive_response_ms": 100
             }
         }
-        
+
         # RED Phase: This will fail because UI performance monitoring is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.monitoring.ui_performance import StreamlitPerformanceMonitor
-            
+
             ui_monitor = StreamlitPerformanceMonitor(session_id=self.test_session)
-            
+
             # Test UI performance across all dataset types
             for dataset_type in ["garak", "ollegen1", "acpbench", "legalbench"]:
                 ui_performance = ui_monitor.measure_ui_performance(
                     dataset_type=dataset_type,
                     performance_targets=ui_performance_targets
                 )
-                
+
                 assert ui_performance.page_load_time <= ui_performance_targets["page_load"]["max_load_time_ms"]
                 assert ui_performance.interaction_response_time <= ui_performance_targets["user_interactions"]["max_response_time_ms"]
-        
+
         # Validate expected failure
         assert any([
             "StreamlitPerformanceMonitor" in str(exc_info.value),
             "ui performance" in str(exc_info.value).lower(),
             "not implemented" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_performance_functionality("streamlit_ui_performance", {
             "missing_classes": ["StreamlitPerformanceMonitor", "UIPerformanceTracker"],
             "missing_methods": ["measure_ui_performance", "track_user_interaction_performance"],
@@ -420,30 +420,30 @@ class TestPerformanceValidation:
                 "dataset_storage": {"max_storage_per_dataset_gb": 5, "compression_ratio": 0.3}
             }
         }
-        
+
         # RED Phase: This will fail because database performance monitoring is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.monitoring.database_performance import DatabasePerformanceMonitor
-            
+
             db_monitor = DatabasePerformanceMonitor(session_id=self.test_session)
-            
+
             # Test database performance under various load conditions
             performance_results = db_monitor.run_performance_suite(
                 targets=db_performance_targets,
                 test_scenarios=["concurrent_queries", "large_datasets", "complex_operations"]
             )
-            
+
             # Validate performance meets targets
             assert performance_results.query_response_times.simple_avg <= db_performance_targets["query_performance"]["simple_queries"]["max_response_time_ms"]
             assert performance_results.concurrent_connections_handled >= db_performance_targets["concurrency"]["max_concurrent_connections"]
-        
+
         # Validate expected failure
         assert any([
             "DatabasePerformanceMonitor" in str(exc_info.value),
             "database performance" in str(exc_info.value).lower(),
             "not implemented" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_performance_functionality("database_performance", {
             "missing_classes": ["DatabasePerformanceMonitor", "QueryPerformanceTracker"],
             "missing_methods": ["run_performance_suite", "measure_query_performance"],
@@ -494,32 +494,32 @@ class TestPerformanceValidation:
                 "thread_cleanup": True
             }
         }
-        
+
         # RED Phase: This will fail because memory cleanup monitoring is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if MemoryCleanupManager is None:
                 raise ImportError("MemoryCleanupManager not implemented")
-            
+
             memory_cleanup_manager = MemoryCleanupManager(session_id=self.test_session)
-            
+
             # Test memory cleanup for various dataset operations
             for dataset_type in ["graphwalk_480mb", "docmath_220mb", "ollegen1_full"]:
                 cleanup_result = memory_cleanup_manager.test_memory_cleanup(
                     operation=f"large_dataset_processing_{dataset_type}",
                     cleanup_targets=memory_cleanup_targets
                 )
-                
+
                 assert cleanup_result.memory_release_percent >= memory_cleanup_targets["cleanup_efficiency"]["memory_release_percent"]
                 assert cleanup_result.cleanup_time_seconds <= memory_cleanup_targets["cleanup_efficiency"]["cleanup_timeout_seconds"]
                 assert cleanup_result.residual_memory_mb <= memory_cleanup_targets["cleanup_efficiency"]["acceptable_residual_mb"]
-        
+
         # Validate expected failure
         assert any([
             "MemoryCleanupManager not implemented" in str(exc_info.value),
             "test_memory_cleanup" in str(exc_info.value),
             "memory cleanup" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_performance_functionality("memory_cleanup_efficiency", {
             "missing_classes": ["MemoryCleanupManager", "MemoryUsageTracker"],
             "missing_methods": ["test_memory_cleanup", "monitor_memory_usage"],
@@ -546,7 +546,7 @@ class TestPerformanceValidation:
         scalability_targets = {
             "concurrent_operations": {
                 "max_concurrent_conversions": 5,
-                "max_concurrent_evaluations": 3, 
+                "max_concurrent_evaluations": 3,
                 "max_concurrent_users": 10
             },
             "throughput": {
@@ -560,23 +560,23 @@ class TestPerformanceValidation:
                 "network_bandwidth_utilization": 70
             }
         }
-        
+
         # RED Phase: This will fail because scalability testing is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.scalability import ScalabilityTester
-            
+
             scalability_tester = ScalabilityTester(session_id=self.test_session)
             scalability_results = scalability_tester.run_scalability_suite(scalability_targets)
-            
+
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_performance_functionality("system_scalability", {
             "missing_classes": ["ScalabilityTester", "ConcurrencyManager"],
             "missing_methods": ["run_scalability_suite", "test_concurrent_operations"],
             "required_features": [
                 "Concurrent operation orchestration",
                 "Multi-user load simulation",
-                "System resource utilization monitoring", 
+                "System resource utilization monitoring",
                 "Throughput measurement and analysis",
                 "Scalability bottleneck identification",
                 "Performance degradation detection"
@@ -592,7 +592,7 @@ class TestPerformanceValidation:
             "missing_functionality": missing_info,
             "performance_requirements": {
                 "monitoring": "real_time_performance_tracking",
-                "alerting": "performance_threshold_alerts", 
+                "alerting": "performance_threshold_alerts",
                 "optimization": "automated_performance_optimization",
                 "reporting": "comprehensive_performance_reporting",
                 "benchmarking": "continuous_performance_benchmarking"
@@ -609,12 +609,12 @@ class TestPerformanceValidation:
                 ]
             }
         }
-        
+
         # Write documentation to metrics directory
         doc_file = self.metrics_dir / f"{performance_area}_missing_functionality.json"
         with open(doc_file, "w") as f:
             json.dump(documentation, f, indent=2)
-        
+
         print(f"\n[TDD RED PHASE] Missing performance functionality documented for {performance_area}")
         print(f"Documentation saved to: {doc_file}")
         print(f"Key missing performance features: {missing_info.get('required_features', [])[:3]}")
@@ -624,7 +624,7 @@ class TestConcurrentPerformance:
     """
     Test system performance under concurrent load conditions.
     """
-    
+
     def test_concurrent_dataset_conversions(self):
         """
         Test system performance with multiple concurrent dataset conversions
@@ -634,13 +634,13 @@ class TestConcurrentPerformance:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.concurrent_performance import ConcurrentPerformanceTester
-            
+
             concurrent_tester = ConcurrentPerformanceTester()
             concurrent_results = concurrent_tester.test_concurrent_conversions(
                 dataset_types=["garak", "ollegen1", "acpbench"],
                 concurrent_count=3
             )
-            
+
         assert "not implemented" in str(exc_info.value).lower()
 
     def test_multi_user_performance_impact(self):
@@ -652,8 +652,8 @@ class TestConcurrentPerformance:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.multi_user_performance import MultiUserPerformanceTester
-            
+
             multi_user_tester = MultiUserPerformanceTester()
             multi_user_results = multi_user_tester.simulate_concurrent_users(user_count=10)
-            
+
         assert "not implemented" in str(exc_info.value).lower()

@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
-# These imports will fail initially (RED phase of TDD)  
+# These imports will fail initially (RED phase of TDD)
 from scripts.backup_management.sqlite_backup import (
     SQLiteBackupManager,
     SQLiteBackupConfig,
@@ -48,7 +48,7 @@ class TestSQLiteBackupConfig:
             verify_integrity=True,
             temp_directory="/tmp/sqlite_backups"
         )
-        
+
         # THEN: Configuration should be created correctly
         assert config.database_path == "/app/app_data/violentutf_api.db"
         assert config.backup_format == "file_copy"
@@ -64,7 +64,7 @@ class TestSQLiteBackupConfig:
             database_path="/valid/path/database.db",
             backup_format="file_copy"
         )
-        
+
         # THEN: Valid configuration should validate
         assert valid_config.is_valid()
         assert len(valid_config.validation_errors) == 0
@@ -76,7 +76,7 @@ class TestSQLiteBackupConfig:
             database_path="",  # Empty path
             backup_format="invalid_format"  # Invalid format
         )
-        
+
         # THEN: Invalid configuration should not validate
         assert not invalid_config.is_valid()
         assert len(invalid_config.validation_errors) > 0
@@ -89,11 +89,11 @@ class TestSQLiteBackupConfig:
             "SQLITE_WAL_MODE": "true",
             "BACKUP_TEMP_DIR": "/app/temp"
         }
-        
+
         with patch.dict(os.environ, env_vars):
             # WHEN: Creating config from environment
             config = SQLiteBackupConfig.from_fastapi_environment()
-            
+
             # THEN: Configuration should be extracted correctly
             assert "/app/app_data/violentutf_api.db" in config.database_path
             assert config.wal_mode is True
@@ -108,7 +108,7 @@ class TestSQLiteFileManager:
         """Create temporary SQLite database."""
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             db_path = f.name
-            
+
         # Create a simple database with test data
         conn = sqlite3.connect(db_path)
         conn.execute('''
@@ -121,9 +121,9 @@ class TestSQLiteFileManager:
         conn.execute("INSERT INTO test_table (name) VALUES ('test_data')")
         conn.commit()
         conn.close()
-        
+
         yield db_path
-        
+
         # Cleanup
         if os.path.exists(db_path):
             os.unlink(db_path)
@@ -136,7 +136,7 @@ class TestSQLiteFileManager:
             backup_format="file_copy"
         )
         manager = SQLiteFileManager(config)
-        
+
         # THEN: Manager should be initialized
         assert manager.config == config
         assert hasattr(manager, 'copy_database_file')
@@ -150,10 +150,10 @@ class TestSQLiteFileManager:
             backup_format="file_copy"
         )
         manager = SQLiteFileManager(config)
-        
+
         # WHEN: Getting database size
         size = manager.get_database_size()
-        
+
         # THEN: Should return valid size
         assert size > 0
         assert isinstance(size, int)
@@ -166,13 +166,13 @@ class TestSQLiteFileManager:
             backup_format="file_copy"
         )
         manager = SQLiteFileManager(config)
-        
+
         with tempfile.TemporaryDirectory() as temp_dir:
             backup_path = Path(temp_dir) / "backup.db"
-            
+
             # WHEN: Copying database file
             copy_result = manager.copy_database_file(str(backup_path))
-            
+
             # THEN: Copy should succeed
             assert copy_result.success is True
             assert backup_path.exists()
@@ -186,17 +186,17 @@ class TestSQLiteFileManager:
             wal_mode=True
         )
         manager = SQLiteFileManager(config)
-        
+
         # Enable WAL mode
         conn = sqlite3.connect(temp_db_file)
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("INSERT INTO test_table (name) VALUES ('wal_test')")
         conn.commit()
         conn.close()
-        
+
         # WHEN: Getting associated files
         associated_files = manager.get_associated_files()
-        
+
         # THEN: Should include database file and potentially WAL/SHM
         assert temp_db_file in associated_files
         assert len(associated_files) >= 1
@@ -209,10 +209,10 @@ class TestSQLiteFileManager:
             verify_integrity=True
         )
         manager = SQLiteFileManager(config)
-        
+
         # WHEN: Verifying integrity
         integrity_result = manager.verify_file_integrity()
-        
+
         # THEN: Integrity check should pass
         assert integrity_result.is_valid is True
         assert integrity_result.error_message is None
@@ -226,7 +226,7 @@ class TestSQLiteIntegrityChecker:
         """Create temporary SQLite database."""
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             db_path = f.name
-            
+
         conn = sqlite3.connect(db_path)
         conn.execute('''
             CREATE TABLE integrity_test (
@@ -237,7 +237,7 @@ class TestSQLiteIntegrityChecker:
         conn.execute("INSERT INTO integrity_test (data) VALUES ('test')")
         conn.commit()
         conn.close()
-        
+
         yield db_path
         os.unlink(db_path)
 
@@ -245,7 +245,7 @@ class TestSQLiteIntegrityChecker:
         """Test creating integrity checker."""
         # GIVEN: Integrity checker initialization
         checker = SQLiteIntegrityChecker("/path/to/database.db")
-        
+
         # THEN: Checker should be initialized
         assert checker.database_path == "/path/to/database.db"
         assert hasattr(checker, 'check_integrity')
@@ -255,10 +255,10 @@ class TestSQLiteIntegrityChecker:
         """Test successful integrity check."""
         # GIVEN: Integrity checker with valid database
         checker = SQLiteIntegrityChecker(temp_db_file)
-        
+
         # WHEN: Checking integrity
         result = checker.check_integrity()
-        
+
         # THEN: Check should pass
         assert result.is_valid is True
         assert result.check_type == "full_integrity"
@@ -268,10 +268,10 @@ class TestSQLiteIntegrityChecker:
         """Test successful quick check."""
         # GIVEN: Integrity checker
         checker = SQLiteIntegrityChecker(temp_db_file)
-        
+
         # WHEN: Performing quick check
         result = checker.quick_check()
-        
+
         # THEN: Quick check should pass
         assert result.is_valid is True
         assert result.check_type == "quick_check"
@@ -283,13 +283,13 @@ class TestSQLiteIntegrityChecker:
             # Write invalid SQLite data
             f.write(b"This is not a valid SQLite database")
             corrupted_db = f.name
-        
+
         try:
             checker = SQLiteIntegrityChecker(corrupted_db)
-            
+
             # WHEN: Checking integrity
             result = checker.check_integrity()
-            
+
             # THEN: Check should fail
             assert result.is_valid is False
             assert result.error_message is not None
@@ -300,10 +300,10 @@ class TestSQLiteIntegrityChecker:
         """Test PRAGMA integrity_check execution."""
         # GIVEN: Integrity checker
         checker = SQLiteIntegrityChecker(temp_db_file)
-        
+
         # WHEN: Running PRAGMA integrity_check
         pragma_result = checker.run_pragma_integrity_check()
-        
+
         # THEN: Should return integrity status
         assert pragma_result is not None
         assert isinstance(pragma_result, list)
@@ -318,7 +318,7 @@ class TestWALModeBackupHandler:
         """Create SQLite database in WAL mode."""
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             db_path = f.name
-        
+
         conn = sqlite3.connect(db_path)
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute('''
@@ -330,9 +330,9 @@ class TestWALModeBackupHandler:
         conn.execute("INSERT INTO wal_test (data) VALUES ('wal_data')")
         conn.commit()
         conn.close()
-        
+
         yield db_path
-        
+
         # Cleanup all associated files
         for ext in ['', '-wal', '-shm']:
             file_path = db_path + ext
@@ -347,7 +347,7 @@ class TestWALModeBackupHandler:
             wal_mode=True
         )
         handler = WALModeBackupHandler(config)
-        
+
         # THEN: Handler should be initialized
         assert handler.config == config
         assert hasattr(handler, 'create_consistent_backup')
@@ -361,10 +361,10 @@ class TestWALModeBackupHandler:
             wal_mode=True
         )
         handler = WALModeBackupHandler(config)
-        
+
         # WHEN: Checkpointing WAL
         checkpoint_result = await handler.checkpoint_wal()
-        
+
         # THEN: Checkpointing should succeed
         assert checkpoint_result.success is True
         assert checkpoint_result.pages_checkpointed >= 0
@@ -377,13 +377,13 @@ class TestWALModeBackupHandler:
             wal_mode=True
         )
         handler = WALModeBackupHandler(config)
-        
+
         with tempfile.TemporaryDirectory() as backup_dir:
             backup_path = Path(backup_dir) / "consistent_backup.db"
-            
+
             # WHEN: Creating consistent backup
             backup_result = await handler.create_consistent_backup(str(backup_path))
-            
+
             # THEN: Backup should be created consistently
             assert backup_result.success is True
             assert backup_path.exists()
@@ -405,7 +405,7 @@ class TestSQLiteBackupManager:
         """Create sample SQLite database."""
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             db_path = f.name
-            
+
         conn = sqlite3.connect(db_path)
         conn.execute('''
             CREATE TABLE orchestrator_configurations (
@@ -431,7 +431,7 @@ class TestSQLiteBackupManager:
         )
         conn.commit()
         conn.close()
-        
+
         yield db_path
         os.unlink(db_path)
 
@@ -446,7 +446,7 @@ class TestSQLiteBackupManager:
             config=config,
             backup_directory=temp_backup_dir
         )
-        
+
         # THEN: Manager should be initialized
         assert manager.config == config
         assert str(manager.backup_directory) == temp_backup_dir
@@ -465,13 +465,13 @@ class TestSQLiteBackupManager:
             config=config,
             backup_directory=temp_backup_dir
         )
-        
+
         # WHEN: Creating full backup
         backup_result = await manager.create_full_backup(
             backup_id="sqlite_full_001",
             created_by="automated_system"
         )
-        
+
         # THEN: Backup should be created successfully
         assert backup_result.success is True
         assert backup_result.backup_metadata.backup_type == "full"
@@ -490,13 +490,13 @@ class TestSQLiteBackupManager:
             config=config,
             backup_directory=temp_backup_dir
         )
-        
+
         # Create full backup first
         full_backup_result = await manager.create_full_backup(
             backup_id="sqlite_full_base",
             created_by="system"
         )
-        
+
         # Add more data to database
         conn = sqlite3.connect(sample_db)
         conn.execute(
@@ -505,14 +505,14 @@ class TestSQLiteBackupManager:
         )
         conn.commit()
         conn.close()
-        
+
         # WHEN: Creating incremental backup
         incremental_result = await manager.create_incremental_backup(
             backup_id="sqlite_incremental_001",
             base_backup_id="sqlite_full_base",
             created_by="system"
         )
-        
+
         # THEN: Incremental backup should be created
         assert incremental_result.success is True
         assert incremental_result.backup_metadata.backup_type == "incremental"
@@ -530,13 +530,13 @@ class TestSQLiteBackupManager:
             config=config,
             backup_directory=temp_backup_dir
         )
-        
+
         # WHEN: Creating backup with vacuum
         backup_result = await manager.create_full_backup(
             backup_id="sqlite_vacuum_001",
             created_by="system"
         )
-        
+
         # THEN: Backup should succeed with vacuum optimization
         assert backup_result.success is True
         assert backup_result.vacuum_performed is True
@@ -547,7 +547,7 @@ class TestSQLiteBackupManager:
         # GIVEN: Database in WAL mode
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             wal_db_path = f.name
-        
+
         try:
             conn = sqlite3.connect(wal_db_path)
             conn.execute("PRAGMA journal_mode=WAL")
@@ -555,7 +555,7 @@ class TestSQLiteBackupManager:
             conn.execute("INSERT INTO wal_table (data) VALUES ('wal_test')")
             conn.commit()
             conn.close()
-            
+
             config = SQLiteBackupConfig(
                 database_path=wal_db_path,
                 backup_format="file_copy",
@@ -565,17 +565,17 @@ class TestSQLiteBackupManager:
                 config=config,
                 backup_directory=temp_backup_dir
             )
-            
+
             # WHEN: Creating backup
             backup_result = await manager.create_full_backup(
                 backup_id="sqlite_wal_001",
                 created_by="system"
             )
-            
+
             # THEN: WAL backup should succeed
             assert backup_result.success is True
             assert backup_result.wal_handled is True
-            
+
         finally:
             for ext in ['', '-wal', '-shm']:
                 file_path = wal_db_path + ext
@@ -593,17 +593,17 @@ class TestSQLiteBackupManager:
             config=config,
             backup_directory=temp_backup_dir
         )
-        
+
         backup_result = await manager.create_full_backup(
             backup_id="sqlite_integrity_test",
             created_by="system"
         )
-        
+
         # WHEN: Validating backup integrity
         validation_result = await manager.validate_backup_integrity(
             backup_result.backup_file_path
         )
-        
+
         # THEN: Validation should pass
         assert validation_result.is_valid is True
         assert validation_result.check_type == "full_integrity"
@@ -623,7 +623,7 @@ class TestSQLiteRestoreManager:
     def sample_backup(self, temp_backup_dir):
         """Create sample SQLite backup file."""
         backup_path = Path(temp_backup_dir) / "sample_backup.db"
-        
+
         conn = sqlite3.connect(str(backup_path))
         conn.execute('''
             CREATE TABLE restored_table (
@@ -634,7 +634,7 @@ class TestSQLiteRestoreManager:
         conn.execute("INSERT INTO restored_table (name) VALUES ('restored_data')")
         conn.commit()
         conn.close()
-        
+
         return str(backup_path)
 
     async def test_create_restore_manager(self, temp_backup_dir):
@@ -648,7 +648,7 @@ class TestSQLiteRestoreManager:
             config=config,
             backup_directory=temp_backup_dir
         )
-        
+
         # THEN: Manager should be initialized
         assert manager.config == config
         assert str(manager.backup_directory) == temp_backup_dir
@@ -660,7 +660,7 @@ class TestSQLiteRestoreManager:
         # GIVEN: Restore manager
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             restore_path = f.name
-        
+
         try:
             config = SQLiteBackupConfig(
                 database_path=restore_path,
@@ -670,18 +670,18 @@ class TestSQLiteRestoreManager:
                 config=config,
                 backup_directory=temp_backup_dir
             )
-            
+
             # WHEN: Restoring from backup
             restore_result = await manager.restore_from_backup(
                 backup_file_path=sample_backup,
                 restored_by="admin"
             )
-            
+
             # THEN: Restore should succeed
             assert restore_result.success is True
             assert os.path.exists(restore_path)
             assert os.path.getsize(restore_path) > 0
-            
+
         finally:
             if os.path.exists(restore_path):
                 os.unlink(restore_path)
@@ -691,11 +691,11 @@ class TestSQLiteRestoreManager:
         # GIVEN: Restored database
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             restore_path = f.name
-        
+
         try:
             # Copy backup to restore location
             shutil.copy2(sample_backup, restore_path)
-            
+
             config = SQLiteBackupConfig(
                 database_path=restore_path,
                 verify_integrity=True
@@ -704,14 +704,14 @@ class TestSQLiteRestoreManager:
                 config=config,
                 backup_directory=temp_backup_dir
             )
-            
+
             # WHEN: Validating restore
             validation_result = await manager.validate_restore()
-            
+
             # THEN: Validation should pass
             assert validation_result.is_valid is True
             assert validation_result.table_count > 0
-            
+
         finally:
             if os.path.exists(restore_path):
                 os.unlink(restore_path)
@@ -721,7 +721,7 @@ class TestSQLiteRestoreManager:
         # GIVEN: Restore manager with verification enabled
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             restore_path = f.name
-        
+
         try:
             config = SQLiteBackupConfig(
                 database_path=restore_path,
@@ -731,18 +731,18 @@ class TestSQLiteRestoreManager:
                 config=config,
                 backup_directory=temp_backup_dir
             )
-            
+
             # WHEN: Restoring with verification
             restore_result = await manager.restore_from_backup(
                 backup_file_path=sample_backup,
                 restored_by="admin",
                 verify_integrity=True
             )
-            
+
             # THEN: Restore should succeed with verification
             assert restore_result.success is True
             assert restore_result.integrity_verified is True
-            
+
         finally:
             if os.path.exists(restore_path):
                 os.unlink(restore_path)

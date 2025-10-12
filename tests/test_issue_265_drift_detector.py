@@ -26,11 +26,11 @@ class TestDriftDetector:
         # GIVEN: Baseline and identical current configuration
         baseline_config = {"host": "postgres", "port": 5432}
         current_config = {"host": "postgres", "port": 5432}
-        
+
         # WHEN: Running drift detection
         detector = DriftDetector()
         drift_result = detector.detect_drift(baseline_config, current_config)
-        
+
         # THEN: No drift should be detected
         assert drift_result.has_drift is False
         assert len(drift_result.changes) == 0
@@ -41,11 +41,11 @@ class TestDriftDetector:
         # GIVEN: Baseline and modified configuration
         baseline_config = {"host": "postgres", "port": 5432}
         current_config = {"host": "postgres", "port": 5433}
-        
+
         # WHEN: Running drift detection
         detector = DriftDetector()
         drift_result = detector.detect_drift(baseline_config, current_config)
-        
+
         # THEN: Drift should be detected
         assert drift_result.has_drift is True
         assert len(drift_result.changes) == 1
@@ -59,11 +59,11 @@ class TestDriftDetector:
         # GIVEN: Baseline and configuration with added values
         baseline_config = {"host": "postgres"}
         current_config = {"host": "postgres", "port": 5432}
-        
+
         # WHEN: Running drift detection
         detector = DriftDetector()
         drift_result = detector.detect_drift(baseline_config, current_config)
-        
+
         # THEN: Addition should be detected
         assert drift_result.has_drift is True
         assert len(drift_result.changes) == 1
@@ -77,11 +77,11 @@ class TestDriftDetector:
         # GIVEN: Baseline and configuration with removed values
         baseline_config = {"host": "postgres", "port": 5432}
         current_config = {"host": "postgres"}
-        
+
         # WHEN: Running drift detection
         detector = DriftDetector()
         drift_result = detector.detect_drift(baseline_config, current_config)
-        
+
         # THEN: Removal should be detected
         assert drift_result.has_drift is True
         assert len(drift_result.changes) == 1
@@ -111,11 +111,11 @@ class TestDriftDetector:
                 }
             }
         }
-        
+
         # WHEN: Running drift detection
         detector = DriftDetector()
         drift_result = detector.detect_drift(baseline_config, current_config)
-        
+
         # THEN: Nested change should be detected
         assert drift_result.has_drift is True
         assert len(drift_result.changes) == 1
@@ -141,15 +141,15 @@ class TestDriftDetector:
             # removed_setting removed
         }
         baseline_config["removed_setting"] = "value"
-        
+
         # WHEN: Running drift detection
         detector = DriftDetector()
         drift_result = detector.detect_drift(baseline_config, current_config)
-        
+
         # THEN: All changes should be detected
         assert drift_result.has_drift is True
         assert len(drift_result.changes) == 4  # 2 modified + 1 added + 1 removed
-        
+
         change_types = [change.change_type for change in drift_result.changes]
         assert "modified" in change_types
         assert "added" in change_types
@@ -159,23 +159,23 @@ class TestDriftDetector:
         """Test drift severity classification."""
         # GIVEN: Different types of configuration changes
         detector = DriftDetector()
-        
+
         # WHEN/THEN: Testing different severity levels
         # Critical: Security-related changes
         assert detector.classify_severity("KC_DB_PASSWORD", "password123", "newpass") == "critical"
         assert detector.classify_severity("SECRET_KEY", "old_secret", "new_secret") == "critical"
         assert detector.classify_severity("JWT_SECRET_KEY", "old_jwt", "new_jwt") == "critical"
-        
+
         # High: Performance-impacting changes
         assert detector.classify_severity("KC_DB_URL_PORT", 5432, 3306) == "high"
         assert detector.classify_severity("timeout", 30, 300) == "high"
         assert detector.classify_severity("pool_size", 10, 100) == "high"
-        
+
         # Medium: Functional changes
         assert detector.classify_severity("KC_HOSTNAME", "localhost", "example.com") == "medium"
         assert detector.classify_severity("DEBUG", True, False) == "medium"
         assert detector.classify_severity("ENVIRONMENT", "dev", "prod") == "medium"
-        
+
         # Low: Non-critical changes
         assert detector.classify_severity("DESCRIPTION", "old desc", "new desc") == "low"
         assert detector.classify_severity("VERSION", "1.0.0", "1.0.1") == "low"
@@ -189,14 +189,14 @@ class TestDriftDetector:
             DriftChange("modified", "timeout", 30, 60, "high"),
             DriftChange("modified", "description", "old", "new", "low")
         ]
-        
+
         # WHEN: Creating drift result
         drift_result = DriftResult(
             has_drift=True,
             changes=changes,
             detected_at=datetime.utcnow()
         )
-        
+
         # THEN: Overall severity should be highest individual severity
         assert drift_result.severity == "critical"
         assert drift_result.change_count == 3
@@ -207,14 +207,14 @@ class TestDriftDetector:
         # GIVEN: Large configuration with few changes
         baseline_config = {f"key_{i}": f"value_{i}" for i in range(100)}
         current_config = baseline_config.copy()
-        
+
         # Only change one value
         current_config["key_50"] = "new_value_50"
-        
+
         # WHEN: Running drift detection
         detector = DriftDetector()
         drift_result = detector.detect_drift(baseline_config, current_config)
-        
+
         # THEN: Only the changed value should be detected
         assert drift_result.has_drift is True
         assert len(drift_result.changes) == 1
@@ -252,7 +252,7 @@ class TestDriftDetector:
                 }
             }
         }
-        
+
         current_config = {
             "services": {
                 "keycloak": {
@@ -280,15 +280,15 @@ class TestDriftDetector:
                 }
             }
         }
-        
+
         # WHEN: Running drift detection
         detector = DriftDetector()
         drift_result = detector.detect_drift(baseline_config, current_config)
-        
+
         # THEN: All changes should be detected with correct paths
         assert drift_result.has_drift is True
         assert len(drift_result.changes) >= 4  # At least 4 changes detected
-        
+
         # Check that nested paths are correctly identified
         field_paths = [change.field_path for change in drift_result.changes]
         assert "services.keycloak.database.port" in field_paths
@@ -307,15 +307,15 @@ class TestDriftDetector:
             "allowed_origins": ["localhost", "127.0.0.1", "example.com"],  # Added item
             "enabled_features": ["auth", "api"]  # Removed item
         }
-        
+
         # WHEN: Running drift detection
         detector = DriftDetector()
         drift_result = detector.detect_drift(baseline_config, current_config)
-        
+
         # THEN: Array changes should be detected
         assert drift_result.has_drift is True
         assert len(drift_result.changes) == 2
-        
+
         # Check specific array changes
         change_paths = [change.field_path for change in drift_result.changes]
         assert "allowed_origins" in change_paths
@@ -335,7 +335,7 @@ class TestDriftChange:
             new_value=5433,
             severity="medium"
         )
-        
+
         # THEN: Change should be created correctly
         assert change.change_type == "modified"
         assert change.field_path == "database.port"
@@ -353,10 +353,10 @@ class TestDriftChange:
             new_value="new_value",
             severity="low"
         )
-        
+
         # WHEN: Serializing
         serialized = change.to_dict()
-        
+
         # THEN: Serialization should preserve all data
         assert serialized["change_type"] == "added"
         assert serialized["field_path"] == "new_setting"
@@ -370,11 +370,11 @@ class TestDriftChange:
         critical_change = DriftChange("modified", "password", "old", "new", "critical")
         high_change = DriftChange("modified", "port", 5432, 5433, "high")
         low_change = DriftChange("modified", "desc", "old", "new", "low")
-        
+
         # WHEN: Sorting changes by severity
         changes = [low_change, critical_change, high_change]
         sorted_changes = sorted(changes, key=lambda x: x.severity_priority(), reverse=True)
-        
+
         # THEN: Critical changes should come first
         assert sorted_changes[0].severity == "critical"
         assert sorted_changes[1].severity == "high"
@@ -392,7 +392,7 @@ class TestDriftResult:
             changes=[],
             detected_at=datetime.utcnow()
         )
-        
+
         # THEN: Result should reflect no drift
         assert result.has_drift is False
         assert result.severity == "none"
@@ -407,14 +407,14 @@ class TestDriftResult:
             DriftChange("added", "timeout", None, 30, "low"),
             DriftChange("removed", "old_setting", "value", None, "low")
         ]
-        
+
         # WHEN: Creating result
         result = DriftResult(
             has_drift=True,
             changes=changes,
             detected_at=datetime.utcnow()
         )
-        
+
         # THEN: Result should aggregate correctly
         assert result.has_drift is True
         assert result.severity == "medium"  # Highest severity
@@ -430,10 +430,10 @@ class TestDriftResult:
             DriftChange("added", "feature", None, "enabled", "low")
         ]
         result = DriftResult(has_drift=True, changes=changes, detected_at=datetime.utcnow())
-        
+
         # WHEN: Generating summary
         summary = result.generate_summary()
-        
+
         # THEN: Summary should contain key information
         assert "3 changes detected" in summary
         assert "critical" in summary.lower()

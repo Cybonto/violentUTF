@@ -106,7 +106,7 @@ class TestMonitoringIntegration:
         """Test schema change detection workflow."""
         # Create schema snapshots
         asset_id = uuid.uuid4()
-        
+
         previous_schema = SchemaSnapshot(
             asset_id=asset_id,
             timestamp=datetime.now(timezone.utc),
@@ -223,7 +223,7 @@ class TestMonitoringIntegration:
         # Verify that most requirements are covered
         covered_count = sum(requirements_covered.values())
         total_requirements = len(requirements_covered)
-        
+
         assert covered_count >= total_requirements * 0.8, f"Only {covered_count}/{total_requirements} requirements covered"
 
     @pytest.mark.skipif(not SCHEMAS_AVAILABLE, reason="Monitoring schemas not available")

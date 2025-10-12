@@ -39,7 +39,7 @@ def create_user_personas() -> Dict[str, Any]:
             "preferred_datasets": ["garak_comprehensive", "red_team_collection"],
             "typical_workflows": [
                 "garak_security_evaluation",
-                "custom_attack_scenario_testing", 
+                "custom_attack_scenario_testing",
                 "vulnerability_assessment_reporting"
             ],
             "success_metrics": [
@@ -114,7 +114,7 @@ def create_user_personas() -> Dict[str, Any]:
             "preferred_datasets": ["confaide_privacy_evaluation", "privacy_test_scenarios"],
             "typical_workflows": [
                 "confaide_privacy_assessment",
-                "contextual_integrity_evaluation", 
+                "contextual_integrity_evaluation",
                 "privacy_risk_analysis"
             ],
             "success_metrics": [

@@ -31,11 +31,14 @@ ContainerLifecycleMonitor = ActualContainerLifecycleMonitor  # type: ignore[no-r
 NetworkMonitor = ActualNetworkMonitor  # type: ignore[no-redef]
 
 # Mock the notification enums
+
+
 class AlertSeverity:
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
     CRITICAL = "CRITICAL"
+
 
 class NotificationChannel:
     SLACK_MONITORING = "SLACK_MONITORING"
@@ -45,10 +48,13 @@ class NotificationChannel:
     SMS = "SMS"
 
 # Mock asset schemas
+
+
 class AssetCreate:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
 
 class AssetResponse:
     def __init__(self, **kwargs):

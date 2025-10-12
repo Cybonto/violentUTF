@@ -94,7 +94,7 @@ class TestCompleteIntegrationWorkflows:
     These tests validate the complete integration pipeline from dataset
     selection through conversion, evaluation, and results generation.
     """
-    
+
     @pytest.fixture(autouse=True, scope="function")
     def setup_e2e_test_environment(self):
         """Setup test environment for end-to-end testing."""
@@ -102,14 +102,14 @@ class TestCompleteIntegrationWorkflows:
         self.auth_client = KeycloakTestAuth()
         self.test_datasets = create_test_datasets()
         self.test_results = []  # Initialize test results collection
-        
+
         # Setup test directory
         self.test_dir = Path(tempfile.mkdtemp(prefix="e2e_test_"))
         self.results_dir = self.test_dir / "results"
         self.results_dir.mkdir(exist_ok=True)
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         if self.test_dir.exists():
@@ -143,15 +143,15 @@ class TestCompleteIntegrationWorkflows:
                 "thresholds": {"harm_threshold": 0.3, "risk_threshold": 0.7}
             }
         }
-        
+
         # GREEN Phase: Now execute the actual workflow and validate results
         if EndToEndWorkflowManager is None:
             pytest.skip("EndToEndWorkflowManager not available - still in RED phase")
-            
+
         # Act: Execute the complete Garak workflow
         workflow_manager = EndToEndWorkflowManager(session_id=self.test_session)
         result = workflow_manager.execute_garak_workflow(workflow_config)
-        
+
         # Assert: Validate successful workflow execution
         assert result is not None, "Workflow result should not be None"
         assert result.workflow_id is not None, "Workflow should have an ID"
@@ -160,25 +160,25 @@ class TestCompleteIntegrationWorkflows:
         assert result.processing_metrics is not None, "Processing metrics should be available"
         assert result.evaluation_results is not None, "Evaluation results should be available"
         assert result.execution_time > 0, "Execution time should be positive"
-        
+
         # Validate processing metrics
         metrics = result.processing_metrics
         assert metrics.processing_time > 0, "Processing time should be positive"
         assert 0 <= metrics.conversion_success_rate <= 1, "Conversion success rate should be between 0 and 1"
         assert 0 <= metrics.performance_score <= 1, "Performance score should be between 0 and 1"
-        
+
         # Validate evaluation results contain expected fields
         eval_results = result.evaluation_results
         assert "total_prompts" in eval_results, "Should contain total prompts count"
         assert "vulnerability_score" in eval_results, "Should contain vulnerability score"
-        
+
         # Document successful implementation
         self._document_successful_implementation("garak_workflow", {
             "implemented_classes": ["EndToEndWorkflowManager"],
             "implemented_methods": ["execute_garak_workflow"],
             "completed_features": [
                 "Garak dataset loading and validation",
-                "Garak to PyRIT SeedPrompt conversion", 
+                "Garak to PyRIT SeedPrompt conversion",
                 "Red-teaming orchestrator integration",
                 "Vulnerability assessment scoring",
                 "Result aggregation and reporting"
@@ -205,7 +205,7 @@ class TestCompleteIntegrationWorkflows:
         """
         # Arrange: Setup cognitive evaluation workflow
         workflow_config = {
-            "dataset_type": "ollegen1", 
+            "dataset_type": "ollegen1",
             "dataset_source": "cognitive_assessment_full.csv",
             "conversion_strategy": "csv_to_qa_dataset",
             "orchestrator_type": "question_answering",
@@ -216,22 +216,22 @@ class TestCompleteIntegrationWorkflows:
                 "behavioral_metrics": ["consistency", "bias_detection", "reasoning_quality"]
             }
         }
-        
+
         # RED Phase: This will fail because cognitive evaluation is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if EndToEndWorkflowManager is None:
                 raise ImportError("EndToEndWorkflowManager not implemented")
-            
+
             workflow_manager = EndToEndWorkflowManager(session_id=self.test_session)
             result = workflow_manager.execute_cognitive_workflow(workflow_config)
-        
+
         # Validate expected failure
         assert any([
             "EndToEndWorkflowManager not implemented" in str(exc_info.value),
             "execute_cognitive_workflow" in str(exc_info.value),
             "cognitive evaluation" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_functionality("ollegen1_cognitive_workflow", {
             "missing_classes": ["EndToEndWorkflowManager", "CognitiveEvaluationPipeline"],
             "missing_methods": ["execute_cognitive_workflow", "analyze_cognitive_patterns"],
@@ -279,29 +279,29 @@ class TestCompleteIntegrationWorkflows:
             "orchestrator_type": "reasoning_evaluation",
             "evaluation_approach": "cross_domain_comparison"
         }
-        
+
         # RED Phase: This will fail because reasoning evaluation is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if EndToEndWorkflowManager is None:
                 raise ImportError("EndToEndWorkflowManager not implemented")
-                
+
             workflow_manager = EndToEndWorkflowManager(session_id=self.test_session)
             result = workflow_manager.execute_reasoning_workflow(workflow_config)
-        
+
         # Validate expected failure
         assert any([
             "EndToEndWorkflowManager not implemented" in str(exc_info.value),
             "execute_reasoning_workflow" in str(exc_info.value),
             "reasoning evaluation" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_functionality("reasoning_benchmark_workflow", {
             "missing_classes": ["EndToEndWorkflowManager", "ReasoningEvaluationPipeline"],
             "missing_methods": ["execute_reasoning_workflow", "cross_domain_analysis"],
             "required_features": [
                 "Multi-benchmark dataset coordination",
                 "ACPBench reasoning task extraction",
-                "LegalBench legal reasoning integration", 
+                "LegalBench legal reasoning integration",
                 "Cross-domain reasoning dataset format",
                 "Reasoning evaluation orchestrator",
                 "Cross-benchmark performance comparison",
@@ -339,22 +339,22 @@ class TestCompleteIntegrationWorkflows:
                 "integrity_checks": ["access_control", "data_flow_analysis", "context_appropriateness"]
             }
         }
-        
+
         # RED Phase: This will fail because privacy evaluation is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if EndToEndWorkflowManager is None:
                 raise ImportError("EndToEndWorkflowManager not implemented")
-                
+
             workflow_manager = EndToEndWorkflowManager(session_id=self.test_session)
             result = workflow_manager.execute_privacy_workflow(workflow_config)
-        
-        # Validate expected failure  
+
+        # Validate expected failure
         assert any([
             "EndToEndWorkflowManager not implemented" in str(exc_info.value),
             "execute_privacy_workflow" in str(exc_info.value),
             "privacy evaluation" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_functionality("privacy_evaluation_workflow", {
             "missing_classes": ["EndToEndWorkflowManager", "PrivacyEvaluationPipeline", "ContextualIntegrityScorer"],
             "missing_methods": ["execute_privacy_workflow", "contextual_integrity_assessment"],
@@ -398,29 +398,29 @@ class TestCompleteIntegrationWorkflows:
                 "quality_metrics": ["consistency", "accuracy", "fairness", "reliability"]
             }
         }
-        
+
         # GREEN Phase: Validate meta-evaluation workflow execution
         if EndToEndWorkflowManager is None:
             pytest.skip("EndToEndWorkflowManager not available")
-            
+
         workflow_manager = EndToEndWorkflowManager(session_id=self.test_session)
         result = workflow_manager.execute_meta_evaluation_workflow(workflow_config)
-        
+
         # Validate workflow execution success
         assert result is not None, "Meta-evaluation workflow should return result"
         assert result.workflow_id, "Result should have workflow ID"
         assert result.dataset_type == "meta_evaluation", "Dataset type should be meta_evaluation"
         assert result.execution_status in ["completed", "in_progress"], "Execution status should be valid"
         assert result.processing_metrics, "Processing metrics should be available"
-        
+
         # Validate processing metrics
         assert result.processing_metrics.processing_time > 0, "Processing time should be recorded"
         assert result.processing_metrics.memory_usage_mb >= 0, "Memory usage should be recorded"
-        
+
         # Validate meta-evaluation specific results
         if hasattr(result, 'evaluation_results'):
             assert result.evaluation_results, "Evaluation results should be present"
-        
+
         # Document successful meta-evaluation workflow completion
         self.test_results.append({
             "test": "meta_evaluation_workflow",
@@ -428,7 +428,7 @@ class TestCompleteIntegrationWorkflows:
             "implemented_features": [
                 "JudgeBench dataset processing",
                 "Meta-evaluation workflow execution",
-                "Judge assessment integration", 
+                "Judge assessment integration",
                 "Performance metrics collection"
             ],
             "workflow_result": {
@@ -468,15 +468,15 @@ class TestCompleteIntegrationWorkflows:
                 "parallel_workers": 4
             }
         }
-        
+
         # RED Phase: This will fail because large file processing is not optimized
         with pytest.raises((ImportError, AttributeError, NotImplementedError, MemoryError, TimeoutError)) as exc_info:
             if EndToEndWorkflowManager is None:
                 raise ImportError("EndToEndWorkflowManager not implemented")
-                
+
             workflow_manager = EndToEndWorkflowManager(session_id=self.test_session)
             result = workflow_manager.execute_large_file_workflow(workflow_config)
-        
+
         # Validate expected failure
         assert any([
             "EndToEndWorkflowManager not implemented" in str(exc_info.value),
@@ -485,7 +485,7 @@ class TestCompleteIntegrationWorkflows:
             "memory" in str(exc_info.value).lower(),
             "timeout" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_functionality("large_file_workflow", {
             "missing_classes": ["EndToEndWorkflowManager", "LargeFileProcessor", "DistributedEvaluationOrchestrator"],
             "missing_methods": ["execute_large_file_workflow", "streaming_file_processing"],
@@ -534,15 +534,15 @@ class TestCompleteIntegrationWorkflows:
                 "analysis_approaches": ["statistical_comparison", "domain_correlation", "performance_benchmarking"]
             }
         }
-        
+
         # RED Phase: This will fail because cross-domain comparison is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if EndToEndWorkflowManager is None:
                 raise ImportError("EndToEndWorkflowManager not implemented")
-                
+
             workflow_manager = EndToEndWorkflowManager(session_id=self.test_session)
             result = workflow_manager.execute_cross_domain_workflow(workflow_config)
-        
+
         # Validate expected failure
         assert any([
             "EndToEndWorkflowManager not implemented" in str(exc_info.value),
@@ -550,7 +550,7 @@ class TestCompleteIntegrationWorkflows:
             "cross-domain" in str(exc_info.value).lower(),
             "comparison" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_functionality("cross_domain_comparison_workflow", {
             "missing_classes": ["EndToEndWorkflowManager", "CrossDomainComparisonPipeline", "UnifiedEvaluationOrchestrator"],
             "missing_methods": ["execute_cross_domain_workflow", "multi_domain_analysis"],
@@ -585,12 +585,12 @@ class TestCompleteIntegrationWorkflows:
                 ]
             }
         }
-        
+
         # Write documentation to results directory
         doc_file = self.results_dir / f"{workflow_name}_missing_functionality.json"
         with open(doc_file, "w") as f:
             json.dump(documentation, f, indent=2)
-        
+
         print(f"\n[TDD RED PHASE] Missing functionality documented for {workflow_name}")
         print(f"Documentation saved to: {doc_file}")
         print(f"Key missing components: {missing_info.get('missing_classes', [])}")
@@ -608,12 +608,12 @@ class TestCompleteIntegrationWorkflows:
                 "all_requirements_met": True
             }
         }
-        
+
         # Write documentation to results directory
         doc_file = self.results_dir / f"{workflow_name}_successful_implementation.json"
         with open(doc_file, "w") as f:
             json.dump(documentation, f, indent=2)
-        
+
         print(f"\n[TDD GREEN PHASE] Successful implementation validated for {workflow_name}")
         print(f"Documentation saved to: {doc_file}")
         print(f"Implemented components: {success_info.get('implemented_classes', [])}")
@@ -626,7 +626,7 @@ class TestWorkflowPerformanceValidation:
     These tests validate that complete end-to-end workflows meet
     established performance targets across all dataset types.
     """
-    
+
     @pytest.fixture(autouse=True, scope="function")
     def setup_performance_test_environment(self):
         """Setup test environment for performance testing."""
@@ -634,19 +634,19 @@ class TestWorkflowPerformanceValidation:
         self.auth_client = KeycloakTestAuth()
         self.test_datasets = create_test_datasets()
         self.test_results = []  # Initialize test results collection
-        
+
         # Setup test directory
         self.test_dir = Path(tempfile.mkdtemp(prefix="perf_test_"))
         self.results_dir = self.test_dir / "results"
         self.results_dir.mkdir(exist_ok=True)
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
-    
+
     def test_workflow_execution_time_benchmarks(self):
         """
         Test that all workflow execution times meet established benchmarks
@@ -666,14 +666,14 @@ class TestWorkflowPerformanceValidation:
         # RED Phase: This will fail because performance monitoring is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.monitoring.performance_monitor import WorkflowPerformanceMonitor
-            
+
             performance_monitor = WorkflowPerformanceMonitor()
             benchmarks = performance_monitor.get_workflow_benchmarks()
-            
+
             for workflow_type, benchmark in benchmarks.items():
                 execution_time = performance_monitor.measure_workflow_time(workflow_type)
                 assert execution_time <= benchmark.max_execution_time
-        
+
         # Validate expected failure
         assert any([
             "WorkflowPerformanceMonitor" in str(exc_info.value),
@@ -688,54 +688,54 @@ class TestWorkflowPerformanceValidation:
         GREEN Phase: Validate memory monitoring functionality
         """
         from violentutf_api.fastapi_app.app.monitoring.memory_monitor import WorkflowMemoryMonitor
-        
+
         memory_monitor = WorkflowMemoryMonitor()
-        
+
         # Test memory limits configuration
         memory_limits = memory_monitor.get_memory_limits()
         assert memory_limits is not None, "Memory limits should be available"
         assert isinstance(memory_limits, dict), "Memory limits should be a dictionary"
-        
+
         # Validate expected workflow types have limits
-        expected_workflows = ["garak_collection", "ollegen1_full", "acpbench_all", 
+        expected_workflows = ["garak_collection", "ollegen1_full", "acpbench_all",
                             "legalbench_166_dirs", "docmath_220mb", "graphwalk_480mb",
                             "confaide_4_tiers", "judgebench_all", "meta_evaluation"]
-        
+
         for workflow in expected_workflows:
             assert workflow in memory_limits, f"Memory limits should include {workflow}"
             assert "max_memory_mb" in memory_limits[workflow], f"Max memory should be defined for {workflow}"
             assert memory_limits[workflow]["max_memory_mb"] > 0, f"Max memory should be positive for {workflow}"
-            
+
         # Test current memory usage monitoring
         current_usage = memory_monitor.get_current_workflow_memory()
         assert current_usage is not None, "Current usage should be available"
         assert "process_memory_mb" in current_usage, "Process memory should be tracked"
         assert "system_memory_percent" in current_usage, "System memory should be tracked"
         assert current_usage["process_memory_mb"] >= 0, "Process memory should be non-negative"
-        
+
         # Test workflow monitoring lifecycle
         workflow_name = "test_memory_workflow"
-        workflow_type = "garak_collection" 
-        
+        workflow_type = "garak_collection"
+
         # Start monitoring
         monitor_id = memory_monitor.start_workflow_monitoring(workflow_name, workflow_type)
         assert monitor_id == workflow_name, "Monitor ID should match workflow name"
-        
+
         # Check compliance
         compliance = memory_monitor.check_workflow_memory_compliance(workflow_name, workflow_type)
         assert compliance["workflow_name"] == workflow_name, "Compliance should track workflow name"
         assert compliance["is_compliant"] in [True, False], "Compliance should be boolean"
         assert compliance["current_memory_mb"] >= 0, "Current memory should be non-negative"
-        
+
         # Stop monitoring
         final_report = memory_monitor.stop_workflow_monitoring(workflow_name)
         assert "start_memory_mb" in final_report, "Final report should include start memory"
         assert "end_memory_mb" in final_report, "Final report should include end memory"
         assert "memory_delta_mb" in final_report, "Final report should include memory delta"
-        
+
         self.test_results.append({
             "test": "workflow_memory_usage_validation",
-            "status": "PASSED", 
+            "status": "PASSED",
             "validated_features": [
                 "Memory limits configuration",
                 "Current memory usage tracking",
@@ -751,7 +751,7 @@ class TestWorkflowErrorHandling:
     """
     Test error handling and recovery mechanisms for complete workflows.
     """
-    
+
     @pytest.fixture(autouse=True, scope="function")
     def setup_error_handling_test_environment(self):
         """Setup test environment for error handling testing."""
@@ -759,19 +759,19 @@ class TestWorkflowErrorHandling:
         self.auth_client = KeycloakTestAuth()
         self.test_datasets = create_test_datasets()
         self.test_results = []  # Initialize test results collection
-        
+
         # Setup test directory
         self.test_dir = Path(tempfile.mkdtemp(prefix="error_test_"))
         self.results_dir = self.test_dir / "results"
         self.results_dir.mkdir(exist_ok=True)
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
-    
+
     def test_workflow_failure_recovery(self):
         """
         Test workflow failure detection and recovery mechanisms
@@ -779,9 +779,9 @@ class TestWorkflowErrorHandling:
         GREEN Phase: Validate workflow recovery functionality
         """
         from violentutf_api.fastapi_app.app.core.recovery.workflow_recovery import WorkflowRecoveryManager
-        
+
         recovery_manager = WorkflowRecoveryManager()
-        
+
         # Test workflow failure handling
         workflow_id = "test_failure_workflow"
         error_details = {
@@ -789,34 +789,34 @@ class TestWorkflowErrorHandling:
             "error_message": "Dataset conversion failed during processing",
             "failed_step": "dataset_validation"
         }
-        
+
         recovery_result = recovery_manager.handle_workflow_failure(workflow_id, error_details)
-        
+
         # Validate recovery result structure
         assert recovery_result is not None, "Recovery result should be returned"
         assert "failure_id" in recovery_result, "Recovery result should have failure ID"
         assert "workflow_id" in recovery_result, "Recovery result should include workflow ID"
         assert recovery_result["workflow_id"] == workflow_id, "Workflow ID should match"
-        
+
         # Validate recovery analysis
         assert "error_analysis" in recovery_result, "Recovery result should include failure analysis"
         assert "can_retry" in recovery_result, "Recovery result should include retry capability"
-        
+
         # Test recovery recommendations
         if "recommended_actions" in recovery_result:
             recommendations = recovery_result["recommended_actions"]
             assert isinstance(recommendations, list), "Recommendations should be a list"
-            
+
         # Test retry capability
         if hasattr(recovery_manager, 'can_retry_workflow'):
             can_retry = recovery_manager.can_retry_workflow(workflow_id, error_details)
             assert isinstance(can_retry, bool), "Can retry should be boolean"
-            
+
         # Test recovery state tracking
         if hasattr(recovery_manager, 'get_recovery_state'):
             state = recovery_manager.get_recovery_state(workflow_id)
             assert state is not None, "Recovery state should be available"
-            
+
         self.test_results.append({
             "test": "workflow_failure_recovery",
             "status": "PASSED",
@@ -838,9 +838,9 @@ class TestWorkflowErrorHandling:
         GREEN Phase: Validate partial completion handling functionality
         """
         from violentutf_api.fastapi_app.app.core.recovery.partial_completion_handler import PartialCompletionHandler
-        
+
         handler = PartialCompletionHandler()
-        
+
         # Test partial workflow completion handling
         workflow_id = "test_partial_workflow"
         completed_tasks = ["dataset_loading", "initial_validation"]
@@ -857,43 +857,43 @@ class TestWorkflowErrorHandling:
             "error_type": "preprocessing_failure",
             "error_message": "File preprocessing failed on corrupted data"
         }
-        
+
         # Handle partial completion (this is async)
         result = await handler.handle_partial_completion(
-            workflow_id, completed_tasks, pending_tasks, failed_tasks, 
+            workflow_id, completed_tasks, pending_tasks, failed_tasks,
             results_data, error_context
         )
-        
+
         # Validate partial completion result
         assert result is not None, "Partial completion result should be returned"
-        
+
         # Check result has expected attributes (based on PartialResults class)
-        assert hasattr(result, 'workflow_id'), "Result should have workflow ID" 
+        assert hasattr(result, 'workflow_id'), "Result should have workflow ID"
         assert hasattr(result, 'completion_percentage'), "Result should have completion percentage"
         assert hasattr(result, 'completed_tasks'), "Result should have completed tasks"
         assert hasattr(result, 'pending_tasks'), "Result should have pending tasks"
         assert hasattr(result, 'failed_tasks'), "Result should have failed tasks"
-        
+
         # Validate workflow tracking
         assert result.workflow_id == workflow_id, "Workflow ID should match"
-        
+
         # Validate completion percentage is reasonable (changed to 0-100 range)
         assert 0 <= result.completion_percentage <= 100, "Completion percentage should be between 0 and 100"
-        
+
         # Validate task tracking
         assert result.completed_tasks == completed_tasks, "Completed tasks should match"
-        assert result.pending_tasks == pending_tasks, "Pending tasks should match" 
+        assert result.pending_tasks == pending_tasks, "Pending tasks should match"
         assert result.failed_tasks == failed_tasks, "Failed tasks should match"
-        
+
         # Test recovery recommendations if available
         if hasattr(result, 'recovery_recommendations'):
             assert isinstance(result.recovery_recommendations, list), "Recommendations should be a list"
-            
+
         # Test resume capability
         if hasattr(handler, 'can_resume_workflow'):
             can_resume = handler.can_resume_workflow(workflow_id, result)
             assert isinstance(can_resume, bool), "Can resume should be boolean"
-            
+
         self.test_results.append({
             "test": "partial_workflow_completion_handling",
             "status": "PASSED",

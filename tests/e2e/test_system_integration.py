@@ -94,19 +94,19 @@ class TestSystemIntegration:
     These tests validate complete integration across authentication,
     API gateway, storage, orchestration, and user interface components.
     """
-    
+
     @pytest.fixture(autouse=True, scope="function")
     def setup_integration_test_environment(self):
         """Setup test environment for system integration testing."""
         self.test_session = f"integration_test_{int(time.time())}"
         self.auth_client = KeycloakTestAuth()
         self.integration_test_data = create_integration_test_data()
-        
+
         # Setup test directory
         self.test_dir = Path(tempfile.mkdtemp(prefix="integration_test_"))
         self.integration_results_dir = self.test_dir / "integration_results"
         self.integration_results_dir.mkdir(exist_ok=True)
-        
+
         # Initialize service endpoints for testing
         self.service_endpoints = {
             "keycloak": "http://localhost:8080",
@@ -115,9 +115,9 @@ class TestSystemIntegration:
             "streamlit_frontend": "http://localhost:8501",
             "mcp_server": "http://localhost:9080/mcp/sse"
         }
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         if self.test_dir.exists():
@@ -153,12 +153,12 @@ class TestSystemIntegration:
                 "researcher": ["all_datasets"]
             }
         }
-        
+
         # RED Phase: This will fail because Keycloak dataset integration is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if SystemIntegrationManager is None:
                 raise ImportError("SystemIntegrationManager not implemented")
-            
+
             integration_manager = SystemIntegrationManager(session_id=self.test_session)
             keycloak_result = integration_manager.test_keycloak_dataset_integration(
                 config=keycloak_integration_config,
@@ -170,14 +170,14 @@ class TestSystemIntegration:
                     "authentication_failure_handling"
                 ]
             )
-        
+
         # Validate expected failure
         assert any([
             "SystemIntegrationManager not implemented" in str(exc_info.value),
             "test_keycloak_dataset_integration" in str(exc_info.value),
             "keycloak integration" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_integration("keycloak_authentication_integration", {
             "missing_classes": ["SystemIntegrationManager", "KeycloakDatasetIntegration"],
             "missing_methods": ["test_keycloak_dataset_integration", "validate_dataset_permissions"],
@@ -191,7 +191,7 @@ class TestSystemIntegration:
             ],
             "integration_endpoints": [
                 "/auth/keycloak/login",
-                "/auth/keycloak/callback", 
+                "/auth/keycloak/callback",
                 "/auth/token/refresh",
                 "/datasets/access/validate"
             ],
@@ -228,12 +228,12 @@ class TestSystemIntegration:
                 "security_headers": ["X-Content-Type-Options", "X-Frame-Options"]
             }
         }
-        
+
         # RED Phase: This will fail because APISIX dataset routing is not configured
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if SystemIntegrationManager is None:
                 raise ImportError("SystemIntegrationManager not implemented")
-            
+
             integration_manager = SystemIntegrationManager(session_id=self.test_session)
             apisix_result = integration_manager.test_apisix_dataset_integration(
                 config=apisix_integration_config,
@@ -245,14 +245,14 @@ class TestSystemIntegration:
                     "load_balancing_verification"
                 ]
             )
-        
+
         # Validate expected failure
         assert any([
             "SystemIntegrationManager not implemented" in str(exc_info.value),
             "test_apisix_dataset_integration" in str(exc_info.value),
             "apisix integration" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_integration("apisix_gateway_integration", {
             "missing_classes": ["SystemIntegrationManager", "APISIXDatasetIntegration"],
             "missing_methods": ["test_apisix_dataset_integration", "configure_dataset_routes"],
@@ -303,12 +303,12 @@ class TestSystemIntegration:
                 "storage_efficiency": 0.7   # compression ratio
             }
         }
-        
+
         # RED Phase: This will fail because DuckDB dataset storage is not optimized
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if SystemIntegrationManager is None:
                 raise ImportError("SystemIntegrationManager not implemented")
-            
+
             integration_manager = SystemIntegrationManager(session_id=self.test_session)
             duckdb_result = integration_manager.test_duckdb_dataset_integration(
                 config=duckdb_integration_config,
@@ -320,14 +320,14 @@ class TestSystemIntegration:
                     "backup_and_recovery_testing"
                 ]
             )
-        
+
         # Validate expected failure
         assert any([
             "SystemIntegrationManager not implemented" in str(exc_info.value),
             "test_duckdb_dataset_integration" in str(exc_info.value),
             "duckdb integration" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_integration("duckdb_storage_integration", {
             "missing_classes": ["SystemIntegrationManager", "DuckDBDatasetIntegration"],
             "missing_methods": ["test_duckdb_dataset_integration", "optimize_dataset_storage"],
@@ -363,7 +363,7 @@ class TestSystemIntegration:
             "mcp_endpoint": "http://localhost:9080/mcp/sse",
             "dataset_tools": [
                 "dataset_converter_tool",
-                "dataset_validator_tool", 
+                "dataset_validator_tool",
                 "evaluation_orchestrator_tool",
                 "results_analyzer_tool",
                 "performance_monitor_tool"
@@ -381,12 +381,12 @@ class TestSystemIntegration:
                 "privacy_evaluation_prompt"
             ]
         }
-        
+
         # RED Phase: This will fail because MCP dataset tools are not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if SystemIntegrationManager is None:
                 raise ImportError("SystemIntegrationManager not implemented")
-            
+
             integration_manager = SystemIntegrationManager(session_id=self.test_session)
             mcp_result = integration_manager.test_mcp_dataset_integration(
                 config=mcp_integration_config,
@@ -398,14 +398,14 @@ class TestSystemIntegration:
                     "oauth_proxy_dataset_access"
                 ]
             )
-        
+
         # Validate expected failure
         assert any([
             "SystemIntegrationManager not implemented" in str(exc_info.value),
             "test_mcp_dataset_integration" in str(exc_info.value),
             "mcp integration" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_integration("mcp_server_integration", {
             "missing_classes": ["SystemIntegrationManager", "MCPDatasetIntegration"],
             "missing_methods": ["test_mcp_dataset_integration", "register_mcp_dataset_tools"],
@@ -455,12 +455,12 @@ class TestSystemIntegration:
                 "privacy_scores": ["privacy_classifier", "contextual_integrity_scorer"]
             }
         }
-        
+
         # RED Phase: This will fail because PyRIT orchestrator integration is incomplete
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if SystemIntegrationManager is None:
                 raise ImportError("SystemIntegrationManager not implemented")
-            
+
             integration_manager = SystemIntegrationManager(session_id=self.test_session)
             pyrit_result = integration_manager.test_pyrit_orchestrator_integration(
                 config=pyrit_integration_config,
@@ -473,14 +473,14 @@ class TestSystemIntegration:
                     "error_handling_and_recovery"
                 ]
             )
-        
+
         # Validate expected failure
         assert any([
             "SystemIntegrationManager not implemented" in str(exc_info.value),
             "test_pyrit_orchestrator_integration" in str(exc_info.value),
             "pyrit integration" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_integration("pyrit_orchestrator_integration", {
             "missing_classes": ["SystemIntegrationManager", "PyRITDatasetIntegration"],
             "missing_methods": ["test_pyrit_orchestrator_integration", "configure_dataset_orchestrators"],
@@ -516,7 +516,7 @@ class TestSystemIntegration:
             "streamlit_url": "http://localhost:8501",
             "dataset_pages": [
                 "2_Configure_Datasets.py",
-                "3_Configure_Converters.py", 
+                "3_Configure_Converters.py",
                 "5_Dashboard.py"
             ],
             "ui_components": {
@@ -531,12 +531,12 @@ class TestSystemIntegration:
                 "websocket_updates": True
             }
         }
-        
+
         # RED Phase: This will fail because Streamlit dataset integration is not complete
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if SystemIntegrationManager is None:
                 raise ImportError("SystemIntegrationManager not implemented")
-            
+
             integration_manager = SystemIntegrationManager(session_id=self.test_session)
             streamlit_result = integration_manager.test_streamlit_platform_integration(
                 config=streamlit_integration_config,
@@ -549,14 +549,14 @@ class TestSystemIntegration:
                     "error_handling_user_feedback"
                 ]
             )
-        
+
         # Validate expected failure
         assert any([
             "SystemIntegrationManager not implemented" in str(exc_info.value),
             "test_streamlit_platform_integration" in str(exc_info.value),
             "streamlit integration" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_integration("streamlit_platform_integration", {
             "missing_classes": ["SystemIntegrationManager", "StreamlitDatasetIntegration"],
             "missing_methods": ["test_streamlit_platform_integration", "configure_dataset_ui_components"],
@@ -598,12 +598,12 @@ class TestSystemIntegration:
                 "resource_exhaustion": {"disk_space_threshold": 90}
             }
         }
-        
+
         # RED Phase: This will fail because comprehensive monitoring is not integrated
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if SystemIntegrationManager is None:
                 raise ImportError("SystemIntegrationManager not implemented")
-            
+
             integration_manager = SystemIntegrationManager(session_id=self.test_session)
             monitoring_result = integration_manager.test_monitoring_integration(
                 config=monitoring_integration_config,
@@ -614,14 +614,14 @@ class TestSystemIntegration:
                     "log_aggregation_and_analysis"
                 ]
             )
-        
+
         # Validate expected failure
         assert any([
             "SystemIntegrationManager not implemented" in str(exc_info.value),
             "test_monitoring_integration" in str(exc_info.value),
             "monitoring integration" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_integration("logging_monitoring_integration", {
             "missing_classes": ["SystemIntegrationManager", "MonitoringIntegration"],
             "missing_methods": ["test_monitoring_integration", "setup_dataset_monitoring"],
@@ -662,12 +662,12 @@ class TestSystemIntegration:
                 ]
             }
         }
-        
+
         # Write documentation to integration results directory
         doc_file = self.integration_results_dir / f"{integration_area}_missing_functionality.json"
         with open(doc_file, "w") as f:
             json.dump(documentation, f, indent=2)
-        
+
         print(f"\n[TDD RED PHASE] Missing integration functionality documented for {integration_area}")
         print(f"Documentation saved to: {doc_file}")
         print(f"Key missing integration features: {missing_info.get('required_integration_features', [])[:3]}")
@@ -677,7 +677,7 @@ class TestCrossServiceIntegration:
     """
     Test integration across multiple services and components simultaneously.
     """
-    
+
     def test_end_to_end_service_chain_integration(self):
         """
         Test complete service chain integration from authentication to results
@@ -687,13 +687,13 @@ class TestCrossServiceIntegration:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.integration.service_chain import ServiceChainOrchestrator
-            
+
             service_chain = ServiceChainOrchestrator()
             chain_result = service_chain.execute_full_service_chain(
                 services=["keycloak", "apisix", "fastapi", "duckdb", "pyrit", "streamlit"],
                 test_data="integration_test_dataset"
             )
-            
+
         assert "not implemented" in str(exc_info.value).lower()
 
     def test_service_failure_cascade_handling(self):
@@ -705,12 +705,12 @@ class TestCrossServiceIntegration:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.integration.failure_handling import FailureCascadeHandler
-            
+
             failure_handler = FailureCascadeHandler()
             cascade_result = failure_handler.test_failure_scenarios(
                 failure_types=["service_timeout", "authentication_failure", "database_connection_loss"]
             )
-            
+
         assert "not implemented" in str(exc_info.value).lower()
 
     def test_data_consistency_across_services(self):
@@ -722,10 +722,10 @@ class TestCrossServiceIntegration:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.integration.data_consistency import DataConsistencyValidator
-            
+
             consistency_validator = DataConsistencyValidator()
             consistency_result = consistency_validator.validate_cross_service_data_consistency(
                 services=["fastapi", "duckdb", "pyrit_memory", "streamlit_session"]
             )
-            
+
         assert "not implemented" in str(exc_info.value).lower()

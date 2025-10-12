@@ -44,16 +44,16 @@ class TestDatabaseAssetModel:
         """Create async database session for testing."""
         # Create in-memory SQLite database for testing
         engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
-        
+
         # Create all tables
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        
+
         # Create session
         async_session_maker = async_sessionmaker(
             engine, class_=AsyncSession, expire_on_commit=False
         )
-        
+
         async with async_session_maker() as session:
             yield session
 
@@ -173,7 +173,7 @@ class TestDatabaseAssetModel:
         asset = DatabaseAsset(**valid_asset_data)
         async_session.add(asset)
         await async_session.commit()
-        
+
         # Asset should be created successfully
         assert asset.asset_type == AssetType.POSTGRESQL
         assert asset.security_classification == SecurityClassification.CONFIDENTIAL
@@ -218,14 +218,14 @@ class TestAssetRelationshipModel:
     async def async_session(self) -> AsyncSession:
         """Create async database session for testing."""
         engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
-        
+
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        
+
         async_session_maker = async_sessionmaker(
             engine, class_=AsyncSession, expire_on_commit=False
         )
-        
+
         async with async_session_maker() as session:
             yield session
 
@@ -248,7 +248,7 @@ class TestAssetRelationshipModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         # Create target asset
         target_asset = DatabaseAsset(
             name="Target Database",
@@ -265,13 +265,13 @@ class TestAssetRelationshipModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(source_asset)
         async_session.add(target_asset)
         await async_session.commit()
         await async_session.refresh(source_asset)
         await async_session.refresh(target_asset)
-        
+
         return source_asset, target_asset
 
     @pytest.mark.asyncio
@@ -280,7 +280,7 @@ class TestAssetRelationshipModel:
     ) -> None:
         """Test creating an asset relationship."""
         source_asset, target_asset = sample_assets
-        
+
         # Create relationship
         relationship = AssetRelationship(
             source_asset_id=source_asset.id,
@@ -292,11 +292,11 @@ class TestAssetRelationshipModel:
             discovered_method="network_analysis",
             confidence_score=85
         )
-        
+
         async_session.add(relationship)
         await async_session.commit()
         await async_session.refresh(relationship)
-        
+
         # Verify relationship was created
         assert relationship.id is not None
         assert relationship.source_asset_id == source_asset.id
@@ -312,7 +312,7 @@ class TestAssetRelationshipModel:
     ) -> None:
         """Test bidirectional relationship creation."""
         source_asset, target_asset = sample_assets
-        
+
         relationship = AssetRelationship(
             source_asset_id=source_asset.id,
             target_asset_id=target_asset.id,
@@ -323,10 +323,10 @@ class TestAssetRelationshipModel:
             discovered_method="configuration_analysis",
             confidence_score=90
         )
-        
+
         async_session.add(relationship)
         await async_session.commit()
-        
+
         assert relationship.bidirectional is True
         assert relationship.relationship_type == RelationshipType.CONNECTED_TO
 
@@ -337,7 +337,7 @@ class TestAssetRelationshipModel:
         """Test foreign key constraints for relationships."""
         # Try to create relationship with non-existent asset IDs
         invalid_id = uuid.uuid4()
-        
+
         relationship = AssetRelationship(
             source_asset_id=invalid_id,
             target_asset_id=invalid_id,
@@ -346,9 +346,9 @@ class TestAssetRelationshipModel:
             discovered_method="manual",
             confidence_score=50
         )
-        
+
         async_session.add(relationship)
-        
+
         # Note: SQLite doesn't enforce foreign key constraints by default
         # This test would be more relevant with PostgreSQL
         # For now, we'll test that the relationship can be created
@@ -362,14 +362,14 @@ class TestAssetAuditLogModel:
     async def async_session(self) -> AsyncSession:
         """Create async database session for testing."""
         engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
-        
+
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        
+
         async_session_maker = async_sessionmaker(
             engine, class_=AsyncSession, expire_on_commit=False
         )
-        
+
         async with async_session_maker() as session:
             yield session
 
@@ -391,11 +391,11 @@ class TestAssetAuditLogModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         return asset
 
     @pytest.mark.asyncio
@@ -418,11 +418,11 @@ class TestAssetAuditLogModel:
             gdpr_relevant=False,
             soc2_relevant=True
         )
-        
+
         async_session.add(audit_log)
         await async_session.commit()
         await async_session.refresh(audit_log)
-        
+
         # Verify audit log was created
         assert audit_log.id is not None
         assert audit_log.asset_id == sample_asset.id
@@ -452,10 +452,10 @@ class TestAssetAuditLogModel:
             gdpr_relevant=True,
             soc2_relevant=True
         )
-        
+
         async_session.add(audit_log)
         await async_session.commit()
-        
+
         # Verify field change details
         assert audit_log.field_changed == "security_classification"
         assert audit_log.old_value == "INTERNAL"
@@ -480,10 +480,10 @@ class TestAssetAuditLogModel:
             soc2_relevant=False,
             compliance_relevant=True
         )
-        
+
         async_session.add(gdpr_log)
         await async_session.commit()
-        
+
         assert gdpr_log.gdpr_relevant is True
         assert gdpr_log.soc2_relevant is False
         assert gdpr_log.compliance_relevant is True
@@ -494,20 +494,20 @@ class TestAssetAuditLogModel:
     ) -> None:
         """Test that timestamp is automatically generated."""
         before_creation = datetime.now(timezone.utc)
-        
+
         audit_log = AssetAuditLog(
             asset_id=sample_asset.id,
             change_type=ChangeType.VALIDATE,
             changed_by="validation_system",
             change_source="DISCOVERY"
         )
-        
+
         async_session.add(audit_log)
         await async_session.commit()
         await async_session.refresh(audit_log)
-        
+
         after_creation = datetime.now(timezone.utc)
-        
+
         # Verify timestamp was auto-generated and is reasonable
         assert audit_log.timestamp is not None
         assert before_creation <= audit_log.timestamp.replace(tzinfo=timezone.utc) <= after_creation

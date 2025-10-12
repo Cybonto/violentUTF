@@ -88,23 +88,23 @@ class TestRegressionFramework:
     These tests validate that dataset processing functionality, performance,
     and data integrity remain stable across system changes and updates.
     """
-    
+
     @pytest.fixture(autouse=True, scope="function")
     def setup_regression_test_environment(self):
         """Setup test environment for regression testing."""
         self.test_session = f"regression_test_{int(time.time())}"
         self.auth_client = KeycloakTestAuth()
         self.regression_test_data = create_regression_test_data()
-        
+
         # Setup test directory
         self.test_dir = Path(tempfile.mkdtemp(prefix="regression_test_"))
         self.regression_results_dir = self.test_dir / "regression_results"
         self.baselines_dir = self.test_dir / "baselines"
         self.regression_results_dir.mkdir(exist_ok=True)
         self.baselines_dir.mkdir(exist_ok=True)
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         if self.test_dir.exists():
@@ -159,33 +159,33 @@ class TestRegressionFramework:
                 "acceptable_degradation": 0.01  # 1% is acceptable
             }
         }
-        
+
         # RED Phase: This will fail because RegressionTestManager is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if RegressionTestManager is None:
                 raise ImportError("RegressionTestManager not implemented")
-            
+
             regression_manager = RegressionTestManager(session_id=self.test_session)
             regression_result = regression_manager.validate_conversion_accuracy_regression(
                 baseline_config=conversion_accuracy_config,
                 test_datasets=self.regression_test_data["conversion_test_datasets"]
             )
-            
+
             # Validate regression results
             for dataset_type, baseline in conversion_accuracy_config["baseline_datasets"].items():
                 dataset_result = regression_result.get_dataset_result(dataset_type)
                 accuracy_degradation = baseline["baseline_accuracy"] - dataset_result.current_accuracy
-                
+
                 assert accuracy_degradation <= baseline["acceptable_degradation"], \
                     f"Conversion accuracy regression detected for {dataset_type}: {accuracy_degradation}"
-        
+
         # Validate expected failure
         assert any([
             "RegressionTestManager not implemented" in str(exc_info.value),
             "validate_conversion_accuracy_regression" in str(exc_info.value),
             "regression test" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_regression_functionality("conversion_accuracy_regression", {
             "missing_classes": ["RegressionTestManager", "ConversionAccuracyValidator"],
             "missing_methods": ["validate_conversion_accuracy_regression", "compare_accuracy_baselines"],
@@ -242,35 +242,35 @@ class TestRegressionFramework:
                 "acceptable_performance_degradation": 0.05  # 5% degradation
             }
         }
-        
+
         # RED Phase: This will fail because performance regression tracking is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if RegressionTestManager is None:
                 raise ImportError("RegressionTestManager not implemented")
-            
+
             regression_manager = RegressionTestManager(session_id=self.test_session)
             performance_regression_result = regression_manager.validate_performance_regression(
                 baseline_config=performance_regression_config,
                 test_operations=self.regression_test_data["performance_test_operations"]
             )
-            
+
             # Validate performance regression results
             for category, metrics in performance_regression_config["baseline_performance_metrics"].items():
                 for metric_name, baseline in metrics.items():
                     current_metric = performance_regression_result.get_current_metric(category, metric_name)
                     performance_degradation = (current_metric - baseline["baseline_seconds"]) / baseline["baseline_seconds"]
-                    
+
                     acceptable_degradation = performance_regression_config["regression_alert_thresholds"]["acceptable_performance_degradation"]
                     assert performance_degradation <= acceptable_degradation, \
                         f"Performance regression detected for {metric_name}: {performance_degradation:.2%}"
-        
+
         # Validate expected failure
         assert any([
             "RegressionTestManager not implemented" in str(exc_info.value),
             "validate_performance_regression" in str(exc_info.value),
             "performance regression" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_regression_functionality("performance_regression", {
             "missing_classes": ["RegressionTestManager", "PerformanceRegressionValidator"],
             "missing_methods": ["validate_performance_regression", "compare_performance_baselines"],
@@ -319,21 +319,21 @@ class TestRegressionFramework:
                 "api_integrity_score": 0.97
             }
         }
-        
+
         # RED Phase: This will fail because data integrity regression is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if RegressionTestManager is None:
                 raise ImportError("RegressionTestManager not implemented")
-            
+
             regression_manager = RegressionTestManager(session_id=self.test_session)
             integrity_result = regression_manager.validate_data_integrity_regression(
                 integrity_config=data_integrity_config,
                 test_data=self.regression_test_data["integrity_test_data"]
             )
-        
+
         # Validate expected failure
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_regression_functionality("data_integrity_regression", {
             "missing_classes": ["RegressionTestManager", "DataIntegrityValidator"],
             "missing_methods": ["validate_data_integrity_regression", "check_integrity_baselines"],
@@ -375,20 +375,20 @@ class TestRegressionFramework:
                 "schema_evolution_strategy": "additive_only"
             }
         }
-        
+
         # RED Phase: This will fail because API compatibility testing is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if RegressionTestManager is None:
                 raise ImportError("RegressionTestManager not implemented")
-            
+
             regression_manager = RegressionTestManager(session_id=self.test_session)
             compatibility_result = regression_manager.validate_api_compatibility_regression(
                 compatibility_config=api_compatibility_config
             )
-        
+
         # Validate expected failure
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_regression_functionality("api_compatibility_regression", {
             "missing_classes": ["RegressionTestManager", "APICompatibilityValidator"],
             "missing_methods": ["validate_api_compatibility_regression", "check_api_contracts"],
@@ -435,20 +435,20 @@ class TestRegressionFramework:
                 "error_handling_consistency": True
             }
         }
-        
+
         # RED Phase: This will fail because workflow regression testing is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if RegressionTestManager is None:
                 raise ImportError("RegressionTestManager not implemented")
-            
+
             regression_manager = RegressionTestManager(session_id=self.test_session)
             workflow_result = regression_manager.validate_workflow_regression(
                 workflow_config=workflow_regression_config
             )
-        
+
         # Validate expected failure
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_regression_functionality("evaluation_workflow_regression", {
             "missing_classes": ["RegressionTestManager", "WorkflowRegressionValidator"],
             "missing_methods": ["validate_workflow_regression", "compare_workflow_baselines"],
@@ -488,12 +488,12 @@ class TestRegressionFramework:
                 ]
             }
         }
-        
+
         # Write documentation to regression results directory
         doc_file = self.regression_results_dir / f"{regression_area}_missing_functionality.json"
         with open(doc_file, "w") as f:
             json.dump(documentation, f, indent=2)
-        
+
         print(f"\n[TDD RED PHASE] Missing regression functionality documented for {regression_area}")
         print(f"Documentation saved to: {doc_file}")
         print(f"Key missing regression features: {missing_info.get('required_regression_features', [])[:3]}")
@@ -503,7 +503,7 @@ class TestAutomatedRegressionValidation:
     """
     Test automated regression validation and continuous monitoring.
     """
-    
+
     def test_automated_baseline_updates(self):
         """
         Test automated baseline update mechanisms
@@ -513,10 +513,10 @@ class TestAutomatedRegressionValidation:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.services.baseline_management import AutomatedBaselineManager
-            
+
             baseline_manager = AutomatedBaselineManager()
             baseline_update_result = baseline_manager.update_baselines_on_improvement()
-            
+
         assert "not implemented" in str(exc_info.value).lower()
 
     def test_regression_alert_system(self):
@@ -528,8 +528,8 @@ class TestAutomatedRegressionValidation:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.services.regression_alerting import RegressionAlertService
-            
+
             alert_service = RegressionAlertService()
             alert_result = alert_service.send_regression_alerts()
-            
+
         assert "not implemented" in str(exc_info.value).lower()
