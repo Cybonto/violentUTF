@@ -10,6 +10,7 @@ This module provides comprehensive unit tests for the ValidationService class,
 covering all validation rules, business logic, and edge cases.
 """
 
+import tempfile
 from typing import List
 
 import pytest
@@ -86,7 +87,7 @@ class TestValidationService:
             name="",  # Empty name
             asset_type=AssetType.SQLITE,
             unique_identifier="test-002",
-            location="/tmp/test.db",
+            location=tempfile.mktemp(suffix=".db"),
             security_classification=SecurityClassification.PUBLIC,
             criticality_level=CriticalityLevel.LOW,
             environment=Environment.TESTING,
@@ -271,7 +272,7 @@ class TestValidationService:
             name="Low Confidence Asset",
             asset_type=AssetType.SQLITE,
             unique_identifier="low-conf-001",
-            location="/tmp/test.db",
+            location=tempfile.mktemp(suffix=".db"),
             security_classification=SecurityClassification.INTERNAL,
             criticality_level=CriticalityLevel.LOW,
             environment=Environment.TESTING,
@@ -288,7 +289,7 @@ class TestValidationService:
             name="High Confidence Asset",
             asset_type=AssetType.SQLITE,
             unique_identifier="high-conf-001",
-            location="/tmp/test.db",
+            location=tempfile.mktemp(suffix=".db"),
             security_classification=SecurityClassification.INTERNAL,
             criticality_level=CriticalityLevel.LOW,
             environment=Environment.TESTING,
@@ -456,7 +457,7 @@ class TestValidationService:
                 name="AB",  # Too short
                 asset_type=AssetType.SQLITE,
                 unique_identifier="invalid-001",
-                location="/tmp/test.db",
+                location=tempfile.mktemp(suffix=".db"),
                 security_classification=SecurityClassification.PUBLIC,
                 criticality_level=CriticalityLevel.LOW,
                 environment=Environment.TESTING,

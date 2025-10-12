@@ -10,6 +10,7 @@ This module provides comprehensive unit tests for the ConflictResolutionService 
 covering duplicate detection algorithms, confidence scoring, and resolution strategies.
 """
 
+import tempfile
 import uuid
 from datetime import datetime, timezone
 
@@ -61,7 +62,7 @@ class TestConflictResolutionService:
             name="New Asset",
             asset_type=AssetType.SQLITE,
             unique_identifier="duplicate-identifier",  # Same as existing
-            location="/tmp/new.db",
+            location=tempfile.mktemp(suffix=".db"),
             security_classification=SecurityClassification.PUBLIC,
             criticality_level=CriticalityLevel.LOW,
             environment=Environment.TESTING,
@@ -265,7 +266,7 @@ class TestConflictResolutionService:
             name="Test SQLite",  # Different name
             asset_type=AssetType.SQLITE,  # Different type
             unique_identifier="test-sqlite-001",  # Different identifier
-            location="/tmp/test.db",  # Different location
+            location=tempfile.mktemp(suffix=".db"),  # Different location
             security_classification=SecurityClassification.PUBLIC,  # Different classification
             criticality_level=CriticalityLevel.LOW,  # Different criticality
             environment=Environment.TESTING,  # Different environment
@@ -622,7 +623,7 @@ class TestConflictResolutionService:
             name="Threshold Test",  # Same name
             asset_type=AssetType.SQLITE,  # Different type
             unique_identifier="threshold-002",
-            location="/tmp/test.db",  # Different location
+            location=tempfile.mktemp(suffix=".db"),  # Different location
             security_classification=SecurityClassification.PUBLIC,  # Different classification
             criticality_level=CriticalityLevel.LOW,  # Different criticality
             environment=Environment.TESTING,  # Different environment

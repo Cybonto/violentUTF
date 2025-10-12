@@ -199,7 +199,7 @@ class ReportGenerator:
 
             # Combine sections into content and mark as safe HTML
             try:
-                from jinja2 import Markup
+                from jinja2 import Markup  # type: ignore[attr-defined]
             except ImportError:
                 try:
                     from markupsafe import Markup

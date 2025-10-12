@@ -11,6 +11,7 @@ utilities for testing the asset management system with high test coverage.
 """
 
 import asyncio
+import tempfile
 import uuid
 from datetime import datetime, timezone
 from typing import Any, AsyncGenerator, Dict, Generator, List, Optional, Union
@@ -189,13 +190,13 @@ def sample_asset_data_list() -> List[AssetCreate]:
             name="Test SQLite DB",
             asset_type=AssetType.SQLITE,
             unique_identifier="test-sqlite-001",
-            location="/tmp/test.db",
+            location=tempfile.mktemp(suffix=".db"),
             security_classification=SecurityClassification.PUBLIC,
             criticality_level=CriticalityLevel.LOW,
             environment=Environment.TESTING,
             discovery_method="manual",
             confidence_score=85,
-            file_path="/tmp/test.db",
+            file_path=tempfile.mktemp(suffix=".db"),
             technical_contact="test-team@company.com"
         )
     ]
@@ -248,7 +249,7 @@ async def sample_asset_relationship(
         name="Target Database Asset",
         asset_type=AssetType.SQLITE,
         unique_identifier="target-sqlite-001",
-        location="/tmp/target.db",
+        location=tempfile.mktemp(suffix=".db"),
         security_classification=SecurityClassification.INTERNAL,
         criticality_level=CriticalityLevel.LOW,
         environment=Environment.TESTING,

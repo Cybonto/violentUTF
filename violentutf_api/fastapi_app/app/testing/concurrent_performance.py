@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class ConcurrentOperationResult:
     """Result of a concurrent operation"""
+
     operation_id: str
     operation_type: str
     start_time: float

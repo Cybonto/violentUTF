@@ -13,6 +13,7 @@ concurrent load efficiently.
 
 import asyncio
 import statistics
+import tempfile
 import time
 import uuid
 from datetime import datetime, timezone
@@ -302,7 +303,7 @@ class TestAssetManagementPerformance:
             "name": f"Concurrent Test {uuid.uuid4()}",
             "asset_type": "SQLITE",
             "unique_identifier": f"concurrent-{uuid.uuid4()}",
-            "location": "/tmp/concurrent.db",
+            "location": tempfile.mktemp(suffix=".db"),
             "security_classification": "INTERNAL",
             "criticality_level": "LOW",
             "environment": "TESTING",
@@ -349,7 +350,7 @@ class TestAssetManagementPerformance:
                 name=f"Service Performance Test {i}",
                 asset_type=AssetType.SQLITE,
                 unique_identifier=f"service-perf-{i}-{uuid.uuid4()}",
-                location=f"/tmp/service-perf-{i}.db",
+                location=tempfile.mktemp(suffix=f"-perf-{i}.db"),
                 security_classification=SecurityClassification.INTERNAL,
                 criticality_level=CriticalityLevel.LOW,
                 environment=Environment.TESTING,

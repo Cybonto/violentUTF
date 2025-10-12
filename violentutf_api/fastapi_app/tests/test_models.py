@@ -10,6 +10,7 @@ This module provides comprehensive unit tests for all database models
 including DatabaseAsset, AssetRelationship, and AssetAuditLog.
 """
 
+import tempfile
 import uuid
 from datetime import datetime, timezone
 
@@ -768,7 +769,7 @@ class TestModelRelationships:
             name="Target Asset",
             asset_type=AssetType.SQLITE,
             unique_identifier="nav-target",
-            location="/tmp/target.db",
+            location=tempfile.mktemp(suffix=".db"),
             security_classification=SecurityClassification.INTERNAL,
             criticality_level=CriticalityLevel.LOW,
             environment=Environment.TESTING,
