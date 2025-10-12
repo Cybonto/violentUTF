@@ -235,8 +235,8 @@ class TestIncidentResponseIntegration:
         response_plan = orchestrator.initiate_response(sample_incident)
 
         assert response_plan is not None
-        assert "runbook_path" in response_plan
-        assert "steps" in response_plan
+        assert hasattr(response_plan, "runbook_path")
+        assert hasattr(response_plan, "steps")
 
     def test_incident_escalation_workflow(self, sample_incident):
         """Test incident escalation workflow."""

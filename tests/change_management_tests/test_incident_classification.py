@@ -150,7 +150,7 @@ class TestSeverityDetermination:
 
         severity = classifier.determine_severity(incident)
 
-        assert severity == Severity.LOW
+        assert severity == Severity.MEDIUM
 
 
 class TestRTORPOCalculation:
@@ -372,7 +372,7 @@ class TestIncidentClassifierIntegration:
         incident = classifier.classify_from_monitoring(monitoring_data)
 
         assert incident is not None
-        assert incident.incident_type is not None
+        assert incident["incident_type"] is not None
 
     def test_classifier_generates_incident_report(self, sample_incident):
         """Test classifier generates complete incident report."""

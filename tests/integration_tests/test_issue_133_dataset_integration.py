@@ -5,13 +5,30 @@ This test suite validates integration with ViolentUTF API, PyRIT memory system,
 authentication flows, and end-to-end data flow validation.
 """
 
+import importlib.util
 import json
+import sys
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import requests
 import streamlit as st
+
+
+def import_configure_datasets():
+    """Helper function to import the Configure Datasets module"""
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "configure_datasets",
+            "violentutf/pages/2_Configure_Datasets.py"
+        )
+        configure_datasets = importlib.util.module_from_spec(spec)
+        sys.modules["configure_datasets"] = configure_datasets
+        spec.loader.exec_module(configure_datasets)
+        return configure_datasets
+    except (ImportError, FileNotFoundError):
+        return None
 
 
 # Test fixtures for API integration
@@ -135,34 +152,38 @@ class TestViolentUTFAPIIntegration:
 
     def test_api_authentication_headers(self, mock_session_state):
         """Test that API authentication headers are properly configured"""
+        configure_datasets = import_configure_datasets()
+        if configure_datasets is None:
+            pytest.skip("Configure Datasets module not available")
+
         with patch('streamlit.session_state', mock_session_state):
-            # This test expects the auth functions to exist
-            with pytest.raises(ImportError):
-                from violentutf.pages.2_Configure_Datasets import get_auth_headers
-                
-                headers = get_auth_headers()
-                
-                assert "Authorization" in headers
-                assert headers["Authorization"].startswith("Bearer ")
-                assert "Content-Type" in headers
-                assert headers["Content-Type"] == "application/json"
-                assert "X-API-Gateway" in headers
-                assert headers["X-API-Gateway"] == "APISIX"
+            headers = configure_datasets.get_auth_headers()
+
+            assert "Authorization" in headers
+            assert headers["Authorization"].startswith("Bearer ")
+            assert "Content-Type" in headers
+            assert headers["Content-Type"] == "application/json"
+            assert "X-API-Gateway" in headers
+            assert headers["X-API-Gateway"] == "APISIX"
     
     def test_load_dataset_types_integration(self, mock_api_responses):
         """Test loading dataset types from API"""
-        with pytest.raises(ImportError):
-            from violentutf.pages.2_Configure_Datasets import api_request, load_dataset_types_from_api
-            
-            with patch('violentutf.pages.2_Configure_Datasets.api_request') as mock_request:
-                mock_request.return_value = mock_api_responses["dataset_types"]
-                
-                dataset_types = load_dataset_types_from_api()
-                
-                assert len(dataset_types) == 3
-                assert "ollegen1_cognitive" in [dt["name"] for dt in dataset_types]
-                assert "garak_redteaming" in [dt["name"] for dt in dataset_types]
-                mock_request.assert_called_once()
+        configure_datasets = import_configure_datasets()
+        if configure_datasets is None:
+            pytest.skip("Configure Datasets module not available")
+
+        api_request = configure_datasets.api_request
+        load_dataset_types_from_api = configure_datasets.load_dataset_types_from_api
+
+        with patch.object(configure_datasets, 'api_request') as mock_request:
+            mock_request.return_value = mock_api_responses["dataset_types"]
+
+            dataset_types = load_dataset_types_from_api()
+
+            assert len(dataset_types) == 3
+            assert "ollegen1_cognitive" in [dt["name"] for dt in dataset_types]
+            assert "garak_redteaming" in [dt["name"] for dt in dataset_types]
+            mock_request.assert_called_once()
     
     def test_create_dataset_via_api_integration(self, mock_api_responses):
         """Test creating dataset through API"""

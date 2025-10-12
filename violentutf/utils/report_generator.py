@@ -783,7 +783,7 @@ class ReportGenerator:
                 sample_data = self._get_empty_metrics()
 
             result = self.template_engine.test_template_rendering(template_name, sample_data)
-            return result.success
+            return result["success"]
 
         except Exception as e:
             logger.error("Template validation failed for %s: %s", template_name, e)
