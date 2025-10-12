@@ -19,6 +19,7 @@ class UIPerformanceMetrics:
     memory_usage_mb: float
 
 
+
 class UIPerformanceTester:
     """UI Performance testing framework"""
 
@@ -82,6 +83,7 @@ class UIPerformanceTester:
 def test_ui_performance_framework_available() -> bool:
     """Check if UI performance testing framework is available"""
     return False  # Not implemented yet
+
 
 
 def get_performance_baseline() -> Dict[str, float]:
