@@ -136,7 +136,7 @@ class TestViolentUTFAPIIntegration:
         with patch('streamlit.session_state', mock_session_state):
             # This test expects the auth functions to exist
             with pytest.raises(ImportError):
-                from violentutf.pages.2_Configure_Datasets import get_auth_headers
+                from violentutf.pages import get_auth_headers
                 
                 headers = get_auth_headers()
                 

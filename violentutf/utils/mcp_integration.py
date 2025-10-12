@@ -46,6 +46,7 @@ class MCPCommandType(Enum):
     PROMPT = "prompt"
     LIST = "list"
     DOCUMENTATION = "documentation"
+    SEARCH = "search"
     UNKNOWN = "unknown"
 
 
@@ -111,6 +112,12 @@ class NaturalLanguageParser:
             r"list\s+(?:all\s+)?(?P<resource>[\w-]+)",
             r"show\s+(?:me\s+)?(?:all\s+)?(?:available\s+)?(?P<resource>[\w-]+)",
             r"what\s+(?P<resource>[\w-]+)\s+are\s+available",
+        ],
+        MCPCommandType.SEARCH: [
+            r"/mcp\s+search\s+(?P<query>[\w\s-]+)",
+            r"search\s+for\s+(?P<query>[\w\s-]+)",
+            r"find\s+(?P<query>[\w\s-]+)",
+            r"look\s+for\s+(?P<query>[\w\s-]+)",
         ],
     }
 

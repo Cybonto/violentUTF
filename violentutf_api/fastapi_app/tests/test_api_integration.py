@@ -798,7 +798,7 @@ class TestAssetAPIIntegration:
         # Act - Send request with invalid content type
         response = await async_client.post(
             "/api/v1/assets/",
-            data=json.dumps(valid_asset_payload),  # Send as raw string instead of JSON
+            content=json.dumps(valid_asset_payload),  # Send as raw content instead of data
             headers={**auth_headers, "Content-Type": "text/plain"}
         )
         

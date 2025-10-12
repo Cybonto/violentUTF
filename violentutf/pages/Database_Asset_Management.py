@@ -282,8 +282,8 @@ def create_interactive_asset_table(assets_data: List[Dict[str, Any]], filters: D
         # Check if data is selected (type: ignore for mypy compatibility)
         if (
             hasattr(selected_data, "selection")
-            and hasattr(selected_data.selection, "rows")
-            and selected_data.selection.rows  # type: ignore
+            and hasattr(selected_data.selection, "rows")  # type: ignore[attr-defined]
+            and selected_data.selection.rows  # type: ignore[attr-defined]
         ):
             selected_idx = selected_data.selection.rows[0]  # type: ignore
             selected_asset = filtered_assets[selected_idx]

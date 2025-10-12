@@ -199,17 +199,14 @@ class ReportGenerator:
 
             # Combine sections into content and mark as safe HTML
             try:
-                from jinja2 import Markup
+                from markupsafe import Markup
             except ImportError:
                 try:
-                    from markupsafe import Markup
+                    from jinja2 import Markup  # type: ignore[attr-defined,no-redef]
                 except ImportError:
-                    # Fallback for older versions
-                    class MarkupFallback(str):
-                        def __new__(cls, value: str) -> "MarkupFallback":
-                            return str.__new__(cls, value)  # type: ignore
-
-                    Markup = MarkupFallback
+                    # Fallback for older versions - just use str
+                    def Markup(text: str) -> str:  # type: ignore[misc,no-redef]
+                        return text
 
             sections_content = ""
             for _, section_html in report_sections.items():
@@ -783,7 +780,7 @@ class ReportGenerator:
                 sample_data = self._get_empty_metrics()
 
             result = self.template_engine.test_template_rendering(template_name, sample_data)
-            return result.success
+            return result["success"]
 
         except Exception as e:
             logger.error("Template validation failed for %s: %s", template_name, e)

@@ -199,6 +199,17 @@ addopts = [
     "--cov-report=xml",
     "--tb=short"
 ]
+# Files and directories to ignore during test collection
+norecursedirs = [
+    "*.egg",
+    ".eggs",
+    "dist",
+    "build",
+    "docs",
+    ".tox",
+    ".git",
+    "__pycache__"
+]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
@@ -210,7 +221,10 @@ markers = [
     "e2e: marks tests as end-to-end tests",
     "docker: marks tests that require Docker",
     "security: marks security-related tests",
-    "benchmark: marks performance benchmark tests"
+    "benchmark: marks performance benchmark tests",
+    "performance: marks performance-related tests",
+    "problematic: marks tests with known import/dependency issues",
+    "incomplete: marks tests that are incomplete or in TDD red phase"
 ]
 filterwarnings = [
     "error",

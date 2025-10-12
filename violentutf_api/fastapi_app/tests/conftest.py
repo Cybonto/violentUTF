@@ -21,8 +21,7 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from sqlalchemy import StaticPool, create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.db.database import Base, get_session
 from main import app
@@ -83,7 +82,7 @@ async def async_engine():
 @pytest_asyncio.fixture(scope="function")
 async def async_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
     """Create async session for testing."""
-    async_session_maker = sessionmaker(
+    async_session_maker = async_sessionmaker(
         async_engine, class_=AsyncSession, expire_on_commit=False
     )
     
@@ -106,7 +105,7 @@ async def async_client(async_session) -> AsyncGenerator[AsyncClient, None]:
     
     app.dependency_overrides[get_session] = override_get_session
     
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(app=app, base_url="http://test", follow_redirects=True) as ac:  # type: ignore[call-arg]
         yield ac
     
     app.dependency_overrides.clear()
