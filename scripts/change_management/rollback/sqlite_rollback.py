@@ -18,7 +18,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 
 @dataclass
@@ -33,6 +33,11 @@ class BackupResult:
     integrity_verified: bool = False
     compressed: bool = False
     error_message: str = ""
+
+    @property
+    def snapshot_id(self) -> Optional[str]:
+        """Alias for backup_id to match interface."""
+        return self.backup_id
 
 
 @dataclass
@@ -67,6 +72,17 @@ class ValidationResult:
     triggers_functional: bool = False
     error_message: str = ""
 
+    @property
+    def valid(self) -> bool:
+        """Overall validity - True if all checks pass and no errors."""
+        return (
+            self.integrity_ok
+            and self.foreign_keys_valid
+            and self.indexes_intact
+            and self.triggers_functional
+            and not self.error_message
+        )
+
 
 class SQLiteRollbackManager:
     """Manages SQLite database rollback procedures."""
@@ -90,18 +106,22 @@ class SQLiteRollbackManager:
         self.compress_backups = compress_backups
         self.backups: Dict[str, BackupResult] = {}  # Track backups
 
-    def backup_database(self, db_path: Path, change_id: str) -> BackupResult:
+    def backup_database(self, db_path: Union[str, Path], change_id: str) -> BackupResult:
         """
         Create file-based backup of SQLite database.
 
         Args:
-            db_path: Path to SQLite database
+            db_path: Path to SQLite database (string or Path object)
             change_id: Change request ID
 
         Returns:
             BackupResult object
         """
         try:
+            # Convert string to Path if needed
+            if isinstance(db_path, str):
+                db_path = Path(db_path)
+
             if not db_path.exists():
                 return BackupResult(
                     success=False,
@@ -179,18 +199,24 @@ class SQLiteRollbackManager:
         except Exception:
             return False
 
-    def restore_from_backup(self, backup_path: Path, target_path: Path) -> RestoreResult:
+    def restore_from_backup(self, backup_path: Union[str, Path], target_path: Union[str, Path]) -> RestoreResult:
         """
         Restore database from backup file.
 
         Args:
-            backup_path: Path to backup file
-            target_path: Target database path
+            backup_path: Path to backup file (string or Path object)
+            target_path: Target database path (string or Path object)
 
         Returns:
             RestoreResult object
         """
         try:
+            # Convert strings to Path if needed
+            if isinstance(backup_path, str):
+                backup_path = Path(backup_path)
+            if isinstance(target_path, str):
+                target_path = Path(target_path)
+
             if not backup_path.exists():
                 return RestoreResult(
                     success=False,
@@ -251,12 +277,12 @@ class SQLiteRollbackManager:
         except Exception:
             return False
 
-    def rollback_database(self, db_path: Path, backup_id: str) -> RollbackResult:
+    def rollback_database(self, db_path: Union[str, Path], backup_id: str) -> RollbackResult:
         """
         Rollback database to backup.
 
         Args:
-            db_path: Database path
+            db_path: Database path (string or Path object)
             backup_id: Backup identifier
 
         Returns:
@@ -265,6 +291,10 @@ class SQLiteRollbackManager:
         start_time = time.time()
 
         try:
+            # Convert string to Path if needed
+            if isinstance(db_path, str):
+                db_path = Path(db_path)
+
             # Get backup
             if backup_id not in self.backups:
                 return RollbackResult(
@@ -353,3 +383,19 @@ class SQLiteRollbackManager:
             return ValidationResult(
                 error_message=f"Validation failed: {str(e)}",
             )
+
+    def validate_restore(self, db_path: Union[str, Path]) -> ValidationResult:
+        """
+        Validate restored SQLite database.
+
+        Args:
+            db_path: Path to the restored database
+
+        Returns:
+            ValidationResult object
+        """
+        # Convert string to Path if needed
+        if isinstance(db_path, str):
+            db_path = Path(db_path)
+
+        return self.validate_database(db_path)

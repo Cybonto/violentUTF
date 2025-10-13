@@ -240,19 +240,56 @@ class PostgreSQLRollbackManager:
             # Try to find snapshot file
             snapshot_path = self.postgresql_backup_dir / f"{snapshot_id}.sql"
             if not snapshot_path.exists():
-                return RollbackResult(
+                error_result = RollbackResult(
                     success=False,
                     error_message=f"Snapshot {snapshot_id} not found",
                 )
 
+                # Send failure notification
+                if self.notification_service:
+                    self.notification_service.send_email(
+                        to="dba@example.com",
+                        subject="PostgreSQL rollback failed",
+                        body=f"Rollback to snapshot {snapshot_id} failed: Snapshot not found",
+                    )
+
+                return error_result
+
             # Check if corrupted
             if not self._verify_snapshot_integrity(snapshot_path):
-                return RollbackResult(
+                error_result = RollbackResult(
                     success=False,
                     error_message=f"Snapshot {snapshot_id} is corrupt",
                 )
+
+                # Send failure notification
+                if self.notification_service:
+                    self.notification_service.send_email(
+                        to="dba@example.com",
+                        subject="PostgreSQL rollback failed",
+                        body=f"Rollback to snapshot {snapshot_id} failed: Snapshot is corrupt",
+                    )
+
+                return error_result
         else:
             snapshot_path = self.snapshots[snapshot_id].snapshot_path
+
+            # Always verify integrity even for stored snapshots
+            if not self._verify_snapshot_integrity(snapshot_path):
+                error_result = RollbackResult(
+                    success=False,
+                    error_message=f"Snapshot {snapshot_id} is corrupt",
+                )
+
+                # Send failure notification
+                if self.notification_service:
+                    self.notification_service.send_email(
+                        to="dba@example.com",
+                        subject="PostgreSQL rollback failed",
+                        body=f"Rollback to snapshot {snapshot_id} failed: Snapshot is corrupt",
+                    )
+
+                return error_result
 
         try:
             # Force disconnect if required
@@ -286,7 +323,7 @@ class PostgreSQLRollbackManager:
             # Send notification
             if self.notification_service:
                 self.notification_service.send_email(
-                    to=["dba@example.com"],
+                    to="dba@example.com",
                     subject="PostgreSQL rollback success",
                     body=f"Successfully rolled back to snapshot {snapshot_id}",
                 )
@@ -303,7 +340,7 @@ class PostgreSQLRollbackManager:
             # Send failure notification
             if self.notification_service:
                 self.notification_service.send_email(
-                    to=["dba@example.com"],
+                    to="dba@example.com",
                     subject="PostgreSQL rollback failed",
                     body=f"Rollback to snapshot {snapshot_id} failed: {str(e)}",
                 )
