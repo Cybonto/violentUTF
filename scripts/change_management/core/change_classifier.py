@@ -13,7 +13,7 @@ and determines approval requirements based on classification.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 
 class ChangeType(Enum):
@@ -76,6 +76,10 @@ class ValidationResult:
     missing_fields: List[str] = field(default_factory=list)
     errors: Dict[str, str] = field(default_factory=dict)
     warnings: List[str] = field(default_factory=list)
+
+    def __getitem__(self, key: str) -> Union[bool, List[str], Dict[str, str]]:
+        """Support dictionary-style access for backward compatibility."""
+        return getattr(self, key)
 
 
 class ChangeClassifier:
