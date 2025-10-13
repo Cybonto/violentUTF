@@ -1,0 +1,39 @@
+title: Configuration Error Incident Response
+database_type: all
+severity: medium
+rto_target: 240
+rpo_target: 480
+detection:
+  symptoms:
+  - Configuration mismatch detected
+  - Service startup failures
+  - Invalid connection parameters
+  - Performance degradation after config change
+  monitoring_commands:
+  - Review recent configuration changes
+  - Compare with known-good configuration
+  - Check service logs
+recovery_steps:
+- step_number: 1
+  title: Identify configuration issue
+  commands:
+  - Review recent changes
+  - Compare with baseline
+  estimated_time_minutes: 15
+- step_number: 2
+  title: Rollback configuration
+  commands:
+  - Restore previous configuration
+  - Restart services
+  estimated_time_minutes: 10
+- step_number: 3
+  title: Validate services
+  commands:
+  - ./check_services.sh
+  - Run health checks
+  estimated_time_minutes: 5
+escalation:
+  immediate:
+  - dba_team
+  after_2_hours:
+  - tech_lead

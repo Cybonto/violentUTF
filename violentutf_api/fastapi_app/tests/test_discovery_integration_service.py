@@ -34,7 +34,7 @@ from app.services.asset_management.validation_service import ValidationResult, V
 
 class TestDiscoveryIntegrationService:
     """Test cases for DiscoveryIntegrationService class."""
-    
+
     @pytest.fixture
     def mock_asset_service(self) -> AsyncMock:
         """Create mock asset service."""
@@ -43,23 +43,23 @@ class TestDiscoveryIntegrationService:
         mock.create_asset = AsyncMock()
         mock.update_from_discovery = AsyncMock()
         return mock
-    
+
     @pytest.fixture
     def mock_validation_service(self) -> MagicMock:
         """Create mock validation service."""
         mock = MagicMock(spec=ValidationService)
         mock.validate_asset_data = MagicMock()
         return mock
-    
+
     @pytest.fixture
     def discovery_service(
-        self, 
-        mock_asset_service: AsyncMock, 
+        self,
+        mock_asset_service: AsyncMock,
         mock_validation_service: MagicMock
     ) -> DiscoveryIntegrationService:
         """Create discovery integration service with mocked dependencies."""
         return DiscoveryIntegrationService(mock_asset_service, mock_validation_service)
-    
+
     @pytest.fixture
     def sample_discovered_asset(self) -> DiscoveredAsset:
         """Create sample discovered asset for testing."""
@@ -96,7 +96,7 @@ class TestDiscoveryIntegrationService:
                 "last_activity": "2025-01-15T10:30:00Z"
             }
         )
-    
+
     @pytest.fixture
     def sample_discovery_report(self, sample_discovered_asset: DiscoveredAsset) -> DiscoveryReport:
         """Create sample discovery report for testing."""
@@ -131,7 +131,7 @@ class TestDiscoveryIntegrationService:
                 "scan_coverage": "100%"
             }
         )
-    
+
     @pytest.mark.asyncio
     async def test_process_discovery_report_new_assets(
         self,
@@ -147,10 +147,10 @@ class TestDiscoveryIntegrationService:
         )
         mock_asset_service.find_by_identifier.return_value = None  # No existing assets
         mock_asset_service.create_asset.return_value = MagicMock(id=uuid.uuid4(), name="Created Asset")
-        
+
         # Act
         result = await discovery_service.process_discovery_report(sample_discovery_report)
-        
+
         # Assert
         assert result.total_processed == 2
         assert result.created_count == 2
@@ -159,12 +159,12 @@ class TestDiscoveryIntegrationService:
         assert len(result.created_assets) == 2
         assert len(result.updated_assets) == 0
         assert len(result.errors) == 0
-        
+
         # Verify asset service calls
         assert mock_asset_service.find_by_identifier.call_count == 2
         assert mock_asset_service.create_asset.call_count == 2
         assert mock_validation_service.validate_asset_data.call_count == 2
-    
+
     @pytest.mark.asyncio
     async def test_process_discovery_report_existing_assets_update(
         self,
@@ -179,16 +179,16 @@ class TestDiscoveryIntegrationService:
         existing_asset.id = uuid.uuid4()
         existing_asset.name = "Existing Asset"
         existing_asset.confidence_score = 80  # Lower than discovery confidence
-        
+
         mock_validation_service.validate_asset_data.return_value = ValidationResult(
             is_valid=True, errors=[], warnings=[]
         )
         mock_asset_service.find_by_identifier.return_value = existing_asset
         mock_asset_service.update_from_discovery.return_value = existing_asset
-        
+
         # Act
         result = await discovery_service.process_discovery_report(sample_discovery_report)
-        
+
         # Assert
         assert result.total_processed == 2
         assert result.created_count == 0
@@ -196,12 +196,12 @@ class TestDiscoveryIntegrationService:
         assert result.error_count == 0
         assert len(result.created_assets) == 0
         assert len(result.updated_assets) == 2
-        
+
         # Verify asset service calls
         assert mock_asset_service.find_by_identifier.call_count == 2
         assert mock_asset_service.update_from_discovery.call_count == 2
         assert mock_asset_service.create_asset.call_count == 0
-    
+
     @pytest.mark.asyncio
     async def test_process_discovery_report_validation_errors(
         self,
@@ -227,14 +227,14 @@ class TestDiscoveryIntegrationService:
                 warnings=[]
             )
         ]
-        
+
         mock_validation_service.validate_asset_data.side_effect = validation_results
         mock_asset_service.find_by_identifier.return_value = None
         mock_asset_service.create_asset.return_value = MagicMock(id=uuid.uuid4(), name="Created Asset")
-        
+
         # Act
         result = await discovery_service.process_discovery_report(sample_discovery_report)
-        
+
         # Assert
         assert result.total_processed == 2
         assert result.created_count == 1  # Only valid asset created
@@ -242,10 +242,10 @@ class TestDiscoveryIntegrationService:
         assert result.error_count == 1  # One validation error
         assert len(result.errors) == 1
         assert "Name too short" in result.errors[0]
-        
+
         # Verify only valid asset was processed
         assert mock_asset_service.create_asset.call_count == 1
-    
+
     @pytest.mark.asyncio
     async def test_process_discovery_report_service_exceptions(
         self,
@@ -260,16 +260,16 @@ class TestDiscoveryIntegrationService:
             is_valid=True, errors=[], warnings=[]
         )
         mock_asset_service.find_by_identifier.return_value = None
-        
+
         # First asset creation succeeds, second fails
         mock_asset_service.create_asset.side_effect = [
             MagicMock(id=uuid.uuid4(), name="Created Asset"),
             Exception("Database connection failed")
         ]
-        
+
         # Act
         result = await discovery_service.process_discovery_report(sample_discovery_report)
-        
+
         # Assert
         assert result.total_processed == 2
         assert result.created_count == 1
@@ -277,7 +277,7 @@ class TestDiscoveryIntegrationService:
         assert result.error_count == 1
         assert len(result.errors) == 1
         assert "Database connection failed" in result.errors[0]
-    
+
     def test_map_discovery_to_asset(
         self,
         discovery_service: DiscoveryIntegrationService,
@@ -286,7 +286,7 @@ class TestDiscoveryIntegrationService:
         """Test mapping discovered asset to asset creation schema."""
         # Act
         asset_create = discovery_service.map_discovery_to_asset(sample_discovered_asset)
-        
+
         # Assert
         assert isinstance(asset_create, AssetCreate)
         assert asset_create.name == sample_discovered_asset.name
@@ -298,7 +298,7 @@ class TestDiscoveryIntegrationService:
         assert asset_create.environment == Environment.PRODUCTION
         assert asset_create.discovery_method == sample_discovered_asset.discovery_metadata.discovery_method
         assert asset_create.confidence_score == sample_discovered_asset.discovery_metadata.confidence_score
-    
+
     def test_map_discovery_to_asset_with_metadata_extraction(
         self,
         discovery_service: DiscoveryIntegrationService
@@ -329,10 +329,10 @@ class TestDiscoveryIntegrationService:
                 }
             )
         )
-        
+
         # Act
         asset_create = discovery_service.map_discovery_to_asset(discovered_asset)
-        
+
         # Assert
         assert asset_create.database_version == "13.7"
         assert asset_create.estimated_size_mb == 2048
@@ -340,7 +340,7 @@ class TestDiscoveryIntegrationService:
         assert asset_create.technical_contact == "dba-team@company.com"
         assert asset_create.backup_configured is True
         assert asset_create.encryption_enabled is True
-    
+
     def test_should_update_asset_newer_discovery(
         self,
         discovery_service: DiscoveryIntegrationService,
@@ -351,15 +351,15 @@ class TestDiscoveryIntegrationService:
         existing_asset = MagicMock()
         existing_asset.confidence_score = 85
         existing_asset.discovery_timestamp = datetime.now(timezone.utc) - timedelta(days=1)
-        
+
         # Sample discovered asset has confidence_score = 92 and newer timestamp
-        
+
         # Act
         should_update = discovery_service.should_update_asset(existing_asset, sample_discovered_asset)
-        
+
         # Assert
         assert should_update is True
-    
+
     def test_should_update_asset_older_discovery(
         self,
         discovery_service: DiscoveryIntegrationService,
@@ -370,13 +370,13 @@ class TestDiscoveryIntegrationService:
         existing_asset = MagicMock()
         existing_asset.confidence_score = 98  # Higher than discovery
         existing_asset.discovery_timestamp = datetime.now(timezone.utc)  # Newer
-        
+
         # Act
         should_update = discovery_service.should_update_asset(existing_asset, sample_discovered_asset)
-        
+
         # Assert
         assert should_update is False
-    
+
     def test_should_update_asset_significant_confidence_improvement(
         self,
         discovery_service: DiscoveryIntegrationService,
@@ -387,15 +387,15 @@ class TestDiscoveryIntegrationService:
         existing_asset = MagicMock()
         existing_asset.confidence_score = 70  # Significantly lower
         existing_asset.discovery_timestamp = datetime.now(timezone.utc)
-        
+
         # Discovery has confidence_score = 92 (22 point improvement)
-        
+
         # Act
         should_update = discovery_service.should_update_asset(existing_asset, sample_discovered_asset)
-        
+
         # Assert
         assert should_update is True
-    
+
     @pytest.mark.asyncio
     async def test_process_discovery_report_mixed_results(
         self,
@@ -474,7 +474,7 @@ class TestDiscoveryIntegrationService:
                 )
             )
         ]
-        
+
         discovery_report = DiscoveryReport(
             report_id="mixed_results_report",
             scan_timestamp=datetime.now(timezone.utc),
@@ -483,7 +483,7 @@ class TestDiscoveryIntegrationService:
             assets=discovered_assets,
             scan_summary={"total_assets_found": 4}
         )
-        
+
         # Configure mocks
         validation_results = [
             ValidationResult(is_valid=True, errors=[], warnings=[]),  # new asset - valid
@@ -496,31 +496,31 @@ class TestDiscoveryIntegrationService:
             ValidationResult(is_valid=True, errors=[], warnings=[])   # error asset - valid but will fail in service
         ]
         mock_validation_service.validate_asset_data.side_effect = validation_results
-        
+
         # Mock asset service responses
         existing_asset = MagicMock()
         existing_asset.id = uuid.uuid4()
         existing_asset.confidence_score = 80  # Lower than discovery
-        
+
         def find_by_identifier_side_effect(identifier):
             if identifier == "existing-asset-001":
                 return existing_asset
             return None
-        
+
         mock_asset_service.find_by_identifier.side_effect = find_by_identifier_side_effect
-        
+
         # Mock create_asset to succeed for new asset, fail for error asset
         def create_asset_side_effect(asset_data, created_by):
             if asset_data.unique_identifier == "error-asset-001":
                 raise Exception("Service error occurred")
             return MagicMock(id=uuid.uuid4(), name=asset_data.name)
-        
+
         mock_asset_service.create_asset.side_effect = create_asset_side_effect
         mock_asset_service.update_from_discovery.return_value = existing_asset
-        
+
         # Act
         result = await discovery_service.process_discovery_report(discovery_report)
-        
+
         # Assert
         assert result.total_processed == 4
         assert result.created_count == 1    # One new asset created
@@ -529,12 +529,12 @@ class TestDiscoveryIntegrationService:
         assert len(result.created_assets) == 1
         assert len(result.updated_assets) == 1
         assert len(result.errors) == 2
-        
+
         # Verify error messages
         error_messages = result.errors
         assert any("Name too short" in error for error in error_messages)
         assert any("Service error occurred" in error for error in error_messages)
-    
+
     def test_extract_metadata_from_discovery(
         self,
         discovery_service: DiscoveryIntegrationService
@@ -568,10 +568,10 @@ class TestDiscoveryIntegrationService:
                 }
             }
         )
-        
+
         # Act
         metadata = discovery_service.extract_metadata_from_discovery(discovery_metadata)
-        
+
         # Assert
         assert metadata["database_version"] == "15.1"
         assert metadata["schema_version"] == "1.2.3"
@@ -587,19 +587,19 @@ class TestDiscoveryIntegrationService:
         assert metadata["backup_configured"] is True
         assert metadata["documentation_url"] == "https://wiki.company.com/db-001"
         assert metadata["compliance_requirements"] == {"gdpr": True, "soc2": True, "pci_dss": False}
-    
+
     def test_import_result_aggregation(self):
         """Test ImportResult aggregation functionality."""
         # Arrange
         result = ImportResult()
-        
+
         # Act - Add various results
         result.add_created(MagicMock(id=uuid.uuid4(), name="Asset 1"))
         result.add_created(MagicMock(id=uuid.uuid4(), name="Asset 2"))
         result.add_updated(MagicMock(id=uuid.uuid4(), name="Asset 3"))
         result.add_error("asset-error-001", "Validation failed")
         result.add_error("asset-error-002", "Service unavailable")
-        
+
         # Assert
         assert result.total_processed == 5
         assert result.created_count == 2
@@ -608,7 +608,7 @@ class TestDiscoveryIntegrationService:
         assert len(result.created_assets) == 2
         assert len(result.updated_assets) == 1
         assert len(result.errors) == 2
-        
+
         # Verify error format
         assert "asset-error-001: Validation failed" in result.errors
         assert "asset-error-002: Service unavailable" in result.errors

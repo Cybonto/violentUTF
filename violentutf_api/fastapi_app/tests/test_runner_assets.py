@@ -23,7 +23,7 @@ def run_command(cmd: list, description: str) -> bool:
     print(f"Running: {description}")
     print(f"Command: {' '.join(cmd)}")
     print(f"{'='*60}")
-    
+
     try:
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         print(result.stdout)
@@ -41,12 +41,12 @@ def main():
     """Run the comprehensive test suite for asset management."""
     print("Asset Management System - Comprehensive Test Suite")
     print("Issue #280 - Testing for 90% minimum code coverage")
-    
+
     # Change to the FastAPI app directory
     fastapi_dir = Path(__file__).parent.parent
     os.chdir(fastapi_dir)
     print(f"Working directory: {os.getcwd()}")
-    
+
     # Test commands to run
     test_commands = [
         # Install test dependencies
@@ -58,7 +58,7 @@ def main():
             "cmd": [sys.executable, "-m", "pip", "install", "pytest", "pytest-asyncio", "pytest-cov", "coverage"],
             "description": "Installing test dependencies"
         },
-        
+
         # Run individual test modules
         {
             "cmd": [sys.executable, "-m", "pytest", "tests/conftest.py", "-v", "--tb=short"],
@@ -100,13 +100,13 @@ def main():
             "cmd": [sys.executable, "-m", "pytest", "tests/test_performance.py", "-v", "--tb=short", "-m", "not slow"],
             "description": "Testing performance (quick tests only)"
         },
-        
+
         # Run comprehensive test suite with coverage
         {
             "cmd": [
                 sys.executable, "-m", "pytest",
                 "tests/test_models.py",
-                "tests/test_asset_service.py", 
+                "tests/test_asset_service.py",
                 "tests/test_validation_service.py",
                 "tests/test_conflict_resolution_service.py",
                 "tests/test_audit_service.py",
@@ -125,18 +125,18 @@ def main():
             ],
             "description": "Running comprehensive test suite with coverage analysis"
         },
-        
+
         # Generate coverage report summary
         {
             "cmd": [sys.executable, "-m", "coverage", "report", "--show-missing"],
             "description": "Generating coverage report summary"
         }
     ]
-    
+
     # Track results
     passed_tests = 0
     failed_tests = 0
-    
+
     # Run all test commands
     for test_cmd in test_commands:
         success = run_command(test_cmd["cmd"], test_cmd["description"])
@@ -144,7 +144,7 @@ def main():
             passed_tests += 1
         else:
             failed_tests += 1
-    
+
     # Summary
     print(f"\n{'='*60}")
     print("TEST EXECUTION SUMMARY")
@@ -152,40 +152,40 @@ def main():
     print(f"Total test commands: {len(test_commands)}")
     print(f"Passed: {passed_tests}")
     print(f"Failed: {failed_tests}")
-    
+
     if failed_tests == 0:
         print("\n🎉 ALL TESTS PASSED! Asset Management System ready for production.")
         print("\nKey achievements:")
         print("✅ Comprehensive test suite implemented")
-        print("✅ 90% minimum code coverage achieved")  
+        print("✅ 90% minimum code coverage achieved")
         print("✅ All service layer components tested")
         print("✅ API integration tests passing")
         print("✅ Database migration tests passing")
         print("✅ Performance requirements validated")
-        
+
         # Check if coverage reports were generated
         coverage_files = [
             "htmlcov/index.html",
             "coverage.xml",
             ".coverage"
         ]
-        
+
         print("\nCoverage reports generated:")
         for coverage_file in coverage_files:
             if os.path.exists(coverage_file):
                 print(f"✅ {coverage_file}")
             else:
                 print(f"❌ {coverage_file} (not found)")
-        
+
         return 0
     else:
         print(f"\n❌ {failed_tests} test command(s) failed. Please review the errors above.")
         print("\nNext steps:")
         print("1. Review failed test output")
-        print("2. Fix any issues in the codebase") 
+        print("2. Fix any issues in the codebase")
         print("3. Re-run tests to verify fixes")
         print("4. Ensure 90% code coverage is achieved")
-        
+
         return 1
 
 

@@ -1,0 +1,63 @@
+title: Database Performance Degradation Response
+service: database_performance
+database_type: multi
+severity: high
+rto_target: 60
+rpo_target: 0
+last_updated: '2025-10-11T12:00:00.000000'
+
+detection:
+  symptoms:
+  - Slow query response times (> 2 seconds)
+  - High CPU/memory usage
+  - Connection pool exhaustion
+  - Lock contention
+  monitoring_commands:
+  - command: psql -c "SELECT * FROM pg_stat_activity WHERE state = 'active'"
+    expected_result: No long-running queries
+    failure_indication: Multiple queries > 10 seconds
+  log_locations:
+  - /var/log/postgresql/
+  - violentutf_api/fastapi_app/logs/
+
+immediate_response:
+  alert_team: Database and Development teams
+  escalation_trigger: Performance degradation > 1 hour
+  initial_actions:
+  - action: Identify slow queries
+    command: python3 scripts/change-management/incident/analyze_slow_queries.py
+    timeout: 5 minutes
+  - action: Check resource utilization
+    command: python3 scripts/change-management/incident/resource_check.py
+    timeout: 2 minutes
+
+recovery_steps:
+- step_number: 1
+  title: Identify performance bottleneck
+  description: Determine root cause of degradation
+  estimated_time_minutes: 10
+  commands:
+  - python3 scripts/change-management/incident/performance_analysis.py
+  - psql -c "SELECT * FROM pg_stat_statements ORDER BY total_time DESC LIMIT 10"
+
+- step_number: 2
+  title: Apply immediate optimizations
+  description: Kill long-running queries, optimize indexes
+  estimated_time_minutes: 15
+  commands:
+  - python3 scripts/change-management/incident/optimize_queries.py
+  - python3 scripts/change-management/incident/rebuild_indexes.py --if-needed
+
+- step_number: 3
+  title: Validate performance restoration
+  description: Verify response times return to normal
+  estimated_time_minutes: 5
+  commands:
+  - python3 scripts/change-management/incident/performance_test.py
+  - psql -c "SELECT * FROM pg_stat_database"
+
+validation:
+  performance_validation:
+    response_time: Database queries < 2 seconds
+    cpu_usage: < 70%
+    memory_usage: < 80%

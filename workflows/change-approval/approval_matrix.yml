@@ -1,0 +1,31 @@
+emergency:
+  approvers_required: 0
+  notification:
+  - oncall
+  - dba_team
+  post_review: true
+major:
+  additional_requirements:
+  - adr
+  - testing_plan
+  approver_roles:
+  - dba
+  - tech_lead
+  - architect
+  approvers_required: 2
+  notification:
+  - all_engineering
+  - management
+normal:
+  approver_roles:
+  - dba
+  - tech_lead
+  approvers_required: 1
+  notification:
+  - dba_team
+  - submitter
+standard:
+  approvers_required: 0
+  notification:
+  - dba_team
+  pre_approved: true

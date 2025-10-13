@@ -10,6 +10,7 @@ This module provides comprehensive unit tests for the ConflictResolutionService 
 covering duplicate detection algorithms, confidence scoring, and resolution strategies.
 """
 
+import tempfile
 import uuid
 from datetime import datetime, timezone
 
@@ -29,11 +30,11 @@ from app.services.asset_management.conflict_resolution_service import (
 
 class TestConflictResolutionService:
     """Test cases for ConflictResolutionService class."""
-    
+
     @pytest.mark.asyncio
     async def test_detect_conflicts_exact_identifier_match(
-        self, 
-        async_session: AsyncSession, 
+        self,
+        async_session: AsyncSession,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test conflict detection with exact identifier match."""
@@ -55,33 +56,33 @@ class TestConflictResolutionService:
         async_session.add(existing_asset)
         await async_session.commit()
         await async_session.refresh(existing_asset)
-        
+
         # New asset with same identifier
         new_asset = AssetCreate(
             name="New Asset",
             asset_type=AssetType.SQLITE,
             unique_identifier="duplicate-identifier",  # Same as existing
-            location="/tmp/new.db",
+            location=tempfile.mktemp(suffix=".db"),
             security_classification=SecurityClassification.PUBLIC,
             criticality_level=CriticalityLevel.LOW,
             environment=Environment.TESTING,
             discovery_method="automated",
             confidence_score=90
         )
-        
+
         # Act
         conflicts = await conflict_resolution_service.detect_conflicts(new_asset)
-        
+
         # Assert
         assert len(conflicts) == 1
         assert conflicts[0].conflict_type == ConflictType.EXACT_IDENTIFIER
         assert conflicts[0].confidence_score == 1.0  # Perfect match
         assert conflicts[0].existing_asset.id == existing_asset.id
-    
+
     @pytest.mark.asyncio
     async def test_detect_conflicts_similar_attributes(
-        self, 
-        async_session: AsyncSession, 
+        self,
+        async_session: AsyncSession,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test conflict detection with similar attributes."""
@@ -103,7 +104,7 @@ class TestConflictResolutionService:
         async_session.add(existing_asset)
         await async_session.commit()
         await async_session.refresh(existing_asset)
-        
+
         # New asset with similar attributes but different identifier
         similar_asset = AssetCreate(
             name="Production Database",  # Same name
@@ -116,24 +117,24 @@ class TestConflictResolutionService:
             discovery_method="manual",  # Different discovery method
             confidence_score=95
         )
-        
+
         # Act
         conflicts = await conflict_resolution_service.detect_conflicts(similar_asset)
-        
+
         # Assert
         assert len(conflicts) >= 1
         similarity_conflict = next(
-            (c for c in conflicts if c.conflict_type == ConflictType.SIMILAR_ATTRIBUTES), 
+            (c for c in conflicts if c.conflict_type == ConflictType.SIMILAR_ATTRIBUTES),
             None
         )
         assert similarity_conflict is not None
         assert similarity_conflict.confidence_score >= 0.85  # High similarity threshold
         assert similarity_conflict.existing_asset.id == existing_asset.id
-    
+
     @pytest.mark.asyncio
     async def test_detect_conflicts_no_matches(
-        self, 
-        async_session: AsyncSession, 
+        self,
+        async_session: AsyncSession,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test conflict detection with no matches."""
@@ -154,7 +155,7 @@ class TestConflictResolutionService:
         )
         async_session.add(existing_asset)
         await async_session.commit()
-        
+
         # Completely different asset
         different_asset = AssetCreate(
             name="Analytics DuckDB",
@@ -167,16 +168,16 @@ class TestConflictResolutionService:
             discovery_method="automated",
             confidence_score=80
         )
-        
+
         # Act
         conflicts = await conflict_resolution_service.detect_conflicts(different_asset)
-        
+
         # Assert
         assert len(conflicts) == 0
-    
+
     @pytest.mark.asyncio
     async def test_calculate_similarity_score_high_similarity(
-        self, 
+        self,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test similarity score calculation for highly similar assets."""
@@ -190,7 +191,7 @@ class TestConflictResolutionService:
             criticality_level=CriticalityLevel.HIGH,
             environment=Environment.PRODUCTION
         )
-        
+
         new_asset = AssetCreate(
             name="Main Database",  # Same name
             asset_type=AssetType.POSTGRESQL,  # Same type
@@ -202,16 +203,16 @@ class TestConflictResolutionService:
             discovery_method="automated",
             confidence_score=95
         )
-        
+
         # Act
         similarity_score = conflict_resolution_service.calculate_similarity_score(new_asset, existing_asset)
-        
+
         # Assert
         assert similarity_score >= 0.9  # Very high similarity
-    
+
     @pytest.mark.asyncio
     async def test_calculate_similarity_score_medium_similarity(
-        self, 
+        self,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test similarity score calculation for moderately similar assets."""
@@ -225,7 +226,7 @@ class TestConflictResolutionService:
             criticality_level=CriticalityLevel.CRITICAL,
             environment=Environment.PRODUCTION
         )
-        
+
         new_asset = AssetCreate(
             name="Database Server",  # Same name
             asset_type=AssetType.POSTGRESQL,  # Same type
@@ -237,16 +238,16 @@ class TestConflictResolutionService:
             discovery_method="automated",
             confidence_score=90
         )
-        
+
         # Act
         similarity_score = conflict_resolution_service.calculate_similarity_score(new_asset, existing_asset)
-        
+
         # Assert
         assert 0.5 <= similarity_score < 0.9  # Medium similarity
-    
+
     @pytest.mark.asyncio
     async def test_calculate_similarity_score_low_similarity(
-        self, 
+        self,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test similarity score calculation for low similarity assets."""
@@ -260,27 +261,27 @@ class TestConflictResolutionService:
             criticality_level=CriticalityLevel.CRITICAL,
             environment=Environment.PRODUCTION
         )
-        
+
         new_asset = AssetCreate(
             name="Test SQLite",  # Different name
             asset_type=AssetType.SQLITE,  # Different type
             unique_identifier="test-sqlite-001",  # Different identifier
-            location="/tmp/test.db",  # Different location
+            location=tempfile.mktemp(suffix=".db"),  # Different location
             security_classification=SecurityClassification.PUBLIC,  # Different classification
             criticality_level=CriticalityLevel.LOW,  # Different criticality
             environment=Environment.TESTING,  # Different environment
             discovery_method="manual",
             confidence_score=80
         )
-        
+
         # Act
         similarity_score = conflict_resolution_service.calculate_similarity_score(new_asset, existing_asset)
-        
+
         # Assert
         assert similarity_score < 0.5  # Low similarity
-    
+
     def test_resolve_conflict_automatically_exact_match_high_confidence(
-        self, 
+        self,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test automatic resolution for exact match with high confidence."""
@@ -289,13 +290,13 @@ class TestConflictResolutionService:
             name="Exact Match Asset",
             unique_identifier="exact-match-001"
         )
-        
+
         conflict = ConflictCandidate(
             existing_asset=existing_asset,
             conflict_type=ConflictType.EXACT_IDENTIFIER,
             confidence_score=0.95
         )
-        
+
         new_asset = AssetCreate(
             name="Same Asset",
             asset_type=AssetType.POSTGRESQL,
@@ -307,17 +308,17 @@ class TestConflictResolutionService:
             discovery_method="automated",
             confidence_score=98
         )
-        
+
         # Act
         resolution = conflict_resolution_service.resolve_conflict_automatically(conflict, new_asset)
-        
+
         # Assert
         assert resolution.action == ResolutionAction.MERGE
         assert resolution.automatic is True
         assert "Exact identifier match with high confidence" in resolution.reason
-    
+
     def test_resolve_conflict_automatically_similar_high_confidence(
-        self, 
+        self,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test automatic resolution for similar attributes with high confidence."""
@@ -326,13 +327,13 @@ class TestConflictResolutionService:
             name="Similar Asset",
             unique_identifier="similar-001"
         )
-        
+
         conflict = ConflictCandidate(
             existing_asset=existing_asset,
             conflict_type=ConflictType.SIMILAR_ATTRIBUTES,
             confidence_score=0.92
         )
-        
+
         new_asset = AssetCreate(
             name="Similar Asset",
             asset_type=AssetType.POSTGRESQL,
@@ -344,17 +345,17 @@ class TestConflictResolutionService:
             discovery_method="automated",
             confidence_score=95
         )
-        
+
         # Act
         resolution = conflict_resolution_service.resolve_conflict_automatically(conflict, new_asset)
-        
+
         # Assert
         assert resolution.action == ResolutionAction.MANUAL_REVIEW
         assert resolution.automatic is False
         assert "High similarity requires manual review" in resolution.reason
-    
+
     def test_resolve_conflict_automatically_low_confidence(
-        self, 
+        self,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test automatic resolution for low confidence similarity."""
@@ -363,13 +364,13 @@ class TestConflictResolutionService:
             name="Different Asset",
             unique_identifier="different-001"
         )
-        
+
         conflict = ConflictCandidate(
             existing_asset=existing_asset,
             conflict_type=ConflictType.SIMILAR_ATTRIBUTES,
             confidence_score=0.70
         )
-        
+
         new_asset = AssetCreate(
             name="Somewhat Similar Asset",
             asset_type=AssetType.POSTGRESQL,
@@ -381,19 +382,19 @@ class TestConflictResolutionService:
             discovery_method="automated",
             confidence_score=85
         )
-        
+
         # Act
         resolution = conflict_resolution_service.resolve_conflict_automatically(conflict, new_asset)
-        
+
         # Assert
         assert resolution.action == ResolutionAction.CREATE_SEPARATE
         assert resolution.automatic is True
         assert "Low similarity confidence, treating as separate asset" in resolution.reason
-    
+
     @pytest.mark.asyncio
     async def test_find_exact_identifier_match(
-        self, 
-        async_session: AsyncSession, 
+        self,
+        async_session: AsyncSession,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test finding exact identifier matches."""
@@ -416,32 +417,32 @@ class TestConflictResolutionService:
         async_session.add(existing_asset)
         await async_session.commit()
         await async_session.refresh(existing_asset)
-        
+
         # Act
         found_asset = await conflict_resolution_service.find_exact_identifier_match(target_identifier)
-        
+
         # Assert
         assert found_asset is not None
         assert found_asset.id == existing_asset.id
         assert found_asset.unique_identifier == target_identifier
-    
+
     @pytest.mark.asyncio
     async def test_find_exact_identifier_match_not_found(
-        self, 
-        async_session: AsyncSession, 
+        self,
+        async_session: AsyncSession,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test finding exact identifier match when none exists."""
         # Act
         found_asset = await conflict_resolution_service.find_exact_identifier_match("non-existent-identifier")
-        
+
         # Assert
         assert found_asset is None
-    
+
     @pytest.mark.asyncio
     async def test_find_similar_assets(
-        self, 
-        async_session: AsyncSession, 
+        self,
+        async_session: AsyncSession,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test finding similar assets based on name, location, and type."""
@@ -490,11 +491,11 @@ class TestConflictResolutionService:
                 updated_by="analytics_system"
             )
         ]
-        
+
         for asset in assets:
             async_session.add(asset)
         await async_session.commit()
-        
+
         # Test finding similar PostgreSQL databases
         new_asset = AssetCreate(
             name="Production Database",  # Same as first asset
@@ -507,23 +508,23 @@ class TestConflictResolutionService:
             discovery_method="automated",
             confidence_score=97
         )
-        
+
         # Act
         similar_assets = await conflict_resolution_service.find_similar_assets(new_asset)
-        
+
         # Assert
         assert len(similar_assets) >= 1
-        
+
         # Should find the first asset as most similar
         most_similar = similar_assets[0]
         assert most_similar.name == "Production Database"
         assert most_similar.asset_type == AssetType.POSTGRESQL
         assert most_similar.location == "prod-server:5432"
-    
+
     @pytest.mark.asyncio
     async def test_conflict_resolution_with_multiple_candidates(
-        self, 
-        async_session: AsyncSession, 
+        self,
+        async_session: AsyncSession,
         conflict_resolution_service: ConflictResolutionService
     ):
         """Test conflict resolution with multiple candidate matches."""
@@ -558,11 +559,11 @@ class TestConflictResolutionService:
                 updated_by="dba"
             )
         ]
-        
+
         for asset in assets:
             async_session.add(asset)
         await async_session.commit()
-        
+
         # New asset similar to both existing assets
         new_asset = AssetCreate(
             name="Main Database",  # Same name as both
@@ -575,30 +576,30 @@ class TestConflictResolutionService:
             discovery_method="automated",
             confidence_score=93
         )
-        
+
         # Act
         conflicts = await conflict_resolution_service.detect_conflicts(new_asset)
-        
+
         # Assert
         assert len(conflicts) >= 2  # Should detect conflicts with both existing assets
-        
+
         # Conflicts should be sorted by confidence score (highest first)
         assert conflicts[0].confidence_score >= conflicts[1].confidence_score
-        
+
         # All conflicts should be similar attributes type (no exact identifier match)
         for conflict in conflicts:
             assert conflict.conflict_type == ConflictType.SIMILAR_ATTRIBUTES
-    
+
     @pytest.mark.asyncio
     async def test_conflict_resolution_threshold_configuration(
-        self, 
+        self,
         async_session: AsyncSession
     ):
         """Test that similarity threshold can be configured."""
         # Arrange - Create service with custom threshold
         custom_threshold = 0.75
         custom_service = ConflictResolutionService(async_session, similarity_threshold=custom_threshold)
-        
+
         # Create existing asset
         existing_asset = DatabaseAsset(
             name="Threshold Test",
@@ -616,27 +617,27 @@ class TestConflictResolutionService:
         )
         async_session.add(existing_asset)
         await async_session.commit()
-        
+
         # Create new asset with moderate similarity
         moderate_similarity_asset = AssetCreate(
             name="Threshold Test",  # Same name
             asset_type=AssetType.SQLITE,  # Different type
             unique_identifier="threshold-002",
-            location="/tmp/test.db",  # Different location
+            location=tempfile.mktemp(suffix=".db"),  # Different location
             security_classification=SecurityClassification.PUBLIC,  # Different classification
             criticality_level=CriticalityLevel.LOW,  # Different criticality
             environment=Environment.TESTING,  # Different environment
             discovery_method="automated",
             confidence_score=85
         )
-        
+
         # Act
         conflicts = await custom_service.detect_conflicts(moderate_similarity_asset)
-        
+
         # Assert - The result depends on whether the calculated similarity meets the threshold
         # This tests that the threshold is being applied correctly
         if conflicts:
             assert all(c.confidence_score >= custom_threshold for c in conflicts)
-        
+
         # Verify the threshold is actually being used
         assert custom_service.similarity_threshold == custom_threshold

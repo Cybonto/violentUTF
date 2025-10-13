@@ -91,11 +91,11 @@ class TestImportResolution:
                 LargeDatasetUIOptimization,
                 UserGuidanceSystem
             ]
-            
+
             for component in components:
                 assert component is not None
                 assert hasattr(component, '__init__')
-                
+
         except ImportError as e:
             pytest.fail(f"Failed to import all components together: {e}")
 
@@ -111,7 +111,7 @@ class TestComponentInstantiation:
         mock_session_state.__contains__ = lambda self, key: False
         mock_session_state.__setitem__ = lambda self, key, value: None
         mock_session_state.__getitem__ = lambda self, key: None
-        
+
         with patch('streamlit.session_state', mock_session_state), \
              patch('streamlit.write'), \
              patch('streamlit.error'), \
@@ -131,7 +131,7 @@ class TestComponentInstantiation:
             selector = NativeDatasetSelector()
             assert selector is not None
             assert hasattr(selector, 'display_dataset_categories')
-                
+
         except Exception as e:
             pytest.fail(f"Failed to instantiate NativeDatasetSelector: {e}")
 
@@ -144,7 +144,7 @@ class TestComponentInstantiation:
             preview = DatasetPreviewComponent()
             assert preview is not None
             assert hasattr(preview, 'display_preview')
-                
+
         except Exception as e:
             pytest.fail(f"Failed to instantiate DatasetPreviewComponent: {e}")
 
@@ -157,7 +157,7 @@ class TestComponentInstantiation:
             config = SpecializedConfigurationInterface()
             assert config is not None
             assert hasattr(config, 'display_configuration')
-                
+
         except Exception as e:
             pytest.fail(f"Failed to instantiate SpecializedConfigurationInterface: {e}")
 
@@ -170,7 +170,7 @@ class TestComponentInstantiation:
             guidance = UserGuidanceSystem()
             assert guidance is not None
             assert hasattr(guidance, 'display_guidance')
-                
+
         except Exception as e:
             pytest.fail(f"Failed to instantiate UserGuidanceSystem: {e}")
 
@@ -183,7 +183,7 @@ class TestComponentInstantiation:
             optimizer = LargeDatasetUIOptimization()
             assert optimizer is not None
             assert hasattr(optimizer, 'optimize_ui_responsiveness')
-                
+
         except Exception as e:
             pytest.fail(f"Failed to instantiate LargeDatasetUIOptimization: {e}")
 
@@ -194,40 +194,40 @@ class TestCrossContextImports:
     def test_import_from_different_working_directory(self):
         """Test imports work when executed from different working directories."""
         original_cwd = os.getcwd()
-        
+
         try:
             # Create temporary directory and change to it
             with tempfile.TemporaryDirectory() as temp_dir:
                 os.chdir(temp_dir)
-                
+
                 # Ensure violentutf is still importable
                 from violentutf.components.dataset_selector import NativeDatasetSelector
                 from violentutf.utils.specialized_workflows import UserGuidanceSystem
-                
+
                 assert NativeDatasetSelector is not None
                 assert UserGuidanceSystem is not None
-                
+
         finally:
             os.chdir(original_cwd)
 
     def test_import_with_modified_python_path(self):
         """Test imports work with modified Python path."""
         original_path = sys.path.copy()
-        
+
         try:
             # Remove current directory from path to simulate different context
             if '' in sys.path:
                 sys.path.remove('')
             if '.' in sys.path:
                 sys.path.remove('.')
-                
+
             # Should still work with absolute imports
             from violentutf.components.dataset_preview import DatasetPreviewComponent
             from violentutf.utils.dataset_ui_components import LargeDatasetUIOptimization
-            
+
             assert DatasetPreviewComponent is not None
             assert LargeDatasetUIOptimization is not None
-            
+
         finally:
             sys.path = original_path
 
@@ -239,19 +239,19 @@ class TestErrorHandling:
         """Test graceful handling when a component is missing."""
         # Simulate missing component by temporarily removing from sys.modules
         component_name = 'violentutf.components.dataset_selector'
-        
+
         if component_name in sys.modules:
             original_module = sys.modules[component_name]
             del sys.modules[component_name]
         else:
             original_module = None
-            
+
         try:
             # Mock the import to raise ImportError
             with patch.dict('sys.modules', {component_name: None}):
                 with pytest.raises(ImportError):
                     from violentutf.components.dataset_selector import NativeDatasetSelector
-                    
+
         finally:
             # Restore original module if it existed
             if original_module is not None:
@@ -261,7 +261,7 @@ class TestErrorHandling:
         """Test handling of component initialization errors."""
         from violentutf.components.dataset_selector import NativeDatasetSelector
 
-        # Mock Streamlit session state access to raise an error during initialization  
+        # Mock Streamlit session state access to raise an error during initialization
         with patch('streamlit.session_state') as mock_session:
             mock_session.__contains__ = lambda key: False
             mock_session.__setitem__ = lambda key, value: None
@@ -277,13 +277,13 @@ class TestIntegrationWithStreamlitPage:
     def test_imports_in_configure_datasets_context(self):
         """Test that imports work in the context of 2_Configure_Datasets.py."""
         # This test simulates the exact import context from the Streamlit page
-        
+
         # Create a mock session state object that behaves like Streamlit's
         mock_session_state = MagicMock()
         mock_session_state.__contains__ = lambda self, key: False
         mock_session_state.__setitem__ = lambda self, key, value: None
         mock_session_state.__getitem__ = lambda self, key: None
-        
+
         # Mock Streamlit dependencies
         with patch('streamlit.session_state', mock_session_state), \
              patch('streamlit.write'), \
@@ -294,7 +294,7 @@ class TestIntegrationWithStreamlitPage:
              patch('streamlit.button'), \
              patch('streamlit.columns'), \
              patch('streamlit.expander'):
-            
+
             try:
                 # Execute the same imports as in the fixed code
                 from violentutf.components.dataset_configuration import SpecializedConfigurationInterface
@@ -318,10 +318,10 @@ class TestIntegrationWithStreamlitPage:
                     guidance_system,
                     ui_optimizer
                 ]
-                
+
                 for component in components:
                     assert component is not None
-                    
+
             except ImportError as e:
                 pytest.fail(f"Import failed in Streamlit page context: {e}")
             except Exception as e:

@@ -92,21 +92,21 @@ class TestRealWorldUserScenarios:
     through task completion, focusing on user experience and workflow
     intuitiveness.
     """
-    
+
     @pytest.fixture(autouse=True, scope="function")
     def setup_user_scenario_environment(self):
         """Setup test environment for user scenario testing."""
         self.test_session = f"user_scenario_test_{int(time.time())}"
         self.auth_client = KeycloakTestAuth()
         self.user_personas = create_user_personas()
-        
+
         # Setup test directory
         self.test_dir = Path(tempfile.mkdtemp(prefix="user_scenario_test_"))
         self.scenario_results_dir = self.test_dir / "scenario_results"
         self.scenario_results_dir.mkdir(exist_ok=True)
-        
+
         yield
-        
+
         # Cleanup
         import shutil
         if self.test_dir.exists():
@@ -149,7 +149,7 @@ class TestRealWorldUserScenarios:
                 "comprehensive_reporting": True
             }
         }
-        
+
         workflow_scenario = {
             "scenario_type": "security_assessment",
             "dataset_selection": "garak_red_team_comprehensive",
@@ -164,25 +164,25 @@ class TestRealWorldUserScenarios:
                 "monitor_progress", "review_results", "generate_report"
             ]
         }
-        
+
         # RED Phase: This will fail because security researcher workflow is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserScenarioManager is None:
                 raise ImportError("UserScenarioManager not implemented")
-            
+
             scenario_manager = UserScenarioManager(
                 session_id=self.test_session,
                 user_profile=researcher_profile
             )
             result = scenario_manager.execute_security_researcher_scenario(workflow_scenario)
-        
+
         # Validate expected failure
         assert any([
             "UserScenarioManager not implemented" in str(exc_info.value),
             "execute_security_researcher_scenario" in str(exc_info.value),
             "security researcher workflow" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_user_workflow("security_researcher_scenario", {
             "missing_classes": ["UserScenarioManager", "SecurityResearcherWorkflow"],
             "missing_methods": ["execute_security_researcher_scenario", "security_assessment_workflow"],
@@ -241,7 +241,7 @@ class TestRealWorldUserScenarios:
                 "audit_trail_logging": True
             }
         }
-        
+
         workflow_scenario = {
             "scenario_type": "compliance_assessment",
             "dataset_selection": "ollegen1_behavioral_assessment",
@@ -251,25 +251,25 @@ class TestRealWorldUserScenarios:
                 "compliance_thresholds": {"acceptable": 0.8, "concerning": 0.6, "non_compliant": 0.4}
             }
         }
-        
+
         # RED Phase: This will fail because compliance workflow is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserScenarioManager is None:
                 raise ImportError("UserScenarioManager not implemented")
-            
+
             scenario_manager = UserScenarioManager(
                 session_id=self.test_session,
                 user_profile=compliance_profile
             )
             result = scenario_manager.execute_compliance_officer_scenario(workflow_scenario)
-        
+
         # Validate expected failure
         assert any([
             "UserScenarioManager not implemented" in str(exc_info.value),
             "execute_compliance_officer_scenario" in str(exc_info.value),
             "compliance workflow" in str(exc_info.value).lower()
         ]), f"Unexpected error: {exc_info.value}"
-        
+
         self._document_missing_user_workflow("compliance_officer_scenario", {
             "missing_classes": ["UserScenarioManager", "ComplianceAssessmentWorkflow"],
             "missing_methods": ["execute_compliance_officer_scenario", "compliance_evaluation_workflow"],
@@ -315,7 +315,7 @@ class TestRealWorldUserScenarios:
                 "jurisdiction_specific_analysis": True
             }
         }
-        
+
         workflow_scenario = {
             "scenario_type": "legal_ai_evaluation",
             "dataset_selection": "legalbench_comprehensive",
@@ -325,21 +325,21 @@ class TestRealWorldUserScenarios:
                 "jurisdiction": "us_federal"
             }
         }
-        
+
         # RED Phase: This will fail because legal AI evaluation is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserScenarioManager is None:
                 raise ImportError("UserScenarioManager not implemented")
-            
+
             scenario_manager = UserScenarioManager(
                 session_id=self.test_session,
                 user_profile=legal_profile
             )
             result = scenario_manager.execute_legal_professional_scenario(workflow_scenario)
-        
+
         # Validate expected failure
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_user_workflow("legal_professional_scenario", {
             "missing_classes": ["UserScenarioManager", "LegalAIEvaluationWorkflow"],
             "missing_methods": ["execute_legal_professional_scenario", "legal_reasoning_evaluation"],
@@ -373,7 +373,7 @@ class TestRealWorldUserScenarios:
                 "privacy_risk_quantification": True
             }
         }
-        
+
         workflow_scenario = {
             "scenario_type": "privacy_assessment",
             "dataset_selection": "confaide_privacy_evaluation",
@@ -383,21 +383,21 @@ class TestRealWorldUserScenarios:
                 "assessment_frameworks": ["contextual_integrity", "privacy_by_design"]
             }
         }
-        
+
         # RED Phase: This will fail because privacy assessment workflow is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserScenarioManager is None:
                 raise ImportError("UserScenarioManager not implemented")
-            
+
             scenario_manager = UserScenarioManager(
                 session_id=self.test_session,
                 user_profile=privacy_profile
             )
             result = scenario_manager.execute_privacy_engineer_scenario(workflow_scenario)
-        
+
         # Validate expected failure
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_user_workflow("privacy_engineer_scenario", {
             "missing_classes": ["UserScenarioManager", "PrivacyAssessmentWorkflow"],
             "missing_methods": ["execute_privacy_engineer_scenario", "privacy_evaluation_workflow"],
@@ -431,7 +431,7 @@ class TestRealWorldUserScenarios:
                 "research_grade_reporting": True
             }
         }
-        
+
         workflow_scenario = {
             "scenario_type": "comprehensive_research_evaluation",
             "dataset_selection": "multi_domain_research_suite",
@@ -441,21 +441,21 @@ class TestRealWorldUserScenarios:
                 "analysis_methods": ["statistical_comparison", "correlation_analysis", "benchmark_ranking"]
             }
         }
-        
+
         # RED Phase: This will fail because comprehensive research workflow is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserScenarioManager is None:
                 raise ImportError("UserScenarioManager not implemented")
-            
+
             scenario_manager = UserScenarioManager(
                 session_id=self.test_session,
                 user_profile=researcher_profile
             )
             result = scenario_manager.execute_ai_researcher_scenario(workflow_scenario)
-        
+
         # Validate expected failure
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_user_workflow("ai_researcher_scenario", {
             "missing_classes": ["UserScenarioManager", "ComprehensiveResearchWorkflow"],
             "missing_methods": ["execute_ai_researcher_scenario", "multi_domain_research_evaluation"],
@@ -489,7 +489,7 @@ class TestRealWorldUserScenarios:
                 "governance_and_audit": True
             }
         }
-        
+
         workflow_scenario = {
             "scenario_type": "enterprise_deployment",
             "user_roles": ["admin", "security_analyst", "compliance_officer", "researcher"],
@@ -499,21 +499,21 @@ class TestRealWorldUserScenarios:
                 "enterprise_reporting": True
             }
         }
-        
+
         # RED Phase: This will fail because enterprise deployment is not implemented
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             if UserScenarioManager is None:
                 raise ImportError("UserScenarioManager not implemented")
-            
+
             scenario_manager = UserScenarioManager(
                 session_id=self.test_session,
                 user_profile=enterprise_profile
             )
             result = scenario_manager.execute_enterprise_deployment_scenario(workflow_scenario)
-        
+
         # Validate expected failure
         assert "not implemented" in str(exc_info.value).lower()
-        
+
         self._document_missing_user_workflow("enterprise_deployment_scenario", {
             "missing_classes": ["UserScenarioManager", "EnterpriseDeploymentWorkflow"],
             "missing_methods": ["execute_enterprise_deployment_scenario", "multi_user_coordination"],
@@ -553,12 +553,12 @@ class TestRealWorldUserScenarios:
                 ]
             }
         }
-        
+
         # Write documentation to results directory
         doc_file = self.scenario_results_dir / f"{scenario_name}_missing_functionality.json"
         with open(doc_file, "w") as f:
             json.dump(documentation, f, indent=2)
-        
+
         print(f"\n[TDD RED PHASE] Missing user workflow documented for {scenario_name}")
         print(f"Documentation saved to: {doc_file}")
         print(f"Key missing user features: {missing_info.get('required_user_features', [])[:3]}")
@@ -568,7 +568,7 @@ class TestUserExperienceValidation:
     """
     Test user experience aspects across all user scenarios.
     """
-    
+
     def test_user_interface_responsiveness(self):
         """
         Test user interface responsiveness across all scenarios
@@ -578,10 +578,10 @@ class TestUserExperienceValidation:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.ui_performance import UIPerformanceTester
-            
+
             ui_tester = UIPerformanceTester()
             responsiveness_metrics = ui_tester.test_interface_responsiveness()
-            
+
         assert "not implemented" in str(exc_info.value).lower()
 
     def test_user_workflow_intuitiveness(self):
@@ -593,10 +593,10 @@ class TestUserExperienceValidation:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.workflow_usability import WorkflowUsabilityTester
-            
+
             usability_tester = WorkflowUsabilityTester()
             intuitiveness_score = usability_tester.measure_workflow_intuitiveness()
-            
+
         assert "not implemented" in str(exc_info.value).lower()
 
     def test_error_handling_user_experience(self):
@@ -608,8 +608,8 @@ class TestUserExperienceValidation:
         """
         with pytest.raises((ImportError, AttributeError, NotImplementedError)) as exc_info:
             from violentutf_api.fastapi_app.app.testing.error_ux import ErrorUserExperienceTester
-            
+
             error_ux_tester = ErrorUserExperienceTester()
             error_handling_score = error_ux_tester.test_error_user_experience()
-            
+
         assert "not implemented" in str(exc_info.value).lower()

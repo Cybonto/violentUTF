@@ -10,6 +10,7 @@ This module provides comprehensive unit tests for all database models
 including DatabaseAsset, AssetRelationship, and AssetAuditLog.
 """
 
+import tempfile
 import uuid
 from datetime import datetime, timezone
 
@@ -34,7 +35,7 @@ from app.models.asset_inventory import (
 
 class TestDatabaseAssetModel:
     """Test cases for DatabaseAsset model."""
-    
+
     @pytest.mark.asyncio
     async def test_create_database_asset_success(self, async_session: AsyncSession):
         """Test successful creation of a database asset."""
@@ -53,13 +54,13 @@ class TestDatabaseAssetModel:
             "created_by": "test_user",
             "updated_by": "test_user"
         }
-        
+
         # Act
         asset = DatabaseAsset(**asset_data)
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         # Assert
         assert asset.id is not None
         assert isinstance(asset.id, uuid.UUID)
@@ -69,7 +70,7 @@ class TestDatabaseAssetModel:
         assert asset.is_deleted is False
         assert asset.created_at is not None
         assert asset.updated_at is not None
-    
+
     @pytest.mark.asyncio
     async def test_database_asset_required_fields(self, async_session: AsyncSession):
         """Test that required fields are enforced."""
@@ -90,7 +91,7 @@ class TestDatabaseAssetModel:
             )
             async_session.add(asset)
             await async_session.commit()
-    
+
     @pytest.mark.asyncio
     async def test_database_asset_unique_identifier_constraint(self, async_session: AsyncSession):
         """Test unique identifier constraint."""
@@ -111,7 +112,7 @@ class TestDatabaseAssetModel:
         )
         async_session.add(asset1)
         await async_session.commit()
-        
+
         # Try to create second asset with same unique_identifier
         with pytest.raises(IntegrityError):
             asset2 = DatabaseAsset(
@@ -130,7 +131,7 @@ class TestDatabaseAssetModel:
             )
             async_session.add(asset2)
             await async_session.commit()
-    
+
     @pytest.mark.asyncio
     async def test_database_asset_enum_validation(self, async_session: AsyncSession):
         """Test enum field validation."""
@@ -149,17 +150,17 @@ class TestDatabaseAssetModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         assert asset.asset_type == AssetType.DUCKDB
         assert asset.security_classification == SecurityClassification.CONFIDENTIAL
         assert asset.criticality_level == CriticalityLevel.HIGH
         assert asset.environment == Environment.PRODUCTION
         assert asset.validation_status == ValidationStatus.VALIDATED
-    
+
     @pytest.mark.asyncio
     async def test_database_asset_optional_fields(self, async_session: AsyncSession):
         """Test that optional fields can be None."""
@@ -194,15 +195,15 @@ class TestDatabaseAssetModel:
             compliance_requirements=None,
             documentation_url=None
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         assert asset.connection_string is None
         assert asset.estimated_size_mb is None
         assert asset.technical_contact is None
-    
+
     @pytest.mark.asyncio
     async def test_database_asset_json_field(self, async_session: AsyncSession):
         """Test JSON field for compliance requirements."""
@@ -212,7 +213,7 @@ class TestDatabaseAssetModel:
             "pci_dss": True,
             "custom_requirements": ["encryption", "audit_trail"]
         }
-        
+
         asset = DatabaseAsset(
             name="Compliance Asset",
             asset_type=AssetType.POSTGRESQL,
@@ -228,15 +229,15 @@ class TestDatabaseAssetModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         assert asset.compliance_requirements == compliance_data
         assert asset.compliance_requirements["gdpr"] is True
         assert asset.compliance_requirements["custom_requirements"] == ["encryption", "audit_trail"]
-    
+
     @pytest.mark.asyncio
     async def test_database_asset_soft_delete(self, async_session: AsyncSession):
         """Test soft delete functionality."""
@@ -254,23 +255,23 @@ class TestDatabaseAssetModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         # Perform soft delete
         asset.is_deleted = True
         asset.deleted_at = datetime.now(timezone.utc)
         asset.deleted_by = "admin_user"
-        
+
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         assert asset.is_deleted is True
         assert asset.deleted_at is not None
         assert asset.deleted_by == "admin_user"
-    
+
     def test_database_asset_repr(self):
         """Test string representation of DatabaseAsset."""
         asset = DatabaseAsset(
@@ -287,7 +288,7 @@ class TestDatabaseAssetModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         repr_str = repr(asset)
         assert "DatabaseAsset" in repr_str
         assert "Test Asset" in repr_str
@@ -296,7 +297,7 @@ class TestDatabaseAssetModel:
 
 class TestAssetRelationshipModel:
     """Test cases for AssetRelationship model."""
-    
+
     @pytest.mark.asyncio
     async def test_create_asset_relationship_success(self, async_session: AsyncSession):
         """Test successful creation of an asset relationship."""
@@ -315,7 +316,7 @@ class TestAssetRelationshipModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         target_asset = DatabaseAsset(
             name="Target Asset",
             asset_type=AssetType.SQLITE,
@@ -330,13 +331,13 @@ class TestAssetRelationshipModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(source_asset)
         async_session.add(target_asset)
         await async_session.commit()
         await async_session.refresh(source_asset)
         await async_session.refresh(target_asset)
-        
+
         # Create relationship
         relationship = AssetRelationship(
             source_asset_id=source_asset.id,
@@ -349,11 +350,11 @@ class TestAssetRelationshipModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(relationship)
         await async_session.commit()
         await async_session.refresh(relationship)
-        
+
         # Assert
         assert relationship.id is not None
         assert relationship.source_asset_id == source_asset.id
@@ -362,12 +363,12 @@ class TestAssetRelationshipModel:
         assert relationship.relationship_strength == RelationshipStrength.STRONG
         assert relationship.confidence_score == 88
         assert relationship.is_deleted is False
-    
+
     @pytest.mark.asyncio
     async def test_asset_relationship_foreign_key_constraints(self, async_session: AsyncSession):
         """Test foreign key constraints for asset relationships."""
         fake_uuid = uuid.uuid4()
-        
+
         # Try to create relationship with non-existent asset IDs
         with pytest.raises(IntegrityError):
             relationship = AssetRelationship(
@@ -380,7 +381,7 @@ class TestAssetRelationshipModel:
             )
             async_session.add(relationship)
             await async_session.commit()
-    
+
     @pytest.mark.asyncio
     async def test_asset_relationship_enum_values(self, async_session: AsyncSession):
         """Test all enum values for relationships."""
@@ -394,7 +395,7 @@ class TestAssetRelationshipModel:
             discovery_method="manual", discovery_timestamp=datetime.now(timezone.utc),
             confidence_score=95, created_by="test", updated_by="test"
         )
-        
+
         target_asset = DatabaseAsset(
             name="Target", asset_type=AssetType.DUCKDB,
             unique_identifier="rel-target", location="/data/target.duckdb",
@@ -404,13 +405,13 @@ class TestAssetRelationshipModel:
             discovery_method="manual", discovery_timestamp=datetime.now(timezone.utc),
             confidence_score=90, created_by="test", updated_by="test"
         )
-        
+
         async_session.add(source_asset)
         async_session.add(target_asset)
         await async_session.commit()
         await async_session.refresh(source_asset)
         await async_session.refresh(target_asset)
-        
+
         # Test different relationship types
         relationship_types = [
             RelationshipType.DEPENDS_ON,
@@ -419,14 +420,14 @@ class TestAssetRelationshipModel:
             RelationshipType.BACKED_UP_TO,
             RelationshipType.SERVES_DATA_TO
         ]
-        
+
         relationship_strengths = [
             RelationshipStrength.WEAK,
             RelationshipStrength.MEDIUM,
             RelationshipStrength.STRONG,
             RelationshipStrength.CRITICAL
         ]
-        
+
         for i, (rel_type, rel_strength) in enumerate(zip(relationship_types, relationship_strengths)):
             relationship = AssetRelationship(
                 source_asset_id=source_asset.id,
@@ -437,9 +438,9 @@ class TestAssetRelationshipModel:
                 confidence_score=80 + i
             )
             async_session.add(relationship)
-        
+
         await async_session.commit()
-        
+
         # Verify all relationships were created
         from sqlalchemy import select
         result = await async_session.execute(
@@ -447,7 +448,7 @@ class TestAssetRelationshipModel:
         )
         relationships = result.scalars().all()
         assert len(relationships) == 5
-    
+
     @pytest.mark.asyncio
     async def test_asset_relationship_bidirectional_flag(self, async_session: AsyncSession):
         """Test bidirectional relationship flag."""
@@ -461,7 +462,7 @@ class TestAssetRelationshipModel:
             discovery_method="manual", discovery_timestamp=datetime.now(timezone.utc),
             confidence_score=95, created_by="test", updated_by="test"
         )
-        
+
         asset2 = DatabaseAsset(
             name="Asset 2", asset_type=AssetType.SQLITE,
             unique_identifier="bidir-2", location="/tmp/asset2.db",
@@ -471,13 +472,13 @@ class TestAssetRelationshipModel:
             discovery_method="manual", discovery_timestamp=datetime.now(timezone.utc),
             confidence_score=90, created_by="test", updated_by="test"
         )
-        
+
         async_session.add(asset1)
         async_session.add(asset2)
         await async_session.commit()
         await async_session.refresh(asset1)
         await async_session.refresh(asset2)
-        
+
         # Create bidirectional relationship
         relationship = AssetRelationship(
             source_asset_id=asset1.id,
@@ -488,13 +489,13 @@ class TestAssetRelationshipModel:
             discovered_method="network_scan",
             confidence_score=85
         )
-        
+
         async_session.add(relationship)
         await async_session.commit()
         await async_session.refresh(relationship)
-        
+
         assert relationship.bidirectional is True
-    
+
     def test_asset_relationship_repr(self):
         """Test string representation of AssetRelationship."""
         relationship = AssetRelationship(
@@ -505,7 +506,7 @@ class TestAssetRelationshipModel:
             discovered_method="test",
             confidence_score=95
         )
-        
+
         repr_str = repr(relationship)
         assert "AssetRelationship" in repr_str
         assert "DEPENDS_ON" in repr_str
@@ -514,7 +515,7 @@ class TestAssetRelationshipModel:
 
 class TestAssetAuditLogModel:
     """Test cases for AssetAuditLog model."""
-    
+
     @pytest.mark.asyncio
     async def test_create_audit_log_success(self, async_session: AsyncSession):
         """Test successful creation of an audit log entry."""
@@ -533,11 +534,11 @@ class TestAssetAuditLogModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         # Create audit log
         audit_log = AssetAuditLog(
             asset_id=asset.id,
@@ -553,11 +554,11 @@ class TestAssetAuditLogModel:
             gdpr_relevant=False,
             soc2_relevant=True
         )
-        
+
         async_session.add(audit_log)
         await async_session.commit()
         await async_session.refresh(audit_log)
-        
+
         # Assert
         assert audit_log.id is not None
         assert audit_log.asset_id == asset.id
@@ -568,7 +569,7 @@ class TestAssetAuditLogModel:
         assert audit_log.change_source == "API"
         assert audit_log.compliance_relevant is True
         assert audit_log.timestamp is not None
-    
+
     @pytest.mark.asyncio
     async def test_audit_log_all_change_types(self, async_session: AsyncSession):
         """Test all change types in audit log."""
@@ -587,14 +588,14 @@ class TestAssetAuditLogModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         # Test all change types
         change_types = [ChangeType.CREATE, ChangeType.UPDATE, ChangeType.DELETE, ChangeType.VALIDATE]
-        
+
         for i, change_type in enumerate(change_types):
             audit_log = AssetAuditLog(
                 asset_id=asset.id,
@@ -607,9 +608,9 @@ class TestAssetAuditLogModel:
                 change_source="TEST"
             )
             async_session.add(audit_log)
-        
+
         await async_session.commit()
-        
+
         # Verify all audit logs were created
         from sqlalchemy import select
         result = await async_session.execute(
@@ -617,10 +618,10 @@ class TestAssetAuditLogModel:
         )
         audit_logs = result.scalars().all()
         assert len(audit_logs) == 4
-        
+
         created_change_types = {log.change_type for log in audit_logs}
         assert created_change_types == set(change_types)
-    
+
     @pytest.mark.asyncio
     async def test_audit_log_compliance_flags(self, async_session: AsyncSession):
         """Test compliance-related flags in audit log."""
@@ -639,11 +640,11 @@ class TestAssetAuditLogModel:
             created_by="compliance_user",
             updated_by="compliance_user"
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         # Create audit log with all compliance flags
         audit_log = AssetAuditLog(
             asset_id=asset.id,
@@ -658,20 +659,20 @@ class TestAssetAuditLogModel:
             gdpr_relevant=True,
             soc2_relevant=True
         )
-        
+
         async_session.add(audit_log)
         await async_session.commit()
         await async_session.refresh(audit_log)
-        
+
         assert audit_log.compliance_relevant is True
         assert audit_log.gdpr_relevant is True
         assert audit_log.soc2_relevant is True
-    
+
     @pytest.mark.asyncio
     async def test_audit_log_foreign_key_constraint(self, async_session: AsyncSession):
         """Test foreign key constraint for audit log."""
         fake_asset_id = uuid.uuid4()
-        
+
         # Try to create audit log with non-existent asset ID
         with pytest.raises(IntegrityError):
             audit_log = AssetAuditLog(
@@ -682,7 +683,7 @@ class TestAssetAuditLogModel:
             )
             async_session.add(audit_log)
             await async_session.commit()
-    
+
     @pytest.mark.asyncio
     async def test_audit_log_timestamp_auto_generation(self, async_session: AsyncSession):
         """Test that timestamp is automatically generated."""
@@ -701,31 +702,31 @@ class TestAssetAuditLogModel:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         # Create audit log without explicit timestamp
         before_creation = datetime.now(timezone.utc)
-        
+
         audit_log = AssetAuditLog(
             asset_id=asset.id,
             change_type=ChangeType.CREATE,
             changed_by="test_user",
             change_source="API"
         )
-        
+
         async_session.add(audit_log)
         await async_session.commit()
         await async_session.refresh(audit_log)
-        
+
         after_creation = datetime.now(timezone.utc)
-        
+
         # Verify timestamp was auto-generated and is within expected range
         assert audit_log.timestamp is not None
         assert before_creation <= audit_log.timestamp <= after_creation
-    
+
     def test_audit_log_repr(self):
         """Test string representation of AssetAuditLog."""
         asset_id = uuid.uuid4()
@@ -735,7 +736,7 @@ class TestAssetAuditLogModel:
             changed_by="test_user",
             change_source="API"
         )
-        
+
         repr_str = repr(audit_log)
         assert "AssetAuditLog" in repr_str
         assert str(asset_id) in repr_str
@@ -744,7 +745,7 @@ class TestAssetAuditLogModel:
 
 class TestModelRelationships:
     """Test relationships between models."""
-    
+
     @pytest.mark.asyncio
     async def test_asset_relationships_navigation(self, async_session: AsyncSession):
         """Test navigation through asset relationships."""
@@ -763,12 +764,12 @@ class TestModelRelationships:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         target_asset = DatabaseAsset(
             name="Target Asset",
             asset_type=AssetType.SQLITE,
             unique_identifier="nav-target",
-            location="/tmp/target.db",
+            location=tempfile.mktemp(suffix=".db"),
             security_classification=SecurityClassification.INTERNAL,
             criticality_level=CriticalityLevel.LOW,
             environment=Environment.TESTING,
@@ -778,13 +779,13 @@ class TestModelRelationships:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(source_asset)
         async_session.add(target_asset)
         await async_session.commit()
         await async_session.refresh(source_asset)
         await async_session.refresh(target_asset)
-        
+
         # Create relationship
         relationship = AssetRelationship(
             source_asset_id=source_asset.id,
@@ -794,11 +795,11 @@ class TestModelRelationships:
             discovered_method="test",
             confidence_score=85
         )
-        
+
         async_session.add(relationship)
         await async_session.commit()
         await async_session.refresh(relationship)
-        
+
         # Test relationship navigation
         from sqlalchemy import select
         from sqlalchemy.orm import selectinload
@@ -810,10 +811,10 @@ class TestModelRelationships:
             .where(DatabaseAsset.id == source_asset.id)
         )
         loaded_source = result.scalar_one()
-        
+
         assert len(loaded_source.source_relationships) == 1
         assert loaded_source.source_relationships[0].target_asset_id == target_asset.id
-    
+
     @pytest.mark.asyncio
     async def test_asset_audit_logs_navigation(self, async_session: AsyncSession):
         """Test navigation to audit logs from asset."""
@@ -832,11 +833,11 @@ class TestModelRelationships:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(asset)
         await async_session.commit()
         await async_session.refresh(asset)
-        
+
         # Create multiple audit logs
         for i in range(3):
             audit_log = AssetAuditLog(
@@ -848,22 +849,22 @@ class TestModelRelationships:
                 change_source="API"
             )
             async_session.add(audit_log)
-        
+
         await async_session.commit()
-        
+
         # Test audit log navigation
         from sqlalchemy import select
         from sqlalchemy.orm import selectinload
-        
+
         result = await async_session.execute(
             select(DatabaseAsset)
             .options(selectinload(DatabaseAsset.audit_logs))
             .where(DatabaseAsset.id == asset.id)
         )
         loaded_asset = result.scalar_one()
-        
+
         assert len(loaded_asset.audit_logs) == 3
-        
+
         # Verify all audit logs belong to this asset
         for audit_log in loaded_asset.audit_logs:
             assert audit_log.asset_id == asset.id

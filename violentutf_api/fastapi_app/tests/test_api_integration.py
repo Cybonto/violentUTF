@@ -25,7 +25,7 @@ from app.models.asset_inventory import AssetType, CriticalityLevel, DatabaseAsse
 
 class TestAssetAPIIntegration:
     """Integration tests for Asset Management API endpoints."""
-    
+
     # Test data for API requests
     @pytest.fixture
     def valid_asset_payload(self) -> Dict[str, Any]:
@@ -45,13 +45,13 @@ class TestAssetAPIIntegration:
             "backup_configured": True,
             "compliance_requirements": {"gdpr": True, "soc2": False}
         }
-    
+
     @pytest.fixture
     def auth_headers(self, mock_current_user: Dict[str, str]) -> Dict[str, str]:
         """Mock authentication headers."""
         # In real implementation, this would be a JWT token
         return {"Authorization": "Bearer mock_jwt_token"}
-    
+
     @pytest.mark.asyncio
     async def test_create_asset_success(
         self,
@@ -66,11 +66,11 @@ class TestAssetAPIIntegration:
             json=valid_asset_payload,
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 201
         response_data = response.json()
-        
+
         assert response_data["name"] == valid_asset_payload["name"]
         assert response_data["asset_type"] == valid_asset_payload["asset_type"]
         assert response_data["unique_identifier"] == valid_asset_payload["unique_identifier"]
@@ -81,7 +81,7 @@ class TestAssetAPIIntegration:
         assert "id" in response_data
         assert "created_at" in response_data
         assert "updated_at" in response_data
-    
+
     @pytest.mark.asyncio
     async def test_create_asset_validation_error(
         self,
@@ -102,19 +102,19 @@ class TestAssetAPIIntegration:
             "confidence_score": 0,  # Invalid range
             "encryption_enabled": False  # Required for restricted
         }
-        
+
         # Act
         response = await async_client.post(
             "/api/v1/assets/",
             json=invalid_payload,
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 422  # Validation error
         error_detail = response.json()["detail"]
         assert isinstance(error_detail, list)
-    
+
     @pytest.mark.asyncio
     async def test_create_asset_duplicate_identifier(
         self,
@@ -141,18 +141,18 @@ class TestAssetAPIIntegration:
         )
         async_session.add(existing_asset)
         await async_session.commit()
-        
+
         # Act
         response = await async_client.post(
             "/api/v1/assets/",
             json=valid_asset_payload,
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 409  # Conflict
         assert "already exists" in response.json()["detail"]
-    
+
     @pytest.mark.asyncio
     async def test_get_asset_success(
         self,
@@ -166,16 +166,16 @@ class TestAssetAPIIntegration:
             f"/api/v1/assets/{sample_database_asset.id}",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         response_data = response.json()
-        
+
         assert response_data["id"] == str(sample_database_asset.id)
         assert response_data["name"] == sample_database_asset.name
         assert response_data["asset_type"] == sample_database_asset.asset_type.value
         assert response_data["unique_identifier"] == sample_database_asset.unique_identifier
-    
+
     @pytest.mark.asyncio
     async def test_get_asset_not_found(
         self,
@@ -185,17 +185,17 @@ class TestAssetAPIIntegration:
         """Test asset retrieval with non-existent ID."""
         # Arrange
         fake_id = uuid.uuid4()
-        
+
         # Act
         response = await async_client.get(
             f"/api/v1/assets/{fake_id}",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 404
         assert "not found" in response.json()["detail"]
-    
+
     @pytest.mark.asyncio
     async def test_update_asset_success(
         self,
@@ -211,28 +211,28 @@ class TestAssetAPIIntegration:
             "estimated_size_mb": 4096,
             "technical_contact": "updated@test.com"
         }
-        
+
         # Act
         response = await async_client.put(
             f"/api/v1/assets/{sample_database_asset.id}",
             json=update_payload,
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         response_data = response.json()
-        
+
         assert response_data["name"] == update_payload["name"]
         assert response_data["purpose_description"] == update_payload["purpose_description"]
         assert response_data["estimated_size_mb"] == update_payload["estimated_size_mb"]
         assert response_data["technical_contact"] == update_payload["technical_contact"]
         assert response_data["updated_by"] == "test_user"
-        
+
         # Unchanged fields should remain the same
         assert response_data["asset_type"] == sample_database_asset.asset_type.value
         assert response_data["unique_identifier"] == sample_database_asset.unique_identifier
-    
+
     @pytest.mark.asyncio
     async def test_patch_asset_success(
         self,
@@ -245,23 +245,23 @@ class TestAssetAPIIntegration:
         patch_payload = {
             "estimated_size_mb": 2048
         }
-        
+
         # Act
         response = await async_client.patch(
             f"/api/v1/assets/{sample_database_asset.id}",
             json=patch_payload,
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         response_data = response.json()
-        
+
         assert response_data["estimated_size_mb"] == patch_payload["estimated_size_mb"]
         # Other fields should remain unchanged
         assert response_data["name"] == sample_database_asset.name
         assert response_data["asset_type"] == sample_database_asset.asset_type.value
-    
+
     @pytest.mark.asyncio
     async def test_delete_asset_success(
         self,
@@ -275,17 +275,17 @@ class TestAssetAPIIntegration:
             f"/api/v1/assets/{sample_database_asset.id}",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 204
-        
+
         # Verify asset is soft deleted (not returned in subsequent GET)
         get_response = await async_client.get(
             f"/api/v1/assets/{sample_database_asset.id}",
             headers=auth_headers
         )
         assert get_response.status_code == 404
-    
+
     @pytest.mark.asyncio
     async def test_list_assets_success(
         self,
@@ -313,21 +313,21 @@ class TestAssetAPIIntegration:
             )
             async_session.add(asset)
             assets.append(asset)
-        
+
         await async_session.commit()
-        
+
         # Act
         response = await async_client.get(
             "/api/v1/assets/",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         response_data = response.json()
-        
+
         assert len(response_data) >= 3  # At least the 3 we created
-        
+
         # Verify structure of returned assets
         for asset_data in response_data:
             assert "id" in asset_data
@@ -335,7 +335,7 @@ class TestAssetAPIIntegration:
             assert "asset_type" in asset_data
             assert "unique_identifier" in asset_data
             assert "created_at" in asset_data
-    
+
     @pytest.mark.asyncio
     async def test_list_assets_with_pagination(
         self,
@@ -361,36 +361,36 @@ class TestAssetAPIIntegration:
                 updated_by="test_user"
             )
             async_session.add(asset)
-        
+
         await async_session.commit()
-        
+
         # Act - Get first page
         response = await async_client.get(
             "/api/v1/assets/?skip=0&limit=2",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         first_page = response.json()
         assert len(first_page) == 2
-        
+
         # Act - Get second page
         response = await async_client.get(
             "/api/v1/assets/?skip=2&limit=2",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         second_page = response.json()
         assert len(second_page) == 2
-        
+
         # Verify no overlap
         first_page_ids = {asset["id"] for asset in first_page}
         second_page_ids = {asset["id"] for asset in second_page}
         assert len(first_page_ids & second_page_ids) == 0
-    
+
     @pytest.mark.asyncio
     async def test_list_assets_with_filters(
         self,
@@ -414,7 +414,7 @@ class TestAssetAPIIntegration:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         sqlite_dev = DatabaseAsset(
             name="SQLite Development",
             asset_type=AssetType.SQLITE,
@@ -429,37 +429,37 @@ class TestAssetAPIIntegration:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(postgresql_prod)
         async_session.add(sqlite_dev)
         await async_session.commit()
-        
+
         # Act - Filter by asset type
         response = await async_client.get(
             "/api/v1/assets/?asset_type=POSTGRESQL",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         postgresql_assets = response.json()
-        
+
         for asset in postgresql_assets:
             assert asset["asset_type"] == "POSTGRESQL"
-        
+
         # Act - Filter by environment
         response = await async_client.get(
             "/api/v1/assets/?environment=PRODUCTION",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         production_assets = response.json()
-        
+
         for asset in production_assets:
             assert asset["environment"] == "PRODUCTION"
-    
+
     @pytest.mark.asyncio
     async def test_search_assets_success(
         self,
@@ -484,42 +484,42 @@ class TestAssetAPIIntegration:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(searchable_asset)
         await async_session.commit()
-        
+
         # Act
         search_payload = {
             "query": "Production",
             "limit": 10,
             "offset": 0
         }
-        
+
         response = await async_client.post(
             "/api/v1/assets/search",
             json=search_payload,
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         response_data = response.json()
-        
+
         assert "results" in response_data
         assert "total_matches" in response_data
         assert "query" in response_data
         assert "execution_time" in response_data
-        
+
         assert response_data["query"] == "Production"
         assert len(response_data["results"]) >= 1
-        
+
         # Verify search found our asset
         found_asset = next(
             (asset for asset in response_data["results"] if asset["name"] == "Searchable Production Database"),
             None
         )
         assert found_asset is not None
-    
+
     @pytest.mark.asyncio
     async def test_bulk_import_assets_success(
         self,
@@ -558,23 +558,23 @@ class TestAssetAPIIntegration:
                 }
             ]
         }
-        
+
         # Act
         response = await async_client.post(
             "/api/v1/assets/bulk-import",
             json=bulk_import_payload,
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 202  # Accepted for background processing
         response_data = response.json()
-        
+
         assert "job_id" in response_data
         assert response_data["status"] == "processing"
         assert response_data["assets_count"] == 2
         assert "estimated_duration" in response_data
-    
+
     @pytest.mark.asyncio
     async def test_get_import_status_success(
         self,
@@ -584,17 +584,17 @@ class TestAssetAPIIntegration:
         """Test import job status retrieval."""
         # Arrange
         job_id = str(uuid.uuid4())
-        
+
         # Act
         response = await async_client.get(
             f"/api/v1/assets/import-status/{job_id}",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         response_data = response.json()
-        
+
         assert response_data["job_id"] == job_id
         assert "status" in response_data
         assert "progress" in response_data
@@ -602,7 +602,7 @@ class TestAssetAPIIntegration:
         assert "assets_created" in response_data
         assert "assets_updated" in response_data
         assert "assets_failed" in response_data
-    
+
     @pytest.mark.asyncio
     async def test_validate_batch_success(
         self,
@@ -639,27 +639,27 @@ class TestAssetAPIIntegration:
                 }
             ]
         }
-        
+
         # Act
         response = await async_client.post(
             "/api/v1/assets/validate-batch",
             json=validation_payload,
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         response_data = response.json()
-        
+
         assert "valid_count" in response_data
         assert "invalid_count" in response_data
         assert "validation_errors" in response_data
         assert "validation_warnings" in response_data
-        
+
         assert response_data["valid_count"] == 1
         assert response_data["invalid_count"] == 1
         assert len(response_data["validation_errors"]) >= 1
-    
+
     @pytest.mark.asyncio
     async def test_bulk_update_assets_success(
         self,
@@ -683,7 +683,7 @@ class TestAssetAPIIntegration:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         asset2 = DatabaseAsset(
             name="Update Asset 2",
             asset_type=AssetType.SQLITE,
@@ -698,13 +698,13 @@ class TestAssetAPIIntegration:
             created_by="test_user",
             updated_by="test_user"
         )
-        
+
         async_session.add(asset1)
         async_session.add(asset2)
         await async_session.commit()
         await async_session.refresh(asset1)
         await async_session.refresh(asset2)
-        
+
         # Bulk update payload
         bulk_update_payload = {
             "updates": [
@@ -724,31 +724,31 @@ class TestAssetAPIIntegration:
                 }
             ]
         }
-        
+
         # Act
         response = await async_client.post(
             "/api/v1/assets/bulk-update",
             json=bulk_update_payload,
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 202  # Accepted for background processing
         response_data = response.json()
-        
+
         assert "job_id" in response_data
         assert response_data["status"] == "processing"
         assert response_data["updates_count"] == 2
-    
+
     @pytest.mark.asyncio
     async def test_unauthorized_access(self, async_client: AsyncClient):
         """Test API access without authentication."""
         # Act - Try to access assets without auth headers
         response = await async_client.get("/api/v1/assets/")
-        
+
         # Assert
         assert response.status_code == 401  # Unauthorized
-    
+
     @pytest.mark.asyncio
     async def test_invalid_uuid_parameter(
         self,
@@ -761,10 +761,10 @@ class TestAssetAPIIntegration:
             "/api/v1/assets/invalid-uuid",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 422  # Validation error for invalid UUID format
-    
+
     @pytest.mark.asyncio
     async def test_performance_response_time(
         self,
@@ -781,12 +781,12 @@ class TestAssetAPIIntegration:
             headers=auth_headers
         )
         end_time = time.time()
-        
+
         # Assert
         assert response.status_code == 200
         response_time_ms = (end_time - start_time) * 1000
         assert response_time_ms < 500, f"Response time {response_time_ms:.2f}ms exceeds 500ms requirement"
-    
+
     @pytest.mark.asyncio
     async def test_content_type_validation(
         self,
@@ -801,10 +801,10 @@ class TestAssetAPIIntegration:
             content=json.dumps(valid_asset_payload),  # Send as raw content instead of data
             headers={**auth_headers, "Content-Type": "text/plain"}
         )
-        
+
         # Assert
         assert response.status_code == 422  # Validation error
-    
+
     @pytest.mark.asyncio
     async def test_rate_limiting_simulation(
         self,
@@ -820,10 +820,10 @@ class TestAssetAPIIntegration:
                 headers=auth_headers
             )
             responses.append(response.status_code)
-        
+
         # Assert - All requests should succeed (no rate limiting implemented yet)
         assert all(status == 200 for status in responses)
-    
+
     @pytest.mark.asyncio
     async def test_error_response_format(
         self,
@@ -837,15 +837,15 @@ class TestAssetAPIIntegration:
             f"/api/v1/assets/{fake_id}",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 404
         error_response = response.json()
-        
+
         assert "detail" in error_response
         assert isinstance(error_response["detail"], str)
         assert "not found" in error_response["detail"].lower()
-    
+
     @pytest.mark.asyncio
     async def test_cors_headers(
         self,
@@ -858,7 +858,7 @@ class TestAssetAPIIntegration:
             "/api/v1/assets/",
             headers=auth_headers
         )
-        
+
         # Assert
         assert response.status_code == 200
         # CORS headers would be added by middleware in actual deployment

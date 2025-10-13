@@ -53,7 +53,7 @@ class TestACPBenchConverter(unittest.TestCase):
         """Set up test fixtures."""
         self.converter = ACPBenchConverter()
         self.test_data_dir = Path(__file__).parent / "test_data" / "acpbench"
-        
+
         # Ensure test data directory exists
         if not self.test_data_dir.exists():
             self.skipTest(f"Test data directory not found: {self.test_data_dir}")
@@ -64,7 +64,7 @@ class TestACPBenchConverter(unittest.TestCase):
         self.assertIsNotNone(self.converter.config)
         self.assertIsNotNone(self.converter.domain_classifier)
         self.assertIsNotNone(self.converter.boolean_handler)
-        self.assertIsNotNone(self.converter.mcq_handler) 
+        self.assertIsNotNone(self.converter.mcq_handler)
         self.assertIsNotNone(self.converter.gen_handler)
 
     def test_convert_with_sample_data(self):
@@ -74,19 +74,19 @@ class TestACPBenchConverter(unittest.TestCase):
 
         try:
             dataset = self.converter.convert(str(self.test_data_dir), "Test_ACPBench")
-            
+
             # Basic structure validation
             self.assertIsNotNone(dataset)
             self.assertEqual(dataset.name, "Test_ACPBench")
             self.assertEqual(dataset.version, "1.0")
             self.assertGreater(len(dataset.questions), 0)
-            
+
             # Check question types are present
             question_types = [q.metadata.get("question_type") for q in dataset.questions]
             self.assertIn("boolean", question_types)
             self.assertIn("multiple_choice", question_types)
             self.assertIn("generation", question_types)
-            
+
             # Validate PyRIT format compliance
             for question in dataset.questions:
                 self.assertIsNotNone(question.question)
@@ -94,16 +94,16 @@ class TestACPBenchConverter(unittest.TestCase):
                 self.assertIsNotNone(question.correct_answer)
                 self.assertIsInstance(question.choices, list)
                 self.assertIsInstance(question.metadata, dict)
-                
+
                 # Check required metadata fields
-                required_fields = ["task_id", "planning_group", "question_type", 
+                required_fields = ["task_id", "planning_group", "question_type",
                                  "domain", "planning_domain", "conversion_strategy"]
                 for field in required_fields:
-                    self.assertIn(field, question.metadata, 
+                    self.assertIn(field, question.metadata,
                                 f"Missing required metadata field: {field}")
 
             print(f"Successfully converted {len(dataset.questions)} questions")
-            
+
         except Exception as e:
             self.fail(f"Conversion failed with error: {str(e)}")
 
@@ -130,12 +130,12 @@ class TestPlanningDomainClassifier(unittest.TestCase):
         """Test planning domain classifier initializes correctly."""
         self.assertIsInstance(self.classifier, PlanningDomainClassifier)
         self.assertIsNotNone(self.classifier.domain_patterns)
-        
+
         # Check all expected domains are configured
         expected_domains = [
-            PlanningDomain.LOGISTICS, 
+            PlanningDomain.LOGISTICS,
             PlanningDomain.BLOCKS_WORLD,
-            PlanningDomain.SCHEDULING, 
+            PlanningDomain.SCHEDULING,
             PlanningDomain.GENERAL_PLANNING
         ]
         for domain in expected_domains:
@@ -145,9 +145,9 @@ class TestPlanningDomainClassifier(unittest.TestCase):
         """Test classification of logistics domain content."""
         context = "A truck needs to deliver packages from warehouse to locations"
         question = "What is the optimal delivery route?"
-        
+
         domain, confidence = self.classifier.classify_domain(context, question)
-        
+
         self.assertEqual(domain, PlanningDomain.LOGISTICS)
         self.assertGreater(confidence, 0.1)
 
@@ -155,9 +155,9 @@ class TestPlanningDomainClassifier(unittest.TestCase):
         """Test classification of blocks world domain content."""
         context = "There are 3 blocks: A, B, and C. Block A is on the table, B is on A"
         question = "Can block C be placed on top of block B?"
-        
+
         domain, confidence = self.classifier.classify_domain(context, question)
-        
+
         self.assertEqual(domain, PlanningDomain.BLOCKS_WORLD)
         self.assertGreater(confidence, 0.1)
 
@@ -167,12 +167,12 @@ class TestPlanningDomainClassifier(unittest.TestCase):
         simple_context = "Move block A to position B"
         simple_question = "Is this possible?"
         complexity = self.classifier.assess_complexity(simple_context, simple_question, PlanningDomain.BLOCKS_WORLD)
-        
-        # Complex scenario  
+
+        # Complex scenario
         complex_context = "Multi-agent coordination with optimization constraints and temporal dependencies"
         complex_question = "Find optimal solution considering all constraints?"
         complex_complexity = self.classifier.assess_complexity(complex_context, complex_question, PlanningDomain.GENERAL_PLANNING)
-        
+
         # Complexity should be valid enum values
         self.assertIsInstance(complexity, PlanningComplexity)
         self.assertIsInstance(complex_complexity, PlanningComplexity)
@@ -181,12 +181,12 @@ class TestPlanningDomainClassifier(unittest.TestCase):
         """Test key concept extraction from planning content."""
         context = "Logistics scenario with trucks delivering packages to locations"
         question = "What is the optimal route?"
-        
+
         concepts = self.classifier.extract_key_concepts(context, question, PlanningDomain.LOGISTICS)
-        
+
         self.assertIsInstance(concepts, list)
         self.assertGreater(len(concepts), 0)
-        
+
         # Should contain relevant logistics concepts
         concept_text = " ".join(concepts).lower()
         logistics_terms = ["truck", "deliver", "package", "location", "route"]
@@ -213,15 +213,15 @@ class TestQuestionHandlers(unittest.TestCase):
             "question": "Can it deliver 3 packages in one trip?",
             "correct": False
         }
-        
+
         qa_entry = self.boolean_handler.create_qa_entry(item)
-        
+
         self.assertEqual(qa_entry.answer_type, "bool")
         self.assertEqual(qa_entry.correct_answer, False)
         self.assertEqual(qa_entry.choices, [])
         self.assertIn("Context:", qa_entry.question)
         self.assertIn("Question:", qa_entry.question)
-        
+
         # Check metadata
         self.assertEqual(qa_entry.metadata["task_id"], "test_bool_1")
         self.assertEqual(qa_entry.metadata["planning_group"], "logistics")
@@ -237,14 +237,14 @@ class TestQuestionHandlers(unittest.TestCase):
             "choices": ["A) Move C directly", "B) Move B to table first", "C) Impossible"],
             "answer": "B) Move B to table first"
         }
-        
+
         qa_entry = self.mcq_handler.create_qa_entry(item)
-        
+
         self.assertEqual(qa_entry.answer_type, "int")
         self.assertIsInstance(qa_entry.correct_answer, int)
         self.assertEqual(len(qa_entry.choices), 3)
         self.assertIn("Context:", qa_entry.question)
-        
+
         # Check metadata
         self.assertEqual(qa_entry.metadata["task_id"], "test_mcq_1")
         self.assertEqual(qa_entry.metadata["question_type"], "multiple_choice")
@@ -259,14 +259,14 @@ class TestQuestionHandlers(unittest.TestCase):
             "question": "Generate the action sequence",
             "expected_response": "Step 1: Move to object1. Step 2: Pick object1. Step 3: Return to base."
         }
-        
+
         qa_entry = self.gen_handler.create_qa_entry(item)
-        
+
         self.assertEqual(qa_entry.answer_type, "str")
         self.assertIsInstance(qa_entry.correct_answer, str)
         self.assertEqual(qa_entry.choices, [])
         self.assertIn("Step 1:", qa_entry.correct_answer)
-        
+
         # Check metadata
         self.assertEqual(qa_entry.metadata["task_id"], "test_gen_1")
         self.assertEqual(qa_entry.metadata["question_type"], "generation")
@@ -278,12 +278,12 @@ class TestQuestionHandlers(unittest.TestCase):
         choices = ["Option A", "Option B", "Option C"]
         index = self.mcq_handler._find_correct_answer_index("Option B", choices)
         self.assertEqual(index, 1)
-        
+
         # Test prefix match (A), B), etc.)
-        choices = ["A) First option", "B) Second option", "C) Third option"]  
+        choices = ["A) First option", "B) Second option", "C) Third option"]
         index = self.mcq_handler._find_correct_answer_index("B) Second option", choices)
         self.assertEqual(index, 1)
-        
+
         # Test partial match
         choices = ["Move block A first", "Move block B first", "Move block C first"]
         index = self.mcq_handler._find_correct_answer_index("Move block B", choices)
@@ -297,11 +297,11 @@ class TestSchemaValidation(unittest.TestCase):
         """Test PlanningDomain enum values."""
         domains = [
             PlanningDomain.LOGISTICS,
-            PlanningDomain.BLOCKS_WORLD, 
+            PlanningDomain.BLOCKS_WORLD,
             PlanningDomain.SCHEDULING,
             PlanningDomain.GENERAL_PLANNING
         ]
-        
+
         for domain in domains:
             self.assertIsInstance(domain.value, str)
             self.assertTrue(len(domain.value) > 0)
@@ -313,7 +313,7 @@ class TestSchemaValidation(unittest.TestCase):
             PlanningComplexity.MEDIUM,
             PlanningComplexity.HIGH
         ]
-        
+
         for complexity in complexities:
             self.assertIsInstance(complexity.value, str)
             self.assertIn(complexity.value, ["low", "medium", "high"])
@@ -325,7 +325,7 @@ class TestSchemaValidation(unittest.TestCase):
             PlanningQuestionType.MULTIPLE_CHOICE,
             PlanningQuestionType.GENERATION
         ]
-        
+
         for q_type in question_types:
             self.assertIsInstance(q_type.value, str)
             self.assertIn(q_type.value, ["boolean", "multiple_choice", "generation"])
@@ -335,6 +335,6 @@ if __name__ == "__main__":
     # Set up logging for test runs
     import logging
     logging.basicConfig(level=logging.INFO)
-    
+
     # Run the tests
     unittest.main(verbosity=2)

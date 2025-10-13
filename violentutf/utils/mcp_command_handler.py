@@ -480,16 +480,18 @@ Preview: {preview}
             prompts = result.get("prompts", [])
             if isinstance(prompts, list):
                 for prompt in prompts[:10]:
+                    if prompt is None:
+                        continue
                     name = "Unknown"
                     desc = "No description"
                     if hasattr(prompt, "name"):
                         name = prompt.name
-                    elif isinstance(prompt, dict):
+                    elif isinstance(prompt, dict) and prompt is not None:
                         name = prompt.get("name", "Unknown")
 
                     if hasattr(prompt, "description"):
                         desc = prompt.description
-                    elif isinstance(prompt, dict):
+                    elif isinstance(prompt, dict) and prompt is not None:
                         desc = prompt.get("description", "No description")
 
                     output += f"• `{name}` - {desc}\n"

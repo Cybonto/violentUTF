@@ -1,5 +1,5 @@
-"""
-Testing framework modules for ViolentUTF testing infrastructure.
+"""Testing framework modules for ViolentUTF testing infrastructure.
+
 Provides comprehensive testing utilities for performance validation,
 UI testing, workflow usability, and error UX validation.
 """

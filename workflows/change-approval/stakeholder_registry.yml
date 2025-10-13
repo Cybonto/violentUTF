@@ -1,0 +1,15 @@
+all_engineering:
+- engineering@example.com
+architect:
+- architect@example.com
+dba_team:
+- dba1@example.com
+- dba2@example.com
+management:
+- mgmt@example.com
+oncall:
+- oncall@example.com
+security_team:
+- security@example.com
+tech_lead:
+- techlead@example.com

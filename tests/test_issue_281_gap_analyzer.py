@@ -57,7 +57,7 @@ class TestGapAnalyzer:
                 technical_contact="admin@company.com"
             ),
             DatabaseAsset(
-                id="asset_002", 
+                id="asset_002",
                 name="orphaned_db",
                 asset_type=AssetType.SQLITE,
                 environment=Environment.DEVELOPMENT,
@@ -127,8 +127,8 @@ class TestGapAnalyzer:
         return prioritizer
 
     @pytest.fixture
-    def gap_analyzer(self, mock_asset_service, mock_orphaned_detector, 
-                    mock_documentation_analyzer, mock_compliance_checker, 
+    def gap_analyzer(self, mock_asset_service, mock_orphaned_detector,
+                    mock_documentation_analyzer, mock_compliance_checker,
                     mock_gap_prioritizer):
         """Create GapAnalyzer instance with mocked dependencies."""
         return GapAnalyzer(
@@ -164,7 +164,7 @@ class TestGapAnalyzer:
         """Test complete gap analysis execution flow."""
         # Execute gap analysis
         result = await gap_analyzer.analyze_gaps(analysis_config)
-        
+
         # Verify result structure
         assert isinstance(result, GapAnalysisResult)
         assert result.analysis_id is not None
@@ -172,7 +172,7 @@ class TestGapAnalyzer:
         assert result.total_gaps_found >= 0
         assert isinstance(result.gaps_by_type, dict)
         assert isinstance(result.gaps_by_severity, dict)
-        
+
         # Verify all detectors were called
         gap_analyzer.orphaned_detector.detect_orphaned_assets.assert_called_once()
         gap_analyzer.documentation_analyzer.analyze_documentation_gaps.assert_called()
@@ -181,15 +181,15 @@ class TestGapAnalyzer:
     async def test_gap_result_aggregation(self, gap_analyzer, analysis_config):
         """Test proper aggregation of gaps from multiple detectors."""
         result = await gap_analyzer.analyze_gaps(analysis_config)
-        
+
         # Should have gaps from all three detectors
         assert result.total_gaps_found == 3  # 1 orphaned + 1 documentation + 1 compliance
-        
+
         # Verify gap categorization
         assert GapType.MISSING_DOCUMENTATION in result.gaps_by_type
         assert GapType.OUTDATED_DOCUMENTATION in result.gaps_by_type
         assert GapType.INSUFFICIENT_SECURITY_CONTROLS in result.gaps_by_type
-        
+
         # Verify severity distribution
         assert GapSeverity.HIGH in result.gaps_by_severity
         assert GapSeverity.MEDIUM in result.gaps_by_severity
@@ -205,24 +205,24 @@ class TestGapAnalyzer:
             description="Duplicate gap",
             recommendations=["Fix duplicate"]
         )
-        
+
         gap_analyzer.orphaned_detector.detect_orphaned_assets.return_value = [duplicate_gap]
         gap_analyzer.documentation_analyzer.analyze_documentation_gaps.return_value = [duplicate_gap]
-        
+
         result = await gap_analyzer.analyze_gaps(analysis_config)
-        
+
         # Should deduplicate identical gaps
         assert result.total_gaps_found == 2  # 1 unique gap + 1 compliance gap
 
     async def test_performance_monitoring(self, gap_analyzer, analysis_config):
         """Test performance monitoring during gap analysis."""
         result = await gap_analyzer.analyze_gaps(analysis_config)
-        
+
         # Verify performance metrics are captured
         assert result.execution_time_seconds < 180  # Must meet requirement
         assert result.memory_usage_mb < 256  # Must meet requirement
         assert result.assets_analyzed > 0
-        
+
         # Verify performance breakdown
         assert hasattr(result, 'performance_breakdown')
         assert 'orphaned_detection_time' in result.performance_breakdown
@@ -237,29 +237,29 @@ class TestGapAnalyzer:
             include_documentation_analysis=False,
             include_compliance_assessment=False
         )
-        
+
         result = await gap_analyzer.analyze_gaps(config)
-        
+
         # Verify only orphaned detection was executed
         gap_analyzer.orphaned_detector.detect_orphaned_assets.assert_called_once()
         gap_analyzer.documentation_analyzer.analyze_documentation_gaps.assert_not_called()
         gap_analyzer.compliance_checker.assess_compliance_gaps.assert_not_called()
-        
+
         # Should only have orphaned gaps
-        assert all(gap.gap_type in [GapType.MISSING_DOCUMENTATION, GapType.UNCLEAR_OWNERSHIP, 
+        assert all(gap.gap_type in [GapType.MISSING_DOCUMENTATION, GapType.UNCLEAR_OWNERSHIP,
                                   GapType.UNREFERENCED_ASSET] for gap in result.all_gaps)
 
     async def test_error_handling_detector_failure(self, gap_analyzer, analysis_config):
         """Test error handling when individual detectors fail."""
         # Configure orphaned detector to raise exception
         gap_analyzer.orphaned_detector.detect_orphaned_assets.side_effect = Exception("Detector failed")
-        
+
         # Analysis should continue with other detectors
         result = await gap_analyzer.analyze_gaps(analysis_config)
-        
+
         # Should still have gaps from other detectors
         assert result.total_gaps_found == 2  # Documentation + compliance gaps
-        
+
         # Should log the error
         assert len(result.errors) == 1
         assert "Detector failed" in result.errors[0]
@@ -270,44 +270,44 @@ class TestGapAnalyzer:
         config = GapAnalysisConfig(
             max_execution_time_seconds=0.001  # 1ms timeout
         )
-        
+
         # Configure detector with long delay
         async def slow_detection(*args):
             await asyncio.sleep(1)  # 1 second delay
             return []
-        
+
         gap_analyzer.orphaned_detector.detect_orphaned_assets = slow_detection
-        
+
         # Should raise timeout error
         with pytest.raises(GapAnalysisError) as exc_info:
             await gap_analyzer.analyze_gaps(config)
-        
+
         assert "timeout" in str(exc_info.value).lower()
 
     async def test_memory_limit_monitoring(self, gap_analyzer, analysis_config):
         """Test memory usage monitoring during analysis."""
         # Configure strict memory limit
         analysis_config.max_memory_usage_mb = 1  # 1MB limit
-        
+
         # Mock memory monitoring to simulate high usage
         with patch('psutil.Process') as mock_process:
             mock_process.return_value.memory_info.return_value.rss = 2 * 1024 * 1024  # 2MB
-            
+
             # Should detect memory limit exceeded
             with pytest.raises(GapAnalysisError) as exc_info:
                 await gap_analyzer.analyze_gaps(analysis_config)
-            
+
             assert "memory limit exceeded" in str(exc_info.value).lower()
 
     async def test_gap_prioritization_integration(self, gap_analyzer, analysis_config):
         """Test integration with gap prioritization system."""
         result = await gap_analyzer.analyze_gaps(analysis_config)
-        
+
         # Verify all gaps were prioritized
         for gap in result.all_gaps:
             assert hasattr(gap, 'priority_score')
             assert gap.priority_score is not None
-            
+
         # Verify prioritizer was called for each gap
         assert gap_analyzer.gap_prioritizer.calculate_gap_priority_score.call_count == 3
 
@@ -318,9 +318,9 @@ class TestGapAnalyzer:
             gap_analyzer.analyze_gaps(analysis_config)
             for _ in range(3)
         ]
-        
+
         results = await asyncio.gather(*tasks)
-        
+
         # All analyses should complete successfully
         assert len(results) == 3
         for result in results:
@@ -331,10 +331,10 @@ class TestGapAnalyzer:
         """Test result caching for identical analysis configurations."""
         # First analysis
         result1 = await gap_analyzer.analyze_gaps(analysis_config)
-        
+
         # Second identical analysis (should use cache)
         result2 = await gap_analyzer.analyze_gaps(analysis_config)
-        
+
         # Results should be identical
         assert result1.analysis_id != result2.analysis_id  # Different execution IDs
         assert result1.total_gaps_found == result2.total_gaps_found
@@ -345,11 +345,11 @@ class TestGapAnalyzer:
         # Test invalid timeout
         with pytest.raises(ValueError):
             GapAnalysisConfig(max_execution_time_seconds=-1)
-        
-        # Test invalid memory limit  
+
+        # Test invalid memory limit
         with pytest.raises(ValueError):
             GapAnalysisConfig(max_memory_usage_mb=0)
-        
+
         # Test invalid compliance framework
         with pytest.raises(ValueError):
             GapAnalysisConfig(compliance_frameworks=["INVALID_FRAMEWORK"])
@@ -363,9 +363,9 @@ class TestGapAnalyzer:
                 "criticality": ["critical", "high"]
             }
         )
-        
+
         result = await gap_analyzer.analyze_gaps(config)
-        
+
         # Should only analyze filtered assets
         assert result.assets_analyzed == 1  # Only production_db matches filters
 
@@ -374,9 +374,9 @@ class TestGapAnalyzer:
         # Mock historical gap data
         with patch.object(gap_analyzer, '_load_historical_gaps') as mock_load:
             mock_load.return_value = []  # No historical gaps
-            
+
             result = await gap_analyzer.analyze_gaps(analysis_config)
-            
+
             # Should include trend analysis
             assert hasattr(result, 'trend_analysis')
             assert result.trend_analysis is not None
@@ -388,7 +388,7 @@ class TestGapAnalysisConfig:
     def test_default_configuration(self):
         """Test default configuration values."""
         config = GapAnalysisConfig()
-        
+
         assert config.include_orphaned_detection is True
         assert config.include_documentation_analysis is True
         assert config.include_compliance_assessment is True
@@ -404,7 +404,7 @@ class TestGapAnalysisConfig:
             max_execution_time_seconds=300,
             compliance_frameworks=["GDPR"]
         )
-        
+
         assert config.include_orphaned_detection is False
         assert config.max_execution_time_seconds == 300
         assert config.compliance_frameworks == ["GDPR"]
@@ -415,7 +415,7 @@ class TestGapAnalysisConfig:
             include_orphaned_detection=True,
             compliance_frameworks=["GDPR", "SOC2"]
         )
-        
+
         # Should be JSON serializable
         config_dict = config.dict()
         assert isinstance(config_dict, dict)
@@ -437,14 +437,14 @@ class TestGapAnalysisResult:
                 recommendations=["Fix it"]
             )
         ]
-        
+
         result = GapAnalysisResult(
             analysis_id="test_analysis_001",
             execution_time_seconds=45.5,
             gaps=gaps,
             assets_analyzed=5
         )
-        
+
         assert result.analysis_id == "test_analysis_001"
         assert result.execution_time_seconds == 45.5
         assert result.total_gaps_found == 1
@@ -468,18 +468,18 @@ class TestGapAnalysisResult:
                 recommendations=[]
             )
         ]
-        
+
         result = GapAnalysisResult(
             analysis_id="test",
             execution_time_seconds=30,
             gaps=gaps,
             assets_analyzed=2
         )
-        
+
         # Test categorization by type
         assert result.gaps_by_type[GapType.MISSING_DOCUMENTATION] == 1
         assert result.gaps_by_type[GapType.OUTDATED_DOCUMENTATION] == 1
-        
+
         # Test categorization by severity
         assert result.gaps_by_severity[GapSeverity.HIGH] == 1
         assert result.gaps_by_severity[GapSeverity.MEDIUM] == 1
@@ -491,14 +491,14 @@ class TestGapAnalysisResult:
             Mock(severity=GapSeverity.MEDIUM, priority_score=Mock(score=60)),
             Mock(severity=GapSeverity.LOW, priority_score=Mock(score=30))
         ]
-        
+
         result = GapAnalysisResult(
             analysis_id="test",
             execution_time_seconds=60,
             gaps=gaps,
             assets_analyzed=10
         )
-        
+
         # Test summary statistics
         assert result.total_gaps_found == 3
         assert result.high_severity_gaps == 1

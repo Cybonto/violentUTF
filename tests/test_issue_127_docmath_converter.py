@@ -303,7 +303,7 @@ class TestFileProcessingIntegration:
 
         converter = DocMathConverter()
 
-        # Create synthetic small DocMath file  
+        # Create synthetic small DocMath file
         test_data = [
             {
                 "question_id": "test_1",

@@ -1,0 +1,43 @@
+title: Database Performance Degradation Response
+database_type: all
+severity: high
+rto_target: 60
+rpo_target: 120
+detection:
+  symptoms:
+  - Slow query performance
+  - High CPU usage
+  - High memory usage
+  - Elevated response times
+  monitoring_commands:
+  - Check system resources
+  - Review slow query log
+  - Analyze query execution plans
+recovery_steps:
+- step_number: 1
+  title: Identify bottleneck
+  commands:
+  - Analyze slow queries
+  - Check system resources
+  - Review connection pool
+  estimated_time_minutes: 15
+- step_number: 2
+  title: Apply immediate fixes
+  commands:
+  - Kill long-running queries
+  - Increase connection pool
+  - Enable query cache
+  estimated_time_minutes: 10
+- step_number: 3
+  title: Optimize queries
+  commands:
+  - Add missing indexes
+  - Optimize query plans
+  - Update statistics
+  estimated_time_minutes: 30
+escalation:
+  immediate:
+  - dba_team
+  after_1_hour:
+  - tech_lead
+  - infrastructure_team

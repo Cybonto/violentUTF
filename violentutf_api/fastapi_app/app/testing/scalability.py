@@ -32,7 +32,7 @@ class SystemScalabilityMonitor:
 
     def __init__(self, session_id: str = None) -> None:
         """Initialize SystemScalabilityMonitor.
-        
+
         Args:
             session_id: Unique identifier for monitoring session.
                        Defaults to timestamp-based ID.

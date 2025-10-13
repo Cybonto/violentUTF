@@ -1,0 +1,124 @@
+title: Database Security Incident Response
+service: database_security
+database_type: multi
+severity: critical
+rto_target: 15
+rpo_target: 0
+last_updated: '2025-10-11T12:00:00.000000'
+
+detection:
+  symptoms:
+  - Unauthorized access attempts logged
+  - Suspicious query patterns detected
+  - Privilege escalation detected
+  - Data exfiltration indicators
+  - Failed authentication spikes
+  monitoring_commands:
+  - command: grep "FATAL" /var/log/postgresql/postgresql.log | tail -50
+    expected_result: No unauthorized access attempts
+    failure_indication: Multiple FATAL auth errors
+  - command: python3 scripts/security_enhancement/core/security_monitor.py --check-anomalies
+    expected_result: No anomalies detected
+    failure_indication: Suspicious activity flagged
+  log_locations:
+  - /var/log/postgresql/
+  - scripts/security_enhancement/logs/
+  - violentutf_api/fastapi_app/logs/security.log
+
+immediate_response:
+  alert_team: Security, Database, and Management teams
+  escalation_trigger: Data breach confirmed or in progress
+  initial_actions:
+  - action: Isolate affected systems
+    command: python3 scripts/change-management/incident/isolate_databases.py --security-breach
+    timeout: 1 minute
+  - action: Revoke compromised credentials
+    command: python3 scripts/security_enhancement/core/emergency_revoke.py --all-suspicious
+    timeout: 2 minutes
+  - action: Enable forensic logging
+    command: python3 scripts/security_enhancement/setup_audit_logging.py --forensic-mode
+    timeout: 1 minute
+
+recovery_steps:
+- step_number: 1
+  title: Contain the breach
+  description: Immediately isolate compromised systems and revoke access
+  estimated_time_minutes: 5
+  commands:
+  - python3 scripts/change-management/incident/isolate_databases.py
+  - python3 scripts/security_enhancement/core/emergency_revoke.py
+  expected_result: Breach contained, unauthorized access blocked
+
+- step_number: 2
+  title: Preserve forensic evidence
+  description: Capture logs, memory dumps, and database state for investigation
+  estimated_time_minutes: 10
+  commands:
+  - python3 scripts/change-management/incident/capture_forensics.py --comprehensive
+  - pg_dump forensic_snapshot
+  expected_result: Complete forensic evidence captured
+
+- step_number: 3
+  title: Assess breach scope
+  description: Determine what data was accessed or exfiltrated
+  estimated_time_minutes: 20
+  commands:
+  - python3 scripts/change-management/incident/breach_assessment.py
+  - python3 scripts/security_enhancement/core/audit_logger.py --analyze-breach
+  expected_result: Breach scope fully understood
+
+- step_number: 4
+  title: Remediate security vulnerabilities
+  description: Patch vulnerabilities, rotate credentials, strengthen controls
+  estimated_time_minutes: 30
+  commands:
+  - python3 scripts/security_enhancement/implement_encryption.py --force
+  - python3 scripts/change-management/incident/rotate_all_credentials.py
+  expected_result: Vulnerabilities patched, credentials rotated
+
+- step_number: 5
+  title: Restore secure operations
+  description: Bring systems back online with enhanced security
+  estimated_time_minutes: 15
+  commands:
+  - python3 scripts/change-management/incident/restore_secure.py
+  - python3 scripts/security_enhancement/validate_encryption.py
+  expected_result: Systems operational with enhanced security
+
+rollback_procedures:
+- trigger: Remediation causes service disruption
+  steps:
+  - Maintain isolation of compromised systems
+  - Implement temporary security controls
+  - Plan staged remediation
+
+escalation:
+  data_breach_confirmed: Notify legal, compliance, and executive team immediately
+  ongoing_unauthorized_access: Contact law enforcement and cybersecurity response team
+  customer_data_compromised: Activate data breach notification procedures
+  rto_breach_15min: Escalate to CISO and activate incident command
+
+communication_templates:
+  initial_alert:
+    subject: 'SECURITY INCIDENT: Unauthorized database access detected'
+    body: 'Security incident in progress. Systems isolated. Investigation underway. Updates every 15 minutes.'
+  recovery_complete:
+    subject: 'SECURITY INCIDENT RESOLVED: Systems secured'
+    body: 'Security incident resolved. Vulnerabilities patched. Enhanced monitoring active. Full report: {report_link}'
+
+validation:
+  health_checks:
+  - check: No unauthorized access
+    command: python3 scripts/security_enhancement/core/security_monitor.py --verify-access
+    expected: No suspicious activity
+  - check: All credentials rotated
+    command: python3 scripts/change-management/incident/verify_credential_rotation.py
+    expected: All credentials fresh
+  - check: Encryption validated
+    command: python3 scripts/security_enhancement/validate_encryption.py
+    expected: All encryption active
+  functional_tests:
+  - Verify only authorized access allowed
+  - Test new credentials work correctly
+  - Confirm audit logging captures all access
+  - Validate security monitoring alerts

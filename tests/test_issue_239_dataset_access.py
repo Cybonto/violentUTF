@@ -45,16 +45,16 @@ class TestIssue239DatasetAccessRegression:
     def setup_method(self):
         """Setup test environment for each test method"""
         self.selector = NativeDatasetSelector()
-        
+
         # Expected dataset counts
         self.expected_total_datasets = 18
         self.expected_pyrit_datasets = 10
         self.expected_violentutf_datasets = 8
-        
+
         # Define expected PyRIT datasets (currently missing)
         self.expected_pyrit_datasets_list = {
             "aya_redteaming",
-            "harmbench", 
+            "harmbench",
             "adv_bench",
             "many_shot_jailbreaking",
             "decoding_trust_stereotypes",
@@ -64,7 +64,7 @@ class TestIssue239DatasetAccessRegression:
             "forbidden_questions",
             "seclists_bias_testing"
         }
-        
+
         # Define expected ViolentUTF datasets with corrected names
         self.expected_violentutf_datasets_list = {
             "ollegen1_cognitive",
@@ -72,15 +72,15 @@ class TestIssue239DatasetAccessRegression:
             "legalbench_reasoning",  # Should map to legalbench_professional
             "docmath_evaluation",    # Should map to docmath_mathematical
             "confaide_privacy",
-            "graphwalk_reasoning",   # Should map to graphwalk_spatial  
+            "graphwalk_reasoning",   # Should map to graphwalk_spatial
             "judgebench_evaluation", # Should map to judgebench_meta
             "acpbench_reasoning"     # Should map to acpbench_planning
         }
-        
+
         # Dataset name mappings to fix mismatches
         self.name_mappings = {
             "legalbench_reasoning": "legalbench_professional",
-            "docmath_evaluation": "docmath_mathematical", 
+            "docmath_evaluation": "docmath_mathematical",
             "graphwalk_reasoning": "graphwalk_spatial",
             "acpbench_reasoning": "acpbench_planning"
         }
@@ -93,17 +93,17 @@ class TestIssue239DatasetAccessRegression:
         """
         # Get available datasets from selector
         available_datasets = self._get_available_datasets()
-        
+
         # Assert minimum count (should be >= 18, may include backward compatibility names)
         assert len(available_datasets) >= self.expected_total_datasets, (
             f"Expected at least {self.expected_total_datasets} datasets, "
             f"but only {len(available_datasets)} are available. "
             f"Missing: {self.expected_total_datasets - len(available_datasets)} datasets"
         )
-        
+
         # Assert all expected datasets are present (checking both original and mapped names)
         all_expected = self.expected_pyrit_datasets_list | self.expected_violentutf_datasets_list
-        
+
         # For ViolentUTF datasets, check either original or mapped name exists
         missing_datasets = set()
         for expected_dataset in all_expected:
@@ -111,7 +111,7 @@ class TestIssue239DatasetAccessRegression:
             mapped_name = self.name_mappings.get(expected_dataset, expected_dataset)
             if expected_dataset not in available_datasets and mapped_name not in available_datasets:
                 missing_datasets.add(expected_dataset)
-        
+
         assert len(missing_datasets) == 0, (
             f"Missing datasets: {sorted(missing_datasets)}"
         )
@@ -123,15 +123,15 @@ class TestIssue239DatasetAccessRegression:
         RED PHASE: This test will fail as PyRIT datasets are currently missing
         """
         available_datasets = self._get_available_datasets()
-        
+
         # Check PyRIT datasets specifically
         available_pyrit = available_datasets & self.expected_pyrit_datasets_list
         missing_pyrit = self.expected_pyrit_datasets_list - available_pyrit
-        
+
         assert len(missing_pyrit) == 0, (
             f"Missing PyRIT datasets: {sorted(missing_pyrit)}"
         )
-        
+
         assert len(available_pyrit) == self.expected_pyrit_datasets, (
             f"Expected {self.expected_pyrit_datasets} PyRIT datasets, "
             f"found {len(available_pyrit)}"
@@ -144,7 +144,7 @@ class TestIssue239DatasetAccessRegression:
         RED PHASE: This test will fail due to name mismatches
         """
         available_datasets = self._get_available_datasets()
-        
+
         # Check that original names are supported (backward compatibility)
         for original_name in self.name_mappings.keys():
             assert original_name in available_datasets or self.name_mappings[original_name] in available_datasets, (
@@ -162,7 +162,7 @@ class TestIssue239DatasetAccessRegression:
         category_datasets = set()
         for category_info in self.selector.dataset_categories.values():
             category_datasets.update(category_info["datasets"])
-        
+
         assert len(category_datasets) >= self.expected_total_datasets, (
             f"Categories contain only {len(category_datasets)} datasets, "
             f"expected at least {self.expected_total_datasets}"
@@ -175,23 +175,23 @@ class TestIssue239DatasetAccessRegression:
         GREEN PHASE: This should pass as we maintain category structure
         """
         categories = self.selector.dataset_categories
-        
+
         # Verify essential categories exist
         expected_categories = {
             "cognitive_behavioral",
-            "redteaming", 
+            "redteaming",
             "legal_reasoning",
             "mathematical_reasoning",
             "spatial_reasoning",
             "privacy_evaluation",
             "meta_evaluation"
         }
-        
+
         available_categories = set(categories.keys())
         assert expected_categories.issubset(available_categories), (
             f"Missing categories: {expected_categories - available_categories}"
         )
-        
+
         # Verify each category has proper structure
         for category_key, category_info in categories.items():
             assert "name" in category_info, f"Category {category_key} missing 'name'"
@@ -207,17 +207,17 @@ class TestIssue239DatasetAccessRegression:
         """
         # Test that the system gracefully handles API unavailability
         # and falls back to enhanced hardcoded categories
-        
+
         # Create selector instance (will try API first, then fallback)
         api_selector = NativeDatasetSelector()
-        
+
         # Verify fallback works and we have all datasets
         available_datasets = self._get_available_datasets_from_selector(api_selector)
         assert len(available_datasets) >= self.expected_total_datasets, (
             f"API integration fallback should provide at least {self.expected_total_datasets} datasets, "
             f"got {len(available_datasets)}"
         )
-        
+
         # Verify API client was initialized (even if it fails)
         assert hasattr(api_selector, 'api_client'), "API client should be initialized"
 
@@ -230,10 +230,10 @@ class TestIssue239DatasetAccessRegression:
         # Simulate API failure
         with patch('violentutf.utils.dataset_api_client.DatasetAPIClient') as mock_api:
             mock_api.side_effect = Exception("API unavailable")
-            
+
             # Selector should fallback to existing datasets
             fallback_selector = NativeDatasetSelector()
-            
+
             # Should have at least the original 7 datasets
             available_datasets = self._get_available_datasets_from_selector(fallback_selector)
             assert len(available_datasets) >= 7, (
@@ -248,11 +248,11 @@ class TestIssue239DatasetAccessRegression:
         """
         # Test configuration for a known dataset
         test_dataset = "ollegen1_cognitive"
-        
+
         # Should be able to get metadata
         metadata = self.selector.get_dataset_metadata(test_dataset)
         assert isinstance(metadata, dict), "Should return metadata dictionary"
-        
+
         # Should have required metadata fields
         required_fields = ["total_entries", "file_size", "pyrit_format", "domain", "status"]
         for field in required_fields:
@@ -267,7 +267,7 @@ class TestIssue239DatasetAccessRegression:
         # Test initial state
         assert self.selector.get_selected_dataset() is None
         assert self.selector.get_selected_category() is None
-        
+
         # Test state reset
         self.selector.reset_selection()
         assert self.selector.get_selected_dataset() is None
@@ -282,13 +282,13 @@ class TestIssue239DatasetAccessRegression:
         # Test that original datasets are still accessible
         original_datasets = {
             "ollegen1_cognitive",
-            "garak_redteaming", 
+            "garak_redteaming",
             "confaide_privacy"
         }
-        
+
         available_datasets = self._get_available_datasets()
         missing_original = original_datasets - available_datasets
-        
+
         assert len(missing_original) == 0, (
             f"Regression detected: Original datasets missing: {missing_original}"
         )
@@ -302,10 +302,10 @@ class TestIssue239DatasetAccessRegression:
         # Test that render methods exist and are callable
         assert hasattr(self.selector, "render_dataset_selection_interface")
         assert callable(self.selector.render_dataset_selection_interface)
-        
-        assert hasattr(self.selector, "render_category_interface") 
+
+        assert hasattr(self.selector, "render_category_interface")
         assert callable(self.selector.render_category_interface)
-        
+
         assert hasattr(self.selector, "render_dataset_card")
         assert callable(self.selector.render_dataset_card)
 
@@ -321,14 +321,14 @@ class TestIssue239DatasetAccessRegression:
         start_time = time.time()
         selector = NativeDatasetSelector()
         init_time = time.time() - start_time
-        
+
         assert init_time < 2.0, f"Initialization took {init_time:.2f}s, should be < 2.0s"
-        
+
         # Test category access time
         start_time = time.time()
         categories = selector.dataset_categories
         access_time = time.time() - start_time
-        
+
         assert access_time < 0.1, f"Category access took {access_time:.2f}s, should be < 0.1s"
 
     # Helper methods
@@ -347,7 +347,7 @@ class TestIssue239DatasetAccessRegression:
     def _create_mock_api_response(self) -> List[Dict]:
         """Create mock API response with all 18 datasets"""
         mock_datasets = []
-        
+
         # Add PyRIT datasets
         for dataset_name in self.expected_pyrit_datasets_list:
             mock_datasets.append({
@@ -357,17 +357,17 @@ class TestIssue239DatasetAccessRegression:
                 "config_required": False,
                 "available_configs": None
             })
-        
+
         # Add ViolentUTF datasets
         for dataset_name in self.expected_violentutf_datasets_list:
             mock_datasets.append({
                 "name": dataset_name,
-                "description": f"ViolentUTF {dataset_name} dataset", 
+                "description": f"ViolentUTF {dataset_name} dataset",
                 "category": "cognitive_behavioral" if "cognitive" in dataset_name else "evaluation",
                 "config_required": True,
                 "available_configs": {"sample_size": [100, 1000, 10000]}
             })
-        
+
         return mock_datasets
 
 
@@ -386,15 +386,15 @@ class TestIssue239Integration:
         5. Verify access
         """
         selector = NativeDatasetSelector()
-        
+
         # Should have all categories populated
         assert len(selector.dataset_categories) >= 7
-        
+
         # Should be able to access datasets from each category
         for category_key, category_info in selector.dataset_categories.items():
             datasets = category_info["datasets"]
             assert len(datasets) > 0, f"Category {category_key} has no datasets"
-            
+
             # Test metadata access for first dataset
             test_dataset = datasets[0]
             metadata = selector.get_dataset_metadata(test_dataset)
@@ -421,20 +421,20 @@ class TestIssue239Integration:
         import os
 
         import psutil
-        
+
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
-        
+
         # Load multiple selector instances
         selectors = [NativeDatasetSelector() for _ in range(10)]
-        
+
         final_memory = process.memory_info().rss / 1024 / 1024  # MB
         memory_increase = final_memory - initial_memory
-        
+
         assert memory_increase < 100, (
             f"Memory usage increased by {memory_increase:.1f}MB, should be < 100MB"
         )
-        
+
         # Cleanup
         del selectors
 

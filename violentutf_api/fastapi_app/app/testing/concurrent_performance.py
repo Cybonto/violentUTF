@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class ConcurrentOperationResult:
     """Result of a concurrent operation"""
+
     operation_id: str
     operation_type: str
     start_time: float
@@ -38,7 +39,7 @@ class ConcurrentPerformanceTester:
 
     def __init__(self, max_workers: int = 10) -> None:
         """Initialize ConcurrentPerformanceTester.
-        
+
         Args:
             max_workers: Maximum number of concurrent workers for testing.
                         Defaults to 10.

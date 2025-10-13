@@ -18,6 +18,7 @@ class WorkflowStep(Enum):
     EXECUTION = "execution"
     RESULTS_REVIEW = "results_review"
 
+
 @dataclass
 class UsabilityMetrics:
     """Usability measurement results"""
@@ -34,7 +35,7 @@ class WorkflowUsabilityTester:
 
     def __init__(self) -> None:
         """Initialize WorkflowUsabilityTester.
-        
+
         Sets up the workflow usability testing framework with an empty
         test results list for tracking usability metrics.
         """
@@ -43,10 +44,10 @@ class WorkflowUsabilityTester:
     def test_workflow_intuitiveness(self, workflow_name: str) -> float:
         """
         Test workflow intuitiveness score
-        
+
         Args:
             workflow_name: Name of workflow to test
-            
+
         Returns:
             float: Intuitiveness score (0-10)
         """
@@ -58,11 +59,11 @@ class WorkflowUsabilityTester:
     def measure_task_completion_rate(self, workflow: str, user_scenarios: List[str]) -> float:
         """
         Measure task completion rate for workflow
-        
+
         Args:
             workflow: Workflow identifier
             user_scenarios: List of user scenarios to test
-            
+
         Returns:
             float: Completion rate percentage
         """
@@ -74,10 +75,10 @@ class WorkflowUsabilityTester:
     def analyze_user_workflow_efficiency(self, workflow_steps: List[WorkflowStep]) -> Dict[str, float]:
         """
         Analyze user workflow efficiency
-        
+
         Args:
             workflow_steps: List of workflow steps to analyze
-            
+
         Returns:
             Dict[str, float]: Efficiency metrics per step
         """
@@ -89,10 +90,10 @@ class WorkflowUsabilityTester:
     def test_workflow_error_recovery(self, workflow: str) -> Dict[str, Any]:
         """
         Test workflow error recovery mechanisms
-        
+
         Args:
             workflow: Workflow to test
-            
+
         Returns:
             Dict[str, Any]: Error recovery metrics
         """
@@ -104,10 +105,10 @@ class WorkflowUsabilityTester:
     def validate_user_guidance_effectiveness(self, workflow: str) -> float:
         """
         Validate effectiveness of user guidance
-        
+
         Args:
             workflow: Workflow to evaluate
-            
+
         Returns:
             float: Guidance effectiveness score
         """

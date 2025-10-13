@@ -47,7 +47,7 @@ class TestBackupTier:
         tier2 = BackupTier.TIER_2_IMPORTANT
         tier3 = BackupTier.TIER_3_USER_SPECIFIC
         tier4 = BackupTier.TIER_4_REPLACEABLE
-        
+
         # THEN: Should have appropriate retention periods
         assert tier1.retention_days == 30
         assert tier2.retention_days == 14
@@ -61,7 +61,7 @@ class TestBackupTier:
         tier2 = BackupTier.TIER_2_IMPORTANT
         tier3 = BackupTier.TIER_3_USER_SPECIFIC
         tier4 = BackupTier.TIER_4_REPLACEABLE
-        
+
         # THEN: Should have appropriate backup frequencies
         assert tier1.backup_frequency == "daily"
         assert tier2.backup_frequency == "daily"
@@ -89,7 +89,7 @@ class TestBackupMetadata:
             backup_size_bytes=1024000,
             compression_ratio=0.65
         )
-        
+
         # THEN: Metadata should be created correctly
         assert metadata.backup_id == "backup_267_001"
         assert metadata.service_name == "keycloak"
@@ -116,7 +116,7 @@ class TestBackupMetadata:
             backup_type="full",
             created_by="system"
         )
-        
+
         # THEN: Valid metadata should validate
         assert valid_metadata.is_valid()
         assert valid_metadata.validation_errors == []
@@ -132,7 +132,7 @@ class TestBackupMetadata:
             backup_type="invalid_type",  # Invalid backup type
             created_by=""  # Empty creator
         )
-        
+
         # THEN: Invalid metadata should not validate
         assert not invalid_metadata.is_valid()
         assert len(invalid_metadata.validation_errors) > 0
@@ -151,11 +151,11 @@ class TestBackupMetadata:
             backup_type="incremental",
             created_by="test_system"
         )
-        
+
         # WHEN: Serializing and deserializing
         serialized = original.to_dict()
         deserialized = BackupMetadata.from_dict(serialized)
-        
+
         # THEN: Data should be preserved
         assert deserialized.backup_id == original.backup_id
         assert deserialized.service_name == original.service_name
@@ -179,14 +179,14 @@ class TestBackupArchive:
             backup_type="full",
             created_by="system"
         )
-        
+
         backup_data = {
             "pg_dump_version": "15.4",
             "database_size": 1024000,
             "tables": ["users", "roles", "sessions"],
             "dump_format": "custom"
         }
-        
+
         archive = BackupArchive(
             metadata=metadata,
             backup_data=backup_data,
@@ -194,7 +194,7 @@ class TestBackupArchive:
             compression=True,
             encryption=True
         )
-        
+
         # THEN: Archive should be created correctly
         assert archive.metadata == metadata
         assert archive.backup_data == backup_data
@@ -214,14 +214,14 @@ class TestBackupArchive:
             backup_type="full",
             created_by="system"
         )
-        
+
         backup_data = {"database_file": "violentutf_api.db", "size": 512000}
         archive = BackupArchive(metadata=metadata, backup_data=backup_data)
-        
+
         # WHEN: Generating checksum
         checksum1 = archive.generate_checksum()
         checksum2 = archive.generate_checksum()
-        
+
         # THEN: Checksum should be consistent
         assert checksum1 == checksum2
         assert len(checksum1) == 64  # SHA-256 hex digest
@@ -238,26 +238,26 @@ class TestBackupArchive:
             backup_type="full",
             created_by="system"
         )
-        
+
         # Large repetitive data that should compress well
         backup_data = {
             "memory_data": "x" * 50000,  # 50KB of repeated data
             "conversations": [{"message": "test message"} for _ in range(1000)]
         }
-        
+
         archive = BackupArchive(
             metadata=metadata,
             backup_data=backup_data,
             compression=True
         )
-        
+
         # WHEN: Compressing data
         compressed_data = archive.compress_data()
-        
+
         # THEN: Compressed data should be smaller
         original_size = len(json.dumps(backup_data).encode())
         compressed_size = len(compressed_data)
-        
+
         assert compressed_size < original_size
         assert archive.compression_ratio > 0
         assert archive.compression_ratio < 1.0
@@ -280,7 +280,7 @@ class TestBackupIntegrityValidator:
         """Test creating integrity validator."""
         # GIVEN: Integrity validator initialization
         validator = BackupIntegrityValidator()
-        
+
         # THEN: Validator should be initialized
         assert validator is not None
         assert hasattr(validator, 'validate_backup')
@@ -290,10 +290,10 @@ class TestBackupIntegrityValidator:
         """Test validating backup file existence."""
         # GIVEN: Integrity validator and backup file
         validator = BackupIntegrityValidator()
-        
+
         # WHEN: Validating existing file
         result = validator.validate_file_exists(temp_backup_file)
-        
+
         # THEN: Validation should pass
         assert result.is_valid is True
         assert result.error_message is None
@@ -302,10 +302,10 @@ class TestBackupIntegrityValidator:
         """Test validating missing backup file."""
         # GIVEN: Integrity validator
         validator = BackupIntegrityValidator()
-        
+
         # WHEN: Validating non-existent file
         result = validator.validate_file_exists("/non/existent/backup.file")
-        
+
         # THEN: Validation should fail
         assert result.is_valid is False
         assert "file not found" in result.error_message.lower()
@@ -314,15 +314,15 @@ class TestBackupIntegrityValidator:
         """Test backup checksum verification."""
         # GIVEN: Backup file and expected checksum
         validator = BackupIntegrityValidator()
-        
+
         # Calculate expected checksum
         with open(temp_backup_file, 'rb') as f:
             content = f.read()
             expected_checksum = hashlib.sha256(content).hexdigest()
-        
+
         # WHEN: Verifying checksum
         result = validator.verify_checksum(temp_backup_file, expected_checksum)
-        
+
         # THEN: Verification should pass
         assert result.is_valid is True
         assert result.calculated_checksum == expected_checksum
@@ -332,10 +332,10 @@ class TestBackupIntegrityValidator:
         # GIVEN: Backup file and incorrect checksum
         validator = BackupIntegrityValidator()
         wrong_checksum = "0" * 64  # Invalid checksum
-        
+
         # WHEN: Verifying checksum
         result = validator.verify_checksum(temp_backup_file, wrong_checksum)
-        
+
         # THEN: Verification should fail
         assert result.is_valid is False
         assert "checksum mismatch" in result.error_message.lower()
@@ -348,7 +348,7 @@ class TestBackupCompressor:
         """Test creating backup compressor."""
         # GIVEN: Compressor initialization
         compressor = BackupCompressor(compression_level=6)
-        
+
         # THEN: Compressor should be initialized
         assert compressor.compression_level == 6
         assert hasattr(compressor, 'compress_data')
@@ -363,14 +363,14 @@ class TestBackupCompressor:
             "repeated_list": ["item"] * 1000,
             "nested": {"data": "B" * 5000}
         }
-        
+
         # WHEN: Compressing data
         compressed = compressor.compress_data(test_data)
-        
+
         # THEN: Data should be compressed
         original_size = len(json.dumps(test_data).encode())
         compressed_size = len(compressed)
-        
+
         assert compressed_size < original_size
         assert compressor.last_compression_ratio > 0
         assert compressor.last_compression_ratio < 1.0
@@ -384,11 +384,11 @@ class TestBackupCompressor:
             "data": {"key1": "value1", "key2": "value2"},
             "timestamp": datetime.now().isoformat()
         }
-        
+
         # WHEN: Compressing and decompressing
         compressed = compressor.compress_data(original_data)
         decompressed = compressor.decompress_data(compressed)
-        
+
         # THEN: Data should be identical
         assert decompressed == original_data
 
@@ -407,7 +407,7 @@ class TestBackupRetentionManager:
         """Test creating retention manager."""
         # GIVEN: Retention manager initialization
         manager = BackupRetentionManager(backup_directory=temp_backup_dir)
-        
+
         # THEN: Manager should be initialized
         assert str(manager.backup_directory) == temp_backup_dir
         assert hasattr(manager, 'enforce_retention_policy')
@@ -417,7 +417,7 @@ class TestBackupRetentionManager:
         """Test enforcing Tier 1 retention policy (30 days)."""
         # GIVEN: Retention manager with Tier 1 backups
         manager = BackupRetentionManager(backup_directory=temp_backup_dir)
-        
+
         # Create mock backups with different ages
         current_time = datetime.now()
         backups = [
@@ -431,12 +431,12 @@ class TestBackupRetentionManager:
             self._create_mock_backup("expired", current_time - timedelta(days=35),
                                    BackupTier.TIER_1_CRITICAL)
         ]
-        
+
         # WHEN: Enforcing retention policy
         deleted_backups = await manager.enforce_retention_policy(
             backups, BackupTier.TIER_1_CRITICAL
         )
-        
+
         # THEN: Only expired backup should be deleted
         assert len(deleted_backups) == 1
         assert deleted_backups[0].backup_id == "expired"
@@ -445,7 +445,7 @@ class TestBackupRetentionManager:
         """Test getting list of expired backups."""
         # GIVEN: Retention manager with mixed backup ages
         manager = BackupRetentionManager(backup_directory=temp_backup_dir)
-        
+
         current_time = datetime.now()
         backups = [
             self._create_mock_backup("backup1", current_time - timedelta(days=5),
@@ -453,15 +453,15 @@ class TestBackupRetentionManager:
             self._create_mock_backup("backup2", current_time - timedelta(days=20),
                                    BackupTier.TIER_2_IMPORTANT)  # Expired (14-day retention)
         ]
-        
+
         # WHEN: Getting expired backups
         expired = await manager.get_expired_backups(backups, BackupTier.TIER_2_IMPORTANT)
-        
+
         # THEN: Should identify expired backup
         assert len(expired) == 1
         assert expired[0].backup_id == "backup2"
 
-    def _create_mock_backup(self, backup_id: str, created_at: datetime, 
+    def _create_mock_backup(self, backup_id: str, created_at: datetime,
                            tier: BackupTier) -> BackupMetadata:
         """Create mock backup metadata for testing."""
         return BackupMetadata(
@@ -489,7 +489,7 @@ class TestBackupManager:
         """Test creating backup manager with all components."""
         # GIVEN: Backup manager initialization
         manager = BackupManager(backup_directory=temp_backup_dir)
-        
+
         # THEN: Manager should be initialized with all components
         assert str(manager.backup_directory) == temp_backup_dir
         assert manager.integrity_validator is not None
@@ -500,7 +500,7 @@ class TestBackupManager:
         """Test backup manager integration with all components."""
         # GIVEN: Backup manager
         manager = BackupManager(backup_directory=temp_backup_dir)
-        
+
         # WHEN: Creating a comprehensive backup
         backup_result = await manager.create_comprehensive_backup(
             service_name="keycloak",
@@ -510,7 +510,7 @@ class TestBackupManager:
             compression=True,
             validation=True
         )
-        
+
         # THEN: Backup should be created successfully
         assert backup_result.success is True
         assert backup_result.backup_id is not None
@@ -522,7 +522,7 @@ class TestBackupManager:
         """Test backup manager failure handling."""
         # GIVEN: Backup manager with simulated failure
         manager = BackupManager(backup_directory=temp_backup_dir)
-        
+
         # Mock a failure in the compression component
         with patch.object(manager.compressor, 'compress_data', side_effect=Exception("Compression failed")):
             # WHEN: Attempting to create backup with compression
@@ -533,7 +533,7 @@ class TestBackupManager:
                 backup_tier=BackupTier.TIER_2_IMPORTANT,
                 compression=True
             )
-            
+
             # THEN: Backup should fail gracefully
             assert backup_result.success is False
             assert "compression failed" in backup_result.error_message.lower()

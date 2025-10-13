@@ -62,7 +62,7 @@ class TestEndToEndGapAnalysis:
                 backup_configured=True,
                 purpose_description="stores user personal information"
             ),
-            
+
             # Orphaned development database - missing ownership
             DatabaseAsset(
                 id="dev_002",
@@ -78,7 +78,7 @@ class TestEndToEndGapAnalysis:
                 backup_configured=False,
                 file_path="/tmp/test.db"
             ),
-            
+
             # Staging database with documentation issues
             DatabaseAsset(
                 id="stage_003",
@@ -94,7 +94,7 @@ class TestEndToEndGapAnalysis:
                 backup_configured=False,  # Missing backup
                 file_path="/app/analytics/staging.duckdb"
             ),
-            
+
             # Production database with missing compliance controls
             DatabaseAsset(
                 id="prod_004",
@@ -110,7 +110,7 @@ class TestEndToEndGapAnalysis:
                 backup_configured=True,
                 purpose_description="financial transaction records"
             ),
-            
+
             # Development database that's actually unused
             DatabaseAsset(
                 id="dev_005",
@@ -194,17 +194,17 @@ class TestEndToEndGapAnalysis:
         }
 
     @pytest.fixture
-    def integration_test_services(self, comprehensive_asset_inventory, 
+    def integration_test_services(self, comprehensive_asset_inventory,
                                  mock_documentation_data, mock_usage_metrics_data):
         """Setup integrated services with realistic mock data."""
-        
+
         # Asset service
         asset_service = AsyncMock()
         asset_service.get_all_assets.return_value = comprehensive_asset_inventory
-        
+
         # Documentation service
         documentation_service = AsyncMock()
-        
+
         async def mock_find_documentation(asset_id, doc_type):
             if asset_id in mock_documentation_data and doc_type.value in mock_documentation_data[asset_id]:
                 doc_data = mock_documentation_data[asset_id][doc_type.value]
@@ -216,12 +216,12 @@ class TestEndToEndGapAnalysis:
                     content=doc_data["content"]
                 )
             return None
-        
+
         documentation_service.find_documentation.side_effect = mock_find_documentation
-        
+
         # Monitoring service
         monitoring_service = AsyncMock()
-        
+
         async def mock_get_usage_metrics(asset_id, days):
             if asset_id in mock_usage_metrics_data:
                 metrics_data = mock_usage_metrics_data[asset_id]
@@ -239,9 +239,9 @@ class TestEndToEndGapAnalysis:
                 days_since_last_activity=365,
                 activity_score=0.0
             )
-        
+
         monitoring_service.get_asset_usage_metrics.side_effect = mock_get_usage_metrics
-        
+
         return {
             "asset_service": asset_service,
             "documentation_service": documentation_service,
@@ -252,22 +252,22 @@ class TestEndToEndGapAnalysis:
     def e2e_gap_analyzer(self, integration_test_services):
         """Create fully integrated GapAnalyzer for E2E testing."""
         services = integration_test_services
-        
+
         # Create integrated components
         orphaned_detector = OrphanedResourceDetector(
             asset_service=services["asset_service"],
             documentation_service=services["documentation_service"],
             monitoring_service=services["monitoring_service"]
         )
-        
+
         documentation_analyzer = DocumentationGapAnalyzer(
             documentation_service=services["documentation_service"],
             asset_service=services["asset_service"]
         )
-        
+
         compliance_checker = ComplianceGapChecker(Mock())
         gap_prioritizer = GapPrioritizer(Mock())
-        
+
         return GapAnalyzer(
             asset_service=services["asset_service"],
             orphaned_detector=orphaned_detector,
@@ -287,26 +287,26 @@ class TestEndToEndGapAnalysis:
             max_execution_time_seconds=180,
             max_memory_usage_mb=256
         )
-        
+
         # Execute full analysis
         start_time = time.time()
         result = await e2e_gap_analyzer.analyze_gaps(config)
         execution_time = time.time() - start_time
-        
+
         # Verify execution meets performance requirements
         assert execution_time < 180  # Must complete within time limit
         assert isinstance(result, GapAnalysisResult)
         assert result.execution_time_seconds > 0
-        
+
         # Verify comprehensive gap detection
         assert result.total_gaps_found >= 10  # Should find multiple types of gaps
         assert result.assets_analyzed == 5     # All test assets analyzed
-        
+
         # Verify gap type distribution
         assert GapType.MISSING_DOCUMENTATION in result.gaps_by_type
         assert GapType.INSUFFICIENT_SECURITY_CONTROLS in result.gaps_by_type
         assert GapType.UNCLEAR_OWNERSHIP in result.gaps_by_type
-        
+
         # Verify severity distribution
         assert GapSeverity.HIGH in result.gaps_by_severity
         assert GapSeverity.MEDIUM in result.gaps_by_severity
@@ -332,23 +332,23 @@ class TestEndToEndGapAnalysis:
                     backup_configured=i % 9 != 0    # Some without backups
                 )
             )
-        
+
         # Update asset service to return large inventory
         e2e_gap_analyzer.asset_service.get_all_assets.return_value = large_inventory
-        
+
         config = GapAnalysisConfig(max_execution_time_seconds=180, max_memory_usage_mb=256)
-        
+
         # Monitor memory usage during execution
         process = psutil.Process()
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
-        
+
         start_time = time.time()
         result = await e2e_gap_analyzer.analyze_gaps(config)
         execution_time = time.time() - start_time
-        
+
         peak_memory = process.memory_info().rss / 1024 / 1024  # MB
         memory_used = peak_memory - initial_memory
-        
+
         # Verify performance requirements
         assert execution_time < 180    # Time limit
         assert memory_used < 256       # Memory limit
@@ -359,16 +359,16 @@ class TestEndToEndGapAnalysis:
         """Test integration between different gap detection services."""
         config = GapAnalysisConfig()
         result = await e2e_gap_analyzer.analyze_gaps(config)
-        
+
         # Verify each service contributed gaps
         orphaned_gaps = [gap for gap in result.all_gaps if isinstance(gap, OrphanedAssetGap)]
         doc_gaps = [gap for gap in result.all_gaps if isinstance(gap, DocumentationGap)]
         compliance_gaps = [gap for gap in result.all_gaps if isinstance(gap, ComplianceGap)]
-        
+
         assert len(orphaned_gaps) > 0      # Orphaned detector found gaps
         assert len(doc_gaps) > 0           # Documentation analyzer found gaps
         assert len(compliance_gaps) > 0    # Compliance checker found gaps
-        
+
         # Verify no duplicate gaps (deduplication working)
         gap_signatures = set()
         for gap in result.all_gaps:
@@ -380,26 +380,26 @@ class TestEndToEndGapAnalysis:
         """Test integration with gap prioritization system."""
         config = GapAnalysisConfig()
         result = await e2e_gap_analyzer.analyze_gaps(config)
-        
+
         # Verify all gaps have priority scores
         for gap in result.all_gaps:
             assert hasattr(gap, 'priority_score')
             assert gap.priority_score is not None
             assert gap.priority_score.score > 0
-        
+
         # Verify priority distribution makes sense
-        critical_gaps = [gap for gap in result.all_gaps 
+        critical_gaps = [gap for gap in result.all_gaps
                         if gap.priority_score.priority_level == "CRITICAL"]
-        high_gaps = [gap for gap in result.all_gaps 
+        high_gaps = [gap for gap in result.all_gaps
                     if gap.priority_score.priority_level == "HIGH"]
-        
+
         # Critical production assets should have high priority gaps
-        prod_gaps = [gap for gap in result.all_gaps 
+        prod_gaps = [gap for gap in result.all_gaps
                     if gap.asset_id in ["prod_001", "prod_004"]]
         assert len(prod_gaps) > 0
-        
+
         # At least some production gaps should be high priority
-        high_priority_prod_gaps = [gap for gap in prod_gaps 
+        high_priority_prod_gaps = [gap for gap in prod_gaps
                                   if gap.priority_score.priority_level in ["CRITICAL", "HIGH"]]
         assert len(high_priority_prod_gaps) > 0
 
@@ -410,11 +410,11 @@ class TestEndToEndGapAnalysis:
             real_time_monitoring=True,
             monitoring_interval_minutes=5
         )
-        
+
         # First analysis
         result1 = await e2e_gap_analyzer.analyze_gaps(config)
         initial_gap_count = result1.total_gaps_found
-        
+
         # Simulate asset change that would trigger new gaps
         new_asset = DatabaseAsset(
             id="new_001",
@@ -428,17 +428,17 @@ class TestEndToEndGapAnalysis:
             encryption_enabled=False,  # Compliance violation
             access_restricted=False
         )
-        
+
         # Update asset inventory
         current_assets = await e2e_gap_analyzer.asset_service.get_all_assets()
         e2e_gap_analyzer.asset_service.get_all_assets.return_value = current_assets + [new_asset]
-        
+
         # Second analysis should detect new gaps
         result2 = await e2e_gap_analyzer.analyze_gaps(config)
-        
+
         # Should have more gaps due to new problematic asset
         assert result2.total_gaps_found > initial_gap_count
-        
+
         # Should detect gaps for the new asset
         new_asset_gaps = [gap for gap in result2.all_gaps if gap.asset_id == "new_001"]
         assert len(new_asset_gaps) >= 2  # At least orphaned and compliance gaps
@@ -447,20 +447,20 @@ class TestEndToEndGapAnalysis:
         """Test error handling and graceful degradation."""
         # Simulate partial service failures
         config = GapAnalysisConfig()
-        
+
         # Make documentation service fail
         e2e_gap_analyzer.documentation_analyzer.documentation_service.find_documentation.side_effect = Exception("Service unavailable")
-        
+
         # Analysis should continue with other detectors
         result = await e2e_gap_analyzer.analyze_gaps(config)
-        
+
         # Should still have gaps from other services
         assert result.total_gaps_found > 0
-        
+
         # Should record the error
         assert len(result.errors) > 0
         assert any("service unavailable" in error.lower() for error in result.errors)
-        
+
         # Should still have orphaned and compliance gaps
         orphaned_gaps = [gap for gap in result.all_gaps if isinstance(gap, OrphanedAssetGap)]
         compliance_gaps = [gap for gap in result.all_gaps if isinstance(gap, ComplianceGap)]
@@ -470,24 +470,24 @@ class TestEndToEndGapAnalysis:
     async def test_concurrent_analysis_execution(self, e2e_gap_analyzer):
         """Test concurrent execution of multiple gap analyses."""
         config = GapAnalysisConfig()
-        
+
         # Run multiple analyses concurrently
         tasks = [
             e2e_gap_analyzer.analyze_gaps(config)
             for _ in range(3)
         ]
-        
+
         start_time = time.time()
         results = await asyncio.gather(*tasks, return_exceptions=True)
         execution_time = time.time() - start_time
-        
+
         # All should complete successfully
         assert len(results) == 3
         for result in results:
             assert not isinstance(result, Exception)
             assert isinstance(result, GapAnalysisResult)
             assert result.total_gaps_found > 0
-        
+
         # Concurrent execution should not significantly increase total time
         assert execution_time < 300  # Should not be 3x single execution time
 
@@ -509,14 +509,14 @@ class TestEndToEndGapAnalysis:
                     high_gaps=12
                 )
             ]
-            
+
             config = GapAnalysisConfig(include_trend_analysis=True)
             result = await e2e_gap_analyzer.analyze_gaps(config)
-            
+
             # Should include trend analysis
             assert hasattr(result, 'trend_analysis')
             assert result.trend_analysis is not None
-            
+
             # Should show improvement trend (fewer gaps over time)
             assert result.trend_analysis.overall_trend == "IMPROVING"
 
@@ -525,18 +525,18 @@ class TestEndToEndGapAnalysis:
         config = GapAnalysisConfig(
             compliance_frameworks=["GDPR", "SOC2", "NIST"]
         )
-        
+
         result = await e2e_gap_analyzer.analyze_gaps(config)
-        
+
         # Verify compliance gaps are detected for assets with known violations
         compliance_gaps = [gap for gap in result.all_gaps if isinstance(gap, ComplianceGap)]
-        
+
         # Should find GDPR violations for personal data assets
         gdpr_gaps = [gap for gap in compliance_gaps if gap.framework == ComplianceFramework.GDPR]
         personal_data_assets = ["prod_001", "prod_004"]  # Both have personal data indicators
         gdpr_asset_violations = [gap for gap in gdpr_gaps if gap.asset_id in personal_data_assets]
         assert len(gdpr_asset_violations) > 0
-        
+
         # Should find SOC2 violations for production assets with missing controls
         soc2_gaps = [gap for gap in compliance_gaps if gap.framework == ComplianceFramework.SOC2]
         production_assets = ["prod_001", "prod_004"]
@@ -546,25 +546,25 @@ class TestEndToEndGapAnalysis:
     async def test_memory_optimization_and_cleanup(self, e2e_gap_analyzer):
         """Test memory optimization and cleanup during analysis."""
         config = GapAnalysisConfig()
-        
+
         # Monitor memory throughout the process
         process = psutil.Process()
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
-        
+
         # Execute analysis
         result = await e2e_gap_analyzer.analyze_gaps(config)
-        
+
         # Force garbage collection to ensure cleanup
         import gc
         gc.collect()
-        
+
         # Check final memory usage
         final_memory = process.memory_info().rss / 1024 / 1024  # MB
         memory_growth = final_memory - initial_memory
-        
+
         # Memory growth should be reasonable
         assert memory_growth < 100  # Less than 100MB growth
-        
+
         # Should not have memory leaks (reasonable cleanup)
         assert memory_growth < 256  # Within configured limit
 
@@ -572,14 +572,14 @@ class TestEndToEndGapAnalysis:
         """Test serialization and persistence of analysis results."""
         config = GapAnalysisConfig()
         result = await e2e_gap_analyzer.analyze_gaps(config)
-        
+
         # Test result serialization
         result_dict = result.dict()
         assert isinstance(result_dict, dict)
         assert 'analysis_id' in result_dict
         assert 'total_gaps_found' in result_dict
         assert 'gaps_by_type' in result_dict
-        
+
         # Test gap serialization
         for gap in result.all_gaps:
             gap_dict = gap.dict()
@@ -587,7 +587,7 @@ class TestEndToEndGapAnalysis:
             assert 'asset_id' in gap_dict
             assert 'gap_type' in gap_dict
             assert 'severity' in gap_dict
-        
+
         # Verify serialization preserves all critical data
         assert result_dict['total_gaps_found'] == result.total_gaps_found
         assert result_dict['assets_analyzed'] == result.assets_analyzed
@@ -604,9 +604,9 @@ class TestPerformanceBenchmarks:
             {"assets": 50, "name": "medium_inventory"},
             {"assets": 100, "name": "large_inventory"}
         ]
-        
+
         results = {}
-        
+
         for scenario in scenarios:
             # Create test inventory
             inventory = [
@@ -622,26 +622,26 @@ class TestPerformanceBenchmarks:
                 )
                 for i in range(scenario["assets"])
             ]
-            
+
             e2e_gap_analyzer.asset_service.get_all_assets.return_value = inventory
-            
+
             # Benchmark execution
             config = GapAnalysisConfig()
             start_time = time.time()
             result = await e2e_gap_analyzer.analyze_gaps(config)
             execution_time = time.time() - start_time
-            
+
             results[scenario["name"]] = {
                 "execution_time": execution_time,
                 "assets_analyzed": result.assets_analyzed,
                 "gaps_found": result.total_gaps_found,
                 "throughput": result.assets_analyzed / execution_time
             }
-        
+
         # Verify performance scaling
         small_throughput = results["small_inventory"]["throughput"]
         large_throughput = results["large_inventory"]["throughput"]
-        
+
         # Throughput should not degrade significantly with scale
         throughput_ratio = large_throughput / small_throughput
         assert throughput_ratio > 0.5  # Less than 50% degradation acceptable

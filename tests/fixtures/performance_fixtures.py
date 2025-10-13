@@ -140,7 +140,7 @@ def create_performance_test_data() -> Dict[str, Any]:
                     "session_duration": 600
                 },
                 {
-                    "scenario_name": "multi_user_moderate_load", 
+                    "scenario_name": "multi_user_moderate_load",
                     "concurrent_users": 10,
                     "operations_per_user": 3,
                     "user_types": ["all_user_types"],

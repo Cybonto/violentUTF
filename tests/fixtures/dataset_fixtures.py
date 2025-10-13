@@ -32,7 +32,7 @@ def create_test_datasets() -> Dict[str, Any]:
             "type": "security_evaluation",
             "files": [
                 "test_jailbreak_attacks.jsonl",
-                "test_prompt_injection.jsonl", 
+                "test_prompt_injection.jsonl",
                 "test_adversarial_prompts.jsonl"
             ],
             "attack_types": ["jailbreak", "prompt_injection", "adversarial"],
@@ -52,7 +52,7 @@ def create_test_datasets() -> Dict[str, Any]:
         },
         "acpbench": {
             "name": "ACPBench Reasoning Test Suite",
-            "type": "reasoning_evaluation", 
+            "type": "reasoning_evaluation",
             "files": [
                 "test_logical_reasoning.json",
                 "test_causal_inference.json"

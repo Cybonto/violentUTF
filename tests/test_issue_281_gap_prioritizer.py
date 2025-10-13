@@ -100,9 +100,9 @@ class TestGapPrioritizer:
             description="Missing encryption",
             recommendations=["Enable encryption"]
         )
-        
+
         score = gap_prioritizer.calculate_gap_priority_score(compliance_gap, critical_production_asset)
-        
+
         # Should be high priority score
         assert isinstance(score, PriorityScore)
         assert score.score >= 200  # High score due to multiple high factors
@@ -122,9 +122,9 @@ class TestGapPrioritizer:
             description="Documentation is 60 days old",
             recommendations=["Update documentation"]
         )
-        
+
         score = gap_prioritizer.calculate_gap_priority_score(doc_gap, low_dev_asset)
-        
+
         # Should be low priority score
         assert score.score <= 50  # Low score due to low impact factors
         assert score.priority_level in [PriorityLevel.LOW, PriorityLevel.MEDIUM]
@@ -153,7 +153,7 @@ class TestGapPrioritizer:
         )
         multiplier = gap_prioritizer.get_regulatory_multiplier(gdpr_gap)
         assert multiplier >= 2.0
-        
+
         # Documentation gap should have lower multiplier
         doc_gap = Mock(
             gap_type=GapType.MISSING_DOCUMENTATION,
@@ -166,10 +166,10 @@ class TestGapPrioritizer:
         """Test security impact multiplier calculation."""
         # Security control gap on confidential asset should have high multiplier
         security_gap = Mock(gap_type=GapType.INSUFFICIENT_SECURITY_CONTROLS)
-        
+
         multiplier = gap_prioritizer.get_security_multiplier(security_gap, critical_production_asset)
         assert multiplier >= 1.5
-        
+
         # Documentation gap should have lower security multiplier
         doc_gap = Mock(gap_type=GapType.MISSING_DOCUMENTATION)
         multiplier = gap_prioritizer.get_security_multiplier(doc_gap, critical_production_asset)
@@ -180,7 +180,7 @@ class TestGapPrioritizer:
         # Critical production asset should have high multiplier
         multiplier = gap_prioritizer.get_business_impact_multiplier(critical_production_asset)
         assert multiplier >= 2.0
-        
+
         # Low development asset should have lower multiplier
         multiplier = gap_prioritizer.get_business_impact_multiplier(low_dev_asset)
         assert multiplier <= 1.5
@@ -200,9 +200,9 @@ class TestGapPrioritizer:
             gap_type=GapType.INSUFFICIENT_SECURITY_CONTROLS,
             framework=ComplianceFramework.GDPR
         )
-        
+
         score = gap_prioritizer.calculate_gap_priority_score(extreme_gap, critical_production_asset)
-        
+
         # Score should be capped at maximum (375)
         assert score.score <= 375
 
@@ -213,16 +213,16 @@ class TestGapPrioritizer:
             compliance_deadline=datetime.now() + timedelta(days=30),  # 30 days
             framework=ComplianceFramework.GDPR
         )
-        
+
         urgency = gap_prioritizer.calculate_urgency_multiplier(urgent_gap)
         assert urgency >= 1.5  # Approaching deadline increases urgency
-        
+
         # Gap with distant deadline
         distant_gap = Mock(
             compliance_deadline=datetime.now() + timedelta(days=365),  # 1 year
             framework=ComplianceFramework.GDPR
         )
-        
+
         urgency = gap_prioritizer.calculate_urgency_multiplier(distant_gap)
         assert urgency <= 1.2  # Distant deadline has lower urgency
 
@@ -233,17 +233,17 @@ class TestGapPrioritizer:
             Mock(priority_score=Mock(score=300, priority_level=PriorityLevel.CRITICAL)),
             Mock(priority_score=Mock(score=280, priority_level=PriorityLevel.HIGH))
         ]
-        
+
         # Low priority gaps
         low_priority_gaps = [
             Mock(priority_score=Mock(score=50, priority_level=PriorityLevel.LOW)),
             Mock(priority_score=Mock(score=40, priority_level=PriorityLevel.LOW))
         ]
-        
+
         all_gaps = high_priority_gaps + low_priority_gaps
-        
+
         recommendations = gap_prioritizer.generate_resource_allocation_recommendations(all_gaps)
-        
+
         assert isinstance(recommendations, ResourceAllocationRecommendation)
         assert recommendations.immediate_action_gaps == 2  # Critical and High
         assert recommendations.scheduled_action_gaps == 2  # Low priority
@@ -258,9 +258,9 @@ class TestGapPrioritizer:
             Mock(asset_id="asset_002", priority_score=Mock(score=150)),
             Mock(asset_id="asset_002", priority_score=Mock(score=120))
         ]
-        
+
         clusters = gap_prioritizer.cluster_gaps_by_asset(gaps)
-        
+
         assert len(clusters) == 2
         assert "asset_001" in clusters
         assert "asset_002" in clusters
@@ -275,9 +275,9 @@ class TestGapPrioritizer:
             Mock(gap_type=GapType.MISSING_DOCUMENTATION),
             Mock(gap_type=GapType.OUTDATED_DOCUMENTATION)
         ]
-        
+
         clusters = gap_prioritizer.cluster_gaps_by_type(gaps)
-        
+
         assert GapType.INSUFFICIENT_SECURITY_CONTROLS in clusters
         assert GapType.MISSING_DOCUMENTATION in clusters
         assert len(clusters[GapType.INSUFFICIENT_SECURITY_CONTROLS]) == 2
@@ -291,17 +291,17 @@ class TestGapPrioritizer:
             severity=GapSeverity.HIGH,
             complexity="HIGH"
         )
-        
+
         effort = gap_prioritizer.estimate_remediation_effort(security_gap)
         assert effort >= 16  # High effort for complex security gaps
-        
+
         # Simple documentation gap
         doc_gap = Mock(
             gap_type=GapType.MISSING_DOCUMENTATION,
             severity=GapSeverity.LOW,
             complexity="LOW"
         )
-        
+
         effort = gap_prioritizer.estimate_remediation_effort(doc_gap)
         assert effort <= 8  # Lower effort for documentation
 
@@ -313,9 +313,9 @@ class TestGapPrioritizer:
             Mock(gap_type=GapType.INSUFFICIENT_ACCESS_CONTROLS),
             Mock(gap_type=GapType.OUTDATED_DOCUMENTATION)
         ]
-        
+
         assignments = gap_prioritizer.recommend_team_assignments(gaps)
-        
+
         assert "security_team" in assignments
         assert "documentation_team" in assignments
         assert len(assignments["security_team"]) == 2  # Two security gaps
@@ -340,9 +340,9 @@ class TestGapPrioritizer:
                 "low_gaps": 25
             }
         ]
-        
+
         trend = gap_prioritizer.analyze_priority_trends(historical_gaps)
-        
+
         # Should show improvement (fewer critical/high gaps)
         assert trend.critical_gap_trend < 0  # Decreasing
         assert trend.high_gap_trend < 0      # Decreasing
@@ -355,16 +355,16 @@ class TestGapPrioritizer:
             asset_sla_tier="GOLD",
             sla_impact_level="HIGH"
         )
-        
+
         sla_multiplier = gap_prioritizer.calculate_sla_impact_multiplier(sla_gap)
         assert sla_multiplier >= 1.5  # SLA impact increases priority
-        
+
         # Gap on non-SLA asset
         non_sla_gap = Mock(
             asset_sla_tier=None,
             sla_impact_level="NONE"
         )
-        
+
         sla_multiplier = gap_prioritizer.calculate_sla_impact_multiplier(non_sla_gap)
         assert sla_multiplier == 1.0  # No SLA impact
 
@@ -375,9 +375,9 @@ class TestGapPrioritizer:
             risk_reduction_value=25000,
             compliance_penalty_avoidance=10000
         )
-        
+
         analysis = gap_prioritizer.calculate_cost_benefit_ratio(gap)
-        
+
         assert analysis.benefit_cost_ratio > 1.0  # Benefits outweigh costs
         assert analysis.net_benefit > 0
         assert analysis.roi_percentage > 0
@@ -386,7 +386,7 @@ class TestGapPrioritizer:
         """Test thread safety for concurrent prioritization operations."""
         import asyncio
         from concurrent.futures import ThreadPoolExecutor
-        
+
         gaps = [
             Mock(
                 severity=GapSeverity.HIGH,
@@ -394,18 +394,18 @@ class TestGapPrioritizer:
             )
             for _ in range(10)
         ]
-        
+
         asset = Mock(criticality_level=CriticalityLevel.HIGH)
-        
+
         # Run prioritization concurrently
         with ThreadPoolExecutor(max_workers=3) as executor:
             futures = [
                 executor.submit(gap_prioritizer.calculate_gap_priority_score, gap, asset)
                 for gap in gaps
             ]
-            
+
             results = [future.result() for future in futures]
-        
+
         # All should complete successfully with consistent results
         assert len(results) == 10
         for result in results:
@@ -427,7 +427,7 @@ class TestPriorityScore:
             business_component=2.2,
             priority_level=PriorityLevel.HIGH
         )
-        
+
         assert score.score == 250.5
         assert score.priority_level == PriorityLevel.HIGH
         assert score.severity_component == 8.0
@@ -443,7 +443,7 @@ class TestPriorityScore:
             business_component=2.5,
             priority_level=PriorityLevel.CRITICAL
         )
-        
+
         low_score = PriorityScore(
             score=100,
             severity_component=6,
@@ -453,7 +453,7 @@ class TestPriorityScore:
             business_component=1.0,
             priority_level=PriorityLevel.MEDIUM
         )
-        
+
         assert high_score > low_score
         assert low_score < high_score
 
@@ -468,7 +468,7 @@ class TestPriorityScore:
             business_component=2.0,
             priority_level=PriorityLevel.HIGH
         )
-        
+
         score_dict = score.dict()
         assert isinstance(score_dict, dict)
         assert score_dict['score'] == 200
@@ -489,7 +489,7 @@ class TestPriorityLevel:
         """Test priority level ordering."""
         levels = [PriorityLevel.LOW, PriorityLevel.CRITICAL, PriorityLevel.MEDIUM, PriorityLevel.HIGH]
         expected_order = [PriorityLevel.CRITICAL, PriorityLevel.HIGH, PriorityLevel.MEDIUM, PriorityLevel.LOW]
-        
+
         # Sort by priority (implementation dependent)
         # This test assumes implementation provides ordering
 
@@ -511,7 +511,7 @@ class TestResourceAllocationRecommendation:
             recommended_timeline_weeks=8,
             budget_estimate=25000
         )
-        
+
         assert recommendation.immediate_action_gaps == 5
         assert recommendation.total_gaps == 15
         assert recommendation.estimated_effort_hours == 120
@@ -527,7 +527,7 @@ class TestResourceAllocationRecommendation:
             recommended_timeline_weeks=4,
             budget_estimate=20000
         )
-        
+
         assert recommendation.total_gaps == 10
         assert recommendation.average_effort_per_gap == 8.0  # 80 hours / 10 gaps
         assert recommendation.weekly_budget == 5000  # 20000 / 4 weeks

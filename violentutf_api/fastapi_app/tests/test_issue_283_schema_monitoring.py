@@ -24,12 +24,16 @@ from app.services.monitoring.schema_monitor import (
 )
 
 # Create mock for DatabaseSchemaMonitor since it doesn't exist in the actual code
+
+
 class DatabaseSchemaMonitor:
     """Mock for DatabaseSchemaMonitor that doesn't exist in actual implementation."""
     def __init__(self, *args, **kwargs):
         pass
 
 # Mock enums and classes
+
+
 class SchemaChangeType:
     TABLE_ADDED = "TABLE_ADDED"
     TABLE_DROPPED = "TABLE_DROPPED"
@@ -39,11 +43,13 @@ class SchemaChangeType:
     INDEX_ADDED = "INDEX_ADDED"
     INDEX_DROPPED = "INDEX_DROPPED"
 
+
 class RiskLevel:
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
     CRITICAL = "CRITICAL"
+
 
 class AssetType:
     POSTGRESQL = "POSTGRESQL"
@@ -168,13 +174,13 @@ class TestSchemaChangeEvent:
     def test_schema_change_event_creation(self):
         """Test creating a complete schema change event."""
         asset_id = uuid.uuid4()
-        
+
         previous_schema = {
             "tables": [{"name": "users", "columns": ["id", "name"]}],
             "indexes": [],
             "constraints": [],
         }
-        
+
         current_schema = {
             "tables": [{"name": "users", "columns": ["id", "name", "email"]}],
             "indexes": [],
@@ -523,7 +529,7 @@ class TestSchemaChangeMonitor:
     async def test_schema_change_notification(self, schema_monitor, mock_notification_service):
         """Test schema change notification sending."""
         mock_asset = Mock(id=uuid.uuid4(), name="test-database")
-        
+
         changes = [
             SchemaChange(
                 change_type=SchemaChangeType.TABLE_ADDED,

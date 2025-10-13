@@ -11,6 +11,7 @@ utilities for testing the asset management system with high test coverage.
 """
 
 import asyncio
+import tempfile
 import uuid
 from datetime import datetime, timezone
 from typing import Any, AsyncGenerator, Dict, Generator, List, Optional, Union
@@ -65,17 +66,17 @@ async def async_engine():
         poolclass=StaticPool,
         connect_args={"check_same_thread": False}
     )
-    
+
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield engine
-    
+
     # Drop all tables after test
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    
+
     await engine.dispose()
 
 
@@ -85,7 +86,7 @@ async def async_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
     async_session_maker = async_sessionmaker(
         async_engine, class_=AsyncSession, expire_on_commit=False
     )
-    
+
     async with async_session_maker() as session:
         yield session
 
@@ -99,15 +100,15 @@ def client() -> TestClient:
 @pytest_asyncio.fixture
 async def async_client(async_session) -> AsyncGenerator[AsyncClient, None]:
     """Create async test client with database session override."""
-    
+
     async def override_get_session():
         yield async_session
-    
+
     app.dependency_overrides[get_session] = override_get_session
-    
+
     async with AsyncClient(app=app, base_url="http://test", follow_redirects=True) as ac:  # type: ignore[call-arg]
         yield ac
-    
+
     app.dependency_overrides.clear()
 
 
@@ -188,13 +189,13 @@ def sample_asset_data_list() -> List[AssetCreate]:
             name="Test SQLite DB",
             asset_type=AssetType.SQLITE,
             unique_identifier="test-sqlite-001",
-            location="/tmp/test.db",
+            location=tempfile.mktemp(suffix=".db"),
             security_classification=SecurityClassification.PUBLIC,
             criticality_level=CriticalityLevel.LOW,
             environment=Environment.TESTING,
             discovery_method="manual",
             confidence_score=85,
-            file_path="/tmp/test.db",
+            file_path=tempfile.mktemp(suffix=".db"),
             technical_contact="test-team@company.com"
         )
     ]
@@ -229,7 +230,7 @@ async def sample_database_asset(async_session: AsyncSession) -> DatabaseAsset:
         created_by="test_user",
         updated_by="test_user"
     )
-    
+
     async_session.add(asset)
     await async_session.commit()
     await async_session.refresh(asset)
@@ -247,7 +248,7 @@ async def sample_asset_relationship(
         name="Target Database Asset",
         asset_type=AssetType.SQLITE,
         unique_identifier="target-sqlite-001",
-        location="/tmp/target.db",
+        location=tempfile.mktemp(suffix=".db"),
         security_classification=SecurityClassification.INTERNAL,
         criticality_level=CriticalityLevel.LOW,
         environment=Environment.TESTING,
@@ -257,11 +258,11 @@ async def sample_asset_relationship(
         created_by="test_user",
         updated_by="test_user"
     )
-    
+
     async_session.add(target_asset)
     await async_session.commit()
     await async_session.refresh(target_asset)
-    
+
     # Create relationship
     relationship = AssetRelationship(
         source_asset_id=sample_database_asset.id,
@@ -274,7 +275,7 @@ async def sample_asset_relationship(
         created_by="test_user",
         updated_by="test_user"
     )
-    
+
     async_session.add(relationship)
     await async_session.commit()
     await async_session.refresh(relationship)
@@ -298,7 +299,7 @@ async def sample_audit_log(
         compliance_relevant=True,
         timestamp=datetime.now(timezone.utc)
     )
-    
+
     async_session.add(audit_log)
     await async_session.commit()
     await async_session.refresh(audit_log)
@@ -396,7 +397,7 @@ def create_test_asset_dict(
     """Create a test asset dictionary for API testing."""
     if unique_id is None:
         unique_id = f"test-asset-{uuid.uuid4()}"
-    
+
     return {
         "name": name,
         "asset_type": asset_type,

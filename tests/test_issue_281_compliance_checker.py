@@ -122,10 +122,10 @@ class TestComplianceGapChecker:
     async def test_assess_all_compliance_gaps(self, compliance_checker, test_asset):
         """Test assessment of all compliance frameworks for an asset."""
         gaps = await compliance_checker.assess_compliance_gaps(test_asset)
-        
+
         # Should assess all applicable frameworks
         assert len(gaps) == 3  # GDPR + SOC2 + NIST
-        
+
         frameworks = {gap.framework for gap in gaps}
         assert ComplianceFramework.GDPR in frameworks
         assert ComplianceFramework.SOC2 in frameworks
@@ -139,16 +139,16 @@ class TestComplianceGapChecker:
             purpose_description="stores user personal information",
             name="user_profiles_db"
         )
-        
+
         assert compliance_checker.is_gdpr_applicable(personal_data_asset) is True
-        
+
         # Asset without personal data should not trigger GDPR
         system_asset = Mock(
             security_classification=SecurityClassification.INTERNAL,
             purpose_description="system configuration data",
             name="config_db"
         )
-        
+
         assert compliance_checker.is_gdpr_applicable(system_asset) is False
 
     async def test_soc2_applicability_detection(self, compliance_checker):
@@ -156,7 +156,7 @@ class TestComplianceGapChecker:
         # Production asset should trigger SOC2
         prod_asset = Mock(environment=Environment.PRODUCTION)
         assert compliance_checker.is_soc2_applicable(prod_asset) is True
-        
+
         # Development asset may not trigger SOC2
         dev_asset = Mock(environment=Environment.DEVELOPMENT)
         # Implementation may vary - could be True or False based on policy
@@ -166,7 +166,7 @@ class TestComplianceGapChecker:
         # Critical asset should trigger NIST
         critical_asset = Mock(criticality_level=CriticalityLevel.CRITICAL)
         assert compliance_checker.is_nist_applicable(critical_asset) is True
-        
+
         # Low criticality asset may not trigger NIST
         low_asset = Mock(criticality_level=CriticalityLevel.LOW)
         # Implementation may vary
@@ -196,13 +196,13 @@ class TestGDPRComplianceChecker:
         # Mock missing DPIA documentation
         with patch.object(gdpr_checker, 'find_dpia_documentation') as mock_find:
             mock_find.return_value = None
-            
+
             gaps = await gdpr_checker.assess_gaps(personal_data_asset)
-            
+
             # Should find missing DPIA gap
             dpia_gaps = [gap for gap in gaps if "DPIA" in gap.requirement]
             assert len(dpia_gaps) >= 1
-            
+
             dpia_gap = dpia_gaps[0]
             assert dpia_gap.severity == GapSeverity.HIGH
             assert "article 35" in dpia_gap.requirement.lower()
@@ -211,13 +211,13 @@ class TestGDPRComplianceChecker:
         """Test data retention policy requirement."""
         # Asset without retention policy
         personal_data_asset.compliance_requirements = {}
-        
+
         gaps = await gdpr_checker.assess_gaps(personal_data_asset)
-        
+
         # Should find missing retention policy gap
         retention_gaps = [gap for gap in gaps if gap.gap_type == GapType.MISSING_RETENTION_POLICY]
         assert len(retention_gaps) >= 1
-        
+
         retention_gap = retention_gaps[0]
         assert retention_gap.severity == GapSeverity.MEDIUM
         assert "storage limitation" in retention_gap.requirement.lower()
@@ -226,11 +226,11 @@ class TestGDPRComplianceChecker:
         """Test encryption requirement for personal data."""
         # Asset without encryption
         gaps = await gdpr_checker.assess_gaps(personal_data_asset)
-        
+
         # Should find insufficient security controls gap
         encryption_gaps = [gap for gap in gaps if gap.gap_type == GapType.INSUFFICIENT_SECURITY_CONTROLS]
         assert len(encryption_gaps) >= 1
-        
+
         encryption_gap = encryption_gaps[0]
         assert encryption_gap.severity == GapSeverity.HIGH
         assert "article 32" in encryption_gap.requirement.lower()
@@ -246,13 +246,13 @@ class TestGDPRComplianceChecker:
                 erasure_right_implemented=False,
                 portability_right_implemented=False
             )
-            
+
             gaps = await gdpr_checker.assess_gaps(personal_data_asset)
-            
+
             # Should find missing data subject rights gaps
             rights_gaps = [gap for gap in gaps if gap.gap_type == GapType.MISSING_DATA_SUBJECT_RIGHTS]
             assert len(rights_gaps) >= 1
-            
+
             rights_gap = rights_gaps[0]
             assert rights_gap.severity == GapSeverity.MEDIUM
             assert "article 15" in rights_gap.requirement.lower()
@@ -286,27 +286,27 @@ class TestGDPRComplianceChecker:
                 "expected_gaps": 4  # Missing: DPIA, retention, encryption, rights
             }
         ]
-        
+
         correct_assessments = 0
         total_assessments = len(test_scenarios)
-        
+
         for scenario in test_scenarios:
             # Mock supporting methods
             with patch.object(gdpr_checker, 'find_dpia_documentation') as mock_dpia, \
                  patch.object(gdpr_checker, 'check_data_subject_rights') as mock_rights:
-                
+
                 mock_dpia.return_value = Mock() if scenario["asset"].dpia_completed else None
                 mock_rights.return_value = Mock(
                     access_right_implemented=scenario["asset"].data_subject_rights
                 )
-                
+
                 gaps = await gdpr_checker.assess_gaps(scenario["asset"])
-                
+
                 # Check if assessment is correct
                 is_compliant = len(gaps) == 0
                 if is_compliant == scenario["expected_compliant"]:
                     correct_assessments += 1
-        
+
         # Calculate accuracy
         accuracy = correct_assessments / total_assessments
         assert accuracy >= 0.95  # 95% accuracy target
@@ -335,11 +335,11 @@ class TestSOC2ComplianceChecker:
     async def test_logical_access_controls_assessment(self, soc2_checker, production_asset):
         """Test CC6.1 - Logical Access Controls assessment."""
         gaps = await soc2_checker.assess_gaps(production_asset)
-        
+
         # Should find insufficient access controls gap
         access_gaps = [gap for gap in gaps if gap.gap_type == GapType.INSUFFICIENT_ACCESS_CONTROLS]
         assert len(access_gaps) >= 1
-        
+
         access_gap = access_gaps[0]
         assert access_gap.severity == GapSeverity.HIGH
         assert "cc6.1" in access_gap.requirement.lower()
@@ -347,11 +347,11 @@ class TestSOC2ComplianceChecker:
     async def test_backup_recovery_assessment(self, soc2_checker, production_asset):
         """Test CC6.7 - System Backup and Recovery assessment."""
         gaps = await soc2_checker.assess_gaps(production_asset)
-        
+
         # Should find missing backup procedures gap
         backup_gaps = [gap for gap in gaps if gap.gap_type == GapType.MISSING_BACKUP_PROCEDURES]
         assert len(backup_gaps) >= 1
-        
+
         backup_gap = backup_gaps[0]
         assert backup_gap.severity == GapSeverity.HIGH
         assert "cc6.7" in backup_gap.requirement.lower()
@@ -371,9 +371,9 @@ class TestSOC2ComplianceChecker:
                     recommendations=["Configure monitoring"]
                 )
             ]
-            
+
             gaps = await soc2_checker.assess_gaps(production_asset)
-            
+
             # Should include monitoring gaps
             monitoring_gaps = [gap for gap in gaps if "monitoring" in gap.requirement.lower()]
             assert len(monitoring_gaps) >= 1
@@ -402,19 +402,19 @@ class TestSOC2ComplianceChecker:
                 "expected_compliant": False
             }
         ]
-        
+
         correct_assessments = 0
-        
+
         for scenario in test_scenarios:
             with patch.object(soc2_checker, 'check_monitoring_controls') as mock_monitor:
                 mock_monitor.return_value = [] if scenario["asset"].monitoring_enabled else [Mock()]
-                
+
                 gaps = await soc2_checker.assess_gaps(scenario["asset"])
-                
+
                 is_compliant = len(gaps) == 0
                 if is_compliant == scenario["expected_compliant"]:
                     correct_assessments += 1
-        
+
         accuracy = correct_assessments / len(test_scenarios)
         assert accuracy >= 0.95
 
@@ -442,18 +442,18 @@ class TestNISTComplianceChecker:
     async def test_data_protection_assessment(self, nist_checker, critical_asset):
         """Test PR.DS-1 - Data-at-rest protection assessment."""
         gaps = await nist_checker.assess_gaps(critical_asset)
-        
+
         # Should find data protection gaps
         protection_gaps = [gap for gap in gaps if "pr.ds-1" in gap.requirement.lower()]
         assert len(protection_gaps) >= 1
-        
+
         protection_gap = protection_gaps[0]
         assert protection_gap.severity in [GapSeverity.MEDIUM, GapSeverity.HIGH]
 
     async def test_access_control_assessment(self, nist_checker, critical_asset):
         """Test PR.AC-1 - Access Control assessment."""
         gaps = await nist_checker.assess_gaps(critical_asset)
-        
+
         # Should find access control gaps
         access_gaps = [gap for gap in gaps if "pr.ac" in gap.requirement.lower()]
         assert len(access_gaps) >= 1
@@ -461,7 +461,7 @@ class TestNISTComplianceChecker:
     async def test_incident_response_assessment(self, nist_checker, critical_asset):
         """Test RS.RP-1 - Response Planning assessment."""
         gaps = await nist_checker.assess_gaps(critical_asset)
-        
+
         # Should find incident response gaps
         response_gaps = [gap for gap in gaps if "rs.rp" in gap.requirement.lower()]
         assert len(response_gaps) >= 1
@@ -479,7 +479,7 @@ class TestNISTComplianceChecker:
                 ),
                 "expected_compliant": True
             },
-            # Non-compliant scenario  
+            # Non-compliant scenario
             {
                 "asset": Mock(
                     encryption_enabled=False,
@@ -490,16 +490,16 @@ class TestNISTComplianceChecker:
                 "expected_compliant": False
             }
         ]
-        
+
         correct_assessments = 0
-        
+
         for scenario in test_scenarios:
             gaps = await nist_checker.assess_gaps(scenario["asset"])
-            
+
             is_compliant = len(gaps) == 0
             if is_compliant == scenario["expected_compliant"]:
                 correct_assessments += 1
-        
+
         accuracy = correct_assessments / len(test_scenarios)
         assert accuracy >= 0.95
 
@@ -540,19 +540,19 @@ class TestSecurityPolicyChecker:
             encryption_enabled=False,
             environment=Environment.PRODUCTION
         )
-        
+
         # Mock policy evaluation
         with patch.object(policy_checker, 'evaluate_policy_rule') as mock_eval, \
              patch.object(policy_checker, 'get_asset_value_for_rule') as mock_value:
-            
+
             mock_eval.return_value = False  # Policy violated
             mock_value.return_value = False  # Asset not encrypted
-            
+
             gaps = await policy_checker.assess_policy_gaps(asset)
-            
+
             # Should find policy violation
             assert len(gaps) >= 1
-            
+
             policy_gap = gaps[0]
             assert policy_gap.gap_type == GapType.POLICY_VIOLATION
             assert policy_gap.policy_name == "Database Encryption Policy"
@@ -572,16 +572,16 @@ class TestSecurityPolicyChecker:
                 )
             ]
         )
-        
+
         # Mock rule evaluation to fail
         with patch.object(policy_checker, 'evaluate_policy_rule') as mock_eval, \
              patch.object(policy_checker, 'get_asset_value_for_rule') as mock_value:
-            
+
             mock_eval.return_value = False
             mock_value.return_value = False
-            
+
             assessment = await policy_checker.assess_asset_against_policy(asset, policy)
-            
+
             assert assessment.compliant is False
             assert len(assessment.violations) == 1
             assert assessment.violations[0].rule_id == "RULE001"
@@ -595,9 +595,9 @@ class TestSecurityPolicyChecker:
                 Mock(impact="MEDIUM")
             ]
         )
-        
+
         severity = policy_checker.calculate_policy_gap_severity(policy, assessment)
-        
+
         # High impact violations should result in high severity
         assert severity == GapSeverity.HIGH
 
@@ -612,9 +612,9 @@ class TestSecurityPolicyChecker:
                 impact="HIGH"
             )
         ]
-        
+
         recommendations = policy_checker.generate_policy_recommendations(violations)
-        
+
         assert len(recommendations) > 0
         assert any("encryption" in rec.lower() for rec in recommendations)
 
@@ -649,13 +649,13 @@ class TestPolicyAssessment:
                 impact="HIGH"
             )
         ]
-        
+
         assessment = PolicyAssessment(
             compliant=False,
             violations=violations,
             recommendations=["Fix the violation"]
         )
-        
+
         assert assessment.compliant is False
         assert len(assessment.violations) == 1
         assert len(assessment.recommendations) == 1
@@ -667,7 +667,7 @@ class TestPolicyAssessment:
             violations=[],
             recommendations=[]
         )
-        
+
         assert assessment.compliant is True
         assert len(assessment.violations) == 0
 

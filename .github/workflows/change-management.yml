@@ -1,0 +1,202 @@
+name: Change Management Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'scripts/change-management/**'
+      - 'tests/change_management_tests/**'
+      - 'workflows/change-approval/**'
+      - 'docs/runbooks/**'
+  workflow_dispatch:
+    inputs:
+      change_type:
+        description: 'Change type'
+        required: true
+        type: choice
+        options:
+          - normal
+          - major
+          - emergency
+          - standard
+
+jobs:
+  validate-change:
+    name: Validate Change Request
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pyyaml requests
+
+      - name: Classify change type
+        id: classify
+        run: |
+          CHANGE_TYPE="${{ github.event.inputs.change_type }}"
+          if [ -z "$CHANGE_TYPE" ]; then
+            CHANGE_TYPE="normal"
+          fi
+          echo "change_type=$CHANGE_TYPE" >> $GITHUB_OUTPUT
+          echo "Change type: $CHANGE_TYPE"
+
+      - name: Validate change management configuration
+        run: |
+          PYTHONPATH=. python3 scripts/change-management/validate_change_procedures.py --test-workflows
+
+      - name: Run change management tests
+        run: |
+          pytest tests/change_management_tests/ -v --tb=short
+
+      - name: Validate rollback procedures
+        run: |
+          PYTHONPATH=. python3 scripts/change-management/validate_change_procedures.py --validate-rollback --database-type sqlite
+
+      - name: Validate incident response runbooks
+        run: |
+          PYTHONPATH=. python3 scripts/change-management/validate_change_procedures.py --validate-incident-response
+
+  rollback-testing:
+    name: Test Rollback Procedures
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: validate-change
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pyyaml requests
+
+      - name: Test SQLite rollback automation
+        run: |
+          PYTHONPATH=. python3 scripts/change-management/implement_rollback_procedures.py \
+            --test-automation \
+            --database-type sqlite \
+            --dry-run
+
+      - name: Generate rollback test report
+        if: always()
+        run: |
+          PYTHONPATH=. python3 scripts/change-management/implement_rollback_procedures.py \
+            --test-automation \
+            --database-type sqlite \
+            --dry-run \
+            --report-file /tmp/rollback_test_report.txt
+          cat /tmp/rollback_test_report.txt
+
+  integration-testing:
+    name: Integration Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: validate-change
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pyyaml requests
+
+      - name: Run integration tests
+        run: |
+          pytest tests/change_management_tests/test_integration.py -v
+
+      - name: Run workflow validation tests
+        run: |
+          pytest tests/change_management_tests/ -v --workflow-validation || true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+
+      - name: Run security scan
+        run: |
+          bandit -r scripts/change_management/ -ll -i
+
+  approval-gate:
+    name: Change Approval Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [validate-change, rollback-testing, integration-testing, security-scan]
+    if: github.event.inputs.change_type == 'major' || contains(github.event.pull_request.labels.*.name, 'major-change')
+
+    steps:
+      - name: Check for required approvals
+        run: |
+          echo "Major change detected - requires manual approval"
+          echo "Please ensure:"
+          echo "  1. ADR has been created"
+          echo "  2. Testing plan is documented"
+          echo "  3. Rollback procedure is validated"
+          echo "  4. Two approvals from DBA and Tech Lead"
+
+      - name: Approval status
+        run: |
+          # In production, this would check actual approval status
+          echo "Approval gate placeholder - manual review required"
+
+  summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [validate-change, rollback-testing, integration-testing, security-scan]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate summary
+        run: |
+          echo "# Change Management Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "**PR**: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Change Type**: ${{ github.event.inputs.change_type || 'normal' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Validation: ${{ needs.validate-change.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Rollback Testing: ${{ needs.rollback-testing.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration Testing: ${{ needs.integration-testing.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Scan: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY

@@ -59,7 +59,7 @@ class MultiUserPerformanceTester:
 
     def __init__(self, max_concurrent_users: int = 20) -> None:
         """Initialize MultiUserPerformanceTester.
-        
+
         Args:
             max_concurrent_users: Maximum number of concurrent users for testing.
                                  Defaults to 20.

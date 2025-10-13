@@ -206,11 +206,10 @@ class BackupRestorationTester:
 
             success = results["failed"] == 0 and results["missing"] == 0
             if success:
-                logger.info("✓ All checksums verified: %s/%s", results['verified'], results['total_files'])
+                logger.info("✓ All checksums verified: %s/%s", results["verified"], results["total_files"])
             else:
                 logger.error(
-                    "✗ Checksum verification failed: %d failed, %d missing",
-                    results['failed'], results['missing']
+                    "✗ Checksum verification failed: %d failed, %d missing", results["failed"], results["missing"]
                 )
 
             return success, results
@@ -288,9 +287,9 @@ class BackupRestorationTester:
 
         success = results["files_failed"] == 0
         if success:
-            logger.info("✓ Full restoration successful: %s files", results['files_restored'])
+            logger.info("✓ Full restoration successful: %s files", results["files_restored"])
         else:
-            logger.error("✗ Restoration failed: %s failures", results['files_failed'])
+            logger.error("✗ Restoration failed: %s failures", results["files_failed"])
 
         return success, results
 
@@ -377,9 +376,9 @@ class BackupRestorationTester:
 
         success = results["inaccessible"] == 0
         if success:
-            logger.info("✓ All databases accessible: %s/%s", results['accessible'], results['total_databases'])
+            logger.info("✓ All databases accessible: %s/%s", results["accessible"], results["total_databases"])
         else:
-            logger.error("✗ Some databases inaccessible: %s", results['inaccessible'])
+            logger.error("✗ Some databases inaccessible: %s", results["inaccessible"])
 
         return success, results
 

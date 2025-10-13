@@ -29,19 +29,19 @@ try:
     # Re-export for tests
     __all__ = [
         "ConfigurationIntentDetector",
-        "ContextAnalyzer", 
+        "ContextAnalyzer",
         "MCPCommand",
         "MCPCommandType",
         "NaturalLanguageParser"
     ]
-    
+
 except ImportError as e:
     # Fallback mock implementations for tests
     from dataclasses import dataclass
     from enum import Enum
     from typing import Any, Dict, List, Optional
-    
-    
+
+
     class MCPCommandType(Enum):
         """MCP command types"""
         HELP = "help"
@@ -54,8 +54,8 @@ except ImportError as e:
         LIST = "list"
         DOCUMENTATION = "documentation"
         UNKNOWN = "unknown"
-        
-    
+
+
     @dataclass
     class MCPCommand:
         """Parsed MCP command"""
@@ -63,38 +63,38 @@ except ImportError as e:
         subcommand: Optional[str] = None
         arguments: Optional[Dict[str, Any]] = None
         raw_text: str = ""
-        
+
         def __post_init__(self) -> None:
             if self.arguments is None:
                 self.arguments = {}
-                
+
 
     class NaturalLanguageParser:
         """Mock natural language parser for tests"""
-        
+
         def parse(self, text: str) -> MCPCommand:
             """Mock parse method"""
             return MCPCommand(
                 type=MCPCommandType.TEST,
                 raw_text=text
             )
-            
+
         def extract_context(self, text: str) -> Dict[str, Any]:
             """Mock context extraction"""
             return {"text": text, "mock": True}
-            
+
 
     class ContextAnalyzer:
         """Mock context analyzer for tests"""
-        
+
         def analyze(self, text: str) -> Dict[str, Any]:
             """Mock analysis"""
             return {"analysis": "mock", "confidence": 0.5}
-            
+
 
     class ConfigurationIntentDetector:
         """Mock configuration intent detector for tests"""
-        
+
         def detect_intent(self, text: str) -> Dict[str, Any]:
             """Mock intent detection"""
             return {"intent": "configuration", "confidence": 0.8}

@@ -37,7 +37,7 @@ class TestDatasetSourceRegression:
             'user_token': 'test_token',
             'dataset_configs': {}
         }
-        
+
         with patch('streamlit.session_state', mock_session_state), \
              patch('streamlit.write'), \
              patch('streamlit.error'), \
@@ -66,10 +66,10 @@ class TestDatasetSourceRegression:
                 'description': 'Q&A datasets'
             }
         }
-        
+
         with patch('violentutf.pages.2_Configure_Datasets.load_dataset_types_from_api') as mock_load:
             mock_load.return_value = mock_types
-            
+
             # Import and test the function
             from violentutf.pages import configure_datasets_page
 
@@ -83,7 +83,7 @@ class TestDatasetSourceRegression:
         """Test that basic dataset creation still works."""
         with patch('violentutf.pages.2_Configure_Datasets.create_dataset_via_api') as mock_create:
             mock_create.return_value = True
-            
+
             # Test dataset creation function
             result = mock_create('test_dataset', 'api', {'type': 'text_classification'})
             assert result is True
@@ -95,11 +95,11 @@ class TestDatasetSourceRegression:
         mock_file = MagicMock()
         mock_file.name = 'test_dataset.csv'
         mock_file.read.return_value = b'prompt,response\ntest,response'
-        
+
         with patch('streamlit.file_uploader', return_value=mock_file), \
              patch('violentutf.pages.2_Configure_Datasets.create_dataset_via_api') as mock_create:
             mock_create.return_value = True
-            
+
             # This should work independently of enhanced components
             assert mock_file.name == 'test_dataset.csv'
             assert mock_file.read() == b'prompt,response\ntest,response'
@@ -114,10 +114,10 @@ class TestDatasetSourceRegression:
                 'max_tokens': 512
             }
         }
-        
+
         with patch('violentutf.pages.2_Configure_Datasets.create_dataset_via_api') as mock_create:
             mock_create.return_value = True
-            
+
             # Test custom configuration
             result = mock_create('custom_test', 'custom', custom_config)
             assert result is True
@@ -142,7 +142,7 @@ class TestExistingDatasetManagement:
                 'status': 'ready'
             }
         }
-        
+
         with patch('streamlit.session_state') as mock_session:
             mock_session.datasets = mock_datasets
             yield mock_session
@@ -154,7 +154,7 @@ class TestExistingDatasetManagement:
                 'dataset1': {'name': 'dataset1', 'type': 'api'},
                 'dataset2': {'name': 'dataset2', 'type': 'file'}
             }
-            
+
             datasets = mock_load()
             assert len(datasets) == 2
             assert 'dataset1' in datasets
@@ -164,7 +164,7 @@ class TestExistingDatasetManagement:
         """Test that dataset deletion functionality is preserved."""
         with patch('violentutf.pages.2_Configure_Datasets.delete_dataset_via_api') as mock_delete:
             mock_delete.return_value = True
-            
+
             result = mock_delete('test_dataset')
             assert result is True
             mock_delete.assert_called_once_with('test_dataset')
@@ -177,7 +177,7 @@ class TestExistingDatasetManagement:
                 'schema': {'columns': ['prompt', 'response']},
                 'count': 100
             }
-            
+
             preview = mock_preview('test_dataset')
             assert preview is not None
             assert 'sample_data' in preview
@@ -209,15 +209,15 @@ class TestImportIsolation:
             'violentutf.utils.dataset_ui_components',
             'violentutf.utils.specialized_workflows'
         ]
-        
+
         import_side_effects = {}
         for module in enhanced_modules:
             import_side_effects[module] = ImportError(f"No module named '{module.split('.')[-1]}'")
-        
+
         # Basic API functions should still work
         with patch('violentutf.pages.2_Configure_Datasets.load_dataset_types_from_api') as mock_api:
             mock_api.return_value = {'basic_type': {'name': 'Basic Type'}}
-            
+
             result = mock_api()
             assert result is not None
             assert 'basic_type' in result
@@ -248,7 +248,7 @@ class TestStreamlitPageIntegration:
         # The page should have the main radio button for dataset source selection
         with patch('streamlit.radio') as mock_radio:
             mock_radio.return_value = "Select from Available APIs"
-            
+
             # Basic page elements should be accessible
             selection = mock_radio.return_value
             assert selection == "Select from Available APIs"
@@ -261,7 +261,7 @@ class TestStreamlitPageIntegration:
             "Upload Dataset File",
             "Configure Custom Dataset"
         ]
-        
+
         with patch('streamlit.radio') as mock_radio:
             for option in expected_options:
                 mock_radio.return_value = option
@@ -274,16 +274,16 @@ class TestStreamlitPageIntegration:
         with patch('streamlit.radio', return_value="Select from Available APIs"), \
              patch('violentutf.pages.2_Configure_Datasets.load_dataset_types_from_api') as mock_load:
             mock_load.return_value = {'test_type': {'name': 'Test Type'}}
-            
+
             # This flow should work independently
             types = mock_load()
             assert types is not None
-            
-        # Test file upload flow  
+
+        # Test file upload flow
         with patch('streamlit.radio', return_value="Upload Dataset File"), \
              patch('streamlit.file_uploader') as mock_upload:
             mock_upload.return_value = None
-            
+
             # This flow should work independently
             uploaded = mock_upload.return_value
             assert uploaded is None  # No file uploaded, but function works
@@ -299,11 +299,11 @@ class TestBackwardCompatibility:
 
         # Load the module
         spec = importlib.util.spec_from_file_location(
-            "configure_datasets", 
+            "configure_datasets",
             repo_root / "violentutf" / "pages" / "2_Configure_Datasets.py"
         )
         module = importlib.util.module_from_spec(spec)
-        
+
         # Verify key functions exist and are callable
         assert hasattr(module, 'flow_native_datasets')
         assert callable(getattr(module, 'flow_native_datasets'))
@@ -316,7 +316,7 @@ class TestBackwardCompatibility:
             'datasets': {},
             'user_token': 'test_token'
         }
-        
+
         with patch('streamlit.session_state', mock_session_state):
             # These should remain accessible
             assert 'api_dataset_types' in mock_session_state

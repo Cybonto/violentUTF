@@ -110,10 +110,10 @@ class TestGraphWalkConverter:
 
         # Check massive JSON splitter initialization
         assert hasattr(converter, "massive_splitter")
-        
+
         # Check checkpoint manager
         assert hasattr(converter, "checkpoint_manager")
-        
+
         # Check processing counter
         assert converter.processed_count == 0
 
@@ -147,7 +147,7 @@ class TestGraphWalkConverter:
 
         # Test logger setup
         assert hasattr(splitter, "logger")
-        
+
         # Test splitting methods
         assert hasattr(splitter, "split_massive_json_preserving_graphs")
         assert hasattr(splitter, "write_chunk_safely")
@@ -178,10 +178,10 @@ class TestMassiveFileProcessing:
 
             assert small_info.size_mb < 400
             assert massive_info.size_mb > 400
-            
+
             # Massive file should trigger advanced splitting
             assert massive_info.requires_advanced_splitting is True
-            
+
         finally:
             os.unlink(small_path)
             os.unlink(massive_path)
@@ -201,7 +201,7 @@ class TestMassiveFileProcessing:
             # Should use advanced splitting strategy
             strategy = converter.determine_processing_strategy(massive_path)
             assert strategy == "convert_with_advanced_splitting"
-            
+
         finally:
             os.unlink(massive_path)
 
@@ -250,17 +250,17 @@ class TestMassiveFileProcessing:
             assert result.total_chunks > 1
             assert result.total_objects == 1000
             assert len(result.chunks) == result.total_chunks
-            
+
             # Validate each chunk
             total_objects_in_chunks = 0
             for chunk in result.chunks:
                 assert os.path.exists(chunk.filename)
                 assert chunk.object_count > 0
                 total_objects_in_chunks += chunk.object_count
-                
+
                 # Cleanup chunk files
                 os.unlink(chunk.filename)
-                
+
             assert total_objects_in_chunks == 1000
 
         finally:
@@ -274,12 +274,12 @@ class TestMassiveFileProcessing:
 
         # Simulate memory pressure
         large_data = []
-        
+
         with monitor.context():
             # Add some data to increase memory
             for i in range(1000):
                 large_data.append(f"test_data_{i}" * 1000)
-                
+
                 # Check memory every 100 iterations
                 if i % 100 == 0:
                     monitor.check_and_cleanup()
@@ -357,7 +357,7 @@ class TestGraphStructureProcessing:
         # Test spatial grid classification
         nodes_grid = [{"id": "A", "pos": [0, 0]}, {"id": "B", "pos": [1, 0]}]
         edges_grid = [{"from": "A", "to": "B"}]
-        
+
         graph_type = service.classify_graph_type(nodes_grid, edges_grid)
         assert graph_type in ["spatial_grid", "planar_graph", "general_graph"]
 
@@ -369,7 +369,7 @@ class TestGraphStructureProcessing:
 
         # Simple path - use actual GraphStructureInfo instead of Mock
         from app.schemas.graphwalk_datasets import GraphStructureInfo
-        
+
         simple_structure = GraphStructureInfo(
             graph_type="simple_graph",
             node_count=3,
@@ -378,7 +378,7 @@ class TestGraphStructureProcessing:
             navigation_type="shortest_path",
             properties={"is_directed": False, "is_weighted": False}
         )
-        
+
         complexity = service.assess_path_complexity(simple_structure)
         assert complexity in ["simple", "medium", "complex"]
 
@@ -412,10 +412,10 @@ class TestMemoryManagement:
 
         # Clear references
         test_objects = None
-        
+
         # Trigger cleanup
         monitor.check_and_cleanup()
-        
+
         # Should complete without errors
 
     def test_memory_monitoring_context_manager(self) -> None:
@@ -453,16 +453,16 @@ class TestErrorHandlingAndRecovery:
             "total_questions": 15000,
             "current_chunk": "chunk_005"
         }
-        
+
         manager.save_checkpoint(test_state)
-        
+
         # Test checkpoint load
         loaded_checkpoint = manager.load_checkpoint()
         assert loaded_checkpoint is not None
         assert loaded_checkpoint.processed_chunks == 5
         assert loaded_checkpoint.total_questions == 15000
         assert loaded_checkpoint.current_chunk == "chunk_005"
-        
+
         # Test checkpoint clear
         manager.clear_checkpoint()
         cleared_checkpoint = manager.load_checkpoint()
@@ -494,10 +494,10 @@ class TestErrorHandlingAndRecovery:
         try:
             # Should handle errors gracefully and continue processing
             questions = converter.process_graph_chunk_with_recovery(chunk_info)
-            
+
             # Should have processed 2 valid items despite 1 invalid
             assert len(questions) == 2
-            
+
         finally:
             os.unlink(chunk_info.filename)
 
@@ -542,19 +542,19 @@ class TestPerformanceRequirements:
 
         try:
             start_time = time.time()
-            
+
             # Process test file
             result = converter.convert(test_path)
-            
+
             end_time = time.time()
             processing_time = end_time - start_time
-            
+
             # Calculate objects per minute
             objects_per_minute = (len(test_objects) / processing_time) * 60
-            
+
             # For unit test, just verify it processes at reasonable speed
             assert objects_per_minute > 100  # Lower threshold for unit test
-            
+
         finally:
             os.unlink(test_path)
 
@@ -591,7 +591,7 @@ class TestPerformanceRequirements:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl', delete=False) as f:
             for line in chunk_data:
                 f.write(line + '\n')
-            
+
             chunk_info = Mock()
             chunk_info.chunk_id = 1
             chunk_info.filename = f.name
@@ -600,11 +600,11 @@ class TestPerformanceRequirements:
             start_time = time.time()
             questions = converter.process_graph_chunk_with_recovery(chunk_info)
             processing_time = time.time() - start_time
-            
+
             # Should process small chunk quickly
             assert processing_time < 10  # 10 seconds max for small chunk
             assert len(questions) == 10
-            
+
         finally:
             os.unlink(chunk_info.filename)
 
@@ -672,7 +672,7 @@ class TestIntegrationRequirements:
             assert hasattr(result, "name")
             assert hasattr(result, "questions")
             assert hasattr(result, "metadata")
-            
+
         finally:
             os.unlink(test_path)
 

@@ -1,0 +1,49 @@
+title: Database Security Incident Response
+database_type: all
+severity: critical
+rto_target: 15
+rpo_target: 60
+detection:
+  symptoms:
+  - Unauthorized access detected
+  - Multiple failed authentication attempts
+  - Suspicious SQL queries
+  - Unusual data access patterns
+  monitoring_commands:
+  - Review authentication logs
+  - Check active connections
+  - Audit query logs
+recovery_steps:
+- step_number: 1
+  title: Contain the incident
+  commands:
+  - Terminate suspicious connections
+  - Disable compromised accounts
+  estimated_time_minutes: 5
+- step_number: 2
+  title: Assess impact
+  commands:
+  - Review audit logs
+  - Identify accessed/modified data
+  estimated_time_minutes: 10
+- step_number: 3
+  title: Preserve evidence
+  commands:
+  - Backup logs
+  - Document timeline
+  estimated_time_minutes: 10
+- step_number: 4
+  title: Restore security
+  commands:
+  - Reset credentials
+  - Apply security patches
+  - Review access controls
+  estimated_time_minutes: 20
+escalation:
+  immediate:
+  - oncall
+  - security_team
+  - management
+  notify:
+  - legal
+  - compliance

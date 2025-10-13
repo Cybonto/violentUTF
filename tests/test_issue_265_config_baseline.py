@@ -31,7 +31,7 @@ class TestConfigurationBaseline:
             "database": "keycloak",
             "username": "keycloak"
         }
-        
+
         # WHEN: Creating baseline
         baseline = ConfigurationBaseline(
             service_name="keycloak",
@@ -39,7 +39,7 @@ class TestConfigurationBaseline:
             config_path="/keycloak/docker-compose.yml",
             config_data=config_data
         )
-        
+
         # THEN: Baseline should be created with proper hash
         assert baseline.service_name == "keycloak"
         assert baseline.config_type == "postgresql"
@@ -54,7 +54,7 @@ class TestConfigurationBaseline:
             "echo": True,
             "future": True
         }
-        
+
         # WHEN: Creating baseline
         baseline = ConfigurationBaseline(
             service_name="fastapi",
@@ -62,7 +62,7 @@ class TestConfigurationBaseline:
             config_path="/app/db/database.py",
             config_data=config_data
         )
-        
+
         # THEN: Baseline should be created correctly
         assert baseline.service_name == "fastapi"
         assert baseline.config_type == "sqlite"
@@ -76,7 +76,7 @@ class TestConfigurationBaseline:
             "salt": "default_salt_2025",
             "app_data_dir": "/app/app_data/violentutf"
         }
-        
+
         # WHEN: Creating baseline
         baseline = ConfigurationBaseline(
             service_name="pyrit",
@@ -84,7 +84,7 @@ class TestConfigurationBaseline:
             config_path="/app/db/duckdb_manager.py",
             config_data=config_data
         )
-        
+
         # THEN: Baseline should be created correctly
         assert baseline.service_name == "pyrit"
         assert baseline.config_type == "duckdb"
@@ -98,7 +98,7 @@ class TestConfigurationBaseline:
             "DEBUG": True,
             "DATABASE_URL": None
         }
-        
+
         # WHEN: Creating baseline
         baseline = ConfigurationBaseline(
             service_name="violentutf_api",
@@ -106,7 +106,7 @@ class TestConfigurationBaseline:
             config_path="/app/core/config.py",
             config_data=config_data
         )
-        
+
         # THEN: Baseline should be created correctly
         assert baseline.service_name == "violentutf_api"
         assert baseline.config_type == "application"
@@ -115,11 +115,11 @@ class TestConfigurationBaseline:
         """Test that identical configurations produce same hash."""
         # GIVEN: Identical configuration data
         config_data = {"key": "value", "number": 123}
-        
+
         # WHEN: Creating two baselines with same data
         baseline1 = ConfigurationBaseline("test", "test", "/test", config_data)
         baseline2 = ConfigurationBaseline("test", "test", "/test", config_data)
-        
+
         # THEN: Hashes should be identical
         assert baseline1.baseline_hash == baseline2.baseline_hash
 
@@ -128,11 +128,11 @@ class TestConfigurationBaseline:
         # GIVEN: Different configuration data
         config_data1 = {"key": "value1"}
         config_data2 = {"key": "value2"}
-        
+
         # WHEN: Creating baselines with different data
         baseline1 = ConfigurationBaseline("test", "test", "/test", config_data1)
         baseline2 = ConfigurationBaseline("test", "test", "/test", config_data2)
-        
+
         # THEN: Hashes should be different
         assert baseline1.baseline_hash != baseline2.baseline_hash
 
@@ -141,11 +141,11 @@ class TestConfigurationBaseline:
         # GIVEN: Configuration baseline
         config_data = {"key": "value", "nested": {"item": 123}}
         baseline = ConfigurationBaseline("test", "test", "/test", config_data)
-        
+
         # WHEN: Serializing and deserializing
         serialized = baseline.to_dict()
         restored = ConfigurationBaseline.from_dict(serialized)
-        
+
         # THEN: Restored baseline should match original
         assert restored.service_name == baseline.service_name
         assert restored.config_type == baseline.config_type
@@ -157,17 +157,17 @@ class TestConfigurationBaseline:
         """Test baseline validation rules."""
         # GIVEN: Invalid baseline parameters
         config_data = {"key": "value"}
-        
+
         # WHEN/THEN: Invalid parameters should raise errors
         with pytest.raises(ValueError, match="Service name cannot be empty"):
             ConfigurationBaseline("", "test", "/test", config_data)
-        
+
         with pytest.raises(ValueError, match="Config type cannot be empty"):
             ConfigurationBaseline("test", "", "/test", config_data)
-        
+
         with pytest.raises(ValueError, match="Config path cannot be empty"):
             ConfigurationBaseline("test", "test", "", config_data)
-        
+
         with pytest.raises(ValueError, match="Config data cannot be empty"):
             ConfigurationBaseline("test", "test", "/test", {})
 
@@ -181,7 +181,7 @@ class TestConfigurationMonitoringService:
         # GIVEN: Configuration monitoring service
         service = ConfigurationMonitoringService()
         config_data = {"host": "postgres", "port": 5432}
-        
+
         # WHEN: Creating baseline
         baseline_id = await service.create_baseline(
             service_name="test_service",
@@ -189,7 +189,7 @@ class TestConfigurationMonitoringService:
             config_path="/test/config",
             config_data=config_data
         )
-        
+
         # THEN: Baseline should be created with ID
         assert baseline_id is not None
         assert isinstance(baseline_id, str)
@@ -206,10 +206,10 @@ class TestConfigurationMonitoringService:
             config_path="/test/config",
             config_data=config_data
         )
-        
+
         # WHEN: Retrieving baseline by ID
         retrieved_baseline = await service.get_baseline(baseline_id)
-        
+
         # THEN: Retrieved baseline should match created one
         assert retrieved_baseline is not None
         assert retrieved_baseline.service_name == "test_service"
@@ -220,17 +220,17 @@ class TestConfigurationMonitoringService:
         """Test listing baselines for a specific service."""
         # GIVEN: Multiple baselines for different services
         service = ConfigurationMonitoringService()
-        
+
         # Create baselines for test_service
         await service.create_baseline("test_service", "postgresql", "/test1", {"key": "value1"})
         await service.create_baseline("test_service", "sqlite", "/test2", {"key": "value2"})
-        
+
         # Create baseline for different service
         await service.create_baseline("other_service", "postgresql", "/test3", {"key": "value3"})
-        
+
         # WHEN: Listing baselines for test_service
         test_service_baselines = await service.list_baselines_for_service("test_service")
-        
+
         # THEN: Only test_service baselines should be returned
         assert len(test_service_baselines) == 2
         assert all(b.service_name == "test_service" for b in test_service_baselines)
@@ -243,11 +243,11 @@ class TestConfigurationMonitoringService:
         baseline_id = await service.create_baseline(
             "test_service", "postgresql", "/test", original_config
         )
-        
+
         # WHEN: Updating baseline with new configuration
         updated_config = {"host": "postgres", "port": 5433, "timeout": 30}
         success = await service.update_baseline(baseline_id, updated_config)
-        
+
         # THEN: Baseline should be updated
         assert success is True
         updated_baseline = await service.get_baseline(baseline_id)
@@ -263,10 +263,10 @@ class TestConfigurationMonitoringService:
         baseline_id = await service.create_baseline(
             "test_service", "postgresql", "/test", {"key": "value"}
         )
-        
+
         # WHEN: Deleting baseline
         success = await service.delete_baseline(baseline_id)
-        
+
         # THEN: Baseline should be deleted
         assert success is True
         deleted_baseline = await service.get_baseline(baseline_id)
@@ -279,10 +279,10 @@ class TestConfigurationMonitoringService:
         await service.create_baseline("service1", "postgresql", "/test1", {"key": "value1"})
         await service.create_baseline("service2", "sqlite", "/test2", {"key": "value2"})
         await service.create_baseline("service3", "duckdb", "/test3", {"key": "value3"})
-        
+
         # WHEN: Getting statistics
         stats = await service.get_baseline_statistics()
-        
+
         # THEN: Statistics should be correct
         assert stats["total_baselines"] >= 3
         assert stats["services_count"] >= 3

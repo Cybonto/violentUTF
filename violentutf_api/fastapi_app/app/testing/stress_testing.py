@@ -89,7 +89,7 @@ class MemoryExhaustionTester:
 
     def __init__(self) -> None:
         """Initialize MemoryExhaustionTester.
-        
+
         Sets up memory stress testing with empty lists for tracking
         allocated memory and allocation history.
         """
@@ -104,12 +104,12 @@ class MemoryExhaustionTester:
     ) -> StressTestMetrics:
         """
         Simulate memory exhaustion conditions
-        
+
         Args:
             target_memory_mb: Target memory consumption in MB
             allocation_rate_mb_per_second: Rate of memory allocation
             test_recovery: Whether to test memory recovery mechanisms
-            
+
         Returns:
             StressTestMetrics: Test execution results
         """
@@ -288,7 +288,7 @@ class DiskSpaceTester:
 
     def __init__(self) -> None:
         """Initialize DiskSpaceTester.
-        
+
         Sets up disk space testing with an empty list for tracking
         temporary files created during testing.
         """
@@ -302,12 +302,12 @@ class DiskSpaceTester:
     ) -> StressTestMetrics:
         """
         Simulate disk space exhaustion conditions
-        
+
         Args:
             target_disk_usage_mb: Target disk space to consume
             test_directory: Directory to use for disk space test
             test_cleanup: Whether to test cleanup mechanisms
-            
+
         Returns:
             StressTestMetrics: Test execution results
         """
@@ -477,7 +477,7 @@ class NetworkFailureTester:
 
     def __init__(self, base_url: str = "http://localhost:9080") -> None:
         """Initialize NetworkFailureTester.
-        
+
         Args:
             base_url: Base URL for network connectivity testing.
                      Defaults to 'http://localhost:9080'.
@@ -493,12 +493,12 @@ class NetworkFailureTester:
     ) -> StressTestMetrics:
         """
         Simulate network failure conditions and test system resilience
-        
+
         Args:
             failure_scenarios: List of failure types to simulate
             test_duration_seconds: Duration of network failure simulation
             recovery_test: Whether to test recovery mechanisms
-            
+
         Returns:
             StressTestMetrics: Test execution results
         """
@@ -683,14 +683,14 @@ class NetworkFailureTester:
 class StressTester:
     """
     Main stress testing orchestration system
-    
+
     Coordinates different types of stress tests and provides comprehensive
     system resilience validation capabilities.
     """
 
     def __init__(self, base_url: str = "http://localhost:9080") -> None:
         """Initialize StressTestSuite.
-        
+
         Args:
             base_url: Base URL for stress testing endpoints.
                      Defaults to 'http://localhost:9080'.
@@ -707,10 +707,10 @@ class StressTester:
     ) -> Dict[str, StressTestMetrics]:
         """
         Run comprehensive stress testing suite
-        
+
         Args:
             test_config: Configuration for stress tests
-            
+
         Returns:
             Dict[str, StressTestMetrics]: Results from all stress tests
         """

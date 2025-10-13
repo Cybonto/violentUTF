@@ -26,6 +26,7 @@ def new_user_persona():
         "dataset_preferences": ["small", "well_documented"]
     }
 
+
 @pytest.fixture
 def power_user_persona():
     """Power user persona for testing"""
@@ -37,6 +38,7 @@ def power_user_persona():
         "needs_guidance": False,
         "dataset_preferences": ["large", "multiple_domains", "customizable"]
     }
+
 
 @pytest.fixture
 def accessibility_requirements():
@@ -50,12 +52,13 @@ def accessibility_requirements():
         "focus_indicators": True
     }
 
+
 @pytest.fixture
 def user_workflow_steps():
     """Standard user workflow steps"""
     return [
         "authenticate",
-        "browse_categories", 
+        "browse_categories",
         "select_dataset",
         "configure_parameters",
         "preview_data",
@@ -63,251 +66,254 @@ def user_workflow_steps():
         "confirm_settings"
     ]
 
+
 class TestNewUserWorkflow:
     """Test suite for new user experience workflows"""
-    
+
     def test_guided_dataset_discovery(self, new_user_persona):
         """Test guided dataset discovery for new users"""
         with pytest.raises(ImportError):
             from violentutf.components.dataset_selector import NativeDatasetSelector
             from violentutf.utils.specialized_workflows import UserGuidanceSystem
-            
+
             guidance = UserGuidanceSystem()
             selector = NativeDatasetSelector()
-            
+
             # Test guided discovery workflow
             with patch('streamlit.info') as mock_info, \
                  patch('streamlit.expander') as mock_expander, \
                  patch('streamlit.markdown') as mock_markdown:
-                
+
                 # Step 1: Show contextual help
                 guidance.render_contextual_help("dataset_selection")
                 mock_info.assert_called()
-                
+
                 # Step 2: Provide recommendations
                 guidance.render_dataset_recommendations("new_user")
-                
+
                 # Step 3: Guide through categories
                 selector.render_dataset_selection_interface()
-                
+
                 # Verify guidance elements are present
                 assert mock_expander.called or mock_info.called
-    
+
     def test_step_by_step_workflow_guidance(self, user_workflow_steps):
         """Test step-by-step workflow guidance for new users"""
         with pytest.raises(ImportError):
             from violentutf.utils.specialized_workflows import UserGuidanceSystem
-            
+
             guidance = UserGuidanceSystem()
-            
+
             for step in user_workflow_steps:
                 with patch('streamlit.columns') as mock_columns, \
                      patch('streamlit.markdown') as mock_markdown:
-                    
+
                     guidance.render_workflow_guide(step)
-                    
+
                     # Verify progress indicators
                     mock_columns.assert_called()
                     mock_markdown.assert_called()
-    
+
     def test_onboarding_flow_completion_time(self, new_user_persona):
         """Test that new users can complete onboarding within target time"""
         start_time = time.time()
-        
+
         # Simulate new user workflow
         workflow_steps = [
             "view_welcome_guide",
-            "browse_dataset_categories", 
+            "browse_dataset_categories",
             "read_dataset_descriptions",
             "select_recommended_dataset",
             "use_default_configuration",
             "preview_sample_data",
             "proceed_to_evaluation"
         ]
-        
+
         with pytest.raises(ImportError):
             from violentutf.components.dataset_configuration import SpecializedConfigurationInterface
             from violentutf.components.dataset_preview import DatasetPreviewComponent
             from violentutf.components.dataset_selector import NativeDatasetSelector
-            
+
             selector = NativeDatasetSelector()
             config = SpecializedConfigurationInterface()
             preview = DatasetPreviewComponent()
-            
+
             # Mock each workflow step
             for step in workflow_steps:
                 with patch('streamlit.button', return_value=True), \
                      patch('streamlit.selectbox', return_value="ollegen1_cognitive"), \
                      patch('streamlit.info'):
-                    
+
                     if "browse" in step:
                         selector.render_dataset_selection_interface()
                     elif "configuration" in step:
                         config.render_cognitive_configuration("ollegen1_cognitive")
                     elif "preview" in step:
                         preview.render_dataset_preview("test", {})
-            
+
             completion_time = time.time() - start_time
-            
+
             # Should complete within target time for new users
             target_time = new_user_persona["expected_completion_time"]
             assert completion_time < target_time, f"Workflow took {completion_time:.1f}s, target was {target_time}s"
-    
+
     def test_error_recovery_guidance(self):
         """Test error recovery guidance for new users"""
         with pytest.raises(ImportError):
             from violentutf.utils.specialized_workflows import UserGuidanceSystem
-            
+
             guidance = UserGuidanceSystem()
-            
+
             # Test different error scenarios
             error_scenarios = [
                 "api_connection_failed",
-                "authentication_expired", 
+                "authentication_expired",
                 "dataset_loading_error",
                 "configuration_validation_error",
                 "preview_generation_failed"
             ]
-            
+
             for scenario in error_scenarios:
                 with patch('streamlit.error') as mock_error, \
                      patch('streamlit.info') as mock_info:
-                    
+
                     # Should provide helpful recovery guidance
                     guidance.render_error_recovery_guidance(scenario)
-                    
+
                     # Verify error and recovery info displayed
                     assert mock_error.called or mock_info.called
 
+
 class TestPowerUserWorkflow:
     """Test suite for power user experience workflows"""
-    
+
     def test_rapid_dataset_selection(self, power_user_persona):
         """Test rapid dataset selection for power users"""
         with pytest.raises(ImportError):
             from violentutf.utils.dataset_ui_components import DatasetManagementInterface
-            
+
             management = DatasetManagementInterface()
-            
+
             start_time = time.time()
-            
+
             # Power user workflow: search -> filter -> batch select
             with patch('streamlit.text_input', return_value="cognitive legal math"), \
                  patch('streamlit.multiselect', return_value=["cognitive", "legal", "mathematical"]), \
                  patch('streamlit.button', return_value=True):
-                
+
                 # Advanced search
                 management.render_dataset_search_interface()
-                
+
                 # Batch operations
                 management.render_batch_operations()
-                
+
             completion_time = time.time() - start_time
             target_time = power_user_persona["expected_completion_time"]
-            
+
             assert completion_time < target_time, f"Power user workflow took {completion_time:.1f}s, target was {target_time}s"
-    
+
     def test_batch_dataset_configuration(self):
         """Test batch configuration for multiple datasets"""
         with pytest.raises(ImportError):
             from violentutf.components.dataset_configuration import SpecializedConfigurationInterface
-            
+
             config = SpecializedConfigurationInterface()
-            
+
             # Test configuring multiple datasets simultaneously
             datasets = [
                 ("ollegen1_cognitive", "cognitive_behavioral"),
                 ("legalbench_professional", "legal_reasoning"),
                 ("docmath_mathematical", "mathematical_reasoning")
             ]
-            
+
             configurations = []
-            
+
             for dataset_name, dataset_type in datasets:
                 with patch('streamlit.multiselect', return_value=["option1", "option2"]), \
                      patch('streamlit.selectbox', return_value="standard"):
-                    
+
                     config_result = config.render_configuration_interface(dataset_name, dataset_type)
                     configurations.append(config_result)
-            
+
             # Verify all configurations completed
             assert len(configurations) == len(datasets)
             for config_result in configurations:
                 assert isinstance(config_result, dict)
-    
+
     def test_advanced_evaluation_workflow_setup(self):
         """Test advanced evaluation workflow setup for power users"""
         with pytest.raises(ImportError):
             from violentutf.components.evaluation_workflows import EvaluationWorkflowInterface
-            
+
             workflow = EvaluationWorkflowInterface()
-            
+
             # Test cross-domain evaluation setup
             selected_datasets = ["cognitive_dataset", "legal_dataset", "math_dataset"]
-            
+
             with patch('streamlit.selectbox', return_value="Cross-Domain Comparison"), \
                  patch('streamlit.multiselect') as mock_multiselect, \
                  patch('streamlit.number_input', return_value=1000):
-                
+
                 mock_multiselect.side_effect = [
                     ["cognitive", "legal", "mathematical"],  # domains
                     ["Accuracy", "Consistency", "Bias Detection", "Domain Specificity"]  # metrics
                 ]
-                
+
                 result = workflow.render_evaluation_workflow_setup(selected_datasets)
-                
+
                 assert isinstance(result, dict)
                 mock_multiselect.assert_called()
 
+
 class TestAccessibilityCompliance:
     """Test suite for accessibility compliance"""
-    
+
     def test_screen_reader_compatibility(self, accessibility_requirements):
         """Test screen reader compatibility"""
         with pytest.raises(ImportError):
             from violentutf.components.dataset_selector import NativeDatasetSelector
-            
+
             selector = NativeDatasetSelector()
-            
+
             # Test that components have proper ARIA labels and structure
             with patch('streamlit.markdown') as mock_markdown, \
                  patch('streamlit.subheader') as mock_subheader, \
                  patch('streamlit.selectbox') as mock_selectbox:
-                
+
                 selector.render_dataset_selection_interface()
-                
+
                 # Verify semantic structure
                 assert mock_subheader.called  # Proper heading structure
                 assert mock_selectbox.called  # Interactive elements
-                
+
                 # Check for accessibility attributes in calls
                 for call in mock_selectbox.call_args_list:
                     if 'help' in call.kwargs:
                         assert len(call.kwargs['help']) > 0  # Help text for screen readers
-    
+
     def test_keyboard_navigation_support(self):
         """Test keyboard navigation support"""
         with pytest.raises(ImportError):
             from violentutf.utils.dataset_ui_components import DatasetManagementInterface
-            
+
             management = DatasetManagementInterface()
-            
+
             # Test that all interactive elements support keyboard navigation
             with patch('streamlit.button') as mock_button, \
                  patch('streamlit.selectbox') as mock_selectbox, \
                  patch('streamlit.text_input') as mock_text_input:
-                
+
                 management.render_dataset_search_interface()
-                
+
                 # Verify interactive elements have proper key handling
                 assert mock_button.called
-                assert mock_selectbox.called  
+                assert mock_selectbox.called
                 assert mock_text_input.called
-                
+
                 # Check for key parameter in interactive elements
                 for call in mock_button.call_args_list:
                     assert 'key' in call.kwargs  # Unique keys for keyboard navigation
-    
+
     def test_color_contrast_compliance(self):
         """Test color contrast compliance for accessibility"""
         # Test that UI components use accessible color combinations
@@ -318,12 +324,12 @@ class TestAccessibilityCompliance:
             "error": {"background": "#FF4444", "text": "#FFFFFF"},
             "warning": {"background": "#FFBB33", "text": "#000000"}
         }
-        
+
         # Verify color contrast ratios meet WCAG AA standards (4.5:1)
         for scheme_name, colors in color_schemes.items():
             # In a real implementation, this would calculate actual contrast ratios
             assert colors["background"] != colors["text"]  # Basic contrast check
-    
+
     def test_responsive_design_compatibility(self):
         """Test responsive design for different screen sizes"""
         screen_sizes = [
@@ -331,25 +337,26 @@ class TestAccessibilityCompliance:
             {"width": 768, "height": 1024, "name": "tablet"},
             {"width": 1920, "height": 1080, "name": "desktop"}
         ]
-        
+
         with pytest.raises(ImportError):
             from violentutf.components.dataset_selector import NativeDatasetSelector
-            
+
             selector = NativeDatasetSelector()
-            
+
             for size in screen_sizes:
                 with patch('streamlit.columns') as mock_columns:
                     # Test layout adaptation for different screen sizes
                     selector.render_dataset_selection_interface()
-                    
+
                     # Verify responsive column usage
                     if mock_columns.called:
                         # Check that columns are used appropriately
                         assert len(mock_columns.call_args_list) > 0
 
+
 class TestErrorScenarioUX:
     """Test suite for error scenario user experience"""
-    
+
     def test_api_connection_error_ux(self):
         """Test user experience during API connection errors"""
         with pytest.raises(ImportError):
