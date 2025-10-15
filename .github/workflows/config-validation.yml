@@ -41,7 +41,7 @@ jobs:
         df -h
 
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 2  # Need previous commit for comparison
 
@@ -310,7 +310,7 @@ jobs:
         df -h
 
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Python
       uses: actions/setup-python@v5
